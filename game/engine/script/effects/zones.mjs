@@ -765,6 +765,10 @@ export function destroyAll(state, params, context) {
  *
  * "The rest on the bottom of your library in a random order" (`rest: "bottom"`, every card that says it): in a random
  * order from the game's stream (batch 80; before it, in the order they were taken, which was not random).
+ *
+ * `found.controller: "you"`: "target opponent reveals cards ... You put that card onto the battlefield under your control"
+ * (Jhoira, Weatherlight Corsair, Train E) -- under this effect's controller's control, its owner still the player whose
+ * library it was (CR 108.3, 110.2a).
  */
 export function digUntil(state, params, context, rng = null) {
   const events = [];
@@ -787,7 +791,8 @@ export function digUntil(state, params, context, rng = null) {
     }
     for (const hit of hits) {
       const to = params.found?.to;
-      const landed = to ? moveOne(state, hit, to, events, {owner: player, tapped: params.found?.tapped === true}) : hit;
+      const landed = to ? moveOne(state, hit, to, events, {owner: player, tapped: params.found?.tapped === true,
+        ...(params.found?.controller === "you" ? {controller: context.controller} : {})}) : hit;
       if (landed !== null) found.push(landed);
     }
     if (params.rest === "graveyard" || (params.rest === "exile" && !params.exile)) for (const id of taken) moveOne(state, id, params.rest, events, {owner: player});

@@ -342,10 +342,21 @@ export function factsOf(state, targets) {
   });
 }
 /* A fact's value, or undefined when its target became illegal. */
-function factValue(value, context) {
+/* A target's power or toughness while it is still the same object -- in the zone it was expected to be in, never moved (CR
+   400.7) -- is its current one (CR 608.2h): "Target creature you control gets +1/+0 until end of turn. It deals damage
+   equal to its power" (Assert Perfection, Burrog Barrage) reads the power the pump left. Gone from there -- Swords to
+   Plowshares' exiled creature -- it is the fact read as the resolution began, its last known information. `state` given by
+   the resolution's own binding (script/resolution.mjs). A counted target's one object ("up to one target creature") is read
+   as the fact, as before. */
+const FROM_NOW = ["powerOf", "toughnessOf"];
+function factValue(value, context, state = null) {
   const key = factRef(value);
   if (!key) return undefined;
-  return (context.facts ?? [])[value[key].target]?.[key];
+  const fact = (context.facts ?? [])[value[key].target]?.[key];
+  if (fact === undefined || state === null || !FROM_NOW.includes(key)) return fact;
+  const id = (context.targets ?? [])[value[key].target]?.id;
+  if (!state.objects[id]) return fact;
+  return key === "powerOf" ? powerOf(state, id) : toughnessOf(state, id);
 }
 
 function objectsOf(value, context) {
@@ -403,7 +414,7 @@ export function bindEffect(effect, context, state = null) {
   for (const [key, value] of Object.entries(bound)) {
     /* Who chooses by `ownerOf` is the owner as the object now is (below), not a fact read as the resolution began. */
     if (!factRef(value) || (key === "chooser" && factRef(value) === "ownerOf")) continue;
-    const fact = factValue(value, context);
+    const fact = factValue(value, context, state);
     if (key === "who") bound.who = fact === undefined ? [] : [fact];
     else if (fact === undefined) delete bound[key];
     else bound[key] = fact;

@@ -569,6 +569,9 @@ export function collectTriggers(state, events) {
      it as it last existed on the battlefield (CR 608.2h; script/condition.mjs, `evolves`). */
   for (const gone of departed) for (const waiting of [...state.stack, ...(state.pendingTriggers ?? [])])
     if (waiting.about?.card === gone.cardId && waiting.script?.condition?.evolves === true) waiting.about.lastKnown = {power: gone.power, toughness: gone.toughness};
+    /* And any other trigger about a permanent that has left the battlefield before it resolves: "Arni gets +X/+0, where X is
+       that creature's power" reads it as it last existed there (CR 608.2h; script/amount.mjs). */
+    else if (waiting.about?.card === gone.cardId) waiting.about.lastKnown = gone;
   /* "WHENEVER ONE OR MORE other creatures die" (`batch`): everything this action did is one event for it (CR 603.2c), so it
      triggers once, about all of them (`about.cards`: "for each of them"). One entry per source and ability, per action. */
   const batched = new Map();

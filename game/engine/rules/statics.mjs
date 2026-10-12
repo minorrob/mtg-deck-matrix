@@ -201,6 +201,9 @@ export const STATIC_RULES = Object.freeze({
   /** Disguise [cost] (CR 702.168a): the keyword kept as this static (cards/index.mjs), read where the card could be cast --
       cast face down for {3} -- and on the face-down permanent, turned face up for its cost (rules/actions.mjs). */
   "disguise": "rules/actions.mjs",
+  /** Morph [cost] (CR 702.37a): the keyword kept as this static (cards/index.mjs), read as disguise's is -- cast face down for
+      {3}, a 2/2 with no text, and on the face-down permanent turned face up for its morph cost (rules/actions.mjs). */
+  "morph": "rules/actions.mjs",
   /** Paradigm (CR 702.192a): the keyword kept as this static (cards/index.mjs), read as the spell resolves -- the delayed
       trigger made the first time a spell of its name resolves for its controller, and the spell exiled. rules/stack.mjs. */
   "paradigm": "rules/stack.mjs",

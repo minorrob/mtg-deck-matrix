@@ -436,6 +436,10 @@ export function putCounter(state, params, context) {
     const counters = state.players[player].counters;
     if (count > 0) counters[params.counter] = (counters[params.counter] ?? 0) + count;
   }
+  /* "Put a +1/+1 counter on target creature you control, then it deals damage equal to its power" (Knockout Maneuver, Train
+     E): `remember`, what it was told to put them on -- a counter put or not, a target no longer legal not among them (CR
+     608.2b) -- for the effects after it, which read "it" as it then is (CR 608.2h), its power with the counter. */
+  if (params.remember) context.remembered = [...(params.targets ?? [])];
   return events;
 }
 

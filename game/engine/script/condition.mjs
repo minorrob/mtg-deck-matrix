@@ -282,7 +282,10 @@ export function conditionHolds(state, condition, {controller, source = null, abo
       ...(rememberedControllers !== undefined ? {rememberedControllers} : {}),
       /* "If another creature died this turn" (Chain Assassination): what the effect before it moved, as each last existed
          there, counted out of the deaths ({movedCount}). */
-      ...(movedWas !== undefined ? {movedWas} : {})};
+      ...(movedWas !== undefined ? {movedWas} : {}),
+      /* How the spell resolving was cast: "if you've cast another instant or sorcery spell this turn" leaves its own cast out
+         (Burrog Barrage; script/amount.mjs, spellsCastThisTurn's `another`). */
+      ...(cast !== undefined ? {cast} : {})};
     const n = amountOf(state, condition.compare.count, counted), than = (v) => amountOf(state, v, counted);
     if (condition.compare.atLeast !== undefined && n < than(condition.compare.atLeast)) return false;
     if (condition.compare.atMost !== undefined && n > than(condition.compare.atMost)) return false;

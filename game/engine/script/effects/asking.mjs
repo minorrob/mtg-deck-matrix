@@ -30,7 +30,7 @@ import {cardsIn, moveObject, addObject, valueCostOf, rememberExileLooker, usesTh
 import {compileSelector, selectMatching} from "../filter.mjs";
 import {event, cardRef, moveOne, playersFor, sacrificeOne, destructionQuestion, destructionChoice} from "./zones.mjs";
 import {proliferate as giveEachAnother, addCounters, putCounter, moveCounters, removeCounter} from "./resources.mjs";
-import {makeCopies, afterwards, joinAttack, attackPlaces, attachTo, createToken, effectUntil, COPY_KEYS} from "./permanents.mjs";
+import {makeCopies, afterwards, joinAttack, attackPlaces, attachTo, createToken, effectUntil, COPY_KEYS, gainControl} from "./permanents.mjs";
 import {payGeneric, canPayGeneric, parseManaCost, manaValue, paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits, unlessPlans, planWords, payPlan} from "../../rules/mana.mjs";
 import {typesOf, characteristicsOf, everyCreatureTypeOf, controllerOf, lastKnown, staticAbilities} from "../../rules/layers.mjs";
 import {isLandType} from "../../keywords/types.mjs";
@@ -722,6 +722,14 @@ const greatestBy = {
   power: (state, id) => characteristicsOf(state, id).power ?? 0,
   /* A transformed permanent's is its front face's (CR 202.3b). */
   manaValue: (state, id) => (valueCostOf(state.objects[id]) ? manaValue(parseManaCost(valueCostOf(state.objects[id]))) : 0),
+};
+/* "Target opponent exiles a creature or planeswalker they control with the greatest mana value among creatures and
+   planeswalkers they control" (End of the Hunt; chooseCard's `greatest`, on the battlefield -- script/schema.mjs): of the
+   permanents that fit, those with the most -- a tie the chooser's to break (CR 608.2d), as a sacrifice's is. */
+const greatestOf = (state, greatest, ids) => {
+  if (!greatest) return ids;
+  const value = greatestBy[greatest], most = Math.max(...ids.map((id) => value(state, id)));
+  return ids.filter((id) => value(state, id) === most);
 };
 const offeredToSacrifice = (state, player, awaiting) => {
   const mine = sacrificeable(state, player, awaiting.selector, awaiting.source ?? null);
@@ -1678,7 +1686,7 @@ export const chooseCard = {
        for a selector's "that player" (script/resolution.mjs, repeatFor). */
     const fits = (id) => (anywhere ? alternatives.map((one) => compileSelector({...one, what: "card", zone: state.objects[id].zone})) : matchers)
       .some((m) => m(state, id, {controller: player, source: context.source, ...(context.about ? {about: context.about} : {})}));
-    const fitting = pool.filter(fits);
+    const fitting = greatestOf(state, params.greatest, pool.filter(fits));
     /* "Up to four cards with different names" (Gifts Ungiven): one of each name offered -- which of two identical cards in a
        library is found changes nothing, and no answer can then name two of a name. */
     const cards = params.differentNames === true ? fitting.filter((id, i) => fitting.findIndex((other) => state.objects[other].card === state.objects[id].card) === i) : fitting;
@@ -2247,6 +2255,52 @@ export const conniveWhich = {
   },
 };
 
+/* ---- control given away, a different opponent for each (Train E: Dack Fayden, Helping Hand) ----
+
+   "For each of those permanents, choose a different opponent. Each opponent gains control of the permanent for which they
+   were chosen": gainControl's `toEach: "different opponent"`, put here by the resolution (script/resolution.mjs). Its
+   controller chooses (CR 608.2d), permanent by permanent in the order the effect names them, among the opponents still in
+   the game not chosen yet (CR 102.3, 800.4a) -- with one left, the rules leave no choice and nobody is asked; with none, the
+   rest stay where they are. Then each opponent gains control of theirs, at once and for good (CR 613.1b;
+   effects/permanents.mjs, gainControl). One gone from the battlefield since is a new object (CR 400.7), and none of them. */
+const unchosenOpponents = (awaiting, given) => awaiting.opponents.filter((player) => !given.includes(player));
+function giveEachAway(state, awaiting) {
+  let given = awaiting.given;
+  while (given.length < awaiting.permanents.length) {
+    const left = unchosenOpponents(awaiting, given);
+    if (left.length > 1) {
+      state.awaiting = {...awaiting, given};
+      return true;
+    }
+    if (!left.length) break;
+    given = [...given, left[0]];
+  }
+  for (const [i, player] of given.entries()) gainControl(state, {targets: [awaiting.permanents[i]], toPlayer: player}, {controller: awaiting.player, source: awaiting.source});
+  return {events: []};
+}
+export const controlToOpponents = {
+  open(state, params, context) {
+    const permanents = [...new Set(params.then.targets ?? [])].filter((id) => state.objects[id]?.zone === "battlefield");
+    const opponents = state.players.filter((p) => p.id !== context.controller && !p.lost).map((p) => p.id);
+    return giveEachAway(state, {kind: "effect-choice", effect: "controlToOpponents", player: context.controller, source: context.source ?? null, permanents, opponents, given: []});
+  },
+  choice(state, awaiting) {
+    const id = awaiting.permanents[awaiting.given.length];
+    return {id: `controlToOpponents:${awaiting.player}:${state.turn}:${id}`, title: `Choose an opponent to gain control of ${state.objects[id]?.card ?? "that permanent"}`,
+      mode: "one", min: 1, max: 1, options: unchosenOpponents(awaiting, awaiting.given).map((player, index) => ({index, label: state.players[player].name, playerId: player}))};
+  },
+  apply(state, awaiting, indices) {
+    const player = Array.isArray(indices) && indices.length === 1 ? unchosenOpponents(awaiting, awaiting.given)[indices[0]] : undefined;
+    if (player === undefined) throw new Error("Invalid selection");
+    const outcome = giveEachAway(state, {...awaiting, given: [...awaiting.given, player]});
+    return outcome === true ? {events: [], again: true} : outcome;
+  },
+  /* Its controller has left the game: their ability left with them (CR 800.4a), and nobody gains anything. */
+  left() {
+    return {events: []};
+  },
+};
+
 /* ---- which kind of counter (CR 122.1; Train B, X11) ----
 
    "Choose a counter on target permanent. Put an additional counter of that kind on that permanent" (Ichormoon Gauntlet),
@@ -2424,4 +2478,6 @@ export const chooseInstead = {
 };
 
 export const ASKING = Object.freeze({twoPiles, scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, chooseColor, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage, orderCounters, orderTokens, orderDraws, explore,
-  conniveWhich, manaColors, counterKind, countersToRemove, countersOnto, orderDestruction, chooseInstead, chooseSource, vote});
+  conniveWhich, manaColors, counterKind, countersToRemove, countersOnto, orderDestruction, chooseInstead, chooseSource, vote,
+  /* Train E: a different opponent for each permanent given away (Dack Fayden, Helping Hand). */
+  controlToOpponents});

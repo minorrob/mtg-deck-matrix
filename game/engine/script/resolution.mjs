@@ -225,6 +225,11 @@ export function runResolution(state, rng = null) {
        goes, its controller's choice as it resolves (effects/asking.mjs, countersOnto). */
     else if (effect?.effect === "moveCounters" && effect.onto !== undefined)
       resolving.queue[0] = {effect: "countersOnto", then: effect};
+    /* "For each of those permanents, choose a different opponent. Each opponent gains control of the permanent for which they
+       were chosen" (Dack Fayden, Helping Hand): whose each becomes, its controller's choice as it resolves (CR 608.2d;
+       effects/asking.mjs, controlToOpponents). */
+    else if (effect?.effect === "gainControl" && effect.toEach === "different opponent")
+      resolving.queue[0] = {effect: "controlToOpponents", then: effect};
     /* CR 616.1: counters that two or more effects would change, where the order changes how many -- the permanent's
        controller chooses which applies first, before any is put on (effects/asking.mjs, orderCounters). */
     else if ((asked = counterQuestion(state, effect, resolving.context, effect?.counterOrders ?? {})))
