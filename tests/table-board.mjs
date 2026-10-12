@@ -307,8 +307,8 @@ try {
     `a click on the land taps it for mana, and it stays lit, offered back: "${untap?.label}", its mana in the pool`);
   await matLand.click();
   await active.page.waitForFunction(() => !document.querySelector(".cm-board-lands .cm-bcard.is-tapped"), null, {timeout: 10000});
-  const upright = views(active === rob ? ROB : MAYA).at(-1);
-  ok((upright.state.players[activeSeat].mana || []).length === 0 && !upright.decision.options.some((o) => o.act === "undo-mana") && upright.state.phase === "MAIN1",
+  const untapped = views(active === rob ? ROB : MAYA).at(-1);
+  ok((untapped.state.players[activeSeat].mana || []).length === 0 && !untapped.decision.options.some((o) => o.act === "undo-mana") && untapped.state.phase === "MAIN1",
     "a second click untaps it: upright, the pool empty, nothing to take back, and still main 1");
   await active.page.click("[data-action=board-pass]");
   /* B5, items 10 and 11: one click, and the steps with nothing to do in them pass by themselves -- combat, with no
@@ -324,7 +324,8 @@ try {
   const who = active === rob ? "Rob" : "Maya";
   await waitText(other.page, ".cm-board-band", new RegExp(`${who} played ${land}`));
   const bandRows = await other.page.locator(".cm-board-band li").allInnerTexts();
-  ok(bandRows[0].includes("nothing to do") && bandRows[1].includes(`${who} played ${land}`), `the history band on the mat says it, newest first: "${who} played ${land}", under the empty steps after it (${bandRows.slice(0, 2).join(" | ")})`);
+  ok(bandRows[0].includes("nothing to do") && bandRows[1] === `${who} untapped ${land}, its mana unspent` && bandRows[2].includes(`${who} played ${land}`),
+    `the history band on the mat says it, newest first: "${who} played ${land}", then the land untapped, under the empty steps after it (${bandRows.slice(0, 3).join(" | ")})`);
   await active.page.click("[data-action=board-history]");
   await active.page.locator("#cm-board-history").waitFor();
   const rows = await active.page.locator("#cm-board-history .cm-history-list li").allInnerTexts();
@@ -911,6 +912,31 @@ try {
   const tray2 = await trayOf(second.page, secondSeat, second === rob ? ROB : MAYA);
   ok(/^([1-9])\/\1$/.test(tray2.shown.Creature) && /^0\//.test(tray2.shown.Land) && JSON.stringify(tray2.shown) === JSON.stringify(tray2.want),
     `with mana in the pool the tray reads Creature ${tray2.shown.Creature}, the land drop spent reads Land ${tray2.shown.Land}, and it agrees with the lit cards`);
+
+  /* B5, items 10 and 12, and Rob's of 2026-10-09 ("When I play a card to the board from my hand, I don't want to have to
+     click a pop-up to resolve it"): A SPELL ON THE STACK. With the mana, the creature in hand is bright; cast, it passes
+     for its caster (game/room/room.mjs, passAfterCast) -- nothing more to press -- and the other board's button names
+     what passing will do, Resolve and the spell's name, its strip saying whose step it is and that they may respond. */
+  const toCast = second.page.locator(".cm-board-hand .cm-bcard.is-bright").first(), castName = (await toCast.getAttribute("aria-label")).split(/[,:]/)[0];
+  const secondEmail = second === rob ? ROB : MAYA, casterSeen = views(secondEmail).length;
+  await toCast.click();
+  const firstBoard = second === rob ? maya : rob;
+  await waitText(firstBoard.page, ".cm-board-strip [data-action=board-pass]", new RegExp(`Resolve ${castName}`));
+  const secondName = second === rob ? "Rob" : "Maya", firstName_ = second === rob ? "Maya" : "Rob";
+  ok(!views(secondEmail).slice(casterSeen).some((v) => v.decision && v.decision.kind === "priority" && v.state.stack.length),
+    `cast, ${castName} goes on the stack and the caster is not asked again with it there: the cast passed for them`);
+  eq((await text(firstBoard.page, ".cm-board-waiting")).trim(), `${secondName}'s first main phase · you may respond`, `on the other board the button reads Resolve ${castName}, and the strip says whose step it is and that they may respond`);
+  /* The caster's own view comes on the caster's socket, and may come after the other board's: until it does, the strip
+     says "Sent…". So it is waited for. */
+  await waitText(second.page, ".cm-board-waiting", new RegExp(`Waiting on ${firstName_}`), 10000);
+  ok(true, "and the caster's strip says who the table waits on");
+  await shot(firstBoard.page, "resolve-" + (firstBoard === rob ? "1400" : "1280"));
+  await firstBoard.page.click(".cm-board-strip [data-action=board-pass]");
+  await waitText(second.page, ".cm-board-mat .cm-board-field", new RegExp(castName));
+  ok(true, `and it resolves: ${castName} is on the battlefield`);
+  ok(await heard(ROB, "sfx/sfx_cast_creature.mp3") && await heard(MAYA, "sfx/sfx_cast_creature.mp3"), "the creature cast is heard at both boards, as a creature summoned");
+  /* THE PANEL, a tapped land in it -- here, once its mana is spent on the creature: a land just tapped, its mana unspent,
+     untaps on a click (room.mjs, untapMana), and this one is only shown. */
   await second.page.click("[data-action=board-panel]");
   await second.page.locator(".cm-board-mat .cm-board-lands .cm-bcard.is-tapped").first().click();
   await second.page.locator(".cm-board-panel .cm-panel-card .cm-bcard").waitFor();
@@ -947,29 +973,6 @@ try {
   ok(Number(await second.page.evaluate(() => localStorage.getItem("cm-board-split:panel"))) === 0.2 && (await panelGeo()).card < pg0.card, "the arrow keys move it too, and it stops at a fifth of the column");
   await second.page.evaluate(() => localStorage.removeItem("cm-board-split:panel"));
   await second.page.click("[data-action=board-panel]");
-
-  /* B5, items 10 and 12, and Rob's of 2026-10-09 ("When I play a card to the board from my hand, I don't want to have to
-     click a pop-up to resolve it"): A SPELL ON THE STACK. With the mana, the creature in hand is bright; cast, it passes
-     for its caster (game/room/room.mjs, passAfterCast) -- nothing more to press -- and the other board's button names
-     what passing will do, Resolve and the spell's name, its strip saying whose step it is and that they may respond. */
-  const toCast = second.page.locator(".cm-board-hand .cm-bcard.is-bright").first(), castName = (await toCast.getAttribute("aria-label")).split(/[,:]/)[0];
-  const secondEmail = second === rob ? ROB : MAYA, casterSeen = views(secondEmail).length;
-  await toCast.click();
-  const firstBoard = second === rob ? maya : rob;
-  await waitText(firstBoard.page, ".cm-board-strip [data-action=board-pass]", new RegExp(`Resolve ${castName}`));
-  const secondName = second === rob ? "Rob" : "Maya", firstName_ = second === rob ? "Maya" : "Rob";
-  ok(!views(secondEmail).slice(casterSeen).some((v) => v.decision && v.decision.kind === "priority" && v.state.stack.length),
-    `cast, ${castName} goes on the stack and the caster is not asked again with it there: the cast passed for them`);
-  eq((await text(firstBoard.page, ".cm-board-waiting")).trim(), `${secondName}'s first main phase · you may respond`, `on the other board the button reads Resolve ${castName}, and the strip says whose step it is and that they may respond`);
-  /* The caster's own view comes on the caster's socket, and may come after the other board's: until it does, the strip
-     says "Sent…". So it is waited for. */
-  await waitText(second.page, ".cm-board-waiting", new RegExp(`Waiting on ${firstName_}`), 10000);
-  ok(true, "and the caster's strip says who the table waits on");
-  await shot(firstBoard.page, "resolve-" + (firstBoard === rob ? "1400" : "1280"));
-  await firstBoard.page.click(".cm-board-strip [data-action=board-pass]");
-  await waitText(second.page, ".cm-board-mat .cm-board-field", new RegExp(castName));
-  ok(true, `and it resolves: ${castName} is on the battlefield`);
-  ok(await heard(ROB, "sfx/sfx_cast_creature.mp3") && await heard(MAYA, "sfx/sfx_cast_creature.mp3"), "the creature cast is heard at both boards, as a creature summoned");
   /* B5, items 10 and 12: ANOTHER PLAYER'S TURN. Rob plays a land on turn 3, which gives him the two mana for an instant;
      on Maya's turn 4 he may respond in her upkeep, his button reads Pass, and his strip says whose step it is. */
   for (let i = 0; i < 80 && !/Turn 4/.test(await text(rob.page, ".cm-board-turn")); i += 1) {
