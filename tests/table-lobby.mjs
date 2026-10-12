@@ -398,6 +398,11 @@ try {
   ok(narrow.worst >= 4.5 && narrow.inside && narrow.apart, `and at 390: contrast ${narrow.worst}, heading, rules and launch row inside the panel and apart (${narrow.inside}, ${narrow.apart})`);
   await shot(maya.page, "lobby-guest-390");
 
+  /* THE LAUNCH LINE AND THE FANS (the brief, 2026-10-12): with Maya ready and Rob not, the panel says what it waits on
+     and how many; a seat with a deck wears its commander's colors as a fan from its inner corner. */
+  await waitText(rob.page, "#cm-table-launch", /Launches when all are ready · 1 seat to go\./);
+  const fans = await rob.page.evaluate(() => [0, 1].map((i) => document.querySelectorAll(`.cm-seat-q:has(.cm-lobby-seat[data-seat='${i}']) .cm-seat-fan path`).length));
+  ok(fans[0] >= 1 && fans[1] >= 1, `each seated deck's quadrant wears its commander's color fan (${fans.join(" and ")} wedges)`);
   /* START: Rob readies, starts; the countdown; Cancel; Start; the game is on. */
   await rob.page.locator(".cm-lobby-seat[data-seat='0'] [data-action=table-ready]").click();
   await waitText(rob.page, ".cm-lobby-seat[data-seat='1'] header", /Ready/);
