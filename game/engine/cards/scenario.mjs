@@ -79,7 +79,10 @@ export function runScenario(scenario, cards, fixtures = {}) {
   const fail = (message) => { throw new Error(`${scenario.name}: ${message}`); };
   const seats = scenario.seats ?? 2;
   const names = ["Rob", "Maya", "Trey", "Sam"].slice(0, seats);
-  const state = createState({matchId: "scenario", seed: scenario.name, players: names.map((name) => ({name}))});
+  /* `skipFirstDraw: false`: the table's house rule that the starting player of a two-player game has their first draw step
+     after all (CR 103.8a; game/room/table.mjs). */
+  const state = createState({matchId: "scenario", seed: scenario.name, players: names.map((name) => ({name})),
+    ...(scenario.skipFirstDraw === false ? {skipFirstDraw: false} : {})});
   const rng = createRng(scenario.name);
   const record = (list) => { events.push(...(list ?? [])); return list; };
 

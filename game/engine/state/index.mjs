@@ -68,7 +68,7 @@ export function recordDiscard(state, player) {
 /**
  * A new game state.
  *
- * @param {{matchId: string, seed: string, players: Array<{name: string}>, startingLife?: number, drawBeat?: boolean}} pod
+ * @param {{matchId: string, seed: string, players: Array<{name: string}>, startingLife?: number, drawBeat?: boolean, skipFirstDraw?: boolean}} pod
  */
 export function createState(pod) {
   const seats = pod?.players ?? [];
@@ -104,6 +104,9 @@ export function createState(pod) {
        holds the draw step's draw until its player says Draw a card. Only a pod that asks carries the key, so every
        game made before it hashes, checkpoints and replays exactly as it did. */
     ...(pod?.drawBeat === true ? {drawBeat: true} : {}),
+    /* A two-player game's starting player skips their first draw step (CR 103.8a; rules/turn.mjs) unless the table's host
+       turned that off, a house rule (game/room/table.mjs). Only a pod that turns it off carries the key, as above. */
+    ...(pod?.skipFirstDraw === false ? {skipFirstDraw: false} : {}),
     players: seats.map((seat, id) => ({
       id,
       name: seat.name ?? `Seat ${id + 1}`,

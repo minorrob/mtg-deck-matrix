@@ -66,7 +66,7 @@ import {deriving} from "./layers.mjs";
 export const STEPS = Object.freeze([
   {phase: "UNTAP", priority: false},
   {phase: "UPKEEP", priority: true},
-  {phase: "DRAW", priority: true},
+  {phase: "DRAW", priority: true, when: "drawStep"},
   {phase: "MAIN1", priority: true},
   {phase: "COMBAT_BEGIN", priority: true},
   {phase: "COMBAT_DECLARE_ATTACKERS", priority: true},
@@ -82,8 +82,13 @@ export const STEPS = Object.freeze([
 export const PHASE_NAMES = Object.freeze(STEPS.map((s) => s.phase));
 
 /* Whether a conditional step happens at all this turn. Predicates over state rather than flags, so
-   a rule that decides a step lives in one place. */
+   a rule that decides a step lives in one place. `added`: the step is one of a phase an effect added (CR 500.8). */
 const CONDITIONS = {
+  /* CR 103.8a: the starting player's first draw step in a two-player game does not happen -- the step, not only its draw,
+     so nothing triggers at its beginning (Teferi's Puzzle Box) and nobody receives priority in it. That is the turn's own
+     draw step: one an added beginning phase brings (CR 500.8) happens. In a game of three or more every draw step happens
+     (103.8c). */
+  drawStep: (state, added = false) => added || !skipsFirstDraw(state),
   /* CR 506.5: no attackers, no declare blockers step and no combat damage step. */
   attackers: (state) => (state.combat?.attacks?.length ?? 0) > 0,
   /* CR 510.4: the first-strike damage step exists only if an attacking or blocking creature has first or double strike
@@ -197,7 +202,8 @@ export function draw(state, player, events) {
 
 /* CR 103.8a, and note that it is a two-player rule. */
 const skipsFirstDraw = (state) =>
-  state.players.length === 2 && state.turn === 1 && state.activePlayer === state.startingPlayer;
+  /* Unless the table's host turned the skip off, a house rule (game/room/table.mjs): then that player has the step too. */
+  state.skipFirstDraw !== false && state.players.length === 2 && state.turn === 1 && state.activePlayer === state.startingPlayer;
 
 /* CR 500.4. Reported only when there was something to empty: an empty pool emptying again is not
    news, and a board that announces it every step buries what matters. */
@@ -531,7 +537,8 @@ function arrive(state, events) {
      to their next. Before anything triggers at its beginning, or anyone has priority in it. */
   if (state.phase === "END_OF_TURN" && (state.effects ?? []).some((e) => e.until === "your-next-end-step"))
     state.effects = state.effects.filter((e) => !(e.until === "your-next-end-step" && e.sourceController === state.activePlayer));
-  if (state.phase === "DRAW" && !skipsFirstDraw(state) && !state.players[state.activePlayer].lost) {
+  /* A draw step skipped (CR 103.8a) is never arrived at: `drawStep`, above. */
+  if (state.phase === "DRAW" && !state.players[state.activePlayer].lost) {
     /* CR 504.1 makes the draw a turn-based action, not a choice. A table that asks for the beat (item 13) holds it
        until the player's click: the same card, at the player's moment, and priority after it (CR 504.2). */
     if (state.drawBeat) state.awaiting = {kind: "draw-card", player: state.activePlayer};
@@ -642,7 +649,7 @@ export function beginGame(state, startingPlayer = 0) {
  * Move to the next step and perform it.
  *
  * Conditional steps are skipped here rather than entered and immediately left, because entering a
- * step is what makes its triggers fire (CR 506.5, 510.4).
+ * step is what makes its triggers fire (CR 103.8a, 506.5, 510.4).
  *
  * @returns {Array} events for the caller to journal
  */
@@ -680,7 +687,7 @@ export function advance(state) {
   let next;
   while (next === undefined && (state.stepQueue ?? []).length) {
     const queued = state.stepQueue.shift();
-    if (!STEPS[queued].when || CONDITIONS[STEPS[queued].when](state)) next = queued;
+    if (!STEPS[queued].when || CONDITIONS[STEPS[queued].when](state, true)) next = queued;
   }
   if (next === undefined) {
     next = (Number.isInteger(state.resumeAfter) ? state.resumeAfter : state.stepIndex) + 1;

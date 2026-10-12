@@ -15,6 +15,7 @@ other lane answers in the last column.
 | # | From | Asks for | What for | Answer |
 | --- | --- | --- | --- | --- |
 | 1 | Engine | The board to show the monarch (CR 725): the view's `state.players[i]` now carries `monarch: true` for the monarch, public to every seat, and no key for anyone else; the history says "Maya became the monarch" | Ginger, Queen of Sweets and Tamiyo, Upriser Crowned make their controller the monarch; the monarch draws a card at their end step, and a creature's combat damage to them makes its controller the monarch -- a player should see who holds it | The engine lane built it (Train E, the `monarch` branch); `docs/ui-lane/gameplay-anchor.md` lists the field. For the UI lane to show |
+| 2 | Engine | A switch in the host's Table rules (`crankmagic-table.js`): *The player who goes first skips their first draw*, on unless the host turns it off. The table's view carries `rules.skipFirstDraw` (`true` by default); the host sends it with the other rules, `POST .../rules {skipFirstDraw: false}`, refused once a seat is ready like the others. It matters only at a two-seat table: in a game of three or four nobody skips (CR 103.8c), so the switch can be shown only there | Rob, 2026-10-12: "this can be toggled off in game setup by the lobby owner". CR 103.8a as a house rule: with it off, the first player of a two-player game has a draw step on turn 1 | The engine lane built the rule, the table's field and the room's pod (`claude/first-draw-step`; `docs/ui-lane/gameplay-anchor.md`). For the UI lane to show |
 
 ## 2026-10-12, later: Train E, Rob's library, in waves; the plan to 90%
 
@@ -76,8 +77,13 @@ usage for this").
   - Wave 4b is running: the 120 most-played cards the table can't play yet (ranks 23 to 500), Cyclonic Rift, Toxic
     Deluge, Swan Song, Teferi's Protection and The One Ring among them.
 - **Open, for later waves:**
-  - In a two-player game the starting player skips the draw step's draw, not the step itself (CR 103.8a). Its
-    beginning triggers still fire on turn 1.
+  - **Fixed on `claude/first-draw-step`:** in a two-player game the starting player skipped the draw step's draw, not
+    the step (CR 103.8a), so its beginning triggers fired on turn 1. Now the step is skipped.
+    - A draw step brought by an added beginning phase (CR 500.8) still happens: Sphinx of the Second Sun on turn 1.
+    - The table's host may turn the skip off (Rob, 2026-10-12; Requests row 2).
+    - Breaks: `breaks-first-draw-step.py`, 16 of 16 caught.
+    - Crossing the lanes: `tests/table-board.mjs`, the UI lane's suite, had its turn-1 history line updated. No UI-lane
+      branch touches that file.
   - When two limited permissions allow the same card, the engine merges them and picks one. That choice is the
     player's.
 - **The plan to 90%** (Rob: "after wave 3 define a wave 4+ to bring us to the 90% of all cards typically used"):

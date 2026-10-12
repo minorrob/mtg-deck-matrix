@@ -742,12 +742,15 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       if (await storage.get(ROOM_KEY) !== null) throw new RoomError(409, "This table already has a game.");
       /* The table's starting life (its host's rule), kept with the match so a replay deals the same game. */
       const startingLife = pod && pod.startingLife !== undefined ? pod.startingLife : undefined;
+      /* And whether the starting player of a two-player game skips their first draw step (CR 103.8a), which the host may
+         turn off: only a pod that turns it off says so, and the match keeps it the same way. */
+      const rules = {...(startingLife !== undefined ? {startingLife} : {}), ...(pod && pod.skipFirstDraw === false ? {skipFirstDraw: false} : {})};
       const beats = {...(pod && pod.drawBeat === true ? {drawBeat: true} : {}), ...(pod && pod.passEmpty === true ? {passEmpty: true} : {}),
         ...(pod && pod.endWhenNoPerson === true ? {endWhenNoPerson: true} : {}), ...(pod && pod.resolveAll === true ? {resolveAll: true} : {}),
         ...(pod && pod.passAfterCast === true ? {passAfterCast: true} : {}), ...(pod && pod.endAsks === true ? {endAsks: true} : {}),
         ...(pod && pod.untapMana === true ? {untapMana: true} : {})};
       passEmpty = beats.passEmpty === true; endWhenNoPerson = beats.endWhenNoPerson === true; resolveAll = beats.resolveAll === true; passAfterCast = beats.passAfterCast === true; endAsks = beats.endAsks === true; untapMana = beats.untapMana === true;
-      try {state = createState({matchId, seed, players: seats.map((s) => ({name: s.name})), ...(startingLife !== undefined ? {startingLife} : {}), ...(beats.drawBeat ? {drawBeat: true} : {})});}
+      try {state = createState({matchId, seed, players: seats.map((s) => ({name: s.name})), ...rules, ...(beats.drawBeat ? {drawBeat: true} : {})});}
       catch (error) {throw new RoomError(400, error.message);}
       seats.forEach((s, seat) => {
         for (const name of s.commander) addObject(state, {...cards(name), card: name, owner: seat, controller: seat, commander: true}, "command", seat);
@@ -758,7 +761,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       controller = createController();
       matchSeed = seed;
       pilots = seats.map((s, seat) => (s.pilot === "house" ? pilotMade(seat) : null));
-      await store.saveMatch({pod: {seats, ...(startingLife !== undefined ? {startingLife} : {}), ...beats}, seed});
+      await store.saveMatch({pod: {seats, ...rules, ...beats}, seed});
       write(beginMulligans(state, rng));
       drive();
       await persist();

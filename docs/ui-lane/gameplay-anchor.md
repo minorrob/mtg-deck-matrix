@@ -142,7 +142,9 @@ so a concept mocks this part.
   - A commander is a legendary creature, or a card that says it can be one, and there can be two partners. A deck has
     a bracket, 1 to 5, as its library measures it.
 - **The table's rules:** set by the host before anyone is ready. Starting life is 40 unless the host sets 1 to 999.
-  There may be a bracket limit, 1 to 5, or none.
+  There may be a bracket limit, 1 to 5, or none. In a two-player game the player who goes first skips their first draw
+  step (CR 103.8a) unless the host turns that off, a house rule: the table's `rules.skipFirstDraw` is `true` until the
+  host sends `false`. A game of three or four has no such skip, whatever it says.
 - **Mats:** each seat plays on a mat it chooses, any time, the game included, and everyone sees it. There are 30 today:
   five drawn by the app and 25 of Rob's own artwork. Every seat starts on felt.
 - **Starting:**
@@ -197,7 +199,10 @@ so a concept mocks this part.
 12. `END_OF_TURN`
 13. `CLEANUP`
 
-- **No priority** in `UNTAP` or `CLEANUP`. The first player skips their first draw only in a two-player game.
+- **No priority** in `UNTAP` or `CLEANUP`.
+- **No first draw step for the first player, in a two-player game:** their first turn goes from `UPKEEP` to `MAIN1`, with
+  no `DRAW` step at all, so nothing triggers there (CR 103.8a), unless the host's `skipFirstDraw` is `false`. In a game
+  of three or four, every turn has its draw step.
 - **Turn counting:** `state.turn` counts everyone's turns, so turn 3 of a four-player game is the third player's first.
   During its own turns, a seat's view also carries `yourTurn`: which of its own turns this is.
 - **Lands:** one land a turn as a rule. `landsPlayed` counts this turn's.
