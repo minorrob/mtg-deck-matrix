@@ -11,6 +11,8 @@ the same for any system.*
 3. This file.
 4. `docs/ui-lane/gameplay-anchor.md`: the facts of a game that every game screen must support, and the contract between
    the room and the board. It was written for prototyping tools, and it is just as true for you.
+5. `docs/ui-lane/handoff-play-ui-2026-10-12.md`: where the Play screen stands after pass 1, Rob's direction in his words
+   (`replit-brief-2026-10-12.md`), and what pass 2 takes up.
 
 ## Your lane
 

@@ -5,7 +5,7 @@
 | Lane | Held by | Branch | Doing |
 | --- | --- | --- | --- |
 | **Engine** | Claude, a cloud container; **paused 2026-10-12 at 90% of the week's usage: `docs/handoff-2026-10-12.md`** | `claude/admiring-franklin-58cxy4` | Waves 4 and after, to the most-played 90% of Commander cards (`docs/engine/plan-coverage-90.md`); waves to 4c merged and on staging; next, wave 4d |
-| **UI** | Fable (a Claude session in a cloud container), since 2026-10-12 | `claude/nice-hypatia-4ajdyi` (the session's own branch, by its harness; the `claude/ui-<topic>` form waits for the next topic) | Pass 1 of the Play screen on the Replit concept: the seven steps in the strip, Full screen as the table from your chair with a 3D switch, the right pane docked with Turn Resources (notes 9 and 10), the hover card no taller than the mat, motion and callouts, the lobby's fans and launch line. The plan: `docs/ui-lane/plan-play-ui-2026-10-12.md`. Brief: `docs/ui-lane/README.md` |
+| **UI** | **Codex Astra** from Rob's feedback on pass 1 (Rob, 2026-10-12); Fable held it for pass 1 and handed off at its weekly limit: `docs/ui-lane/handoff-play-ui-2026-10-12.md` | `codex/ui-<topic>` (Fable's `claude/nice-hypatia-4ajdyi` carries only merged history and #729's docs) | Pass 2 of the Play screen on Rob's feedback: `docs/ui-lane/plan-play-ui-2026-10-12.md` §4, reordered by his notes. Brief: `docs/ui-lane/README.md` |
 
 ### Requests between the lanes
 
@@ -60,9 +60,12 @@ refused of the concept, and the passes to come: `docs/ui-lane/plan-play-ui-2026-
   staging in his brief): release-acceptance 22, play-e2e 35; `release/cloud-staging` 4cc2001b pushed; Workers Builds
   deployed it within four minutes, and `tools/staging-check.mjs` signed in reads 222af699 on `version.json` and both pages. The suites this pass touches were green on the head: a11y-board 288, table-board 281, table-lobby 89,
   board-callouts 33, settings-r3 63, board-choices 40, coach 60, design-tokens 91; the 19 breaks all caught.
+- **Handed off to Codex Astra** (Rob, 2026-10-12, at this session's weekly limit): `docs/ui-lane/handoff-play-ui-2026-10-12.md`,
+  with Rob's brief kept at `docs/ui-lane/replit-brief-2026-10-12.md` and the cascade script at
+  `docs/ui-lane/tools/bump-versions.py` (#729).
 - **Outstanding:** Rob's review of staging (the lower-confidence areas are `plan-play-ui-2026-10-12.md` §3: the 3D
-  bend, the side seats at 1280×720, the callouts' loudness and place, flights at 250 permanents), then pass 2 (§4) on
-  his feedback. The branch `claude/nice-hypatia-4ajdyi` stays the lane's, restarted from main.
+  bend, the side seats at 1280×720, the callouts' loudness and place, flights at 250 permanents), then pass 2 (§4) by
+  Astra on his feedback. #729 (docs only) merges on a green run, or rides with Astra's first PR.
 
 ## 2026-10-12, later: Train E, Rob's library, in waves; the plan to 90%
 
