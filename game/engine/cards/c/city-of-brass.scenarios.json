@@ -1,0 +1,248 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "City of Brass",
+  "fixtures": {
+    "Sage": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Draw a card.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "draw",
+            "count": 1
+          }
+        ]
+      }
+    },
+    "Frost": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Tap target land.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Land"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "tap",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Tapped for mana: any color, and it deals 1 damage to Rob",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "City of Brass"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "City of Brass"
+              },
+              "count": 5
+            }
+          ]
+        },
+        {
+          "tap": "City of Brass",
+          "mana": {
+            "R": 1
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            },
+            {
+              "seat": 0,
+              "pool": {
+                "R": 1
+              }
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 39
+        }
+      ]
+    },
+    {
+      "name": "The mana is spent while the trigger waits: the instant cast with it resolves first, then the damage",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "City of Brass"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sage"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "City of Brass",
+          "mana": {
+            "G": 1
+          }
+        },
+        {
+          "cast": "Sage"
+        },
+        {
+          "expect": [
+            {
+              "stack": 2
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "life": 40
+            },
+            {
+              "seat": 0,
+              "zone": "hand",
+              "count": 1
+            },
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 39
+        }
+      ]
+    },
+    {
+      "name": "However it becomes tapped: tapped by Maya's spell, not for mana, it still deals 1 damage to Rob",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "City of Brass"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Frost"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 1
+        },
+        {
+          "cast": "Frost",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "City of Brass"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "City of Brass"
+            },
+            {
+              "seat": 0,
+              "pool": {
+                "U": 0
+              }
+            },
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 39
+        }
+      ]
+    }
+  ]
+}

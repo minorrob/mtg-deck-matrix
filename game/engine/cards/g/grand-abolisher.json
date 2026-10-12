@@ -1,0 +1,66 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Grand Abolisher",
+    "oracleId": "c749f23c-40c0-4159-b84c-a70cbb062c14",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Cleric"
+    ],
+    "manaCost": "{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "During your turn, your opponents can't cast spells or activate abilities of artifacts, creatures, or enchantments.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "During your turn, your opponents can't cast spells or activate abilities of artifacts, creatures, or enchantments.",
+      "rule": "cant-cast",
+      "affects": {
+        "what": "player",
+        "who": "opponent"
+      },
+      "duringYourTurn": true
+    },
+    {
+      "kind": "static",
+      "text": "During your turn, your opponents can't cast spells or activate abilities of artifacts, creatures, or enchantments.",
+      "rule": "cant-activate",
+      "affects": {
+        "what": "player",
+        "who": "opponent"
+      },
+      "duringYourTurn": true,
+      "of": {
+        "anyOf": [
+          {
+            "types": [
+              "Artifact"
+            ]
+          },
+          {
+            "types": [
+              "Creature"
+            ]
+          },
+          {
+            "types": [
+              "Enchantment"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

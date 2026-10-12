@@ -252,11 +252,15 @@ const TRIGGERS = {
   /* "Whenever one or more permanent cards are put into your graveyard from anywhere" (Moonshadow): a card arriving in a
      graveyard, from any zone, read as the card it became there -- a token is no card (CR 108.2b) -- `owner` whose
      graveyard (a card goes to its owner's, CR 400.3), `filter` what the card must be. "One or more" is `batch`. */
-  "put into graveyard": (t) => (["you", "opponent", "any"].includes(t.owner ?? "you")
-    ? {on: "GameEventCardChangeZone", to: "Graveyard", intoGraveyard: true, owner: t.owner ?? "you", ...(t.filter ? {filter: t.filter} : {})} : null),
-  /* "Whenever one or more cards leave your graveyard" (Garrison Excavator): to any zone, a card cast from it included. */
-  "left graveyard": (t) => (["you", "opponent", "any"].includes(t.owner ?? "you") && !t.filter
-    ? {on: "GameEventCardChangeZone", from: "Graveyard", leftGraveyard: true, owner: t.owner ?? "you"} : null),
+  /* "A creature card is put into a graveyard from anywhere other than the battlefield" (Syr Konrad, the Grim, wave 4b):
+     `notFrom: "battlefield"`. */
+  "put into graveyard": (t) => (["you", "opponent", "any"].includes(t.owner ?? "you") && [undefined, "battlefield"].includes(t.notFrom)
+    ? {on: "GameEventCardChangeZone", to: "Graveyard", intoGraveyard: true, owner: t.owner ?? "you", ...(t.filter ? {filter: t.filter} : {}),
+      ...(t.notFrom === "battlefield" ? {notFrom: "Battlefield"} : {})} : null),
+  /* "Whenever one or more cards leave your graveyard" (Garrison Excavator): to any zone, a card cast from it included. "A
+     creature card leaves your graveyard" (Syr Konrad, the Grim, wave 4b): `filter`, the card as it was there (rules/trigger.mjs). */
+  "left graveyard": (t) => (["you", "opponent", "any"].includes(t.owner ?? "you")
+    ? {on: "GameEventCardChangeZone", from: "Graveyard", leftGraveyard: true, owner: t.owner ?? "you", ...(t.filter ? {filter: t.filter} : {})} : null),
   upkeep: (t) => ({on: "GameEventTurnPhase", phase: "UPKEEP", ...(t.yours === false ? {} : {yourTurn: true})}),
   /* "Whenever you cast a noncreature spell", "whenever an opponent casts a spell": `caster` you, opponent or any;
      `filter` the spell (CR 601.2i). */
@@ -273,6 +277,10 @@ const TRIGGERS = {
     ...(t.while ? {while: t.while} : {}),
     /* "For each other instant and sorcery spell you've cast before it this turn": counted as it triggers. */
     ...(t.countBefore ? {countBefore: true} : {}),
+    /* MAGECRAFT, "whenever you cast OR COPY an instant or sorcery spell" (Archmage Emeritus, Storm-Kiln Artist; CR 207.2c,
+       707.10): `orCopy`, a copy put on the stack by an effect of `caster`'s too -- once for each copy, the copy what it is
+       about (rules/trigger.mjs). A copy cast is a spell cast (CR 707.12), so it is seen as one already. */
+    ...(t.orCopy === true ? {orCopy: true} : {}),
     /* "An instant or sorcery spell that targets a creature" (Rehearsed Debater): what one of its targets is (rules/trigger.mjs). */
     ...(t.targets ? {targets: t.targets} : {}),
     /* "An Equipment spell or a spell that targets a creature you control" (Danitha, Sword of Hope): either, each its own
@@ -357,9 +365,10 @@ const TRIGGERS = {
      damage" (Forge's DamageDoneOnce): the same, once for everything one action did -- per player dealt it (trigger.mjs). */
   "damage dealt once": (t) => { const once = damageDealt(t); return once ? {...once, batch: true} : null; },
   /* "Whenever you draw a card", "whenever an opponent draws a card" (CR 121.1): `drawer`. */
-  drawn: (t) => t.nthThisTurn === undefined || (Number.isInteger(t.nthThisTurn) && t.nthThisTurn >= 1)
+  /* "Except the first one they draw in each of their draw steps" (Orcish Bowmasters, wave 4b): `exceptFirstInDrawStep`. */
+  drawn: (t) => (t.nthThisTurn === undefined || (Number.isInteger(t.nthThisTurn) && t.nthThisTurn >= 1)) && [undefined, true].includes(t.exceptFirstInDrawStep)
     ? {on: "GameEventCardChangeZone", from: "Library", to: "Hand", drawn: true, drawer: t.drawer ?? "you",
-      ...(t.nthThisTurn !== undefined ? {nthThisTurn: t.nthThisTurn} : {})} : null,
+      ...(t.nthThisTurn !== undefined ? {nthThisTurn: t.nthThisTurn} : {}), ...(t.exceptFirstInDrawStep ? {exceptFirstInDrawStep: true} : {})} : null,
   /* "Whenever you gain life" (CR 119.9): `gainer` you, opponent or any. */
   "life gained": (t) => ({on: "GameEventPlayerLivesChanged", gainer: t.gainer ?? "you"}),
   /* "Whenever an opponent loses life", "whenever you lose life" (CR 119.3, batch 78): `loser` you, opponent or any; about
@@ -470,12 +479,20 @@ function manaAbility(ability, id) {
       ? {anyCombination: first.anyCombination, ...(first.count ? {count: first.count} : {})}
     : null;
   if (!adds) return "unbuilt";
+  /* "{T}: Add {C}. If Gemstone Caverns has a luck counter on it, instead add one mana of any color" (wave 4b): `instead`, what
+     it adds while its permanent has a counter of that kind -- one mana of any color, or a fixed mana -- read as it is
+     activated (rules/mana.mjs, manaAbilityNow). Beside a fixed mana only. */
+  const instead = first.instead === undefined ? null
+    : adds.produces && !Array.isArray(adds.produces) && typeof first.instead?.counter === "string" && Object.keys(first.instead).length === 2
+      && (first.instead.anyColor === true || MANA(first.instead.mana))
+      ? {counter: first.instead.counter, ...(first.instead.anyColor === true ? {anyColor: true} : {produces: {...first.instead.mana}})} : undefined;
+  if (instead === undefined) return "unbuilt";
   /* "Spend this mana only to cast a creature spell of the chosen type" (CR 106.6; rules/restricted-mana.mjs): a spell or
      an ability's source it may pay for, each a selector, and "that spell can't be countered" -- read as every addMana's
      is, where the compiler walks an ability's effects. */
   const mana = cost.find((a) => a.atom === "mana");
   const life = cost.filter((a) => a.atom === "payLife").reduce((n, a) => n + (a.amount ?? 0), 0);
-  return {id, kind: "mana", tapSelf: cost.some((a) => a.atom === "{T}"), ...adds, text: ability.text,
+  return {id, kind: "mana", tapSelf: cost.some((a) => a.atom === "{T}"), ...adds, ...(instead ? {instead} : {}), text: ability.text,
     ...(mana ? {cost: mana.cost} : {}), ...(life ? {payLife: life} : {}), ...(then.length ? {then} : {}),
     ...(cost.some((a) => a.atom === "sacrifice" && a.self === true) ? {sacrificeSelf: true} : {}),
     /* "Mill a card" as part of the cost (Millikin): how many. */
@@ -528,7 +545,9 @@ function spendOnlyValid(only) {
    of its controller's own turn ("exile those creatures at the beginning of your next upkeep", Rally the Ancestors). */
 /* "At end of combat" (Wall of Junk; CR 511.2) and "at the beginning of the declare attackers step on your next turn"
    (Meandering Towershell) too: the next end of combat step, and that step of a turn of its controller's after this one. */
-const DELAYED_MOMENTS = ["end step", "upkeep", "your upkeep", "end of combat", "your next declare attackers"];
+/* "At the beginning of your next main phase" (Mana Drain; CR 505.1): "your next main", the next main phase of a turn of its
+   controller's, precombat or postcombat -- this turn's postcombat one, made in its precombat one (rules/trigger.mjs). */
+const DELAYED_MOMENTS = ["end step", "upkeep", "your upkeep", "end of combat", "your next declare attackers", "your next main"];
 function withDelayedTriggers(abilities, problems) {
   const walk = (effect) => {
     if (!effect || typeof effect !== "object") return effect;
@@ -615,6 +634,17 @@ function compileGivenIn(effects, text, problems) {
   }
 }
 
+/* WHAT A GIFT GIVES (CR 702.174d-i): the chosen player's -- the opponent promised it (script/bind.mjs, "the chosen player"). */
+const GIFTS = Object.freeze({
+  "a card": [{effect: "draw", who: "the chosen player", count: 1}],
+  "a Food": [{effect: "createToken", controller: "the chosen player", count: 1, token: {predefined: "Food"}}],
+  "a tapped Fish": [{effect: "createToken", controller: "the chosen player", count: 1, tapped: true,
+    token: {name: "Fish", types: ["Creature"], subtypes: ["Fish"], colors: ["U"], power: 1, toughness: 1}}],
+  "an extra turn": [{effect: "addTurn", who: "the chosen player"}],
+  "a Treasure": [{effect: "createToken", controller: "the chosen player", count: 1, token: {predefined: "Treasure"}}],
+  "an Octopus": [{effect: "createToken", controller: "the chosen player", count: 1, token: {name: "Octopus", types: ["Creature"], subtypes: ["Octopus"], colors: ["U"], power: 8, toughness: 8}}],
+});
+
 export function compileScript(script) {
   const {valid, errors} = validateScript(script);
   if (!valid) return {definition: null, problems: errors.map((e) => `${e.path}: ${e.message}`)};
@@ -631,6 +661,8 @@ export function compileScript(script) {
   let escalate = null;
   /* Tiered (CR 702.183a): each mode's own cost, put on the spell once its modes are known (below). */
   let tiered = false;
+  /* Gift (CR 702.174a): its additional cost and what the chosen player gets, put on the spell once it is known (below). */
+  let gift = null;
 
   /* "ENCHANT CREATURE" (CR 702.5, 303.4): an Aura spell targets what it will enchant, and the permanent may be attached
      only to what the same words describe. One keyword ability, `target` its selector; `hostile` when the Aura is a
@@ -734,6 +766,27 @@ export function compileScript(script) {
       abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS["spell cast"]({caster: "you", filter: {nonTypes: ["Creature"]}}),
         effects: [{effect: "pump", targets: "self", power: 1, toughness: 1}]});
       keywords.push("Prowess");
+      return;
+    }
+    /* EXALTED (CR 702.83a; Ignoble Hierarch, wave 4b): "Whenever a creature you control attacks alone, that creature gets +1/+1
+       until end of turn" -- the keyword IS that triggered ability, "alone" the only creature declared as an attacker (702.83b,
+       506.5; rules/trigger.mjs). Each instance triggers, on any permanent that has it. */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "exalted") {
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.attacks({who: "any", alone: true, filter: {types: ["Creature"], controller: "you"}}),
+        effects: [{effect: "pump", targets: "that card", power: 1, toughness: 1}]});
+      keywords.push("Exalted");
+      return;
+    }
+    /* EXTORT (CR 702.101a; Crypt Ghast, wave 4b): "Whenever you cast a spell, you may pay {W/B}. If you do, each opponent loses 1
+       life and you gain life equal to the total life lost this way" -- the keyword IS that triggered ability: the payment asked
+       as it resolves, at most once (its ruling), from the pool or the payer's mana sources (effects/asking.mjs, unlessPays's
+       `mana`), and the life gained what the opponents lost (script/amount.mjs, lifeLostThisWay). Instances trigger separately
+       (702.101b). */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "extort") {
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS["spell cast"]({caster: "you"}),
+        effects: [{effect: "unlessPays", who: "you", mana: "{W/B}", ifPaid: true,
+          effects: [{effect: "loseLife", who: "opponent", amount: 1}, {effect: "gainLife", amount: {lifeLostThisWay: true}}]}]});
+      keywords.push("Extort");
       return;
     }
     /* FIREBENDING N (CR 702.189a; Fire Nation Cadets, Train C phase 2): the keyword IS a triggered ability -- "Whenever this
@@ -1098,6 +1151,20 @@ export function compileScript(script) {
       keywords.push("Embalm");
       return;
     }
+    /* ETERNALIZE [COST] (CR 702.129a; Fanatic of Rhonas, wave 4b): embalm's ability with other exceptions -- "Create a token
+       that's a copy of this card, except it's black, it's 4/4, it has no mana cost, and it's a Zombie in addition to its other
+       types. Activate only as a sorcery": black its only color, 4/4 its base power and toughness, copiable values of the
+       token (CR 707.9b; effects/permanents.mjs, copiable's `setColors`, `setPower`, `setToughness`). A mana cost; a creature
+       card, the only kind that has a power and toughness to set. */
+    if (word === "eternalize") {
+      const cost = Array.isArray(ability.cost) ? ability.cost : [];
+      if (cost.length !== 1 || cost[0]?.atom !== "mana") problems.push(`${ability.text}: an eternalize cost is mana, once`);
+      if (!(identity.types ?? []).includes("Creature")) problems.push(`${ability.text}: eternalize makes a 4/4 token copy of a creature card`);
+      abilities.push({id, kind: "activated", text: ability.text, zone: "graveyard", timing: "sorcery", cost: [...structuredClone(cost), {atom: "exileFromGraveyard", self: true}],
+        effects: [{effect: "copyPermanent", targets: "that card", except: {setColors: ["B"], addSubtypes: ["Zombie"], setPower: 4, setToughness: 4, noManaCost: true}}]});
+      keywords.push("Eternalize");
+      return;
+    }
     /* SUSPEND N--[COST] (CR 702.62a; Knight of Old Benalia): its first ability, "if you could begin to cast this card by putting
        it onto the stack from your hand, you may pay [cost] and exile it with N time counters on it", kept as a static the card
        carries in its owner's hand (rules/actions.mjs offers the special action there). Its other two -- a time counter removed
@@ -1143,6 +1210,19 @@ export function compileScript(script) {
        evoked: a cast for it marks the spell, and the permanent it becomes, evoked (rules/stack.mjs), which the trigger's
        condition reads as it triggers and again as it resolves (CR 603.4; script/condition.mjs). A new object after it
        moves (CR 400.7) was never evoked, so one flickered in response stays. */
+    /* GIFT A [SOMETHING] (CR 702.174a; Dawn's Truce, wave 4b): "as an additional cost to cast this spell, you may choose an
+       opponent" -- the opponent promised the gift (rules/actions.mjs, one offer each) -- and what that player then gets: on an
+       instant or sorcery, "if this spell's gift cost was paid, [effect]", before its other effects (702.174j); on a permanent,
+       "when this permanent enters, if its gift cost was paid, [effect]" (702.174b). `gift` names it, as the card does: "a
+       card", "a Food", "a tapped Fish", "an extra turn", "a Treasure", "an Octopus" (702.174d-i). Once, at most (its ruling). */
+    if (word === "gift") {
+      const given = GIFTS[ability.gift];
+      if (!given) problems.push(`${ability.text}: a gift is one of ${Object.keys(GIFTS).join(", ")} (CR 702.174d-i)`);
+      if (gift !== null) problems.push(`${ability.text}: one gift to a card`);
+      gift = {id, text: ability.text, effects: structuredClone(given ?? [])};
+      keywords.push("Gift");
+      return;
+    }
     /* MULTIKICKER (CR 702.33c): "you may pay an additional {2} any number of times as you cast this spell" -- an additional
        cost of the spell's (rules/actions.mjs, additionalVariants), each number of times its own cast; the spell, and the
        permanent it becomes, kicked that many times (`kicked`, an amount). */
@@ -1265,8 +1345,9 @@ export function compileScript(script) {
         problems.push("moveZone: withCounters is the counters it enters the battlefield with, or is exiled with: {kind: 1 or more}");
       /* "Put this creature's counters on that token" (Ambitious Augmenter): `countersOf: "self"`, every kind its source had as
          it last existed, as many -- with no kind or count of its own (effects/resources.mjs, putCounter). */
-      if (effect.effect === "putCounter" && effect.countersOf !== undefined && !(effect.countersOf === "self" && effect.counter === undefined && effect.count === undefined))
-        problems.push("putCounter: countersOf is \"self\", its source's counters as it last existed, with no counter or count of its own");
+      /* Or "that card", those the creature a trigger is about had as it last existed (The Ozolith, wave 4b). */
+      if (effect.effect === "putCounter" && effect.countersOf !== undefined && !(["self", "that card"].includes(effect.countersOf) && effect.counter === undefined && effect.count === undefined))
+        problems.push("putCounter: countersOf is \"self\" or \"that card\", the counters it had as it last existed, with no counter or count of its own");
       /* "That player ... puts a +1/+1 counter on it" (Alexios): who puts them, the player a trigger is about. */
       if (effect.effect === "putCounter" && effect.puts !== undefined && effect.puts !== "that player")
         problems.push("putCounter: puts is \"that player\", the player the trigger is about putting them");
@@ -1389,6 +1470,14 @@ export function compileScript(script) {
             if (one?.atom === "blight" && !(Number.isInteger(one.count ?? 1) && (one.count ?? 1) >= 1)) problems.push("blight: an additional cost of 1 or more -1/-1 counters");
             if (one?.optional !== undefined) problems.push("oneOf: one of a choice is never optional");
           }
+          continue;
+        }
+        /* "As an additional cost to cast this spell, pay X life" (Toxic Deluge, wave 4b): X announced as it is cast, one offer for
+           each value (rules/actions.mjs, lifeXAtom) -- on a spell with no {X} in its mana cost, for one X to name. */
+        if (atom?.atom === "payLife") {
+          let manaX = true;
+          try { manaX = parseManaCost(identity.manaCost ?? "").variable > 0; } catch { /* refused below */ }
+          if (atom.amount !== "X" || manaX) problems.push("payLife: an additional cost of X life, on a spell with no {X} in its mana cost");
           continue;
         }
         if (!["discard", "sacrifice", "blight", "tapCreature", "behold"].includes(atom?.atom)) problems.push(`${atom?.atom ?? "an additional cost"}: an additional cost nothing pays yet`);
@@ -1571,12 +1660,14 @@ export function compileScript(script) {
       /* A TRIGGERED MANA ABILITY (CR 605.1b): one that triggers on a mana ability and adds mana -- a fixed amount, or "one
          mana of any type that land produced" -- with no target. It is not put on the stack (rules/trigger.mjs, manaTriggered). */
       const [adds] = effects ?? [];
+      /* Or "an additional one mana of the chosen color" (Utopia Sprawl): the color its permanent chose as it entered
+         (`chosenColor`, rules/trigger.mjs). */
       if (trigger?.on === "GameEventManaPool" && effects.length === 1 && adds?.effect === "addMana" && !(ability.targets ?? []).length && !ability.optional
-        && (MANA(adds.mana) || adds.produced === true)) {
+        && (MANA(adds.mana) || adds.produced === true || adds.chosenColor === true)) {
         /* What a triggered mana ability adds goes straight to the pool: one that says what its mana may pay for is refused
            until it is carried there. */
         if (adds.spendOnly !== undefined || adds.cantSpend !== undefined) problems.push(`${ability.text}: a triggered mana ability whose mana may pay for only some things is not built`);
-        trigger.manaAbility = adds.produced === true ? {produced: true} : {mana: {...adds.mana}};
+        trigger.manaAbility = adds.produced === true ? {produced: true} : adds.chosenColor === true ? {chosenColor: true} : {mana: {...adds.mana}};
       }
       /* MODES CHOSEN AS IT IS PUT ON THE STACK (CR 603.3c, 700.2b): a triggered ability whose one effect is a modal -- its
          modes and their targets are chosen then (rules/trigger.mjs), never as it resolves, whether its modes name targets or
@@ -1587,6 +1678,8 @@ export function compileScript(script) {
       const lone = (ability.effects ?? []).length === 1 ? ability.effects[0] : null;
       const modal = lone?.effect === "modal" && lone.chooser === undefined
         ? {choose: lone.choose ?? 1, ...(lone.mayChooseNone ? {mayChooseNone: true} : {}), ...(lone.differentPlayers ? {differentPlayers: true} : {}),
+          /* "Choose one or more" (Black Market Connections, wave 4b): as many as `upTo`, each number of them a way of its own. */
+          ...(lone.chooseUpTo ? {upTo: lone.chooseUpTo} : {}),
           /* "Choose one that hasn't been chosen" (Gollum, Riddle Master): each mode once, for as long as its permanent is
              the object it is (rules/trigger.mjs, modesTaken). */
           ...(lone.unchosen === true ? {unchosen: true} : {}),
@@ -1614,9 +1707,17 @@ export function compileScript(script) {
       problems.push(`${ability.text}: a condition or a graveyard on a rule static, which nothing reads yet`);
     if (ability.kind === "static" && ability.worksFrom !== undefined && ability.worksFrom !== "graveyard") problems.push(`${ability.text}: a static works from the battlefield, or from a graveyard`);
     /* An opening hand's action (rules/mulligan.mjs): revealing the card, and the delayed trigger that makes (CR 103.6b, 603.7g)
-       -- not beginning the game with it on the battlefield (103.6a), which is not built. */
-    if (ability.kind === "static" && ability.rule === "opening-hand" && !((ability.effects ?? []).length && ability.effects.every((e) => e?.effect === "delayedTrigger")))
-      problems.push(`${ability.text}: an opening hand's action reveals the card and makes a delayed trigger (CR 103.6b); beginning the game with it on the battlefield (103.6a) is not built`);
+       -- or beginning the game with it on the battlefield (103.6a; Gemstone Caverns, wave 4b): `begin: "battlefield"`, its
+       counters (`withCounters`, each kind a number, 1 or more), "you're not the starting player" (`notStarting`), and "if you
+       do, exile a card from your hand" (`exileFromHand: 1`) -- and nothing else. */
+    const beginning = ability.kind === "static" && ability.rule === "opening-hand" && ability.begin !== undefined;
+    if (beginning && !(ability.begin === "battlefield" && ability.effects === undefined && (identity.types ?? []).some((t) => ["Artifact", "Battle", "Creature", "Enchantment", "Land", "Planeswalker"].includes(t))
+      && (ability.withCounters === undefined || (ability.withCounters && typeof ability.withCounters === "object" && Object.values(ability.withCounters).length > 0
+        && Object.values(ability.withCounters).every((n) => Number.isInteger(n) && n >= 1)))
+      && [undefined, true].includes(ability.notStarting) && [undefined, 1].includes(ability.exileFromHand)))
+      problems.push(`${ability.text}: an opening hand's beginning on the battlefield is begin: "battlefield", a permanent card, its counters, notStarting, exileFromHand: 1, and no effects (CR 103.6a)`);
+    if (ability.kind === "static" && ability.rule === "opening-hand" && !beginning && !((ability.effects ?? []).length && ability.effects.every((e) => e?.effect === "delayedTrigger")))
+      problems.push(`${ability.text}: an opening hand's action reveals the card and makes a delayed trigger (CR 103.6b), or begins the game with it on the battlefield (103.6a)`);
     /* A layer static's `affects` is read by the layers' own matcher: a key it does not read is refused, not ignored. */
     if (ability.kind === "static" && ability.layer !== undefined)
       for (const key of Object.keys(ability.affects ?? {})) if (!LAYER_AFFECTS_KEYS.includes(key)) problems.push(`${ability.text}: a layer static's affects has no key ${JSON.stringify(key)}`);
@@ -1717,6 +1818,20 @@ export function compileScript(script) {
   /* Replicate's additional cost, on the spell (an instant or sorcery's, which has one). */
   if (replicate !== null && !spell) problems.push("Replicate is on a spell with something to copy: its spell ability");
   else if (replicate !== null) spell = {...spell, additionalCost: [...(spell.additionalCost ?? []), {atom: "replicate", cost: replicate}]};
+  /* Gift's additional cost, on the spell (CR 702.174a) -- a permanent's too, whose spell does nothing else (CR 608.3) -- and
+     what the chosen player gets: an instant's or a sorcery's first, before its other effects (702.174j), or a permanent's
+     trigger as it enters, its "if" an intervening one (702.174b, CR 603.4). Not on a spell whose modes are chosen as it is
+     cast: its effects are its modes'. */
+  if (gift !== null) {
+    const fleeting = types.some((t) => t === "Instant" || t === "Sorcery");
+    const given = gift.effects.map((effect) => ({...effect, condition: {giftPromised: true}}));
+    if (fleeting && (!spell || spell.modal)) problems.push(`${gift.text}: a gift on an instant or sorcery is given by its spell ability, one without modes chosen as it is cast`);
+    else if (fleeting) spell = {...spell, additionalCost: [...(spell.additionalCost ?? []), {atom: "gift"}], effects: [...given, ...(spell.effects ?? [])]};
+    else {
+      spell = {...(spell ?? {id: "gift", text: gift.text, targets: [], effects: []}), additionalCost: [...(spell?.additionalCost ?? []), {atom: "gift"}]};
+      abilities.push({id: gift.id, kind: "triggered", text: gift.text, trigger: TRIGGERS.enters({who: "self"}), condition: {giftPromised: true}, effects: gift.effects});
+    }
+  }
 
   const partners = partnersIn(script.oracleText);
   const definition = {

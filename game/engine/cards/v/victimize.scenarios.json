@@ -1,0 +1,408 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Victimize",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Elf": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Scour": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Exile target card from a graveyard.",
+        "targets": [
+          {
+            "what": "card",
+            "zone": "graveyard"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "moveZone",
+            "targets": {
+              "target": 0
+            },
+            "to": "exile"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "The Bear and the Ogre back tapped; the Elf sacrificed, Rob's choice",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Elf"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Victimize"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Victimize",
+          "targets": [
+            [
+              {
+                "card": "Bear"
+              },
+              {
+                "card": "Ogre"
+              }
+            ]
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Elf"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Elf"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Bear"
+        },
+        {
+          "seat": 0,
+          "tapped": "Ogre"
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Elf",
+            "Victimize"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "One creature card in Rob's graveyard: two targets are needed -- not offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Elf"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Victimize"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Victimize"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "No creature to sacrifice: nothing returns, both cards stay",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Victimize"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Victimize",
+          "targets": [
+            [
+              {
+                "card": "Bear"
+              },
+              {
+                "card": "Ogre"
+              }
+            ]
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Ogre",
+            "Victimize"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Swamp",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Maya exiles the Bear in response: Rob still sacrifices, and the Ogre alone returns (CR 608.2b)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Elf"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Victimize"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Scour"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Victimize",
+          "targets": [
+            [
+              {
+                "card": "Bear"
+              },
+              {
+                "card": "Ogre"
+              }
+            ]
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Scour",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Elf"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Ogre"
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Elf",
+            "Victimize"
+          ]
+        }
+      ]
+    }
+  ]
+}

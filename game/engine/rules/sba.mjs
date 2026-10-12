@@ -289,7 +289,13 @@ export function checkStateBasedActions(state) {
       const object = state.objects[id];
       if (!object.enchant) continue;
       const host = object.attachedTo === null || object.attachedTo === undefined ? null : state.objects[object.attachedTo];
-      if (host && host.zone === "battlefield" && host.id !== id && matchesSelector(object.enchant, state, object.attachedTo, {controller: object.controller, source: id})) continue;
+      /* "Enchant creature card in a graveyard" (Animate Dead; CR 303.4a): a card in the zone its Enchant names, still that card
+         (CR 400.7) -- and, once "it loses 'enchant creature card in a graveyard' and gains 'enchant creature put onto the
+         battlefield with this Aura'" (`enchantOnly`, effects/permanents.mjs attach), that one creature alone, while it is one. */
+      const inZone = host && (host.zone === "battlefield" || (object.enchant.what === "card" && host.zone === object.enchant.zone));
+      const legal = object.enchantOnly !== undefined ? Boolean(host) && host.zone === "battlefield" && host.id === object.enchantOnly && typesOf(state, host.id).includes("Creature")
+        : inZone && host.id !== id && matchesSelector(object.enchant, state, object.attachedTo, {controller: object.controller, source: id});
+      if (legal) continue;
       auraToGraveyard(state, id, events);
       acted = true;
     }
@@ -319,7 +325,9 @@ export function checkStateBasedActions(state) {
       const host = state.objects[object.attachedTo];
       const equipment = (object.subtypes ?? []).includes("Equipment");
       const attachable = !typesOf(state, id).includes("Creature") && (Boolean(object.enchant) || equipment);
-      if (host && host.zone === "battlefield" && attachable && (!equipment || typesOf(state, object.attachedTo).includes("Creature"))
+      /* An Aura enchanting a card in a graveyard (Animate Dead) stays attached to it, as the check above found legal. */
+      const there = host && (host.zone === "battlefield" || (object.enchant?.what === "card" && host.zone === object.enchant.zone));
+      if (there && attachable && (!equipment || typesOf(state, object.attachedTo).includes("Creature"))
         /* Nor enchanted or equipped by one it has protection from (CR 702.16c-d): unattached here, an Aura then put into
            its owner's graveyard by the check above, as an Aura attached to nothing (CR 704.5m). */
         && !protectedFrom(state, {card: object.attachedTo}, id)) continue;

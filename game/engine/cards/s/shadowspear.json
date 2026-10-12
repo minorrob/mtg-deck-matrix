@@ -1,0 +1,109 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Shadowspear",
+    "oracleId": "8b27326f-e7b8-4a4d-b589-df459246d19a",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Equipment"
+    ],
+    "manaCost": "{1}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Equipped creature gets +1/+1 and has trample and lifelink.\n{1}: Permanents your opponents control lose hexproof and indestructible until end of turn.\nEquip {2}",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Equipped creature gets +1/+1 and has trample and lifelink.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 1
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Equipped creature gets +1/+1 and has trample and lifelink.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "addKeywords": [
+          "Trample",
+          "Lifelink"
+        ]
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{1}: Permanents your opponents control lose hexproof and indestructible until end of turn.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "layer": 6,
+          "selector": {
+            "what": "permanent",
+            "controller": "opponent"
+          },
+          "apply": {
+            "removeKeywords": [
+              "Hexproof",
+              "Indestructible"
+            ]
+          },
+          "until": "end-of-turn"
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "Equip {2}",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        }
+      ],
+      "timing": "sorcery",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "attach",
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

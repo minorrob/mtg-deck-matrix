@@ -1,0 +1,307 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Crypt Ghast",
+  "fixtures": {
+    "Trinket": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Draw a card.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "draw",
+            "count": 1
+          }
+        ]
+      }
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A spell cast, {W/B} paid with a Plains: Maya loses 1 and Rob gains 1 -- before the spell resolves",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Crypt Ghast",
+            "Wastes",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Trinket"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Trinket"
+        },
+        {
+          "expect": [
+            {
+              "stack": 2
+            }
+          ]
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Pay {W/B}",
+                  "Don't pay"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Pay {W/B}"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 39
+            },
+            {
+              "seat": 0,
+              "life": 41
+            },
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Trinket"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Three players: each opponent loses 1, and Rob gains the 2 they lost",
+      "seats": 3,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Crypt Ghast",
+            "Wastes",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Trinket"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Trinket"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Pay {W/B}"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 39
+        },
+        {
+          "seat": 2,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "life": 42
+        }
+      ]
+    },
+    {
+      "name": "Not paid: nobody's life changes",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Crypt Ghast",
+            "Wastes",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Trinket"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Trinket"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Don't pay"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "life": 40
+        }
+      ]
+    },
+    {
+      "name": "Maya's spell triggers nothing: \"whenever you cast\"",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Crypt Ghast"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Trinket"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Trinket",
+          "seat": 1
+        }
+      ],
+      "expect": [
+        {
+          "stack": 1
+        }
+      ]
+    },
+    {
+      "name": "A Swamp tapped for mana adds an additional {B}; a Plains does not",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Crypt Ghast",
+            "Swamp",
+            "Plains"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Plains"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "B": 2,
+            "W": 1
+          }
+        }
+      ]
+    }
+  ]
+}

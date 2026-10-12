@@ -137,6 +137,10 @@ function applies(state, ability, holder, proposal) {
     if (watches.filter) {
       const entering = state.objects[proposal.objectId];
       if (!entering) return false;
+      /* A token is made on the battlefield (CR 111.1, effects/permanents.mjs makeToken): read as the permanent it is there,
+         under the control it was made under -- never by its own abilities, which are for what enters after it (CR 614.12). */
+      if (entering.zone === "battlefield" && entering.token === true)
+        return entering.id !== holder.id && compileSelector({...chosenFor(watches.filter, holder), what: "permanent"})(state, proposal.objectId, {controller: holder.controller, source: holder.id});
       const what = entering.zone === "stack" ? "spell" : "card";
       if (!compileSelector({...chosenFor(watches.filter, holder), what, ...(what === "card" ? {zone: entering.zone} : {})})(state, proposal.objectId, {controller: holder.controller, source: holder.id})) return false;
     }

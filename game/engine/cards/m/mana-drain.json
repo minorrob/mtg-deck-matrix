@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mana Drain",
+    "oracleId": "74d3277a-38e5-4732-afed-084a56148f20",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Counter target spell. At the beginning of your next main phase, add an amount of {C} equal to that spell's mana value.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Counter target spell. At the beginning of your next main phase, add an amount of {C} equal to that spell's mana value.",
+      "targets": [
+        {
+          "what": "spell"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "counterSpell",
+          "spells": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "delayedTrigger",
+          "at": "your next main",
+          "text": "At the beginning of your next main phase, add an amount of {C} equal to that spell's mana value.",
+          "effects": [
+            {
+              "effect": "addMana",
+              "mana": {
+                "C": 1
+              },
+              "count": {
+                "manaValueOf": {
+                  "target": 0
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

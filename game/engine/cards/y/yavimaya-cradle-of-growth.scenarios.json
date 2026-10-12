@@ -1,0 +1,313 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Yavimaya, Cradle of Growth",
+  "fixtures": {
+    "Seek": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Search your library for a Forest card, reveal it, put it into your hand, then shuffle.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "chooseCard",
+            "zone": "library",
+            "selector": {
+              "subtypes": [
+                "Forest"
+              ]
+            },
+            "to": "hand",
+            "reveal": true,
+            "shuffle": true
+          }
+        ]
+      }
+    },
+    "Uproot": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Return target land to its owner's hand.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Land"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "moveZone",
+            "targets": {
+              "target": 0
+            },
+            "to": "hand"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Each land a Forest: Rob's Island taps for {U} or {G}, Maya's Swamp for {B} or {G}, Yavimaya itself for {G}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Yavimaya, Cradle of Growth",
+            "Island"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Island"
+              },
+              "count": 2,
+              "mana": [
+                {
+                  "U": 1
+                },
+                {
+                  "G": 1
+                }
+              ]
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Yavimaya, Cradle of Growth"
+              },
+              "count": 1,
+              "mana": [
+                {
+                  "G": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Island",
+          "mana": {
+            "G": 1
+          }
+        },
+        {
+          "tap": "Yavimaya, Cradle of Growth"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "pool": {
+                "G": 2
+              }
+            }
+          ]
+        },
+        {
+          "pass": 1
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Swamp",
+            "seat": 1
+          },
+          "count": 2,
+          "mana": [
+            {
+              "B": 1
+            },
+            {
+              "G": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A land that is a Forest already gains no second ability: a basic Forest one {G}, Breeding Pool its two",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Yavimaya, Cradle of Growth",
+            "Forest",
+            "Breeding Pool"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Forest"
+          },
+          "count": 1
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Breeding Pool"
+          },
+          "count": 2,
+          "mana": [
+            {
+              "G": 1
+            },
+            {
+              "U": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Land cards elsewhere are no Forests (its ruling): a search for a Forest card finds the Forest, never the Island",
+      "library": [
+        "Island",
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Yavimaya, Cradle of Growth",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Seek"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Seek"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Forest"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Forest"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Yavimaya gone, the Island is an Island alone again: {U}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Yavimaya, Cradle of Growth",
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Uproot"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Uproot",
+          "targets": [
+            {
+              "card": "Yavimaya, Cradle of Growth"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Yavimaya, Cradle of Growth"
+          ]
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Island"
+          },
+          "count": 1,
+          "mana": [
+            {
+              "U": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

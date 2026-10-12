@@ -1,0 +1,69 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ohran Frostfang",
+    "oracleId": "b99ada26-9a61-4175-9fb8-15a106960220",
+    "supertypes": [
+      "Snow"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Snake"
+    ],
+    "manaCost": "{3}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 6
+  },
+  "oracleText": "Attacking creatures you control have deathtouch.\nWhenever a creature you control deals combat damage to a player, draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Attacking creatures you control have deathtouch.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "attacking": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Deathtouch"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a creature you control deals combat damage to a player, draw a card.",
+      "trigger": {
+        "on": "damage dealt",
+        "who": "any",
+        "to": "player",
+        "combat": true,
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

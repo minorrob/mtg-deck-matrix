@@ -1,0 +1,1024 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Spellskite",
+  "fixtures": {
+    "Bolt": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Bolt deals 3 damage to any target.",
+        "targets": [
+          {
+            "anyOf": [
+              {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ]
+              },
+              {
+                "what": "permanent",
+                "types": [
+                  "Planeswalker"
+                ]
+              },
+              {
+                "what": "player"
+              }
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 3,
+            "targets": {
+              "target": 0
+            },
+            "who": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Spark": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Spark deals 1 damage to target player.",
+        "targets": [
+          {
+            "what": "player"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 1,
+            "who": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Pinger": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Shaman"
+      ],
+      "manaCost": "{C}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "a0",
+          "kind": "activated",
+          "text": "{T}: This creature deals 1 damage to any target.",
+          "cost": [
+            {
+              "atom": "{T}"
+            }
+          ],
+          "targets": [
+            {
+              "anyOf": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ]
+                },
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Planeswalker"
+                  ]
+                },
+                {
+                  "what": "player"
+                }
+              ]
+            }
+          ],
+          "effects": [
+            {
+              "effect": "dealDamage",
+              "amount": 1,
+              "targets": {
+                "target": 0
+              },
+              "who": {
+                "target": 0
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "Twinbolt": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Shaman"
+      ],
+      "manaCost": "{C}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "a0",
+          "kind": "activated",
+          "text": "{T}: This creature deals 1 damage to any target and 1 damage to another target.",
+          "cost": [
+            {
+              "atom": "{T}"
+            }
+          ],
+          "targets": [
+            {
+              "anyOf": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ]
+                },
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Planeswalker"
+                  ]
+                },
+                {
+                  "what": "player"
+                }
+              ]
+            },
+            {
+              "anyOf": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ]
+                },
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Planeswalker"
+                  ]
+                },
+                {
+                  "what": "player"
+                }
+              ],
+              "distinctFrom": [
+                0
+              ]
+            }
+          ],
+          "effects": [
+            {
+              "effect": "dealDamage",
+              "amount": 1,
+              "targets": {
+                "target": 0
+              },
+              "who": {
+                "target": 0
+              }
+            },
+            {
+              "effect": "dealDamage",
+              "amount": 1,
+              "targets": {
+                "target": 1
+              },
+              "who": {
+                "target": 1
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Doom": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Maya's Bolt at Rob, changed to the Spellskite for {U}: the 0/4 takes it",
+      "at": {
+        "turn": 2,
+        "phase": "MAIN1"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Spellskite",
+            "Island"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "cast": "Bolt",
+          "seat": 1,
+          "targets": [
+            {
+              "player": 0
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "activate": "Spellskite",
+          "seat": 0,
+          "targets": [
+            {
+              "card": "Bolt"
+            }
+          ]
+        },
+        {
+          "choose": [
+            "{U}"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 2
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Spellskite",
+            "Island"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bolt"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "{U/P} paid with 2 life, and an ability changed: the Pinger's 1 damage to the Spellskite",
+      "at": {
+        "turn": 2,
+        "phase": "MAIN1"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Spellskite"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Pinger"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Pinger",
+          "seat": 1,
+          "targets": [
+            {
+              "player": 0
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "activate": "Spellskite",
+          "seat": 0,
+          "targets": [
+            {
+              "ability": "Pinger"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 38
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "A spell that can't target it -- Spark, at a player -- is unchanged: Rob takes the 1",
+      "at": {
+        "turn": 2,
+        "phase": "MAIN1"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Spellskite",
+            "Island"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Spark"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "cast": "Spark",
+          "seat": 1,
+          "targets": [
+            {
+              "player": 0
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "activate": "Spellskite",
+          "seat": 0,
+          "targets": [
+            {
+              "card": "Spark"
+            }
+          ]
+        },
+        {
+          "choose": [
+            "{U}"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 39
+        }
+      ]
+    },
+    {
+      "name": "Two targets it could be: Rob chooses which -- Twinbolt's second, his Bear, becomes the Spellskite",
+      "at": {
+        "turn": 2,
+        "phase": "MAIN1"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Spellskite",
+            "Island",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Twinbolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Twinbolt",
+          "seat": 1,
+          "targets": [
+            {
+              "player": 0
+            },
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "activate": "Spellskite",
+          "seat": 0,
+          "targets": [
+            {
+              "ability": "Twinbolt"
+            }
+          ]
+        },
+        {
+          "choose": [
+            "{U}"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Its first target, Rob",
+                  "Its second target, Bear"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Its second target, Bear"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Spellskite",
+            "Island",
+            "Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "\"Another target\": Twinbolt at Rob and the Spellskite -- its first can't become the Spellskite too, so nothing changes",
+      "at": {
+        "turn": 2,
+        "phase": "MAIN1"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Spellskite",
+            "Island"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Twinbolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Twinbolt",
+          "seat": 1,
+          "targets": [
+            {
+              "player": 0
+            },
+            {
+              "card": "Spellskite"
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "activate": "Spellskite",
+          "seat": 0,
+          "targets": [
+            {
+              "ability": "Twinbolt"
+            }
+          ]
+        },
+        {
+          "choose": [
+            "{U}"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 2
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Spellskite",
+            "Island"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "And the other way: Twinbolt at the Spellskite and then Rob -- its second can't become the Spellskite either",
+      "at": {
+        "turn": 2,
+        "phase": "MAIN1"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Spellskite",
+            "Island"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Twinbolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Twinbolt",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Spellskite"
+            },
+            {
+              "player": 0
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "activate": "Spellskite",
+          "seat": 0,
+          "targets": [
+            {
+              "ability": "Twinbolt"
+            }
+          ]
+        },
+        {
+          "choose": [
+            "{U}"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 2
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Spellskite",
+            "Island"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Destroyed in response, the Spellskite is no longer there to be the target: the Bolt still hits Rob",
+      "at": {
+        "turn": 2,
+        "phase": "MAIN1"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Spellskite",
+            "Island"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bolt",
+            "Doom"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "cast": "Bolt",
+          "seat": 1,
+          "targets": [
+            {
+              "player": 0
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "activate": "Spellskite",
+          "seat": 0,
+          "targets": [
+            {
+              "card": "Bolt"
+            }
+          ]
+        },
+        {
+          "choose": [
+            "{U}"
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Swamp",
+          "seat": 1
+        },
+        {
+          "cast": "Doom",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Spellskite"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 37
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Spellskite"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Already its target: Maya's Bolt at the Spellskite stays at it, nobody asked",
+      "at": {
+        "turn": 2,
+        "phase": "MAIN1"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Spellskite",
+            "Island"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "cast": "Bolt",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Spellskite"
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "activate": "Spellskite",
+          "seat": 0,
+          "targets": [
+            {
+              "card": "Bolt"
+            }
+          ]
+        },
+        {
+          "choose": [
+            "{U}"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 2
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Spellskite",
+            "Island"
+          ]
+        }
+      ]
+    }
+  ]
+}

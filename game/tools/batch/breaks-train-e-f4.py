@@ -70,7 +70,7 @@ BREAKS = [
     ('replicate: its mana paid', ACTIONS,
      'Array.from({length: MULTIKICK_MOST + 1}, (_, k) => ({...v, mana: v.mana + (atom.cost ?? "").repeat(k), replicated: k})));',
      'Array.from({length: MULTIKICK_MOST + 1}, (_, k) => ({...v, mana: v.mana, replicated: k})));'),
-    ('replicate: the offer says how many times', ACTIONS, '        ...(variant.replicated ? {replicated: variant.replicated} : {}),\n', ''),
+    ('replicate: the offer says how many times', ACTIONS, '        ...(variant.replicated ? {replicated: variant.replicated} : {}), ...(gift', '        ...(gift'),
     ('replicate: no action claims more copies', ACTIONS, '  && (a.replicated ?? 0) === (b.replicated ?? 0)\n', ''),
     ('replicate: its trigger', ACTIONS, '    if (action.replicated > 0) {\n      (state.pendingTriggers ??= []).push({abilityId: "replicate"',
      '    if (false) {\n      (state.pendingTriggers ??= []).push({abilityId: "replicate"'),
@@ -93,7 +93,7 @@ BREAKS = [
     ('forEach: permanents', SCHEMA, FOR_EACH, FOR_EACH.replace('\n      && (Array.isArray(selector.anyOf) ? selector.anyOf : [selector]).every((one) => (one?.what ?? "permanent") === "permanent")', '')),
 
     # Hapatra: the greatest mana value among cards (script/amount.mjs).
-    ('greatestManaValue: a kind', AMOUNT, '  "greatestManaValue"]);', '  ]);'),
+    ('greatestManaValue: a kind', AMOUNT, '  "greatestManaValue",\n', ''),
     ('greatestManaValue: its selector held to the grammar', AMOUNT, '"planeswalkerTypesAmong", "fewestAmongPlayers", "greatestManaValue"]) {',
      '"planeswalkerTypesAmong", "fewestAmongPlayers"]) {'),
     ('greatestManaValue: counted', AMOUNT, '  } else if ("greatestManaValue" in value) {\n', '  } else if (false) {\n'),

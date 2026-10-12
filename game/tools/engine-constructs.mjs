@@ -23,6 +23,14 @@ import {TRIGGER_KINDS} from "../engine/cards/index.mjs";
 export const FORGE_API = {
   ChangeZone: "moveZone", ChangeZoneAll: "moveZoneAll", Draw: "draw", Discard: "discard",
   Mill: "mill", Shuffle: "shuffle", Dig: "dig", Surveil: "surveil", Scry: "scry",
+  /* RearrangeTopOfLibrary ("look at the top three cards of your library, then put them back in any order": Ponder, Sensei's
+     Divining Top, Halimar Depths; wave 4b): rearrangeTop, the looker's order of them. */
+  RearrangeTopOfLibrary: "rearrangeTop",
+  /* ChangeTargets (CR 115.7; wave 4b): changeTargets in the pool's three forms -- "change the target of target spell or ability
+     with a single target" (Bolt Bend, Untimely Malfunction; batch 65), "you may choose new targets for target spell or
+     ability" (Deflecting Swat, Wild Ricochet; `may`), and "change a target of target spell or ability to this creature"
+     (Spellskite, Hydroelectric Specimen; `to: "self"`). Named, not built: a new target chosen at random (Grip of Chaos). */
+  ChangeTargets: "changeTargets",
   PeekAndReveal: "peekAndReveal", Sacrifice: "sacrifice", SacrificeAll: "sacrificeAll",
   Destroy: "destroy", DestroyAll: "destroyAll", Regenerate: "regenerate", ExileUntil: "exileUntil", ReturnToHand: "returnToHand",
   Play: "play", Discover: "discover",
@@ -94,6 +102,10 @@ export const FORGE_TRIGGER = {
   Always: "state",
   /* "Whenever this creature transforms into ..." (Train C, w2c-hands-triggers; CR 701.27e). */
   Transformed: "transformed",
+  /* Magecraft, "whenever you cast or copy an instant or sorcery spell" (Archmage Emeritus, Storm-Kiln Artist; wave 4b): the
+     engine's "spell cast" with `orCopy` -- a copy an effect of yours puts on the stack too, once for each (CR 707.10;
+     rules/trigger.mjs). Every one of the pool's cards says it this way. */
+  SpellCastOrCopy: "spell cast",
 };
 
 /* Forge static and replacement modes the engine can execute today. `Continuous` is an anthem or a
@@ -195,7 +207,16 @@ export const DECK_RULE_KEYWORDS = {Partner: "room/table.mjs", "Choose a Backgrou
      an alternative cost offered beside the mana cost (rules/actions.mjs), the spell then with no targets (702.96b) and the
      effects its card writes for "each" (702.96c; cards/index.mjs compiles the keyword). Built for Winds of Abandon and
      credited with Mizzix's Mastery (Train B, X11), whose overloaded copies are cast one by one; no new code for the keyword. */
-export const CAST_RULE_KEYWORDS = {AlternateAdditionalCost: "rules/actions.mjs", ETBReplacement: "rules/replacement.mjs", Overload: "rules/actions.mjs"};
+/* Gift (CR 702.174; Dawn's Truce, wave 4b) -- "as an additional cost to cast this spell, you may choose an opponent": an offer for
+     each opponent beside the cast that promises nothing (rules/actions.mjs), and what the chosen player gets -- a card, a Food,
+     a tapped Fish, an extra turn, a Treasure or an Octopus -- an instant's or sorcery's first, a permanent's as it enters
+     (cards/index.mjs, GIFTS).
+   MayEffectFromOpeningHand (CR 103.6; Gemstone Caverns, wave 4b) -- an opening hand's actions once the mulligans are done:
+     revealing a card for a delayed trigger (103.6b, Chancellor of the Forge), or beginning the game with it on the battlefield,
+     its counters on it (103.6a), not the starting player's to take when it says so, and then a card exiled from the hand
+     (rules/mulligan.mjs). */
+export const CAST_RULE_KEYWORDS = {AlternateAdditionalCost: "rules/actions.mjs", ETBReplacement: "rules/replacement.mjs", Overload: "rules/actions.mjs",
+  Gift: "rules/actions.mjs", MayEffectFromOpeningHand: "rules/mulligan.mjs"};
 
 export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: "chooseCard", Enchant: "attach",
   /* Hideaway (Train B, CR 702.75a): dig links a face-down exile, shuffles the rest to the bottom,
@@ -237,6 +258,15 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
      speed, a token copy of it that is white, a Zombie besides its other types, and has no mana cost (cards/index.mjs;
      effects/permanents.mjs, copiable's `noManaCost`). */
   Embalm: "copyPermanent",
+  /* Eternalize (CR 702.129a; Fanatic of Rhonas, wave 4b): embalm's graveyard ability, the token copy black, 4/4, a Zombie
+     besides its other types, with no mana cost (cards/index.mjs). */
+  Eternalize: "copyPermanent",
+  /* Exalted (CR 702.83a; Ignoble Hierarch, wave 4b): the trigger as a creature its controller controls attacks alone, +1/+1
+     until end of turn (cards/index.mjs; rules/trigger.mjs's `alone`). */
+  Exalted: "pump",
+  /* Extort (CR 702.101a; Crypt Ghast, wave 4b): the cast trigger, "you may pay {W/B}" as it resolves, each opponent's life lost
+     and that much gained (cards/index.mjs; effects/asking.mjs, unlessPays's `mana`). */
+  Extort: "unlessPays",
   /* Echo (CR 702.30a; Karmic Guide, AI 1's deck): the upkeep trigger, its intervening "if" (came under your control since
      your last upkeep, script/condition.mjs), and "sacrifice it unless you pay" a mana cost with its colors (cards/index.mjs,
      effects/asking.mjs). */
@@ -416,10 +446,13 @@ export const FORGE_COUNTS = Object.freeze({
   DamageAmount: {name: "Damage dealt", status: "built", engine: "{damageDealt: true}: the damage a damage trigger is about, all of an action's together"},
   /* Train C, p4-replacements: the number a counter replacement changes ("that many plus one", "twice that many"). */
   CounterNum: {name: "That many counters (the number of counters a replacement changes)", status: "built", engine: "more-counters' times, plus and half (rules/statics.mjs, placeCounters)"},
-  AttackersDeclared: {name: "Attackers declared", status: "missing"},
+  /* Wave 4b (Minas Tirith): "if you attacked with two or more creatures this turn" -- each creature a player declared as an
+     attacker this turn, once, kept as they are declared (rules/combat.mjs). Its one form, built. */
+  AttackersDeclared: {name: "Attackers declared", status: "built", engine: "amount {creaturesAttackedWithThisTurn: \"you\" | \"that player\"} (rules/combat.mjs keeps them)"},
   TimesKicked: {name: "Times kicked", status: "missing"},
   Kicked: {name: "Whether it was kicked", status: "missing"},
-  PromisedGift: {name: "A gift promised", status: "missing"},
+  /* Wave 4b (Dawn's Truce): "if the gift was promised" (CR 702.174b, 702.174k). */
+  PromisedGift: {name: "A gift promised", status: "built", engine: "condition {giftPromised} (script/condition.mjs): the spell's gift, a copy's, or the permanent's it became (rules/stack.mjs)"},
   /* Train D (Ezuri, Claw of Progress): "the number of experience counters you have" -- a player's own counters, counted (CR
      122.1); "you get an experience counter" is putCounter's `who` (effects/resources.mjs). */
   YourCountersExperience: {name: "Your experience counters", status: "built", engine: "amount {countersOn: \"you\", counter: \"experience\"} (script/amount.mjs); putCounter's who gives them"},

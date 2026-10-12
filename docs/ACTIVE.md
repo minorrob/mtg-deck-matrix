@@ -54,8 +54,9 @@ refused of the concept, and the passes to come: `docs/ui-lane/plan-play-ui-2026-
 - **Assumed, not proved:** the flights and the turn's light are seen in the fixture (`tools/board-fixture.mjs`) and not
   yet held by a suite; the side seats' boards at 1280×720 are legible as presence, not to read.
 - **Asked of the engine lane:** Requests rows 2 to 6 above.
-- **Outstanding:** the merge of #725 waits on `tests/advisor.mjs`, red on `main` since 2026-10-12T11:59Z by its own clock
-  (Requests row 7, the engine lane's); then the staging release, Rob's review, and pass 2 (`plan-play-ui-2026-10-12.md` §4).
+- **Outstanding:** the merge of #725 on a green run of its head (the advisor suite's clock, Requests row 7, was fixed on
+  `main` in c629f8c and is merged into the branch); then the staging release, Rob's review, and pass 2
+  (`plan-play-ui-2026-10-12.md` §4).
   The suites this pass touches are green on its head: a11y-board 288, table-board 281, table-lobby 89, board-callouts 33,
   settings-r3 63, board-choices 40, coach 60, design-tokens 91; the 19 breaks all caught.
 
@@ -66,7 +67,7 @@ usage for this").
 - **Wave 1, merged #719** (main 0b9de9a8), on staging (b1369b4b3bf3): 44 cards. With them came:
   - warp, void and sneak;
   - explore and the Map token.
-- **Wave 2, in this branch:** 63 cards from four workers.
+- **Wave 2, merged #720:** 63 cards from four workers.
   - Engine pieces:
     - morph;
     - behold-and-exile;
@@ -78,7 +79,7 @@ usage for this").
   - Fixed: whether a first-strike damage step happens is now decided as combat damage begins, not at blocks (CR 510.4).
     A creature given first strike after blocks used to deal no combat damage.
   - Waiting: Extrapolate the Impossible, which needs cards from outside the game (CR 400.11).
-- **Wave 3, in this branch:** 63 cards from four workers, the last of Rob's library.
+- **Wave 3, merged #721:** 63 cards from four workers, the last of Rob's library.
   - Engine pieces:
     - Narset's "can't draw more than one card each turn" (CR 121.2b);
     - a modal "you may choose the same mode more than once" (700.2d);
@@ -91,7 +92,7 @@ usage for this").
     - "you may choose new targets";
     - no maximum hand size for the rest of the game.
   - A second worker made wave 2's CR 510.4 fix independently; wave 2's was kept.
-- **The monarch** (CR 725), in this branch:
+- **The monarch** (CR 725), merged #721:
   - one monarch at a time, with its two inherent triggers;
   - a monarch who leaves passes it on (725.4);
   - `becomeMonarch`, and `monarch: "you"`;
@@ -101,7 +102,7 @@ usage for this").
   Crowned now play.
 - **Rob's library, after waves 1 to 3:** 1,216 of his v43 library's 1,217 cards play (`tableCards`). The one left is Extrapolate the Impossible,
   which needs cards from outside the game (CR 400.11).
-- **Wave 4a, in this branch:** four constructs, and 72 of the most-played Commander cards they unlock. The 80% set goes
+- **Wave 4a, merged #722** (main 494bf0f4), on staging (5153cc15): four constructs, and 72 of the most-played Commander cards they unlock. The 80% set goes
   from 1,275 defined to 1,347, and from 2,661 with every rule to 2,743.
   - "You may play that card" from another zone: 17 cards. Valgavoth waits on a replacement on every route to a
     graveyard.
@@ -112,12 +113,28 @@ usage for this").
   None of the four constructs is credited in full. Each lane names the forms still missing.
 - **Every break anchors once again.** Later merges had moved the anchors of 37 breaks across 15 files, so those breaks
   no longer broke anything. Each was re-anchored on the code it was written for and proved caught; 1,098 breaks
-  checked.
+  checked. Wave 4b's merges moved 23 more, in 10 files: each re-anchored and proved caught the same way. Every one of
+  the 1,368 breaks in the 40 files now finds its code exactly once.
 - **The plan, reordered** (`docs/engine/plan-coverage-90.md`):
   - 1,396 of the 80% set's undefined cards already have every rule, so the most-played cards come first, each wave
     building the small constructs its cards need.
-  - Wave 4b is running: the 120 most-played cards the table can't play yet (ranks 23 to 500), Cyclonic Rift, Toxic
-    Deluge, Swan Song, Teferi's Protection and The One Ring among them.
+- **Wave 4b, in this branch:** 112 of the 120 most-played cards the table couldn't play (ranks 23 to 500), and three
+  more that prove its constructs. Four lanes, each building the constructs its cards needed:
+  - j1, 26 cards: an Aura on a graveyard card (Animate Dead), a land given a basic land type taps for its mana
+    (CR 305.6), protection from colors over the creatures a spell named (Akroma's Will), "if you cast it".
+  - j2, 31 cards: changing targets to this creature (Spellskite), the top of a library put back in any order
+    (`rearrangeTop`), "whenever you cast or copy" (magecraft), the amount a delayed trigger remembers (Mana Drain).
+  - j3, 30 cards: exalted, extort, eternalize, gift, an opening hand's card beginning on the battlefield (CR 103.6a),
+    base power.
+  - j4, 28 cards: "can't be activated" (Grand Abolisher), a cost raised for what a spell targets (Terror of the Peaks),
+    X paid in life (Toxic Deluge), imprint, the creatures attacked with this turn (Minas Tirith).
+  - Three lanes each built CR 305.6 on its own. One is kept (`intrinsicMana`, rules/layers.mjs, layer 4), only for a
+    land, and gives each type's ability once.
+  - Not defined, each waiting on another family: Sylvan Library, Arena of Glory, Mosswort Bridge, Six, Ragavan, Dauthi
+    Voidwalker, Birgi and Emry.
+  - The 80% set: 1,462 defined (from 1,347), 2,780 with every rule. The 90% set: 1,605 of 5,869 defined (from 1,411).
+    The defined cards now cover 60.3% of all card appearances (52.0% when the plan was written).
+  - Breaks: j1 33, j2 45, j3 111, j4 81, each caught.
 - **Open, for later waves:**
   - In a two-player game the starting player skips the draw step's draw, not the step itself (CR 103.8a). Its
     beginning triggers still fire on turn 1.

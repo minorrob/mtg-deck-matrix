@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Avacyn's Pilgrim",
+    "oracleId": "069f6530-e65c-4d52-85f3-e0a2acd148c5",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Monk"
+    ],
+    "manaCost": "{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "{T}: Add {W}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {W}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "W": 1
+          }
+        }
+      ]
+    }
+  ]
+}

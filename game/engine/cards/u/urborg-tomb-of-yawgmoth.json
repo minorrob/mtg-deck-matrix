@@ -1,0 +1,39 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Urborg, Tomb of Yawgmoth",
+    "oracleId": "db6174d7-211d-4817-b8e4-8384594c83f9",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each land is a Swamp in addition to its other land types.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Each land is a Swamp in addition to its other land types.",
+      "layer": 4,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Land"
+        ]
+      },
+      "apply": {
+        "addSubtypes": [
+          "Swamp"
+        ]
+      }
+    }
+  ]
+}

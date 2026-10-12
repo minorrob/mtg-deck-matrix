@@ -58,6 +58,8 @@ export const SELECTOR_KEYS = Object.freeze([
   "otherThan", "sharesCreatureTypeWith",
   /* "Each equipped creature" (Hemlock Vial). */
   "equipped",
+  /* "Each with power greater than its base power" (Kutzil, Malamet Exemplar; CR 208.4b). */
+  "powerAboveBase",
   /* "If this creature isn't prepared" (Paradox Shaper // Omit Variables; CR 722.3): the prepared designation. */
   "prepared",
   /* "Target attacking or blocking creature" (Gideon's Memorial): declared as a blocker in this combat (CR 509.1g). */
@@ -207,6 +209,7 @@ function assertGrammar(selector) {
   for (const key of ["otherThan", "sharesCreatureTypeWith"])
     if (selector[key] !== undefined && selector[key] !== "that card") throw new Error(`A selector's ${key} is "that card": the object a trigger is about`);
   if (selector.equipped !== undefined && selector.equipped !== true) throw new Error("A selector's equipped is true: an Equipment is attached to it");
+  if (selector.powerAboveBase !== undefined && selector.powerAboveBase !== true) throw new Error("A selector's powerAboveBase is true: its power greater than its base power");
   if (selector.prepared !== undefined && typeof selector.prepared !== "boolean") throw new Error("A selector's prepared is true or false: whether the permanent is prepared (CR 722.3)");
   /* "With power less than this creature's power" (mentor, CR 702.134a): `power.lessThan` "self". */
   if (selector.power?.lessThan !== undefined && selector.power.lessThan !== "self") throw new Error("A selector's power.lessThan is \"self\": less than its source's power");
@@ -233,9 +236,11 @@ export function shareCreatureType(state, ids) {
 }
 
 /* A player with hexproof (CR 702.11c): a permanent of theirs with the static "you have hexproof" (rules/statics.mjs), as its
-   abilities are after layer 6 (CR 613.1f). */
+   abilities are after layer 6 (CR 613.1f) -- or an effect giving it them for a while, "you gain hexproof until end of turn"
+   (Dawn's Truce; effects/permanents.mjs, effectUntil's `players`). */
 const playerHasHexproof = (state, player) => { const held = staticAbilities(state); return state.zones.battlefield.some((id) => controllerOf(state, id) === player
-  && held(id).some((a) => a.kind === "static" && a.rule === "player-hexproof")); };
+  && held(id).some((a) => a.kind === "static" && a.rule === "player-hexproof"))
+  || (state.effects ?? []).some((e) => e.rule === "player-hexproof" && (e.players ?? []).includes(player)); };
 
 /* CR 115.2, and the difference between the two keywords is the part worth getting right:
    hexproof stops opponents only (CR 702.11b); shroud stops everybody, its controller included. */
@@ -458,6 +463,13 @@ export function compileSelector(selector) {
     }
     /* "With toughness greater than its power" (Bedrock Tortoise), through the layers. */
     if (selector.toughnessOverPower === true) { const c = characteristicsOf(state, id); if (!((c.toughness ?? 0) > (c.power ?? 0))) return false; }
+    /* "Each with power greater than its base power" (Kutzil, Malamet Exemplar; CR 208.4b): through the layers, its power against
+       what layer 7's first two sublayers made it (rules/layers.mjs, `basePower`). Off the battlefield, a card's printed power
+       is its base. */
+    if (selector.powerAboveBase === true) {
+      const c = object.zone === "battlefield" ? characteristicsOf(state, id) : {power: object.power, basePower: object.power};
+      if (!((c.power ?? 0) > (c.basePower ?? 0))) return false;
+    }
     /* "Each equipped creature" (Hemlock Vial; CR 301.5a): an Equipment attached to it -- an Aura is not one -- and still there:
        one that has left the battlefield is a new object, the old one gone (CR 400.7). */
     if (selector.equipped === true && !(object.attachments ?? []).some((other) => state.objects[other] && subtypesOf(state, other).includes("Equipment"))) return false;

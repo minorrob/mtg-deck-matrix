@@ -1,0 +1,306 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Sink into Stupor // Soporific Springs",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Relic": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{2}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Maya's Bear to her hand; Rob's own Relic and Maya's Forest are no target",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes",
+            "Relic"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sink into Stupor // Soporific Springs"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Sink into Stupor"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Bear"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Sink into Stupor",
+          "targets": [
+            {
+              "card": "Bear",
+              "seat": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Sink into Stupor"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Maya's Bear spell on the stack, returned to her hand -- it never resolves",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sink into Stupor // Soporific Springs"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Bear",
+          "seat": 1
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "cast": "Sink into Stupor",
+          "seat": 0,
+          "targets": [
+            {
+              "card": "Bear",
+              "seat": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bear",
+            "Wastes"
+          ]
+        },
+        {
+          "stack": 0
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Forest",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Played as Soporific Springs, paying 3 life: untapped, and it adds {U}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sink into Stupor // Soporific Springs"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Soporific Springs"
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Pay 3 life: Soporific Springs enters untapped",
+                  "Don't pay: Soporific Springs enters tapped"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "answer": [
+            0
+          ]
+        },
+        {
+          "tap": "Soporific Springs"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 37
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "U": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Played as Soporific Springs without paying: tapped, no life lost",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sink into Stupor // Soporific Springs"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Soporific Springs"
+        },
+        {
+          "answer": [
+            1
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "tapped": "Soporific Springs"
+        }
+      ]
+    }
+  ]
+}

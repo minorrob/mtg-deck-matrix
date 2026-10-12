@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rise of the Dark Realms",
+    "oracleId": "e5223a09-f732-4747-8914-e6546ab0ef4c",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{7}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Put all creature cards from all graveyards onto the battlefield under your control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Put all creature cards from all graveyards onto the battlefield under your control.",
+      "effects": [
+        {
+          "effect": "moveZoneAll",
+          "selector": {
+            "what": "card",
+            "zone": "graveyard",
+            "types": [
+              "Creature"
+            ]
+          },
+          "to": "battlefield",
+          "controller": "you"
+        }
+      ]
+    }
+  ]
+}

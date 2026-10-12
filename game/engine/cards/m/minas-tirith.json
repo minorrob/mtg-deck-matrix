@@ -1,0 +1,92 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Minas Tirith",
+    "oracleId": "7b0d7e62-0287-454a-8702-b0bfa7b41245",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Minas Tirith enters tapped unless you control a legendary creature.\n{T}: Add {W}.\n{1}{W}, {T}: Draw a card. Activate only if you attacked with two or more creatures this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "Minas Tirith enters tapped unless you control a legendary creature.",
+      "watches": {
+        "event": "enters",
+        "who": "self",
+        "unless": {
+          "controls": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "supertypes": [
+              "Legendary"
+            ]
+          }
+        }
+      },
+      "change": {
+        "entersTapped": true
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {W}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "W": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{1}{W}, {T}: Draw a card. Activate only if you attacked with two or more creatures this turn.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{W}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "creaturesAttackedWithThisTurn": "you"
+          },
+          "atLeast": 2
+        }
+      }
+    }
+  ]
+}

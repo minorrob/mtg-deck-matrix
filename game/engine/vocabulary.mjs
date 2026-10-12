@@ -63,6 +63,8 @@ export const PRIMITIVES = Object.freeze({
     "moveZone", "moveZoneAll", "draw", "discard", "mill", "shuffle", "dig", "surveil", "scry",
     "peekAndReveal", "sacrifice", "sacrificeAll", "destroy", "destroyAll", "exileUntil",
     "returnToHand", "play", "mayPlay", "discover", "digUntil", "manifest", "explore",
+    /* Wave 4b: the top of a library looked at and put back in any order (Forge's RearrangeTopOfLibrary; Ponder). */
+    "rearrangeTop",
   ]),
   mana: Object.freeze([
     "addMana", "addManaReflected", "tap", "untap", "untapAll", "costReduction", "alternativeCost",
@@ -216,7 +218,10 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
      copying the spell for each (cards/index.mjs, rules/actions.mjs). */
   "replicate",
   /* Wave 4a: shadow (CR 702.28), a keyword counter's (Minas Morgul, Dark Fortress; CR 122.1b; keywords/combat.mjs). */
-  "shadow"];
+  "shadow",
+  /* Wave 4b: exalted (CR 702.83) and extort (CR 702.101), triggered abilities; eternalize (CR 702.129), embalm's 4/4 black
+     copy; gift (CR 702.174), an optional additional cost choosing an opponent (cards/index.mjs, rules/actions.mjs). */
+  "exalted", "extort", "eternalize", "gift"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

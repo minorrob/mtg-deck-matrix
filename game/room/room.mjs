@@ -293,6 +293,8 @@ export function offerDetails(state, seat, actions) {
     if (a.free) parts.push("without paying its mana cost");
     /* An additional cost's mana, beside its other choice ("blight 1 or pay {3}"). */
     if (a.extraMana) parts.push(`paying ${a.extraMana} more`);
+    /* A gift promised (CR 702.174a): to whom, the caster's choice of opponent. */
+    if (a.gift !== undefined) parts.push(`promising ${player(a.gift)} a gift`);
     /* Tapped for as it is cast (the board's one click): the sources, or that the caster picks them. */
     if (a.autoTap) {
       const ways = castTapPlans(state, seat, a, 2);

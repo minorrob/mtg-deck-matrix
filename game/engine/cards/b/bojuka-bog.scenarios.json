@@ -1,0 +1,251 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Bojuka Bog",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Played: it enters tapped, and Maya's graveyard is exiled -- Rob's is left",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bojuka Bog"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Bojuka Bog"
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Rob",
+                  "Maya"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Maya"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Bojuka Bog"
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "count": 0
+        },
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": [
+            "Bear",
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Any player: aimed at Rob himself, his own graveyard goes",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bojuka Bog"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Bojuka Bog"
+        },
+        {
+          "choose": [
+            "Rob"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "An empty graveyard is still a player to aim at: nothing is exiled",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bojuka Bog"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Bojuka Bog"
+        },
+        {
+          "choose": [
+            "Maya"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "exile",
+          "count": 0
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "Untapped, it taps for {B}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bojuka Bog"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Bojuka Bog"
+              },
+              "count": 1,
+              "mana": [
+                {
+                  "B": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Bojuka Bog"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "B": 1
+          }
+        }
+      ]
+    }
+  ]
+}

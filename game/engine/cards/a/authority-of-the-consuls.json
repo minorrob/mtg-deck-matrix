@@ -1,0 +1,60 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Authority of the Consuls",
+    "oracleId": "55f3c721-e13a-406e-bc8e-d6cdc91ac477",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Creatures your opponents control enter tapped.\nWhenever a creature an opponent controls enters, you gain 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "Creatures your opponents control enter tapped.",
+      "watches": {
+        "event": "enters",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "opponent"
+        }
+      },
+      "change": {
+        "entersTapped": true
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a creature an opponent controls enters, you gain 1 life.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "opponent"
+        }
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

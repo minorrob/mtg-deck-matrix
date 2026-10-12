@@ -1,0 +1,137 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Golgari Rot Farm",
+  "scenarios": [
+    {
+      "name": "Played: tapped, and Rob chooses which land to return -- the Forest, not the Swamp",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Golgari Rot Farm"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Golgari Rot Farm"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Forest",
+                  "Swamp",
+                  "Golgari Rot Farm"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Forest"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Golgari Rot Farm"
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Swamp",
+            "Golgari Rot Farm"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "His only land: it returns itself",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Golgari Rot Farm"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Golgari Rot Farm"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Golgari Rot Farm"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Golgari Rot Farm"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": []
+        }
+      ]
+    },
+    {
+      "name": "{T}: {B}{G}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Golgari Rot Farm"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Golgari Rot Farm"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "B": 1,
+            "G": 1
+          }
+        }
+      ]
+    }
+  ]
+}

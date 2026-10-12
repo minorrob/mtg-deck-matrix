@@ -1,0 +1,351 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Boseiju, Who Endures",
+  "fixtures": {
+    "Hero": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human"
+      ],
+      "manaCost": "{2}",
+      "colors": [],
+      "power": 2,
+      "toughness": 2,
+      "supertypes": [
+        "Legendary"
+      ]
+    },
+    "Bauble": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Channel for {1}{G}: Maya's Bauble destroyed, and she finds a land with a basic land type -- Watery Grave is one",
+      "library": [
+        "Wastes",
+        "Forest",
+        "Watery Grave"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Boseiju, Who Endures"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bauble"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Boseiju, Who Endures",
+          "targets": [
+            {
+              "card": "Bauble"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 1,
+                "options": [
+                  "Forest",
+                  "Watery Grave"
+                ],
+                "min": 0
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Forest"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bauble"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 1,
+          "tapped": "Forest",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Boseiju, Who Endures"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "library",
+          "count": 19
+        }
+      ]
+    },
+    {
+      "name": "Only what an opponent controls, and no basic land: Maya's Watery Grave and Bauble, not her Forest nor Rob's own",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Boseiju, Who Endures"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Arcane Signet"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Watery Grave",
+            "Bauble"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Boseiju, Who Endures"
+          },
+          "count": 2
+        }
+      ]
+    },
+    {
+      "name": "A nonbasic land destroyed; \"may\" -- Maya declines to search, and nothing enters",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Boseiju, Who Endures"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Watery Grave"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Boseiju, Who Endures",
+          "targets": [
+            {
+              "card": "Watery Grave"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": []
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Watery Grave"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": []
+        },
+        {
+          "seat": 1,
+          "zone": "library",
+          "count": 20
+        }
+      ]
+    },
+    {
+      "name": "{1} less for a legendary creature Rob controls: Channel for {G} alone",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Boseiju, Who Endures"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Hero"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bauble"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "activate": "Boseiju, Who Endures",
+          "targets": [
+            {
+              "card": "Bauble"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": []
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bauble"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Boseiju, Who Endures"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "On the battlefield, {T}: {G} -- and channel is an ability of the card in hand only",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Boseiju, Who Endures"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bauble"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Boseiju, Who Endures"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "tap": "Boseiju, Who Endures"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,121 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Finale of Devastation",
+    "oracleId": "69872a9a-fe54-4e58-940c-89395af71acd",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{X}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Search your library and/or graveyard for a creature card with mana value X or less and put it onto the battlefield. If you search your library this way, shuffle. If X is 10 or more, creatures you control get +X/+X and gain haste until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Search your library and/or graveyard for a creature card with mana value X or less and put it onto the battlefield. If you search your library this way, shuffle. If X is 10 or more, creatures you control get +X/+X and gain haste until end of turn.",
+      "effects": [
+        {
+          "effect": "modal",
+          "title": "Search your library and/or graveyard",
+          "modes": [
+            {
+              "text": "Search your library and your graveyard",
+              "effects": [
+                {
+                  "effect": "chooseCard",
+                  "zones": [
+                    "library",
+                    "graveyard"
+                  ],
+                  "selector": {
+                    "types": [
+                      "Creature"
+                    ],
+                    "manaValue": {
+                      "max": "X"
+                    }
+                  },
+                  "to": "battlefield"
+                }
+              ]
+            },
+            {
+              "text": "Search your library",
+              "effects": [
+                {
+                  "effect": "chooseCard",
+                  "zone": "library",
+                  "selector": {
+                    "types": [
+                      "Creature"
+                    ],
+                    "manaValue": {
+                      "max": "X"
+                    }
+                  },
+                  "to": "battlefield"
+                }
+              ]
+            },
+            {
+              "text": "Search your graveyard",
+              "effects": [
+                {
+                  "effect": "chooseCard",
+                  "zone": "graveyard",
+                  "selector": {
+                    "types": [
+                      "Creature"
+                    ],
+                    "manaValue": {
+                      "max": "X"
+                    }
+                  },
+                  "to": "battlefield"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "effect": "shuffle",
+          "condition": {
+            "searched": true
+          }
+        },
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "power": "X",
+          "toughness": "X",
+          "keywords": [
+            "Haste"
+          ],
+          "until": "end-of-turn",
+          "condition": {
+            "compare": {
+              "count": "X",
+              "atLeast": 10
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

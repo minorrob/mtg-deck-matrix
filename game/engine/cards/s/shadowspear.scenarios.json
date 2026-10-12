@@ -1,0 +1,606 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Shadowspear",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Doom": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Shrouded Beast": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Beast"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2,
+      "keywords": [
+        "Hexproof"
+      ]
+    },
+    "Stalwart": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Golem"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 2,
+      "toughness": 2,
+      "keywords": [
+        "Indestructible"
+      ]
+    },
+    "Veil": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Target creature gains hexproof until end of turn.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "pump",
+            "targets": {
+              "target": 0
+            },
+            "power": 0,
+            "toughness": 0,
+            "keywords": [
+              "Hexproof"
+            ]
+          }
+        ]
+      }
+    },
+    "Wall": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Wall"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "power": 0,
+      "toughness": 4,
+      "keywords": [
+        "Defender"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Equipped for {2}: Rob's Bear is a 3/3 with trample and lifelink, and its attack gains him 3 life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Shadowspear",
+            "Bear",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Shadowspear",
+          "ability": "a3",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Bear",
+                "power": 3,
+                "toughness": 3
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Bear",
+                "has": [
+                  "Trample",
+                  "Lifelink"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "attack": [
+            "Bear"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 37
+        },
+        {
+          "seat": 0,
+          "life": 43
+        }
+      ]
+    },
+    {
+      "name": "Maya's hexproof Beast is no target for Rob's Doom",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Shadowspear",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Doom"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Shrouded Beast"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Doom"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "{1}: Maya's hexproof Beast loses hexproof -- Rob's Doom destroys it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Shadowspear",
+            "Wastes",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Doom"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Shrouded Beast"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Shadowspear",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "keywords": {
+                "card": "Shrouded Beast",
+                "lacks": [
+                  "Hexproof"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Doom",
+          "targets": [
+            {
+              "card": "Shrouded Beast"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Shrouded Beast"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "And indestructible: Maya's Stalwart is destroyed; Rob's own hexproof Beast keeps its hexproof",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Shadowspear",
+            "Wastes",
+            "Swamp",
+            "Shrouded Beast"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Doom"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Stalwart"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Shadowspear",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Doom",
+          "targets": [
+            {
+              "card": "Stalwart"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Stalwart"
+          ]
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Shrouded Beast",
+            "has": [
+              "Hexproof"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Until end of turn: on Maya's turn the Beast has hexproof again",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Shadowspear",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Shrouded Beast"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Shadowspear",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "keywords": {
+            "card": "Shrouded Beast",
+            "has": [
+              "Hexproof"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hexproof given after it resolves is had: Maya's Veil on her Wall in response to nothing, after -- the Wall has hexproof",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Shadowspear",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wall",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Veil"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Shadowspear",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "cast": "Veil",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Wall"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "keywords": {
+            "card": "Wall",
+            "has": [
+              "Hexproof"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hexproof given before it resolves is lost: Maya's Veil on her Wall, then Rob's {1}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Shadowspear",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wall",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Veil"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "cast": "Veil",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Wall"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "keywords": {
+                "card": "Wall",
+                "has": [
+                  "Hexproof"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "activate": "Shadowspear",
+          "seat": 0,
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "keywords": {
+            "card": "Wall",
+            "lacks": [
+              "Hexproof"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

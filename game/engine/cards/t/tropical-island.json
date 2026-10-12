@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tropical Island",
+    "oracleId": "74b7fe23-5d3a-4092-8d78-7c0eba8f6f73",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [
+      "Forest",
+      "Island"
+    ],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "({T}: Add {G} or {U}.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {G} or {U}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "G": 1
+            },
+            {
+              "U": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -131,8 +131,12 @@ function blockersAgainst(s, attacker) {
   const modal = (more = {}) => ({effect: "modal", choose: 1, chooseUpTo: 2, modes: [{text: "a", targets: [], effects: [{effect: "draw", count: 1}]}, {text: "b", targets: [], effects: [{effect: "gainLife", amount: 1}]}], ...more});
   ok(validateScript(script({kind: "spell", text: "Choose one or both --", effects: [modal()]})).valid, "a spell whose one effect is the modal may say \"one or both\"");
   ok(!validateScript(script({kind: "spell", text: "Choose one or both --", effects: [modal(), {effect: "draw", count: 1}]})).valid, "not with another effect beside it");
-  ok(!validateScript(script({kind: "triggered", text: "When this enters, choose one or both --", trigger: {on: "enters", who: "self"}, effects: [modal()]})).valid,
-    "nor on a triggered ability, where the modal is asked as it resolves");
+  /* A triggered ability's modes are chosen as it is put on the stack (CR 603.3c): "choose one or more" there too (Black Market
+     Connections, wave 4b); an activated ability's modal is asked as it resolves, as one. */
+  ok(validateScript(script({kind: "triggered", text: "When this enters, choose one or both --", trigger: {on: "enters", who: "self"}, effects: [modal()]})).valid,
+    "and on a triggered ability, its modes chosen as it is put on the stack");
+  ok(!validateScript(script({kind: "activated", text: "{T}: Choose one or both --", cost: [{atom: "{T}"}], effects: [modal()]})).valid,
+    "nor on an activated ability, where the modal is asked as it resolves");
   ok(!validateScript(script({kind: "spell", text: "Choose one --", effects: [modal({chooseUpTo: 1})]})).valid, "and chooseUpTo is more than choose");
   /* Modes with no targets are chosen as it is cast too: "one or both" is never asked as it resolves, as one. */
   const untargeted = createCardIndex([script({kind: "spell", text: "Choose one or both --", effects: [modal()]})]).definition("Test");

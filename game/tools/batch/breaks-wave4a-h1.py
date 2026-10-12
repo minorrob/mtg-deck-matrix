@@ -44,7 +44,7 @@ DOES = '  ability.additionalCost ?? null, ability.anyMana === true]);'
 TYPE_WAYS = '  return permission?.ability.perType === true ? openTypes(state, permission.ability, permission.source, id, "spell") : [null];'
 SELF_FROM = '      && conditionHolds(state, a.condition, {controller: player, source: id})) && !found.includes(id)) found.push(id);'
 OWN_EXTRA = ' && !(permission?.ability.additionalCost && !(object.spell?.additionalCost ?? []).length))'
-LAND_DROPS = '.filter(({ability, source}) => conditionHolds(state, ability.condition, {controller: player, source})).length'
+LAND_DROPS = '.filter(({ability, source}) => conditionHolds(state, ability.condition, {controller: player, source}))\n    .reduce('
 MAY_PLAY_FROM = '  if (params.from !== undefined) {\n    const player = context.controller;'
 MAY_PLAY_UNIQUE = '    do { id = `may-play:${params.from}:${serial++}`; } while (effects.some(e => e.id === id));'
 MAY_PLAY_NAME = 'player, name: state.objects[context.source]?.card ?? context.lastKnown?.name ?? "Effect",\n      from: params.from,'
@@ -56,7 +56,7 @@ FOLLOWS = '      if (to === "battlefield" && effect.layer !== undefined && Array
 FOLLOWED = '        effect.affects = {...effect.affects, ids: effect.affects.ids.map((id) => (id === entry.objectId ? arrived : id))};\n'
 CANT_CAST_OK = '    if (!(typeof params.named === "string" || params.allSpells === true) || !Array.isArray(who) || !who.length) return [];'
 CANT_CAST_ALL = 'spells: params.allSpells === true ? {} : {named: params.named},'
-LOOK_PLAYERS = '"damage-doubled", "look-at-top"].includes(params.rule)'
+LOOK_PLAYERS = '"damage-doubled", "look-at-top", "player-hexproof"].includes(params.rule)'
 LOOK_EFFECT = '  if ((state.effects ?? []).some((e) => e.rule === "look-at-top" && (e.players ?? []).includes(owner))) looked = true;\n'
 LOOK_CONDITION = '      if (ability.rule === "look-at-top" && conditionHolds(state, ability.condition, {controller: owner, source: id})) looked = true;'
 READS = '  "play-from", "cast-self-from",\n'
@@ -126,7 +126,7 @@ BREAKS = [
     # "By sacrificing a land in addition to paying its other costs" (Exploration Broodship).
     ("permission's cost: asked", ACTIONS, ', ...(back?.extra ?? []), ...(permit?.ability.additionalCost ?? [])])) {', ', ...(back?.extra ?? [])])) {'),
     ("permission's cost: not the spell's own", ACTIONS, OWN_EXTRA, ')'),
-    ('station: the land drop at 3+', ACTIONS, LAND_DROPS, '.length'),
+    ('station: the land drop at 3+', ACTIONS, LAND_DROPS, '\n    .reduce('),
 
     # "Pay life equal to its mana value rather than pay its mana cost" (Demon of Fate's Design).
     ('life for mana: as cast', ACTIONS, FREE_LIFE_TERMS, FREE_LIFE_TERMS.replace('free ? freeLife(object, free)', 'free ? null')),
@@ -173,7 +173,7 @@ BREAKS = [
 
     # "Until end of turn, you may look at the top card of your library any time" (Gwenom): an effect's.
     ('look at the top: by an effect', PROJECTION, LOOK_EFFECT, ''),
-    ('look at the top: its player', PERMANENTS, LOOK_PLAYERS, '"damage-doubled"].includes(params.rule)'),
+    ('look at the top: its player', PERMANENTS, LOOK_PLAYERS, '"damage-doubled", "player-hexproof"].includes(params.rule)'),
 
     # "You can't cast additional spells this turn" (Conduit of Worlds).
     ("can't cast: every spell", PERMANENTS, CANT_CAST_ALL, 'spells: {named: params.named},'),
@@ -185,9 +185,9 @@ BREAKS = [
     ('condition read: cast-self-from', INDEX, READS, '  "play-from",\n'),
     ('condition read: extra-land-drop', INDEX, '  "extra-land-drop",\n', ''),
     ('condition read: look-at-top', INDEX, '  "look-at-top"];', '  ];'),
-    ('condition keys: castFromYourHand', CONDITION, '  "castFromYourHand",\n', ''),
-    ('condition keys: solved', CONDITION, '  "solved", "sacrificedNontokenThisTurn"];', '  "sacrificedNontokenThisTurn"];'),
-    ('condition keys: sacrificedNontokenThisTurn', CONDITION, '  "solved", "sacrificedNontokenThisTurn"];', '  "solved"];'),
+    ('condition keys: castFromYourHand', CONDITION, '  "castFromYourHand", "castByYou",', '  "castByYou",'),
+    ('condition keys: solved', CONDITION, '  "solved", "sacrificedNontokenThisTurn",\n', '  "sacrificedNontokenThisTurn",\n'),
+    ('condition keys: sacrificedNontokenThisTurn', CONDITION, '  "solved", "sacrificedNontokenThisTurn",\n', '  "solved",\n'),
     ('condition problem: castFromYourHand', CONDITION, '  if ("castFromYourHand" in condition && typeof condition.castFromYourHand !== "boolean") problems.push("castFromYourHand is true or false");\n', ''),
     ('condition problem: solved', CONDITION, '  if ("solved" in condition && typeof condition.solved !== "boolean") problems.push("solved is true or false");\n', ''),
     ('condition problem: sacrificedNontokenThisTurn', CONDITION, '  if ("sacrificedNontokenThisTurn" in condition && condition.sacrificedNontokenThisTurn !== true) problems.push("sacrificedNontokenThisTurn is true");\n', ''),

@@ -1,0 +1,66 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Victimize",
+    "oracleId": "240e85d3-e495-4877-8609-4b4056c402f7",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose two target creature cards in your graveyard. Sacrifice a creature. If you do, return the chosen cards to the battlefield tapped.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose two target creature cards in your graveyard. Sacrifice a creature. If you do, return the chosen cards to the battlefield tapped.",
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "controller": "you",
+          "types": [
+            "Creature"
+          ],
+          "count": {
+            "min": 2,
+            "max": 2
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "count": 1,
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          },
+          "remember": true
+        },
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "battlefield",
+          "tapped": true,
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          }
+        }
+      ]
+    }
+  ]
+}

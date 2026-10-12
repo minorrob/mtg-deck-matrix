@@ -21,7 +21,7 @@ import {holdArrival, enteredWith} from "../../rules/entering.mjs";
 import {prepare} from "./attributes.mjs";
 import {afterwards, delayedTrigger, enchantable, enchantOnArrival, controlSourceLeft, endWhileSourceRemains} from "./permanents.mjs";
 import {typesOf} from "../../rules/layers.mjs";
-import {moveObject, cardsIn, PUBLIC_ZONES, removeObject, eventCard, rememberExileLooker, recordDraw, recordDeath} from "../../state/index.mjs";
+import {moveObject, cardsIn, PUBLIC_ZONES, removeObject, eventCard, rememberExileLooker, recordDraw, recordDrawStepDraw, recordDeath} from "../../state/index.mjs";
 import {lastKnown} from "../../rules/layers.mjs";
 import {keywordsOf, controllerOf, abilitiesOf} from "../../rules/layers.mjs";
 import {selectMatching, compileSelector, matchesSelector, shareCreatureType} from "../filter.mjs";
@@ -166,6 +166,9 @@ export function moveOne(state, id, to, events, {owner = null, controller = null,
   events.push(event("GameEventCardChangeZone", state, {
     card,
     ...(leftBehind ? {leftBehind} : {}),
+    /* A card leaving a graveyard, as it was there: "whenever a creature card leaves your graveyard" (Syr Konrad, the Grim,
+       wave 4b; rules/trigger.mjs) looks back (CR 603.10a), wherever it went -- a hand or a library too. */
+    ...(from === "graveyard" ? {wasCard: {types: [...(object.types ?? [])], subtypes: [...(object.subtypes ?? [])], supertypes: [...(object.supertypes ?? [])]}} : {}),
     /* The permanent that arrived is a new object (CR 400.7); "when this enters" looks for it by this. */
     ...(destination === "battlefield" ? {enteredAs: moved} : {}),
     /* "When this land enters untapped" (rules/trigger.mjs) asks how it entered, not how it is later. */
@@ -485,11 +488,15 @@ export function moveZone(state, params, context, rng = null) {
   /* "Exile another target nonland permanent" (Oblivion Ring, `link`): what it exiled, kept against this source for the
      ability linked to it (CR 607.2a); used, the link is spent. Each time the ability exiles adds to what it exiled -- the
      same trigger twice (Panharmonicon) is "the exiled cards", both (Skyclave Apparition's ruling of 2020-09-25). */
+  /* And what it put onto the battlefield: "Return enchanted creature card to the battlefield under your control ... When this
+     Aura leaves the battlefield, that creature's controller sacrifices it" (Animate Dead) -- that creature, while it is the
+     same object (CR 400.7), for the ability that names it (`linked`). */
   if (params.link === true && linkOf(context) !== null) {
     const links = (state.links ??= {}), source = linkOf(context);
     const linked = became.filter(id => state.objects[id]?.zone === "exile");
     for (const id of linked) state.objects[id].exiledTurn = state.turn;
-    links[source] = [...(links[source] ?? []), ...linked];
+    const entered = became.filter(id => state.objects[id]?.zone === "battlefield");
+    links[source] = [...(links[source] ?? []), ...linked, ...entered];
   }
   if (params.linked === true && state.links) {
     /* Only some of them (`linkedOnly`): the others are still exiled with it (CR 607.2a). */
@@ -582,9 +589,12 @@ export function moveZoneAll(state, params, context, rng = null) {
   const matched = selectMatching(state, params.selector ?? {what: "permanent"}, context);
   /* A copy, because each move rewrites the zone list underneath the iteration. */
   const was = {};
+  /* "Put all creature cards from all graveyards onto the battlefield under your control" (Rise of the Dark Realms): each enters
+     under this effect's controller's control, not its owner's (CR 110.2a) -- as it enters, before what it enters with. */
+  const under = params.to === "battlefield" && params.controller === "you" ? context.controller : null;
   for (const id of [...matched]) {
     const controller = state.objects[id]?.zone === "battlefield" ? controllerOf(state, id) : null;
-    const moved = moveOne(state, id, params.to ?? "graveyard", events, {tapped: params.tapped === true});
+    const moved = moveOne(state, id, params.to ?? "graveyard", events, {tapped: params.tapped === true, controller: under});
     if (moved !== null) { arrivedAll.push(moved); if (controller !== null) was[moved] = controller; }
   }
   /* "Each player shuffles the cards from their hand into their library" (Winds of Change, batch 80, `shuffle`): each library
@@ -640,6 +650,9 @@ function drawOne(state, player, events) {
     const fields = events[events.length - 1].data.fields;
     fields.drawn = true;
     fields.drawNumber = recordDraw(state, player);
+    /* In the drawer's own draw step, which of the cards drawn there (Orcish Bowmasters; state/index.mjs). */
+    const inStep = recordDrawStepDraw(state, player);
+    if (inStep !== null) fields.drawStepNumber = inStep;
   }
 }
 

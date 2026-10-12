@@ -56,7 +56,7 @@ import {cardsIn, usesThisTurn, recordUse} from "../state/index.mjs";
 import {playerStatics} from "./statics.mjs";
 import {matchesSelector, matchesLastKnown} from "../script/filter.mjs";
 import {abilitiesOf, abilitiesReader, characteristicsOf} from "./layers.mjs";
-import {chosenFor} from "../script/chosen.mjs";
+import {chosenFor, CHOSEN_COLOR_LETTER} from "../script/chosen.mjs";
 import {targetChoices, targetName, isHostile, isChoosing, targetCandidates, countedChoice, modalScript, differentControllersProblem} from "../script/bind.mjs";
 
 /* An ability lives where its card is (CR 113.6). A triggered ability of a permanent watches the
@@ -123,8 +123,20 @@ function recordArrivals(state, events) {
 function subjects(state, event, condition, sourceId, controller) {
   /* "Deals combat damage to a player or planeswalker" (Grateful Apparition): damage dealt to a permanent is watched too. */
   const toPermanent = condition.planeswalkers === true && condition.on === "GameEventPlayerDamaged" && event.kind === "GameEventCardDamaged";
-  if (event.kind !== condition.on && !toPermanent) return [];
+  /* "Whenever you cast or copy an instant or sorcery spell" (magecraft; `orCopy`): a spell copied is watched too. */
+  const copied = condition.orCopy === true && condition.on === "GameEventSpellAbilityCast" && event.kind === "GameEventSpellCopied";
+  if (event.kind !== condition.on && !toPermanent && !copied) return [];
   const fields = event.data?.fields ?? {};
+  /* A COPY OF A SPELL (CR 707.10): put on the stack by an effect, under that effect's controller's control -- the player who
+     copied it, for "whenever you copy" (the magecraft rulings) -- once for each copy, about the copy as it is there and
+     its controller ("that spell's mana value", CR 707.2). Never cast (CR 707.10), so nothing else a cast trigger asks
+     (how many cast before it, from where) is asked of it. */
+  if (copied) {
+    const copier = fields.playerId, spell = fields.card?.cardId;
+    if (!whoseIs(condition.caster ?? "you", copier, controller)) return [];
+    if (condition.filter && !matchesSelector({...condition.filter, what: "spell"}, state, spell, {controller, source: sourceId})) return [];
+    return [{card: spell, player: copier, ...spellWas(state, spell)}];
+  }
   /* "Whenever you cast a noncreature spell" (CR 601.2i): the spell on the stack, and who cast it. */
   /* "Whenever you scry or surveil" (CR 701.22a, 701.25a): who did it. */
   if (condition.on === "GameEventScried") {
@@ -365,6 +377,9 @@ function subjects(state, event, condition, sourceId, controller) {
     if (fields.drawn !== true) return [];
     /* Faerie Mastermind: the second draw itself, even if several draws resolve together. */
     if (condition.nthThisTurn !== undefined && fields.drawNumber !== condition.nthThisTurn) return [];
+    /* "Except the first one they draw in each of their draw steps" (Orcish Bowmasters, wave 4b): not that one (state/index.mjs,
+       recordDrawStepDraw) -- the step's own draw, or an effect's when that was skipped -- and every other. */
+    if (condition.exceptFirstInDrawStep && fields.drawStepNumber === 1) return [];
     const drawer = fields.to?.player?.playerId;
     return whoseIs(condition.drawer ?? "you", drawer, controller) ? [{player: drawer}] : [];
   }
@@ -420,10 +435,21 @@ function matches(state, event, condition, sourceId, controller) {
     if (condition.intoGraveyard) {
       const card = fields.becomes !== undefined ? state.objects[fields.becomes] : undefined;
       if (!card || card.token || !whoseIs(condition.owner ?? "you", card.owner, controller)) return false;
+      /* "From anywhere other than the battlefield" (Syr Konrad, the Grim): a hand, a library, the stack, exile -- not a death. */
+      if (condition.notFrom && fields.from?.zoneType === condition.notFrom) return false;
       return !condition.filter || matchesSelector({...condition.filter, what: "card", zone: "graveyard"}, state, fields.becomes, {controller, source: sourceId});
     }
     /* "Whenever one or more cards leave your graveyard" (Garrison Excavator): the graveyard is its card's owner's. */
-    if (condition.leftGraveyard) return whoseIs(condition.owner ?? "you", fields.card?.owner, controller);
+    /* "A creature card leaves your graveyard" (Syr Konrad, the Grim, wave 4b): what the card was there, looking back (CR
+       603.10a) -- the move's snapshot of it (`wasCard`, effects/zones.mjs and rules/actions.mjs), or the card it became where
+       everyone can see it (CR 400.7e: a commander put into the command zone). */
+    if (condition.leftGraveyard && !condition.filter) return whoseIs(condition.owner ?? "you", fields.card?.owner, controller);
+    if (condition.leftGraveyard) {
+      if (!whoseIs(condition.owner ?? "you", fields.card?.owner, controller)) return false;
+      const became = fields.becomes !== undefined ? state.objects[fields.becomes] : undefined;
+      const was = fields.wasCard ?? (became ? {types: [...(became.types ?? [])], subtypes: [...(became.subtypes ?? [])], supertypes: [...(became.supertypes ?? [])]} : null);
+      return Boolean(was) && matchesLastKnown(condition.filter, was, {controller, source: sourceId});
+    }
     /* `self` means this permanent, compared against the card AS IT WAS — the event's snapshot, not
        the object, because for a death the object no longer exists. An arrival is the other way round:
        the card that moved was the one on the stack or in hand, and the permanent that arrived is a new
@@ -551,7 +577,10 @@ export function manaTriggered(state, event) {
       const mana = ability.kind === "triggered" ? ability.trigger?.manaAbility : null;
       if (!mana || !tappedForMana(state, fields, ability.trigger, id, holder.controller)) continue;
       const [kind] = Object.keys(fields.produced ?? {}).filter((k) => fields.produced[k] > 0);
-      const adds = mana.produced ? (kind ? {[kind]: 1} : null) : mana.mana;
+      /* "An additional one mana of the chosen color" (Utopia Sprawl): the color its permanent chose as it entered; none
+         chosen, none. */
+      const chosen = mana.chosenColor === true ? CHOSEN_COLOR_LETTER[holder.chosen] : undefined;
+      const adds = mana.produced ? (kind ? {[kind]: 1} : null) : mana.chosenColor === true ? (chosen ? {[chosen]: 1} : null) : mana.mana;
       if (adds) made.push({player: fields.player?.playerId, mana: adds, source: id});
     }
   }
@@ -727,7 +756,9 @@ export function collectTriggers(state, events) {
        main phase of a turn (CR 505.1a) -- its controller's turns only (`yourTurn`), and again every time (`forever`). */
     /* "At end of combat" (Wall of Junk; CR 511.2): as the end of combat step begins. "At the beginning of the declare attackers
        step on your next turn" (Meandering Towershell): that step's beginning, read once attackers are declared (rules/turn.mjs). */
-    const moment = event.kind === "GameEventTurnPhase" ? {END_OF_TURN: "end step", UPKEEP: "upkeep", MAIN1: "precombat main", COMBAT_END: "end of combat",
+    /* "At the beginning of your next main phase" (Mana Drain, `at: "your next main"`; CR 505.1): either main phase, the next of
+       its controller's turns' -- one made in a precombat main phase waits for that turn's postcombat one. */
+    const moment = event.kind === "GameEventTurnPhase" ? {END_OF_TURN: "end step", UPKEEP: "upkeep", MAIN1: "precombat main", MAIN2: "postcombat main", COMBAT_END: "end of combat",
       COMBAT_DECLARE_ATTACKERS: "declare attackers"}[event.data?.fields?.phase] : undefined;
     /* SUSPEND (CR 702.62a): at the beginning of its owner's upkeep, a suspended card in exile with a time counter on it has
        one removed -- and when the last is, its owner may cast it without paying its mana cost (a creature so cast has haste,
@@ -751,6 +782,7 @@ export function collectTriggers(state, events) {
          the one it was made in -- not an extra combat later this turn (CR 500.8). */
       const due = state.delayedTriggers.filter((d) => (d.at === moment && (!d.yours || d.controller === turnOf) && (!d.yourTurn || d.controller === turnOf) && (d.player === undefined || d.player === turnOf))
         || (moment === "upkeep" && d.at === "your upkeep" && d.controller === turnOf)
+        || ((moment === "precombat main" || moment === "postcombat main") && d.at === "your next main" && d.controller === turnOf)
         || (moment === "declare attackers" && d.at === "your next declare attackers" && d.controller === turnOf && state.turn > d.madeOnTurn));
       state.delayedTriggers = state.delayedTriggers.filter((d) => !due.includes(d) || d.forever === true);
       for (const d of due) state.pendingTriggers.push({
@@ -986,9 +1018,15 @@ export function resolveTriggerCounted(state, awaiting, indices) {
    (CR 700.2d), each with a way to aim its targets; a mode with no legal target can't be chosen. "Each mode must target a
    different player": no player twice among them. "Choose one that hasn't been chosen": never one in `taken` (modesTaken) --
    all of them chosen, and there is no way, so it is removed from the stack (CR 603.3c). */
+/* "CHOOSE ONE OR MORE" (`upTo`, Black Market Connections, wave 4b): each number of modes from `choose` to `upTo`, every set of
+   that many its own way. */
 function modalWays(state, modal, context, taken = []) {
   const ways = [];
-  const n = Math.min(modal.choose, modal.modes.length);
+  for (let n = Math.min(modal.choose, modal.modes.length); n <= Math.min(modal.upTo ?? modal.choose, modal.modes.length); n += 1) ways.push(...modalWaysOf(state, modal, context, taken, n));
+  return ways;
+}
+function modalWaysOf(state, modal, context, taken, n) {
+  const ways = [];
   const pick = (from, chosen) => {
     if (chosen.length === n) {
       for (const targets of targetChoices(state, modalScript(modal, chosen).targets, context)) {
@@ -1029,7 +1067,7 @@ export function triggerTargetsChoice(state, awaiting) {
       return {index, label, modes, targets, hostile: isHostile(modalScript(modal, modes).effects), ...(entry.cardId !== null ? {cardId: entry.cardId} : {})};
     });
     if (modal.mayChooseNone) options.push({index: options.length, label: "Choose none", none: true});
-    return {id: `trigger-targets:${entry.stackId}`, title: `${entry.name ?? "A triggered ability"}: choose ${modal.choose}`, mode: "one", min: 1, max: 1, options};
+    return {id: `trigger-targets:${entry.stackId}`, title: `${entry.name ?? "A triggered ability"}: choose ${modal.choose}${modal.upTo ? " or more" : ""}`, mode: "one", min: 1, max: 1, options};
   }
   const hostile = isHostile(entry.script.effects);
   return {

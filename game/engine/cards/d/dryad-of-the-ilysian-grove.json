@@ -1,0 +1,58 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dryad of the Ilysian Grove",
+    "oracleId": "bdbde5d0-f5e4-44da-b27c-b4ad6f374cc9",
+    "types": [
+      "Enchantment",
+      "Creature"
+    ],
+    "subtypes": [
+      "Nymph",
+      "Dryad"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "You may play an additional land on each of your turns.\nLands you control are every basic land type in addition to their other types.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "You may play an additional land on each of your turns.",
+      "rule": "extra-land-drop",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Lands you control are every basic land type in addition to their other types.",
+      "layer": 4,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Land"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "addSubtypes": [
+          "Plains",
+          "Island",
+          "Swamp",
+          "Mountain",
+          "Forest"
+        ]
+      }
+    }
+  ]
+}

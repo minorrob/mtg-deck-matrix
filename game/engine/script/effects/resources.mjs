@@ -494,6 +494,11 @@ function counterPlacements(state, params, context, all) {
      existed, as many (CR 608.2h) -- put on as counters are, so what changes counters put on changes these too. */
   if (params.countersOf === "self")
     return ids.flatMap((id) => Object.entries(context.lastKnown?.counters ?? {}).map(([had, n]) => ({id, kind: had, count: n})));
+  /* "Whenever a creature you control leaves the battlefield, if it had counters on it, put those counters on The Ozolith"
+     (wave 4b): each kind the creature the trigger is about had as it last existed, as many (CR 603.10a, 608.2h) -- not moved
+     off it, so a second Ozolith gets them too (the card's ruling). */
+  if (params.countersOf === "that card")
+    return ids.flatMap((id) => Object.entries(context.about?.lastKnown?.counters ?? {}).map(([had, n]) => ({id, kind: had, count: n})));
   return ids.map((id) => ({id, kind, count}));
 }
 /** Which placement an answer belongs to: the permanent, and the kind. */
@@ -579,6 +584,12 @@ export function moveCounters(state, params, context) {
   /* "Onto other creatures" (Forgotten Ancient): where each goes is asked (effects/asking.mjs, countersOnto), never decided here. */
   if (params.onto !== undefined) throw new Error("moveCounters onto permanents its controller chooses asks where: run it through resolution.mjs");
   const [from] = params.from ?? [], [to] = params.targets ?? [];
+  /* "Move all counters from The Ozolith onto target creature" (wave 4b; CR 122.5): every kind there, all of each, each moved as
+     one kind is below. */
+  if (params.counter === "all") {
+    const there = Object.entries(state.objects[from]?.counters ?? {});
+    return there.flatMap(([kind, n]) => moveCounters(state, {...params, counter: kind, count: n}, context));
+  }
   const kind = params.counter ?? "+1/+1", n = Math.max(0, params.count ?? 1);
   if (from === undefined || to === undefined || from === to || n === 0) return events;
   const source = state.objects[from], destination = state.objects[to];

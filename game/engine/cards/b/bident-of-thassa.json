@@ -1,0 +1,78 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bident of Thassa",
+    "oracleId": "e1afaef7-9fa3-4662-a95f-adfb0da9fd11",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Enchantment",
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever a creature you control deals combat damage to a player, you may draw a card.\n{1}{U}, {T}: Creatures your opponents control attack this turn if able.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever a creature you control deals combat damage to a player, you may draw a card.",
+      "trigger": {
+        "on": "damage dealt",
+        "who": "any",
+        "combat": true,
+        "to": "player",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ],
+      "optional": true
+    },
+    {
+      "kind": "activated",
+      "text": "{1}{U}, {T}: Creatures your opponents control attack this turn if able.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{U}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "rule": "attacks-each-combat",
+          "affects": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "opponent"
+          },
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}
