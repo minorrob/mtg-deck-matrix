@@ -1,7 +1,7 @@
 {
   "name": "crankmagic",
-  "main": "cloud/worker.mjs",
-  "compatibility_date": "2026-10-03",
+  "main": "cloud/play-worker.mjs",
+  "compatibility_date": "2026-10-12",
   "assets": {
     "directory": "./",
     "binding": "ASSETS",
@@ -27,7 +27,8 @@
   ],
   "vars": {
     "ACCESS_TEAM_DOMAIN": "crankmagic.cloudflareaccess.com",
-    "ACCESS_AUD": "ff51f3bcda0f6f50d2f48bb9d3d96b76530c128a23cdb1cc33aa4fa6d68611a3"
+    "ACCESS_AUD": "ff51f3bcda0f6f50d2f48bb9d3d96b76530c128a23cdb1cc33aa4fa6d68611a3",
+    "PLAY_TABLES_CLOSED": "on"
   },
   "ratelimits": [
     {
@@ -45,6 +46,30 @@
         "limit": 120,
         "period": 60
       }
+    }
+  ],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "logs": {
+      "enabled": true,
+      "invocation_logs": false
+    }
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "TABLES",
+        "class_name": "GameTable"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "tables-v1",
+      "new_sqlite_classes": [
+        "GameTable"
+      ]
     }
   ]
 }

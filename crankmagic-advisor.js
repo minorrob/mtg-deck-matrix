@@ -12,6 +12,41 @@ const draw=()=>{$('#cm-suggestion-list').innerHTML=shown.filter(x=>(x.card.name+
 actions['review-suggestion']=el=>{const d=M.deck(C.state,el.dataset.deck),slot=M.slot(C.state,d.id,el.dataset.slot),card=C.catalog.get(el.dataset.card)||C.card(el.dataset.card),lots=C.state.lots.filter(l=>l.cardId===card.id&&l.offer!=='held');form('Choose how to fulfill '+card.name,`<div class="cm-full">${note('The default can use unassigned bench copies. It never takes a reserved or In deck copy from another deck. Choose a specific record below to request a transfer.',true)}</div>`+s('Copy to reserve','lot',[['','Use available bench, otherwise create To buy'],...lots.map(l=>[l.id,C.affected(l)])],''),v=>C.review('Review replacement',note(`${C.card(slot.cardId).name} → ${card.name}. Any released owned copies fulfill compatible needs in priority order, then return to Bench allocation. Actual box locations remain recorded.`),{type:'swap',deckId:d.id,slotId:slot.id,cardId:card.id,cards:[card],lotId:v.lot||undefined}),'Preview changes');};
 actions['save-suggestion']=el=>C.commit({type:'option',deckId:el.dataset.deck,replaces:el.dataset.slot,cards:[C.catalog.get(el.dataset.card)],option:{cardId:el.dataset.card,quantity:M.slot(C.state,el.dataset.deck,el.dataset.slot).quantity,purpose:'upgrade'},reserve:false});
 actions['dismiss-suggestion']=async el=>{await C.commit({type:'preferences',values:{dismissedSuggestions:[...(C.state.preferences.dismissedSuggestions||[]),el.dataset.key].slice(-2000)}});return actions['deck-suggestions']({dataset:{deck:el.dataset.deck}});};actions['reset-suggestions']=async el=>{await C.commit({type:'preferences',values:{dismissedSuggestions:[]}});return actions['deck-suggestions'](el);};
+/* THE AI ADVISOR (AI-4, docs/plan-to-done-2026-09-30.md). Offered under the deck's More menu only where the AI door would
+   answer this person (GET /api/ai-advise). The page sends the deck's id and the person's goal, nothing more: the Worker
+   builds the brief from their library as last saved to the cloud (cloud/advise.mjs). The answer is a review, never a
+   change: each swap is a row to tick, and a ticked swap is saved as the deck's linked upgrade, as Save as upgrade option
+   saves one above -- nothing else moves until the person applies it from the Upgrades tab. */
+C.adviseOpen=false;
+if(document.querySelector('meta[name="crankmagic-accounts"]')?.content==='on')fetch('/api/ai-advise',{credentials:'same-origin',redirect:'manual',cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{C.adviseOpen=!!(j&&j.open);}).catch(()=>{});
+let advised=null;   /* the last answer, with the deck it is for */
+actions['deck-advise']=el=>{const d=M.deck(C.state,el.dataset.deck);advised=null;
+  modal('Ask the AI advisor · '+d.name,`${note('The advisor reads this deck and your own cards and lists as last saved to the cloud, and proposes swaps among them, and among cards you don’t own if your AI Coach settings allow. Nothing changes until you save a swap as an upgrade.')}<label>Your goal (optional)<input id="cm-advise-ask" maxlength="300" placeholder="Make it faster, more removal under $20…"></label><div class="cm-actions">${b('Ask the advisor','deck-advise-send',{deck:d.id},true)}</div><div id="cm-advise-out" aria-live="polite"></div>`);};
+actions['deck-advise-send']=async el=>{const d=M.deck(C.state,el.dataset.deck),out=$('#cm-advise-out'),ask=($('#cm-advise-ask')?.value||'').trim();
+  out.innerHTML=`<p class="cm-muted">Asking the advisor…</p>`;el.disabled=true;
+  let r,j=null;
+  try{r=await fetch('/api/ai/advise',{method:'POST',credentials:'same-origin',redirect:'manual',headers:{'content-type':'application/json','x-crankmagic':'ai'},body:JSON.stringify({deckId:d.id,ask})});}
+  catch{el.disabled=false;out.innerHTML=`<p class="cm-note cm-warning">The advisor could not be reached. Try again in a moment.</p>`;return;}
+  el.disabled=false;
+  if(r.type==='opaqueredirect'||r.status===401){out.innerHTML=`<p>The advisor has its own sign-in, with Google.</p><div class="cm-actions"><a class="v-button" href="/api/ai/login?to=${encodeURIComponent('#decks?deck='+d.id)}">Sign in to the AI features</a></div>`;return;}
+  j=await r.json().catch(()=>null);
+  if(!r.ok||!j||!Array.isArray(j.changes)){out.innerHTML=`<p class="cm-note cm-warning">${e((j&&j.error)||'The advisor could not answer just now. Try again in a moment.')}</p>`;return;}
+  advised={deckId:d.id,changes:j.changes};
+  const when=j.savedAt?new Date(j.savedAt).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'';
+  out.innerHTML=`${j.summary?`<p>${e(j.summary)}</p>`:''}${j.changes.length?`<ul class="cm-advise-list">${j.changes.map((c,i)=>`<li><label class="cm-checkbox"><input type="checkbox" name="advise" value="${i}" checked> <span><strong>${e(c.out)} → ${e(c.in)}</strong>${c.role?` <span class="cm-badge">${e(c.role)}</span>`:''}<br><span class="cm-muted">${e(c.why)}</span></span></label></li>`).join('')}</ul><div class="cm-actions">${b('Save ticked as upgrades','deck-advise-save',{deck:d.id},true)}</div>`:'<p class="cm-muted">The advisor proposed no swap for this deck.</p>'}`
+    +`<p class="cm-muted">${j.dropped?`${j.dropped} proposed swap${j.dropped===1?' named a card':'s named cards'} not in this deck or among your cards, and ${j.dropped===1?'is':'are'} not shown. `:''}Read from your library${when?` as saved ${e(when)}`:''}${j.meter?` · ${e(String(j.meter.spentCents))}¢ of your ${e(String(j.meter.capCents))}¢ today`:''}.</p>`;};
+actions['deck-advise-save']=async el=>{const d=M.deck(C.state,el.dataset.deck);
+  if(!advised||advised.deckId!==d.id)throw Error('Ask the advisor again: that answer is for another deck.');
+  const ticked=[...C.$('#cm-dialog').querySelectorAll('input[name=advise]:checked')].map(x=>advised.changes[Number(x.value)]).filter(Boolean);
+  if(!ticked.length)throw Error('Tick a swap to save it as an upgrade.');
+  const byName=n=>Object.keys(C.state.cards).find(id=>C.card(id)?.name===n);
+  let saved=0;
+  /* A card not owned (AI Coach settings: Suggest cards I don't own) is the catalog's, and joins the library as the upgrade's card. */
+  for(const c of ticked){const slot=d.slots.find(r=>r.purpose==='main'&&C.card(r.cardId)?.name===c.out),cardId=byName(c.in)||C.catalog.exact(c.in)?.id;
+    if(!slot||!cardId)continue;
+    await C.commit({type:'option',deckId:d.id,replaces:slot.id,cards:[C.catalog.get(cardId)||C.card(cardId)],option:{cardId,quantity:slot.quantity,purpose:'upgrade'},reserve:false});saved++;}
+  actions.close();
+  C.notice(saved?`Saved ${saved} swap${saved===1?'':'s'} as upgrade${saved===1?'':'s'}: they are on the deck's Upgrades tab, to apply when you are ready.`:'Those swaps no longer match the deck, so nothing was saved.');};
 /* A COMPARE TICK IS A VIEW SELECTION, NOT A LIBRARY CHANGE (D9). It used to go through
    commit() as a preferences command: the second tick inside a second was refused with "A save is
    already in progress", and the selection outlived the session. It lives on C now, for this page

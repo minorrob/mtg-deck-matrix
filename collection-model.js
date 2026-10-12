@@ -532,6 +532,27 @@
          other decks (which stay where they physically are until pulled), then records a new
          owned copy when the library holds none -- the spreadsheet asserting a card is in the
          box is the owner saying it exists. Both are reviewed by the view before they run. */
+      case 'removeDeckCard':{const d=deck(s,c.deckId),r=slot(s,d.id,c.slotId);
+        ensure(c.confirmed===true,'Review removing this card first.');ensure(r.purpose==='main','Choose a main-list card.');
+        const gone=new Set(d.slots.filter(x=>x.id===r.id||x.replaces===r.id).map(x=>x.id));
+        ensure(!d.archived,'Restore the deck first.');ensure(!d.commanders.includes(r.cardId),'The commander stays in its own list; replace the commander instead.');version(d);
+        d.slots=d.slots.filter(x=>!gone.has(x.id));
+        for(const l of s.lots)if(l.allocation?.deckId===d.id&&gone.has(l.allocation.slotId))release(l,'bench');
+        for(const l of s.lots){if(gone.has(l.standInFor))delete l.standInFor;
+          if(c.returnToBench&&l.cardId===r.cardId&&l.location?.kind==='deck'&&l.location.deckId===d.id){l.location={kind:'bench',box:''};delete l.standInFor;}}
+        summary=`Removed ${card(s,r.cardId).name} from ${d.name}'s list; owned copies kept${c.returnToBench?', copies in this box returned to the Bench':''}`;break;}
+      case 'changeCommander':{const d=deck(s,c.deckId);ensure(!d.archived,'Restore the deck first.');
+        ensure(c.confirmed===true,'Review the commander change first.');ensure(d.commanders.includes(c.previous),'Choose the commander being replaced.');
+        for(const raw of c.cards||[])addCard(raw);const next=card(s,c.cardId);
+        ensure(next.commander&&next.verified&&next.legalities?.commander==='legal','Choose a verified Commander-legal commander.');
+        ensure(!d.commanders.includes(next.id),'That card is already a commander.');
+        const old=d.slots.find(r=>r.purpose==='main'&&r.cardId===c.previous),existing=d.slots.find(r=>r.purpose==='main'&&r.cardId===next.id);
+        ensure(old,'The previous commander must have a main-list slot.');ensure(!existing||existing.quantity===1,'A commander must appear exactly once.');version(d);
+        if(!existing){const gone=new Set(d.slots.filter(r=>r.id===old.id||r.replaces===old.id).map(r=>r.id));
+          d.slots=d.slots.filter(r=>!gone.has(r.id));d.slots.push(...rows([{cardId:next.id,quantity:1,purpose:'main'}]));
+          for(const l of s.lots){if(l.allocation?.deckId===d.id&&gone.has(l.allocation.slotId)){l.allocation=null;l.keepBench=true;}if(gone.has(l.standInFor))delete l.standInFor;}}
+        d.commanders=d.commanders.map(cid=>cid===c.previous?next.id:cid);d.status='draft';d.locked=false;
+        summary=`Changed ${d.name}'s commander to ${next.name}; draft for legality review, ownership and box locations unchanged`;break;}
       case 'target':{const d=deck(s,c.deckId);ensure(!d.archived,'Restore the deck first.');for(const raw of c.cards||[])addCard(raw);const cardObj=card(s,c.cardId),n=c.quantity===0?0:quantity(c.quantity);
         const allowed=maxCopies(cardObj);ensure(n<=allowed,`${cardObj.name}: a deck can carry ${allowed===1?'one copy':allowed+' copies'}.`);
         const colors=new Set(d.commanders.flatMap(id=>card(s,id).colorIdentity||[]));ensure(n===0||!(cardObj.colorIdentity||[]).some(x=>!colors.has(x)),`${cardObj.name} is outside ${d.name}'s color identity.`);
@@ -595,15 +616,10 @@
       case 'lock':{const d=deck(s,c.deckId);d.locked=!!c.locked;summary=`${d.locked?'Locked':'Unlocked'} ${d.name}`;break;}
       case 'archive':{const d=deck(s,c.deckId);ensure(!d.archived,'Deck already archived.');d.archived=true;version(d);for(const l of [...s.lots].filter(l=>l.allocation?.deckId===d.id))release(l,c.destination);summary=`Archived ${d.name}; released allocations and retained actual box locations`;break;}
       case 'restoreDeck':{const d=deck(s,c.deckId);ensure(d.archived,`${d.name} is not archived.`);d.archived=false;d.status='draft';d.locked=false;summary=`Restored ${d.name} as a draft for availability review`;break;}
-      /* PERMANENT DELETION, and only of an archived deck. Archiving is the reversible step
-         and it already released every allocation, so by the time a deck can be deleted no
-         lot is reserved for it. What can still point at it: a lot's PHYSICAL location (the
-         copies are in that physical deck on the shelf), which goes back to the bench because the
-         box no longer exists as a plan; the deck's reports, advice and games, which describe
-         an exact list that is being erased; and two preferences. All of it goes, because
-         "permanently" is the word the button uses. */
-      case 'deleteDeck':{const d=deck(s,c.deckId);ensure(d.archived,'Archive the deck first; only an archived deck can be deleted permanently.');ensure(c.confirmed===true,'Confirm permanent deletion.');
-        for(const l of s.lots){if(l.allocation?.deckId===d.id)l.allocation=null;if(l.location?.kind==='deck'&&l.location.deckId===d.id)l.location={kind:'bench',box:''};}
+      /* Deletion is one reviewed transaction. Owned copies survive, reservations for
+         this plan are released, and its recorded box contents return to the Bench. */
+      case 'deleteDeck':{const d=deck(s,c.deckId);ensure(c.confirmed===true,'Confirm permanent deletion.');
+        for(const l of s.lots){if(l.allocation?.deckId===d.id)l.allocation=null;if(l.location?.kind==='deck'&&l.location.deckId===d.id){l.location={kind:'bench',box:''};delete l.standInFor;}}
         s.decks=s.decks.filter(x=>x.id!==d.id);
         /* The group made with the deck goes with the deck -- but only if nothing else is
            using it: no other deck attached, no planned entries, no copies filed by hand. */

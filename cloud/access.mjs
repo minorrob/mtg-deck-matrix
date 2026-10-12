@@ -76,8 +76,22 @@ export async function verifyAccess(request, env, deps = {}) {
   if (claims.iss !== `https://${team}`) throw new Unauthorized("a token from another issuer");
   if (typeof claims.exp !== "number" || claims.exp < seconds - 30) throw new Unauthorized("an expired token");
   if (typeof claims.nbf === "number" && claims.nbf > seconds + 30) throw new Unauthorized("a token that is not valid yet");
-  /* A service token has no email. Libraries belong to people, so a service token is not a person here. */
+  /* A service token has no email. Libraries belong to people, so a service token is not a person here -- except at a
+     release that seats one (SERVICE_SEATS, the cloud-staging profile only: tools/release-pages.mjs refuses it anywhere
+     else). There a token Access issued to a service token (its client id, `common_name`), checked like any other above,
+     is a test identity of its own: a session's automated checks of staging (the review response's L6), or one of the
+     agents that play it (M8, G-C), each token one, so four agents are four seats. It is named so it is no one's address
+     -- the Worker keys a person by what it is handed here, and nothing else reads it as mail. Only a service token
+     Access admits reaches here: staging's Service Auth policies. */
   const email = typeof claims.email === "string" ? claims.email.trim().toLowerCase() : "";
+  if (!email && env.SERVICE_SEATS === "on" && typeof claims.common_name === "string" && claims.common_name.trim()) return {email: await serviceIdentity(claims.common_name.trim()), service: true};
   if (!/^[^\s@]+@[^\s@]+$/.test(email)) throw new Unauthorized("a token that names no person");
   return {email};
+}
+
+/** Who a service token is, where a release seats one: `service:` and the first twelve hex of its client id's SHA-256 --
+    the same token always the same identity, two tokens two, never a person's address, and the client id not repeated. */
+export async function serviceIdentity(clientId) {
+  const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", enc.encode(clientId)));
+  return "service:" + [...digest.slice(0, 6)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
