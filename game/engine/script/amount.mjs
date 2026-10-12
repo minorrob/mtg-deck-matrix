@@ -22,6 +22,8 @@
  *   {totalPower: selector}               their powers added together
  *   {differentPowers: selector}          how many different powers there are among them (Loot, the Nexus): a 2/1 and two
  *                                        3/3s are two
+ *   {differentNames: selector}           how many different names there are among them ("the number of differently named
+ *                                        lands you control", Fungal Colossus): three Forests and a Wastes are two
  *   {devotion: [colors]}                 CR 700.5: the mana symbols of those colors among the mana costs of permanents you
  *                                        control -- a hybrid symbol of two of them once, a Phyrexian one of its color
  *   {lifeLostThisWay: true}              the life the effects before it in this resolution took ("You gain life equal to
@@ -110,7 +112,9 @@ export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf"
   /* Train D: "put that many growth counters" (Simic Ascendancy), the counters a "counter added" trigger is about. */
   "countersPut",
   /* Train E: "for each unspent mana you have" (Omnath, Locus of the Void). */
-  "manaInPool"]);
+  "manaInPool",
+  /* Train E: "the number of differently named lands you control" (Fungal Colossus). */
+  "differentNames"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "per", "filter", "controlledBy", "named"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -183,7 +187,7 @@ export function amountProblems(value) {
     for (const key of ["then", "else"]) if (key in value) problems.push(...amountProblems(value[key]));
   }
   /* What it counts is a selector, held to the selector grammar (script/filter.mjs), a choice of them included. */
-  for (const key of ["count", "greatestPower", "totalPower", "mostAmongOpponents", "differentPowers", "planeswalkerTypesAmong", "fewestAmongPlayers"]) {
+  for (const key of ["count", "greatestPower", "totalPower", "mostAmongOpponents", "differentPowers", "differentNames", "planeswalkerTypesAmong", "fewestAmongPlayers"]) {
     if (!(key in value)) continue;
     const {anyOf, ...shared} = value[key] ?? {};
     try { for (const one of Array.isArray(anyOf) ? anyOf.map((a) => ({...shared, ...a})) : [value[key]]) compileSelector(one); }
@@ -346,6 +350,10 @@ export function amountOf(state, value, context = {}) {
   /* "One mana of that color for each different power among creatures you control" (Loot, the Nexus): the distinct values
      among their powers now, through the layers (CR 208.1) -- 0 and less among them, each a power like any other. */
   else if ("differentPowers" in value) n = new Set(matching(state, value.differentPowers, who).map((id) => characteristicsOf(state, id).power ?? 0)).size;
+  /* "This spell costs {X} less to cast, where X is the number of differently named lands you control" (Fungal Colossus;
+     CR 201.2): the distinct names among what the selector matches now -- a copy's the name it copied (CR 707.2), and a
+     face-down permanent, which has no name (CR 708.2a), none to count. */
+  else if ("differentNames" in value) n = new Set(matching(state, value.differentNames, who).map((id) => state.objects[id].card).filter((name) => typeof name === "string" && name)).size;
   else if ("devotion" in value) n = devotion(state, context.controller, value.devotion);
   else if ("lifeLostThisWay" in value) n = context.lifeLost ?? 0;
   /* "Then draws that many cards" (Winds of Change): what the effect before it moved, and remembered, counted. */

@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Frontline War-Rager",
+    "oracleId": "610d006a-3ceb-4136-b92b-a500c74d06b0",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Kavu",
+      "Soldier"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "At the beginning of your end step, if you control two or more tapped creatures, put a +1/+1 counter on this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your end step, if you control two or more tapped creatures, put a +1/+1 counter on this creature.",
+      "trigger": {
+        "on": "end step"
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ],
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "tapped": true
+        },
+        "atLeast": 2
+      }
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Flamebraider",
+    "oracleId": "c552bd73-ce75-40fd-9d80-9e90b6f45274",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental",
+      "Bard"
+    ],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "{T}: Add two mana in any combination of colors. Spend this mana only to cast Elemental spells or activate abilities of Elemental sources.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add two mana in any combination of colors. Spend this mana only to cast Elemental spells or activate abilities of Elemental sources.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyCombination": true,
+          "count": 2,
+          "spendOnly": {
+            "spell": {
+              "subtypes": [
+                "Elemental"
+              ]
+            },
+            "abilitySource": {
+              "subtypes": [
+                "Elemental"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

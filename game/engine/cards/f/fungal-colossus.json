@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Fungal Colossus",
+    "oracleId": "ce25dd89-dcc7-4576-b148-ef4c1cd5290c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Fungus",
+      "Beast"
+    ],
+    "manaCost": "{6}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "This spell costs {X} less to cast, where X is the number of differently named lands you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This spell costs {X} less to cast, where X is the number of differently named lands you control.",
+      "rule": "this-costs-less",
+      "affects": {
+        "self": true
+      },
+      "amount": {
+        "differentNames": {
+          "what": "permanent",
+          "types": [
+            "Land"
+          ],
+          "controller": "you"
+        }
+      }
+    }
+  ]
+}

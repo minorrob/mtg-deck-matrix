@@ -1,0 +1,225 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Gravelgill Scoundrel",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Wall": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Wall"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 0,
+      "toughness": 5,
+      "keywords": [
+        "Defender"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It attacks; Rob taps his Bear: it can't be blocked, and Maya's Wall stands by -- 1 damage; vigilance keeps it untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Gravelgill Scoundrel",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wall"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Gravelgill Scoundrel"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Tap Bear",
+                  "Don't pay"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Tap Bear"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Bear"
+            },
+            {
+              "seat": 0,
+              "tapped": "Gravelgill Scoundrel",
+              "is": false
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 39
+        }
+      ]
+    },
+    {
+      "name": "Rob declines: nothing tapped, and Maya's Wall blocks it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Gravelgill Scoundrel",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wall"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Gravelgill Scoundrel"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Don't pay"
+          ]
+        },
+        {
+          "block": [
+            [
+              "Wall",
+              "Gravelgill Scoundrel"
+            ]
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "tapped": "Bear",
+          "is": false
+        }
+      ]
+    },
+    {
+      "name": "Another untapped creature: its own vigilance is no payment, and a tapped Bear is none -- only not paying",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Gravelgill Scoundrel",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Gravelgill Scoundrel",
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Don't pay"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Don't pay"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 37
+        }
+      ]
+    }
+  ]
+}

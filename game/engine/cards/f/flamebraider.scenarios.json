@@ -1,0 +1,326 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Flamebraider",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ember Kin": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elemental"
+      ],
+      "manaCost": "{R}{G}",
+      "colors": [
+        "R",
+        "G"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Ember Bolt": {
+      "types": [
+        "Kindred",
+        "Instant"
+      ],
+      "subtypes": [
+        "Elemental"
+      ],
+      "manaCost": "{1}{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Ember Bolt deals 2 damage to target player.",
+        "targets": [
+          {
+            "what": "player"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 2,
+            "who": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Cinder": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elemental"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "c",
+          "kind": "activated",
+          "text": "{2}: This creature gets +1/+0 until end of turn.",
+          "cost": [
+            {
+              "atom": "mana",
+              "cost": "{2}"
+            }
+          ],
+          "targets": [],
+          "effects": [
+            {
+              "effect": "pump",
+              "targets": "self",
+              "power": 1,
+              "toughness": 0
+            }
+          ]
+        }
+      ]
+    },
+    "Ashen Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "c",
+          "kind": "activated",
+          "text": "{2}: This creature gets +1/+0 until end of turn.",
+          "cost": [
+            {
+              "atom": "mana",
+              "cost": "{2}"
+            }
+          ],
+          "targets": [],
+          "effects": [
+            {
+              "effect": "pump",
+              "targets": "self",
+              "power": 1,
+              "toughness": 0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Two mana in any combination: {R}{G} casts the Elemental, never the Bear",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Flamebraider"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Ember Kin",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Flamebraider",
+          "mana": {
+            "R": 1,
+            "G": 1
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Flamebraider"
+            },
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Ember Kin"
+              },
+              "count": 1
+            },
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Bear"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "cast": "Ember Kin"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Flamebraider",
+            "Ember Kin"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A kindred Elemental instant is an Elemental spell: {R}{R} casts it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Flamebraider"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Ember Bolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Flamebraider",
+          "mana": {
+            "R": 2
+          }
+        },
+        {
+          "cast": "Ember Bolt",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Ember Bolt"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "It pays an Elemental's ability, and not a Bear's",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Flamebraider",
+            "Cinder",
+            "Ashen Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Flamebraider",
+          "mana": {
+            "R": 2
+          }
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Cinder"
+              },
+              "count": 1
+            },
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Ashen Bear"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "activate": "Cinder"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Cinder",
+            "power": 2,
+            "toughness": 1
+          }
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "R": 0
+          }
+        }
+      ]
+    }
+  ]
+}

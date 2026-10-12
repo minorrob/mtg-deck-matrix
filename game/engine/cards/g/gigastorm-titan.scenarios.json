@@ -1,0 +1,352 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Gigastorm Titan",
+  "fixtures": {
+    "Tidings": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Draw a card.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "draw",
+            "count": 1
+          }
+        ]
+      }
+    },
+    "Spark": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Spark deals 1 damage to target player.",
+        "targets": [
+          {
+            "what": "player"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 1,
+            "who": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A spell cast first: {1}{U} casts the Titan",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Tidings",
+            "Gigastorm Titan"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Tidings"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Gigastorm Titan"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Island",
+            "Island",
+            "Wastes",
+            "Gigastorm Titan"
+          ]
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "U": 0,
+            "C": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "No other spell this turn: {4}{U} -- two lands do not cast it, five do",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Gigastorm Titan"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Gigastorm Titan"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Gigastorm Titan"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "U": 0,
+            "C": 0
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Maya's spell on Rob's turn is not his: still {4}{U}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Gigastorm Titan"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Spark"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "cast": "Spark",
+          "seat": 1,
+          "targets": [
+            {
+              "player": 0
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 39
+        },
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Gigastorm Titan",
+            "seat": 0
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Two spells first: {3} less, not {6} -- {1}{U}, with nothing left over",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Tidings",
+            "Tidings",
+            "Gigastorm Titan"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Tidings"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Tidings"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Gigastorm Titan"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Gigastorm Titan"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "U": 0,
+            "C": 0
+          }
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Island",
+            "Island",
+            "Island",
+            "Wastes",
+            "Gigastorm Titan"
+          ]
+        }
+      ]
+    }
+  ]
+}

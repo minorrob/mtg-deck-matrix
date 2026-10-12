@@ -1,14 +1,16 @@
 /* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE. */
 
-/* COUNTS AMONG PERMANENTS: a power greater than a target's, every color among them as mana, and how many different powers
- * (Fell the Mighty, Faeburrow Elder, Loot, the Nexus).
+/* COUNTS AMONG PERMANENTS: a power greater than a target's, every color among them as mana, how many different powers
+ * and how many different names (Fell the Mighty, Faeburrow Elder, Loot, the Nexus, Fungal Colossus).
  *
  * "Destroy all creatures with power greater than target creature's power": a selector's `power.moreThan`, a fact about a
  * target, bound to a number as the resolution begins (script/bind.mjs; CR 608.2h) -- and, unbound, matching nothing
  * (script/filter.mjs). "For each color among permanents you control, add one mana of that color": a mana ability's `among`
  * with `each` -- all of those colors, one offer (rules/actions.mjs, manaAlternatives). "One mana of that color for each
  * different power among creatures you control": the amount `differentPowers` (script/amount.mjs), counted as the ability
- * is activated. The scenarios play the cards; this suite holds four players, the layers, responses and the grammar.
+ * is activated. "The number of differently named lands you control": the amount `differentNames` (Train E), names as they
+ * are now, a face-down permanent's none (CR 708.2a). The scenarios play the cards; this suite holds four players, the
+ * layers, responses and the grammar.
  */
 import assert from "node:assert/strict";
 import {runScenario} from "../game/engine/cards/scenario.mjs";
@@ -104,4 +106,23 @@ const pay = lands.map((land) => ({tap: land}));
   eq(amountProblems({differentPowers: yours}), [], "and a selector it knows is fine");
 }
 
-console.log(`engine-counts-among: ${checks} checks passed -- power greater than a target's as it resolves (four players, a response, the grammar); every color among permanents as one mana ability; different powers through the layers.`);
+/* ---- Fungal Colossus: how many different names, four players, a face-down one nameless ---- */
+{
+  const s = play([at(0, "battlefield", "Forest", "Forest", "Forest", "Wastes", "Island"), at(1, "battlefield", "Forest", "Swamp"),
+    at(2, "battlefield", "Mountain"), at(0, "battlefield", "Bear", "Bear", "Elf")], [], {seats: 4});
+  const lands = {what: "permanent", types: ["Land"], controller: "you"};
+  eq(amountOf(s, {differentNames: lands}, {controller: 0}), 3, "Rob's three Forests, a Wastes and an Island: three names");
+  eq(amountOf(s, {differentNames: lands}, {controller: 1}), 2, "Maya's, counted for Maya: a Forest and a Swamp, two -- Rob's Forests are not hers");
+  eq(amountOf(s, {differentNames: lands}, {controller: 3}), 0, "Sam has no land: none");
+  const creatures = {what: "permanent", types: ["Creature"], controller: "you"};
+  eq(amountOf(s, {differentNames: creatures}, {controller: 0}), 2, "two Bears and an Elf: two names");
+  /* Turned face down (CR 708.2a): no name -- the face-down template's (state/index.mjs), its card kept beside it. */
+  const elf = s.zones.battlefield.find((id) => s.objects[id].card === "Elf");
+  Object.assign(s.objects[elf], {card: null, faceDown: true, faceDownCard: {card: "Elf"}});
+  eq(amountOf(s, {differentNames: creatures}, {controller: 0}), 1, "the Elf face down has no name: only the Bears' is counted");
+  eq(amountOf(s, {differentNames: {...creatures, controller: "opponent"}}, {controller: 0}), 0, "and no creature of an opponent's: none");
+  ok(amountProblems({differentNames: {types: ["Land"], strength: 3}}).some((p) => /differentNames/.test(p)), "the grammar is closed: an unknown selector key is refused");
+  eq(amountProblems({differentNames: lands}), [], "and a selector it knows is fine");
+}
+
+console.log(`engine-counts-among: ${checks} checks passed -- power greater than a target's as it resolves (four players, a response, the grammar); every color among permanents as one mana ability; different powers through the layers; different names, a face-down one nameless (four players).`);

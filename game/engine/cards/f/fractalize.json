@@ -1,0 +1,71 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Fractalize",
+    "oracleId": "9e7bd032-8946-4d72-9910-b224823bc940",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{X}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Until end of turn, target creature becomes a green and blue Fractal with base power and toughness each equal to X plus 1. (It loses all other colors and creature types.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Until end of turn, target creature becomes a green and blue Fractal with base power and toughness each equal to X plus 1. (It loses all other colors and creature types.)",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "layer": 4,
+          "targets": {
+            "target": 0
+          },
+          "until": "end-of-turn",
+          "apply": {
+            "setCreatureTypes": [
+              "Fractal"
+            ]
+          }
+        },
+        {
+          "effect": "animate",
+          "targets": {
+            "target": 0
+          },
+          "addTypes": [],
+          "colors": [
+            "G",
+            "U"
+          ],
+          "power": {
+            "x": true,
+            "plus": 1
+          },
+          "toughness": {
+            "x": true,
+            "plus": 1
+          },
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,413 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Gallia, Tragic Host",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{4}{B}, the Bear exiled from the graveyard: Gallia returns tapped, a 3/2 with a +1/+1 counter",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Gallia, Tragic Host",
+            "Bear",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Gallia, Tragic Host"
+              },
+              "count": 1,
+              "costs": [
+                [
+                  "Bear"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Gallia, Tragic Host",
+          "exile": "Bear"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Gallia, Tragic Host"
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Gallia, Tragic Host",
+            "counter": "+1/+1",
+            "count": 1
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Gallia, Tragic Host",
+            "power": 3,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Another creature card: Gallia is not one, a land is not -- nothing to exile, no offer",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Gallia, Tragic Host",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Gallia, Tragic Host"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Maya's graveyard is not Rob's: her Bear pays nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Gallia, Tragic Host"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Gallia, Tragic Host"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Not only as a sorcery: on Maya's turn, Rob returns her, choosing the Ogre over the Bear",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Gallia, Tragic Host",
+            "Bear",
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Swamp",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Gallia, Tragic Host",
+                "seat": 0
+              },
+              "count": 2,
+              "costs": [
+                [
+                  "Bear"
+                ],
+                [
+                  "Ogre"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Gallia, Tragic Host",
+          "seat": 0,
+          "exile": "Ogre"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Gallia, Tragic Host"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "On the battlefield it is no ability of hers; and she has menace",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Gallia, Tragic Host"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Gallia, Tragic Host"
+          },
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Gallia, Tragic Host",
+            "has": [
+              "Menace"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
