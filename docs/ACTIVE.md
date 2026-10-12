@@ -4,7 +4,7 @@
 
 | Lane | Held by | Branch | Doing |
 | --- | --- | --- | --- |
-| **Engine** | Claude, a cloud container; **paused 2026-10-12 at 90% of the week's usage: `docs/handoff-2026-10-12.md`** | `claude/admiring-franklin-58cxy4` | Waves 4 and after, to the most-played 90% of Commander cards (`docs/engine/plan-coverage-90.md`); wave 4c in #726 |
+| **Engine** | Claude, a cloud container; **paused 2026-10-12 at 90% of the week's usage: `docs/handoff-2026-10-12.md`** | `claude/admiring-franklin-58cxy4` | Waves 4 and after, to the most-played 90% of Commander cards (`docs/engine/plan-coverage-90.md`); waves to 4c merged and on staging; next, wave 4d |
 | **UI** | Fable (a Claude session in a cloud container), since 2026-10-12 | `claude/nice-hypatia-4ajdyi` (the session's own branch, by its harness; the `claude/ui-<topic>` form waits for the next topic) | Pass 1 of the Play screen on the Replit concept: the seven steps in the strip, Full screen as the table from your chair with a 3D switch, the right pane docked with Turn Resources (notes 9 and 10), the hover card no taller than the mat, motion and callouts, the lobby's fans and launch line. The plan: `docs/ui-lane/plan-play-ui-2026-10-12.md`. Brief: `docs/ui-lane/README.md` |
 
 ### Requests between the lanes
@@ -135,7 +135,7 @@ usage for this").
   - The 80% set: 1,462 defined (from 1,347), 2,780 with every rule. The 90% set: 1,605 of 5,869 defined (from 1,411).
     The defined cards now cover 60.3% of all card appearances (52.0% when the plan was written).
   - Breaks: j1 33, j2 45, j3 111, j4 81, each caught.
-- **Wave 4c, #726:** 78 of the next 80 most-played cards (ranks 501 to 723), in four lanes by theme, each owning the
+- **Wave 4c, merged #726** (main 0540d882): 78 of the next 80 most-played cards (ranks 501 to 723), in four lanes by theme, each owning the
   rules its cards need:
   - k1 lands, 21: a land played as an effect resolves (Windbrisk Heights, and Mosswort Bridge, which 4b had left).
   - k2 graveyard and combat, 19: delve, dredge, fabricate, a flashback cost that sacrifices, the rest of a dig on the
@@ -153,8 +153,11 @@ usage for this").
     `train-b6-breaks.py` the earlier scans never read. 53 files, 1,712 breaks.
   - The 80% set: 1,540 defined (from 1,462), 2,814 with every rule. The 90% set: 1,683 of 5,869. The defined cards
     cover 62.5% of all card appearances.
-  - **Staging still serves wave 4a.** The release of main a61244a0 stopped at `play-e2e`, which named Cyclonic Rift
-    as unplayable; the fix rides #726, and staging takes waves 4b and 4c together once it merges.
+  - **On staging with wave 4b** (main 0540d882): release-acceptance 22, play-e2e 35; Workers Builds deployed version
+    fe296442, its `play-worker.js` byte for byte the release's dry run (sha256 dc3437729abb); `staging-check` signed in
+    reads 0540d882. The release of a61244a0 had stopped at `play-e2e` (Cyclonic Rift named as unplayable); #726 fixed it.
+- **Paused here at 83% of the week's usage**, at a wave's end rather than mid-wave (Rob's 90% rule): the handoff is
+  `docs/handoff-2026-10-12.md`. Wave 4d starts at rank 724 of the 80% set, plus the leftovers it lists.
 - **Open, for later waves:**
   - In a two-player game the starting player skips the draw step's draw, not the step itself (CR 103.8a). Its
     beginning triggers still fire on turn 1.
