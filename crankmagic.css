@@ -3911,16 +3911,16 @@ button.cm-vitals{cursor:pointer}
 .cm-board[data-view="full"]~.cm-board-callouts{top:16%}
 .cm-callout{display:grid;justify-items:center;gap:2px;--glow:var(--v-accent);--size:calc(38px + 26px * var(--level,.6));color:var(--tone);filter:drop-shadow(0 0 calc(6px + 10px * var(--level,.6)) var(--glow))}
 .cm-callout.is-big{--size:calc(52px + 36px * var(--level,.6))}
-.cm-callout.is-harm{--tone:#ff5c4d;--glow:rgb(255 70 50 / .9)}
-.cm-callout.is-answer{--tone:#5fd3ff;--glow:rgb(70 190 255 / .9)}
-.cm-callout.is-growth{--tone:#6ff06a;--glow:rgb(80 230 90 / .9)}
-.cm-callout.is-value{--tone:#ffd34d;--glow:rgb(255 200 60 / .9)}
-.cm-callout.is-fade{--tone:#c99bff;--glow:rgb(180 130 255 / .9)}
+.cm-callout.is-harm{--tone:var(--callout-harm);--glow:rgb(255 70 50 / .9)}
+.cm-callout.is-answer{--tone:var(--callout-answer);--glow:rgb(70 190 255 / .9)}
+.cm-callout.is-growth{--tone:var(--callout-growth);--glow:rgb(80 230 90 / .9)}
+.cm-callout.is-value{--tone:var(--callout-value);--glow:rgb(255 200 60 / .9)}
+.cm-callout.is-fade{--tone:var(--callout-fade);--glow:rgb(180 130 255 / .9)}
 .cm-callout-glyph{display:inline-block;width:calc(var(--size) * .8);height:calc(var(--size) * .8)}
 .cm-callout-glyph svg{width:100%;height:100%;display:block}
 .cm-callout-word{display:flex;align-items:baseline;gap:.25em;font-family:'Barlow Condensed',var(--font-display),sans-serif;font-weight:800;font-style:italic;font-size:var(--size);line-height:.95;letter-spacing:.02em;text-transform:uppercase;-webkit-text-stroke:1.5px rgb(0 0 0 / .85);paint-order:stroke fill;white-space:nowrap}
 .cm-callout-word b{font-weight:900}
-.cm-callout-line{margin-top:4px;padding:2px 10px;border-radius:8px;background:rgb(12 12 14 / .9);color:#f3efe6;font-size:12px;font-weight:600;filter:none;max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;-webkit-text-stroke:0}
+.cm-callout-line{margin-top:4px;padding:2px 10px;border-radius:8px;background:rgb(12 12 14 / .9);color:var(--mat-ink);font-size:12px;font-weight:600;filter:none;max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;-webkit-text-stroke:0}
 /* Settings › Play › Overlay: the slider with its value beside it (AGENTS.md: sizes and levels are sliders). */
 #matrix-v2 .cm-settings-slider{display:flex;align-items:center;gap:10px;flex:1 1 320px;max-width:480px;font-size:13px}
 #matrix-v2 .cm-settings-slider input[type=range]{flex:1 1 auto;min-height:0;height:18px;margin:0;accent-color:var(--v-accent)}
