@@ -1,0 +1,715 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Darksteel Mutation",
+  "fixtures": {
+    "Elder": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf",
+        "Druid"
+      ],
+      "manaCost": "{3}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 4,
+      "toughness": 4,
+      "keywords": [
+        "Flying",
+        "Trample"
+      ]
+    },
+    "Kill Spell": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Artifact Exile": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Exile target artifact.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Artifact"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "moveZone",
+            "targets": {
+              "target": 0
+            },
+            "to": "exile"
+          }
+        ]
+      }
+    },
+    "Growth": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Target creature gets +3/+3 until end of turn.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "pump",
+            "targets": {
+              "target": 0
+            },
+            "power": 3,
+            "toughness": 3
+          }
+        ]
+      }
+    },
+    "Arbor": {
+      "types": [
+        "Land",
+        "Creature"
+      ],
+      "subtypes": [
+        "Forest",
+        "Dryad"
+      ],
+      "manaCost": null,
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Walker": {
+      "types": [
+        "Creature",
+        "Planeswalker"
+      ],
+      "supertypes": [
+        "Legendary"
+      ],
+      "subtypes": [
+        "Gideon",
+        "Human",
+        "Soldier"
+      ],
+      "manaCost": "{1}{W}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 4,
+      "toughness": 4,
+      "loyalty": 4
+    },
+    "Gideon Bane": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target Gideon.",
+        "targets": [
+          {
+            "what": "permanent",
+            "subtypes": [
+              "Gideon"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Forest Bane": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target Forest.",
+        "targets": [
+          {
+            "what": "permanent",
+            "subtypes": [
+              "Forest"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "On Maya's 4/4 flier: an indestructible 0/1 Insect artifact creature with no other ability, and still green",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Darksteel Mutation",
+            "Kill Spell"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Elder"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Darksteel Mutation",
+          "targets": [
+            {
+              "card": "Elder"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "stats": {
+                "card": "Elder",
+                "power": 0,
+                "toughness": 1
+              }
+            },
+            {
+              "seat": 1,
+              "keywords": {
+                "card": "Elder",
+                "has": [
+                  "Indestructible"
+                ],
+                "lacks": [
+                  "Flying",
+                  "Trample"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Kill Spell",
+          "targets": [
+            {
+              "card": "Elder"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Elder"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Kill Spell"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "It is an artifact now: an \"exile target artifact\" spell may take it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Darksteel Mutation",
+            "Artifact Exile"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Elder"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Darksteel Mutation",
+          "targets": [
+            {
+              "card": "Elder"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Artifact Exile",
+          "targets": [
+            {
+              "card": "Elder"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": [
+            "Elder"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Artifact Exile",
+            "Darksteel Mutation"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Before it, Maya's creature is no artifact: the \"exile target artifact\" spell has nothing to aim at",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Artifact Exile"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Elder"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Artifact Exile"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "A pump after it still counts (CR 613.4c): +3/+3 makes it 3/4",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Darksteel Mutation",
+            "Growth"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Elder"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Darksteel Mutation",
+          "targets": [
+            {
+              "card": "Elder"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Growth",
+          "targets": [
+            {
+              "card": "Elder"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Elder",
+            "power": 3,
+            "toughness": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "On a Forest land creature: not a land, not a Forest (CR 205.3d), and no mana ability left",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Darksteel Mutation",
+            "Forest Bane"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Arbor"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Darksteel Mutation",
+          "targets": [
+            {
+              "card": "Arbor"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Forest Bane"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "pass": 1
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Arbor",
+            "seat": 1
+          },
+          "count": 0
+        },
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Arbor",
+            "power": 0,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Before it: the Forest creature is a Forest, the planeswalker creature a Gideon",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest Bane",
+            "Gideon Bane"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Arbor",
+            "Walker"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Forest Bane"
+          },
+          "count": 1
+        },
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Gideon Bane"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "On a planeswalker that is a creature: no planeswalker now, and no Gideon either (CR 205.3d)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Darksteel Mutation",
+            "Gideon Bane"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Walker"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Darksteel Mutation",
+          "targets": [
+            {
+              "card": "Walker"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Swamp"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Gideon Bane"
+          },
+          "count": 0
+        },
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Walker",
+            "power": 0,
+            "toughness": 1
+          }
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Walker"
+          ]
+        }
+      ]
+    }
+  ]
+}

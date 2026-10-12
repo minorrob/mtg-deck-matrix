@@ -1,0 +1,219 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Open the Armory",
+  "fixtures": {
+    "Blade": {
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [
+        "Equipment"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Shroud": {
+      "types": [
+        "Enchantment"
+      ],
+      "subtypes": [
+        "Aura"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Seal": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Relic": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Rob finds his Blade, an Equipment, or his Shroud, an Aura -- not the Seal or the Relic -- and reveals it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Open the Armory"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Open the Armory"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Blade",
+                  "Shroud"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Blade"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Blade"
+          ]
+        },
+        {
+          "event": "GameEventCardRevealed"
+        },
+        {
+          "event": "GameEventShuffle"
+        }
+      ],
+      "library": [
+        "Seal",
+        "Relic",
+        "Blade",
+        "Shroud"
+      ]
+    },
+    {
+      "name": "The Aura: to his hand",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Open the Armory"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Open the Armory"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Shroud"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Shroud"
+          ]
+        }
+      ],
+      "library": [
+        "Seal",
+        "Blade",
+        "Shroud"
+      ]
+    },
+    {
+      "name": "None there: a search may find nothing (CR 701.23b), and the library is shuffled",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Open the Armory"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Open the Armory"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": []
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 0
+        },
+        {
+          "event": "GameEventShuffle"
+        }
+      ],
+      "library": [
+        "Seal",
+        "Relic"
+      ]
+    }
+  ]
+}

@@ -93,7 +93,7 @@ BREAKS = [
     ('scenarios: the monarch checked', SCENARIO, '        if (got !== e.monarch) fail(', '        if (false) fail('),
     # The words: schema, registry, vocabulary, plan, credits.
     ('schema: one player becomes the monarch', SCHEMA, 'if (name === "becomeMonarch" && effect.who !== undefined', 'if (false && effect.who !== undefined'),
-    ('registry: becomeMonarch', EFFECTS, '  becomeMonarch,\n});', '});'),
+    ('registry: becomeMonarch', EFFECTS, '  becomeMonarch,\n  /* Wave 4c', '  /* Wave 4c'),
     ('vocabulary: becomeMonarch', VOCAB, '"empowerJace", "becomeMonarch",', '"empowerJace",'),
     ('plan: becomeMonarch in 12.2', PLAN, '`becomeMonarch` ("you become the monarch",', 'becomeMonarch ("you become the monarch",'),
     ('credit: BecomeMonarch', CONSTRUCTS, '  BecomeMonarch: "becomeMonarch",\n', ''),

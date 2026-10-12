@@ -4,7 +4,7 @@
 
 | Lane | Held by | Branch | Doing |
 | --- | --- | --- | --- |
-| **Engine** | Claude, a cloud container | `claude/admiring-franklin-58cxy4` | Train E (the library's cards, in waves); the monarch and CR 506.4; then waves 4 and after, to the most-played 90% of Commander cards (`docs/engine/plan-coverage-90.md`) |
+| **Engine** | Claude, a cloud container; **paused 2026-10-12 at 90% of the week's usage: `docs/handoff-2026-10-12.md`** | `claude/admiring-franklin-58cxy4` | Waves 4 and after, to the most-played 90% of Commander cards (`docs/engine/plan-coverage-90.md`); wave 4c in #726 |
 | **UI** | Fable or Codex Astra (Rob, 2026-10-12), on his computer and in the cloud; Rob prototypes Play in Replit first | `claude/ui-<topic>` or `codex/ui-<topic>` | Rob's notes 9 and 10 (a *Turn Resources* tab; the right pane docked; the hover card no taller than the mat); concepts Rob brings back from prototyping tools. Brief: `docs/ui-lane/README.md` |
 
 ### Requests between the lanes
@@ -74,7 +74,7 @@ usage for this").
 - **The plan, reordered** (`docs/engine/plan-coverage-90.md`):
   - 1,396 of the 80% set's undefined cards already have every rule, so the most-played cards come first, each wave
     building the small constructs its cards need.
-- **Wave 4b, in this branch:** 112 of the 120 most-played cards the table couldn't play (ranks 23 to 500), and three
+- **Wave 4b, merged #723** (main a61244a0): 112 of the 120 most-played cards the table couldn't play (ranks 23 to 500), and three
   more that prove its constructs. Four lanes, each building the constructs its cards needed:
   - j1, 26 cards: an Aura on a graveyard card (Animate Dead), a land given a basic land type taps for its mana
     (CR 305.6), protection from colors over the creatures a spell named (Akroma's Will), "if you cast it".
@@ -91,6 +91,26 @@ usage for this").
   - The 80% set: 1,462 defined (from 1,347), 2,780 with every rule. The 90% set: 1,605 of 5,869 defined (from 1,411).
     The defined cards now cover 60.3% of all card appearances (52.0% when the plan was written).
   - Breaks: j1 33, j2 45, j3 111, j4 81, each caught.
+- **Wave 4c, #726:** 78 of the next 80 most-played cards (ranks 501 to 723), in four lanes by theme, each owning the
+  rules its cards need:
+  - k1 lands, 21: a land played as an effect resolves (Windbrisk Heights, and Mosswort Bridge, which 4b had left).
+  - k2 graveyard and combat, 19: delve, dredge, fabricate, a flashback cost that sacrifices, the rest of a dig on the
+    bottom in an order its owner chooses (CR 401.4), Commander's Plate's protection, CR 205.3d's subtypes.
+  - k3 tokens and counters, 18: dice (`rollDie`), offspring, "becomes level", +1/+1 and -1/-1 counters cancelling
+    with the deaths (CR 704.5q), Saw in Half's copies, a counter for each creature of the chosen type.
+  - k4 spells and draws, 20: affinity, a hand looked at (Gitaxian Probe), "draws more" and "an empty draw wins"
+    (Teferi's Ageless Insight, Laboratory Maniac), a fixed life payment as a cost's choice.
+  - Stopped on: Mox Diamond (an "instead of entering" asked before it enters, on every route to the battlefield);
+    The Earth Crystal (counters divided at activation, CR 601.2d); Tibalt's Trickery (a random number, a cast by
+    another player as it resolves).
+  - Two lanes built the same "tap a permanent without {T}" mana cost (Urza; Relic of Legends): one kept.
+  - **Every break still breaks something:** `tests/engine-breaks-anchors.mjs` holds each anchor to being found once
+    (`game/tools/batch/anchors.py`). It named the three breaks this wave's own merge moved, and three stale ones in
+    `train-b6-breaks.py` the earlier scans never read. 53 files, 1,712 breaks.
+  - The 80% set: 1,540 defined (from 1,462), 2,814 with every rule. The 90% set: 1,683 of 5,869. The defined cards
+    cover 62.5% of all card appearances.
+  - **Staging still serves wave 4a.** The release of main a61244a0 stopped at `play-e2e`, which named Cyclonic Rift
+    as unplayable; the fix rides #726, and staging takes waves 4b and 4c together once it merges.
 - **Open, for later waves:**
   - In a two-player game the starting player skips the draw step's draw, not the step itself (CR 103.8a). Its
     beginning triggers still fire on turn 1.

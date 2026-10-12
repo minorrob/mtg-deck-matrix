@@ -87,6 +87,8 @@
  *   {giftPromised: true|false}         its spell's gift was promised, or its permanent's (CR 702.174b, 702.174k; Dawn's Truce:
  *                                      "if the gift was promised") -- the spell resolving, a copy of it too (CR 707.10), or the
  *                                      permanent the spell became (rules/stack.mjs)
+ *   {offspringPaid: true|false}        its own permanent was cast with its offspring cost paid, or was not (CR 702.175a;
+ *                                      Coruscation Mage) -- asked again as the trigger resolves, as it triggered
  *
  * The keys are closed, like every other grammar here: an unknown one is refused at the schema rather than read as true.
  */
@@ -128,7 +130,9 @@ const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTu
   /* A Case's solved designation (CR 719.3b), and Evendo Brushrazer's "as long as you've sacrificed a nontoken permanent this turn". */
   "solved", "sacrificedNontokenThisTurn",
   /* Gift's "if the gift was promised" (CR 702.174b). */
-  "giftPromised"];
+  "giftPromised",
+  /* Offspring's "if its offspring cost was paid" (CR 702.175a; wave 4c). */
+  "offspringPaid"];
 /** Whether these effects, nested ones included, ask `firstResolution` -- so their ability's resolutions are counted
     (rules/stack.mjs). */
 export const asksFirstResolution = (effects) => JSON.stringify(effects ?? []).includes('"firstResolution"');
@@ -218,8 +222,13 @@ function castHolds(rule, cast) {
 
 /** Whether a condition holds now, for an ability controlled by `controller` on object `source`. No condition holds. */
 export function conditionHolds(state, condition, {controller, source = null, about = undefined, remembered = undefined, targets = undefined, cast = undefined, x = undefined, spent = undefined, excessDamage = undefined, rememberedControllers = undefined,
-  movedWas = undefined, searched = undefined, lastKnown = undefined, paidFor = undefined, resolvedBefore = undefined, gift = undefined} = {}) {
+  movedWas = undefined, searched = undefined, lastKnown = undefined, paidFor = undefined, resolvedBefore = undefined, gift = undefined, offspring = undefined} = {}) {
   if (!condition) return true;
+  /* "IF ITS OFFSPRING COST WAS PAID" (CR 702.175a; Coruscation Mage, wave 4c): its own permanent was cast with it paid -- or,
+     asked again as its trigger resolves (CR 603.4), its source as it triggered, which may be gone: the token is made all the
+     same (the card's ruling; rules/trigger.mjs keeps it, `offspring`). */
+  if (condition.offspringPaid !== undefined
+    && ((offspring ?? (source !== null && source !== undefined ? state.objects[source]?.offspring : undefined)) === true) !== condition.offspringPaid) return false;
   /* "IF BOTH TARGETS ARE STILL LEGAL AS THIS ABILITY RESOLVES" (Goblin Welder; CR 608.2b): every target its ability chose is
      legal still, as the resolution rechecked them (rules/stack.mjs, script/bind.mjs recheckTargets: an illegal one is null) --
      one illegal, and what it says is not done at all, to the other either. */
@@ -494,6 +503,7 @@ export function conditionProblems(condition) {
   if ("castByYou" in condition && typeof condition.castByYou !== "boolean") problems.push("castByYou is true or false");
   if ("solved" in condition && typeof condition.solved !== "boolean") problems.push("solved is true or false");
   if ("giftPromised" in condition && typeof condition.giftPromised !== "boolean") problems.push("giftPromised is true or false: whether the gift was promised");
+  if ("offspringPaid" in condition && typeof condition.offspringPaid !== "boolean") problems.push("offspringPaid is true or false: whether its offspring cost was paid");
   if ("sacrificedNontokenThisTurn" in condition && condition.sacrificedNontokenThisTurn !== true) problems.push("sacrificedNontokenThisTurn is true");
   if ("uniqueCreatureName" in condition && condition.uniqueCreatureName !== true) problems.push("uniqueCreatureName is true");
   if ("searched" in condition && condition.searched !== true) problems.push("searched is true: a library was searched earlier in this resolution");

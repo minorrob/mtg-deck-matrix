@@ -1,0 +1,166 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Savannah",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Played untapped; {T}: {G} or {W}, either",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Savannah"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Savannah"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Savannah",
+              "is": false
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Savannah"
+              },
+              "count": 2,
+              "mana": [
+                {
+                  "G": 1
+                },
+                {
+                  "W": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Savannah",
+          "mana": {
+            "W": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "W": 1,
+            "G": 0
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Savannah"
+        }
+      ]
+    },
+    {
+      "name": "A Forest and a Plains: Misty Rainforest finds it by one of its land types, and not the Mountain; it taps for {G}",
+      "library": [
+        "Mountain",
+        "Savannah",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Misty Rainforest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Misty Rainforest"
+        },
+        {
+          "activate": "Misty Rainforest"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Savannah"
+                ],
+                "min": 0
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Savannah"
+          ]
+        },
+        {
+          "tap": "Savannah",
+          "mana": {
+            "G": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Savannah"
+          ]
+        }
+      ]
+    }
+  ]
+}

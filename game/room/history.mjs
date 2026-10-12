@@ -83,6 +83,9 @@ export function historyLines(event, names = []) {
     /* The monarch (CR 725.3): a designation of the game's, and public. */
     case "GameEventBecomeMonarch":
       return line(`${who(f.player.playerId)} became the monarch`);
+    /* A die rolled (CR 706.1; Ancient Copper Dragon): the roll and its result, which every player sees. */
+    case "GameEventDieRolled":
+      return line(`${who(f.player.playerId)} rolled a d${f.sides}: ${f.result}`);
     /* A Class's level (CR 716.2a). */
     case "GameEventCardLevel":
       return line(`${cardName(f.card)} reached level ${f.newValue}`);

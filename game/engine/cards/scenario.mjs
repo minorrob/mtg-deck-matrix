@@ -183,6 +183,9 @@ export function runScenario(scenario, cards, fixtures = {}) {
     /* Convoked (CR 702.51a): `convoke: true` takes the offer the caster's creatures help pay, its creatures a question once it
        is taken, answered by the next step's `choose`; without it, the cast the pool pays alone. */
     found = found.filter((a) => (a.convoke ?? false) === (step.convoke ?? false));
+    /* Delved (CR 702.66a): `delve: true` takes the offer the caster's graveyard helps pay, its cards a question once it is
+       taken, answered by the next step's `answer` or `choose`; without it, the cast the pool pays alone. */
+    found = found.filter((a) => (a.delve ?? false) === (step.delve ?? false));
     /* Waterbend (CR 701.67a): `waterbend: true` takes the offer that taps artifacts and creatures for part of it, which ones a
        question once it is taken; without it, the one the pool pays. */
     found = found.filter((a) => (a.waterbend ?? false) === (step.waterbend ?? false));

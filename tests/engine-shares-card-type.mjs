@@ -123,8 +123,11 @@ function endStep(seats, setup) {
   eq(validateScript(braids).valid, true, "Braids's definition is a valid script");
   const with_ = (change) => { const copy = structuredClone(braids); change(copy.abilities[0].effects[1]); return validateScript(copy).errors.map((e) => e.message).join(" | "); };
   ok(/A sacrifice that may be declined is optional: true/.test(with_((e) => { e.optional = "yes"; })), "optional is true");
-  ok(/beside optional: true/.test(with_((e) => { delete e.optional; })), "ifNot only beside optional");
-  ok(/beside optional: true/.test(with_((e) => { e.ifNot = []; })), "ifNot is a list with something in it");
+  /* Beside a sacrifice that must be made too: what follows for each player who can't (Plaguecrafter; wave 4c). Never beside
+     keeping. */
+  eq(with_((e) => { delete e.optional; }), "", "ifNot beside a sacrifice that must be made: for each player who can't");
+  ok(/never beside keeping/.test(with_((e) => { e.keep = 1; })), "ifNot never beside keeping");
+  ok(/is a list of effects/.test(with_((e) => { e.ifNot = []; })), "ifNot is a list with something in it");
   ok(/not a primitive/.test(with_((e) => { e.ifNot = [{effect: "loseHalf"}]; })), "what follows is held to the effect grammar");
   /* And to what the engine has built: a declared primitive nothing performs is a problem, named, before any game. */
   const unbuilt = structuredClone(braids);

@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Blind Obedience",
+    "oracleId": "5d998c09-7d89-4265-ada4-6d80cbf56dae",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Extort (Whenever you cast a spell, you may pay {W/B}. If you do, each opponent loses 1 life and you gain that much life.)\nArtifacts and creatures your opponents control enter tapped.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Extort (Whenever you cast a spell, you may pay {W/B}. If you do, each opponent loses 1 life and you gain that much life.)",
+      "keyword": "extort"
+    },
+    {
+      "kind": "replacement",
+      "text": "Artifacts and creatures your opponents control enter tapped.",
+      "watches": {
+        "event": "enters",
+        "filter": {
+          "anyOf": [
+            {
+              "types": [
+                "Artifact"
+              ]
+            },
+            {
+              "types": [
+                "Creature"
+              ]
+            }
+          ],
+          "controller": "opponent"
+        }
+      },
+      "change": {
+        "entersTapped": true
+      }
+    }
+  ]
+}

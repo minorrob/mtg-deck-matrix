@@ -220,7 +220,7 @@ try {
   const [noneA, noneB] = UNPLAYABLE;
   const pod5 = {seats: [{seatId: "a", commander: ["Quintorius, Loremaster"], cards: ["Mountain", noneA, "Mountain"]}, {seatId: "b", commander: [], cards: ["Island", noneB]}]};
   const bad = await post(new GameRoom({...ctx, storage: {get: async () => undefined, put: async () => {}, delete: async () => false, list: async () => new Map()}}, {}), "/start", {matchId: "do-2", seed: "s", pod: pod5});
-  eq([bad.status, (await bad.json()).unsupported], [422, [noneA, noneB]], "over the object, a pod of cards the table has no definition of is refused by name too");
+  eq([bad.status, (await bad.json()).unsupported], [422, [noneA, noneB].sort()], "over the object, a pod of cards the table has no definition of is refused by name too, in name order");
   eq((await post(object, "/view", null, "stranger")).status, 403, "a seat that is not at the table gets no view");
   const byRoom = {rob: socket(), maya: socket(), "ai-1": socket()};
   for (const [seat, s] of Object.entries(byRoom)) object.accept(s, seat);

@@ -1,20 +1,6 @@
 {
   "schema": "CrankCardScenarios@1",
   "card": "Krosan Verge",
-  "fixtures": {
-    "Savannah": {
-      "types": [
-        "Land"
-      ],
-      "subtypes": [
-        "Forest",
-        "Plains"
-      ],
-      "manaCost": null,
-      "colors": [],
-      "abilities": []
-    }
-  },
   "scenarios": [
     {
       "name": "A Forest card, then a Plains card: both onto the battlefield tapped, then shuffle",

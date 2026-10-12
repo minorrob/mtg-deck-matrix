@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Changeling Outcast",
+    "oracleId": "a61ef0cc-1da9-49f9-b0dc-01cf9f6205be",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Shapeshifter"
+    ],
+    "manaCost": "{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Changeling (This card is every creature type.)\nThis creature can't block and can't be blocked.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Changeling",
+      "keyword": "changeling"
+    },
+    {
+      "kind": "static",
+      "text": "This creature can't block and can't be blocked.",
+      "rule": "cant-block",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      }
+    },
+    {
+      "kind": "static",
+      "text": "This creature can't block and can't be blocked.",
+      "rule": "cant-be-blocked",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      }
+    }
+  ]
+}

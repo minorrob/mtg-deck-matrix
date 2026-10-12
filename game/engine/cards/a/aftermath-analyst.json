@@ -1,0 +1,71 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Aftermath Analyst",
+    "oracleId": "374e54d8-8e73-4268-9dde-c28c77bbbf32",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Detective"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "When this creature enters, mill three cards. (Put the top three cards of your library into your graveyard.)\n{3}{G}, Sacrifice this creature: Return all land cards from your graveyard to the battlefield tapped.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, mill three cards. (Put the top three cards of your library into your graveyard.)",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "mill",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{3}{G}, Sacrifice this creature: Return all land cards from your graveyard to the battlefield tapped.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}{G}"
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZoneAll",
+          "selector": {
+            "what": "card",
+            "zone": "graveyard",
+            "types": [
+              "Land"
+            ],
+            "controller": "you"
+          },
+          "to": "battlefield",
+          "tapped": true
+        }
+      ],
+      "targets": []
+    }
+  ]
+}

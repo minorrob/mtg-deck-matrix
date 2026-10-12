@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Pact of Negation",
+    "oracleId": "f3e213a4-ba5a-468a-93b3-c0a34e1bd725",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{0}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Counter target spell.\nAt the beginning of your next upkeep, pay {3}{U}{U}. If you don't, you lose the game.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Counter target spell.\nAt the beginning of your next upkeep, pay {3}{U}{U}. If you don't, you lose the game.",
+      "targets": [
+        {
+          "what": "spell"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "counterSpell",
+          "spells": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "delayedTrigger",
+          "at": "your upkeep",
+          "text": "At the beginning of your next upkeep, pay {3}{U}{U}. If you don't, you lose the game.",
+          "effects": [
+            {
+              "effect": "unlessPays",
+              "who": "you",
+              "mana": "{3}{U}{U}",
+              "effects": [
+                {
+                  "effect": "loseGame",
+                  "who": "you"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

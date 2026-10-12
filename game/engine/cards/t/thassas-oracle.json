@@ -1,0 +1,75 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Thassa's Oracle",
+    "oracleId": "1de1b591-a73f-4974-b507-8c63e07a0868",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Merfolk",
+      "Wizard"
+    ],
+    "manaCost": "{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "When this creature enters, look at the top X cards of your library, where X is your devotion to blue. Put up to one of them on top of your library and the rest on the bottom of your library in a random order. If X is greater than or equal to the number of cards in your library, you win the game. (Each {U} in the mana costs of permanents you control counts toward your devotion to blue.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, look at the top X cards of your library, where X is your devotion to blue. Put up to one of them on top of your library and the rest on the bottom of your library in a random order. If X is greater than or equal to the number of cards in your library, you win the game.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "dig",
+          "count": {
+            "devotion": [
+              "U"
+            ]
+          },
+          "take": 1,
+          "upTo": true,
+          "to": "top",
+          "rest": "bottom",
+          "random": true
+        },
+        {
+          "effect": "branch",
+          "if": {
+            "compare": {
+              "count": {
+                "devotion": [
+                  "U"
+                ]
+              },
+              "atLeast": {
+                "count": {
+                  "what": "card",
+                  "zone": "library",
+                  "controller": "you"
+                }
+              }
+            }
+          },
+          "then": [
+            {
+              "effect": "winGame"
+            }
+          ],
+          "otherwise": []
+        }
+      ]
+    }
+  ]
+}

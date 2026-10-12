@@ -54,7 +54,7 @@ BREAKS = [
     ('warp: a mana cost without X', INDEX, "problems.push(`${ability.text}: a warp cost of mana, once, without X`);", 'void 0;'),
     ('warp: a permanent card', INDEX, "problems.push(`${ability.text}: warp on a card that never becomes a permanent from the stack`);", 'void 0;'),
     ('keywords: warp and sneak declared', VOCAB, '  "warp", "sneak",\n', ''),
-    ('built: Warp and Sneak', TIMING, '"Disguise", "Morph", "Warp", "Sneak"]),', '"Disguise", "Morph"]),'),
+    ('built: Warp and Sneak', TIMING, '"Disguise", "Morph", "Warp", "Sneak", "Delve"]),', '"Disguise", "Morph", "Delve"]),'),
     # Warp, offered (rules/actions.mjs).
     ('warp: fromHand carried to the way', ACTIONS, '      ...(ability.fromHand === true ? {fromHand: true} : {}),\n', ''),
     ('warp: from the hand alone', ACTIONS, '.filter((w) => !w.fromHand || from === "hand");', ';'),
