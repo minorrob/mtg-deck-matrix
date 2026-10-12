@@ -542,10 +542,12 @@ for (const [kind, seed] of [["house", 1], ["house", 2], ["house", 3], ["house", 
 ok(forks > 150 && duringAnother > 5, `${forks} concessions at a question, ${duringAnother} of them during another player's resolution, of ${kinds.size} kinds: none stalls, asks or gives priority to anyone who has left, or leads to a refused answer`);
 
 /* And in the game itself, played to its end: each player asked during another player's resolution concedes there -- and
-   past turn 30 whoever is asked anything -- until the last one standing wins (CR 104.2a). */
+   past turn 30 whoever is asked anything -- until the last one standing wins (CR 104.2a). Four games: dealt from the pool
+   as it was after Train E's wave 2, seeds 11 to 13 held only two concessions during another player's resolution -- the
+   sweep's reach, not its finding, as above. */
 let ended = 0, mainLine = 0;
 const goneOn = (x) => !(x.priorityPlayer !== null && !x.awaiting && !x.resolving);
-for (const [kind, seed] of [["house", 11], ["random", 12], ["house", 13]]) {
+for (const [kind, seed] of [["house", 11], ["random", 12], ["house", 13], ["house", 14]]) {
   const {s, stream, pilot} = begun(kind, seed), ignored = {refused: 0};
   for (let n = 0; n < 40000 && !gameOver(s); n += 1) {
     const another = s.awaiting && s.resolving && s.stack.findLast((e) => e.stage === "resolving")?.playerId !== s.awaiting.player;
@@ -556,7 +558,7 @@ for (const [kind, seed] of [["house", 11], ["random", 12], ["house", 13]]) {
   const living = s.players.filter((p) => !p.lost).map((p) => p.id);
   if (living.length === 1 && gameOver(s)?.winner === living[0]) ended += 1;
 }
-eq(ended, 3, "three games played to their end through concessions while asked: none stalled, and in each the last player standing won");
+eq(ended, 4, "four games played to their end through concessions while asked: none stalled, and in each the last player standing won");
 ok(mainLine >= 3, `${mainLine} of those concessions during another player's resolution`);
 
 console.log(`engine-x11-leave-questions: ${checks} checks passed -- a player leaving while asked: theirs to choose among is no choice, a cost not paid, another choice another opponent's; damage to them asked and dealt to nobody; the next defender, the next player's triggers; priority to the next player; and ${forks} fuzzed concessions, none stalling.`);
