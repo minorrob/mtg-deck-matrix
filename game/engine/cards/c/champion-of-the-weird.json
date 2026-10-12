@@ -1,0 +1,102 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Champion of the Weird",
+    "oracleId": "1726f9cd-6f18-4509-b95b-bca82ba795a4",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin",
+      "Berserker"
+    ],
+    "manaCost": "{3}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "As an additional cost to cast this spell, behold a Goblin and exile it. (Exile a Goblin you control or a Goblin card from your hand.)\nPay 1 life, Blight 2: Target opponent blights 2. Activate only as a sorcery.\nWhen this creature leaves the battlefield, return the exiled card to its owner's hand.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "As an additional cost to cast this spell, behold a Goblin and exile it. (Exile a Goblin you control or a Goblin card from your hand.)",
+      "targets": [],
+      "effects": [],
+      "additionalCost": [
+        {
+          "atom": "behold",
+          "selector": {
+            "subtypes": [
+              "Goblin"
+            ]
+          },
+          "exile": true
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "Pay 1 life, Blight 2: Target opponent blights 2. Activate only as a sorcery.",
+      "timing": "sorcery",
+      "cost": [
+        {
+          "atom": "payLife",
+          "amount": 1
+        },
+        {
+          "atom": "blight",
+          "count": 2
+        }
+      ],
+      "targets": [
+        {
+          "what": "player",
+          "who": "opponent"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "who": {
+            "target": 0
+          },
+          "zone": "battlefield",
+          "selector": {
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "to": "stay",
+          "remember": true
+        },
+        {
+          "effect": "putCounter",
+          "targets": "remembered",
+          "counter": "-1/-1",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature leaves the battlefield, return the exiled card to its owner's hand.",
+      "trigger": {
+        "on": "leaves"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "linked": true,
+          "to": "hand"
+        }
+      ]
+    }
+  ]
+}

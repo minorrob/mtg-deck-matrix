@@ -1,0 +1,39 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gigastorm Titan",
+    "oracleId": "ef06e10c-553b-45b8-abf0-1d2e87c22128",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental"
+    ],
+    "manaCost": "{4}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "This spell costs {3} less to cast if you've cast another spell this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This spell costs {3} less to cast if you've cast another spell this turn.",
+      "rule": "this-costs-less",
+      "affects": {
+        "self": true
+      },
+      "amount": {
+        "spellsCastThisTurn": "you",
+        "atMost": 1,
+        "times": 3
+      }
+    }
+  ]
+}

@@ -1,0 +1,333 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Frontline War-Rager",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Refresh": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Untap target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "untap",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Two of Rob's creatures attacked, tapped: a +1/+1 counter at his end step -- and none at Maya's",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Frontline War-Rager",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Frontline War-Rager",
+            "Bear"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "END_OF_TURN"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Frontline War-Rager",
+                "counter": "+1/+1",
+                "count": 1
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "END_OF_TURN"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Bear"
+            },
+            {
+              "stack": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Frontline War-Rager",
+            "power": 3,
+            "toughness": 4
+          }
+        },
+        {
+          "seat": 1,
+          "life": 36
+        }
+      ]
+    },
+    {
+      "name": "One tapped creature is not two: no counter",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Frontline War-Rager",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Bear"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "END_OF_TURN"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Frontline War-Rager",
+            "counter": "+1/+1",
+            "count": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Maya's tapped creatures are not Rob's: no counter",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Frontline War-Rager",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Bear"
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Ogre",
+            "Bear"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Bear"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "END_OF_TURN"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Frontline War-Rager",
+            "counter": "+1/+1",
+            "count": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Two tapped as it triggers, one untapped before it resolves: the \"if\" fails then, and no counter (CR 603.4)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Frontline War-Rager",
+            "Bear",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Refresh"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Frontline War-Rager",
+            "Bear"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "END_OF_TURN"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Refresh",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "tapped": "Bear",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Frontline War-Rager",
+            "counter": "+1/+1",
+            "count": 0
+          }
+        }
+      ]
+    }
+  ]
+}

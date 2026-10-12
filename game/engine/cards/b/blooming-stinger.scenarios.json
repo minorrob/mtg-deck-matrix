@@ -1,0 +1,308 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Blooming Stinger",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Giant": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{3}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 7,
+      "toughness": 7
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters: Rob's Bear gains deathtouch until end of turn -- Maya's Ogre is no target, nor the Stinger",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Blooming Stinger"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Blooming Stinger"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Bear"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Bear",
+                "has": [
+                  "Deathtouch"
+                ]
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Blooming Stinger",
+                "has": [
+                  "Deathtouch"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Bear",
+            "lacks": [
+              "Deathtouch"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Blooming Stinger",
+            "has": [
+              "Deathtouch"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "The Bear with deathtouch, blocked by a 7/7 Giant: the Giant dies",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Blooming Stinger"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Giant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Blooming Stinger"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "attack": [
+            "Bear"
+          ]
+        },
+        {
+          "block": [
+            [
+              "Giant",
+              "Bear"
+            ]
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Giant"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "No other creature of Rob's: the trigger has no target and does nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Blooming Stinger"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Blooming Stinger"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Blooming Stinger",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "keywords": {
+            "card": "Ogre",
+            "lacks": [
+              "Deathtouch"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

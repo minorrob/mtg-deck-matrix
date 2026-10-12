@@ -63,7 +63,7 @@ import {recordCommanderDamage} from "./commander.mjs";
 import {damageAssignmentProblem} from "../controller.mjs";
 import {
   canBlockAttacker, blockersAreLegal, whyBlockersAreIllegal, lethalNeededFrom,
-  combatNeedsFirstStrike, dealsFirstStrike, dealsRegular, trampleOver, lifelinkFrom, markDeathtouch,
+  dealsFirstStrike, dealsRegular, trampleOver, lifelinkFrom, markDeathtouch,
 } from "../keywords/combat.mjs";
 
 const event = (kind, state, fields) => ({kind, data: {turn: state.turn, phase: state.phase, fields}});
@@ -392,13 +392,9 @@ function declareAttacks(state, player, picked, events) {
     defenders: [...new Set(picked.map((o) => o.defenderId))],
     /* `defender` the defending player (CR 506.2) -- the one who blocks -- and `planeswalker` the one attacked, when it is. */
     attacks: picked.map((o) => ({attacker: o.cardId, defender: o.defenderId, ...(o.planeswalkerId !== undefined ? {planeswalker: o.planeswalkerId} : {}), blocked: false, blockers: []})),
-    /* Read by the turn table to decide whether the first-strike damage step happens (CR 510.4).
-       Recomputed once blockers are in, because a blocker with first strike makes the step
-       happen just as an attacker with it does. */
-    firstStrike: false,
+    /* Whether the first-strike damage step happens is read from the creatures as the combat damage step begins (CR 510.4;
+       rules/turn.mjs), not kept here: first strike given after the declarations counts (Interjection, Train E). */
   };
-  /* An attacker with first strike is enough on its own; a blocker can add to it later. */
-  state.combat.firstStrike = combatNeedsFirstStrike(state);
   /* "Creatures that attacked this turn", "attacks for the first time each turn": counted on each attacker. */
   for (const attack of state.combat.attacks) recordUse(state, attack.attacker, "attacked");
   /* And whom the attacking player attacked this turn -- players, not their planeswalkers (CR 506.3): "players who attacked
@@ -500,10 +496,6 @@ export const blockers = {
       }));
     }
 
-    /* CR 510.4: whether the extra damage step happens can only be known once the blockers are in,
-       because a BLOCKER with first strike makes it happen just as an attacker with it does. */
-    state.combat.firstStrike = combatNeedsFirstStrike(state);
-
     /* The next defending player, if there is one; otherwise the step is done. */
     const next = nextDefenderToDeclare(state, awaiting.player);
     state.awaiting = next === null ? null : {kind: "declare-blockers", player: next};
@@ -548,6 +540,16 @@ const power = (state, id) => combatDamageOf(state, id);
 const onBattlefield = (state, id) => state.objects[id] !== undefined && state.objects[id].zone === "battlefield";
 /** Which combat damage step this is (CR 510.4): the first-strike step, or the regular one. */
 export const damageStep = (state) => (state.phase === "COMBAT_FIRST_STRIKE_DAMAGE" ? "first" : "regular");
+/* WHO DEALS DAMAGE IN THIS STEP (CR 510.4). In the first-strike step, a creature with first or double strike now -- and
+   which ones those were as that step began is kept (`struckFirst`). In the second step, the rest: one that had neither as
+   the first-strike step began -- even if it gained first strike since ("gains first strike until end of turn" cast in the
+   first-strike damage step, Interjection, Train E) -- and one with double strike now. With no first-strike step, the one
+   step is everyone's but a first striker's (dealsRegular) -- and none can have it then, or there would have been one. */
+const dealsIn = (state, id, step) => {
+  if (step === "first") return dealsFirstStrike(state, id);
+  const struck = state.combat?.struckFirst;
+  return Array.isArray(struck) ? !struck.includes(id) || hasNow(state, id, "Double Strike") : dealsRegular(state, id);
+};
 
 export const combatDamage = {
   /* Only an attacker that deals damage in this step (CR 510.4) and faces more than one blocker still in combat has a
@@ -555,7 +557,7 @@ export const combatDamage = {
      with trample (CR 702.19d) or nowhere. Asked once in each damage step it deals damage in. */
   open(state, step = damageStep(state)) {
     if (!state.combat) return false;
-    const dealsNow = (id) => (step === "first" ? dealsFirstStrike(state, id) : dealsRegular(state, id));
+    const dealsNow = (id) => dealsIn(state, id, step);
     const attack = state.combat.attacks.find((a) => a.assignment?.step !== step && onBattlefield(state, a.attacker) && dealsNow(a.attacker)
       && power(state, a.attacker) > 0 && a.blockers.filter((id) => onBattlefield(state, id)).length > 1);
     if (!attack) return false;
@@ -627,9 +629,11 @@ export const combatDamage = {
     if (!state.combat) return [];
     const events = [];
     const pending = [];
-    /* CR 510.4: in the first-strike step only creatures with first or double strike deal damage;
-       in the regular step, everything except a first striker that is not also double. */
-    const dealsNow = (id) => (step === "first" ? dealsFirstStrike(state, id) : dealsRegular(state, id));
+    /* CR 510.4: in the first-strike step only creatures with first or double strike deal damage -- those it began with
+       kept for the second step (dealsIn); in the regular step, the rest, and double strikers again. */
+    const dealsNow = (id) => dealsIn(state, id, step);
+    if (step === "first") state.combat.struckFirst = state.combat.attacks.flatMap((a) => [a.attacker, ...a.blockers])
+      .filter((id) => onBattlefield(state, id) && dealsFirstStrike(state, id));
     /* A creature that has left the battlefield deals no combat damage (CR 506.4). That is not a
        guard against a missing object, it is the rule: a blocker killed in the first-strike step is
        gone by the regular one and never hits back, which is the whole point of first strike. */

@@ -1,0 +1,304 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Guac & Marshmallow Pizza",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Flashed in after Rob attacks with his Bear: +2/+2 and untapped, and Maya takes 4",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Guac & Marshmallow Pizza"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Bear"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Bear"
+            }
+          ]
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Guac & Marshmallow Pizza"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Bear",
+              "is": false
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Bear",
+                "power": 4,
+                "toughness": 4
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_END"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 36
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Bear",
+            "Forest",
+            "Guac & Marshmallow Pizza"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Any creature: in Maya's turn, on her Ogre",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Guac & Marshmallow Pizza"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Forest",
+          "seat": 0
+        },
+        {
+          "cast": "Guac & Marshmallow Pizza",
+          "seat": 0
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Ogre"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Ogre",
+            "power": 5,
+            "toughness": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "No creature to target: the trigger is removed (CR 603.3d), the Pizza stays",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Guac & Marshmallow Pizza"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Guac & Marshmallow Pizza"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Forest",
+            "Guac & Marshmallow Pizza"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "{2}, {T}, sacrifice it: Rob gains 3 life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Guac & Marshmallow Pizza",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Guac & Marshmallow Pizza"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 43
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Guac & Marshmallow Pizza"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "With one mana, the Food ability is not offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Guac & Marshmallow Pizza",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Guac & Marshmallow Pizza"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": []
+    }
+  ]
+}

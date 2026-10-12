@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Arni, Renowned Champion",
+    "oracleId": "1a929c4f-ae1f-44d9-a0a7-2ca2dc928dee",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Berserker"
+    ],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 1,
+    "toughness": 5
+  },
+  "oracleText": "Trample\nWhenever another creature you control enters, Arni gets +X/+0 until end of turn, where X is that creature's power.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever another creature you control enters, Arni gets +X/+0 until end of turn, where X is that creature's power.",
+      "trigger": {
+        "on": "enters",
+        "who": "another",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": {
+            "powerOf": "that card"
+          },
+          "toughness": 0
+        }
+      ]
+    }
+  ]
+}

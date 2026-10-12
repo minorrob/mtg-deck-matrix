@@ -1,0 +1,111 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Deluge Virtuoso",
+    "oracleId": "416c70ab-f136-43e0-b5d5-9af8d4211c01",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Wizard"
+    ],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "When this creature enters, tap target creature an opponent controls and put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)\nOpus — Whenever you cast an instant or sorcery spell, this creature gets +1/+1 until end of turn. If five or more mana was spent to cast that spell, this creature gets +2/+2 until end of turn instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, tap target creature an opponent controls and put a stun counter on it.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "tap",
+          "targets": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "counter": "stun",
+          "count": 1
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "opponent"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Opus — Whenever you cast an instant or sorcery spell, this creature gets +1/+1 until end of turn. If five or more mana was spent to cast that spell, this creature gets +2/+2 until end of turn instead.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "filter": {
+          "anyOf": [
+            {
+              "types": [
+                "Instant"
+              ]
+            },
+            {
+              "types": [
+                "Sorcery"
+              ]
+            }
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "branch",
+          "if": {
+            "compare": {
+              "count": {
+                "manaSpent": "that card"
+              },
+              "atLeast": 5
+            }
+          },
+          "then": [
+            {
+              "effect": "pump",
+              "targets": "self",
+              "power": 2,
+              "toughness": 2
+            }
+          ],
+          "otherwise": [
+            {
+              "effect": "pump",
+              "targets": "self",
+              "power": 1,
+              "toughness": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

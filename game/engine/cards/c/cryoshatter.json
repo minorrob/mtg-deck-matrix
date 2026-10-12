@@ -1,0 +1,82 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Cryoshatter",
+    "oracleId": "865715e9-6759-4e01-803d-702c959e386e",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant creature\nEnchanted creature gets -5/-0.\nWhen enchanted creature becomes tapped or is dealt damage, destroy it.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Enchant creature",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Enchanted creature gets -5/-0.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": -5,
+        "toughness": 0
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "When enchanted creature becomes tapped or is dealt damage, destroy it.",
+      "trigger": {
+        "on": "becomes tapped",
+        "who": "any",
+        "filter": {
+          "attachedBy": "self"
+        }
+      },
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": "that card"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "When enchanted creature becomes tapped or is dealt damage, destroy it.",
+      "trigger": {
+        "on": "damage dealt once",
+        "to": "enchanted"
+      },
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": "that card"
+        }
+      ]
+    }
+  ]
+}

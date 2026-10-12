@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Feed the Flames",
+    "oracleId": "f474d244-d9be-4580-bf62-f97660e9c1a3",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Feed the Flames deals 5 damage to target creature. If that creature would die this turn, exile it instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Feed the Flames deals 5 damage to target creature. If that creature would die this turn, exile it instead.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 5,
+          "targets": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "effectUntil",
+          "rule": "exile-if-dies",
+          "targets": {
+            "target": 0
+          },
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

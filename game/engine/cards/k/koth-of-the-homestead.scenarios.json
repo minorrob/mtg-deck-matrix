@@ -1,0 +1,303 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Koth of the Homestead",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A Plains: 1 life, and a +1/+1 counter on Koth, the only creature",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Koth of the Homestead"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Plains"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Plains"
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 41
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Koth of the Homestead",
+            "counter": "+1/+1",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "He targets his Bear",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Koth of the Homestead",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Plains"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Plains"
+        },
+        {
+          "answer": [
+            0,
+            1
+          ]
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "life": 40
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 41
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Bear",
+            "counter": "+1/+1",
+            "count": 1
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 3,
+            "toughness": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "Target creature: Maya's Ogre is a target as well",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Koth of the Homestead"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Plains"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Plains"
+        },
+        {
+          "answer": [
+            0,
+            1
+          ]
+        },
+        {
+          "choose": [
+            "Ogre"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "counters": {
+            "card": "Ogre",
+            "counter": "+1/+1",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "A Forest: 1 life and no counter",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Koth of the Homestead"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Forest"
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 41
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Koth of the Homestead",
+            "counter": "+1/+1",
+            "count": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Maya's Plains is not Rob's: nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Koth of the Homestead"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Plains"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "play": "Plains",
+          "seat": 1
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 1,
+          "life": 40
+        }
+      ]
+    }
+  ]
+}

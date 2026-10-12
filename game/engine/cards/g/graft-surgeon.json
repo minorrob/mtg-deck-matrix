@@ -1,0 +1,71 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Graft Surgeon",
+    "oracleId": "fe7938ce-6289-4bf8-a8f5-85ecccbb7f86",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Cleric"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "This creature enters with a +1/+1 counter on it.\nWhen this creature dies, put its counters on up to one target creature you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This creature enters with a +1/+1 counter on it.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersWithCounters": {
+          "counter": "+1/+1",
+          "count": 1
+        }
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature dies, put its counters on up to one target creature you control.",
+      "trigger": {
+        "on": "dies",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "countersOf": "self"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "count": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    }
+  ]
+}

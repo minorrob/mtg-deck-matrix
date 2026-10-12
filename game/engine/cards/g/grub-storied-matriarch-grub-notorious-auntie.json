@@ -1,0 +1,233 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Grub, Storied Matriarch // Grub, Notorious Auntie",
+    "oracleId": "180286e4-67fa-44d5-9e90-4a4e99c016a7",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin",
+      "Warlock"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B",
+      "R"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Menace\nWhenever this creature enters or transforms into Grub, Storied Matriarch, return up to one target Goblin card from your graveyard to your hand.\nAt the beginning of your first main phase, you may pay {R}. If you do, transform Grub.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Menace",
+      "keyword": "menace"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature enters or transforms into Grub, Storied Matriarch, return up to one target Goblin card from your graveyard to your hand.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "hand"
+        }
+      ],
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "controller": "you",
+          "subtypes": [
+            "Goblin"
+          ],
+          "count": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature enters or transforms into Grub, Storied Matriarch, return up to one target Goblin card from your graveyard to your hand.",
+      "trigger": {
+        "on": "transformed",
+        "who": "self",
+        "into": "Grub, Storied Matriarch"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "hand"
+        }
+      ],
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "controller": "you",
+          "subtypes": [
+            "Goblin"
+          ],
+          "count": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your first main phase, you may pay {R}. If you do, transform Grub.",
+      "trigger": {
+        "on": "step",
+        "step": "MAIN1"
+      },
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "who": "you",
+          "mana": "{R}",
+          "ifPaid": true,
+          "effects": [
+            {
+              "effect": "setState",
+              "targets": "self",
+              "transform": true
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "layout": "transform",
+  "back": {
+    "identity": {
+      "name": "Grub, Notorious Auntie",
+      "supertypes": [
+        "Legendary"
+      ],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin",
+        "Warrior"
+      ],
+      "manaCost": null,
+      "colors": [
+        "R"
+      ],
+      "power": 2,
+      "toughness": 1
+    },
+    "oracleText": "Menace\nWhenever Grub attacks, you may blight 1. If you do, create a tapped and attacking token that's a copy of the blighted creature, except it has \"At the beginning of the end step, sacrifice this token.\"\nAt the beginning of your first main phase, you may pay {B}. If you do, transform Grub.",
+    "abilities": [
+      {
+        "kind": "keyword",
+        "text": "Menace",
+        "keyword": "menace"
+      },
+      {
+        "kind": "triggered",
+        "text": "Whenever Grub attacks, you may blight 1. If you do, create a tapped and attacking token that's a copy of the blighted creature, except it has \"At the beginning of the end step, sacrifice this token.\"",
+        "trigger": {
+          "on": "attacks",
+          "who": "self"
+        },
+        "effects": [
+          {
+            "effect": "chooseCard",
+            "zone": "battlefield",
+            "selector": {
+              "types": [
+                "Creature"
+              ],
+              "controller": "you"
+            },
+            "to": "stay",
+            "remember": true
+          },
+          {
+            "effect": "putCounter",
+            "targets": "remembered",
+            "counter": "-1/-1",
+            "count": 1
+          },
+          {
+            "effect": "copyPermanent",
+            "targets": "remembered",
+            "tapped": true,
+            "attacking": true,
+            "condition": {
+              "about": "remembered",
+              "is": {}
+            },
+            "except": {
+              "addAbilities": [
+                {
+                  "kind": "triggered",
+                  "text": "At the beginning of the end step, sacrifice this token.",
+                  "trigger": {
+                    "on": "end step",
+                    "yours": false
+                  },
+                  "effects": [
+                    {
+                      "effect": "moveZone",
+                      "targets": "self",
+                      "sacrifice": true
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "optional": true
+      },
+      {
+        "kind": "triggered",
+        "text": "At the beginning of your first main phase, you may pay {B}. If you do, transform Grub.",
+        "trigger": {
+          "on": "step",
+          "step": "MAIN1"
+        },
+        "effects": [
+          {
+            "effect": "unlessPays",
+            "who": "you",
+            "mana": "{B}",
+            "ifPaid": true,
+            "effects": [
+              {
+                "effect": "setState",
+                "targets": "self",
+                "transform": true
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

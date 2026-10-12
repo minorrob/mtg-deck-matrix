@@ -1,0 +1,148 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Burrog Banemaker",
+  "fixtures": {
+    "Giant": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{3}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 7,
+      "toughness": 7
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{1}{B} twice: a 3/3 until end of turn, a 1/1 again on Maya's turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Burrog Banemaker",
+            "Swamp",
+            "Wastes",
+            "Swamp",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Burrog Banemaker"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Burrog Banemaker"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Burrog Banemaker",
+                "power": 3,
+                "toughness": 3
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Burrog Banemaker",
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Deathtouch: blocked by Maya's 7/7 Giant, the 1/1 kills it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Burrog Banemaker"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Giant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Burrog Banemaker"
+          ]
+        },
+        {
+          "block": [
+            [
+              "Giant",
+              "Burrog Banemaker"
+            ]
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Giant"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Burrog Banemaker"
+          ]
+        }
+      ]
+    }
+  ]
+}

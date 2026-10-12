@@ -1,0 +1,534 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Gideon the Oathless",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Murder": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Maya's Bear enters: Gideon deals 1 damage to Maya; Rob's own Bear does nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Gideon the Oathless",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Bear"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Bear",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "life": 40
+        }
+      ]
+    },
+    {
+      "name": "Three players: Trey's creature, Trey is dealt the damage, not Maya",
+      "seats": 3,
+      "at": {
+        "turn": 3,
+        "phase": "MAIN1"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Gideon the Oathless"
+          ]
+        },
+        {
+          "seat": 2,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 2,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest",
+          "seat": 2
+        },
+        {
+          "tap": "Wastes",
+          "seat": 2
+        },
+        {
+          "cast": "Bear",
+          "seat": 2
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 2,
+          "life": 39
+        },
+        {
+          "seat": 1,
+          "life": 40
+        }
+      ]
+    },
+    {
+      "name": "Maya activates Kiora's -1: Gideon deals 1 damage to her; Rob's own loyalty ability does nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Gideon the Oathless",
+            "Kiora, Behemoth Beckoner",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Kiora, Behemoth Beckoner",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "activate": "Kiora, Behemoth Beckoner",
+          "targets": [
+            {
+              "card": "Forest",
+              "seat": 0
+            }
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "activate": "Kiora, Behemoth Beckoner",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Forest",
+              "seat": 1
+            }
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 2
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 39
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 1,
+          "tapped": "Forest",
+          "is": false
+        }
+      ]
+    },
+    {
+      "name": "A 0 loyalty ability is one: Maya's Ajani Resolute gains her 1 life, and Gideon deals her 1 damage first",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Gideon the Oathless"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ajani Resolute"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Ajani Resolute",
+          "seat": 1,
+          "ability": "a1"
+        },
+        {
+          "expect": [
+            {
+              "stack": 2
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 39
+            }
+          ]
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 1,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "life": 40
+        }
+      ]
+    },
+    {
+      "name": "Ward -- discard a card: Maya discards the Wastes she drew, and her Murder resolves",
+      "at": {
+        "turn": 2,
+        "phase": "MAIN1"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Gideon the Oathless"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Murder"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Murder",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Gideon the Oathless"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 1,
+                "options": [
+                  "Discard Wastes",
+                  "Don't pay"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Discard Wastes"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Gideon the Oathless"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Wastes",
+            "Murder"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Ward: Maya won't discard, and her Murder is countered",
+      "at": {
+        "turn": 2,
+        "phase": "MAIN1"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Gideon the Oathless"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Murder"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Murder",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Gideon the Oathless"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Don't pay"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Gideon the Oathless"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Murder"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

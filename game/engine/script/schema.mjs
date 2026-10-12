@@ -140,10 +140,28 @@ function checkEffect(effect, path, errors) {
      or for good when unsaid (effects/permanents.mjs). */
   if (name === "gainControl" && effect.until !== undefined && !CONTROL_DURATIONS.includes(effect.until))
     errors.push({path: `${path}.until`, message: `Control is gained for good, or until ${CONTROL_DURATIONS.join(" or ")}`});
+  /* "With the greatest power", "with the greatest mana value" (Crackling Doom, Soul Shatter; End of the Hunt): what is
+     sacrificed, or a permanent chosen on the battlefield (effects/asking.mjs, greatestBy) -- never read anywhere else. */
+  if (effect.greatest !== undefined && !(["power", "manaValue"].includes(effect.greatest) && (name === "sacrifice" || (name === "chooseCard" && effect.zone === "battlefield"))))
+    errors.push({path: `${path}.greatest`, message: "\"The greatest power\" or \"mana value\" (`greatest`) is a sacrifice's, or a chooseCard's on the battlefield: \"power\" or \"manaValue\""});
+  /* "For each of those permanents, choose a different opponent. Each opponent gains control of the permanent for which they
+     were chosen" (Dack Fayden, Helping Hand; effects/asking.mjs, controlToOpponents): `toEach`, of the permanents `targets`
+     names, for good, to no one player. */
+  if (effect.toEach !== undefined && (name !== "gainControl" || effect.toEach !== "different opponent" || effect.until !== undefined || effect.toPlayer !== undefined
+    || effect.selector !== undefined || effect.targets === undefined))
+    errors.push({path: `${path}.toEach`, message: "A different opponent for each permanent (`toEach: \"different opponent\"`) is gainControl's, of its `targets`, for good, with no `toPlayer`"});
+  /* "Goaded for the rest of the game" (Dack Fayden, Helping Hand; CR 701.15a): a goad's `until` is "game" or unsaid (until
+     its controller's next turn). */
+  if (name === "goad" && effect.until !== undefined && effect.until !== "game")
+    errors.push({path: `${path}.until`, message: "A goad lasts until its controller's next turn, or for the rest of the game (`until: \"game\"`)"});
   /* Control of two permanents exchanged (CR 701.12b; effects/permanents.mjs, exchangeControl): the one (`from`) and the other
      (`targets`) -- or the two of `targets` -- for good. */
   if (name === "exchangeControl" && (effect.targets === undefined || effect.until !== undefined))
     errors.push({path: `${path}.targets`, message: "exchangeControl exchanges control of two permanents, for good: `from` the one and `targets` the other, or the two of `targets`"});
+  /* "You put that card onto the battlefield under your control" (Jhoira, Weatherlight Corsair; effects/zones.mjs, digUntil):
+     the one controller a found card is put there under besides its owner -- any other word would be read as its owner. */
+  if (name === "digUntil" && effect.found?.controller !== undefined && !(effect.found.controller === "you" && effect.found.to === "battlefield"))
+    errors.push({path: `${path}.found.controller`, message: "A card found is put onto the battlefield under its owner's control, or `controller: \"you\"` with `to: \"battlefield\"`"});
   /* "Exile ... until this leaves the battlefield" (CR 610.3): the one "until" the engine returns from. */
   if (name === "exileUntil" && effect.until !== "this leaves")
     errors.push({path: `${path}.until`, message: "exileUntil returns what it exiled when its source leaves the battlefield: `until: \"this leaves\"`"});
@@ -315,9 +333,14 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
   /* A target is a selector, or `{anyOf: [...]}` for "any target" (script/bind.mjs) -- either with a `count`, `{min, max}`, for
      "up to N", "any number of", "one or two" (CR 115.1, 601.2c). */
   for (const [index, spec] of (ability.targets ?? []).entries()) {
-    const {count, distinctFrom, onlyIf, differentControllers, share, ...selector} = spec && typeof spec === "object" ? spec : {};
+    const {count, distinctFrom, onlyIf, differentControllers, share, forEach, ...selector} = spec && typeof spec === "object" ? spec : {};
     if (count !== undefined && !countValid(count))
       errors.push({path: `${path}.targets[${index}].count`, message: "A target's count is `{min, max}`: whole numbers, max at least 1 and at least min, or no max for \"any number\""});
+    /* "For each opponent, put X -1/-1 counters on up to one target creature that player controls" (Hapatra, the Desert Fang,
+       Train E; script/bind.mjs, `forEach`): a triggered ability's, as a reflexive trigger's is (above) -- the one form built. */
+    if (forEach !== undefined && !(ability.kind === "triggered" && forEach === "opponent" && (count?.min ?? 0) === 0 && count?.max === 1
+      && (Array.isArray(selector.anyOf) ? selector.anyOf : [selector]).every((one) => (one?.what ?? "permanent") === "permanent")))
+      errors.push({path: `${path}.targets[${index}].forEach`, message: "\"For each opponent, up to one target ... that player controls\" is forEach: \"opponent\" with count {min: 0, max: 1}, on a triggered ability, its alternatives permanents"});
     /* "A second target", "up to one other target" (script/bind.mjs, SPEC_KEYS): an earlier target of the same ability. */
     if (distinctFrom !== undefined && !(Array.isArray(distinctFrom) && distinctFrom.length && distinctFrom.every((n) => Number.isInteger(n) && n >= 0 && n < index)))
       errors.push({path: `${path}.targets[${index}].distinctFrom`, message: "distinctFrom names earlier targets of the same ability, by number: [0]"});

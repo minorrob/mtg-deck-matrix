@@ -1,0 +1,368 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Hydro-Channeler",
+  "fixtures": {
+    "Tidings": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Draw a card.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "draw",
+            "count": 1
+          }
+        ]
+      }
+    },
+    "Omen": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Draw a card.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "draw",
+            "count": 1
+          }
+        ]
+      }
+    },
+    "Spark": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Spark deals 1 damage to target player.",
+        "targets": [
+          {
+            "what": "player"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 1,
+            "who": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Sprite": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Faerie"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "keywords": [
+        "Flying"
+      ]
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{T}: {U} for an instant -- Rob draws",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hydro-Channeler"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Tidings"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Hydro-Channeler",
+          "mana": {
+            "U": 1
+          }
+        },
+        {
+          "cast": "Tidings"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Tidings"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "And for a sorcery",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hydro-Channeler"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Omen"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Hydro-Channeler",
+          "mana": {
+            "U": 1
+          }
+        },
+        {
+          "cast": "Omen"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Omen"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Not for a creature spell: the {U} cannot cast the Sprite",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hydro-Channeler"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sprite"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Hydro-Channeler",
+          "mana": {
+            "U": 1
+          }
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Sprite"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": []
+    },
+    {
+      "name": "{1}, {T}: one mana of any color -- red, for Spark",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hydro-Channeler",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Spark"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Hydro-Channeler",
+          "mana": {
+            "R": 1
+          }
+        },
+        {
+          "cast": "Spark",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "tapped": "Hydro-Channeler"
+        }
+      ]
+    },
+    {
+      "name": "Its any-color mana is not for an artifact spell either",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hydro-Channeler",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rock"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Hydro-Channeler",
+          "mana": {
+            "G": 1
+          }
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Rock"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": []
+    },
+    {
+      "name": "Summoning sick, its {T} abilities are not offered (CR 302.6)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hydro-Channeler"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Tidings"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Hydro-Channeler"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": []
+    }
+  ]
+}

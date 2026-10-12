@@ -1,0 +1,569 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Fractalize",
+  "fixtures": {
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Red Bane": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target red creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "colors": [
+              "R"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Ogre Bane": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target Ogre.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Ogre"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Fractal Bane": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target Fractal.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Fractal"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Green Bane": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target green creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "colors": [
+              "G"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Blue Bane": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target blue creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "colors": [
+              "U"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Growth": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Target creature gets +3/+3 until end of turn.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "pump",
+            "targets": {
+              "target": 0
+            },
+            "power": 3,
+            "toughness": 3
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "X=2 on Maya's red 3/3 Ogre: a green and blue Fractal, base 3/3 -- no longer red, nor an Ogre",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Fractalize",
+            "Red Bane",
+            "Ogre Bane",
+            "Green Bane",
+            "Blue Bane",
+            "Fractal Bane"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Red Bane"
+              },
+              "count": 1
+            },
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Fractal Bane"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Fractalize",
+          "x": 2,
+          "targets": [
+            {
+              "card": "Ogre"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "stats": {
+                "card": "Ogre",
+                "power": 3,
+                "toughness": 3
+              }
+            },
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Red Bane"
+              },
+              "count": 0
+            },
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Ogre Bane"
+              },
+              "count": 0
+            },
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Green Bane"
+              },
+              "count": 1
+            },
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Blue Bane"
+              },
+              "count": 1
+            },
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Fractal Bane"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Fractal Bane",
+          "targets": [
+            {
+              "card": "Ogre"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "X=0: base 1/1, and a +3/+3 cast before it still applies -- a 4/4 (CR 613.4)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Fractalize",
+            "Growth"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Growth",
+          "targets": [
+            {
+              "card": "Ogre"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "stats": {
+                "card": "Ogre",
+                "power": 6,
+                "toughness": 6
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Fractalize",
+          "x": 0,
+          "targets": [
+            {
+              "card": "Ogre"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Ogre",
+            "power": 4,
+            "toughness": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "Until end of turn: on Maya's turn her Ogre is a red 3/3 Ogre again",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Fractalize",
+            "Red Bane",
+            "Ogre Bane"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Fractalize",
+          "x": 4,
+          "targets": [
+            {
+              "card": "Ogre"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "stats": {
+                "card": "Ogre",
+                "power": 5,
+                "toughness": 5
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "pass": 1
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "stats": {
+                "card": "Ogre",
+                "power": 3,
+                "toughness": 3
+              }
+            },
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Red Bane",
+                "seat": 0
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "cast": "Ogre Bane",
+          "seat": 0,
+          "targets": [
+            {
+              "card": "Ogre"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ]
+    }
+  ]
+}

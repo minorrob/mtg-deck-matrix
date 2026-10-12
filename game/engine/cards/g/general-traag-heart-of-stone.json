@@ -1,0 +1,84 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "General Traag, Heart of Stone",
+    "oracleId": "ade54bb7-3df8-4578-add8-1f85afee57ab",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental",
+      "Soldier"
+    ],
+    "manaCost": "{3}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 4,
+    "toughness": 3
+  },
+  "oracleText": "Trample\nWhen General Traag enters, you may sacrifice another artifact. When you do, General Traag deals 4 damage to target creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "triggered",
+      "text": "When General Traag enters, you may sacrifice another artifact. When you do, General Traag deals 4 damage to target creature.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "count": 1,
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Artifact"
+            ],
+            "another": true
+          },
+          "remember": true
+        },
+        {
+          "effect": "immediateTrigger",
+          "text": "When you do, General Traag deals 4 damage to target creature.",
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          },
+          "targets": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            }
+          ],
+          "effects": [
+            {
+              "effect": "dealDamage",
+              "amount": 4,
+              "targets": {
+                "target": 0
+              }
+            }
+          ]
+        }
+      ],
+      "optional": true
+    }
+  ]
+}

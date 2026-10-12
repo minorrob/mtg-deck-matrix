@@ -1,0 +1,67 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Fractal Mascot",
+    "oracleId": "cca3f3e8-15a7-4ad8-893a-d3570178a800",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Fractal",
+      "Elk"
+    ],
+    "manaCost": "{4}{G}{U}",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": 6,
+    "toughness": 6
+  },
+  "oracleText": "Trample\nWhen this creature enters, tap target creature an opponent controls. Put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, tap target creature an opponent controls. Put a stun counter on it.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "tap",
+          "targets": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "counter": "stun",
+          "count": 1
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "opponent"
+        }
+      ]
+    }
+  ]
+}

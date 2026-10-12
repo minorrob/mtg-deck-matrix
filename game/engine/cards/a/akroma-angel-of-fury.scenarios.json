@@ -1,0 +1,930 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Akroma, Angel of Fury",
+  "fixtures": {
+    "Counter": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{U}{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Counter target spell.",
+        "targets": [
+          {
+            "what": "spell"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "counterSpell",
+            "spells": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Recall": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Return target creature to its owner's hand.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "moveZone",
+            "targets": {
+              "target": 0
+            },
+            "to": "hand"
+          }
+        ]
+      }
+    },
+    "Smite": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Bolt": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Bolt deals 3 damage to any target.",
+        "targets": [
+          {
+            "anyOf": [
+              {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ]
+              },
+              {
+                "what": "player"
+              }
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 3,
+            "targets": {
+              "target": 0
+            },
+            "who": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Cast for {5}{R}{R}{R}: Maya's Counter can aim at it and does nothing -- it can't be countered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Akroma, Angel of Fury"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Mountain",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Counter"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Akroma, Angel of Fury"
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 1
+        },
+        {
+          "cast": "Counter",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Akroma, Angel of Fury"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Akroma, Angel of Fury",
+            "Mountain",
+            "Mountain",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Counter"
+          ]
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Akroma, Angel of Fury",
+            "has": [
+              "Flying",
+              "Trample",
+              "Protection"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Akroma, Angel of Fury",
+            "power": 6,
+            "toughness": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "Protection from white and from blue: Maya's Recall and Smite find only her Bear; her red Bolt may aim at Akroma, who takes 3 and lives",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Akroma, Angel of Fury"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Plains",
+            "Mountain",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Recall",
+            "Smite",
+            "Bolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Island",
+          "seat": 1
+        },
+        {
+          "tap": "Plains",
+          "seat": 1
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Recall",
+                "seat": 1
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Bear"
+                ]
+              ]
+            },
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Smite",
+                "seat": 1
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Bear"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "cast": "Bolt",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Akroma, Angel of Fury"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Akroma, Angel of Fury"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bolt"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "{R}: +1/+0 until end of turn, as often as it is paid -- an 8/6 for two, a 6/6 again next turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Akroma, Angel of Fury",
+            "Mountain",
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "activate": "Akroma, Angel of Fury"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "activate": "Akroma, Angel of Fury"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Akroma, Angel of Fury",
+                "power": 8,
+                "toughness": 6
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Akroma, Angel of Fury",
+            "power": 6,
+            "toughness": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "Morph: cast face down for {3}, a nameless 2/2 with no abilities -- Rob sees Akroma, Maya a face-down permanent",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Akroma, Angel of Fury"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Akroma, Angel of Fury"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "cast": "Akroma, Angel of Fury",
+          "disguise": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "faceDown": [
+            "Akroma, Angel of Fury"
+          ]
+        },
+        {
+          "seat": 1,
+          "of": 0,
+          "zone": "battlefield",
+          "faceDown": [
+            null
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Akroma, Angel of Fury",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Akroma, Angel of Fury",
+            "lacks": [
+              "Flying",
+              "Trample",
+              "Protection",
+              "Ward"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Turned face up for {3}{R}{R}{R}, a special action in answer to Maya's Bolt: the 6/6 Akroma takes 3 and lives",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Akroma, Angel of Fury"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Mountain",
+            "Mountain",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Akroma, Angel of Fury",
+          "disguise": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "cast": "Bolt",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "A face-down permanent"
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Mountain",
+          "seat": 0
+        },
+        {
+          "tap": "Mountain",
+          "seat": 0
+        },
+        {
+          "tap": "Mountain",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "turn-face-up",
+                "card": "Akroma, Angel of Fury",
+                "seat": 0
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "turnFaceUp": "Akroma, Angel of Fury",
+          "seat": 0,
+          "disguise": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            },
+            {
+              "seat": 1,
+              "of": 0,
+              "zone": "battlefield",
+              "cards": [
+                "Akroma, Angel of Fury",
+                "Wastes",
+                "Wastes",
+                "Wastes",
+                "Mountain",
+                "Mountain",
+                "Mountain",
+                "Wastes",
+                "Wastes",
+                "Wastes"
+              ]
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Akroma, Angel of Fury",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Mountain",
+            "Mountain",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Akroma, Angel of Fury",
+            "power": 6,
+            "toughness": 6
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Akroma, Angel of Fury",
+            "has": [
+              "Flying",
+              "Trample",
+              "Protection"
+            ]
+          }
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bolt"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Cast face down, it turns face up for its morph cost alone: eight mana in the pool, and only the morph way is offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Akroma, Angel of Fury"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Mountain",
+            "Mountain",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Akroma, Angel of Fury",
+          "disguise": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "turn-face-up",
+            "card": "Akroma, Angel of Fury"
+          },
+          "count": 1
+        },
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Akroma, Angel of Fury"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "The face-down spell has no abilities: Maya's Counter counters it, and Akroma goes to Rob's graveyard",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Akroma, Angel of Fury"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Counter"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Akroma, Angel of Fury",
+          "disguise": true
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 1
+        },
+        {
+          "cast": "Counter",
+          "seat": 1,
+          "targets": "any"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Akroma, Angel of Fury"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ]
+    }
+  ]
+}

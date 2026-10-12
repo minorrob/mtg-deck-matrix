@@ -1,0 +1,97 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hydro-Channeler",
+    "oracleId": "95630a83-3699-4340-b3e5-17e81db1b82f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Merfolk",
+      "Wizard"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "{T}: Add {U}. Spend this mana only to cast an instant or sorcery spell.\n{1}, {T}: Add one mana of any color. Spend this mana only to cast an instant or sorcery spell.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {U}. Spend this mana only to cast an instant or sorcery spell.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "U": 1
+          },
+          "spendOnly": {
+            "spell": {
+              "anyOf": [
+                {
+                  "types": [
+                    "Instant"
+                  ]
+                },
+                {
+                  "types": [
+                    "Sorcery"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{1}, {T}: Add one mana of any color. Spend this mana only to cast an instant or sorcery spell.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyColor": true,
+          "spendOnly": {
+            "spell": {
+              "anyOf": [
+                {
+                  "types": [
+                    "Instant"
+                  ]
+                },
+                {
+                  "types": [
+                    "Sorcery"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

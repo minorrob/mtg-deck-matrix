@@ -1,0 +1,65 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gardenize",
+    "oracleId": "e74a2a4c-ca3c-49e8-9b0f-b4d1bb91fb54",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever a creature you control dies, put a charge counter on this enchantment.\nAt the beginning of your first main phase, add {G} for each charge counter on this enchantment.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever a creature you control dies, put a charge counter on this enchantment.",
+      "trigger": {
+        "on": "dies",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "charge",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your first main phase, add {G} for each charge counter on this enchantment.",
+      "trigger": {
+        "on": "step",
+        "step": "MAIN1"
+      },
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "G": {
+              "countersOn": "self",
+              "counter": "charge"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

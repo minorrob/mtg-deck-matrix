@@ -1,0 +1,268 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Hemosymbic Mite",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Growth": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Target creature gets +3/+3 until end of turn.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "pump",
+            "targets": {
+              "target": 0
+            },
+            "power": 3,
+            "toughness": 3
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Tapped to attack: the Bear beside it gets +1/+1",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hemosymbic Mite",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Hemosymbic Mite"
+          ]
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 3,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Hemosymbic Mite",
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Its power as the ability resolves: grown to 4/4 in response, the Bear gets +4/+4",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hemosymbic Mite",
+            "Bear",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Growth"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Hemosymbic Mite"
+          ]
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Growth",
+          "targets": [
+            {
+              "card": "Hemosymbic Mite"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 6,
+            "toughness": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "Another creature Rob controls: alone, or beside only Maya's Ogre, there is no target and nothing happens",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hemosymbic Mite"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Hemosymbic Mite"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Ogre",
+            "power": 3,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Hemosymbic Mite",
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Until end of turn: the Bear is a 2/2 again in the next turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hemosymbic Mite",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Hemosymbic Mite"
+          ]
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    }
+  ]
+}

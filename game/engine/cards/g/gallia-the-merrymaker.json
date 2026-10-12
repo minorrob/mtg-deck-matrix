@@ -1,0 +1,85 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gallia, the Merrymaker",
+    "oracleId": "87f39199-3e4b-44fa-8406-62019eb43c10",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Satyr"
+    ],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Haste\nEach other creature you control with a +1/+1 counter on it has haste.\n{1}{R}, {T}: Put a +1/+1 counter on target creature that entered this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Haste",
+      "keyword": "haste"
+    },
+    {
+      "kind": "static",
+      "text": "Each other creature you control with a +1/+1 counter on it has haste.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "counters": "+1/+1",
+        "another": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Haste"
+        ]
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{1}{R}, {T}: Put a +1/+1 counter on target creature that entered this turn.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{R}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "enteredThisTurn": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

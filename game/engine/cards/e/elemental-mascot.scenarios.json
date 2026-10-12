@@ -1,0 +1,589 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Elemental Mascot",
+  "fixtures": {
+    "Tidings": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Draw a card.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "draw",
+            "count": 1
+          }
+        ]
+      }
+    },
+    "Blaze": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{4}{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Blaze deals 3 damage to target player.",
+        "targets": [
+          {
+            "what": "player"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 3,
+            "who": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Tidings, one mana: a 2/4 until end of turn, and nothing exiled",
+      "library": [
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elemental Mascot",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Tidings"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Tidings"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Elemental Mascot",
+                "power": 2,
+                "toughness": 4
+              }
+            },
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": []
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Elemental Mascot",
+            "power": 1,
+            "toughness": 4
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Blaze, five mana: a 2/4, and the top card, an Island, exiled -- Rob plays it from exile",
+      "library": [
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elemental Mascot",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Blaze"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Blaze",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Island"
+              ]
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Elemental Mascot",
+                "power": 2,
+                "toughness": 4
+              }
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "play-land",
+                "card": "Island"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "play": "Island"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Elemental Mascot",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": []
+        },
+        {
+          "seat": 1,
+          "life": 37
+        }
+      ]
+    },
+    {
+      "name": "Until the end of Rob's next turn: on turn 3 the Island is still his to play",
+      "library": [
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elemental Mascot",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Blaze"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Blaze",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "settle": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "play-land",
+                "card": "Island"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "play": "Island"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Elemental Mascot",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Island"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "And no longer: on turn 5 the Island stays in exile, not offered",
+      "library": [
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elemental Mascot",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Blaze"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Blaze",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "settle": true
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "play-land",
+            "card": "Island"
+          },
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Island"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A Bear exiled: cast from exile, paying its {1}{G}",
+      "library": [
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elemental Mascot",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Blaze"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Blaze",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "settle": true
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Bear"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Elemental Mascot",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Forest",
+            "Wastes",
+            "Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Flying and vigilance: it attacks for 1 and stays untapped; a creature spell does nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elemental Mascot",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Bear"
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Elemental Mascot",
+                "has": [
+                  "Flying",
+                  "Vigilance"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "attack": [
+            "Elemental Mascot"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "tapped": "Elemental Mascot",
+          "is": false
+        }
+      ]
+    }
+  ]
+}

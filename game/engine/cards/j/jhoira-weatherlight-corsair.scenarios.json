@@ -1,0 +1,620 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Jhoira, Weatherlight Corsair",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Legend": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human"
+      ],
+      "manaCost": "{2}{B}",
+      "colors": [
+        "B"
+      ],
+      "power": 3,
+      "toughness": 3,
+      "supertypes": [
+        "Legendary"
+      ]
+    },
+    "Legendary Sorcery": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{4}{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Draw a card.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "draw",
+            "count": 1
+          }
+        ]
+      },
+      "supertypes": [
+        "Legendary"
+      ]
+    },
+    "Big Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{5}",
+      "colors": []
+    },
+    "Shatter": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target artifact.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Artifact"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters: Maya reveals a Bear, an Ogre and a Rock -- the Rock is Rob's, he loses 1, and the two go to the bottom",
+      "library": [
+        "Bear",
+        "Ogre",
+        "Rock"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Jhoira, Weatherlight Corsair"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Jhoira, Weatherlight Corsair"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Jhoira, Weatherlight Corsair",
+            "Rock"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Rock"
+          ]
+        },
+        {
+          "seat": 0,
+          "life": 39
+        },
+        {
+          "seat": 1,
+          "life": 40
+        },
+        {
+          "seat": 1,
+          "zone": "library",
+          "count": 19
+        },
+        {
+          "event": "GameEventCardRevealed",
+          "where": {
+            "card": {
+              "cardId": 21,
+              "name": "Bear",
+              "owner": 1,
+              "controller": 1,
+              "faceDown": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "A legendary sorcery is historic but no permanent card: passed over for the Legend after it, and Rob loses 3",
+      "library": [
+        "Legendary Sorcery",
+        "Legend"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Jhoira, Weatherlight Corsair"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Jhoira, Weatherlight Corsair"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Jhoira, Weatherlight Corsair",
+            "Legend"
+          ]
+        },
+        {
+          "seat": 0,
+          "life": 37
+        },
+        {
+          "seat": 1,
+          "zone": "library",
+          "count": 19
+        }
+      ]
+    },
+    {
+      "name": "No historic permanent card in her library: all of it revealed and put back, nothing found, no life lost",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Jhoira, Weatherlight Corsair"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Jhoira, Weatherlight Corsair"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Jhoira, Weatherlight Corsair"
+          ]
+        },
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 1,
+          "zone": "library",
+          "count": 20
+        }
+      ]
+    },
+    {
+      "name": "It attacks: a five-mana Big Rock this time, and Rob loses 5",
+      "library": [
+        "Big Rock"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Jhoira, Weatherlight Corsair"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Jhoira, Weatherlight Corsair"
+          ]
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Jhoira, Weatherlight Corsair",
+            "Big Rock"
+          ]
+        },
+        {
+          "seat": 0,
+          "life": 35
+        }
+      ]
+    },
+    {
+      "name": "Three players: Rob targets Trey -- Trey's library, Trey's Rock, now Rob's",
+      "seats": 3,
+      "library": [
+        "Rock"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Jhoira, Weatherlight Corsair"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Jhoira, Weatherlight Corsair"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Maya",
+                  "Trey"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Trey"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Jhoira, Weatherlight Corsair",
+            "Rock"
+          ]
+        },
+        {
+          "seat": 2,
+          "zone": "battlefield",
+          "cards": [
+            "Rock"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "library",
+          "count": 20
+        },
+        {
+          "seat": 2,
+          "zone": "library",
+          "count": 19
+        }
+      ]
+    },
+    {
+      "name": "The Rock leaves: to its owner's graveyard, Maya's",
+      "library": [
+        "Rock"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Jhoira, Weatherlight Corsair",
+            "Shatter"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Jhoira, Weatherlight Corsair"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Shatter",
+          "targets": [
+            {
+              "card": "Rock"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Rock"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Shatter"
+          ]
+        }
+      ]
+    }
+  ]
+}

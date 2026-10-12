@@ -11,15 +11,15 @@
   "cards": 3238,
   "defined": 1273,
   "provisional": 27,
-  "everyRule": 2650
+  "everyRule": 2651
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 66,
+    "built": 68,
     "partial": 0,
     "named": 5,
-    "missing": 123
+    "missing": 121
    },
    "entries": [
     {
@@ -758,13 +758,13 @@
      "kind": "keyword ability",
      "rule": "702.37",
      "name": "Morph",
-     "engine": null,
-     "status": "missing",
+     "engine": "Morph",
+     "status": "built",
      "forge": "Morph",
      "top": 2,
      "all": 153,
-     "blocks": 2,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -1610,8 +1610,8 @@
      "kind": "keyword ability",
      "rule": "702.56",
      "name": "Replicate",
-     "engine": null,
-     "status": "missing",
+     "engine": "Replicate",
+     "status": "built",
      "forge": "Replicate",
      "top": 0,
      "all": 21,
@@ -8294,7 +8294,7 @@
      "top": 1,
      "all": 8,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "replacement",

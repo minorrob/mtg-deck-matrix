@@ -1,0 +1,58 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Lose Focus",
+    "oracleId": "1cea6439-7ae5-4887-8c33-7da9fb36e2d4",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Replicate {U} (When you cast this spell, copy it for each time you paid its replicate cost. You may choose new targets for the copies.)\nCounter target spell unless its controller pays {2}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Replicate {U} (When you cast this spell, copy it for each time you paid its replicate cost. You may choose new targets for the copies.)",
+      "keyword": "replicate",
+      "cost": "{U}"
+    },
+    {
+      "kind": "spell",
+      "text": "Counter target spell unless its controller pays {2}.",
+      "targets": [
+        {
+          "what": "spell"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "who": {
+            "controllerOf": {
+              "target": 0
+            }
+          },
+          "amount": 2,
+          "effects": [
+            {
+              "effect": "counterSpell",
+              "spells": {
+                "target": 0
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

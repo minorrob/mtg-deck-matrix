@@ -1,0 +1,58 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hemosymbic Mite",
+    "oracleId": "103e0b63-fbde-4054-91f7-dd04b40b59ef",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Mite"
+    ],
+    "manaCost": "{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Whenever this creature becomes tapped, another target creature you control gets +X/+X until end of turn, where X is this creature's power.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature becomes tapped, another target creature you control gets +X/+X until end of turn, where X is this creature's power.",
+      "trigger": {
+        "on": "becomes tapped",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": {
+            "powerOf": "self"
+          },
+          "toughness": {
+            "powerOf": "self"
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "another": true
+        }
+      ]
+    }
+  ]
+}

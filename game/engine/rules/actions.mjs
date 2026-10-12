@@ -404,7 +404,10 @@ export function resolveCastCost(state, awaiting, indices) {
   if (picked.length !== (indices ?? []).length || !counted || picked.some((i) => !choice.options[i]))
     throw new Error("Invalid selection");
   const ids = picked.map((i) => choice.options[i].cardId);
-  const way = choice.cost === "mana" ? castTapPlans(state, awaiting.player, awaiting.action, TAP_CHOICES)[picked[0]] : null;
+  /* The ways to tap, read as the question read them: as the card is cast (asCast) -- an Adventure as itself (CR 715.3a), so
+     mana in the pool that would pay the creature but not its Adventure (Smaug, the Great Calamity's Spew Flame) is not read
+     as paying it, which would leave no way to tap. */
+  const way = choice.cost === "mana" ? asCast(state, awaiting.action, () => castTapPlans(state, awaiting.player, awaiting.action, TAP_CHOICES))[picked[0]] : null;
   const action = {...structuredClone(awaiting.action), ...(choice.cost === "pool" ? {payWith: choice.options[picked[0]].key, ...(choice.options[picked[0]].riders ? {payRiders: choice.options[picked[0]].riders} : {})} : way ? {tapPlan: way.key} : choice.cost === "tap" ? {flashbackTap: ids}
     : choice.cost === "convoke" ? {convokeTap: ids} : choice.cost === "waterbend" ? {waterbendTap: ids} : choice.cost === "tapAny" ? {tapChosen: ids} : choice.cost === "behold" ? {beheld: ids} : choice.cost === "exileOthers" ? {othersExiled: ids} : choice.cost === "sacrifice" ? {sacrificeSet: ids} : choice.cost === "escalate" ? {escalateTapped: ids}
     : choice.cost === "counters" ? {counterSet: picked.map((i) => ({id: choice.options[i].cardId, counter: choice.options[i].counter}))} : {escapeExile: ids})};
@@ -544,6 +547,12 @@ function additionalVariants(costs) {
     }
     if (atom?.atom === "multikicker") {
       variants = variants.flatMap((v) => Array.from({length: MULTIKICK_MOST + 1}, (_, k) => ({...v, mana: v.mana + (atom.cost ?? "").repeat(k), kicked: k})));
+      continue;
+    }
+    /* REPLICATE (CR 702.56a; Lose Focus, Train E): "you may pay [cost] any number of times" -- as multikicker's, each number of
+       times its own cast, that many times its mana added (`replicated`, the copies its trigger makes). */
+    if (atom?.atom === "replicate") {
+      variants = variants.flatMap((v) => Array.from({length: MULTIKICK_MOST + 1}, (_, k) => ({...v, mana: v.mana + (atom.cost ?? "").repeat(k), replicated: k})));
       continue;
     }
     /* TIERED (CR 702.183a): one mode, and its cost -- each mode its own variant, that mode alone (withModes), its cost added. */
@@ -1285,7 +1294,9 @@ function withAdventure(state, id, fn) {
    from. The card is weighed as that face-down spell for the length of `fn` (state/index.mjs, shownFaceDown): its cost, its
    timing, and every rule that reads a spell, the face-down spell's (702.168b), with its derivations made afresh -- and as
    itself again after, unless `fn` cast it: it is then a new object, a face-down spell on the stack (rules/stack.mjs). */
-const disguiseOf = (card) => (card?.abilities ?? []).find((a) => a.kind === "static" && a.rule === "disguise") ?? null;
+/* MORPH (CR 702.37a, 702.37c) is cast face down the same way, for {3} -- a 2/2 with no text (state/index.mjs) -- and turned
+   face up for its morph cost (702.37e): the card's own face-down keyword, either. */
+const disguiseOf = (card) => (card?.abilities ?? []).find((a) => a.kind === "static" && (a.rule === "disguise" || a.rule === "morph")) ?? null;
 const DISGUISE_WAY = Object.freeze({mana: "{3}", life: 0, extra: [], evoke: false, disguise: true});
 function withFaceDown(state, id, fn) {
   const card = state.objects[id];
@@ -1423,6 +1434,7 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, adv
       const base = {kind: "cast", objectId: id, label: way?.disguise ? object.faceDownCard.card : object.card, payment: convoke || payWays ? null : payment, from, tax, ...(X !== null ? {x: X} : {}), ...(autoTap && !convoke ? {autoTap: true} : {}),
         ...(payWays && !convoke ? {payWays: true} : {}),
         ...(convoke ? {convoke: true} : {}), ...(variant.mana ? {extraMana: variant.mana} : {}), ...(variant.kicked ? {kicked: variant.kicked} : {}),
+        ...(variant.replicated ? {replicated: variant.replicated} : {}),
         ...(tapsAny ? {tapAny: true} : {}), ...(beholds ? {behold: beholds.count ?? 1} : {}),
         /* Escalated (CR 702.120a): how many modes beyond the first, and how many creatures that taps. */
         ...(variant.escalate ? {escalate: variant.escalate} : {}), ...(variant.escalateTap ? {escalateTap: variant.escalateTap.count} : {}),
@@ -1817,6 +1829,8 @@ const sameAction = (a, b) => a.kind === b.kind
      ("or pay {3}") another than paying its other choice. */
   && (a.alternative ?? null) === (b.alternative ?? null)
   && (a.extraMana ?? null) === (b.extraMana ?? null)
+  /* And replicated that many times (CR 702.56a): another cost, and that many copies. */
+  && (a.replicated ?? 0) === (b.replicated ?? 0)
   /* And escalated for that many modes beyond the first, tapping that many creatures (CR 702.120a): another cost. Which
      creatures is picked after the offer is taken, so they are not part of it (and are held to the cost as it is paid). */
   && (a.escalate ?? 0) === (b.escalate ?? 0) && (a.escalateTap ?? 0) === (b.escalateTap ?? 0)
@@ -2339,6 +2353,15 @@ function performOffered(state, player, action, during) {
     }
     /* What it beheld from the hand, revealed to every player as the cost is paid (CR 701.4a, 701.20a); it stays in the hand. */
     for (const id of beholding) if (state.objects[id]?.zone === "hand") events.push(event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: player}}));
+    /* "Behold a Goblin and exile it" (Champion of the Weird; CR 701.4a, 601.2h): what was beheld -- revealed from the hand, or a
+       permanent chosen -- exiled as the cost is paid, and kept against the spell for the permanent it becomes, whose ability
+       names "the exiled card" (CR 607.2q; rules/stack.mjs carries it there). */
+    if (beholding.length && additionalAtom(object.spell?.additionalCost, "behold")?.exile === true) {
+      const exiled = beholding.filter((id) => state.objects[id]).map((id) => moveOne(state, id, "exile", events, {owner: state.objects[id].owner}))
+        .filter((id) => id !== null && state.objects[id]?.zone === "exile");
+      for (const id of exiled) state.objects[id].exiledTurn = state.turn;
+      if (exiled.length) (state.links ??= {})[entry.objectId] = [...(state.links[entry.objectId] ?? []), ...exiled];
+    }
     /* Escape's other cards, and a graveyard alternative cost's, exiled as the rest of the cost is paid (CR 601.2h). */
     for (const id of [...exiling, ...othersExiling]) if (state.objects[id]) moveOne(state, id, "exile", events, {owner: state.objects[id].owner});
     /* And a flashback cost's creatures, tapped; and a convoke's (CR 702.51c: they convoked it), for no mana; and the creatures
@@ -2358,6 +2381,15 @@ function performOffered(state, player, action, during) {
         source: {cardId: entry.objectId, name: object.card}, cause: null, optional: false,
         about: {card: entry.objectId, player, stackId: entry.stackId, castBefore: Math.max(0, before)},
         script: {targets: [], effects: [{effect: "copySpell", spells: "that card", count: {castBefore: true}, newTargets: true}]}});
+    }
+    /* REPLICATE (CR 702.56a): "when you cast this spell, if a replicate cost was paid for it, copy it for each time its
+       replicate cost was paid. If the spell has any targets, you may choose new targets for any of the copies" -- a triggered
+       ability of the spell, waiting with the rest, as storm's; none when it was not paid (CR 603.4). */
+    if (action.replicated > 0) {
+      (state.pendingTriggers ??= []).push({abilityId: "replicate", text: `Replicate: copy ${object.card} for each time its replicate cost was paid.`, controller: player,
+        source: {cardId: entry.objectId, name: object.card}, cause: null, optional: false,
+        about: {card: entry.objectId, player, stackId: entry.stackId},
+        script: {targets: [], effects: [{effect: "copySpell", spells: "that card", count: action.replicated, newTargets: true}]}});
     }
     events.push(event("GameEventSpellAbilityCast", state, {
       card,

@@ -1,0 +1,93 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Elemental Mascot",
+    "oracleId": "882f30e4-4ce1-4581-8d2d-d763aa13befe",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental",
+      "Bird"
+    ],
+    "manaCost": "{1}{U}{R}",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "power": 1,
+    "toughness": 4
+  },
+  "oracleText": "Flying, vigilance\nOpus — Whenever you cast an instant or sorcery spell, this creature gets +1/+0 until end of turn. If five or more mana was spent to cast that spell, exile the top card of your library. You may play that card until the end of your next turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "triggered",
+      "text": "Opus — Whenever you cast an instant or sorcery spell, this creature gets +1/+0 until end of turn. If five or more mana was spent to cast that spell, exile the top card of your library. You may play that card until the end of your next turn.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "filter": {
+          "anyOf": [
+            {
+              "types": [
+                "Instant"
+              ]
+            },
+            {
+              "types": [
+                "Sorcery"
+              ]
+            }
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 1,
+          "toughness": 0
+        },
+        {
+          "effect": "branch",
+          "if": {
+            "compare": {
+              "count": {
+                "manaSpent": "that card"
+              },
+              "atLeast": 5
+            }
+          },
+          "then": [
+            {
+              "effect": "moveZone",
+              "fromTop": 1,
+              "to": "exile",
+              "remember": true
+            },
+            {
+              "effect": "mayPlay",
+              "targets": "remembered",
+              "until": "your-next-end"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

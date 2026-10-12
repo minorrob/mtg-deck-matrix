@@ -20,8 +20,12 @@
  *   {toughnessOf: ref}                   its toughness ("its controller gains life equal to its toughness", Condemn)
  *   {greatestPower: selector}            the greatest power among what the selector matches, 0 if nothing (CR 208.1)
  *   {totalPower: selector}               their powers added together
+ *   {greatestManaValue: selector}        the greatest mana value among what the selector matches, 0 if nothing (CR 202.3):
+ *                                        "among cards in your graveyard" (Hapatra, the Desert Fang)
  *   {differentPowers: selector}          how many different powers there are among them (Loot, the Nexus): a 2/1 and two
  *                                        3/3s are two
+ *   {differentNames: selector}           how many different names there are among them ("the number of differently named
+ *                                        lands you control", Fungal Colossus): three Forests and a Wastes are two
  *   {devotion: [colors]}                 CR 700.5: the mana symbols of those colors among the mana costs of permanents you
  *                                        control -- a hybrid symbol of two of them once, a Phyrexian one of its color
  *   {lifeLostThisWay: true}              the life the effects before it in this resolution took ("You gain life equal to
@@ -43,7 +47,7 @@
  *   {cardsDrawnThisTurn: who}            the cards that player drew this turn
  *   {scriedOrSurveilledThisTurn: who}    the times that player scried or surveilled this turn
  *   {spellsCastThisTurn: who, filter?}   that player's spells cast this turn, as each was cast; "an opponent", the most
- *                                        any one opponent cast
+ *                                        any one opponent cast; `another: true` ("you" only), this spell's own cast left out
  *   {spellsCastThisGame: who, named}     that player's spells of a name cast this game
  *   {playersDealtNoncombatDamage: "opponent"|"any"}  the players noncombat damage reached this turn
  *   {lifeLostThisTurn: "opponents"}      the life every opponent lost this turn, together
@@ -110,8 +114,12 @@ export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf"
   /* Train D: "put that many growth counters" (Simic Ascendancy), the counters a "counter added" trigger is about. */
   "countersPut",
   /* Train E: "for each unspent mana you have" (Omnath, Locus of the Void). */
-  "manaInPool"]);
-const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "per", "filter", "controlledBy", "named"];
+  "manaInPool",
+  /* Train E: "the number of differently named lands you control" (Fungal Colossus). */
+  "differentNames",
+  /* Train E, wave 2: "the greatest mana value among cards in your graveyard" (Hapatra, the Desert Fang). */
+  "greatestManaValue"]);
+const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "per", "filter", "controlledBy", "named", "another"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
 /** Whether an amount is undefined for its player (CR 903.4f): one of the colors in their commanders' color identity, for a
@@ -134,6 +142,8 @@ export function amountProblems(value) {
     "cardsDrawnThisTurn", "scriedOrSurveilledThisTurn", "spellsCastThisGame", "cardsDiscardedThisTurn"]) if (key in value && !["you", "that player"].includes(value[key])) problems.push(`${key} is "you" or "that player"`);
   /* The spells cast this turn: a player's, or the most of any one opponent's ("if an opponent cast a blue spell this turn"). */
   if ("spellsCastThisTurn" in value && !["you", "that player", "an opponent"].includes(value.spellsCastThisTurn)) problems.push('spellsCastThisTurn is "you", "that player" or "an opponent"');
+  /* "If you've cast ANOTHER instant or sorcery spell this turn" (Burrog Barrage): this spell's own cast left out. */
+  if ("another" in value && !(value.another === true && value.spellsCastThisTurn === "you")) problems.push('another is true, beside spellsCastThisTurn: "you"');
   /* The life lost this turn: a player's, or every opponent's together ("if an opponent lost life this turn", spectacle). */
   if ("lifeLostThisTurn" in value && !["you", "that player", "opponents"].includes(value.lifeLostThisTurn)) problems.push('lifeLostThisTurn is "you", "that player" or "opponents"');
   if ("creaturesDiedThisTurn" in value && !["you", "that player", "any"].includes(value.creaturesDiedThisTurn)) problems.push('creaturesDiedThisTurn is "you", "that player" or "any"');
@@ -183,7 +193,7 @@ export function amountProblems(value) {
     for (const key of ["then", "else"]) if (key in value) problems.push(...amountProblems(value[key]));
   }
   /* What it counts is a selector, held to the selector grammar (script/filter.mjs), a choice of them included. */
-  for (const key of ["count", "greatestPower", "totalPower", "mostAmongOpponents", "differentPowers", "planeswalkerTypesAmong", "fewestAmongPlayers"]) {
+  for (const key of ["count", "greatestPower", "totalPower", "mostAmongOpponents", "differentPowers", "differentNames", "planeswalkerTypesAmong", "fewestAmongPlayers", "greatestManaValue"]) {
     if (!(key in value)) continue;
     const {anyOf, ...shared} = value[key] ?? {};
     try { for (const one of Array.isArray(anyOf) ? anyOf.map((a) => ({...shared, ...a})) : [value[key]]) compileSelector(one); }
@@ -236,6 +246,10 @@ function objectOf(ref, context) {
   if (ref && typeof ref === "object" && Number.isInteger(ref.target)) { const chosen = (context.targets ?? [])[ref.target]; return chosen?.kind === "object" ? chosen.id : null; }
   return null;
 }
+
+/* "Where X is that creature's power" (Arni, Renowned Champion), the creature the trigger is about gone from the battlefield
+   since: as it last existed there (CR 608.2h; rules/trigger.mjs keeps it, `about.lastKnown`) -- null for anything else. */
+const aboutWas = (ref, context) => (ref === "that card" ? context.about?.lastKnown ?? null : null);
 
 /* "You gain life equal to that card's toughness, lose life equal to its power" (Sapling of Colfenor): a card an effect
    before it remembered -- revealed, in a library or elsewhere off the battlefield -- has its printed power and toughness
@@ -329,16 +343,20 @@ export function amountOf(state, value, context = {}) {
     n = (value.powerOf === "sacrificed" ? was?.power : was?.toughness) ?? 0;
   } else if ("powerOf" in value) {
     const id = objectOf(value.powerOf, context);
-    n = id !== null && state.objects[id]?.zone === "battlefield" ? powerOf(state, id) : cardFigure(state, value.powerOf, id, "power") ?? (context.lastKnown?.power ?? 0);
+    n = id !== null && state.objects[id]?.zone === "battlefield" ? powerOf(state, id) : cardFigure(state, value.powerOf, id, "power") ?? (aboutWas(value.powerOf, context)?.power ?? context.lastKnown?.power ?? 0);
   } else if ("toughnessOf" in value) {
     const id = objectOf(value.toughnessOf, context);
-    n = id !== null && state.objects[id]?.zone === "battlefield" ? toughnessOf(state, id) : cardFigure(state, value.toughnessOf, id, "toughness") ?? (context.lastKnown?.toughness ?? 0);
+    n = id !== null && state.objects[id]?.zone === "battlefield" ? toughnessOf(state, id) : cardFigure(state, value.toughnessOf, id, "toughness") ?? (aboutWas(value.toughnessOf, context)?.toughness ?? context.lastKnown?.toughness ?? 0);
   } else if ("countersAmong" in value) {
     /* "The number of +1/+1 counters on lands you control" (Toph, the Blind Bandit): all of them, of the kind. */
     n = matching(state, value.countersAmong, who).reduce((sum, id) => sum + (state.objects[id].counters?.[value.counter ?? "+1/+1"] ?? 0), 0);
   } else if ("greatestToughness" in value) {
     /* "Draw cards equal to the greatest toughness among creatures you control" (Last March of the Ents). */
     n = Math.max(0, ...matching(state, value.greatestToughness, who).map((id) => characteristicsOf(state, id).toughness ?? 0));
+  } else if ("greatestManaValue" in value) {
+    /* "Where X is the greatest mana value among cards in your graveyard" (Hapatra, the Desert Fang; Train E): each one's mana
+       value (CR 202.3; a double-faced card there its front face's, 712.8a), 0 when there is none. */
+    n = Math.max(0, ...matching(state, value.greatestManaValue, who).map((id) => manaValue(parseManaCost(valueCostOf(state.objects[id])))));
   } else if ("greatestPower" in value || "totalPower" in value) {
     const powers = matching(state, value.greatestPower ?? value.totalPower, who).map((id) => characteristicsOf(state, id).power ?? 0);
     n = "greatestPower" in value ? Math.max(0, ...powers) : powers.reduce((a, b) => a + b, 0);
@@ -346,6 +364,10 @@ export function amountOf(state, value, context = {}) {
   /* "One mana of that color for each different power among creatures you control" (Loot, the Nexus): the distinct values
      among their powers now, through the layers (CR 208.1) -- 0 and less among them, each a power like any other. */
   else if ("differentPowers" in value) n = new Set(matching(state, value.differentPowers, who).map((id) => characteristicsOf(state, id).power ?? 0)).size;
+  /* "This spell costs {X} less to cast, where X is the number of differently named lands you control" (Fungal Colossus;
+     CR 201.2): the distinct names among what the selector matches now -- a copy's the name it copied (CR 707.2), and a
+     face-down permanent, which has no name (CR 708.2a), none to count. */
+  else if ("differentNames" in value) n = new Set(matching(state, value.differentNames, who).map((id) => state.objects[id].card).filter((name) => typeof name === "string" && name)).size;
   else if ("devotion" in value) n = devotion(state, context.controller, value.devotion);
   else if ("lifeLostThisWay" in value) n = context.lifeLost ?? 0;
   /* "Then draws that many cards" (Winds of Change): what the effect before it moved, and remembered, counted. */
@@ -426,13 +448,18 @@ export function amountOf(state, value, context = {}) {
      counted when the amount is read, so one cast after a trigger triggered and before it resolves is among them (CR 608.2h). */
   else if ("spellsCastThisTurn" in value) {
     const castBy = (player) => (state.players[player]?.castThisTurn ?? []).filter((cast) => matchesLastKnown(value.filter ?? {}, {...cast, controller: player}, {controller: context.controller})).length;
+    /* "ANOTHER instant or sorcery spell" (Burrog Barrage): the spells cast this turn but this one -- which is among them only if
+       it was cast (CR 601.2i; rules/actions.mjs keeps its cast). A copy was not cast (CR 707.10): for it the spell it copies is
+       another, and nothing is left out. */
+    const own = value.another === true && context.cast && state.objects[context.source]
+      && matchesLastKnown(value.filter ?? {}, {types: state.objects[context.source].types ?? [], colors: state.objects[context.source].colors ?? [], controller: context.controller}, {controller: context.controller}) ? 1 : 0;
     /* "If an opponent cast a blue spell this turn" (Ricochet Trap): the most any one opponent of its controller still in the
        game cast (CR 102.2, 800.4a) -- one opponent's spells, never several added together. */
     if (value.spellsCastThisTurn === "an opponent")
       n = Math.max(0, ...state.players.filter((p) => p.id !== context.controller && !p.lost).map((p) => castBy(p.id)));
     else {
       const player = playerOf(value.spellsCastThisTurn, context);
-      n = player !== null ? castBy(player) : 0;
+      n = player !== null ? castBy(player) - own : 0;
     }
   }
   /* "You've cast another spell named Approach of the Second Sun this game": that player's spells of the name this game, this

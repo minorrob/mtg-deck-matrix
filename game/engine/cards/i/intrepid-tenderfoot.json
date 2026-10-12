@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Intrepid Tenderfoot",
+    "oracleId": "94023b23-339a-426e-85cc-cc361ef68754",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Insect",
+      "Citizen"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "{3}: Put a +1/+1 counter on this creature. Activate only as a sorcery.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{3}: Put a +1/+1 counter on this creature. Activate only as a sorcery.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}"
+        }
+      ],
+      "timing": "sorcery",
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

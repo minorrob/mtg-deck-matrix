@@ -200,7 +200,7 @@ export function enterAttacking(state, ids, whom, context, controller) {
      The active player's, who is the attacking player (CR 506.2, 506.3b), once attackers are declared (Meandering
      Towershell, back "at the beginning of the declare attackers step"). */
   if (!state.combat && state.phase === "COMBAT_DECLARE_ATTACKERS" && controller === state.activePlayer)
-    state.combat = {attackingPlayerId: controller, defenders: [], attacks: [], firstStrike: false};
+    state.combat = {attackingPlayerId: controller, defenders: [], attacks: []};
   if (!state.combat || state.combat.attackingPlayerId !== controller) return;
   if (whom === "that player") {
     const player = context.about?.player, planeswalker = context.about?.planeswalker;
@@ -770,6 +770,9 @@ export function endWhileSourceRemains(state, departed) {
  * when it returns.
  */
 export function gainControl(state, params, context) {
+  /* "Choose a different opponent" for each (`toEach`, Dack Fayden, Helping Hand) is its controller's choice: asked by the
+     resolution (effects/asking.mjs, controlToOpponents), never given to this effect's controller here by default. */
+  if (params.toEach !== undefined) throw new Error("gainControl's toEach asks its controller whose each permanent becomes: run it through the resolution (script/resolution.mjs)");
   const to = Number.isInteger(params.toPlayer) ? params.toPlayer : context.controller;
   /* "For as long as this creature remains on the battlefield": a duration that never starts -- its source gone from the
      battlefield before this resolves (rules/stack.mjs leaves it null then) -- and the effect does nothing (CR 611.2b). */
@@ -954,7 +957,9 @@ export function phaseIn(state, player) {
  */
 export function goad(state, params, context) {
   const ids = (params.selector ? selectMatching(state, params.selector, context) : params.targets ?? []).filter((id) => state.objects[id]?.zone === "battlefield");
-  if (ids.length) (state.effects ??= []).push({id: `goad:${context.source ?? "effect"}:${state.effects.length}`, rule: "goaded", affects: {ids}, until: "your-next-turn", sourceController: context.controller});
+  /* "They're goaded for the rest of the game" (Dack Fayden, Helping Hand; CR 701.15a): `until: "game"`, a goad that no turn
+     ends -- each permanent goaded until it leaves the battlefield and is a new object (CR 400.7). */
+  if (ids.length) (state.effects ??= []).push({id: `goad:${context.source ?? "effect"}:${state.effects.length}`, rule: "goaded", affects: {ids}, until: params.until === "game" ? "game" : "your-next-turn", sourceController: context.controller});
   return [];
 }
 

@@ -1,0 +1,295 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Fungal Colossus",
+  "fixtures": {
+    "Grove": {
+      "types": [
+        "Land"
+      ],
+      "manaCost": null,
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Six differently named lands: {6} less -- {G} casts it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Island",
+            "Swamp",
+            "Mountain",
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Fungal Colossus"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Fungal Colossus"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Forest",
+            "Island",
+            "Swamp",
+            "Mountain",
+            "Plains",
+            "Wastes",
+            "Fungal Colossus"
+          ]
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "G": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Three Forests and two Wastes are two names, not five; Maya's lands are not his -- {4}{G}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Fungal Colossus"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Swamp",
+            "Mountain",
+            "Plains"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Fungal Colossus"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Fungal Colossus"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Forest",
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Fungal Colossus"
+          ]
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "G": 0,
+            "C": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Seven names, a nonbasic Grove among them: only the generic {6} goes, and {G} is still paid",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Island",
+            "Swamp",
+            "Mountain",
+            "Plains",
+            "Wastes",
+            "Grove"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Fungal Colossus"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Fungal Colossus"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Fungal Colossus"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 0,
+            "U": 1
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "No lands of another name: one Forest, {5}{G} -- six lands",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Fungal Colossus"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Fungal Colossus"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Fungal Colossus"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 0
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

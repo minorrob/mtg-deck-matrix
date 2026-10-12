@@ -257,6 +257,23 @@ const exiled = (more = []) => play([at(0, "battlefield", "Plains", "Wastes", "Pl
     [1, CARE, ["Plains", "Wastes"]], "answered: the Plains and the Wastes tapped, and Concerted Care on the stack");
 }
 
+/* ---- and with mana in the pool that pays the creature but not its Adventure: the lands are still read as the Adventure
+   reads them, so the way picked is found (seed 12 of the library's two-person sweep, Smaug's Spew Flame, 2026-10-12) ---- */
+{
+  const CREATURE_LAND = {types: ["Land"], abilities: [{id: "m", kind: "mana", tapSelf: true, produces: {G: 1}, spendOnly: {spell: {types: ["Creature"]}}}]};
+  const s = runScenario({name: "adventure", setup: [at(0, "battlefield", "Plains", "Plains", "Wastes", "Bear", "Creature Land"), at(0, "hand", BOFUR)],
+    steps: [{tap: "Creature Land"}]}, index.definition, {...FIX, "Creature Land": CREATURE_LAND}).state;
+  const [bear] = named(s, "Bear");
+  const offer = careAt(s, bear.id);
+  eq(offer?.autoTap, true, "{G} only for creature spells in the pool: Concerted Care, an instant, is still offered tapped for");
+  applyAction(s, 0, offer);
+  const question = awaitingChoice(s);
+  eq(question.title, `${CARE}: what to tap for it`, "and asked which lands, as the Adventure");
+  resolveAwaiting(s, [question.options.findIndex((o) => o.label === "Plains, Wastes")]);
+  eq([s.awaiting, s.stack.length, s.objects[s.stack[0]?.objectId]?.card, s.zones.battlefield.filter((id) => s.objects[id].tapped).map((id) => s.objects[id].card).sort()],
+    [null, 1, CARE, ["Creature Land", "Plains", "Wastes"]], "answered: that way tapped and Concerted Care on the stack -- not asked again, with no escape's cards made up");
+}
+
 /* ---- an Adventure is an offer of its own; one not offered is refused, whatever it claims ---- */
 {
   const errand = {schema: SCRIPT_SCHEMA, identity: {name: "Probe Squire // Probe Errand", oracleId: "probe-squire", types: ["Creature"], subtypes: ["Human"], manaCost: "{W}", colors: ["W"], colorIdentity: ["W"], power: 1, toughness: 1},

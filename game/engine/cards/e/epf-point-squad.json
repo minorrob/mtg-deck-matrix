@@ -1,0 +1,51 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "EPF Point Squad",
+    "oracleId": "2dea1935-c227-46d5-9d98-e7d2cd612f98",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Soldier"
+    ],
+    "manaCost": "{1}{R/W}{R/W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Alliance — Whenever another creature you control enters, put a +1/+1 counter on this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Alliance — Whenever another creature you control enters, put a +1/+1 counter on this creature.",
+      "trigger": {
+        "on": "enters",
+        "who": "another",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

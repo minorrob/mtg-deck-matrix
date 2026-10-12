@@ -88,11 +88,16 @@ const FLASHBACK_ATOMS = ["mana", "payLife", "tapCreature", "discard", "behold"];
 /* BEHOLD (CR 701.4a): "behold an Elf", "behold three Elementals" -- what may be beheld, a selector, and how many (1 or more),
    in an additional cost or a flashback cost (rules/actions.mjs, beholdChoices). Never optional, and one to a card: its cast
    asks one question of it. */
-function beholdProblems(atom) {
+/* "BEHOLD A GOBLIN AND EXILE IT" (Champion of the Weird; CR 701.4a, 601.2h): `exile: true`, what is beheld exiled as the cost is
+   paid -- in a plain additional cost alone (`exiles`), linked to the permanent the spell becomes (CR 607.2q; rules/actions.mjs,
+   rules/stack.mjs). */
+function beholdProblems(atom, {exiles = false} = {}) {
   if (atom?.atom !== "behold") return [];
   let fits = Boolean(atom.selector) && typeof atom.selector === "object" && (atom.count === undefined || (Number.isInteger(atom.count) && atom.count >= 1)) && atom.optional === undefined;
   try { if (fits) compileSelector({...atom.selector, what: "card"}); } catch { fits = false; }
-  return fits ? [] : ["behold: what may be beheld (a selector) and how many, 1 or more, never optional"];
+  const exile = atom.exile === undefined || (exiles && atom.exile === true);
+  return [...(fits ? [] : ["behold: what may be beheld (a selector) and how many, 1 or more, never optional"]),
+    ...(exile ? [] : ["behold: exile is true (behold and exile it), in a spell's own additional cost and nowhere else"])];
 }
 /* Life paid as a number (CR 119.4): only an activated ability's cost counts it as it is paid (rules/actions.mjs, costPayment;
    War Room) -- an alternative cost's life and a mana ability's are read before anything is counted. */
@@ -579,6 +584,8 @@ export function compileScript(script) {
   const keywords = [];
   let spell = null;
   let multikicker = null;
+  /* Replicate's cost (CR 702.56a), put on the spell once it is known (below). */
+  let replicate = null;
   /* Escalate's cost (CR 702.120a), put on the spell once its modes are known (below). */
   let escalate = null;
   /* Tiered (CR 702.183a): each mode's own cost, put on the spell once its modes are known (below). */
@@ -817,14 +824,16 @@ export function compileScript(script) {
        cost, read where the card could be cast -- cast face down for {3} as a 2/2 creature with ward {2} (rules/actions.mjs,
        withFaceDown; state/index.mjs) -- and on the face-down permanent: turned face up for that cost, a special action
        (702.168d). A mana cost, without X; never on a land, which is not cast. */
-    if (word === "disguise") {
+    /* MORPH [COST] (CR 702.37a; Akroma, Angel of Fury, Train E): the same, kept as the static `morph` -- cast face down for
+       {3} as a 2/2 creature with no text (702.37c, no ward), and turned face up for its morph cost (702.37e). */
+    if (word === "disguise" || word === "morph") {
       const cost = Array.isArray(ability.cost) ? ability.cost : [];
       let parsed = null;
       try { parsed = cost.length === 1 && cost[0]?.atom === "mana" ? parseManaCost(cost[0].cost ?? "") : null; } catch { /* refused below */ }
-      if (!parsed || !parsed.symbols.length || parsed.variable > 0) problems.push(`${ability.text}: a disguise cost of mana, without X`);
-      if ((identity.types ?? []).includes("Land")) problems.push(`${ability.text}: disguise on a land, which is never cast`);
-      abilities.push({id, kind: "static", rule: "disguise", text: ability.text, cost: structuredClone(cost), affects: {what: "card", self: true}});
-      keywords.push("Disguise");
+      if (!parsed || !parsed.symbols.length || parsed.variable > 0) problems.push(`${ability.text}: a ${word} cost of mana, without X`);
+      if ((identity.types ?? []).includes("Land")) problems.push(`${ability.text}: ${word} on a land, which is never cast`);
+      abilities.push({id, kind: "static", rule: word, text: ability.text, cost: structuredClone(cost), affects: {what: "card", self: true}});
+      keywords.push(word === "morph" ? "Morph" : "Disguise");
       return;
     }
     /* COMPLEATED (CR 702.150a; Vraska, Betrayal's Sting, Train C phase 2): a planeswalker whose caster paid life for Phyrexian
@@ -1104,6 +1113,21 @@ export function compileScript(script) {
       keywords.push("Multikicker");
       return;
     }
+    /* REPLICATE [cost] (CR 702.56a; Lose Focus, Train E): two abilities. "As an additional cost to cast this spell, you may
+       pay [cost] any number of times" -- an additional cost of the spell's, each number of times its own cast, as multikicker's
+       (rules/actions.mjs, additionalVariants) -- and "when you cast this spell, if a replicate cost was paid for it, copy it for
+       each time", a triggered ability of the spell made as it is cast (rules/actions.mjs). Only on an instant or sorcery here,
+       as storm: a permanent spell's copies would become tokens (CR 707.10f). One instance of it (702.56b is two, unbuilt). */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "replicate") {
+      let parsed = null;
+      try { parsed = parseManaCost(ability.cost ?? ""); } catch { /* refused below */ }
+      if (!parsed || !parsed.symbols.length || parsed.variable > 0) problems.push(`${ability.text}: replicate is a mana cost`);
+      if (!(identity.types ?? []).some((t) => t === "Instant" || t === "Sorcery")) problems.push(`${ability.text}: replicate on a card that is not an instant or sorcery`);
+      if (replicate !== null) problems.push(`${ability.text}: a second replicate is not built (CR 702.56b)`);
+      replicate = String(ability.cost ?? "");
+      keywords.push("Replicate");
+      return;
+    }
     /* OVERLOAD (CR 702.96a-b): an alternative cost; cast for it, the spell's text has "each" where it had "target" -- written
        out as the effects it then has (`effects`, no targets), which the spell carries onto the stack in place of its own
        (rules/actions.mjs, rules/stack.mjs). */
@@ -1326,7 +1350,7 @@ export function compileScript(script) {
           continue;
         }
         if (!["discard", "sacrifice", "blight", "tapCreature", "behold"].includes(atom?.atom)) problems.push(`${atom?.atom ?? "an additional cost"}: an additional cost nothing pays yet`);
-        problems.push(...beholdProblems(atom));
+        problems.push(...beholdProblems(atom, {exiles: true}));
         /* "Discard two cards" (Cathartic Reunion): a whole number of cards, 1 or more (rules/actions.mjs, additionalChoices). */
         if (atom?.atom === "discard" && atom.count !== undefined && !(Number.isInteger(atom.count) && atom.count >= 1)) problems.push("discard: an additional cost of 1 or more cards");
         /* "Tap any number of untapped creatures you control" (Burn at the Stake): `count: "any"` and the creatures it may tap, a
@@ -1632,6 +1656,9 @@ export function compileScript(script) {
   if (!tiered && modeCosts.some((cost) => cost !== undefined)) problems.push("a mode's own cost is tiered's: the spell says Tiered (CR 702.183a)");
   /* Multikicker's additional cost, on the spell -- a permanent's too, whose spell does nothing else (CR 608.3). */
   if (multikicker !== null) spell = {...(spell ?? {id: "multikicker", text: "Multikicker", targets: [], effects: []}), additionalCost: [...(spell?.additionalCost ?? []), {atom: "multikicker", cost: multikicker}]};
+  /* Replicate's additional cost, on the spell (an instant or sorcery's, which has one). */
+  if (replicate !== null && !spell) problems.push("Replicate is on a spell with something to copy: its spell ability");
+  else if (replicate !== null) spell = {...spell, additionalCost: [...(spell.additionalCost ?? []), {atom: "replicate", cost: replicate}]};
 
   const partners = partnersIn(script.oracleText);
   const definition = {

@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Lyra, Archangel of Dawn",
+    "oracleId": "0fca3328-484f-4050-925e-91840710b5d6",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel",
+      "Knight"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Flying\nWhenever you gain life, put a +1/+1 counter on each Angel you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you gain life, put a +1/+1 counter on each Angel you control.",
+      "trigger": {
+        "on": "life gained"
+      },
+      "effects": [
+        {
+          "effect": "putCounterAll",
+          "selector": {
+            "what": "permanent",
+            "subtypes": [
+              "Angel"
+            ],
+            "controller": "you"
+          },
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,583 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Dack Fayden, Helping Hand",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "One opponent: the Bear on top is put onto the battlefield, goaded, and Maya's -- nobody is asked whose",
+      "library": [
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Dack Fayden, Helping Hand"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Dack Fayden, Helping Hand"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Dack Fayden, Helping Hand"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 19
+        }
+      ]
+    },
+    {
+      "name": "For the rest of the game: Maya's Bear attacks Rob on her turn, and again on her next, after Rob's turn has passed",
+      "library": [
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Dack Fayden, Helping Hand"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Dack Fayden, Helping Hand"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "life": 38
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 4,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 36
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Two opponents: an Ogre and a Bear revealed past a Wastes; Rob gives the Ogre to Trey, and the Bear goes to Maya",
+      "seats": 3,
+      "library": [
+        "Wastes",
+        "Ogre",
+        "Wastes",
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Dack Fayden, Helping Hand"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Dack Fayden, Helping Hand"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Maya",
+                  "Trey"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Trey"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 2,
+          "controls": [
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Dack Fayden, Helping Hand"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 17
+        }
+      ]
+    },
+    {
+      "name": "Goaded by Rob, Maya's Bear attacks Trey, a player other than Rob, on her turn",
+      "seats": 3,
+      "library": [
+        "Wastes",
+        "Ogre",
+        "Wastes",
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Dack Fayden, Helping Hand"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Dack Fayden, Helping Hand"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Trey"
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 2,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "life": 40
+        }
+      ]
+    },
+    {
+      "name": "Three opponents, one creature card in the whole library: it is revealed with all the rest, and Rob chooses Sam",
+      "seats": 4,
+      "library": [
+        "Wastes",
+        "Wastes",
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Dack Fayden, Helping Hand"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Dack Fayden, Helping Hand"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Maya",
+                  "Trey",
+                  "Sam"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Sam"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 3,
+          "controls": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": []
+        },
+        {
+          "seat": 2,
+          "controls": []
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 18
+        }
+      ]
+    },
+    {
+      "name": "No creature card in the library: nothing is put onto the battlefield, and nobody is asked",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Dack Fayden, Helping Hand"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Dack Fayden, Helping Hand"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Dack Fayden, Helping Hand"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": []
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 20
+        }
+      ]
+    }
+  ]
+}

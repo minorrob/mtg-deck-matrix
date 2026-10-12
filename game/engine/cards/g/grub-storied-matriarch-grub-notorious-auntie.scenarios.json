@@ -1,0 +1,661 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Grub, Storied Matriarch // Grub, Notorious Auntie",
+  "fixtures": {
+    "Goblin Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters: Rob returns the Goblin card he targets from his graveyard",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Grub, Storied Matriarch // Grub, Notorious Auntie"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Goblin Pal",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Grub, Storied Matriarch"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Goblin Pal"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Goblin Pal"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Grub, Storied Matriarch",
+            "has": [
+              "Menace"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Up to one: he may target nothing, and the Goblin stays",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Grub, Storied Matriarch // Grub, Notorious Auntie"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Goblin Pal"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Grub, Storied Matriarch"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": []
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Goblin Pal"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "name": "A Goblin card in his graveyard only: not a Bear, and not one in Maya's",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Grub, Storied Matriarch // Grub, Notorious Auntie"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Goblin Pal"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Grub, Storied Matriarch"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Goblin Pal"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "name": "{R} paid at his first main phase: it transforms into Grub, Notorious Auntie",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Grub, Storied Matriarch // Grub, Notorious Auntie"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Pay {R}"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Grub, Notorious Auntie",
+            "Mountain"
+          ]
+        },
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Grub, Notorious Auntie",
+            "has": [
+              "Menace"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "{R} not paid: it stays Grub, Storied Matriarch",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Grub, Storied Matriarch // Grub, Notorious Auntie"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Don't pay"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Grub, Storied Matriarch",
+            "Mountain"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Auntie attacks, Rob blights his Bear: a tapped and attacking token copy of it, Maya takes 4, and the token is sacrificed at the end step",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Grub, Storied Matriarch // Grub, Notorious Auntie"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Pay {R}"
+          ]
+        },
+        {
+          "attack": [
+            "Grub, Notorious Auntie"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Yes"
+          ]
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "controls": [
+                "Grub, Notorious Auntie",
+                "Mountain",
+                "Bear",
+                "Bear"
+              ]
+            },
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Bear",
+                "counter": "-1/-1",
+                "count": 1
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "COMBAT_END"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 36
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "END_OF_TURN"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Grub, Notorious Auntie",
+            "Mountain",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "He declines to blight: no token, and Maya takes 2",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Grub, Storied Matriarch // Grub, Notorious Auntie"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Pay {R}"
+          ]
+        },
+        {
+          "attack": [
+            "Grub, Notorious Auntie"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "No"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "COMBAT_END"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Grub, Notorious Auntie",
+            "Mountain",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Bear",
+            "counter": "-1/-1",
+            "count": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "{B} paid at his next first main phase: back to Grub, Storied Matriarch -- and transforming into it returns a Goblin card",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Grub, Storied Matriarch // Grub, Notorious Auntie"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Goblin Pal"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Pay {R}"
+          ]
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Pay {B}"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "controls": [
+                "Grub, Storied Matriarch",
+                "Mountain",
+                "Swamp"
+              ]
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Goblin Pal"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Goblin Pal",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": []
+        }
+      ]
+    }
+  ]
+}
