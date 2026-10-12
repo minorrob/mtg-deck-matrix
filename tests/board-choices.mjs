@@ -69,8 +69,19 @@ const land = (color) => ({types: ["Land"], supertypes: ["Basic"], abilities: [{i
   const of = (kind, label) => actions.map((a, i) => [a, details[i]]).filter(([a]) => a.kind === kind && a.label === label).map(([, d]) => d);
   const zap = of("cast", "Zap");
   ok(zap.length === 7, `Zap is offered once per legal target: the two players and five creatures (${zap.length})`);
-  ok(zap.includes("→ Maya") && zap.includes("→ Rob (you)"), `each says what it is aimed at, the players by name, yours said so: ${zap.filter((d) => !/Goblin|Elves|Bear|Seer/.test(d)).join("; ")}`);
-  ok(zap.includes("→ Llanowar Elves (Maya's)") && zap.includes("→ Bear"), "another player's permanent says whose; your own goes unsaid");
+  ok(zap.includes("→ Maya") && zap.includes("→ Rob (you) · against you"), `each says what it is aimed at, the players by name, yours said so -- and damage at you, that it is against you: ${zap.filter((d) => !/Goblin|Elves|Bear|Seer/.test(d)).join("; ")}`);
+  ok(zap.includes("→ Llanowar Elves (Maya's)") && zap.includes("→ Bear · against your own"), "another player's permanent says whose; your own goes unsaid, but that it is against your own");
+  /* WHOSE SIDE IT IS ON (Rob, 2026-10-12; room.mjs `leaning`): a spell that helps its target aimed at an opponent's
+     permanent says it helps them -- a pump, indestructible in a chosen mode -- and the harmful mode of the same card does not. */
+  const STANCE = {types: ["Instant"], manaCost: "{R}", spell: {id: "s0", text: "Choose one", targets: [], effects: [], modal: {choose: 1, modes: [
+    {text: "Target creature gains indestructible until end of turn.", targets: [{what: "permanent", types: ["Creature"]}], effects: [{effect: "pump", targets: {target: 0}, power: 0, toughness: 0, keywords: ["Indestructible"]}]},
+    {text: "Destroy target creature.", targets: [{what: "permanent", types: ["Creature"]}], effects: [{effect: "destroy", targets: {target: 0}}]}]}}};
+  const elves = Object.keys(s.objects).map(Number).find((k) => s.objects[k].card === "Llanowar Elves"), bear = Object.keys(s.objects).map(Number).find((k) => s.objects[k].card === "Bear");
+  const stance = addObject(s, {card: "Stance", ...STANCE, owner: 0, controller: 0}, "hand", 0);
+  const aim = (modes, target) => ({kind: "cast", objectId: stance, label: "Stance", modes, targets: [{kind: "object", id: target}]});
+  eq(offerDetails(s, 0, [aim([0], elves), aim([1], elves), aim([0], bear), aim([1], bear)]).map((d) => d.split(" · ").slice(1).join(" · ")),
+    ["→ Llanowar Elves (Maya's) · helps Maya", "→ Llanowar Elves (Maya's)", "→ Bear", "→ Bear · against your own"],
+    "indestructible at Maya's creature helps Maya; destroying it is the usual; at your own, indestructible is the usual and destroying it is against your own");
   eq(zap.filter((d) => d.startsWith("→ Goblin")).sort(), ["→ Goblin (Maya's) 1/1 · 1", "→ Goblin (Maya's) 1/1 · 2"], "two of Maya's Goblins alike in every way: power and toughness said, then numbered");
   eq(new Set(zap).size, zap.length, "so no two of Zap's offers read alike");
   /* A cost chosen as it is paid -- an ability's sacrifice, a spell's discard -- in the shape the engine offers it
@@ -173,7 +184,7 @@ const bears = latest.state.players[1].zones.Battlefield.cards.filter((c) => c.na
 const targetCount = 2 + latest.state.players.reduce((n, p) => n + p.zones.Battlefield.cards.filter((c) => (c.types ?? []).includes("Creature")).length, 0);
 ok(castOptions.length === targetCount && allZaps.every((o) => o.detail), `the room's question offers each Zap once per target, each with its detail (${castOptions.map((o) => o.detail).join("; ")})`);
 eq(new Set(castOptions.map((o) => o.detail)).size, castOptions.length, `no two of one card's reading alike${bears > 1 ? `, though Maya's ${bears} Bears share a name` : ""}`);
-ok(castOptions.some((o) => o.detail === "→ Maya") && castOptions.some((o) => o.detail === "→ Rob (you)"), "the players among them, by name");
+ok(castOptions.some((o) => o.detail === "→ Maya") && castOptions.some((o) => o.detail === "→ Rob (you) · against you" && o.lean === "against you"), "the players among them, by name; the one at Rob carrying that it is against him, for the board to mark");
 
 /* ---- 2b. a second table, where Rob's spell is Peek Three ("Scry 3."), played to its question ---- */
 const SCRY_TABLE = "boardscry01";
@@ -308,9 +319,10 @@ try {
   await choose.click();
   const dialog = page.locator("#cm-dialog[open]");
   await dialog.waitFor({timeout: 5000});
-  const ways = await dialog.locator(".cm-board-choices [data-action=board-zoom-do]").allInnerTexts();
+  const ways = (await dialog.locator(".cm-board-choices [data-action=board-zoom-do]").allInnerTexts()).map((w) => w.replace(/\s+/g, " ").trim());
   eq(ways.length, castOptions.length, "pressing it opens a pop-up with every way");
-  ok(ways.includes("Cast Zap → Maya") && ways.includes("Cast Zap → Rob (you)") && ways.some((w) => /^Cast Zap → Maya Bear \(Maya's\)/.test(w)), `each by what it is aimed at: ${ways.join("; ")}`);
+  ok(ways.includes("Cast Zap → Maya") && ways.includes("Cast Zap → Rob (you) · ⚠ against you") && ways.some((w) => /^Cast Zap → Maya Bear \(Maya's\)/.test(w)), `each by what it is aimed at: ${ways.join("; ")}`);
+  eq(await dialog.locator(".cm-board-choices [data-action=board-zoom-do] .cm-lean.is-against").allInnerTexts(), ["⚠ against you"], "the one against Rob himself marked so, and only it");
   ok(await page.locator(".cm-board-also").count() === 0, "and the menu it came from is put away");
   if (SHOTS) await page.screenshot({path: path.join(SHOTS, "board-choices-1400.png")});
   await dialog.locator("[data-action=close]").first().click();
@@ -329,7 +341,7 @@ try {
   });
   ok(fit.inside && !fit.scrolls, `at 1280 by 720 every way and Close are on screen, the pop-up unscrolled (card ${fit.card}px tall)`);
   if (SHOTS) await page.screenshot({path: path.join(SHOTS, "board-choices-1280x720.png")});
-  eq((await dialog.locator(".cm-board-choices [data-action=board-zoom-do]").allInnerTexts()).sort(), [...ways].sort(), "pressing Zap in the hand opens the same pop-up, rather than casting it at the first target");
+  eq((await dialog.locator(".cm-board-choices [data-action=board-zoom-do]").allInnerTexts()).map((w) => w.replace(/\s+/g, " ").trim()).sort(), [...ways].sort(), "pressing Zap in the hand opens the same pop-up, rather than casting it at the first target");
   /* The cast passes for Rob (game/room/room.mjs, passAfterCast) and the AI seat passes, so Zap resolves in the same turn of
      the room as it is cast: what it hit is read off the game, Maya one life down, rather than off the stack. */
   const mayaLife = (v) => v.state.players[1].health.life, before = mayaLife(latest), castsBefore = latest.history.filter((h) => h.text === "Rob cast Zap").length;

@@ -174,13 +174,59 @@ export function leastAnswer(choice) {
   return {indices: options.slice(0, Math.max(choice.min ?? 0, choice.mode === "one" || choice.mode === "boolean" ? 1 : 0)).map((o) => o.index)};
 }
 
+/* WHOSE SIDE AN OFFER IS ON (Rob, 2026-10-12: Valorous Stance's indestructible aimed at an opponent's creature "should be
+   distinguished from spells that are negative"). What it does to each target it is aimed at -- its chosen modes', or its
+   own -- read off the effects bound to that target: one that helps it (a pump, indestructible, life, a +1/+1 counter, an
+   untap, a draw, a land found) aimed at an opponent's permanent or at an opponent "helps" them; one that harms it (destroy,
+   damage, a -1/-1 counter, a discard, a sacrifice, a mill, a counterspell) aimed at your own permanent or at you is
+   "against your own" -- "against you". Either may be what a player means, so it is said, never refused. */
+const HELPS = (e) => (e.effect === "pump" && (e.power ?? 0) >= 0 && (e.toughness ?? 0) >= 0 && ((e.power ?? 0) > 0 || (e.toughness ?? 0) > 0 || (e.keywords ?? []).length > 0))
+  || ["gainLife", "untap", "regenerate", "draw", "chooseCard"].includes(e.effect) || (e.effect === "putCounter" && ["+1/+1", "loyalty", "shield"].includes(e.counter));
+const HARMS = (e) => ["destroy", "dealDamage", "loseLife", "discard", "sacrifice", "mill", "counterSpell", "poison"].includes(e.effect)
+  || (e.effect === "pump" && ((e.power ?? 0) < 0 || (e.toughness ?? 0) < 0)) || (e.effect === "putCounter" && e.counter === "-1/-1");
+/* Each effect of a list, nested ones too ("then", a branch's), with the target it is bound to: `targets` or `who`. */
+function aimedEffects(effects, offset, out = []) {
+  for (const e of effects ?? []) {
+    if (!e || typeof e !== "object") continue;
+    for (const ref of [e.targets, e.who]) if (ref && typeof ref === "object" && Number.isInteger(ref.target)) out.push({e, at: offset + ref.target});
+    for (const nested of [e.effects, e.then, e.else, e.otherwise]) if (Array.isArray(nested)) aimedEffects(nested, offset, out);
+  }
+  return out;
+}
+/* Who holds a target: a permanent's controller now (the layers), any other object's controller. */
+function holderIn(state, id) {
+  const o = state.objects[id];
+  if (!o) return null;
+  try { return o.zone === "battlefield" ? controllerOf(state, id) : o.controller; } catch { return o.controller; }
+}
+export function leaning(state, seat, a) {
+  if (!(a.targets ?? []).length || (a.kind !== "cast" && a.kind !== "activate")) return "";
+  const object = state.objects[a.objectId];
+  const source = a.kind === "activate" ? (object?.abilities ?? []).find((b) => b.id === a.abilityId) : object?.spell;
+  if (!source) return "";
+  /* A modal one's chosen modes, their targets one after another in the order chosen (CR 700.2c). */
+  let aimed = [];
+  if (Array.isArray(a.modes) && source.modal?.modes) {
+    let offset = 0;
+    for (const i of a.modes) {const mode = source.modal.modes[i]; if (!mode) continue; aimed = aimed.concat(aimedEffects(mode.effects, offset)); offset += (mode.targets ?? []).length;}
+  } else aimed = aimedEffects(source.effects, 0);
+  for (const {e, at} of aimed) {
+    const t = a.targets[at];
+    if (!t || Array.isArray(t) || (t.kind !== "object" && t.kind !== "player")) continue;
+    const holder = t.kind === "player" ? t.id : holderIn(state, t.id);
+    if (holder === undefined || holder === null) continue;
+    if (HELPS(e) && holder !== seat) return `helps ${state.players[holder]?.name ?? `Seat ${holder + 1}`}`;
+    if (HARMS(e) && holder === seat) return t.kind === "player" ? "against you" : "against your own";
+  }
+  return "";
+}
+
 export function offerDetails(state, seat, actions) {
   const player = (id) => (id === seat ? `${state.players[id]?.name ?? "you"} (you)` : state.players[id]?.name ?? `Seat ${id + 1}`);
   const object = (id, plain) => {
     const o = state.objects[id];
     if (!o) return "";
-    let holder = o.controller;
-    try { if (o.zone === "battlefield") holder = controllerOf(state, id); } catch { /* the base controller */ }
+    const holder = holderIn(state, id);
     const whose = holder === seat || holder === undefined || holder === null ? "" : ` (${state.players[holder]?.name ?? `Seat ${holder + 1}`}'s)`;
     /* A face-down permanent has no name (CR 708.2a): it is said to be face down. */
     const name = shownName(o);
@@ -218,6 +264,8 @@ export function offerDetails(state, seat, actions) {
     const aimed = (t) => (!t ? "" : Array.isArray(t) ? (t.length ? t.map(aimed).join(" and ") : "no target") : t.kind === "choose" ? countWords(t)
       : t.kind === "player" ? player(t.id) : t.kind === "ability" ? targetName(state, t) : object(t.id, plain));
     if ((a.targets ?? []).length) parts.push(`→ ${a.targets.map(aimed).join(", ")}`);
+    const lean = leaning(state, seat, a);
+    if (lean) parts.push(lean);
     /* What the cost takes: one card, or a set of them ("sacrificing Bear and Wolf", "discarding Ponder and Opt"), each
        said with what it does to them. */
     /* "Blight 1" puts its counters on the creature (CR 701.68a); "tap three untapped creatures you control", a set tapped; and
@@ -286,7 +334,9 @@ function priorityChoice(id, actions, state = null, seat = null) {
       : {index, label: a.kind === "pass" ? "Pass priority" : (a.label || a.kind), act: a.kind, ...(a.objectId !== undefined ? {cardId: a.objectId} : {}),
         /* The pass that ends the seat's own turn: its end step, nothing on the stack (the board says "End turn"). */
         ...(a.kind === "pass" && state && seat === state.activePlayer && state.phase === "END_OF_TURN" && !state.stack.length ? {endsTurn: true} : {}),
-        ...(details[index] ? {detail: details[index]} : {})}))};
+        ...(details[index] ? {detail: details[index]} : {}),
+        /* Whose side it is on, when it is not the usual one (`leaning`): "helps Maya", "against your own" -- the board marks it. */
+        ...((lean) => (lean ? {lean} : {}))(state ? leaning(state, seat, a) : "")}))};
 }
 
 /* RESOLVE ALL (Rob, 2026-10-09). Krenko, Mob Boss with Intruder Alarm puts thousands of one trigger on the stack, and
