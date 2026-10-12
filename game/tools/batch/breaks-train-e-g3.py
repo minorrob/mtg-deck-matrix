@@ -55,7 +55,7 @@ BREAKS = [
     ('incubate: no counter kept when none is given', PERM, NONE_KEPT, 'state.objects[id].counters[counter] = (state.objects[id].counters[counter] ?? 0) + placed;'),
     ('incubate: N counted', PERM, COUNTED, 'entersWithCounters: {"+1/+1": 1}}, context);'),
     ('incubate: none without a count', PERM, COUNTED, 'entersWithCounters: {"+1/+1": params.count ?? 1}}, context);'),
-    ('incubate: run as a primitive', EFFECTS, '  incubate,\n});', '});'),
+    ('incubate: run as a primitive', EFFECTS, '  incubate,\n  /* Train E: "you become the monarch"', '  /* Train E: "you become the monarch"'),
     ('incubate: in the catalog', VOCAB, '"phaseOut", "exchangeControl", "incubate",', '"phaseOut", "exchangeControl",'),
     # The first-strike damage step, decided as the combat damage step begins (CR 510.4; rules/turn.mjs, wave 2's f4, which
     # Stingerquill Charm and Squire's Lightblade play on): with no such step, their creatures deal no first-strike damage.
