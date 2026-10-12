@@ -49,6 +49,6 @@ card_fault('Quintorius lasts an extra turn',Q,lambda d:d['abilities'][2]['effect
 
 BREAKS += [
  ('granted static ignored',A,'const mayGain = (state.effects','const mayGain = false && (state.effects'),
- ('permission id collision',Z,'while (effects.some(e => e.id === id))','while (false)'),
+ ('permission id collision',Z,'do { id = `may-play:${ids.join(",")}:${serial++}`; } while (effects.some(e => e.id === id));','do { id = `may-play:${ids.join(",")}:${serial++}`; } while (false);'),
  ('false turn predicate accepted',F,'if (selector.exiledThisTurn !== undefined && selector.exiledThisTurn !== true) throw new Error("exiledThisTurn is true");',''),
 ]

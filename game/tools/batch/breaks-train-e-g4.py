@@ -37,7 +37,7 @@ CHOICE = '''    if (awaiting.questions) {
 '''
 APPLY = '    if (awaiting.questions) return copySpell.apply(state, awaiting, indices);\n'
 
-PLAYERS = '["protection", "life-cant-change", "no-maximum-hand-size", "damage-doubled"].includes(params.rule)'
+PLAYERS = '["protection", "life-cant-change", "no-maximum-hand-size", "damage-doubled", "look-at-top"].includes(params.rule)'
 EFFECTS = '  return (state.effects ?? []).some((effect) => effect.rule === rule && (effect.players ?? []).includes(player));'
 
 BREAKS = [
