@@ -39,6 +39,13 @@
  *                117.3c) by doing so, so what they put on the stack resolves unless someone responds. To hold priority
  *                instead -- the caster's choice, CR 117.3c -- the answer that casts carries `hold: true` (the board's
  *                Tools, "Hold priority after I cast"). One pass, for that cast: a response on top asks them again.
+ * And a sixth, Rob's of 2026-10-11 ("passing the turn to the next player should always require player confirmation, never
+ * happen automatically"), kept the same way:
+ *   `endAsks`    a person's own end step is asked of them whether or not there is anything to do in it, so their turn
+ *                ends only with their pass there (the board's End turn; priorityChoice, `endsTurn`).
+ * And a seventh, Rob's of the same day ("I should also be able to click the card to untap it again"), kept the same way:
+ *   `untapMana`  a person who taps a land for mana may untap it while its mana is unspent and nothing else has happened
+ *                (game/engine/rules/untap-mana.mjs), and is not passed for while they may: "Untap Forest", beside the pass.
  *
  * WHAT IT PLAYS. Only cards the `cards` resolver can define. A pod with any other card is refused before
  * anything is written, naming every card it cannot play (docs/decisions-2026-09-25.md, M4: "refused by name;
@@ -48,6 +55,7 @@ import {createState, addObject, shownName, shownFaceUp} from "../engine/state/in
 import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../engine/rules/turn.mjs";
 import {legalActions, applyAction, nothingToDo, escapeWays, flashbackCost, tappersInWords, castTapPlans, tapWords} from "../engine/rules/actions.mjs";
 import {paymentWords} from "../engine/rules/mana.mjs";
+import {beforeTap, tapTaken, untappable, untapTaken} from "../engine/rules/untap-mana.mjs";
 import {passPriority} from "../engine/rules/priority.mjs";
 import {gameOver, concede} from "../engine/rules/sba.mjs";
 import {beginMulligans} from "../engine/rules/mulligan.mjs";
@@ -83,11 +91,15 @@ export class RoomError extends Error {
   constructor(status, message, extra = {}) {super(message); this.status = status; Object.assign(this, extra);}
 }
 
-/* The one kind of card the engine can play with no definition: a basic land is a land with a mana ability. */
+/* The one kind of card the engine can play with no definition: a basic land -- Basic, a Land, its land type, and the mana
+   ability that type gives it (CR 205.4c, 305.6; Wastes has no land type and its own {T}: Add {C}). Its supertype and type
+   are what "search your library for a basic land card" and "unless you control a Forest or an Island" read: without them
+   (Rob, 2026-10-11: Rampant Growth found nothing in a library of nineteen basics), every such search and check failed. */
 const BASIC_COLORS = {Plains: "W", Island: "U", Swamp: "B", Mountain: "R", Forest: "G", Wastes: "C"};
 export function basicCards(name) {
   const color = BASIC_COLORS[name];
-  return color ? {types: ["Land"], abilities: [{id: `t-${color.toLowerCase()}`, kind: "mana", tapSelf: true, produces: {[color]: 1}}]} : null;
+  return color ? {types: ["Land"], supertypes: ["Basic"], subtypes: name === "Wastes" ? [] : [name],
+    abilities: [{id: `t-${color.toLowerCase()}`, kind: "mana", tapSelf: true, produces: {[color]: 1}}]} : null;
 }
 
 /* Public facts the house pilot may read about a named card: what anyone reads off the card itself. */
@@ -162,13 +174,59 @@ export function leastAnswer(choice) {
   return {indices: options.slice(0, Math.max(choice.min ?? 0, choice.mode === "one" || choice.mode === "boolean" ? 1 : 0)).map((o) => o.index)};
 }
 
+/* WHOSE SIDE AN OFFER IS ON (Rob, 2026-10-12: Valorous Stance's indestructible aimed at an opponent's creature "should be
+   distinguished from spells that are negative"). What it does to each target it is aimed at -- its chosen modes', or its
+   own -- read off the effects bound to that target: one that helps it (a pump, indestructible, life, a +1/+1 counter, an
+   untap, a draw, a land found) aimed at an opponent's permanent or at an opponent "helps" them; one that harms it (destroy,
+   damage, a -1/-1 counter, a discard, a sacrifice, a mill, a counterspell) aimed at your own permanent or at you is
+   "against your own" -- "against you". Either may be what a player means, so it is said, never refused. */
+const HELPS = (e) => (e.effect === "pump" && (e.power ?? 0) >= 0 && (e.toughness ?? 0) >= 0 && ((e.power ?? 0) > 0 || (e.toughness ?? 0) > 0 || (e.keywords ?? []).length > 0))
+  || ["gainLife", "untap", "regenerate", "draw", "chooseCard"].includes(e.effect) || (e.effect === "putCounter" && ["+1/+1", "loyalty", "shield"].includes(e.counter));
+const HARMS = (e) => ["destroy", "dealDamage", "loseLife", "discard", "sacrifice", "mill", "counterSpell", "poison"].includes(e.effect)
+  || (e.effect === "pump" && ((e.power ?? 0) < 0 || (e.toughness ?? 0) < 0)) || (e.effect === "putCounter" && e.counter === "-1/-1");
+/* Each effect of a list, nested ones too ("then", a branch's), with the target it is bound to: `targets` or `who`. */
+function aimedEffects(effects, offset, out = []) {
+  for (const e of effects ?? []) {
+    if (!e || typeof e !== "object") continue;
+    for (const ref of [e.targets, e.who]) if (ref && typeof ref === "object" && Number.isInteger(ref.target)) out.push({e, at: offset + ref.target});
+    for (const nested of [e.effects, e.then, e.else, e.otherwise]) if (Array.isArray(nested)) aimedEffects(nested, offset, out);
+  }
+  return out;
+}
+/* Who holds a target: a permanent's controller now (the layers), any other object's controller. */
+function holderIn(state, id) {
+  const o = state.objects[id];
+  if (!o) return null;
+  try { return o.zone === "battlefield" ? controllerOf(state, id) : o.controller; } catch { return o.controller; }
+}
+export function leaning(state, seat, a) {
+  if (!(a.targets ?? []).length || (a.kind !== "cast" && a.kind !== "activate")) return "";
+  const object = state.objects[a.objectId];
+  const source = a.kind === "activate" ? (object?.abilities ?? []).find((b) => b.id === a.abilityId) : object?.spell;
+  if (!source) return "";
+  /* A modal one's chosen modes, their targets one after another in the order chosen (CR 700.2c). */
+  let aimed = [];
+  if (Array.isArray(a.modes) && source.modal?.modes) {
+    let offset = 0;
+    for (const i of a.modes) {const mode = source.modal.modes[i]; if (!mode) continue; aimed = aimed.concat(aimedEffects(mode.effects, offset)); offset += (mode.targets ?? []).length;}
+  } else aimed = aimedEffects(source.effects, 0);
+  for (const {e, at} of aimed) {
+    const t = a.targets[at];
+    if (!t || Array.isArray(t) || (t.kind !== "object" && t.kind !== "player")) continue;
+    const holder = t.kind === "player" ? t.id : holderIn(state, t.id);
+    if (holder === undefined || holder === null) continue;
+    if (HELPS(e) && holder !== seat) return `helps ${state.players[holder]?.name ?? `Seat ${holder + 1}`}`;
+    if (HARMS(e) && holder === seat) return t.kind === "player" ? "against you" : "against your own";
+  }
+  return "";
+}
+
 export function offerDetails(state, seat, actions) {
   const player = (id) => (id === seat ? `${state.players[id]?.name ?? "you"} (you)` : state.players[id]?.name ?? `Seat ${id + 1}`);
   const object = (id, plain) => {
     const o = state.objects[id];
     if (!o) return "";
-    let holder = o.controller;
-    try { if (o.zone === "battlefield") holder = controllerOf(state, id); } catch { /* the base controller */ }
+    const holder = holderIn(state, id);
     const whose = holder === seat || holder === undefined || holder === null ? "" : ` (${state.players[holder]?.name ?? `Seat ${holder + 1}`}'s)`;
     /* A face-down permanent has no name (CR 708.2a): it is said to be face down. */
     const name = shownName(o);
@@ -206,6 +264,8 @@ export function offerDetails(state, seat, actions) {
     const aimed = (t) => (!t ? "" : Array.isArray(t) ? (t.length ? t.map(aimed).join(" and ") : "no target") : t.kind === "choose" ? countWords(t)
       : t.kind === "player" ? player(t.id) : t.kind === "ability" ? targetName(state, t) : object(t.id, plain));
     if ((a.targets ?? []).length) parts.push(`→ ${a.targets.map(aimed).join(", ")}`);
+    const lean = leaning(state, seat, a);
+    if (lean) parts.push(lean);
     /* What the cost takes: one card, or a set of them ("sacrificing Bear and Wolf", "discarding Ponder and Opt"), each
        said with what it does to them. */
     /* "Blight 1" puts its counters on the creature (CR 701.68a); "tap three untapped creatures you control", a set tapped; and
@@ -269,8 +329,14 @@ function priorityChoice(id, actions, state = null, seat = null) {
   const details = state ? offerDetails(state, seat, actions) : [];
   return {id, title: "Your priority", mode: "one", min: 1, max: 1, kind: "priority",
     options: actions.map((a, index) => (a.kind === "resolve-all" ? {index, label: `Resolve all ${a.n}`, act: a.kind, count: a.n, detail: `${a.name} triggers`}
+      /* A tap taken back, its mana unspent (`untapMana`). */
+      : a.kind === "undo-mana" ? {index, label: `Untap ${a.name}`, act: a.kind, cardId: a.objectId, detail: "its mana unspent"}
       : {index, label: a.kind === "pass" ? "Pass priority" : (a.label || a.kind), act: a.kind, ...(a.objectId !== undefined ? {cardId: a.objectId} : {}),
-        ...(details[index] ? {detail: details[index]} : {})}))};
+        /* The pass that ends the seat's own turn: its end step, nothing on the stack (the board says "End turn"). */
+        ...(a.kind === "pass" && state && seat === state.activePlayer && state.phase === "END_OF_TURN" && !state.stack.length ? {endsTurn: true} : {}),
+        ...(details[index] ? {detail: details[index]} : {}),
+        /* Whose side it is on, when it is not the usual one (`leaning`): "helps Maya", "against your own" -- the board marks it. */
+        ...((lean) => (lean ? {lean} : {}))(state ? leaning(state, seat, a) : "")}))};
 }
 
 /* RESOLVE ALL (Rob, 2026-10-09). Krenko, Mob Boss with Intruder Alarm puts thousands of one trigger on the stack, and
@@ -359,6 +425,14 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
   /* ITEM 11: whether a person with nothing to do passes by itself, and what the step in progress has seen -- a pass
      the room made for someone, and anything anyone chose to do (a person's pass counts: they could have acted). */
   let passEmpty = false, step = {key: null, quiet: false, acted: false};
+  let endAsks = false;
+  /* The run of a person's taps for mana that may still be taken back (`untapMana`; rules/untap-mana.mjs), or null. */
+  let untapMana = false, taken = null;
+  /* Each person's way of playing (`prefer`), by seat id: `stepByStep`, asked at every step of their own turn. */
+  let prefs = {};
+  /* Each seat's own turns so far, by seat id, and the game turn last counted (`at`); null in a room saved before they were
+     counted, which says nothing rather than a wrong number. */
+  let turnsOf = {at: 0};
   /* Rob, 2026-10-06: when every person is out, the game ends; the AI seats do not play it out. */
   let endWhenNoPerson = false;
   /* Rob, 2026-10-09: Resolve all is offered (`resolveAll`), and the seats that took it, each with the run it is passing
@@ -368,7 +442,12 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
      waits on until priority comes back to them (`castBy`). */
   let passAfterCast = false, castBy = null;
   const nobodyLeft = () => seats.some((s) => s.pilot === "human") && seats.every((s, i) => s.pilot !== "human" || state.players[i].lost);
-  const track = () => {const key = `${state.turn}:${state.stepIndex}`; if (key !== step.key) step = {key, quiet: false, acted: false};};
+  const track = () => {
+    const key = `${state.turn}:${state.stepIndex}`; if (key !== step.key) step = {key, quiet: false, acted: false};
+    /* Whose turn this is of theirs (Rob, 2026-10-11: "it says we are on turn 3, but I only played one land" -- the game's
+       turn 3, his second): each seat's own turns, counted as each begins. */
+    if (turnsOf && state.turn !== turnsOf.at) {const seatId = seats[state.activePlayer]?.seatId; turnsOf = {...turnsOf, at: state.turn, [seatId]: (turnsOf[seatId] ?? 0) + 1};}
+  };
   /* A step that passed by itself, said once; the quiet steps of a turn in a row share one line. */
   function quietly(phase) {
     const name = QUIET_STEP[phase] || String(phase).toLowerCase(), last = history[history.length - 1];
@@ -492,9 +571,18 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         }
         apply(seat, pilots[seat].choose(seen, actions), "pilot"); continue;
       }
-      if (passEmpty && nothingToDo(state, seat, actions)) {apply(seat, actions.find((a) => a.kind === "pass"), "room"); continue;}
+      /* A PERSON'S OWN TURN ENDS ONLY WHEN THEY SAY SO (Rob, 2026-10-11: "passing the turn to the next player should always
+         require player confirmation, never happen automatically"): their end step is asked, with nothing to do or not, its
+         pass the end of their turn (priorityChoice, `endsTurn`). And one who plays step by step (`prefs`, Settings) is asked
+         at every step of their own turn. */
+      /* A land just tapped for mana, its mana unspent and nothing since, may be untapped (`untapMana`) -- and the person is not
+         passed for while it may: tapped for the wrong mana, nothing they hold can be cast with it (rules/actions.mjs,
+         nothingToDo), and that is when they would want the tap back. */
+      const untaps = untappable(state, taken) ? taken.takes.map((t) => ({kind: "undo-mana", objectId: t.objectId, name: t.card})) : [];
+      const asked = untaps.length > 0 || (seat === state.activePlayer && ((endAsks && state.phase === "END_OF_TURN") || prefs[seats[seat].seatId]?.stepByStep === true));
+      if (passEmpty && !asked && nothingToDo(state, seat, actions)) {apply(seat, actions.find((a) => a.kind === "pass"), "room"); continue;}
       const run = resolveAll ? triggerRun(state.stack) : null;
-      const offered = run ? [...actions, {kind: "resolve-all", key: run.key, n: run.n, name: run.name}] : actions;
+      const offered = [...actions, ...(run ? [{kind: "resolve-all", key: run.key, n: run.n, name: run.name}] : []), ...untaps];
       controller.offer(priorityChoice(`priority:${state.turn}:${state.stepIndex}:${controller.revision}`, offered, state, seat));
       pendingSeat = seat; pendingActions = offered; driven = 0; return;
     }
@@ -555,8 +643,9 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     if (!record || record.schema !== ROOM_SCHEMA) throw new RoomError(404, "There is no game at this table.");
     const point = await store.latestCheckpoint();
     if (!point || point.sequence !== record.sequence) throw new RoomError(500, "This table's saved game does not match its record, so it was not resumed.");
-    passEmpty = record.passEmpty === true; step = record.step || {key: null, quiet: false, acted: false};
-    resolveAll = record.resolveAll === true; standing = record.standing || {};
+    passEmpty = record.passEmpty === true; step = record.step || {key: null, quiet: false, acted: false}; prefs = record.prefs || {}; turnsOf = record.turnsOf || null;
+    resolveAll = record.resolveAll === true; standing = record.standing || {}; endAsks = record.endAsks === true;
+    untapMana = record.untapMana === true; taken = record.taken ?? null;
     passAfterCast = record.passAfterCast === true; castBy = record.castBy ?? null;
     seats = record.seats; pendingSeat = record.pendingSeat; pendingActions = record.pendingActions; receipts = record.receipts || []; leaving = record.leaving || []; departures = record.departures || {}; ended = record.ended || null; history = record.history || [];
     refusals = record.refusals || {total: 0, since: point.sequence, first: []};
@@ -581,11 +670,20 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
      Resolve all ("standing"), or for one whose cast passes (`passAfterCast`, "cast"); `hold`, a person casting who holds
      priority. */
   function apply(seat, action, by = "person", hold = false) {
+    if (action.kind === "undo-mana") {
+      step.acted = true;
+      const back = untapTaken(state, taken, action.objectId);
+      taken = back.run;
+      write(back.events);
+      note(`${seats[seat].name} untapped ${action.name}, its mana unspent`);
+      return;
+    }
     if (action.kind === "resolve-all") {
       standing[seat] = {key: action.key, left: action.n - 1, answers: {}};
       note(`${seats[seat].name} let ${action.n} ${action.name} triggers resolve`);
       return apply(seat, {kind: "pass"}, by);
     }
+    const run = taken;
     if (action.kind === "pass") {
       if (by === "room") step.quiet = true; else if (by === "person") step.acted = true;
       /* The game's random stream, for what resolves ("then shuffle", "in a random order"): the room's own, so a replay
@@ -598,7 +696,11 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       }
     } else {
       step.acted = true;
-      write(applyAction(state, seat, action));
+      /* A tap for mana, kept to be taken back while nothing else happens (`untapMana`): a person's only is ever offered. */
+      const was = untapMana && action.kind === "activate-mana" ? {mark: beforeTap(state), run} : null;
+      const events = applyAction(state, seat, action);
+      write(events);
+      taken = was ? tapTaken(state, seat, action, was.mark, events, was.run) : null;
       if (passAfterCast && by === "person" && !hold && (action.kind === "cast" || action.kind === "activate")) castBy = seat;
     }
   }
@@ -613,7 +715,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     const point = journal.checkpoint(state, rng.checkpoint());
     await store.saveCheckpoint(point);
     await store.pruneCheckpoints();
-    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, history, refusals, ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {}), ...(resolveAll ? {resolveAll, standing} : {}), ...(passAfterCast ? {passAfterCast, castBy} : {})}));
+    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, history, refusals, ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {}), ...(resolveAll ? {resolveAll, standing} : {}), ...(passAfterCast ? {passAfterCast, castBy} : {}), ...(endAsks ? {endAsks} : {}), ...(untapMana ? {untapMana, taken} : {}), ...(Object.keys(prefs).length ? {prefs} : {}), ...(turnsOf ? {turnsOf} : {})}));
   }
 
   const api = {
@@ -637,8 +739,9 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       const startingLife = pod && pod.startingLife !== undefined ? pod.startingLife : undefined;
       const beats = {...(pod && pod.drawBeat === true ? {drawBeat: true} : {}), ...(pod && pod.passEmpty === true ? {passEmpty: true} : {}),
         ...(pod && pod.endWhenNoPerson === true ? {endWhenNoPerson: true} : {}), ...(pod && pod.resolveAll === true ? {resolveAll: true} : {}),
-        ...(pod && pod.passAfterCast === true ? {passAfterCast: true} : {})};
-      passEmpty = beats.passEmpty === true; endWhenNoPerson = beats.endWhenNoPerson === true; resolveAll = beats.resolveAll === true; passAfterCast = beats.passAfterCast === true;
+        ...(pod && pod.passAfterCast === true ? {passAfterCast: true} : {}), ...(pod && pod.endAsks === true ? {endAsks: true} : {}),
+        ...(pod && pod.untapMana === true ? {untapMana: true} : {})};
+      passEmpty = beats.passEmpty === true; endWhenNoPerson = beats.endWhenNoPerson === true; resolveAll = beats.resolveAll === true; passAfterCast = beats.passAfterCast === true; endAsks = beats.endAsks === true; untapMana = beats.untapMana === true;
       try {state = createState({matchId, seed, players: seats.map((s) => ({name: s.name})), ...(startingLife !== undefined ? {startingLife} : {}), ...(beats.drawBeat ? {drawBeat: true} : {})});}
       catch (error) {throw new RoomError(400, error.message);}
       seats.forEach((s, seat) => {
@@ -680,6 +783,10 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         state: projectFor(state, seat),
         history: history.slice(-HISTORY_VIEW).map(({turn, text, mark}) => ({turn, text, ...(mark ? {mark} : {})})),
         ...(api.continuing ? {continuing: true} : {}),
+        /* This seat's own way of playing, as the room holds it (prefer). */
+        ...(prefs[seatId]?.stepByStep === true ? {stepByStep: true} : {}),
+        /* Which of its own turns this is, when the turn is this seat's (the board says "your 2nd"). */
+        ...(turnsOf && state.activePlayer === seat && turnsOf[seatId] ? {yourTurn: turnsOf[seatId]} : {}),
       };
     },
 
@@ -708,7 +815,8 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     async replay(entry) {
       if (entry.kind === "leave") return api.leave(entry.seat, entry.why);
       if (entry.kind === "end") return api.end(entry.seat);
-      if (entry.kind !== "answer") throw new RoomError(400, `Tape entry ${entry.n} is not an answer, a leave or an end.`);
+      if (entry.kind === "prefer") return api.prefer(entry.seat, entry);
+      if (entry.kind !== "answer") throw new RoomError(400, `Tape entry ${entry.n} is not an answer, a leave, an end or a way of playing.`);
       const seat = seatIndex(entry.seat);
       if (seat < 0 || pendingSeat !== seat) throw new RoomError(409, `The tape parts from the game at entry ${entry.n}: it answers for ${entry.seat}, and the game is waiting on ${pendingSeat === null ? "no one" : seats[pendingSeat].seatId}.`);
       withdrawKeeping();
@@ -723,6 +831,25 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
      * time ran out. Whatever was being asked is withdrawn and asked afresh, because the board it was asked
      * about has changed; the engine concedes them (CR 104.3a) and play goes on without them.
      */
+    /**
+     * A person's way of playing (Rob, 2026-10-11): `stepByStep`, to be asked at every step of their own turn rather than
+     * have a step with nothing to do pass itself. On the tape, as a leave is, so a replay asks where the game asked; the
+     * same as it was, it changes nothing and is not taped. It takes effect from the next step on.
+     */
+    async prefer(seatId, {stepByStep} = {}) {
+      const seat = seatIndex(seatId);
+      if (seat < 0) throw new RoomError(403, "That seat is not at this table.");
+      if (seats[seat].pilot === "house") throw new RoomError(409, "An AI seat has no way of playing to set.");
+      if (finished()) throw new RoomError(409, "This game is over.");
+      const on = stepByStep === true;
+      if ((prefs[seatId]?.stepByStep === true) === on) return api;
+      notWhileContinuing("Your way of playing can be changed");
+      prefs = {...prefs, [seatId]: {stepByStep: on}};
+      tape({kind: "prefer", seat: seatId, stepByStep: on});
+      await persist();
+      return api;
+    },
+
     async leave(seatId, why = "conceded") {
       const seat = seatIndex(seatId);
       if (seat < 0) throw new RoomError(403, "That seat is not at this table.");

@@ -3354,6 +3354,8 @@ button.cm-vitals{cursor:pointer}
 .cm-bcard-mark.is-state{background:var(--table-ink);font-weight:700}   /* a card read upright says it is tapped */
 .cm-bcard-mark.is-combat{background:var(--table-ink);font-weight:700;text-transform:capitalize}   /* attacking, blocking: said in its label too */
 .cm-bcard.is-tapped{transform:rotate(90deg) scale(.86);margin:0 calc(var(--bc) * .22)}
+.cm-lean{font-weight:800;white-space:nowrap}
+.cm-lean.is-helps,.cm-lean.is-against{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
 .cm-bcard.is-bright{box-shadow:0 0 0 3px var(--v-accent),0 6px 14px -6px rgb(0 0 0 / .85);cursor:pointer}
 .cm-bcard.is-picked{box-shadow:0 0 0 3px var(--v-accent),0 0 18px var(--v-accent);translate:0 -4px}
 .cm-bcard.is-selected{outline:2px solid var(--v-aether);outline-offset:2px}
@@ -3627,6 +3629,9 @@ button.cm-vitals{cursor:pointer}
 .cm-hand-slot{position:absolute;left:50%;top:0;transform:translateX(calc(-50% + var(--o) * var(--step))) translateY(calc(var(--a) * 10px)) rotate(calc(var(--o) * 5deg));transform-origin:50% 120%;transition:transform .2s}
 .cm-hand-slot:hover{z-index:2;transform:translateX(calc(-50% + var(--o) * var(--step))) translateY(-18px) rotate(0deg)}
 .cm-hand-slot .cm-bcard{--bc:calc(170px * var(--card-scale,1));cursor:pointer}
+/* Each card of the fan lies over the right of the one before it: a name there wraps within what is seen of its card, never
+   under the next one (a11y-board: every word reads at 4.5:1). The last card, and the one under the pointer, are whole. */
+.cm-hand-slot:not(:last-child):not(:hover) .cm-bcard-name{right:max(6%,calc(100% - var(--step) + 8px))}
 .cm-hand-key{position:absolute;left:50%;bottom:-24px;transform:translateX(-50%);font-size:12px;font-weight:700;color:color-mix(in srgb,var(--mat-ink) 75%,transparent)}
 .cm-hand-held .cm-bcard{--bc:calc(190px * var(--card-scale,1));box-shadow:0 0 0 3px var(--v-accent),0 24px 60px -20px rgb(0 0 0 / .8);cursor:pointer}
 .cm-hand-acts{justify-content:center}

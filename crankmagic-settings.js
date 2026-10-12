@@ -17,9 +17,9 @@ const swatch=([k,label,line])=>{const [palette,face]=C.THEME_FACE[k];return `<bu
 C.HELP.settings={title:'Settings',body:`<p>Your account, how the app looks, the price cap a deck is held to, and your library's data: backups, exports, history, and starting over.</p><p>A backup is an extra copy of the library, in a file you keep. Restoring one <strong>replaces</strong> the library with the file's.</p>`};
 
 views.settings=async()=>{
-  const p=C.state.preferences||{},choice=C.themeChoice(),still=Boolean(p.reduceMotion),rule=globalThis.CrankRules?globalThis.CrankRules.RULES.deckCap:null;
+  const p=C.state.preferences||{},choice=C.themeChoice(),still=Boolean(p.reduceMotion),stepByStep=(p.play||{}).stepByStep===true,rule=globalThis.CrankRules?globalThis.CrankRules.RULES.deckCap:null;
   const own=Number(p.defaultBudgetCap)>0?Number(p.defaultBudgetCap):null,version=document.querySelector('meta[name="crankmagic-version"]')?.content||'';
-  C.main.innerHTML=C.pageHead('Settings','','settings','<p class="cm-decks-summary">Account, appearance, prices and data.</p>')
+  C.main.innerHTML=C.pageHead('Settings','','settings','<p class="cm-decks-summary">Account, appearance, play, prices and data.</p>')
    +`<div class="cm-settings">`
    +card('account','Account',`<div id="cm-settings-account"><p class="cm-muted">Signing in is not offered on this copy of CrankMagic, so the library has no cloud copy here. Save a backup file below to keep an extra one.</p></div>`)
    +card('appearance','Appearance',
@@ -28,6 +28,9 @@ views.settings=async()=>{
       +`<p class="cm-settings-label">Motion</p><div class="cm-settings-row"><button type="button" class="v-button cm-chip-toggle" data-action="set-motion" aria-pressed="${still}">Reduce motion</button></div>`
       +`<p class="cm-muted">Stills the animated backgrounds and transitions. Your device's own setting does the same whatever this says.</p>`
       +`<div class="cm-settings-row">${b('Confirmations…','confirm-skips')}</div>`)
+   +card('play','Play',
+      `<div class="cm-settings-row"><button type="button" class="v-button cm-chip-toggle" data-action="set-step-by-step" aria-pressed="${stepByStep}">Stop at every step of my turn</button></div>`
+      +`<p class="cm-muted">Off, a step of your turn with nothing in it for you to do passes by itself, and the table stops where there is something: a land to play, a spell you can pay for, an attack. On, it stops at every step (upkeep, draw, main, combat, the end step), and you move on from each one yourself. Either way your turn never ends by itself: in your end step the button reads End turn. At a table, from its next step.</p>`)
    +card('prices','Prices',
       `<p>Prices are in US dollars, from Scryfall's daily market prices.</p>`
       +`<form class="cm-settings-cap" data-settings-cap><label>Default budget cap ($)<input name="cap" type="number" min="1" step="1" inputmode="numeric" value="${own??''}" placeholder="${e(rule??'')}"></label>${b('Save cap','save-budget-cap',{},true)}</form>`
@@ -69,6 +72,9 @@ actions['ai-settings-save']=async()=>{const f=document.getElementById('cm-ai-set
     /* Not elements.length, which is the form's count of controls. */
     length:f.elements.adviceLength.value==='detailed'?'detailed':'short',coachSees:f.elements.coachSees.value==='board'?'board':'hand'};
   await commit({type:'preferences',values:{aiCoach:next}});actions.close();notice('AI Coach settings saved.');};
+/* STOP AT EVERY STEP OF MY TURN (Rob, 2026-10-11): kept with the preferences (`play`), and told to the room by the board
+   (crankmagic-board.js, prefer). */
+actions['set-step-by-step']=async()=>{const play=(C.state.preferences||{}).play||{},on=play.stepByStep!==true;await commit({type:'preferences',values:{play:{...play,stepByStep:on}}});notice(on?'Your turn now stops at every step; you move on from each yourself.':'Steps of your turn with nothing to do pass by themselves again. Your turn still never ends without you.');};
 actions['set-motion']=async()=>{const on=!(C.state.preferences&&C.state.preferences.reduceMotion);await commit({type:'preferences',values:{reduceMotion:on}});notice(on?'Motion reduced: backgrounds and transitions hold still.':'Motion back on (your device’s own setting still applies).');};
 /* The cap is read from its own form, whichever button or key submitted it. Empty goes back to the rule. */
 actions['save-budget-cap']=async el=>{const form=el.closest('[data-settings-cap]'),raw=String(form?.elements.cap.value??'').trim(),n=raw===''?null:Number(raw);

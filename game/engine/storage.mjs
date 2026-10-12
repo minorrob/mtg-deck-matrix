@@ -139,7 +139,7 @@ export function createMatchStore(storage, matchId) {
         game (game/room/replay.mjs); the journal holds what the engine did, the tape what people told it. */
     async appendTape(entries) {
       for (const t of entries) {
-        if (!t || !Number.isInteger(t.n) || t.n < 0 || !["answer", "leave", "end"].includes(t.kind)) throw new Error("A tape entry is {n, kind: answer | leave | end, seat, ...}");
+        if (!t || !Number.isInteger(t.n) || t.n < 0 || !["answer", "leave", "end", "prefer"].includes(t.kind)) throw new Error("A tape entry is {n, kind: answer | leave | end | prefer, seat, ...}");
         const key = `${root}/tape/${pad(t.n)}`;
         if (await storage.get(key) !== null) throw new Error(`Tape entry ${t.n} is already written; a tape is appended to, never rewritten`);
         await write(key, t);
