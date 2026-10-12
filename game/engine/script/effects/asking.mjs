@@ -28,7 +28,7 @@
 
 import {cardsIn, moveObject, addObject, valueCostOf, rememberExileLooker, usesThisTurn, recordUse, recordDiscard} from "../../state/index.mjs";
 import {compileSelector, selectMatching} from "../filter.mjs";
-import {event, cardRef, moveOne, playersFor, sacrificeOne, destructionQuestion, destructionChoice} from "./zones.mjs";
+import {event, cardRef, moveOne, playersFor, sacrificeOne, destructionQuestion, destructionChoice, dredgers, dredgeInstead, dredgeWords, draw as drawEffect} from "./zones.mjs";
 import {proliferate as giveEachAnother, addCounters, putCounter, moveCounters, removeCounter} from "./resources.mjs";
 import {makeCopies, afterwards, joinAttack, attackPlaces, attachTo, createToken, effectUntil, COPY_KEYS, gainControl, attach} from "./permanents.mjs";
 import {payGeneric, canPayGeneric, parseManaCost, manaValue, paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits, unlessPlans, planWords, payPlan} from "../../rules/mana.mjs";
@@ -321,7 +321,7 @@ function showRevealed(state, player, ids) {
 }
 const unshowRevealed = (state, player) => { if (state.looks) state.looks = state.looks.filter((l) => !(l.revealed === true && l.owner === player)); };
 /* What dig does with the cards not taken: "the bottom" is a library move -- in a random order when the card says so, else
-   in the order they were looked at; anywhere else is an ordinary zone change. */
+   in the order given (the order its owner chose, digRestAsked below); anywhere else is an ordinary zone change. */
 function digRest(state, player, cards, {rest, random}, rng, events) {
   const left = cards.filter((id) => state.objects[id]);
   if (random && !rng) throw new Error("A random order needs the game's random stream");
@@ -333,6 +333,28 @@ function digRest(state, player, cards, {rest, random}, rng, events) {
     if (at >= 0) library.splice(at, 1);
     library.push(id);
   }
+}
+/* "THE REST ON THE BOTTOM OF YOUR LIBRARY IN ANY ORDER" (Dig Through Time, Growing Rites of Itlimoc; wave 4c, k2): two or more
+   cards put on the bottom of a library at once go there in the order their owner chooses (CR 401.4) -- the looker, whose
+   library it is -- one question, an order of them all, the first chosen highest. Never asked for one card, for "in a random
+   order" (`random`), or for the rest put anywhere else. Asked after what was taken has moved; `found`, what the dig took,
+   kept for "remember" until the order is answered. True when it asks. */
+function digRestAsked(state, awaiting, cards, found) {
+  const left = cards.filter((id) => state.objects[id]?.zone === "library");
+  if ((awaiting.rest ?? "bottom") !== "bottom" || awaiting.random === true || left.length < 2) return false;
+  state.awaiting = {kind: "effect-choice", effect: "dig", player: awaiting.player, step: "order", cards: left, rest: "bottom",
+    ...(awaiting.remember ? {remember: true, found: [...found]} : {})};
+  return true;
+}
+/* "Put up to one of them on top of your library" (Thassa's Oracle; `to: "top"`): the card taken stays in the library, lifted
+   to its top -- no zone change -- before the rest go to the bottom. One card, so there is no order to choose. */
+function digToTop(state, player, id) {
+  const library = state.zones.library[player];
+  const at = library.indexOf(id);
+  if (at < 0) return null;
+  library.splice(at, 1);
+  library.unshift(id);
+  return id;
 }
 /* "PUT ANY NUMBER OF NONLAND PERMANENT CARDS WITH TOTAL MANA VALUE 4 OR LESS FROM AMONG THEM ONTO THE BATTLEFIELD" (Ao, the Dawn
    Sky; `totalManaValueAtMost`): which cards is the looker's choice, made one card at a time -- each question offers only the
@@ -351,6 +373,7 @@ function digMoved(state, awaiting, chosen, events) {
        hand" (Zimone's Experiment; `toByType`): each to the first destination whose card types it has -- a land creature is a
        land card, and the lands come first. */
     const where = awaiting.toByType?.find((w) => w.types.some((type) => (state.objects[id].types ?? []).includes(type))) ?? {to: awaiting.to};
+    if (where.to === "top") { if (digToTop(state, awaiting.player, id) !== null) found.push(id); continue; }
     const moved = moveOne(state, id, where.to, events, {owner: awaiting.player, ...(where.tapped === true ? {tapped: true} : {}),
       ...(awaiting.faceDown ? {faceDown: true, lookers: [awaiting.player], ...(awaiting.link !== undefined ? {exiledBy: awaiting.link} : {})} : {})});
     if (moved !== null && state.objects[moved]) found.push(moved);
@@ -365,6 +388,7 @@ function digMoved(state, awaiting, chosen, events) {
 function digTaken(state, awaiting, chosen, rng) {
   const events = digRevealing(state, awaiting, chosen);
   const found = digMoved(state, awaiting, chosen, events);
+  if (digRestAsked(state, awaiting, awaiting.cards.filter((id) => !chosen.includes(id)), found)) return {events, again: true};
   digRest(state, awaiting.player, awaiting.cards.filter((id) => !chosen.includes(id)), awaiting, rng, events);
   return awaiting.remember ? {events, remembered: found} : events;
 }
@@ -388,6 +412,8 @@ export const dig = {
     /* Nothing among them that may be taken: nobody is asked, and the rest go where they go. */
     if (offered.length === 0) {
       const events = [...revealed];
+      /* Two or more of them to the bottom in any order: that order is still the looker's to choose (digRestAsked). */
+      if (digRestAsked(state, {player: context.controller, rest: params.rest, random: params.random === true}, looked, [])) { state.resolving?.events.push(...events); return true; }
       digRest(state, context.controller, looked, {rest: params.rest ?? "bottom", random: params.random === true}, rng, events);
       return {events};
     }
@@ -399,8 +425,9 @@ export const dig = {
       const taking = {player: context.controller, cards: looked, to: params.to ?? "hand", rest: params.rest ?? "bottom", random: params.random === true,
         ...(Array.isArray(params.toByType) ? {toByType: structuredClone(params.toByType)} : {})};
       const found = digMoved(state, taking, offered, events);
-      digRest(state, context.controller, looked.filter((id) => !offered.includes(id)), taking, rng, events);
       if (params.remember) context.remembered = found;
+      if (digRestAsked(state, taking, looked.filter((id) => !offered.includes(id)), found)) { state.resolving?.events.push(...events); return true; }
+      digRest(state, context.controller, looked.filter((id) => !offered.includes(id)), taking, rng, events);
       return {events};
     }
     if (revealed.length) { state.resolving?.events.push(...revealed); showRevealed(state, context.controller, looked); }
@@ -420,6 +447,9 @@ export const dig = {
   },
 
   choice(state, awaiting) {
+    /* The rest's order on the bottom (digRestAsked): all of them, the first chosen highest. */
+    if (awaiting.step === "order") return {id: `dig-order:${awaiting.cards.join(",")}`, title: "Put the rest on the bottom of your library in any order, the first you choose highest",
+      mode: "order", min: awaiting.cards.length, max: awaiting.cards.length, options: cardOptions(state, awaiting.cards)};
     const offered = awaiting.offered ?? awaiting.cards;
     if (awaiting.budget !== undefined) {
       const left = budgetLeft(state, awaiting);
@@ -440,6 +470,14 @@ export const dig = {
   },
 
   apply(state, awaiting, indices, extra = {}, rng = null) {
+    /* The order answered (inOrder: one an answer leaves out keeps its place after them): to the bottom in that order, each
+       still in the library -- and what the dig took, remembered now. */
+    if (awaiting.step === "order") {
+      if ((indices ?? []).some((i) => awaiting.cards[i] === undefined) || new Set(indices ?? []).size !== (indices ?? []).length) throw new Error("Invalid selection");
+      const events = [];
+      digRest(state, awaiting.player, inOrder(awaiting.cards, indices).filter((id) => state.objects[id]?.zone === "library"), {rest: "bottom", random: false}, rng, events);
+      return awaiting.remember ? {events, remembered: (awaiting.found ?? []).filter((id) => state.objects[id])} : events;
+    }
     if (awaiting.budget !== undefined) {
       const left = budgetLeft(state, awaiting);
       if ((indices ?? []).length !== 1 || !(indices[0] >= 0 && indices[0] <= left.length)) throw new Error("Invalid selection");
@@ -458,6 +496,7 @@ export const dig = {
     const events = digRevealing(state, awaiting, chosen);
     const taken = new Set(chosen);
     const found = digMoved(state, awaiting, chosen, events);
+    if (digRestAsked(state, awaiting, awaiting.cards.filter((id) => !taken.has(id)), found)) return {events, again: true};
     digRest(state, awaiting.player, awaiting.cards.filter((id) => !taken.has(id)), awaiting, rng, events);
     return awaiting.remember ? {events, remembered: found} : events;
   },
@@ -1789,6 +1828,35 @@ export const enchantWhat = {
   },
 };
 
+/* ---- dredgeDraw (CR 702.52a, 616.1; wave 4c, k2): one card drawn as an effect resolves, or a dredge in its place -- the
+   drawing player's choice among the dredge cards of their graveyard that could replace it now (effects/zones.mjs, dredgers);
+   with none, the card is drawn and nobody is asked. Queued by script/resolution.mjs, one for each card a draw would draw;
+   never written in a card script. ---- */
+export const dredgeDraw = {
+  open(state, params, context) {
+    if (!dredgers(state, params.player).length) return {events: drawEffect(state, {who: [params.player], count: 1}, context)};
+    state.awaiting = {kind: "effect-choice", effect: "dredgeDraw", player: params.player, cards: dredgers(state, params.player).map((d) => d.id)};
+    return true;
+  },
+  choice(state, awaiting) {
+    const could = new Map(dredgers(state, awaiting.player).map((d) => [d.id, d.amount]));
+    return {id: `dredge:${state.turn}:${awaiting.cards.join(",")}`, title: "You would draw a card: draw it, or dredge instead", mode: "one", min: 1, max: 1,
+      options: [{index: 0, label: "Draw a card"}, ...awaiting.cards.map((id, i) => ({index: i + 1, cardId: id, label: dredgeWords(state, {id, amount: could.get(id)})}))]};
+  },
+  apply(state, awaiting, indices) {
+    const [index] = indices ?? [];
+    if ((indices ?? []).length !== 1 || !(Number.isInteger(index) && index >= 0 && index <= awaiting.cards.length)) throw new Error("Invalid selection");
+    const events = [];
+    if (index === 0) return drawEffect(state, {who: [awaiting.player], count: 1}, {controller: awaiting.player});
+    if (!dredgeInstead(state, awaiting.player, awaiting.cards[index - 1], events)) throw new Error("That card can no longer dredge: draw the card, or dredge with another");
+    return events;
+  },
+  /* The drawing player has left the game (CR 800.4a): nothing is drawn. */
+  left() {
+    return [];
+  },
+};
+
 /** The four, by the name a card script uses. */
 /* ---- chooseCard: a search (CR 701.23) ---- */
 
@@ -2693,4 +2761,6 @@ export const ASKING = Object.freeze({twoPiles, scry, rearrangeTop, surveil, dig,
   /* Wave 4c: a hand looked at (Gitaxian Probe). */
   handLook,
   /* Train E: a different opponent for each permanent given away (Dack Fayden, Helping Hand). */
-  controlToOpponents});
+  controlToOpponents,
+  /* Wave 4c, k2: a draw, or a dredge in its place (CR 702.52a). */
+  dredgeDraw});

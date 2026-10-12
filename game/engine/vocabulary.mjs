@@ -231,7 +231,15 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
   "exalted", "extort", "eternalize", "gift",
   /* Wave 4c: offspring (CR 702.175), an optional additional cost and a 1/1 token copy as it enters (cards/index.mjs,
      rules/actions.mjs). */
-  "offspring"];
+  "offspring",
+  /* Wave 4c, k2: fabricate (CR 702.123a; Marionette Apprentice), a triggered ability -- +1/+1 counters or Servo tokens, its
+     controller's choice as it resolves (cards/index.mjs). */
+  "fabricate",
+  /* Wave 4c, k2: delve (CR 702.66a; Treasure Cruise, Dig Through Time), cards of the graveyard exiled to pay generic mana as a
+     spell is cast (rules/actions.mjs). */
+  "delve",
+  /* And dredge (CR 702.52a; Life from the Loam), a draw replaced from the graveyard, its player's choice (script/effects/zones.mjs). */
+  "dredge"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

@@ -670,6 +670,57 @@ function drawOne(state, player, events, replaced = []) {
   }
 }
 
+/* ---- DREDGE N (CR 702.52a; Life from the Loam; wave 4c, k2) ----
+
+   "If you would draw a card, you may mill N cards instead. If you do, return this card from your graveyard to your hand": a
+   replacement of one draw (CR 614.1a, 121.6), had by the card in its owner's graveyard and only there (CR 113.6) -- the
+   static `dredge` its keyword compiles to (cards/index.mjs). Usable only with N or more cards in that player's library
+   (702.52b), and never for a draw the player can't make (Narset, Parter of Veils; drawForbidden): there is no draw to
+   replace. Each card drawn is its own draw (CR 121.2), so one draw is replaced by one dredge at most, and a dredge card a
+   dredge milled may replace the next draw (the card's rulings). Whether, and with which, is the drawing player's choice
+   (CR 616.1): in the draw step (rules/turn.mjs, "dredge-draw") and as an effect resolves (script/resolution.mjs; effects/
+   asking.mjs, dredgeDraw). */
+/** The dredge cards of a player's graveyard that could replace their next draw now, each `{id, amount}`. */
+export function dredgers(state, player) {
+  if (!state.players[player] || state.players[player].lost || drawForbidden(state, player)) return [];
+  const library = cardsIn(state, "library", player).length;
+  return cardsIn(state, "graveyard", player).flatMap((id) => {
+    const rule = (state.objects[id].abilities ?? []).find((a) => a.kind === "static" && a.rule === "dredge");
+    return rule && Number.isInteger(rule.amount) && rule.amount >= 1 && rule.amount <= library ? [{id, amount: rule.amount}] : [];
+  });
+}
+/** One dredge in words, for the drawing player's question: "Dredge 3: mill three cards and return Life from the Loam to your hand". */
+const DREDGE_WORDS = ["no", "a", "two", "three", "four", "five", "six"];
+export const dredgeWords = (state, {id, amount}) =>
+  `Dredge ${amount}: mill ${DREDGE_WORDS[amount] ?? amount} card${amount === 1 ? "" : "s"} and return ${state.objects[id]?.card ?? "it"} to your hand`;
+/** A draw replaced by this card's dredge (dredgers): its N cards milled, then the card returned from its owner's graveyard to
+    their hand -- the object it was there (CR 400.7). No card is drawn, so nothing that watches draws sees it. False when it
+    cannot dredge now. */
+export function dredgeInstead(state, player, cardId, events) {
+  const could = dredgers(state, player).find((d) => d.id === cardId);
+  if (!could) return false;
+  events.push(...mill(state, {who: [player], count: could.amount}, {controller: player, source: cardId}));
+  if (state.objects[cardId]?.zone === "graveyard") moveOne(state, cardId, "hand", events, {owner: player});
+  return true;
+}
+/** A draw effect as the single draws it makes, a player for each card, in the order `draw` makes them -- Alms Collector's
+    "instead you and that player each draw a card" among them (drawsInstead, the one its drawing player chose, `drawOrders`)
+    -- for a dredge to replace any one of them (script/resolution.mjs). */
+export function singleDraws(state, params, context) {
+  const count = params.count ?? 1, draws = [];
+  for (const player of playersFor(state, params.who, context.controller)) {
+    const instead = drawsInstead(state, player, count);
+    if (instead.length) {
+      const you = instead.includes(params.drawOrders?.[player]) ? params.drawOrders[player] : instead[0];
+      const seats = state.players.length, rank = (p) => (p - state.activePlayer + seats) % seats;
+      draws.push(...[you, player].sort((a, b) => rank(a) - rank(b)));
+      continue;
+    }
+    for (let i = 0; i < count; i += 1) draws.push(player);
+  }
+  return draws;
+}
+
 /* ---- CR 616.1, before cards are drawn ----
 
    A draw of two or more two players' Alms Collectors would replace: the drawing player chooses whose applies, asked before any

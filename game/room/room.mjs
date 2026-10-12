@@ -302,11 +302,14 @@ export function offerDetails(state, seat, actions) {
     }
     /* Convoke (CR 702.51a): creatures help pay, picked once it is taken. */
     if (a.convoke) parts.push("convoking, tapping creatures you choose");
+    /* Delve (CR 702.66a): cards of the graveyard help pay, picked once it is taken (wave 4c, k2). */
+    if (a.delve) parts.push("delving, exiling cards you choose from your graveyard");
     /* Flashback (CR 702.34a): from the graveyard for its flashback cost, exiled after -- and the creatures it taps, picked
        once it is taken. */
+    /* And the permanents it sacrifices ("Flashback--Sacrifice three creatures", Dread Return), picked once it is taken too. */
     if (a.flashback) {
-      const tap = flashbackCost(state, seat, a.objectId)?.tap;
-      parts.push(tap ? `flashback, tapping ${tappersInWords(tap)}` : "flashback");
+      const back = flashbackCost(state, seat, a.objectId), tap = back?.tap, sacrifice = back?.sacrifice;
+      parts.push(`flashback${tap ? `, tapping ${tappersInWords(tap)}` : ""}${sacrifice ? `, sacrificing ${inWords(sacrifice.count)} you choose` : ""}`);
     }
     /* Escape (CR 702.138a): from the graveyard for its escape cost -- its mana, and the other cards it will take. */
     if (a.escape !== undefined) {

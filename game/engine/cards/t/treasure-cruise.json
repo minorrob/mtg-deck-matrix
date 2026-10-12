@@ -1,0 +1,39 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Treasure Cruise",
+    "oracleId": "5b6bdf5a-2742-4851-92cd-a857a3852836",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{7}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Delve (Each card you exile from your graveyard while casting this spell pays for {1}.)\nDraw three cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Delve",
+      "keyword": "delve"
+    },
+    {
+      "kind": "spell",
+      "text": "Draw three cards.",
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 3
+        }
+      ]
+    }
+  ]
+}

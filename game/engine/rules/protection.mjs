@@ -20,6 +20,7 @@
 
 import {staticAffects, typesOf, colorsOf, controllerOf, onceAQuestion, staticAbilities} from "./layers.mjs";
 import {chosenFor} from "../script/chosen.mjs";
+import {commanderIdentity, hasCommander} from "./commander.mjs";
 
 /* Every protection there is now, each with what it covers and its quality: once a question, since a question asks it of
    every target candidate. */
@@ -38,10 +39,21 @@ function gatherProtections(state) {
   return found;
 }
 
+/* "PROTECTION FROM EACH COLOR THAT'S NOT IN YOUR COMMANDER'S COLOR IDENTITY" (Commander's Plate; wave 4c, k2): the colors
+   outside the identity of the commanders of the protection's controller (`holder`), their union (CR 903.4, 702.124c) -- each
+   of the five when that identity is colorless, and none for a player with no commander, whose commander's identity is
+   undefined (903.4f; the card's ruling). Read as each question is asked: whose it is can change with control. */
+function qualityColors(state, from, holder) {
+  if (from?.outsideCommanderIdentity !== true) return from?.colors ?? [];
+  if (!Number.isInteger(holder) || !hasCommander(state, holder)) return [];
+  const identity = commanderIdentity(state, holder);
+  return ["W", "U", "B", "R", "G"].filter((color) => !identity.includes(color));
+}
+
 /* Whether a source has the quality (CR 702.16a): "everything", one of the card types, or one of the colors (`colors`,
    "protection from black": Karmic Guide), as the source is now -- a permanent through the layers, a spell on the stack or a
    card elsewhere as it is. */
-function hasQuality(state, from, sourceId) {
+function hasQuality(state, from, sourceId, holder = null) {
   if (from === "everything") return true;
   if (sourceId === null || sourceId === undefined || !state.objects[sourceId]) return false;
   const onBattlefield = state.objects[sourceId].zone === "battlefield";
@@ -50,7 +62,7 @@ function hasQuality(state, from, sourceId) {
   const colors = onBattlefield ? colorsOf(state, sourceId) : (state.objects[sourceId].colors ?? []);
   /* "Protection from multicolored" (Argentum Masticore): a source of two or more colors (CR 105.2b). */
   if (from?.multicolored === true && colors.length >= 2) return true;
-  return (from?.colors ?? []).some((color) => colors.includes(color));
+  return qualityColors(state, from, holder).some((color) => colors.includes(color));
 }
 
 /**
@@ -86,7 +98,7 @@ export function protectedFrom(state, {card = null, player = null}, sourceId) {
   if (card !== null && card !== undefined
     && (state.effects ?? []).some((e) => e.rule === "protection" && (e.affects?.ids ?? []).includes(card) && hasQuality(state, e.from, sourceId))) return true;
   for (const {ability, holderId, controller} of protections(state)) {
-    if (!hasQuality(state, ability.from, sourceId)) continue;
+    if (!hasQuality(state, ability.from, sourceId, controller)) continue;
     if (card !== null && card !== undefined && ability.affects && state.objects[card]?.zone === "battlefield"
       && staticAffects(state, {affects: ability.affects, sourceId: holderId}, card, controller)) return true;
     if (player !== null && player !== undefined && ability.players === "you" && player === controller) return true;

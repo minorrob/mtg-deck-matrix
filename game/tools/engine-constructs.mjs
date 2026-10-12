@@ -78,6 +78,11 @@ export const FORGE_API = {
   AddTurn: "addTurn", AddPhase: "addPhase", ChooseCard: "chooseCard", ChooseType: "chooseType",
   /* ChooseColor ("choose a color", as it resolves; Skrelv, Defector Mite, Train C phase 2): CR 105.1. */
   ChooseColor: "chooseColor",
+  /* Protection ("target creature you control gains protection from the color of your choice until end of turn", Mother of
+     Runes; wave 4c k2): effectUntil's `rule: "protection"` over the permanents named (rules/protection.mjs, built with
+     Akroma's Will in wave 4b), from colors -- named, or the one a chooseColor chose ("$chosenColor") -- card types or
+     everything. No new code: Mother of Runes is the first card read through it. */
+  Protection: "effectUntil",
   /* GenericChoice ("create a Food token or a Treasure token", "target opponent may have you draw three cards"): the modal
      question at resolution, its chooser any player (batch 52). */
   GenericChoice: "modal", TwoPiles: "twoPiles", Connive: "connive",
@@ -270,6 +275,9 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
   /* Eternalize (CR 702.129a; Fanatic of Rhonas, wave 4b): embalm's graveyard ability, the token copy black, 4/4, a Zombie
      besides its other types, with no mana cost (cards/index.mjs). */
   Eternalize: "copyPermanent",
+  /* Fabricate (CR 702.123a; Marionette Apprentice, wave 4c k2): the enters trigger, N +1/+1 counters on it or N 1/1 Servo
+     artifact creature tokens, its controller's choice as it resolves -- the Servos alone once it has left (cards/index.mjs). */
+  Fabricate: "createToken",
   /* Exalted (CR 702.83a; Ignoble Hierarch, wave 4b): the trigger as a creature its controller controls attacks alone, +1/+1
      until end of turn (cards/index.mjs; rules/trigger.mjs's `alone`). */
   Exalted: "pump",
@@ -390,7 +398,9 @@ export const FORGE_COUNTS = Object.freeze({
   CardPower: {name: "This card's power", status: "built", engine: "{powerOf: \"self\"}"},
   ValidHand: {name: "Cards in a hand", status: "built", engine: "{count: {what: \"card\", zone: \"hand\"}}"},
   ValidGraveyard: {name: "Cards in a graveyard", status: "built", engine: "{count: {what: \"card\", zone: \"graveyard\"}}"},
-  ValidLibrary: {name: "Cards in a library", status: "missing"},
+  /* Wave 4c, k2 (Thassa's Oracle): "the number of cards in your library" -- a count of a zone's cards, as a hand's and a
+     graveyard's are (script/filter.mjs, selectMatching, every player's library). No new code: credited as built. */
+  ValidLibrary: {name: "Cards in a library", status: "built", engine: "{count: {what: \"card\", zone: \"library\"}}"},
   ValidExile: {name: "Cards in exile", status: "missing"},
   LifeAmount: {name: "That much life (\"loses that much life\", the life gained)", status: "built", engine: "{lifeGained: true}: the life the trigger is about (batch 68)"},
   Devotion: {name: "Devotion to a color (CR 700.5)", status: "built", engine: "{devotion: [color]}"},
@@ -440,7 +450,9 @@ export const FORGE_COUNTS = Object.freeze({
   Adamant: {name: "Mana of a color spent to cast it (adamant; \"if {G}{G} was spent to cast it\")", status: "built", engine: "condition {spent: {color: n}} (script/condition.mjs)"},
   /* Fblthp, the Lost (AI 1's deck): "if it entered from your library or was cast from your library". */
   wasCastFromYourLibrary: {name: "It entered from, or was cast from, your library", status: "built", engine: "condition {cameFrom: \"library\"} (script/condition.mjs)"},
-  Threshold: {name: "Threshold (seven cards in your graveyard)", status: "missing"},
+  /* Wave 4c, k2 (Cabal Ritual): "if there are seven or more cards in your graveyard" -- a count of the graveyard compared, an
+     ability's or an effect's condition (Loot, the Anomaly; Theorix Metamage). No new code: credited as built. */
+  Threshold: {name: "Threshold (seven cards in your graveyard)", status: "built", engine: "condition {compare: {count: {count: {what: \"card\", zone: \"graveyard\", controller: \"you\"}}, atLeast: 7}}"},
   /* Train B (X11; Wayward Swordtooth): "unless you have the city's blessing" -- ascend's designation (CR 702.131;
      keywords/designations.mjs). */
   Blessing: {name: "The city's blessing (ascend)", status: "built", engine: "condition {citysBlessing} (script/condition.mjs)"},

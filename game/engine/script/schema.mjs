@@ -301,6 +301,10 @@ function checkEffect(effect, path, errors) {
     errors.push({path: `${path}.enchants`, message: "An Aura that enchants only what it attaches itself to is attach's `enchants: true`, with no other `source`"});
   if (name === "dig" && effect.all !== undefined && !(effect.all === true && effect.selector !== undefined && effect.upTo === undefined && effect.take === undefined))
     errors.push({path: `${path}.all`, message: "Every card a selector fits, taken with nobody asked, is `all: true` beside a `selector`, with no `take` or `upTo`"});
+  /* "Put up to one of them on top of your library" (Thassa's Oracle, wave 4c k2; effects/asking.mjs, digToTop): one card, kept
+     in the library and lifted to its top -- never several, whose order on top nothing asks. */
+  if (name === "dig" && effect.to === "top" && !((effect.take ?? 1) === 1 && effect.all === undefined && effect.toByType === undefined))
+    errors.push({path: `${path}.to`, message: "A card a dig puts on top of the library is one card: `to: \"top\"` with `take: 1`, never `all` or `toByType`"});
   /* Counters moved (moveCounters, CR 122.5; script/effects/resources.mjs): from one object onto another, of a kind named --
      or "chosen", its controller's choice among the kinds there (effects/asking.mjs, counterKind). */
   if (name === "moveCounters") {

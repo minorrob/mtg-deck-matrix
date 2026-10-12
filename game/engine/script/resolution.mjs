@@ -23,7 +23,7 @@ import {runEffect, eachOf} from "./effects/index.mjs";
 import {ASKING, commandersGoingHome} from "./effects/asking.mjs";
 import {damageQuestion, addCounters, counterQuestion} from "./effects/resources.mjs";
 import {controllerOf} from "../rules/layers.mjs";
-import {destructionQuestion, drawQuestion} from "./effects/zones.mjs";
+import {destructionQuestion, drawQuestion, dredgers, singleDraws} from "./effects/zones.mjs";
 import {tokenQuestion} from "./effects/permanents.mjs";
 import {bindEffect} from "./bind.mjs";
 import {countEffect} from "./amount.mjs";
@@ -263,6 +263,13 @@ export function runResolution(state, rng = null) {
        drawn (effects/asking.mjs, orderDraws). */
     else if ((asked = drawQuestion(state, effect, resolving.context, effect?.drawOrders ?? {})))
       resolving.queue[0] = {effect: "orderDraws", draw: effect, answers: effect.drawOrders ?? {}, question: asked};
+    /* DREDGE (CR 702.52a; Life from the Loam, wave 4c k2): a draw a dredge card in a drawing player's graveyard could replace --
+       each card drawn its own draw (CR 121.2) -- rewritten as it reaches the head into its single draws (effects/zones.mjs,
+       singleDraws: Alms Collector's, asked above, among them), each the drawing player's question when a dredge could replace
+       it then and a plain draw when none could (effects/asking.mjs, dredgeDraw): a dredge card the first dredge milled may
+       replace the next. */
+    else if (effect?.effect === "draw" && singleDraws(state, effect, resolving.context).some((player) => dredgers(state, player).length))
+      resolving.queue.splice(0, 1, ...singleDraws(state, effect, resolving.context).map((player) => ({effect: "dredgeDraw", player})));
     /* CR 616.1: a destruction two or more effects would replace, ending differently (umbra armor; effects/zones.mjs) -- the
        permanent's controller chooses which, before anything is destroyed (effects/asking.mjs, orderDestruction). */
     else if (destructionQuestion(state, effect, resolving.context)) resolving.queue[0] = {effect: "orderDestruction", destroy: effect};

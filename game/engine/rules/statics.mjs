@@ -212,6 +212,10 @@ export const STATIC_RULES = Object.freeze({
   /** Storm (CR 702.40a): the keyword kept as this static, read as the spell is cast (cards/index.mjs; batch 77 names it
       here, where every rule a definition carries is named). */
   "storm": "rules/actions.mjs",
+  /** Dredge N (CR 702.52a; Life from the Loam, wave 4c k2): the keyword kept as this static, with its N (`amount`), read in its
+      owner's graveyard wherever that player would draw a card -- the draw step (rules/turn.mjs) and a draw effect
+      (script/resolution.mjs) -- a replacement its player may choose (script/effects/zones.mjs, dredgers). */
+  "dredge": "script/effects/zones.mjs",
   /** Rebound (CR 702.88a): the keyword kept as this static (cards/index.mjs), read as the spell leaves the stack: cast from
       its owner's hand and resolved, it is exiled and may be cast free at its caster's next upkeep (Ephemerate). */
   "rebound": "rules/stack.mjs",

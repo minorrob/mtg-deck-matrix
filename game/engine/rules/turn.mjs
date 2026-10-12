@@ -39,7 +39,7 @@ import {cardsIn, moveObject, eventCard, recordDraw, recordDrawStepDraw, recordDi
 import {attackers, blockers, combatDamage, endCombat} from "./combat.mjs";
 import {combatNeedsFirstStrike} from "../keywords/combat.mjs";
 import {checkStateBasedActions, gameOver, finishCommanderReplacement, legendChoice, finishLegendRule, finishDestructionChoice} from "./sba.mjs";
-import {destructionChoice} from "../script/effects/zones.mjs";
+import {destructionChoice, dredgers, dredgeInstead, dredgeWords} from "../script/effects/zones.mjs";
 import {commanderChoice} from "./commander.mjs";
 import {damageOrderChoice} from "./replacement.mjs";
 import {mulliganChoice, resolveMulligan} from "./mulligan.mjs";
@@ -318,6 +318,10 @@ function choiceFor(state) {
   /* The held draw (item 13): one thing to do, and nothing else happens until it is done. */
   if (awaiting.kind === "draw-card")
     return {id: `draw:${state.turn}`, title: "Draw a card", kind: "draw", mode: "one", min: 1, max: 1, options: [{index: 0, label: "Draw a card"}]};
+  /* The draw step's draw, or a dredge in its place (CR 702.52a): a question like any other, never the beat's one button. */
+  if (awaiting.kind === "dredge-draw")
+    return {id: `dredge-draw:${state.turn}`, title: "Your draw step: draw a card, or dredge instead", mode: "one", min: 1, max: 1,
+      options: [{index: 0, label: "Draw a card"}, ...dredgers(state, awaiting.player).map((d, i) => ({index: i + 1, cardId: d.id, label: dredgeWords(state, d)}))]};
   if (awaiting.kind === "discard-to-hand-size") {
     const hand = cardsIn(state, "hand", awaiting.player);
     return {
@@ -469,6 +473,18 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
     grantStepPriority(state, events);
     return events;
   }
+  /* Drawn, or dredged: the card's N milled and the card returned to its owner's hand, and no card drawn (CR 702.52a). */
+  if (awaiting.kind === "dredge-draw") {
+    const could = dredgers(state, awaiting.player);
+    const [index] = indices ?? [];
+    if (!Array.isArray(indices) || indices.length !== 1 || !(Number.isInteger(index) && index >= 0 && index <= could.length)) throw new Error("Invalid selection");
+    const events = [];
+    state.awaiting = null;
+    if (index === 0) draw(state, awaiting.player, events);
+    else dredgeInstead(state, awaiting.player, could[index - 1].id, events);
+    grantStepPriority(state, events);
+    return events;
+  }
   if (awaiting.kind === "assign-combat-damage") {
     const events = combatDamage.resolve(state, awaiting, amounts ?? indices);
     /* Another attacker may also face several blockers; each gets its own question, and only once
@@ -541,7 +557,11 @@ function arrive(state, events) {
   if (state.phase === "DRAW" && !skipsFirstDraw(state) && !state.players[state.activePlayer].lost) {
     /* CR 504.1 makes the draw a turn-based action, not a choice. A table that asks for the beat (item 13) holds it
        until the player's click: the same card, at the player's moment, and priority after it (CR 504.2). */
-    if (state.drawBeat) state.awaiting = {kind: "draw-card", player: state.activePlayer};
+    /* DREDGE (CR 702.52a; Life from the Loam, wave 4c k2): a dredge card in their graveyard could replace that draw --
+       whether, and with which, is theirs to choose (CR 616.1), asked as the draw is made, and the draw held for it as the
+       beat holds it (script/effects/zones.mjs, dredgers). */
+    if (dredgers(state, state.activePlayer).length) state.awaiting = {kind: "dredge-draw", player: state.activePlayer};
+    else if (state.drawBeat) state.awaiting = {kind: "draw-card", player: state.activePlayer};
     else draw(state, state.activePlayer, events);
   }
   /* CR 714.3b: as the precombat main phase begins, the active player puts a lore counter on each Saga they control -- what

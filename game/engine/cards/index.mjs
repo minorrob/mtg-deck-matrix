@@ -95,7 +95,9 @@ const countedTarget = (spec) => Boolean(spec) && typeof spec === "object" && spe
    ("Flashback--Tap three untapped white creatures you control", Battle Screech: `tapCreature`, its `count` and `selector`),
    and cards to discard ("Flashback--{1}{U/R}{U/R}, Discard a card", Twinned Vision: `discard`, its `count`), each card its
    own offer as an additional cost's discard is (rules/actions.mjs, additionalChoices). */
-const FLASHBACK_ATOMS = ["mana", "payLife", "tapCreature", "discard", "behold"];
+/* And permanents to sacrifice ("Flashback--Sacrifice three creatures", Dread Return; wave 4c, k2: `sacrifice`, its `count` and
+   `selector`), which ones asked once the cast is taken, as the creatures it taps are. */
+const FLASHBACK_ATOMS = ["mana", "payLife", "tapCreature", "discard", "behold", "sacrifice"];
 /* BEHOLD (CR 701.4a): "behold an Elf", "behold three Elementals" -- what may be beheld, a selector, and how many (1 or more),
    in an additional cost or a flashback cost (rules/actions.mjs, beholdChoices). Never optional, and one to a card: its cast
    asks one question of it. */
@@ -459,7 +461,8 @@ function manaAbility(ability, id) {
     || (a?.atom === "mill" && Number.isInteger(a.count ?? 1) && (a.count ?? 1) >= 1)
     /* "{T}, Tap an untapped creature you control: Add one mana of any color" (Jaspera Sentinel): one creature the selector
        describes, beside the source's own {T} (rules/actions.mjs, manaTappers) -- or alone: "Tap an untapped artifact you
-       control: Add {U}" (Urza, Lord High Artificer; wave 4c), the source among what it may tap if it is one. */
+       control: Add {U}" (Urza, Lord High Artificer), "Tap an untapped legendary creature you control: Add one mana of any
+       color" (Relic of Legends; wave 4c), the source among what it may tap if it is one. */
     || (a?.atom === "tapCreature" && (a.count ?? 1) === 1 && Boolean(a.selector) && typeof a.selector === "object")
     /* "{T}, Exile a card from your graveyard: Add {R}" (Rubble Rouser): one card of its controller's graveyard the selector
        describes (rules/actions.mjs, graveyardChoices). */
@@ -767,6 +770,23 @@ export function compileScript(script) {
       keywords.push("Hideaway");
       return;
     }
+    /* FABRICATE N (CR 702.123a; Marionette Apprentice, wave 4c k2): the keyword IS a triggered ability -- "When this permanent
+       enters, you may put N +1/+1 counters on it. If you don't, create N 1/1 colorless Servo artifact creature tokens" -- which
+       of the two, its controller's choice as it resolves (a modal then, not as it goes on the stack: its one effect is the
+       branch), and the Servos alone when it is no longer on the battlefield to put counters on (the card's ruling). Each
+       instance triggers separately (702.123b). */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "fabricate") {
+      if (!(Number.isInteger(ability.amount) && ability.amount >= 1)) problems.push(`${ability.text}: fabricate needs its number, 1 or more`);
+      const n = ability.amount ?? 1, many = n === 1 ? "" : "s";
+      const servos = {effect: "createToken", count: n, token: {name: "Servo", types: ["Artifact", "Creature"], subtypes: ["Servo"], colors: [], power: 1, toughness: 1}};
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.enters({who: "self"}),
+        effects: [{effect: "branch", if: {present: {self: true}}, otherwise: [servos],
+          then: [{effect: "modal", title: `Fabricate ${n}`, modes: [
+            {text: `Put ${n === 1 ? "a" : n} +1/+1 counter${many} on it`, effects: [{effect: "putCounter", targets: "self", counter: "+1/+1", count: n}]},
+            {text: `Create ${n === 1 ? "a" : n} 1/1 Servo token${many}`, effects: [servos]}]}]}]});
+      keywords.push("Fabricate");
+      return;
+    }
     /* PROWESS (CR 702.108a, batch 77): "Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn"
        -- the keyword IS that triggered ability. */
     if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "prowess") {
@@ -863,6 +883,14 @@ export function compileScript(script) {
       if (!(identity.types ?? []).some((t) => t === "Instant" || t === "Sorcery")) problems.push(`${ability.text}: storm on a card that is not an instant or sorcery`);
       abilities.push({id, kind: "static", rule: "storm", text: ability.text, affects: {what: "card", self: true}});
       keywords.push("Storm");
+      return;
+    }
+    /* DREDGE N (CR 702.52a; Life from the Loam, wave 4c k2): kept on the card as a static ability with its N, read in its owner's
+       graveyard wherever they would draw a card (script/effects/zones.mjs, dredgers). */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "dredge") {
+      if (!(Number.isInteger(ability.amount) && ability.amount >= 1)) problems.push(`${ability.text}: dredge needs its number, 1 or more`);
+      abilities.push({id, kind: "static", rule: "dredge", text: ability.text, amount: ability.amount ?? 0, affects: {what: "card", self: true}});
+      keywords.push("Dredge");
       return;
     }
     /* REBOUND (CR 702.88a): kept on the card as a static ability, read as the spell leaves the stack (rules/stack.mjs): cast
@@ -1152,6 +1180,9 @@ export function compileScript(script) {
       const taps = cost.filter((atom) => atom?.atom === "tapCreature");
       if (taps.length > 1 || taps.some((atom) => !(Number.isInteger(atom.count) && atom.count >= 1) || !atom.selector || typeof atom.selector !== "object"))
         problems.push(`${ability.text}: a flashback cost taps a number of creatures, 1 or more, fitting a selector, once`);
+      const sacrifices = cost.filter((atom) => atom?.atom === "sacrifice");
+      if (sacrifices.length > 1 || sacrifices.some((atom) => !(Number.isInteger(atom.count) && atom.count >= 1) || !atom.selector || typeof atom.selector !== "object" || atom.self !== undefined))
+        problems.push(`${ability.text}: a flashback cost sacrifices a number of permanents, 1 or more, fitting a selector, once`);
       if (!(identity.types ?? []).some((t) => t === "Instant" || t === "Sorcery")) problems.push(`${ability.text}: flashback on a card that is not an instant or sorcery`);
       abilities.push({id, kind: "static", rule: "flashback", text: ability.text, cost: structuredClone(cost), affects: {what: "card", self: true}});
       keywords.push("Flashback");
@@ -1786,6 +1817,18 @@ export function compileScript(script) {
           problems.push(`${ability.text}: an alternative cost of ${atom?.atom ?? "something"} nothing pays yet`);
       if (ability.zone !== undefined && ability.zone !== "graveyard") problems.push(`${ability.text}: an alternative cost is cast from where it is, or from the graveyard (\`zone: "graveyard"\`)`);
     }
+    /* "Has protection from each color that's not in your commander's color identity" (Commander's Plate; wave 4c, k2): a
+       protection static's quality, `outsideCommanderIdentity: true`, alone in `from` -- the colors rules/protection.mjs counts
+       for the static's controller as each question is asked. */
+    if (ability.kind === "static" && ability.rule === "protection" && ability.from?.outsideCommanderIdentity !== undefined
+      && !(ability.from.outsideCommanderIdentity === true && Object.keys(ability.from).length === 1))
+      problems.push(`${ability.text}: protection from the colors outside your commander's identity is from: {outsideCommanderIdentity: true}, and nothing beside it`);
+    /* "It loses all other ... card types" (Darksteel Mutation; wave 4c, k2): the subtypes of the types it no longer has go
+       with them (CR 205.3d; rules/layers.mjs), read after its types are set -- `correspondingSubtypes: true`, in layer 4,
+       beside `setTypes`. */
+    if (ability.kind === "static" && ability.apply?.correspondingSubtypes !== undefined
+      && !(ability.apply.correspondingSubtypes === true && ability.layer === 4 && Array.isArray(ability.apply.setTypes)))
+      problems.push(`${ability.text}: correspondingSubtypes is true, in layer 4, beside setTypes (CR 205.3d)`);
     /* "A deck can have any number of cards named <this card>" (CR 100.2a): said of the card's own name, or no card says it. */
     if (ability.kind === "static" && ability.rule === "any-number-in-deck" && ability.text !== `A deck can have any number of cards named ${identity.name}.`)
       problems.push(`${ability.text}: any number of a card in a deck is the card's own words, of its own name`);

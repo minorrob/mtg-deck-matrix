@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,521 defined and playable today; 2,794 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,540 defined and playable today; 2,814 with every
 mechanic built, so only their definitions are left to write; 25 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -18,15 +18,15 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 74 | 0 | 6 | 114 |
+| Keyword abilities (CR 702) | 194 | 77 | 0 | 6 | 111 |
 | Keyword actions (CR 701) | 70 | 22 | 5 | 1 | 42 |
-| Effects | 192 | 77 | 2 | 1 | 112 |
+| Effects | 192 | 78 | 2 | 1 | 111 |
 | Triggers | 138 | 26 | 4 | 1 | 107 |
 | Static abilities | 77 | 14 | 2 | 0 | 61 |
 | Replacement effects | 34 | 0 | 6 | 0 | 28 |
 | Costs | 26 | 5 | 2 | 10 | 9 |
 | Options and conditions | 37 | 24 | 5 | 0 | 8 |
-| Amounts the game counts | 188 | 28 | 2 | 0 | 158 |
+| Amounts the game counts | 188 | 30 | 2 | 0 | 156 |
 | Choices | 15 | 12 | 0 | 0 | 3 |
 | Other keyword constructs | 16 | 11 | 0 | 1 | 4 |
 
@@ -39,18 +39,18 @@ The things that alone hold back the most of the most-played cards.
 | count | What entered or died this turn | — | missing | 9 | 9 |
 | option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 8 | 65 |
 | effect | RingTemptsYou | — | missing | 8 | 11 |
-| count | Cards in a library | — | missing | 7 | 11 |
 | effect | ChoosePlayer | — | missing | 6 | 8 |
 | effect | Discover | discover | named | 6 | 6 |
 | count | How many things an effect remembered | — | missing | 5 | 8 |
 | option | Imprint (a card exiled with this) | — | missing | 5 | 7 |
 | count | Times this resolved this turn | — | missing | 5 | 7 |
 | keyword ability | Spree | — | missing | 5 | 6 |
-| effect | Protection | — | missing | 5 | 5 |
 | keyword ability | Cascade | — | missing | 5 | 5 |
 | trigger | AbilityCast | — | missing | 5 | 5 |
 | option | Remembering what an effect moved | — | missing | 4 | 61 |
 | count | Your life total | — | missing | 4 | 10 |
+| count | Amount | — | missing | 4 | 8 |
+| option | Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 4 | 7 |
 
 ## Keyword abilities (CR 702)
 
@@ -116,20 +116,20 @@ The things that alone hold back the most of the most-played cards.
 | 702.94 | Miracle | — | missing | 3 | 17 | 3 | 3 |
 | 702.181 | Mobilize | — | missing | 3 | 15 | 3 | 3 |
 | 702.89 | Umbra Armor | Umbra Armor | built | 3 | 15 | 0 | 0 |
-| 702.52 | Dredge | — | missing | 3 | 14 | 3 | 3 |
+| 702.52 | Dredge | Dredge | built | 3 | 14 | 0 | 0 |
 | 702.37 | Morph | Morph | built | 2 | 153 | 0 | 0 |
 | 702.30 | Echo | Echo | built | 2 | 52 | 0 | 0 |
 | 702.103 | Bestow | — | missing | 2 | 43 | 2 | 2 |
 | 702.28 | Shadow | Shadow | built | 2 | 39 | 0 | 0 |
 | 702.83 | Exalted | Exalted | built | 2 | 35 | 0 | 0 |
 | 702.138 | Escape | Escape | built | 2 | 33 | 0 | 0 |
-| 702.66 | Delve | — | missing | 2 | 29 | 2 | 2 |
+| 702.66 | Delve | Delve | built | 2 | 29 | 0 | 0 |
 | 702.95 | Soulbond | — | missing | 2 | 25 | 2 | 1 |
 | 702.13 | Intimidate | — | missing | 2 | 23 | 2 | 2 |
 | 702.63 | Vanishing | — | missing | 2 | 21 | 2 | 2 |
 | 702.134 | Mentor | Mentor | built | 2 | 19 | 0 | 0 |
 | 702.101 | Extort | Extort | built | 2 | 18 | 0 | 0 |
-| 702.123 | Fabricate | — | missing | 2 | 16 | 2 | 2 |
+| 702.123 | Fabricate | Fabricate | built | 2 | 16 | 0 | 0 |
 | 702.118 | Skulk | — | missing | 2 | 15 | 2 | 2 |
 | 702.129 | Eternalize | Eternalize | built | 2 | 12 | 0 | 0 |
 | 702.121 | Melee | — | missing | 2 | 12 | 2 | 2 |
@@ -163,7 +163,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.91 | Battle Cry | — | missing | 1 | 13 | 1 | 1 |
 | 702.58 | Graft | — | missing | 1 | 13 | 1 | 1 |
 | 702.173 | Freerunning | Freerunning | built | 1 | 12 | 0 | 0 |
-| 702.180 | Harmonize | — | missing | 1 | 12 | 1 | 0 |
+| 702.180 | Harmonize | — | missing | 1 | 12 | 1 | 1 |
 | 702.156 | Ravenous | — | missing | 1 | 12 | 1 | 1 |
 | 702.137 | Spectacle | Spectacle | built | 1 | 11 | 0 | 0 |
 | 702.76 | Prowl | Prowl | built | 1 | 10 | 0 | 0 |
@@ -407,7 +407,7 @@ The things that alone hold back the most of the most-played cards.
 | Discover | discover | named | 6 | 35 | 6 | 6 |
 | AlterAttribute | alterAttribute | built | 5 | 115 | 0 | 0 |
 | ChooseNumber | — | missing | 5 | 57 | 4 | 1 |
-| Protection | — | missing | 5 | 53 | 5 | 5 |
+| Protection | effectUntil | built | 5 | 53 | 0 | 0 |
 | MoveCounter | moveCounters | built | 5 | 32 | 0 | 0 |
 | Fog | — | missing | 4 | 34 | 4 | 3 |
 | Radiation | — | missing | 4 | 22 | 4 | 2 |
@@ -873,7 +873,7 @@ The things that alone hold back the most of the most-played cards.
 | — | This card's power | {powerOf: "self"} | built | 25 | 251 | 0 | 0 |
 | — | A comparison ("if you control ...") | {if: condition, then, else}; a modal's chooseMore, as it is cast | built | 17 | 146 | 0 | 0 |
 | — | That many counters (the number of counters a replacement changes) | more-counters' times, plus and half (rules/statics.mjs, placeCounters) | built | 16 | 32 | 0 | 0 |
-| — | Cards in a library | — | missing | 13 | 63 | 11 | 7 |
+| — | Cards in a library | {count: {what: "card", zone: "library"}} | built | 13 | 63 | 0 | 0 |
 | — | Spells cast this turn | amount {spellsCastThisTurn: "you" / "that player", filter?} -- by card type and controller | partial | 12 | 139 | 0 | 0 |
 | — | Life you gained this turn | amount {lifeGainedThisTurn} (effects/resources.mjs and rules/combat.mjs keep it) | built | 12 | 84 | 0 | 0 |
 | — | What entered or died this turn | — | missing | 11 | 174 | 9 | 9 |
@@ -917,7 +917,7 @@ The things that alone hold back the most of the most-played cards.
 | — | AltCost | — | missing | 1 | 8 | 1 | 0 |
 | — | CreaturesAttackedThisTurn | — | missing | 1 | 7 | 1 | 0 |
 | — | MostProminentCreatureType | — | missing | 1 | 7 | 1 | 1 |
-| — | Threshold (seven cards in your graveyard) | — | missing | 1 | 7 | 1 | 1 |
+| — | Threshold (seven cards in your graveyard) | condition {compare: {count: {count: {what: "card", zone: "graveyard", controller: "you"}}, atLeast: 7}} | built | 1 | 7 | 0 | 0 |
 | — | If it was cast during its caster's main phase ("if you cast this spell during your main phase") | condition {cast: {mainPhase: true}}; a target spec's onlyIf (script/bind.mjs) | built | 1 | 6 | 0 | 0 |
 | — | ValidAll | — | missing | 1 | 6 | 1 | 1 |
 | — | Ignore | — | missing | 1 | 4 | 1 | 0 |

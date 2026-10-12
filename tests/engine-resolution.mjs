@@ -262,8 +262,11 @@ const drawsIn = (events) => events.filter((e) => e.kind === "GameEventCardChange
 
   resolveAwaiting(s, [1]);
   ok(handNames(s, 0).includes(top[1]), "the chosen card goes where the card says");
-  eq(libraryNames(s, 0).slice(-2), [top[0], top[2]],
-    "and the rest go to the bottom, in the order they were looked at");
+  /* The rest on the bottom in the order their owner chooses (CR 401.4; wave 4c, k2): asked, and put there as answered. */
+  eq(awaitingChoice(s).mode, "order", "the order of the rest is asked");
+  resolveAwaiting(s, [1, 0]);
+  eq(libraryNames(s, 0).slice(-2), [top[2], top[0]],
+    "and the rest go to the bottom in the order chosen, the first highest");
   eq(resolutionPending(s), false, "the resolution is finished");
 }
 {

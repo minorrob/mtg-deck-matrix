@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mother of Runes",
+    "oracleId": "60433b48-d27f-413c-905c-43839b1943f1",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Cleric"
+    ],
+    "manaCost": "{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "{T}: Target creature you control gains protection from the color of your choice until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Target creature you control gains protection from the color of your choice until end of turn.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "chooseColor"
+        },
+        {
+          "effect": "effectUntil",
+          "rule": "protection",
+          "targets": {
+            "target": 0
+          },
+          "from": {
+            "colors": [
+              "$chosenColor"
+            ]
+          },
+          "until": "end-of-turn"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ]
+    }
+  ]
+}
