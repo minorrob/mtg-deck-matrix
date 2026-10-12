@@ -396,6 +396,11 @@ export function housePilot({seat, cards = () => null} = {}) {
         const best = options.reduce((b, o) => ((fewest ? o.least < b.least : o.puts > b.puts) ? o : b));
         return {indices: [best.index]};
       }
+      /* CR 616.1: which effect changes the tokens it makes first (Anointed Procession, Queen Allenal) -- the most. */
+      if (id.startsWith("order-tokens:") && options.length) {
+        const best = options.reduce((b, o) => ((o.makes ?? 0) > (b.makes ?? 0) ? o : b));
+        return {indices: [best.index]};
+      }
       /* Anything else (trigger order, the commander's zone, an effect's choice): the first legal answer,
          in the order offered, which is also what a careful reader would do by default. */
       if (choice.mode === "boolean") return {indices: [0]};

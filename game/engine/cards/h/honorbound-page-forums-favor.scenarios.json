@@ -1,0 +1,354 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Honorbound Page // Forum's Favor",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A 3/3 first striker, prepared; Forum's Favor on itself for {W}: a 4/3 flier until end of turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Honorbound Page // Forum's Favor"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Honorbound Page"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Forum's Favor"
+              ]
+            },
+            {
+              "event": "GameEventCardAttribute",
+              "where": {
+                "attribute": "prepared",
+                "value": true
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Honorbound Page",
+                "has": [
+                  "First Strike"
+                ],
+                "lacks": [
+                  "Flying"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Forum's Favor"
+              },
+              "count": 2,
+              "targets": [
+                [
+                  "Honorbound Page"
+                ],
+                [
+                  "Bear"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Forum's Favor",
+          "targets": [
+            {
+              "card": "Honorbound Page"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Honorbound Page",
+                "power": 4,
+                "toughness": 3
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Honorbound Page",
+                "has": [
+                  "Flying",
+                  "First Strike"
+                ]
+              }
+            },
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": []
+            },
+            {
+              "event": "GameEventCardAttribute",
+              "where": {
+                "attribute": "prepared",
+                "value": false
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Honorbound Page",
+            "power": 3,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Honorbound Page",
+            "lacks": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Any creature: Maya's Bear gets +1/+0 and flying",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Honorbound Page // Forum's Favor"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Honorbound Page"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Forum's Favor",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Bear",
+            "power": 3,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 1,
+          "keywords": {
+            "card": "Bear",
+            "has": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "First strike: Maya's 3/3 Ogre blocks it, and dies before it can deal its damage -- the Page lives",
+      "at": {
+        "turn": 3,
+        "phase": "MAIN1"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Honorbound Page // Forum's Favor"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Honorbound Page"
+          ]
+        },
+        {
+          "block": [
+            [
+              "Ogre",
+              "Honorbound Page"
+            ]
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Honorbound Page"
+          ]
+        },
+        {
+          "seat": 1,
+          "life": 40
+        }
+      ]
+    }
+  ]
+}

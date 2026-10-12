@@ -776,8 +776,10 @@ export function lastKnown(state, id) {
     /* Its abilities as it last was, the ones given it included: "when this creature dies" given by Feign Death. */
     abilities: structuredClone(heldAbilities(object, current)),
     /* Its copiable values (CR 707.2), when they were not its card's own -- a copy of something else, or face down (708.2a) --
-       for "create a token that's a copy of that creature" (Hofri Ghostforge; effects/permanents.mjs, `asItLastWas`). */
-    ...(object.uncopied || object.faceDown === true ? {copiable: Object.fromEntries(COPIED_KEYS.filter((key) => object[key] !== undefined).map((key) => [key, structuredClone(object[key])]))} : {}),
+       for "create a token that's a copy of that creature" (Hofri Ghostforge; effects/permanents.mjs, `asItLastWas`). And
+       whatever they are, while an ability of its own waits on the stack, which outlives it (CR 113.7a): "create a token
+       that's a copy of this creature" (Colorstorm Stallion's Opus; effects/permanents.mjs, copyPermanent's `lastKnown`). */
+    ...(object.uncopied || object.faceDown === true || state.stack.some((entry) => entry.cardId === id) ? {copiable: Object.fromEntries(COPIED_KEYS.filter((key) => object[key] !== undefined).map((key) => [key, structuredClone(object[key])]))} : {}),
   };
 }
 /* The copiable values a permanent shows (effects/permanents.mjs, COPY_KEYS: the same list, kept here to keep the layers free

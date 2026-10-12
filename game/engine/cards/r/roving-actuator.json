@@ -1,0 +1,87 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Roving Actuator",
+    "oracleId": "78ac1e6c-2704-4844-9e87-642324c23997",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Robot"
+    ],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "Void — When this creature enters, if a nonland permanent left the battlefield this turn or a spell was warped this turn, exile up to one target instant or sorcery card with mana value 2 or less from your graveyard. Copy it. You may cast the copy without paying its mana cost.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Void — When this creature enters, if a nonland permanent left the battlefield this turn or a spell was warped this turn, exile up to one target instant or sorcery card with mana value 2 or less from your graveyard. Copy it. You may cast the copy without paying its mana cost.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "play",
+          "from": "targets",
+          "targets": "remembered",
+          "copies": true,
+          "free": true
+        }
+      ],
+      "condition": {
+        "void": true
+      },
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you",
+              "types": [
+                "Instant"
+              ],
+              "manaValue": {
+                "max": 2
+              }
+            },
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you",
+              "types": [
+                "Sorcery"
+              ],
+              "manaValue": {
+                "max": 2
+              }
+            }
+          ],
+          "count": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -32,7 +32,7 @@
 
 import {keywordsOf, characteristicsOf, controllerOf, typesOf, subtypesOf} from "../rules/layers.mjs";
 import {toughnessOf} from "../rules/layers.mjs";
-import {combatDamageOf, ruleChanged, cantBeBlockedBy} from "../rules/statics.mjs";
+import {combatDamageOf, ruleChanged, cantBeBlockedBy, blocksOnlyOthers} from "../rules/statics.mjs";
 import {protectedFrom} from "../rules/protection.mjs";
 
 /** The families of §3.1, so a caller can ask what this module covers. */
@@ -80,6 +80,8 @@ export function canBlockAttacker(state, blockerId, attackerId) {
   if (ruleChanged(state, "cant-be-blocked", attackerId)) return false;
   /* "Can't be blocked except by Slivers", "by creatures with power 2 or less": this blocker, by what it is. */
   if (cantBeBlockedBy(state, attackerId, blockerId)) return false;
+  /* "This token can block only creatures with flying": this blocker, by what the attacker is. */
+  if (blocksOnlyOthers(state, blockerId, attackerId)) return false;
   /* Forestwalk and Islandwalk (CR 702.14c): the defending player controls a land of that type. A dual land
      qualifies, ownership does not, and one controlled by a different opponent does not. */
   for (const [walk, type] of Object.entries(LANDWALKS)) {

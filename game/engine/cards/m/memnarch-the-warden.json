@@ -1,0 +1,80 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Memnarch, the Warden",
+    "oracleId": "f2630b02-fb48-4167-8a47-8284f7d4c484",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Wizard"
+    ],
+    "manaCost": "{10}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 8,
+    "toughness": 9
+  },
+  "oracleText": "Indestructible\nWhen Memnarch enters, create two 1/1 colorless Myr artifact creature tokens.\nWhenever Memnarch attacks, draw a card for each artifact you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Indestructible",
+      "keyword": "indestructible"
+    },
+    {
+      "kind": "triggered",
+      "text": "When Memnarch enters, create two 1/1 colorless Myr artifact creature tokens.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 2,
+          "token": {
+            "name": "Myr",
+            "types": [
+              "Artifact",
+              "Creature"
+            ],
+            "subtypes": [
+              "Myr"
+            ],
+            "colors": [],
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever Memnarch attacks, draw a card for each artifact you control.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": {
+            "count": {
+              "what": "permanent",
+              "types": [
+                "Artifact"
+              ],
+              "controller": "you"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

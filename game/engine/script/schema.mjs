@@ -480,6 +480,12 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
       if (Object.keys(ability.affects ?? {}).some((key) => key !== "types")) errors.push({path: `${path}.affects`, message: "The tokens made instead of others are told by their card types: affects {types}"});
       if (!(ability.token && isText(ability.token.name) && Array.isArray(ability.token.types))) errors.push({path: `${path}.token`, message: "What is made instead is a token: {name, types, ...}"});
     }
+    /* "Those tokens plus a 1/1 white Soldier creature token are created instead" of creature tokens (Queen Allenal): the tokens
+       it adds to by their card types, and the token it adds. */
+    if (ability.rule === "tokens-plus") {
+      if (Object.keys(ability.affects ?? {}).some((key) => key !== "types") || !Array.isArray(ability.affects?.types)) errors.push({path: `${path}.affects`, message: "The tokens another is added to are told by their card types: affects {types}"});
+      if (!(ability.token && isText(ability.token.name) && Array.isArray(ability.token.types))) errors.push({path: `${path}.token`, message: "What is added is a token: {name, types, ...}"});
+    }
     /* "Twice that much life instead" (rules/statics.mjs, lifeGained): how many times, 2 or more. */
     if (ability.rule === "more-life" && !(Number.isInteger(ability.times) && ability.times >= 2))
       errors.push({path: `${path}.times`, message: "More life instead says how many times as much: a whole number, 2 or more"});
@@ -490,6 +496,11 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
     }
     /* What a chosen target must be for the spell to cost less (CR 601.2f): "if it targets an attacking creature" (Run Behind). */
     if (ability.rule === "this-costs-less" && ability.targeting !== undefined) checkSelector(ability.targeting, `${path}.targeting`, errors);
+    /* "Can block only creatures with flying" (CR 509.1b): which attackers, a selector. */
+    if (ability.rule === "can-block-only") {
+      if (!ability.attackers || typeof ability.attackers !== "object") errors.push({path, message: "\"Can block only\" says which attackers: `attackers`, a selector"});
+      else checkSelector(ability.attackers, `${path}.attackers`, errors, {choice: true});
+    }
     if (ability.rule === "cant-be-blocked-by") {
       if (!ability.by && ability.byPowerBelowSource !== true) errors.push({path, message: "\"Can't be blocked by\" says by what: `by`, or `byPowerBelowSource`"});
       if (ability.by) checkSelector(ability.by, `${path}.by`, errors, {choice: true});

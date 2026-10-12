@@ -1,0 +1,225 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Omnath, Locus of the Void",
+  "scenarios": [
+    {
+      "name": "Landfall: a land played adds {C}{C}; Omnath is 8/8, and the mana stays as the step ends, colorless",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Omnath, Locus of the Void",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Forest"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "pool": {
+                "C": 2
+              }
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Omnath, Locus of the Void",
+                "power": 8,
+                "toughness": 8
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "pool": {
+                "C": 2,
+                "R": 1
+              }
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Omnath, Locus of the Void",
+                "power": 9,
+                "toughness": 9
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_BEGIN"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 3,
+            "R": 0
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Omnath, Locus of the Void",
+            "power": 9,
+            "toughness": 9
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kept across turns, Rob's alone: on Maya's turn he still has it, her own mana she loses",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Omnath, Locus of the Void",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "pool": {
+                "G": 1
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "DRAW"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 1
+          }
+        },
+        {
+          "seat": 1,
+          "pool": {
+            "G": 0,
+            "C": 0
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Omnath, Locus of the Void",
+            "power": 7,
+            "toughness": 7
+          }
+        }
+      ]
+    },
+    {
+      "name": "Maya's land is no landfall of Rob's",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Omnath, Locus of the Void"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "play": "Forest",
+          "seat": 1
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 0
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Omnath, Locus of the Void",
+            "power": 6,
+            "toughness": 6
+          }
+        }
+      ]
+    }
+  ]
+}

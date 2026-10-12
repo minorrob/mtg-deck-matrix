@@ -63,6 +63,11 @@
  *   {lifeAboveAnotherOpponent: "that player"}  the player a trigger is about has more life than another opponent of its
  *                                      controller still in the game (CR 119.1, 800.4a): "if that opponent has more life than
  *                                      another of your opponents" (Breena, the Demagogue) -- with no other, it has not
+ *   {void: true}                       void's "if a nonland permanent left the battlefield this turn or a spell was warped this
+ *                                      turn" (an ability word, CR 207.2c; CR 702.185c): any player's, as state/index.mjs and
+ *                                      rules/actions.mjs record them this turn (Plasma Bolt, Temporal Intervention)
+ *   {sneak: true}                      sneak's "during your declare blockers step" (CR 702.190a): its controller's turn, that
+ *                                      step (Leonardo, Leader in Blue)
  *
  * The keys are closed, like every other grammar here: an unknown one is refused at the schema rather than read as true.
  */
@@ -86,9 +91,12 @@ const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTu
   /* Breena, the Demagogue's "more life than another of your opponents" (CR 119.1). */
   "lifeAboveAnotherOpponent",
   /* Smaug, Wicked Worm's "if mana from a Treasure was spent to cast it" (CR 106.3, 601.2h). */
-  "spentFrom"];
-/* The alternative costs a spell may be marked as cast for (cards/index.mjs; rules/actions.mjs). */
-const PAID_FOR = ["surge", "freerunning"];
+  "spentFrom",
+  /* Void (CR 207.2c, 702.185c) and sneak's timing (CR 702.190a). */
+  "void", "sneak"];
+/* The alternative costs a spell may be marked as cast for (cards/index.mjs; rules/actions.mjs): sneak's (CR 702.190a) too --
+   "if his sneak cost was paid" (Leonardo, Leader in Blue). */
+const PAID_FOR = ["surge", "freerunning", "sneak"];
 /* Where a permanent may have come from, for `cameFrom`: a library (effects/zones.mjs and rules/stack.mjs record it). */
 const CAME_FROM = ["library"];
 /* The mana a condition may ask was spent to cast its object: the five colors and colorless (CR 106.1). */
@@ -157,11 +165,13 @@ function prowlable(state, controller, source) {
    graveyard" (Sevinne's Reclamation: `from`, the zone), and Addendum's "if you cast this spell during your main phase"
    (Unbreakable Formation: `mainPhase`). A copy was not cast (CR 707.10), and neither was an ability: no record, and
    neither holds. */
-const CAST_KEYS = ["from", "mainPhase", "additionalPaid"];
+/* "If this spell was cast from anywhere other than your hand" (Antiquities on the Loose): `notFrom`, the zone it was not. */
+const CAST_KEYS = ["from", "notFrom", "mainPhase", "additionalPaid"];
 const CAST_ZONES = ["hand", "graveyard", "exile", "library", "command"];
 function castHolds(rule, cast) {
   if (!cast) return false;
   if (rule.from !== undefined && cast.from !== rule.from) return false;
+  if (rule.notFrom !== undefined && cast.from === rule.notFrom) return false;
   if (rule.mainPhase === true && cast.mainPhase !== true) return false;
   /* "If this spell's additional cost was paid" (CR 601.2f; rules/actions.mjs). */
   if (rule.additionalPaid === true && cast.additionalPaid !== true) return false;
@@ -287,6 +297,13 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   if (condition.citysBlessing !== undefined && hasCitysBlessing(state, controller) !== condition.citysBlessing) return false;
   /* Prowl's cost may be paid (CR 702.76a): asked of the card as its cast is offered (rules/actions.mjs, alternativeCosts). */
   if (condition.prowl === true && !prowlable(state, controller, source)) return false;
+  /* VOID (an ability word, CR 207.2c): "if a nonland permanent left the battlefield this turn" -- any player's, counted as it
+     left (state/index.mjs, recordDeath) -- "or a spell was warped this turn": cast for its warp cost by any player (CR
+     702.185c; rules/actions.mjs marks it among what that player cast this turn). */
+  if (condition.void === true && !((state.nonlandLeftThisTurn ?? 0) > 0 || state.players.some((p) => (p.castThisTurn ?? []).some((cast) => cast.warped === true)))) return false;
+  /* SNEAK'S TIMING (CR 702.190a): "any time you could cast an instant during your declare blockers step" -- its controller's
+     own turn, in that step (rules/actions.mjs offers the cast at an instant's timing then). */
+  if (condition.sneak === true && !(state.activePlayer === controller && state.phase === "COMBAT_DECLARE_BLOCKERS")) return false;
   /* Surge (CR 702.117a): its controller has cast another spell this turn -- asked as this one's cast is offered, before it
      is counted among them (rules/actions.mjs). */
   if (condition.surge === true && !((state.players[controller]?.castThisTurn ?? []).length > 0)) return false;
@@ -363,6 +380,8 @@ export function conditionProblems(condition) {
   if ("prowl" in condition && condition.prowl !== true) problems.push("prowl is true");
   if ("prowled" in condition && typeof condition.prowled !== "boolean") problems.push("prowled is true or false");
   if ("surge" in condition && condition.surge !== true) problems.push("surge is true");
+  if ("void" in condition && condition.void !== true) problems.push("void is true");
+  if ("sneak" in condition && condition.sneak !== true) problems.push("sneak is true");
   if ("freerunning" in condition && condition.freerunning !== true) problems.push("freerunning is true");
   if ("paidFor" in condition && !PAID_FOR.includes(condition.paidFor)) problems.push(`paidFor is the alternative cost a spell was cast for: ${PAID_FOR.join(", ")}`);
   if ("opponentPoisonAtLeast" in condition && !(Number.isInteger(condition.opponentPoisonAtLeast) && condition.opponentPoisonAtLeast >= 1))
@@ -414,6 +433,7 @@ export function conditionProblems(condition) {
       problems.push(`cast says how this spell was cast: ${CAST_KEYS.join(", ")}`);
     else {
       if ("from" in rule && !CAST_ZONES.includes(rule.from)) problems.push(`cast.from is a zone: ${CAST_ZONES.join(", ")}`);
+      if ("notFrom" in rule && !CAST_ZONES.includes(rule.notFrom)) problems.push(`cast.notFrom is a zone: ${CAST_ZONES.join(", ")}`);
       if ("mainPhase" in rule && rule.mainPhase !== true) problems.push("cast.mainPhase is true");
       if ("additionalPaid" in rule && rule.additionalPaid !== true) problems.push("cast.additionalPaid is true");
     }

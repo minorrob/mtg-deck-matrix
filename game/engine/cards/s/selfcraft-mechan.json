@@ -1,0 +1,80 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Selfcraft Mechan",
+    "oracleId": "4ba4cb4b-f421-4abd-8fcf-a01174447790",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Robot",
+      "Artificer"
+    ],
+    "manaCost": "{3}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "When this creature enters, you may sacrifice an artifact. When you do, put a +1/+1 counter on target creature and draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, you may sacrifice an artifact. When you do, put a +1/+1 counter on target creature and draw a card.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "count": 1,
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Artifact"
+            ]
+          },
+          "remember": true
+        },
+        {
+          "effect": "immediateTrigger",
+          "text": "When you do, put a +1/+1 counter on target creature and draw a card.",
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          },
+          "targets": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            }
+          ],
+          "effects": [
+            {
+              "effect": "putCounter",
+              "targets": {
+                "target": 0
+              },
+              "counter": "+1/+1",
+              "count": 1
+            },
+            {
+              "effect": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ],
+      "optional": true
+    }
+  ]
+}

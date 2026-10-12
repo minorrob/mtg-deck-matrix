@@ -108,7 +108,9 @@ export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf"
   /* Every player's, compared (Train C phase 2, w2a-selectors): the fewest among them, and the graveyards holding so many. */
   "fewestAmongPlayers", "graveyardsWithAtLeast",
   /* Train D: "put that many growth counters" (Simic Ascendancy), the counters a "counter added" trigger is about. */
-  "countersPut"]);
+  "countersPut",
+  /* Train E: "for each unspent mana you have" (Omnath, Locus of the Void). */
+  "manaInPool"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "per", "filter", "controlledBy", "named"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -160,6 +162,7 @@ export function amountProblems(value) {
   if ("per" in value && !(Number.isInteger(value.per) && value.per > 1)) problems.push("An amount's per is a whole number above 1: \"for every seven\" is per 7");
   if ("countersRemovedThisWay" in value && value.countersRemovedThisWay !== true) problems.push("countersRemovedThisWay is true");
   if ("countersPut" in value && value.countersPut !== true) problems.push("countersPut is true");
+  if ("manaInPool" in value && value.manaInPool !== "you") problems.push('manaInPool is "you": the mana in your pool');
   /* A player's own counters are "you" ("the number of experience counters you have", Ezuri, Claw of Progress) or a target
      player; an object's, the objects an amount names. */
   if ("countersOn" in value && typeof value.countersOn === "string" && !["self", "that card", "remembered", "you"].includes(value.countersOn))
@@ -458,6 +461,12 @@ export function amountOf(state, value, context = {}) {
   else if ("permanentsLeftThisTurn" in value) {
     const player = playerOf(value.permanentsLeftThisTurn, context);
     n = player !== null ? state.players[player]?.leftThisTurn ?? 0 : 0;
+  }
+  /* "For each unspent mana you have" (Omnath, Locus of the Void; CR 106.4): the mana in that player's pool now, every kind, and
+     the mana that may be spent only on some things beside it (rules/restricted-mana.mjs keeps it apart, one entry a mana). */
+  else if ("manaInPool" in value) {
+    const player = state.players[playerOf(value.manaInPool, context)];
+    n = player ? Object.values(player.manaPool ?? {}).reduce((a, b) => a + b, 0) + (player.restrictedMana ?? []).length : 0;
   }
   /* "If a card left your graveyard this turn" (Primary Research, Relic Retriever): how many cards did, from that player's
      graveyard to anywhere (state/index.mjs counts each as it leaves, rules/turn.mjs clears it as a turn begins). */

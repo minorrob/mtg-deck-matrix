@@ -1,0 +1,105 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Practiced Offense",
+    "oracleId": "99678cc9-59c8-4358-b847-8c38ffb4a050",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Put a +1/+1 counter on each creature target player controls. Target creature gains your choice of double strike or lifelink until end of turn.\nFlashback {1}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Put a +1/+1 counter on each creature target player controls. Target creature gains your choice of double strike or lifelink until end of turn.",
+      "targets": [
+        {
+          "what": "player"
+        },
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "putCounterAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": {
+              "target": 0
+            }
+          },
+          "counter": "+1/+1",
+          "count": 1
+        },
+        {
+          "effect": "modal",
+          "chooser": "you",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Double Strike",
+              "effects": [
+                {
+                  "effect": "pump",
+                  "targets": {
+                    "target": 1
+                  },
+                  "power": 0,
+                  "toughness": 0,
+                  "keywords": [
+                    "Double Strike"
+                  ]
+                }
+              ]
+            },
+            {
+              "text": "Lifelink",
+              "effects": [
+                {
+                  "effect": "pump",
+                  "targets": {
+                    "target": 1
+                  },
+                  "power": 0,
+                  "toughness": 0,
+                  "keywords": [
+                    "Lifelink"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Flashback {1}{W}",
+      "keyword": "flashback",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{W}"
+        }
+      ]
+    }
+  ]
+}

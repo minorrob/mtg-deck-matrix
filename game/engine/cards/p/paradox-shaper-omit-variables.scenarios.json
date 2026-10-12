@@ -1,0 +1,387 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Paradox Shaper // Omit Variables",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Not prepared at the beginning of Rob's upkeep: it becomes prepared; Omit Variables for {U/B} mills three",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Paradox Shaper // Omit Variables"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            },
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": []
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Omit Variables"
+              ]
+            },
+            {
+              "event": "GameEventCardAttribute",
+              "where": {
+                "attribute": "prepared",
+                "value": true
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Omit Variables"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "count": 3
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": []
+        },
+        {
+          "event": "GameEventCardAttribute",
+          "where": {
+            "attribute": "prepared",
+            "value": false
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Paradox Shaper",
+            "power": 1,
+            "toughness": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "Still prepared at his next upkeep: no trigger at all (CR 603.4), and one Omit Variables in exile",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Paradox Shaper // Omit Variables"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Omit Variables"
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "UPKEEP"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Omit Variables"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Cast and unprepared, it is prepared again the upkeep after",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Paradox Shaper // Omit Variables"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Omit Variables"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": []
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Omit Variables"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "{2}: the Bear from Rob's graveyard to the bottom of his library -- his next draw is still the Island on top; Maya's Ogre is no target",
+      "library": [
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Paradox Shaper // Omit Variables",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Paradox Shaper"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Bear"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Paradox Shaper",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": []
+            },
+            {
+              "seat": 0,
+              "zone": "library",
+              "count": 21
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ]
+    }
+  ]
+}

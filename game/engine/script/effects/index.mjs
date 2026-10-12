@@ -84,7 +84,9 @@ export const TOP_25 = Object.freeze([
  */
 export const NEEDS_A_DECISION = Object.freeze(["dig", "scry", "surveil", "discard", "modal", "chooseCard", "proliferate", "sacrifice", "populate", "amass", "unlessPays", "copySpell", "chooseType", "chooseColor", "play", "changeTargets", "empowerJace", "twoPiles", "chooseSource", "vote",
   /* Connive (CR 701.50): which permanent connives next, and what its controller discards. */
-  "connive"]);
+  "connive",
+  /* Explore (CR 701.44): whether the revealed nonland card goes to the graveyard. */
+  "explore"]);
 
 /* What "each" ranges over (`repeatFor`), each with what it binds: a player -- in turn order from the active player
    (CR 101.4) -- as "that player"; a creature as "that card", and its controller as "that player". */

@@ -1,0 +1,78 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Studious First-Year // Rampant Growth",
+    "oracleId": "58b0c737-0a84-4f9a-b3b7-300c5de43874",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Bear",
+      "Wizard"
+    ],
+    "manaCost": "{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This creature enters prepared.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersPrepared": true
+      }
+    }
+  ],
+  "prepare": {
+    "identity": {
+      "name": "Rampant Growth",
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Search your library for a basic land card, put that card onto the battlefield tapped, then shuffle.",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Search your library for a basic land card, put that card onto the battlefield tapped, then shuffle.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "chooseCard",
+            "zone": "library",
+            "selector": {
+              "types": [
+                "Land"
+              ],
+              "supertypes": [
+                "Basic"
+              ]
+            },
+            "shuffle": true,
+            "to": "battlefield",
+            "tapped": true
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,273 defined and playable today; 2,645 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,273 defined and playable today; 2,650 with every
 mechanic built, so only their definitions are left to write; 27 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 64 | 0 | 5 | 125 |
+| Keyword abilities (CR 702) | 194 | 66 | 0 | 5 | 123 |
 | Keyword actions (CR 701) | 70 | 22 | 5 | 1 | 42 |
 | Effects | 192 | 73 | 1 | 2 | 116 |
 | Triggers | 138 | 24 | 4 | 2 | 108 |
@@ -39,7 +39,7 @@ The things that alone hold back the most of the most-played cards.
 | option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 27 | 86 |
 | option | Remembering what an effect moved | — | missing | 21 | 80 |
 | option | You may play or cast a card from another zone | — | missing | 18 | 62 |
-| effect | ReplaceCounter | replaceCounters | named | 9 | 12 |
+| effect | ReplaceCounter | replaceCounters | named | 10 | 12 |
 | count | What entered or died this turn | — | missing | 9 | 9 |
 | count | Cards in a library | — | missing | 8 | 12 |
 | effect | RingTemptsYou | — | missing | 8 | 11 |
@@ -49,8 +49,8 @@ The things that alone hold back the most of the most-played cards.
 | effect | Discover | discover | named | 6 | 6 |
 | count | How many things an effect remembered | — | missing | 5 | 8 |
 | effect | ChangeTargets | — | missing | 5 | 7 |
-| keyword ability | Warp | — | missing | 5 | 7 |
 | option | Unless a player sacrifices a permanent | — | missing | 5 | 7 |
+| count | Times this resolved this turn | — | missing | 5 | 7 |
 
 ## Keyword abilities (CR 702)
 
@@ -83,7 +83,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.108 | Prowess | Prowess | built | 8 | 93 | 0 | 0 |
 | 702.164 | Toxic | Toxic | built | 7 | 44 | 0 | 0 |
 | 702.40 | Storm | Storm | built | 7 | 37 | 0 | 0 |
-| 702.185 | Warp | — | missing | 7 | 37 | 7 | 5 |
+| 702.185 | Warp | Warp | built | 7 | 37 | 0 | 0 |
 | 702.96 | Overload | Overload | built | 7 | 28 | 0 | 0 |
 | 702.86 | Annihilator | Annihilator | built | 7 | 14 | 0 | 0 |
 | 702.124 | Partner | Partner | built | 6 | 78 | 0 | 0 |
@@ -180,7 +180,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.171 | Saddle | — | missing | 0 | 32 | 0 | 0 |
 | 702.25 | Flanking | Flanking | built | 0 | 30 | 0 | 0 |
 | 702.31 | Horsemanship | — | missing | 0 | 29 | 0 | 0 |
-| 702.190 | Sneak | — | missing | 0 | 27 | 0 | 0 |
+| 702.190 | Sneak | Sneak | built | 0 | 27 | 0 | 0 |
 | 702.165 | Backup | Backup | built | 0 | 26 | 0 | 0 |
 | 702.87 | Level Up | — | missing | 0 | 26 | 0 | 0 |
 | 702.46 | Soulshift | — | missing | 0 | 26 | 0 | 0 |
@@ -378,7 +378,7 @@ The things that alone hold back the most of the most-played cards.
 | ImmediateTrigger | immediateTrigger | built | 18 | 313 | 0 | 0 |
 | DigUntil | digUntil | built | 18 | 167 | 0 | 0 |
 | ReplaceToken | — | missing | 17 | 35 | 16 | 0 |
-| ReplaceCounter | replaceCounters | named | 16 | 33 | 12 | 9 |
+| ReplaceCounter | replaceCounters | named | 16 | 33 | 12 | 10 |
 | Fight | fight | built | 15 | 148 | 0 | 0 |
 | WinsGame | winGame | built | 15 | 43 | 0 | 0 |
 | ChooseColor | chooseColor | built | 14 | 132 | 0 | 0 |

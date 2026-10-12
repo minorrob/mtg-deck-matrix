@@ -1,0 +1,67 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Landscape Painter // Vibrant Idea",
+    "oracleId": "5ba7abbc-f6e8-40c2-800b-11efd10cca5b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Merfolk",
+      "Wizard"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This creature enters prepared.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersPrepared": true
+      }
+    }
+  ],
+  "prepare": {
+    "identity": {
+      "name": "Vibrant Idea",
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "manaCost": "{4}{U}",
+      "colors": [
+        "U"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Draw two cards.",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Draw two cards.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "draw",
+            "count": 2
+          }
+        ]
+      }
+    ]
+  }
+}

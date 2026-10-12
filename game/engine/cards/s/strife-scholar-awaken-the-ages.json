@@ -1,0 +1,93 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Strife Scholar // Awaken the Ages",
+    "oracleId": "e85c6bd2-db15-4052-88c0-3ae25414f0ca",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Orc",
+      "Sorcerer"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "Ward—Pay 2 life.\nThis creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Ward—Pay 2 life.",
+      "keyword": "ward",
+      "cost": [
+        {
+          "atom": "payLife",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "kind": "replacement",
+      "text": "This creature enters prepared.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersPrepared": true
+      }
+    }
+  ],
+  "prepare": {
+    "identity": {
+      "name": "Awaken the Ages",
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "manaCost": "{5}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Create two 2/2 red and white Spirit creature tokens.",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Create two 2/2 red and white Spirit creature tokens.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "createToken",
+            "count": 2,
+            "token": {
+              "name": "Spirit",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Spirit"
+              ],
+              "colors": [
+                "R",
+                "W"
+              ],
+              "power": 2,
+              "toughness": 2
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

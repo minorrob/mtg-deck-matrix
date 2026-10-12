@@ -1,0 +1,352 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Vigorbloom Vanguard // Seed Suture",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A 2/2, prepared; Seed Suture for {G/W} on Rob's Bear: a +1/+1 counter and 1 life -- and the Bear has vigilance, the Vanguard not",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Forest",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Vigorbloom Vanguard // Seed Suture"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Vigorbloom Vanguard"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Seed Suture"
+              ]
+            },
+            {
+              "event": "GameEventCardAttribute",
+              "where": {
+                "attribute": "prepared",
+                "value": true
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Bear",
+                "lacks": [
+                  "Vigilance"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Seed Suture"
+              },
+              "count": 3,
+              "targets": [
+                [
+                  "Vigorbloom Vanguard"
+                ],
+                [
+                  "Bear"
+                ],
+                [
+                  "Bear"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Seed Suture",
+          "targets": [
+            {
+              "card": "Bear",
+              "seat": 0
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Bear",
+            "counter": "+1/+1",
+            "count": 1
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 3,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 0,
+          "life": 41
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Bear",
+            "has": [
+              "Vigilance"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Vigorbloom Vanguard",
+            "lacks": [
+              "Vigilance"
+            ]
+          }
+        },
+        {
+          "seat": 1,
+          "keywords": {
+            "card": "Bear",
+            "lacks": [
+              "Vigilance"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": []
+        },
+        {
+          "event": "GameEventCardAttribute",
+          "where": {
+            "attribute": "prepared",
+            "value": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Maya's creature with a counter is not Rob's: Seed Suture on her Bear gives it no vigilance",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Vigorbloom Vanguard // Seed Suture"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Vigorbloom Vanguard"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Seed Suture",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "counters": {
+            "card": "Bear",
+            "counter": "+1/+1",
+            "count": 1
+          }
+        },
+        {
+          "seat": 1,
+          "keywords": {
+            "card": "Bear",
+            "lacks": [
+              "Vigilance"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "life": 41
+        }
+      ]
+    },
+    {
+      "name": "Vigilance: the Vanguard, with a counter of its own, attacks and stays untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Forest",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Vigorbloom Vanguard // Seed Suture"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Vigorbloom Vanguard"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Seed Suture",
+          "targets": [
+            {
+              "card": "Vigorbloom Vanguard"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Vigorbloom Vanguard",
+            "Bear"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Vigorbloom Vanguard",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "tapped": "Bear"
+        },
+        {
+          "seat": 1,
+          "life": 35
+        }
+      ]
+    }
+  ]
+}

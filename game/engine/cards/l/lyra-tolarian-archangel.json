@@ -1,0 +1,104 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Lyra, Tolarian Archangel",
+    "oracleId": "d9060fff-0b65-4b3d-930d-6e36315b802c",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel",
+      "Wizard"
+    ],
+    "manaCost": "{1}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Flying\nAt the beginning of each end step, if you've drawn three or more cards this turn, create a 3/3 blue Angel creature token with flying.\n{3}{U}{U}: Until end of turn, whenever Lyra deals combat damage to a player, draw two cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of each end step, if you've drawn three or more cards this turn, create a 3/3 blue Angel creature token with flying.",
+      "trigger": {
+        "on": "end step",
+        "yours": false
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Angel",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Angel"
+            ],
+            "colors": [
+              "U"
+            ],
+            "power": 3,
+            "toughness": 3,
+            "keywords": [
+              "Flying"
+            ]
+          }
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "cardsDrawnThisTurn": "you"
+          },
+          "atLeast": 3
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{3}{U}{U}: Until end of turn, whenever Lyra deals combat damage to a player, draw two cards.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}{U}{U}"
+        }
+      ],
+      "targets": [],
+      "effects": [
+        {
+          "effect": "delayedTrigger",
+          "when": {
+            "on": "damage dealt",
+            "who": "self",
+            "combat": true,
+            "to": "player"
+          },
+          "thisTurn": true,
+          "text": "Until end of turn, whenever Lyra deals combat damage to a player, draw two cards.",
+          "effects": [
+            {
+              "effect": "draw",
+              "count": 2
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

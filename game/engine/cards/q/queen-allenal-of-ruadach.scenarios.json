@@ -1,0 +1,642 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Queen Allenal of Ruadach",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Muster": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Create a 1/1 white Soldier creature token.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "createToken",
+            "count": 1,
+            "token": {
+              "name": "Soldier",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Soldier"
+              ],
+              "colors": [
+                "W"
+              ],
+              "power": 1,
+              "toughness": 1
+            }
+          }
+        ]
+      }
+    },
+    "Rally": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Create a 1/1 red Goblin creature token. It gains haste until end of turn.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "createToken",
+            "count": 1,
+            "gainsUntilEndOfTurn": [
+              "Haste"
+            ],
+            "token": {
+              "name": "Goblin",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Goblin"
+              ],
+              "colors": [
+                "R"
+              ],
+              "power": 1,
+              "toughness": 1
+            }
+          }
+        ]
+      }
+    },
+    "Make Treasure": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Create a Treasure token.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "createToken",
+            "count": 1,
+            "token": {
+              "predefined": "Treasure"
+            }
+          }
+        ]
+      }
+    },
+    "Twin": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Create a token that is a copy of target creature you control.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "copyPermanent",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Cast alone, she counts herself: a 1/1; beside a Bear, a 2/2",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Plains",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Queen Allenal of Ruadach"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Queen Allenal of Ruadach"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Queen Allenal of Ruadach",
+                "power": 1,
+                "toughness": 1
+              }
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Forest",
+            "Plains",
+            "Plains",
+            "Queen Allenal of Ruadach"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Rob makes a Soldier token: that Soldier plus a 1/1 white Soldier -- and the Queen, with the Bear, is a 4/4",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Queen Allenal of Ruadach",
+            "Bear",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Muster"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Queen Allenal of Ruadach",
+                "power": 2,
+                "toughness": 2
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Muster"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Queen Allenal of Ruadach",
+            "Bear",
+            "Plains",
+            "Soldier",
+            "Soldier"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Queen Allenal of Ruadach",
+            "power": 4,
+            "toughness": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "\"It gains haste\": the Goblin made has it, the Soldier added beside it does not",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Queen Allenal of Ruadach",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rally"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Rally"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Queen Allenal of Ruadach",
+            "Mountain",
+            "Goblin",
+            "Soldier"
+          ]
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Goblin",
+            "has": [
+              "Haste"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Soldier",
+            "lacks": [
+              "Haste"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A Treasure is no creature token: no Soldier",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Queen Allenal of Ruadach",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Make Treasure"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Make Treasure"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Queen Allenal of Ruadach",
+            "Mountain",
+            "Treasure"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Maya's Soldier is made under her control, not Rob's: no Soldier for anyone",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Queen Allenal of Ruadach"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Plains"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Muster"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Plains",
+          "seat": 1
+        },
+        {
+          "cast": "Muster",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Plains",
+            "Soldier"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Queen Allenal of Ruadach"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A token copy of the Bear is a creature token too: the copy plus a Soldier",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Queen Allenal of Ruadach",
+            "Bear",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Twin"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Twin",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Queen Allenal of Ruadach",
+            "Bear",
+            "Bear",
+            "Island",
+            "Soldier"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "With Anointed Procession, Rob chooses the order: the Queen first -- 2 Soldiers doubled with Muster's, 4 tokens",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Queen Allenal of Ruadach",
+            "Anointed Procession",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Muster"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Muster"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Anointed Procession first: 3 tokens",
+                  "Queen Allenal of Ruadach first: 4 tokens"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Queen Allenal of Ruadach first: 4 tokens"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Queen Allenal of Ruadach",
+            "Anointed Procession",
+            "Plains",
+            "Soldier",
+            "Soldier",
+            "Soldier",
+            "Soldier"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Or the Procession first: two Soldiers, then one added -- 3 tokens",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Queen Allenal of Ruadach",
+            "Anointed Procession",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Muster"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Muster"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Anointed Procession first: 3 tokens"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Queen Allenal of Ruadach",
+            "Anointed Procession",
+            "Plains",
+            "Soldier",
+            "Soldier",
+            "Soldier"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "With Draconic Visitor, a Treasure is a Dragon instead -- a creature token, so a Soldier too; nobody is asked",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Queen Allenal of Ruadach",
+            "Draconic Visitor",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Make Treasure"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Make Treasure"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Queen Allenal of Ruadach",
+            "Draconic Visitor",
+            "Mountain",
+            "Dragon",
+            "Soldier"
+          ]
+        }
+      ]
+    }
+  ]
+}

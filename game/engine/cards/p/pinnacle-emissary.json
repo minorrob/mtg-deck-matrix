@@ -1,0 +1,92 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Pinnacle Emissary",
+    "oracleId": "522e8db5-857e-492f-afed-d60cd2ce3dcd",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Robot"
+    ],
+    "manaCost": "{1}{U}{R}",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Whenever you cast an artifact spell, create a 1/1 colorless Drone artifact creature token with flying and \"This token can block only creatures with flying.\"\nWarp {U/R} (You may cast this card from your hand for its warp cost. Exile this creature at the beginning of the next end step, then you may cast it from exile on a later turn.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast an artifact spell, create a 1/1 colorless Drone artifact creature token with flying and \"This token can block only creatures with flying.\"",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "filter": {
+          "types": [
+            "Artifact"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Drone",
+            "types": [
+              "Artifact",
+              "Creature"
+            ],
+            "subtypes": [
+              "Drone"
+            ],
+            "colors": [],
+            "power": 1,
+            "toughness": 1,
+            "keywords": [
+              "Flying"
+            ],
+            "abilities": [
+              {
+                "id": "block-flyers",
+                "kind": "static",
+                "rule": "can-block-only",
+                "text": "This token can block only creatures with flying.",
+                "affects": {
+                  "what": "permanent",
+                  "self": true
+                },
+                "attackers": {
+                  "keywords": [
+                    "Flying"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Warp {U/R}",
+      "keyword": "warp",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{U/R}"
+        }
+      ]
+    }
+  ]
+}

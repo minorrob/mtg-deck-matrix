@@ -48,6 +48,11 @@ export function recordDraw(state, player) {
    departure from the battlefield that can end in a graveyard calls it (effects/zones.mjs moveOne; rules/sba.mjs), as it
    happens, so an effect later in the same resolution sees it; cleared as a turn begins (rules/turn.mjs). */
 export function recordDeath(state, was, zone) {
+  /* VOID'S RECORD (an ability word, CR 207.2c; Plasma Bolt, Roving Actuator, Temporal Intervention): "if a nonland permanent
+     left the battlefield this turn" -- any player's, a token too, wherever it went. Every departure from the battlefield
+     passes here with its last known information (`was`; a land animated or not is a land, CR 603.10a), so it is counted
+     as it leaves, game-wide; cleared as a turn begins (rules/turn.mjs). Read by the condition `void` (script/condition.mjs). */
+  if (was && !(was.types ?? []).includes("Land")) state.nonlandLeftThisTurn = (state.nonlandLeftThisTurn ?? 0) + 1;
   if (zone !== "graveyard" || !(was?.types ?? []).includes("Creature")) return;
   state.players[was.controller].diedThisTurn = (state.players[was.controller].diedThisTurn ?? 0) + 1;
 }

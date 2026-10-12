@@ -1,0 +1,247 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Splinter, Hamato Yoshi",
+  "fixtures": {
+    "Ninja": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human",
+        "Ninja"
+      ],
+      "manaCost": "{1}{B}",
+      "colors": [
+        "B"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{3}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 4,
+      "toughness": 4
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Sneaked for {B}, the unblocked Bear returned: Splinter tapped and attacking with the Ninja, which he makes 3/3",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Bear",
+            "Ninja"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Splinter, Hamato Yoshi"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Bear",
+            "Ninja"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DECLARE_BLOCKERS"
+          }
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Splinter, Hamato Yoshi"
+              },
+              "count": 2,
+              "costs": [
+                [
+                  "Bear"
+                ],
+                [
+                  "Ninja"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Splinter, Hamato Yoshi",
+          "alternative": 0
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Splinter, Hamato Yoshi"
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Ninja",
+                "power": 3,
+                "toughness": 3
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Splinter, Hamato Yoshi",
+                "has": [
+                  "Menace"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 36
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Cast for {1}{B}: Splinter a 1/3 with menace, not a Ninja himself; Rob's other Ninja 3/3, Maya's still 2/2",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes",
+            "Ninja"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Splinter, Hamato Yoshi"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ninja"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Splinter, Hamato Yoshi"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Splinter, Hamato Yoshi"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Splinter, Hamato Yoshi",
+            "power": 1,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Splinter, Hamato Yoshi",
+            "has": [
+              "Menace"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Ninja",
+            "power": 3,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Ninja",
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    }
+  ]
+}

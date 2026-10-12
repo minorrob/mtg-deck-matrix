@@ -1,0 +1,130 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gideon's Memorial",
+    "oracleId": "c8f08704-7330-4fa9-b456-2e96aa252a2c",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Creature tokens you control get +1/+0 and have vigilance.\n{T}: Add one mana of any color. Spend this mana only to cast a planeswalker spell.\n{1}{W}, Discard this card: It deals 4 damage to target attacking or blocking creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Creature tokens you control get +1/+0 and have vigilance.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "token": true
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 0
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Creature tokens you control get +1/+0 and have vigilance.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "token": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Vigilance"
+        ]
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add one mana of any color. Spend this mana only to cast a planeswalker spell.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyColor": true,
+          "spendOnly": {
+            "spell": {
+              "types": [
+                "Planeswalker"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{1}{W}, Discard this card: It deals 4 damage to target attacking or blocking creature.",
+      "zone": "hand",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{W}"
+        },
+        {
+          "atom": "discard",
+          "self": true
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "attacking": true
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "blocking": true
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 4,
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,367 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Harmonized Trio // Brainstorm",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{T}, tap the Bear and the Ogre: it becomes prepared; Brainstorm from exile for {U} -- three drawn, two put back, the first chosen on top",
+      "library": [
+        "Island",
+        "Forest",
+        "Plains"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Harmonized Trio // Brainstorm",
+            "Bear",
+            "Ogre",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rock"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Harmonized Trio"
+              },
+              "count": 1,
+              "costs": [
+                [
+                  "Bear",
+                  "Ogre"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Harmonized Trio",
+          "tapping": [
+            "Bear",
+            "Ogre"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Brainstorm"
+              ]
+            },
+            {
+              "event": "GameEventCardAttribute",
+              "where": {
+                "attribute": "prepared",
+                "value": true
+              }
+            },
+            {
+              "seat": 0,
+              "tapped": "Harmonized Trio"
+            },
+            {
+              "seat": 0,
+              "tapped": "Bear"
+            },
+            {
+              "seat": 0,
+              "tapped": "Ogre"
+            }
+          ]
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Brainstorm"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "min": 2
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Rock",
+            "Plains"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "hand",
+              "cards": [
+                "Island",
+                "Forest"
+              ]
+            },
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": []
+            },
+            {
+              "event": "GameEventCardAttribute",
+              "where": {
+                "attribute": "prepared",
+                "value": false
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island",
+            "Forest",
+            "Rock"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "One other untapped creature is not two, and the Trio does not count itself: not offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Harmonized Trio // Brainstorm",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Harmonized Trio"
+          },
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "name": "Its own {T} waits a turn (CR 302.6): cast this turn, it is not offered, though the Bear and the Ogre may be tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Ogre",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Harmonized Trio // Brainstorm"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Harmonized Trio"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Harmonized Trio"
+          },
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "name": "Creatures that came this turn may be the two it taps; and Brainstorm is an instant, cast on Maya's turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Harmonized Trio // Brainstorm",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Ogre"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Harmonized Trio",
+          "tapping": [
+            "Bear",
+            "Ogre"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Brainstorm"
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "cast": "Brainstorm",
+          "seat": 0
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "min": 2
+              }
+            }
+          ]
+        },
+        {
+          "answer": [
+            0,
+            1
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": []
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 19
+        }
+      ]
+    }
+  ]
+}
