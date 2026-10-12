@@ -1,0 +1,376 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Chrome Mox",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Shock": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Target player loses 2 life.",
+        "targets": [
+          {
+            "what": "player"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "loseLife",
+            "amount": 2,
+            "who": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Relic": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Twin": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{G}{U}",
+      "colors": [
+        "G",
+        "U"
+      ]
+    },
+    "Spawn": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Eldrazi"
+      ],
+      "manaCost": "{4}",
+      "colors": [],
+      "power": 3,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Imprint: a nonartifact, nonland card exiled from Rob's hand -- the Mox then taps for that card's color",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Chrome Mox",
+            "Bear",
+            "Shock",
+            "Relic",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "cast": "Chrome Mox"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Bear",
+                  "Shock"
+                ],
+                "min": 0
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Bear"
+              ]
+            },
+            {
+              "seat": 0,
+              "zone": "hand",
+              "cards": [
+                "Shock",
+                "Relic",
+                "Forest"
+              ]
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Chrome Mox"
+              },
+              "count": 1,
+              "mana": [
+                {
+                  "G": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Chrome Mox"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "A multicolored card: either of its colors, each time it is tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Chrome Mox",
+            "Twin"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "cast": "Chrome Mox"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Twin"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Chrome Mox"
+              },
+              "count": 2,
+              "mana": [
+                {
+                  "G": 1
+                },
+                {
+                  "U": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Chrome Mox",
+          "mana": {
+            "U": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "U": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "You may: Rob exiles nothing, and the Mox can add no mana",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Chrome Mox",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "cast": "Chrome Mox"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": []
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Chrome Mox"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "A colorless card exiled: still no mana -- never {C} (the card's ruling)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Chrome Mox",
+            "Spawn"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "cast": "Chrome Mox"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Spawn"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Spawn"
+          ]
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Chrome Mox"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Nothing in hand it could exile: Rob is shown none to choose, and the Mox adds no mana",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Chrome Mox",
+            "Relic",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "cast": "Chrome Mox"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [],
+                "min": 0
+              }
+            }
+          ]
+        },
+        {
+          "answer": []
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Relic",
+            "Forest"
+          ]
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Chrome Mox"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

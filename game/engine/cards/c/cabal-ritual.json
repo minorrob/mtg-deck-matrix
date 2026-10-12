@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Cabal Ritual",
+    "oracleId": "5b5bf1fa-6502-4790-b66b-f0f8504ebc7c",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Add {B}{B}{B}.\nThreshold — Add {B}{B}{B}{B}{B} instead if there are seven or more cards in your graveyard.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Add {B}{B}{B}.\nThreshold — Add {B}{B}{B}{B}{B} instead if there are seven or more cards in your graveyard.",
+      "effects": [
+        {
+          "effect": "branch",
+          "if": {
+            "compare": {
+              "count": {
+                "count": {
+                  "what": "card",
+                  "zone": "graveyard",
+                  "controller": "you"
+                }
+              },
+              "atLeast": 7
+            }
+          },
+          "then": [
+            {
+              "effect": "addMana",
+              "mana": {
+                "B": 5
+              }
+            }
+          ],
+          "otherwise": [
+            {
+              "effect": "addMana",
+              "mana": {
+                "B": 3
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

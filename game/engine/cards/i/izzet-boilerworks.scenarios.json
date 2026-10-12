@@ -1,0 +1,200 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Izzet Boilerworks",
+  "scenarios": [
+    {
+      "name": "Played: it enters tapped, and Rob returns his Mountain to his hand",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Izzet Boilerworks"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Izzet Boilerworks"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Mountain",
+                  "Izzet Boilerworks"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Mountain"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Izzet Boilerworks"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Izzet Boilerworks"
+        }
+      ]
+    },
+    {
+      "name": "With no other land, a land Rob controls is itself: back to his hand",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Izzet Boilerworks"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Izzet Boilerworks"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Izzet Boilerworks"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Izzet Boilerworks"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": []
+        }
+      ]
+    },
+    {
+      "name": "Not Maya's land: only Rob's are among the choices",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Izzet Boilerworks"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Izzet Boilerworks"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Mountain",
+                  "Izzet Boilerworks"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Izzet Boilerworks"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Mountain"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "{T}: {U}{R}, both at once",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Izzet Boilerworks"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Izzet Boilerworks"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "U": 1,
+            "R": 1
+          }
+        }
+      ]
+    }
+  ]
+}

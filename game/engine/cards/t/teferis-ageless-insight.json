@@ -1,0 +1,38 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Teferi's Ageless Insight",
+    "oracleId": "1c9e1f75-73f0-4846-b53f-458a0984b1bb",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "If you would draw a card except the first one you draw in each of your draw steps, draw two cards instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "If you would draw a card except the first one you draw in each of your draw steps, draw two cards instead.",
+      "rule": "draws-more",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "count": 2,
+      "exceptFirstInDrawStep": true
+    }
+  ]
+}

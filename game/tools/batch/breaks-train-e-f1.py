@@ -73,7 +73,7 @@ BREAKS = [
     ('behold exile: the spell\'s link spent', STACK, '      delete state.links[entry.objectId];\n', ''),
 
     # "If you've cast another instant or sorcery spell this turn" (Burrog Barrage): spellsCastThisTurn's `another`.
-    ('another: a key of the grammar', AMOUNT, '"controlledBy", "named", "another"];', '"controlledBy", "named"];'),
+    ('another: a key of the grammar', AMOUNT, '"controlledBy", "named", "another", "signed"];', '"controlledBy", "named", "signed"];'),
     ('another: refused but for "you"', AMOUNT,
      '''  if ("another" in value && !(value.another === true && value.spellsCastThisTurn === "you")) problems.push('another is true, beside spellsCastThisTurn: "you"');\n''', ''),
     ('another: its own cast left out', AMOUNT, OWN, '    const own = 0;'),

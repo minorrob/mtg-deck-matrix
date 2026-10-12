@@ -63,6 +63,8 @@ export const PRIMITIVES = Object.freeze({
     "moveZone", "moveZoneAll", "draw", "discard", "mill", "shuffle", "dig", "surveil", "scry",
     "peekAndReveal", "sacrifice", "sacrificeAll", "destroy", "destroyAll", "exileUntil",
     "returnToHand", "play", "mayPlay", "discover", "digUntil", "manifest", "explore",
+    /* Wave 4b: the top of a library looked at and put back in any order (Forge's RearrangeTopOfLibrary; Ponder). */
+    "rearrangeTop",
   ]),
   mana: Object.freeze([
     "addMana", "addManaReflected", "tap", "untap", "untapAll", "costReduction", "alternativeCost",
@@ -73,6 +75,8 @@ export const PRIMITIVES = Object.freeze({
   counters: Object.freeze([
     "putCounter", "putCounterAll", "removeCounter", "proliferate", "multiplyCounters",
     "moveCounters", "replaceCounters", "amass", "poison", "winGame", "loseGame", "goad", "empowerJace", "becomeMonarch",
+    /* Wave 4c: "roll a d20" (CR 706; Forge's RollDice; Ancient Copper Dragon), its result counted by what follows. */
+    "rollDie",
   ]),
   permanents: Object.freeze([
     "createToken", "copyPermanent", "becomeCopy", "earthbend", "populate", "unlessPays", "animate", "animateAll", "attach", "gainControl", "setState",
@@ -119,6 +123,8 @@ export const TRIGGER_EVENTS = Object.freeze([
   "state",
   /* "Whenever this creature transforms into Ashling, Rimebound" (CR 701.27e; Train C, w2c-hands-triggers). */
   "transformed",
+  /* "When this Class becomes level 2" (CR 716.2a; Caretaker's Talent, Wizard Class; wave 4c). */
+  "becomes level",
 ]);
 
 /** The cost atoms of §12.2. The two symbolic ones are named; the rest are structural. */
@@ -216,7 +222,24 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
      copying the spell for each (cards/index.mjs, rules/actions.mjs). */
   "replicate",
   /* Wave 4a: shadow (CR 702.28), a keyword counter's (Minas Morgul, Dark Fortress; CR 122.1b; keywords/combat.mjs). */
-  "shadow"];
+  "shadow",
+  /* Wave 4c: affinity (CR 702.41), the spell's own cost reduction for each of a kind of permanent its caster controls
+     (cards/index.mjs). */
+  "affinity",
+  /* Wave 4b: exalted (CR 702.83) and extort (CR 702.101), triggered abilities; eternalize (CR 702.129), embalm's 4/4 black
+     copy; gift (CR 702.174), an optional additional cost choosing an opponent (cards/index.mjs, rules/actions.mjs). */
+  "exalted", "extort", "eternalize", "gift",
+  /* Wave 4c: offspring (CR 702.175), an optional additional cost and a 1/1 token copy as it enters (cards/index.mjs,
+     rules/actions.mjs). */
+  "offspring",
+  /* Wave 4c, k2: fabricate (CR 702.123a; Marionette Apprentice), a triggered ability -- +1/+1 counters or Servo tokens, its
+     controller's choice as it resolves (cards/index.mjs). */
+  "fabricate",
+  /* Wave 4c, k2: delve (CR 702.66a; Treasure Cruise, Dig Through Time), cards of the graveyard exiled to pay generic mana as a
+     spell is cast (rules/actions.mjs). */
+  "delve",
+  /* And dredge (CR 702.52a; Life from the Loam), a draw replaced from the graveyard, its player's choice (script/effects/zones.mjs). */
+  "dredge"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

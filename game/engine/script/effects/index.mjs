@@ -33,7 +33,7 @@ import {moveZone, moveZoneAll, draw, destroy, destroyAll, mill, counterSpell, sa
 import {
   addMana, tap, untap, untapAll, gainLife, loseLife, dealDamage,
   putCounter, putCounterAll, removeCounter, proliferate, damageAll, fight, poison, winGame, loseGame, multiplyCounters,
-  exchangeLife, damageEach, moveCounters, becomeMonarch,
+  exchangeLife, damageEach, moveCounters, becomeMonarch, rollDie,
 } from "./resources.mjs";
 import {
   createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup, attach, copyPermanent, regenerate, addPhase, gainControl,
@@ -86,7 +86,9 @@ export const NEEDS_A_DECISION = Object.freeze(["dig", "scry", "surveil", "discar
   /* Connive (CR 701.50): which permanent connives next, and what its controller discards. */
   "connive",
   /* Explore (CR 701.44): whether the revealed nonland card goes to the graveyard. */
-  "explore"]);
+  "explore",
+  /* "Look at the top three cards of your library, then put them back in any order" (Ponder; wave 4b): their order. */
+  "rearrangeTop"]);
 
 /* What "each" ranges over (`repeatFor`), each with what it binds: a player -- in turn order from the active player
    (CR 101.4) -- as "that player"; a creature as "that card", and its controller as "that player". */
@@ -188,6 +190,8 @@ export const EFFECTS = Object.freeze({
   incubate,
   /* Train E: "you become the monarch" (CR 725; Ginger, Queen of Sweets), and the monarch's own trigger (rules/trigger.mjs). */
   becomeMonarch,
+  /* Wave 4c: "roll a d20" (CR 706; Ancient Copper Dragon), its result for what follows. */
+  rollDie,
 });
 
 /** Whether the engine can perform this primitive at all, by either route. */

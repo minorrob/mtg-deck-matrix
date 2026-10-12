@@ -29,17 +29,27 @@ BIND = 'game/engine/script/bind.mjs'
 SCHEMA = 'game/engine/script/schema.mjs'
 CONDITION = 'game/engine/script/condition.mjs'
 
-KOMA_OFFERS = '''    /* "Its activated abilities can't be activated this turn" (Koma, Cosmos Serpent; CR 602.5; state/index.mjs). */
-    if (activationsForbidden(state, id)) continue;
+# Each Koma guard shares its line with Grand Abolisher's (wave 4b, j4): a break takes Koma's away and leaves the other.
+KOMA_OFFERS = '''    /* "Its activated abilities can't be activated this turn" (Koma, Cosmos Serpent; CR 602.5; state/index.mjs), and "during
+       your turn, your opponents can't activate abilities of artifacts, creatures, or enchantments" (Grand Abolisher). */
+    if (activationsForbidden(state, id) || permanentActivationForbidden(state, id)) continue;
 '''
-KOMA_MANA = '''    /* A mana ability is an activated ability (CR 605.1a): "its activated abilities can't be activated" (Koma) stops it too. */
-    if (activationsForbidden(state, id)) continue;
+KOMA_MANA = '''    /* A mana ability is an activated ability (CR 605.1a): "its activated abilities can't be activated" (Koma) stops it too,
+       and so does "your opponents can't activate abilities of artifacts, creatures, or enchantments" (Grand Abolisher). */
+    if (activationsForbidden(state, id) || permanentActivationForbidden(state, id)) continue;
 '''
-KOMA_PLAIN = '''    /* Its mana abilities can't be activated (Koma, Cosmos Serpent; CR 602.5, 605.1a): it pays for nothing. */
-    if (activationsForbidden(state, id)) continue;
+KOMA_PLAIN = '''    /* Its mana abilities can't be activated (Koma, Cosmos Serpent; Grand Abolisher's opponents, during its controller's turn;
+       CR 602.5, 605.1a): it pays for nothing. */
+    if (activationsForbidden(state, id) || permanentActivationForbidden(state, id)) continue;
 '''
+
+
+def NOT_KOMA(anchor):
+    return anchor.replace('if (activationsForbidden(state, id) || ', 'if (')
+
+
 OWN_LOYALTY = '''  if ((types ?? []).includes("Planeswalker") && Number.isInteger(loyalty)) counters.loyalty = (counters.loyalty ?? 0) + loyalty;
-  return {tapped: proposal.tapped === true, counters, asks: proposal.asks ?? []};'''
+  return {tapped: proposal.tapped === true, counters, asks: withChoiceCounters(proposal)};'''
 COPY_KEYS = '"abilities", "power", "toughness", "loyalty", "spell", "enchant"]);'
 RELATED = '''  return Boolean(first) && !Array.isArray(first) && first.kind === "object" && state.objects[first.id]?.zone === "battlefield"
     && candidate?.kind === "object" && state.objects[candidate.id]?.owner === controllerOf(state, first.id);'''
@@ -53,7 +63,7 @@ BREAKS = [
      '        if (true)\n'),
     ('spark: counters said', ENTERING, '        if (object.counters[counter] > was) events.push(', '        if (false) events.push('),
     # A planeswalker copied: its loyalty a copiable value (CR 707.2), and that many counters as it enters (CR 306.5b).
-    ('copied planeswalker: loyalty counters', REPLACEMENT, OWN_LOYALTY, '  return {tapped: proposal.tapped === true, counters, asks: proposal.asks ?? []};'),
+    ('copied planeswalker: loyalty counters', REPLACEMENT, OWN_LOYALTY, '  return {tapped: proposal.tapped === true, counters, asks: withChoiceCounters(proposal)};'),
     ('copiable: loyalty', PERMANENTS, '    ...(Number.isInteger(object.loyalty) ? {loyalty: object.loyalty} : {}),\n    ...(object.spell', '    ...(object.spell'),
     ('COPY_KEYS: loyalty', STATE, COPY_KEYS, '"abilities", "power", "toughness", "spell", "enchant"]);'),
     ('last known copiable: loyalty', LAYERS, COPY_KEYS, '"abilities", "power", "toughness", "spell", "enchant"]);'),
@@ -65,9 +75,9 @@ BREAKS = [
     ('koma: forbidden', STATE,
      '  return (state.effects ?? []).some((effect) => effect.rule === ACTIVATIONS_FORBIDDEN && (effect.affects?.ids ?? []).includes(id));',
      '  return false;'),
-    ('koma: no activation offered', ACTIONS, KOMA_OFFERS, ''),
-    ('koma: no mana ability offered', ACTIONS, KOMA_MANA, ''),
-    ('koma: no unasked payment', MANA, KOMA_PLAIN, ''),
+    ('koma: no activation offered', ACTIONS, KOMA_OFFERS, NOT_KOMA(KOMA_OFFERS)),
+    ('koma: no mana ability offered', ACTIONS, KOMA_MANA, NOT_KOMA(KOMA_MANA)),
+    ('koma: no unasked payment', MANA, KOMA_PLAIN, NOT_KOMA(KOMA_PLAIN)),
     # The replacements a resolution remembers (CR 614.1, 614.5, 616.1).
     ('fenrir: enters with counters', REPLACEMENT,
      '  if (effect.rule === "enters-with-counters" && proposal.event === "enters" && (effect.affects?.ids ?? []).includes(proposal.objectId))\n',
@@ -84,7 +94,7 @@ BREAKS = [
      '    if (ability && !(proposal.appliedBy ?? []).includes(appliedKey(null, ability))) found.push({holderId: null, ability});',
      '    if (ability) found.push({holderId: null, ability});'),
     ('lightning: an order to choose', REPLACEMENT, '  n += (state.effects ?? []).filter((e) => e.rule === "damage-doubled").length;\n', ''),
-    ('lightning: the players remembered', PERMANENTS, '"no-maximum-hand-size", "damage-doubled", "look-at-top"]', '"no-maximum-hand-size", "look-at-top"]'),
+    ('lightning: the players remembered', PERMANENTS, '"no-maximum-hand-size", "damage-doubled", "look-at-top", "player-hexproof"]', '"no-maximum-hand-size", "look-at-top", "player-hexproof"]'),
     ('lightning: named', PERMANENTS,
      '    ...(params.rule === "damage-doubled" ? {name: state.objects[context.source]?.card ?? context.lastKnown?.name ?? "An effect"} : {}),\n', ''),
     ('fenrir: the counters kept', PERMANENTS,
@@ -97,7 +107,7 @@ BREAKS = [
     ('shadow: counter', LAYERS, '  "shadow": "Shadow"});', '});'),
     ('shadow: blocking', COMBAT, '  if (has(state, attackerId, "Shadow") !== has(state, blockerId, "Shadow")) return false;\n', ''),
     ('shadow: a keyword with behavior', COMBAT, '    "Shadow"]),', '    ]),'),
-    ('shadow: declared', VOCAB, '  "shadow"];', '  ];'),
+    ('shadow: declared', VOCAB, '  "shadow",\n', ''),
     # Selective Obliteration: each player's color, and whose it is.
     ('obliteration: that player chooses', ASKING,
      'effect: "chooseColor", player: Number.isInteger(params.chooser) ? params.chooser : context.controller,',

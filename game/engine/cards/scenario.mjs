@@ -18,7 +18,7 @@
  *   {schema: "CrankCardScenarios@1", card, fixtures?: {name: object}, scenarios: [{
  *     name, seats?: 2..4, at?: {turn, phase}, library?: [names],
  *     setup: [{seat, zone, cards, sick?}]   (a card put in the command zone is that seat's commander),
- *     steps: [ {play|tap|cast|activate|turnFaceUp|suspend: name, seat?, targets?: [{card, seat?} | {player} | {ability}] | "any", ability?, mana?, x?, optional?}
+ *     steps: [ {play|tap|cast|activate|turnFaceUp|suspend: name, seat?, targets?: [{card, seat?} | {player} | {ability}] | "any", ability?, mana?, x?, optional?, gift?}
  *            | {resolve: true} | {settle: true} | {pass: n} | {to: {turn, phase}} | {answer: [indices]} | {expect: [...]}
  *            | {attack: [names], at?} | {block: [[blocker, attacker], ...]} | {choose: [labels]} ],
  *   (`targets: "any"` takes the first legal aim; `optional` skips a move the rules do not offer; `settle` answers every
@@ -186,9 +186,14 @@ export function runScenario(scenario, cards, fixtures = {}) {
     /* Convoked (CR 702.51a): `convoke: true` takes the offer the caster's creatures help pay, its creatures a question once it
        is taken, answered by the next step's `choose`; without it, the cast the pool pays alone. */
     found = found.filter((a) => (a.convoke ?? false) === (step.convoke ?? false));
+    /* Delved (CR 702.66a): `delve: true` takes the offer the caster's graveyard helps pay, its cards a question once it is
+       taken, answered by the next step's `answer` or `choose`; without it, the cast the pool pays alone. */
+    found = found.filter((a) => (a.delve ?? false) === (step.delve ?? false));
     /* Waterbend (CR 701.67a): `waterbend: true` takes the offer that taps artifacts and creatures for part of it, which ones a
        question once it is taken; without it, the one the pool pays. */
     found = found.filter((a) => (a.waterbend ?? false) === (step.waterbend ?? false));
+    /* A gift promised (CR 702.174a): `gift`, the seat of the opponent chosen; without it, the cast that promises none. */
+    found = found.filter((a) => (a.gift ?? null) === (step.gift ?? null));
     /* Cast face down with disguise (CR 702.168a), or turned face up for its disguise cost (702.168d): `disguise: true`;
        without it, the card cast as itself, or turned face up for its mana cost. */
     found = found.filter((a) => (a.disguise ?? false) === (step.disguise ?? false));

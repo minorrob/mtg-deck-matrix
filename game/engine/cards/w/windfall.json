@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Windfall",
+    "oracleId": "08becc07-28bc-4a2f-a6b0-28a2998d2f50",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each player discards their hand, then draws cards equal to the greatest number of cards a player discarded this way.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Each player discards their hand, then draws cards equal to the greatest number of cards a player discarded this way.",
+      "effects": [
+        {
+          "effect": "discard",
+          "who": "each",
+          "all": true,
+          "remember": true
+        },
+        {
+          "effect": "draw",
+          "who": "each",
+          "count": {
+            "rememberedCount": true,
+            "controlledBy": "most"
+          }
+        }
+      ]
+    }
+  ]
+}

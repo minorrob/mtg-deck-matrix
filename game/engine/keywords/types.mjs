@@ -41,5 +41,13 @@ const LAND_TYPES = new Set(["Cave", "Desert", "Forest", "Gate", "Island", "Lair"
   "Sphere", "Swamp", "Tower", "Town", "Urza's"]);
 /** Whether a subtype is a land type. */
 export const isLandType = (subtype) => LAND_TYPES.has(subtype);
+/* The enchantment types (CR 205.3h): what "it loses all other card types" takes from an enchantment creature with one, once it
+   is no longer an enchantment (CR 205.3d; Darksteel Mutation, wave 4c k2; rules/layers.mjs, correspondingSubtypes). */
+const ENCHANTMENT_TYPES = new Set(["Aura", "Background", "Cartouche", "Case", "Class", "Curse", "Role", "Room", "Rune", "Saga", "Shard", "Shrine"]);
+/** Whether a subtype is an enchantment type. */
+export const isEnchantmentType = (subtype) => ENCHANTMENT_TYPES.has(subtype);
+/* THE BASIC LAND TYPES AND THEIR INTRINSIC MANA ABILITIES (CR 305.6): an object with one has "{T}: Add [its mana]" -- a land
+   given the type by an effect gains it too (CR 305.7; rules/layers.mjs, intrinsicMana). */
+export const BASIC_LAND_MANA = Object.freeze({Plains: "W", Island: "U", Swamp: "B", Mountain: "R", Forest: "G"});
 /** Whether an object with these subtypes -- every creature type, or not -- has `subtype`. */
 export const hasSubtype = (subtypes, every, subtype) => subtypes.includes(subtype) || (every === true && isCreatureType(subtype));

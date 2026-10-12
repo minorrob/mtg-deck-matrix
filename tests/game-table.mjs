@@ -13,16 +13,21 @@
  *           only from this site; strangers see no table.
  */
 import assert from "node:assert/strict";
-import {existsSync} from "node:fs";
+import {existsSync, readFileSync} from "node:fs";
 import {memoryStorage} from "../game/engine/storage.mjs";
 import {basicCards} from "../game/room/room.mjs";
 import {replayTape} from "../game/room/replay.mjs";
 import {tableOn, INVITE_TTL, MATS, commanderLegal, isBasicLandsTestDeck} from "../game/room/table.mjs";
 import {compileScript} from "../game/engine/cards/index.mjs";
 import {loadCardScripts} from "../game/tools/engine-cards.mjs";
-import {GameTable} from "../cloud/game-room.mjs";
+import {GameTable, tableCards} from "../cloud/game-room.mjs";
 import {handle} from "../cloud/worker.mjs";
 import {forgetKeys} from "../cloud/access.mjs";
+/* Real cards the table has no definition of yet, the most-played first (data/engine/top-cards.json), found as the suite
+   runs: each wave of definitions makes another card the example, so none is named here (Cyclonic Rift and Mana Drain were,
+   until wave 4b defined them). */
+const UNPLAYABLE = JSON.parse(readFileSync(new URL("../data/engine/top-cards.json", import.meta.url), "utf8")).cards
+  .map((c) => c.name).filter((name) => !tableCards(name));
 
 let checks = 0;
 const ok = (c, m) => {assert.ok(c, m); checks += 1;};
@@ -349,10 +354,11 @@ ${line}`, abilities: [...script.abilities, {kind: "static", text: line, rule: "c
   };
   await call("POST", "/table/create", ROB, {tableId: "tabledefs1", hostName: "Rob", seats: [{kind: "ai", name: "Shadrix"}]});
   const real = {name: "Goblins", commander: ["Krenko, Mob Boss"], cards: [...Array(40).fill("Mountain"), "Lightning Bolt", "Blasphemous Act", "Zulaport Cutthroat", "Sol Ring"]};
-  eq((await call("POST", "/table/known", ROB, {names: [...real.commander, ...real.cards, "Cyclonic Rift"]})).json.unknown, ["Cyclonic Rift"],
+  const [none] = UNPLAYABLE;
+  eq((await call("POST", "/table/known", ROB, {names: [...real.commander, ...real.cards, none]})).json.unknown, [none],
     "asked which names it cannot play, the table names the one the engine has no definition of -- and only that one");
   eq((await call("POST", "/table/deck", ROB, {seatId: 1, deck: real})).status, 200, "a deck of the engine's own definitions takes a seat at a table handed no cards");
-  eq((await call("POST", "/table/deck", ROB, {seatId: 1, deck: {...real, cards: [...real.cards, "Cyclonic Rift"]}})).json.unsupported, ["Cyclonic Rift"],
+  eq((await call("POST", "/table/deck", ROB, {seatId: 1, deck: {...real, cards: [...real.cards, none]}})).json.unsupported, [none],
     "and one card it cannot play keeps the deck from the seat, by name");
   eq((await call("POST", "/table/known", ROB, {names: Array(2001).fill("Mountain")})).status, 400, "a question of more than 2000 names is refused");
 }

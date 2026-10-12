@@ -4,7 +4,7 @@
 
 | Lane | Held by | Branch | Doing |
 | --- | --- | --- | --- |
-| **Engine** | Claude, a cloud container | `claude/admiring-franklin-58cxy4` | Train E (the library's cards, in waves); the monarch and CR 506.4; then waves 4 and after, to the most-played 90% of Commander cards (`docs/engine/plan-coverage-90.md`) |
+| **Engine** | Claude, a cloud container; **paused 2026-10-12 at 90% of the week's usage: `docs/handoff-2026-10-12.md`** | `claude/admiring-franklin-58cxy4` | Waves 4 and after, to the most-played 90% of Commander cards (`docs/engine/plan-coverage-90.md`); wave 4c in #726 |
 | **UI** | Fable or Codex Astra (Rob, 2026-10-12), on his computer and in the cloud; Rob prototypes Play in Replit first | `claude/ui-<topic>` or `codex/ui-<topic>` | Rob's notes 9 and 10 (a *Turn Resources* tab; the right pane docked; the hover card no taller than the mat); concepts Rob brings back from prototyping tools. Brief: `docs/ui-lane/README.md` |
 
 ### Requests between the lanes
@@ -24,7 +24,7 @@ usage for this").
 - **Wave 1, merged #719** (main 0b9de9a8), on staging (b1369b4b3bf3): 44 cards. With them came:
   - warp, void and sneak;
   - explore and the Map token.
-- **Wave 2, in this branch:** 63 cards from four workers.
+- **Wave 2, merged #720:** 63 cards from four workers.
   - Engine pieces:
     - morph;
     - behold-and-exile;
@@ -36,7 +36,7 @@ usage for this").
   - Fixed: whether a first-strike damage step happens is now decided as combat damage begins, not at blocks (CR 510.4).
     A creature given first strike after blocks used to deal no combat damage.
   - Waiting: Extrapolate the Impossible, which needs cards from outside the game (CR 400.11).
-- **Wave 3, in this branch:** 63 cards from four workers, the last of Rob's library.
+- **Wave 3, merged #721:** 63 cards from four workers, the last of Rob's library.
   - Engine pieces:
     - Narset's "can't draw more than one card each turn" (CR 121.2b);
     - a modal "you may choose the same mode more than once" (700.2d);
@@ -49,7 +49,7 @@ usage for this").
     - "you may choose new targets";
     - no maximum hand size for the rest of the game.
   - A second worker made wave 2's CR 510.4 fix independently; wave 2's was kept.
-- **The monarch** (CR 725), in this branch:
+- **The monarch** (CR 725), merged #721:
   - one monarch at a time, with its two inherent triggers;
   - a monarch who leaves passes it on (725.4);
   - `becomeMonarch`, and `monarch: "you"`;
@@ -59,7 +59,7 @@ usage for this").
   Crowned now play.
 - **Rob's library, after waves 1 to 3:** 1,216 of his v43 library's 1,217 cards play (`tableCards`). The one left is Extrapolate the Impossible,
   which needs cards from outside the game (CR 400.11).
-- **Wave 4a, in this branch:** four constructs, and 72 of the most-played Commander cards they unlock. The 80% set goes
+- **Wave 4a, merged #722** (main 494bf0f4), on staging (5153cc15): four constructs, and 72 of the most-played Commander cards they unlock. The 80% set goes
   from 1,275 defined to 1,347, and from 2,661 with every rule to 2,743.
   - "You may play that card" from another zone: 17 cards. Valgavoth waits on a replacement on every route to a
     graveyard.
@@ -70,12 +70,48 @@ usage for this").
   None of the four constructs is credited in full. Each lane names the forms still missing.
 - **Every break anchors once again.** Later merges had moved the anchors of 37 breaks across 15 files, so those breaks
   no longer broke anything. Each was re-anchored on the code it was written for and proved caught; 1,098 breaks
-  checked.
+  checked. Wave 4b's merges moved 23 more, in 10 files: each re-anchored and proved caught the same way. Every one of
+  the 1,368 breaks in the 40 files now finds its code exactly once.
 - **The plan, reordered** (`docs/engine/plan-coverage-90.md`):
   - 1,396 of the 80% set's undefined cards already have every rule, so the most-played cards come first, each wave
     building the small constructs its cards need.
-  - Wave 4b is running: the 120 most-played cards the table can't play yet (ranks 23 to 500), Cyclonic Rift, Toxic
-    Deluge, Swan Song, Teferi's Protection and The One Ring among them.
+- **Wave 4b, merged #723** (main a61244a0): 112 of the 120 most-played cards the table couldn't play (ranks 23 to 500), and three
+  more that prove its constructs. Four lanes, each building the constructs its cards needed:
+  - j1, 26 cards: an Aura on a graveyard card (Animate Dead), a land given a basic land type taps for its mana
+    (CR 305.6), protection from colors over the creatures a spell named (Akroma's Will), "if you cast it".
+  - j2, 31 cards: changing targets to this creature (Spellskite), the top of a library put back in any order
+    (`rearrangeTop`), "whenever you cast or copy" (magecraft), the amount a delayed trigger remembers (Mana Drain).
+  - j3, 30 cards: exalted, extort, eternalize, gift, an opening hand's card beginning on the battlefield (CR 103.6a),
+    base power.
+  - j4, 28 cards: "can't be activated" (Grand Abolisher), a cost raised for what a spell targets (Terror of the Peaks),
+    X paid in life (Toxic Deluge), imprint, the creatures attacked with this turn (Minas Tirith).
+  - Three lanes each built CR 305.6 on its own. One is kept (`intrinsicMana`, rules/layers.mjs, layer 4), only for a
+    land, and gives each type's ability once.
+  - Not defined, each waiting on another family: Sylvan Library, Arena of Glory, Mosswort Bridge, Six, Ragavan, Dauthi
+    Voidwalker, Birgi and Emry.
+  - The 80% set: 1,462 defined (from 1,347), 2,780 with every rule. The 90% set: 1,605 of 5,869 defined (from 1,411).
+    The defined cards now cover 60.3% of all card appearances (52.0% when the plan was written).
+  - Breaks: j1 33, j2 45, j3 111, j4 81, each caught.
+- **Wave 4c, #726:** 78 of the next 80 most-played cards (ranks 501 to 723), in four lanes by theme, each owning the
+  rules its cards need:
+  - k1 lands, 21: a land played as an effect resolves (Windbrisk Heights, and Mosswort Bridge, which 4b had left).
+  - k2 graveyard and combat, 19: delve, dredge, fabricate, a flashback cost that sacrifices, the rest of a dig on the
+    bottom in an order its owner chooses (CR 401.4), Commander's Plate's protection, CR 205.3d's subtypes.
+  - k3 tokens and counters, 18: dice (`rollDie`), offspring, "becomes level", +1/+1 and -1/-1 counters cancelling
+    with the deaths (CR 704.5q), Saw in Half's copies, a counter for each creature of the chosen type.
+  - k4 spells and draws, 20: affinity, a hand looked at (Gitaxian Probe), "draws more" and "an empty draw wins"
+    (Teferi's Ageless Insight, Laboratory Maniac), a fixed life payment as a cost's choice.
+  - Stopped on: Mox Diamond (an "instead of entering" asked before it enters, on every route to the battlefield);
+    The Earth Crystal (counters divided at activation, CR 601.2d); Tibalt's Trickery (a random number, a cast by
+    another player as it resolves).
+  - Two lanes built the same "tap a permanent without {T}" mana cost (Urza; Relic of Legends): one kept.
+  - **Every break still breaks something:** `tests/engine-breaks-anchors.mjs` holds each anchor to being found once
+    (`game/tools/batch/anchors.py`). It named the three breaks this wave's own merge moved, and three stale ones in
+    `train-b6-breaks.py` the earlier scans never read. 53 files, 1,712 breaks.
+  - The 80% set: 1,540 defined (from 1,462), 2,814 with every rule. The 90% set: 1,683 of 5,869. The defined cards
+    cover 62.5% of all card appearances.
+  - **Staging still serves wave 4a.** The release of main a61244a0 stopped at `play-e2e`, which named Cyclonic Rift
+    as unplayable; the fix rides #726, and staging takes waves 4b and 4c together once it merges.
 - **Open, for later waves:**
   - **Fixed on `claude/first-draw-step`:** in a two-player game the starting player skipped the draw step's draw, not
     the step (CR 103.8a), so its beginning triggers fired on turn 1. Now the step is skipped.

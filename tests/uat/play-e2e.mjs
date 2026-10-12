@@ -44,6 +44,10 @@ const TEAM = "e2e.cloudflareaccess.com", AUD = "e2e-audience", EMAIL = "rob@e2e.
 let checks = 0;
 const ok = (value, message) => {assert.ok(value, message); checks++; console.log(`  ok  ${message}`);};
 const eq = (a, b, message) => {assert.deepEqual(a, b, message); checks++; console.log(`  ok  ${message}`);};
+/* A real card the table has no definition of yet, the most-played first (data/engine/top-cards.json), found as the walk
+   runs: each wave of definitions makes another card the example (it was Cyclonic Rift until wave 4b defined it). */
+const [none] = JSON.parse(readFileSync(new URL("../../data/engine/top-cards.json", import.meta.url), "utf8")).cards
+  .map((c) => c.name).filter((name) => !tableCards(name));
 
 /* The build, with test Access values, in site/ with its configuration beside it (see cloud-e2e). */
 const dir = mkdtempSync(path.join(os.tmpdir(), "crankmagic-play-e2e-")), site = path.join(dir, "site");
@@ -142,11 +146,11 @@ try {
   const made = await api("POST", "/api/tables", {hostName: "Rob", seats: [{kind: "ai", name: "Bot"}]});
   eq([made.status, made.json.table.playtest, made.json.table.youAreHost], [201, true, true], "Rob makes a table with an AI seat, and on staging it is a playtest table");
   const id = made.json.table.tableId, url = `/api/tables/${id}`;
-  const refused = await api("POST", `${url}/deck`, {seatId: 0, deck: {name: "Quintorius", commander: ["Quintorius, Loremaster"], cards: ["Cyclonic Rift", "Forest"]}});
-  eq([refused.status, refused.json.unsupported], [422, ["Cyclonic Rift"]], "only undefined cards are refused by name; Quintorius is supported");
+  const refused = await api("POST", `${url}/deck`, {seatId: 0, deck: {name: "Quintorius", commander: ["Quintorius, Loremaster"], cards: [none, "Forest"]}});
+  eq([refused.status, refused.json.unsupported], [422, [none]], "only undefined cards are refused by name; Quintorius is supported");
   /* M5 (the plan review's C4): the table plays the engine's own definitions -- a deck wholly of them takes a seat, and
      the table says which names it does not know. */
-  eq((await api("POST", `${url}/known`, {names: ["Krenko, Mob Boss", "Lightning Bolt", "Cyclonic Rift"]})).json.unknown, ["Cyclonic Rift"], "asked which names it cannot play, the table names only the undefined one");
+  eq((await api("POST", `${url}/known`, {names: ["Krenko, Mob Boss", "Lightning Bolt", none]})).json.unknown, [none], "asked which names it cannot play, the table names only the undefined one");
   const whole = await api("POST", `${url}/deck`, {seatId: 0, deck: {name: "Goblins", commander: ["Krenko, Mob Boss"], cards: [...Array(40).fill("Mountain"), "Lightning Bolt", "Blasphemous Act", "Sol Ring"]}});
   eq(whole.status, 200, "a deck wholly of the engine's own definitions takes a seat at the playtest table");
   /* The lobby, drawn from the release's own modules (Rob, 2026-09-29: it opened on "reading 'statusPill'"). */

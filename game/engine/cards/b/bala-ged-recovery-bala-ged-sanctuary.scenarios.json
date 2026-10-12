@@ -1,0 +1,199 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Bala Ged Recovery // Bala Ged Sanctuary",
+  "fixtures": {
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Cast as Bala Ged Recovery: the Ogre back from Rob's graveyard to his hand -- any card, a land too",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bala Ged Recovery // Bala Ged Sanctuary"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Ogre",
+            "Island"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Bala Ged Recovery"
+              },
+              "count": 2,
+              "targets": [
+                [
+                  "Ogre"
+                ],
+                [
+                  "Island"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Bala Ged Recovery",
+          "targets": [
+            {
+              "card": "Ogre"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Island",
+            "Bala Ged Recovery"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "From Rob's graveyard only: Maya's Ogre is no target, and with none of his it can't be cast",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bala Ged Recovery // Bala Ged Sanctuary"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Bala Ged Recovery"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Played as Bala Ged Sanctuary: it enters tapped, and taps for {G} next turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bala Ged Recovery // Bala Ged Sanctuary"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Bala Ged Sanctuary"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Bala Ged Sanctuary"
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Bala Ged Sanctuary"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1
+          }
+        }
+      ]
+    }
+  ]
+}

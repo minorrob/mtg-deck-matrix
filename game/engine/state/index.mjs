@@ -40,6 +40,16 @@ export function recordDraw(state, player) {
   who.drawnThisTurn = (who.drawnThisTurn ?? 0) + 1;
   return who.drawnThisTurn;
 }
+/** "Except the first one they draw in each of their draw steps" (Orcish Bowmasters, wave 4b; CR 504.1): which card this is
+ *  of those the player has drawn in their own draw step -- 1 for the first, whether the step's draw or an effect's -- or null
+ *  for a draw anywhere else. Counted on the player against the turn, a turn having one draw step. */
+export function recordDrawStepDraw(state, player) {
+  if (state.phase !== "DRAW" || state.activePlayer !== player) return null;
+  const who = state.players[player];
+  if (who.drawStepDraws?.turn !== state.turn) who.drawStepDraws = {turn: state.turn, count: 0};
+  who.drawStepDraws.count += 1;
+  return who.drawStepDraws.count;
+}
 
 /* MORBID'S RECORD: a creature DIES when it is put into a graveyard from the battlefield (CR 700.4) -- counted as it lands
    there for the player who controlled it as it last existed on the battlefield (`was`, rules/layers.mjs lastKnown: an
@@ -209,6 +219,12 @@ export function valueCostOf(object) {
   if (!object) return null;
   if (object.mdfc?.transforming === true && object.face === "back" && !object.uncopied) return object.mdfc.front.manaCost ?? null;
   return object.manaCost ?? null;
+}
+
+/** The value of X in an object's mana value (CR 202.3e): the one chosen for it while it is a spell on the stack -- its stack
+    entry's, a copy's copied with it (CR 707.10) -- and zero anywhere else, where no stack entry is its. */
+export function xOnStack(state, id) {
+  return (state?.stack ?? []).find((e) => e.objectId === id)?.x ?? 0;
 }
 
 /* A FACE-DOWN PERMANENT'S CHARACTERISTICS (CR 708.2a, 701.40a): a nameless 2/2 creature, textless, without subtypes or a

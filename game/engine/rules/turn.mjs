@@ -35,21 +35,21 @@
  *   CR 500.4: mana pools empty at the end of every step and phase, not at end of turn.
  */
 
-import {cardsIn, moveObject, eventCard, recordDraw, recordDiscard} from "../state/index.mjs";
+import {cardsIn, moveObject, eventCard, recordDraw, recordDrawStepDraw, recordDiscard} from "../state/index.mjs";
 import {attackers, blockers, combatDamage, endCombat} from "./combat.mjs";
 import {combatNeedsFirstStrike} from "../keywords/combat.mjs";
 import {checkStateBasedActions, gameOver, finishCommanderReplacement, legendChoice, finishLegendRule, finishDestructionChoice} from "./sba.mjs";
-import {destructionChoice} from "../script/effects/zones.mjs";
+import {destructionChoice, dredgers, dredgeInstead, dredgeWords} from "../script/effects/zones.mjs";
 import {commanderChoice} from "./commander.mjs";
 import {damageOrderChoice} from "./replacement.mjs";
 import {mulliganChoice, resolveMulligan} from "./mulligan.mjs";
 import {answerResolution, answerDeparted, resolutionChoice} from "../script/resolution.mjs";
 import {finishResolving} from "./stack.mjs";
 import {priorityOrder} from "./priority.mjs";
-import {playerRuleChanged, untapsDuringOthers, ruleChanged, drawForbidden} from "./statics.mjs";
+import {playerRuleChanged, untapsDuringOthers, ruleChanged, drawForbidden, emptyDrawWins} from "./statics.mjs";
 import {emptyRestricted, colorlessPool} from "./restricted-mana.mjs";
 import {endCopies, phaseIn, endControlChange, nextRecord} from "../script/effects/permanents.mjs";
-import {untapOne} from "../script/effects/resources.mjs";
+import {untapOne, winGame} from "../script/effects/resources.mjs";
 import {runEffect} from "../script/effects/index.mjs";
 import {askEntering, enteringChoice, resolveEnteringChoice} from "./entering.mjs";
 import {collectTriggers, openTriggers, askTriggerTargets, triggerChoice, resolveTriggerOrder, triggerTargetsChoice, resolveTriggerTargets, triggerCountedChoice, resolveTriggerCounted} from "./trigger.mjs";
@@ -184,6 +184,9 @@ export function draw(state, player, events) {
   if (drawForbidden(state, player)) return null;
   const library = cardsIn(state, "library", player);
   if (library.length === 0) {
+    /* "You win the game instead" (Laboratory Maniac; CR 614.11, 121.6a): replaced, and no draw from an empty library
+       (script/effects/zones.mjs says why, for an effect's draw). */
+    if (emptyDrawWins(state, player)) { winGame(state, {who: [player]}, {controller: player}); return null; }
     state.players[player].drewFromEmpty = true;
     return null;
   }
@@ -196,9 +199,13 @@ export function draw(state, player, events) {
     to: {zoneType: ZONE_LABEL.hand, player: {playerId: player}},
     /* A draw (CR 121.1), as "whenever you draw a card" watches for; a search that puts a card into a hand is not one. */
     drawn: true, drawNumber: recordDraw(state, player),
+    /* And which of those drawn in the drawer's own draw step, there (Orcish Bowmasters; state/index.mjs). */
+    ...drawStep(state, player),
   }));
   return moved;
 }
+
+const drawStep = (state, player) => { const n = recordDrawStepDraw(state, player); return n === null ? {} : {drawStepNumber: n}; };
 
 /* CR 103.8a, and note that it is a two-player rule. */
 const skipsFirstDraw = (state) =>
@@ -317,6 +324,10 @@ function choiceFor(state) {
   /* The held draw (item 13): one thing to do, and nothing else happens until it is done. */
   if (awaiting.kind === "draw-card")
     return {id: `draw:${state.turn}`, title: "Draw a card", kind: "draw", mode: "one", min: 1, max: 1, options: [{index: 0, label: "Draw a card"}]};
+  /* The draw step's draw, or a dredge in its place (CR 702.52a): a question like any other, never the beat's one button. */
+  if (awaiting.kind === "dredge-draw")
+    return {id: `dredge-draw:${state.turn}`, title: "Your draw step: draw a card, or dredge instead", mode: "one", min: 1, max: 1,
+      options: [{index: 0, label: "Draw a card"}, ...dredgers(state, awaiting.player).map((d, i) => ({index: i + 1, cardId: d.id, label: dredgeWords(state, d)}))]};
   if (awaiting.kind === "discard-to-hand-size") {
     const hand = cardsIn(state, "hand", awaiting.player);
     return {
@@ -468,6 +479,18 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
     grantStepPriority(state, events);
     return events;
   }
+  /* Drawn, or dredged: the card's N milled and the card returned to its owner's hand, and no card drawn (CR 702.52a). */
+  if (awaiting.kind === "dredge-draw") {
+    const could = dredgers(state, awaiting.player);
+    const [index] = indices ?? [];
+    if (!Array.isArray(indices) || indices.length !== 1 || !(Number.isInteger(index) && index >= 0 && index <= could.length)) throw new Error("Invalid selection");
+    const events = [];
+    state.awaiting = null;
+    if (index === 0) draw(state, awaiting.player, events);
+    else dredgeInstead(state, awaiting.player, could[index - 1].id, events);
+    grantStepPriority(state, events);
+    return events;
+  }
   if (awaiting.kind === "assign-combat-damage") {
     const events = combatDamage.resolve(state, awaiting, amounts ?? indices);
     /* Another attacker may also face several blockers; each gets its own question, and only once
@@ -541,7 +564,11 @@ function arrive(state, events) {
   if (state.phase === "DRAW" && !state.players[state.activePlayer].lost) {
     /* CR 504.1 makes the draw a turn-based action, not a choice. A table that asks for the beat (item 13) holds it
        until the player's click: the same card, at the player's moment, and priority after it (CR 504.2). */
-    if (state.drawBeat) state.awaiting = {kind: "draw-card", player: state.activePlayer};
+    /* DREDGE (CR 702.52a; Life from the Loam, wave 4c k2): a dredge card in their graveyard could replace that draw --
+       whether, and with which, is theirs to choose (CR 616.1), asked as the draw is made, and the draw held for it as the
+       beat holds it (script/effects/zones.mjs, dredgers). */
+    if (dredgers(state, state.activePlayer).length) state.awaiting = {kind: "dredge-draw", player: state.activePlayer};
+    else if (state.drawBeat) state.awaiting = {kind: "draw-card", player: state.activePlayer};
     else draw(state, state.activePlayer, events);
   }
   /* CR 714.3b: as the precombat main phase begins, the active player puts a lore counter on each Saga they control -- what

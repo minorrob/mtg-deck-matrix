@@ -1,0 +1,200 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Boros Garrison",
+  "scenarios": [
+    {
+      "name": "Played: it enters tapped, and Rob returns his Plains to his hand",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Boros Garrison"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Boros Garrison"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Plains",
+                  "Boros Garrison"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Plains"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Boros Garrison"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Boros Garrison"
+        }
+      ]
+    },
+    {
+      "name": "With no other land, a land Rob controls is itself: back to his hand",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Boros Garrison"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Boros Garrison"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Boros Garrison"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Boros Garrison"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": []
+        }
+      ]
+    },
+    {
+      "name": "Not Maya's land: only Rob's are among the choices",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Boros Garrison"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Boros Garrison"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Plains",
+                  "Boros Garrison"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Boros Garrison"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Plains"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "{T}: {R}{W}, both at once",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Boros Garrison"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Boros Garrison"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "R": 1,
+            "W": 1
+          }
+        }
+      ]
+    }
+  ]
+}

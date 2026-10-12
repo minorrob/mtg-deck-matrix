@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Unnatural Growth",
+    "oracleId": "7324abaa-48da-439d-9339-b0ea5eea612e",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{G}{G}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "At the beginning of each combat, double the power and toughness of each creature you control until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of each combat, double the power and toughness of each creature you control until end of turn.",
+      "trigger": {
+        "on": "step",
+        "step": "COMBAT_BEGIN",
+        "yours": false
+      },
+      "effects": [
+        {
+          "effect": "repeatFor",
+          "each": "creature",
+          "effects": [
+            {
+              "effect": "branch",
+              "if": {
+                "about": "that card",
+                "is": {
+                  "controller": "you"
+                }
+              },
+              "then": [
+                {
+                  "effect": "pump",
+                  "targets": "that card",
+                  "power": {
+                    "powerOf": "that card",
+                    "signed": true
+                  },
+                  "toughness": {
+                    "toughnessOf": "that card",
+                    "signed": true
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

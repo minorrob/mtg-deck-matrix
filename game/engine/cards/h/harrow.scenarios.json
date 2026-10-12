@@ -1,0 +1,268 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Harrow",
+  "scenarios": [
+    {
+      "name": "A Forest sacrificed, tapped for mana first: two basics found and put onto the battlefield untapped",
+      "library": [
+        "Forest",
+        "Island",
+        "Watery Grave",
+        "Watery Grave",
+        "Watery Grave",
+        "Watery Grave",
+        "Watery Grave",
+        "Watery Grave",
+        "Watery Grave",
+        "Watery Grave",
+        "Watery Grave",
+        "Watery Grave",
+        "Watery Grave",
+        "Watery Grave",
+        "Watery Grave",
+        "Watery Grave",
+        "Watery Grave",
+        "Watery Grave",
+        "Watery Grave",
+        "Watery Grave"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Harrow"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Harrow",
+          "sacrifice": "Forest"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Forest",
+                  "Island"
+                ],
+                "min": 0
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Forest",
+            "Island"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Wastes",
+            "Wastes",
+            "Forest",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Forest",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "tapped": "Island",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Forest",
+            "Harrow"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Up to two: one found",
+      "library": [
+        "Forest",
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Harrow"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Harrow",
+          "sacrifice": "Wastes"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Island"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Forest",
+            "Wastes",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 19
+        }
+      ]
+    },
+    {
+      "name": "Which land is sacrificed is Rob's choice: one offer for each land, tapped or not",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Harrow"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Harrow"
+          },
+          "count": 3,
+          "costs": [
+            [
+              "Forest"
+            ],
+            [
+              "Wastes"
+            ],
+            [
+              "Wastes"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "With no land to sacrifice it can't be cast, though the mana is there",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Harrow"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Llanowar Elves",
+            "Sol Ring"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Llanowar Elves"
+        },
+        {
+          "tap": "Sol Ring"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Harrow"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

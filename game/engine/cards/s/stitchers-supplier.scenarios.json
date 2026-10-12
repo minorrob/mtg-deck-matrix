@@ -1,0 +1,136 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Stitcher's Supplier",
+  "fixtures": {
+    "Kill Spell": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters: three cards milled; it dies: three more",
+      "library": [
+        "Forest",
+        "Island",
+        "Mountain",
+        "Plains",
+        "Swamp",
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Stitcher's Supplier",
+            "Kill Spell"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Stitcher's Supplier"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Forest",
+                "Island",
+                "Mountain"
+              ]
+            },
+            {
+              "seat": 0,
+              "zone": "library",
+              "count": 17
+            }
+          ]
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Kill Spell",
+          "targets": [
+            {
+              "card": "Stitcher's Supplier"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Forest",
+            "Island",
+            "Mountain",
+            "Plains",
+            "Swamp",
+            "Forest",
+            "Stitcher's Supplier",
+            "Kill Spell"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 14
+        }
+      ]
+    }
+  ]
+}

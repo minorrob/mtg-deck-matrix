@@ -1,0 +1,39 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Yavimaya, Cradle of Growth",
+    "oracleId": "8dd5f5af-d2d8-4356-8617-8381081b930c",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each land is a Forest in addition to its other land types.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Each land is a Forest in addition to its other land types.",
+      "layer": 4,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Land"
+        ]
+      },
+      "apply": {
+        "addSubtypes": [
+          "Forest"
+        ]
+      }
+    }
+  ]
+}

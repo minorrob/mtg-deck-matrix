@@ -26,7 +26,12 @@ import {housePilot} from "../game/engine/pilots/house-pilot.mjs";
 import {hashState} from "../game/engine/journal.mjs";
 import {startRoom, openRoom, RoomError, basicCards} from "../game/room/room.mjs";
 import {loadCardIndex} from "../game/tools/engine-cards.mjs";
-import {GameRoom, objectStorage} from "../cloud/game-room.mjs";
+import {GameRoom, objectStorage, tableCards} from "../cloud/game-room.mjs";
+/* Real cards the table has no definition of yet, the most-played first (data/engine/top-cards.json), found as the suite
+   runs: each wave of definitions makes another card the example, so none is named here (Cyclonic Rift and Mana Drain were,
+   until wave 4b defined them). */
+const UNPLAYABLE = JSON.parse(readFileSync(new URL("../data/engine/top-cards.json", import.meta.url), "utf8")).cards
+  .map((c) => c.name).filter((name) => !tableCards(name));
 
 let checks = 0;
 const ok = (c, m) => {assert.ok(c, m); checks += 1;};
@@ -212,9 +217,10 @@ try {
   eq((await post(object, "/start", {matchId: "do-1", seed: "seed-5", pod: POD})).status, 409, "and a second start is refused");
   /* The object's own card source is the table's, every definition in the directory (cloud/game-room.mjs, tableCards):
      Krenko, Sol Ring and Counterspell are among them, so the pod it refuses is one of cards with no definition yet. */
-  const pod5 = {seats: [{seatId: "a", commander: ["Quintorius, Loremaster"], cards: ["Mountain", "Cyclonic Rift", "Mountain"]}, {seatId: "b", commander: [], cards: ["Island", "Mana Drain"]}]};
+  const [noneA, noneB] = UNPLAYABLE;
+  const pod5 = {seats: [{seatId: "a", commander: ["Quintorius, Loremaster"], cards: ["Mountain", noneA, "Mountain"]}, {seatId: "b", commander: [], cards: ["Island", noneB]}]};
   const bad = await post(new GameRoom({...ctx, storage: {get: async () => undefined, put: async () => {}, delete: async () => false, list: async () => new Map()}}, {}), "/start", {matchId: "do-2", seed: "s", pod: pod5});
-  eq([bad.status, (await bad.json()).unsupported], [422, ["Cyclonic Rift", "Mana Drain"]], "over the object, a pod of cards the table has no definition of is refused by name too");
+  eq([bad.status, (await bad.json()).unsupported], [422, [noneA, noneB].sort()], "over the object, a pod of cards the table has no definition of is refused by name too, in name order");
   eq((await post(object, "/view", null, "stranger")).status, 403, "a seat that is not at the table gets no view");
   const byRoom = {rob: socket(), maya: socket(), "ai-1": socket()};
   for (const [seat, s] of Object.entries(byRoom)) object.accept(s, seat);

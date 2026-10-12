@@ -1,0 +1,34 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Ancient Den",
+  "scenarios": [
+    {
+      "name": "{T}: {W}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Ancient Den"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Ancient Den"
+        },
+        {
+          "tap": "Ancient Den"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "W": 1
+          }
+        }
+      ]
+    }
+  ]
+}

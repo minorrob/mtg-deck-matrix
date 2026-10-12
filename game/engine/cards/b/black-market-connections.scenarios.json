@@ -1,0 +1,203 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Black Market Connections",
+  "scenarios": [
+    {
+      "name": "At the beginning of Rob's first main phase: one or more modes, chosen as it goes on the stack -- all three",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Black Market Connections"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Sell Contraband — Create a Treasure token. You lose 1 life.",
+                  "Buy Information — Draw a card. You lose 2 life.",
+                  "Hire a Mercenary — Create a 3/2 colorless Shapeshifter creature token with changeling. You lose 3 life. (It is every creature type.)",
+                  "Sell Contraband — Create a Treasure token. You lose 1 life.; Buy Information — Draw a card. You lose 2 life.",
+                  "Sell Contraband — Create a Treasure token. You lose 1 life.; Hire a Mercenary — Create a 3/2 colorless Shapeshifter creature token with changeling. You lose 3 life. (It is every creature type.)",
+                  "Buy Information — Draw a card. You lose 2 life.; Hire a Mercenary — Create a 3/2 colorless Shapeshifter creature token with changeling. You lose 3 life. (It is every creature type.)",
+                  "Sell Contraband — Create a Treasure token. You lose 1 life.; Buy Information — Draw a card. You lose 2 life.; Hire a Mercenary — Create a 3/2 colorless Shapeshifter creature token with changeling. You lose 3 life. (It is every creature type.)"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Sell Contraband — Create a Treasure token. You lose 1 life.; Buy Information — Draw a card. You lose 2 life.; Hire a Mercenary — Create a 3/2 colorless Shapeshifter creature token with changeling. You lose 3 life. (It is every creature type.)"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Black Market Connections",
+            "Treasure",
+            "Shapeshifter"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 0,
+          "life": 34
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Shapeshifter",
+            "power": 3,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Shapeshifter",
+            "has": [
+              "Changeling"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "One mode alone: Buy Information draws a card for 2 life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Black Market Connections"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "choose": [
+            "Buy Information — Draw a card. You lose 2 life."
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 0,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Black Market Connections"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Two of them: a Treasure and a Shapeshifter, 4 life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Black Market Connections"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "choose": [
+            "Sell Contraband — Create a Treasure token. You lose 1 life.; Hire a Mercenary — Create a 3/2 colorless Shapeshifter creature token with changeling. You lose 3 life. (It is every creature type.)"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Black Market Connections",
+            "Treasure",
+            "Shapeshifter"
+          ]
+        },
+        {
+          "seat": 0,
+          "life": 36
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Not at Maya's first main phase: \"your first main phase\"",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Black Market Connections"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 40
+        }
+      ]
+    }
+  ]
+}

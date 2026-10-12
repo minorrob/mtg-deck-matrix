@@ -73,7 +73,7 @@ const BEAR = {types: ["Creature"], manaCost: "{1}{G}", colors: ["G"], power: 2, 
   const a = put(s, {card: "Plains", types: ["Land"]}, 0), b = put(s, {card: "Forest", types: ["Land"]}, 0), c = put(s, {card: "Grove", types: ["Land"]}, 1);
   s.objects[a].counters = {"+1/+1": 2}; s.objects[b].counters = {"+1/+1": 1}; s.objects[c].counters = {"+1/+1": 5};
   eq(amountOf(s, {countersAmong: {what: "permanent", types: ["Land"], controller: "you"}, counter: "+1/+1"}, {controller: 0, source: null}), 3, "three on his lands, not Maya's five");
-  eq([missingFor({apis: ["Earthbend"]}), missingFor({apis: ["ChangeTargets"]}).length], [[], 1], "Earthbend credited; ChangeTargets not -- an ability on the stack is no target yet");
+  eq([missingFor({apis: ["Earthbend"]}), missingFor({apis: ["ChangeTargets"]}).length], [[], 0], "Earthbend credited; ChangeTargets too, since wave 4b built its last form (a target changed to this creature, Spellskite)");
 }
 
 console.log(`engine-earthbend: ${checks} checks passed — a land a creature with haste for good, its counters, back tapped when it dies; another target a spell could have, never itself, none and nothing asked; a single target; counters among permanents.`);

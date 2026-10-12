@@ -1,0 +1,217 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Underground Sea",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{T}: Rob chooses {U} or {B} -- two offers, and he takes {B}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Underground Sea"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Underground Sea"
+              },
+              "count": 2,
+              "mana": [
+                {
+                  "U": 1
+                },
+                {
+                  "B": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Underground Sea",
+          "mana": {
+            "B": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "B": 1,
+            "U": 0
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Underground Sea"
+        }
+      ]
+    },
+    {
+      "name": "Or {U}; and it is an Island and a Swamp: Cabal Coffers counts it as a Swamp",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Underground Sea",
+            "Cabal Coffers",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Cabal Coffers"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "pool": {
+                "B": 1,
+                "C": 0
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Underground Sea",
+          "mana": {
+            "U": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "B": 1,
+            "U": 1,
+            "C": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Not a basic land: Path to Exile's search for a basic finds nothing among Maya's Underground Seas",
+      "library": [
+        "Underground Sea",
+        "Underground Sea",
+        "Underground Sea",
+        "Underground Sea",
+        "Underground Sea",
+        "Underground Sea",
+        "Underground Sea",
+        "Underground Sea",
+        "Underground Sea",
+        "Underground Sea",
+        "Underground Sea",
+        "Underground Sea",
+        "Underground Sea",
+        "Underground Sea",
+        "Underground Sea",
+        "Underground Sea",
+        "Underground Sea",
+        "Underground Sea",
+        "Underground Sea",
+        "Underground Sea"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Path to Exile"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Path to Exile",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 1,
+                "options": [],
+                "min": 0
+              }
+            }
+          ]
+        },
+        {
+          "answer": []
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": []
+        },
+        {
+          "seat": 1,
+          "zone": "library",
+          "count": 20
+        }
+      ]
+    }
+  ]
+}
