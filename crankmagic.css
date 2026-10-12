@@ -3232,9 +3232,9 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
 .cm-board-ribbon-button:hover .cm-board-ribbon.is-strip,.cm-board-ribbon-button:focus-visible .cm-board-ribbon.is-strip{background:color-mix(in srgb,var(--v-ink) 14%,transparent)}
 .cm-board-step.is-alone{display:inline-block}
 /* Full screen's pill carries the same ribbon, on the pill's dark: its ink is the mat's. */
-.cm-full-pill .cm-board-ribbon.is-strip{background:rgb(255 255 255 / .1)}
+.cm-full-pill .cm-board-ribbon.is-strip{background:rgb(0 0 0 / .45)}   /* darker than the pill, never lighter: a done step's word read 4.47:1 on a lighter one */
 .cm-full-pill .cm-board-ribbon.is-strip li{color:var(--mat-ink)}
-.cm-full-pill .cm-board-ribbon.is-strip li.is-done{color:color-mix(in srgb,var(--mat-ink) 70%,transparent)}
+.cm-full-pill .cm-board-ribbon.is-strip li.is-done{color:color-mix(in srgb,var(--mat-ink) 84%,transparent)}
 .cm-full-pill .cm-board-ribbon.is-strip li.is-now{color:var(--color-on-accent)}
 .cm-full-pill .cm-board-menu{left:0;right:auto;top:calc(100% + 8px);color:var(--v-ink)}
 .cm-board-prompt{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:10px;overflow:hidden}
