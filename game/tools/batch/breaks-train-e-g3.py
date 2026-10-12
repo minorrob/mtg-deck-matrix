@@ -29,7 +29,7 @@ FACE = ('const tokenFace = (spec) => ({card: spec.name ?? "Token", types: [...(s
 FACE_PT = 'manaCost: null, colors: [...(spec.colors ?? [])], power: spec.power ?? null, toughness: spec.toughness ?? null, keywords: [...(spec.keywords ?? [])],'
 FACE_ABILITIES = '  abilities: structuredClone(spec.abilities ?? [])});'
 ENTERS_WITH = 'for (const [counter, n] of Object.entries(params.entersWithCounters ?? {})) {'
-PLACED = 'const placed = countersPlaced(state, id, counter, n, controller);'
+PLACED = 'const placed = enteringCountersPlaced(state, id, counter, n, controller);'
 NONE_KEPT = 'if (placed > 0) state.objects[id].counters[counter] = (state.objects[id].counters[counter] ?? 0) + placed;'
 COUNTED = 'entersWithCounters: {"+1/+1": params.count ?? 0}}, context);'
 FIRST_STRIKE = 'firstStrike: (state) => CONDITIONS.attackers(state) && combatNeedsFirstStrike(state),'

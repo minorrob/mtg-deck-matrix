@@ -66,7 +66,7 @@ import {runEffects} from "../script/effects/index.mjs";
 import {changeLife} from "../script/effects/resources.mjs";
 import {unprepare, preparedCopyStays} from "../script/effects/attributes.mjs";
 import {checkStateBasedActions, gameOver} from "./sba.mjs";
-import {costReduction, costIncrease, abilityCostIncrease, equipCostReduction, playerStatics, freeCast, flashGranted, castForbidden, countersPlaced, activationForbidden, cantBeSacrificed, ruleChanged} from "./statics.mjs";
+import {costReduction, costIncrease, abilityCostIncrease, equipCostReduction, playerStatics, freeCast, flashGranted, castForbidden, placeCounters, activationForbidden, cantBeSacrificed, ruleChanged} from "./statics.mjs";
 import {countMana, amountOf, countEffect, isCounted, amountProblems, commanderless} from "../script/amount.mjs";
 import {bindEffect} from "../script/bind.mjs";
 import {conditionHolds} from "../script/condition.mjs";
@@ -795,10 +795,11 @@ const millPayable = (state, player, ability) => !ability.millCost || cardsIn(sta
 /* Whether a mana ability's counters can be paid: every removal has the counters to remove. */
 const countersPayable = (state, id, costs) => (costs ?? []).every((c) => c.put || (state.objects[id].counters?.[c.counter] ?? 0) >= c.count);
 /* A cost's counters (CR 602.2b, 606.4): put on by the player paying it -- "twice that many instead" sees them (a loyalty
-   ability's +1, Wall of Roots' -0/-1; rules/statics.mjs, countersPlaced) -- or removed. */
+   ability's +1, Wall of Roots' -0/-1; rules/statics.mjs, placeCounters), but not "if an effect would put" (Doubling Season's
+   ruling: a cost is no effect) -- or removed. */
 function payCounters(state, id, costs, by = null) {
   const counters = state.objects[id].counters;
-  for (const c of costs ?? []) counters[c.counter] = Math.max(0, (counters[c.counter] ?? 0) + (c.put ? countersPlaced(state, id, c.counter, c.count, by) : -c.count));
+  for (const c of costs ?? []) counters[c.counter] = Math.max(0, (counters[c.counter] ?? 0) + (c.put ? placeCounters(state, {id}, c.counter, c.count, by, {cost: true}).count : -c.count));
 }
 
 /* A SACRIFICE OF MANY (Bolas's Citadel: "sacrifice ten nonland permanents"): one offer for each set while the sets are

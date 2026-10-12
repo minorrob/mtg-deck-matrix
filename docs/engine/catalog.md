@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,311 defined and playable today; 2,698 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,330 defined and playable today; 2,726 with every
 mechanic built, so only their definitions are left to write; 27 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -20,8 +20,8 @@ many most-played cards need it among other missing things; **Alone** how many it
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Keyword abilities (CR 702) | 194 | 69 | 0 | 5 | 120 |
 | Keyword actions (CR 701) | 70 | 22 | 5 | 1 | 42 |
-| Effects | 192 | 74 | 1 | 2 | 115 |
-| Triggers | 138 | 24 | 4 | 2 | 108 |
+| Effects | 192 | 74 | 2 | 1 | 115 |
+| Triggers | 138 | 25 | 4 | 1 | 108 |
 | Static abilities | 77 | 14 | 2 | 0 | 61 |
 | Replacement effects | 34 | 0 | 6 | 0 | 28 |
 | Costs | 26 | 5 | 2 | 10 | 9 |
@@ -37,20 +37,20 @@ The things that alone hold back the most of the most-played cards.
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
 | option | You may play or cast a card from another zone | — | missing | 18 | 62 |
-| effect | ReplaceCounter | replaceCounters | named | 10 | 12 |
 | count | What entered or died this turn | — | missing | 9 | 9 |
 | option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 8 | 67 |
 | count | Cards in a library | — | missing | 8 | 12 |
 | effect | RingTemptsYou | — | missing | 8 | 11 |
-| trigger | CounterAddedOnce | counter added once | named | 6 | 9 |
 | effect | ChoosePlayer | — | missing | 6 | 8 |
 | option | Imprint (a card exiled with this) | — | missing | 6 | 8 |
 | effect | Discover | discover | named | 6 | 6 |
+| count | Amount | — | missing | 5 | 9 |
 | count | How many things an effect remembered | — | missing | 5 | 8 |
 | effect | ChangeTargets | — | missing | 5 | 7 |
 | option | Unless a player sacrifices a permanent | — | missing | 5 | 7 |
 | count | Times this resolved this turn | — | missing | 5 | 7 |
 | static | RaiseCost | — | missing | 5 | 6 |
+| effect | Protection | — | missing | 5 | 5 |
 
 ## Keyword abilities (CR 702)
 
@@ -377,8 +377,8 @@ The things that alone hold back the most of the most-played cards.
 | SacrificeAll | sacrificeAll | built | 19 | 130 | 0 | 0 |
 | ImmediateTrigger | immediateTrigger | built | 18 | 313 | 0 | 0 |
 | DigUntil | digUntil | built | 18 | 167 | 0 | 0 |
-| ReplaceToken | — | missing | 17 | 35 | 16 | 0 |
-| ReplaceCounter | replaceCounters | named | 16 | 33 | 12 | 10 |
+| ReplaceToken | — | missing | 17 | 35 | 4 | 0 |
+| ReplaceCounter | the AddCounter replacement (rules/statics) | partial | 16 | 33 | 0 | 0 |
 | Fight | fight | built | 15 | 148 | 0 | 0 |
 | WinsGame | winGame | built | 15 | 43 | 0 | 0 |
 | ChooseColor | chooseColor | built | 14 | 132 | 0 | 0 |
@@ -540,7 +540,7 @@ The things that alone hold back the most of the most-played cards.
 | TapsForMana | tapped for mana | built | 18 | 64 | 0 | 0 |
 | Sacrificed | sacrificed | built | 17 | 114 | 0 | 0 |
 | Discarded | discarded | built | 17 | 76 | 0 | 0 |
-| CounterAddedOnce | counter added once | named | 10 | 47 | 9 | 6 |
+| CounterAddedOnce | counter added | built | 10 | 47 | 0 | 0 |
 | AttackersDeclaredOneTarget | attackers declared | built | 8 | 32 | 0 | 0 |
 | SpellCastOrCopy | — | missing | 6 | 31 | 6 | 4 |
 | LifeLost | life lost | built | 6 | 20 | 0 | 0 |
@@ -755,7 +755,7 @@ The things that alone hold back the most of the most-played cards.
 | Moved | replacement | partial | 280 | 955 | 0 | 0 |
 | DamageDone | rules/replacement | partial | 22 | 209 | 0 | 0 |
 | Counter | rules/statics | partial | 21 | 110 | 0 | 0 |
-| CreateToken | — | missing | 17 | 32 | 16 | 0 |
+| CreateToken | — | missing | 17 | 32 | 4 | 0 |
 | AddCounter | rules/statics | partial | 15 | 30 | 0 | 0 |
 | Draw | — | missing | 7 | 37 | 7 | 4 |
 | GainLife | — | missing | 6 | 21 | 5 | 1 |
@@ -880,7 +880,7 @@ The things that alone hold back the most of the most-played cards.
 | 700.5 | Devotion to a color (CR 700.5) | {devotion: [color]} | built | 11 | 49 | 0 | 0 |
 | — | That much life ("loses that much life", the life gained) | {lifeGained: true}: the life the trigger is about (batch 68) | built | 11 | 38 | 0 | 0 |
 | — | Your life total | — | missing | 10 | 92 | 10 | 4 |
-| — | Amount | — | missing | 10 | 43 | 9 | 2 |
+| — | Amount | — | missing | 10 | 43 | 9 | 5 |
 | — | How many things an effect remembered | — | missing | 8 | 71 | 8 | 5 |
 | — | Times this resolved this turn | — | missing | 7 | 31 | 7 | 5 |
 | — | The monarch | condition {monarch: "you"} (script/condition.mjs); "while you're the monarch", a damage trigger's monarch: "you" | built | 7 | 15 | 0 | 0 |

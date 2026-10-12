@@ -125,6 +125,21 @@ export function escapeCostProblems(cost, {given = false} = {}) {
   return problems;
 }
 
+/* A TOKEN A REPLACEMENT MAKES, NAMED AS A PREDEFINED ONE (CR 111.10): "plus an additional Food token" (Peregrin Took), "plus an
+   additional Treasure token" (Xorn), "one of each" Clue, Food and Treasure (Academy Manufactor) -- given the definition
+   createToken makes it from (PREDEFINED_TOKENS), so rules/statics.mjs reads what the token is. One it does not know is a
+   problem, by name. */
+const TOKEN_REPLACEMENTS = ["tokens-instead", "tokens-plus", "tokens-each"];
+function predefinedIn(ability, problems) {
+  if (ability.kind !== "static" || !TOKEN_REPLACEMENTS.includes(ability.rule)) return ability;
+  const spec = (token) => {
+    if (!token?.predefined) return token;
+    if (!Object.hasOwn(PREDEFINED_TOKENS, token.predefined)) { problems.push(`${ability.text}: no predefined token named ${token.predefined}`); return token; }
+    return structuredClone(PREDEFINED_TOKENS[token.predefined]);
+  };
+  return {...ability, ...(ability.token ? {token: spec(ability.token)} : {}), ...(Array.isArray(ability.each) ? {each: ability.each.map(spec)} : {})};
+}
+
 /* THE PARTNER ABILITIES (CR 702.124a), read from the card's own words: a deck rule a table holds a deck to
    (room/table.mjs), which the game itself never reads. Reminder text first goes, and "Partner with" is read whole --
    the name it gives may have a comma in it -- before a keyword line is split at its commas.
@@ -254,14 +269,18 @@ const TRIGGERS = {
     ...(Array.isArray(t.anyOf) ? {anyOf: t.anyOf.map((one) => ({...(one.filter ? {filter: one.filter} : {}), ...(one.targets ? {targets: one.targets} : {})}))} : {})}),
   /* "Whenever one or more +1/+1 counters are put on Berta" (CR 122.1): counters of `counter` put on this permanent, once
      for each time they are put on, however many. */
-  "counter added": (t) => (typeof t.counter !== "string" ? null : (t.who ?? "self") === "self" ? {on: "GameEventCardCounters", counterAdded: true, counter: t.counter,
+  /* "Whenever YOU put one or more +1/+1 counters on this creature" (Exemplar of Light), "whenever you put one or more -1/-1
+     counters on a creature" (Nest of Scarabs): `putBy: "you"`, put by this ability's controller -- an effect's controller,
+     or as a permanent enters its controller (CR 122.6a; rules/trigger.mjs). */
+  "counter added": (t) => (typeof t.counter !== "string" || ![undefined, "you"].includes(t.putBy) ? null : (t.who ?? "self") === "self" ? {on: "GameEventCardCounters", counterAdded: true, counter: t.counter,
     /* "Whenever a +1/+1 counter is put on this creature" (Fathom Mage): once for each counter (`each`), not for each time. */
-    ...(t.each === true ? {each: true} : {})}
+    ...(t.each === true ? {each: true} : {}), ...(t.putBy ? {putBy: t.putBy} : {})}
     /* "Whenever one or more +1/+1 counters are put on a creature you control, put that many growth counters on this
        enchantment" (Simic Ascendancy; CR 122.6): on any permanent `filter` describes, once for each permanent each time
        they are put on it -- about that permanent and how many (rules/trigger.mjs; "that many", script/amount.mjs
        `countersPut`). Once for each time, never for each counter. */
-    : t.who === "any" && t.each === undefined ? {on: "GameEventCardCounters", counterAdded: true, counter: t.counter, who: "any", ...(t.filter ? {filter: t.filter} : {})} : null),
+    : t.who === "any" && t.each === undefined ? {on: "GameEventCardCounters", counterAdded: true, counter: t.counter, who: "any", ...(t.filter ? {filter: t.filter} : {}),
+      ...(t.putBy ? {putBy: t.putBy} : {})} : null),
   /* "Whenever you scry or surveil" (Proft, Consulting Detective; CR 701.22a, 701.25a): once each is done, by `scrier`. */
   scried: (t) => ({on: "GameEventScried", scrier: t.scrier ?? "you"}),
   /* "Whenever you proliferate" (Ezuri, Stalker of Spheres; CR 701.34a): once each proliferate is done, by `proliferator`
@@ -1613,8 +1632,9 @@ export function compileScript(script) {
     /* What follows a prevention is done at once, inside the damage event (CR 615.5): nothing in it may stop to ask. */
     if (ability.kind === "replacement") for (const effect of ability.change?.then ?? [])
       if (!EFFECTS[effect?.effect]) problems.push(`${ability.text}: ${effect?.effect} follows a prevention, and it asks a question or is not built`);
-    /* static and replacement: their schema is the rules modules' own shape. */
-    abilities.push({...ability, id});
+    /* static and replacement: their schema is the rules modules' own shape -- a token a replacement makes, named as a
+       predefined one, given its definition (predefinedIn). */
+    abilities.push({...predefinedIn(ability, problems), id});
   });
 
   /* What a static or an effect gives (compileGrant): compiled here, in place of the script's words. */

@@ -1,0 +1,65 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Stridehangar Automaton",
+    "oracleId": "9070c98b-fd01-4eeb-a4ec-fc464946c7c0",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Construct"
+    ],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 1,
+    "toughness": 4
+  },
+  "oracleText": "Thopters you control get +1/+1.\nIf one or more artifact tokens would be created under your control, those tokens plus an additional 1/1 colorless Thopter artifact creature token with flying are created instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Thopters you control get +1/+1.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "subtypes": [
+          "Thopter"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 1
+      }
+    },
+    {
+      "kind": "static",
+      "text": "If one or more artifact tokens would be created under your control, those tokens plus an additional 1/1 colorless Thopter artifact creature token with flying are created instead.",
+      "rule": "tokens-plus",
+      "affects": {
+        "types": [
+          "Artifact"
+        ]
+      },
+      "token": {
+        "name": "Thopter",
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "subtypes": [
+          "Thopter"
+        ],
+        "colors": [],
+        "power": 1,
+        "toughness": 1,
+        "keywords": [
+          "Flying"
+        ]
+      }
+    }
+  ]
+}

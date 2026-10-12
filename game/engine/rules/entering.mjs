@@ -25,7 +25,7 @@ import {creatureTypesInGame} from "../script/effects/asking.mjs";
 import {copyOnto} from "../script/effects/permanents.mjs";
 import {ownEntering} from "./replacement.mjs";
 import {collectTriggers} from "./trigger.mjs";
-import {countersPlaced} from "./statics.mjs";
+import {enteringCountersPlaced} from "./statics.mjs";
 
 /* The cards in the controller's hand a reveal could show ("an Island or Swamp card"). */
 const revealable = (state, player, selector) => cardsIn(state, "hand", player).filter((id) => matchesSelector({...selector, what: "card", zone: "hand"}, state, id, {controller: player}));
@@ -52,8 +52,9 @@ export function holdArrival(state, objectId, arrival) {
 export function enteredWith(state, id, entering) {
   const object = state.objects[id];
   if (object?.zone !== "battlefield") return [];
+  /* Put on it by its controller (CR 122.6a): "whenever you put one or more counters" sees them as theirs. */
   return Object.keys(entering?.counters ?? {}).map((counter) => ({kind: "GameEventCardCounters",
-    data: {turn: state.turn, phase: state.phase, fields: {card: eventCard(state, id), type: counter, oldValue: 0, newValue: object.counters[counter] ?? 0}}}));
+    data: {turn: state.turn, phase: state.phase, fields: {card: eventCard(state, id), type: counter, oldValue: 0, newValue: object.counters[counter] ?? 0, by: object.controller}}}));
 }
 
 /* What it may enter as a copy of: each other permanent the selector matches, "you" its controller. */
@@ -153,13 +154,14 @@ export function resolveEnteringChoice(state, awaiting, indices) {
       for (const extra of awaiting.copy?.except?.entersWithCounters ?? [])
         if (matchesSelector({...(extra.if ?? {}), what: "permanent"}, state, awaiting.objectId, {controller: object.controller, source: awaiting.objectId}))
           counters[extra.counter] = (counters[extra.counter] ?? 0) + extra.count;
-      /* Put on it as it enters (CR 122.6), by its controller (122.6a): "twice that many instead" sees them -- and said, as an
-         entering counter is (enteredWith): "whenever a +1/+1 counter is put on" sees them too. */
+      /* Put on it as it enters (CR 122.6), by its controller (122.6a): "twice that many instead" sees them, but not its own
+         replacement (614.12; enteringCountersPlaced) -- and said, as an entering counter is (enteredWith), with who put them:
+         "whenever a +1/+1 counter is put on" sees them too, and "whenever you put" (Exemplar of Light). */
       for (const [counter, count] of Object.entries(counters)) {
         const was = object.counters[counter] ?? 0;
-        object.counters[counter] = was + countersPlaced(state, awaiting.objectId, counter, count, object.controller);
+        object.counters[counter] = was + enteringCountersPlaced(state, awaiting.objectId, counter, count, object.controller);
         if (object.counters[counter] > was) events.push({kind: "GameEventCardCounters", data: {turn: state.turn, phase: state.phase,
-          fields: {card: eventCard(state, awaiting.objectId), type: counter, oldValue: was, newValue: object.counters[counter]}}});
+          fields: {card: eventCard(state, awaiting.objectId), type: counter, oldValue: was, newValue: object.counters[counter], by: object.controller}}});
       }
       for (const ask of own.asks) queueEnteringQuestion(state, awaiting.objectId, ask);
       if (object.tapped && asked?.arrival) asked.arrival.data.fields.enteredTapped = true;
@@ -177,8 +179,8 @@ export function resolveEnteringChoice(state, awaiting, indices) {
   const riot = state.objects[awaiting.objectId];
   if (option.riot === "counter" && riot) {
     const was = riot.counters["+1/+1"] ?? 0;
-    riot.counters["+1/+1"] = was + countersPlaced(state, awaiting.objectId, "+1/+1", 1, riot.controller);
-    events.push({kind: "GameEventCardCounters", data: {turn: state.turn, phase: state.phase, fields: {card: eventCard(state, awaiting.objectId), type: "+1/+1", oldValue: was, newValue: riot.counters["+1/+1"]}}});
+    riot.counters["+1/+1"] = was + enteringCountersPlaced(state, awaiting.objectId, "+1/+1", 1, riot.controller);
+    events.push({kind: "GameEventCardCounters", data: {turn: state.turn, phase: state.phase, fields: {card: eventCard(state, awaiting.objectId), type: "+1/+1", oldValue: was, newValue: riot.counters["+1/+1"], by: riot.controller}}});
   }
   if (option.riot === "haste" && riot) {
     const timestamp = state.nextTimestamp;

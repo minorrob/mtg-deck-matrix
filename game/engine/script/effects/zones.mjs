@@ -26,7 +26,7 @@ import {lastKnown} from "../../rules/layers.mjs";
 import {keywordsOf, controllerOf, abilitiesOf} from "../../rules/layers.mjs";
 import {selectMatching, compileSelector, matchesSelector, shareCreatureType} from "../filter.mjs";
 import {applyReplacements, enteringModifications, regenerated} from "../../rules/replacement.mjs";
-import {cantBeCountered, entersUntapped, countersPlaced, drawsInstead, cantBeSacrificed, drawForbidden} from "../../rules/statics.mjs";
+import {cantBeCountered, entersUntapped, enteringCountersPlaced, drawsInstead, cantBeSacrificed, drawForbidden} from "../../rules/statics.mjs";
 import {amountOf} from "../amount.mjs";
 import {manaValue, parseManaCost} from "../../rules/mana.mjs";
 
@@ -155,7 +155,7 @@ export function moveOne(state, id, to, events, {owner = null, controller = null,
     for (const ask of entering.asks ?? []) (state.enteringQuestions ??= []).push({objectId: moved, ...ask});
     /* Counters it enters with are put on it (CR 122.6) -- by its controller (122.6a): "twice that many instead" sees them. */
     for (const [counter, count] of [...Object.entries(entering.counters), ...Object.entries(counters ?? {})]) {
-      state.objects[moved].counters[counter] = (state.objects[moved].counters[counter] ?? 0) + countersPlaced(state, moved, counter, count, state.objects[moved].controller);
+      state.objects[moved].counters[counter] = (state.objects[moved].counters[counter] ?? 0) + enteringCountersPlaced(state, moved, counter, count, state.objects[moved].controller);
     }
   }
   events.push(event("GameEventCardChangeZone", state, {
@@ -491,7 +491,7 @@ export function moveZone(state, params, context, rng = null) {
   /* Teferi's Time Twist: "if it enters as a creature, it enters with an additional +1/+1 counter on it". */
   /* Put on it as it enters (CR 122.6), by its controller (122.6a): "twice that many instead" sees it. */
   if (params.withCounter) for (const id of arrived) if (typesOf(state, id).includes("Creature"))
-    state.objects[id].counters[params.withCounter] = (state.objects[id].counters[params.withCounter] ?? 0) + countersPlaced(state, id, params.withCounter, 1, state.objects[id].controller);
+    state.objects[id].counters[params.withCounter] = (state.objects[id].counters[params.withCounter] ?? 0) + enteringCountersPlaced(state, id, params.withCounter, 1, state.objects[id].controller);
   afterwards(state, arrived, params, context);
   return events;
 }

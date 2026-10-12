@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Academy Manufactor",
+    "oracleId": "f36d1d8b-8303-44a9-ab56-531931641ea2",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Assembly-Worker"
+    ],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "If you would create a Clue, Food, or Treasure token, instead create one of each.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "If you would create a Clue, Food, or Treasure token, instead create one of each.",
+      "rule": "tokens-each",
+      "affects": {},
+      "each": [
+        {
+          "predefined": "Clue"
+        },
+        {
+          "predefined": "Food"
+        },
+        {
+          "predefined": "Treasure"
+        }
+      ]
+    }
+  ]
+}

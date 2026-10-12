@@ -41,7 +41,7 @@ export const FORGE_API = {
   ExchangeControl: "exchangeControl",
   PutCounter: "putCounter", PutCounterAll: "putCounterAll", RemoveCounter: "removeCounter",
   Proliferate: "proliferate", MultiplyCounter: "multiplyCounters", MoveCounter: "moveCounters",
-  ReplaceCounter: "replaceCounters", Amass: "amass",
+  Amass: "amass",
   /* Poison ("each opponent gets a poison counter", batch 64). */
   Poison: "poison",
   /* "You win the game" (batch 68). */
@@ -79,7 +79,12 @@ export const FORGE_TRIGGER = {
   AttackersDeclaredOneTarget: "attackers declared", Blocks: "blocks",
   SpellCast: "spell cast", DamageDone: "damage dealt", DamageDoneOnce: "damage dealt once", TapsForMana: "tapped for mana",
   Discarded: "discarded", DiscardedAll: "discarded", Drawn: "drawn", LandPlayed: "land played",
-  BecomesTarget: "becomes target", Taps: "becomes tapped", Cycled: "cycled", CounterAdded: "counter added", CounterAddedOnce: "counter added once",
+  BecomesTarget: "becomes target", Taps: "becomes tapped", Cycled: "cycled", CounterAdded: "counter added",
+  /* "Whenever one or more +1/+1 counters are put on this creature" (Evolution Witness), "on a creature you control" (Shalai and
+     Hallar), "whenever YOU put one or more ... counters on" (Exemplar of Light, Nest of Scarabs; wave 4a): the engine's "counter
+     added", once for each time counters are put on a permanent however many (rules/trigger.mjs) -- `who: "any"` and its
+     filter, `putBy: "you"` the player who put them, "that many" `countersPut` (script/amount.mjs). */
+  CounterAddedOnce: "counter added",
   LifeGained: "life gained", LifeLost: "life lost", TokenCreatedOnce: "token created", BecomeMonstrous: "becomes monstrous",
   /* "Whenever you proliferate" (Train C, w2c-hands-triggers; CR 701.34a). */
   Proliferate: "proliferated",
@@ -144,8 +149,20 @@ export const FORGE_REPLACEMENT = {Moved: "replacement",
   /* Counters put on a permanent or a player, replaced (Train C, p4-replacements): "twice that many" (Branching Evolution,
      credited here with no new code for it), "that many plus one" (Hardened Scales), "half that many, rounded down"
      (Vorinclex) -- for whom they are put on and by whom -- the order of two the affected player's (CR 614.1a, 616.1): the
-     static `more-counters`, rules/statics.mjs, placeCounters; asked in a resolution (effects/asking.mjs, orderCounters). */
+     static `more-counters`, rules/statics.mjs, placeCounters; asked in a resolution (effects/asking.mjs, orderCounters).
+     Wave 4a: on its controller alone among players ("or on yourself", Lae'zel; "if you would get", Winding Constrictor), an
+     effect's counters and not a cost's ("if an effect would put", Doubling Season), and not as its own permanent enters
+     (CR 614.12; the Kami of Whispered Hopes, Ozolith and Winding Constrictor rulings). */
   AddCounter: "rules/statics"};
+
+/* FORGE'S EFFECTS THAT ARE ONLY EVER A REPLACEMENT'S "INSTEAD" (its ReplaceWith): the event a replacement puts in the place of
+   the one it replaces. The engine writes the whole replacement as one static (rules/statics.mjs), so such an effect is
+   built exactly where the replacement mode it belongs to is -- never an effect primitive of its own. One is listed only
+   once that mode is credited in FORGE_REPLACEMENT (tests/engine-tokens-counters-4a.mjs holds the two together). */
+export const FORGE_REPLACING_API = Object.freeze({
+  /* "That many plus one", "twice that many", "half that many" counters instead (wave 4a: the 18 cards of the pool that
+     use it, all of them the forms `more-counters` reads). */
+  ReplaceCounter: "AddCounter"});
 
 /* Keywords the engine implements BEHAVIORALLY, as opposed to merely declaring the word. Declaring
    `Flying` in the vocabulary is what lets a card script say it; `keywords/combat.mjs` is what makes
@@ -414,6 +431,8 @@ export const BROAD_TRIGGERS = Object.freeze(["ChangesZone", "ChangesZoneAll", "P
 export function missingFor(card) {
   const missing = [];
   for (const api of card.apis ?? []) {
+    /* The "instead" of a replacement: built where that replacement is (FORGE_REPLACING_API). */
+    if (FORGE_REPLACING_API[api]) continue;
     const primitive = FORGE_API[api];
     if (!primitive) { missing.push({kind: "api", name: api, why: "unmapped"}); continue; }
     if (!isBuilt(primitive) && !isPrimitive(primitive)) missing.push({kind: "api", name: primitive, why: "undeclared"});

@@ -198,8 +198,8 @@ eq(flips("castForbidden (cant-cast)", [on(1, R.handOnly), {seat: 0, zone: "grave
 eq(flips("activationForbidden (cant-activate)", [on(1, R.combatLock)], (s) => { s.phase = "COMBAT_BEGIN"; return activationForbidden(s, 0); }, {holder: R.combatLock}).after, false,
   "abilities activated during combat again");
 eq(flips("cantGainLife (cant-gain-life)", [on(1, R.noLife)], (s) => cantGainLife(s, 0), {holder: R.noLife}).after, false, "Rob gains life again");
-eq(flips("tokensCreated (more-tokens)", [on(0, R.tokens)], (s) => tokensCreated(s, 0, 1, {types: ["Creature"]}).count, {holder: R.tokens}).after, 1, "one token, not two");
-eq(flips("tokensCreated (tokens-instead)", [on(0, R.dragons)], (s) => tokensCreated(s, 0, 1, {types: ["Artifact"]}).instead?.name ?? null, {holder: R.dragons}).after, null,
+eq(flips("tokensCreated (more-tokens)", [on(0, R.tokens)], (s) => tokensCreated(s, 0, 1, {types: ["Creature"]}).groups[0].count, {holder: R.tokens}).after, 1, "one token, not two");
+eq(flips("tokensCreated (tokens-instead)", [on(0, R.dragons)], (s) => { const [made] = tokensCreated(s, 0, 1, {types: ["Artifact"]}).groups; return made.own ? null : made.token.name; }, {holder: R.dragons}).after, null,
   "a Treasure, not a Dragon");
 eq(flips("cantBeSacrificed", [on(0, R.unsacrificed)], (s) => cantBeSacrificed(s, idOf(s, R.unsacrificed)), {holder: R.unsacrificed}).after, false, "it can be sacrificed");
 eq(flips("drawsInstead (draws-instead)", [on(1, R.alms)], (s) => drawsInstead(s, 0, 2), {holder: R.alms}).after, [], "Rob draws his two");

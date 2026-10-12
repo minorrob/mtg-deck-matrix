@@ -538,23 +538,38 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
       if (ability.plus !== undefined && !(Number.isInteger(ability.plus) && ability.plus !== 0)) errors.push({path: `${path}.plus`, message: "plus is a whole number, not 0: 1 for \"that many plus one\", -1 for \"that many minus one\""});
       if (ability.half !== undefined && ability.half !== true) errors.push({path: `${path}.half`, message: "half is true: half that many, rounded down"});
       if (ability.putBy !== undefined && !["you", "opponent"].includes(ability.putBy)) errors.push({path: `${path}.putBy`, message: "putBy is \"you\" or \"opponent\": who must be putting them"});
-      if (ability.players !== undefined && ability.players !== true) errors.push({path: `${path}.players`, message: "players is true: a player's counters too"});
+      /* A player's counters too: any player's ("on a permanent or player"), or its controller's ("or on yourself"); with
+         `affects: {what: "player"}`, a player's alone ("if you would get one or more counters", Winding Constrictor). */
+      if (ability.players !== undefined && ![true, "you"].includes(ability.players)) errors.push({path: `${path}.players`, message: "players is true (any player's counters too) or \"you\" (its controller's)"});
+      if (ability.affects?.what === "player" && (ability.players === undefined || Object.keys(ability.affects).length !== 1))
+        errors.push({path: `${path}.affects`, message: "A player's counters alone are affects {what: \"player\"}, and players says whose"});
+      /* "If an effect would put" (Doubling Season): not counters put as a cost. */
+      if (ability.byEffect !== undefined && ability.byEffect !== true) errors.push({path: `${path}.byEffect`, message: "byEffect is true: counters an effect puts, not a cost"});
     }
     /* "Twice that many of those tokens instead" (rules/statics.mjs, tokensCreated): how many times, 2 or more. */
     if (ability.rule === "more-tokens" && !(Number.isInteger(ability.times) && ability.times >= 2))
       errors.push({path: `${path}.times`, message: "More tokens instead says how many times as many: a whole number, 2 or more"});
     /* "That many 5/5 red Dragon creature tokens with flying are created instead" of artifact tokens: the tokens it replaces
        by their card types, and the token made instead. */
+    /* A token a replacement makes: a spec, or a predefined token by name (CR 111.10; "an additional Food token"), which the
+       card's compiling gives its definition (cards/index.mjs). */
+    const tokenSpec = (token) => Boolean(token) && (isText(token.predefined) ? Object.keys(token).length === 1 : isText(token.name) && Array.isArray(token.types));
     if (ability.rule === "tokens-instead") {
       if (Object.keys(ability.affects ?? {}).some((key) => key !== "types")) errors.push({path: `${path}.affects`, message: "The tokens made instead of others are told by their card types: affects {types}"});
-      if (!(ability.token && isText(ability.token.name) && Array.isArray(ability.token.types))) errors.push({path: `${path}.token`, message: "What is made instead is a token: {name, types, ...}"});
+      if (!tokenSpec(ability.token)) errors.push({path: `${path}.token`, message: "What is made instead is a token: {name, types, ...} or {predefined}"});
     }
-    /* "Those tokens plus a 1/1 white Soldier creature token are created instead" of creature tokens (Queen Allenal): the tokens
-       it adds to by their card types, and the token it adds. */
+    /* "Those tokens plus a 1/1 white Soldier creature token are created instead" of creature tokens (Queen Allenal), "plus an
+       additional Treasure token" of Treasure tokens (Xorn), of any tokens (Peregrin Took): the tokens it adds to by their card
+       types and subtypes, any unsaid, and the token it adds. */
     if (ability.rule === "tokens-plus") {
-      if (Object.keys(ability.affects ?? {}).some((key) => key !== "types") || !Array.isArray(ability.affects?.types)) errors.push({path: `${path}.affects`, message: "The tokens another is added to are told by their card types: affects {types}"});
-      if (!(ability.token && isText(ability.token.name) && Array.isArray(ability.token.types))) errors.push({path: `${path}.token`, message: "What is added is a token: {name, types, ...}"});
+      if (Object.keys(ability.affects ?? {}).some((key) => !["types", "subtypes"].includes(key)) || Object.values(ability.affects ?? {}).some((v) => !Array.isArray(v) || !v.length))
+        errors.push({path: `${path}.affects`, message: "The tokens another is added to are told by their card types and subtypes, or any token: affects {types?, subtypes?}"});
+      if (!tokenSpec(ability.token)) errors.push({path: `${path}.token`, message: "What is added is a token: {name, types, ...} or {predefined}"});
     }
+    /* "If you would create a Clue, Food, or Treasure token, instead create one of each" (Academy Manufactor): the tokens it
+       names, two or more predefined tokens (CR 111.10), each told by its subtype. */
+    if (ability.rule === "tokens-each" && !(Array.isArray(ability.each) && ability.each.length >= 2 && ability.each.every((kind) => isText(kind?.predefined) && Object.keys(kind).length === 1)))
+      errors.push({path: `${path}.each`, message: "One of each says which tokens: each, two or more [{predefined}]"});
     /* "Twice that much life instead" (rules/statics.mjs, lifeGained): how many times, 2 or more. */
     if (ability.rule === "more-life" && !(Number.isInteger(ability.times) && ability.times >= 2))
       errors.push({path: `${path}.times`, message: "More life instead says how many times as much: a whole number, 2 or more"});

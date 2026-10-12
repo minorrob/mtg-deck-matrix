@@ -1,0 +1,60 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Peregrin Took",
+    "oracleId": "188da0ad-8524-4fb2-915e-1876dc9df89f",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Halfling",
+      "Citizen"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "If one or more tokens would be created under your control, those tokens plus an additional Food token are created instead. (It's an artifact with \"{2}, {T}, Sacrifice this token: You gain 3 life.\")\nSacrifice three Foods: Draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "If one or more tokens would be created under your control, those tokens plus an additional Food token are created instead.",
+      "rule": "tokens-plus",
+      "affects": {},
+      "token": {
+        "predefined": "Food"
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "Sacrifice three Foods: Draw a card.",
+      "cost": [
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "subtypes": [
+              "Food"
+            ]
+          },
+          "count": 3
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

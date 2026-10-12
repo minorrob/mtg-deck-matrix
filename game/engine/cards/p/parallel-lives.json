@@ -1,0 +1,33 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Parallel Lives",
+    "oracleId": "84dc94b2-95fb-4d53-aaa2-191cb645639f",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "If an effect would create one or more tokens under your control, it creates twice that many of those tokens instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "If an effect would create one or more tokens under your control, it creates twice that many of those tokens instead.",
+      "rule": "more-tokens",
+      "affects": {
+        "who": "you"
+      },
+      "times": 2
+    }
+  ]
+}

@@ -217,6 +217,6 @@ const turnsOf = (s, n, rng = createRng("x11-turns"), log = []) => {
   applyAction(s, 0, loyal().find((a) => a.loyalty === -12));
   t.eq([s.objects[walker].counters.loyalty, loyal()], [1, []], "activated: twelve removed as its cost, and no other loyalty ability of it this turn (CR 606.3)");
 }
-t.eq([missingFor({apis: ["MoveCounter", "AddTurn"]}), missingFor({apis: ["ReplaceCounter"]}).length], [[], 1], "the constructs MoveCounter and AddTurn read as built; one still unbuilt does not");
+t.eq([missingFor({apis: ["MoveCounter", "AddTurn"]}), missingFor({apis: ["ReplaceMana"]}).length], [[], 1], "the constructs MoveCounter and AddTurn read as built; one still unbuilt (ReplaceMana; ReplaceCounter is wave 4a's) does not");
 
 t.done();

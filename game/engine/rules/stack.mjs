@@ -39,7 +39,7 @@ import {ascendAsItResolves} from "../keywords/designations.mjs";
 import {conditionHolds, asksFirstResolution} from "../script/condition.mjs";
 import {moveObject, addObject, removeObject, eventCard} from "../state/index.mjs";
 import {enteringModifications} from "./replacement.mjs";
-import {countersPlaced} from "./statics.mjs";
+import {enteringCountersPlaced} from "./statics.mjs";
 import {beginResolution, resolutionPending} from "../script/resolution.mjs";
 import {delayedTrigger, enterAttacking} from "../script/effects/permanents.mjs";
 import {prepare} from "../script/effects/attributes.mjs";
@@ -482,7 +482,7 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     /* And for its impending cost (CR 702.176a): marked, with its N time counters (put on it as it enters, CR 122.6). */
     if (to === "battlefield" && entry.impending) {
       state.objects[arrived].impending = true;
-      state.objects[arrived].counters.time = (state.objects[arrived].counters.time ?? 0) + countersPlaced(state, arrived, "time", entry.impending, entry.playerId);
+      state.objects[arrived].counters.time = (state.objects[arrived].counters.time ?? 0) + enteringCountersPlaced(state, arrived, "time", entry.impending, entry.playerId);
     }
     /* And the mana spent to cast it (rules/actions.mjs): "if {G}{G} was spent to cast it" asks the permanent. */
     if (to === "battlefield" && object.spent) state.objects[arrived].spent = {...object.spent};
@@ -498,7 +498,7 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
       for (const ask of entering.asks ?? []) (state.enteringQuestions ??= []).push({objectId: arrived, ...ask});
       /* Counters it enters with are put on it (CR 122.6) -- by its controller (122.6a): "twice that many instead" sees them. */
       for (const [counter, count] of Object.entries(entering.counters)) {
-        state.objects[arrived].counters[counter] = (state.objects[arrived].counters[counter] ?? 0) + countersPlaced(state, arrived, counter, count, entry.playerId);
+        state.objects[arrived].counters[counter] = (state.objects[arrived].counters[counter] ?? 0) + enteringCountersPlaced(state, arrived, counter, count, entry.playerId);
       }
     }
     /* SNEAK (CR 702.190b): a permanent spell whose sneak cost was paid enters tapped and attacking the player or planeswalker
