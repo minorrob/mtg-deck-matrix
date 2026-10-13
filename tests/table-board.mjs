@@ -246,12 +246,12 @@ try {
   /* DECIDE: the active player plays a land by tapping it in the hand. */
   const active = /Turn 1 · You/.test(await text(rob.page, ".cm-board-turn")) ? rob : maya, other = active === rob ? maya : rob;
   const activeSeat = active === rob ? 0 : 1, land = active === rob ? "Forest" : "Island";
-  /* B5, item 11: turn 1's upkeep and its draw step (the first player's first draw is skipped, CR 103.8a) have nothing
-     to do in them, so they pass by themselves, and the table opens in main 1. */
+  /* B5, item 11: turn 1's upkeep has nothing to do in it, so it passes by itself; the first player of a two-player game
+     has no draw step on turn 1 (CR 103.8a); and the table opens in main 1. */
   await active.page.locator(".cm-board-hand .cm-bcard.is-bright").first().waitFor({timeout: 20000});
-  ok(/Main 1/.test(await text(active.page, ".cm-board-step")), `the empty upkeep and draw step pass by themselves: turn 1 opens in main 1, where there is something to do (${(await text(active.page, ".cm-board-step")).trim()})`);
-  await waitText(active.page, ".cm-board-band", /Upkeep, Draw step: nothing to do/);
-  ok((await active.page.locator(".cm-board-band li.is-quiet").first().innerText()).includes("Upkeep, Draw step: nothing to do"), "and the history says so, in one quieter line: Upkeep, Draw step: nothing to do");
+  ok(/Main 1/.test(await text(active.page, ".cm-board-step")), `the empty upkeep passes by itself, and there is no draw step: turn 1 opens in main 1, where there is something to do (${(await text(active.page, ".cm-board-step")).trim()})`);
+  await waitText(active.page, ".cm-board-band", /Upkeep: nothing to do/);
+  ok((await active.page.locator(".cm-board-band li.is-quiet").first().innerText()).includes("Upkeep: nothing to do"), "and the history says so, in one quieter line: Upkeep: nothing to do");
   /* B5, item 10: on your own turn with the stack empty, the button says what passing will do. */
   eq((await text(active.page, ".cm-board-strip [data-action=board-pass]")).trim(), "Next step", "on your own turn, with the stack empty, the button reads Next step");
   eq((await text(active.page, ".cm-board-waiting")).trim(), "", "and the strip does not say Your priority beside it: the button carries it");

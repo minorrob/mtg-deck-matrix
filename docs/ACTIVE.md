@@ -21,6 +21,7 @@ other lane answers in the last column.
 | 6 | UI | A `roll` frame at the game's start: the d20 for first player, sent to every seat with its result | The brief's die, which animates to the result it was sent | the room, at launch | |
 | 7 | UI | `tests/advisor.mjs` to pass again: its clock is fixed at 2026-10-11T12:00Z and its `ai_calls` rows are written at that clock, but the meter's 24-hour window (`cloud/ai.mjs` `since()`, through `aiMeter` in `cloud/worker.mjs`) runs on the real clock, so from 2026-10-12T11:59Z the rows fall outside it and the meter check fails on every branch, `main` included | The Actions gate is red for every PR until it is fixed; #725 (the UI pass) waits on it to merge | `cloud/worker.mjs` (`aiMeter`: pass the request's `now` to the door's `spent`), or the suite's rows at the real clock | Fixed on `main` in c629f8c1 (#723): `aiMeter` takes the request's clock. #727 puts the LLM seat's call log on the table's clock too (`cloud/game-room.mjs`), with `tools/ai-clock-breaks.py`; the AI suites pass with the machine's clock moved days either way |
 | 1 | Engine | The board to show the monarch (CR 725): the view's `state.players[i]` now carries `monarch: true` for the monarch, public to every seat, and no key for anyone else; the history says "Maya became the monarch" | Ginger, Queen of Sweets and Tamiyo, Upriser Crowned make their controller the monarch; the monarch draws a card at their end step, and a creature's combat damage to them makes its controller the monarch -- a player should see who holds it | The engine lane built it (Train E, the `monarch` branch); `docs/ui-lane/gameplay-anchor.md` lists the field. For the UI lane to show |
+| 2 | Engine | A switch in the host's Table rules (`crankmagic-table.js`): *The player who goes first skips their first draw*, on unless the host turns it off. The table's view carries `rules.skipFirstDraw` (`true` by default); the host sends it with the other rules, `POST .../rules {skipFirstDraw: false}`, refused once a seat is ready like the others. It matters only at a two-seat table: in a game of three or four nobody skips (CR 103.8c), so the switch can be shown only there | Rob, 2026-10-12: "this can be toggled off in game setup by the lobby owner". CR 103.8a as a house rule: with it off, the first player of a two-player game has a draw step on turn 1 | The engine lane built the rule, the table's field and the room's pod (`claude/first-draw-step`; `docs/ui-lane/gameplay-anchor.md`). For the UI lane to show |
 
 ## 2026-10-12: the UI lane's pass 1 on the Play screen (Fable, a Claude session in a cloud container)
 
@@ -174,8 +175,15 @@ usage for this").
 - **Paused here at 83% of the week's usage**, at a wave's end rather than mid-wave (Rob's 90% rule): the handoff is
   `docs/handoff-2026-10-12.md`. Wave 4d starts at rank 724 of the 80% set, plus the leftovers it lists.
 - **Open, for later waves:**
-  - In a two-player game the starting player skips the draw step's draw, not the step itself (CR 103.8a). Its
-    beginning triggers still fire on turn 1.
+  - **Fixed on `claude/first-draw-step`:** in a two-player game the starting player skipped the draw step's draw, not
+    the step (CR 103.8a), so its beginning triggers fired on turn 1. Now the step is skipped.
+    - A draw step brought by an added beginning phase (CR 500.8) still happens: Sphinx of the Second Sun on turn 1.
+    - The table's host may turn the skip off (Rob, 2026-10-12; Requests row 2).
+    - Breaks: `breaks-first-draw-step.py`, 16 of 16 caught.
+    - Orcish Bowmasters (wave 4b): its turn-1 scenario drew in the step that no longer happens. It now shows Rob's
+      turn-1 draw triggering it. A new dredge scenario (CR 702.52a) catches j4's "an effect's draw" break again.
+    - Crossing the lanes: `tests/table-board.mjs`, the UI lane's suite, had its turn-1 history line updated. No UI-lane
+      branch touches that file.
   - When two limited permissions allow the same card, the engine merges them and picks one. That choice is the
     player's.
 - **The plan to 90%** (Rob: "after wave 3 define a wave 4+ to bring us to the 90% of all cards typically used"):

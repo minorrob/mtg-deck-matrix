@@ -3,7 +3,7 @@
   "card": "Sphinx of the Second Sun",
   "scenarios": [
     {
-      "name": "At the beginning of its postcombat main phase: an additional beginning phase -- untap, upkeep, draw -- then the end step",
+      "name": "At the beginning of its postcombat main phase: an additional beginning phase -- untap, upkeep, draw -- then the end step. On turn 1 too: Rob, first in a two-player game, has no draw step of his own (CR 103.8a), but the added one is not that one, and he draws in it",
       "at": {
         "turn": 3,
         "phase": "MAIN1"
@@ -25,7 +25,7 @@
             {
               "seat": 0,
               "zone": "hand",
-              "count": 1
+              "count": 2
             }
           ]
         },
@@ -55,7 +55,7 @@
         {
           "seat": 0,
           "zone": "hand",
-          "count": 2
+          "count": 3
         },
         {
           "seat": 0,

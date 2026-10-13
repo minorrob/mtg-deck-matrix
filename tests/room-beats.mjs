@@ -99,6 +99,20 @@ async function walk(room, {turns, hook, pick} = {}) {
     "their hand waits for the click; the click draws one card from the library, and priority follows in the draw step");
 }
 
+/* 2a. THE HOST'S HOUSE RULE (game/room/table.mjs): the first draw's skip turned off, the room plays it -- the person who goes
+   first has a draw step on turn 1 and is asked to draw in it -- keeps it with the match, and replays to the same game. */
+{
+  const storage = memoryStorage();
+  const room = await startRoom({storage, matchId: "beat1h", cards, seed: "beat-seed-1", pod: {seats: seats(), drawBeat: true, skipFirstDraw: false}});
+  const asked = [];
+  await walk(room, {turns: 2, hook: (view) => {if (view.decision.kind === "draw") asked.push({turn: view.state.turn, seat: view.seat, active: view.state.turnPlayerId, phase: view.state.phase});}});
+  eq(asked.map((x) => x.turn), [1, 2], "with the skip turned off, the first player is asked to draw on turn 1 too, then the second on turn 2");
+  ok(asked.every((x) => x.seat === x.active && x.phase === "DRAW"), "each in their own draw step");
+  eq((await createMatchStore(storage, "beat1h").loadMatch()).pod.skipFirstDraw, false, "the match keeps the house rule with its pod");
+  const proof = await replayMatch({storage, matchId: "beat1h", cards});
+  ok(proof.same && proof.tape > 0, `and replays from its seed and tape to the same game (${proof.tape} tape entries)`);
+}
+
 /* 3. A STEP WITH NOTHING TO DO PASSES ITSELF, and the draw beat with it. Lands only: after the land drop, nothing. */
 {
   const storage = memoryStorage();
@@ -126,8 +140,8 @@ async function walk(room, {turns, hook, pick} = {}) {
     ok(old.length > 0 && !old.includes("END_OF_TURN"), `a game made before endAsks is not asked at its end steps (${[...new Set(old)].join(", ")})`);
   }
   const lines = room.history.filter((l) => l.mark === "quiet");
-  ok(room.history.some((l) => l.turn === 1 && l.mark === "quiet" && l.text === "Upkeep, Draw step: nothing to do"),
-    `the first turn's empty upkeep and skipped draw say so in the history, in one line (${lines.filter((l) => l.turn === 1).map((l) => l.text).join(" | ")})`);
+  ok(room.history.some((l) => l.turn === 1 && l.mark === "quiet" && l.text === "Upkeep: nothing to do") && !room.history.some((l) => l.turn === 1 && /Draw step/.test(l.text)),
+    `the first turn's empty upkeep says so in the history, and there is no draw step to speak of: the first player of a two-player game has none on turn 1 (CR 103.8a) (${lines.filter((l) => l.turn === 1).map((l) => l.text).join(" | ")})`);
   ok(lines.some((l) => l.turn === 1 && l.text === "Beginning of combat, Declare attackers, End of combat, Main 2: nothing to do"), `and the quiet steps after the land drop, in one line of their own, the end step not among them (${lines.filter((l) => l.turn === 1).map((l) => l.text).join(" | ")})`);
   ok(!lines.some((l) => /^Draw step/.test(l.text) && l.turn > 1), "a draw step where someone drew is not called empty");
 
