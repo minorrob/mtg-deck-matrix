@@ -23,6 +23,21 @@ other lane answers in the last column.
 | 1 | Engine | The board to show the monarch (CR 725): the view's `state.players[i]` now carries `monarch: true` for the monarch, public to every seat, and no key for anyone else; the history says "Maya became the monarch" | Ginger, Queen of Sweets and Tamiyo, Upriser Crowned make their controller the monarch; the monarch draws a card at their end step, and a creature's combat damage to them makes its controller the monarch -- a player should see who holds it | The engine lane built it (Train E, the `monarch` branch); `docs/ui-lane/gameplay-anchor.md` lists the field. For the UI lane to show |
 | 2 | Engine | A switch in the host's Table rules (`crankmagic-table.js`): *The player who goes first skips their first draw*, on unless the host turns it off. The table's view carries `rules.skipFirstDraw` (`true` by default); the host sends it with the other rules, `POST .../rules {skipFirstDraw: false}`, refused once a seat is ready like the others. It matters only at a two-seat table: in a game of three or four nobody skips (CR 103.8c), so the switch can be shown only there | Rob, 2026-10-12: "this can be toggled off in game setup by the lobby owner". CR 103.8a as a house rule: with it off, the first player of a two-player game has a draw step on turn 1 | The engine lane built the rule, the table's field and the room's pod (`claude/first-draw-step`; `docs/ui-lane/gameplay-anchor.md`). For the UI lane to show |
 
+## 2026-10-13: the lobby's buttons in reach at any window size (`claude/ui-lobby-seat-buttons`; Claude on Personal-HP)
+
+UI-lane files, at Rob's direct request; no UI-lane branch touched them. Rob, testing staging with an invited player: "their
+screen wasn't maximized, and the buttons aren't visible when the screen isn't big enough".
+- **What it was:** a seat's quadrant clips what it holds, and the 2x2 shrinks with the window. At 1024x768 her seat
+  showed Change deck, with Choose mat and Ready cut off below it.
+- **Built:** the cloud table keeps its 2x2 only while every seat's card, reading and controls fit inside what clips
+  them, and stacks the seats otherwise (`fitSeats` in `crankmagic-seat-art.js`). The seats keep clear of the rules
+  panel's 246px floor. A stacked seat is as tall as what it holds. The stacked table is no longer 18px wider than its
+  column.
+- **Proof:** `tests/table-lobby.mjs`, 97 checks: every control reached as a person can and hit-tested, guest and host,
+  at six window sizes. `breaks-lobby-reach.py`, 9 of 9 caught.
+- **For whoever holds the UI lane next (Codex Astra):** a Playwright click scrolls inside clipped boxes, which a person
+  cannot. Prove a control usable by hit-testing it (`inReach` in `tests/table-lobby.mjs`).
+
 ## 2026-10-12: the UI lane's pass 1 on the Play screen (Fable, a Claude session in a cloud container)
 
 Rob's brief of 2026-10-12: evaluate the Replit concept (`CrankMagic-Play`, with its `HANDOFF.md`) and the board, plan
