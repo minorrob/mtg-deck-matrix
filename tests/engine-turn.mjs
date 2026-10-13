@@ -87,10 +87,10 @@ function started(n = 4, cards = 60) {
   eq(STEPS.filter((s) => s.priority).length, PHASE_NAMES.length - 2,
     "and in every other step somebody does");
 
-  /* CR 506.5 and 510.4: three steps are conditional, and the condition is named rather than
+  /* CR 103.8a, 506.5 and 510.4: four steps are conditional, and the condition is named rather than
      hidden in a branch, so 1.4 fills it in one place. */
   eq(STEPS.filter((s) => s.when).map((s) => s.phase),
-    ["COMBAT_DECLARE_BLOCKERS", "COMBAT_FIRST_STRIKE_DAMAGE", "COMBAT_DAMAGE"],
+    ["DRAW", "COMBAT_DECLARE_BLOCKERS", "COMBAT_FIRST_STRIKE_DAMAGE", "COMBAT_DAMAGE"],
     "the steps that only happen under a condition say so");
 }
 
@@ -138,14 +138,35 @@ function started(n = 4, cards = 60) {
   eq(drawn.data.fields.to.zoneType, "Hand", "to the Hand, in the capitalized zone names the readers use");
   eq(drawn.data.fields.to.player.playerId, 0, "and it says whose, which is how the telemetry keeps it private");
 
-  const two = createState(pod(2));
-  beginGame(two);
-  for (let i = 0; i < 60; i += 1) addObject(two, {card: `L${i}`, owner: 0, controller: 0}, "library", 0);
+  /* In a two-player game the player who goes first skips the draw STEP of their first turn (CR 103.8a), not only its draw:
+     the step is never begun, so it is never announced, nobody receives priority in it, and nothing triggers at its
+     beginning -- their upkeep is followed by their precombat main phase. */
+  const two = started(2);
+  const turnOne = [];
+  while (two.turn === 1) {
+    turnOne.push(...advance(two));
+    ok(currentPhase(two) !== "DRAW" || two.turn !== 1, "the starting player is never in a draw step on turn one");
+  }
+  const begun = turnOne.filter((e) => e.kind === "GameEventTurnPhase" && e.data.turn === 1).map((e) => e.data.fields.phase);
+  eq(begun.slice(0, 2), ["UPKEEP", "MAIN1"], "in a two-player game the player who went first goes from their upkeep to their main phase");
+  ok(!begun.includes("DRAW"), "and their draw step is never announced");
+  eq(cardsIn(two, "hand", 0).length, 0, "so they draw nothing on turn one");
   until(two, atPhase("DRAW"));
-  eq(cardsIn(two, "hand", 0).length, 0, "in a two-player game the player who went first skips it");
-  for (let i = 0; i < 60; i += 1) addObject(two, {card: `R${i}`, owner: 1, controller: 1}, "library", 1);
-  until(two, (st) => st.activePlayer === 1 && currentPhase(st) === "DRAW");
-  eq(cardsIn(two, "hand", 1).length, 1, "the second player does not");
+  eq([two.turn, two.activePlayer], [2, 1], "the next draw step is the second player's, on turn two");
+  eq(cardsIn(two, "hand", 1).length, 1, "who has it, and draws");
+  eq(two.priorityPlayer, 1, "and receives priority in it");
+
+  /* THE HOST'S HOUSE RULE (game/room/table.mjs): the skip turned off, the starting player has that draw step too. Only a pod
+     that turns it off carries the key, so every game made before it hashes as it did. */
+  ok(!("skipFirstDraw" in createState(pod(2))) && !("skipFirstDraw" in createState({...pod(2), skipFirstDraw: true})),
+    "a pod that keeps CR 103.8a carries no key for it");
+  const house = createState({...pod(2), skipFirstDraw: false});
+  eq(house.skipFirstDraw, false, "a pod that turns it off says so in the state");
+  for (let seat = 0; seat < 2; seat += 1) for (let i = 0; i < 60; i += 1) addObject(house, {card: `H${seat}-${i}`, owner: seat, controller: seat}, "library", seat);
+  beginGame(house);
+  until(house, atPhase("DRAW"));
+  eq([house.turn, house.activePlayer], [1, 0], "with the skip turned off, the starting player's first turn has its draw step");
+  eq(cardsIn(house, "hand", 0).length, 1, "and they draw in it");
 }
 
 /* ---- drawing from an empty library is recorded, not thrown (CR 104.3c) ---- */

@@ -9,7 +9,7 @@
  * this turn, the first combat phase of the turn, and delirium -- four or more card types among cards in your graveyard.
  */
 import assert from "node:assert/strict";
-import {createState, addObject} from "../game/engine/state/index.mjs";
+import {createState, addObject, cardsIn} from "../game/engine/state/index.mjs";
 import {beginGame, advance, resolveAwaiting} from "../game/engine/rules/turn.mjs";
 import {passPriority} from "../game/engine/rules/priority.mjs";
 import {runEffects} from "../game/engine/script/effects/index.mjs";
@@ -65,6 +65,13 @@ const START = ["UNTAP", "UPKEEP", "DRAW"];
   add(s, ["beginning"]);
   const first = walk(s).slice(0, 8);
   eq(first, ["MAIN1", ...START, ...COMBAT, "COMBAT_BEGIN"], "a combat, then a beginning phase, both after MAIN1: the beginning phase (added last) comes first");
+  /* Rob went first in a two-player game, so his first turn had no draw step of its own (CR 103.8a); the added beginning
+     phase's draw step is not that one, and happens, its draw with it. */
+  const d = table(); beginGame(d); to(d, "MAIN1");
+  eq(cardsIn(d, "hand", 0).length, 0, "turn one, two players: Rob, first, had no draw step of his own (CR 103.8a)");
+  add(d, ["beginning"]);
+  to(d, "DRAW");
+  eq([d.turn, d.activePlayer, cardsIn(d, "hand", 0).length], [1, 0, 1], "a beginning phase added on that turn has its draw step, and he draws in it (CR 500.8)");
   const t = table(); beginGame(t); to(t, "MAIN1");
   add(t, ["combat", "main"]);
   to(t, "COMBAT_BEGIN");
