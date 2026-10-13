@@ -3191,6 +3191,28 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
 /* On a phone the seats stack, and a seat's content is laid over its sea, so a stacked seat has no height of
    its own: it takes one here, enough for the label bar, the commander's card and its controls. */
 @media(max-width:900px){.cm-cloud-table .cm-seat-q{min-height:230px}.cm-cloud-table .cm-table-center{max-height:none}}
+/* EVERY SEAT'S CONTROLS IN REACH, AT ANY WINDOW SIZE (Rob, 2026-10-13: "the buttons aren't visible when the screen isn't
+   big enough"). A quadrant clips what it holds, so in a window too small for the 2x2 table a seat's reading and buttons
+   ran out of its quarter and were cut off: a player invited to a table, in a window 1024 wide, saw Change deck and no
+   Ready. So:
+   - a seat keeps clear of the rules panel as the panel really is: half its width, its 246px floor included, and a margin;
+   - the table stacks its seats, one to a row and each as tall as what it holds, wherever the 2x2 cannot hold every seat's
+     card, reading and controls inside what clips them -- measured each time the table is drawn or the window changes
+     (crankmagic-seat-art.js, fitSeats) -- and always on a phone. */
+.cm-cloud-table .cm-q-br .cm-seat-figure,.cm-cloud-table .cm-q-tr .cm-seat-figure{right:max(24%,132px)}
+.cm-cloud-table .cm-q-bl .cm-seat-figure,.cm-cloud-table .cm-q-tl .cm-seat-figure{left:max(24%,132px)}
+.cm-cloud-table.is-stacked{grid-template-columns:minmax(0,1fr);grid-template-rows:none;aspect-ratio:auto;width:100%}
+/* Positioned and clipped: the gear stamp bleeds 18px past the panel's corner, and a static panel handed it to the table
+   to be placed against -- 62% of the table wide, 18px past its right edge -- so the stacked table was wider than its
+   column, a hidden sideways scroll that focusing a button could set off. */
+.cm-cloud-table.is-stacked .cm-table-center{position:relative;inset:auto;transform:none;width:auto;min-width:0;max-height:none;overflow:clip;order:-1;box-shadow:none}
+.cm-cloud-table.is-stacked .cm-seat-q{min-height:230px}
+.cm-cloud-table.is-stacked .cm-seat-q .cm-seat-body{padding:0;height:auto}
+.cm-cloud-table.is-stacked .cm-seat-q .cm-lobby-seat>header{left:0;right:0}
+/* The figure in the flow, so the seat grows with its reading and controls rather than cutting them off; the card a
+   fixed height, since a share of a height that now follows the content would be a share of nothing. */
+.cm-cloud-table.is-stacked .cm-seat-q .cm-seat-figure{position:relative;inset:auto;margin:46px 12px 10px}
+.cm-cloud-table.is-stacked .cm-seat-q .cm-seat-card{height:150px;max-height:none}
 /* THE CLOUD BOARD (M5, crankmagic-board.js; the handoff's Focus view). The strip is one 48px line; the pane
    holds every seat's tile; the mat is felt with its own ink in both themes, as the poster pair is, because the
    cards on it do not flip; its zones are 1px frames at about 55% white with small italic names. Cards are sized

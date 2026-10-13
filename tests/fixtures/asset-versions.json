@@ -154,8 +154,8 @@
       "sha": "5dd742bd996b24a6"
     },
     "crankmagic-app.js": {
-      "version": 481,
-      "sha": "973538f5c38ecbfa"
+      "version": 482,
+      "sha": "9a4e3612ff52e0dd"
     },
     "crankmagic-assets.js": {
       "version": 35,
@@ -306,8 +306,8 @@
       "sha": "4e08c75b8d320b77"
     },
     "crankmagic-seat-art.js": {
-      "version": 1,
-      "sha": "006f5c23f82da7aa"
+      "version": 2,
+      "sha": "430a2293c29f4df7"
     },
     "crankmagic-settings.js": {
       "version": 10,
@@ -322,8 +322,8 @@
       "sha": "07440b83396bb9e2"
     },
     "crankmagic-sw.js": {
-      "version": 465,
-      "sha": "8fd339d158cfc7db"
+      "version": 466,
+      "sha": "f73676253f46588e"
     },
     "crankmagic-table.js": {
       "version": 27,
@@ -346,8 +346,8 @@
       "sha": "ca657a27caa9093d"
     },
     "crankmagic.css": {
-      "version": 288,
-      "sha": "a5e01e83df610a7b"
+      "version": 289,
+      "sha": "c2eefa1815a66dd9"
     },
     "custom-model.js": {
       "version": 3,
