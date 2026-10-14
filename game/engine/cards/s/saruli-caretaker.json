@@ -1,0 +1,55 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Saruli Caretaker",
+    "oracleId": "5e2736e6-b812-43a4-bd79-6f6095344fe1",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dryad"
+    ],
+    "manaCost": "{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 0,
+    "toughness": 3
+  },
+  "oracleText": "Defender\n{T}, Tap an untapped creature you control: Add one mana of any color.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Defender",
+      "keyword": "defender"
+    },
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "tapCreature",
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyColor": true
+        }
+      ],
+      "text": "{T}, Tap an untapped creature you control: Add one mana of any color."
+    }
+  ]
+}

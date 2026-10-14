@@ -1,0 +1,103 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Theorix Charm",
+    "oracleId": "cf527bbd-e898-4aa9-909d-daec2f4b62ad",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{U}{B}",
+    "colors": [
+      "B",
+      "U"
+    ],
+    "colorIdentity": [
+      "B",
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one —\n• Counter target noncreature spell unless its controller pays {2}.\n• Target creature gets -2/-2 until end of turn.\n• Mill three cards, then draw a card. (To mill three cards, put the top three cards of your library into your graveyard.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one —\n• Counter target noncreature spell unless its controller pays {2}.\n• Target creature gets -2/-2 until end of turn.\n• Mill three cards, then draw a card. (To mill three cards, put the top three cards of your library into your graveyard.)",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Counter target noncreature spell unless its controller pays {2}.",
+              "targets": [
+                {
+                  "what": "spell",
+                  "nonTypes": [
+                    "Creature"
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "unlessPays",
+                  "who": {
+                    "controllerOf": {
+                      "target": 0
+                    }
+                  },
+                  "amount": 2,
+                  "effects": [
+                    {
+                      "effect": "counterSpell",
+                      "spells": {
+                        "target": 0
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "text": "Target creature gets -2/-2 until end of turn.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "pump",
+                  "targets": {
+                    "target": 0
+                  },
+                  "power": -2,
+                  "toughness": -2
+                }
+              ]
+            },
+            {
+              "text": "Mill three cards, then draw a card.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "mill",
+                  "count": 3
+                },
+                {
+                  "effect": "draw",
+                  "count": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

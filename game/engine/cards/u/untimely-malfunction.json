@@ -1,0 +1,105 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Untimely Malfunction",
+    "oracleId": "2c49d24a-98a4-43c2-bb59-1ef13d4214c2",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one —\n• Destroy target artifact.\n• Change the target of target spell or ability with a single target.\n• One or two target creatures can't block this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one —\n• Destroy target artifact.\n• Change the target of target spell or ability with a single target.\n• One or two target creatures can't block this turn.",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Destroy target artifact.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Artifact"
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "destroy",
+                  "targets": {
+                    "target": 0
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Change the target of target spell or ability with a single target.",
+              "targets": [
+                {
+                  "anyOf": [
+                    {
+                      "what": "spell",
+                      "singleTarget": true
+                    },
+                    {
+                      "what": "ability",
+                      "singleTarget": true
+                    }
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "changeTargets",
+                  "stack": {
+                    "target": 0
+                  }
+                }
+              ]
+            },
+            {
+              "text": "One or two target creatures can't block this turn.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ],
+                  "count": {
+                    "min": 1,
+                    "max": 2
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "effectUntil",
+                  "targets": {
+                    "target": 0
+                  },
+                  "rule": "cant-block",
+                  "until": "end-of-turn"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

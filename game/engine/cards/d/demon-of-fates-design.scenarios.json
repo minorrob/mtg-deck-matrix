@@ -1,0 +1,324 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Demon of Fate's Design",
+  "fixtures": {
+    "Charm": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Shrine": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{2}{W}",
+      "colors": [
+        "W"
+      ]
+    },
+    "Cub": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "power": 2,
+      "toughness": 2
+    },
+    "Flash Shrine": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{2}{W}",
+      "colors": [
+        "W"
+      ],
+      "keywords": [
+        "Flash"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "The Shrine for 3 life rather than {2}{W}; a second enchantment then costs its mana, and he has none",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Demon of Fate's Design"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Shrine",
+            "Charm"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "cast": "Shrine"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 37
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Demon of Fate's Design",
+            "Shrine"
+          ]
+        },
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Charm"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Paid for with mana, the life cast is still his: the Charm for a Wastes, then the Shrine for 3 life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Demon of Fate's Design",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Shrine",
+            "Charm"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Charm"
+              },
+              "count": 2
+            }
+          ]
+        },
+        {
+          "cast": "Charm"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "life": 40
+            }
+          ]
+        },
+        {
+          "cast": "Shrine"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 37
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Demon of Fate's Design",
+            "Wastes",
+            "Charm",
+            "Shrine"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Not a creature spell, and not on Maya's turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Demon of Fate's Design"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Cub",
+            "Flash Shrine"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Cub"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "pass": 1
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Flash Shrine",
+            "seat": 0
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "{2}{B}, the Shrine sacrificed: +3/+0 until end of turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Demon of Fate's Design",
+            "Shrine",
+            "Swamp",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Demon of Fate's Design",
+          "sacrifice": "Shrine"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Demon of Fate's Design",
+                "power": 9,
+                "toughness": 6
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Demon of Fate's Design",
+            "power": 6,
+            "toughness": 6
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Shrine"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Another enchantment: the Demon, an enchantment itself, is no sacrifice for it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Demon of Fate's Design",
+            "Swamp",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Demon of Fate's Design"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

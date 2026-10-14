@@ -1,0 +1,106 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gandalf, Goblins' Bane // Flameshape",
+    "oracleId": "f48f2a9b-4ba5-4984-8180-3950889bba65",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Avatar",
+      "Wizard"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Whenever you cast a noncreature spell, Gandalf gets +1/+1 until end of turn and deals 1 damage to each opponent.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a noncreature spell, Gandalf gets +1/+1 until end of turn and deals 1 damage to each opponent.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "filter": {
+          "nonTypes": [
+            "Creature"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 1,
+          "toughness": 1
+        },
+        {
+          "effect": "dealDamage",
+          "amount": 1,
+          "who": "opponent"
+        }
+      ]
+    }
+  ],
+  "adventure": {
+    "identity": {
+      "name": "Flameshape",
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [
+        "Adventure"
+      ],
+      "manaCost": "{1}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Look at the top two cards of your library and exile them face down. For as long as they remain exiled, you may play them if you control a Wizard.",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Look at the top two cards of your library and exile them face down. For as long as they remain exiled, you may play them if you control a Wizard.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "moveZone",
+            "fromTop": 2,
+            "to": "exile",
+            "faceDown": true,
+            "look": true,
+            "remember": true
+          },
+          {
+            "effect": "mayPlay",
+            "targets": "remembered",
+            "zone": "exile",
+            "until": "ever",
+            "onlyIf": {
+              "present": {
+                "what": "permanent",
+                "controller": "you",
+                "subtypes": [
+                  "Wizard"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

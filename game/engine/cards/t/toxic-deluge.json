@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Toxic Deluge",
+    "oracleId": "afaef788-34d1-460b-b884-9d7ae6ddeb18",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "As an additional cost to cast this spell, pay X life.\nAll creatures get -X/-X until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "As an additional cost to cast this spell, pay X life.\nAll creatures get -X/-X until end of turn.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          },
+          "power": {
+            "x": true,
+            "times": -1
+          },
+          "toughness": {
+            "x": true,
+            "times": -1
+          },
+          "until": "end-of-turn"
+        }
+      ],
+      "additionalCost": [
+        {
+          "atom": "payLife",
+          "amount": "X"
+        }
+      ]
+    }
+  ]
+}

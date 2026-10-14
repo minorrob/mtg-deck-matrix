@@ -1,0 +1,384 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Unlicensed Hearse",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Their Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Two of Maya's cards: one offer for each graveyard; her Bear and Mountain exiled, and the Hearse a 2/2",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Unlicensed Hearse"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Island"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Their Bear",
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Unlicensed Hearse"
+              },
+              "count": 2,
+              "targets": [
+                [
+                  "up to two targets from Rob's graveyard"
+                ],
+                [
+                  "up to two targets from Maya's graveyard"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Unlicensed Hearse",
+          "targets": [
+            [
+              {
+                "card": "Their Bear"
+              },
+              {
+                "card": "Mountain"
+              }
+            ]
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": []
+        },
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": [
+            "Their Bear",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Unlicensed Hearse",
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "The question is one graveyard's cards: Rob's, and not Maya's",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Unlicensed Hearse"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Island"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Their Bear",
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Unlicensed Hearse",
+          "targets": [
+            [
+              {
+                "card": "Bear"
+              }
+            ]
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Unlicensed Hearse",
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Every graveyard empty: up to two is none, and it still taps",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Unlicensed Hearse"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Unlicensed Hearse"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "activate": "Unlicensed Hearse",
+          "targets": [
+            []
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Unlicensed Hearse"
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "name": "Cards exiled with it count however many times it is used: crewed by the Ogre, a 3/3 after three, and it attacks for 3",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Unlicensed Hearse",
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Their Bear",
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Unlicensed Hearse",
+          "targets": [
+            [
+              {
+                "card": "Their Bear"
+              },
+              {
+                "card": "Mountain"
+              }
+            ]
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Unlicensed Hearse",
+          "targets": [
+            [
+              {
+                "card": "Bear"
+              }
+            ]
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Unlicensed Hearse",
+                "power": 3,
+                "toughness": 3
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Unlicensed Hearse",
+          "targets": []
+        },
+        {
+          "resolve": true
+        },
+        {
+          "attack": [
+            "Unlicensed Hearse"
+          ]
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": [
+            "Their Bear",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 1,
+          "life": 37
+        },
+        {
+          "seat": 0,
+          "tapped": "Ogre"
+        }
+      ]
+    }
+  ]
+}

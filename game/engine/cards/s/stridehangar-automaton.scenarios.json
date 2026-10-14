@@ -1,0 +1,423 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Stridehangar Automaton",
+  "fixtures": {
+    "Treasure Maker": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{C}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Create a Treasure token.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "createToken",
+            "count": 1,
+            "token": {
+              "predefined": "Treasure"
+            }
+          }
+        ]
+      }
+    },
+    "Soldier Maker": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{C}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Create a 1/1 white Soldier creature token.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "createToken",
+            "count": 1,
+            "token": {
+              "name": "Soldier",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Soldier"
+              ],
+              "colors": [
+                "W"
+              ],
+              "power": 1,
+              "toughness": 1
+            }
+          }
+        ]
+      }
+    },
+    "Thopter Maker": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{C}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Create a 1/1 colorless Thopter artifact creature token with flying.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "createToken",
+            "count": 1,
+            "token": {
+              "name": "Thopter",
+              "types": [
+                "Artifact",
+                "Creature"
+              ],
+              "subtypes": [
+                "Thopter"
+              ],
+              "colors": [],
+              "power": 1,
+              "toughness": 1,
+              "keywords": [
+                "Flying"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "Quick Treasure": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Create a Treasure token.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "createToken",
+            "count": 1,
+            "token": {
+              "predefined": "Treasure"
+            }
+          }
+        ]
+      }
+    },
+    "Thopter Pal": {
+      "types": [
+        "Artifact",
+        "Creature"
+      ],
+      "subtypes": [
+        "Thopter"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "power": 1,
+      "toughness": 1,
+      "keywords": [
+        "Flying"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A Treasure: the Treasure and a 1/1 flying Thopter -- 2/2 with the Automaton",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Stridehangar Automaton",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Treasure Maker"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Treasure Maker"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Stridehangar Automaton",
+            "Treasure",
+            "Thopter",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Thopter",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Thopter",
+            "has": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "A Soldier is no artifact token: no Thopter",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Stridehangar Automaton",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Soldier Maker"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Soldier Maker"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Stridehangar Automaton",
+            "Soldier",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A Thopter token: it and another",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Stridehangar Automaton",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Thopter Maker"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Thopter Maker"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Stridehangar Automaton",
+            "Thopter",
+            "Thopter",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Beside Anointed Procession Rob chooses (CR 616.1; its ruling): the Automaton first -- two Treasures and two Thopters",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Stridehangar Automaton",
+            "Anointed Procession",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Treasure Maker"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Treasure Maker"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Anointed Procession first: 3 tokens",
+                  "Stridehangar Automaton first: 4 tokens"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Stridehangar Automaton first: 4 tokens"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Stridehangar Automaton",
+            "Anointed Procession",
+            "Treasure",
+            "Treasure",
+            "Thopter",
+            "Thopter",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Maya's Treasure is hers alone, and her Thopter isn't Rob's to pump",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Stridehangar Automaton"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Thopter Pal"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Quick Treasure"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Quick Treasure",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Treasure",
+            "Thopter Pal",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Thopter Pal",
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "A Thopter of his that is no token gets +1/+1 too",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Stridehangar Automaton",
+            "Thopter Pal"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Thopter Pal",
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    }
+  ]
+}

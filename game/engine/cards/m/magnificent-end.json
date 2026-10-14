@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Magnificent End",
+    "oracleId": "82bdf9cb-61fe-4eaf-8762-c32002403d96",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This spell costs {3} less to cast if it targets a tapped creature.\nMagnificent End deals 5 damage to target creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This spell costs {3} less to cast if it targets a tapped creature.",
+      "rule": "this-costs-less",
+      "affects": {
+        "self": true
+      },
+      "amount": 3,
+      "targeting": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "tapped": true
+      }
+    },
+    {
+      "kind": "spell",
+      "text": "Magnificent End deals 5 damage to target creature.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 5,
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

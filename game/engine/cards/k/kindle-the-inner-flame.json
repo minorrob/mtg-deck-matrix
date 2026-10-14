@@ -1,0 +1,90 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kindle the Inner Flame",
+    "oracleId": "c7ca6371-73bb-4717-a148-0804b8f4c1e6",
+    "types": [
+      "Kindred",
+      "Sorcery"
+    ],
+    "subtypes": [
+      "Elemental"
+    ],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Create a token that's a copy of target creature you control, except it has haste and \"At the beginning of the end step, sacrifice this token.\"\nFlashback—{1}{R}, Behold three Elementals. (You may cast this card from your graveyard for its flashback cost. Then exile it. To behold an Elemental, choose an Elemental you control or reveal an Elemental card from your hand.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Create a token that's a copy of target creature you control, except it has haste and \"At the beginning of the end step, sacrifice this token.\"",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "copyPermanent",
+          "targets": {
+            "target": 0
+          },
+          "except": {
+            "addKeywords": [
+              "Haste"
+            ],
+            "addAbilities": [
+              {
+                "kind": "triggered",
+                "text": "At the beginning of the end step, sacrifice this token.",
+                "trigger": {
+                  "on": "end step",
+                  "yours": false
+                },
+                "effects": [
+                  {
+                    "effect": "moveZone",
+                    "targets": "self",
+                    "sacrifice": true
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Flashback—{1}{R}, Behold three Elementals. (You may cast this card from your graveyard for its flashback cost. Then exile it. To behold an Elemental, choose an Elemental you control or reveal an Elemental card from your hand.)",
+      "keyword": "flashback",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{R}"
+        },
+        {
+          "atom": "behold",
+          "count": 3,
+          "selector": {
+            "subtypes": [
+              "Elemental"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

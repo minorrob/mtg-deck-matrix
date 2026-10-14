@@ -91,6 +91,13 @@ export function alterAttribute(state, params, context) {
       if (n !== null) object.monstrosityX = n;
       events.push(changed(state, id, "monstrous", true));
     }
+    /* SOLVED (CR 719.3b): a Case's designation, kept until it leaves the battlefield -- given once, never taken. "To solve"
+       (719.3a) gives it at the beginning of its controller's end step (Case of the Locked Hothouse). */
+    if (params.attribute === "solved") {
+      if (object.solved === true) continue;
+      object.solved = true;
+      events.push(changed(state, id, "solved", true));
+    }
     if (params.attribute === "prepared") {
       if (params.value === false) unprepare(state, id, events);
       else prepare(state, id, events);

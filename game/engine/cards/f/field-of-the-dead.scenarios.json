@@ -1,0 +1,357 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Field of the Dead",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "The seventh name: Rob plays a Wastes beside the Field and five basics -- a 2/2 black Zombie",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Field of the Dead",
+            "Plains",
+            "Island",
+            "Swamp",
+            "Mountain",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Field of the Dead",
+            "Plains",
+            "Island",
+            "Swamp",
+            "Mountain",
+            "Forest",
+            "Wastes",
+            "Zombie"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Zombie",
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "Its own arrival is a land Rob controls entering: played as the seventh name it enters tapped and makes a Zombie",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Island",
+            "Swamp",
+            "Mountain",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Field of the Dead"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Field of the Dead"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Field of the Dead"
+            },
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Field of the Dead",
+            "Plains",
+            "Island",
+            "Swamp",
+            "Mountain",
+            "Forest",
+            "Wastes",
+            "Zombie"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "{T}: {C}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Field of the Dead"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Field of the Dead"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Seven lands but six names: a second Forest makes no Zombie (the \"if\" is false, so it never triggers)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Field of the Dead",
+            "Plains",
+            "Island",
+            "Swamp",
+            "Mountain",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Forest"
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "count": 7
+        }
+      ]
+    },
+    {
+      "name": "Asked again as it resolves (CR 603.4): Rob sacrifices Marsh Flats in response, six names are left, and no Zombie",
+      "library": [
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Field of the Dead",
+            "Plains",
+            "Island",
+            "Swamp",
+            "Mountain",
+            "Marsh Flats"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "activate": "Marsh Flats"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": []
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Field of the Dead",
+            "Plains",
+            "Island",
+            "Swamp",
+            "Mountain",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Maya's land is not Rob's: her Forest entering makes him nothing, though he has seven names",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Field of the Dead",
+            "Plains",
+            "Island",
+            "Swamp",
+            "Mountain",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "play": "Forest",
+          "seat": 1
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "count": 7
+        }
+      ]
+    }
+  ]
+}

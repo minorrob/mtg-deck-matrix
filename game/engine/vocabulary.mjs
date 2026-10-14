@@ -62,7 +62,9 @@ export const PRIMITIVES = Object.freeze({
   zones: Object.freeze([
     "moveZone", "moveZoneAll", "draw", "discard", "mill", "shuffle", "dig", "surveil", "scry",
     "peekAndReveal", "sacrifice", "sacrificeAll", "destroy", "destroyAll", "exileUntil",
-    "returnToHand", "play", "mayPlay", "discover", "digUntil", "manifest",
+    "returnToHand", "play", "mayPlay", "discover", "digUntil", "manifest", "explore",
+    /* Wave 4b: the top of a library looked at and put back in any order (Forge's RearrangeTopOfLibrary; Ponder). */
+    "rearrangeTop",
   ]),
   mana: Object.freeze([
     "addMana", "addManaReflected", "tap", "untap", "untapAll", "costReduction", "alternativeCost",
@@ -72,19 +74,21 @@ export const PRIMITIVES = Object.freeze({
   ]),
   counters: Object.freeze([
     "putCounter", "putCounterAll", "removeCounter", "proliferate", "multiplyCounters",
-    "moveCounters", "replaceCounters", "amass", "poison", "winGame", "goad", "empowerJace",
+    "moveCounters", "replaceCounters", "amass", "poison", "winGame", "loseGame", "goad", "empowerJace", "becomeMonarch",
+    /* Wave 4c: "roll a d20" (CR 706; Forge's RollDice; Ancient Copper Dragon), its result counted by what follows. */
+    "rollDie",
   ]),
   permanents: Object.freeze([
     "createToken", "copyPermanent", "becomeCopy", "earthbend", "populate", "unlessPays", "animate", "animateAll", "attach", "gainControl", "setState",
-    "phaseOut",
+    "phaseOut", "exchangeControl", "incubate",
   ]),
   modifiers: Object.freeze([
     "pump", "pumpAll", "alterAttribute", "effectUntil", "grantKeyword", "regenerate",
   ]),
   flow: Object.freeze([
     "modal", "sequence", "repeatFor", "branch", "delayedTrigger", "immediateTrigger", "counterSpell",
-    "copySpell", "addTurn", "chooseCard", "chooseType", "genericChoice", "twoPiles", "connive",
-    "investigate", "cleanup", "addPhase", "changeTargets",
+    "copySpell", "addTurn", "chooseCard", "chooseType", "chooseColor", "genericChoice", "twoPiles", "connive",
+    "investigate", "cleanup", "addPhase", "changeTargets", "chooseSource", "vote",
   ]),
 });
 
@@ -111,6 +115,16 @@ export const TRIGGER_EVENTS = Object.freeze([
   "loyalty activated",
   /* "Whenever you scry or surveil" (CR 701.22a, 701.25a). */
   "scried",
+  /* "Whenever you proliferate" (CR 701.34a; Train C, w2c-hands-triggers). */
+  "proliferated",
+  /* "Whenever you commit a crime" (CR 700.13; Train C, w2c-hands-triggers). */
+  "crime committed",
+  /* A state trigger, "when this artifact has twenty or more charge counters on it" (CR 603.8; Train C, w2c-hands-triggers). */
+  "state",
+  /* "Whenever this creature transforms into Ashling, Rimebound" (CR 701.27e; Train C, w2c-hands-triggers). */
+  "transformed",
+  /* "When this Class becomes level 2" (CR 716.2a; Caretaker's Talent, Wizard Class; wave 4c). */
+  "becomes level",
 ]);
 
 /** The cost atoms of §12.2. The two symbolic ones are named; the rest are structural. */
@@ -151,7 +165,9 @@ export const TIER0_KEYWORDS = Object.freeze(TIER0_ALL.filter((word) => !TIER0_CO
 
 /* Keyword abilities the app already recognizes that tier 0 did not carry. Tier 0 was measured on
    seven decks, so this is growth rather than a correction. */
-const BEYOND_TIER0 = ["shroud", "ward",
+const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
+  /* Train C phase 2, p6-combat: islandwalk (CR 702.14; Meandering Towershell), forestwalk's rule for Islands. */
+  "islandwalk",
   /* M4 phase 3, batch 54: an ability of the card in hand (cards/index.mjs). Batch 58: station (CR 702.184). */
   "ninjutsu", "station",
   /* Batch 60: a Saga's reminder line, the lore counter it enters with (CR 714.3a). */
@@ -175,7 +191,55 @@ const BEYOND_TIER0 = ["shroud", "ward",
   "choose a background",
   /* Paradigm (CR 702.192; Germination Practicum): a spell exiled as it resolves, cast again as a copy each precombat main
      phase after the first time one of its name resolves (rules/stack.mjs). */
-  "paradigm"];
+  "paradigm",
+  /* Train C: spectacle (CR 702.137; Light Up the Stage), an alternative cost once an opponent lost life this turn. */
+  "spectacle",
+  /* Train C, phase 2 (p5-keywords): split second (CR 702.61; keywords/timing.mjs), riot (CR 702.136). */
+  "split second", "riot",
+  /* Surge (CR 702.117) and freerunning (CR 702.173): alternative costs (keywords/timing.mjs). */
+  "surge", "freerunning",
+  /* Embalm (CR 702.128): a token copy from the graveyard (cards/index.mjs). */
+  "embalm",
+  /* Tiered (CR 702.183): each mode its own additional cost (keywords/timing.mjs). */
+  "tiered",
+  /* Suspend (CR 702.62), from the hand (keywords/timing.mjs). */
+  "suspend",
+  /* Partner with [name] (CR 702.124j): a deck rule and a trigger as it enters (cards/index.mjs). */
+  "partner with",
+  /* Firebending N (CR 702.189): an attack trigger, its mana kept until end of combat (cards/index.mjs, rules/turn.mjs). */
+  "firebending",
+  /* Compleated (CR 702.150): fewer loyalty counters for Phyrexian mana paid with life (rules/replacement.mjs). */
+  "compleated",
+  /* Disguise (CR 702.168): cast face down for {3}, turned face up for its cost (rules/actions.mjs). */
+  "disguise",
+  /* Morph (CR 702.37): the same without ward (rules/actions.mjs, state/index.mjs). */
+  "morph",
+  /* Train E: warp (CR 702.185), an alternative cost from the hand, exiled at the next end step and cast again later; and sneak
+     (CR 702.190), one in its caster's declare blockers step, entering tapped and attacking (cards/index.mjs, rules/actions.mjs,
+     rules/stack.mjs). */
+  "warp", "sneak",
+  /* Train E, wave 2: replicate (CR 702.56a; Lose Focus), an additional cost paid any number of times and a cast trigger
+     copying the spell for each (cards/index.mjs, rules/actions.mjs). */
+  "replicate",
+  /* Wave 4a: shadow (CR 702.28), a keyword counter's (Minas Morgul, Dark Fortress; CR 122.1b; keywords/combat.mjs). */
+  "shadow",
+  /* Wave 4c: affinity (CR 702.41), the spell's own cost reduction for each of a kind of permanent its caster controls
+     (cards/index.mjs). */
+  "affinity",
+  /* Wave 4b: exalted (CR 702.83) and extort (CR 702.101), triggered abilities; eternalize (CR 702.129), embalm's 4/4 black
+     copy; gift (CR 702.174), an optional additional cost choosing an opponent (cards/index.mjs, rules/actions.mjs). */
+  "exalted", "extort", "eternalize", "gift",
+  /* Wave 4c: offspring (CR 702.175), an optional additional cost and a 1/1 token copy as it enters (cards/index.mjs,
+     rules/actions.mjs). */
+  "offspring",
+  /* Wave 4c, k2: fabricate (CR 702.123a; Marionette Apprentice), a triggered ability -- +1/+1 counters or Servo tokens, its
+     controller's choice as it resolves (cards/index.mjs). */
+  "fabricate",
+  /* Wave 4c, k2: delve (CR 702.66a; Treasure Cruise, Dig Through Time), cards of the graveyard exiled to pay generic mana as a
+     spell is cast (rules/actions.mjs). */
+  "delve",
+  /* And dredge (CR 702.52a; Life from the Loam), a draw replaced from the graveyard, its player's choice (script/effects/zones.mjs). */
+  "dredge"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

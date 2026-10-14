@@ -44,6 +44,10 @@ const TEAM = "e2e.cloudflareaccess.com", AUD = "e2e-audience", EMAIL = "rob@e2e.
 let checks = 0;
 const ok = (value, message) => {assert.ok(value, message); checks++; console.log(`  ok  ${message}`);};
 const eq = (a, b, message) => {assert.deepEqual(a, b, message); checks++; console.log(`  ok  ${message}`);};
+/* A real card the table has no definition of yet, the most-played first (data/engine/top-cards.json), found as the walk
+   runs: each wave of definitions makes another card the example (it was Cyclonic Rift until wave 4b defined it). */
+const [none] = JSON.parse(readFileSync(new URL("../../data/engine/top-cards.json", import.meta.url), "utf8")).cards
+  .map((c) => c.name).filter((name) => !tableCards(name));
 
 /* The build, with test Access values, in site/ with its configuration beside it (see cloud-e2e). */
 const dir = mkdtempSync(path.join(os.tmpdir(), "crankmagic-play-e2e-")), site = path.join(dir, "site");
@@ -120,6 +124,14 @@ try {
     const r = await fetch(u, {method: m, cache: "no-store", ...(m === "GET" ? {} : {headers: {"content-type": "application/json", "x-crankmagic": "play"}, body: JSON.stringify(b || {})})});
     return {status: r.status, json: await r.json().catch(() => null)};
   }, [method, p, body]);
+  /* A table read until `pred` holds. A reply with no table -- a refusal, such as the person's rate limit (120 a minute,
+     tools/release-pages.mjs) met by a long poll on a slow machine -- is waited out like any other not-yet, and the last
+     one is named if the wait runs out, so a failure says what the table answered. */
+  const tableUntil = async (what, u, pred, timeout) => {
+    let last = null;
+    try {return await until(what, async () => {last = await api("GET", u); const t = last.json?.table; return t && pred(t) ? t : null;}, timeout);}
+    catch (error) {throw Error(`${error.message}; the table last answered ${last ? `${last.status} ${JSON.stringify(last.json).slice(0, 200)}` : "nothing"}`);}
+  };
 
   /* 1. The Play tab. */
   await page.goto(`${BASE}/index.html#game`);
@@ -134,11 +146,11 @@ try {
   const made = await api("POST", "/api/tables", {hostName: "Rob", seats: [{kind: "ai", name: "Bot"}]});
   eq([made.status, made.json.table.playtest, made.json.table.youAreHost], [201, true, true], "Rob makes a table with an AI seat, and on staging it is a playtest table");
   const id = made.json.table.tableId, url = `/api/tables/${id}`;
-  const refused = await api("POST", `${url}/deck`, {seatId: 0, deck: {name: "Quintorius", commander: ["Quintorius, Loremaster"], cards: ["Cyclonic Rift", "Forest"]}});
-  eq([refused.status, refused.json.unsupported], [422, ["Cyclonic Rift", "Quintorius, Loremaster"]], "a deck's cards the engine has no definition of yet are refused by name");
+  const refused = await api("POST", `${url}/deck`, {seatId: 0, deck: {name: "Quintorius", commander: ["Quintorius, Loremaster"], cards: [none, "Forest"]}});
+  eq([refused.status, refused.json.unsupported], [422, [none]], "only undefined cards are refused by name; Quintorius is supported");
   /* M5 (the plan review's C4): the table plays the engine's own definitions -- a deck wholly of them takes a seat, and
      the table says which names it does not know. */
-  eq((await api("POST", `${url}/known`, {names: ["Krenko, Mob Boss", "Lightning Bolt", "Cyclonic Rift"]})).json.unknown, ["Cyclonic Rift"], "asked which names it cannot play, the table names only the undefined one");
+  eq((await api("POST", `${url}/known`, {names: ["Krenko, Mob Boss", "Lightning Bolt", none]})).json.unknown, [none], "asked which names it cannot play, the table names only the undefined one");
   const whole = await api("POST", `${url}/deck`, {seatId: 0, deck: {name: "Goblins", commander: ["Krenko, Mob Boss"], cards: [...Array(40).fill("Mountain"), "Lightning Bolt", "Blasphemous Act", "Sol Ring"]}});
   eq(whole.status, 200, "a deck wholly of the engine's own definitions takes a seat at the playtest table");
   /* The lobby, drawn from the release's own modules (Rob, 2026-09-29: it opened on "reading 'statusPill'"). */
@@ -164,7 +176,7 @@ try {
   eq((await api("POST", `${url}/start`)).status, 200, "Rob starts the countdown");
 
   /* 3. The object's alarm ends it; the board opens over the socket. */
-  const playing = await until("the countdown to end on the object's alarm", async () => {const t = (await api("GET", url)).json.table; return t.phase === "playing" && t;}, 45000);
+  const playing = await tableUntil("the countdown to end on the object's alarm", url, (t) => t.phase === "playing", 45000);
   ok(/^[a-z0-9]+g1$/.test(playing.matchId), `the game is on (${playing.matchId}), launched by the Durable Object's alarm in workerd`);
   await page.goto(`${BASE}/index.html#table?id=${id}`);
   await page.locator("#cm-board").waitFor({timeout: 30000});
@@ -326,6 +338,10 @@ try {
       ok(true, "the host starts; both people's boards open on the game");
 
       /* Both play the first turns: keep, draw, pass, and the first answer to anything else. */
+      /* Whether a control is there and enabled now: the board redraws as each question arrives, so one counted a moment
+         ago may be gone -- asked of a vanished element, isEnabled waits its whole 30 s for it to come back (the staging
+         walk of 8787d103, 2026-10-08). Gone is "not now"; `until` asks again. */
+      const enabled = (l) => l.isEnabled({timeout: 2000}).catch(() => false);
       const act = async (p) => {
         const went = p.locator("[data-action=board-went-close]");
         if (await went.count()) {await went.first().click(); return;}
@@ -334,14 +350,14 @@ try {
           assert.ok(!/cannot answer/.test((await d.textContent()) || ""), "the board can answer what it is asked");
           const confirm = d.locator("[data-action=board-confirm]"), opts = d.locator("[data-action=board-option]");
           if (await confirm.count()) {
-            for (let i = 0; i < await opts.count() && !(await confirm.isEnabled()); i++) await opts.nth(i).click();
-            if (await confirm.isEnabled()) await confirm.click();
+            for (let i = 0; i < await opts.count() && !(await enabled(confirm)); i++) await opts.nth(i).click();
+            if (await enabled(confirm)) await confirm.click();
           } else if (await opts.count()) await opts.first().click();
           return;
         }
         for (const action of ["board-draw", "board-pass"]) {
           const b = p.locator(`[data-action=${action}]`).first();
-          if (await b.count() && await b.isEnabled()) {await b.click(); return;}
+          if (await b.count() && await enabled(b)) {await b.click(); return;}
         }
       };
       const turnOf = async (p) => Number((/Turn (\d+)/.exec((await p.locator(".cm-board-turn").first().textContent().catch(() => "")) || "") || [0, 0])[1]);
@@ -380,7 +396,7 @@ try {
   for (const seatId of [0, 1, 2]) await api("POST", `${url3}/deck`, {seatId, deck: goblins});
   await api("POST", `${url3}/ready`, {ready: true});
   await api("POST", `${url3}/start`);
-  const match = (await until("the third table's countdown to end", async () => {const t = (await api("GET", url3)).json.table; return t.phase === "playing" && t;}, 45000)).matchId;
+  const match = (await tableUntil("the third table's countdown to end", url3, (t) => t.phase === "playing", 45000)).matchId;
   eq((await api("POST", `${url3}/concede`)).json.table.phase, "rematch", "at a third table, Rob and two AI seats, Rob concedes as the game begins, and the table moves on at once");
   const done = (await api("GET", `${url3}/record?match=${match}`)).json.record;
   eq([done.result.reason, done.result.winner, done.departures.s0, done.refusals.since], [NO_PERSON_REASON, null, "conceded", 0], "the game ended there, the AI seats not playing it out, and its record says why");

@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Skystinger",
+    "oracleId": "6bb7419b-e085-4616-8e5c-4ed08cb2b4c1",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Insect",
+      "Warrior"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Reach\nWhenever this creature blocks a creature with flying, this creature gets +5/+0 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Reach",
+      "keyword": "reach"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature blocks a creature with flying, this creature gets +5/+0 until end of turn.",
+      "trigger": {
+        "on": "blocks",
+        "who": "self",
+        "each": "attacker",
+        "blocked": {
+          "keywords": [
+            "Flying"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 5,
+          "toughness": 0
+        }
+      ]
+    }
+  ]
+}

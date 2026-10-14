@@ -1,0 +1,97 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Selvala, Heart of the Wilds",
+    "oracleId": "1d725121-e50c-42f0-9128-56802f07c89e",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Scout"
+    ],
+    "manaCost": "{1}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Whenever another creature enters, its controller may draw a card if its power is greater than each other creature's power.\n{G}, {T}: Add X mana in any combination of colors, where X is the greatest power among creatures you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever another creature enters, its controller may draw a card if its power is greater than each other creature's power.",
+      "trigger": {
+        "on": "enters",
+        "who": "another",
+        "filter": {
+          "types": [
+            "Creature"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "modal",
+          "chooser": "that card's controller",
+          "title": "Draw a card?",
+          "modes": [
+            {
+              "text": "Draw a card",
+              "effects": [
+                {
+                  "effect": "draw",
+                  "count": 1,
+                  "who": "that card's controller"
+                }
+              ]
+            },
+            {
+              "text": "Don't draw",
+              "effects": []
+            }
+          ],
+          "condition": {
+            "powerAboveOthers": "that card"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{G}, {T}: Add X mana in any combination of colors, where X is the greatest power among creatures you control.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{G}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyCombination": true,
+          "count": {
+            "greatestPower": {
+              "types": [
+                "Creature"
+              ],
+              "controller": "you"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

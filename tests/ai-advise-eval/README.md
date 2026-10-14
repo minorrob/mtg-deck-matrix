@@ -9,7 +9,7 @@ eval before a model is trusted with a job"*. The agent is run on Rob's seven dec
 | `make-rubric.mjs` | Rewrites `rubric.json` from `data/live-state.json` and keeps every refusal already written. `tests/advise-brief.mjs` fails when the two differ. |
 | `run.mjs` | The run. **It spends,** so it needs `--yes` and `ANTHROPIC_API_KEY`, and it is never part of `runtests.sh`. It writes `results/<stamp>.json`, which is not committed. |
 
-How it scores: the brief is the box reading (`advise-brief.js`): what is physically in each box, the substitutes
+How it scores: the brief is the box reading (`cloud/advise-brief.mjs`): what is physically in each box, the substitutes
 holding their seats, and the candidates the code finds. It does not say which candidate a seat is for, so choosing
 the intended upgrade is the model's judgment.
 

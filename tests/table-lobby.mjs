@@ -31,6 +31,8 @@ import {GameTable} from "../cloud/game-room.mjs";
 import {MATS} from "../game/room/table.mjs";
 import {build, worktreeSource} from "../tools/release-pages.mjs";
 import {joinLocation} from "../cloud/worker.mjs";
+import {tables} from "../cloud/tables.mjs";
+import {decksFromBackup} from "../tools/fuzz-live.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 let checks = 0;
@@ -100,6 +102,7 @@ const objectCtx = () => {
   acceptWebSocket: (s, tags) => {s.tags = tags; sockets.push(s);}, getWebSockets: () => sockets, getTags: (s) => s.tags};
 };
 const tableFor = (id) => {if (!objects.has(id)) objects.set(id, new GameTable(objectCtx(), {}, {cards, now: () => clock})); return objects.get(id);};
+const TABLES = {idFromName: (name) => name, get: (id) => tableFor(id)};
 /* A person's table reads can be held in flight, to prove an answer that lands after they left the page draws nothing. */
 const held = {};
 async function answer(route, email) {
@@ -109,15 +112,12 @@ async function answer(route, email) {
     writes.push({path: url.pathname, header: req.headers()["x-crankmagic"], type: req.headers()["content-type"]});
     if (req.headers()["x-crankmagic"] !== "play") return route.fulfill({status: 403, json: {error: "That request did not come from CrankMagic."}});
   }
-  const m = /^\/api\/tables(?:\/([a-z0-9]+)(?:\/([a-z]+))?)?$/.exec(url.pathname);
-  if (!m) return route.fulfill({status: 404, json: {error: "No such endpoint."}});
-  const [, given, action] = m;
   const body = method === "GET" ? undefined : req.postData() || "{}";
-  if (action === "deck") deckBodies.push(JSON.parse(body));
-  let id = given, internal = action ? `/table/${action}` : "/table";
-  let payload = body;
-  if (!given) {id = `table${String(++nextId).padStart(6, "0")}`; internal = "/table/create"; payload = JSON.stringify({...JSON.parse(body), tableId: id});}
-  const r = await tableFor(id).fetch(new Request(`https://table.internal${internal}`, {method, headers: {"content-type": "application/json", "x-crankmagic-email": email}, ...(payload !== undefined ? {body: payload} : {})}));
+  if (/^\/api\/tables\/[a-z0-9]+\/deck$/.test(url.pathname)) deckBodies.push(JSON.parse(body));
+  /* Through the Worker's own front door (cloud/tables.mjs), each table its object here. */
+  const r = await tables(new Request(url.href, {method, headers: {"content-type": "application/json"}, ...(body !== undefined ? {body} : {})}),
+    {TABLES}, {email}, {newId: () => `table${String(++nextId).padStart(6, "0")}`});
+  if (!r) return route.fulfill({status: 404, json: {error: "No such endpoint."}});
   return route.fulfill({status: r.status, contentType: "application/json", body: await r.text()});
 }
 
@@ -167,6 +167,8 @@ try {
   ok(!/Coming Soon/.test(await pageText(rob.page, "#cm-main")), "with the cloud-Play mark, the Play tab opens a new table");
 
   /* HOST: a new table. */
+  /* The AI door not open to Rob (GET /api/ai-seat says so): no AI on Claude is offered. */
+  await rob.page.route("**/api/ai-seat", (r) => r.fulfill({json: {open: false}}));
   await rob.page.goto(`${base}/index.html#table`);
   await rob.page.locator("#cm-table-new").waitFor({timeout: 30000});
   /* The accessibility pass: the page's "?" opens the table's help, the board's keys among it. */
@@ -177,12 +179,14 @@ try {
   await rob.page.waitForFunction(() => !document.querySelector("#cm-dialog[open]"), null, {timeout: 5000});
   await rob.page.fill("#cm-table-new [name=hostName]", "Rob");
   await rob.page.fill("#cm-table-new [name=name2]", "Maya");
-  await rob.page.selectOption("#cm-table-new [name=kind3]", "ai");
+  eq(await rob.page.locator("#cm-table-new [name=kind3] option").allTextContents(), ["A person I will invite", "An AI · Normal", "An AI · Easy", "Nobody"],
+    "an AI seat is offered at Normal or Easy (AI-2)");
+  await rob.page.selectOption("#cm-table-new [name=kind3]", "ai-easy");
   await rob.page.fill("#cm-table-new [name=name3]", "Shadrix");
   await rob.page.click("[data-action=table-create]");
   await rob.page.waitForFunction(() => /#table\?id=table\d+/.test(location.hash), null, {timeout: 20000});
   await rob.page.locator(".cm-cloud-table .cm-lobby-seat").first().waitFor({state: "attached"});
-  eq(await rob.page.locator(".cm-cloud-table .cm-lobby-seat h3").allTextContents(), ["Seat 1 · You", "Seat 2 · Maya", "Seat 3 · AI"], "the lobby: you in seat 1, Maya to invite, an AI; seat 4 left out");
+  eq(await rob.page.locator(".cm-cloud-table .cm-lobby-seat h3").allTextContents(), ["Seat 1 · You", "Seat 2 · Maya", "Seat 3 · AI · Easy"], "the lobby: you in seat 1, Maya to invite, an AI at Easy, as chosen; seat 4 left out");
   eq(await rob.page.locator('#cm-main .cm-page-head [data-action="page-help"]').getAttribute("data-help"), "table", "and its head carries the same ?, to the table's help");
   const seaWords = await overSea(rob.page), seaLow = seaWords.filter((w) => w.ratio < 4.5);
   ok(seaWords.length >= 6 && !seaLow.length, `every word over a seat's sea reads at 4.5:1 or better over a white sea (${seaWords.length} read; ${(seaLow.length ? seaLow : seaWords.slice(0, 3)).map((w) => `"${w.text}" (${w.cls}) ${w.ratio}`).join(", ")})`);
@@ -210,7 +214,14 @@ try {
      deck above the limit refused with what to do instead. */
   const sizes = await rob.page.evaluate(() => {const e = document.querySelector(".cm-table-center .cm-table-rules-edit"), other = document.querySelector(".cm-lobby-seat [data-action=table-deck]"), h = document.querySelector(".cm-table-head h2"); if (!e || !other) return null; const r = e.getBoundingClientRect(), o = other.getBoundingClientRect(), hr = h.getBoundingClientRect(); return {edit: Math.round(r.height), other: Math.round(o.height), beside: r.left >= hr.right && Math.abs((r.top + r.bottom) / 2 - (hr.top + hr.bottom) / 2) < 8};});
   ok(sizes && sizes.beside && sizes.edit < sizes.other * 0.75, `the host sees a small Edit beside Table rules (${sizes && sizes.edit}px, the page's buttons ${sizes && sizes.other}px)`);
+  /* THE LOBBY'S MUSIC (Rob, 2026-10-09: "Lobby music."): nothing of the sound before a press in the lobby -- a browser would
+     refuse to play it -- and the pack's lobby bed from the first one. */
+  const audioAsked = () => rob.page.evaluate(() => performance.getEntriesByType("resource").map((r) => r.name).filter((n) => n.includes("/assets/audio/")).map((n) => n.split("/assets/audio/")[1].split("?")[0]));
+  eq(await audioAsked(), [], "the lobby fetches nothing of the sound before a press in it");
   await rob.page.click(".cm-table-rules-edit");
+  await rob.page.waitForFunction(() => performance.getEntriesByType("resource").some((r) => /bgm_lobby_mythic_calm\.mp3/.test(r.name)), null, {timeout: 10000});
+  const lobbySound = await audioAsked();
+  ok(lobbySound.includes("sound-index.json") && lobbySound.includes("bgm/bgm_lobby_mythic_calm.mp3") && !lobbySound.some((n) => /bgm_game/.test(n)), `the first press in the lobby starts its music: the pack's index and the lobby's bed, never the game's (${lobbySound.join(", ")})`);
   await rob.page.locator("#cm-table-rules-form").waitFor();
   await rob.page.fill("#cm-table-rules-form [name=startingLife]", "30");
   await rob.page.selectOption("#cm-table-rules-form [name=bracketLimit]", "2");
@@ -321,17 +332,35 @@ try {
   /* INVITE: link, QR, email. */
   await rob.page.click(".cm-lobby-seat[data-seat='1'] [data-action=table-invite]");
   await rob.page.locator("#cm-table-link").waitFor();
-  const link = await rob.page.inputValue("#cm-table-link");
+  let link = await rob.page.inputValue("#cm-table-link");
   ok(/^https?:\/\/[^/]+\/api\/join\/table\d+\/[A-Za-z0-9_-]{40,}$/.test(link), `the invite dialog gives the seat's link, a path Access's sign-in keeps (a fragment it drops): ${link.replace(/\/[^/]+$/, "/…")}`);
   ok(await rob.page.locator("#cm-dialog .cm-qr-code svg").count() === 1, "a QR of it, to scan across the room");
   ok((await rob.page.getAttribute("#cm-table-mail", "href")).includes(encodeURIComponent(link)), "and an email that carries it");
   await shot(rob.page, "invite-1400");
+  await rob.context.grantPermissions(["clipboard-read", "clipboard-write"], {origin: base});
+  await rob.page.click("#cm-dialog [data-action=table-copy-link]");
+  await waitText(rob.page, "#cm-notice", /Link copied/);
+  eq(await rob.page.evaluate(() => navigator.clipboard.readText()), link, "Copy link puts the seat's link on the clipboard, and says so");
   await rob.page.keyboard.press("Escape");
   await waitText(rob.page, ".cm-lobby-seat[data-seat='1'] header", /Invite sent/);
   ok(true, "the seat now says the invitation is out");
+  /* WITHDRAW: the invitation taken back; its link no longer works, and a new one is sent. */
+  await rob.page.click(".cm-lobby-seat[data-seat='1'] [data-action=table-uninvite]");
+  await rob.page.waitForFunction(() => !/Invite sent/.test(document.querySelector(".cm-lobby-seat[data-seat='1'] header")?.textContent || ""), null, {timeout: 10000});
+  ok(await rob.page.locator(".cm-lobby-seat[data-seat='1'] [data-action=table-invite]").count() === 1, "Withdraw takes the invitation back, and the seat can be invited again");
+  const withdrawn = link;
+  await rob.page.click(".cm-lobby-seat[data-seat='1'] [data-action=table-invite]");
+  await rob.page.locator("#cm-table-link").waitFor();
+  link = await rob.page.inputValue("#cm-table-link");
+  ok(link !== withdrawn && /\/api\/join\/table\d+\/[A-Za-z0-9_-]{40,}$/.test(link), "inviting again gives a new link");
+  await rob.page.keyboard.press("Escape");
+  await waitText(rob.page, ".cm-lobby-seat[data-seat='1'] header", /Invite sent/);
 
-  /* JOIN: Maya opens the link on her phone. A made-up code first. */
+  /* JOIN: Maya opens the link on her phone. The withdrawn link, and a made-up code, first. */
   const id = /\/api\/join\/(table\d+)\//.exec(link)[1];
+  await maya.page.goto(joinLocation(new URL(withdrawn.replace(/^https?:\/\/[^/]+/, base))));
+  await maya.page.locator("#cm-table-refused").waitFor({timeout: 30000});
+  ok(/no longer works/.test(await pageText(maya.page, "#cm-table-refused")), "the withdrawn link is refused: it no longer works");
   await maya.page.goto(`${base}/index.html#table/${id}/${"x".repeat(43)}`);
   await maya.page.locator("#cm-table-refused").waitFor({timeout: 30000});
   ok(/no longer works/.test(await pageText(maya.page, "#cm-table-refused")) && /Ask the host for a new link/.test(await pageText(maya.page, "#cm-table-refused")), "a made-up or spent link is refused, and says to ask the host for a new one");
@@ -369,6 +398,11 @@ try {
   ok(narrow.worst >= 4.5 && narrow.inside && narrow.apart, `and at 390: contrast ${narrow.worst}, heading, rules and launch row inside the panel and apart (${narrow.inside}, ${narrow.apart})`);
   await shot(maya.page, "lobby-guest-390");
 
+  /* THE LAUNCH LINE AND THE FANS (the brief, 2026-10-12): with Maya ready and Rob not, the panel says what it waits on
+     and how many; a seat with a deck wears its commander's colors as a fan from its inner corner. */
+  await waitText(rob.page, "#cm-table-launch", /Launches when all are ready · 1 seat to go\./);
+  const fans = await rob.page.evaluate(() => [0, 1].map((i) => document.querySelectorAll(`.cm-seat-q:has(.cm-lobby-seat[data-seat='${i}']) .cm-seat-fan path`).length));
+  ok(fans[0] >= 1 && fans[1] >= 1, `each seated deck's quadrant wears its commander's color fan (${fans.join(" and ")} wedges)`);
   /* START: Rob readies, starts; the countdown; Cancel; Start; the game is on. */
   await rob.page.locator(".cm-lobby-seat[data-seat='0'] [data-action=table-ready]").click();
   await waitText(rob.page, ".cm-lobby-seat[data-seat='1'] header", /Ready/);
@@ -405,9 +439,14 @@ try {
      decks, is told how to bring one, and Restore opens from the dialog itself, so the seat stays theirs. */
   {
     const nina = await person("nina@example.com", {width: 1400, height: 900}, {library: false});
+    /* Where the AI door is open to her (GET /api/ai-seat, stood in for here), New table offers an AI on Claude too. */
+    await nina.page.route("**/api/ai-seat", (r) => r.fulfill({json: {open: true}}));
     await nina.page.goto(`${base}/index.html#table`);
     const form = nina.page.locator("#cm-table-new");
     await form.waitFor({timeout: 30000});
+    await form.locator("select[name=kind2] option[value=ai-llm]").waitFor({state: "attached", timeout: 10000});
+    eq(await form.locator("select[name=kind2] option").allTextContents(), ["A person I will invite", "An AI · Normal", "An AI · Easy", "An AI · Claude", "Nobody"],
+      "with the AI door open to her, New table offers an AI on Claude beside Normal and Easy (AI-2)");
     await form.locator("input[name=hostName]").fill("Nina");
     await form.locator("select[name=kind2]").selectOption("ai");
     await nina.page.click("[data-action=table-create]");
@@ -421,6 +460,98 @@ try {
     ok(/Restore a full backup/.test(await pageText(nina.page, "#cm-dialog")), "and Restore from a backup file opens the restore, on the table's page");
     ok(/#table\?id=/.test(await nina.page.evaluate(() => location.hash)), "which is still her table");
     await nina.context.close();
+  }
+
+  /* YOUR DECKS AND THE TABLE (AI-5): each deck says whether the table can play it, on its tile and its page, before any
+     table is opened; Play this deck opens a new table with the deck at your seat, or brings it to the table you already
+     sit at; New from Wizards' Play it makes the precon a deck and goes on to a table. What each deck should say is read
+     here from the library's own backup, against this suite's table, which plays every card but Sol Ring. */
+  {
+    const backup = JSON.parse(readFileSync(path.join(ROOT, "data", "live-state.json"), "utf8"));
+    const listed = backup.payload.state.decks.filter((d) => !d.archived && (d.commanders || []).length);
+    const named = decksFromBackup(backup, listed.map((d) => d.name));
+    const refused = new Map(listed.map((d, i) => [d.id, [...named[i].commander, ...named[i].cards].filter((n) => n === REFUSED).length]));
+    const playableIds = listed.filter((d) => refused.get(d.id) === 0).map((d) => d.id), learning = listed.find((d) => refused.get(d.id) > 0);
+    ok(playableIds.length >= 2 && learning, `the library has decks the table plays whole (${playableIds.length}) and one it does not (${learning && learning.name})`);
+    const olu = await person("olu@example.com", {width: 1400, height: 900});
+    const asked = [];
+    olu.page.on("request", (r) => {if (/\/api\/tables\/known$/.test(new URL(r.url()).pathname)) asked.push(r.method());});
+    await olu.page.goto(`${base}/index.html#decks`);
+    await olu.page.waitForFunction((n) => document.querySelectorAll("[data-play-for]:not([hidden])").length >= n, listed.length, {timeout: 30000});
+    const tiles = await olu.page.$$eval("[data-play-for]:not([hidden])", (els) => els.map((el) => [el.dataset.playFor, el.textContent.trim(), el.classList.contains("is-playable")]));
+    eq(tiles.map(([id, text, good]) => [id, text, good]).sort(),
+      listed.map((d) => {const n = refused.get(d.id); return [d.id, n ? `${n} card${n === 1 ? "" : "s"} to learn for the table` : "Playable at the table", !n];}).sort(),
+      "each deck's tile says whether the table can play it: Playable at the table, or how many of its cards are still to learn");
+    eq(asked, ["POST"], "and the hub asked the table once, for every deck at once (POST /api/tables/known)");
+    await shot(olu.page, "decks-playable-1400");
+    /* The deck page: the line, and Play this deck only where the table plays every card. */
+    const deckLine = async (id) => {
+      await olu.page.goto(`${base}/index.html#decks?deck=${encodeURIComponent(id)}`);
+      await olu.page.locator(`#cm-deck-play[data-deck="${id}"]:not([hidden])`).waitFor({timeout: 30000});
+      return {text: (await olu.page.locator("#cm-deck-play").innerText()).replace(/\s+/g, " ").trim(), play: await olu.page.locator("#cm-deck-play [data-action=deck-play]").count()};
+    };
+    const whole = await deckLine(playableIds[0]);
+    await shot(olu.page, "deck-playable-1400");
+    const part = await deckLine(learning.id);
+    await shot(olu.page, "deck-to-learn-1400");
+    const total = (d) => {const i = listed.indexOf(d); return named[i].commander.length + named[i].cards.length;};
+    const first = listed.find((d) => d.id === playableIds[0]);
+    ok(whole.text.startsWith(`Playable at the table · all ${total(first)} cards known`) && whole.play === 1, `a deck the table plays whole says so on its page, with Play this deck (${whole.text})`);
+    ok(part.text.startsWith(`${total(learning) - refused.get(learning.id)} of ${total(learning)} known · ${refused.get(learning.id)} to learn`) && /cannot play this one yet: Sol Ring\./.test(part.text) && part.play === 0,
+      `one it does not says how much it knows and names what it cannot play yet, with no Play this deck (${part.text})`);
+    /* Play this deck: a new table, the deck said above the seats, and at seat 1 once the table is made. */
+    await olu.page.goto(`${base}/index.html#decks?deck=${encodeURIComponent(first.id)}`);
+    await olu.page.locator(`#cm-deck-play[data-deck="${first.id}"] [data-action=deck-play]`).click();
+    await olu.page.locator("#cm-table-new-deck:not([hidden])").waitFor({timeout: 30000});
+    eq(await olu.page.evaluate(() => location.hash), `#table?deck=${encodeURIComponent(first.id)}`, "Play this deck opens a new table, carrying the deck");
+    eq((await olu.page.locator("#cm-table-new-deck").innerText()).trim(), `You bring ${first.name} to seat 1.`, "which says the deck comes with you to seat 1");
+    await shot(olu.page, "table-bring-1400");
+    await olu.page.fill("#cm-table-new [name=hostName]", "Olu");
+    await olu.page.selectOption("#cm-table-new [name=kind2]", "ai");
+    const before = deckBodies.length;
+    await olu.page.click("[data-action=table-create]");
+    await olu.page.waitForFunction(() => /#table\?id=table\d+/.test(location.hash), null, {timeout: 20000});
+    await waitText(olu.page, ".cm-lobby-seat[data-seat='0'] .cm-seat-line", new RegExp(first.name));
+    const sent = deckBodies.slice(before);
+    eq(sent.map((b) => [b.seatId, b.deck.name, b.deck.source.deckId]), [[0, first.name, first.id]], "made, the table seats the deck at your seat, as the library's own deck");
+    const oluTable = (await olu.page.evaluate(() => location.hash)).match(/id=(table\d+)/)[1];
+    /* Seated before its game, Play this deck from another deck offers to bring it to that table. */
+    const second = listed.find((d) => d.id === playableIds[1]);
+    await olu.page.goto(`${base}/index.html#decks?deck=${encodeURIComponent(second.id)}`);
+    await olu.page.locator(`#cm-deck-play[data-deck="${second.id}"] [data-action=deck-play]`).click();
+    await olu.page.locator("#cm-table-back [data-action=table-bring]").waitFor({timeout: 30000});
+    eq((await olu.page.locator("#cm-table-back [data-action=table-bring]").innerText()).trim(), `Bring ${second.name} there`, "seated at a table whose game has not begun, Play this deck offers to bring the deck there");
+    await shot(olu.page, "table-bring-there-1400");
+    await olu.page.click("#cm-table-back [data-action=table-bring]");
+    await olu.page.waitForFunction((t) => location.hash === `#table?id=${t}`, oluTable, {timeout: 20000});
+    await waitText(olu.page, ".cm-lobby-seat[data-seat='0'] .cm-seat-line", new RegExp(second.name));
+    ok(true, "and brought, it is the deck at your seat there");
+    /* A deck the table cannot play whole is not brought: the new table says which cards, and you choose another there. */
+    await olu.page.goto(`${base}/index.html#table?deck=${encodeURIComponent(learning.id)}`);
+    await olu.page.locator("#cm-table-new-deck:not([hidden])").waitFor({timeout: 30000});
+    const warn = (await olu.page.locator("#cm-table-new-deck").innerText()).trim();
+    ok(warn.startsWith(`${learning.name} cannot be played at the table yet`) && /\(Sol Ring\)/.test(warn) && !(await olu.page.locator("#cm-table-new [name=deck]").count()),
+      `a deck it cannot play whole is named with its cards, and not brought (${warn})`);
+    /* New from Wizards' Play it: the precon comes in through the import, becomes a deck, and goes on to a new table. */
+    await olu.page.goto(`${base}/index.html#decks`);
+    const chip = olu.page.locator("#cm-precon-latest:not([hidden]) li").first();
+    await chip.locator("[data-action=precon-play]").waitFor({timeout: 30000});
+    const preconName = (await chip.locator(".cm-precon-chip strong").innerText()).trim();
+    await chip.locator("[data-action=precon-play]").click();
+    await olu.page.getByRole("heading", {name: "Import cards or a deck list", exact: true}).waitFor({timeout: 30000});
+    await olu.page.getByRole("button", {name: "Parse input", exact: true}).click();
+    await olu.page.getByRole("heading", {name: "Review import", exact: true}).waitFor({timeout: 60000});
+    await olu.page.getByRole("button", {name: /^Import \d+ reviewed rows?$/}).click();
+    await olu.page.getByRole("heading", {name: `New deck from ${preconName}`, exact: true}).waitFor({timeout: 60000});
+    await olu.page.getByRole("button", {name: "Create draft", exact: true}).click();
+    await olu.page.waitForFunction(() => /^#table\?deck=/.test(location.hash), null, {timeout: 30000});
+    await olu.page.locator("#cm-table-new-deck:not([hidden])").waitFor({timeout: 30000});
+    const made = await olu.page.evaluate(async () => {const r = await CrankRepository.open(); try {const st = await r.getState(); const id = decodeURIComponent(location.hash.split("deck=")[1]); const d = st.decks.find((x) => x.id === id); return d ? {name: d.name, precon: d.precon || null} : null;} finally {r.close();}});
+    ok(made && made.precon && made.precon.name === preconName && !("play" in made.precon), `Play it makes the precon a deck of the library, marked as the precon (and nothing more), and goes on to a new table with it (${made && made.name})`);
+    const said = (await olu.page.locator("#cm-table-new-deck").innerText()).trim();
+    ok(said === `You bring ${made.name} to seat 1.` || said.startsWith(`${made.name} cannot be played at the table yet`),
+      `where the new table says whether the deck comes with you, as Play this deck's does (${said})`);
+    await olu.context.close();
   }
 
   /* NOT SIGNED IN: someone opening a table's link without an account is told it is invite-only, and where to go if

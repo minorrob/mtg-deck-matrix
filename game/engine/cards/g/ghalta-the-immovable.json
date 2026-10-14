@@ -1,0 +1,71 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ghalta the Immovable",
+    "oracleId": "0d496c6e-8f7b-420f-9197-dacd2feb528f",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elder",
+      "Dinosaur"
+    ],
+    "manaCost": "{8}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 0,
+    "toughness": 7
+  },
+  "oracleText": "This spell costs {X} less to cast, where X is the greatest toughness among creatures you control.\nCreatures you control can attack as though they didn't have defender.\nEach creature you control with toughness greater than its power assigns combat damage equal to its toughness rather than its power.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This spell costs {X} less to cast, where X is the greatest toughness among creatures you control.",
+      "rule": "this-costs-less",
+      "affects": {
+        "self": true
+      },
+      "amount": {
+        "greatestToughness": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Creatures you control can attack as though they didn't have defender.",
+      "rule": "attacks-despite-defender",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Each creature you control with toughness greater than its power assigns combat damage equal to its toughness rather than its power.",
+      "rule": "combat-damage-by-toughness",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "toughnessOverPower": true
+      }
+    }
+  ]
+}

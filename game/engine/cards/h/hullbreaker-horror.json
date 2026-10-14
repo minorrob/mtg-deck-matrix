@@ -1,0 +1,96 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hullbreaker Horror",
+    "oracleId": "d4a84e78-d9b9-4c67-8a4b-4329e65f0f15",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Kraken",
+      "Horror"
+    ],
+    "manaCost": "{5}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 7,
+    "toughness": 8
+  },
+  "oracleText": "Flash\nThis spell can't be countered.\nWhenever you cast a spell, choose up to one —\n• Return target spell you don't control to its owner's hand.\n• Return target nonland permanent to its owner's hand.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flash",
+      "keyword": "flash"
+    },
+    {
+      "kind": "static",
+      "text": "This spell can't be countered.",
+      "rule": "cant-be-countered",
+      "affects": {
+        "what": "spell",
+        "self": true
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a spell, choose up to one —\n• Return target spell you don't control to its owner's hand.\n• Return target nonland permanent to its owner's hand.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you"
+      },
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "mayChooseNone": true,
+          "modes": [
+            {
+              "text": "Return target spell you don't control to its owner's hand.",
+              "targets": [
+                {
+                  "what": "spell",
+                  "controller": "opponent"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "moveZone",
+                  "targets": {
+                    "target": 0
+                  },
+                  "to": "hand"
+                }
+              ]
+            },
+            {
+              "text": "Return target nonland permanent to its owner's hand.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "nonTypes": [
+                    "Land"
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "moveZone",
+                  "targets": {
+                    "target": 0
+                  },
+                  "to": "hand"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

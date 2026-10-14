@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kindred Judgment",
+    "oracleId": "b5dce42a-a769-4d7d-b29e-8722f79d4092",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{5}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose a creature type. Destroy all creatures that aren't of the chosen type.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose a creature type. Destroy all creatures that aren't of the chosen type.",
+      "effects": [
+        {
+          "effect": "chooseType"
+        },
+        {
+          "effect": "destroyAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "nonSubtypes": [
+              "$chosen"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

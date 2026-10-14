@@ -1,0 +1,88 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Heartstring Puller",
+  "scenarios": [
+    {
+      "name": "It enters: a 2/2 Wizard Soldier named Cadet; it has trample",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Heartstring Puller"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Heartstring Puller"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Heartstring Puller",
+            "Cadet"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Cadet",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Heartstring Puller",
+            "has": [
+              "Trample"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

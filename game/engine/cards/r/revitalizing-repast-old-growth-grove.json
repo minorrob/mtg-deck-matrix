@@ -1,0 +1,109 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Revitalizing Repast // Old-Growth Grove",
+    "oracleId": "8dd6d060-d023-48a6-85cb-7a5521b6257b",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{B/G}",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "colorIdentity": [
+      "B",
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Put a +1/+1 counter on target creature. It gains indestructible until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Put a +1/+1 counter on target creature. It gains indestructible until end of turn.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "counter": "+1/+1",
+          "count": 1
+        },
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Indestructible"
+          ]
+        }
+      ]
+    }
+  ],
+  "back": {
+    "identity": {
+      "name": "Old-Growth Grove",
+      "types": [
+        "Land"
+      ],
+      "subtypes": [],
+      "manaCost": null,
+      "colors": [],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "This land enters tapped.\n{T}: Add {B} or {G}.",
+    "abilities": [
+      {
+        "kind": "replacement",
+        "text": "This land enters tapped.",
+        "watches": {
+          "event": "enters",
+          "who": "self"
+        },
+        "change": {
+          "entersTapped": true
+        }
+      },
+      {
+        "kind": "activated",
+        "text": "{T}: Add {B} or {G}.",
+        "mana": true,
+        "cost": [
+          {
+            "atom": "{T}"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "addMana",
+            "choice": [
+              {
+                "B": 1
+              },
+              {
+                "G": 1
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -33,19 +33,112 @@
  *                                      cast from it (Fblthp, the Lost)
  *   {sinceYourLastUpkeep: true}        its own permanent came under its controller's control since the beginning of
  *                                      their last upkeep (echo, CR 702.30a)
+ *   {evolves: true}                    evolve's "if that creature's power is greater than this creature's power and/or that
+ *                                      creature's toughness is greater than this creature's toughness" (CR 702.100a): the
+ *                                      creature the trigger is about against its own source, power to power and toughness
+ *                                      to toughness, as each now is -- the arrival gone, as it last was (rules/trigger.mjs
+ *                                      keeps it, CR 608.2h); never greater than a noncreature permanent (702.100c)
+ *   {citysBlessing: true|false}        its controller has the city's blessing, or has not (CR 702.131c; ascend,
+ *                                      keywords/designations.mjs): "unless you have the city's blessing" (Wayward Swordtooth)
+ *   {prowl: true}                      prowl's "if a player was dealt combat damage this turn by a source that, at the time
+ *                                      it dealt that damage, was under your control and had any of this spell's creature
+ *                                      types" (CR 702.76a): its own object's creature types against what rules/combat.mjs
+ *                                      kept of its controller's sources this turn
+ *   {prowled: true|false}              its own permanent was cast for its prowl cost, or was not (CR 702.76a; rules/stack.mjs):
+ *                                      "if its prowl cost was paid" (Latchkey Faerie)
+ *   {surge: true}                      surge's "if you or one of your teammates has cast another spell this turn" (CR
+ *                                      702.117a): its controller has cast a spell this turn (there are no teams here)
+ *   {freerunning: true}                freerunning's "if a player was dealt combat damage this turn by a creature that, at
+ *                                      the time it dealt that damage, was an Assassin creature or a commander under your
+ *                                      control" (CR 702.173a): what rules/combat.mjs kept of its controller's sources
+ *   {paidFor: "surge"|"freerunning"}   the spell resolving, or its own permanent, was cast for that cost (CR 702.117a,
+ *                                      702.173a; rules/actions.mjs, rules/stack.mjs): "if its surge cost was paid" --
+ *                                      its source gone, as the trigger saw it (CR 608.2h)
  *   {opponentPoisonAtLeast: 3}         an opponent of its controller, still in the game, has at least that many poison
  *                                      counters (CR 122.1f): Corrupted's "as long as an opponent has three or more poison
  *                                      counters" (Skrelv's Hive; an ability word, CR 207.2c, with no rules meaning of its own)
+ *   {spentFrom: selector}              mana from a source the selector describes, as that source was as it made the mana
+ *                                      (CR 106.3), was spent to cast the spell the trigger is about (CR 601.2h): "if mana from
+ *                                      a Treasure was spent to cast it" (Smaug, Wicked Worm)
+ *   {lifeAboveAnotherOpponent: "that player"}  the player a trigger is about has more life than another opponent of its
+ *                                      controller still in the game (CR 119.1, 800.4a): "if that opponent has more life than
+ *                                      another of your opponents" (Breena, the Demagogue) -- with no other, it has not
+ *   {void: true}                       void's "if a nonland permanent left the battlefield this turn or a spell was warped this
+ *                                      turn" (an ability word, CR 207.2c; CR 702.185c): any player's, as state/index.mjs and
+ *                                      rules/actions.mjs record them this turn (Plasma Bolt, Temporal Intervention)
+ *   {sneak: true}                      sneak's "during your declare blockers step" (CR 702.190a): its controller's turn, that
+ *                                      step (Leonardo, Leader in Blue)
+ *   {monarch: "you"}                   "if you're the monarch" (CR 725; Ginger, Queen of Sweets): its controller is the
+ *                                      monarch now (`state.monarch`, effects/resources.mjs) -- with no monarch in the game, nobody
+ *                                      is (725.1)
+ *   {solved: true|false}               its own permanent, a Case, is solved, or is not (CR 719.3b): "To solve" asks it as its
+ *                                      end step begins (719.3a), and "Solved -- [ability]" is that ability's condition (719.3c)
+ *   {sacrificedNontokenThisTurn: true}  its controller has sacrificed a nontoken permanent this turn (Evendo Brushrazer;
+ *                                      state kept by script/effects/zones.mjs, sacrificeOne, cleared as a turn begins)
+ *   {castFromYourHand: true|false}     the permanent the trigger is about was cast by its controller from their hand, or
+ *                                      was not (Chainer, Nightmare Adept: "if you didn't cast it from your hand") -- read on
+ *                                      the permanent (rules/stack.mjs); one gone gains nothing either way
+ *   {castByYou: true|false}            the permanent the trigger is about was cast by its controller, from anywhere (The One
+ *                                      Ring: "when The One Ring enters, if you cast it") -- read on the permanent as
+ *                                      castFromYourHand is (rules/stack.mjs); one put onto the battlefield was not cast
+ *   {firstResolution: true}            "if this is the first time this ability has resolved this turn" (Nissa, Leyline
+ *                                      Tamer): an effect's own, of a triggered or activated ability -- its ability resolved
+ *                                      no time before this one this turn (rules/stack.mjs counts them)
+ *   {giftPromised: true|false}         its spell's gift was promised, or its permanent's (CR 702.174b, 702.174k; Dawn's Truce:
+ *                                      "if the gift was promised") -- the spell resolving, a copy of it too (CR 707.10), or the
+ *                                      permanent the spell became (rules/stack.mjs)
+ *   {offspringPaid: true|false}        its own permanent was cast with its offspring cost paid, or was not (CR 702.175a;
+ *                                      Coruscation Mage) -- asked again as the trigger resolves, as it triggered
  *
  * The keys are closed, like every other grammar here: an unknown one is refused at the schema rather than read as true.
  */
 
+import {controllerOf, typesOf} from "../rules/layers.mjs";
 import {cardsIn} from "../state/index.mjs";
 import {matchesSelector, compileSelector, matchesLastKnown} from "./filter.mjs";
 import {amountOf, amountProblems} from "./amount.mjs";
+import {characteristicsOf, subtypesOf, everyCreatureTypeOf} from "../rules/layers.mjs";
+import {isCreatureType} from "../keywords/types.mjs";
+import {hasCitysBlessing} from "../keywords/designations.mjs";
 
 const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn", "notYourTurn", "about", "is", "chosen", "selfCounters", "lifeAtLeast", "cast", "compare", "escaped", "evoked", "spent", "enduringStory", "loyaltyThisTurn", "impending",
-  "cameFrom", "sinceYourLastUpkeep", "level", "opponentPoisonAtLeast", "searched"];
+  "uniqueCreatureName", "cameFrom", "sinceYourLastUpkeep", "level", "opponentPoisonAtLeast", "searched",
+  /* Evolve's comparison (CR 702.100a); prowl's damage, and its cost paid (CR 702.76a). */
+  "evolves", "prowl", "prowled",
+  /* Ascend's city's blessing (CR 702.131). */
+  "citysBlessing",
+  /* Surge (CR 702.117a) and freerunning (CR 702.173a), and the cost a spell was cast for. */
+  "surge", "freerunning", "paidFor",
+  /* Breena, the Demagogue's "more life than another of your opponents" (CR 119.1). */
+  "lifeAboveAnotherOpponent",
+  /* Smaug, Wicked Worm's "if mana from a Treasure was spent to cast it" (CR 106.3, 601.2h). */
+  "spentFrom",
+  /* Void (CR 207.2c, 702.185c) and sneak's timing (CR 702.190a). */
+  "void", "sneak",
+  /* "If you're the monarch" (CR 725). */
+  "monarch",
+  /* Nissa, Leyline Tamer's "if this is the first time this ability has resolved this turn". */
+  "firstResolution",
+  /* Goblin Welder's "if both targets are still legal as this ability resolves" (CR 608.2b). */
+  "targetsLegal",
+  /* Summon: Fenrir's "if you control the creature with the greatest power or tied for the greatest power" (CR 208.1). */
+  "greatestPower",
+  /* Selvala, Heart of the Wilds' "if its power is greater than each other creature's power" (CR 208.1). */
+  "powerAboveOthers",
+  /* Chainer, Nightmare Adept's "if you didn't cast it from your hand" (CR 601.2a). The One Ring's "if you cast it". */
+  "castFromYourHand", "castByYou",
+  /* A Case's solved designation (CR 719.3b), and Evendo Brushrazer's "as long as you've sacrificed a nontoken permanent this turn". */
+  "solved", "sacrificedNontokenThisTurn",
+  /* Gift's "if the gift was promised" (CR 702.174b). */
+  "giftPromised",
+  /* Offspring's "if its offspring cost was paid" (CR 702.175a; wave 4c). */
+  "offspringPaid"];
+/** Whether these effects, nested ones included, ask `firstResolution` -- so their ability's resolutions are counted
+    (rules/stack.mjs). */
+export const asksFirstResolution = (effects) => JSON.stringify(effects ?? []).includes('"firstResolution"');
+/* The alternative costs a spell may be marked as cast for (cards/index.mjs; rules/actions.mjs): sneak's (CR 702.190a) too --
+   "if his sneak cost was paid" (Leonardo, Leader in Blue). */
+const PAID_FOR = ["surge", "freerunning", "sneak"];
 /* Where a permanent may have come from, for `cameFrom`: a library (effects/zones.mjs and rules/stack.mjs record it). */
 const CAME_FROM = ["library"];
 /* The mana a condition may ask was spent to cast its object: the five colors and colorless (CR 106.1). */
@@ -85,15 +178,42 @@ function namedIs(state, id, selector, context, was = null) {
   return compileSelector({...selector, what, ...(what === "card" ? {zone: object.zone} : {})})(state, id, context);
 }
 
+/* EVOLVE (CR 702.100a): the creature that entered -- on the battlefield and still a creature, as it now is; gone, as it last
+   was there (`about.lastKnown`, rules/trigger.mjs; CR 608.2h) -- against the creature with evolve, which must still be one: a
+   creature can't have a greater power or toughness than a noncreature permanent (702.100c). Power to power, toughness to
+   toughness, either greater. */
+function evolves(state, source, about) {
+  if (source === null || source === undefined || state.objects[source]?.zone !== "battlefield") return false;
+  const mine = characteristicsOf(state, source);
+  if (!mine.types.includes("Creature")) return false;
+  const id = about?.card;
+  const there = state.objects[id]?.zone === "battlefield" ? characteristicsOf(state, id) : null;
+  const it = there ? (there.types.includes("Creature") ? there : null) : about?.lastKnown ?? null;
+  if (!it) return false;
+  return (it.power ?? 0) > (mine.power ?? 0) || (it.toughness ?? 0) > (mine.toughness ?? 0);
+}
+
+/* PROWL (CR 702.76a): a creature type of this object's -- every one, for a changeling (CR 702.73a) -- among those of a source
+   that dealt combat damage to a player this turn under its controller's control, as that source was as it dealt it
+   (rules/combat.mjs, `combatDamageSources`). An object with no creature type has nothing to share. */
+function prowlable(state, controller, source) {
+  if (source === null || source === undefined || !state.objects[source]) return false;
+  const every = everyCreatureTypeOf(state, source), types = subtypesOf(state, source).filter(isCreatureType);
+  return (state.players[controller]?.combatDamageSources ?? []).some((dealt) => (every ? dealt.every || dealt.types.length > 0
+    : dealt.every ? types.length > 0 : dealt.types.some((t) => types.includes(t))));
+}
+
 /* HOW A SPELL WAS CAST (batch 70; rules/actions.mjs records it on the stack entry): "if this spell was cast from a
    graveyard" (Sevinne's Reclamation: `from`, the zone), and Addendum's "if you cast this spell during your main phase"
    (Unbreakable Formation: `mainPhase`). A copy was not cast (CR 707.10), and neither was an ability: no record, and
    neither holds. */
-const CAST_KEYS = ["from", "mainPhase", "additionalPaid"];
+/* "If this spell was cast from anywhere other than your hand" (Antiquities on the Loose): `notFrom`, the zone it was not. */
+const CAST_KEYS = ["from", "notFrom", "mainPhase", "additionalPaid"];
 const CAST_ZONES = ["hand", "graveyard", "exile", "library", "command"];
 function castHolds(rule, cast) {
   if (!cast) return false;
   if (rule.from !== undefined && cast.from !== rule.from) return false;
+  if (rule.notFrom !== undefined && cast.from === rule.notFrom) return false;
   if (rule.mainPhase === true && cast.mainPhase !== true) return false;
   /* "If this spell's additional cost was paid" (CR 601.2f; rules/actions.mjs). */
   if (rule.additionalPaid === true && cast.additionalPaid !== true) return false;
@@ -102,13 +222,42 @@ function castHolds(rule, cast) {
 
 /** Whether a condition holds now, for an ability controlled by `controller` on object `source`. No condition holds. */
 export function conditionHolds(state, condition, {controller, source = null, about = undefined, remembered = undefined, targets = undefined, cast = undefined, x = undefined, spent = undefined, excessDamage = undefined, rememberedControllers = undefined,
-  movedWas = undefined, searched = undefined, lastKnown = undefined} = {}) {
+  movedWas = undefined, searched = undefined, lastKnown = undefined, paidFor = undefined, resolvedBefore = undefined, gift = undefined, offspring = undefined} = {}) {
   if (!condition) return true;
+  /* "IF ITS OFFSPRING COST WAS PAID" (CR 702.175a; Coruscation Mage, wave 4c): its own permanent was cast with it paid -- or,
+     asked again as its trigger resolves (CR 603.4), its source as it triggered, which may be gone: the token is made all the
+     same (the card's ruling; rules/trigger.mjs keeps it, `offspring`). */
+  if (condition.offspringPaid !== undefined
+    && ((offspring ?? (source !== null && source !== undefined ? state.objects[source]?.offspring : undefined)) === true) !== condition.offspringPaid) return false;
+  /* "IF BOTH TARGETS ARE STILL LEGAL AS THIS ABILITY RESOLVES" (Goblin Welder; CR 608.2b): every target its ability chose is
+     legal still, as the resolution rechecked them (rules/stack.mjs, script/bind.mjs recheckTargets: an illegal one is null) --
+     one illegal, and what it says is not done at all, to the other either. */
+  if (condition.targetsLegal === true && !(Array.isArray(targets) && targets.length > 0 && targets.every((t) => t !== null && t !== undefined))) return false;
+  /* "IF THIS IS THE FIRST TIME THIS ABILITY HAS RESOLVED THIS TURN" (Nissa, Leyline Tamer): asked as one of its effects is
+     reached, of the times its ability resolved before this one this turn (rules/stack.mjs counts them) -- none. */
+  if (condition.firstResolution === true && resolvedBefore !== 0) return false;
   /* "If you search your library this way" (Claim Jumper): a search made earlier in this resolution (script/resolution.mjs). */
   if (condition.searched === true && searched !== true) return false;
+  /* Guardian Project (CR 603.4, 201.2a): compare the entering creature's current name,
+     or its last known name after it leaves (CR 608.2h), against creatures YOU control
+     and creature cards in YOUR graveyard. Tokens count as other creatures; nameless
+     objects share a name with nothing. Control, ownership and card type are distinct. */
+  if (condition.uniqueCreatureName === true) {
+    const id = about?.card, object = state.objects[id];
+    const name = object ? object.card : about?.was?.name;
+    if (name === undefined) return false;
+    if (name !== null) {
+      if (state.zones.battlefield.some(other => other !== id && state.objects[other].card === name
+          && controllerOf(state, other) === controller && typesOf(state, other).includes("Creature"))) return false;
+      if (cardsIn(state, "graveyard", controller).some(other => state.objects[other].card === name
+          && !state.objects[other].token && state.objects[other].types.includes("Creature"))) return false;
+    }
+  }
   if (condition.cast !== undefined && !castHolds(condition.cast, cast)) return false;
-  /* "Khans -- ...": what its permanent chose as it entered (the Sieges). */
-  if (condition.chosen !== undefined && (source === null || state.objects[source]?.chosen !== condition.chosen)) return false;
+  /* "Khans -- ...": what its permanent chose as it entered (the Sieges) -- or, gone, as it last was: Outpost Siege destroyed
+     with the creatures its Dragons watches sees them leave (CR 603.10a; rules/trigger.mjs passes its last known
+     information). Asked as it triggers, never as it resolves (rules/trigger.mjs, scriptOf). */
+  if (condition.chosen !== undefined && ((source !== null && state.objects[source] ? state.objects[source].chosen : lastKnown?.chosen) ?? null) !== condition.chosen) return false;
   /* "Sacrifice it unless it escaped" (Uro; CR 702.138b): whether its own permanent was cast with escape (rules/stack.mjs). */
   if (condition.escaped !== undefined && ((source !== null && state.objects[source]?.escaped === true) !== condition.escaped)) return false;
   /* "If its evoke cost was paid" (CR 702.74a): whether its own permanent was cast for its evoke cost (rules/stack.mjs). */
@@ -123,6 +272,26 @@ export function conditionHolds(state, condition, {controller, source = null, abo
     const id = about?.card ?? source;
     const came = (id !== null && id !== undefined ? state.objects[id]?.cameFrom : undefined) ?? about?.cameFrom;
     if (!(came?.zone === condition.cameFrom && came.owner === controller)) return false;
+  }
+  /* "If ... this Case is not solved" (CR 719.3a), "Solved -- ..." (719.3c): its own permanent's designation (script/effects/
+     attributes.mjs). Gone, it is not solved. */
+  if (condition.solved !== undefined && ((source !== null && state.objects[source]?.solved === true) !== condition.solved)) return false;
+  /* "As long as you've sacrificed a nontoken permanent this turn" (Evendo Brushrazer; CR 701.21a): counted as each was. */
+  if (condition.sacrificedNontokenThisTurn === true && !((state.players[controller]?.sacrificedNontokenThisTurn ?? 0) > 0)) return false;
+  /* "If you didn't cast it from your hand" (Chainer, Nightmare Adept; CR 601.2a): the permanent the trigger is about, cast by
+     this ability's controller from their hand -- one put onto the battlefield, or cast from anywhere else or by anyone else,
+     was not. */
+  if (condition.castFromYourHand !== undefined) {
+    const id = about?.card ?? source;
+    const cast = id !== null && id !== undefined ? state.objects[id]?.castFrom : undefined;
+    if ((cast?.zone === "hand" && cast.by === controller) !== condition.castFromYourHand) return false;
+  }
+  /* "If you cast it" (The One Ring; CR 601.2): cast at all, from any zone, by its controller (CR 603.4: asked as it triggers and
+     again as it resolves) -- a permanent put onto the battlefield without being cast, or a new object since (CR 400.7), was not. */
+  if (condition.castByYou !== undefined) {
+    const id = about?.card ?? source;
+    const cast = id !== null && id !== undefined ? state.objects[id]?.castFrom : undefined;
+    if ((cast !== undefined && cast.by === controller) !== condition.castByYou) return false;
   }
   /* Echo's "if this permanent came under your control since the beginning of your last upkeep" (CR 702.30a): the turn it
      came under its controller's control (state/index.mjs, controlledSinceTurn -- entering, or a change of control) is that
@@ -184,7 +353,13 @@ export function conditionHolds(state, condition, {controller, source = null, abo
       /* "If excess damage was dealt this way" (Violent Echoes): what the damage before it left (script/resolution.mjs). */
       ...(excessDamage !== undefined ? {excessDamage} : {}),
       /* "For each creature exiled this way, its controller ..." (Winds of Abandon): who controlled what was remembered. */
-      ...(rememberedControllers !== undefined ? {rememberedControllers} : {})};
+      ...(rememberedControllers !== undefined ? {rememberedControllers} : {}),
+      /* "If another creature died this turn" (Chain Assassination): what the effect before it moved, as each last existed
+         there, counted out of the deaths ({movedCount}). */
+      ...(movedWas !== undefined ? {movedWas} : {}),
+      /* How the spell resolving was cast: "if you've cast another instant or sorcery spell this turn" leaves its own cast out
+         (Burrog Barrage; script/amount.mjs, spellsCastThisTurn's `another`). */
+      ...(cast !== undefined ? {cast} : {})};
     const n = amountOf(state, condition.compare.count, counted), than = (v) => amountOf(state, v, counted);
     if (condition.compare.atLeast !== undefined && n < than(condition.compare.atLeast)) return false;
     if (condition.compare.atMost !== undefined && n > than(condition.compare.atMost)) return false;
@@ -194,6 +369,55 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   /* "As long as you have an enduring story" (Storied, CR 702.195b), or "unless you have one": the player's designation
      (keywords/designations.mjs). */
   if (condition.enduringStory !== undefined && (state.players[controller]?.enduringStory === true) !== condition.enduringStory) return false;
+  /* "Unless you have the city's blessing" (Wayward Swordtooth; CR 702.131c): its controller's designation, or theirs this
+     moment by a permanent's ascend (keywords/designations.mjs). */
+  if (condition.citysBlessing !== undefined && hasCitysBlessing(state, controller) !== condition.citysBlessing) return false;
+  /* Prowl's cost may be paid (CR 702.76a): asked of the card as its cast is offered (rules/actions.mjs, alternativeCosts). */
+  if (condition.prowl === true && !prowlable(state, controller, source)) return false;
+  /* VOID (an ability word, CR 207.2c): "if a nonland permanent left the battlefield this turn" -- any player's, counted as it
+     left (state/index.mjs, recordDeath) -- "or a spell was warped this turn": cast for its warp cost by any player (CR
+     702.185c; rules/actions.mjs marks it among what that player cast this turn). */
+  if (condition.void === true && !((state.nonlandLeftThisTurn ?? 0) > 0 || state.players.some((p) => (p.castThisTurn ?? []).some((cast) => cast.warped === true)))) return false;
+  /* SNEAK'S TIMING (CR 702.190a): "any time you could cast an instant during your declare blockers step" -- its controller's
+     own turn, in that step (rules/actions.mjs offers the cast at an instant's timing then). */
+  if (condition.sneak === true && !(state.activePlayer === controller && state.phase === "COMBAT_DECLARE_BLOCKERS")) return false;
+  /* "IF THE GIFT WAS PROMISED" (CR 702.174b, 702.174k): the spell resolving was cast with its gift promised -- the opponent it
+     was promised to, whether or not they are still in the game -- or the permanent the trigger is its own was. */
+  if (condition.giftPromised !== undefined
+    && Number.isInteger(gift ?? (source !== null && source !== undefined ? state.objects[source]?.gift : undefined)) !== condition.giftPromised) return false;
+  /* "If you're the monarch" (CR 725.1, 725.3): its controller holds the game's designation now. */
+  if (condition.monarch === "you" && state.monarch !== controller) return false;
+  /* "IF YOU CONTROL THE CREATURE WITH THE GREATEST POWER OR TIED FOR THE GREATEST POWER" (Summon: Fenrir; CR 208.1): a creature of
+     its controller's whose power, through the layers, no creature on the battlefield exceeds -- a power below zero as it is,
+     not as none. With no creature of theirs, they control none. */
+  if (condition.greatestPower === "you") {
+    const creatures = state.zones.battlefield.filter((id) => typesOf(state, id).includes("Creature"));
+    const powers = creatures.map((id) => characteristicsOf(state, id).power ?? 0), most = Math.max(...powers);
+    if (!creatures.some((id, at) => controllerOf(state, id) === controller && powers[at] === most)) return false;
+  }
+  /* "If its power is greater than each other creature's power" (Selvala, Heart of the Wilds, wave 4b; CR 208.1): the creature
+     the trigger is about against every other creature on the battlefield, through the layers, as this is asked -- it gone, its
+     power as it last existed there (CR 608.2h; the card's ruling). A tie is not greater; with no other creature, it is. */
+  if (condition.powerAboveOthers === "that card") {
+    const id = about?.card;
+    const here = id !== undefined && id !== null && state.objects[id]?.zone === "battlefield";
+    const power = here ? characteristicsOf(state, id).power : about?.lastKnown?.power;
+    if (power === null || power === undefined) return false;
+    if (state.zones.battlefield.some((other) => other !== id && typesOf(state, other).includes("Creature") && (characteristicsOf(state, other).power ?? 0) >= power)) return false;
+  }
+  /* Surge (CR 702.117a): its controller has cast another spell this turn -- asked as this one's cast is offered, before it
+     is counted among them (rules/actions.mjs). */
+  if (condition.surge === true && !((state.players[controller]?.castThisTurn ?? []).length > 0)) return false;
+  /* Freerunning (CR 702.173a): combat damage to a player this turn by one of its controller's creatures that was an
+     Assassin -- a changeling is every creature type (CR 702.73a) -- or a commander, as it dealt it (rules/combat.mjs). */
+  if (condition.freerunning === true && !(state.players[controller]?.combatDamageSources ?? []).some((dealt) => dealt.commander === true || dealt.every === true || dealt.types.includes("Assassin"))) return false;
+  /* "If its surge cost was paid", "if this spell's freerunning cost was paid": the spell as it resolves (`cast`), its own
+     permanent, or -- that permanent gone -- the trigger's record of it (rules/trigger.mjs). */
+  if (condition.paidFor !== undefined && (cast?.paidFor ?? (source !== null && source !== undefined ? state.objects[source]?.paidFor : undefined) ?? paidFor) !== condition.paidFor) return false;
+  /* "If its prowl cost was paid" (CR 702.76a): whether its own permanent was cast for it (rules/stack.mjs). */
+  if (condition.prowled !== undefined && (state.objects[source]?.prowled === true) !== condition.prowled) return false;
+  /* Evolve's comparison (CR 702.100a): as it triggers, and again as it resolves (CR 603.4). */
+  if (condition.evolves === true && !evolves(state, source, about)) return false;
   /* "If you've activated a loyalty ability this turn" (Kiora of Salt and Sand): its controller has (rules/actions.mjs). */
   if (condition.loyaltyThisTurn === true && !((state.players[controller]?.loyaltyThisTurn ?? 0) > 0)) return false;
   /* "Activate only during your turn" (Humble Defector). */
@@ -202,6 +426,20 @@ export function conditionHolds(state, condition, {controller, source = null, abo
      is no opponent (CR 800.4a). */
   if (condition.opponentPoisonAtLeast !== undefined
     && !state.players.some((p) => p.id !== controller && !p.lost && (p.poison ?? 0) >= condition.opponentPoisonAtLeast)) return false;
+  /* "If mana from a Treasure was spent to cast it" (Smaug, Wicked Worm): the sources of the mana spent to cast the spell the
+     trigger is about, as each was as it made the mana (rules/actions.mjs, `spentFrom`) -- or, the spell gone, as it last was
+     on the stack (`about.was`, rules/trigger.mjs; CR 608.2h). One the selector describes is enough. */
+  if (condition.spentFrom !== undefined) {
+    const spell = about?.card !== undefined && about.card !== null ? state.objects[about.card] : undefined;
+    if (!(spell?.spentFrom ?? about?.was?.spentFrom ?? []).some((was) => matchesLastKnown(condition.spentFrom, was, {controller, source}))) return false;
+  }
+  /* "If that opponent has more life than another of your opponents" (Breena, the Demagogue): the player the trigger is about,
+     against each opponent of the controller still in the game (CR 800.4a) -- one with less is enough (that player is never
+     less than itself), and none is no such opponent. */
+  if (condition.lifeAboveAnotherOpponent === "that player") {
+    const them = state.players[about?.player];
+    if (!them || !state.players.some((p) => p.id !== controller && !p.lost && p.life < them.life)) return false;
+  }
   /* "If you have 40 or more life" (Felidar Sovereign). */
   if (condition.lifeAtLeast !== undefined && state.players[controller].life < condition.lifeAtLeast) return false;
   /* "If it's not your turn, you may exile a blue card from your hand rather than pay this spell's mana cost". */
@@ -232,8 +470,26 @@ export function conditionProblems(condition) {
   if ("firstCombat" in condition && condition.firstCombat !== true) problems.push("firstCombat is true");
   if ("yourTurn" in condition && condition.yourTurn !== true) problems.push("yourTurn is true");
   if ("enduringStory" in condition && typeof condition.enduringStory !== "boolean") problems.push("enduringStory is true or false");
+  if ("citysBlessing" in condition && typeof condition.citysBlessing !== "boolean") problems.push("citysBlessing is true or false");
+  if ("lifeAboveAnotherOpponent" in condition && condition.lifeAboveAnotherOpponent !== "that player") problems.push("lifeAboveAnotherOpponent is \"that player\": the player the trigger is about");
+  if ("spentFrom" in condition) {
+    try { matchesLastKnown(condition.spentFrom ?? {}, {}, {}); } catch (error) { problems.push(`What spentFrom asks of the mana's source: ${error.message}`); }
+  }
   if ("notYourTurn" in condition && condition.notYourTurn !== true) problems.push("notYourTurn is true");
+  if ("targetsLegal" in condition && condition.targetsLegal !== true) problems.push("targetsLegal is true: every target still legal as it resolves");
   if ("loyaltyThisTurn" in condition && condition.loyaltyThisTurn !== true) problems.push("loyaltyThisTurn is true");
+  if ("evolves" in condition && condition.evolves !== true) problems.push("evolves is true");
+  if ("prowl" in condition && condition.prowl !== true) problems.push("prowl is true");
+  if ("prowled" in condition && typeof condition.prowled !== "boolean") problems.push("prowled is true or false");
+  if ("surge" in condition && condition.surge !== true) problems.push("surge is true");
+  if ("void" in condition && condition.void !== true) problems.push("void is true");
+  if ("sneak" in condition && condition.sneak !== true) problems.push("sneak is true");
+  if ("monarch" in condition && condition.monarch !== "you") problems.push("monarch is \"you\": its controller is the monarch");
+  if ("greatestPower" in condition && condition.greatestPower !== "you") problems.push("greatestPower is \"you\": its controller controls the creature with the greatest power, or one tied for it");
+  if ("powerAboveOthers" in condition && condition.powerAboveOthers !== "that card") problems.push("powerAboveOthers is \"that card\": the creature a trigger is about has more power than each other creature");
+  if ("firstResolution" in condition && condition.firstResolution !== true) problems.push("firstResolution is true: the first time this ability has resolved this turn");
+  if ("freerunning" in condition && condition.freerunning !== true) problems.push("freerunning is true");
+  if ("paidFor" in condition && !PAID_FOR.includes(condition.paidFor)) problems.push(`paidFor is the alternative cost a spell was cast for: ${PAID_FOR.join(", ")}`);
   if ("opponentPoisonAtLeast" in condition && !(Number.isInteger(condition.opponentPoisonAtLeast) && condition.opponentPoisonAtLeast >= 1))
     problems.push("opponentPoisonAtLeast is a whole number of poison counters, 1 or more");
   if ("graveyardTypes" in condition && !(Number.isInteger(condition.graveyardTypes) && condition.graveyardTypes >= 1)) problems.push("graveyardTypes is a whole number of card types, 1 or more");
@@ -243,6 +499,13 @@ export function conditionProblems(condition) {
   if ("impending" in condition && typeof condition.impending !== "boolean") problems.push("impending is true or false");
   if ("cameFrom" in condition && !CAME_FROM.includes(condition.cameFrom)) problems.push(`cameFrom is the zone the permanent came from: ${CAME_FROM.join(", ")}`);
   if ("sinceYourLastUpkeep" in condition && condition.sinceYourLastUpkeep !== true) problems.push("sinceYourLastUpkeep is true");
+  if ("castFromYourHand" in condition && typeof condition.castFromYourHand !== "boolean") problems.push("castFromYourHand is true or false");
+  if ("castByYou" in condition && typeof condition.castByYou !== "boolean") problems.push("castByYou is true or false");
+  if ("solved" in condition && typeof condition.solved !== "boolean") problems.push("solved is true or false");
+  if ("giftPromised" in condition && typeof condition.giftPromised !== "boolean") problems.push("giftPromised is true or false: whether the gift was promised");
+  if ("offspringPaid" in condition && typeof condition.offspringPaid !== "boolean") problems.push("offspringPaid is true or false: whether its offspring cost was paid");
+  if ("sacrificedNontokenThisTurn" in condition && condition.sacrificedNontokenThisTurn !== true) problems.push("sacrificedNontokenThisTurn is true");
+  if ("uniqueCreatureName" in condition && condition.uniqueCreatureName !== true) problems.push("uniqueCreatureName is true");
   if ("searched" in condition && condition.searched !== true) problems.push("searched is true: a library was searched earlier in this resolution");
   if ("spent" in condition) {
     const spent = condition.spent;
@@ -282,6 +545,7 @@ export function conditionProblems(condition) {
       problems.push(`cast says how this spell was cast: ${CAST_KEYS.join(", ")}`);
     else {
       if ("from" in rule && !CAST_ZONES.includes(rule.from)) problems.push(`cast.from is a zone: ${CAST_ZONES.join(", ")}`);
+      if ("notFrom" in rule && !CAST_ZONES.includes(rule.notFrom)) problems.push(`cast.notFrom is a zone: ${CAST_ZONES.join(", ")}`);
       if ("mainPhase" in rule && rule.mainPhase !== true) problems.push("cast.mainPhase is true");
       if ("additionalPaid" in rule && rule.additionalPaid !== true) problems.push("cast.additionalPaid is true");
     }

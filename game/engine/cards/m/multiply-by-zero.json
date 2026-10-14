@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Multiply by Zero",
+    "oracleId": "d940611f-f84d-43fa-82d6-eecb4fb54164",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target creature has base power and toughness 0/0 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Target creature has base power and toughness 0/0 until end of turn.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "layer": 7,
+          "sublayer": "b",
+          "targets": {
+            "target": 0
+          },
+          "apply": {
+            "setPower": 0,
+            "setToughness": 0
+          }
+        }
+      ]
+    }
+  ]
+}

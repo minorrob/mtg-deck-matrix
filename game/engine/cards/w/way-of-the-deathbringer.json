@@ -1,0 +1,119 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Way of the Deathbringer",
+    "oracleId": "54775625-bf44-4035-969e-7e70578c8b98",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "When Way of the Deathbringer enters, empower Jace 5. (Put five loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")\nPlaneswalkers you control have \"[−2]: You may sacrifice a creature. If you do, create a 4/4 green Beast creature token with trample.\"",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When Way of the Deathbringer enters, empower Jace 5.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "empowerJace",
+          "count": 5
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "Planeswalkers you control have \"[−2]: You may sacrifice a creature. If you do, create a 4/4 green Beast creature token with trample.\"",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Planeswalker"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "addAbilities": [
+          {
+            "kind": "activated",
+            "text": "−2: You may sacrifice a creature. If you do, create a 4/4 green Beast creature token with trample.",
+            "cost": [
+              {
+                "atom": "loyalty",
+                "amount": -2
+              }
+            ],
+            "effects": [
+              {
+                "effect": "modal",
+                "title": "You may sacrifice a creature. If you do, create a 4/4 green Beast creature token with trample.",
+                "modes": [
+                  {
+                    "text": "Yes",
+                    "effects": [
+                      {
+                        "effect": "sacrifice",
+                        "count": 1,
+                        "selector": {
+                          "types": [
+                            "Creature"
+                          ]
+                        },
+                        "remember": true
+                      },
+                      {
+                        "effect": "createToken",
+                        "count": 1,
+                        "token": {
+                          "name": "Beast",
+                          "types": [
+                            "Creature"
+                          ],
+                          "subtypes": [
+                            "Beast"
+                          ],
+                          "colors": [
+                            "G"
+                          ],
+                          "power": 4,
+                          "toughness": 4,
+                          "keywords": [
+                            "Trample"
+                          ]
+                        },
+                        "condition": {
+                          "about": "remembered",
+                          "is": {}
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "text": "No",
+                    "effects": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -19,6 +19,55 @@
         "Trample",
         "Haste"
       ]
+    },
+    "Elf Lord": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2,
+      "abilities": [
+        {
+          "id": "a0",
+          "kind": "static",
+          "text": "Other creatures you control get +1/+1.",
+          "layer": 7,
+          "sublayer": "c",
+          "affects": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you",
+            "another": true
+          },
+          "apply": {
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
     }
   },
   "scenarios": [
@@ -156,6 +205,89 @@
             ],
             "lacks": [
               "Flying"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "On Maya's Elf Lord: its anthem is gone, her Bear a 2/2 again, and the lord keeps the keyword counters put on after (CR 613.1f, 613.7c)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Abigale, Eloquent First-Year"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Elf Lord",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "stats": {
+                "card": "Bear",
+                "power": 3,
+                "toughness": 3
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Abigale, Eloquent First-Year"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Elf Lord (Maya's)"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Bear",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 1,
+          "keywords": {
+            "card": "Elf Lord",
+            "has": [
+              "Flying",
+              "First Strike",
+              "Lifelink"
             ]
           }
         }

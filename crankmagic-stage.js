@@ -5,34 +5,30 @@
 (function (root) {
   "use strict";
   const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, Number(n) || 0));
-  function geometry(width, height, {tilt = 18, zoom = 100, seats = 3} = {}) {
-    const w = Math.max(1, width), h = Math.max(1, height), t = clamp(tilt, 0, 35) / 35;
-    const z = clamp(zoom, 85, 110) / 100;
-    const top = h * (.10 + t * .035), bottom = h * .98;
-    const inset = w * (.08 + t * .10 - (z - 1) * .2);
-    const near = w * (.08 - t * .065 - (z - 1) * .2);
-    const quad = [inset, top, w - inset, top, w - near, bottom, near, bottom];
-    // One projective plane drives every mat texture and its DOM descendants.
-    // At zero tilt this is affine; increasing tilt narrows the far edge.
-    const farWidth = w - inset * 2, nearWidth = w - near * 2;
-    const depth = farWidth / nearWidth - 1;
-    const A = farWidth / w, B = ((1 + depth) * near - inset) / h;
-    const E = ((1 + depth) * bottom - top) / h, D = depth / h;
+  // One pinhole-camera homography for the physical table, mats and DOM cards.
+  function geometry(width, height, {tilt = 40, zoom = 100, seats = 3} = {}) {
+    const w = Math.max(1, width), h = Math.max(1, height), angle = clamp(tilt, 0, 60) * Math.PI / 180;
+    const planeHeight = h * .88, cosine = Math.cos(angle), sx = .902 * clamp(zoom,60,120) / 100, sy = sx * cosine;
+    const cx=w/2, cy=planeHeight/2, screenY=h*.43, depth=-Math.sin(angle)/(Math.max(w,h)*2.5);
+    const project=(x,y)=>{const d=1+depth*(y-cy);return [cx+sx*(x-cx)/d,screenY+sy*(y-cy)/d];};
     function surface(r) {
-      const denominator = 1 + D * r.y;
-      const a = A / denominator, b = B / denominator, c = (inset + A * r.x + B * r.y) / denominator;
-      const e = E / denominator, f = (top + E * r.y) / denominator, d = D / denominator;
-      const point = (x, y) => [(a * x + b * y + c) / (1 + d * y), (e * y + f) / (1 + d * y)];
-      return {...r, matrix: [a,0,0,0,b,e,0,d,0,0,1,0,c,f,0,1],
-        quad: [...point(0,0), ...point(r.width,0), ...point(r.width,r.height), ...point(0,r.height)]};
+      const tx=sx*(r.x-cx)+cx*(1+depth*(r.y-cy)), ty=sy*(r.y-cy)+screenY*(1+depth*(r.y-cy));
+      return {...r, matrix:[sx,0,0,0,cx*depth,sy+screenY*depth,0,depth,0,0,1,0,tx,ty,0,1+depth*(r.y-cy)],
+        quad:[...project(r.x,r.y),...project(r.x+r.width,r.y),...project(r.x+r.width,r.y+r.height),...project(r.x,r.y+r.height)]};
     }
-    const rearY = 12, rearH = Math.max(48, h * .24 - 12);
-    const margin = 18, count = clamp(seats, 1, 3), gap = 18;
+    const quad=[...project(0,0),...project(w,0),...project(w,planeHeight),...project(0,planeHeight)], [ox,oy]=quad;
+    const margin = 22, gap = 20, count = clamp(seats,1,3), rearY = 18, rearH = planeHeight * .24;
     const rearW = (w - margin * 2 - gap * (count - 1)) / count;
-    const rear = Array.from({length: seats}, (_, i) => surface({x: margin + i * (rearW + gap), y: rearY, width: rearW, height: rearH}));
-    const frontY = rearY + rearH + 26;
-    const front = surface({x: margin, y: frontY, width: w - margin * 2, height: Math.max(1, h - frontY - 16)});
-    return {width: w, height: h, quad, rear, front};
+    const rear = Array.from({length:seats},(_,i)=>surface({x:margin+i*(rearW+gap),y:rearY,width:rearW,height:rearH}));
+    const frontY = rearY + rearH + 22;
+    const front = surface({x:margin,y:frontY,width:w-margin*2,height:planeHeight-frontY-18});
+    return {width:w,height:h,planeHeight,sx,sy,ox,oy,angle,quad,rear,front};
+  }
+  const appearances = Object.freeze({backgrounds: [{id:"volcano",name:"Volcano"},{id:"forest",name:"Forest"},{id:"clouds",name:"Cloud sea"}],
+    tables: [{id:"wooden",name:"Wooden"},{id:"stone",name:"Stone"},{id:"obsidian",name:"Obsidian"}]});
+  function carousel(count, start = 0, limit = 7) {
+    const n = Math.max(0, Math.floor(Number(count) || 0));
+    return Array.from({length:Math.min(n,limit)},(_,i)=>((start+i)%n+n)%n);
   }
   let library = null;
   function load() {
@@ -74,9 +70,9 @@
     if (!current) return;
     current.box = box; current.opts = {...current.opts, ...opts};
     const g = geometry(box.width, box.height, {tilt: opts.tilt, zoom: opts.zoom, seats: (opts.mats || []).length - 1});
-    for (const [i, el] of [...current.host.querySelectorAll(".cm-stage-rear")].entries()) position(el, g.rear[i]);
+    for (const [i, el] of [...current.host.querySelectorAll(".cm-stage-rear")].entries()) {position(el, g.rear[i]); el.style.setProperty("--rear-card", `${Math.max(18, (g.rear[i].height-28)/4.8)}px`);}
     position(current.host.querySelector(".cm-stage-front"), g.front);
-    current.host.style.setProperty("--stage-card", `${Math.floor(clamp(g.front.height / 2.65, 48, 112) * clamp(opts.zoom ?? 100, 85, 110) / 100)}px`);
+    current.host.style.setProperty("--stage-card", `${Math.floor(clamp((g.front.height - 64) / 5.5, 24, 112) * 1.3 * (1 + .8 * (clamp(opts.cards ?? 100, 70, 150) - 100) / 100))}px`);
     if (current.app) {current.host.prepend(current.app.canvas); paint(current);}
     return g;
   }
@@ -91,19 +87,41 @@
     app.renderer.resize(g.width, g.height);
     for (const child of app.stage.removeChildren()) child.destroy({children: true});
     const bg = new P.Graphics(); app.stage.addChild(bg);
-    bg.rect(0, 0, g.width, g.height).fill(0x071719);
-    // The first environment is a quiet procedural forest; final scene artwork follows this preview.
-    for (let i = 0; i < 22; i++) {
-      const x = (i * .071 % 1) * g.width, y = g.height * (.02 + (i % 4) * .025);
-      bg.poly([x - 80, g.height, x - 13, y, x + 14, y, x + 100, g.height]).fill({color: i % 2 ? 0x163b37 : 0x0c292b, alpha: .55});
+    const scene = o.background || "volcano", material = o.table || "wooden";
+    bg.rect(0,0,g.width,g.height).fill(scene === "volcano" ? 0x191216 : scene === "clouds" ? 0x243f53 : 0x101e19);
+    if (scene === "volcano") {
+      // A replaceable procedural environment until the host's background loops are supplied.
+      for (let i=5;i>0;i--) bg.ellipse(g.width*.5,g.height*.85,g.width*.11*i,g.height*.08*i).fill({color:0xee620a,alpha:.025});
+      for (let i=0;i<19;i++) {
+        const x=(i*.137%1)*g.width, y=(i*.233%1)*g.height;
+        bg.poly([x-80,y+95,x-48,y-35,x+22,y-68,x+92,y+20,x+48,y+100]).fill(i%2?0x2b2528:0x211e22).stroke({color:0x55413a,width:2,alpha:.5});
+        if(i%2===0) for (const [width,color,alpha] of [[16,0xe33b05,.15],[7,0xe45b08,.5],[2,0xffbb42,.9]]) bg.moveTo(x-80,y+95).lineTo(x-48,y-35).lineTo(x+22,y-68).stroke({width,color,alpha});
+      }
+    } else if (scene === "forest") {
+      for (let i=0;i<24;i++) {const x=(i*.071%1)*g.width;bg.poly([x-55,g.height,x-11,0,x+9,0,x+65,g.height]).fill({color:i%2?0x294b35:0x162d29,alpha:.8});}
+      for (let i=0;i<14;i++) bg.ellipse((i*.173%1)*g.width,g.height*(i%3)*.12,150,85).fill({color:0x497b4a,alpha:.13});
+    } else {
+      for (let i=0;i<30;i++) bg.ellipse((i*.137%1)*g.width,(i*.217%1)*g.height,180,50).fill({color:0xd4e6e2,alpha:.045});
     }
-    for (let i = 7; i >= 1; i--) bg.ellipse(g.width * .5, g.height * .17, g.width * .10 * i, g.height * .055 * i).fill({color: 0x75ac8a, alpha: .018});
-    const edge = o.combat ? 0xf0a963 : o.instant ? 0x8ecbff : 0x77c8ad;
+    const edge = o.combat ? 0xf0a963 : o.instant ? 0x8ecbff : 0xc8ae77;
+    const thickness = 5 + Math.sin(g.angle)*24;
+    for(let i=5;i>0;i--) bg.poly(g.quad.map((n,j)=>j%2?n+18+i*5:n)).fill({color:0x000000,alpha:.065});
     const slab = new P.Graphics(); app.stage.addChild(slab);
-    const dropped = g.quad.map((v, i) => i % 2 ? v + 12 : v);
-    slab.poly(dropped).fill(0x061010).stroke({color: 0x214443, width: 2});
-    slab.poly(g.quad).fill(0x132b29).stroke({color: edge, width: 2, alpha: .85});
-    for (let i = 3; i > 0; i--) slab.poly(g.quad).stroke({color: edge, width: i * 5, alpha: .018});
+    slab.poly(g.quad.map((n,j)=>j%2?n+thickness:n)).fill(material === "wooden" ? 0x261710 : 0x141b20).stroke({color:0x080c0b,width:2});
+    const plane = new P.Container();
+    const top = new P.Graphics();plane.addChild(top);
+    top.roundRect(0,0,g.width,g.planeHeight,28).fill(material === "wooden" ? 0x795238 : material === "stone" ? 0x727572 : 0x252c38).stroke({color:edge,width:3,alpha:.85});
+    if(material === "wooden") {
+      for(let i=1;i<32;i++){const y=i*g.planeHeight/32;top.moveTo(10,y).bezierCurveTo(g.width*.3,y-9,g.width*.68,y+12,g.width-10,y+3).stroke({color:i%3?0x3a2218:0xb08a5b,width:i%3?1:2,alpha:.35});}
+      for(let i=1;i<5;i++)top.moveTo(i*g.width/5,5).lineTo(i*g.width/5,g.planeHeight-5).stroke({color:0x2b1d15,width:2,alpha:.6});
+    } else if(material === "stone") {
+      for(let i=0;i<35;i++){const x=(i*.137%1)*g.width,y=(i*.217%1)*g.planeHeight;top.moveTo(x,y).lineTo(x+38,y+15).lineTo(x+57,y+12).stroke({color:0xc7c9bf,width:1,alpha:.15});}
+    }
+    top.roundRect(7,7,g.width-14,g.planeHeight-14,22).stroke({color:edge,width:1,alpha:.4});
+    s.surfaceTexture?.destroy(true);
+    s.surfaceTexture=P.RenderTexture.create({width:g.width,height:g.planeHeight,resolution:1});
+    app.renderer.render({container:plane,target:s.surfaceTexture,clear:true});plane.destroy({children:true});
+    app.stage.addChild(new P.PerspectiveMesh({texture:s.surfaceTexture,x0:g.quad[0],y0:g.quad[1],x1:g.quad[2],y1:g.quad[3],x2:g.quad[4],y2:g.quad[5],x3:g.quad[6],y3:g.quad[7]}));
     const rects = [g.front, ...g.rear];
     rects.forEach((r, i) => {
       const mat = new P.Graphics(); app.stage.addChild(mat);
@@ -114,7 +132,7 @@
         const texture = s.textures.get(url);
         if (texture) {
           const mesh = new P.PerspectiveMesh({texture, x0: r.quad[0], y0: r.quad[1], x1: r.quad[2], y1: r.quad[3], x2: r.quad[4], y2: r.quad[5], x3: r.quad[6], y3: r.quad[7]});
-          mesh.alpha = i ? .24 : .32; app.stage.addChild(mesh);
+          mesh.alpha = i ? .68 : .74; app.stage.addChild(mesh);
         } else if (!s.pending.has(url)) {
           s.pending.add(url);
           P.Assets.load(url).then((texture) => {if (current === s) {s.textures.set(url, texture); paint(s);}}).catch(() => {});
@@ -131,7 +149,7 @@
           const x = (i * .137 % 1) * g.width;
           const y = ((i * .217 + time / 120000) % 1) * g.height;
           // Keep decorative light outside the cards' main area.
-          if (x < g.width * .06 || x > g.width * .94 || y < g.height * .09) motes.circle(x, y, 1.5).fill({color: 0xbbe5b0, alpha: .45});
+          if (x < g.ox || x > g.width-g.ox || y < g.oy || y > g.quad[5]+20) motes.circle(x, y, scene === "volcano" ? 2 : 1.5).fill({color: scene === "volcano" ? 0xffad47 : 0xbbe5b0, alpha: .55});
         }
         app.render();
       }
@@ -144,7 +162,7 @@
     const s = current; current = null; generation++;
     if (!s) return;
     cancelAnimationFrame(s.frame); s.unhear?.();
-    s.app?.destroy(true, {children: true});
+    s.app?.destroy(true, {children: true});s.surfaceTexture?.destroy(true);
   }
-  root.CrankStage = Object.freeze({geometry, mount, layout, unmount});
+  root.CrankStage = Object.freeze({geometry, carousel, appearances, mount, layout, unmount});
 })(globalThis);

@@ -13,16 +13,21 @@
  *           only from this site; strangers see no table.
  */
 import assert from "node:assert/strict";
-import {existsSync} from "node:fs";
+import {existsSync, readFileSync} from "node:fs";
 import {memoryStorage} from "../game/engine/storage.mjs";
 import {basicCards} from "../game/room/room.mjs";
 import {replayTape} from "../game/room/replay.mjs";
 import {tableOn, INVITE_TTL, MATS, commanderLegal, isBasicLandsTestDeck} from "../game/room/table.mjs";
 import {compileScript} from "../game/engine/cards/index.mjs";
 import {loadCardScripts} from "../game/tools/engine-cards.mjs";
-import {GameTable} from "../cloud/game-room.mjs";
+import {GameTable, tableCards} from "../cloud/game-room.mjs";
 import {handle} from "../cloud/worker.mjs";
 import {forgetKeys} from "../cloud/access.mjs";
+/* Real cards the table has no definition of yet, the most-played first (data/engine/top-cards.json), found as the suite
+   runs: each wave of definitions makes another card the example, so none is named here (Cyclonic Rift and Mana Drain were,
+   until wave 4b defined them). */
+const UNPLAYABLE = JSON.parse(readFileSync(new URL("../data/engine/top-cards.json", import.meta.url), "utf8")).cards
+  .map((c) => c.name).filter((name) => !tableCards(name));
 
 let checks = 0;
 const ok = (c, m) => {assert.ok(c, m); checks += 1;};
@@ -232,6 +237,14 @@ function objectCtx() {
   eq((await call("POST", `/api/tables/${id}/explode`, {body: {}})).status, 404, "an unknown action is 404");
   eq((await call("GET", `/api/tables/${id}/ready`)).status, 405, "an action is a POST");
   eq((await call("POST", `/api/tables/${id}/join`, {as: MAYA, body: "x".repeat(70 * 1024)})).status, 400, "a body larger than a table needs is refused at the door");
+  /* A DECK'S READINESS BEFORE ANY TABLE (AI-5): the front door asks one object which names a table cannot play -- an object
+     named so that no table's id can be it, so it never holds a table -- and the answer is the names alone. */
+  const known = await call("POST", "/api/tables/known", {body: {names: ["Mountain", "No Such Card", "Mountain"]}});
+  eq([known.status, known.json], [200, {unknown: ["No Such Card"]}], "asked with no table which names a table cannot play, the door answers with those names alone");
+  ok(objects.has("cards-known") && !/^[a-z0-9]{8,40}$/.test("cards-known"), "asked of one object whose name no table's id can be");
+  eq((await call("GET", "/api/tables/known")).status, 405, "the question is a POST");
+  eq((await call("POST", "/api/tables/known", {body: "x".repeat(70 * 1024)})).status, 400, "and one larger than a table needs is refused at the door");
+  eq((await call("POST", "/api/tables/known", {body: {names: ["Mountain"]}, env: base})).status, 503, "and without Play's binding it is shut with the rest");
 }
 
 /* THE TABLE'S RULES (Rob, 2026-09-30; docs/plan-to-done-2026-09-30.md, B3): the host sets the starting life and a bracket
@@ -241,10 +254,10 @@ function objectCtx() {
   const storage = memoryStorage(), t = tableOn(storage, {cards, random});
   await t.create({tableId: "tablerules1", host: ROB, hostName: "Rob", seats: [{kind: "human", name: "Maya"}, {kind: "ai", name: "Shadrix"}], playtest: true});
   await t.join(MAYA, (await t.invite(ROB, 1, now)).code, now);
-  eq((await t.view(ROB)).rules, {startingLife: 40, bracketLimit: null}, "a new table plays at 40 life (CR 903.7) with no bracket limit");
+  eq((await t.view(ROB)).rules, {startingLife: 40, bracketLimit: null, skipFirstDraw: true}, "a new table plays at 40 life (CR 903.7) with no bracket limit, and the first player of a two-player game skips their first draw step (CR 103.8a)");
   await refuses(t.rules(MAYA, {startingLife: 30}, now), 403, /Only the host/, "only the host edits the rules");
-  eq((await t.rules(ROB, {startingLife: 30, bracketLimit: 3}, now)).rules, {startingLife: 30, bracketLimit: 3}, "the host sets 30 life and bracket 3");
-  eq((await t.view(MAYA)).rules, {startingLife: 30, bracketLimit: 3}, "and everyone at the table sees them");
+  eq((await t.rules(ROB, {startingLife: 30, bracketLimit: 3}, now)).rules, {startingLife: 30, bracketLimit: 3, skipFirstDraw: true}, "the host sets 30 life and bracket 3");
+  eq((await t.view(MAYA)).rules, {startingLife: 30, bracketLimit: 3, skipFirstDraw: true}, "and everyone at the table sees them");
   await refuses(t.rules(ROB, {startingLife: 0}, now), 400, /1 to 999/, "a starting life is a whole number from 1 to 999");
   await refuses(t.rules(ROB, {bracketLimit: 7}, now), 400, /1 to 5/, "a bracket limit is 1 to 5, or none");
   await refuses(t.deck(MAYA, 1, {...deckFor("maya"), bracket: 4}, now), 409, /^maya deck is bracket 4, above this table's limit of 3\. Choose a deck at bracket 3 or lower, or ask the host to raise the limit\.$/, "a deck above the limit is refused, saying what is wrong and what to do instead");
@@ -253,7 +266,7 @@ function objectCtx() {
   await t.ready(MAYA, true, now);
   await refuses(t.rules(ROB, {startingLife: 20}, now), 409, /^The rules can't change once a seat is ready, and Maya is\. Take back Ready/, "once a seat is ready the rules are refused, saying how to change them");
   await t.ready(MAYA, false, now);
-  eq((await t.rules(ROB, {bracketLimit: null}, now)).rules, {startingLife: 30, bracketLimit: null}, "with nobody ready, the host takes the limit off again");
+  eq((await t.rules(ROB, {bracketLimit: null}, now)).rules, {startingLife: 30, bracketLimit: null, skipFirstDraw: true}, "with nobody ready, the host takes the limit off again");
   await t.deck(ROB, 0, deckFor("rob"), now); await t.deck(ROB, 2, deckFor("shadrix"), now);
   await refuses(t.rules(ROB, {startingLife: 25}, now), 409, /Shadrix is\. Take back Ready \(an AI seat is ready once its deck is chosen, so choose AI decks after the rules\)/, "an AI seat is ready once its deck is chosen, and the refusal says to set the rules first");
   await t.ready(ROB, true, now); await t.ready(MAYA, true, now);
@@ -265,6 +278,29 @@ function objectCtx() {
   eq(record.pod.startingLife, 30, "the playtest record keeps the starting life with the pod");
   const replayed = await replayTape({matchId, pod: record.pod, seed: record.seed, tape: record.tape, cards});
   eq(replayed.view("s0").state.players.map((p) => p.health.life), [30, 30, 30], "and replays to the same 30 life");
+}
+
+/* THE FIRST DRAW, A HOUSE RULE (Rob, 2026-10-12: "this can be toggled off in game setup by the lobby owner"): in a two-player
+   game the player who goes first skips their first draw step (CR 103.8a) unless the host turns that off. The table hands the
+   room a pod that says so; the room plays it (tests/room-beats.mjs) and the match's record keeps it. */
+for (const off of [false, true]) {
+  const t = tableOn(memoryStorage(), {cards, random});
+  await t.create({tableId: off ? "tabledraw2" : "tabledraw1", host: ROB, hostName: "Rob", seats: [{kind: "ai", name: "Shadrix"}], playtest: true});
+  if (off) {
+    await refuses(t.rules(MAYA, {skipFirstDraw: false}, now), 403, /Only the host/, "only the host turns the first draw's skip off");
+    await refuses(t.rules(ROB, {skipFirstDraw: "off"}, now), 400, /^Whether the player who goes first skips their first draw is on or off: true or false\.$/,
+      "the skip is on or off, and anything else is refused, saying so");
+    eq((await t.rules(ROB, {skipFirstDraw: false}, now)).rules, {startingLife: 40, bracketLimit: null, skipFirstDraw: false}, "the host turns it off, the other rules as they were");
+    eq((await t.rules(ROB, {startingLife: 30}, now)).rules.skipFirstDraw, false, "and another rule changed leaves it off");
+  }
+  await t.deck(ROB, 0, deckFor("rob"), now); await t.deck(ROB, 1, deckFor("shadrix"), now);
+  if (off) await refuses(t.rules(ROB, {skipFirstDraw: true}, now), 409, /^The rules can't change once a seat is ready, and Shadrix is\./, "once a seat is ready it is refused, as every rule is");
+  await t.ready(ROB, true, now);
+  await t.start(ROB, now); const matchId = await t.tick(now + 11000);
+  await t.endGame(ROB, now + 12000);
+  const record = await t.record(ROB, matchId);
+  eq(record.pod.skipFirstDraw, off ? false : undefined, off ? "the pod the room was handed says the skip is off, and the record keeps it"
+    : "a table that keeps CR 103.8a starts a match whose pod has no key for it, as every game before the house rule");
 }
 
 /* ONLY A CARD THAT CAN BE A COMMANDER IS ONE (CR 903.3; Rob, 2026-10-01): a legendary creature, or a card that says it
@@ -318,10 +354,11 @@ ${line}`, abilities: [...script.abilities, {kind: "static", text: line, rule: "c
   };
   await call("POST", "/table/create", ROB, {tableId: "tabledefs1", hostName: "Rob", seats: [{kind: "ai", name: "Shadrix"}]});
   const real = {name: "Goblins", commander: ["Krenko, Mob Boss"], cards: [...Array(40).fill("Mountain"), "Lightning Bolt", "Blasphemous Act", "Zulaport Cutthroat", "Sol Ring"]};
-  eq((await call("POST", "/table/known", ROB, {names: [...real.commander, ...real.cards, "Cyclonic Rift"]})).json.unknown, ["Cyclonic Rift"],
+  const [none] = UNPLAYABLE;
+  eq((await call("POST", "/table/known", ROB, {names: [...real.commander, ...real.cards, none]})).json.unknown, [none],
     "asked which names it cannot play, the table names the one the engine has no definition of -- and only that one");
   eq((await call("POST", "/table/deck", ROB, {seatId: 1, deck: real})).status, 200, "a deck of the engine's own definitions takes a seat at a table handed no cards");
-  eq((await call("POST", "/table/deck", ROB, {seatId: 1, deck: {...real, cards: [...real.cards, "Cyclonic Rift"]}})).json.unsupported, ["Cyclonic Rift"],
+  eq((await call("POST", "/table/deck", ROB, {seatId: 1, deck: {...real, cards: [...real.cards, none]}})).json.unsupported, [none],
     "and one card it cannot play keeps the deck from the seat, by name");
   eq((await call("POST", "/table/known", ROB, {names: Array(2001).fill("Mountain")})).status, 400, "a question of more than 2000 names is refused");
 }

@@ -1,0 +1,90 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Massacre Girl, Most Wanted",
+    "oracleId": "81f35914-73bf-429f-ba20-32e23ac30159",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Assassin"
+    ],
+    "manaCost": "{4}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Whenever another creature or planeswalker you control dies, Massacre Girl deals 1 damage to target opponent and you gain 1 life.\nWhenever an opponent is dealt noncombat damage, put a +1/+1 counter on Massacre Girl.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever another creature or planeswalker you control dies, Massacre Girl deals 1 damage to target opponent and you gain 1 life.",
+      "trigger": {
+        "on": "dies",
+        "who": "another",
+        "filter": {
+          "anyOf": [
+            {
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "types": [
+                "Planeswalker"
+              ]
+            }
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 1,
+          "who": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "gainLife",
+          "amount": 1
+        }
+      ],
+      "targets": [
+        {
+          "what": "player",
+          "who": "opponent"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever an opponent is dealt noncombat damage, put a +1/+1 counter on Massacre Girl.",
+      "trigger": {
+        "on": "damage dealt",
+        "who": "any",
+        "to": "opponent",
+        "noncombat": true
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

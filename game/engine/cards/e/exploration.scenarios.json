@@ -1,0 +1,94 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Exploration",
+  "scenarios": [
+    {
+      "name": "Two lands on his turn, not three",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Exploration"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest",
+            "Island",
+            "Swamp"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Forest"
+        },
+        {
+          "play": "Island"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Exploration",
+            "Forest",
+            "Island"
+          ]
+        },
+        {
+          "offers": {
+            "kind": "play-land",
+            "card": "Swamp"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Not Maya's: one land on her turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Exploration"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Forest",
+            "Island"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "play": "Forest",
+          "seat": 1
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "play-land",
+            "card": "Island",
+            "seat": 1
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

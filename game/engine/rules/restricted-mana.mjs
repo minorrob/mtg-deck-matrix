@@ -5,7 +5,10 @@
  *
  * It is mana in its player's pool like any other, and empties with it (CR 500.4, rules/turn.mjs), but it is kept beside
  * the pool -- the player's `restrictedMana`, one entry a mana -- each entry with what it may pay for: `spell`, a selector
- * over the card being cast, `ability`, one over the source of an ability being activated; either, or both. "The chosen
+ * over the card being cast, `ability`, one over the permanent whose ability is being activated ("abilities of
+ * creatures": a creature permanent, CR 109.2), `abilitySource`, one over the source of an ability wherever that object is
+ * ("abilities of Elf sources": an Elf card's cycling in a hand too -- CR 109.2 does not narrow a "source" to a permanent,
+ * and an ability's source is the object it is of, CR 113.7); any of them, or more than one. "The chosen
  * type" is read as the mana is made, its source's choice (script/chosen.mjs), so the source leaving later changes
  * nothing. What a spell or an ability may spend is the pool and the entries that admit it, and it spends those entries
  * first: nothing else could use them. "And that spell can't be countered" (Cavern, Delighted Halfling) rides on the
@@ -24,13 +27,35 @@
  * and the rider mana can still do more, so keeping it takes nothing from the player -- unless there is not enough plain
  * mana, and then which riders go is theirs to say, too. A pool spent elsewhere (an "unless that player pays" cost, a ward)
  * spends the plain mana first in the same way (ridersOf keeps no more riders of a key than the pool holds).
+ *
+ * MANA FROM A SOURCE OF A KIND (CR 106.3, 601.2h): "if mana from a Treasure was spent to cast it" (Smaug, Wicked Worm). The
+ * source of mana is the object whose ability made it (CR 106.3) -- as it was as it made it: a Treasure is sacrificed for its
+ * mana. Mana a mana ability makes whose source an ability in the game asks after (a `spentFrom` condition, script/
+ * condition.mjs) -- and only that: nothing else can tell one mana of a type from another -- is remembered beside the pool
+ * as rider mana is, its source as it then was (`from`). Spent to cast a spell, the spell remembers it (rules/actions.mjs, `spentFrom`). And where it would
+ * be read -- a spell cast by a player who controls a permanent that asks after it -- which mana pays is the player's to say,
+ * each way its own offer, as a rider's is (riderChoices); elsewhere the other mana is spent first, as a rider's is, keeping
+ * every way for a spell after.
+ *
+ * MANA THAT CAN'T BE SPENT ON SOME THINGS (CR 106.4, 106.6): "This mana can't be spent to cast spells from your hand"
+ * (Heartwood Crafter; a mana ability's `cantSpend: {castFrom: "hand"}`). It pays for everything else -- an ability, a
+ * spell cast from exile (a prepare spell's copy, CR 722.3c) or from the command zone, an "unless" cost, a ward -- so it is
+ * in the pool like any other, and `withheldMana` beside the pool says how much of the pool it is: one entry a mana, its
+ * `key`, its `source`, `cantSpend`. A spell cast from its caster's hand sees the pool less it (poolFor) and spends none of
+ * it (spendFor). Anything else spends it first: it pays for all the rest of the pool pays for but that, so spending it
+ * first takes nothing from its player. A spend that does not go through spendFor -- an "unless" cost or a ward (CR
+ * 118.12, rules/mana.mjs), a mana ability's own cost, a manifest turned face up (rules/actions.mjs) -- is read as having
+ * spent it first too: `withheldSeen`, the pool as it was when the entries were last written, says how much of each kind
+ * went since (withheldOf), and whatever adds mana to the pool settles that first (addPoolMana), so that what it adds is
+ * never taken for what was spent.
  */
-import {compileSelector} from "../script/filter.mjs";
+import {compileSelector, matchesLastKnown} from "../script/filter.mjs";
 import {chosenFor} from "../script/chosen.mjs";
-import {spend, MANA_KEYS} from "./mana.mjs";
+import {spend, addMana, MANA_KEYS} from "./mana.mjs";
+import {lastKnown, controllerOf} from "./layers.mjs";
 
 /** The keys a mana ability's `spendOnly` may carry. */
-export const SPEND_ONLY_KEYS = Object.freeze(["spell", "ability", "uncounterable"]);
+export const SPEND_ONLY_KEYS = Object.freeze(["spell", "ability", "abilitySource", "uncounterable"]);
 
 const restricted = (state, player) => state.players[player].restrictedMana ?? [];
 
@@ -39,15 +64,19 @@ export function addRestricted(state, player, mana, spendOnly, source) {
   const only = chosenFor(spendOnly, state.objects[source]);
   const list = (state.players[player].restrictedMana ??= []);
   for (const [key, n] of Object.entries(mana)) for (let i = 0; i < n; i += 1)
-    list.push({key, source, ...(only.spell ? {spell: only.spell} : {}), ...(only.ability ? {ability: only.ability} : {}), ...(only.uncounterable === true ? {uncounterable: true} : {})});
+    list.push({key, source, ...(only.spell ? {spell: only.spell} : {}), ...(only.ability ? {ability: only.ability} : {}),
+      ...(only.abilitySource ? {abilitySource: only.abilitySource} : {}), ...(only.uncounterable === true ? {uncounterable: true} : {})});
 }
 
 /* Whether this entry may pay for `use`: casting the card `use.spell` (where it is now, before it moves to the stack), or
-   activating an ability of the permanent `use.ability` -- on the battlefield; a card's ability in a hand is not one. */
+   activating an ability of the object `use.ability` -- by `ability`, a permanent on the battlefield, a card's ability in a
+   hand not one; by `abilitySource`, the object where it is now: Woodland Weavemaster's {G} pays an Elf card's "Cycling {1}"
+   in its owner's hand (CR 109.2, 113.7). */
 function admits(state, player, entry, use) {
   const context = {controller: player, source: entry.source};
   if (use.spell !== undefined) return Boolean(entry.spell) && compileSelector({...entry.spell, what: "card", zone: state.objects[use.spell]?.zone})(state, use.spell, context);
-  if (use.ability !== undefined) return Boolean(entry.ability) && compileSelector({...entry.ability, what: "permanent"})(state, use.ability, context);
+  if (use.ability !== undefined) return (Boolean(entry.ability) && compileSelector({...entry.ability, what: "permanent"})(state, use.ability, context))
+    || (Boolean(entry.abilitySource) && compileSelector({...entry.abilitySource, what: "card", zone: state.objects[use.ability]?.zone})(state, use.ability, context));
   return false;
 }
 
@@ -59,6 +88,29 @@ export function addRider(state, player, mana, whenSpent, source) {
     list.push({id: state.manaSerial, key, source, whenSpent: structuredClone(whenSpent)});
   }
 }
+
+/* What the abilities in the game ask of the source of mana spent (`spentFrom`): each a selector of the source as it last was. */
+const provenanceAsked = (state, objects = Object.values(state.objects)) => objects.flatMap((object) => (object.abilities ?? [])
+  .map((ability) => ability.condition?.spentFrom).filter(Boolean));
+
+/** Mana `source` made for `player`, in the pool: remembered with what its source was, when an ability in the game asks
+    (CR 106.3). */
+export function addProvenance(state, player, mana, source) {
+  /* Its source as it now is, read only when something asks (lastKnown runs the layers). */
+  let was = null;
+  if (!provenanceAsked(state).some((selector) => matchesLastKnown(selector, (was ??= lastKnown(state, source)), {controller: player}))) return;
+  const from = {cardId: source, name: was.name, controller: was.controller, types: was.types, subtypes: was.subtypes, supertypes: was.supertypes, token: was.token};
+  const list = (state.players[player].manaRiders ??= []);
+  for (const [key, n] of Object.entries(mana)) for (let i = 0; i < n; i += 1) {
+    state.manaSerial = (state.manaSerial ?? 0) + 1;
+    list.push({id: state.manaSerial, key, source, from: structuredClone(from)});
+  }
+}
+/* Whether spending this mana on `use` is read: a spell cast by a player who controls a permanent with an ability asking after
+   the source of the mana spent, and this mana's source what it asks (CR 601.2h). */
+const provenanceRead = (state, player, entry, use) => Boolean(entry.from) && use.spell !== undefined
+  && provenanceAsked(state, state.zones.battlefield.filter((id) => controllerOf(state, id) === player).map((id) => state.objects[id]))
+    .some((selector) => matchesLastKnown(selector, entry.from, {controller: player}));
 
 /** The rider mana a player has: no more of a key than the pool holds -- the plain mana spent first by whatever spent it
  *  without saying (the oldest riders kept). It only reads: spendFor and the pool's emptying write the list. */
@@ -102,9 +154,10 @@ export function riderChoices(state, player, use, mana) {
     const plain = (pool[key] ?? 0) - mine.length;
     const groups = [];
     for (const r of mine) {
-      const kind = `${r.source}:${r.whenSpent?.ability ?? ""}`;
+      /* Mana from sources alike -- two Treasures' -- is alike (`from`). */
+      const kind = r.from ? `from:${JSON.stringify([r.from.types, r.from.subtypes, r.from.supertypes, r.from.token])}` : `${r.source}:${r.whenSpent?.ability ?? ""}`;
       const group = groups.find((g) => g.kind === kind);
-      if (group) group.ids.push(r.id); else groups.push({kind, ids: [r.id], triggers: triggersOn(state, player, r, use)});
+      if (group) group.ids.push(r.id); else groups.push({kind, ids: [r.id], triggers: triggersOn(state, player, r, use) || provenanceRead(state, player, r, use)});
     }
     const here = [];
     const walk = (g, picked, total) => {
@@ -123,21 +176,59 @@ export function riderChoices(state, player, use, mana) {
   return ways.map((ids) => [...ids].sort((a, b) => a - b));
 }
 
-/** What `player` may spend on `use` now: the pool, and the restricted mana that admits it. A copy, to pay from. */
+/* Whether this withheld mana can't pay for `use`: casting a spell from the zone it names, the card read where it is now (an
+   ability's use names no spell). */
+const withholds = (state, entry, use) => state.objects[use.spell]?.zone === entry.cantSpend.castFrom;
+
+/** The withheld mana still in the pool: its entries, less what was spent since they were last written without spendFor
+ *  saying so -- taken from them first. It only reads: spendFor and addPoolMana write the list. */
+export function withheldOf(state, player) {
+  const p = state.players[player];
+  const list = p.withheldMana ?? [];
+  if (!list.length) return list;
+  const gone = Object.fromEntries(MANA_KEYS.map((key) => [key, p.withheldSeen[key] - p.manaPool[key]]));
+  return list.filter((entry) => {
+    if (gone[entry.key] > 0) { gone[entry.key] -= 1; return false; }
+    return true;
+  });
+}
+/* Written as the pool now is (withheldOf), before the pool changes again -- its writer then says what the pool was. Nothing
+   kept for a player who has had none. */
+function settleWithheld(state, player) {
+  const p = state.players[player];
+  if (p.withheldMana) p.withheldMana = withheldOf(state, player);
+}
+
+/** Add `mana` to `player`'s pool, made by `source` -- and, with `cantSpend` (Heartwood Crafter's), remembered beside it as
+ *  mana that can't be spent on those. */
+export function addPoolMana(state, player, mana, cantSpend, source) {
+  settleWithheld(state, player);
+  const p = state.players[player];
+  addMana(p.manaPool, mana);
+  if (cantSpend) for (const [key, n] of Object.entries(mana)) for (let i = 0; i < n; i += 1) (p.withheldMana ??= []).push({key, source, cantSpend});
+  if (p.withheldMana?.length) p.withheldSeen = {...p.manaPool};
+}
+
+/** What `player` may spend on `use` now: the pool, and the restricted mana that admits it -- less the mana that can't be
+ *  spent on it. A copy, to pay from. */
 export function poolFor(state, player, use) {
   const pool = {...state.players[player].manaPool};
   for (const entry of restricted(state, player)) if (admits(state, player, entry, use)) pool[entry.key] = (pool[entry.key] ?? 0) + 1;
+  for (const entry of withheldOf(state, player)) if (withholds(state, entry, use)) pool[entry.key] -= 1;
   return pool;
 }
 
 /**
  * Spend `mana` on `use`: the restricted mana that admits it first, then the pool -- of it, the rider mana `riders` names
- * (an offer's choice, riderChoices), or, unnamed, the plain mana first and then the oldest riders.
+ * (an offer's choice, riderChoices), or, unnamed, the plain mana first and then the oldest riders; and of the pool, the
+ * withheld mana first, where it may be spent.
  *
- * @returns {{uncounterable: boolean, triggered: Array}} whether any of it said "that spell can't be countered", and the
- *   rider entries spent that trigger on this use (the caller makes their triggers, about the spell as it now is)
+ * @returns {{uncounterable: boolean, triggered: Array, from: Array}} whether any of it said "that spell can't be countered", the
+ *   rider entries spent that trigger on this use (the caller makes their triggers, about the spell as it now is), and the
+ *   sources, as each was, of the mana spent whose source is asked after (CR 106.3)
  */
 export function spendFor(state, player, use, mana, riders = null) {
+  settleWithheld(state, player);
   const list = restricted(state, player);
   const left = {...mana};
   let uncounterable = false;
@@ -168,8 +259,38 @@ export function spendFor(state, player, use, mana, riders = null) {
     }
     state.players[player].manaRiders = mine.filter((r) => !spent.includes(r));
   }
-  spend(state.players[player].manaPool, left);
-  return {uncounterable, triggered: spent.filter((r) => triggersOn(state, player, r, use))};
+  const p = state.players[player];
+  if (p.withheldMana?.length) {
+    const take = {...left};
+    p.withheldMana = p.withheldMana.filter((entry) => {
+      if (withholds(state, entry, use) || !(take[entry.key] > 0)) return true;
+      take[entry.key] -= 1;
+      return false;
+    });
+  }
+  spend(p.manaPool, left);
+  if (p.withheldMana?.length) p.withheldSeen = {...p.manaPool};
+  return {uncounterable, triggered: spent.filter((r) => triggersOn(state, player, r, use)), from: spent.filter((r) => r.from).map((r) => r.from)};
+}
+
+/** "That mana becomes colorless instead" of being lost (Omnath, Locus of the Void; CR 614.1a, 106.4; rules/turn.mjs): `player`'s
+ *  pool but what is `kept` (firebending's, not lost now) becomes {C}, and the mana kept beside it with it -- the restricted
+ *  mana, each still paying only for what it did; the riders and withheld mana of what became {C}, each still doing and
+ *  refusing what it did. */
+/* Taken out of the pool as it was, and put back as {C} through addPoolMana, the pool's one way up -- the withheld mana's record
+   written between the two, so nothing it withholds reads as spent. */
+export function colorlessPool(state, player, kept = {}) {
+  const p = state.players[player];
+  settleWithheld(state, player);
+  const lost = Object.fromEntries(MANA_KEYS.map((key) => [key, Math.max(0, (p.manaPool[key] ?? 0) - (kept[key] ?? 0))]));
+  for (const entry of p.restrictedMana ?? []) entry.key = "C";
+  for (const list of [p.manaRiders ?? [], p.withheldMana ?? []]) {
+    const left = {...lost};
+    for (const entry of list) if (left[entry.key] > 0) { left[entry.key] -= 1; entry.key = "C"; }
+  }
+  spend(p.manaPool, lost);
+  if (p.withheldMana?.length) p.withheldSeen = {...p.manaPool};
+  addPoolMana(state, player, {C: MANA_KEYS.reduce((n, key) => n + lost[key], 0)}, null, null);
 }
 
 /** Empty it with the pool (CR 500.4), the riders of the pool's mana too. @returns {number} how much there was */
@@ -177,5 +298,6 @@ export function emptyRestricted(player) {
   const had = player.restrictedMana?.length ?? 0;
   if (had) player.restrictedMana = [];
   if (player.manaRiders?.length) player.manaRiders = [];
+  if (player.withheldMana?.length) player.withheldMana = [];
   return had;
 }

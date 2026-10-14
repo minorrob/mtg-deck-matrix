@@ -17,6 +17,8 @@ import {runEffects} from "../game/engine/script/effects/index.mjs";
 import {beginResolution} from "../game/engine/script/resolution.mjs";
 import {conditionHolds, conditionProblems} from "../game/engine/script/condition.mjs";
 import {compileScript} from "../game/engine/cards/index.mjs";
+import {runScenario} from "../game/engine/cards/scenario.mjs";
+import {loadCardIndex} from "../game/tools/engine-cards.mjs";
 
 let checks = 0;
 const eq = (a, b, m) => { assert.deepEqual(a, b, m); checks += 1; };
@@ -106,4 +108,135 @@ const you = {controller: 0, source: null};
   eq(compileScript(script({what: "permanent", types: ["Creature"], power: {min: 2}})).problems.some((p) => /no key "power"/.test(p)), true, "power: refused, not ignored");
 }
 
-console.log(`engine-remembered-moved: ${checks} checks passed — a search remembers; from among what was moved, chosen; the top of a library, revealed if it says; its mana value; exiled if it would leave; a named object's condition; a layer's affects read in full or refused.`);
+/* WAVE 4A, LANE H2: THE CARDS AN EFFECT MOVED, REFERRED TO AFTER IT -- "exile two target ..., then return those cards"
+   (Ghostly Flicker, Brago), "put all artifact cards from among them" (Tezzeret, Master of the Bridge), "put all land cards
+   from among them" (Animist's Awakening), "you may attach it" (Armored Skyhunter), "exiled with this Vehicle" (Nautiloid
+   Ship). What the cards' scenarios cannot reach: each grammar's refusals, and the edges of a move of several at once. */
+const RELIC = {card: "Relic", types: ["Artifact"], manaCost: "{1}", colors: []};
+const AURA = {card: "Aura", types: ["Enchantment"], subtypes: ["Aura"], manaCost: "{W}", colors: ["W"], enchant: {what: "permanent", types: ["Creature"]}};
+const TOKEN = {card: "Treasure", types: ["Artifact"], subtypes: ["Treasure"], colors: [], token: true};
+const zoneOf = (s, card) => Object.values(s.objects).filter((o) => o.card === card).map((o) => o.zone).sort();
+{
+  /* Then return those cards (CR 608.2c): every card exiled first, then every one returned -- never one exiled and returned
+     before the next is exiled. */
+  const s = table();
+  const bear = put(s, BEAR, 0, "battlefield"), relic = put(s, RELIC, 0, "battlefield");
+  const events = runEffects(s, [{effect: "moveZone", targets: [bear, relic], to: "exile", andReturn: "now"}], you)
+    .filter((e) => e.kind === "GameEventCardChangeZone").map((e) => `${e.data.fields.card.name} to ${e.data.fields.to.zoneType}`);
+  eq(events, ["Bear to Exile", "Relic to Exile", "Bear to Battlefield", "Relic to Battlefield"], "both exiled, then both returned");
+  /* "Under your control" (Ghostly Flicker): its controller's, whoever owns it. */
+  const t = table();
+  const theirs = put(t, BEAR, 1, "battlefield");
+  t.objects[theirs].controller = 0;
+  runEffects(t, [{effect: "moveZone", targets: [theirs], to: "exile", andReturn: "now", under: "you"}], you);
+  eq(t.zones.battlefield.map((id) => [t.objects[id].owner, t.objects[id].controller]), [[1, 0]], "Maya's Bear Rob controlled, returned under his control");
+}
+{
+  /* A token exiled this way stays in exile (CR 111.8): it does not return, and is gone at the next state-based actions. */
+  const s = table();
+  const treasure = put(s, TOKEN, 0, "battlefield"), relic = put(s, RELIC, 0, "battlefield");
+  const ctx = {...you};
+  runEffects(s, [{effect: "moveZone", targets: [treasure, relic], to: "exile", andReturn: "now", remember: true}], ctx);
+  eq([zoneOf(s, "Treasure"), zoneOf(s, "Relic"), names(s, ctx.remembered)], [["exile"], ["battlefield"], ["Relic"]], "the Treasure stays in exile; the Relic comes back, and is what is remembered");
+  const exiled = s.zones.exile.find((id) => s.objects[id].card === "Treasure");
+  runEffects(s, [{effect: "moveZone", targets: [exiled], to: "battlefield"}], you);
+  eq(zoneOf(s, "Treasure"), ["exile"], "nor can any effect bring it back from there");
+}
+{
+  /* Cards entering the battlefield together (CR 303.4f): an Aura among them enchants none of the others -- one of this move's,
+     or one a flicker returns beside it. Here Maya's Ogre is the one creature it may enchant; without it, the Aura has nothing
+     to enchant and stays where it was (CR 303.4g). */
+  const s = table();
+  const ogre = put(s, OGRE, 1, "battlefield");
+  const bear = put(s, BEAR, 0, "graveyard"), aura = put(s, AURA, 0, "graveyard");
+  beginResolution(s, [{effect: "moveZone", targets: [bear, aura], to: "battlefield"}], you);
+  const onIt = s.zones.battlefield.find((id) => s.objects[id].card === "Aura");
+  eq([onIt !== undefined, s.objects[onIt]?.attachedTo], [true, ogre], "the Bear and the Aura put onto the battlefield at once: the Aura on the Ogre, not the Bear");
+  const t = table();
+  const lone = put(t, BEAR, 0, "graveyard"), charm = put(t, AURA, 0, "graveyard");
+  beginResolution(t, [{effect: "moveZone", targets: [lone, charm], to: "battlefield"}], you);
+  eq([zoneOf(t, "Bear"), zoneOf(t, "Aura")], [["battlefield"], ["graveyard"]], "with only the Bear entering beside it, the Aura stays in the graveyard");
+}
+{
+  /* "Put all artifact cards from among them" (`only`): of what it names, those a selector fits where each now is -- nobody
+     asked; on the battlefield, as permanents. */
+  const s = table();
+  const relic = put(s, RELIC, 0, "exile"), bear = put(s, BEAR, 0, "exile");
+  runEffects(s, [{effect: "moveZone", targets: [relic, bear], only: {types: ["Artifact"]}, to: "battlefield"}], you);
+  eq([zoneOf(s, "Relic"), zoneOf(s, "Bear"), s.awaiting ?? null], [["battlefield"], ["exile"], null], "the Relic onto the battlefield, the Bear left in exile");
+  const t = table();
+  const a = put(t, RELIC, 0, "battlefield"), b = put(t, BEAR, 0, "battlefield");
+  runEffects(t, [{effect: "moveZone", targets: [a, b], only: {types: ["Creature"]}, to: "hand"}], you);
+  eq([zoneOf(t, "Relic"), zoneOf(t, "Bear")], [["battlefield"], ["hand"]], "a permanent read as a permanent: the creature returned, the artifact not");
+  /* As it now is, through the layers: a Wastes animated into a creature (layer 4) is one -- its card's types say land. */
+  const u = table();
+  const land = put(u, WASTES, 0, "battlefield");
+  runEffects(u, [{effect: "animate", targets: [land], power: 1, toughness: 1}], you);
+  runEffects(u, [{effect: "moveZone", targets: [land], only: {types: ["Creature"]}, to: "hand"}], you);
+  eq(zoneOf(u, "Wastes"), ["hand"], "the animated Wastes, a creature now, returned");
+}
+{
+  /* "Exile target player's graveyard" kept for "exiled with this Vehicle" (moveZoneAll's `link`): what reached exile. A card
+     a replacement sends elsewhere ("put it into its owner's hand instead") was never exiled, and is not linked. */
+  const s = table();
+  const ship = put(s, RELIC, 0, "battlefield");
+  put(s, BEAR, 1, "graveyard"); put(s, OGRE, 1, "graveyard");
+  runEffects(s, [{effect: "moveZoneAll", selector: {what: "card", zone: "graveyard", controller: 1}, to: "exile", link: true}], {controller: 0, source: ship});
+  eq(names(s, s.links[ship]).sort(), ["Bear", "Ogre"], "her two creature cards exiled, linked to the source");
+  const t = table();
+  const vehicle = put(t, RELIC, 0, "battlefield");
+  put(t, {card: "Warden", types: ["Enchantment"], abilities: [{id: "w", kind: "replacement", text: "If a card would be put into exile from a graveyard, put it into its owner's hand instead.",
+    watches: {event: "zone-change", from: "graveyard", to: "exile"}, change: {to: "hand"}}]}, 1, "battlefield");
+  put(t, BEAR, 1, "graveyard");
+  runEffects(t, [{effect: "moveZoneAll", selector: {what: "card", zone: "graveyard", controller: 1}, to: "exile", link: true}], {controller: 0, source: vehicle});
+  eq([zoneOf(t, "Bear"), (t.links?.[vehicle] ?? []).length], [["hand"], 0], "put into her hand instead: nothing linked");
+}
+{
+  /* "{R}{W}, Unattach this Equipment" (Sunforger; CR 701.3d): off the creature it equipped, which no longer lists it. */
+  const index = loadCardIndex();
+  const fixtures = {Bear: {types: ["Creature"], manaCost: "{1}{G}", colors: ["G"], power: 2, toughness: 2}};
+  const {state: s} = runScenario({name: "unattach", setup: [{seat: 0, zone: "battlefield", cards: ["Sunforger", "Bear", "Wastes", "Wastes", "Wastes", "Mountain", "Plains"]}],
+    steps: [{tap: "Wastes"}, {tap: "Wastes"}, {tap: "Wastes"}, {activate: "Sunforger", ability: "a2", targets: [{card: "Bear"}]}, {resolve: true},
+      {tap: "Mountain"}, {tap: "Plains"}, {activate: "Sunforger", ability: "a1"}]}, index.definition, fixtures);
+  const bear = s.zones.battlefield.find((id) => s.objects[id].card === "Bear"), sunforger = s.zones.battlefield.find((id) => s.objects[id].card === "Sunforger");
+  eq([s.objects[sunforger].attachedTo ?? null, s.objects[bear].attachments ?? []], [null, []], "unattached as the cost is paid, and off the Bear's list");
+}
+{
+  /* "Exile the top X cards ... you may attach it": the Equipment the effect before it put onto the battlefield. None there,
+     nobody is asked. "Put all land cards from among them" (dig's `all`): nobody is asked, and what it took is remembered. */
+  const s = table();
+  put(s, BEAR, 0, "battlefield");
+  const ctx = {...you, remembered: []};
+  const outcome = beginResolution(s, [{effect: "chooseCard", zone: "battlefield", selector: {types: ["Creature"], controller: "you"}, upTo: true, to: "stay", attach: "remembered"}], ctx);
+  eq([outcome.status, s.awaiting ?? null], ["done", null], "nothing remembered on the battlefield to attach: no question");
+  const t = table();
+  for (const o of [BEAR, WASTES, BOLT, WASTES]) put(t, o, 0, "library");
+  const dug = beginResolution(t, [{effect: "dig", count: 3, selector: {types: ["Land"]}, all: true, toByType: [{types: ["Land"], to: "battlefield", tapped: true}], remember: true},
+    {effect: "untap", targets: "remembered"}], you);
+  /* The rest to the bottom in the order their owner chooses (CR 401.4; wave 4c, k2): asked, and the land still remembered after. */
+  eq(dug.status, "waiting", "the order of the two left is asked");
+  resolveAwaiting(t, [0, 1]);
+  eq([names(t, t.zones.battlefield), t.zones.battlefield.map((id) => t.objects[id].tapped), names(t, t.zones.library[0])],
+    [["Wastes"], [false], ["Wastes", "Bear", "Bolt"]], "the one land of the top three onto the battlefield and remembered (untapped after); the rest to the bottom");
+}
+{
+  /* Each new word's grammar, refused when it is misused rather than read as something else. */
+  const script = (effects, kind = "spell") => ({schema: "CrankCardScript@1", identity: {name: "Probe", oracleId: "x", types: ["Sorcery"], subtypes: [], manaCost: "{1}", colors: [], colorIdentity: [], power: null, toughness: null},
+    oracleText: "Probe.", source: "hand", abilities: [{kind, text: "Probe.", effects}]});
+  const refused = (effects, pattern) => compileScript(script(effects)).problems.some((p) => pattern.test(p));
+  eq(compileScript(script([{effect: "moveZone", targets: "remembered", only: {types: ["Artifact"]}, to: "battlefield"}])).problems, [], "`only`, a selector: read");
+  eq(refused([{effect: "moveZone", targets: "remembered", only: {mana: 3}, to: "battlefield"}], /only/), true, "`only` with a key no selector has: refused");
+  eq(refused([{effect: "moveZone", targets: "remembered", to: "exile", returnTapped: true}], /returnTapped/), true, "returnTapped without andReturn: refused");
+  eq(refused([{effect: "moveZoneAll", selector: {what: "card", zone: "graveyard"}, to: "hand", link: true}], /link/), true, "a move of all kept as linked, not to exile: refused");
+  eq(refused([{effect: "chooseCard", zone: "battlefield", selector: {types: ["Creature"]}, to: "hand", attach: "remembered"}], /attach/), true, "attach with a chosen card that moves: refused");
+  eq(refused([{effect: "dig", count: 3, selector: {types: ["Land"]}, all: true, take: 2}], /all/), true, "dig's all beside a take: refused");
+  eq(refused([{effect: "dig", count: 3, all: true}], /all/), true, "dig's all with nothing to fit: refused");
+  eq(refused([{effect: "dig", count: 3, selector: {types: ["Land"]}, all: true, upTo: true}], /all/), true, "dig's all beside a \"you may\": refused");
+  eq(compileScript(script([{effect: "dig", count: 3, selector: {types: ["Land"]}, all: true, toByType: [{types: ["Land"], to: "battlefield", tapped: true}]}])).problems, [], "dig's all beside a selector: read");
+  eq(refused([{effect: "modal", choose: 1, sameMode: true, modes: [{text: "A", effects: [{effect: "draw", count: 1}]}, {text: "B", effects: [{effect: "draw", count: 2}]}]}], /sameMode/), true,
+    "the same mode more than once, choosing one: refused");
+  eq(compileScript(script([{effect: "modal", choose: 3, sameMode: true, modes: [{text: "A", effects: [{effect: "draw", count: 1}]}, {text: "B", effects: [{effect: "draw", count: 2}]}]}])).problems, [],
+    "choose three, the same mode more than once (Eldrazi Confluence): read");
+}
+
+console.log(`engine-remembered-moved: ${checks} checks passed — a search remembers; from among what was moved, chosen; the top of a library, revealed if it says; its mana value; exiled if it would leave; a named object's condition; a layer's affects read in full or refused; those cards exiled, then returned, a token never, an Aura entering beside them enchanting none of them; all of a kind from among them; an Equipment attached as it says; each new word refused when misused.`);

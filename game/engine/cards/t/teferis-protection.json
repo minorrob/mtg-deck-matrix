@@ -1,0 +1,55 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Teferi's Protection",
+    "oracleId": "0d4ecdb1-ec90-497f-a7a4-1c68092b8757",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Until your next turn, your life total can't change and you gain protection from everything. All permanents you control phase out. (While they're phased out, they're treated as though they don't exist. They phase in before you untap during your untap step.)\nExile Teferi's Protection.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Until your next turn, your life total can't change and you gain protection from everything. All permanents you control phase out. (While they're phased out, they're treated as though they don't exist. They phase in before you untap during your untap step.)\nExile Teferi's Protection.",
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "rule": "life-cant-change",
+          "who": "you",
+          "until": "your-next-turn"
+        },
+        {
+          "effect": "effectUntil",
+          "rule": "protection",
+          "from": "everything",
+          "who": "you",
+          "until": "your-next-turn"
+        },
+        {
+          "effect": "phaseOut",
+          "selector": {
+            "what": "permanent",
+            "controller": "you"
+          }
+        },
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "to": "exile"
+        }
+      ]
+    }
+  ]
+}

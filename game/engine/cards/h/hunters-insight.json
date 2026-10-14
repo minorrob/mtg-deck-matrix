@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hunter's Insight",
+    "oracleId": "cf8a0782-f545-445e-abac-d9063dad696b",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose target creature you control. Whenever that creature deals combat damage to a player or planeswalker this turn, draw that many cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose target creature you control. Whenever that creature deals combat damage to a player or planeswalker this turn, draw that many cards.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "delayedTrigger",
+          "when": {
+            "on": "damage dealt",
+            "who": {
+              "target": 0
+            },
+            "combat": true,
+            "to": "player",
+            "planeswalkers": true
+          },
+          "thisTurn": true,
+          "text": "Whenever that creature deals combat damage to a player or planeswalker this turn, draw that many cards.",
+          "effects": [
+            {
+              "effect": "draw",
+              "count": {
+                "damageDealt": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -18,13 +18,14 @@
  *   {schema: "CrankCardScenarios@1", card, fixtures?: {name: object}, scenarios: [{
  *     name, seats?: 2..4, at?: {turn, phase}, library?: [names],
  *     setup: [{seat, zone, cards, sick?}]   (a card put in the command zone is that seat's commander),
- *     steps: [ {play|tap|cast|activate|turnFaceUp: name, seat?, targets?: [{card, seat?} | {player}] | "any", ability?, mana?, x?, optional?}
+ *     steps: [ {play|tap|cast|activate|turnFaceUp|suspend: name, seat?, targets?: [{card, seat?} | {player} | {ability}] | "any", ability?, mana?, x?, optional?, gift?}
  *            | {resolve: true} | {settle: true} | {pass: n} | {to: {turn, phase}} | {answer: [indices]} | {expect: [...]}
  *            | {attack: [names], at?} | {block: [[blocker, attacker], ...]} | {choose: [labels]} ],
  *   (`targets: "any"` takes the first legal aim; `optional` skips a move the rules do not offer; `settle` answers every
  *   question with its first legal answer and resolves the stack until it is empty -- the card loader's smoke test.)
- *     expect: [ {seat, zone, cards} | {seat, zone, count} | {seat, life} | {seat, poison} | {stack} | {seat, tapped, is}
- *             | {seat, pool} | {seat, counters: {card, counter, count}} | {offers: {kind, card, seat?}, count, targets?} | {event, where} ] }]}
+ *     expect: [ {seat, of?, zone, cards?, count?, faceDown?} | {seat, life} | {seat, poison} | {stack} | {seat, tapped, is}
+ *             | {seat, pool} | {seat, counters: {card, counter, count}} | {offers: {kind, card, seat?}, count, targets?} | {event, where}
+ *             | {monarch: seat | null} ] }]}
  */
 
 import {controllerOf} from "../rules/layers.mjs";
@@ -78,7 +79,10 @@ export function runScenario(scenario, cards, fixtures = {}) {
   const fail = (message) => { throw new Error(`${scenario.name}: ${message}`); };
   const seats = scenario.seats ?? 2;
   const names = ["Rob", "Maya", "Trey", "Sam"].slice(0, seats);
-  const state = createState({matchId: "scenario", seed: scenario.name, players: names.map((name) => ({name}))});
+  /* `skipFirstDraw: false`: the table's house rule that the starting player of a two-player game has their first draw step
+     after all (CR 103.8a; game/room/table.mjs). */
+  const state = createState({matchId: "scenario", seed: scenario.name, players: names.map((name) => ({name})),
+    ...(scenario.skipFirstDraw === false ? {skipFirstDraw: false} : {})});
   const rng = createRng(scenario.name);
   const record = (list) => { events.push(...(list ?? [])); return list; };
 
@@ -144,8 +148,12 @@ export function runScenario(scenario, cards, fixtures = {}) {
       const w = wanted[i];
       /* A counted target ("up to two target creatures", a list in the step): the offer holds its placeholder, and the list
          is picked once the offer is taken (CR 601.2c; script/bind.mjs). */
-      if (Array.isArray(w)) return isChoosing(t);
+      /* One whose choices share something ("from a single graveyard", script/bind.mjs `share`) is offered once for each group:
+         the one holding every card the step names. */
+      if (Array.isArray(w)) return isChoosing(t) && (!Array.isArray(t.group) || w.every((x) => x.card === undefined || t.group.some((id) => targetName(state, {kind: "object", id}) === x.card)));
       if (w.player !== undefined) return t.kind === "player" && t.id === w.player;
+      /* An ability on the stack (Bolt Bend's target), by its source's name: `{ability: "Prodigal Pyromancer"}`. */
+      if (w.ability !== undefined) return t.kind === "ability" && state.stack.find((e) => e.stackId === t.id)?.name === w.ability;
       return t.kind === "object" && targetName(state, t) === w.card && (w.seat === undefined || state.objects[t.id].controller === w.seat);
     });
   };
@@ -156,8 +164,9 @@ export function runScenario(scenario, cards, fixtures = {}) {
     const seat = seatOf(step);
     /* `turnFaceUp`: a manifested permanent turned face up (CR 701.40b), named by the card it is -- as its controller,
        who is offered it, sees it (CR 708.5). */
+    /* `suspend`: a card suspended from its owner's hand (CR 702.62a), a special action. */
     const [kind, card] = step.play ? ["play-land", step.play] : step.tap ? ["activate-mana", step.tap]
-      : step.cast ? ["cast", step.cast] : step.turnFaceUp ? ["turn-face-up", step.turnFaceUp] : ["activate", step.activate];
+      : step.cast ? ["cast", step.cast] : step.turnFaceUp ? ["turn-face-up", step.turnFaceUp] : step.suspend ? ["suspend", step.suspend] : ["activate", step.activate];
     const aim = step.targets === "any" ? undefined : (kind === "cast" || kind === "activate" ? step.targets ?? [] : undefined);
     let found = offered({kind, card, seat}, aim);
     if (kind === "activate" && step.ability !== undefined) found = found.filter((a) => a.abilityId === step.ability);
@@ -177,6 +186,17 @@ export function runScenario(scenario, cards, fixtures = {}) {
     /* Convoked (CR 702.51a): `convoke: true` takes the offer the caster's creatures help pay, its creatures a question once it
        is taken, answered by the next step's `choose`; without it, the cast the pool pays alone. */
     found = found.filter((a) => (a.convoke ?? false) === (step.convoke ?? false));
+    /* Delved (CR 702.66a): `delve: true` takes the offer the caster's graveyard helps pay, its cards a question once it is
+       taken, answered by the next step's `answer` or `choose`; without it, the cast the pool pays alone. */
+    found = found.filter((a) => (a.delve ?? false) === (step.delve ?? false));
+    /* Waterbend (CR 701.67a): `waterbend: true` takes the offer that taps artifacts and creatures for part of it, which ones a
+       question once it is taken; without it, the one the pool pays. */
+    found = found.filter((a) => (a.waterbend ?? false) === (step.waterbend ?? false));
+    /* A gift promised (CR 702.174a): `gift`, the seat of the opponent chosen; without it, the cast that promises none. */
+    found = found.filter((a) => (a.gift ?? null) === (step.gift ?? null));
+    /* Cast face down with disguise (CR 702.168a), or turned face up for its disguise cost (702.168d): `disguise: true`;
+       without it, the card cast as itself, or turned face up for its mana cost. */
+    found = found.filter((a) => (a.disguise ?? false) === (step.disguise ?? false));
     for (const key of ["exile"]) if (step[key] !== undefined) found = found.filter((a) => (a.costNames ?? []).includes(step[key]));
     /* Which permanent a "Sacrifice a creature" cost takes, which card a discard does, which creature an "untap a tapped
        creature you control" cost untaps, or which one a "Blight 1" cost puts its counter on: the offer that names it. */
@@ -195,6 +215,8 @@ export function runScenario(scenario, cards, fixtures = {}) {
     if (step.riders !== undefined) found = found.filter((a) => ((a.riders ?? []).length > 0) === step.riders);
     /* Through which permanent's permission ("via": its name), when two would let it be played and do different things. */
     if (step.via !== undefined) found = found.filter((a) => (a.viaName ?? null) === step.via);
+    /* As which of its permanent types, through a permission kept by type (Muldrotha, the Gravetide): `asType`, "Artifact". */
+    if (step.asType !== undefined) found = found.filter((a) => (a.asType ?? null) === step.asType);
     if (!found.length && step.optional) return;
     if (!found.length) fail(`${names[seat]} is not offered ${kind} ${card}${step.targets ? ` at ${JSON.stringify(step.targets)}` : ""}`);
     record(applyAction(state, seat, found[0]));
@@ -212,19 +234,33 @@ export function runScenario(scenario, cards, fixtures = {}) {
     }
   }
 
+  /* A permanent on a seat's battlefield, as that seat sees it: by its name -- a face-down one of theirs by the card it is,
+     which they may look at (CR 708.5), and any face-down one as "A face-down permanent". */
+  const onField = (seat, name) => projectFor(state, seat).players[seat].zones.Battlefield.cards
+    .find((c) => c.name === name || (c.faceDown && (c.faceDownName === name || name === "A face-down permanent")));
   function check(expect) {
     for (const e of expect ?? []) {
       if (e.zone !== undefined) {
-        const zone = projectFor(state, e.seat).players[e.seat].zones[ZONES[e.zone]];
+        /* Another seat's zone as this seat sees it (`of`, whose): Maya's view of Rob's exile. */
+        const whose = e.of ?? e.seat, where = whose === e.seat ? `${names[e.seat]}'s ${e.zone}` : `${names[whose]}'s ${e.zone} as ${names[e.seat]} sees it`;
+        const zone = projectFor(state, e.seat).players[whose].zones[ZONES[e.zone]];
         if (e.cards !== undefined) {
           const got = zone.cards.map((c) => c.name).sort();
           const want = [...e.cards].sort();
-          if (JSON.stringify(got) !== JSON.stringify(want)) fail(`${names[e.seat]}'s ${e.zone} is ${JSON.stringify(got)}, not ${JSON.stringify(want)}`);
-          passed.push(`${names[e.seat]}'s ${e.zone}: ${want.join(", ") || "empty"}`);
+          if (JSON.stringify(got) !== JSON.stringify(want)) fail(`${where} is ${JSON.stringify(got)}, not ${JSON.stringify(want)}`);
+          passed.push(`${where}: ${want.join(", ") || "empty"}`);
+        }
+        /* Its face-down cards as this seat may look at them (CR 406.3, 708.5; projection.mjs, `faceDownName`): the card each
+           is, or null where this seat may not look. */
+        if (e.faceDown !== undefined) {
+          const got = zone.cards.filter((c) => c.faceDown).map((c) => c.faceDownName ?? null).sort();
+          const want = [...e.faceDown].sort();
+          if (JSON.stringify(got) !== JSON.stringify(want)) fail(`the face-down cards of ${where} are ${JSON.stringify(got)}, not ${JSON.stringify(want)}`);
+          passed.push(`the face-down cards of ${where}: ${want.map((n) => n ?? "unseen").join(", ") || "none"}`);
         }
         if (e.count !== undefined) {
-          if (zone.count !== e.count) fail(`${names[e.seat]}'s ${e.zone} holds ${zone.count}, not ${e.count}`);
-          passed.push(`${names[e.seat]}'s ${e.zone} holds ${e.count}`);
+          if (zone.count !== e.count) fail(`${where} holds ${zone.count}, not ${e.count}`);
+          passed.push(`${where} holds ${e.count}`);
         }
       } else if (e.life !== undefined) {
         const life = projectFor(state, e.seat).players[e.seat].life;
@@ -246,7 +282,7 @@ export function runScenario(scenario, cards, fixtures = {}) {
         if (size !== e.stack) fail(`the stack holds ${size}, not ${e.stack}`);
         passed.push(`the stack holds ${e.stack}`);
       } else if (e.tapped !== undefined) {
-        const card = projectFor(state, e.seat).players[e.seat].zones.Battlefield.cards.find((c) => c.name === e.tapped);
+        const card = onField(e.seat, e.tapped);
         if (!card || card.tapped !== (e.is !== false)) fail(`${e.tapped} is ${card ? (card.tapped ? "tapped" : "untapped") : "not on the battlefield"}`);
         passed.push(`${e.tapped} ${e.is === false ? "untapped" : "tapped"}`);
       } else if (e.pool !== undefined) {
@@ -286,24 +322,29 @@ export function runScenario(scenario, cards, fixtures = {}) {
         passed.push(`asks ${names[state.awaiting.player]}: ${(e.asks.options ?? []).join(", ")}`);
       } else if (e.keywords !== undefined) {
         /* A permanent's current keywords, as its controller's view shows them. */
-        const card = projectFor(state, e.seat).players[e.seat].zones.Battlefield.cards.find((c) => c.name === e.keywords.card);
+        const card = onField(e.seat, e.keywords.card);
         if (!card) fail(`${e.keywords.card} is not on ${names[e.seat]}'s battlefield`);
         for (const k of e.keywords.has ?? []) if (!card.keywords.includes(k)) fail(`${e.keywords.card} lacks ${k}`);
         for (const k of e.keywords.lacks ?? []) if (card.keywords.includes(k)) fail(`${e.keywords.card} has ${k}`);
         passed.push(`${e.keywords.card}: ${(e.keywords.has ?? []).join(", ")}${(e.keywords.lacks ?? []).length ? `, not ${e.keywords.lacks.join(", ")}` : ""}`);
       } else if (e.counters !== undefined) {
         /* A permanent's counters of one kind, as its seat sees them: {seat, counters: {card, counter, count}}. */
-        const card = projectFor(state, e.seat).players[e.seat].zones.Battlefield.cards.find((c) => c.name === e.counters.card);
+        const card = onField(e.seat, e.counters.card);
         if (!card) fail(`${e.counters.card} is not on ${names[e.seat]}'s battlefield`);
         const n = card.counters?.[e.counters.counter] ?? 0;
         if (n !== e.counters.count) fail(`${e.counters.card} has ${n} ${e.counters.counter} counter${n === 1 ? "" : "s"}, not ${e.counters.count}`);
         passed.push(`${e.counters.card}: ${e.counters.count} ${e.counters.counter}`);
       } else if (e.stats !== undefined) {
         /* A creature's current power and toughness, as its controller's view shows them (layer 7). */
-        const card = projectFor(state, e.seat).players[e.seat].zones.Battlefield.cards.find((c) => c.name === e.stats.card);
+        const card = onField(e.seat, e.stats.card);
         if (!card) fail(`${e.stats.card} is not on ${names[e.seat]}'s battlefield`);
         if (card.power !== e.stats.power || card.toughness !== e.stats.toughness) fail(`${e.stats.card} is ${card.power}/${card.toughness}, not ${e.stats.power}/${e.stats.toughness}`);
         passed.push(`${e.stats.card}: ${e.stats.power}/${e.stats.toughness}`);
+      } else if (e.monarch !== undefined) {
+        /* Who is the monarch (CR 725), as every seat's view says it (projection.mjs): a seat, or null for nobody. */
+        const got = projectFor(state, 0).players.find((p) => p.monarch === true)?.playerId ?? null;
+        if (got !== e.monarch) fail(`the monarch is ${got === null ? "nobody" : names[got]}, not ${e.monarch === null ? "nobody" : names[e.monarch]}`);
+        passed.push(`the monarch: ${e.monarch === null ? "nobody" : names[e.monarch]}`);
       } else if (e.event !== undefined) {
         const hit = events.some((ev) => ev.kind === e.event && Object.entries(e.where ?? {}).every(([k, v]) => JSON.stringify(ev.data?.fields?.[k]) === JSON.stringify(v)));
         if (!hit) fail(`no ${e.event} with ${JSON.stringify(e.where ?? {})}`);
@@ -313,7 +354,7 @@ export function runScenario(scenario, cards, fixtures = {}) {
   }
 
   for (const step of scenario.steps ?? []) {
-    if (step.play || step.tap || step.cast || step.activate || step.turnFaceUp) act(step);
+    if (step.play || step.tap || step.cast || step.activate || step.turnFaceUp || step.suspend) act(step);
     else if (step.resolve) {
       if (!state.stack.length) fail("there is nothing on the stack to resolve");
       /* Everyone passes in turn until the top object has left the stack, or stopped to ask somebody. What its
@@ -351,6 +392,13 @@ export function runScenario(scenario, cards, fixtures = {}) {
       for (let n = 0; n < STEP_LIMIT && state.awaiting?.kind !== "declare-blockers"; n += 1) stepOnce();
       if (state.awaiting?.kind !== "declare-blockers") fail("the game never asked who blocks");
       const choice = awaitingChoice(state), picked = [];
+      /* `blockers`: the creatures that may block, by name, as the question offers them -- "this creature can't block" is one
+         that is not among them (Gravecrawler). */
+      if (step.blockers !== undefined) {
+        const got = [...new Set(choice.options.map((o) => o.label.split(" blocks ")[0]))].sort();
+        if (JSON.stringify(got) !== JSON.stringify([...step.blockers].sort())) fail(`the creatures that may block are ${JSON.stringify(got)}, not ${JSON.stringify(step.blockers)}`);
+        passed.push(`may block: ${step.blockers.join(", ") || "nothing"}`);
+      }
       for (const [blocker, attacker] of step.block) {
         const option = choice.options.find((o) => o.label === `${blocker} blocks ${attacker}` && !picked.includes(o.index));
         if (!option) fail(`${blocker} cannot block ${attacker}: ${choice.options.map((o) => o.label).join(", ") || "nothing can"}`);

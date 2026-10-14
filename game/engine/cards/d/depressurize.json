@@ -1,0 +1,65 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Depressurize",
+    "oracleId": "abcb5321-c295-4abf-8622-7de79679d27a",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target creature gets -3/-0 until end of turn. Then if that creature's power is 0 or less, destroy it.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Target creature gets -3/-0 until end of turn. Then if that creature's power is 0 or less, destroy it.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": -3,
+          "toughness": 0
+        },
+        {
+          "effect": "branch",
+          "if": {
+            "about": "target",
+            "is": {
+              "power": {
+                "max": 0
+              }
+            }
+          },
+          "then": [
+            {
+              "effect": "destroy",
+              "targets": {
+                "target": 0
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

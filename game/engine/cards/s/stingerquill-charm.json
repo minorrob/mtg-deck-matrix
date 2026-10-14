@@ -1,0 +1,131 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Stingerquill Charm",
+    "oracleId": "987aadac-d6a6-4e50-9468-9e8e53cc5529",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{B}{R}",
+    "colors": [
+      "B",
+      "R"
+    ],
+    "colorIdentity": [
+      "B",
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one —\n• Stingerquill Charm deals 3 damage to any target.\n• Target creature gains first strike and deathtouch until end of turn.\n• Create a 2/2 colorless Wizard Soldier creature token named Cadet. It gains haste until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one —\n• Stingerquill Charm deals 3 damage to any target.\n• Target creature gains first strike and deathtouch until end of turn.\n• Create a 2/2 colorless Wizard Soldier creature token named Cadet. It gains haste until end of turn.",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Stingerquill Charm deals 3 damage to any target.",
+              "targets": [
+                {
+                  "anyOf": [
+                    {
+                      "what": "permanent",
+                      "types": [
+                        "Creature"
+                      ]
+                    },
+                    {
+                      "what": "permanent",
+                      "types": [
+                        "Planeswalker"
+                      ]
+                    },
+                    {
+                      "what": "permanent",
+                      "types": [
+                        "Battle"
+                      ]
+                    },
+                    {
+                      "what": "player"
+                    }
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "dealDamage",
+                  "amount": 3,
+                  "targets": {
+                    "target": 0
+                  },
+                  "who": {
+                    "target": 0
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Target creature gains first strike and deathtouch until end of turn.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "pump",
+                  "targets": {
+                    "target": 0
+                  },
+                  "power": 0,
+                  "toughness": 0,
+                  "keywords": [
+                    "First Strike",
+                    "Deathtouch"
+                  ]
+                }
+              ]
+            },
+            {
+              "text": "Create a 2/2 colorless Wizard Soldier creature token named Cadet. It gains haste until end of turn.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "createToken",
+                  "count": 1,
+                  "token": {
+                    "name": "Cadet",
+                    "types": [
+                      "Creature"
+                    ],
+                    "subtypes": [
+                      "Wizard",
+                      "Soldier"
+                    ],
+                    "colors": [],
+                    "power": 2,
+                    "toughness": 2
+                  },
+                  "gainsUntilEndOfTurn": [
+                    "Haste"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -27,6 +27,7 @@
  */
 
 import {cardsIn, moveObject, eventCard} from "../state/index.mjs";
+import {runEffects} from "../script/effects/index.mjs";
 
 /** CR 103.2, and the Commander rules do not change it. */
 const STARTING_HAND = 7;
@@ -145,8 +146,44 @@ export function beginMulligans(state, rng, startingPlayer = 0) {
 /** Whether the opening is settled and the first turn can begin. */
 export const mulligansDone = (state) => state.mulligan?.done === true;
 
+/* AN OPENING HAND'S ACTIONS (CR 103.6): once the mulligans are done, the starting player may take them, then each other player
+   in turn order -- "you may reveal this card from your opening hand. If you do, at the beginning of the first upkeep, create a
+   1/1 red Phyrexian Goblin creature token with haste" (Chancellor of the Forge; CR 103.6b): a card of theirs with the static
+   `opening-hand`, each revealed once at most, what it does its `effects` (a delayed trigger, CR 603.7g: the card its source,
+   its controller the player). One question at a time: a card to reveal, or nothing more. */
+/* "IF THIS CARD IS IN YOUR OPENING HAND AND YOU'RE NOT THE STARTING PLAYER, YOU MAY BEGIN THE GAME WITH GEMSTONE CAVERNS ON THE
+   BATTLEFIELD WITH A LUCK COUNTER ON IT. IF YOU DO, EXILE A CARD FROM YOUR HAND" (CR 103.6a; wave 4b): `begin: "battlefield"`,
+   the card put onto the battlefield (its owner's), with `withCounters`; `notStarting`, never the starting player's to take;
+   `exileFromHand`, then a card of the player's hand exiled, which one theirs -- asked next, before anything else (none left,
+   nothing). */
+const openingAbility = (state, id, player) => (state.objects[id].abilities ?? []).find((a) => a.kind === "static" && a.rule === "opening-hand"
+  && !(a.notStarting === true && player === state.mulligan.startingPlayer));
+const openingCards = (state, player) => cardsIn(state, "hand", player).filter((id) => !(state.mulligan.revealed ?? []).includes(id)
+  && openingAbility(state, id, player));
+function openingHandQuestion(state) {
+  const m = state.mulligan;
+  if (m.exiling) return {kind: "opening-hand", player: m.exiling.player, exile: true};
+  for (const player of decidingOrder(state)) {
+    if ((m.openingDone ?? []).includes(player)) continue;
+    if (openingCards(state, player).length) return {kind: "opening-hand", player};
+  }
+  return null;
+}
+
 /** The choice (§12.1) for whichever mulligan question is pending. */
 export function mulliganChoice(state, awaiting) {
+  if (awaiting.kind === "opening-hand" && awaiting.exile) {
+    const hand = cardsIn(state, "hand", awaiting.player);
+    return {id: `opening-exile:${awaiting.player}:${hand.length}`, title: `${state.mulligan.exiling.name}: exile a card from your hand`, mode: "one", min: 1, max: 1,
+      options: hand.map((id, index) => ({index, label: state.objects[id].card, cardId: id}))};
+  }
+  if (awaiting.kind === "opening-hand") {
+    const cards = openingCards(state, awaiting.player);
+    return {id: `opening-hand:${awaiting.player}:${cards.length}`, title: "Your opening hand: reveal a card for what it does, or begin the game", mode: "one", min: 1, max: 1,
+      options: [...cards.map((id, index) => ({index, cardId: id,
+        label: openingAbility(state, id, awaiting.player).begin === "battlefield" ? `Begin the game with ${state.objects[id].card} on the battlefield` : `Reveal ${state.objects[id].card}`})),
+      {index: cards.length, label: "Begin the game"}]};
+  }
   if (awaiting.kind === "mulligan-decision") {
     const taken = state.mulligan.taken[awaiting.player] ?? 0;
     return {
@@ -182,7 +219,34 @@ export function resolveMulligan(state, awaiting, indices, rng) {
   if (!m) throw new Error("The mulligans have not begun");
   const events = [];
 
-  if (awaiting.kind === "mulligan-decision") {
+  if (awaiting.kind === "opening-hand" && awaiting.exile) {
+    const option = Array.isArray(indices) && indices.length === 1 ? mulliganChoice(state, awaiting).options[indices[0]] : undefined;
+    if (!option) throw new Error("Choose a card from your hand to exile");
+    const card = cardRef(state, option.cardId);
+    moveObject(state, option.cardId, "exile", null);
+    events.push(event("GameEventCardChangeZone", state, {card, from: {zoneType: "Hand", player: {playerId: awaiting.player}}, to: {zoneType: "Exile", player: {playerId: awaiting.player}}}));
+    delete m.exiling;
+  } else if (awaiting.kind === "opening-hand") {
+    const choice = mulliganChoice(state, awaiting);
+    const option = Array.isArray(indices) && indices.length === 1 ? choice.options[indices[0]] : undefined;
+    if (!option) throw new Error("Choose a card to reveal, or begin the game");
+    const ability = option.cardId === undefined ? null : openingAbility(state, option.cardId, awaiting.player);
+    if (option.cardId === undefined) m.openingDone = [...(m.openingDone ?? []), awaiting.player];
+    /* Begun with it on the battlefield (CR 103.6a): there, its owner's, with its counters -- and then the card to exile. */
+    else if (ability.begin === "battlefield") {
+      const name = state.objects[option.cardId].card;
+      events.push(...runEffects(state, [{effect: "moveZone", targets: [option.cardId], to: "battlefield", ...(ability.withCounters ? {withCounters: {...ability.withCounters}} : {})}],
+        {controller: awaiting.player, source: option.cardId}));
+      if (ability.exileFromHand && cardsIn(state, "hand", awaiting.player).length) m.exiling = {player: awaiting.player, name};
+    } else {
+      /* Revealed (CR 701.20a), and so until the first turn begins (CR 103.6b; projection.mjs): said in the journal, and
+         what revealing it does, done. */
+      m.revealed = [...(m.revealed ?? []), option.cardId];
+      events.push(event("GameEventCardRevealed", state, {card: cardRef(state, option.cardId), player: {playerId: awaiting.player}}));
+      for (const ability of state.objects[option.cardId].abilities ?? []) if (ability.kind === "static" && ability.rule === "opening-hand")
+        events.push(...runEffects(state, ability.effects ?? [], {controller: awaiting.player, source: option.cardId}));
+    }
+  } else if (awaiting.kind === "mulligan-decision") {
     if (!Array.isArray(indices) || indices.length !== 1)
       throw new Error("Answer yes or no: keep this hand, or take a mulligan");
     m.answered[awaiting.player] = indices[0] === 0 ? "keep" : "mulligan";
@@ -214,7 +278,7 @@ export function resolveMulligan(state, awaiting, indices, rng) {
     m.toBottom[awaiting.player] = 0;
   }
 
-  const next = nextQuestion(state);
+  const next = nextQuestion(state) ?? openingHandQuestion(state);
   state.awaiting = next;
   if (!next) m.done = true;
   return events;

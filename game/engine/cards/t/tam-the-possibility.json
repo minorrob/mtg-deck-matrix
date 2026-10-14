@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tam, the Possibility",
+    "oracleId": "c92c7744-0c92-4a36-9ada-4ffca812009e",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Gorgon",
+      "Wizard"
+    ],
+    "manaCost": "{1}{G}{U}",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "B",
+      "G",
+      "R",
+      "U",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "Planeswalker spells you cast cost {1} less to cast.\n{W}{U}{B}{R}{G}, {T}: Proliferate X times, where X is the number of planeswalker types among planeswalkers you control. (To proliferate, choose any number of permanents and/or players, then give each another counter of each kind already there.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Planeswalker spells you cast cost {1} less to cast.",
+      "rule": "spells-cost-less",
+      "affects": {
+        "what": "spell",
+        "types": [
+          "Planeswalker"
+        ]
+      },
+      "amount": 1
+    },
+    {
+      "kind": "activated",
+      "text": "{W}{U}{B}{R}{G}, {T}: Proliferate X times, where X is the number of planeswalker types among planeswalkers you control.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{W}{U}{B}{R}{G}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "proliferate",
+          "count": {
+            "planeswalkerTypesAmong": {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ],
+              "controller": "you"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

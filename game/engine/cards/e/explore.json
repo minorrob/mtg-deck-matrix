@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Explore",
+    "oracleId": "b8f566ea-8283-4afa-9ac8-737e26419283",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "You may play an additional land this turn.\nDraw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "You may play an additional land this turn.\nDraw a card.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "rule": "extra-land-drop",
+          "affects": {
+            "what": "player",
+            "who": "you"
+          }
+        },
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

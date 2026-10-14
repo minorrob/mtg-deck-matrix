@@ -73,7 +73,7 @@
                 "$chosen"
               ]
             },
-            "ability": {
+            "abilitySource": {
               "subtypes": [
                 "$chosen"
               ]

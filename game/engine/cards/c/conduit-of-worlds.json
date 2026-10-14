@@ -1,0 +1,143 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Conduit of Worlds",
+    "oracleId": "ed14be15-8f8d-4fe3-a147-f5da8ed873bf",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "You may play lands from your graveyard.\n{T}: Choose target nonland permanent card in your graveyard. If you haven't cast a spell this turn, you may cast that card. If you do, you can't cast additional spells this turn. Activate only as a sorcery.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "You may play lands from your graveyard.",
+      "rule": "play-from",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "zone": "graveyard",
+      "lands": true
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Choose target nonland permanent card in your graveyard. If you haven't cast a spell this turn, you may cast that card. If you do, you can't cast additional spells this turn. Activate only as a sorcery.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "timing": "sorcery",
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "owner": "you",
+              "nonTypes": [
+                "Land"
+              ],
+              "types": [
+                "Artifact"
+              ]
+            },
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "owner": "you",
+              "nonTypes": [
+                "Land"
+              ],
+              "types": [
+                "Battle"
+              ]
+            },
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "owner": "you",
+              "nonTypes": [
+                "Land"
+              ],
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "owner": "you",
+              "nonTypes": [
+                "Land"
+              ],
+              "types": [
+                "Enchantment"
+              ]
+            },
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "owner": "you",
+              "nonTypes": [
+                "Land"
+              ],
+              "types": [
+                "Planeswalker"
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "branch",
+          "if": {
+            "compare": {
+              "count": {
+                "spellsCastThisTurn": "you"
+              },
+              "atMost": 0
+            }
+          },
+          "then": [
+            {
+              "effect": "play",
+              "from": "targets",
+              "targets": {
+                "target": 0
+              },
+              "payMana": true
+            },
+            {
+              "effect": "effectUntil",
+              "rule": "cant-cast",
+              "who": "you",
+              "allSpells": true,
+              "condition": {
+                "compare": {
+                  "count": {
+                    "spellsCastThisTurn": "you"
+                  },
+                  "atLeast": 1
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

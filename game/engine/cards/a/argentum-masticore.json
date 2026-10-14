@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Argentum Masticore",
+    "oracleId": "3ceee5c2-321c-49ec-ba49-1fac7f6ee2cc",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Phyrexian",
+      "Masticore"
+    ],
+    "manaCost": "{5}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "First strike, protection from multicolored\nAt the beginning of your upkeep, sacrifice this creature unless you discard a card. When you discard a card this way, destroy target nonland permanent an opponent controls with mana value less than or equal to the mana value of the discarded card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "First strike",
+      "keyword": "first strike"
+    },
+    {
+      "kind": "keyword",
+      "text": "protection from multicolored",
+      "keyword": "protection",
+      "from": {
+        "multicolored": true
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your upkeep, sacrifice this creature unless you discard a card. When you discard a card this way, destroy target nonland permanent an opponent controls with mana value less than or equal to the mana value of the discarded card.",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "discard": 1,
+          "effects": [
+            {
+              "effect": "moveZone",
+              "targets": "self",
+              "sacrifice": true
+            }
+          ],
+          "whenPaid": [
+            {
+              "effect": "immediateTrigger",
+              "about": "remembered",
+              "text": "When you discard a card this way, destroy target nonland permanent an opponent controls with mana value less than or equal to the mana value of the discarded card.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "nonTypes": [
+                    "Land"
+                  ],
+                  "controller": "opponent",
+                  "manaValue": {
+                    "max": {
+                      "manaValueOf": "that card"
+                    }
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "destroy",
+                  "targets": {
+                    "target": 0
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

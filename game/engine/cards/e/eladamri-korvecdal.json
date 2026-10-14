@@ -1,0 +1,137 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Eladamri, Korvecdal",
+    "oracleId": "9aff3d55-e25d-4f06-a783-c3aa9eb9fd50",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Warrior"
+    ],
+    "manaCost": "{1}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "You may look at the top card of your library any time.\nYou may cast creature spells from the top of your library.\n{G}, {T}, Tap two untapped creatures you control: Reveal a card from your hand or the top card of your library. If you reveal a creature card this way, put it onto the battlefield. Activate only during your turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "You may look at the top card of your library any time.",
+      "rule": "look-at-top",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      }
+    },
+    {
+      "kind": "static",
+      "text": "You may cast creature spells from the top of your library.",
+      "rule": "play-from",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "zone": "library-top",
+      "spells": {
+        "types": [
+          "Creature"
+        ]
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{G}, {T}, Tap two untapped creatures you control: Reveal a card from your hand or the top card of your library. If you reveal a creature card this way, put it onto the battlefield. Activate only during your turn.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{G}"
+        },
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "tapCreature",
+          "count": 2,
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          }
+        }
+      ],
+      "condition": {
+        "yourTurn": true
+      },
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Reveal a card from your hand.",
+              "effects": [
+                {
+                  "effect": "chooseCard",
+                  "zone": "hand",
+                  "count": 1,
+                  "to": "stay",
+                  "reveal": true,
+                  "remember": true
+                },
+                {
+                  "effect": "moveZone",
+                  "targets": "remembered",
+                  "to": "battlefield",
+                  "condition": {
+                    "about": "remembered",
+                    "is": {
+                      "types": [
+                        "Creature"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Reveal the top card of your library.",
+              "effects": [
+                {
+                  "effect": "peekAndReveal",
+                  "count": 1,
+                  "reveal": true,
+                  "remember": true
+                },
+                {
+                  "effect": "moveZone",
+                  "targets": "remembered",
+                  "to": "battlefield",
+                  "condition": {
+                    "about": "remembered",
+                    "is": {
+                      "types": [
+                        "Creature"
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

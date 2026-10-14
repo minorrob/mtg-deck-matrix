@@ -1,0 +1,94 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kiora of Fire and Ashes",
+    "oracleId": "02b41d0e-82e7-4307-8cc4-8175ff78ea1f",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Merfolk",
+      "Noble"
+    ],
+    "manaCost": "{4}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "When Kiora enters, create a 5/5 red Dragon creature token with flying.\n{8}: Create a 5/5 red Dragon creature token with flying.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When Kiora enters, create a 5/5 red Dragon creature token with flying.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Dragon",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Dragon"
+            ],
+            "colors": [
+              "R"
+            ],
+            "power": 5,
+            "toughness": 5,
+            "keywords": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{8}: Create a 5/5 red Dragon creature token with flying.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{8}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Dragon",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Dragon"
+            ],
+            "colors": [
+              "R"
+            ],
+            "power": 5,
+            "toughness": 5,
+            "keywords": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

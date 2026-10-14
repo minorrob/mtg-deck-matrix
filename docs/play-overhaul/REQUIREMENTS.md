@@ -1,12 +1,25 @@
 # Play requirements and acceptance checklist
 
-Updated October 14, 2026. Execution branch: `codex/play-tabletop-preview`.
+Updated October 14, 2026. Execution branch: `codex/ui-play-tabletop-preview`.
 
 Rob's current instructions override the compiled brief; the later feedback captured in INSTRUCTIONS.md overrides the older Replit prototype. The wireframes govern layout; the reference videos govern atmosphere and motion. RECONCILIATION.md is architectural evidence, including its corrections. Replit supplies reusable examples and recorded fixtures, not a replacement app or a new design authority.
 
 ## Current user decisions
 
-- Playmats and all cards on them share the same perspective and tilt at every camera setting; the separate hand strip stays upright.
+- Profile avatar/menu at top right beside Skip to end; Settings removed from the left rail. Settings includes Set Side Drawer Modules, with Left / Right / None radio columns. Reorder by drag handle or keyboard buttons within each drawer; placement and order follow the profile through library sync. Cancel preserves the prior layout.
+- Available modules: Screen View (one Full / Table / Focus popout), History, AI Coach, Counter-Intel, Resources, On the Stack, Card Preview, Table Vitals, Recommended Actions, Chat, and Actions. Recommended Actions shares the existing AI Coach conversation. Assigned Actions replaces floating decision popups in Full screen; other views retain their controls. Chat remains explicitly unavailable pending a shared service; voice is a later feature.
+- Both drawers reach the screen bottom through the hand region. Handles stay attached to exposed edges in either state. Camera follows the right drawer whether expanded or collapsed.
+- Borderless rows: creatures, artifacts/enchantments, then lands. Zone piles form a two-by-two block on the right. Rear-seat labels sit below mats, commander inline, without health; opponent health floats upper left.
+- Table Zoom is 60–120%, with 100% matching the former 110% scale. Small sizes may be unreadable; large sizes may clip table edges, as explicitly requested. Card size is separate: 100% matches the former 130%, and 150% is 40% larger than the new 100%. Hand bottoms slightly clip the screen edge and card tops overlap the table front.
+- Tabletop card size has a separate camera slider; slider spacing is halved. Tilt uses a fixed camera scale with natural depth perspective; zero degrees is flat.
+- Pending: replace the procedural table/environment with reference-video quality. Clean locked-camera environment loops remain separate from table material and gameplay objects.
+- Pending round contract: Round x, Turn y must handle extra turns and eliminated seats using authoritative progression, not global turn divided by initial seat count.
+
+- Full screen always uses the 3D tabletop. Remove both the 3D toggle and the opt-in preview toggle. Zero tilt provides the flat view.
+- Tilt is an angle from 0 to 60 degrees, default 40 degrees. Cards and mats share the same physical camera perspective, without separate card deformation; the hand stays upright.
+- T11 is a container-free fan, seven cards at most. Larger hands have previous/next arrows, wrapping indefinitely in either direction. Each viewed seat keeps its own carousel position; opponent faces stay private.
+- Match the reference video's floating table with rounded edges, thickness and a distinct surrounding environment. Background and Table are independent appearance choices (for example Volcano and Wooden). Background-only videos will be supplied by Rob. The current procedural environments remain placeholders.
+- Prepare host-selected shared appearance as a table setting; current local appearance controls are explicitly labeled as this-device previews, not synchronized host controls.
 
 - When viewing another seat, show that player's hand count and card backs. Return to your own seat to see your cards. Never reveal another player's private faces. This supersedes the initial execution plan's own-hand proposal.
 - Send screenshots after meaningful UI updates, with stable visible object IDs for feedback.
@@ -16,16 +29,16 @@ Rob's current instructions override the compiled brief; the later feedback captu
 
 ## Status legend
 
-Preview means implemented in the initial opt-in desktop surface, with acceptance still being recorded. Pending means this preview does not claim the feature is complete. Inherited means existing behavior is preserved and requires regression checks.
+Preview means implemented in the desktop tabletop surface, with acceptance still being recorded. Pending means this preview does not claim the feature is complete. Inherited means existing behavior is preserved and requires regression checks.
 
 | ID | Requirement and source | Status | Acceptance |
 | --- | --- | --- | --- |
 | R01 | Cloud path only; existing room authority (brief 0, 1) | Inherited | Real GameTable actions still use the existing answer envelope; no browser rules fork. |
 | R02 | Hybrid Pixi ground and DOM card buttons (D1) | Preview | Vendored pinned library and license; CSP unchanged; buttons retain accessible names and options. |
-| R03 | Full board default, desktop stage at 1280+ after acceptance (D2) | Pending | Preview is opt-in; phone stays on existing layout; capability failure retains a readable board. |
-| R04 | Top strip, upright hand below canvas, back row of three seats, front mat 70–75% depth (D3) | Preview | Geometry measured at 1400, 1280 and 1024 widths and short heights. |
-| R05 | Tilt 0–35 degrees and zoom sliders (D4) | Preview | Live updates; save on release; endpoints fit; mats and cards share one projective plane, with the hand upright. Camera reset/reload remains to be accepted. |
-| R06 | Host-selected table scene, five choices, synchronized in game (D5) | Pending | Host-only route, validation, persisted field, game refresh/reconnect carries scene to every seat. |
+| R03 | Full screen always uses the 3D tabletop (latest user correction) | Preview | No 3D toggle; 0 degrees is flat; phone retains its responsive board; graphics failure leaves readable controls. |
+| R04 | Top strip, container-free hand fan, back row of three seats, front mat 70–75% depth (D3 plus latest correction) | Preview | Geometry measured at 1400, 1280 and 1024 widths and short heights. |
+| R05 | Tilt 0–60 degrees, default 40, and zoom sliders (latest correction) | Preview | Live updates; save on release; Zoom 60–120%, with new 100% equal to previous 110%; high zoom may clip table edges. Mats and cards share one perspective; hand stays upright. Camera reset/reload remains to be accepted. |
+| R06 | Independent host-selected Background and Table, synchronized in game (latest correction) | Pending | Local previews use a registry and independent selectors now. Pending: host-only route, validation, persisted appearance field and reconnect carrying both choices to every seat. |
 | R07 | Last human ready starts 10-second countdown, host cancel, no Start (D6) | Pending | Alarm scheduled once; unready cancels; missing seats refused; cancel cannot instantly restart itself. |
 | R08 | Atomic deck loading, visible real progress, cancel/resume (D7) | Pending | No partial POST; content/version-keyed progress; existing valid deck survives canceled replacement. |
 | R09 | Warm existing card cache, preserve build-time engine definitions (D8) | Pending | Cache reuse proven; unavailable art has fallback; unsupported cards remain actionable errors. |
@@ -50,18 +63,18 @@ Preview means implemented in the initial opt-in desktop surface, with acceptance
 | R28 | Draw, place, tap, select, inspect and cast motion (3d, 5.3) | Pending | New video timings; interruptible; no accidental cast from selection; reduced motion preserved. |
 | R29 | Acting-seat and unseen-permanent cues (3e) | Pending | Reset conditions and reconnect baseline tested. |
 | R30 | Overlay rails never resize canvas (4a) | Preview | Both handles open/close overlays; canvas box unchanged. Existing content only at this milestone. |
-| R31 | Configurable pane slots, repeated modules, persisted layout (4a) | Pending | Notify Rob first; dropdown swap and duplicate instances have isolated state. |
+| R31 | Profile drawer modules (latest correction) | Preview | Left/Right/None dialog; drag and keyboard order, hide/restore, owner isolation, reload and fresh-browser cloud restore. Counter-Intel currently shows public battlefield counts; deeper analysis remains pending. |
 | R32 | Stack cards newest first, resolved history (4a) | Pending | One source of truth with reveal shelf; all active entries remain accessible. |
 | R33 | Attack readiness uses engine facts (section 6) | Pending | Engine already has controlledSinceTurn and summoningSick; project facts without guessing next turn or attack legality. |
 | R34 | Mana and passive-effect wording (section 6) | Pending | Source count is not mana amount; text match is not a confirmed active restriction. |
-| R35 | Screenshots with stable object IDs (latest user instruction) | Preview | T01 top, T02–T04 back seats, T05 front mat, T06 command, T07 library, T08 lands, T09 battlefield, T10 camera, T11 hand, T12/T13 handles, T14 panel. |
+| R35 | Screenshots with stable object IDs (latest user instruction) | Preview | T01 top, T02–T04 back seats, T05 front mat, T06 command, T07 library, T08 lands, T09 battlefield, T10 camera, T11 hand, T12/T13 handles, T14 panel, T15/T16 previous/next hand cards, T17 Background, T18 Table material, T19 Cards, T20 profile, M01 stack, M02 Table Vitals, M03 History, D01 drawer settings. |
 | R36 | Final comprehensive UAT HTML (latest user instruction) | Pending | Every row has steps, expected behavior, status, evidence and an input for findings. |
 | R37 | Staging integration (latest user instruction) | Pending | Exact tested source, release verification and staging acceptance; no production release implied. |
 
 ## Reconciled technical decisions
 
 - PixiJS 8.11.0 is pinned. Its matching compatibility module is required under script-src self; image workers are disabled to preserve worker-src self. Do not relax CSP to accommodate the library.
-- The prototype's React app and side-positioned seats are not imported. The existing cloud board is extended behind an opt-in switch.
+- The prototype's React app and side-positioned seats are not imported. Full screen uses the extended cloud board directly.
 - The recorded-view preview is labeled and isolated. Its controls do not pretend that a recorded state transition is an accepted gameplay action. Live control acceptance uses the real GameTable browser suite separately.
 - The code has stack targets, combat defenders and priority holder already. Do not add redundant protocol fields.
 - Stack disappearance remains ambiguous. Add authoritative outcomes or use neutral wording.
@@ -70,7 +83,7 @@ Preview means implemented in the initial opt-in desktop surface, with acceptance
 
 ## Initial preview proof boundary
 
-The preview proves the new layout on the existing card renderer, a persistent Pixi surface, camera controls, viewed-seat hand privacy and overlay geometry. It does not finish environment art, motion, audio, events, lobby flow or configurable modules. The environment and motion videos remain the references for those later milestones.
+The preview proves the new layout on the existing card renderer, a persistent Pixi surface, rigid camera tilt, a wrapping seven-card fan, viewed-seat hand privacy and overlay geometry. It does not finish environment art, motion, audio, events, lobby flow or full Counter-Intel analysis. Both environment and motion videos were inspected at their two-second frames on October 14. Their rounded floating slab and independent surroundings guide the renderer; the newer back-row layout and hand fan take precedence over their older seat positions.
 
 ## Execution sequence
 

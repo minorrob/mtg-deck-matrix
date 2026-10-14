@@ -1,0 +1,323 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Nykthos, Shrine to Nyx",
+  "fixtures": {
+    "Oaf": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Beast"
+      ],
+      "manaCost": "{1}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Spirit": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Spirit"
+      ],
+      "manaCost": "{G/W}{G/W}",
+      "colors": [
+        "G",
+        "W"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Devotion to green 3 (Llanowar Elves's {G}, the Oaf's {G}{G}): {2}, {T} -- green, and three {G}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Nykthos, Shrine to Nyx",
+            "Llanowar Elves",
+            "Oaf",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Nykthos, Shrine to Nyx",
+          "mana": {
+            "G": 3
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 3,
+            "C": 0
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Nykthos, Shrine to Nyx"
+        }
+      ]
+    },
+    {
+      "name": "The color is Rob's to choose: every color is offered, each its devotion -- white adds nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Nykthos, Shrine to Nyx",
+            "Oaf",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Nykthos, Shrine to Nyx"
+              },
+              "count": 6,
+              "mana": [
+                {
+                  "C": 1
+                },
+                {
+                  "W": 0
+                },
+                {
+                  "U": 0
+                },
+                {
+                  "B": 0
+                },
+                {
+                  "R": 0
+                },
+                {
+                  "G": 2
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Nykthos, Shrine to Nyx",
+          "mana": {
+            "W": 0
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "W": 0,
+            "G": 0,
+            "C": 0
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Nykthos, Shrine to Nyx"
+        }
+      ]
+    },
+    {
+      "name": "A hybrid {G/W} counts toward each of its colors (CR 700.5a): the Spirit's two give two white",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Nykthos, Shrine to Nyx",
+            "Spirit",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Nykthos, Shrine to Nyx"
+              },
+              "count": 6,
+              "mana": [
+                {
+                  "C": 1
+                },
+                {
+                  "W": 2
+                },
+                {
+                  "U": 0
+                },
+                {
+                  "B": 0
+                },
+                {
+                  "R": 0
+                },
+                {
+                  "G": 2
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Nykthos, Shrine to Nyx",
+          "mana": {
+            "W": 2
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "W": 2,
+            "C": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Only permanents Rob controls: Maya's Bear adds nothing to his devotion",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Nykthos, Shrine to Nyx",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Nykthos, Shrine to Nyx",
+          "mana": {
+            "G": 0
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 0,
+            "C": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Without {2} in the pool only {T}: Add {C} is offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Nykthos, Shrine to Nyx",
+            "Oaf"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Nykthos, Shrine to Nyx"
+              },
+              "count": 1,
+              "mana": [
+                {
+                  "C": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Nykthos, Shrine to Nyx"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 1
+          }
+        }
+      ]
+    }
+  ]
+}

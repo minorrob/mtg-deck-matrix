@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Embrace the Paradox",
+    "oracleId": "b9110be0-3f0c-449b-8baf-689e92fdb8f0",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{G}{U}",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Draw three cards. You may put a land card from your hand onto the battlefield tapped.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Draw three cards. You may put a land card from your hand onto the battlefield tapped.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 3
+        },
+        {
+          "effect": "chooseCard",
+          "zone": "hand",
+          "selector": {
+            "types": [
+              "Land"
+            ]
+          },
+          "to": "battlefield",
+          "tapped": true,
+          "upTo": true
+        }
+      ]
+    }
+  ]
+}

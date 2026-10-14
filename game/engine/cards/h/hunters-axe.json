@@ -1,0 +1,126 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hunter's Axe",
+    "oracleId": "d7d59fef-1401-464b-b1bb-ee5da92cde51",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Equipment"
+    ],
+    "manaCost": "{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Equipped creature gets +2/+0 and has \"Whenever this creature attacks, it gains your choice of trample or deathtouch until end of turn.\"\nEquip {2} ({2}: Attach to target creature you control. Equip only as a sorcery.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Equipped creature gets +2/+0 and has \"Whenever this creature attacks, it gains your choice of trample or deathtouch until end of turn.\"",
+      "layer": 7,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": 2,
+        "toughness": 0
+      },
+      "sublayer": "c"
+    },
+    {
+      "kind": "static",
+      "text": "Equipped creature gets +2/+0 and has \"Whenever this creature attacks, it gains your choice of trample or deathtouch until end of turn.\"",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "addAbilities": [
+          {
+            "kind": "triggered",
+            "text": "Whenever this creature attacks, it gains your choice of trample or deathtouch until end of turn.",
+            "trigger": {
+              "on": "attacks",
+              "who": "self"
+            },
+            "effects": [
+              {
+                "effect": "modal",
+                "chooser": "you",
+                "choose": 1,
+                "modes": [
+                  {
+                    "text": "Trample",
+                    "effects": [
+                      {
+                        "effect": "pump",
+                        "targets": "self",
+                        "power": 0,
+                        "toughness": 0,
+                        "keywords": [
+                          "Trample"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "text": "Deathtouch",
+                    "effects": [
+                      {
+                        "effect": "pump",
+                        "targets": "self",
+                        "power": 0,
+                        "toughness": 0,
+                        "keywords": [
+                          "Deathtouch"
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "Equip {2}",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "attach",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "timing": "sorcery",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ]
+    }
+  ]
+}

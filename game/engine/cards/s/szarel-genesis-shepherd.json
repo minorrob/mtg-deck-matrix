@@ -1,0 +1,89 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Szarel, Genesis Shepherd",
+    "oracleId": "1f3c3365-7dc8-47e1-b304-2a09aa229292",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Insect",
+      "Druid"
+    ],
+    "manaCost": "{2}{B}{R}{G}",
+    "colors": [
+      "B",
+      "G",
+      "R"
+    ],
+    "colorIdentity": [
+      "B",
+      "G",
+      "R"
+    ],
+    "power": 2,
+    "toughness": 5
+  },
+  "oracleText": "Flying\nYou may play lands from your graveyard.\nWhenever you sacrifice another nontoken permanent during your turn, put a number of +1/+1 counters equal to Szarel's power on up to one other target creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "static",
+      "text": "You may play lands from your graveyard.",
+      "rule": "play-from",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "zone": "graveyard",
+      "lands": true
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you sacrifice another nontoken permanent during your turn, put a number of +1/+1 counters equal to Szarel's power on up to one other target creature.",
+      "trigger": {
+        "on": "sacrificed",
+        "filter": {
+          "token": false
+        },
+        "another": true
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "counter": "+1/+1",
+          "count": {
+            "powerOf": "self"
+          }
+        }
+      ],
+      "condition": {
+        "yourTurn": true
+      },
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "another": true,
+          "count": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    }
+  ]
+}

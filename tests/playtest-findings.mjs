@@ -1,27 +1,19 @@
 /* PLAYTEST FINDINGS HAVE ONE SHAPE (docs/uat/playtest-findings.md, docs/plan-to-100.md M8). Grok Bot's agents hand
  * over one row per finding; a row the triage loop cannot read -- a missing column, a severity outside S1-S4, a class
- * it does not know -- is refused here rather than discovered halfway through a triage. Every playtest CSV under
- * docs/uat/ is checked: the template, and each run's findings once they arrive. */
+ * it does not know -- is refused here rather than discovered halfway through a triage. A closed row says how: a fixed one
+ * names its PR, one ruled as intended why (and a rules or card finding its CR rule; tools/playtest-triage.mjs reads the
+ * same columns). Every
+ * playtest CSV under docs/uat/ is checked: the template, and each run's findings once they arrive. */
 import assert from "node:assert/strict";
 import {readFileSync, readdirSync, statSync} from "node:fs";
 import path from "node:path";
 import {fileURLToPath} from "node:url";
+import {COLUMNS, cells, unanswered} from "../tools/playtest-triage.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const COLUMNS = ["id", "game_id", "seat", "turn", "phase", "cards", "happened", "should_have", "cr_rule", "evidence", "severity", "class", "status"];
 let checks = 0;
 const ok = (c, m) => {assert.ok(c, m); checks += 1;};
 
-/* A CSV line to its cells: commas split, double quotes group, "" is a quote. */
-function cells(line) {
-  const out = [];let cur = "", q = false;
-  for (let i = 0; i < line.length; i += 1) {
-    const ch = line[i];
-    if (q) {if (ch === '"' && line[i + 1] === '"') {cur += '"'; i += 1;} else if (ch === '"') q = false; else cur += ch;}
-    else if (ch === '"') q = true; else if (ch === ",") {out.push(cur); cur = "";} else cur += ch;
-  }
-  out.push(cur);return out;
-}
 const files = [];
 (function walk(dir) {for (const f of readdirSync(dir)) {const p = path.join(dir, f); if (statSync(p).isDirectory()) walk(p); else if (/playtest.*\.csv$/.test(f)) files.push(p);}})(path.join(ROOT, "docs", "uat"));
 ok(files.some((f) => f.endsWith("playtest-findings-template.csv")), "the template is there");
@@ -40,6 +32,8 @@ for (const f of files) {
     ok(["rules", "card", "ui", "performance", "ux"].includes(row.class), `${where}: class is rules, card, ui, performance or ux`);
     ok(["open", "fixed", "as-intended"].includes(row.status), `${where}: status is open, fixed or as-intended`);
     ok(!row.cr_rule || /^CR \d{3}(\.\d+[a-z]?)?$/.test(row.cr_rule), `${where}: a rule is cited as CR 510.1a`);
+    ok(row.status !== "open" || !row.outcome, `${where}: an open finding has no outcome yet`);
+    for (const owed of unanswered(row)) ok(false, `${where}: ${owed}`);
   }
 }
 console.log(`playtest-findings: ${checks} checks passed — ${files.length} playtest CSV${files.length === 1 ? "" : "s"} in the one shape the triage loop reads.`);

@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bloom Tender",
+    "oracleId": "0c23fefe-9891-4dd8-9bb1-eebdb3274e31",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Druid"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Vivid — {T}: For each color among permanents you control, add one mana of that color.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "Vivid — {T}: For each color among permanents you control, add one mana of that color.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "among": {
+            "what": "permanent",
+            "controller": "you"
+          },
+          "each": true
+        }
+      ]
+    }
+  ]
+}

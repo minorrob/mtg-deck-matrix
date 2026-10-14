@@ -17,15 +17,17 @@
  * true` and nothing else here treats it specially.
  */
 
-import {addObject, transformObject, rememberExileLooker} from "../../state/index.mjs";
+import {addObject, transformObject, rememberExileLooker, COPY_KEYS} from "../../state/index.mjs";
 import {selectMatching, compileSelector} from "../filter.mjs";
-import {bindEffect, rememberNow} from "../bind.mjs";
+import {bindEffect, rememberNow, countThisWay} from "../bind.mjs";
 import {amountOf} from "../amount.mjs";
-import {event, cardRef} from "./zones.mjs";
-import {typesOf, controllerOf} from "../../rules/layers.mjs";
+import {event, cardRef, moveOne} from "./zones.mjs";
+import {typesOf, controllerOf, staticAbilities} from "../../rules/layers.mjs";
 import {protectedFrom} from "../../rules/protection.mjs";
 import {manaValue, parseManaCost} from "../../rules/mana.mjs";
-import {countersPlaced} from "../../rules/statics.mjs";
+import {countersPlaced, enteringCountersPlaced, tokensCreated} from "../../rules/statics.mjs";
+import {removeFromCombat} from "../../rules/combat.mjs";
+import {enteringModifications} from "../../rules/replacement.mjs";
 
 /* A continuous effect needs a timestamp to be ordered by (CR 613.7), and it has to be part of the
    state so a checkpoint carries it. The state's own counter is the right source: it is monotonic
@@ -64,11 +66,35 @@ export const PREDEFINED_TOKENS = Object.freeze({
       {id: "jace-draw", kind: "activated", text: "\u22123: Draw a card.", targets: [], loyalty: -3, timing: "sorcery",
         cost: [{atom: "removeCounters", self: true, counter: "loyalty", count: 3}], effects: [{effect: "draw", count: 1}]},
     ]},
+  /* CR 111.10m (Royal Treatment): a Role (CR 303.7) -- a colorless Aura Role enchantment token with enchant creature, named
+     Royal, "Enchanted creature gets +1/+1 and has ward {1}" (its ward the triggered ability the keyword is, as a card's
+     compiles; cards/index.mjs). Created attached to what it enchants (createToken's `attachedTo`). */
+  "Royal Role": {name: "Royal", types: ["Enchantment"], subtypes: ["Aura", "Role"], colors: [], enchant: {what: "permanent", types: ["Creature"]},
+    abilities: [
+      {id: "royal-pt", kind: "static", text: "Enchanted creature gets +1/+1 and has ward {1}.", layer: 7, sublayer: "c",
+        affects: {what: "permanent", attachedBy: "self"}, apply: {power: 1, toughness: 1}},
+      {id: "royal-ward", kind: "static", text: "Enchanted creature gets +1/+1 and has ward {1}.", layer: 6, affects: {what: "permanent", attachedBy: "self"},
+        apply: {addKeywords: ["Ward"], addAbilities: [{id: "ward", kind: "triggered", text: "ward {1}", trigger: {on: "GameEventBecomesTarget", who: "self", by: "opponent"},
+          effects: [{effect: "unlessPays", who: "that player", amount: 1, effects: [{effect: "counterSpell", stack: "that"}]}]}]}},
+    ]},
   /* CR 111.10v (Splinter, the Mentor) */
   Mutagen: {name: "Mutagen", types: ["Artifact"], subtypes: ["Mutagen"],
     abilities: [{id: "mutagen", kind: "activated", text: "{1}, {T}, Sacrifice this token: Put a +1/+1 counter on target creature. Activate only as a sorcery.",
       timing: "sorcery", targets: [{what: "permanent", types: ["Creature"]}],
       cost: [{atom: "mana", cost: "{1}"}, {atom: "{T}"}, {atom: "sacrifice", self: true}], effects: [{effect: "putCounter", targets: {target: 0}, counter: "+1/+1", count: 1}]}]},
+  /* CR 111.10s (Restless Anchorage): explore, CR 701.44 (effects/asking.mjs, explore). */
+  Map: {name: "Map", types: ["Artifact"], subtypes: ["Map"],
+    abilities: [{id: "map", kind: "activated", text: "{1}, {T}, Sacrifice this token: Target creature you control explores. Activate only as a sorcery.",
+      timing: "sorcery", targets: [{what: "permanent", types: ["Creature"], controller: "you"}],
+      cost: [{atom: "mana", cost: "{1}"}, {atom: "{T}"}, {atom: "sacrifice", self: true}], effects: [{effect: "explore", targets: {target: 0}}]}]},
+  /* CR 111.10i, 701.53b (Train E, Sunfall's incubate): a double-faced token. Its front face a colorless Incubator artifact
+     with "{2}: Transform this token.", its back face (`back`) a 0/0 colorless Phyrexian artifact creature named Phyrexian
+     Token. makeToken gives the token both faces, and it transforms as a double-faced permanent does (CR 701.27a, 712.18;
+     state/index.mjs, transformObject): the same object, its counters still on it. */
+  Incubator: {name: "Incubator", types: ["Artifact"], subtypes: ["Incubator"], colors: [],
+    abilities: [{id: "incubator", kind: "activated", text: "{2}: Transform this token.", targets: [],
+      cost: [{atom: "mana", cost: "{2}"}], effects: [{effect: "setState", targets: "self", transform: true}]}],
+    back: {name: "Phyrexian Token", types: ["Artifact", "Creature"], subtypes: ["Phyrexian"], colors: [], power: 0, toughness: 0}},
 });
 
 /**
@@ -81,6 +107,12 @@ export function attach(state, params, context) {
   const source = sourceId === null || sourceId === undefined ? null : state.objects[sourceId];
   const [hostId] = params.targets ?? [];
   const host = hostId === undefined ? null : state.objects[hostId];
+  /* "It loses 'enchant creature card in a graveyard' and gains 'enchant creature put onto the battlefield with this Aura.'
+     ... attach this Aura to it" (Animate Dead; CR 303.4, 613.1f): `enchants: true`, the Aura's Enchant from now on that one
+     creature alone, for as long as the Aura is this object (`enchantOnly`, which a zone change does not carry, CR 400.7;
+     rules/sba.mjs reads it). Changed whether or not the Aura can then be attached: with no creature put onto the battlefield,
+     or one it can't enchant (protection from black), it enchants nothing it may, and goes to its owner's graveyard (CR 704.5m). */
+  if (params.enchants === true && source && source.zone === "battlefield") source.enchantOnly = host && host.zone === "battlefield" ? hostId : null;
   if (!source || !host || source.zone !== "battlefield" || host.zone !== "battlefield" || sourceId === hostId) return events;
   /* CR 701.3b: attaching it to what it is already attached to does nothing. */
   if (source.attachedTo === hostId) return events;
@@ -101,6 +133,9 @@ export function attach(state, params, context) {
    and a token is not made (CR 303.4g). What it may enchant here are permanents; an Aura that enchants a player is not
    built, and finds nothing. */
 export function enchantable(state, enchant, controller) {
+  /* "Enchant creature card in a graveyard" (Animate Dead returned by Sun Titan; CR 303.4f, 303.4a): a card in that zone it
+     could enchant, as it is there. */
+  if (enchant?.what === "card" && typeof enchant.zone === "string" && !Array.isArray(enchant.anyOf)) return selectMatching(state, enchant, {controller});
   const {anyOf, ...shared} = enchant ?? {};
   const each = (Array.isArray(anyOf) ? anyOf.map((one) => ({...shared, ...one})) : [enchant ?? {}])
     .filter((one) => (one.what ?? "permanent") === "permanent")
@@ -126,10 +161,15 @@ export function attachTo(state, auraId, hostId) {
    copy (CR 707.3). `except` is the card's "except ..." (CR 707.9): not legendary, an extra type, keywords, power and
    toughness, colors, its name ("except its name is Sarkhan, Soul Aflame"), an extra supertype ("except it's legendary"), its
    card types set. */
+/* A characteristic-defining ability of its power or toughness (CR 604.3; layer 7a, its own object's), defining one the copy
+   effect sets (CR 707.9d). */
+const definesSetStats = (ability, except) => ability?.kind === "static" && ability.layer === 7 && ability.sublayer === "a" && ability.affects?.self === true
+  && ((except.setPower !== undefined && ability.apply?.setPower !== undefined) || (except.setToughness !== undefined && ability.apply?.setToughness !== undefined));
 function copiable(object, except = {}) {
   const supertypes = [...new Set([...(object.supertypes ?? []).filter((t) => !(except.nonLegendary && t === "Legendary")), ...(except.addSupertypes ?? [])])];
   return {
-    card: except.name ?? object.card, manaCost: object.manaCost ?? null,
+    /* "With no mana cost" (embalm, CR 702.128a): none, part of the copiable values (CR 707.9b) -- its mana value 0. */
+    card: except.name ?? object.card, manaCost: except.noManaCost === true ? null : object.manaCost ?? null,
     /* "It's a Vehicle artifact ... and it loses all other card types" (Imposter Mech): set, then any added. */
     types: [...new Set([...(except.setTypes ?? object.types ?? []), ...(except.addTypes ?? [])])],
     /* "It's a 2/2 black Zombie in addition to its other colors and types" (Ratadrabik): added, not set. */
@@ -139,8 +179,14 @@ function copiable(object, except = {}) {
     keywords: [...new Set([...(object.keywords ?? []), ...(except.addKeywords ?? [])])],
     /* "And it has 'When this token leaves the battlefield, ...'" (Hofri Ghostforge; CR 707.9a): abilities the copy has besides
        the original's, part of its copiable values -- compiled with the card (cards/index.mjs), bound as it is made. */
-    abilities: [...structuredClone(object.abilities ?? []), ...structuredClone(except.addAbilities ?? [])],
+    /* A copy whose power or toughness the effect sets ("except it's 1/1", offspring; "half that creature's power", Saw in
+       Half; wave 4c) does not copy a characteristic-defining ability that would define it (CR 707.9d; Saw in Half's ruling):
+       "Adeline's power is equal to the number of creatures you control" is no ability of a 1/1 copy of her. */
+    abilities: [...structuredClone((object.abilities ?? []).filter((a) => !definesSetStats(a, except))), ...structuredClone(except.addAbilities ?? [])],
     power: except.setPower ?? object.power ?? null, toughness: except.setToughness ?? object.toughness ?? null,
+    /* Its printed loyalty (CR 707.2): a planeswalker copied as it enters has that many loyalty counters (CR 306.5b; Spark
+       Double, rules/replacement.mjs ownEntering). */
+    ...(Number.isInteger(object.loyalty) ? {loyalty: object.loyalty} : {}),
     ...(object.spell ? {spell: structuredClone(object.spell)} : {}),
     ...(object.enchant ? {enchant: structuredClone(object.enchant)} : {}),
   };
@@ -153,6 +199,14 @@ export function defendingPlayers(state, controller) {
   return [...seats.slice(from + 1), ...seats.slice(0, from)].filter((id) => !state.players[id].lost);
 }
 
+/* WHAT A CREATURE PUT ONTO THE BATTLEFIELD ATTACKING MAY ATTACK (CR 508.4): each defending player, then each planeswalker a
+   defending player controls, its controller's choice among them (effects/asking.mjs, attackWhom). */
+export function attackPlaces(state, controller) {
+  const players = defendingPlayers(state, controller);
+  return [...players.map((player) => ({player})), ...players.flatMap((player) => state.zones.battlefield
+    .filter((id) => typesOf(state, id).includes("Planeswalker") && controllerOf(state, id) === player).map((planeswalker) => ({player, planeswalker})))];
+}
+
 /* It attacks that player in this combat -- or that planeswalker of theirs: never declared as an attacker (CR 508.4: no
    "whenever ... attacks" for it), and blocked or not as the combat goes. The player defends now, so they declare blockers. */
 export function joinAttack(state, id, player, planeswalker = undefined) {
@@ -163,14 +217,20 @@ export function joinAttack(state, id, player, planeswalker = undefined) {
 /**
  * "Tapped and attacking" (CR 508.4; Forge's TokenAttacking) -- `attacking` on what makes or moves permanents: "that
  * player", the one the ability is about (Adeline's "attacking that player", ninjutsu's returned attacker's); `true`, the
- * defending player its controller chooses as it enters -- the only one, or asked, a creature at a time (asking.mjs,
- * attackWhom). Only in a combat, only a creature, and only the attacking player's (CR 506.3a-b); a player no longer in
+ * defending player, or planeswalker one controls, its controller chooses as it enters -- the only one, or asked, a creature
+ * at a time (asking.mjs, attackWhom). Only in a combat, only a creature, and only the attacking player's (CR 506.3a-b); a player no longer in
  * the game is attacked by nothing (CR 508.4a).
  */
 export function enterAttacking(state, ids, whom, context, controller) {
-  if (!state.combat || state.combat.attackingPlayerId !== controller) return;
   const creatures = ids.filter((id) => state.objects[id]?.zone === "battlefield" && typesOf(state, id).includes("Creature"));
   if (!creatures.length) return;
+  /* NO CREATURE WAS DECLARED (CR 508.8): one put onto the battlefield attacking in the declare attackers step all the same
+     makes an attack of it -- the declare blockers and combat damage steps then happen (rules/turn.mjs reads the attacks).
+     The active player's, who is the attacking player (CR 506.2, 506.3b), once attackers are declared (Meandering
+     Towershell, back "at the beginning of the declare attackers step"). */
+  if (!state.combat && state.phase === "COMBAT_DECLARE_ATTACKERS" && controller === state.activePlayer)
+    state.combat = {attackingPlayerId: controller, defenders: [], attacks: []};
+  if (!state.combat || state.combat.attackingPlayerId !== controller) return;
   if (whom === "that player") {
     const player = context.about?.player, planeswalker = context.about?.planeswalker;
     if (player === controller || !state.players[player] || state.players[player].lost) return;
@@ -180,10 +240,10 @@ export function enterAttacking(state, ids, whom, context, controller) {
     for (const id of creatures) joinAttack(state, id, player, planeswalker);
     return;
   }
-  const players = defendingPlayers(state, controller);
-  if (!players.length) return;
-  /* One defending player, or an effect run outside a resolution with no one to ask: the first in turn order. */
-  if (players.length === 1 || !state.resolving) { for (const id of creatures) joinAttack(state, id, players[0]); return; }
+  const places = attackPlaces(state, controller);
+  if (!places.length) return;
+  /* One place it may attack, or an effect run outside a resolution with no one to ask: the first player in turn order. */
+  if (places.length === 1 || !state.resolving) { for (const id of creatures) joinAttack(state, id, places[0].player, places[0].planeswalker); return; }
   /* Asked next, before the rest of what the ability does. */
   state.resolving.queue.unshift({effect: "attackWhom", tokens: creatures, player: controller});
 }
@@ -212,6 +272,12 @@ export function afterwards(state, ids, params, context) {
   if (params.mustAttack === "that player" && Number.isInteger(context.about?.player))
     pushEffect(state, {id: `must-attack:${context.source ?? "effect"}:${made.join(",")}`, rule: "must-attack", affects: {ids: made}, defender: context.about.player,
       until: "end-of-turn", sourceController: controller});
+  /* "That token gains haste until end of turn and attacks this combat if able" (Legion Warboss; CR 508.1d): a requirement on
+     them in this combat alone -- the combat phase under way, as rules/turn.mjs counts them -- read with the statics' "attacks each
+     combat if able" (rules/statics.mjs, attacksEachCombat), and named by its source when a declaration breaks it. */
+  if (params.mustAttack === "this combat")
+    pushEffect(state, {id: `attacks-this-combat:${context.source ?? "effect"}:${made.join(",")}`, rule: "attacks-each-combat", affects: {ids: made},
+      combat: state.combatsThisTurn ?? 0, until: "end-of-turn", sourceId: context.source ?? null, sourceName: state.objects[context.source]?.card ?? null, sourceController: controller});
   /* "Return it to the battlefield under its owner's control. It's an enchantment. (It's not a creature.)" (the Enduring
      cycle): its card types from now on, as long as it is this object (CR 205.1a, layer 4). */
   if (params.setTypes) pushEffect(state, {id: `types:${context.source ?? "effect"}`, layer: 4, affects: {ids: made}, apply: {setTypes: params.setTypes}, until: null, sourceController: controller});
@@ -243,10 +309,16 @@ export function makeCopies(state, ids, params, context, events) {
     /* "A copy of THAT CREATURE" (Hofri Ghostforge; CR 707.2, 608.2h): the creature the trigger is about, its copiable values as
        it last existed on the battlefield (`asItLastWas`) -- a creature that was copying something, or face down, is that
        (rules/layers.mjs, lastKnown's `copiable`); one that was neither, its card's own, which is where it now is. */
-    const original = params.asItLastWas === true && context.about?.copiedAs && state.objects[id] ? context.about.copiedAs : state.objects[id];
+    const original = id?.values ?? (params.asItLastWas === true && context.about?.copiedAs && state.objects[id] ? context.about.copiedAs : state.objects[id]);
     if (!original) continue;
     const except = params.except?.addAbilities ? {...params.except, addAbilities: rememberedIn(params.except.addAbilities, context.remembered)} : params.except;
-    for (let i = 0; i < (params.count ?? 1); i += 1) {
+    /* Twice as many copies (Anointed Procession), Dragons instead of a copy that would be an artifact (Draconic Visitor), a
+       Soldier beside a creature's (Queen Allenal): rules/statics.mjs, tokensCreated -- read against what the copy would be,
+       in the order its controller chose for this original (tokenQuestion). The copies are the effect's own; what is made
+       instead of them, or beside them, is made as its token says, and as the effect makes its tokens (tapped, hasty). */
+    const {groups} = tokensCreated(state, controller, params.count ?? 1, copiable(original, except), {orders: params.tokenOrders?.[copyEventKey(id)] ?? []});
+    for (const {token, count, own} of groups) for (let i = 0; i < count; i += 1) {
+      if (!own) { made.push(makeToken(state, token, controller, params, context, events)); continue; }
       const values = copiable(original, except);
       /* A copy of an Aura enchants something as it enters, or is not made (CR 303.4f-g). */
       const hosts = values.enchant ? enchantable(state, values.enchant, controller) : null;
@@ -264,12 +336,37 @@ export function makeCopies(state, ids, params, context, events) {
   afterwards(state, made, {...params, controller}, context);
   return made;
 }
+/* Which event of a copy effect an order answers: the original by its id, or the source as it last existed (`lastKnown`) --
+   or a creature an effect moved, as it last existed, by the id of what it became (`key`; movedCopies). */
+const copyEventKey = (id) => (id?.values ? (id.key !== undefined ? String(id.key) : "lastKnown") : String(id));
+
+/* "ITS CONTROLLER CREATES TWO TOKENS THAT ARE COPIES OF THAT CREATURE, EXCEPT THEIR POWER IS HALF THAT CREATURE'S POWER AND THEIR
+   TOUGHNESS IS HALF THAT CREATURE'S TOUGHNESS. ROUND UP EACH TIME" (Saw in Half; wave 4c): `of: "moved"`, a copy of each
+   creature the effect before it moved and remembered -- "if that creature dies this way", a destroy's `remember` (effects/
+   zones.mjs: none indestructible, regenerated, or sent elsewhere by a replacement) -- as it last existed on the battlefield
+   (CR 608.2h, 113.7a): its copiable values, or what it was copying (CR 707.3; layers.mjs lastKnown's `copiable`), under the
+   control of its controller then. `halfStats`: their base power and toughness half the power and toughness it last had,
+   each rounded up (CR 707.9b; the card's rulings). */
+function movedCopies(state, params, context) {
+  const half = (n) => Math.ceil((n ?? 0) / 2) + 0;
+  /* Each as it last was (`movedWas`), beside what it became (`remembered`): destroy keeps the two in step (effects/zones.mjs). */
+  return (context.movedWas ?? []).map((was, i) => ({id: (context.remembered ?? [])[i], was})).map(({id, was}) => ({id, controller: was.controller,
+    original: was.copiable ?? state.objects[id], except: {...(params.except ?? {}), ...(params.halfStats === true ? {setPower: half(was.power), setToughness: half(was.toughness)} : {})}}));
+}
 
 /** `copyPermanent` — "create a token that's a copy of target creature you control" (CR 707.2), or one of each a selector matches ("for each token you control"). */
 export function copyPermanent(state, params, context) {
   const events = [];
+  if (params.of === "moved") {
+    for (const one of movedCopies(state, params, context)) makeCopies(state, [{values: one.original, key: one.id}], {...params, controller: one.controller, except: one.except}, context, events);
+    return events;
+  }
   const originals = params.selector ? selectMatching(state, params.selector, context) : (params.targets ?? []);
-  const made = makeCopies(state, originals, params, context, events);
+  /* "Create a token that's a copy of this creature" (`targets: "self"`, `lastKnown`; Colorstorm Stallion's Opus), this creature
+     gone since its ability was put on the stack: a copy of it as it last existed on the battlefield (CR 608.2h, 113.7a) --
+     the copiable values its last known information kept for that ability (rules/layers.mjs, lastKnown). */
+  const gone = params.lastKnown === true && !originals.length && context.lastKnown?.copiable ? [{values: context.lastKnown.copiable}] : null;
+  const made = makeCopies(state, gone ?? originals, params, context, events);
   /* "If the token is an Aura, untap Yenna" (batch 70): the tokens made, for the effects after it. */
   if (params.remember) context.remembered = made;
   return events;
@@ -290,8 +387,10 @@ export function copyPermanent(state, params, context) {
  * it shows again, and with none left the permanent is its own again. Leaving the battlefield ends them all: a card moves
  * as itself (state/index.mjs, moveObject; CR 400.7).
  */
-export const COPY_KEYS = Object.freeze(["card", "manaCost", "types", "subtypes", "supertypes", "colors", "keywords", "abilities", "power", "toughness", "spell", "enchant"]);
-const ownValues = (object) => Object.fromEntries(COPY_KEYS.map((key) => [key, object[key] === undefined ? undefined : structuredClone(object[key])]));
+export {COPY_KEYS};
+/* Its own values, only those it has: a key holding undefined would not survive the room's storage (JSON drops it), and a
+   value it never had is read as none (showCopy; state/index.mjs, moveObject). */
+const ownValues = (object) => Object.fromEntries(COPY_KEYS.filter((key) => object[key] !== undefined).map((key) => [key, structuredClone(object[key])]));
 function showCopy(object) {
   const latest = (object.copyEffects ?? []).at(-1);
   const values = latest ? latest.values : object.uncopied;
@@ -313,10 +412,32 @@ export function copyOnto(state, id, fromId, {except = {}, keep = [], until = nul
   showCopy(object);
   return true;
 }
+/* "Each nonland permanent you control becomes a copy of target non-Aura permanent" (Mirrorform): `selector`, what becomes
+   the copy in the source's place -- each permanent it matches as the effect begins (CR 611.2c). The target among them
+   becomes a copy of itself, which changes nothing, so the rest copy it as it was (CR 707.2). */
 export function becomeCopy(state, params, context) {
-  copyOnto(state, context.source, (params.targets ?? [])[0], {except: params.except ?? {}, keep: params.keep ?? [], until: params.until ?? null});
+  const ids = params.selector ? selectMatching(state, params.selector, context) : [context.source];
+  for (const id of ids) copyOnto(state, id, (params.targets ?? [])[0], {except: params.except ?? {}, keep: params.keep ?? [], until: params.until ?? null});
   return [];
 }
+/**
+ * "FOR AS LONG AS THAT LAND HAS A BLIGHT COUNTER ON IT" (Ultima, Origin of Oblivion; CR 611.2b): a layer's effect lasting while
+ * each object it affects has a counter of a kind (`whileCounter`) ends for an object with none -- for good, so a counter put
+ * on again later does not bring it back -- and with none left, it is over. Run as the game is checked (rules/sba.mjs); the
+ * layers apply it only while the counter is there, in between. A rule changed for a while (`rule`, Promise of Loyalty's
+ * "can't attack") reads its counter where the rule is asked (rules/statics.mjs).
+ */
+export function endCounterDurations(state) {
+  const over = new Set();
+  for (const e of state.effects ?? []) {
+    if (!e.whileCounter || e.rule || !Array.isArray(e.affects?.ids)) continue;
+    const ids = e.affects.ids.filter((id) => (state.objects[id]?.counters?.[e.whileCounter] ?? 0) > 0);
+    if (!ids.length) over.add(e);
+    else if (ids.length < e.affects.ids.length) e.affects = {...e.affects, ids};
+  }
+  if (over.size) state.effects = state.effects.filter((e) => !over.has(e));
+}
+
 /** "Until end of turn": those copy effects end (rules/turn.mjs, the cleanup step). */
 export function endCopies(state) {
   for (const id of state.zones.battlefield) {
@@ -334,6 +455,22 @@ export function endCopies(state) {
 export function investigate(state, params, context) {
   return createToken(state, {...(params.controller !== undefined ? {controller: params.controller} : {}), count: params.count ?? 1, token: {predefined: "Clue"}}, context);
 }
+
+/**
+ * `incubate` — CR 701.53a (Train E, Sunfall: "Incubate X, where X is the number of creatures exiled this way"): one
+ * Incubator token (CR 111.10i) that enters the battlefield with N +1/+1 counters on it. `count` is the N, an amount counted
+ * as the effect is applied (CR 608.2h). The counters are given as it enters (CR 122.6), by its controller (122.6a), so an
+ * effect that changes how many are put sees them; none at all, and it enters with none.
+ */
+export function incubate(state, params, context) {
+  return createToken(state, {count: 1, token: {predefined: "Incubator"}, entersWithCounters: {"+1/+1": params.count ?? 0}}, context);
+}
+
+/* A face of a double-faced token (an Incubator, CR 111.10i), as a double-faced card's face is kept (cards/index.mjs,
+   faceOfDefinition): what transformObject turns over (state/index.mjs). */
+const tokenFace = (spec) => ({card: spec.name ?? "Token", types: [...(spec.types ?? [])], subtypes: [...(spec.subtypes ?? [])], supertypes: [...(spec.supertypes ?? [])],
+  manaCost: null, colors: [...(spec.colors ?? [])], power: spec.power ?? null, toughness: spec.toughness ?? null, keywords: [...(spec.keywords ?? [])],
+  abilities: structuredClone(spec.abilities ?? [])});
 
 /**
  * "THE EXILED CARD'S OWNER CREATES AN X/X BLUE ILLUSION CREATURE TOKEN, WHERE X IS THE MANA VALUE OF THE EXILED CARD"
@@ -361,52 +498,129 @@ export function createToken(state, params, context) {
   if (!spec) throw new Error(`No predefined token named ${params.token.predefined}`);
   const count = params.count ?? 1;
   const controller = params.controller ?? context.controller;
-  /* A target player who is no longer one creates nothing. */
-  if (!state.players[controller]) return events;
+  /* A target player who is no longer one creates nothing -- nor one who has left the game (CR 800.4b: no token is created
+     under their control; Tempt with Vengeance's "may create" answered for them, CR 800.4g). */
+  if (!state.players[controller] || state.players[controller].lost) return events;
+  /* "Create a Royal Role token attached to that creature" (Royal Treatment): `attachedTo`, an object bound as a target is --
+     an Aura token created attached to what its Enchant could not enchant, or to nothing, is not created (CR 303.4i). An Aura
+     token's alone: the compiler refuses it of any other (cards/index.mjs). */
+  const [host] = params.attachedTo ?? [];
+  if (params.attachedTo !== undefined && !enchantable(state, spec.enchant, controller).includes(host)) return events;
   const made = [];
+  /* "Twice that many of those tokens instead" (Anointed Procession), artifact tokens made Dragons instead (Draconic Visitor),
+     "those tokens plus a 1/1 white Soldier" (Queen Allenal), "one of each" (Academy Manufactor): what is made, in the order
+     their controller chose (rules/statics.mjs, tokensCreated; effects/asking.mjs, orderTokens) -- each as the effect says its
+     tokens are made, tapped, attacking or gaining haste, whatever a replacement made of them (their rulings; CR 614.6). */
+  const {groups} = tokensCreated(state, controller, count, spec, {orders: params.tokenOrders?.[TOKEN_EVENT] ?? []});
+  for (const {token, count: many} of groups) for (let i = 0; i < many; i += 1) made.push(makeToken(state, token, controller, params, context, events));
+  /* An Aura among them enters attached (Royal Treatment's Role, twice that many of it too); a Food added beside it does not. */
+  if (params.attachedTo !== undefined) for (const id of made) if (state.objects[id].enchant) attachTo(state, id, host);
+  /* "They gain haste until end of turn" (Ovika), and the rest a made permanent may gain (afterwards). */
+  afterwards(state, made, {...params, controller}, context);
+  /* "Create X 1/1 white Soldier creature tokens. If X is 5 or more, destroy all OTHER creatures" (Martial Coup): the
+     tokens this made, for the effects after it -- the ones a replacement added among them (CR 614.6). */
+  if (params.remember) context.remembered = made;
+  return events;
+}
+
+/* The answers kept for the order of the effects changing tokens (CR 616.1; effects/asking.mjs, orderTokens): by the event --
+   a createToken's one, or each original a copy is made of. */
+const TOKEN_EVENT = "made";
+/**
+ * The first event of this token effect whose replacement effects' order is the tokens' controller's to choose and not yet
+ * chosen (CR 616.1), given `answers` (by event): `{player, options, controller, count, values, key}`, or null. It changes
+ * nothing. A createToken or a copyPermanent of targets; the rest (populate, amass, investigate's Clues, which no adder adds
+ * to unless they are made Dragons first) take the order that makes the most (rules/statics.mjs, tokensCreated).
+ */
+export function tokenQuestion(state, effect, context, answers = {}) {
+  const ask = (controller, count, values, key) => {
+    const {question} = tokensCreated(state, controller, count, values, {orders: answers[key] ?? [], askable: true});
+    return question ? {...question, controller, count, values, key, answered: answers[key] ?? []} : null;
+  };
+  const controller = effect?.controller ?? context.controller;
+  /* Copies of what the effect before it moved (Saw in Half; movedCopies): each its controller's, as it last existed. */
+  if (effect?.effect === "copyPermanent" && effect.of === "moved") {
+    for (const one of movedCopies(state, effect, context)) {
+      const asked = ask(one.controller, effect.count ?? 1, copiable(one.original, one.except), String(one.id));
+      if (asked) return asked;
+    }
+    return null;
+  }
+  /* Linked tokens are made under the exiled cards' owners' control (linkedTokens): theirs to order, not asked here. */
+  if (effect?.effect === "createToken" && effect.linked !== true)
+    return ask(controller, effect.count ?? 1, effect.token?.predefined ? PREDEFINED_TOKENS[effect.token.predefined] : effect.token, TOKEN_EVENT);
+  if (effect?.effect === "copyPermanent" && !effect.selector && Array.isArray(effect.targets)) {
+    for (const id of effect.targets) {
+      if (!state.objects[id]) continue;
+      const asked = ask(controller, effect.count ?? 1, copiable(state.objects[id], effect.except), copyEventKey(id));
+      if (asked) return asked;
+    }
+    /* A copy of this creature as it last existed (copyPermanent's `lastKnown`). */
+    if (effect.lastKnown === true && !effect.targets.length && context.lastKnown?.copiable)
+      return ask(controller, effect.count ?? 1, copiable(context.lastKnown.copiable, effect.except), copyEventKey({values: true}));
+  }
+  return null;
+}
+
+/* One token of this spec, under `controller`'s control, as the effect says it is made (tapped), said so. */
+function makeToken(state, spec, controller, params, context, events) {
   /* "An X/X green Dinosaur Beast ... where X is the amount of damage those creatures dealt" (Quartzwood Crasher): its size
      counted as it is made. */
   /* "X/X ... where X is the mana value of the exiled card" (linkedTokens): "X", the X this effect was given. */
   const sized = (value) => (value === "X" || (value !== null && typeof value === "object") ? amountOf(state, value, context) : value ?? null);
-  for (let i = 0; i < count; i += 1) {
-    const id = addObject(state, {
-      card: spec.name ?? "Token",
-      types: spec.types ?? ["Creature"],
-      /* A Goblin token is a Goblin (CR 111.4): "sacrifice a Goblin" has to find it. */
-      subtypes: spec.subtypes ?? [],
-      /* "Colorless snow artifact tokens named Replicated Ring" (batch 72): its supertypes (state/index.mjs keeps none empty). */
-      supertypes: spec.supertypes ?? [],
-      /* "A 1/1 red Elemental" is red (CR 111.4): "white creatures you control" has to find a white token. */
-      colors: spec.colors ?? [],
-      power: sized(spec.power),
-      toughness: sized(spec.toughness),
-      keywords: spec.keywords ?? [],
-      abilities: spec.abilities ?? [],
-      owner: controller,
-      controller,
-      token: true,
-    }, "battlefield");
-    /* "Create a tapped Treasure token": the effect says so as well as a spec can. */
-    if (spec.tapped || params.tapped) state.objects[id].tapped = true;
-    events.push(event("GameEventCardChangeZone", state, {
-      card: cardRef(state, id),
-      /* The token is the object that arrived: "for each of them, create a token that's a copy of it" names it. */
-      becomes: id, ...(state.objects[id]?.tapped ? {enteredTapped: true} : {}),
-      from: {zoneType: null, player: {playerId: controller}},
-      to: {zoneType: "Battlefield", player: {playerId: controller}},
-      createdAsToken: true,
-    }));
-    made.push(id);
-    /* The tokens each player has made this turn ("only if you created a token this turn", Idol of Oblivion): its creator
-       is its controller unless the effect says otherwise (CR 111.2). Cleared as a turn begins (rules/turn.mjs). */
-    state.players[controller].tokensThisTurn = (state.players[controller].tokensThisTurn ?? 0) + 1;
+  const id = addObject(state, {
+    card: spec.name ?? "Token",
+    types: spec.types ?? ["Creature"],
+    /* A Goblin token is a Goblin (CR 111.4): "sacrifice a Goblin" has to find it. */
+    subtypes: spec.subtypes ?? [],
+    /* "Colorless snow artifact tokens named Replicated Ring" (batch 72): its supertypes (state/index.mjs keeps none empty). */
+    supertypes: spec.supertypes ?? [],
+    /* "A 1/1 red Elemental" is red (CR 111.4): "white creatures you control" has to find a white token. */
+    colors: spec.colors ?? [],
+    /* A mana cost only when the effect gives it one (CR 111.3): "a {1} 1/1 Food Golem artifact creature" (Ginger, Queen of
+       Sweets' Gingerbrute) has mana value 1; a token made without one has none. */
+    ...(spec.manaCost ? {manaCost: spec.manaCost} : {}),
+    power: sized(spec.power),
+    toughness: sized(spec.toughness),
+    keywords: spec.keywords ?? [],
+    abilities: spec.abilities ?? [],
+    /* An Aura token's Enchant (a Role's, CR 303.7): what the state-based actions hold it to (CR 704.5m). */
+    ...(spec.enchant ? {enchant: spec.enchant} : {}),
+    /* A double-faced token (an Incubator, CR 111.10i): both faces, its front face up as it enters (CR 712.14's default),
+       so it is one that can transform (CR 701.27a, 712.9). */
+    ...(spec.back ? {mdfc: {front: tokenFace(spec), back: tokenFace(spec.back), transforming: true}} : {}),
+    owner: controller,
+    controller,
+    token: true,
+  }, "battlefield");
+  /* "Create a tapped Treasure token": the effect says so as well as a spec can. */
+  if (spec.tapped || params.tapped) state.objects[id].tapped = true;
+  /* "Creatures your opponents control enter tapped" (Authority of the Consuls; CR 614.1c, 614.12): a token is a permanent
+     entering the battlefield too (CR 111.1), and a replacement that has it enter tapped applies as it is made. Only that is
+     taken from them here -- what else a token enters with, the effect's own words give (above, below) -- and not "tapped
+     unless you pay" (a shock land's), which asks a question no token is asked yet (NAMED). */
+  else {
+    const entering = enteringModifications(state, {objectId: id, player: controller, types: state.objects[id].types, abilities: state.objects[id].abilities});
+    if (entering.tapped && !entering.asks.some((ask) => ask.life !== undefined || ask.reveal !== undefined)) state.objects[id].tapped = true;
   }
-  /* "They gain haste until end of turn" (Ovika), and the rest a made permanent may gain (afterwards). */
-  afterwards(state, made, {...params, controller}, context);
-  /* "Create X 1/1 white Soldier creature tokens. If X is 5 or more, destroy all OTHER creatures" (Martial Coup): the
-     tokens this made, for the effects after it. */
-  if (params.remember) context.remembered = made;
-  return events;
+  /* "An Incubator token that enters the battlefield with N +1/+1 counters on it" (incubate, CR 701.53a): given as it enters,
+     before the event that says it entered (CR 122.6), by its controller (122.6a) -- "twice that many instead" sees them. */
+  for (const [counter, n] of Object.entries(params.entersWithCounters ?? {})) {
+    const placed = enteringCountersPlaced(state, id, counter, n, controller);
+    if (placed > 0) state.objects[id].counters[counter] = (state.objects[id].counters[counter] ?? 0) + placed;
+  }
+  events.push(event("GameEventCardChangeZone", state, {
+    card: cardRef(state, id),
+    /* The token is the object that arrived: "for each of them, create a token that's a copy of it" names it. */
+    becomes: id, ...(state.objects[id]?.tapped ? {enteredTapped: true} : {}),
+    from: {zoneType: null, player: {playerId: controller}},
+    to: {zoneType: "Battlefield", player: {playerId: controller}},
+    createdAsToken: true,
+  }));
+  /* The tokens each player has made this turn ("only if you created a token this turn", Idol of Oblivion): its creator
+     is its controller unless the effect says otherwise (CR 111.2). Cleared as a turn begins (rules/turn.mjs). */
+  state.players[controller].tokensThisTurn = (state.players[controller].tokensThisTurn ?? 0) + 1;
+  return id;
 }
 
 /**
@@ -422,7 +636,9 @@ export function animate(state, params, context) {
   pushEffect(state, {
     id: `animate:${context.source ?? "effect"}`,
     layer: 4, affects,
-    apply: {addTypes: params.addTypes ?? ["Creature"], ...(params.subtypes ? {addTypes: [...(params.addTypes ?? ["Creature"]), ...params.subtypes]} : {}),
+    /* "Becomes a 0/0 Elemental creature", "each of them is a 1/1 Spirit in addition to its other types" (Ghost Vacuum): its
+       subtypes added beside its own, in the same layer (CR 205.1b, 613.1d) -- creature types, never card types. */
+    apply: {addTypes: params.addTypes ?? ["Creature"], ...(params.subtypes ? {addSubtypes: [...params.subtypes]} : {}),
       /* "And gain all creature types" (Mirror Entity, batch 74): in the same layer (rules/layers.mjs). */
       ...(params.allCreatureTypes === true ? {allCreatureTypes: true} : {})},
     until: params.until ?? null,
@@ -468,7 +684,7 @@ export function earthbend(state, params, context) {
     if (count > 0) {
       const before = state.objects[id].counters["+1/+1"] ?? 0;
       state.objects[id].counters["+1/+1"] = before + count;
-      events.push(event("GameEventCardCounters", state, {card: cardRef(state, id), type: "+1/+1", oldValue: before, newValue: before + count}));
+      events.push(event("GameEventCardCounters", state, {card: cardRef(state, id), type: "+1/+1", oldValue: before, newValue: before + count, by: context.controller}));
     }
     const back = [{effect: "moveZone", targets: "that card", to: "battlefield", tapped: true}];
     for (const to of ["Graveyard", "Exile"])
@@ -542,21 +758,29 @@ function fixedAt(state, selector, context) {
 }
 
 export function effectUntil(state, params, context) {
+  /* "For as long as this Saga remains on the battlefield" (Old Fat Spider Can't See Me; CR 611.2b): `until: "this leaves"`,
+     ended as its source leaves the battlefield (endWhileSourceRemains) -- a duration that never starts with the source gone
+     from it before this resolves (rules/stack.mjs leaves the source null then), and the effect does nothing. */
+  const whileHere = params.until === "this leaves";
+  if (whileHere && (context.source === null || context.source === undefined || state.objects[context.source]?.zone !== "battlefield")) return [];
   /* "That creature's owner can't cast spells with the same name as that creature until your next turn" (Reflector Mage):
      a rule changed for players, not objects -- `who`, bound as it resolves ({ownerOf: {target: 0}}, script/bind.mjs) -- and
      the spells it forbids by `named`, that creature's name as it resolves ({nameOf: {target: 0}}; CR 201.2a). Read where a
      cast is offered (rules/statics.mjs, castForbidden). Lands are played, not cast, and stay playable (the card's ruling). A
      name that could not be read (the creature gone) forbids nothing. */
+  /* "If you do, you can't cast additional spells this turn" (Conduit of Worlds): every spell (`allSpells`), its controller's
+     ("you"). */
   if (params.rule === "cant-cast") {
-    if (typeof params.named !== "string" || !Array.isArray(params.who) || !params.who.length) return [];
-    pushEffect(state, {id: params.id ?? `effect:${context.source ?? "effect"}`, rule: "cant-cast", players: [...params.who], spells: {named: params.named},
+    const who = params.who === "you" ? [context.controller] : params.who;
+    if (!(typeof params.named === "string" || params.allSpells === true) || !Array.isArray(who) || !who.length) return [];
+    pushEffect(state, {id: params.id ?? `effect:${context.source ?? "effect"}`, rule: "cant-cast", players: [...who], spells: params.allSpells === true ? {} : {named: params.named},
       affects: {what: "player"}, apply: {}, until: params.until ?? "end-of-turn", sourceController: context.controller});
     return [];
   }
   pushEffect(state, {
     id: params.id ?? `effect:${context.source ?? "effect"}`,
     /* A rule changed for a while ("can't be blocked this turn", rules/statics.mjs), or a characteristic, in a layer. */
-    ...(params.rule ? {rule: params.rule} : {layer: params.layer ?? 6, sublayer: params.sublayer}),
+    ...(params.rule ? {rule: params.rule} : {layer: params.layer ?? 6, ...(params.sublayer !== undefined ? {sublayer: params.sublayer} : {})}),
     /* `selector`: what it affects, fixed as it resolves (CR 611.2c) -- "each instant and sorcery card in your graveyard
        gains flashback until end of turn" does not reach a card put there later. A choice (`anyOf`) is each of them. */
     affects: params.targets ? {ids: params.targets} : params.selector ? {ids: fixedAt(state, params.selector, context)}
@@ -572,7 +796,9 @@ export function effectUntil(state, params, context) {
        (Promise of Loyalty): `defender` "you", this effect's controller, `planeswalkers` theirs too (CR 506.3), and
        `whileCounter`, a duration of each creature's own -- while it has that counter (CR 611.2b; rules/statics.mjs). */
     ...(params.rule === "cant-attack" && params.defender === "you" ? {defender: "you", ...(params.planeswalkers === true ? {planeswalkers: true} : {})} : {}),
-    ...(params.rule === "cant-attack" && typeof params.whileCounter === "string" ? {whileCounter: params.whileCounter} : {}),
+    /* And "for as long as that land has a blight counter on it, it loses all land types and abilities" (Ultima, Origin of
+       Oblivion): the same, for a characteristic changed in a layer (rules/layers.mjs). */
+    ...(typeof params.whileCounter === "string" ? {whileCounter: params.whileCounter} : {}),
     apply: params.apply ?? {},
     /* "Until end of turn" (the default), "until your next turn", or "ever": an effect with no duration -- "up to one other
        target creature loses all abilities" (Abigale) -- lasting as long as what it affects does (CR 611.2a; a permanent
@@ -580,37 +806,194 @@ export function effectUntil(state, params, context) {
     until: params.until === "ever" ? null : params.until ?? "end-of-turn",
     /* "Until that player's next turn" (Teferi's Reproach): `their-next-turn`, the player `who` names (rules/turn.mjs). And a
        rule changed for players (`players`): their protection, their life total that can't change. */
-    ...(params.until === "their-next-turn" || ["protection", "life-cant-change"].includes(params.rule) ? {players: Array.isArray(params.who) ? [...params.who] : [context.controller]} : {}),
+    /* And "you have no maximum hand size for the rest of the game" (Wisdom of Ages; CR 402.2, 611.2a): read at cleanup
+       (rules/statics.mjs, playerRuleChanged). And "until end of turn, you may look at the top card of your library any time"
+       (Gwenom, Remorseless; CR 401.2): read as the library is shown (projection.mjs, topSeenBy). */
+    /* "Creatures you control gain ... protection from each color until end of turn" (Akroma's Will; CR 702.16, 611.2c) is a
+       protection over the permanents it names, fixed as it resolves (`selector`, `targets`), and no player's
+       (rules/protection.mjs, protectedFrom). And "you gain hexproof until end of turn" (Dawn's Truce; CR 702.11c): its
+       players, read where a target is chosen (script/filter.mjs, playerHasHexproof). */
+    ...(params.until === "their-next-turn" || (["protection", "life-cant-change", "no-maximum-hand-size", "damage-doubled", "look-at-top", "player-hexproof"].includes(params.rule)
+      && !(params.rule === "protection" && (params.targets || params.selector))) ? {players: Array.isArray(params.who) ? [...params.who] : [context.controller]} : {}),
+    /* "If a source would deal damage to that player or a permanent that player controls, it deals double that damage
+       instead" (Lightning, Army of One; rules/replacement.mjs, rememberedReplacement): `who` the players it remembers, its
+       name for the order's question (CR 616.1). "That creature enters with an additional +1/+1 counter on it" (Summon:
+       Fenrir): `counter` and `count`, about the spell `targets` names. */
+    ...(params.rule === "damage-doubled" ? {name: state.objects[context.source]?.card ?? context.lastKnown?.name ?? "An effect"} : {}),
+    ...(params.rule === "enters-with-counters" ? {counters: {counter: params.counter, count: params.count ?? 1}} : {}),
     ...(params.rule === "protection" ? {from: params.from ?? "everything"} : {}),
+    /* "Creatures your opponents control attack this turn if able" (Bident of Thassa; rules/statics.mjs, attacksEachCombat):
+       named by its source when a declaration breaks it, as it was then, gone or not (rules/combat.mjs). */
+    ...(params.rule === "attacks-each-combat" ? {sourceId: context.source ?? null, sourceName: state.objects[context.source]?.card ?? context.lastKnown?.name ?? null} : {}),
+    /* A PREVENTION SHIELD OF A PLAYER'S (CR 615; rules/replacement.mjs, preventionsFor): "prevent all combat damage that would
+       be dealt to you this turn" (Inkshield) -- `who`, the players it shields -- "the next time a source of your choice
+       would deal damage to you this turn" (Deflecting Palm) -- `from`, the sources chosen (CR 609.7a), and `next`, used up
+       by the first damage it prevents (CR 615.8) -- and what follows, `then` (CR 615.5), done by its controller and dealt by
+       the spell that made it (`dealer`, followed to the card it becomes, rules/stack.mjs), its name for the order's
+       question (CR 616.1). */
+    ...(params.rule === "prevent-damage" && params.who !== undefined ? {players: Array.isArray(params.who) ? [...params.who] : [context.controller]} : {}),
+    ...(params.rule === "prevent-damage" && Array.isArray(params.from) ? {sources: [...params.from]} : {}),
+    ...(params.rule === "prevent-damage" && params.next === true ? {next: true} : {}),
+    ...(params.rule === "prevent-damage" && Array.isArray(params.then) ? {then: structuredClone(params.then), dealer: context.source ?? null} : {}),
+    ...(params.rule === "prevent-damage" ? {name: state.objects[context.source]?.card ?? context.lastKnown?.name ?? "An effect"} : {}),
+    /* "Hexproof from that color until end of turn" (Skrelv, Defector Mite; CR 702.11d): its colors, chosen as it resolves
+       ("$chosenColor", script/bind.mjs), read where a target is chosen (rules/protection.mjs, hexproofFrom). */
+    ...(params.rule === "hexproof-from" ? {colors: [...(params.colors ?? [])]} : {}),
+    /* "It can't be blocked by creatures of that color this turn" (Skrelv): which blockers, a selector (rules/statics.mjs,
+       cantBeBlockedBy, `by`). */
+    ...(params.rule === "cant-be-blocked-by" ? {by: structuredClone(params.by ?? {})} : {}),
     /* "Until this card is cast from exile" (Emrakul, the Exigent Doom): `untilCast` the card, as `until: "ever"` otherwise is,
        until that cast (rules/actions.mjs). */
     ...(Array.isArray(params.untilCast) && params.untilCast.length ? {untilCast: params.untilCast[0]} : {}),
+    ...(whileHere ? {source: context.source} : {}),
     sourceController: context.controller,
   });
   return [];
 }
 
 /**
+ * A PERMANENT HAS LEFT THE BATTLEFIELD (`departed`, its id there): each effect lasting "for as long as" it remained there
+ * ends (CR 611.2b; effectUntil's `until: "this leaves"`, Old Fat Spider Can't See Me) -- wherever it went, it is a new
+ * object (CR 400.7), and coming back does not bring the effect back. Called with every departure, after controlSourceLeft
+ * has given back what a control change lasting as long took (effects/zones.mjs, returnExiledUntil).
+ */
+export function endWhileSourceRemains(state, departed) {
+  if ((state.effects ?? []).some((e) => e.until === "this leaves" && e.source === departed))
+    state.effects = state.effects.filter((e) => !(e.until === "this leaves" && e.source === departed));
+}
+
+/**
  * `gainControl` -- CR 613.1b: "gain control of target creature until end of turn", "untap all creatures and gain control
- * of them" (`selector`, fixed as it resolves), "target opponent gains control of this creature" (`toPlayer`). For good
- * unless `until` says "end-of-turn". The permanent's controller itself changes -- the projection, its triggers, a choice
- * of "a creature you control" all read it -- and for a turn a `control-returns` record gives it back as the turn ends
- * (rules/turn.mjs). It has changed controller, so it is summoning sick for its new controller unless it has haste
- * (CR 302.6), and again for its old one when it returns.
+ * of them" (`selector`, fixed as it resolves), "target opponent gains control of this creature" (`toPlayer`), "for as long
+ * as this creature remains on the battlefield" (Sower of Temptation: `until: "this leaves"`). For good unless `until` says
+ * one of those. The permanent's controller itself changes -- the projection, its triggers, a choice of "a creature you
+ * control" all read it -- and every change leaves a `control-returns` record: whom it took the permanent from, whom it gave
+ * it to (`to`), and how long it lasts (`until`, unsaid for good). That record gives it back when the change ends
+ * (endControlChange): as the turn ends (rules/turn.mjs), as its source leaves the battlefield (effects/zones.mjs), or --
+ * for good ones too -- as the player it gave control to leaves the game (CR 800.4a; rules/sba.mjs). It has changed
+ * controller, so it is summoning sick for its new controller unless it has haste (CR 302.6), and again for its old one
+ * when it returns. And it is removed from combat (CR 506.4; rules/combat.mjs): an attacker taken in the middle of a combat
+ * attacks no one, and a blocker taken blocks nothing -- each time its controller changes, going and coming back.
  */
 export function gainControl(state, params, context) {
+  /* "Choose a different opponent" for each (`toEach`, Dack Fayden, Helping Hand) is its controller's choice: asked by the
+     resolution (effects/asking.mjs, controlToOpponents), never given to this effect's controller here by default. */
+  if (params.toEach !== undefined) throw new Error("gainControl's toEach asks its controller whose each permanent becomes: run it through the resolution (script/resolution.mjs)");
   const to = Number.isInteger(params.toPlayer) ? params.toPlayer : context.controller;
+  /* "For as long as this creature remains on the battlefield": a duration that never starts -- its source gone from the
+     battlefield before this resolves (rules/stack.mjs leaves it null then) -- and the effect does nothing (CR 611.2b). */
+  const source = context.source ?? null;
+  if (params.until === "this leaves" && (source === null || state.objects[source]?.zone !== "battlefield")) return [];
   const ids = (params.selector ? selectMatching(state, params.selector, context) : params.targets ?? []).filter((id) => state.objects[id]?.zone === "battlefield");
   for (const id of ids) {
     const object = state.objects[id];
-    if (params.until === "end-of-turn" && object.controller !== to)
-      (state.effects ??= []).push({id: `control-returns:${id}:${state.effects.length}`, rule: "control-returns", affects: {ids: [id]}, apply: {controller: object.controller}, until: "end-of-turn", sourceController: context.controller});
+    /* Kept even for good, and even when it changes nothing: a later change outlasts the earlier ones in layer 2 (CR 613.7),
+       but its player may leave the game and the earlier ones decide again (CR 800.4a). */
+    (state.effects ??= []).push({id: `control-returns:${id}:${state.effects.length}`, rule: "control-returns", affects: {ids: [id]},
+      apply: {controller: object.controller}, to, ...(params.until ? {until: params.until} : {}), ...(params.until === "this leaves" ? {source} : {}), sourceController: context.controller});
     rememberExileLooker(state, id, controllerOf(state, id));
-    if (object.controller !== to) object.controlledSinceTurn = state.turn;
+    if (object.controller !== to) {
+      object.controlledSinceTurn = state.turn;
+      removeFromCombat(state, id);
+    }
     object.controller = to;
     rememberExileLooker(state, id, controllerOf(state, id));
   }
   return [];
+}
+/**
+ * `exchangeControl` -- CR 701.12a-b: "exchange control of target artifact or creature you control and target creature an
+ * opponent controls with power 3 or less" (Oko, Thief of Crowns' -5): `from` the one, `targets` the other -- or, with no
+ * `from`, "exchange control of two target creatures" (Switcheroo): the two of `targets`. Both still on the battlefield -- and each still a legal target as it resolves, or nothing is bound to it (CR 608.2b) -- and controlled
+ * by different players: each player gains control of the other's, at once and for good, as two control changes, each with
+ * its record, so a player who leaves the game gives back what they were given (CR 800.4a). One gone, or no longer legal,
+ * and no part of the exchange happens (701.12a); both one player's, and it does nothing (701.12b).
+ */
+export function exchangeControl(state, params, context) {
+  const [one, other] = params.from !== undefined ? [params.from[0], (params.targets ?? [])[0]] : params.targets ?? [];
+  if (state.objects[one]?.zone !== "battlefield" || state.objects[other]?.zone !== "battlefield") return [];
+  const ones = controllerOf(state, one), others = controllerOf(state, other);
+  if (ones === others) return [];
+  gainControl(state, {targets: [one], toPlayer: others}, context);
+  gainControl(state, {targets: [other], toPlayer: ones}, context);
+  return [];
+}
+
+/** How long a control change may last other than for good: the turn, or while its source stays (schema.mjs reads it). */
+export const CONTROL_DURATIONS = Object.freeze(["end-of-turn", "this leaves"]);
+
+/**
+ * A CONTROL CHANGE ENDS (CR 613.1b, 613.7): `record`, the `control-returns` record gainControl left. Control effects apply in
+ * timestamp order, the latest winning, so its permanent goes back to whom this one took it from -- unless a later change
+ * still holds it, and then that one is told to give it back there in its turn, as though this one had never been. "Gain
+ * control until end of turn" twice in a turn ends with the first controller; a creature Sower of Temptation took and then
+ * lent until end of turn goes to its owner when the Sower leaves only once the loan ends. Changing hands, it is summoning
+ * sick for whom it returns to (CR 302.6), and not at all for one who has had it all along, and it leaves combat (CR 506.4).
+ * A permanent gone from the battlefield is a new object (CR 400.7) whose records are spent as it leaves (controlSourceLeft).
+ * Ending one may exile its permanent (CR 800.4c), so a caller ending several asks for the next one still standing each time
+ * (`nextRecord`).
+ */
+export function endControlChange(state, record, events = []) {
+  const id = record.affects.ids[0];
+  const later = (state.effects ?? []).filter((e) => e.rule === "control-returns" && e.affects.ids[0] === id);
+  const next = later[later.indexOf(record) + 1];
+  state.effects = state.effects.filter((e) => e !== record);
+  if (next) next.apply = {...next.apply, controller: record.apply.controller};
+  /* Back to a player who has left the game it does not go: no other change gives it to a player still in the game, the
+     one who controlled it by default is gone, and it is exiled -- as soon as the change ends (CR 800.4c). */
+  else if (state.players[record.apply.controller].lost) moveOne(state, id, "exile", events);
+  else if (state.objects[id].controller !== record.apply.controller) {
+    state.objects[id].controller = record.apply.controller;
+    state.objects[id].controlledSinceTurn = state.turn;
+    /* Its controller changes back, and it leaves the combat it is in (CR 506.4): one Sower of Temptation or Tractor Beam
+       held, given back mid-combat as its source leaves, attacks or blocks no longer. */
+    removeFromCombat(state, id);
+  }
+  return events;
+}
+/** The first control record still in effect that `fits` (endControlChange's callers, one at a time). */
+export const nextRecord = (state, fits) => (state.effects ?? []).find((e) => e.rule === "control-returns" && fits(e));
+
+/**
+ * A PERMANENT HAS LEFT THE BATTLEFIELD (`departed`, its id there): each control change lasting "for as long as" it remained
+ * there ends (CR 611.2b; Sower of Temptation), and the records of control changes to it are spent -- it is a new object
+ * now, wherever it went (CR 400.7). Called with every departure (effects/zones.mjs, returnExiledUntil).
+ */
+export function controlSourceLeft(state, departed, events = []) {
+  /* Its own records first: a Sower that took itself (its trigger's only target) has one it is both the source and the
+     subject of, and nothing is left to give back (G1, 2026-10-08). */
+  if (state.effects?.some((e) => e.rule === "control-returns" && e.affects.ids[0] === departed))
+    state.effects = state.effects.filter((e) => !(e.rule === "control-returns" && e.affects.ids[0] === departed));
+  for (let record; (record = nextRecord(state, (e) => e.until === "this leaves" && e.source === departed));) endControlChange(state, record, events);
+}
+
+/**
+ * "YOU CONTROL ENCHANTED PERMANENT" (Tractor Beam; CR 613.1b, 611.3a): an Aura's static ability, `rule: "control-enchanted"`
+ * (rules/statics.mjs), made the control change gainControl makes -- the permanent's controller itself changes, so every
+ * reader sees it, summoning sickness included (CR 302.6) -- with the Aura's own record (`byAura`), from the first moment it
+ * applies: the Aura on the battlefield with the ability (after layer 6, CR 613.1f), attached to that permanent. Asked whenever
+ * the game is checked (rules/sba.mjs), before anything else is: a player never holds priority before it applies. It lasts while
+ * that holds and its controller is still whom the record gave control to: the Aura gone (controlSourceLeft, `until: "this
+ * leaves"`), attached elsewhere, without the ability, or under another player's control, and it ends (endControlChange) --
+ * the next to apply, applying afresh. A later change of control outlasts it, and gives it back as it ends (CR 613.7).
+ */
+const controlsEnchanted = (state, held, aura) => held(aura).some((a) => a.kind === "static" && a.rule === "control-enchanted");
+export function controlByAuras(state, events = []) {
+  /* Only a card that prints it has it (no effect gives it): none on the battlefield, and nothing to do -- an Aura gone has
+     ended its record as it left (controlSourceLeft). */
+  if (!state.zones.battlefield.some((id) => (state.objects[id].abilities ?? []).some((a) => a.rule === "control-enchanted"))) return;
+  const held = staticAbilities(state);
+  const holds = (record) => state.objects[record.byAura]?.attachedTo === record.affects.ids[0] && controllerOf(state, record.byAura) === record.to
+    && controlsEnchanted(state, held, record.byAura);
+  for (let record; (record = nextRecord(state, (e) => e.byAura !== undefined && !holds(e)));) endControlChange(state, record, events);
+  for (const aura of [...state.zones.battlefield]) {
+    const host = state.objects[aura]?.attachedTo;
+    /* An Aura attached to nothing (put onto the battlefield so, until the game puts it into the graveyard, CR 704.5m). */
+    if (state.objects[host]?.zone !== "battlefield" || !controlsEnchanted(state, held, aura)) continue;
+    if ((state.effects ?? []).some((e) => e.byAura === aura && e.affects.ids[0] === host)) continue;
+    gainControl(state, {targets: [host], until: "this leaves"}, {controller: controllerOf(state, aura), source: aura});
+    state.effects.findLast((e) => e.rule === "control-returns" && e.affects.ids[0] === host).byAura = aura;
+  }
 }
 
 /**
@@ -660,10 +1043,7 @@ export function phaseOut(state, params, context) {
     object.zone = "phased";
     object.phasedOut = {player: ids.includes(object.attachedTo) ? state.objects[object.attachedTo].controller : object.controller};
     (state.phasedOut ??= []).push(id);
-    if (state.combat) {
-      state.combat.attacks = (state.combat.attacks ?? []).filter((a) => a.attacker !== id);
-      for (const attack of state.combat.attacks ?? []) attack.blockers = (attack.blockers ?? []).filter((b) => b !== id);
-    }
+    removeFromCombat(state, id);
   }
   return [];
 }
@@ -687,7 +1067,9 @@ export function phaseIn(state, player) {
  */
 export function goad(state, params, context) {
   const ids = (params.selector ? selectMatching(state, params.selector, context) : params.targets ?? []).filter((id) => state.objects[id]?.zone === "battlefield");
-  if (ids.length) (state.effects ??= []).push({id: `goad:${context.source ?? "effect"}:${state.effects.length}`, rule: "goaded", affects: {ids}, until: "your-next-turn", sourceController: context.controller});
+  /* "They're goaded for the rest of the game" (Dack Fayden, Helping Hand; CR 701.15a): `until: "game"`, a goad that no turn
+     ends -- each permanent goaded until it leaves the battlefield and is a new object (CR 400.7). */
+  if (ids.length) (state.effects ??= []).push({id: `goad:${context.source ?? "effect"}:${state.effects.length}`, rule: "goaded", affects: {ids}, until: params.until === "game" ? "game" : "your-next-turn", sourceController: context.controller});
   return [];
 }
 
@@ -749,14 +1131,25 @@ export function addPhase(state, params, context) {
  * condition saying whether it did ("this way", script/condition.mjs) -- and goes on the stack the next time a player
  * would receive priority, with the other triggers waiting then, its targets chosen as it does (CR 603.3d; none legal,
  * and it is removed). `effects` what it does, `targets` its own; "that card" and "that player" what this resolution is
- * about.
+ * about -- or, `about: "remembered"`, "that card" what the effect before it remembered: "when you discard a card this way,
+ * destroy target nonland permanent ... with mana value less than or equal to the mana value of the discarded card"
+ * (Argentum Masticore; effects/asking.mjs, unlessPays's discard).
  */
 export function immediateTrigger(state, params, context) {
   const source = context.source ?? null;
+  /* What it remembered moved off the battlefield ("you may sacrifice another creature. When you do, Ziatora deals damage
+     equal to that creature's power", Ziatora, the Incinerator): "that creature" as it last existed there (CR 608.2h) -- the
+     effect before it kept each as it left (`movedWas`, effects/asking.mjs and effects/zones.mjs), one for each it moved. */
+  const was = params.about === "remembered" && (context.movedWas ?? []).length === (context.remembered ?? []).length ? context.movedWas?.[0] : undefined;
+  const about = params.about === "remembered" && context.remembered?.[0] !== undefined ? {...(context.about ?? {}), card: context.remembered[0], ...(was ? {lastKnown: structuredClone(was)} : {})} : context.about;
   (state.pendingTriggers ??= []).push({abilityId: "reflexive", text: params.text ?? "When you do", controller: context.controller,
     source: {cardId: source, name: source !== null ? state.objects[source]?.card ?? null : null}, cause: null, optional: false,
-    ...(context.about ? {about: structuredClone(context.about)} : {}),
-    script: {targets: structuredClone(params.targets ?? []), effects: structuredClone(params.effects ?? [])}});
+    ...(about ? {about: structuredClone(about)} : {}),
+    /* And the X of the resolution that made it (Halo Forager's "you may pay {X}. When you do, ... with mana value X"):
+       what its targets and effects read as X (rules/trigger.mjs). */
+    ...(Number.isInteger(context.x) ? {x: context.x} : {}),
+    /* "Put that many +1/+1 counters" (Augusta, Order Returned): what this resolution did, counted now (script/bind.mjs). */
+    script: {targets: structuredClone(params.targets ?? []), effects: structuredClone(countThisWay(params.effects, context, state))}});
   return [];
 }
 
@@ -772,7 +1165,9 @@ export function delayedTrigger(state, params, context) {
       ...(params.untilYourNextTurn ? {untilYourNextTurn: true} : {}), fresh: true}
       /* "At the beginning of YOUR next upkeep" (rebound, CR 702.88a; rules/stack.mjs): its controller's, not the next one's.
          "At the beginning of that player's next end step" (The Eternal Wanderer): a moment of that player's turn only (`player`). */
-      : {at: params.at ?? "end step", ...(params.yours === true ? {yours: true} : {}), ...(Number.isInteger(params.player) ? {player: params.player} : {})}),
+      : {at: params.at ?? "end step", ...(params.yours === true ? {yours: true} : {}), ...(Number.isInteger(params.player) ? {player: params.player} : {}),
+        /* "On your next turn" (Meandering Towershell): a turn after this one (rules/trigger.mjs). */
+        ...(params.at === "your next declare attackers" ? {madeOnTurn: state.turn} : {})}),
     controller: context.controller,
     source: context.source ?? null,
     /* A double-faced source's transforms as this is made: "transform it" from a delayed trigger is ignored once it has

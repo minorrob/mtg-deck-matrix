@@ -8,8 +8,11 @@
  * that forgot to say Coming Soon, a tool that leaked -- each must be named.
  */
 import assert from "node:assert/strict";
-import {readFileSync} from "node:fs";
-import {build, worktreeSource, verify, transform, referencesOf, workerModules, PROFILES, NEVER, PAGES, FIRST_PUBLIC, RETIRED_PUBLIC, PLAY_WORKER} from "../tools/release-pages.mjs";
+import {readFileSync, mkdtempSync, rmSync} from "node:fs";
+import {execFileSync} from "node:child_process";
+import os from "node:os";
+import path from "node:path";
+import {build, worktreeSource, verify, releaseBranch, refuseDropTables, commitRelease, transform, referencesOf, workerModules, PROFILES, NEVER, PAGES, FIRST_PUBLIC, RETIRED_PUBLIC, PLAY_WORKER, aiVars} from "../tools/release-pages.mjs";
 
 let checks = 0;
 const ok = (value, message) => {assert.ok(value, message); checks++;};
@@ -70,6 +73,8 @@ eq(wrangler.ratelimits, [
   {name: "LIMIT_IP", namespace_id: "1001", simple: {limit: 240, period: 60}},
   {name: "LIMIT_PERSON", namespace_id: "1002", simple: {limit: 120, period: 60}},
 ], "/api/* is rate-limited per IP and per person (M3)");
+eq(wrangler.observability, {enabled: true, head_sampling_rate: 1, logs: {enabled: true, invocation_logs: false}},
+  "Workers Logs keeps the Worker's own monitoring lines, every one, and not the platform's line for each request (M3)");
 const ignored = built.get(".assetsignore").toString("utf8").split("\n");
 ok([".git", ".wrangler", "wrangler.jsonc", ".assetsignore"].every((f) => ignored.includes(f)), "and .assetsignore keeps the clone's .git, wrangler's scratch folder and the configuration off the site");
 ok([...built.values()].every((b) => b.length <= 25 * 1024 * 1024), "every file fits Cloudflare's 25 MiB");
@@ -86,6 +91,12 @@ ok(!ignored.includes("_headers"), "and _headers is uploaded, since Cloudflare re
 const broken = (edit) => {const copy = new Map(built); edit(copy); return verify(copy, profile);};
 ok(!broken((m) => m).some((p) => p.includes("rate-limit")), "the builder accepts the rate limits it wrote (M3)");
 ok(broken((m) => { const w = JSON.parse(m.get("wrangler.jsonc").toString()); delete w.ratelimits; m.set("wrangler.jsonc", Buffer.from(JSON.stringify(w))); }).some((p) => p.includes("LIMIT_IP")), "and a release without the limits is named");
+const observe = (edit) => broken((m) => { const w = JSON.parse(m.get("wrangler.jsonc").toString()); edit(w); m.set("wrangler.jsonc", Buffer.from(JSON.stringify(w))); });
+ok(!broken((m) => m).some((p) => /Workers Logs/.test(p)), "the builder accepts the logging it wrote (M3)");
+ok(observe((w) => { w.observability.logs.invocation_logs = true; }).some((p) => p.includes("its headers")), "a release that would keep every request's headers in the logs is named");
+ok(observe((w) => { delete w.observability; }).some((p) => p.includes("its headers")), "as is one that leaves it to whatever the dashboard has");
+ok(observe((w) => { w.observability.enabled = false; }).some((p) => p.includes("count nothing")), "and one whose logs are off, so the alerts would count nothing");
+ok(observe((w) => { w.observability.head_sampling_rate = 0.1; }).some((p) => p.includes("count nothing")), "or sampled, so they would miss nine in ten");
 ok(broken((m) => m.delete("data/cards.json")).some((p) => p.includes("data/cards.json")), "a file the worker lists but the release lacks is named");
 ok(broken((m) => m.set("crankmagic-game.js", Buffer.from(""))).some((p) => p.includes("crankmagic-game.js")), "a Play module in the release is named");
 ok(broken((m) => m.set("index.html", Buffer.from(m.get("index.html").toString().replace('content="coming-soon"', 'content="live"')))).some((p) => p.includes("not marked")), "a page that does not say Coming Soon is named");
@@ -140,7 +151,8 @@ eq(pw.vars, {ACCESS_TEAM_DOMAIN: "crankmagic.cloudflareaccess.com", ACCESS_AUD: 
   "and it trusts the CrankMagic accounts application (crankmagic.com/api/*, the invite list), read from its sign-in redirect");
 const staging = build({source: worktreeSource(), profileName: "cloud-staging"});
 eq(staging.problems, [], "the staging build is complete, its Access application's team and audience included");
-eq(JSON.parse(staging.built.get("wrangler.jsonc").toString("utf8")).vars, {ACCESS_TEAM_DOMAIN: "crankmagic.cloudflareaccess.com", ACCESS_AUD: "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5", PLAYTEST_TABLES: "on", SERVICE_SEATS: "on"},
+eq(JSON.parse(staging.built.get("wrangler.jsonc").toString("utf8")).vars, {ACCESS_TEAM_DOMAIN: "crankmagic.cloudflareaccess.com", ACCESS_AUD: "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5", PLAYTEST_TABLES: "on", SERVICE_SEATS: "on",
+  AI_ACCESS_AUD: "d3e7b5812c81536cb707c64cca2196e1ee7854cbca6791f4d7bd2ef4b649f6db", AI_CAP_TOTAL_CENTS: "300", AI_CAP_PERSON_CENTS: "300", AI_MODEL: "claude-haiku-5-5", AI_COACH: "on", AI_CAP_COACH_CENTS: "150", AI_PILOT: "on", AI_CAP_PILOT_GAME_CENTS: "25", AI_ADVISE: "on", AI_EVERYONE: "on"},
   "and the Worker trusts that team's keys for that application only (read from the sign-in redirect's kid, and confirmed by Rob from the dashboard); its tables are playtest tables (M8b)");
 const sb = staging.built, sw2 = JSON.parse(sb.get("wrangler.jsonc").toString("utf8"));
 eq([sw2.name, sw2.main, sw2.assets, sw2.routes], ["crankmagic-staging", PLAY_WORKER, {directory: "./", binding: "ASSETS", run_worker_first: ["/api/*"]}, [{pattern: "staging.crankmagic.com", custom_domain: true}]],
@@ -155,6 +167,9 @@ ok(verify(new Map([...sb, ["wrangler.jsonc", Buffer.from(JSON.stringify({...sw2,
   "a release that would hand the Worker its own signing keys is refused");
 /* PLAY IN THE CLOUD, ON STAGING (Rob, 2026-09-29: "execute the play release and merge to staging"). */
 const stagingProfile = PROFILES["cloud-staging"];
+ok(["crankmagic-stage.js", "crankmagic-stage.css", "vendor/pixi.min.js", "vendor/pixi-csp.min.js", "vendor/PIXI-LICENSE.txt"].every(f => sb.has(f)), "staging carries the tabletop renderer, CSP adapter and upstream license");
+ok(![...built.keys()].some(f => f.startsWith("vendor/pixi") || f === "vendor/PIXI-LICENSE.txt"), "the non-Play profile does not include the tabletop renderer");
+
 eq([sw2.durable_objects, sw2.migrations], [{bindings: [{name: "TABLES", class_name: "GameTable"}]}, [{tag: "tables-v1", new_sqlite_classes: ["GameTable"]}]], "staging binds TABLES to the table's Durable Object, made once by a SQLite-class migration");
 ok(PAGES.every((p) => sb.get(p).toString("utf8").includes('<meta name="crankmagic-play" content="cloud">')), "both staging pages are marked Play in the cloud");
 ok(["crankmagic-table.js", "crankmagic-board.js"].every((f) => sb.has(f)), "the table's lobby and its board are in it");
@@ -186,6 +201,52 @@ ok(verify(playConfig(built, (c) => ({...c, vars: {...c.vars, PLAYTEST_TABLES: "o
 ok(verify(playConfig(built, (c) => ({...c, vars: {...c.vars, SERVICE_SEATS: "on"}})), profile).some((p) => p.includes("SERVICE_SEATS is on")), "production seating a service token is refused: an automated check would be a person there");
 ok(verify(playConfig(sb, (c) => ({...c, vars: {...c.vars, SERVICE_SEATS: undefined}})), stagingProfile).some((p) => p.includes("service token is not seated")), "and staging without it, its session checks shut out");
 eq(pw.vars.SERVICE_SEATS, undefined, "production's Worker never seats a service token");
+/* The AI door (Rob, 2026-10-09): open on staging with its own application and one cap for everyone; since 2026-10-14 open
+   to everyone signed in, on staging and in production's Play release (below). The pages release, without Play, keeps it shut. */
+ok(Object.keys(pw.vars).every((name) => !/^AI_/.test(name)), "the pages release keeps the AI door shut: no AI application, no caps");
+ok(verify(playConfig(built, (c) => ({...c, vars: {...c.vars, AI_ACCESS_AUD: "d3e7b5812c81536cb707c64cca2196e1ee7854cbca6791f4d7bd2ef4b649f6db", AI_CAP_TOTAL_CENTS: "300", AI_CAP_PERSON_CENTS: "300"}})), profile).some((p) => p.includes("AI door is shut")), "a production release that opens the AI door is refused");
+ok(verify(playConfig(sb, (c) => ({...c, vars: {...c.vars, AI_ACCESS_AUD: "ff51f3bcda0f6f50d2f48bb9d3d96b76530c128a23cdb1cc33aa4fa6d68611a3"}})), stagingProfile).some((p) => p.includes("open the AI door")), "and staging's door trusting another application is refused");
+ok(verify(playConfig(sb, (c) => ({...c, vars: {...c.vars, AI_CAP_PERSON_CENTS: undefined}})), stagingProfile).some((p) => p.includes("open the AI door")), "as is staging with a cap missing, which would keep the door shut");
+ok(verify(playConfig(sb, (c) => ({...c, vars: {...c.vars, AI_MODEL: "claude-opus-5-5"}})), stagingProfile).some((p) => p.includes("open the AI door")), "and staging asking a model other than its profile's");
+/* The Coach's switch (X13): on on staging since Rob approved its privacy wording (2026-10-09); a release that turns it on
+   without its profile, or where the privacy policy does not say what it sends, is refused. */
+eq(sw2.vars.AI_COACH, "on", "staging's Coach is switched on, its privacy wording approved");
+const noCoach = {...stagingProfile, ai: {...stagingProfile.ai}};
+delete noCoach.ai.coach;
+ok(verify(sb, noCoach).some((p) => p.includes("open the AI door")), "a release that turns the Coach on without its profile saying so is refused");
+const unsaid = new Map([...sb].map(([f, b]) => [f, f === "privacy.html" ? Buffer.from(b.toString("utf8").replace("<strong>The Coach.</strong>", "")) : b]));
+ok(verify(unsaid, stagingProfile).some((p) => p.includes("privacy.html does not say what it sends")), "and so is one whose privacy policy does not say what the Coach sends");
+/* Its own daily cap, $1.50 for everyone together (Rob, 2026-10-10), set with it or the release is refused. */
+eq(sw2.vars.AI_CAP_COACH_CENTS, "150", "staging's Coach has its own daily cap: 150 cents for everyone together");
+const uncapped = {...stagingProfile, ai: {...stagingProfile.ai}};
+delete uncapped.ai.coachCapCents;
+ok(verify(playConfig(sb, (c) => ({...c, vars: Object.fromEntries(Object.entries(c.vars).filter(([k]) => k !== "AI_CAP_COACH_CENTS"))})), uncapped).some((p) => p.includes("without a daily cap of its own")), "and a release that switches the Coach on without its cap is refused");
+ok(sb.get("privacy.html").toString("utf8").includes("It never sends another player's hand, the order of any library"), "the published privacy policy says what the Coach sends and never sends");
+eq(aiVars({...stagingProfile, ai: {...stagingProfile.ai, coach: true}}).AI_COACH, "on", "and a profile that says so turns it on");
+/* AN AI ON CLAUDE (AI-2): its own switch and each game's cap, from the profile; on staging since Rob approved what the
+   privacy page says it sends (2026-10-12). A policy that leaves a feature out is made by taking its paragraph away. */
+const unsaying = (build, mark) => new Map([...build].map(([f, b]) => [f, f === "privacy.html" ? Buffer.from(b.toString("utf8").replace(mark, "")) : b]));
+eq([sw2.vars.AI_PILOT, sw2.vars.AI_CAP_PILOT_GAME_CENTS], ["on", "25"], "staging seats an AI on Claude, each game capped at 25 cents");
+ok(sb.get("privacy.html").toString("utf8").replace(/\s+/g, " ").includes("It never sends a person's hand, the order of any library, or anyone's name"), "the published privacy policy says what an AI on Claude sends and never sends");
+const pilotProfile = {...stagingProfile, ai: {...stagingProfile.ai, pilot: true}};
+eq([aiVars(pilotProfile).AI_PILOT, aiVars(pilotProfile).AI_CAP_PILOT_GAME_CENTS, aiVars({...stagingProfile, ai: {...stagingProfile.ai, pilot: true, pilotGameCents: 10}}).AI_CAP_PILOT_GAME_CENTS],
+  ["on", "25", "10"], "a profile that says so switches it on, each game capped at 25 cents unless it says otherwise (Rob: \"0.25 per game is good\")");
+const withPilot = playConfig(unsaying(sb, "<strong>AI players on Claude.</strong>"), (c) => ({...c, vars: {...c.vars, AI_PILOT: "on", AI_CAP_PILOT_GAME_CENTS: "25"}}));
+ok(verify(withPilot, pilotProfile).some((p) => p.includes("privacy.html does not say what it sends") && p.includes("AI on Claude")), "a release that seats an AI on Claude where the privacy policy does not say what it sends is refused");
+const said = new Map([...withPilot].map(([f, b]) => [f, f === "privacy.html" ? Buffer.from(b.toString("utf8").replace("</main>", "<p><strong>AI players on Claude.</strong> …</p></main>")) : b]));
+ok(!verify(said, pilotProfile).some((p) => p.includes("AI on Claude")), "and one whose privacy policy says it is not");
+const uncappedPilot = playConfig(said, (c) => ({...c, vars: {...c.vars, AI_CAP_PILOT_GAME_CENTS: "0"}}));
+ok(verify(uncappedPilot, {...pilotProfile, ai: {...pilotProfile.ai, pilotGameCents: 0}}).some((p) => p.includes("without a cap for each game")), "nor one without each game's cap");
+/* THE DECK ADVISOR (AI-4): its own switch, from the profile; on staging since Rob approved what the privacy page says it sends (2026-10-12). */
+eq(sw2.vars.AI_ADVISE, "on", "staging offers the deck advisor");
+ok(sb.get("privacy.html").toString("utf8").replace(/\s+/g, " ").includes("It never sends your name or email, what you paid for a card, or another person's library"), "the published privacy policy says what the advisor sends and never sends");
+const advisorProfile = {...stagingProfile, ai: {...stagingProfile.ai, advise: true}};
+eq(aiVars(advisorProfile).AI_ADVISE, "on", "a profile that says so switches it on");
+const withAdvisor = playConfig(unsaying(sb, "<strong>The deck advisor.</strong>"), (c) => ({...c, vars: {...c.vars, AI_ADVISE: "on"}}));
+ok(verify(withAdvisor, advisorProfile).some((p) => p.includes("the deck advisor is switched on (AI_ADVISE) but privacy.html does not say what it sends")), "a release that offers the advisor where the privacy policy does not say what it sends is refused");
+const advisorSaid = new Map([...withAdvisor].map(([f, b]) => [f, f === "privacy.html" ? Buffer.from(b.toString("utf8").replace("</main>", "<p><strong>The deck advisor.</strong> …</p></main>")) : b]));
+ok(!verify(advisorSaid, advisorProfile).some((p) => p.includes("deck advisor")), "and one whose privacy policy says it is not");
+ok(verify(playConfig(sb, (c) => ({...c, vars: {...c.vars, AI_MODEL: "claude-opus-5-5"}})), {...stagingProfile, ai: {...stagingProfile.ai, model: "claude-opus-5-5"}}).some((p) => p.includes("not one the AI door calls")), "and a profile naming a model dearer than Sonnet, even its own (Rob: Sonnet or the lowest-cost models, always)");
 ok(verify(playConfig(built, (c) => ({...c, durable_objects: sw2.durable_objects})), profile).some((p) => p.includes("release without Play")), "and production binding a table");
 ok(verify(new Map([...sb, [".assetsignore", Buffer.from(sb.get(".assetsignore").toString().replace("game/\n", ""))]]), stagingProfile).some((p) => p.includes("engine's source as files")), "a Play release that would publish the engine's source is named");
 ok(verify(without(sb, "game/room/room.mjs"), stagingProfile).some((p) => p.includes("game/room/room.mjs")), "one missing a module the table imports is named");
@@ -194,5 +255,67 @@ ok(verify(new Map([...sb, ["game/room/history.mjs", Buffer.from(`import fs from 
 ok(verify(without(sb, "crankmagic-board.js"), stagingProfile).some((p) => p.includes("crankmagic-board.js is Play in the cloud")), "and a Play release without the board");
 ok(verify(new Map([...built, ["index.html", Buffer.from(built.get("index.html").toString().replace('<meta name="crankmagic-accounts" content="on">', ""))]]), profile).some((p) => p.includes("would stay asleep")),
   "a production page that lost its accounts-on mark is named");
+
+/* Production Play and its same-class recovery candidate are explicit profiles. The default
+   pages build above stays closed; no release is deployed by building any of these. */
+for (const name of ["cloud-production", "cloud-production-standby"]) {
+  const p = PROFILES[name], result = build({source: worktreeSource(), profileName: name});
+  eq(result.problems, [], `${name} builds and verifies`);
+  const b = result.built, c = JSON.parse(b.get("wrangler.jsonc")), closed = name.endsWith("-standby");
+  eq(releaseBranch(name), "release/pages", `${name} stays in production's one release record`);
+  eq([c.name, c.d1_databases, c.ratelimits, c.vars.ACCESS_TEAM_DOMAIN, c.vars.ACCESS_AUD],
+    [pw.name, pw.d1_databases, pw.ratelimits, pw.vars.ACCESS_TEAM_DOMAIN, pw.vars.ACCESS_AUD], `${name} retains the same production account resources`);
+  eq([c.main, c.durable_objects, c.migrations], [sw2.main, sw2.durable_objects, sw2.migrations], `${name} keeps the exact table class and migration`);
+  eq([c.vars.PLAYTEST_TABLES, c.vars.SERVICE_SEATS, c.vars.PLAY_TABLES_CLOSED], [undefined, undefined, closed ? "on" : undefined], `${name} has no service seats or full-record exposure`);
+  eq(b.has("crankmagic-board.js"), !closed, `${name} public Play modules match its entry state`);
+  eq(JSON.parse(b.get("version.json")).profile, name, `${name} is identified for exact readback`);
+  ok(b.get(".assetsignore").toString().includes("game/\n"), `${name} engine remains private`);
+  /* Rob, 2026-10-14: "I want the AI door open on staging and production for anyone that can sign in." */
+  eq(Object.fromEntries(Object.entries(c.vars).filter(([k]) => /^AI_/.test(k))), closed ? {} : {AI_ACCESS_AUD: pw.vars.ACCESS_AUD, AI_CAP_TOTAL_CENTS: "300", AI_CAP_PERSON_CENTS: "300", AI_MODEL: "claude-haiku-5-5", AI_COACH: "on", AI_CAP_COACH_CENTS: "150", AI_PILOT: "on", AI_CAP_PILOT_GAME_CENTS: "25", AI_ADVISE: "on", AI_EVERYONE: "on"},
+    closed ? `${name} keeps the AI door shut` : `${name} opens the AI door to everyone signed in, on the accounts application's own sign-in, with staging's caps and model`);
+  for (const [label, mutate, message] of [
+    ["staging database", x => {x.d1_databases[0].database_id=sw2.d1_databases[0].database_id;}, "database as DB"],
+    ["staging audience", x => {x.vars.ACCESS_AUD=sw2.vars.ACCESS_AUD;}, "exact Access application"],
+    ["other Access team", x => {x.vars.ACCESS_TEAM_DOMAIN="other.cloudflareaccess.com";}, "exact Access application"],
+    ["staging rate namespace", x => {x.ratelimits[0].namespace_id="2001";}, "rate-limit"],
+    ["service identity", x => {x.vars.SERVICE_SEATS="on";}, "SERVICE_SEATS"],
+    ["playtest record", x => {x.vars.PLAYTEST_TABLES="on";}, "full record"],
+    ["wrong entry state", x => {x.vars.PLAY_TABLES_CLOSED=closed ? "off" : "on";}, "entry state"],
+    ["deleted table class", x => {x.migrations.push({tag:"remove-tables",deleted_classes:["GameTable"]});}, "migration"],
+    ["AI door not its profile's", x => {if (closed) x.vars.AI_EVERYONE = "on"; else delete x.vars.AI_EVERYONE;}, "AI door"],
+  ]) ok(verify(playConfig(b, x => {mutate(x);return x;}),p).some(v=>v.includes(message)), `${name} refuses ${label}`);
+}
+eq(releaseBranch("cloud-staging"), "release/cloud-staging", "staging keeps its separate release record");
+
+/* ONCE THE TABLE CLASS IS ON PRODUCTION'S WORKER, NO RELEASE DROPS IT (tools/release-pages.mjs, refuseDropTables). A
+   standby or Play release registers GameTable on crankmagic; a pages release committed after it could never deploy. */
+eq([refuseDropTables(null, "pages"), refuseDropTables("pages", "pages"), refuseDropTables("cloud-production-standby", "cloud-production"),
+  refuseDropTables("cloud-production", "cloud-production-standby"), refuseDropTables("cloud-production-standby", "cloud-production-standby")],
+  [null, null, null, null, null], "pages after pages, and any release with tables after one with them, is never refused");
+for (const previous of ["cloud-production-standby", "cloud-production"]) {
+  const refusal = refuseDropTables(previous, "pages");
+  ok(typeof refusal === "string" && refusal.includes(`a ${previous} release`) && /Build cloud-production-standby .* or cloud-production instead/.test(refusal),
+    `pages after ${previous} is refused, saying what is there and what to build instead`);
+}
+{
+  /* The real commit path, in a repository of its own: a standby release, then pages on top of it. */
+  const root = mkdtempSync(path.join(os.tmpdir(), "release-guard-"));
+  try {
+    const g = (...args) => execFileSync("git", ["-C", root, ...args], {encoding: "utf8"}).trim();
+    g("init", "-q"); g("config", "user.name", "release-guard"); g("config", "user.email", "release-guard@example.invalid");
+    const release = (profile) => new Map([["version.json", Buffer.from(JSON.stringify({commit: "0".repeat(40), profile}))], ["index.html", Buffer.from(profile)]]);
+    const standby = commitRelease(release("cloud-production-standby"), {commit: "0".repeat(40), version: "v1", profileName: "cloud-production-standby", root});
+    eq([standby.branch, standby.unchanged, g("rev-parse", "refs/heads/release/pages")], ["release/pages", false, standby.commit], "a standby release commits to release/pages");
+    let refused = null;
+    try { commitRelease(release("pages"), {commit: "0".repeat(40), version: "v2", profileName: "pages", root}); } catch (error) { refused = error.message; }
+    ok(refused?.includes("registered the GameTable Durable Object"), "and pages on top of it is refused by the commit itself");
+    eq(g("rev-parse", "refs/heads/release/pages"), standby.commit, "leaving release/pages where it was");
+    const play = commitRelease(release("cloud-production"), {commit: "0".repeat(40), version: "v3", profileName: "cloud-production", root});
+    eq(g("rev-parse", "refs/heads/release/pages^"), standby.commit, "while a cloud-production release commits on top of the standby");
+    ok(play.unchanged === false, "as a new release");
+  } finally {
+    rmSync(root, {recursive: true, force: true});
+  }
+}
 
 console.log(`release-pages: ${checks} checks passed — ${files.length} files, Play out, Coming Soon in, nothing that never ships.`);

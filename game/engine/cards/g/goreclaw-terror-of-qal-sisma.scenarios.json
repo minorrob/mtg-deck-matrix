@@ -1,0 +1,412 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Goreclaw, Terror of Qal Sisma",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Brute": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Beast"
+      ],
+      "manaCost": "{3}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 4,
+      "toughness": 4
+    },
+    "Giant": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{4}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Rob's Giant, power 5, costs {2}{G}; his Ogre, power 3, the full {2}{R}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Goreclaw, Terror of Qal Sisma",
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Giant",
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Giant"
+              },
+              "count": 1
+            },
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Ogre"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "cast": "Giant"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Goreclaw, Terror of Qal Sisma",
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Mountain",
+            "Giant"
+          ]
+        },
+        {
+          "seat": 0,
+          "pool": {}
+        }
+      ]
+    },
+    {
+      "name": "Only generic mana comes off: a Brute's {3}{G} is {1}{G}, never less than its {G}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Goreclaw, Terror of Qal Sisma",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Brute"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Brute"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Brute"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Goreclaw, Terror of Qal Sisma",
+            "Forest",
+            "Wastes",
+            "Brute"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Maya's creature spells cost her what they cost",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Goreclaw, Terror of Qal Sisma"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Giant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Giant",
+                "seat": 1
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Giant",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Goreclaw attacks: it and the Brute, power 4 or greater, get +1/+1 and trample; the Ogre does not",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Goreclaw, Terror of Qal Sisma",
+            "Brute",
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Goreclaw, Terror of Qal Sisma",
+            "Brute",
+            "Ogre"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Goreclaw, Terror of Qal Sisma",
+                "power": 5,
+                "toughness": 4
+              }
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Brute",
+                "power": 5,
+                "toughness": 5
+              }
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Ogre",
+                "power": 3,
+                "toughness": 3
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Brute",
+                "has": [
+                  "Trample"
+                ]
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Goreclaw, Terror of Qal Sisma",
+                "has": [
+                  "Trample"
+                ]
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Ogre",
+                "lacks": [
+                  "Trample"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 27
+        }
+      ]
+    },
+    {
+      "name": "Until end of turn: on Rob's next turn they are as printed",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Goreclaw, Terror of Qal Sisma",
+            "Brute"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Goreclaw, Terror of Qal Sisma"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Brute",
+            "power": 4,
+            "toughness": 4
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Brute",
+            "lacks": [
+              "Trample"
+            ]
+          }
+        },
+        {
+          "seat": 1,
+          "life": 35
+        }
+      ]
+    }
+  ]
+}

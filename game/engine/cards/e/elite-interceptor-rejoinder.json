@@ -1,0 +1,108 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Elite Interceptor // Rejoinder",
+    "oracleId": "d97de156-5a6d-4dc6-953e-d4bad63cbad2",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Wizard"
+    ],
+    "manaCost": "{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This creature enters prepared.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersPrepared": true
+      }
+    }
+  ],
+  "prepare": {
+    "identity": {
+      "name": "Rejoinder",
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "You may tap or untap target creature.\nDraw a card.",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "You may tap or untap target creature.\nDraw a card.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "modal",
+            "chooser": "you",
+            "choose": 1,
+            "title": "You may tap or untap target creature.",
+            "modes": [
+              {
+                "text": "Tap target creature",
+                "effects": [
+                  {
+                    "effect": "tap",
+                    "targets": {
+                      "target": 0
+                    }
+                  }
+                ]
+              },
+              {
+                "text": "Untap target creature",
+                "effects": [
+                  {
+                    "effect": "untap",
+                    "targets": {
+                      "target": 0
+                    }
+                  }
+                ]
+              },
+              {
+                "text": "Neither",
+                "effects": []
+              }
+            ]
+          },
+          {
+            "effect": "draw",
+            "count": 1
+          }
+        ]
+      }
+    ]
+  }
+}

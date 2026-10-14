@@ -1,0 +1,92 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Halo Forager",
+    "oracleId": "210d1077-6e60-4f06-a8a4-10b842979ac5",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Faerie",
+      "Rogue"
+    ],
+    "manaCost": "{1}{U}{B}",
+    "colors": [
+      "B",
+      "U"
+    ],
+    "colorIdentity": [
+      "B",
+      "U"
+    ],
+    "power": 3,
+    "toughness": 1
+  },
+  "oracleText": "Flying\nWhen this creature enters, you may pay {X}. When you do, you may cast target instant or sorcery card with mana value X from a graveyard without paying its mana cost. If that spell would be put into a graveyard, exile it instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, you may pay {X}. When you do, you may cast target instant or sorcery card with mana value X from a graveyard without paying its mana cost. If that spell would be put into a graveyard, exile it instead.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "amountX": true,
+          "ifPaid": true,
+          "effects": [
+            {
+              "effect": "immediateTrigger",
+              "text": "When you do, you may cast target instant or sorcery card with mana value X from a graveyard without paying its mana cost. If that spell would be put into a graveyard, exile it instead.",
+              "targets": [
+                {
+                  "anyOf": [
+                    {
+                      "what": "card",
+                      "zone": "graveyard",
+                      "types": [
+                        "Instant"
+                      ],
+                      "manaValue": {
+                        "exactly": "X"
+                      }
+                    },
+                    {
+                      "what": "card",
+                      "zone": "graveyard",
+                      "types": [
+                        "Sorcery"
+                      ],
+                      "manaValue": {
+                        "exactly": "X"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "play",
+                  "from": "targets",
+                  "targets": {
+                    "target": 0
+                  },
+                  "free": true,
+                  "exileInstead": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

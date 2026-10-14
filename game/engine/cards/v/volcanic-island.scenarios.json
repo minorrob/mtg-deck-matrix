@@ -1,0 +1,88 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Volcanic Island",
+  "scenarios": [
+    {
+      "name": "{T}: {U} or {R}, as its two basic land types give it (CR 305.6)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Volcanic Island"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Volcanic Island"
+              },
+              "count": 2,
+              "mana": [
+                {
+                  "U": 1
+                },
+                {
+                  "R": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Volcanic Island",
+          "mana": {
+            "R": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "R": 1
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Volcanic Island"
+        }
+      ]
+    },
+    {
+      "name": "It is a land of both types: Sulfur Falls enters untapped beside it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Volcanic Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sulfur Falls"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Sulfur Falls"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Sulfur Falls",
+          "is": false
+        }
+      ]
+    }
+  ]
+}

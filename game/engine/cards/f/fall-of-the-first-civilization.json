@@ -1,0 +1,124 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Fall of the First Civilization",
+    "oracleId": "dd0494f5-58bf-46ae-ad69-90b063f6f660",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Saga"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "(As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.)\nI — You and target opponent each draw two cards.\nII — Exile target artifact an opponent controls.\nIII — Each player chooses three nonland permanents they control. Destroy all other nonland permanents.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "As this Saga enters and after your draw step, add a lore counter. Sacrifice after III.",
+      "keyword": "saga"
+    },
+    {
+      "kind": "triggered",
+      "text": "I — You and target opponent each draw two cards.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 1
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 2
+        },
+        {
+          "effect": "draw",
+          "count": 2,
+          "who": {
+            "target": 0
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "player",
+          "who": "opponent"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "II — Exile target artifact an opponent controls.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 2
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Artifact"
+          ],
+          "controller": "opponent"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "III — Each player chooses three nonland permanents they control. Destroy all other nonland permanents.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 3
+      },
+      "effects": [
+        {
+          "effect": "repeatFor",
+          "each": "player",
+          "effects": [
+            {
+              "effect": "chooseCard",
+              "zone": "battlefield",
+              "who": "that player",
+              "selector": {
+                "nonTypes": [
+                  "Land"
+                ],
+                "controller": "you"
+              },
+              "count": 3,
+              "to": "stay",
+              "remember": "add"
+            }
+          ]
+        },
+        {
+          "effect": "destroyAll",
+          "selector": {
+            "what": "permanent",
+            "nonTypes": [
+              "Land"
+            ]
+          },
+          "except": "remembered"
+        }
+      ]
+    }
+  ]
+}

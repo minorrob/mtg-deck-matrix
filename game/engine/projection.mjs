@@ -27,7 +27,8 @@
  * render. It is pinned in §12.1 and reproduced here, not designed.
  */
 
-import {characteristicsOf, deriving} from "./rules/layers.mjs";
+import {characteristicsOf, deriving, staticAbilities} from "./rules/layers.mjs";
+import {conditionHolds} from "./script/condition.mjs";
 import {commanderKeyOf} from "./state/index.mjs";
 
 export const PROJECTION_SCHEMA = "CommanderProbeProjection@1";
@@ -62,8 +63,9 @@ const VISIBILITY = {
 /* WHO MAY LOOK AT A FACE-DOWN CARD. On the battlefield, its controller (CR 708.5). In exile, nobody unless an instruction
    allows it (CR 406.3): hideaway's "the player who controls the permanent that exiled this card may look at this card"
    (702.75a) -- `lookers`, each player who has been allowed to, and who goes on being able to until it leaves exile (406.3)
-   -- and never its owner merely for owning it. */
-function mayLookAt(state, object, viewer, controller) {
+   -- and never its owner merely for owning it. And the one answer the rules ask too: a card exiled face down is played
+   only by a player who may look at it (CR 406.3b; rules/actions.mjs), so an offer naming it is never made to anyone else. */
+export function mayLookAt(state, object, viewer, controller = null) {
   if (object.zone === "battlefield") return viewer === controller;
   if (object.zone === "exile") {
     const by = object.exiledBy !== undefined ? state.objects[object.exiledBy] : null;
@@ -102,6 +104,8 @@ function cardFor(state, id, canSeeFace, viewer = null) {
     /* Monstrous (CR 701.37b) and prepared (CR 722.3a): designations, which anyone can see (script/effects/attributes.mjs). */
     ...(object.monstrous === true ? {monstrous: true} : {}),
     ...(object.prepared === true ? {prepared: true} : {}),
+    /* Solved (CR 719.3b): a Case's designation, which anyone can see. */
+    ...(object.solved === true ? {solved: true} : {}),
     commander: object.commander === true,
     /* Which commander (state/index.mjs, commanderKeyOf): the key its damage is kept under in every player's
        `health.commanderDamage`, the same in every zone, so the board can say whose commander dealt it. */
@@ -110,19 +114,25 @@ function cardFor(state, id, canSeeFace, viewer = null) {
 }
 
 /* THE TOP OF A LIBRARY, when a permanent its owner controls says so (rules/statics.mjs): "play with the top card of
-   your library revealed" shows it to everyone (CR 401.4), "you may look at the top card of your library any time" to
+   your library revealed" shows it to everyone (CR 401.5), "you may look at the top card of your library any time" to
    its owner alone. Never more than that one card, and never without such a permanent. */
 function topSeenBy(state, owner, viewer) {
   let revealed = false, looked = false;
+  /* Its abilities as they are after layer 6 (CR 613.1f): one that lost them all shows nothing. */
+  const held = staticAbilities(state);
   for (const id of state.zones.battlefield) {
     const holder = state.objects[id];
     if (holder.controller !== owner) continue;
-    for (const ability of holder.abilities ?? []) {
+    for (const ability of held(id)) {
       if (ability.kind !== "static") continue;
       if (ability.rule === "top-revealed") revealed = true;
-      if (ability.rule === "look-at-top") looked = true;
+      /* "Solved -- You may look at the top card of your library any time" (Case of the Locked Hothouse): while its condition holds. */
+      if (ability.rule === "look-at-top" && conditionHolds(state, ability.condition, {controller: owner, source: id})) looked = true;
     }
   }
+  /* And for a while, by an effect of theirs: "until end of turn, you may look at the top card of your library any time"
+     (Gwenom, Remorseless; script/effects/permanents.mjs, effectUntil). */
+  if ((state.effects ?? []).some((e) => e.rule === "look-at-top" && (e.players ?? []).includes(owner))) looked = true;
   return revealed || (looked && viewer === owner);
 }
 
@@ -139,6 +149,18 @@ function topLookedAtBy(state, viewer, ids) {
   return known;
 }
 
+/* A HAND REVEALED (CR 701.20a; effects/asking.mjs, discard's `handRevealed`): "target opponent reveals their hand. You
+   choose a nonland card from it" (Render Speechless) -- each card of it shown to every player while the card is chosen, and
+   to nobody once the question is gone, however it goes: those of this hand's cards the question revealed. */
+/* And a card revealed from an opening hand (CR 103.6b): until the first turn begins. */
+/* And A HAND LOOKED AT (CR 701.20e; effects/asking.mjs, handLook): "look at target player's hand" (Gitaxian Probe) -- shown to
+   its looker alone (`handLookedBy`), while they look. */
+function handShown(state, ids, viewer) {
+  const asking = state.awaiting;
+  const opening = state.stepIndex === undefined ? state.mulligan?.revealed ?? [] : [];
+  return ids.filter((id) => (asking?.handRevealed === true && asking.cards.includes(id)) || (asking?.handLookedBy === viewer && asking.cards.includes(id)) || opening.includes(id));
+}
+
 function zoneFor(state, zone, owner, viewer) {
   const ids = zone === "battlefield" || zone === "exile"
     ? state.zones[zone].filter((id) => state.objects[id].owner === owner)
@@ -147,6 +169,7 @@ function zoneFor(state, zone, owner, viewer) {
   const visible = rule === "public" || (rule === "owner" && viewer === owner);
   const looked = zone === "library" ? topLookedAtBy(state, viewer, ids) : 0;
   const cards = visible ? ids.map((id) => cardFor(state, id, true, viewer)).filter(Boolean)
+    : zone === "hand" ? handShown(state, ids, viewer).map((id) => cardFor(state, id, true)).filter(Boolean)
     : zone === "library" && ids.length && (looked || topSeenBy(state, owner, viewer)) ? ids.slice(0, Math.max(1, looked)).map((id) => cardFor(state, id, true)).filter(Boolean) : [];
   return {
     count: ids.length,
@@ -178,6 +201,8 @@ function playerFor(state, player, viewer) {
     /* A mana pool is public: the board shows it, and so does a table. */
     mana: Object.entries(player.manaPool).filter(([, n]) => n > 0).map(([color, amount]) => ({color, amount})),
     landsPlayed: player.landsPlayed,
+    /* The monarch (CR 725): a designation of the game's, public, one player's at most (725.3) -- said only of that player. */
+    ...(state.monarch === player.id ? {monarch: true} : {}),
     zones,
   };
 }

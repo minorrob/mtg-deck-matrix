@@ -12,6 +12,7 @@ first on `PATH` (on Personal-HP: `C:/Users/robmi/CrankMagic/workbench/node22/nod
 | `cardlib.py` | Imported by a batch's generator: identity from the oracle data, scenario helpers, `Batch.write` |
 | `check-cards.mjs` | Every definition playable, faithful and through its smoke game, and every scenario run, card by card |
 | `breaks.py <breaks-file> [label ...]` | Breaks each change in turn, after a green baseline, and reports any break no suite catches |
+| `anchors.py [root]` | Every breaks file's anchors each found once, and only once, so no break has been moved out from under by a merge; `tests/engine-breaks-anchors.mjs` runs it |
 | `build-catalog-page.py <out> "<line>"` | Rob's Engine Catalog page from `game/docs/engine-catalog.json` |
 | `../../../tools/quick-check.sh <suite> ...` | Before a push: the scan and merge with main, then the touched suites |
 
@@ -30,7 +31,11 @@ first on `PATH` (on Personal-HP: `C:/Users/robmi/CrankMagic/workbench/node22/nod
 4. **Define the cards** with a generator in your own scratch space, importing `cardlib.py` (its docstring has the
    shape). The grammar is in the definitions already written (`game/engine/cards/`), `game/engine/cards/index.mjs`
    (`TRIGGERS`), `game/engine/script/filter.mjs` (`SELECTOR_KEYS`) and `game/engine/script/amount.mjs`. Each card needs
-   scenarios. Then `node --stack-size=4000 game/tools/batch/check-cards.mjs` until it says 0 failed.
+   scenarios. Then `node --stack-size=4000 game/tools/batch/check-cards.mjs` until it says 0 failed. A card with a
+   learned definition stored provisional (`data/engine/scripts`, seated at no table) is confirmed the same way: written
+   here by hand with its scenarios, then its stored record and its entry in `tests/fixtures/learned-scenarios.json`
+   withdrawn, and its row in `data/engine/onboarding-ledger.json` set to `confirmed`, naming the definition
+   (`tests/engine-learned.mjs` holds the two to each other; Tegwyll, Duke of Splendor was the first).
 5. **Write the batch's suite**, `tests/engine-<topic>.mjs` -- check the name is free first (`ls`), since the Write tool
    overwrites silently -- for what the scenarios cannot reach: three or four players, the edges, the catalog's credit.
 6. **Regenerate** the measured documents, and the data inventory if a file under `data/` gained a reader:
@@ -48,6 +53,8 @@ first on `PATH` (on Personal-HP: `C:/Users/robmi/CrankMagic/workbench/node22/nod
 8. **Break it.** A breaks file (shape in `breaks.py`) with one break per engine change -- each guard, each branch, each
    credit -- then `python game/tools/batch/breaks.py <file>`. A break no suite catches is a missing check, or code
    nothing reaches: add the check, or remove the code.
+   A merge that moves another break's anchor fails `tests/engine-breaks-anchors.mjs`: re-anchor that break on the code
+   it was written for, and prove it caught again (`breaks.py <file> <label>`).
 9. **Commit, check, push.** `tools/quick-check.sh <the touched suites>`, push, and a draft PR on the previous batch's
    branch; its body says what was built, the cards, the calls made, what was left out, the coverage and the proof.
 10. **Update Rob's page**: `python game/tools/batch/build-catalog-page.py <scratch>/engine-catalog.html "<line>"`, then

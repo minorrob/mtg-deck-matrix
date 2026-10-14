@@ -22,10 +22,16 @@ import {randomUUID} from "node:crypto";
 import {memoryStorage} from "../game/engine/storage.mjs";
 import {createRng} from "../game/engine/rng.mjs";
 import {randomLegalPilot} from "../game/engine/pilots/random-legal.mjs";
+import {housePilot} from "../game/engine/pilots/house-pilot.mjs";
 import {hashState} from "../game/engine/journal.mjs";
 import {startRoom, openRoom, RoomError, basicCards} from "../game/room/room.mjs";
 import {loadCardIndex} from "../game/tools/engine-cards.mjs";
-import {GameRoom, objectStorage} from "../cloud/game-room.mjs";
+import {GameRoom, objectStorage, tableCards} from "../cloud/game-room.mjs";
+/* Real cards the table has no definition of yet, the most-played first (data/engine/top-cards.json), found as the suite
+   runs: each wave of definitions makes another card the example, so none is named here (Cyclonic Rift and Mana Drain were,
+   until wave 4b defined them). */
+const UNPLAYABLE = JSON.parse(readFileSync(new URL("../data/engine/top-cards.json", import.meta.url), "utf8")).cards
+  .map((c) => c.name).filter((name) => !tableCards(name));
 
 let checks = 0;
 const ok = (c, m) => {assert.ok(c, m); checks += 1;};
@@ -211,9 +217,10 @@ try {
   eq((await post(object, "/start", {matchId: "do-1", seed: "seed-5", pod: POD})).status, 409, "and a second start is refused");
   /* The object's own card source is the table's, every definition in the directory (cloud/game-room.mjs, tableCards):
      Krenko, Sol Ring and Counterspell are among them, so the pod it refuses is one of cards with no definition yet. */
-  const pod5 = {seats: [{seatId: "a", commander: ["Quintorius, Loremaster"], cards: ["Mountain", "Cyclonic Rift", "Mountain"]}, {seatId: "b", commander: [], cards: ["Island", "Mana Drain"]}]};
+  const [noneA, noneB] = UNPLAYABLE;
+  const pod5 = {seats: [{seatId: "a", commander: ["Quintorius, Loremaster"], cards: ["Mountain", noneA, "Mountain"]}, {seatId: "b", commander: [], cards: ["Island", noneB]}]};
   const bad = await post(new GameRoom({...ctx, storage: {get: async () => undefined, put: async () => {}, delete: async () => false, list: async () => new Map()}}, {}), "/start", {matchId: "do-2", seed: "s", pod: pod5});
-  eq([bad.status, (await bad.json()).unsupported], [422, ["Cyclonic Rift", "Mana Drain", "Quintorius, Loremaster"]], "over the object, a pod of cards the table has no definition of is refused by name too");
+  eq([bad.status, (await bad.json()).unsupported], [422, [noneA, noneB].sort()], "over the object, a pod of cards the table has no definition of is refused by name too, in name order");
   eq((await post(object, "/view", null, "stranger")).status, 403, "a seat that is not at the table gets no view");
   const byRoom = {rob: socket(), maya: socket(), "ai-1": socket()};
   for (const [seat, s] of Object.entries(byRoom)) object.accept(s, seat);
@@ -246,12 +253,20 @@ try {
 } finally {
   /* nothing to close: all in memory */
 }
-/* A PILOT'S REFUSED ANSWER IS NOT THE GAME'S END (the plan review's C2; probe R's seed 11 ended a table this way). The
-   house pilot cannot see what attacking costs (Propaganda: {2} for each creature attacking its controller), so it
-   declares an attack its controller cannot pay for; the rules refuse it before changing anything. The room says so in
-   the history and answers for it with the least legal answer -- here, no attack -- and the game goes on to its end. */
+/* A PILOT'S REFUSED ANSWER IS NOT THE GAME'S END (the plan review's C2; probe R's seed 11 ended a table this way). A
+   pilot declares an attack its controller cannot pay for (Propaganda: {2} for each creature attacking its controller) --
+   the house pilot did, until the declare-attackers record said what attacking takes from the mana there is
+   (tests/engine-attack-tax-answers.mjs); here a house pilot made to, on purpose, attacking with all it has -- and the
+   rules refuse it before changing anything. The room says so in the history and answers for it with the least legal
+   answer -- here, no attack -- and the game goes on to its end. */
 {
   const index = loadCardIndex();
+  const overreaching = (args) => {
+    const pilot = housePilot(args);
+    return {...pilot, answer: (view, choice) => (/^declare-attackers:/.test(choice.id) && choice.budget
+      ? {indices: choice.options.filter((o, i, all) => all.findIndex((p) => p.cardId === o.cardId) === i).map((o) => o.index)}
+      : pilot.answer(view, choice))};
+  };
   const refusalCards = (name) => (name === "Propaganda" ? index.definition("Propaganda") : cards(name));
   const zero = def("Zero Bear", {types: ["Creature"], power: 1, toughness: 1, manaCost: "{0}"});
   const pod = {seats: [
@@ -259,7 +274,7 @@ try {
     {seatId: "ai-b", name: "Prop", pilot: "house", commander: [def("General p", {types: ["Creature"], supertypes: ["Legendary"], power: 3, toughness: 3, manaCost: "{9}"})],
       cards: [...Array(30).fill("Island"), ...Array(69).fill("Propaganda")]},
   ]};
-  const room = await startRoom({storage: memoryStorage(), matchId: "refused1", cards: refusalCards, pod, seed: "refused"});
+  const room = await startRoom({storage: memoryStorage(), matchId: "refused1", cards: refusalCards, pod, seed: "refused", pilot: overreaching});
   const said = room.history.filter((h) => /was refused/.test(h.text));
   ok(said.length > 0 && /cost \{\d+\} to attack with/.test(said[0].text), `the refused attack is said in the history (${said[0]?.text})`);
   ok(room.refusals.total >= said.length && room.refusals.since === 0 && /cost \{\d+\} to attack with/.test(room.refusals.first[0].reason),

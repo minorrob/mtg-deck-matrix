@@ -1,0 +1,154 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tezzeret, Master of the Bridge",
+    "oracleId": "d097991c-41df-47de-a439-57a0693b9581",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Planeswalker"
+    ],
+    "subtypes": [
+      "Tezzeret"
+    ],
+    "manaCost": "{4}{U}{B}",
+    "colors": [
+      "B",
+      "U"
+    ],
+    "colorIdentity": [
+      "B",
+      "U"
+    ],
+    "power": null,
+    "toughness": null,
+    "loyalty": 5
+  },
+  "oracleText": "Creature and planeswalker spells you cast have affinity for artifacts. (They cost {1} less to cast for each artifact you control.)\n+2: Tezzeret deals X damage to each opponent, where X is the number of artifacts you control. You gain X life.\n−3: Return target artifact card from your graveyard to your hand.\n−8: Exile the top ten cards of your library. Put all artifact cards from among them onto the battlefield.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Creature and planeswalker spells you cast have affinity for artifacts. (They cost {1} less to cast for each artifact you control.)",
+      "rule": "spells-cost-less",
+      "affects": {
+        "anyOf": [
+          {
+            "types": [
+              "Creature"
+            ]
+          },
+          {
+            "types": [
+              "Planeswalker"
+            ]
+          }
+        ]
+      },
+      "amount": {
+        "count": {
+          "what": "permanent",
+          "types": [
+            "Artifact"
+          ],
+          "controller": "you"
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "+2: Tezzeret deals X damage to each opponent, where X is the number of artifacts you control. You gain X life.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": 2
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "who": "opponent",
+          "amount": {
+            "count": {
+              "what": "permanent",
+              "types": [
+                "Artifact"
+              ],
+              "controller": "you"
+            }
+          }
+        },
+        {
+          "effect": "gainLife",
+          "amount": {
+            "count": {
+              "what": "permanent",
+              "types": [
+                "Artifact"
+              ],
+              "controller": "you"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "−3: Return target artifact card from your graveyard to your hand.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": -3
+        }
+      ],
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "owner": "you",
+          "types": [
+            "Artifact"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "hand"
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "−8: Exile the top ten cards of your library. Put all artifact cards from among them onto the battlefield.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": -8
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "fromTop": 10,
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "moveZone",
+          "targets": "remembered",
+          "only": {
+            "types": [
+              "Artifact"
+            ]
+          },
+          "to": "battlefield"
+        }
+      ]
+    }
+  ]
+}

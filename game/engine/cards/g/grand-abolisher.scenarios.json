@@ -1,0 +1,432 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Grand Abolisher",
+  "fixtures": {
+    "Shock": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Target player loses 2 life.",
+        "targets": [
+          {
+            "what": "player"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "loseLife",
+            "amount": 2,
+            "who": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "During Rob's turn, Maya can't cast a spell; her land still taps for mana",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Grand Abolisher"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Shock"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Shock",
+                "seat": 1
+              },
+              "count": 0
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Mountain",
+                "seat": 1
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Shock",
+                "seat": 1
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "pool": {
+            "R": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nor activate the abilities of her artifacts and creatures -- their mana abilities too (her creatures hers since her turn began)",
+      "at": {
+        "turn": 3,
+        "phase": "MAIN1"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Grand Abolisher"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Sol Ring",
+            "Llanowar Elves",
+            "Loran of the Third Path",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Sol Ring",
+                "seat": 1
+              },
+              "count": 0
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Llanowar Elves",
+                "seat": 1
+              },
+              "count": 0
+            },
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Loran of the Third Path",
+                "seat": 1
+              },
+              "count": 0
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Forest",
+                "seat": 1
+              },
+              "count": 1
+            }
+          ]
+        }
+      ],
+      "expect": []
+    },
+    {
+      "name": "On Maya's own turn, all of it is hers to do again",
+      "at": {
+        "turn": 2,
+        "phase": "MAIN1"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Grand Abolisher"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Sol Ring",
+            "Loran of the Third Path",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Shock"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Sol Ring",
+                "seat": 1
+              },
+              "count": 1
+            },
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Loran of the Third Path",
+                "seat": 1
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Shock",
+                "seat": 1
+              },
+              "count": 2
+            }
+          ]
+        }
+      ],
+      "expect": []
+    },
+    {
+      "name": "Rob's own artifacts and creatures are his to activate",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Grand Abolisher",
+            "Sol Ring",
+            "Loran of the Third Path"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Sol Ring"
+              },
+              "count": 1
+            },
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Loran of the Third Path"
+              },
+              "count": 1
+            }
+          ]
+        }
+      ],
+      "expect": []
+    },
+    {
+      "name": "A card's ability in Maya's hand is no permanent's: she may still cycle (the card's ruling)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Grand Abolisher"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Ash Barrens"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Ash Barrens",
+                "seat": 1
+              },
+              "count": 1
+            }
+          ]
+        }
+      ],
+      "expect": []
+    },
+    {
+      "name": "Paying \"unless\" during Rob's turn: Maya's Sol Rings can't be tapped for it, so she can't pay Smothering Tithe's {2}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Grand Abolisher",
+            "Smothering Tithe",
+            "Loran of the Third Path"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Sol Ring",
+            "Sol Ring"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Loran of the Third Path",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Grand Abolisher",
+            "Smothering Tithe",
+            "Loran of the Third Path",
+            "Treasure"
+          ]
+        },
+        {
+          "seat": 1,
+          "tapped": "Sol Ring",
+          "is": false
+        }
+      ]
+    },
+    {
+      "name": "Without it, she pays with them",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Smothering Tithe",
+            "Loran of the Third Path"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Sol Ring",
+            "Sol Ring"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Loran of the Third Path",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Smothering Tithe",
+            "Loran of the Third Path"
+          ]
+        }
+      ]
+    }
+  ]
+}

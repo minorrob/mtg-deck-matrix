@@ -1,0 +1,85 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Vastlands Scavenger // Bind to Life",
+    "oracleId": "3a97bc8d-bd81-468e-9277-eba4fac11ee0",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Bear",
+      "Druid"
+    ],
+    "manaCost": "{1}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Deathtouch\nThis creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Deathtouch",
+      "keyword": "deathtouch"
+    },
+    {
+      "kind": "replacement",
+      "text": "This creature enters prepared.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersPrepared": true
+      }
+    }
+  ],
+  "prepare": {
+    "identity": {
+      "name": "Bind to Life",
+      "types": [
+        "Instant"
+      ],
+      "subtypes": [],
+      "manaCost": "{4}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Mill seven cards. Then put a creature card from among them onto the battlefield.",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Mill seven cards. Then put a creature card from among them onto the battlefield.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "mill",
+            "count": 7,
+            "remember": true
+          },
+          {
+            "effect": "chooseCard",
+            "zone": "graveyard",
+            "among": "remembered",
+            "count": 1,
+            "selector": {
+              "types": [
+                "Creature"
+              ]
+            },
+            "to": "battlefield"
+          }
+        ]
+      }
+    ]
+  }
+}

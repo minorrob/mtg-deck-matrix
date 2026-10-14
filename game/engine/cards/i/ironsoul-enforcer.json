@@ -1,0 +1,67 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ironsoul Enforcer",
+    "oracleId": "a613b00e-d6e8-4470-a7dc-5eab5e48dce0",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Samurai"
+    ],
+    "manaCost": "{4}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Whenever this creature or a commander you control attacks alone, return target artifact card from your graveyard to the battlefield.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature or a commander you control attacks alone, return target artifact card from your graveyard to the battlefield.",
+      "trigger": {
+        "on": "attacks",
+        "who": "any",
+        "alone": true,
+        "filter": {
+          "anyOf": [
+            {
+              "self": true
+            },
+            {
+              "commander": true,
+              "controller": "you"
+            }
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "battlefield"
+        }
+      ],
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "types": [
+            "Artifact"
+          ],
+          "controller": "you"
+        }
+      ]
+    }
+  ]
+}

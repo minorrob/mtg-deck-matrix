@@ -1,0 +1,83 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Chainer, Nightmare Adept",
+    "oracleId": "14f6fcb0-bed4-4a38-b7df-1e438d81bedb",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Minion"
+    ],
+    "manaCost": "{2}{B}{R}",
+    "colors": [
+      "B",
+      "R"
+    ],
+    "colorIdentity": [
+      "B",
+      "R"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "Discard a card: You may cast a creature spell from your graveyard this turn. Activate only once each turn.\nWhenever a nontoken creature you control enters, if you didn't cast it from your hand, it gains haste until your next turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "Discard a card: You may cast a creature spell from your graveyard this turn. Activate only once each turn.",
+      "cost": [
+        {
+          "atom": "discard"
+        }
+      ],
+      "limit": 1,
+      "effects": [
+        {
+          "effect": "mayPlay",
+          "from": "graveyard",
+          "spellsOnly": true,
+          "spells": {
+            "types": [
+              "Creature"
+            ]
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a nontoken creature you control enters, if you didn't cast it from your hand, it gains haste until your next turn.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "token": false
+        }
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "that card",
+          "keywords": [
+            "Haste"
+          ],
+          "until": "your-next-turn"
+        }
+      ],
+      "condition": {
+        "castFromYourHand": false
+      }
+    }
+  ]
+}

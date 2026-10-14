@@ -1,0 +1,153 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Marwyn, the Clearcutter",
+  "fixtures": {
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{2}, {T}, sacrifice the Rock: draw a card",
+      "library": [
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Marwyn, the Clearcutter",
+            "Wastes",
+            "Wastes",
+            "Rock",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Marwyn, the Clearcutter"
+              },
+              "count": 3,
+              "costs": [
+                [
+                  "Rock"
+                ],
+                [
+                  "Wastes"
+                ],
+                [
+                  "Wastes"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Marwyn, the Clearcutter",
+          "sacrifice": "Rock"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Rock"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Marwyn, the Clearcutter"
+        }
+      ]
+    },
+    {
+      "name": "Or a land: a tapped Wastes it was paid with",
+      "library": [
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Marwyn, the Clearcutter",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Marwyn, the Clearcutter",
+          "sacrifice": "Wastes"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Marwyn, the Clearcutter",
+            "Wastes"
+          ]
+        }
+      ]
+    }
+  ]
+}

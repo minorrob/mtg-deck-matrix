@@ -46,6 +46,7 @@ import {existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync, mkdtemp
 import os from "node:os";
 import path from "node:path";
 import {fileURLToPath} from "node:url";
+import {MODELS} from "../cloud/ai.mjs";
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const RELEASE_BRANCH = "release/pages";
@@ -91,15 +92,39 @@ const RELEASE = {
    a cloud profile builds but refuses to be written out or committed: verify() names what is missing. */
 export const PENDING = "pending";
 
+/* Production profiles share one origin, account database and Access audience. Selecting Play
+   never creates another library or borrows staging's service identity. */
+const PRODUCTION = {
+  worker: "crankmagic", origin: "https://crankmagic.com/", accounts: "on",
+  cloud: {database: {name: "crankmagic", id: "131b2c74-70a0-471e-8474-b8d079b0d322"}, limits: {ip: "1001", person: "1002"},
+    access: {team: "crankmagic.cloudflareaccess.com", aud: "ff51f3bcda0f6f50d2f48bb9d3d96b76530c128a23cdb1cc33aa4fa6d68611a3"}},
+};
+
 export const PROFILES = {
   /* Production. Rob registered crankmagic.com on Cloudflare (2026-09-24) and asked to make the cloud move now;
      he approved accounts on staging the same day ("Everything looks good!"). The pages stay public and
      signing in stays optional: only /api/* is behind the "CrankMagic accounts" Access application, whose
      policy is the invite list. */
   pages: {
-    ...RELEASE, worker: "crankmagic", origin: "https://crankmagic.com/", leaveOut: PLAY, accounts: "on",
-    cloud: {database: {name: "crankmagic", id: "131b2c74-70a0-471e-8474-b8d079b0d322"}, limits: {ip: "1001", person: "1002"},
-      access: {team: "crankmagic.cloudflareaccess.com", aud: "ff51f3bcda0f6f50d2f48bb9d3d96b76530c128a23cdb1cc33aa4fa6d68611a3"}},
+    ...RELEASE, ...PRODUCTION, leaveOut: PLAY,
+  },
+  /* Explicit opt-in after staging/data/Access/recovery gates and Rob's final release go.
+     Production games never expose playtest records or admit the service identity. */
+  "cloud-production": {
+    ...RELEASE, ...PRODUCTION, leaveOut: LOCAL_PLAY, play: "cloud", tables: {playtest: false},
+    /* THE AI DOOR, open in production to everyone signed in (Rob, 2026-10-14: "I want the AI door open on staging and
+       production for anyone that can sign in ... I want everyone I add to be able to use the AI features"). No AI
+       application of its own: the door takes the "CrankMagic accounts" sign-in, whose policy is the invite list. The
+       caps, the model and the features are staging's. The key is a Worker secret Rob enters himself, never here; until
+       he does, the door answers 503. */
+    ai: {aud: PRODUCTION.cloud.access.aud, everyone: true, capTotalCents: 300, model: "claude-haiku-5-5", coach: true, coachCapCents: 150, pilot: true, pilotGameCents: 25, advise: true},
+  },
+  /* Register/retain the same Durable Object class while the public app keeps Play closed.
+     This is a recovery candidate, not a pause of existing sockets or their game clocks.
+     Cloudflare cannot roll back across the first class migration: validate and deploy this
+     baseline before activating Play, then record its exact version as the recovery target. */
+  "cloud-production-standby": {
+    ...RELEASE, ...PRODUCTION, leaveOut: PLAY, tables: {playtest: false, closed: true},
   },
   /* Stage 2 on staging.crankmagic.com, for Rob alone behind Access (Rob, 2026-09-24: staging first). With PLAY IN
      THE CLOUD since 2026-09-29 (Rob: "execute the play release and merge to staging"): the lobby and the board,
@@ -111,6 +136,18 @@ export const PROFILES = {
     /* A session's automated checks sit at its tables as the Access service token Rob made for them (cloud/access.mjs,
        SERVICE_SEATS; staging's "Session checks" policy, 2026-10-06). Never in production. */
     serviceSeats: true,
+    /* THE AI DOOR, open on staging (Rob, 2026-10-09; docs/ai-door.md). Its own Access application, "CrankMagic AI
+       (staging)" on staging.crankmagic.com/api/ai/*, Google sign-in only, its policy the people allowed; and one
+       spend cap for everyone together, 300 US cents in any 24 hours. The door also takes a cap per person, and Rob
+       wants none, so it is the same number, which never stops anyone before the total does. The model is Claude
+       Haiku 5.5 ("change the model use to Haiku explicitly"). The key is a Worker secret Rob
+       set himself, never here; the allowlist is his, in the database. Production's door stays shut. And the Coach
+       (X13) is on: Rob approved its privacy wording on 2026-10-09, and privacy.html says what it sends; and it has a cap of
+       its own inside the general one, for everyone together (Rob: "$1.50 for the coach per day is good"). An AI on Claude
+       (AI-2), each game capped at 25 cents, and the deck advisor (AI-4) are on too: Rob approved what privacy.html says
+       each sends on 2026-10-12. */
+    /* Open to everyone signed in since 2026-10-14 (Rob, as for production): the door takes staging's own sign-in too. */
+    ai: {aud: "d3e7b5812c81536cb707c64cca2196e1ee7854cbca6791f4d7bd2ef4b649f6db", everyone: true, capTotalCents: 300, model: "claude-haiku-5-5", coach: true, coachCapCents: 150, pilot: true, pilotGameCents: 25, advise: true},
     cloud: {database: {name: "crankmagic-staging", id: "b7f806ec-c9e8-4265-9f23-7d9705db9a26"}, limits: {ip: "2001", person: "2002"}, access: {team: "crankmagic.cloudflareaccess.com", aud: "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5"}},
   },
 };
@@ -124,6 +161,27 @@ export const PROFILES = {
    .assetsignore keeps a clone's .git, wrangler's own .wrangler scratch folder (it writes one into the
    folder it deploys from, and its debug log walks it with the assets) and the configuration off the site. */
 export const CLOUDFLARE_MAX_FILE = 25 * 1024 * 1024;
+/* The AI door's Worker variables (cloud/ai.mjs): none for a profile whose door is shut, so cloud/worker.mjs answers
+   503 "not switched on here yet" there. A profile with one cap for everyone gives the per-person cap the same
+   number, which can never bind first. */
+export const aiVars = (profile) => (profile.ai ? {
+  AI_ACCESS_AUD: profile.ai.aud,
+  AI_CAP_TOTAL_CENTS: String(profile.ai.capTotalCents),
+  AI_CAP_PERSON_CENTS: String(profile.ai.capPersonCents ?? profile.ai.capTotalCents),
+  AI_MODEL: profile.ai.model,
+  /* The Coach (X13) sends a person's hand and board: its own switch, on only once the privacy page says so; and its own
+     daily cap, for everyone together. */
+  ...(profile.ai.coach ? {AI_COACH: "on", ...(profile.ai.coachCapCents ? {AI_CAP_COACH_CENTS: String(profile.ai.coachCapCents)} : {})} : {}),
+  /* An AI on Claude (AI-2) sends that seat's view of the game: its own switch, on only once the privacy page says so; and
+     each game's cap (Rob, 2026-10-10: "0.25 per game is good"). */
+  ...(profile.ai.pilot ? {AI_PILOT: "on", AI_CAP_PILOT_GAME_CENTS: String(profile.ai.pilotGameCents ?? 25)} : {}),
+  /* The deck advisor (AI-4) sends a deck's list and the person's own cards and lists: its own switch, on only once the
+     privacy page says so. */
+  ...(profile.ai.advise ? {AI_ADVISE: "on"} : {}),
+  /* Everyone signed in (Rob, 2026-10-14: "I want everyone I add to be able to use the AI features"): the invite list is
+     the allowlist, and the door takes the app's own sign-in too. */
+  ...(profile.ai.everyone ? {AI_EVERYONE: "on"} : {}),
+} : {});
 /* RATE LIMITS ON /api/* (M3): requests a minute, counted at the edge by Cloudflare's Rate Limiting bindings,
    which cloud/worker.mjs asks before it does anything. Per IP first, so a flood is turned away before any
    work; per person once Access has named them. The app saves a few seconds after a change, about twenty
@@ -134,6 +192,9 @@ export const LIMITS_PER_MINUTE = Object.freeze({ip: 240, person: 120});
    is still served straight from the assets, uninvoiced -- with its D1 database and its Access settings.
    The Worker's source ships in the release tree for wrangler to bundle, and .assetsignore keeps it (and the
    migrations) from being published as files. */
+/* Workers Logs for a cloud release (M3): the Worker's own lines, and never the platform's per-request one. */
+export const OBSERVABILITY = {enabled: true, head_sampling_rate: 1, logs: {enabled: true, invocation_logs: false}};
+
 export const HOST_FILES = {
   cloudflare: ({date, origin, profile}) => ({
     "wrangler.jsonc": JSON.stringify({
@@ -146,11 +207,15 @@ export const HOST_FILES = {
       preview_urls: false,
       ...(profile.cloud ? {
         d1_databases: [{binding: "DB", database_name: profile.cloud.database.name, database_id: profile.cloud.database.id, migrations_dir: "cloud/migrations"}],
-        vars: {ACCESS_TEAM_DOMAIN: profile.cloud.access.team, ACCESS_AUD: profile.cloud.access.aud, ...(profile.tables?.playtest ? {PLAYTEST_TABLES: "on"} : {}), ...(profile.serviceSeats ? {SERVICE_SEATS: "on"} : {})},
+        vars: {ACCESS_TEAM_DOMAIN: profile.cloud.access.team, ACCESS_AUD: profile.cloud.access.aud, ...(profile.tables?.playtest ? {PLAYTEST_TABLES: "on"} : {}), ...(profile.serviceSeats ? {SERVICE_SEATS: "on"} : {}), ...(profile.tables?.closed ? {PLAY_TABLES_CLOSED: "on"} : {}), ...aiVars(profile)},
         ratelimits: [
           {name: "LIMIT_IP", namespace_id: profile.cloud.limits.ip, simple: {limit: LIMITS_PER_MINUTE.ip, period: 60}},
           {name: "LIMIT_PERSON", namespace_id: profile.cloud.limits.person, simple: {limit: LIMITS_PER_MINUTE.person, period: 60}},
         ],
+        /* Monitoring (M3, docs/ops.md): Workers Logs keeps the Worker's own lines -- each 5xx and each sync conflict,
+           cloud/worker.mjs opsLine -- for its alerts to count. Not the platform's line for every request, which
+           carries its headers, Access's signed assertion of who is asking among them. */
+        observability: OBSERVABILITY,
       } : {}),
       /* Play: each table is a Durable Object (SQLite-backed, which every plan has), made once by this migration. */
       ...(profile.cloud && profile.tables ? {
@@ -356,28 +421,44 @@ export function verify(built, profile) {
       if (profile.tables) {
         /* Play: the table as a Durable Object, the engine it carries, and nothing of game/ published as a file. */
         if (JSON.stringify(config?.durable_objects) !== JSON.stringify({bindings: [{name: "TABLES", class_name: "GameTable"}]})) problems.push("wrangler.jsonc does not bind TABLES to the GameTable Durable Object");
-        if (!(config?.migrations || []).some((m) => (m.new_sqlite_classes || []).includes("GameTable"))) problems.push("wrangler.jsonc has no migration that makes the GameTable class");
+        if (JSON.stringify(config?.migrations) !== JSON.stringify([{tag: "tables-v1", new_sqlite_classes: ["GameTable"]}])) problems.push("wrangler.jsonc has no migration that makes the GameTable class");
         problems.push(...engine.problems);
         for (const f of ["cloud/game-room.mjs", "game/room/table.mjs", "game/room/room.mjs"]) if (!engine.files.includes(f)) problems.push(`${f} is missing, so the table cannot be bundled`);
         if (!(built.get(".assetsignore")?.toString("utf8") || "").split("\n").includes("game/")) problems.push(".assetsignore would publish the engine's source as files");
-        for (const f of PLAY_CLOUD) if (!files.has(f)) problems.push(`${f} is Play in the cloud, and is not in this release`);
+        for (const f of profile.play === "cloud" ? PLAY_CLOUD : []) if (!files.has(f)) problems.push(`${f} is Play in the cloud, and is not in this release`);
       } else if (config?.durable_objects || config?.migrations) problems.push("wrangler.jsonc binds a Durable Object in a release without Play");
       if ((config?.vars?.PLAYTEST_TABLES === "on") !== !!profile.tables?.playtest) problems.push(profile.tables?.playtest ? "the playtest tables are not switched on (PLAYTEST_TABLES)" : "PLAYTEST_TABLES is on in a release whose tables are not playtest tables: every finished game's full record would be downloadable");
       if (config?.assets?.binding !== "ASSETS" || JSON.stringify(config?.assets?.run_worker_first) !== JSON.stringify(["/api/*"])) problems.push("wrangler.jsonc must run the Worker for /api/* only, with the assets bound as ASSETS");
       const db = (config?.d1_databases || [])[0];
-      if (!db || db.binding !== "DB" || db.database_name !== profile.cloud.database.name || !/^[0-9a-f-]{36}$/.test(db.database_id || "")) problems.push(`wrangler.jsonc does not bind the ${profile.cloud.database.name} database as DB`);
+      if (!db || db.binding !== "DB" || db.database_name !== profile.cloud.database.name || db.database_id !== profile.cloud.database.id || !/^[0-9a-f-]{36}$/.test(db.database_id || "")) problems.push(`wrangler.jsonc does not bind the ${profile.cloud.database.name} database as DB`);
       for (const [name, value] of Object.entries(config?.vars || {})) if (value === PENDING) problems.push(`${name} is pending: create the Access application for ${profile.origin} and put its value in PROFILES["${Object.keys(PROFILES).find((k) => PROFILES[k] === profile)}"]`);
-      if (!config?.vars?.ACCESS_TEAM_DOMAIN || !config?.vars?.ACCESS_AUD) problems.push("wrangler.jsonc does not tell the Worker which Access application to trust");
+      if (config?.vars?.ACCESS_TEAM_DOMAIN !== profile.cloud.access.team || config?.vars?.ACCESS_AUD !== profile.cloud.access.aud) problems.push("wrangler.jsonc does not trust the exact Access application for this profile");
       /* M3: every /api/* request is counted per IP and per person before it does any work. */
       for (const [name, limit] of [["LIMIT_IP", LIMITS_PER_MINUTE.ip], ["LIMIT_PERSON", LIMITS_PER_MINUTE.person]]) {
         const binding = (config?.ratelimits || []).find((r) => r.name === name);
-        if (!binding || !/^[1-9][0-9]*$/.test(binding.namespace_id || "") || binding.simple?.limit !== limit || binding.simple?.period !== 60)
+        if (!binding || !/^[1-9][0-9]*$/.test(binding.namespace_id || "") || binding.namespace_id !== profile.cloud.limits[name === "LIMIT_IP" ? "ip" : "person"] || binding.simple?.limit !== limit || binding.simple?.period !== 60)
           problems.push(`wrangler.jsonc does not rate-limit /api/* with ${name} at ${limit} a minute`);
       }
+      if (config?.observability?.logs?.invocation_logs !== false) problems.push("wrangler.jsonc keeps the platform's line for every request in Workers Logs, with its headers -- Access's signed assertion of who is asking among them");
+      else if (JSON.stringify(config.observability) !== JSON.stringify(OBSERVABILITY)) problems.push("wrangler.jsonc does not keep the Worker's monitoring lines in Workers Logs, so its alerts would count nothing");
       const namespaces = (config?.ratelimits || []).map((r) => r.namespace_id);
       if (new Set(namespaces).size !== namespaces.length) problems.push("wrangler.jsonc counts two rate limits in one namespace");
       if (config?.vars && "ACCESS_JWKS" in config.vars) problems.push("wrangler.jsonc hands the Worker its own signing keys (ACCESS_JWKS) -- that is for the local end-to-end run only");
       if ((config?.vars?.SERVICE_SEATS === "on") !== !!profile.serviceSeats) problems.push(profile.serviceSeats ? "the session's service token is not seated (SERVICE_SEATS)" : "SERVICE_SEATS is on in a release that does not seat a service token: an automated check would be a person there");
+      if ((config?.vars?.PLAY_TABLES_CLOSED === "on") !== !!profile.tables?.closed) problems.push("wrangler.jsonc has the wrong Play entry state (PLAY_TABLES_CLOSED)");
+      /* The AI door: exactly this profile's settings, or none at all where the door is shut (production, until Rob's go). */
+      const ai = Object.fromEntries(Object.entries(config?.vars || {}).filter(([name]) => /^AI_/.test(name)));
+      if (JSON.stringify(ai) !== JSON.stringify(aiVars(profile))) problems.push(profile.ai ? "wrangler.jsonc does not open the AI door with this profile's Access application, spend caps and model" : `${Object.keys(ai).join(", ")} set in a release whose AI door is shut`);
+      /* Sonnet or the lowest-cost models, always (Rob, 2026-10-09): a dearer one would keep the Worker's door shut. */
+      if (ai.AI_MODEL && !MODELS.includes(ai.AI_MODEL)) problems.push(`AI_MODEL ${ai.AI_MODEL} is not one the AI door calls (${MODELS.join(", ")})`);
+      /* The Coach sends a person's hand and board: never switched on where the privacy policy does not say so. */
+      if (ai.AI_COACH === "on" && !(built.get("privacy.html")?.toString("utf8") || "").includes("<strong>The Coach.</strong>")) problems.push("the Coach is switched on (AI_COACH) but privacy.html does not say what it sends");
+      if (ai.AI_COACH === "on" && !(Number(ai.AI_CAP_COACH_CENTS) > 0)) problems.push("the Coach is switched on (AI_COACH) without a daily cap of its own (AI_CAP_COACH_CENTS)");
+      /* An AI on Claude sends its seat's view: never switched on where the privacy policy does not say so, nor uncapped. */
+      if (ai.AI_PILOT === "on" && !(built.get("privacy.html")?.toString("utf8") || "").includes("<strong>AI players on Claude.</strong>")) problems.push("an AI on Claude is switched on (AI_PILOT) but privacy.html does not say what it sends");
+      if (ai.AI_PILOT === "on" && !(Number(ai.AI_CAP_PILOT_GAME_CENTS) > 0)) problems.push("an AI on Claude is switched on (AI_PILOT) without a cap for each game (AI_CAP_PILOT_GAME_CENTS)");
+      /* The deck advisor sends a deck's list and the person's own cards and lists: never on where the privacy policy does not say so. */
+      if (ai.AI_ADVISE === "on" && !(built.get("privacy.html")?.toString("utf8") || "").includes("<strong>The deck advisor.</strong>")) problems.push("the deck advisor is switched on (AI_ADVISE) but privacy.html does not say what it sends");
       for (const f of ["cloud/worker.mjs", "cloud/access.mjs", "cloud/library.mjs"]) if (!files.has(f)) problems.push(`${f} is missing, so the Worker cannot be bundled`);
       if (![...files].some((f) => /^cloud\/migrations\/.+\.sql$/.test(f))) problems.push("the database migrations are missing");
       if (!(built.get(".assetsignore")?.toString("utf8") || "").split("\n").includes("cloud/")) problems.push(".assetsignore would publish the Worker's source as files");
@@ -448,25 +529,47 @@ export function build({source, profileName = "pages", origin = "", domain = ""})
 
 /* Commit the build to release/pages with plumbing and a private index: the working tree, the
    checked-out branch and the real index are never touched. */
-export const releaseBranch = (profileName) => profileName === "pages" ? RELEASE_BRANCH : `release/${profileName}`;
-export function commitRelease(built, {commit, version, profileName}) {
+export const releaseBranch = (profileName) => ["pages", "cloud-production", "cloud-production-standby"].includes(profileName) ? RELEASE_BRANCH : `release/${profileName}`;
+
+/* ONCE THE TABLE CLASS IS ON A WORKER, EVERY LATER RELEASE KEEPS IT. A release whose profile binds the GameTable Durable
+   Object (`tables`) registers the class on the Worker with its migration (tables-v1). Cloudflare then refuses to deploy a
+   script that no longer exports the class -- the only way to drop it is a delete migration, which erases every table it
+   stored -- and cannot roll back across the migration that made it. So a release without tables (production's `pages`)
+   committed on top of one with them would be undeployable for good. Refused here, with what to build instead, the way a
+   move that would break the game is refused (AGENTS.md). `previous` is the profile the branch's head was built with. */
+export function refuseDropTables(previous, profileName) {
+  if (!previous || !PROFILES[previous]?.tables || PROFILES[profileName]?.tables) return null;
+  return `${releaseBranch(profileName)} already holds a ${previous} release, which registered the GameTable Durable Object on its Worker; ` +
+    `a ${profileName} release has no table class, so Cloudflare could never deploy it over that one (dropping the class erases every stored table). ` +
+    `Build cloud-production-standby (Play closed, the tables kept) or cloud-production instead.`;
+}
+/* The profile a release commit was built with: its version.json's (build, above). */
+function profileOf(root, ref) {
+  const read = spawnSync("git", ["-C", root, "show", `${ref}:version.json`], {encoding: "utf8"});
+  if (read.status !== 0) return null;
+  try { return JSON.parse(read.stdout).profile ?? null; } catch { return null; }
+}
+
+export function commitRelease(built, {commit, version, profileName, root = ROOT}) {
   const RELEASE_BRANCH = releaseBranch(profileName);
   const tmp = mkdtempSync(path.join(os.tmpdir(), "release-index-"));
   try {
     const env = {...process.env, GIT_INDEX_FILE: path.join(tmp, "index")};
     const lines = [];
     for (const [f, body] of [...built].sort(([a], [b]) => a.localeCompare(b))) {
-      const oid = execFileSync("git", ["-C", ROOT, "hash-object", "-w", "--stdin"], {input: body}).toString().trim();
+      const oid = execFileSync("git", ["-C", root, "hash-object", "-w", "--stdin"], {input: body}).toString().trim();
       lines.push(`100644 ${oid}\t${f}`);
     }
-    execFileSync("git", ["-C", ROOT, "update-index", "--add", "--index-info"], {input: lines.join("\n") + "\n", env});
-    const tree = execFileSync("git", ["-C", ROOT, "write-tree"], {env}).toString().trim();
-    const parent = spawnSync("git", ["-C", ROOT, "rev-parse", "--verify", "-q", `refs/heads/${RELEASE_BRANCH}`], {encoding: "utf8"}).stdout.trim()
-      || spawnSync("git", ["-C", ROOT, "rev-parse", "--verify", "-q", `refs/remotes/origin/${RELEASE_BRANCH}`], {encoding: "utf8"}).stdout.trim();
-    if (parent && git("rev-parse", `${parent}^{tree}`) === tree) return {commit: parent, tree, unchanged: true, branch: RELEASE_BRANCH};
-    const message = `Release ${version} (${profileName}): main ${commit}\n\nBuilt by tools/release-pages.mjs from ${commit}. The web app only; Play says Coming Soon${PROFILES[profileName].accounts === "on" ? "; accounts on, with the API Worker" : ""}.\n`;
-    const next = execFileSync("git", ["-C", ROOT, "commit-tree", tree, ...(parent ? ["-p", parent] : []), "-F", "-"], {input: message}).toString().trim();
-    execFileSync("git", ["-C", ROOT, "update-ref", `refs/heads/${RELEASE_BRANCH}`, next, ...(parent ? [parent] : [])]);
+    execFileSync("git", ["-C", root, "update-index", "--add", "--index-info"], {input: lines.join("\n") + "\n", env});
+    const tree = execFileSync("git", ["-C", root, "write-tree"], {env}).toString().trim();
+    const parent = spawnSync("git", ["-C", root, "rev-parse", "--verify", "-q", `refs/heads/${RELEASE_BRANCH}`], {encoding: "utf8"}).stdout.trim()
+      || spawnSync("git", ["-C", root, "rev-parse", "--verify", "-q", `refs/remotes/origin/${RELEASE_BRANCH}`], {encoding: "utf8"}).stdout.trim();
+    if (parent && execFileSync("git", ["-C", root, "rev-parse", `${parent}^{tree}`], {encoding: "utf8"}).trim() === tree) return {commit: parent, tree, unchanged: true, branch: RELEASE_BRANCH};
+    const refusal = parent ? refuseDropTables(profileOf(root, parent), profileName) : null;
+    if (refusal) throw new Error(refusal);
+    const message = `Release ${version} (${profileName}): main ${commit}\n\nBuilt by tools/release-pages.mjs from ${commit}. The web app; Play ${PROFILES[profileName].play === "cloud" ? "is in the cloud" : "says Coming Soon"}${PROFILES[profileName].accounts === "on" ? "; accounts on, with the API Worker" : ""}.\n`;
+    const next = execFileSync("git", ["-C", root, "commit-tree", tree, ...(parent ? ["-p", parent] : []), "-F", "-"], {input: message}).toString().trim();
+    execFileSync("git", ["-C", root, "update-ref", `refs/heads/${RELEASE_BRANCH}`, next, ...(parent ? [parent] : [])]);
     return {commit: next, tree, parent, unchanged: false, branch: RELEASE_BRANCH};
   } finally {
     rmSync(tmp, {recursive: true, force: true});

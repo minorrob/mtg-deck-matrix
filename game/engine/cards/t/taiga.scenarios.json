@@ -1,0 +1,166 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Taiga",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Played untapped; {T}: {R} or {G}, either",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Taiga"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Taiga"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Taiga",
+              "is": false
+            },
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Taiga"
+              },
+              "count": 2,
+              "mana": [
+                {
+                  "R": 1
+                },
+                {
+                  "G": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Taiga",
+          "mana": {
+            "G": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1,
+            "R": 0
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Taiga"
+        }
+      ]
+    },
+    {
+      "name": "A Mountain and a Forest: Bloodstained Mire finds it by one of its land types, and not the Plains; it taps for {R}",
+      "library": [
+        "Plains",
+        "Taiga",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear",
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bloodstained Mire"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Bloodstained Mire"
+        },
+        {
+          "activate": "Bloodstained Mire"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Taiga"
+                ],
+                "min": 0
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Taiga"
+          ]
+        },
+        {
+          "tap": "Taiga",
+          "mana": {
+            "R": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "R": 1
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Taiga"
+          ]
+        }
+      ]
+    }
+  ]
+}

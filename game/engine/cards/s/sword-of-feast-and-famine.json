@@ -1,0 +1,109 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sword of Feast and Famine",
+    "oracleId": "d0901053-6de0-46d0-9ee3-8d40510236c1",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Equipment"
+    ],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Equipped creature gets +2/+2 and has protection from black and from green.\nWhenever equipped creature deals combat damage to a player, that player discards a card and you untap all lands you control.\nEquip {2}",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Equipped creature gets +2/+2 and has protection from black and from green.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": 2,
+        "toughness": 2
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Equipped creature gets +2/+2 and has protection from black and from green.",
+      "rule": "protection",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "from": {
+        "colors": [
+          "B",
+          "G"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever equipped creature deals combat damage to a player, that player discards a card and you untap all lands you control.",
+      "trigger": {
+        "on": "damage dealt",
+        "who": "any",
+        "combat": true,
+        "to": "player",
+        "filter": {
+          "attachedBy": "self"
+        }
+      },
+      "effects": [
+        {
+          "effect": "discard",
+          "who": "that player",
+          "count": 1
+        },
+        {
+          "effect": "untapAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Land"
+            ],
+            "controller": "you"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "Equip {2}",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        }
+      ],
+      "timing": "sorcery",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "attach",
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

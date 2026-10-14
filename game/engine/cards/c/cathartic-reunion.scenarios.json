@@ -1,0 +1,132 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Cathartic Reunion",
+  "scenarios": [
+    {
+      "name": "Each pair of the other cards in hand is an offer; the two chosen are discarded and three drawn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Cathartic Reunion",
+            "Plains",
+            "Island",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Cathartic Reunion"
+              },
+              "count": 3,
+              "costs": [
+                [
+                  "Plains",
+                  "Island"
+                ],
+                [
+                  "Plains",
+                  "Swamp"
+                ],
+                [
+                  "Island",
+                  "Swamp"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Cathartic Reunion",
+          "discard": [
+            "Plains",
+            "Swamp"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Cathartic Reunion",
+            "Plains",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 4
+        },
+        {
+          "event": "GameEventCardChangeZone",
+          "where": {
+            "discarded": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "With one other card in hand it cannot be cast: two cards are the cost (CR 118.3)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Cathartic Reunion",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Cathartic Reunion"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

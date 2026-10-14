@@ -1,0 +1,598 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Conduit of Worlds",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Cub": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "power": 2,
+      "toughness": 2
+    },
+    "Tidings": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Draw a card.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "draw",
+            "count": 1
+          }
+        ]
+      }
+    },
+    "Golem": {
+      "types": [
+        "Artifact",
+        "Creature"
+      ],
+      "subtypes": [
+        "Golem"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "power": 2,
+      "toughness": 2
+    },
+    "Vault": {
+      "types": [
+        "Artifact",
+        "Land"
+      ],
+      "colors": [],
+      "abilities": [
+        {
+          "id": "t-c",
+          "kind": "mana",
+          "tapSelf": true,
+          "produces": {
+            "C": 1
+          }
+        }
+      ]
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Troll": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Troll"
+      ],
+      "manaCost": "{4}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Crate": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{0}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A Forest from his graveyard: played as his land for the turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Conduit of Worlds"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Forest"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Conduit of Worlds",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "name": "No spell yet this turn: Rob casts the Bear from his graveyard through Conduit, paying for it -- and then can't cast even a Crate, though he may still play a land",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Conduit of Worlds",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Crate",
+            "Plains"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Conduit of Worlds",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Bear",
+                  "Don't cast"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            },
+            {
+              "seat": 0,
+              "tapped": "Forest"
+            },
+            {
+              "seat": 0,
+              "tapped": "Wastes"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Conduit of Worlds",
+            "Forest",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Crate"
+          },
+          "count": 0
+        },
+        {
+          "offers": {
+            "kind": "play-land",
+            "card": "Plains"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "He declines to cast it: nothing forbidden, and the Crate is cast after",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Conduit of Worlds",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Crate"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Conduit of Worlds",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Don't cast"
+          ]
+        },
+        {
+          "cast": "Crate"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Conduit of Worlds",
+            "Forest",
+            "Wastes",
+            "Crate"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A spell cast already this turn: the ability resolves, nothing is asked, and his spells are not forbidden",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Conduit of Worlds",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Crate",
+            "Crate"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "cast": "Crate"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Conduit of Worlds",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        },
+        {
+          "cast": "Crate"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Conduit of Worlds",
+            "Forest",
+            "Wastes",
+            "Crate",
+            "Crate"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Nothing in his graveyard he could pay for: the Troll's {4}{G} is more than his Forest and Wastes -- nothing asked, nothing forbidden",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Conduit of Worlds",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Troll"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Crate"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Conduit of Worlds",
+          "targets": [
+            {
+              "card": "Troll"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        },
+        {
+          "cast": "Crate"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Troll"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Conduit of Worlds",
+            "Forest",
+            "Wastes",
+            "Crate"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Its target: a nonland permanent card of his -- not a land (an artifact land neither), an instant, or a card of Maya's",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Conduit of Worlds"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Forest",
+            "Vault",
+            "Tidings",
+            "Golem",
+            "Cub"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Conduit of Worlds"
+          },
+          "count": 2,
+          "targets": [
+            [
+              "Golem"
+            ],
+            [
+              "Cub"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Only as a sorcery: not with a spell on the stack, and not on Maya's turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Conduit of Worlds",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Cub"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Tidings"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Tidings"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Conduit of Worlds"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "pass": 1
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Conduit of Worlds",
+            "seat": 0
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

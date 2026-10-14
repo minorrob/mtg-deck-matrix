@@ -1,0 +1,67 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sidar Kondo of Jamuraa",
+    "oracleId": "331b6834-6bb4-40fa-b80b-22d67b34734f",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Knight"
+    ],
+    "manaCost": "{2}{G}{W}",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 5
+  },
+  "oracleText": "Flanking (Whenever a creature without flanking blocks this creature, the blocking creature gets -1/-1 until end of turn.)\nCreatures your opponents control without flying or reach can't block creatures with power 2 or less.\nPartner (You can have two commanders if both have partner.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flanking (Whenever a creature without flanking blocks this creature, the blocking creature gets -1/-1 until end of turn.)",
+      "keyword": "flanking"
+    },
+    {
+      "kind": "static",
+      "text": "Creatures your opponents control without flying or reach can't block creatures with power 2 or less.",
+      "rule": "cant-be-blocked-by",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "power": {
+          "max": 2
+        }
+      },
+      "by": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "opponent",
+        "nonKeywords": [
+          "Flying",
+          "Reach"
+        ]
+      }
+    },
+    {
+      "kind": "keyword",
+      "text": "Partner (You can have two commanders if both have partner.)",
+      "keyword": "partner"
+    }
+  ]
+}

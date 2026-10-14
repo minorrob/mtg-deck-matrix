@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Alms Collector",
+    "oracleId": "278e51fe-3cd9-4c82-bd81-2164771f8611",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Cat",
+      "Cleric"
+    ],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "Flash\nIf an opponent would draw two or more cards, instead you and that player each draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flash",
+      "keyword": "flash"
+    },
+    {
+      "kind": "static",
+      "text": "If an opponent would draw two or more cards, instead you and that player each draw a card.",
+      "rule": "draws-instead",
+      "affects": {
+        "who": "opponent"
+      }
+    }
+  ]
+}

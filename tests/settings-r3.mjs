@@ -5,12 +5,13 @@
  *   1. The Menu holds what §4.7 lists (the theme, Settings, backup and restore, help, the tour,
  *      feedback, sharing) and none of what moved: Excel, the emailed export, history and Undo,
  *      Confirmations, Clear all data, the card data ages. Reset comparison picks is gone.
- *   2. Menu → Settings opens #settings, with the design's sections: Account, Appearance, Prices, Data,
- *      About. Every entry that left the Menu is there, and Publish your To Trade list is in the
+ *   2. Menu → Settings opens #settings, with the design's sections, Play and AI Coach (AI-6): Account, Appearance, Play, Prices,
+ *      AI Coach, Data, About. Every entry that left the Menu is there, and Publish your To Trade list is in the
  *      Library's More menu.
  *   3. The theme can be chosen here too, and both places show the same choice.
  *   4. Reduce motion is saved: it stills transitions and the rail's animation, survives a reload, and
- *      turns off again.
+ *      turns off again. So is Play's Stop at every step of my turn (Rob, 2026-10-11), with the preferences the board
+ *      tells the room (tests/table-board.mjs).
  *   5. The default budget cap is what a deck with no cap of its own is held to, on the deck's own
  *      page; empty goes back to the pod's rule.
  *   6. About names the card data's ages, and on a phone the cards stack in one column.
@@ -51,7 +52,26 @@ try {
   /* 2. Settings, with everything that left the Menu. */
   await toSettings(page);
   ok(page.url().endsWith("#settings"), `Menu → Settings opens #settings (${page.url()})`);
-  eq(await page.$$eval(".cm-settings-card h2", (hs) => hs.map((h) => h.textContent)), ["Account", "Appearance", "Prices", "Data", "About"], "Settings has the design's five sections");
+  eq(await page.$$eval(".cm-settings-card h2", (hs) => hs.map((h) => h.textContent)), ["Account", "Appearance", "Play", "Prices", "AI Coach", "Data", "About"], "Settings has the design's five sections, Play and AI Coach (AI-6)");
+  /* AI COACH SETTINGS (AI-6): six controls, their defaults, saved with the preferences; the meter from the door. */
+  await page.route(`${base}/api/ai-meter`, (r) => r.fulfill({json: {open: true, spentCents: 0.4, capCents: 25}}));
+  const aiPanel = async () => {await page.locator(".cm-settings-card", {has: page.locator("h2", {hasText: "AI Coach"})}).getByRole("button", {name: "AI Coach settings…"}).click(); await page.locator("#cm-ai-settings").waitFor({timeout: 10000});};
+  const aiValues = () => page.evaluate(() => {const f = document.getElementById("cm-ai-settings").elements; return {suggestUnowned: f.suggestUnowned.checked, preferOwned: f.preferOwned.checked, inBracket: f.inBracket.checked, length: f.adviceLength.value, coachSees: f.coachSees.value};});
+  await aiPanel();
+  eq(await aiValues(), {suggestUnowned: false, preferOwned: true, inBracket: true, length: "short", coachSees: "hand"}, "AI Coach settings opens on its defaults: no cards not owned, own first, inside the bracket, short, the Coach sees the hand");
+  await page.waitForFunction(() => /0\.4¢ of your 25¢/.test(document.getElementById("cm-ai-meter")?.textContent || ""), null, {timeout: 10000});
+  eq(await page.locator("#cm-ai-settings a[href='privacy.html#ai-features']").count(), 1, "with the person's spending against their cap, and the privacy page's AI section");
+  await page.locator("#cm-ai-settings [name=suggestUnowned]").check();
+  await page.locator("#cm-ai-settings [name=adviceLength]").selectOption("detailed");
+  await page.locator("#cm-ai-settings [name=coachSees]").selectOption("board");
+  await page.locator("[data-action=ai-settings-save]").click();
+  await page.waitForFunction(() => !document.querySelector("#cm-dialog[open]"), null, {timeout: 10000});
+  eq(await page.evaluate(async () => {const r = await CrankRepository.open(); try {return (await r.getState()).preferences.aiCoach;} finally {r.close();}}),
+    {suggestUnowned: true, preferOwned: true, inBracket: true, length: "detailed", coachSees: "board"}, "Save keeps them with the library's preferences, which sync with the account");
+  await aiPanel();
+  eq(await aiValues(), {suggestUnowned: true, preferOwned: true, inBracket: true, length: "detailed", coachSees: "board"}, "and the panel opens on them again");
+  await page.locator("#cm-dialog [data-action=close]").first().click();
+  await page.waitForFunction(() => !document.querySelector("#cm-dialog[open]"), null, {timeout: 10000});
   for (const [section, labels] of [["Data", ["Save a backup file", "Restore from a backup file", "Export as Excel", "Email the export…", "See every change…", "Undo last change", "Clear all data"]], ["Appearance", ["Confirmations…"]]]) {
     const inside = await page.locator(".cm-settings-card", {has: page.locator("h2", {hasText: section})}).locator("button").allTextContents();
     for (const label of labels) ok(inside.includes(label), `Settings › ${section} has ${label}`);
@@ -66,6 +86,17 @@ try {
   /* 3. The theme, from Settings. */
   await toSettings(page);
   /* A1: four swatch cards, each drawn in its own theme's colors and face. */
+  /* PLAY › OVERLAY (2026-10-12): the callouts' loudness is a slider, 60% until moved, saved with the Play preferences. */
+  const overlay = page.locator(".cm-settings [data-settings-overlay]");
+  eq([await overlay.getAttribute("type"), await overlay.inputValue(), (await page.locator(".cm-settings-slider output").innerText()).trim()], ["range", "60", "60%"], "Play has the Overlay slider, at 60% until moved");
+  await overlay.fill("0");
+  await page.waitForFunction(() => document.querySelector(".cm-settings [data-settings-overlay]").getAttribute("aria-valuetext") === "off");
+  await page.waitForTimeout(400);
+  await page.locator(".cm-sidebar a[data-nav=decks]").click();
+  await toSettings(page);
+  eq(await page.locator(".cm-settings [data-settings-overlay]").inputValue(), "0", "moved to the left it is off, and saved: Settings opened again shows it off");
+  await page.locator(".cm-settings [data-settings-overlay]").fill("60");
+  await page.waitForTimeout(400);
   eq(await page.$$eval(".cm-settings .cm-theme-card", (bs) => bs.map((b) => b.getAttribute("aria-label"))), ["Moss & Iron", "Brass & Slate", "Felt & Cream", "Steel & Cobalt"], "Settings shows the four themes as swatch cards");
   const swatchBg = await page.$$eval(".cm-settings .cm-theme-swatch", (ss) => ss.map((x) => getComputedStyle(x).backgroundColor));
   eq(new Set(swatchBg).size, 4, `each swatch is drawn in its own theme's ground (${swatchBg.join(", ")})`);
@@ -97,6 +128,20 @@ try {
   await page.getByRole("button", {name: "Reduce motion"}).click();
   await page.waitForFunction(() => !document.documentElement.dataset.motion);
   ok((await motion()).aether === "running", "and turning it off sets the rail moving again");
+  /* Play's Stop at every step of my turn: off by default, saved with the preferences, kept through a reload. */
+  const steps = () => page.evaluate(async () => ({pressed: document.querySelector('[data-action="set-step-by-step"]').getAttribute("aria-pressed"),
+    saved: await (async () => {const r = await CrankRepository.open(); try {return ((await r.getState()).preferences.play || {}).stepByStep ?? null;} finally {r.close();}})()}));
+  eq(await steps(), {pressed: "false", saved: null}, "Stop at every step of my turn is off by default");
+  ok(/never ends by itself/.test(await page.locator(".cm-settings-card", {hasText: "Stop at every step"}).innerText()), "and Play says your turn never ends by itself, either way");
+  await page.getByRole("button", {name: "Stop at every step of my turn"}).click();
+  await page.waitForFunction(() => document.querySelector('[data-action="set-step-by-step"]')?.getAttribute("aria-pressed") === "true");
+  eq(await steps(), {pressed: "true", saved: true}, "pressed, it is saved with the preferences (play.stepByStep), which the board tells the room");
+  await page.reload();
+  await page.locator(".cm-settings").waitFor({timeout: 60000});
+  eq(await steps(), {pressed: "true", saved: true}, "and kept through a reload");
+  await page.getByRole("button", {name: "Stop at every step of my turn"}).click();
+  await page.waitForFunction(() => document.querySelector('[data-action="set-step-by-step"]')?.getAttribute("aria-pressed") === "false");
+  eq(await steps(), {pressed: "false", saved: false}, "and off again");
 
   /* 5. The default budget cap. */
   const deck = "deck:live:D6";
@@ -198,4 +243,4 @@ try {
 } finally {
   await close();
 }
-console.log(`settings-r3: ${checks} checks passed — the Menu slimmed to INTAKE §4.7, Settings holds the rest in five sections, Reduce motion is saved and stills the page, and the default cap reaches a deck's own page.`);
+console.log(`settings-r3: ${checks} checks passed — the Menu slimmed to INTAKE §4.7, Settings holds the rest in five sections, Play and AI Coach, Reduce motion (which stills the page) and Stop at every step are saved, and the default cap reaches a deck's own page.`);

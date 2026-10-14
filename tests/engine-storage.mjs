@@ -80,6 +80,14 @@ try {
     await rejects(() => store.saveCheckpoint({...point, state: {...point.state, turn: point.state.turn + 1}}), /does not match its hash/, "a checkpoint whose state is not the one its hash describes is refused");
     await rejects(() => store.saveCheckpoint({...point, matchId: "other"}), /not m1/, "and one for another match");
     await rejects(() => store.saveCheckpoint({...point, schema: "x"}), new RegExp(CHECKPOINT_SCHEMA), "and one that is not a checkpoint");
+    /* A state JSON would not carry whole -- a key holding undefined, a number that is not finite -- hashes as it is in
+       memory and not as it reads back, so a room could never wake from it (G1, 2026-10-08): refused as it is saved. */
+    for (const [label, effect, field] of [["a key holding undefined", {id: "e", layer: 6, sublayer: undefined}, "state.effects.0.sublayer is undefined"],
+      ["a number that is not finite", {id: "e", layer: 7, timestamp: NaN}, "state.effects.0.timestamp is NaN"]]) {
+      const state = {...point.state, effects: [effect]};
+      await rejects(() => createMatchStore(memoryStorage(), "m1").saveCheckpoint({...point, state, hash: hashState(state)}), new RegExp(`would not read back.*${field.replace(/\./g, "\\.")}`),
+        `a checkpoint whose state holds ${label} is refused as it is saved, naming the field`);
+    }
     eq(await createMatchStore(memoryStorage(), "empty").latestCheckpoint(), null, "a match with no checkpoint yet says so");
   }
 

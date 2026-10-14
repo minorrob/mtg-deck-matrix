@@ -1,0 +1,88 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Reaping Willow",
+    "oracleId": "ce60402c-34cd-44fe-ae1d-4a5404298f5b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Treefolk",
+      "Cleric"
+    ],
+    "manaCost": "{1}{W/B}{W/B}{W/B}",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 6
+  },
+  "oracleText": "Lifelink\nThis creature enters with two -1/-1 counters on it.\n{1}{W/B}, Remove two counters from this creature: Return target creature card with mana value 3 or less from your graveyard to the battlefield. Activate only as a sorcery.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Lifelink",
+      "keyword": "lifelink"
+    },
+    {
+      "kind": "replacement",
+      "text": "This creature enters with two -1/-1 counters on it.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersWithCounters": {
+          "counter": "-1/-1",
+          "count": 2
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{1}{W/B}, Remove two counters from this creature: Return target creature card with mana value 3 or less from your graveyard to the battlefield. Activate only as a sorcery.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{W/B}"
+        },
+        {
+          "atom": "removeCountersAmong",
+          "count": 2,
+          "selector": {
+            "self": true
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "battlefield"
+        }
+      ],
+      "timing": "sorcery",
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "types": [
+            "Creature"
+          ],
+          "owner": "you",
+          "manaValue": {
+            "max": 3
+          }
+        }
+      ]
+    }
+  ]
+}

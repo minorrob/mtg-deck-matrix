@@ -1,0 +1,79 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Storm-Kiln Artist",
+    "oracleId": "a145ff8c-5812-4bcb-bd16-9839dc25121d",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dwarf",
+      "Shaman"
+    ],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "This creature gets +1/+0 for each artifact you control.\nMagecraft — Whenever you cast or copy an instant or sorcery spell, create a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This creature gets +1/+0 for each artifact you control.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "power": {
+          "count": {
+            "what": "permanent",
+            "types": [
+              "Artifact"
+            ],
+            "controller": "you"
+          }
+        }
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Magecraft — Whenever you cast or copy an instant or sorcery spell, create a Treasure token.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "orCopy": true,
+        "filter": {
+          "anyOf": [
+            {
+              "types": [
+                "Instant"
+              ]
+            },
+            {
+              "types": [
+                "Sorcery"
+              ]
+            }
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "predefined": "Treasure"
+          }
+        }
+      ]
+    }
+  ]
+}

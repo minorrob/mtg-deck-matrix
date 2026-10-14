@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wisdom of Ages",
+    "oracleId": "d9722ec3-aa5e-4c69-8ff0-cef1b1839fa4",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{U}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Return all instant and sorcery cards from your graveyard to your hand. You have no maximum hand size for the rest of the game.\nExile Wisdom of Ages.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Return all instant and sorcery cards from your graveyard to your hand. You have no maximum hand size for the rest of the game.\nExile Wisdom of Ages.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "moveZoneAll",
+          "selector": {
+            "what": "card",
+            "zone": "graveyard",
+            "owner": "you",
+            "anyOf": [
+              {
+                "types": [
+                  "Instant"
+                ]
+              },
+              {
+                "types": [
+                  "Sorcery"
+                ]
+              }
+            ]
+          },
+          "to": "hand"
+        },
+        {
+          "effect": "effectUntil",
+          "rule": "no-maximum-hand-size",
+          "until": "ever"
+        },
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "to": "exile"
+        }
+      ]
+    }
+  ]
+}

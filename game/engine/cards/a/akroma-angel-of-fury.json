@@ -1,0 +1,88 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Akroma, Angel of Fury",
+    "oracleId": "2b80faaf-92fd-4fa0-a3f6-8bb263e7ff1d",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel"
+    ],
+    "manaCost": "{5}{R}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 6,
+    "toughness": 6
+  },
+  "oracleText": "This spell can't be countered.\nFlying, trample, protection from white and from blue\n{R}: Akroma gets +1/+0 until end of turn.\nMorph {3}{R}{R}{R} (You may cast this card face down as a 2/2 creature for {3}. Turn her face up any time for her morph cost.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This spell can't be countered.",
+      "rule": "cant-be-countered",
+      "affects": {
+        "what": "spell",
+        "self": true
+      }
+    },
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "keyword",
+      "text": "protection from white and from blue",
+      "keyword": "protection",
+      "from": {
+        "colors": [
+          "W",
+          "U"
+        ]
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{R}: Akroma gets +1/+0 until end of turn.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{R}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 1,
+          "toughness": 0
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Morph {3}{R}{R}{R}",
+      "keyword": "morph",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}{R}{R}{R}"
+        }
+      ]
+    }
+  ]
+}

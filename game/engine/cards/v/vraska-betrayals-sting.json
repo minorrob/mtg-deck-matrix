@@ -1,0 +1,146 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Vraska, Betrayal's Sting",
+    "oracleId": "05d09c55-f551-4cb4-a8d2-4811dccc848d",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Planeswalker"
+    ],
+    "subtypes": [
+      "Vraska"
+    ],
+    "manaCost": "{4}{B}{B/P}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null,
+    "loyalty": 6
+  },
+  "oracleText": "Compleated ({B/P} can be paid with {B} or 2 life. If life was paid, this planeswalker enters with two fewer loyalty counters.)\n0: You draw a card and lose 1 life. Proliferate.\n−2: Target creature becomes a Treasure artifact with \"{T}, Sacrifice this artifact: Add one mana of any color\" and loses all other card types and abilities.\n−9: If target player has fewer than nine poison counters, they get a number of poison counters equal to the difference.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Compleated",
+      "keyword": "compleated"
+    },
+    {
+      "kind": "activated",
+      "text": "0: You draw a card and lose 1 life. Proliferate.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": 0
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        },
+        {
+          "effect": "loseLife",
+          "amount": 1
+        },
+        {
+          "effect": "proliferate"
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "−2: Target creature becomes a Treasure artifact with \"{T}, Sacrifice this artifact: Add one mana of any color\" and loses all other card types and abilities.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": -2
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "layer": 4,
+          "targets": {
+            "target": 0
+          },
+          "apply": {
+            "setTypes": [
+              "Artifact"
+            ],
+            "setSubtypes": [
+              "Treasure"
+            ]
+          },
+          "until": "ever"
+        },
+        {
+          "effect": "effectUntil",
+          "layer": 6,
+          "targets": {
+            "target": 0
+          },
+          "apply": {
+            "removeAllAbilities": true,
+            "addAbilities": [
+              {
+                "id": "vraska-treasure",
+                "kind": "mana",
+                "tapSelf": true,
+                "anyColor": true,
+                "sacrificeSelf": true,
+                "text": "{T}, Sacrifice this artifact: Add one mana of any color."
+              }
+            ]
+          },
+          "until": "ever"
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "−9: If target player has fewer than nine poison counters, they get a number of poison counters equal to the difference.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": -9
+        }
+      ],
+      "targets": [
+        {
+          "what": "player"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "poison",
+          "who": {
+            "target": 0
+          },
+          "count": {
+            "countersOn": {
+              "target": 0
+            },
+            "counter": "poison",
+            "times": -1,
+            "plus": 9
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -10,9 +10,10 @@ import {readFileSync, writeFileSync} from "node:fs";
 import {createRequire} from "node:module";
 import path from "node:path";
 import {ROOT} from "../../schema/index.mjs";
+import * as B from "../../cloud/advise-brief.mjs";
 
 const require = createRequire(import.meta.url);
-const B = require(path.join(ROOT, "advise-brief.js")), M = require(path.join(ROOT, "collection-model.js")), Catalog = require(path.join(ROOT, "card-catalog.js"));
+const M = require(path.join(ROOT, "collection-model.js")), Catalog = require(path.join(ROOT, "card-catalog.js"));
 const live = JSON.parse(readFileSync(path.join(ROOT, "data/live-state.json"), "utf8"));
 const state = M.migrate(live.payload.state || live.payload);
 const cardOf = (id) => state.cards[id] || null;

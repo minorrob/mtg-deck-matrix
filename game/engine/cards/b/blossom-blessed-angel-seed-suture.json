@@ -1,0 +1,94 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Blossom-Blessed Angel // Seed Suture",
+    "oracleId": "cd61c26b-8d3c-4730-92f2-0d94d961bafd",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel",
+      "Cleric"
+    ],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "Flying, vigilance\nThis creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "replacement",
+      "text": "This creature enters prepared.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersPrepared": true
+      }
+    }
+  ],
+  "prepare": {
+    "identity": {
+      "name": "Seed Suture",
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "manaCost": "{G/W}",
+      "colors": [
+        "W",
+        "G"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Put a +1/+1 counter on target creature. You gain 1 life.",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Put a +1/+1 counter on target creature. You gain 1 life.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "putCounter",
+            "targets": {
+              "target": 0
+            },
+            "counter": "+1/+1",
+            "count": 1
+          },
+          {
+            "effect": "gainLife",
+            "amount": 1
+          }
+        ]
+      }
+    ]
+  }
+}

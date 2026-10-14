@@ -57,6 +57,7 @@ function deal(state, seat) {
 
 /* A four-player game in which each seat has its own pilot. A house pilot is handed its seat's
    projection and nothing else from the state. `onDecision` sees every house decision point. */
+let quick = 0;
 function playGame(seed, kinds, {onDecision} = {}) {
   const state = createState({matchId: "house", seed, players: [0, 1, 2, 3].map((i) => ({name: `Seat ${i}`}))});
   for (let seat = 0; seat < 4; seat += 1) deal(state, seat);
@@ -93,6 +94,8 @@ function playGame(seed, kinds, {onDecision} = {}) {
       onDecision?.({state, seat, view, actions});
       chosen = pilot.choose(view, actions);
       assert.ok(actions.includes(chosen), "the house pilot chose one of the offered actions");
+      /* Its quick pass (`passes`, which the room asks before working out its view) is its own choice. */
+      if (pilot.passes(actions, state.stack.length)) {quick += 1; assert.equal(chosen.kind, "pass", `seed ${seed}: the quick check said seat ${seat} would pass, and it chose ${chosen.kind}`);}
     } else chosen = pilot.choose(actions);
     if (chosen.kind === "pass") {
       const result = passPriority(state);
@@ -208,4 +211,15 @@ function playGame(seed, kinds, {onDecision} = {}) {
   ok(true, "and the rules accept the declaration");
 }
 
+ok(quick > 1000, `at ${quick} of its passes the quick check said it would pass whatever the board, and every time its full choice passed`);
+/* And never for what it takes: each kind of action it may choose keeps the quick check from saying "pass". */
+{
+  const quickly = housePilot({seat: 0, cards});
+  const pass = {kind: "pass"}, plain = {kind: "activate", objectId: 3, label: "Goblin Den"}, mana = {kind: "activate-mana", objectId: 4};
+  ok(quickly.passes([pass, plain, mana], 1), "with only a plain ability and mana on offer, the stack in use: a certain pass");
+  ok(!quickly.passes([pass, mana], 0), "mana with the stack empty: not certain (it may tap for a spell in its main phase)");
+  for (const [what, action] of [["a land", {kind: "play-land", objectId: 5}], ["a spell", {kind: "cast", objectId: 6, label: "Shock"}],
+    ["a face-down card to turn up", {kind: "turn-face-up", objectId: 7}], ["a loyalty ability", {kind: "activate", objectId: 8, loyalty: -1}]])
+    ok(!quickly.passes([pass, plain, action], 1), `${what} on offer: not a certain pass, so its full choice is worked out`);
+}
 console.log(`engine-house-pilot: ${checks} checks passed — the house pilot sees only its seat, draws nothing it cannot see, replays exactly, finishes 100 games, and beats random play (${measured.join("; ")}).`);

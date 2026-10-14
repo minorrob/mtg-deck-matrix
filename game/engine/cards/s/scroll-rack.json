@@ -1,0 +1,66 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Scroll Rack",
+    "oracleId": "648bd03d-247e-4d6f-87a9-12a67688cbf5",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{1}, {T}: Exile any number of cards from your hand face down. Put that many cards from the top of your library into your hand. Then look at the exiled cards and put them on top of your library in any order.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{1}, {T}: Exile any number of cards from your hand face down. Put that many cards from the top of your library into your hand. Then look at the exiled cards and put them on top of your library in any order.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [],
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "hand",
+          "count": 99,
+          "upTo": true,
+          "to": "stay",
+          "remember": true
+        },
+        {
+          "effect": "moveZone",
+          "targets": "remembered",
+          "to": "exile",
+          "faceDown": true,
+          "look": true,
+          "remember": true
+        },
+        {
+          "effect": "moveZone",
+          "fromTop": {
+            "rememberedCount": true
+          },
+          "to": "hand"
+        },
+        {
+          "effect": "chooseCard",
+          "zone": "exile",
+          "among": "remembered",
+          "count": 99,
+          "to": "top"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Faerie Mastermind",
+    "oracleId": "a984db23-40ea-428d-829f-e944267280f8",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Faerie",
+      "Rogue"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Flash\nFlying\nWhenever an opponent draws their second card each turn, you draw a card.\n{3}{U}: Each player draws a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flash",
+      "keyword": "flash"
+    },
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever an opponent draws their second card each turn, you draw a card.",
+      "trigger": {
+        "on": "drawn",
+        "drawer": "opponent",
+        "nthThisTurn": 2
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{3}{U}: Each player draws a card.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}{U}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "who": "each",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

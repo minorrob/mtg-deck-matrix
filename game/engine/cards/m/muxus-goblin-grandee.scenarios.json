@@ -1,0 +1,266 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Muxus, Goblin Grandee",
+  "fixtures": {
+    "Goblin Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Goblin Scout": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin",
+        "Scout"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Goblin Giant": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin",
+        "Giant"
+      ],
+      "manaCost": "{4}{R}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 6,
+      "toughness": 6
+    },
+    "Goblin Banner": {
+      "types": [
+        "Kindred",
+        "Enchantment"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ]
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters: the top six revealed, the Goblin Pal and Goblin Scout onto the battlefield; the 6-mana Goblin, the Bear, the Banner and the Forest to the bottom",
+      "library": [
+        "Goblin Pal",
+        "Bear",
+        "Goblin Giant",
+        "Goblin Scout",
+        "Goblin Banner",
+        "Forest",
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Muxus, Goblin Grandee"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Muxus, Goblin Grandee"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Goblin Pal",
+                  "Goblin Scout"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Goblin Pal",
+            "Goblin Scout"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "event": "GameEventCardRevealed"
+            },
+            {
+              "seat": 0,
+              "zone": "library",
+              "count": 18
+            },
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": []
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Mountain",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Muxus, Goblin Grandee",
+            "Goblin Pal",
+            "Goblin Scout"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 17
+        }
+      ]
+    },
+    {
+      "name": "It attacks with two other Goblins beside it -- a creature and a kindred Banner -- and Maya's Goblin not counted: a 6/6",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Muxus, Goblin Grandee",
+            "Goblin Pal",
+            "Goblin Banner"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Goblin Scout"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Muxus, Goblin Grandee"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Muxus, Goblin Grandee",
+                "power": 6,
+                "toughness": 6
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 34
+        }
+      ]
+    }
+  ]
+}

@@ -41,7 +41,7 @@
 import {conditionHolds} from "../script/condition.mjs";
 import {isCounted, amountOf} from "../script/amount.mjs";
 import {chosenFor} from "../script/chosen.mjs";
-import {hasSubtype, everyCreatureType} from "../keywords/types.mjs";
+import {hasSubtype, everyCreatureType, isLandType, isCreatureType, isPlaneswalkerType, isEnchantmentType, BASIC_LAND_MANA} from "../keywords/types.mjs";
 
 /** The seven layers of CR 613.1, in order. */
 export const LAYERS = Object.freeze([1, 2, 3, 4, 5, 6, 7]);
@@ -56,7 +56,9 @@ const SUBLAYERS = Object.freeze(["a", "b", "c", "d", "e"]);
    old as the permanent. The ones the engine plays. */
 const KEYWORD_COUNTERS = Object.freeze({"flying": "Flying", "first strike": "First Strike", "double strike": "Double Strike", "deathtouch": "Deathtouch",
   "haste": "Haste", "hexproof": "Hexproof", "indestructible": "Indestructible", "lifelink": "Lifelink", "menace": "Menace", "reach": "Reach",
-  "trample": "Trample", "vigilance": "Vigilance"});
+  "trample": "Trample", "vigilance": "Vigilance",
+  /* A shadow counter (Minas Morgul, Dark Fortress; CR 122.1b, 702.28): shadow, keywords/combat.mjs. */
+  "shadow": "Shadow"});
 const counterKeywords = (counters) => Object.entries(counters ?? {}).filter(([kind, n]) => n > 0 && KEYWORD_COUNTERS[kind]).map(([kind]) => KEYWORD_COUNTERS[kind]);
 export const isKeywordCounter = (kind) => Boolean(KEYWORD_COUNTERS[kind]);
 /* The keywords an object's counters give it, each with its counter's timestamp. */
@@ -100,7 +102,7 @@ function printed(state, id) {
    cannot ask what they are still deriving. Anything else would be ignored, and a static would affect more than it says:
    the card compiler refuses it (cards/index.mjs). */
 export const LAYER_AFFECTS_KEYS = Object.freeze(["anyOf", "what", "ids", "types", "subtypes", "supertypes", "controller", "token", "another", "self", "attachedBy", "colors", "colorless", "countersAtLeast", "tapped", "counters",
-  "keywords"]);
+  "keywords", "hasDealtDamage", "hasDealtCombatDamage", "attacking"]);
 
 function affects(state, effect, current, sourceController) {
   const rule = effect.affects ?? {};
@@ -111,6 +113,9 @@ function affects(state, effect, current, sourceController) {
     return anyOf.some((one) => affects(state, {...effect, affects: {...shared, ...one}}, current, sourceController));
   }
   if (rule.ids && !rule.ids.includes(current.id)) return false;
+  /* "For as long as that land has a blight counter on it" (Ultima, Origin of Oblivion; CR 611.2b): an effect's object while
+     it has a counter of that kind -- and once it has none, no longer (rules/sba.mjs ends it for good, endCounterDurations). */
+  if (effect.whileCounter && !(((current.counters ?? {})[effect.whileCounter] ?? 0) > 0)) return false;
   if (rule.types && !rule.types.every((type) => current.types.includes(type))) return false;
   if (rule.controller === "you" && current.controller !== sourceController) return false;
   if (rule.controller === "opponent" && current.controller === sourceController) return false;
@@ -139,6 +144,13 @@ function affects(state, effect, current, sourceController) {
     : ((current.counters ?? {})[rule.counters] ?? 0) > 0)) return false;
   /* "Other tapped legendary creatures you control have indestructible" (The Seriema): tapped as it is, which no layer changes. */
   if (rule.tapped !== undefined && (state.objects[current.id]?.tapped === true) !== rule.tapped) return false;
+  /* "Ruric Thar has hexproof as long as they haven't dealt combat damage yet": whether this object has dealt damage, or
+     combat damage, as the selector grammar reads it (script/filter.mjs) -- a fact of the game, which no layer changes. */
+  if (rule.hasDealtDamage !== undefined && (state.objects[current.id]?.hasDealtDamage === true) !== rule.hasDealtDamage) return false;
+  if (rule.hasDealtCombatDamage !== undefined && (state.objects[current.id]?.hasDealtCombatDamage === true) !== rule.hasDealtCombatDamage) return false;
+  /* "Attacking creatures you control get +1/+0" (Goblin Oriflamme): in this combat's attacks, declared or put onto the
+     battlefield attacking (CR 508.4) -- read off the combat, which no layer changes; over at the end of combat (CR 511.3). */
+  if (rule.attacking === true && !(state.combat?.attacks ?? []).some((attack) => attack.attacker === current.id)) return false;
   /* "Creatures you control with toxic have lifelink" (Skrelv's Hive): its keywords as the derivation has them so far -- an
      effect that gives or takes the keyword is one this depends on (CR 613.8a; dependsOn asks, and orders them). */
   if (rule.keywords && !rule.keywords.every((word) => (current.keywords ?? []).includes(word))) return false;
@@ -153,9 +165,30 @@ function applyEffect(current, effect) {
   if (Number.isInteger(change.controller)) current.controller = change.controller;
   /* CR 613.1d: "in addition to its other types" adds; setTypes replaces. */
   if (change.addTypes) for (const type of change.addTypes) if (!current.types.includes(type)) current.types.push(type);
+  /* And subtypes "in addition to its other types" (CR 205.1b; effects/permanents.mjs, animate's `subtypes`). */
+  if (change.addSubtypes) for (const subtype of change.addSubtypes) if (!current.subtypes.includes(subtype)) current.subtypes.push(subtype);
   if (change.setTypes) current.types = [...change.setTypes];
+  /* "It loses all other ... card types" (Darksteel Mutation; wave 4c, k2): an object has only the subtypes of the card types it
+     has (CR 205.3d) -- a land's, a planeswalker's or an enchantment's subtypes go with that type (a Dryad Arbor's Forest, an
+     animated Gideon's Gideon), a creature's go once it is no creature (and no kindred); any other kept, an Equipment's among
+     them (the card's ruling). `correspondingSubtypes`, after the types are set. */
+  if (change.correspondingSubtypes === true) {
+    const has = (type) => current.types.includes(type);
+    current.subtypes = current.subtypes.filter((subtype) => !((isLandType(subtype) && !has("Land")) || (isPlaneswalkerType(subtype) && !has("Planeswalker"))
+      || (isEnchantmentType(subtype) && !has("Enchantment")) || (isCreatureType(subtype) && !has("Creature") && !has("Kindred"))));
+    if (!has("Creature") && !has("Kindred")) current.everyCreatureType = false;
+  }
   /* "Enchanted permanent is a colorless Forest land" (Song of the Dryads): its subtypes set, every other one lost (CR 205.1b). */
   if (change.setSubtypes) { current.subtypes = [...change.setSubtypes]; current.everyCreatureType = false; }
+  /* "Becomes a green Elk creature" (Oko, Thief of Crowns), "is a Turtle" (Retro-Mutation): its creature types set, and only
+     those -- each other subtype kept, an Elked Food still a Food (CR 205.1a: a set subtype replaces those of its own set);
+     a changeling's every creature type among those replaced. */
+  if (change.setCreatureTypes) {
+    current.subtypes = [...current.subtypes.filter((subtype) => !isCreatureType(subtype)), ...change.setCreatureTypes];
+    current.everyCreatureType = false;
+  }
+  /* "It loses all land types" (Ultima, Origin of Oblivion; CR 205.3i): every land type taken away, the other subtypes kept. */
+  if (change.removeLandTypes === true) current.subtypes = current.subtypes.filter((subtype) => !isLandType(subtype));
   /* "It's not a creature" (impending, CR 702.176a): that type taken away, the rest kept. */
   if (change.removeTypes) current.types = current.types.filter((type) => !change.removeTypes.includes(type));
   if (change.setColors) current.colors = [...change.setColors];
@@ -173,7 +206,18 @@ function applyEffect(current, effect) {
      abilities it is -- so two grants of one ability are two abilities. */
   if (change.addAbilities) for (const ability of change.addAbilities)
     current.granted.push({...ability, id: `granted:${effect.timestamp ?? ""}:${effect.id ?? ""}:${ability.id}`});
-  if (change.addKeywords) for (const word of change.addKeywords) if (!current.keywords.includes(word)) current.keywords.push(word);
+  /* A keyword given by an effect older than one that took that keyword away is not had: a pump's keywords are applied with its
+     power in layer 7c here, and are layer 6's by the rules (CR 613.1f), where timestamps order them (CR 613.7). */
+  if (change.addKeywords) for (const word of change.addKeywords)
+    if (!current.keywords.includes(word) && !(current.keywordsLost ?? []).some((lost) => lost.words.includes(word) && lost.timestamp > (effect.timestamp ?? 0))) current.keywords.push(word);
+  /* "Permanents your opponents control lose hexproof and indestructible until end of turn" (Shadowspear; CR 613.1f): those
+     keywords taken away -- printed, given before it, or a counter's put on before it -- and one given after it, in timestamp
+     order (CR 613.7), or a keyword counter put on since (above), it has again (the card's rulings). */
+  if (change.removeKeywords) {
+    const since = new Set((current.counterKeywords ?? []).filter(([, stamp]) => stamp > (effect.timestamp ?? 0)).map(([word]) => word));
+    current.keywords = current.keywords.filter((word) => since.has(word) || !change.removeKeywords.includes(word));
+    current.keywordsLost = [...(current.keywordsLost ?? []), {words: [...change.removeKeywords], timestamp: effect.timestamp ?? 0}];
+  }
   if (Number.isInteger(change.setPower)) current.power = change.setPower;
   if (Number.isInteger(change.setToughness)) current.toughness = change.setToughness;
   if (Number.isInteger(change.power) && current.power !== null) current.power += change.power;
@@ -222,6 +266,20 @@ function topCardGrant(state, holder, ability) {
   const {topCardAbilities: _top, ...rest} = ability.apply;
   return {...ability, apply: {...rest, addAbilities: (card.abilities ?? []).filter((a) => a.kind === "activated" || a.kind === "mana")}};
 }
+/* "THRANDUIL HAS ALL ACTIVATED ABILITIES OF ALL ELF CARDS IN YOUR GRAVEYARD" (Thranduil, the Elvenking; CR 613.1f, layer 6):
+   `apply.graveyardAbilities`, what those cards must be (their subtypes, a changeling card's every creature type among them,
+   CR 702.73a) -- read from the holder's controller's graveyard as it now is, so the abilities come and go with the cards.
+   Each card's activated abilities, mana abilities among them (CR 605.1a), given as granted abilities are, each named by its
+   card as well, so two cards' alike abilities are two; one that works only from a graveyard is given and never offered on
+   the battlefield (rules/actions.mjs). No such card, and the static gives nothing. */
+function graveyardGrant(state, holder, ability) {
+  const wanted = ability.apply.graveyardAbilities?.subtypes ?? [];
+  const cards = (state.zones.graveyard?.[holder.controller] ?? []).filter((id) => state.objects[id]
+    && wanted.every((t) => hasSubtype(state.objects[id].subtypes ?? [], everyCreatureType(state.objects[id].keywords), t)));
+  const {graveyardAbilities: _graveyard, ...rest} = ability.apply;
+  return {...ability, apply: {...rest, addAbilities: cards.flatMap((id) => (state.objects[id].abilities ?? [])
+    .filter((a) => a.kind === "activated" || a.kind === "mana").map((a) => ({...a, id: `${id}:${a.id}`})))}};
+}
 
 function gatherEffects(state) {
   const found = [];
@@ -240,7 +298,8 @@ function gatherEffects(state) {
       /* One that works from a graveyard does not work here (CR 113.6). */
       if (ability.worksFrom === "graveyard") continue;
       if (!holdsNow(state, ability.condition, {controller: holder.controller, source: id})) continue;
-      const given = ability.apply?.topCardAbilities !== undefined ? topCardGrant(state, holder, ability) : ability;
+      const given = ability.apply?.topCardAbilities !== undefined ? topCardGrant(state, holder, ability)
+        : ability.apply?.graveyardAbilities !== undefined ? graveyardGrant(state, holder, ability) : ability;
       if (given === null) continue;
       found.push({
         /* "Creatures you control of the chosen type get +1/+1", "this creature is the chosen type": its own choice. */
@@ -249,6 +308,8 @@ function gatherEffects(state) {
         sourceController: holder.controller,
         /* A static ability's timestamp is its permanent's (CR 613.7d). */
         timestamp: ability.timestamp ?? holder.timestamp,
+        /* Which of its permanent's abilities this is (partOf): one its permanent loses makes no effect from then on. */
+        partOf: partOf(id, ability),
       });
     }
   }
@@ -303,7 +364,85 @@ const canonical = (current) => JSON.stringify({
    ability's script, four per pair (by structuredClone, then a plain copy), was most of a whole game's CPU
    (engine-room-games seed 11, 2026-10-05: the review's F-2). */
 const trial = (c) => ({...c, types: [...c.types], subtypes: [...c.subtypes], colors: [...c.colors], keywords: [...c.keywords], granted: [...c.granted]});
+
+/* WHETHER A CAN DEPEND ON B AT ALL, without a trial. dependsOn below finds a dependency in one of two ways: B changes
+   whether A applies, or the two applied in either order come out different. The first needs B to write a field A's
+   `affects` reads (affects, above: types, subtypes, controller, colors, keywords -- the rest it reads off the game, which
+   a trial does not change); the second needs both to write one field with operations whose order matters (a set, a
+   removal, a switch, or a push onto a list `canonical` does not sort: subtypes, granted abilities). Neither, and every
+   trial would answer no, so none is made: a crowded board's layer 7 -- a dozen +1/+1 statics, none reading power --
+   spent most of a game's CPU proving that (the G1 pass of 2026-10-08, D4-D7 seed 3: 20 s of one person's wait). The
+   answer is the same either way; `pruneCheck` makes the trial anyway and throws if the two disagree (the suites). */
+const READS = {types: ["types"], subtypes: ["types", "subtypes"], controller: ["controller"], colors: ["colors"], colorless: ["colors"], keywords: ["keywords"]};
+const WRITES = {controller: "controller", addTypes: "types", setTypes: "types", removeTypes: "types", addSubtypes: "subtypes", setSubtypes: "subtypes", setCreatureTypes: "subtypes",
+  allCreatureTypes: "subtypes", removeLandTypes: "subtypes", setColors: "colors", removeAllAbilities: "abilities", addAbilities: "abilities", addKeywords: "abilities", setPower: "pt",
+  setToughness: "pt", power: "pt", toughness: "pt", switchPT: "pt"};
+/* Operations on one field that give the same result in either order (canonical sorts types and keywords). */
+const COMMUTING = {types: ["addTypes"], abilities: ["addKeywords"], pt: ["power", "toughness"], subtypes: ["allCreatureTypes"]};
+function readsOf(rule = {}) {
+  const fields = new Set();
+  for (const [key, value] of Object.entries(rule)) {
+    if (key === "anyOf" && Array.isArray(value)) for (const one of value) for (const f of readsOf(one)) fields.add(f);
+    for (const f of READS[key] ?? []) fields.add(f);
+  }
+  /* "Has flying" read off keywords, which "loses all abilities" and a keyword grant both write (as "abilities"). */
+  if (fields.has("keywords")) fields.add("abilities");
+  return fields;
+}
+/* An effect's reads and writes, made once per effect object (the effects are gathered once a memo). An `apply` key this
+   does not know (one applyEffect learns later) is assumed to matter: `known` false, and the trial is made. */
+const profiles = new WeakMap();
+function profileOf(effect) {
+  let profile = profiles.get(effect);
+  if (profile) return profile;
+  const writes = new Map();
+  let known = true;
+  for (const key of Object.keys(effect.apply ?? {})) {
+    const field = WRITES[key];
+    if (!field) { known = false; continue; }
+    writes.set(field, [...(writes.get(field) ?? []), key]);
+  }
+  profile = {known, reads: readsOf(effect.affects), writes};
+  profiles.set(effect, profile);
+  return profile;
+}
+const commute = (field, ops) => ops.every((op) => (COMMUTING[field] ?? []).includes(op));
+function mayDepend(a, b) {
+  const pa = profileOf(a), pb = profileOf(b);
+  if (!pa.known || !pb.known) return true;
+  for (const field of pa.reads) if (pb.writes.has(field)) return true;
+  for (const [field, opsA] of pa.writes) {
+    const opsB = pb.writes.get(field);
+    if (opsB && !commute(field, [...opsA, ...opsB])) return true;
+  }
+  return false;
+}
+/* Whether no effect in a layer can depend on another (each pair as mayDepend asks it, all at once): no effect reads a
+   field another writes, and every field two or more write is written by operations that commute. Then timestamp order is
+   the order (CR 613.7), with no pair asked. */
+function independent(effects) {
+  const writers = new Map();
+  for (const effect of effects) {
+    const profile = profileOf(effect);
+    if (!profile.known) return false;
+    for (const [field, ops] of profile.writes) writers.set(field, [...(writers.get(field) ?? []), {effect, ops}]);
+  }
+  for (const effect of effects) for (const field of profileOf(effect).reads)
+    if ((writers.get(field) ?? []).some((w) => w.effect !== effect)) return false;
+  for (const [field, list] of writers) if (list.length > 1 && !commute(field, list.flatMap((w) => w.ops))) return false;
+  return true;
+}
+let pruneCheck = false;
+
 function dependsOn(state, a, b, base, sourceOf) {
+  if (!mayDepend(a, b)) {
+    if (!pruneCheck) return false;
+    if (trialDependsOn(state, a, b, base, sourceOf)) throw new Error(`layers: mayDepend said ${a.id ?? "an effect"} cannot depend on ${b.id ?? "another"}, and a trial says it does`);
+    return false;
+  }
+  return trialDependsOn(state, a, b, base, sourceOf);
+}
+function trialDependsOn(state, a, b, base, sourceOf) {
   trials += 1;
   const withoutB = applyEffect(trial(base), a);
   const afterB = applyEffect(trial(base), b);
@@ -325,6 +464,7 @@ function dependsOn(state, a, b, base, sourceOf) {
    spent seconds there (the review's F-2). */
 function orderWithin(state, effects, base, sourceOf) {
   const byTime = [...effects].sort((x, y) => (x.timestamp ?? 0) - (y.timestamp ?? 0));
+  if (byTime.length < 2 || (!pruneCheck && independent(byTime))) return byTime;
   const out = [];
   const remaining = [...byTime];
   const index = new Map(byTime.map((effect, i) => [effect, i])), asked = new Map();
@@ -333,8 +473,10 @@ function orderWithin(state, effects, base, sourceOf) {
     if (!asked.has(key)) asked.set(key, dependsOn(state, x, y, base, sourceOf));
     return asked.get(key);
   };
+  /* Each pass places one effect at least, so a pass for each is enough. (A fixed 64 stopped there, and a layer of more
+     than 64 effects lost the rest without a word.) */
   let guard = 0;
-  while (remaining.length > 0 && guard < 64) {
+  while (remaining.length > 0 && guard <= byTime.length) {
     guard += 1;
     /* The first effect that does not depend on anything still waiting. */
     const at = remaining.findIndex((candidate) =>
@@ -382,7 +524,9 @@ export function derivingAfresh(state, fn) {
 }
 /** For the suites: turn the memo off (to compare), and how many derivations -- and dependency trials (CR 613.8a,
     `dependsOn`) -- were made since `reset`. */
-export const deriveMemo = {off(value = true) { memoOff = value; }, count() { return derivations; }, trials() { return trials; }, reset() { derivations = 0; trials = 0; }};
+export const deriveMemo = {off(value = true) { memoOff = value; }, count() { return derivations; }, trials() { return trials; }, reset() { derivations = 0; trials = 0; },
+  /* Make every trial mayDepend skips, and throw where the two would disagree (the suites; the answer is the same). */
+  checkPrune(value = true) { pruneCheck = value; }};
 const copy = (v) => (Array.isArray(v) ? v.map(copy) : v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, copy(x)])) : v);
 
 /**
@@ -404,25 +548,102 @@ export function characteristicsOf(state, id) {
    "power equal to the number of cards in your hand") changes only those (`counted`), and counting asks about the whole
    board again; who controls an object, what it is and what it has are derived with every effect but its counted
    amounts. A derivation with them answers a question without. */
-function derived(state, id, counts = true) {
+function derived(state, id, counts = true, through = 7) {
   if (!state.objects[id]) throw new Error(`There is no object ${id} to describe`);
-  if (memo === null && !memoOff) return deriving(state, () => derived(state, id, counts));
-  const key = memo !== null && memo.state === state ? `${id}|${conditioning > 0 ? 1 : 0}|${counting > 0 ? 1 : 0}` : null;
+  if (memo === null && !memoOff) return deriving(state, () => derived(state, id, counts, through));
+  /* `through`: the last layer derived -- 6, for which of its own abilities a permanent has lost (lostBy). */
+  const key = memo !== null && memo.state === state ? `${id}|${conditioning > 0 ? 1 : 0}|${counting > 0 ? 1 : 0}${through < 7 ? `|${through}` : ""}` : null;
   const known = key !== null ? memo.characteristics.get(key) : undefined;
   if (known && (known.counts || !counts)) return known.current;
-  const current = derive(state, id, counts);
+  const current = derive(state, id, counts, through);
   if (key !== null) memo.characteristics.set(key, {counts, current});
   return current;
 }
 
-function derive(state, id, counts = true) {
+/* WHICH ABILITY A STATIC'S EFFECT IS PART OF: its permanent and its words. A definition writes an ability that works in
+   several layers as statics of one text, a part for each layer -- Eldrazi Monument's +1/+1 (7c) and flying (6), Song of
+   the Dryads in layers 4, 5 and 6 -- so its parts are known as one ability (CR 613.6). */
+const partOf = (id, ability) => `${id}|${ability.text ?? ability.id ?? ""}`;
+
+/* WHO MAY HAVE LOST THEIR ABILITIES (CR 613.1f): the permanents an effect that takes abilities away can reach, from what it
+   affects -- the objects it names, fixed as it began (Oko's +1, Abigale, Day of Black Sun, Retched Wretch), or what its
+   Aura enchants (Song of the Dryads, Infinite Coursework) -- or every one (`true`) when it says a kind of permanent. Null
+   when nothing does: then each permanent's abilities are its own (an effect gives activated, triggered and keyword
+   abilities only, cards/index.mjs GRANTABLE: never a static or a replacement), and nothing is derived to know it. A set to
+   look in, never an answer: each one in it is derived. */
+function losersAmong(state, effects) {
+  let ids = null;
+  for (const {apply, affects: rule, sourceId} of effects) {
+    if (!apply?.removeAllAbilities) continue;
+    ids ??= new Set();
+    if (Array.isArray(rule?.ids)) { for (const id of rule.ids) ids.add(id); continue; }
+    if (rule?.attachedBy === "self") { const host = state.objects[sourceId]?.attachedTo; if (host !== null && host !== undefined) ids.add(host); continue; }
+    return true;
+  }
+  return ids;
+}
+
+/* THE ABILITIES THAT TOOK A PERMANENT'S OWN AWAY (CR 613.1f): its derivation through layer 6, which is all that decides it,
+   each by `partOf` (derive keeps them beside the derivation, in `removals`, so no answer about an object changes shape).
+   Asked again while it is being asked -- a permanent whose own ability takes its abilities away (Humility made a creature)
+   -- and the answer is none but that one: an effect does not depend on itself (CR 613.8a), and keeps applying though its
+   ability is removed by it (CR 613.6). Two permanents each taking the other's abilities, a dependency loop (CR 613.8b),
+   is a board no definition can make: only an Aura or an effect fixed on its objects takes abilities away. */
+const losing = new Set(), removals = new WeakMap();
+function lostBy(state, id) {
+  if (losing.has(id)) return [];
+  losing.add(id);
+  try { return removals.get(derived(state, id, false, 6)) ?? []; } finally { losing.delete(id); }
+}
+
+/* A STATIC ABILITY ITS PERMANENT HAS LOST (CR 613.1f): taken away in layer 6 by another ability, it makes no effect in layers
+   6 and 7 -- whatever the timestamps, since its effect depends on the one that takes it away (CR 613.8a: applying that one
+   changes its existence). Song of the Dryads on an Elf lord: the other Elves are no longer pumped. Unless its effect began
+   to apply to this object in an earlier layer (`begun`): then it carries on in the later ones (CR 613.6) -- a creature that
+   makes lands 1/1 creatures (layers 4 and 7b) still makes them 1/1 once it has lost its abilities. An effect a spell or an
+   ability left (`state.effects`) is no ability of a permanent's, and is never lost. */
+function lostEffect(state, effect, begun, losers) {
+  if (effect.partOf === undefined || begun.has(effect.partOf)) return false;
+  if (losers !== true && !losers.has(effect.sourceId)) return false;
+  return lostBy(state, effect.sourceId).some((part) => part !== effect.partOf);
+}
+
+/* A BASIC LAND TYPE AN EFFECT GAVE (CR 305.7): "lands you control are every basic land type in addition to their other types"
+   (Dryad of the Ilysian Grove), "each land is a Swamp in addition to its other land types" (Urborg, Tomb of Yawgmoth; and
+   Yavimaya, Cradle of Growth's Forests) -- each one the object does not print brings that type's intrinsic mana ability, "{T}: Add
+   [its mana]" (CR 305.6), given with the type in layer 4, so an effect that takes abilities away in layer 6 takes it too
+   (CR 613.1f). A type it prints has its ability among its own already: a basic land's, a dual land's written out. Once a
+   type, however many effects give it: a subtype is had once (applyEffect). */
+function intrinsicMana(state, id, current) {
+  /* An object with the land card type and a basic land type has it (CR 305.6): a nonland given one has none. */
+  if (!current.types.includes("Land")) return;
+  const own = state.objects[id].subtypes ?? [];
+  for (const type of current.subtypes) {
+    const color = BASIC_LAND_MANA[type];
+    if (!color || own.includes(type)) continue;
+    current.granted.push({id: `intrinsic:${type}`, kind: "mana", tapSelf: true, produces: {[color]: 1}, text: `{T}: Add {${color}}.`});
+  }
+}
+
+function derive(state, id, counts = true, through = 7) {
   derivations += 1;
   let current = printed(state, id);
   const effects = allEffects(state);
   const sourceOf = (effect) => effect.sourceController;
+  const losers = losersAmong(state, effects);
+  /* The abilities whose effects have begun to apply to this object (CR 613.6, lostEffect), and those that took its own
+     abilities away (lostBy) -- undefined for an effect a spell or an ability left, which is no permanent's ability. */
+  const begun = new Set(), removedBy = [];
+  const applied = (effect) => {
+    if (effect.partOf !== undefined) begun.add(effect.partOf);
+    if (effect.apply?.removeAllAbilities) removedBy.push(effect.partOf);
+    return applyEffect(current, effect);
+  };
 
   for (const layer of LAYERS) {
-    const inLayer = effects.filter((effect) => (effect.layer ?? 0) === layer);
+    if (layer > through) break;
+    let inLayer = effects.filter((effect) => (effect.layer ?? 0) === layer);
+    if (layer >= 6 && losers !== null) inLayer = inLayer.filter((effect) => !lostEffect(state, effect, begun, losers));
     /* Layer 7 always runs, even with no effects in it: counters are sublayer 7d and they are not
        an effect, they are on the object. Skipping the layer because nothing else was in it left
        every counter on every board doing nothing. */
@@ -430,14 +651,18 @@ function derive(state, id, counts = true) {
 
     if (layer !== 7) {
       for (const effect of orderWithin(state, inLayer, current, sourceOf)) {
-        if (affects(state, effect, current, sourceOf(effect))) current = applyEffect(current, effect);
+        if (affects(state, effect, current, sourceOf(effect))) current = applied(effect);
       }
+      if (layer === 4) intrinsicMana(state, id, current);
       continue;
     }
 
     /* CR 613.4: layer 7 runs sublayer by sublayer, and counters are 7d — after anything that sets
        power and toughness, and after anything that modifies them. */
     for (const sublayer of SUBLAYERS) {
+      /* ITS BASE POWER AND TOUGHNESS (CR 208.4b): what characteristic-defining abilities and setting effects made them, before
+         anything that modifies them -- "each with power greater than its base power" (Kutzil, Malamet Exemplar). */
+      if (sublayer === "c") { current.basePower = current.power; current.baseToughness = current.toughness; }
       if (sublayer === "d") {
         /* +1/+1 and -1/-1, and every other "+X/+Y" counter (CR 122.1a): the -0/-1 counters on Wall of Roots. */
         for (const [kind, n] of Object.entries(current.counters ?? {})) {
@@ -457,6 +682,7 @@ function derive(state, id, counts = true) {
     }
   }
 
+  removals.set(current, removedBy);
   return current;
 }
 
@@ -484,7 +710,9 @@ const heldAbilities = (object, current) => [...(current.lostAbilities ? [] : obj
    graveyard (where one may work from, allEffects): when none does, a permanent's abilities are its own, and nothing need
    be derived to read them. */
 function abilitiesChange(state) {
-  const changes = (apply) => Boolean(apply && (apply.addAbilities || apply.removeAllAbilities || apply.topCardAbilities));
+  /* And a basic land type given, which brings its mana ability (CR 305.7, intrinsicMana). */
+  const changes = (apply) => Boolean(apply && (apply.addAbilities || apply.removeAllAbilities || apply.topCardAbilities || apply.graveyardAbilities
+    || [...(apply.addSubtypes ?? []), ...(apply.setSubtypes ?? [])].some((type) => BASIC_LAND_MANA[type])));
   if ((state.effects ?? []).some((effect) => changes(effect.apply))) return true;
   const holders = [...state.zones.battlefield, ...(state.zones.graveyard ?? []).flat()];
   return holders.some((id) => (state.objects[id].abilities ?? []).some((ability) => ability.kind === "static" && changes(ability.apply)));
@@ -498,6 +726,46 @@ export function abilitiesOf(state, id) {
   const object = state.objects[id];
   if (object.zone !== "battlefield" || !abilitiesChange(state)) return object.abilities ?? [];
   return heldAbilities(object, characteristicsOf(state, id));
+}
+
+/** Permanents' abilities for one look at a board that does not change while it is read (rules/trigger.mjs, collectTriggers):
+    whether any effect may give or take abilities is asked once, not once a permanent, and each permanent's abilities are
+    read once. With a thousand Goblin tokens on the battlefield (Krenko, Mob Boss and Intruder Alarm; G1, 2026-10-08)
+    asking it for each was a million reads for every trigger that resolved. */
+export function abilitiesReader(state) {
+  const change = abilitiesChange(state), read = new Map();
+  return (id) => {
+    const object = state.objects[id];
+    if (object.zone !== "battlefield" || !change) return object.abilities ?? [];
+    if (!read.has(id)) read.set(id, heldAbilities(object, characteristicsOf(state, id)));
+    return read.get(id);
+  };
+}
+
+/**
+ * WHAT A PERMANENT'S RULES ARE READ FROM (CR 613.1f with 604.1 and 614.12): the abilities it has after layer 6, so one that
+ * has lost all its abilities generates no rule of its own -- no cost change (Marauding Raptor under Song of the Dryads), no
+ * "can't attack", no replacement effect. `staticAbilities(state)` is a reader, `(id) => abilities`, for one look at a board
+ * that does not change while it is read: rules/statics.mjs, rules/replacement.mjs and the others ask it for each permanent.
+ * They run constantly, so a permanent no effect can have taken abilities from (losersAmong, from what is in play without
+ * its conditions: a set to look in) is read as it is, with nothing derived, and inside a question that opened a memo
+ * (`deriving`) the reader and what it has read are shared by the question. Anywhere but the battlefield, the card's own.
+ */
+export const staticAbilities = (state) => onceAQuestion(state, "static-abilities", () => staticReader(state));
+function staticReader(state) {
+  const removers = [...(state.effects ?? [])];
+  const take = (id, here) => { for (const ability of state.objects[id].abilities ?? [])
+    if (ability.kind === "static" && (ability.worksFrom === "graveyard") === here) removers.push({apply: ability.apply, affects: ability.affects, sourceId: id}); };
+  /* A permanent's statics, and a card's that work from its graveyard (CR 113.6b; gatherEffects). */
+  for (const id of state.zones.battlefield) take(id, false);
+  for (const id of (state.zones.graveyard ?? []).flat()) take(id, true);
+  const losers = losersAmong(state, removers), read = new Map();
+  return (id) => {
+    const object = state.objects[id];
+    if (object.zone !== "battlefield" || losers === null || (losers !== true && !losers.has(id))) return object.abilities ?? [];
+    if (!read.has(id)) read.set(id, heldAbilities(object, characteristicsOf(state, id)));
+    return read.get(id);
+  };
 }
 
 /**
@@ -554,10 +822,12 @@ export function lastKnown(state, id) {
     /* Its abilities as it last was, the ones given it included: "when this creature dies" given by Feign Death. */
     abilities: structuredClone(heldAbilities(object, current)),
     /* Its copiable values (CR 707.2), when they were not its card's own -- a copy of something else, or face down (708.2a) --
-       for "create a token that's a copy of that creature" (Hofri Ghostforge; effects/permanents.mjs, `asItLastWas`). */
-    ...(object.uncopied || object.faceDown === true ? {copiable: Object.fromEntries(COPIED_KEYS.filter((key) => object[key] !== undefined).map((key) => [key, structuredClone(object[key])]))} : {}),
+       for "create a token that's a copy of that creature" (Hofri Ghostforge; effects/permanents.mjs, `asItLastWas`). And
+       whatever they are, while an ability of its own waits on the stack, which outlives it (CR 113.7a): "create a token
+       that's a copy of this creature" (Colorstorm Stallion's Opus; effects/permanents.mjs, copyPermanent's `lastKnown`). */
+    ...(object.uncopied || object.faceDown === true || state.stack.some((entry) => entry.cardId === id) ? {copiable: Object.fromEntries(COPIED_KEYS.filter((key) => object[key] !== undefined).map((key) => [key, structuredClone(object[key])]))} : {}),
   };
 }
 /* The copiable values a permanent shows (effects/permanents.mjs, COPY_KEYS: the same list, kept here to keep the layers free
    of the effects). */
-const COPIED_KEYS = Object.freeze(["card", "manaCost", "types", "subtypes", "supertypes", "colors", "keywords", "abilities", "power", "toughness", "spell", "enchant"]);
+const COPIED_KEYS = Object.freeze(["card", "manaCost", "types", "subtypes", "supertypes", "colors", "keywords", "abilities", "power", "toughness", "loyalty", "spell", "enchant"]);

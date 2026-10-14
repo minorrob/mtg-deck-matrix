@@ -1,0 +1,128 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "The World Tree",
+    "oracleId": "3437d504-bf62-4c27-b15f-f6330182ff7e",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "B",
+      "G",
+      "R",
+      "U",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This land enters tapped.\n{T}: Add {G}.\nAs long as you control six or more lands, lands you control have \"{T}: Add one mana of any color.\"\n{W}{W}{U}{U}{B}{B}{R}{R}{G}{G}, {T}, Sacrifice this land: Search your library for any number of God cards, put them onto the battlefield, then shuffle.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This land enters tapped.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersTapped": true
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {G}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "G": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "As long as you control six or more lands, lands you control have \"{T}: Add one mana of any color.\"",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Land"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "addAbilities": [
+          {
+            "kind": "activated",
+            "text": "{T}: Add one mana of any color.",
+            "cost": [
+              {
+                "atom": "{T}"
+              }
+            ],
+            "effects": [
+              {
+                "effect": "addMana",
+                "anyColor": true
+              }
+            ]
+          }
+        ]
+      },
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "types": [
+            "Land"
+          ],
+          "controller": "you"
+        },
+        "atLeast": 6
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{W}{W}{U}{U}{B}{B}{R}{R}{G}{G}, {T}, Sacrifice this land: Search your library for any number of God cards, put them onto the battlefield, then shuffle.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{W}{W}{U}{U}{B}{B}{R}{R}{G}{G}"
+        },
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "subtypes": [
+              "God"
+            ]
+          },
+          "count": 99,
+          "upTo": true,
+          "to": "battlefield",
+          "shuffle": true
+        }
+      ]
+    }
+  ]
+}

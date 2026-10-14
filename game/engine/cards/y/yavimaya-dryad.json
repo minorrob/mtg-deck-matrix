@@ -1,0 +1,66 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Yavimaya Dryad",
+    "oracleId": "6d1a1ea3-6d83-4bee-a7fe-0ddd0f3019cf",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dryad"
+    ],
+    "manaCost": "{1}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Forestwalk (This creature can't be blocked as long as defending player controls a Forest.)\nWhen this creature enters, you may search your library for a Forest card, put it onto the battlefield tapped under target player's control, then shuffle.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Forestwalk (This creature can't be blocked as long as defending player controls a Forest.)",
+      "keyword": "forestwalk"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, you may search your library for a Forest card, put it onto the battlefield tapped under target player's control, then shuffle.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Land"
+            ],
+            "subtypes": [
+              "Forest"
+            ]
+          },
+          "to": "battlefield",
+          "tapped": true,
+          "shuffle": true,
+          "controller": {
+            "target": 0
+          }
+        }
+      ],
+      "optional": true,
+      "targets": [
+        {
+          "what": "player",
+          "who": "any"
+        }
+      ]
+    }
+  ]
+}

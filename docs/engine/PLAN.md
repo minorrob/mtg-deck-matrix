@@ -637,25 +637,40 @@ Tier 0 (the seven decks), grouped, with the Forge ruler in parentheses only to s
   top N, choose, rest to bottom or graveyard), `surveil`, `scry`, `peekAndReveal`, `sacrifice`, `sacrificeAll`,
   `destroy`, `destroyAll`, `exileUntil`, `returnToHand`, `play` (cast or play without paying), `discover`, `digUntil`
   (from the top until a card fits; added in M4 phase 3, batch 62), `manifest` (the top card of a library onto the
-  battlefield face down, a nameless 2/2, CR 701.40; claude/cards-faces-class, 2026-10-06).
+  battlefield face down, a nameless 2/2, CR 701.40; claude/cards-faces-class, 2026-10-06), `explore` (the top card
+  revealed: a land to its hand, else a +1/+1 counter and the card may go to the graveyard, CR 701.44; a Map token's;
+  Train E, 2026-10-12), `rearrangeTop` (the top N cards of a library looked at and put back in any order, the looker's
+  choice; Ponder, Sensei's Divining Top; wave 4b, 2026-10-12).
 - Mana and cost: `addMana`, `addManaReflected`, `tap`, `untap`, `untapAll`, `costReduction`, `alternativeCost`.
 - Life and damage: `gainLife`, `loseLife`, `dealDamage`, `damageEach`, `damageAll`, `exchangeLife`, `fight`.
 - Counters: `putCounter`, `putCounterAll`, `removeCounter`, `proliferate`, `multiplyCounters`, `moveCounters`,
   `replaceCounters`, `amass`, `poison` (a player's poison counters; added in M4 phase 3, batch 64), `winGame` ("you win
-  the game", CR 104.2b; batch 68), `goad` (CR 701.15; batch 69), `empowerJace` (loyalty counters on a Jace token you
-  control, made first if you control none; the live-game plan of 2026-10-04).
+  the game", CR 104.2b; batch 68), `loseGame` ("that player loses the game", CR 104.3e: they leave the game at once;
+  Train C phase 2, 2026-10-11), `goad` (CR 701.15; batch 69), `empowerJace` (loyalty counters on a Jace token you
+  control, made first if you control none; the live-game plan of 2026-10-04), `becomeMonarch` ("you become the monarch",
+  CR 725: a designation of the game, one player's at a time, with two triggered abilities of the game's own; Train E,
+  2026-10-12), `rollDie` ("roll a d20", CR 706: one die of a number of sides, its result from the game's random stream and
+  counted by what follows; Ancient Copper Dragon, wave 4c, 2026-10-12).
 - Permanents: `createToken`, `copyPermanent`, `becomeCopy`, `earthbend` (added in M4 phase 3, batch 65), `animate`, `animateAll`, `attach`, `gainControl`, `setState` (transform,
-  flip), `phaseOut`.
+  flip), `phaseOut`, `exchangeControl` (control of two permanents exchanged, CR 701.12b: both still there and controlled by
+  different players, or nothing happens; Train D, 2026-10-12), `incubate` (an Incubator token, a double-faced token that
+  transforms for {2} into a 0/0 Phyrexian artifact creature, entering with N +1/+1 counters, CR 701.53, 111.10i; Train E,
+  2026-10-12).
 - Modifiers: `pump`, `pumpAll`, `alterAttribute`, `effectUntil` (a temporary static), `grantKeyword`, `regenerate` (a regeneration shield, CR 701.19a; added in M4 phase 3, batch 28).
 - Flow: `modal` (Charm), `sequence`, `repeatFor` (RepeatEach), `branch`, `delayedTrigger`, `immediateTrigger`,
-  `counterSpell`, `copySpell`, `addTurn`, `chooseCard`, `chooseType`, `genericChoice`, `twoPiles`, `connive`,
+  `counterSpell`, `copySpell`, `addTurn`, `chooseCard`, `chooseType`, `chooseColor` (a color chosen as it resolves, CR
+  105.1; Train C phase 2), `genericChoice`, `twoPiles`, `connive`,
   `investigate`, `cleanup` (end-of-effect bookkeeping, not a card-visible primitive), `addPhase` (an additional
   combat, main or beginning phase, CR 500.8; added in M4 phase 3, batch 33), `changeTargets` (a spell's single target
-  changed, CR 115.7; batch 65).
+  changed, CR 115.7; batch 65; new targets chosen, and a target changed to this creature, wave 4b), `chooseSource` ("a source of your choice", CR 609.7a: a permanent, a spell, an object
+  one on the stack refers to; Train C phase 2, 2026-10-11), `vote` (each player in turn order from you votes for one of
+  the choices, counted by choice, CR 701.38; Train C phase 2, 2026-10-11).
 - Triggers: zone change (enters, dies, leaves, exiled), phase and step, attacks, attackers declared, blocks, spell
   cast, damage dealt (and once), discarded, drawn, land played, becomes target, sacrificed, tapped for mana (added in
   M4 phase 3, batch 51; one that adds mana is a mana ability, CR 605.1b), counter added (and once), life gained, life
-  lost, token created (once), becomes monstrous, chapter (a Saga's, CR 714.2c; added in M4 phase 3, batch 60).
+  lost, token created (once), becomes monstrous, chapter (a Saga's, CR 714.2c; added in M4 phase 3, batch 60),
+  proliferated (CR 701.34a), crime committed (CR 700.13), a state trigger (CR 603.8) and transformed (CR 701.27e; all four
+  added in Train C), becomes level (a Class's, CR 716.2a; wave 4c).
 - Statics: continuous characteristic changes, combat damage by toughness, can't attack, can attack as though no
   defender, attack restriction, can't be cast, can't be blocked by, must attack, cost reduction, alternative cost,
   activate as though haste, Panharmonicon-style trigger doubling.

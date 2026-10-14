@@ -45,3 +45,6 @@ MagicCompRules*.txt
 
 # The advisor eval writes its runs here (it spends; results are Rob's, not the repository's)
 tests/ai-advise-eval/results/
+
+# Python bytecode from the batch helpers (game/tools/batch/*.py import cardlib)
+__pycache__/

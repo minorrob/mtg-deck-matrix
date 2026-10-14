@@ -96,6 +96,35 @@
       "colors": [
         "G"
       ]
+    },
+    "Tax Warden": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 2,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "a0",
+          "kind": "static",
+          "text": "Noncreature spells cost {1} more to cast.",
+          "rule": "spells-cost-more",
+          "affects": {
+            "what": "spell",
+            "nonTypes": [
+              "Creature"
+            ]
+          },
+          "amount": 1
+        }
+      ]
     }
   },
   "scenarios": [
@@ -161,6 +190,100 @@
         {
           "seat": 1,
           "tapped": "Bear"
+        }
+      ]
+    },
+    {
+      "name": "On Maya's Tax Warden: Rob's noncreature spells cost {1} more no longer -- the Grasp under it {3}{U}, then his Rock {1} (CR 613.1f, 601.2f)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Enchanted River's Grasp",
+            "Rock"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Tax Warden"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Enchanted River's Grasp",
+          "targets": [
+            {
+              "card": "Tax Warden"
+            }
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "pool": {
+                "U": 0,
+                "C": 0
+              }
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Rock"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Enchanted River's Grasp",
+            "Rock"
+          ]
         }
       ]
     }

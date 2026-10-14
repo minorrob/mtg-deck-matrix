@@ -1,0 +1,332 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "The Indomitable",
+  "fixtures": {
+    "Pirate": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Pirate"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "t-u",
+          "kind": "mana",
+          "tapSelf": true,
+          "produces": {
+            "U": 1
+          }
+        }
+      ]
+    },
+    "Skiff": {
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [
+        "Vehicle"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "abilities": [
+        {
+          "id": "t-u",
+          "kind": "mana",
+          "tapSelf": true,
+          "produces": {
+            "U": 1
+          }
+        }
+      ]
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Cub": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Three tapped Pirates: The Indomitable cast from his graveyard -- untapped, or only two tapped, they are not enough",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Pirate",
+            "Pirate",
+            "Pirate",
+            "Island",
+            "Island",
+            "Island",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "The Indomitable"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "The Indomitable"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "tap": "Pirate"
+        },
+        {
+          "tap": "Pirate"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "The Indomitable"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "tap": "Pirate"
+        },
+        {
+          "cast": "The Indomitable"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Pirate",
+            "Pirate",
+            "Pirate",
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "The Indomitable"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "name": "Pirates and Vehicles together: two tapped Pirates and a tapped Skiff are three",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Pirate",
+            "Pirate",
+            "Skiff",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "The Indomitable"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Pirate"
+        },
+        {
+          "tap": "Pirate"
+        },
+        {
+          "tap": "Skiff"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "The Indomitable"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Pirate",
+            "Pirate",
+            "Skiff",
+            "Island",
+            "The Indomitable"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Crewed by the Ogre, it attacks: 6 trample damage over Maya's Cub, and a card drawn -- the Bear's damage draws another",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "The Indomitable",
+            "Ogre",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Cub"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "The Indomitable"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "attack": [
+            "The Indomitable",
+            "Bear"
+          ]
+        },
+        {
+          "block": [
+            [
+              "Cub",
+              "The Indomitable"
+            ]
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 34
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 2
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Cub"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Crew 3: the Bear alone is not enough to crew it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "The Indomitable",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "The Indomitable"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

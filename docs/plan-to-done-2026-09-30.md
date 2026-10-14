@@ -161,6 +161,9 @@ These are the things the executor must keep true. Most are in `AGENTS.md`; the r
       drew Island* until the next action. No rule bends; the surprise goes.
     **Rob, 2026-09-30: the beat.** The room carries a "draw" acknowledgment in the draw step; the button reads
     *Draw a card*; the click draws; priority follows.
+    **Rob, 2026-10-09, after playing it: automatic.** *"Draw phase should be resolved automatically by drawing a card
+    and progress to the next screen."* The table no longer asks for the beat (`game/room/table.mjs`); a game launched
+    with it keeps it and replays as played. With it, *"Clicking the library pile should Draw a Card"* too.
 14. **The hand tray:** the count beside the ✋ (remove *Hand · 8*); remove *Bright = you can use it now*; keep the
     space for something hand-specific. **Rob, 2026-09-30: counts by type, four types only — Land, Creature,
     Instant (which includes any card with flash), Other — each shown as X/Y, X the number castable now and Y the
@@ -268,7 +271,11 @@ extraction design** (`docs/plan-card-extraction-skill.md`; M7 in `docs/plan-to-1
   $2/$10, Claude Haiku 4.5 `claude-haiku-4-5` $1/$5, cache reads a fifth of input), and an unknown model is still
   priced at the dearest rate. Each feature has its own `AI_MODEL_<feature>` so Rob sets a model per job. **Rob,
   2026-09-30: `AI_MODEL_coach` Claude Sonnet 5.5 · `AI_MODEL_pilot` Claude Haiku 4.5 · `AI_MODEL_loader` Claude
-  Sonnet 5.5 · `AI_MODEL_advise` Claude Haiku 4.5, each held to its eval.**
+  Sonnet 5.5 · `AI_MODEL_advise` Claude Haiku 4.5, each held to its eval.** **Rob, 2026-10-09: *"We will always be
+  using sonnet or other lowest cost models,"* and then the Coach on Claude Haiku 5.5, explicitly.** The door calls only models priced at or below Claude Sonnet 5.5
+  (`cloud/ai.mjs`, `MODELS`: Sonnet 5.5 and Claude Haiku 5.5 `claude-haiku-5-5`, $0.10/$0.50); a feature's model
+  naming a dearer one keeps that feature shut, and the release tool refuses it. Claude Haiku 5.5 now costs a tenth
+  of Haiku 4.5, so the pilot's and the advisor's evals try it first.
 - **The agent is code; the model judges.** For each feature the Worker assembles a *brief* deterministically from
   the library and the game — the facts, the candidates, the constraints — and asks the model to choose and explain
   among the candidates only, with structured output (`output_config.format`, a JSON schema per feature) so the
@@ -281,8 +288,10 @@ extraction design** (`docs/plan-card-extraction-skill.md`; M7 in `docs/plan-to-1
 - **The stable prefix is cached.** Each feature's system prompt and vocabulary (the roles, the card states, the
   rules of the brief) come first and never change between calls; the brief follows. Prompt caching then makes
   the repeated part nearly free.
-- **Effort low or medium; adaptive thinking; streaming where a person waits** (the Coach). Never a refusal shown
-  raw: the door's fallback (`fallbacks: "default"`) re-runs a declined request server-side, and a 422 says so.
+- **Effort low or medium; adaptive thinking; streaming only where an answer is long** (never the Coach's, which is
+  checked before it is shown). Never a refusal shown
+  raw: a declined request comes back as a plain 422. No server-side fallback is asked for, since it can re-run a
+  request on a model dearer than Rob allows.
 - **An eval before a model is trusted with a job**, kept in the repository: for the advisor, Rob's seven decks with
   changes he would make himself as the rubric; for the card loader, the cards of the seven decks against their
   oracle text and a smoke test in the engine; for the Coach, a set of board states with the plays a seasoned
@@ -292,25 +301,58 @@ extraction design** (`docs/plan-card-extraction-skill.md`; M7 in `docs/plan-to-1
 
 ### AI-1. The Coach, wired
 
-*Rob's ask:* the Coach answers for real. *Today:* the chat panel (#414) with turn dividers, prompts, a composer and
-a stub reply that says it is not switched on; in Full screen it will live in the side column under the log (item 22).
+*Rob's ask:* the Coach answers for real. *Before:* the chat panel (#414) with turn dividers, prompts, a composer and
+a stub reply that said it was not switched on; in Full screen it lives in the side column under the log (item 22).
 
-- **The route:** `POST /api/ai/coach` with the asking seat's own view (the same projection the room sends that seat
-  — its hand, every public zone, the history's last lines, the decision it is being asked) and the question. Never
-  another seat's hand; the projection cannot carry it.
+**Status, 2026-10-09: built, and on on staging.** The route, the brief, the grounding and the panel are in, as
+below (`game/room/coach-brief.mjs`, `cloud/ai.mjs` `coach`, `tests/coach.mjs`; `docs/ACTIVE.md` has the record). Rob
+approved its privacy wording the same day; it is on `privacy.html`, and staging's release profile sets `ai.coach`. Two differences from the text below: the model is the door's one
+`AI_MODEL` (Haiku 5.5), not a separate `AI_MODEL_coach`; and there is no per-game cap, since Rob chose one general
+cap, *"not per person"*, 300¢ a day for everyone. Inside it, the Coach has a daily cap of its own, for everyone
+together: Rob, 2026-10-10, *"$1.50 for the coach per day is good"* (`AI_CAP_COACH_CENTS`, 150 on staging).
+
+- **The route:** `POST /api/ai/coach` with the question. The Worker reads the asking seat's own view from the table
+  itself (the same projection the room sends that seat — its hand, every public zone, the history's last lines, the
+  decision it is being asked), never a view the browser sends, so nothing can be added to it. Never another seat's
+  hand; the projection cannot carry it.
+- **What the Coach may see (Rob, 2026-10-09):** *"keep it's context restricted to the content present within the
+  player's deck and the active played board (can't see the opponents hands)"*, and then: *"within the player's hand
+  and knowledge of their deck (not visibility into the order of cards in the deck)"*. The brief holds only:
+  - the asking person's own hand;
+  - the board as everyone at the table sees it: each seat's battlefield, graveyard, face-up exile and command zone,
+    life and counters, the stack, the step, and the history's public lines;
+  - their own deck as a list: the cards it was built with, sorted by name, and how many cards their library still
+    holds. Never the library's order, its top card, or where any card is in it;
+  - never another seat's hand or library, nor a face-down card that is not theirs.
+
+  The proof is the check G1 already makes of every frame, applied to the brief: no other seat's hidden card, and no
+  library order (a shuffled library gives the same brief).
 - **The brief:** the board as a table (each seat's life, poison, commander damage, permanents with their state;
   your hand with what each card can do *now*, from the decision's options; the stack; the step); the last twenty
   history lines; the question; and the reply schema: `{answer, plays: [{card, action, why}], threat: {seat, why},
   show: [cardIds]}` — every `card` and `seat` must be in the brief.
-- **The panel:** streams the answer as it comes (the Worker passes the stream through); replies carry the action
+- **The panel:** shows the answer once the Worker has checked its grounding (every card and seat in the brief; at one
+  to three sentences there is little to stream, and a streamed answer would be on screen before it was checked); replies carry the action
   chips the shell already draws (*Show me* highlights the named cards on the mat; *Why?* expands the reasoning);
   turn dividers as now. The Coach never acts: it names a play; the person makes it.
-- **Model and cost:** `AI_MODEL_coach` = Claude Sonnet 5.5 (Rob's call) at low effort, for a chat that must
-  answer in a few seconds; the eval says whether Claude Haiku 4.5 answers as well. Each game has its
-  own cap (a Worker variable) on top of the person's.
-- **Proof:** `tests/ai-door.mjs` grows a coach section with a stubbed provider: grounding refused, the cap
-  refused, a streamed answer's chips; `tests/table-board.mjs`: the Coach's answer and *Show me* highlighting the
-  card. The privacy wording, approved, before the switch.
+- **Brevity (Rob, 2026-10-09):** *"I want tight controls on the coach. It's responses should be very concise, no
+  more than 1-3 sentences with 80% being 1 sentence, when in coach."* Then: *"I don't want the text length check
+  occurring after the response is generated. The agent between the API and the consumption layer should have
+  instruction to only return very concise 1-3 sentences and aim for no more than 1 sentence. We don't need a hard
+  check on 80% either."* So the control is the instruction, not a check:
+  - **The Coach's brief** (the agent between the API and the panel) tells the model to answer in very concise
+    sentences, one to three at most, and to aim for one; no preamble, no restating the question, no list. Each
+    play's `why` is held to one sentence the same way, and shows only when the person taps *Why?*.
+  - **Nothing measures the answer afterward:** no sentence count on the Worker, and no 80% gate in the eval.
+    `max_tokens` is a cost ceiling only, set well above three sentences and the schema, so it never cuts an answer.
+- **Model and cost:** `AI_MODEL_coach` = **Claude Haiku 5.5** (`claude-haiku-5-5`), explicitly (Rob, 2026-10-09:
+  *"change the model use to Haiku explicitly"*; it was Sonnet 5.5), at low effort, for a chat that must answer in a
+  few seconds. Claude Sonnet 5.5 stays the ceiling, never a dearer model. Each game has its own cap (a Worker
+  variable) on top of the person's.
+- **Proof:** `tests/coach.mjs`, its own suite, with a stubbed provider: grounding refused, the cap refused, the
+  brief's brevity instruction sent with every call, the brief from a real table holding no other seat's hidden card
+  and no library order, and the board's panel: the Coach's answer, *Show me* highlighting the card, *Why?*. The
+  privacy wording, approved, before the switch.
 
 ### AI-2. AI players
 
@@ -329,9 +371,183 @@ plays what the engine offers); the LLM seat is M6's "through the door".
   among more than one non-pass option; mulligans; blocks; targets) and answers priority-with-nothing-to-do itself.
   A per-game cap; when it is reached the seat finishes on the house pilot and the table says so.
 - **Model:** `AI_MODEL_pilot` = Claude Haiku 4.5 (Rob's call) at low effort, measured against the house pilot
-  over 100 seeded games (M4's gate G1 harness) before a table offers it.
+  over 100 seeded games (M4's gate G1 harness) before a table offers it. **Rob, 2026-10-10: *"Use Haiku 5.5. 0.25 per
+  game is good"*:** Claude Haiku 5.5 at low effort, and a cap of 25¢ a game; and *"I do want to deliver on L0 as part
+  of the LLM AI seat capability"*: the LLM seat chooses among L0's legal options (below).
 - **Proof:** the engine's determinism holds (the tape records the answer, not the model); `tests/game-room.mjs`
   gains an LLM pilot with a stubbed provider; the lobby suite the configurator's pilot choice; M8's playtests use it.
+
+#### The house pilot's levels of decision (Rob, 2026-10-10)
+
+Rob's definitions, as he gave them:
+- **L0, legal:** the basic layer, and legal. What the house pilot has now.
+- **L1, probability:** considers some probabilistic outcome, or another statistically or mathematically derived result,
+  for a good choice out of those provided.
+- **L2, the deck's formulas:** the deck's mechanics converted to formulas, where certain cards commit input to
+  completing a formula, which makes the mechanic possible. The formulas cover engine-building, and the defense a given
+  attack or counter requires, set against the cards in hand (or in the graveyard, where there is a way to play from it)
+  that are available, playable and affordable with the mana there is. Much of L2 combines formula-driven completion,
+  on statistical modeling, with deterministic if/then logic. For example, if a card can be played from the graveyard,
+  the graveyard joins the options, and the formula updates to include them.
+- **L3, chained probability:** like today's video games' easy, medium and hard. Determinism chained through several
+  layers on the probabilities of outcomes, including the other players' boards and how likely each is to play a given
+  card, given the direction their board is taking from the cards played and the mechanics those cards support.
+
+**Not now:** Rob, 2026-10-10: *"We won't be doing L2 or L3 right now."* L1 is built now, with AI-2.
+
+**How the field builds this.** Game AIs that are not language models set difficulty with one engine and three knobs:
+how far it looks ahead (Stockfish's depth; the simulations in AI Factory's Spades; XMage's minimax), how much it knows
+about what a position is worth (Forge's rules for each card; learned evaluation weights; utility scoring), and how
+often it chooses a worse option on purpose (Stockfish's Skill Level picks among its best few moves; weighted chance
+among scored moves reaches a target strength better than always the best or pure chance). None of them changes what
+the AI may see, which is the house pilot's rule already: difficulty changes the effort, never the information. Two
+warnings: weakening an AI by making it think less produces mistakes that read as broken, not human; and strength that
+swings within a game reads as fake. The strongest shipped card-game AIs combine rules with search: AI Factory's
+Spades made far fewer plays that people saw as blunders than search alone, and played better than its rules-only
+predecessor. Language models do not yet play Magic better than simple scripted AIs, at a dollar or more a game on the
+mage-bench harness. So the engine comes first, and the model fills the gaps.
+
+| Level | In the field | In CrankMagic |
+|---|---|---|
+| L0 | Scripted rules | Today's house pilot: a land each turn, the dearest spell it can cast, attack the lowest life, a block only when the blocker kills and survives |
+| L1 | Utility scoring with expected value, one turn ahead | Each legal option scored from the seat's own view: mana used this turn, card advantage, the board's value after it, the life race (turns until each side can kill the other), exact combat for the creatures on the board, an opponent's trick as a probability from their open mana and cards in hand, the odds of drawing a land or a needed card (hypergeometric, over the seat's own deck list less the cards it has seen), and the threat it removes. The weights in one table |
+| L2 | Goal recipes and resource checks | Each deck's formulas as recipes with slots; a recipe's completion, and the odds of drawing its missing pieces, raise a card's score; a threat is matched with the answers castable now; rules add zones to the options |
+| L3 | Simulated futures with opponent models | Opponents' hidden hands invented to fit what is public, weighted by their deck's likely direction; short futures played out with L1 and L2 choosing inside them; the number of futures is the difficulty. Processor time on the Durable Object, in the step-budgeted slices that already exist; no tokens |
+
+**The difficulty settings (Claude's recommendation; Rob, 2026-10-10: *"I agree with your recommendations"*).** L0
+is the floor, not a difficulty: the fallback, and the baseline every level is measured against. Its mistakes come
+from what it cannot see (an attack that lets the opponent swing back for lethal), and they read as broken, not easy.
+
+| Setting | Uses | How it chooses |
+|---|---|---|
+| Easy | L1 | Weighted chance among the scored options: usually the best, sometimes the second-best, never an absurd one. Its temperature is fixed for the game and drawn from the game's seed, so the game replays identically |
+| Normal | L1 | The best score |
+| Medium | L1 and L2 | The best score |
+| Hard | L1, L2 and L3 | The best result after the simulated futures; how many futures can be set |
+
+**Where the model fills the gaps, cheapest first.**
+1. **Once for each deck (Phase 2):** the model reads the deck's card text and writes its L2 formulas as structured
+   data; a check in code refuses any card or effect the deck does not hold; the result is kept by the deck's hash.
+   Pennies, once, and every game after is free.
+2. **At close calls (Phase 1, the LLM seat):** the seat chooses among L0's legal options, with L1's three best scores
+   as the hint. It is asked only when the decision matters (a cast, an attack, a block, a target, a mulligan) and L1's
+   two best scores are close; the house pilot answers everything else at once. At the 25¢ cap, on a timeout or on an
+   index that is not offered, the house pilot answers.
+3. **Inside the simulations (Phase 3 or later):** narrowing which options to play out; never each priority pass.
+
+At the door's prices (Claude Haiku 5.5, $0.10/$0.50 a million tokens), 25¢ buys about 500 decisions, so the cap will
+not bind. The wait will: each call takes one to three seconds, against Rob's five-second rule (G-B). Estimated, until
+the bench measures it: 1¢ to 3¢ a game for the LLM seat asked only at close calls, against about 15¢ if it answered
+every decision.
+
+**The phases.**
+- **Phase 1 (now):** L1 in the house pilot (the board's value from the seat's own projection; option scoring; combat
+  math; draw odds; the Easy and Normal settings), then the LLM seat on L0 with L1 as its hint and its fallback. The
+  bench: 100 seeded games measuring L1's wins against L0; a checklist of plain blunders (attacked into a lethal swing
+  back, passed with a castable spell and the mana for it, chump-blocked at high life); the slowest 5% of decision
+  times; and, for the LLM seat, its calls and cents a game, how often it fell back, and its wins against L1.
+- **Phase 2 (Medium):** L2, the formulas written once for each deck by the model, the defense formulas, and the zones
+  rules add.
+- **Phase 3 (Hard):** L3, simulated futures and opponent models, the number of futures as the difficulty.
+
+**Status, 2026-10-10: Phase 1's L1 built, and measured.** `game/engine/pilots/scored-pilot.mjs` (with `odds.mjs`) scores
+five choices and leaves the rest to L0:
+- the spells it casts: the set that spends the most of its mana, the largest first, a commander's tax counted;
+- where a spell is aimed: the opposing permanent worth the most;
+- its attacks: damage dealt, trades against the defender's likely blocks, and the swing back each one leaves open;
+- its blocks: kills that survive, fair trades, walls, and chump blocks only while what gets through would kill;
+- its opening hand: the hypergeometric chance of its third land by turn three, from its own deck list.
+
+Combat is exact for one attacker and one blocker: first strike, double strike, deathtouch, indestructible, trample and
+damage already marked. A table's AI seat is chosen at Normal or Easy on New table (*An AI · Normal*, *An AI · Easy*).
+The table and the room keep the setting with the seat, and the room makes the pilot from it with its own deck list and
+the match's seed. A seat without a setting (every match launched before) is L0 and replays as it was played. Easy's
+chance comes from the seed, the seat and the question, not a stream, so a replay and a reopened room choose alike
+(`tests/room-seat-pilots.mjs`).
+
+**The bench** (`tools/pilot-bench.mjs`) plays two-seat games of the seven decks through the real room, round the 21
+pairs, L1's seat alternating. It ran 420 seeded games per arm, each arm on the same seeds:
+
+| Arm | L1's seat won | L0 won | L1's share (95%) | Paired with the control: wins gained / lost |
+|---|---|---|---|---|
+| Control (both L0) | 214 | 206 | 51% (46–56%) | — |
+| **Normal** | **242** | **178** | **58% (53–62%)** | **+51 / −23, sign test p = 0.0015** |
+| Easy (its first temperature, 1.5) | 233 | 187 | 55% (51–60%) | +54 / −35, p = 0.06 (against Normal: +27 / −36) |
+| Normal's attacks alone | 222 | 198 | 53% | +22 / −14, p = 0.24 |
+| Normal's casting alone | 224 | 196 | 53% | +31 / −21, p = 0.21 |
+
+No part decides much alone; together they do. Most games (about 80%) end the same either way: these decks' engines
+decide them, not these choices.
+- **Its time:** of 66,348 decisions, the median under 0.01 ms, the slowest 5% from 0.2 ms, the slowest 24 ms. It works
+  combat out only up to 4,000 creature pairs; beyond that (a board of hundreds of Goblins), L0 answers.
+- **Its checklist:** no pass with a castable spell, either pilot. Normal's bench flagged 4 chump blocks as not needed
+  where L0 had none, counted on raw power. The bench now counts double strike twice, as L1 does.
+- **Not answered:** none of either pilot's answers was refused.
+
+**Then, the same day: its activated abilities.** L0 never activates an ability that is not a mana or loyalty ability,
+and L1 at first inherited that. Krenko's Goblins, Chulane's land and draw, Sakura-Tribe Elder's land, Priest of Forgotten
+Gods and a Clue's card were offered hundreds of times in seven games and never used. L1 now weighs each one offered,
+by what the card says it does against what it costs, in its own main phase with the stack empty, once no spell fits.
+- **What it does:** cards drawn, tokens made (*"X Goblins, where X is the number of Goblins you control"* counted on its
+  own board), a land fetched, counters, a look at the library, a threat destroyed or damaged at the worthiest target,
+  life lost by an opponent.
+- **What it costs:** mana, tapping a creature, what it sacrifices (itself, or the permanents the offer names), counters
+  removed, a card discarded, life.
+- **Where it stops,** since it keeps no count: an ability that costs nothing is never taken; no more tokens past 60
+  permanents of its own; no draw past eight cards in hand or with five left in the library; no ability at all past 150
+  permanents on the battlefield. The first bench found the reason: Krenko with Intruder Alarm untaps as each Goblin
+  enters, and L1 doubled them every activation until the game crawled.
+- **Its quick pass** (the room asks it before working out its view) now looks for an ability worth taking in its own
+  main phase. The room tells it whose turn it is and the step, which everyone sees, and the card facts it reads now carry
+  each card's subtypes and activated abilities, as the card says them, read once a match.
+
+| Arm (420 games each, the same seeds) | L1's seat won | L0 won | L1's share (95%) | Paired: gained / lost |
+|---|---|---|---|---|
+| **Normal, with abilities** | **255** | **165** | **61% (56–65%)** | **+60 / −19 against the control, p < 0.0001**; +19 / −6 against Normal without them, p = 0.015 |
+| Abilities alone | 220 | 200 | 52% | +11 / −5 against the control |
+| Easy at its first temperature (1.5) | 246 | 174 | 59% | +23 / −32 against Normal: too close to it to feel easier |
+| **Easy at 4, as set** | **234** | **186** | **56% (51–60%)** | **+54 / −34 against the control, p = 0.04; +22 / −43 against Normal, p = 0.01** |
+
+So the settings are in order, each step measured: L0 51%, Easy 56%, Normal 61%.
+- **Time:** the slowest decision was 176 ms, on a board of a hundred Goblins.
+- **Refused answers:** none, from either pilot.
+
+**Status, 2026-10-10: the LLM seat built, behind its switch.** *An AI · Claude* on New table, where the AI door would
+let the host spend on it (`AI_PILOT` on, the key, caps and model set, the host on the allowlist).
+- **Where the model comes in:** the seat plays L1 at Normal except at its close calls, where L1's two best plans for
+  the spells it would cast or an attack score within a point of each other (`game/engine/pilots/agent-pilot.mjs`).
+- **How it is asked:** the room offers the seat that decision as it would a person. The table's object asks Claude
+  Haiku 5.5 on its alarm, with the seat's own view, no person's name and L1's choice as the hint
+  (`game/room/agent-brief.mjs`, `cloud/ai.mjs` `pilot`, `cloud/game-room.mjs` `agentTurns`).
+- **What holds it:** each call is logged as `pilot` under the host, on the day's caps and within the game's 25¢. When
+  the model cannot answer, the seat's own pilot does (`room.houseAnswer`). Either answer is on the tape, so a replay
+  never asks the model.
+- **Proof** (a stand-in model; no network):
+  - `room-agent-seat`: only close calls are offered to it; its answers replay; a room reopened while it waits still
+    waits.
+  - `agent-seat-table`: the door's gates at seating; no name sent; logged under the host; the game's cap; a wrong
+    index or a failed call handled.
+  - `coach`: `GET /api/ai-seat`.
+  - `table-lobby`: the option appears only where open.
+  - `release-pages`: the switch, refused without the privacy wording or the game's cap.
+- **Rob's, left:** approve the privacy wording drafted in `docs/ai-door.md` ("AI players on Claude"). Then it goes on
+  `privacy.html`, staging's profile gets `ai.pilot: true`, and the next staging release seats an AI on Claude.
+- **Then measured:** the plan's 100 seeded games against L1 need the key. It is a Worker secret, not in the session's
+  container, so the bench runs on staging's playtest tables, or here with a key Rob sets in the environment. That costs
+  about 1¢ to 3¢ a game, by the estimate above.
+
+Sources: [AI Factory's Spades, MCTS with knowledge](https://ojs.aaai.org/index.php/AIIDE/article/view/12679);
+[Information Set MCTS](https://eprints.whiterose.ac.uk/75048); [determinized MCTS for
+Magic](https://eprints.whiterose.ac.uk/75050); [evolved evaluation functions for a collectible card
+game](https://www.scitepress.org/Papers/2022/108069/108069.pdf); [Hearthstone opponent card
+prediction](https://arxiv.org/abs/1808.04794); [opponent hand estimation in Gin
+Rummy](https://ojs.aaai.org/index.php/AAAI/article/view/17824); [XMage's AI
+players](https://mintlify.wiki/magefree/mage/development/ai-players); [Stockfish's Skill
+Level](https://stockfishchess.org/blog/2011/stockfish-2-1/); [weaker play
+levels](https://www.talkchess.com/forum/viewtopic.php?p=677118); [utility
+systems](https://en.wikipedia.org/wiki/Utility_system); [mage-bench, the author's
+notes](https://hn.svelte.dev/item/47049227); [a language model inside
+search](https://arxiv.org/pdf/2403.05632).
 
 ### AI-3. The card loader: the data grows as cards are played
 
@@ -378,6 +594,11 @@ compiler and the AI reconciliation for every card; the extraction design is writ
 - **Proof:** `tests/engine-*`: a learned script passes the four checks; a deliberately wrong script fails each
   check; the lobby suite: a deck with unknown cards shows learning and then ready; the refusal with instructions
   for a card that fails; the eval: the seven decks' cards against their oracle text.
+- **Status, 2026-10-11: Rob's library learned, by hand rather than by the loader (Train C, then Gandalf).** 1,131
+  of the 1,132 cards in his library play: phase 1's 167 cards, then the engine pieces the rest needed and 138 more,
+  each card with scenarios that can fail (`docs/ACTIVE.md`, Train C); then Gandalf, Goblins' Bane // Flameshape, with
+  playing a face-down exiled card (CR 406.3a). One is left, with its reason: Extrapolate the Impossible (nothing
+  outside the game in Commander, so it does nothing there). The loader above stays the design for cards beyond Rob's library; **Rob's:** confirming the library.
 
 ### AI-4. The deck advisor: sound changes from a very low-cost model
 
@@ -421,6 +642,23 @@ sketch strategy considerations and copilot recommendations.
 - **Whether the advisor may name cards Rob does not own is a setting, not a rule** — see AI-6.
 - **Proof:** `tests/ai-door.mjs`: the brief's shape from a fixture library (candidates inside the identity and the
   cap; the weak roles first; never a hidden field); grounding refused; the review flow receives the swaps; the cap.
+- **Status, 2026-10-11: the route and the review built, behind the advisor's own switch** (`AI_ADVISE`, off on staging
+  until Rob approves its privacy wording in `docs/ai-door.md`):
+  - **the route:** `POST /api/ai/advise` takes the deck's id and the goal, nothing more. The Worker builds the brief
+    from the person's latest version in the cloud (`cloud/advise.mjs`): the list reading, its candidates the person's
+    own cards and lists. Each card's facts come from the catalog, slimmed to 287 KB for the Worker
+    (`cloud/advise-cards.mjs`, from `data/cards.json` by `tools/build-advise-cards.mjs`); for each of Rob's seven decks
+    the brief is the one the whole catalog makes. The brief builder is now an ES module the Worker bundles
+    (`cloud/advise-brief.mjs`). The call is the door's model at low effort with a cached instruction, logged as
+    `advise`; grounding drops and counts any swap naming a card not in the brief.
+  - **the review:** *Ask the AI advisor* under a deck's More menu, offered only where `GET /api/ai-advise` says the
+    door would answer. Each swap is a row to tick; a ticked swap is saved as the deck's linked upgrade (the card in, for
+    the card out's slot), and nothing else changes.
+  - **the eval** asks with the shipped body (`adviseBody`), on the door's own models.
+  - **Proof:** `advisor` 43 checks, `advisor-page` 9, `release-pages` 204, `generators` (the card table's `--check`),
+    `coach`, `ai-door`, `cloud-worker`, `advise-brief` unchanged and green; 28 breaks caught.
+  - **Rob's, left:** approve the privacy wording; run the eval with his key (`tests/ai-advise-eval/run.mjs --yes`) and
+    add the swaps he would refuse to its rubric. Cards he does not own wait on AI-6's setting.
 
 ### AI-6. AI Coach Settings, under Tools
 
@@ -445,6 +683,19 @@ to keep it simple."*
   gates do that.
 - **Proof:** `tests/settings-r3.mjs` and the board suite: each control read by the advisor's brief and the Coach's
   request (a card not owned never appears with 1 off; the hand withheld with 5 set to board only); the meter shown.
+- **Status, 2026-10-11: built.** *AI Coach settings…* from Settings (its own card, *AI Coach*) and from the board's
+  Tools, one panel (`crankmagic-settings.js`, `C.aiSettings`), saved as `preferences.aiCoach` and synced with the library.
+  - **1-4, the advisor's**, read by the Worker from the library it holds (`cloud/advise.mjs` `aiSettingsOf`, whose
+    defaults the panel shows): cards not owned only when asked for, from the catalog (Commander-legal, inside the
+    commander's colors and the per-card cap), with ten places of their own beside the person's thirty; the person's
+    own first unless they say otherwise; the bracket's game-changer cap unless lifted; and the advice short or detailed,
+    which the instruction reads.
+  - **5, the Coach's:** *My board only* sends the question with the hand withheld; the table builds the brief with no
+    hand and not the question being asked, whose options name it (`coachBrief`, `?hand=0`), and the Coach is told why;
+    the board's Coach says what it sees.
+  - **6, the meter:** `GET /api/ai-meter`, the person's spending over the last 24 hours against their cap, and the
+    privacy page's AI section.
+  - **Proof:** `advisor` 56 checks, `coach` 60, `settings-r3` 56, `table-board` 250, `advisor-page` 9; 26 breaks caught.
 
 ### AI-5. Your decks and the decks you can play — the connection
 
@@ -465,6 +716,21 @@ table are not yet one thing.
   history line.
 - **Proof:** `tests/decks-hub.mjs` and `tests/deck-page-r3.mjs`: the readiness line and *Play this deck*;
   `tests/table-lobby.mjs`: the deck arrives at the seat; `tests/precons.mjs`: *Play it*.
+- **Status, 2026-10-11: built**, where Play is in the cloud (`crankmagic-table.js`, `C.play`; production leaves it out):
+  - **the readiness:** each tile reads *Playable at the table* or *13 cards to learn for the table*; the deck's page reads
+    *Playable at the table · all 100 cards known*, or *87 of 100 known · 13 to learn* and names the cards the table
+    cannot play yet. It is read from `POST /api/tables/known` (`cloud/tables.mjs`): which names a table cannot play,
+    asked with no table, of one object that answers from the engine's cards alone. The hub asks once for every deck.
+  - **Play this deck** opens New table saying *You bring … to seat 1.*, and seats the deck once the table is made; seated
+    at a table whose game has not begun, it offers *Bring … there*. A deck the table cannot play whole is named with
+    its cards and not brought.
+  - **New from Wizards' Play it:** the precon's import, then the deck, then New table with it.
+  - **Proof:** all of it in `tests/table-lobby.mjs`, the suite that runs staging's own page with Play on (88 checks,
+    13 new, through the Worker's real front door now); the door in `tests/game-table.mjs` (159); the other suites
+    named above unchanged and green. 21 breaks: 20 caught; the one missed was a guard no suite could see (an
+    answer landing after the page moved on writes into a page already gone), so it was removed.
+  - **Left:** *to learn* still means the table refuses the deck by name, until AI-3's online half learns a card at
+    *Prepare decks*; the deck page's Record gaining the game's history line.
 
 ## Part 4 — The order, the estimates, and what Rob decides
 
@@ -480,13 +746,14 @@ pilot: two sessions), AI-5 (the connection: one session, after AI-3 makes a deck
 | # | Decision | Rob's answer |
 | --- | --- | --- |
 | 2 | Which table rules the host may edit, and whether once a seat is ready | **Bracket limit and starting life; not once any seat is ready** |
-| 13 | The draw as its own beat (a *Draw a card* click) or automatic and visible | **The beat** |
+| 13 | The draw as its own beat (a *Draw a card* click) or automatic and visible | **The beat** (2026-09-30); **automatic** (2026-10-09, after playing it) |
 | 14 | What fills the hand tray's space | **Counts by type — Land, Creature, Instant (with flash), Other — as X/Y, castable now over in hand** |
 | 20 | The CrankMagic card back | **His artwork: `design/art-source/card_backgrounds/` (five colors)**; which is universal, and whether a seat's follows its color, at build (recommended tan; yes) |
 | 21 | The Coach's glyph | **A speech bubble with the wand** |
 | AI | The door's five steps (`docs/ai-door.md`) | **Rob does them** (the Access application, the allowlist, the key, the caps, the privacy wording) |
-| AI | A model per job | **Coach Sonnet 5.5 · pilot Haiku 4.5 · loader Sonnet 5.5 · advise Haiku 4.5, each held to its eval** |
+| AI | A model per job | **Coach Sonnet 5.5 · pilot Haiku 4.5 · loader Sonnet 5.5 · advise Haiku 4.5, each held to its eval**; 2026-10-09 to 10: **the Coach and the pilot on Claude Haiku 5.5**, the pilot capped at 25¢ a game and the Coach at $1.50 a day |
 | AI | The advisor's rubric | **An afternoon of his, before AI-4 is judged**, starting from the workbook's Target-versus-Actual intent |
+| AI-2 | The house pilot's levels | **L0 to L3 as he defined them (AI-2); L1 now, L2 and L3 not yet; Easy is L1 with chosen mistakes, Normal L1, Medium L2, Hard L3; L0 the floor** |
 | AI | Whether the advisor may name cards he does not own | **A person's setting, in AI Coach Settings (AI-6), off by default** |
 | AI-3 | The first batch of cards to learn | **His whole library from `MtG - Master - 9.30.xlsx` (1,132 cards), not the seven decks' 477** |
 | Part 5 | The roadmap's recommendations (Actions billing restored for CI and the refresh; the tracks and their order) | **Accepted** |
@@ -528,7 +795,7 @@ where each item now sits against Parts 2 and 3. `docs/plan-groups.md` (the libra
 | Milestone | Open items (`docs/plan-to-100.md`) | Where it sits now |
 | --- | --- | --- |
 | **M2 data** | Live-first reads set by set; stores kept only where §0 says; the adjudication log; the scheduled CR check; About shows every data set's date and stale labels; a game pins its data version; **Rob:** R2 on, the token, the schedule; the bucket; a scheduled refresh; publish to R2 with `current.json`; the Worker serves `/data/*` from R2; the app reads `current.json`; About's "prices refreshed today"; precons in the refresh (done: `tools/refresh.mjs` runs `build-precons.mjs`); split `graph-played.json`; Scryfall's and EDHREC's terms | **Track D (data), after Rob's R2.** The scheduled refresh was to be a GitHub Actions run; Actions is out on billing, so the schedule is either Actions once billing is restored (which also restores CI) or a Cloudflare Cron Trigger calling a refresh Worker — **decision for Rob** (recommended: restore Actions billing; it is the smaller change and CI needs it too) |
-| **M3 ops** | Monitoring (Workers logs, an alert on 5xx and sync conflicts, a weekly check; **Rob:** the alert email); backups (D1 Time Travel's window; a nightly copy to R2); invites (Rob, ongoing; the 50-person cap); how Rob's workbook reaches his library; the program document's sync note | **Track O (operations)**, before the human-invites gate (Part 7, G-E): monitoring and backups are a session; the rest is Rob's |
+| **M3 ops** | Monitoring (Workers logs, an alert on 5xx and sync conflicts, a weekly check; **Rob:** the alert email); backups (D1 Time Travel's window; a nightly copy to R2); invites (Rob, ongoing; the 50-person cap); how Rob's workbook reaches his library; the program document's sync note | **Track O (operations)**, before the human-invites gate (Part 7, G-E): monitoring and backups are a session; the rest is Rob's. **Status, 2026-10-11 (`docs/ops.md`):** Workers Logs keeps the Worker's own line for each 5xx and each sync conflict, never the person or what was sent; the weekly check is `tools/ops-week.mjs`; Time Travel reaches 30 days. **Rob's:** the two alerts and their email, R2 turned on, and the nightly copy's window and what deletion promises |
 | **M4 engine** | Keyword families for the seven decks (2.3); the scenario runner and `cards/index.mjs` (2.4); **tier 0, the 477 cards** (phase 3); PLAN §5/§7 suites (performance budgets, card scenarios, the bridge contract); deck legality against a dated banned list; the CME history event contract; **gate G1** (seven decks, 100 games each against house pilots and random pilots, zero exceptions, identical replays, no leaks, and the conformance suite green); Rob's calls (Forge's role — dropped; unsupported cards — refused by name, compiled once M7 lands) | **The critical path to a real game.** Tier 0's 477 cards become **AI-3's first batch** (the loader run offline by Rob on the seven decks), with the hand-authored scenario tests kept as the loader's eval; the keyword families and the runner stay engine work (three to four sessions); G1 is the gate before Grok Bot plays real decks |
 | **M5 Play** | Card definitions from a store, not bundled; the audio pack; the live hidden-information checks; the speed rule; **Rob:** who plays v1 (decided: the invite list), Workers Paid when CPU passes 10 ms | The store is AI-3's `card_scripts`; **B8, the audio** (below); the checks and the speed rule are the end-to-end test gate (Part 7, G-B) |
 | **M6 door** | Rob's five steps; through the door: LLM seats, the Coach, the workshop's features; the privacy wording | **AI-1, AI-2, AI-4** (Part 3); the steps are Rob's, and gate every AI PR |
@@ -569,7 +836,16 @@ where each item now sits against Parts 2 and 3. `docs/plan-groups.md` (the libra
   quantity >2 but only print info on 1 card, assume all of that quantity are that print."* So a row with one print group
   is that print for every copy; a row with two keeps each group's quantity (a blank first quantity takes what Own leaves);
   copies no group accounts for stay without a print; and the dearest print fills the deck boxes first.
+  **Status: built** (adf56c16, 2026-09-30): the one row opens to list each print with its value and where it is,
+  priced at the dearest; the workbook builder reads both print groups (`tools/build-live-load.mjs`); proof
+  `tests/library-r3.mjs` check 9.
 - **An accessibility pass on the board and the lobby** (Part 6).
+  **Status, 2026-10-11: done** (`tests/a11y-board.mjs`, 288 checks, 72 breaks caught). Contrast is measured from the
+  screen's pixels over every playmat in both themes: the worst word went from 1.07:1 to 4.77:1, and the focus rings
+  are two-tone. Focus order, focus kept through each redraw, modals that trap and return focus, every bound key in
+  Help, and card names that carry their combat state without a hidden card's name are all covered. One polite status
+  region announces the questions and the peek. Left: "token" and "summoning sick" in a card's name (the projection
+  carries neither), and primary buttons outside Play on two light themes.
 - **A browser and device matrix** for the end-to-end walk (Part 6).
 
 ## Part 6 — Validation: does the whole plan cover what the app needs?
@@ -596,12 +872,12 @@ Part 7 after G-B depends on it. AI-5 then joins the library's decks to the table
 **Non-functional.** *Security and privacy:* Access guards the API (the Invited policy), the AI door's own
 application and allowlist, hidden information proved by inspecting every frame, the secrets scan in the gate, the
 privacy page before any AI feature; *reliability:* the room resumes from any decision, sockets reconnect, a dropped
-seat has five minutes, D1's Time Travel — and **monitoring and backups (M3) are the open items**, scheduled before
-human invites; *performance:* the page budgets, the board measured at four sizes, the engine's budgets in PLAN §5,
+seat has five minutes, D1's Time Travel (30 days) — and **M3's monitoring is built** (Workers Logs, the weekly check;
+the alerts and the nightly copy to R2 are Rob's steps, `docs/ops.md`), before human invites; *performance:* the page budgets, the board measured at four sizes, the engine's budgets in PLAN §5,
 Rob's five-second rule measured over the network at G-B; *cost:* the AI caps and the call log, Workers Paid when CPU
 passes 10 ms (Rob), Actions billing (Rob) so CI and the scheduled refresh run; *offline and updates:* the service
 worker's precache and its "new version, Reload" prompt; *data freshness:* M2, waiting on R2; *observability:* the
-AI call log, Workers logs once M3's alerts exist.
+AI call log, and Workers Logs' monitoring lines with the weekly check (`docs/ops.md`).
 
 **Code health.** 182 suites with the browser ones required, run twice on a clean worktree before every merge; the
 ratchets that only go down (raw hex, UK spellings, page budgets, no size steps); one component per thing (the

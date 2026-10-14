@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wandering Musicians",
+    "oracleId": "7166bf81-05c2-457d-a0bb-a175175b8e79",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Bard",
+      "Ally"
+    ],
+    "manaCost": "{3}{R/W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 5
+  },
+  "oracleText": "Whenever this creature attacks, creatures you control get +1/+0 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature attacks, creatures you control get +1/+0 until end of turn.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "power": 1,
+          "toughness": 0
+        }
+      ]
+    }
+  ]
+}

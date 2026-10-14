@@ -1,0 +1,162 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Boseiju, Who Endures",
+    "oracleId": "bf1341dd-41a3-49f6-87ec-63170dde4324",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {G}.\nChannel — {1}{G}, Discard this card: Destroy target artifact, enchantment, or nonbasic land an opponent controls. That player may search their library for a land card with a basic land type, put it onto the battlefield, then shuffle. This ability costs {1} less to activate for each legendary creature you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {G}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "G": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "Channel — {1}{G}, Discard this card: Destroy target artifact, enchantment, or nonbasic land an opponent controls. That player may search their library for a land card with a basic land type, put it onto the battlefield, then shuffle. This ability costs {1} less to activate for each legendary creature you control.",
+      "zone": "hand",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{G}"
+        },
+        {
+          "atom": "discard",
+          "self": true
+        }
+      ],
+      "costLess": {
+        "count": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "supertypes": [
+            "Legendary"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Artifact"
+              ],
+              "controller": "opponent"
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Enchantment"
+              ],
+              "controller": "opponent"
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Land"
+              ],
+              "nonSupertypes": [
+                "Basic"
+              ],
+              "controller": "opponent"
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "anyOf": [
+              {
+                "types": [
+                  "Land"
+                ],
+                "subtypes": [
+                  "Plains"
+                ]
+              },
+              {
+                "types": [
+                  "Land"
+                ],
+                "subtypes": [
+                  "Island"
+                ]
+              },
+              {
+                "types": [
+                  "Land"
+                ],
+                "subtypes": [
+                  "Swamp"
+                ]
+              },
+              {
+                "types": [
+                  "Land"
+                ],
+                "subtypes": [
+                  "Mountain"
+                ]
+              },
+              {
+                "types": [
+                  "Land"
+                ],
+                "subtypes": [
+                  "Forest"
+                ]
+              }
+            ]
+          },
+          "shuffle": true,
+          "who": {
+            "controllerOf": {
+              "target": 0
+            }
+          },
+          "to": "battlefield"
+        }
+      ]
+    }
+  ]
+}

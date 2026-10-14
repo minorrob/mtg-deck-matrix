@@ -1,0 +1,100 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Thassa, God of the Sea",
+    "oracleId": "69e5df2f-be1f-4608-a90f-3e2f51e2fea4",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Enchantment",
+      "Creature"
+    ],
+    "subtypes": [
+      "God"
+    ],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Indestructible\nAs long as your devotion to blue is less than five, Thassa isn't a creature. (Each {U} in the mana costs of permanents you control counts toward your devotion to blue.)\nAt the beginning of your upkeep, scry 1.\n{1}{U}: Target creature you control can't be blocked this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Indestructible",
+      "keyword": "indestructible"
+    },
+    {
+      "kind": "static",
+      "text": "As long as your devotion to blue is less than five, Thassa isn't a creature.",
+      "layer": 4,
+      "affects": {
+        "self": true
+      },
+      "condition": {
+        "compare": {
+          "count": {
+            "devotion": [
+              "U"
+            ]
+          },
+          "fewerThan": 5
+        }
+      },
+      "apply": {
+        "removeTypes": [
+          "Creature"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your upkeep, scry 1.",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "scry",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{1}{U}: Target creature you control can't be blocked this turn.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{U}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "targets": {
+            "target": 0
+          },
+          "rule": "cant-be-blocked",
+          "until": "end-of-turn"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ]
+    }
+  ]
+}

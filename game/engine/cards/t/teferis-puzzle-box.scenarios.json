@@ -1,0 +1,540 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Teferi's Puzzle Box",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [],
+      "manaCost": "{1}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "At Maya's draw step, after her draw: she puts her three cards on the bottom in the order she chooses, then draws three",
+      "library": [
+        "Mountain",
+        "Island",
+        "Plains",
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Teferi's Puzzle Box"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bear",
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "DRAW"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            },
+            {
+              "seat": 1,
+              "zone": "hand",
+              "cards": [
+                "Bear",
+                "Ogre",
+                "Mountain"
+              ]
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 1,
+                "options": [
+                  "Bear",
+                  "Ogre",
+                  "Mountain"
+                ],
+                "min": 3
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Ogre",
+            "Mountain",
+            "Bear"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Island",
+            "Plains",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "library",
+          "count": 19
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "At his own draw step too: his Rock and the card he drew go under, and he draws two",
+      "library": [
+        "Mountain",
+        "Island",
+        "Plains",
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Teferi's Puzzle Box"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rock"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "DRAW"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Mountain"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "DRAW"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Rock",
+                  "Mountain"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Rock",
+            "Mountain"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 19
+        }
+      ]
+    },
+    {
+      "name": "Four players: it triggers at each player's draw step, each choosing their own order",
+      "seats": 4,
+      "library": [
+        "Mountain",
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Teferi's Puzzle Box"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "DRAW"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 1,
+                "options": [
+                  "Mountain"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Mountain"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "DRAW"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 2
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Mountain"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 2,
+          "zone": "hand",
+          "cards": [
+            "Island"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "On the battlefield as a two-player game begins: Rob goes first and has no draw step on turn 1 (CR 103.8a), so it does not trigger for him; at Maya's draw step on turn 2 it does",
+      "library": [
+        "Mountain",
+        "Island",
+        "Plains",
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Teferi's Puzzle Box"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rock"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bear",
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "hand",
+              "cards": [
+                "Rock"
+              ]
+            },
+            {
+              "seat": 0,
+              "zone": "library",
+              "count": 20
+            },
+            {
+              "stack": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "DRAW"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            },
+            {
+              "seat": 1,
+              "zone": "hand",
+              "cards": [
+                "Bear",
+                "Ogre",
+                "Mountain"
+              ]
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 1,
+                "options": [
+                  "Bear",
+                  "Ogre",
+                  "Mountain"
+                ],
+                "min": 3
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Ogre",
+            "Mountain",
+            "Bear"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Island",
+            "Plains",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rock"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 20
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "With the table's house rule that the first player draws (CR 103.8a's skip turned off): Rob has his draw step on turn 1, and it triggers there",
+      "skipFirstDraw": false,
+      "at": {
+        "turn": 1,
+        "phase": "DRAW"
+      },
+      "library": [
+        "Mountain",
+        "Island",
+        "Plains",
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Teferi's Puzzle Box"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rock"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bear",
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "stack": 1
+            },
+            {
+              "seat": 0,
+              "zone": "hand",
+              "cards": [
+                "Rock",
+                "Mountain"
+              ]
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Rock",
+                  "Mountain"
+                ],
+                "min": 2
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Mountain",
+            "Rock"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 19
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bear",
+            "Ogre"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

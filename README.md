@@ -475,6 +475,31 @@ every reopening and in its replay, and `tools/fuzz-live.mjs`, the seeded-games h
 any game with one. `room-slices` holds the room played in slices where a request's CPU is capped (a Durable Object's
 30 s): the AI seats stop after a step budget with nobody asked and the object's alarm plays on, the sliced game the
 same game as one played in one go and as its replay, leaving and ending refused with instructions until they stop.
+`room-refused-answer` holds a person's answer the rules refuse (the live fuzz found one): refused, 422, in the rules'
+words, with nothing changed -- storage key for key, the game, the view, no tape entry and no receipt -- and the same
+question still pending; the valid answer after it taken, the room reopened playing on and its tape replaying; a priority
+action the engine refuses likewise; an engine failure after an answer or a seat leaving undone with a 500 that says so;
+the refused frame over the Durable Object; and `tools/fuzz-live.mjs`'s random person answering a refused question again.
+`room-g1-terms` holds gate G1's other two terms on Rob's real decks (`tools/fuzz-live.mjs --replay --leaks`): what each
+seat may know of a card read off the state -- a hand its owner's, a library no one's but a revealed or looked-at top, a
+face-down card its controller's or its lookers', a name with a copy anywhere public no secret -- a name found only where
+it names a card, a planted leak found, a whole game of four of the decks with nothing leaked and an identical replay, and
+the checkpoints the replay found would not read back (an effect's `sublayer: undefined`, a copy's own values) now saved
+and read back as the same game; and the harness's person going round a loop at most four times a turn, and none once its
+seat controls a hundred permanents. `room-resolve-all` holds Resolve all (Rob, 2026-10-09): a run of the same trigger on
+top of the stack read off it, offered as one decision in a game that asked for it and in no other, the room passing for
+that seat through that run only -- asked again when another player's ability lands on top, no more passes than were
+there, kept across a wake and replayed -- and the board's button beside the pass, with the run one line on the stack.
+`room-untap-mana` holds Untap (Rob, 2026-10-11): a land tapped for mana, its mana unspent and nothing since, offered back
+to its person -- any of a run of taps, the game then exactly as before the first, to its hash -- and never a tap that did
+more (a pain land's damage), nor after a pass; kept with the room, replayed, and never taken by the fuzz harness's person.
+`table-basics` holds the table's basic lands as basic lands (Rob, 2026-10-11, Rampant Growth finding nothing): the table
+plays the engine's own definitions, the room's own basics are Basic and of their land type, and every card's scenarios
+pass played with the table's own lookup.
+`coach` holds the Coach (X13): its brief, the person's own hand, the board as everyone sees it and their deck as a sorted
+list, never another hand or a library's order; the table building it for the AI door alone; POST /api/ai/coach behind the
+door's gates and its own switch, asking Haiku 5.5 in one to three sentences, aiming for one; an answer naming anything not
+in the brief refused; and the board's panel showing the answer, Show me and Why?, and the AI door's sign-in.
 `engine-derive-once` holds the layers' memo: each object derived once per question and guard level, the same answers as
 without it on a board where the guard levels differ, a question that only reads changing nothing, and the work linear in
 the board. `engine-targets-up-to`
@@ -508,7 +533,7 @@ two mana and a summoning-sick creature left to tapping by hand. `engine-pay-choi
 pays more than one way offered and asking which way (X8b): two colors for generic, a Phyrexian symbol's mana or life, a
 hybrid; one way asks nothing, a way gone from the pool is refused, and the house pilot pays with mana. `staging-check`
 holds `tools/staging-check.mjs`, a session reading staging back through its Access service token: the release, both
-pages' version and the seated identity, and what is wrong when Access refuses or the release is not the one expected. `engine-cards-pb1` holds what the scenarios of Rob's
+pages' version and the seated identity, and what is wrong when Access refuses or the release is not the one expected; and, with `--agents`, the four agents' tokens (M8): four identities at staging, none admitted by production. `engine-cards-pb1` holds what the scenarios of Rob's
 priority list's first cards cannot reach: a creature that can't block never offered as a blocker (on itself, on a
 selector, for a turn), "destroy all other creatures" sparing only what the spell made, every counter removed, and "choose
 one or both"; `engine-cards-pb2`, the next slice's: exhaust once per object (a new object may again), an ability of a
@@ -633,7 +658,8 @@ creatures; and an emblem (Ajani Resolute), an effect with no source and no end, 
 cast so, one removed at its controller's end step, and none of it when cast for its mana cost; and "cards with
 different names" (Gifts Ungiven), one of each name offered.
 `engine-overload` holds overload (Winds of Abandon): offered beside the mana cost, with no target; a repetition that
-asks, each player in turn; and each search by the creature's controller as it left the battlefield.
+asks, each player in turn; and each search by the creature's controller as it left the battlefield. The keyword is
+credited as built, with Mizzium Mortars and Vandalblast (Train B X11).
 `engine-discover` holds discover (Quintorius Kand), written with what was built: past what doesn't fit, the rest under,
 cast free from exile or put into hand; each opponent dealt 2 for a spell cast from exile; and mana for each card exiled.
 `engine-eminence` holds eminence (The Ur-Sphinx), from the command zone and its owner's other Sphinxes only; "that many"
@@ -713,6 +739,52 @@ choice; and three counters from among its controller's other permanents, picked 
 `engine-cards-x11-b2` holds what the scenarios of X11's second batch cannot reach: Topiary Stomper can't attack or block
 unless its controller has seven lands, at six and at seven ("can't block" on a condition, now compiled); Plaza of Heroes'
 two ways to make {W}, one only for a legendary spell; Purphoros an attacker only at devotion five.
+`engine-x11-permissions` holds what the scenarios of X11's permissions and control cards cannot reach: a card leaving a
+graveyard counted per graveyard, cards only, from none each turn (Primary Research, Relic Retriever); Sower of Temptation's
+control while it remains, control changes ending in timestamp order; a player leaving the game (CR 800.4a), each kind of
+control change they had given back, what they still control exiled, what would return to them exiled (800.4c); Legion
+Warboss's token required to attack this combat, mentor's lesser power as it resolves; four players, and the credits.
+`engine-x11-leave` holds a player leaving the game (CR 800.4a): everything they own leaving every zone, the stack and
+phasing, with nothing said of a hidden card; their spells leaving and abilities ceasing, a resolution of theirs cut short
+and priority passed on; what they still control exiled; a permanent phased out under them phasing in after their turn
+would have begun (702.26n); their delayed trigger never put on the stack, their "until this leaves" exile returning.
+`engine-layer-prune` holds the dependency order made without the trials that cannot find one (CR 613.8a): a layer where no effect reads what another writes, and every shared write commutes, is in timestamp order with no pair tried; a real dependency is still found, and a one-way one with the one trial it needs; a sublayer of more than 64 effects loses none; and a whole seeded game of Rob's decks (the G1 game a person waited 20 seconds in) agrees with every skipped trial made.
+`engine-x11-leave-questions` holds a player leaving the game while they are asked (CR 800.4f-h): their sacrifice, discard,
+search, commander, Aura, attacking tokens and conniving left with them, the next player asked; an "unless" cost not paid;
+any other choice -- a "may" of theirs, Fact or Fiction's piles, Gifts Ungiven's two -- made by another opponent, the
+controller choosing which; the next defender blocking, the next player's triggers and targets, combat damage dealt to
+nobody who has left (800.4e), priority to the next player (800.4j); and a fuzzed concession at every question of seeded
+games, none stalling or leading to a refused answer.
+`engine-x11-memory` holds the pieces the memory axis's last ten cards needed, at their edges and at four seats: discarding
+"up to" two (Fable of the Mirror-Breaker); all of a kind of counter removed, counted, and a color asked for each mana
+(Coalition Relic); "put into exile from your library and/or your graveyard" (Laelia); a reduction for spells cast from
+anywhere but the hand (Advanced Reconstruction); copies cast (Mizzix's Mastery) and Overload credited; each creature card
+exiled with it, a 1/1 Spirit in addition to its other types (Ghost Vacuum); Getaway Barrel, Settle the Wreckage and
+Currency Converter at the edges the scenarios cannot reach; and an adventurer card's offer leaving the card as it was.
+`engine-x11-counts-triggers` holds the counts and triggers of the effects axis's last cards: a creature dealt damage this
+turn (Mirrodin Avenged), the other attackers sharing a creature type with one (Shared Animosity), the nontoken creatures
+you controlled that were destroyed (Ceaseless Conflict), a mana value capped by a count (Venerable Warsinger), and a
+preparation card cast. `engine-x11-turns-counters` holds extra turns (Ichormoon Gauntlet: the newest first, turn order
+resumed after them, a departed player's dropped), counters moved and the kind asked, and "only once each turn" (Tidus).
+`engine-x11-costs` holds the costs X11's costs worker built, each paid with what the player picks: Burn at the Stake's "tap
+any number of untapped creatures you control" (one offer, asked once taken, never tapped for), Cathartic Reunion's two
+discards, the mana abilities that tap another creature (Jaspera Sentinel, Saruli Caretaker) or exile a card from the
+graveyard (Rubble Rouser, with its "when you do"), Lorehold Excavation's creature card exiled, and Squee, Dubious
+Monarch's alternative cost from the graveyard, four other cards exiled (no escape); four players, both pilots' answers, the
+refusals, and no payer ever choosing the creature or the card for the player.
+`engine-x11-filters` holds the selector key X11's costs worker built for Hemlock Vial: "each equipped creature", an
+Equipment attached and still there, not an Aura; only what the Vial's controller controls, its set fixed as it resolves.
+`engine-x11-keep` holds the two ways X11's costs worker built to choose what is kept before the rest is sacrificed: Slaughter
+the Strong's "creatures with total power 4 or less", each player asked in turn with the question's budget, refused past
+it, all sacrificed at once; and Tragic Arrogance's caster choosing one of each type for every player, asked only where
+there is a choice; four players, both pilots' answers, a planeswalker and an artifact land.
+`engine-x11-finality` holds finality counters (CR 122.1h): a permanent with one exiled instead of put into a graveyard from
+the battlefield, destroyed, sacrificed or dead to damage, any kind of permanent, beside another "exile it instead" without
+a question, to a hand untouched; moveZone's "with a finality counter on it"; and Excava, the Risen Past at four players.
+`engine-x11-pay-x` holds Halo Forager's "you may pay {X}. When you do, you may cast target instant or sorcery card with
+mana value X from a graveyard without paying its mana cost. If that spell would be put into a graveyard, exile it
+instead": every amount the payer could pay offered, which mana asked when it matters, the X carried to the reflexive
+trigger's targets in every graveyard, the spell cast marked to be exiled, both pilots' answers, the schema.
 `engine-mulligan` holds the
 London rule: every mulligan draws seven, the bottoming happens when you keep and over the hand you
 kept, the player chooses which cards go, and they go to the bottom.
@@ -831,7 +903,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 361 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 510 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -883,6 +955,36 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `deck-sources` — `tests/deck-sources.mjs`
 - `docx-writer` — `tests/docx-writer.mjs`
 - `edhrec-client` — `tests/edhrec-client.mjs`
+- `engine-actions` — `tests/engine-actions.mjs`
+- `engine-cast` — `tests/engine-cast.mjs`
+- `engine-combat` — `tests/engine-combat.mjs`
+- `engine-commander` — `tests/engine-commander.mjs`
+- `engine-controller` — `tests/engine-controller.mjs`
+- `engine-effects` — `tests/engine-effects.mjs`
+- `engine-enters` — `tests/engine-enters.mjs`
+- `engine-filter` — `tests/engine-filter.mjs`
+- `engine-gate` — `tests/engine-gate.mjs`
+- `engine-headers` — `tests/engine-headers.mjs`
+- `engine-journal` — `tests/engine-journal.mjs`
+- `engine-keywords` — `tests/engine-keywords.mjs`
+- `engine-layers` — `tests/engine-layers.mjs`
+- `engine-lki` — `tests/engine-lki.mjs`
+- `engine-mana` — `tests/engine-mana.mjs`
+- `engine-mulligan` — `tests/engine-mulligan.mjs`
+- `engine-priority` — `tests/engine-priority.mjs`
+- `engine-projection` — `tests/engine-projection.mjs`
+- `engine-replacement` — `tests/engine-replacement.mjs`
+- `engine-resolution` — `tests/engine-resolution.mjs`
+- `engine-rng` — `tests/engine-rng.mjs`
+- `engine-runtime` — `tests/engine-runtime.mjs`
+- `engine-sba` — `tests/engine-sba.mjs`
+- `engine-schema` — `tests/engine-schema.mjs`
+- `engine-skeleton` — `tests/engine-skeleton.mjs`
+- `engine-stack` — `tests/engine-stack.mjs`
+- `engine-state` — `tests/engine-state.mjs`
+- `engine-trigger` — `tests/engine-trigger.mjs`
+- `engine-turn` — `tests/engine-turn.mjs`
+- `engine-vocabulary` — `tests/engine-vocabulary.mjs`
 - `engine-cards` — `tests/engine-cards.mjs`
 - `engine-catalog` — `tests/engine-catalog.mjs`
 - `engine-deaths` — `tests/engine-deaths.mjs`
@@ -964,9 +1066,14 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-equip` — `tests/engine-equip.mjs`
 - `engine-event-triggers` — `tests/engine-event-triggers.mjs`
 - `engine-house-pilot` — `tests/engine-house-pilot.mjs`
+- `agent-seat-table` — `tests/agent-seat-table.mjs` (an AI on Claude at the table: seated only through the AI door, asked on the table's alarm, held to its game's cap)
+- `engine-scored-pilot` — `tests/engine-scored-pilot.mjs` (the house pilot's L1: draw odds, exact combat, its choices scored, Easy and Normal)
 - `engine-ingest` — `tests/engine-ingest.mjs`
 - `engine-learned` — `tests/engine-learned.mjs`
 - `engine-mana-abilities` — `tests/engine-mana-abilities.mjs`
+- `engine-exile-commanders` — `tests/engine-exile-commanders.mjs` (Quintorius and Maralen linked exile, free casting and owner choices)
+- `engine-faerie-interactions` — `tests/engine-faerie-interactions.mjs` (second-card draws, Spellstutter's live Faerie count and Winnower's unequal power/toughness targets)
+- `engine-chulane-completion` — `tests/engine-chulane-completion.mjs` (Guardian Project, Yavimaya Dryad, Claim Jumper)
 - `engine-search` — `tests/engine-search.mjs`
 - `engine-storage` — `tests/engine-storage.mjs`
 - `engine-targets` — `tests/engine-targets.mjs`
@@ -1016,14 +1123,29 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `game-room` — `tests/game-room.mjs`
 - `room-refusals` — `tests/room-refusals.mjs`
 - `room-slices` — `tests/room-slices.mjs`
+- `room-seat-pilots` — `tests/room-seat-pilots.mjs` (an AI seat's Easy or Normal, from New table to the pilot; L1 games replay)
+- `room-agent-seat` — `tests/room-agent-seat.mjs` (the LLM seat in the room: only its close calls offered to it, its answers on the tape)
+- `room-refused-answer` — `tests/room-refused-answer.mjs`
+- `room-g1-terms` — `tests/room-g1-terms.mjs`
 - `game-table` — `tests/game-table.mjs`
 - `game-leave` — `tests/game-leave.mjs`
 - `table-lobby` — `tests/table-lobby.mjs`
 - `table-board` — `tests/table-board.mjs`
+- `board-callouts` — `tests/board-callouts.mjs` (the board's reading of a new view against the last, for the callouts over the table: your turn, attackers against you, hits and life, a seat out, countered and tokens, destroyed and exiled, a response on the stack, the game's end; a hidden card never named)
+- `a11y-app` — `tests/a11y-app.mjs` (WCAG 2.1 1.4.3 across the app: every rule that sets words on the accent, and the Decks page's primary buttons, at 4.5:1 in all four themes)
+- `a11y-board` — `tests/a11y-board.mjs` (WCAG 2.1 AA on the board and the lobby: every word's contrast from the screen's pixels over all the mats in both themes, the focus rings, Tab in reading order, the keys as bound in Help, every card's label with its state and nothing hidden, the questions announced)
 - `room-beats` — `tests/room-beats.mjs`
+- `room-resolve-all` — `tests/room-resolve-all.mjs`
+- `room-untap-mana` — `tests/room-untap-mana.mjs`
+- `table-basics` — `tests/table-basics.mjs`
+- `coach` — `tests/coach.mjs`
 - `board-choices` — `tests/board-choices.mjs`
 - `crankmagic-audio` — `tests/crankmagic-audio.mjs`
+- `advice-contract` — `tests/advice-contract.mjs` (preparation-only AI requests, evidence references and stale-result rejection)
 - `advise-brief` — `tests/advise-brief.mjs`
+- `advisor` — `tests/advisor.mjs` (the deck advisor through the AI door: the brief built from the person's own library in the cloud, grounded swaps only, on the day's caps)
+- `ops-week` — `tests/ops-week.mjs` (M3's weekly check, `tools/ops-week.mjs`, against a stand-in for Cloudflare's API: it reads and changes nothing, counts the Worker's monitoring lines by kind and status, never reads an address, and names an incident; `docs/ops.md`)
+- `advisor-page` — `tests/advisor-page.mjs` (Ask the AI advisor on a deck's page: offered only where the door would answer, swaps saved as upgrades)
 - `import-flow` — `tests/import-flow.mjs`
 - `deck-holds-cards` — `tests/deck-holds-cards.mjs`
 - `group-templates` — `tests/group-templates.mjs`
@@ -1037,6 +1159,8 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `slow-start` — `tests/slow-start.mjs`
 - `menu-help` — `tests/menu-help.mjs`
 - `playtest-findings` — `tests/playtest-findings.mjs`
+- `playtest-triage` — `tests/playtest-triage.mjs`
+- `playtest-harness` — `tests/playtest-harness.mjs`
 - `migrate-dry-run` — `tests/migrate-dry-run.mjs`
 - `sw-update` — `tests/sw-update.mjs`
 - `game-history` — `tests/game-history.mjs`
@@ -1164,6 +1288,134 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-card-choice-memory` - `tests/engine-card-choice-memory.mjs`
 - `engine-enter-transformed` - `tests/engine-enter-transformed.mjs`
 - `engine-power-comparison` - `tests/engine-power-comparison.mjs`
+- `engine-x11-permissions` - `tests/engine-x11-permissions.mjs`
+- `engine-x11-leave` - `tests/engine-x11-leave.mjs`
+- `engine-x11-leave-questions` - `tests/engine-x11-leave-questions.mjs`
+- `engine-layer-prune` - `tests/engine-layer-prune.mjs`
+- `engine-x11-memory` - `tests/engine-x11-memory.mjs`
+- `engine-x11-counts-triggers` - `tests/engine-x11-counts-triggers.mjs`
+- `engine-x11-turns-counters` - `tests/engine-x11-turns-counters.mjs`
+- `engine-x11-costs` - `tests/engine-x11-costs.mjs`
+- `engine-x11-filters` - `tests/engine-x11-filters.mjs`
+- `engine-x11-keep` - `tests/engine-x11-keep.mjs`
+- `engine-x11-finality` - `tests/engine-x11-finality.mjs`
+- `engine-x11-pay-x` - `tests/engine-x11-pay-x.mjs`
+- `engine-x11-flanking` - `tests/engine-x11-flanking.mjs`: flanking (Sidar Kondo of Jamuraa), once per blocker without it, and a selector's "without" a keyword
+- `engine-x11-umbra-armor` - `tests/engine-x11-umbra-armor.mjs`: umbra armor (Treefolk Umbra) wherever a permanent would be destroyed, and the CR 616.1 choice between two ways out
+- `engine-x11-living-weapon` - `tests/engine-x11-living-weapon.mjs`: living weapon (Bitterthorn, Nissa's Animus), the Germ made and equipped, its controller's
+- `engine-x11-evolve` - `tests/engine-x11-evolve.mjs`: evolve (Fathom Mage), its comparison as it triggers and resolves, and a trigger for each counter, entered with or put on
+- `engine-x11-backup` - `tests/engine-x11-backup.mjs`: backup (Guardian Scalelord), its counter, and the abilities printed below it given to another creature until end of turn
+- `engine-x11-cumulative-upkeep` - `tests/engine-x11-cumulative-upkeep.mjs`: cumulative upkeep (Mystic Remora), an age counter each upkeep and its cost for every one, or sacrificed
+- `engine-x11-prowl` - `tests/engine-x11-prowl.mjs`: prowl (Latchkey Faerie), after combat damage by a source of the caster's sharing a creature type, this turn
+- `engine-x11-escalate` - `tests/engine-x11-escalate.mjs`: escalate (Collective Effort), its cost for each mode beyond the first, the creatures to tap asked of the caster
+- `engine-x11-unearth` - `tests/engine-x11-unearth.mjs`: unearth (Salvation Colossus), from the graveyard at sorcery speed for mana or energy, and exiled at the end step or instead of leaving any other way
+- `engine-x11-ascend` - `tests/engine-x11-ascend.mjs`: ascend (Wayward Swordtooth), the city's blessing at ten permanents for the rest of the game, a permanent's and a spell's, and "unless you have the city's blessing"
+- `engine-chosen-mode` - `tests/engine-chosen-mode.mjs`: a Siege's chosen mode (Outpost Siege), asked as its ability triggers -- as the Siege last was, for one that left with the creatures -- and never again as it resolves
+- `engine-restricted-source` - `tests/engine-restricted-source.mjs`: mana for abilities of a kind of source (Woodland Weavemaster) pays for that object wherever it is, a card's cycling in a hand too; for abilities of creatures, a permanent only
+- `engine-zone-costs` - `tests/engine-zone-costs.mjs`: an activated ability's costs offered, chosen and paid wherever it works from (Eldrazi Ravager's "Sacrifice two Eldrazi" from the graveyard; a discard from a hand; a creature to tap)
+- `engine-adventure-targets` - `tests/engine-adventure-targets.mjs`: an Adventure's counted targets asked and answered as the Adventure's (Meager Meal's up to one creature, Gaze in Wonder's one or two, Gone Fishing's two of yours)
+- `engine-dig-reveal` - `tests/engine-dig-reveal.mjs`: what a dig reveals shown to every player (Satyr Wayfinder's four, in the journal and in each seat's view while its controller chooses; Boughside Wanderers' card taken, alone)
+- `engine-history-records` - `tests/engine-history-records.mjs`: what happened this turn and this game -- creatures that died (morbid), cards drawn, noncombat damage, a scry or surveil, opponents' life lost (spectacle), spells cast, by name -- a graveyard card from the battlefield this turn, and what has dealt damage
+- `engine-attacked-recipient` - `tests/engine-attacked-recipient.mjs`: "the player or planeswalker that creature is attacking" (CR 506.3; Raid Bombardment, Myr Battlesphere), at four seats, with the planeswalker or the creature gone before the trigger resolves
+- `engine-attacks-alone` - `tests/engine-attacks-alone.mjs`: "attacks alone" and "attacks a player alone" (CR 506.5; Thoughtweft Imbuer, Jiang Yanggu), the cards discarded this turn by every route, and "during combat, players can't cast spells or activate abilities that aren't mana abilities" (Yuriko, Blade of the Mighty)
+- `engine-combat-moments` - `tests/engine-combat-moments.mjs`: delayed triggers at end of combat (Wall of Junk) and at the declare attackers step of your next turn (Meandering Towershell); a step that asks has begun for its triggers (the held draw too); an attack made of a creature put onto the battlefield attacking (CR 508.8), a planeswalker among what it may attack (CR 508.4); islandwalk
+- `engine-lose-game` - `tests/engine-lose-game.mjs`: "that player loses the game" (CR 104.3e; Strixhaven Stadium, Triskaidekaphobia), at once and together, a draw when all who remain do, against "you can't lose the game", the loser's own spell gone with them; and combat damage "to you"
+- `engine-combat-statics` - `tests/engine-combat-statics.mjs`: "attacking creatures you control get +1/+0" (Goblin Oriflamme), defender lifted while a Lesson is in your graveyard (Platypus-Bear), and negative power assigned as positive (CR 510.1a; Loot, the Anomaly)
+- `engine-counters-replaced` - `tests/engine-counters-replaced.mjs`: counters put on, replaced -- that many plus one (Hardened Scales), half rounded down (Vorinclex), twice -- by whom, and the CR 616.1 order asked of the affected player where it changes how many
+- `engine-lki-dies` - `tests/engine-lki-dies.mjs`: what a creature was as it died -- the counters it had, its keywords, its toughness -- for a dies trigger as it triggers and resolves, through a wipe, a checkpoint and a theft
+- `engine-exile-if-dies` - `tests/engine-exile-if-dies.mjs`: "if that creature would die this turn, exile it instead" (Essence Burn) -- every way to die, never a death, a bounce and a new object not it, beside other exile-instead effects, this turn only
+- `engine-life-doubled` - `tests/engine-life-doubled.mjs`: "you gain twice that much life instead" (Rhox Faithmender) -- an effect's gain, lifelink in and out of combat, an exchange; four times for two; can't gain life
+- `engine-tokens-replaced` - `tests/engine-tokens-replaced.mjs`: tokens created, replaced -- twice that many (Anointed Procession), Dragons instead of artifact tokens (Draconic Visitor), a Soldier beside creature tokens (Queen Allenal of Ruadach; the order beside a doubler asked of the tokens' controller, CR 616.1) -- whose control, copies, the effect's own words on what is made instead
+- `engine-draws-replaced` - `tests/engine-draws-replaced.mjs`: an opponent's two or more draws replaced, one each (Alms Collector), and whose of two players' asked of the drawing player before anything is drawn
+- `engine-cant-be-sacrificed` - `tests/engine-cant-be-sacrificed.mjs`: "can't be sacrificed" (Alexios, Deimos of Kosmos) -- told to, nothing happens; never among the choices of an effect or a cost -- and whose control and counter "that player" is
+- `engine-cost-targets` - `tests/engine-cost-targets.mjs`: a cost read from its targets (Magnificent End, Warrior's Blades, Dwarven Mauler), each way to choose them costed and offered on its own (CR 601.2c, 601.2f)
+- `engine-cost-atoms` - `tests/engine-cost-atoms.mjs`: three cost atoms -- a +1/+1 counter from a creature you control (Bolrac-Clan Crusher), a discard in a flashback cost (Twinned Vision), and life counted as it is paid, unpayable without a commander (War Room; CR 903.4f)
+- `engine-behold` - `tests/engine-behold.mjs`: behold as a cost (CR 701.4a; Lys Alana Dignitary, Kindle the Inner Flame), a permanent chosen or a card revealed from the hand, which ones asked once the cast is taken
+- `engine-waterbend` - `tests/engine-waterbend.mjs`: waterbend as an activated ability's cost (CR 701.67; Giant Koi, Foggy Swamp Vinebender), artifacts and creatures tapped for its generic mana, never for an increase on it
+- `engine-cant-cast-self` - `tests/engine-cant-cast-self.mjs`: a card's own "you can't cast this spell unless ..." (Proft, Sinister Mastermind's threshold), read wherever it would be cast from
+- `engine-unless-tap` - `tests/engine-unless-tap.mjs`: "you may tap another untapped Merfolk you control. When you do, ..." (Meanders Guide; CR 118.12a, 603.12), each permanent its own option
+- `engine-spell-x-cost` - `tests/engine-spell-x-cost.mjs`: a spell with {X} in its mana cost, as a selector (Frontline Medic; CR 107.3) -- on the stack whatever X was chosen, in a hand, on the battlefield; {Y} is not {X} -- and battalion as the attack as a whole
+- `engine-shares-card-type` - `tests/engine-shares-card-type.mjs`: "each opponent may sacrifice a permanent that shares a card type with it; for each opponent who doesn't ..." (Braids, Arisen Nightmare) -- the card types of what was sacrificed as it last existed, a sacrifice that may be declined, and what follows each refusal, in turn order
+- `engine-target-groups` - `tests/engine-target-groups.mjs`: a counted target's choices together -- "up to two target cards from a single graveyard" (Unlicensed Hearse), "two target creature cards that share a creature type" (Unbury) -- a way to aim it for each group, picked within it, held to it as cast and as it resolves (CR 601.2c, 608.2b)
+- `engine-sacrifice-sparing` - `tests/engine-sacrifice-sparing.mjs`: "each player sacrifices all other creatures they control that don't share a creature type with the chosen creature they control" (Winnowing; CR 205.3m) -- the chosen creature's kin spared, its controller's only, through the layers, a changeling sharing every type
+- `engine-cast-trigger-choice` - `tests/engine-cast-trigger-choice.mjs`: "whenever you cast an Equipment spell or a spell that targets a creature you control" (Danitha, Sword of Hope; CR 601.2c) -- a spell cast trigger's choice of spells, each a filter of the spell, of what it targets, or both
+- `engine-player-extremes` - `tests/engine-player-extremes.mjs`: every player's, compared -- the fewest cards in hand among all players (Naktamun Lorespinner), the graveyards with seven or more cards (Master's Councillors), more life than another of your opponents and that attacking player (Breena, the Demagogue) -- players who have left aside (CR 800.4a)
+- `engine-enters-or-leaves` - `tests/engine-enters-or-leaves.mjs`: "if a legendary permanent or an artifact entering or leaving the battlefield causes a triggered ability ... to trigger, that ability triggers an additional time" (Gandalf the White; CR 603.2d, 603.10a) -- every way to leave, as it last existed, a token, its own dies trigger, two at once
+- `engine-mana-provenance` - `tests/engine-mana-provenance.mjs`: "if mana from a Treasure was spent to cast it" (Smaug, Wicked Worm; CR 106.3, 601.2h) -- a mana ability's mana remembered with its source when an ability asks, the spell keeping it, and which mana pays the caster's choice where it is read
+- `engine-mana-withheld` - `tests/engine-mana-withheld.mjs`: "This mana can't be spent to cast spells from your hand" (Heartwood Crafter; CR 106.4, 106.6, 118.12) -- in the pool and remembered beside it: a spell cast from the hand sees the pool less it, anything else spends it first, and a spend the engine is not told of (an "unless" cost, a mana ability's own cost) is read as having spent it first, settled before mana is added again
+- `engine-split-second` - `tests/engine-split-second.mjs`: split second (Siege Smash), nothing cast and no ability but a mana ability activated while it is on the stack; triggers and special actions go on
+- `engine-riot` - `tests/engine-riot.mjs`: riot (Ghor-Clan Wrecker), a +1/+1 counter or haste, its controller's choice as it enters however it enters, each instance its own
+- `engine-surge-freerunning` - `tests/engine-surge-freerunning.mjs`: surge (Reckless Bushwhacker) and freerunning (Monastery Raid), alternative costs after another spell or an Assassin's or commander's combat damage this turn, and "if its cost was paid"
+- `engine-embalm` - `tests/engine-embalm.mjs`: embalm (Anointer Priest), from its owner's graveyard as a sorcery, the card exiled, a white Zombie token copy of it with no mana cost
+- `engine-tiered` - `tests/engine-tiered.mjs`: tiered (Cloud's Limit Break), one mode with its own cost added, each mode its own cast, a mode's target controlled by different players
+- `engine-suspend-hand` - `tests/engine-suspend-hand.mjs`: suspend from the hand (Knight of Old Benalia), a special action at the timing it could be cast, exiled with its time counters and suspended
+- `engine-protection-multicolored` - `tests/engine-protection-multicolored.mjs`: protection from multicolored (Argentum Masticore), and "sacrifice it unless you discard a card; when you discard a card this way", about the card discarded
+- `engine-hexproof-from` - `tests/engine-hexproof-from.mjs`: a color chosen as it resolves (Skrelv, Defector Mite), hexproof from that color and unblockable by creatures of it until end of turn
+- `engine-partner-with` - `tests/engine-partner-with.mjs`: partner with [name] (for Pir, Imaginative Rascal), two commanders that name each other, and the trigger as it enters: its target player may search their library for the card it names
+- `engine-firebending` - `tests/engine-firebending.mjs`: firebending (Fire Nation Cadets), whenever it attacks N {R} kept as combat's steps end, no more than is left, and lost as combat ends; each instance its own; the Cadets' only while a Lesson is in its controller's graveyard
+- `engine-compleated` - `tests/engine-compleated.mjs`: compleated (Vraska, Betrayal's Sting), two fewer loyalty counters for each Phyrexian symbol its caster paid with life, never fewer than none; a creature made a Treasure artifact for good, and a target player's poison counters counted to nine
+- `engine-disguise` - `tests/engine-disguise.mjs`: disguise (Arno Dorian, Bayek of Siwa), a card cast face down for {3}, a nameless 2/2 with ward {2} on the stack and the battlefield, never named to another seat; turned face up for its disguise cost alone, a special action
+- `engine-adventure-asking` - `tests/engine-adventure-asking.mjs`: asking what an adventurer card may do changes nothing, the card shown as itself again with no empty subtypes, supertypes or colors kept
+- `engine-counted-amounts` - `tests/engine-counted-amounts.mjs`: amounts counted as printed -- half and "for every seven", rounded down (Pox Plague, Dark Matter Manipulator), each player's own count for a discard or a sacrifice, a target player's hand (Borrowed Knowledge, Jeska's Will), a whole hand remembered, a remembered count filtered and carried into a reflexive trigger (Release to Memory, Augusta, Order Returned), converge (Sundering Archaic), planeswalker types and proliferate X times (Tam, the Possibility), your commanders' casts
+- `engine-another-died` - `tests/engine-another-died.mjs`: "if another creature died this turn" (Chain Assassination), the deaths this turn less what the destroy killed, as a destroy remembers it -- not the indestructible, nor one exiled instead
+- `engine-each-player-creates` - `tests/engine-each-player-creates.mjs`: "each opponent creates a 1/1 white Human creature token" (Slaughter Specialist; CR 111.2) -- a token made for "that player" of a repetition, theirs to control and own, in turn order, none for a player gone
+- `engine-attach-target` - `tests/engine-attach-target.mjs`: "attach target Equipment you control to up to one target creature you control" (Iron Hills Stalwart; CR 701.3) -- the targeted Equipment moves, from where it was; nothing moves for an illegal target, none chosen, or protection
+- `engine-counters-removed` - `tests/engine-counters-removed.mjs`: "remove up to three counters from another target creature or planeswalker" (Mabel, Bitter Recluse; CR 122.1, 608.2d) -- of any kinds, which ones its controller chooses as it resolves, counted after; unasked where there is no choice
+- `engine-graveyard-abilities` - `tests/engine-graveyard-abilities.mjs`: "Thranduil has all activated abilities of all Elf cards in your graveyard" (CR 613.1f) -- its controller's graveyard as it now is, a changeling card among them, one ability each, "this creature" the holder
+- `engine-copy-set` - `tests/engine-copy-set.mjs`: copies of a set and of a card from among those that left a graveyard (Mirrorform, Spirit of Resilience; CR 707.2, 611.2c, 400.7e) -- each matched as it begins; what that leaves attached unattached (CR 704.5p, 301.5c); a card where it is now
+- `engine-roles` - `tests/engine-roles.mjs`: Role tokens (Royal Treatment; CR 303.7, 303.4i, 704.5z) -- a Royal Role created attached, not created for what it could not enchant, and one player's newest Role alone on a permanent
+- `engine-warp-sneak` - `tests/engine-warp-sneak.mjs`: warp (All-Fates Stalker, Pinnacle Emissary; CR 702.185) from the hand alone, exiled at the next end step and castable by its owner from exile after that turn; void (Plasma Bolt) any player's, this turn's; sneak (Leonardo, Leader in Blue; CR 702.190) at an instant's timing in its caster's declare blockers step, attacking whom the returned creature attacked; Omnath, Locus of the Void's mana kept as {C}; a Drone that can block only flyers; and Tractor Beam's "you control enchanted permanent"
+- `engine-counters-onto` - `tests/engine-counters-onto.mjs`: "move any number of +1/+1 counters from this creature onto other creatures" (Forgotten Ancient; CR 122.5) -- where each goes asked a counter at a time, then all moved at once, one placement on each; all or nothing
+- `engine-counter-duration` - `tests/engine-counter-duration.mjs`: "for as long as that land has a blight counter on it, it loses all land types and abilities" (Ultima, Origin of Oblivion; CR 611.2b, 205.3i) -- applied while it has the counter, over for good once it does not; every land type lost, a land creature's creature types kept
+- `engine-dig-by-type` - `tests/engine-dig-by-type.mjs`: a dig's cards to zones by card type (Zimone's Experiment; CR 701.20a) -- lands onto the battlefield tapped, creatures into hand, a land creature with the lands, the taken alone revealed
+- `engine-search-steps` - `tests/engine-search-steps.mjs`: a search a card at a time (Krosan Verge, Myriad Landscape; CR 701.23b, 701.23h) -- a description for each card, or sharing a land type; found together, shuffled once
+- `engine-unless-exile` - `tests/engine-unless-exile.mjs`: "you may exile this spell and four cards named Sphinx's Approach from your graveyard. If you do" (CR 118.12a, 707.10a) -- offered only when it can be paid, which four asked; and its deck rule (CR 100.2a)
+- `engine-revealed-hand` - `tests/engine-revealed-hand.mjs`: a discard chosen from a revealed hand (CR 701.9b, 701.20a; Render Speechless, Stinging Vitriol, Dai Li Indoctrination, Auntie's Sentence) -- every card shown to every seat while it is chosen, named in the journal, discarded by its own player -- and "any number of cards, then draws that many" (Steal the Show)
+- `engine-discard-triggers` - `tests/engine-discard-triggers.mjs`: "when you discard this card" (CR 113.6k; Titanbones, Towering Heart) from the zone it went to, its own discard alone -- at cleanup and as a cost -- and "whenever a player discards one or more cards" (CR 603.2c; Tinybones, Pocket Nuisance), once for each player each action
+- `engine-graveyard-upkeep` - `tests/engine-graveyard-upkeep.mjs`: a triggered ability that works from its card's graveyard (CR 113.6m; Squee, Goblin Nabob) -- there alone, for its owner, once for each card, finding nothing once the card has left
+- `engine-proliferated` - `tests/engine-proliferated.mjs`: "whenever you proliferate" (CR 701.34a; Ezuri, Stalker of Spheres) -- every proliferate said as it is done, counters given or none, by whom, twice when doubled (Tekuthal)
+- `engine-crime` - `tests/engine-crime.mjs`: "whenever you commit a crime" (CR 700.13; Bandit's Haul) -- a spell cast, an ability activated or a trigger put on the stack aimed at an opponent, what they control, or a card in their graveyard, once for it, by whom
+- `engine-state-trigger` - `tests/engine-state-trigger.mjs`: state triggers (CR 603.8; Darksteel Reactor) -- triggering the moment the state holds, not again while waiting or on the stack, again once resolved if it still holds, one for each permanent
+- `engine-transformed` - `tests/engine-transformed.mjs`: "whenever this creature transforms into" a face (CR 701.27e; Ashling, Rekindled // Ashling, Rimebound), this permanent's own turning over and never entering transformed, and an ability's two mana of one color, kept for what it may pay for (CR 106.6)
+- `engine-delayed-mana` - `tests/engine-delayed-mana.mjs`: a delayed triggered mana ability (CR 603.7, 605.1b; Molten Tide, Pyre Rhymer's prepared spell) -- added at once with the mana ability that triggers it, never on the stack, for what it names, its controller's, until it ends
+- `engine-opening-hand` - `tests/engine-opening-hand.mjs`: an opening hand's actions (CR 103.6b; Chancellor of the Forge) asked once the mulligans are done, the starting player first, a card at a time -- revealed to everyone until the first turn begins -- and the delayed trigger at the first upkeep (CR 603.7g)
+- `engine-attack-tax-answers` - `tests/engine-attack-tax-answers.mjs`: an attack tax the attacker can't pay (CR 508.1d, 508.1h): the declare-attackers record says what each attack takes from the mana there is, and L0, L1, the random pilot and the room's least answer declare only what can be paid for -- a required Goblin goes where it is free
+- `engine-counter-exile-cast` - `tests/engine-counter-exile-cast.mjs`: a permanent spell countered and exiled instead, and cast free for as long as it remains exiled (Thranduil's Decree; CR 701.6a, 611.2b, 400.7): what the counter moved remembered, a permission only for a card in exile now
+- `engine-ability-target` - `tests/engine-ability-target.mjs`: an ability on the stack as a target (Bolt Bend; CR 115.2, 115.5, 115.7a, 115.9a): chosen by its stack entry, by whose and "with a single target", gone once it leaves; an effect's stack entries; its new target held to the ability's own requirements; the room's offer and the pilots' aim read off the stack
+- `engine-tempting-offer` - `tests/engine-tempting-offer.mjs`: a tempting offer (Tempt with Vengeance; CR 207.2c, 101.4, 800.4b, 800.4g): each opponent asked a "may" in turn order, those who did kept and counted (playersWhoDid, X for each with times X), one who leaves answered for, given nothing and not counted
+- `engine-prevention-shields` - `tests/engine-prevention-shields.mjs`: a player's prevention shields (Inkshield, Deflecting Palm; CR 609.7a, 615.5, 615.8, 616.1): who they shield, a source chosen, used up once, what follows dealt by the card the spell became, ordered with the other effects by the player dealt the damage
+- `engine-vote` - `tests/engine-vote.mjs`: voting (Fateful Tempest's council's dilemma; CR 701.38, 800.4a): each player from the caster in turn order, the votes so far in the question, one who has left casting none; the votes for a choice and the total mana value of what was milled counted
+- `engine-unless-times` - `tests/engine-unless-times.mjs`: a cost paid any number of times and "that many" after it (Bloodthirsty Adversary; CR 118.12a, 601.2h, 603.12): each count the mana pays offered, the cost that many times over paid as one, the reflexive trigger's X and "up to X" targets
+- `engine-pay-mana-play` - `tests/engine-pay-mana-play.mjs`: casting what this creature exiled as it attacks, its mana cost paid (Boiling Rock Rioter; CR 607.2a, 608.2g, 601.2g-h, 605.3a): an Ally exiled with this creature cast from the pool and its caster's plain sources, colored symbols and all, the ways to pay asked; an {X} or unpayable one not offered; a tap cost that may tap its own source unless it says another
+- `engine-next-end-step` - `tests/engine-next-end-step.mjs`: "until your next end step, you may play those cards" (Shadow Urchin; CR 513.1, 611.2a) -- over as its controller's next end step begins: this turn's if made before it, the next if made during it, never another player's; "until the end of your next turn" lasting through it
+- `engine-source-remains` - `tests/engine-source-remains.mjs`: "for as long as this Saga remains on the battlefield" (Old Fat Spider Can't See Me; CR 611.2b, 400.7) -- a layer's effect or a prevention kept with its source and over as it leaves, however it goes (its owner leaving the game among them), never back with it, never started without it
+- `engine-was-attached` - `tests/engine-was-attached.mjs`: "put Zack Fair's counters on that creature and attach an Equipment that was attached to Zack Fair to that creature" (CR 608.2h, 400.7, 701.3a) -- what the sacrificed source had as it last existed, still the same objects on the battlefield, an Equipment and not an Aura, one chosen when several; nothing asked with none; the house pilot's answer
+- `engine-unchosen-modes` - `tests/engine-unchosen-modes.mjs`: "as Gollum enters, choose odd or even" and "choose one that hasn't been chosen" (Gollum, Riddle Master; CR 614.12, 202.3, 603.3c, 700.2, 400.7) -- a spell's mana value of the chosen quality, zero even and X counted; each mode once, remembered on the permanent as it is chosen, a second trigger at once seeing the first's choice, the snapshot as it triggered when it has gone, a new object afresh, the last trigger removed when none is left
+- `engine-face-down-play` - `tests/engine-face-down-play.mjs`: playing a card exiled face down (Gandalf, Goblins' Bane // Flameshape; CR 406.3, 406.3a-b, 601.2, 305.1) -- looked at and exiled face down, offered as the card it is (a land under the land drop's rules, a spell by its own cost and timing, an adventurer card as its Adventure) to the one player who may look at it, while "if you control a Wizard" holds and it remains exiled; turned face up and revealed as it is played, hidden from every other seat and from G1's leak judge until then; the table's words its modes and costs; asking changes nothing
+- `fuzz-library` - `tests/fuzz-library.mjs`: G1 over Rob's whole library (`tools/fuzz-live.mjs --library`) -- each seed's four decks Commander decks of his library (a legendary creature the table plays, 99 cards of its color identity, none twice but basics), the same for the same seed; a game's exception said with its seed and the run going on; seed 229, the waterbend paid with rider mana that stalled a table, played clean through the real room
+- `engine-counters-put` - `tests/engine-counters-put.mjs`: counters put on players and on a creature you control (Ezuri, Claw of Progress; Simic Ascendancy; CR 122.1, 122.6, 701.34a) -- "you get an experience counter", each player named, doubled as Innkeeper's Talent doubles them, counted as "the number of experience counters you have" for its controller alone; "whenever one or more +1/+1 counters are put on a creature you control", about the creature and that many, not another player's creature, a noncreature or another kind; the compiler refusing a player's counters of no kind, chosen, +1/+1 or poison
+- `engine-ability-loss` - `tests/engine-ability-loss.mjs`: "loses all abilities" switching off a permanent's own static abilities and replacement effects (Song of the Dryads, Infinite Coursework, Oko, Thief of Crowns, Retro-Mutation; CR 613.1f, 613.6, 613.8a) -- an anthem and a grant gone from layers 6 and 7 whatever the timestamps, an effect begun in layer 4 carried on in 7b, Humility made a creature keeping its own one ability; every rule a static changes and every replacement effect, each reader before and after its permanent loses its abilities; a board's rules read with nothing derived when nothing takes abilities away; a layer-4 change of creature types only (CR 205.1a); control of two permanents exchanged, both or nothing (CR 701.12a-b)
+- `engine-explore` - `tests/engine-explore.mjs`: explore (CR 701.44) and the Map token (CR 111.10s; Restless Anchorage) -- a land to its hand, a nonland's +1/+1 counter and the graveyard asked, an empty library, the exploring permanent's controller's library, one gone told by its last known information (701.44c), the revealed card in every seat's view while it is asked, a player who left
+- `engine-different-opponents` - `tests/engine-different-opponents.mjs`: a different opponent for each permanent given away (Dack Fayden, Helping Hand) -- its controller asked permanent by permanent, the last forced, the rest kept when no opponent is left, the gone and the repeated left out, each for good, refused run directly; a goad for the rest of the game (CR 701.15a); the greatest power or mana value among what a player chooses, a tie theirs (End of the Hunt; CR 608.2d); and where the schema lets each be said
+- `engine-train-e-f1` - `tests/engine-train-e-f1.mjs`: morph (Akroma, Angel of Fury; CR 702.37) cast face down for {3} as a 2/2 with no text and no ward, turned face up for its morph cost alone, a manifested card with morph either way, and the table's words for each; "behold a Goblin and exile it" (Champion of the Weird; CR 701.4a, 607.2q), the card exiled with the cost and linked to the permanent the spell becomes, only in a spell's own additional cost; "another instant or sorcery spell" cast this turn (Burrog Barrage), a copy's count; "that creature's power" with the creature gone (Arni, Renowned Champion; CR 608.2h); a target's power as it now is; and April O'Neil's blockers
+- `engine-replicate-first-strike` - `tests/engine-replicate-first-strike.mjs`: replicate (Lose Focus; CR 702.56a) -- a mana cost on an instant or sorcery, once; each number of times paid its own cast, and no cast claiming more copies than it paid for -- and first strike read as the combat damage step begins (Interjection; CR 510.4): given after blocks, the first-strike step happens; in the second step, those that had neither as the first began, and double strikers; a first striker gone before it, not counted. Also a triggered ability's "for each opponent, up to one target ... that player controls" (Hapatra, the Desert Fang), the greatest mana value among cards (a land 0, a double-faced card its front face, CR 712.8a), and a card found "under your control" (Jhoira, Weatherlight Corsair)
+- `engine-train-e-g4` - `tests/engine-train-e-g4.mjs`: "discard two cards unless you discard a creature card" (Thirst for Identity; CR 118.12), an unless cost's discard of a kind, only the cards in hand it describes ways to pay and the question saying which kind, ward's plain discard as before; "you may choose new targets for target instant or sorcery spell" (Wild Ricochet; CR 115.7d), each target kept or changed a question at a time, one with no other choice and a counted target's list not asked about, "change the target" as before, and the new target the spell's for ward; "no maximum hand size for the rest of the game" (Wisdom of Ages; CR 402.2, 611.2a) for the players it names, beside the statics; and the table playing all sixteen of the wave's cards
+- `engine-train-e-g2` - `tests/engine-train-e-g2.mjs`: "whenever this creature blocks a creature with flying" (Skystinger; CR 509.3b), a blocks trigger's attacking creature described, once for each it blocks, said only with each attacker; "when you cast this spell while you control a creature" (Social Snub), a condition asked as the spell is cast and not again (no intervening if, CR 603.4), on a spell cast trigger alone; Snooping Page unblockable after a spell that targets a creature; Sleight of Hand's other card on the bottom (CR 401.4); and the sixteen cards at the table
+- `engine-train-e-g3` - `tests/engine-train-e-g3.mjs`: incubate (Sunfall; CR 701.53), an Incubator token entering with its +1/+1 counters, a double-faced token (CR 111.10i) that transforms for {2} into a 0/0 Phyrexian artifact creature -- the same object with its counters (CR 712.18), once however many times it is told to (CR 701.27f), no counters when there are none to give; the first-strike damage step decided as the combat damage step begins (CR 510.4), first strike given after blocks and a first striker gone; Surveillance Phantasm attacking only after a scry or surveil this turn; counters moved as many as there are (Tester of the Tangential; CR 122.5, 609.3)
+- `engine-monarch` - `tests/engine-monarch.mjs`: a creature whose controller changes removed from combat (CR 506.4) -- an attacker taken as attackers are declared or after blocks, a blocker taken (the attacker it blocked still blocked, CR 509.1h; through only with trample, 702.19d), an exchange in combat (Oko's -5), one given back as the effect or the Aura that held it ends -- and nothing dealt; the monarch (CR 725; Ginger, Queen of Sweets; Tamiyo, Upriser Crowned): one player's at a time, its two triggers the game's own with no source, the end-step draw and combat damage taking it (unblocked, trample, first strike, four players), noncombat damage not, a monarch who leaves the game on their own turn and on another's, with the active player leaving too and nobody left, the condition, "while you're the monarch", the view's `monarch` and the history's line
+- `engine-train-e-g1` - `tests/engine-train-e-g1.mjs`: "each opponent can't draw more than one card each turn" (Narset, Parter of Veils; CR 121.2b) -- an effect's draws, the draw step's, no draw from an empty library, and a "you may draw" its chooser can't take (CR 121.3); "choose up to four, the same mode more than once" (Moment of Reckoning; CR 700.2d), none to four modes offered as picks, each target its own and picked once the offer is taken, and the table's words for no modes; "the first time this ability has resolved this turn" (Nissa, Leyline Tamer), counted by the object its ability came from -- that object gone, or a new one -- and a branch's too; and where the schema lets each be said
+- `engine-wave4a-h3` - `tests/engine-wave4a-h3.mjs`: an object an effect remembers, referred to later by the same card (wave 4a, lane h3) -- Spark Double's copy and its counters by what it entered as, a planeswalker copied with its loyalty (CR 707.2, 306.5b; Clever Impersonator too); Hunter's Insight's delayed trigger waiting on a damage source; Koma's "its activated abilities can't be activated", mana abilities and unasked payments included (CR 602.5, 605.1a); the replacements a resolution remembers -- "that creature enters with an additional +1/+1 counter" (Summon: Fenrir), "it deals double that damage" to that player and what they control (Lightning, Army of One), each its own and ordered as any is (CR 614.5, 616.1); Ziatora's sacrificed creature's power as it last was (CR 608.2h); shadow (CR 702.28) and its counter; each player's chosen color (Selective Obliteration); Goblin Welder's "in that player's graveyard" and "if both targets are still legal" (CR 608.2b); the creature with the greatest power, a negative power as it is; and the table playing all nineteen of the lane's cards
+- `engine-tokens-counters-4a` - `tests/engine-tokens-counters-4a.mjs`: replacements on creating tokens and putting counters (wave 4a; CR 614.1a, 614.12, 616.1, 122.6) -- the token event in groups, "one of each" (Academy Manufactor) by a token's subtype, the order among the effects that apply as the event stands (Divine Visitation and Queen Allenal, Manufactor, Xorn and Anointed Procession), each option saying what it makes when counts agree, every token made as the effect says (an Aura attached, a Food beside it not), a predefined token compiled in; counters on yourself alone, an effect's and not a cost's (Doubling Season), a permanent entering with counters not seeing its own effect at each place it enters; "whenever you put" told by the counters event; four seats; the schema; the credits; the table playing all nineteen
+- `engine-play-from-zones` - `tests/engine-play-from-zones.mjs`: "you may play / cast that card" from another zone in the forms the most-played cards ask (wave 4a, lane h1) -- a permission kept by permanent type (Muldrotha, the Gravetide), one offer for each type a card has and a forged one refused, one land whatever the land drops; a permission's additional cost (Exploration Broodship), no additional cost of the spell's own; "mana of any type can be spent" (Tinybones, Bauble Burglar; CR 118.14) for colored and hybrid symbols, a Phyrexian one still its color or 2 life, and more than one way to pay asked; an effect's permission for a zone's cards (Chainer, Nightmare Adept), spent only when nothing unlimited would do, each permission that does something different its own offer; life for mana (Demon of Fate's Design) within its player's life; an effect on a spell that follows it onto the battlefield (CR 400.7a) and a rule about it that does not; "if you didn't cast it from your hand"; a Case's solved designation (CR 719.3b); the nontoken permanents sacrificed this turn; a card exiled with counters; what the schema lets each be said; and the scenario runner's blockers
+- `engine-wave4b-j1` - `tests/engine-wave4b-j1.mjs`: remembered and moved objects, and the rules beside them that the lane's most-played cards needed (wave 4b, lane j1) -- Animate Dead's Aura attached to a creature card in a graveyard (CR 303.4a, 704.5m), chosen as it enters without being cast (CR 303.4f), its Enchant then that one creature alone and "that creature" kept for its leaving, moved off it or the creature no longer one; a land given a basic land type has that type's mana ability (CR 305.6; Urborg, Tomb of Yawgmoth), once, and lost with its abilities; protection from each color over the creatures a spell named and no player (Akroma's Will; CR 702.16, 611.2c); "if you cast it" (The One Ring); an additional mana of the chosen color (Utopia Sprawl; CR 605.1b), none with none chosen; "creatures your opponents control attack this turn if able" for every creature that is theirs this turn (Bident of Thassa; CR 508.1d, 611.2c); a move of all under its controller's control (Rise of the Dark Realms; CR 110.2a); what the schema lets each be said; and the table playing all twenty-six of the lane's cards
+- `engine-rearrange-copies-4b` - `tests/engine-rearrange-copies-4b.mjs`: the top of a library looked at and put back in any order (rearrangeTop; Ponder, Sensei's Divining Top; wave 4b, lane j2) -- one question, an order of them all, a library of one card or none, another player's library, a card gone before the answer, a looker who left, and what each seat then sees; a spell's mana value on the stack with X as chosen (CR 202.3e; Mana Drain's amount); "lose hexproof" (Shadowspear) against a keyword counter put on since and a "hexproof from" given before; a basic land type given bringing its mana ability once (CR 305.7; Dryad of the Ilysian Grove), lost with all abilities; a token entering tapped by a replacement (CR 111.1, 614.12), not by its own for others; the catalog's credits
+- `engine-wave4b-j3` - `tests/engine-wave4b-j3.mjs`: keywords not yet built, and the small rules the lane's most-played cards needed (wave 4b, lane j3) -- beginning the game with Gemstone Caverns on the battlefield from the opening hand (CR 103.6a), never the starting player's, its luck counter and a card exiled from the hand, the player's choice, and its mana "instead" while it has a luck counter; gift (CR 702.174), an offer for each opponent, what each of the six kinds gives the chosen player -- an instant's first, a permanent's as it enters -- a copy's gift (CR 707.10) and the words a player is offered; eternalize's black 4/4 Zombie token with no mana cost (CR 702.129a); extort's instances and {W/B} paid by a source (CR 702.101); a basic land type given and its mana ability (CR 305.7, Yavimaya) beside another and under Song of the Dryads; base power (CR 208.4b); the most any one player discarded (Windfall); two more land drops (Azusa); a player's hexproof for a turn (Dawn's Truce); a search of two zones at once (Finale of Devastation); what the schema and compiler refuse; and the table playing all thirty of the lane's cards
+- `engine-costs-activations-4b` - `tests/engine-costs-activations-4b.mjs`: activations forbidden, costs raised and X paid in life (wave 4b, lane j4; CR 602.5, 605.1a, 601.2f, 119.4, 107.3a) -- "your opponents can't activate abilities of artifacts, creatures, or enchantments" (Grand Abolisher) of the permanents it names, their mana abilities too, always or during its controller's turn, while its condition holds; a spell's life raised for what it targets (Terror of the Peaks), each way to aim it costed with a Phyrexian symbol's life, a counted target refused in words and nothing paid; the house pilot paying the least X of life and never all of it; what the schema and the compiler let each new form say -- "choose one or more" for a triggered ability, all counters moved, the counters that card had, "from anywhere other than the battlefield", "a creature card leaves your graveyard", "except the first one they draw in each of their draw steps", "greater than each other creature's power", the creatures attacked with this turn; questions in words; the table playing the lane's twenty-eight cards
+- `engine-breaks-anchors` - `tests/engine-breaks-anchors.mjs`: every break still breaks something -- each breaks file under `game/tools/batch` and `tools` read (`game/tools/batch/anchors.py`), each anchor found once and only once in the file it names, that file and each suite there, a replacement that changes something; a fixture of each problem reported, a sound break not
+- `engine-wave4c-k3` - `tests/engine-wave4c-k3.mjs`: tokens and counters, Classes and dice (wave 4c, lane k3) -- a die rolled (CR 706; Ancient Copper Dragon), every face of a d20 reached from the game's random stream, its result kept for what follows and said in the history; "when this Class becomes level 2" (CR 716.2a), its own level from below and no other Class's; offspring's two offers and a cast claiming it unpaid refused (CR 702.175a); copies of what an effect moved, halved (Saw in Half); a mana ability with no {T} of its own tapping an artifact, its source among them (Urza, Lord High Artificer); +1/+1 and -1/-1 counters annihilating on a creature that lives (CR 704.5q); what the schema and the compiler refuse; and the table playing the lane's eighteen cards
+
+- `engine-spells-draws-4c` - `tests/engine-spells-draws-4c.mjs`: spells, draws and discards (wave 4c, lane k4) -- the lane's twenty cards at a table and through their scenarios; affinity (CR 702.41a) as the spell's own reduction; a cast or a copy of an instant or sorcery making a trigger trigger again (Veyran, Voice of Duality; CR 603.2d); draws replaced (CR 614.11) -- "you win the game instead" from an empty library (Laboratory Maniac), "draw two cards instead" but the draw step's first (Teferi's Ageless Insight), two of them making four (CR 614.5), a draw Narset forbids no event to replace; a mana choice among some colors as a spell resolves (Culling Ritual); a hand looked at (Gitaxian Probe; CR 701.20e) shown to its looker alone, hand by hand in turn order, an empty hand or the looker's own not asked, a looker who concedes, a spectator; "each player who can't" after a sacrifice that must be made (Plaguecrafter); "pay 5 life or pay {2}" (Redirect Lightning; CR 119.4) beside Phyrexian mana, and an offer changed to skip the life refused; a sacrificed creature's power as it last was (CR 608.2h)
+- `engine-wave4c-k2` - `tests/engine-wave4c-k2.mjs`: the graveyard and combat (wave 4c, lane k2) -- delve (CR 702.66a), the cards of the caster's graveyard picked once the cast is taken, never the spell itself, refused when too few or not the graveyard's, with flashback given, and the words a player is offered; dredge (CR 702.52a), each player of "each player draws a card" asked in turn, Alms Collector's single draws, never under Narset, the draw step's question never the beat's one button, and both pilots answering it; the rest on the bottom of a library in any order (CR 401.4), the order asked and kept; protection from the colors outside the commander's color identity (Commander's Plate), damage prevented and read for the Plate's controller as it now is; a flashback cost that sacrifices (Dread Return); fabricate's two modes; a creature tapped for mana without {T} (Relic of Legends); subtypes that go with a card type lost (CR 205.3d, Darksteel Mutation); a dig's card put on top (Thassa's Oracle); what the schema and compiler refuse; the credits; and the table playing the lane's nineteen cards
 
 ## Design and execution record
 

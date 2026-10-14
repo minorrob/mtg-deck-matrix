@@ -1,0 +1,55 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kami of Whispered Hopes",
+    "oracleId": "f122624f-f30d-444e-a62a-939829241045",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spirit"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "If one or more +1/+1 counters would be put on a permanent you control, that many plus one +1/+1 counters are put on that permanent instead.\n{T}: Add X mana of any one color, where X is this creature's power.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "If one or more +1/+1 counters would be put on a permanent you control, that many plus one +1/+1 counters are put on that permanent instead.",
+      "rule": "more-counters",
+      "affects": {
+        "what": "permanent",
+        "controller": "you"
+      },
+      "counter": "+1/+1",
+      "plus": 1
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add X mana of any one color, where X is this creature's power.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyColor": true,
+          "count": {
+            "powerOf": "self"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,404 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Urborg, Tomb of Yawgmoth",
+  "scenarios": [
+    {
+      "name": "Rob's Forest is a Swamp too: it taps for {G} or for {B} (CR 305.6), and he takes {B}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Urborg, Tomb of Yawgmoth",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Forest"
+              },
+              "count": 2,
+              "mana": [
+                {
+                  "G": 1
+                },
+                {
+                  "B": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Forest",
+          "mana": {
+            "B": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "B": 1,
+            "G": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Urborg is a land, so a Swamp itself: it taps for {B}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Urborg, Tomb of Yawgmoth"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Urborg, Tomb of Yawgmoth"
+              },
+              "count": 1,
+              "mana": [
+                {
+                  "B": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Urborg, Tomb of Yawgmoth"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "B": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Each land -- Maya's Island taps for {B} as well",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Urborg, Tomb of Yawgmoth"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Island",
+                "seat": 1
+              },
+              "count": 2,
+              "mana": [
+                {
+                  "U": 1
+                },
+                {
+                  "B": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Island",
+          "seat": 1,
+          "mana": {
+            "B": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "pool": {
+            "B": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "A land already a Swamp gets no second {B} ability: a Swamp offers one, Underground Sea two",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Urborg, Tomb of Yawgmoth",
+            "Swamp",
+            "Underground Sea"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Swamp"
+          },
+          "count": 1,
+          "mana": [
+            {
+              "B": 1
+            }
+          ]
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Underground Sea"
+          },
+          "count": 2,
+          "mana": [
+            {
+              "U": 1
+            },
+            {
+              "B": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Every land is a Swamp: Cabal Coffers counts two Forests, Urborg and itself -- four {B}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Urborg, Tomb of Yawgmoth",
+            "Cabal Coffers",
+            "Forest",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest",
+          "mana": {
+            "G": 1
+          }
+        },
+        {
+          "tap": "Forest",
+          "mana": {
+            "G": 1
+          }
+        },
+        {
+          "tap": "Cabal Coffers",
+          "mana": {
+            "B": 4
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "B": 4,
+            "G": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Urborg destroyed (Maya channels Boseiju, Who Endures at it): Rob's Forest is no Swamp again, and taps for {G} only",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Urborg, Tomb of Yawgmoth",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Boseiju, Who Endures"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Forest"
+              },
+              "count": 2
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "activate": "Boseiju, Who Endures",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Urborg, Tomb of Yawgmoth"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": []
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Urborg, Tomb of Yawgmoth"
+          ]
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Forest",
+            "seat": 0
+          },
+          "count": 1,
+          "mana": [
+            {
+              "G": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Under Song of the Dryads, a land Urborg makes a Swamp has lost every ability but {G}: no {B}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Urborg, Tomb of Yawgmoth",
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Song of the Dryads"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest",
+          "mana": {
+            "G": 1
+          }
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Song of the Dryads",
+          "targets": [
+            {
+              "card": "Island"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "pass": 1
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Island",
+            "seat": 1
+          },
+          "count": 1,
+          "mana": [
+            {
+              "G": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

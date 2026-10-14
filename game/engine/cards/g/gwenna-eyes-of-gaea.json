@@ -47,7 +47,7 @@
                 "Creature"
               ]
             },
-            "ability": {
+            "abilitySource": {
               "types": [
                 "Creature"
               ]

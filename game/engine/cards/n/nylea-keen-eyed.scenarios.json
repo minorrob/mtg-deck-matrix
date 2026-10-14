@@ -1,0 +1,633 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Nylea, Keen-Eyed",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Elf Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Kid": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Construct"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "power": 1,
+      "toughness": 1
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Murder": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Green Giant": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{G}{G}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 4,
+      "toughness": 4
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Devotion to green 1: Nylea isn't a creature, so Murder can aim only at the Bear",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Nylea, Keen-Eyed",
+            "Bear",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Murder"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Murder"
+          },
+          "count": 1,
+          "targets": [
+            [
+              "Bear"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Devotion to green 5 (Nylea and the Green Giant): a 5/6 creature, and indestructible -- Murder leaves it; the Giant destroyed, devotion is 1 and it is no creature again",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Nylea, Keen-Eyed",
+            "Green Giant",
+            "Bear",
+            "Swamp",
+            "Swamp",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Murder",
+            "Murder",
+            "Murder"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Murder"
+              },
+              "count": 9,
+              "targets": [
+                [
+                  "Nylea, Keen-Eyed"
+                ],
+                [
+                  "Nylea, Keen-Eyed"
+                ],
+                [
+                  "Nylea, Keen-Eyed"
+                ],
+                [
+                  "Green Giant"
+                ],
+                [
+                  "Green Giant"
+                ],
+                [
+                  "Green Giant"
+                ],
+                [
+                  "Bear"
+                ],
+                [
+                  "Bear"
+                ],
+                [
+                  "Bear"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Murder",
+          "targets": [
+            {
+              "card": "Nylea, Keen-Eyed"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "battlefield",
+              "cards": [
+                "Nylea, Keen-Eyed",
+                "Green Giant",
+                "Bear",
+                "Swamp",
+                "Swamp",
+                "Swamp"
+              ]
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Nylea, Keen-Eyed",
+                "power": 5,
+                "toughness": 6
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Murder",
+          "targets": [
+            {
+              "card": "Green Giant"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Swamp"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Green Giant",
+            "Murder",
+            "Murder"
+          ]
+        },
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Murder"
+          },
+          "count": 1,
+          "targets": [
+            [
+              "Bear"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Creature spells he casts cost {1} less: the Bear for {G}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Nylea, Keen-Eyed",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Bear"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Nylea, Keen-Eyed",
+            "Forest",
+            "Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Generic mana only, and creature spells only: the {1} Kid for nothing, not the {1} Rock, not the {G} Elf (CR 118.7a)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Nylea, Keen-Eyed"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Kid",
+            "Rock",
+            "Elf Pal"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Rock"
+              },
+              "count": 0
+            },
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Elf Pal"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "cast": "Kid"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Nylea, Keen-Eyed",
+            "Kid"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rock",
+            "Elf Pal"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Spells he casts: Maya's {1} Kid is not cheaper",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Nylea, Keen-Eyed"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Kid"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Kid",
+            "seat": 1
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "{2}{G}: the top card revealed, a creature card -- into his hand",
+      "library": [
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Nylea, Keen-Eyed",
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Nylea, Keen-Eyed"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "event": "GameEventCardRevealed",
+          "where": {}
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 19
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "Not a creature card (a Forest): he may put it into his graveyard, and does",
+      "library": [
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Nylea, Keen-Eyed",
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Nylea, Keen-Eyed"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Yes",
+                  "No"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Yes"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": []
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 19
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "Not a creature card (the Rock), and he doesn't: it stays on top, and is his next draw",
+      "library": [
+        "Rock"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Nylea, Keen-Eyed",
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Nylea, Keen-Eyed"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "No"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": []
+            },
+            {
+              "seat": 0,
+              "zone": "hand",
+              "cards": []
+            },
+            {
+              "seat": 0,
+              "zone": "library",
+              "count": 20
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rock"
+          ]
+        }
+      ]
+    }
+  ]
+}

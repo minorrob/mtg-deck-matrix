@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Relic Retriever",
+    "oracleId": "689c41e9-800a-4998-bb04-74bf90141035",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spirit",
+      "Monkey"
+    ],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "First strike\nAt the beginning of each end step, if a card left your graveyard this turn, create a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "First strike",
+      "keyword": "first strike"
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of each end step, if a card left your graveyard this turn, create a Treasure token.",
+      "trigger": {
+        "on": "end step",
+        "yours": false
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "token": {
+            "predefined": "Treasure"
+          }
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "cardsLeftGraveyardThisTurn": "you"
+          },
+          "atLeast": 1
+        }
+      }
+    }
+  ]
+}

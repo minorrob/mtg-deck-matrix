@@ -1,0 +1,119 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Maralen, Fae Ascendant",
+    "oracleId": "114e1d2c-cefc-4e2a-922e-3b2ceed1871d",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Faerie",
+      "Noble"
+    ],
+    "manaCost": "{2}{B}{G}{U}",
+    "colors": [
+      "B",
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "B",
+      "G",
+      "U"
+    ],
+    "power": 4,
+    "toughness": 5
+  },
+  "oracleText": "Flying\nWhenever Maralen or another Elf or Faerie you control enters, exile the top two cards of target opponent's library.\nOnce each turn, you may cast a spell with mana value less than or equal to the number of Elves and Faeries you control from among cards exiled with Maralen this turn without paying its mana cost.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever Maralen or another Elf or Faerie you control enters, exile the top two cards of target opponent's library.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "controller": "you",
+          "anyOf": [
+            {
+              "self": true
+            },
+            {
+              "subtypes": [
+                "Elf"
+              ]
+            },
+            {
+              "subtypes": [
+                "Faerie"
+              ]
+            }
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "fromTop": 2,
+          "who": {
+            "target": 0
+          },
+          "to": "exile",
+          "link": true
+        }
+      ],
+      "targets": [
+        {
+          "what": "player",
+          "who": "opponent"
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "Once each turn, you may cast a spell with mana value less than or equal to the number of Elves and Faeries you control from among cards exiled with Maralen this turn without paying its mana cost.",
+      "rule": "play-from",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "zone": "exile",
+      "spells": {
+        "exiledWith": "self",
+        "exiledThisTurn": true,
+        "manaValue": {
+          "max": {
+            "count": {
+              "what": "permanent",
+              "controller": "you",
+              "anyOf": [
+                {
+                  "subtypes": [
+                    "Elf"
+                  ]
+                },
+                {
+                  "subtypes": [
+                    "Faerie"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      },
+      "free": true,
+      "limit": 1
+    }
+  ]
+}

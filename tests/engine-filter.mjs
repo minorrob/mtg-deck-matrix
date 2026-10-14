@@ -172,6 +172,34 @@ const names = (state, ids) => ids.map((id) => state.objects[id].card).sort();
   ok(match(s, theirs, {controller: 1}), "and takes its context each time, so one compiled selector serves every seat");
 }
 
+/* ---- "if this creature isn't prepared" (Paradox Shaper // Omit Variables; CR 722.3) ---- */
+{
+  const {s, mine, alsoMine} = board();
+  s.objects[mine].prepared = true;
+  eq(names(s, selectMatching(s, {what: "permanent", types: ["Creature"], prepared: true}, {controller: 0})), ["Mine"],
+    "`prepared: true` is the permanent with the prepared designation");
+  eq(names(s, selectMatching(s, {what: "permanent", types: ["Creature"], controller: "you", prepared: false}, {controller: 0})), ["Also Mine"],
+    "and `prepared: false` every one without it");
+  ok(!compileSelector({what: "permanent", self: true, prepared: false})(s, mine, {controller: 0, source: mine})
+    && compileSelector({what: "permanent", self: true, prepared: false})(s, alsoMine, {controller: 0, source: alsoMine}),
+    "read of a source itself, as an intervening \"if\" asks it");
+  refuses(() => compileSelector({prepared: "no"}), /prepared/, "and `prepared` is true or false, not a word that would read as true");
+}
+
+/* ---- "target attacking or blocking creature" (Gideon's Memorial; CR 508.1k, 509.1g) ---- */
+{
+  const {s, mine, alsoMine, theirs} = board();
+  const blocking = compileSelector({what: "permanent", types: ["Creature"], blocking: true});
+  const attacking = compileSelector({what: "permanent", types: ["Creature"], attacking: true});
+  ok(SELECTOR_KEYS.includes("blocking"), "blocking is a key of the grammar");
+  eq([mine, alsoMine, theirs].filter((id) => blocking(s, id, {controller: 0})), [], "no combat: nothing is blocking");
+  s.combat = {attacks: [{attacker: mine, defender: 1, blocked: true, blockers: [theirs]}, {attacker: alsoMine, defender: 1, blocked: false, blockers: []}]};
+  eq([mine, alsoMine, theirs].filter((id) => blocking(s, id, {controller: 0})), [theirs], "the creature declared as a blocker is blocking; the attackers are not");
+  eq([mine, alsoMine, theirs].filter((id) => attacking(s, id, {controller: 0})), [mine, alsoMine], "and attacking is the attackers', blocked or not");
+  s.combat = null;
+  ok(!blocking(s, theirs, {controller: 0}), "combat over (rules/combat.mjs clears it): it blocks no longer");
+}
+
 /* ---- selectors are plain data ---- */
 {
   const selector = {what: "permanent", types: ["Creature"], controller: "you", another: true, manaValue: {max: 3}};

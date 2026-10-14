@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Cathartic Reunion",
+    "oracleId": "0f3c3e5f-6af3-4af2-8703-4ccc8ed8f675",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "As an additional cost to cast this spell, discard two cards.\nDraw three cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "As an additional cost to cast this spell, discard two cards.\nDraw three cards.",
+      "additionalCost": [
+        {
+          "atom": "discard",
+          "count": 2
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 3
+        }
+      ]
+    }
+  ]
+}

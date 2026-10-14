@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Quill-Blade Laureate // Twofold Intent",
+    "oracleId": "bd9d3a70-faed-4bc6-97d8-1601b36cdb21",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Cleric"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Double strike\nThis creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Double strike",
+      "keyword": "double strike"
+    },
+    {
+      "kind": "replacement",
+      "text": "This creature enters prepared.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersPrepared": true
+      }
+    }
+  ],
+  "prepare": {
+    "identity": {
+      "name": "Twofold Intent",
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Target creature gets +1/+0 and gains double strike until end of turn.",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Target creature gets +1/+0 and gains double strike until end of turn.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "pump",
+            "targets": {
+              "target": 0
+            },
+            "power": 1,
+            "toughness": 0,
+            "keywords": [
+              "Double Strike"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,241 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Utopia Sprawl",
+  "scenarios": [
+    {
+      "name": "On Rob's Forest, blue chosen: the Forest taps for {G} and an additional {U}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Utopia Sprawl"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Llanowar Elves"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Llanowar Elves"
+        },
+        {
+          "cast": "Utopia Sprawl",
+          "targets": [
+            {
+              "card": "Forest"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "White",
+                  "Blue",
+                  "Black",
+                  "Red",
+                  "Green"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Blue"
+          ]
+        },
+        {
+          "tap": "Forest"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1,
+            "U": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Enchant Forest: a Wastes is no target, and Rob's only target here is the Forest",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Utopia Sprawl"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Llanowar Elves"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Llanowar Elves"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Utopia Sprawl"
+          },
+          "count": 1,
+          "targets": [
+            [
+              "Forest"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "On Maya's Forest, red chosen by Rob: its controller, Maya, adds the {R} when she taps it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Utopia Sprawl"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Llanowar Elves"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Llanowar Elves"
+        },
+        {
+          "cast": "Utopia Sprawl",
+          "targets": [
+            {
+              "card": "Forest",
+              "seat": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Red"
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "pool": {
+            "G": 1,
+            "R": 1
+          }
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "R": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "A Forest by type, not by name: Rob's Breeding Pool is one, and taps for {G} and the chosen {W}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Utopia Sprawl"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Breeding Pool",
+            "Llanowar Elves"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Llanowar Elves"
+        },
+        {
+          "cast": "Utopia Sprawl",
+          "targets": [
+            {
+              "card": "Breeding Pool"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "White"
+          ]
+        },
+        {
+          "tap": "Breeding Pool",
+          "mana": {
+            "G": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1,
+            "W": 1
+          }
+        }
+      ]
+    }
+  ]
+}

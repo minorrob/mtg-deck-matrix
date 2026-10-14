@@ -1,0 +1,384 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Coalition Relic",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Overcharge": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Put two charge counters on target artifact.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Artifact"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "putCounter",
+            "targets": {
+              "target": 0
+            },
+            "counter": "charge",
+            "count": 2
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Three charge counters: three mana, each color chosen in turn -- red, green, green -- and the Ogre cast with it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Coalition Relic"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Overcharge",
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Coalition Relic"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Overcharge",
+          "targets": [
+            {
+              "card": "Coalition Relic"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Coalition Relic",
+                "counter": "charge",
+                "count": 3
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "White",
+                  "Blue",
+                  "Black",
+                  "Red",
+                  "Green"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Red"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "White",
+                  "Blue",
+                  "Black",
+                  "Red",
+                  "Green"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Green"
+          ]
+        },
+        {
+          "choose": [
+            "Green"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "pool": {
+                "W": 0,
+                "U": 0,
+                "B": 0,
+                "R": 1,
+                "G": 2
+              }
+            },
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Coalition Relic",
+                "counter": "charge",
+                "count": 0
+              }
+            }
+          ]
+        },
+        {
+          "cast": "Ogre"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Coalition Relic",
+            "Island",
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "W": 0,
+            "U": 0,
+            "B": 0,
+            "R": 0,
+            "G": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "A charge counter on turn 1; at Rob's next first main phase it is removed for one mana of the color he names",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Coalition Relic"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Coalition Relic"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Coalition Relic",
+                "counter": "charge",
+                "count": 1
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "White",
+                  "Blue",
+                  "Black",
+                  "Red",
+                  "Green"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Green"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1
+          }
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Coalition Relic",
+            "counter": "charge",
+            "count": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "{T}: one mana of any color, its color chosen as it is tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Coalition Relic"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Coalition Relic",
+          "mana": {
+            "R": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "R": 1
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Coalition Relic",
+          "is": true
+        }
+      ]
+    },
+    {
+      "name": "With no charge counter, the trigger adds nothing and asks nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Coalition Relic"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "W": 0,
+            "U": 0,
+            "B": 0,
+            "R": 0,
+            "G": 0
+          }
+        }
+      ]
+    }
+  ]
+}

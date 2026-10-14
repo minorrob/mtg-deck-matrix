@@ -1,0 +1,201 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Gran-Gran",
+  "fixtures": {
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Lesson Pal": {
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [
+        "Lesson"
+      ],
+      "manaCost": "{1}{U}",
+      "colors": [
+        "U"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It attacks and becomes tapped: Rob draws the Forest and discards the Mountain",
+      "library": [
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Gran-Gran"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Gran-Gran"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Mountain"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Mountain"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Three Lessons in Rob's graveyard: his Rock costs {0}, his Bear still {1}{G}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Gran-Gran",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rock",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Lesson Pal",
+            "Lesson Pal",
+            "Lesson Pal"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "cast": "Rock"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Bear"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Gran-Gran",
+            "Forest",
+            "Rock"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Two Lessons, and Maya's third: the Rock still costs {1}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Gran-Gran"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rock"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Lesson Pal",
+            "Lesson Pal"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Lesson Pal"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Rock"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

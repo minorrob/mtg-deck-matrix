@@ -1,0 +1,79 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Cheerful Osteomancer // Raise Dead",
+    "oracleId": "fd01229f-1c4c-4ad1-bc6f-4023f24d8c71",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Orc",
+      "Warlock"
+    ],
+    "manaCost": "{3}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 4,
+    "toughness": 2
+  },
+  "oracleText": "This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This creature enters prepared.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersPrepared": true
+      }
+    }
+  ],
+  "prepare": {
+    "identity": {
+      "name": "Raise Dead",
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Return target creature card from your graveyard to your hand.",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Return target creature card from your graveyard to your hand.",
+        "targets": [
+          {
+            "what": "card",
+            "zone": "graveyard",
+            "controller": "you",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "moveZone",
+            "targets": {
+              "target": 0
+            },
+            "to": "hand"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -17,16 +17,17 @@
  * behave differently later.
  */
 
-import {holdArrival} from "../../rules/entering.mjs";
+import {holdArrival, enteredWith} from "../../rules/entering.mjs";
 import {prepare} from "./attributes.mjs";
-import {afterwards, delayedTrigger, enchantable, enchantOnArrival} from "./permanents.mjs";
+import {afterwards, delayedTrigger, enchantable, enchantOnArrival, controlSourceLeft, endWhileSourceRemains} from "./permanents.mjs";
 import {typesOf} from "../../rules/layers.mjs";
-import {moveObject, cardsIn, PUBLIC_ZONES, removeObject, eventCard, rememberExileLooker} from "../../state/index.mjs";
+import {moveObject, cardsIn, PUBLIC_ZONES, removeObject, eventCard, rememberExileLooker, recordDraw, recordDrawStepDraw, recordDeath} from "../../state/index.mjs";
 import {lastKnown} from "../../rules/layers.mjs";
-import {keywordsOf, controllerOf} from "../../rules/layers.mjs";
-import {selectMatching, compileSelector} from "../filter.mjs";
+import {keywordsOf, controllerOf, abilitiesOf} from "../../rules/layers.mjs";
+import {selectMatching, compileSelector, matchesSelector, shareCreatureType} from "../filter.mjs";
 import {applyReplacements, enteringModifications, regenerated} from "../../rules/replacement.mjs";
-import {cantBeCountered, entersUntapped, countersPlaced} from "../../rules/statics.mjs";
+import {cantBeCountered, entersUntapped, enteringCountersPlaced, drawsInstead, cantBeSacrificed, drawForbidden, emptyDrawWins, drawsMore} from "../../rules/statics.mjs";
+import {winGame} from "./resources.mjs";
 import {amountOf} from "../amount.mjs";
 import {manaValue, parseManaCost} from "../../rules/mana.mjs";
 
@@ -67,9 +68,19 @@ const PERMANENT_TYPES = ["Artifact", "Battle", "Creature", "Enchantment", "Land"
    nothing. */
 /* `transformed`: onto the battlefield with its back face up (CR 712.14a) -- a card that isn't a double-faced card that
    transforms stays where it is. */
-export function moveOne(state, id, to, events, {owner = null, tapped = false, faceDown = false, lookers = null, exiledBy = null, transformed = false} = {}) {
+/* `counters`: what the effect putting it onto the battlefield says it enters with -- "with a finality counter on it" (Excava,
+   the Risen Past; CR 122.6) -- put on as it arrives, by its controller (122.6a), whatever kind of permanent it is. */
+/* `notOnto`: permanents entering the battlefield at the same time as this one (effects/zones.mjs, moveZone's `together`) --
+   an Aura among them enchants none of them (CR 303.4f: what it will enchant is chosen as it enters, and they are not yet
+   there to be chosen). */
+export function moveOne(state, id, to, events, {owner = null, controller = null, tapped = false, faceDown = false, lookers = null, exiledBy = null, transformed = false, counters = null, notOnto = null} = {}) {
   const object = state.objects[id];
   if (!object) return null;
+  /* A TOKEN THAT HAS LEFT THE BATTLEFIELD STAYS WHERE IT IS (CR 111.8): it can't move to another zone or come back onto the
+     battlefield, and it ceases to exist as state-based actions are next checked (CR 704.5d). "Exile two target artifacts,
+     creatures, and/or lands you control, then return those cards to the battlefield" (Ghostly Flicker): a Treasure exiled
+     this way does not come back. */
+  if (object.token === true && object.zone !== "battlefield") return null;
   const from = object.zone;
   const down = faceDown === true && to === "battlefield";
   let card = down || (faceDown === true && to === "exile") ? {...cardRef(state, id), name: null, faceDown: true} : leavingRef(state, id);
@@ -85,11 +96,11 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false, fa
      Cast with flashback, it is exiled instead of going anywhere else (CR 702.34a). */
   const leaving = from === "stack" ? state.stack.findIndex((entry) => entry.objectId === id) : -1;
   /* Cast "this way" by Kess: to exile only instead of a graveyard. */
+  /* "If it would leave the battlefield, exile it instead" (unearth, Whip of Erebos) is a replacement (rules/replacement.mjs). */
   const destination = leaving >= 0 && (state.stack[leaving].flashback || (state.stack[leaving].graveyardToExile && proposal.to === "graveyard")) ? "exile"
-    /* "If it would leave the battlefield, exile it instead of putting it anywhere else" (Whip of Erebos): on the permanent
-       (effects/permanents.mjs, afterwards), gone with it when it leaves (CR 400.7). */
-    : from === "battlefield" && object.exileIfLeaves === true ? "exile" : proposal.to;
+    : leaving >= 0 && state.stack[leaving].graveyardToLibraryBottom && proposal.to === "graveyard" ? "library" : proposal.to;
   const holder = owner ?? object.owner;
+  const enteringController = controller ?? object.owner;
 
   /* A modal double-faced card told to enter with its front face up, when that face is no permanent's (CR 712.14b): it
      stays where it is. */
@@ -104,13 +115,13 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false, fa
      counter is not put on the creature it becomes. */
   const face = backUp ? object.mdfc.back : object;
   const entering = destination === "battlefield"
-    ? enteringModifications(state, {objectId: id, player: object.controller, types: asDown ? ["Creature"] : face.types, abilities: asDown ? [] : face.abilities})
+    ? enteringModifications(state, {objectId: id, player: enteringController, types: asDown ? ["Creature"] : face.types, abilities: asDown ? [] : face.abilities})
     : null;
 
   /* An Aura put onto the battlefield by an effect, not resolving as a spell (CR 303.4f; Sun Titan returning one): it
      enchants what its controller chooses as it enters, and with nothing to enchant it stays where it is -- or, from the
      stack, goes to its owner's graveyard (CR 303.4g). */
-  const hosts = destination === "battlefield" && object.enchant && !asDown ? enchantable(state, object.enchant, object.owner) : null;
+  const hosts = destination === "battlefield" && object.enchant && !asDown ? enchantable(state, object.enchant, enteringController).filter((host) => !(notOnto ?? []).includes(host)) : null;
   if (hosts && !hosts.length) {
     if (from !== "stack") return null;
     return moveOne(state, id, "graveyard", events, {owner: object.owner});
@@ -121,6 +132,11 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false, fa
   const hidden = faceDown === true && to === "exile" && destination === "exile";
   if (faceDown === true && !asDown && !hidden) card = leavingRef(state, id);
   const moved = moveObject(state, id, destination, PER_PLAYER.includes(destination) ? holder : null, {faceDown: asDown || hidden, transformed: backUp});
+  /* A creature put into a graveyard from the battlefield died (CR 700.4): destroyed, sacrificed, put there -- what left
+     another zone has no last known information, and did not (state/index.mjs). */
+  recordDeath(state, leftBehind, destination);
+  // CR 110.2a, 614.12: the effect's recipient controls it as it enters, before entry effects.
+  if (destination === "battlefield" && state.objects[moved]) state.objects[moved].controller = enteringController;
   /* "The player who controls the permanent that exiled this card may look at this card in the exile zone" (CR 702.75a), and
      goes on being able to until it leaves exile (406.3). */
   if (hidden && state.objects[moved]) {
@@ -139,13 +155,21 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false, fa
     /* A question it asks as it enters waits for the next priority (rules/entering.mjs). */
     for (const ask of entering.asks ?? []) (state.enteringQuestions ??= []).push({objectId: moved, ...ask});
     /* Counters it enters with are put on it (CR 122.6) -- by its controller (122.6a): "twice that many instead" sees them. */
-    for (const [counter, count] of Object.entries(entering.counters)) {
-      state.objects[moved].counters[counter] = (state.objects[moved].counters[counter] ?? 0) + countersPlaced(state, moved, counter, count, state.objects[moved].controller);
+    for (const [counter, count] of [...Object.entries(entering.counters), ...Object.entries(counters ?? {})]) {
+      state.objects[moved].counters[counter] = (state.objects[moved].counters[counter] ?? 0) + enteringCountersPlaced(state, moved, counter, count, state.objects[moved].controller);
     }
   }
+  /* "Exile it from their graveyard with a stash counter on it" (Tinybones, Bauble Burglar; CR 122.1): a card in exile may have
+     counters, as a suspended card's time counters are -- given it as it arrives there. Not put on a permanent, so nothing
+     that changes how many are put on one reads them (CR 122.6). */
+  if (destination === "exile" && counters && state.objects[moved])
+    for (const [counter, count] of Object.entries(counters)) state.objects[moved].counters[counter] = (state.objects[moved].counters[counter] ?? 0) + count;
   events.push(event("GameEventCardChangeZone", state, {
     card,
     ...(leftBehind ? {leftBehind} : {}),
+    /* A card leaving a graveyard, as it was there: "whenever a creature card leaves your graveyard" (Syr Konrad, the Grim,
+       wave 4b; rules/trigger.mjs) looks back (CR 603.10a), wherever it went -- a hand or a library too. */
+    ...(from === "graveyard" ? {wasCard: {types: [...(object.types ?? [])], subtypes: [...(object.subtypes ?? [])], supertypes: [...(object.supertypes ?? [])]}} : {}),
     /* The permanent that arrived is a new object (CR 400.7); "when this enters" looks for it by this. */
     ...(destination === "battlefield" ? {enteredAs: moved} : {}),
     /* "When this land enters untapped" (rules/trigger.mjs) asks how it entered, not how it is later. */
@@ -153,12 +177,14 @@ export function moveOne(state, id, to, events, {owner = null, tapped = false, fa
     /* And what it became wherever it went, when that zone is public (CR 400.7e): "that card" in a dies trigger. */
     ...(PUBLIC_ZONES.includes(destination) ? {becomes: moved} : {}),
     from: {zoneType: ZONE_LABEL[from] ?? from, player: {playerId: object.controller}},
-    to: {zoneType: ZONE_LABEL[destination] ?? destination, player: {playerId: holder}},
+    to: {zoneType: ZONE_LABEL[destination] ?? destination, player: {playerId: destination === "battlefield" ? enteringController : holder}},
   }));
   /* "You may have this creature enter as a copy of ...": its arrival waits for the answer (rules/entering.mjs). */
   if (destination === "battlefield") holdArrival(state, moved, events[events.length - 1]);
   /* "Enters prepared" (CR 614.1c, 722.3a): the designation it entered with, and its prepare spell's copy in exile (722.3c). */
   if ((entering?.designations ?? []).includes("prepared")) prepare(state, moved, events);
+  /* What it entered with, said once it has (rules/entering.mjs, enteredWith). */
+  if (destination === "battlefield") events.push(...enteredWith(state, moved, entering));
   /* What it exiled "until this leaves the battlefield", back now (CR 610.3). */
   if (from === "battlefield") returnExiledUntil(state, id, events, leftBehind);
   return moved;
@@ -207,6 +233,10 @@ export function exileUntil(state, params, context) {
 export function returnExiledUntil(state, departed, events, leftBehind = null) {
   if (leftBehind) rememberExileLooker(state, departed, leftBehind.controller);
   if (leftBehind) keepLastKnown(state, departed, leftBehind);
+  /* And control gained "for as long as" it remained on the battlefield ends with it (CR 611.2b; Sower of Temptation). */
+  controlSourceLeft(state, departed, events);
+  /* And every other effect lasting for as long as it remained there (Old Fat Spider Can't See Me). */
+  endWhileSourceRemains(state, departed);
   const due = (state.exiledUntil ?? []).filter((link) => link.source === departed);
   if (!due.length) return;
   state.exiledUntil = state.exiledUntil.filter((link) => link.source !== departed);
@@ -224,6 +254,9 @@ export function returnExiledUntil(state, departed, events, leftBehind = null) {
  * permanent's id as it was; each of its abilities waiting on the stack that knows nothing of it yet is told.
  */
 export function keepLastKnown(state, departed, leftBehind) {
+  // A trigger's subject can leave too (Guardian Project); remember its final name, not its arrival name.
+  for (const entry of [...state.stack, ...(state.pendingTriggers ?? [])])
+    if (entry.about?.card === departed) entry.about.was = structuredClone(leftBehind);
   for (const entry of state.stack) if (entry.objectId === null && entry.cardId === departed && !entry.lastKnown) entry.lastKnown = structuredClone(leftBehind);
 }
 
@@ -270,11 +303,16 @@ const inRandomOrder = (list, rng) => {
  */
 export function sacrificeOne(state, id, events) {
   const object = state.objects[id];
-  if (!object) return null;
+  /* "Can't be sacrificed" (Alexios; rules/statics.mjs): told to, nothing happens to it. */
+  if (!object || cantBeSacrificed(state, id)) return null;
   const sacrificer = object.controller;
   const before = events.length;
   const moved = moveOne(state, id, "graveyard", events, {owner: object.owner});
   if (moved !== null && events.length > before) Object.assign(events[events.length - 1].data.fields, {sacrificed: true, sacrificer});
+  /* "As long as you've sacrificed a nontoken permanent this turn" (Evendo Brushrazer; script/condition.mjs): counted for its
+     sacrificer, whatever replaced where it went -- it was sacrificed all the same (CR 701.21a) -- and cleared as a turn begins
+     (rules/turn.mjs). */
+  if (object.token !== true && state.players[sacrificer]) state.players[sacrificer].sacrificedNontokenThisTurn = (state.players[sacrificer].sacrificedNontokenThisTurn ?? 0) + 1;
   return moved;
 }
 
@@ -288,7 +326,14 @@ export function sacrificeAll(state, params, context) {
   /* "Each player sacrifices all creatures they control not chosen this way" (The Eternal Wanderer): `except` what the
      effect before it remembered. */
   const spared = params.except === "remembered" ? new Set(context.remembered ?? []) : null;
-  const doomed = state.zones.battlefield.filter((id) => !spared?.has(id) && players.includes(state.objects[id].controller) && matches(state, id, {controller: state.objects[id].controller, source: context.source ?? null}));
+  /* "Then each player sacrifices all other creatures they control that don't share a creature type with the chosen creature
+     they control" (Winnowing; CR 205.3m, 702.73a): `exceptSharing` "creature type", those that share one with a remembered
+     creature their controller controls are spared too -- each as it now is, a changeling sharing every one; one chosen that
+     has since left is a new object (CR 400.7), and nothing is kin to it. */
+  const kin = (id) => params.exceptSharing === "creature type" && [...spared].some((chosen) => state.objects[chosen]
+    && state.objects[chosen].controller === state.objects[id].controller && shareCreatureType(state, [chosen, id]));
+  const doomed = state.zones.battlefield.filter((id) => !spared?.has(id) && players.includes(state.objects[id].controller) && matches(state, id, {controller: state.objects[id].controller, source: context.source ?? null})
+    && !kin(id));
   for (const id of doomed) if (state.objects[id]) sacrificeOne(state, id, events);
   return events;
 }
@@ -302,6 +347,9 @@ export function sacrificeAll(state, params, context) {
  * names a looked-at card to nobody.
  */
 export function peekAndReveal(state, params, context) {
+  /* A hand looked at is asked of its looker as the resolution reaches it (script/resolution.mjs; effects/asking.mjs,
+     handLook): run here, nobody would see it -- refused, never read as the library's top. */
+  if (params.zone === "hand") throw new Error("A look at a hand is shown to its looker as a resolution reaches it; it is not run on its own");
   const events = [], seen = [];
   const count = params.count ?? 1;
   for (const player of playersFor(state, params.who, context.controller)) {
@@ -321,6 +369,16 @@ export function peekAndReveal(state, params, context) {
 /* The source a link is kept against: this ability's, or -- one that left the battlefield to trigger it -- as it last was. */
 const linkOf = (context) => context.source ?? context.lastKnown?.cardId ?? null;
 
+/* What a linked move moves (CR 607.2a): the cards this source's other ability exiled -- "put EACH CREATURE CARD exiled with
+   this artifact onto the battlefield" (Ghost Vacuum): `linkedOnly`, of those, the ones a selector fits as they are in exile
+   (a card exiled face down has no characteristics there, CR 406.3a, and fits none with a quality). */
+function linkedMoving(state, params, context) {
+  const source = linkOf(context);
+  const linked = (state.links?.[source] ?? []).filter((id) => state.objects[id]);
+  if (!params.linkedOnly) return linked;
+  return linked.filter((id) => matchesSelector({...params.linkedOnly, what: "card", zone: state.objects[id].zone}, state, id, {controller: context.controller, source}));
+}
+
 export function moveZone(state, params, context, rng = null) {
   const events = [];
   const arrived = [], became = [];
@@ -333,14 +391,25 @@ export function moveZone(state, params, context, rng = null) {
      it says so (Dark Confidant) -- or simply moved, face up, to exile (Lord of the Void). "The top card of each player's
      library" (Etali, batch 79): of every library `who` names; "the top X cards" (Villainous Wealth): an amount. */
   /* "Exile all but the bottom card of each opponent's library" (Jace, Reality Sculptor): `allButBottom`. */
-  const moving = params.fromTop !== undefined || params.allButBottom === true
+  const named = params.fromTop !== undefined || params.allButBottom === true
     ? playersFor(state, params.who, context.controller).flatMap((whose) => { const library = cardsIn(state, "library", whose);
       return params.allButBottom === true ? library.slice(0, Math.max(0, library.length - 1)) : library.slice(0, params.fromTop); })
     /* LINKED ABILITIES (CR 607.2a): "return the exiled card to the battlefield" (Oblivion Ring) -- what this permanent's
        other ability exiled (`link`, below), while it is still that card in exile (CR 400.7: gone from there, it is a new
        object, and nothing returns). */
-    : params.linked === true ? [...(state.links?.[linkOf(context)] ?? [])]
+    : params.linked === true ? linkedMoving(state, params, context)
     : params.targets ?? [];
+  /* "Exile the top ten cards of your library. Put ALL ARTIFACT CARDS FROM AMONG THEM onto the battlefield" (Tezzeret, Master
+     of the Bridge; `only`): of what it names -- what the effect before it moved, `targets: "remembered"` -- the ones a
+     selector fits as each now is where it is (CR 608.2h), a permanent through the layers. Nobody chooses: all of them. */
+  const moving = params.only ? named.filter((id) => state.objects[id] && matchesSelector({...params.only, what: "card", zone: state.objects[id].zone}, state, id,
+    {controller: context.controller, source: context.source ?? null})) : named;
+  /* What this move has put onto the battlefield so far, and what a move before it in the same instruction did (`notOnto`,
+     a flicker's return below): entering together, an Aura among them enchants none of them (CR 303.4f). */
+  const together = [...(params.notOnto ?? [])];
+  /* "Exile ..., then return those cards to the battlefield" (a flicker): each card exiled, and then -- once every one is
+     -- each returned (below). */
+  const returning = [];
   if (params.reveal) for (const id of moving) events.push(event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: state.objects[id].owner}}));
   /* "Put the rest on the bottom of your library in a random order" (Sunbird's Invocation; batch 80, `random`). */
   for (const id of params.random === true ? inRandomOrder(moving, rng) : moving) {
@@ -349,7 +418,13 @@ export function moveZone(state, params, context, rng = null) {
     const to = (params.commanderHome ?? []).includes(id) ? "command" : params.to ?? "graveyard";
     if (state.objects[id]?.zone === "battlefield") leftBy.set(id, controllerOf(state, id));
     const before = params.remember && state.objects[id]?.zone === "battlefield" ? lastKnown(state, id) : null;
-    const moved = params.sacrifice === true ? sacrificeOne(state, id, events) : moveOne(state, id, to, events, {tapped: params.tapped === true, transformed: params.transformed === true});
+    /* "Look at the top two cards of your library and exile them face down" (Flameshape; `faceDown`, into exile only): cards
+       with no characteristics there, named to nobody as they move (CR 406.3a) -- and, looked at first (`look`), seen by this
+       effect's controller for as long as they remain exiled (CR 406.3: "if a player is instructed to look at a card and then
+       exile it face down ... that player may continue to look at that card"; projection.mjs, `lookers`). */
+    const moved = params.sacrifice === true ? sacrificeOne(state, id, events) : moveOne(state, id, to, events, {tapped: params.tapped === true, transformed: params.transformed === true,
+      ...(params.withCounters ? {counters: params.withCounters} : {}), ...(to === "battlefield" && together.length ? {notOnto: together} : {}),
+      ...(params.faceDown === true ? {faceDown: true, lookers: params.look === true ? [context.controller] : []} : {})});
     if (before && moved !== null && state.objects[moved]?.zone === (params.sacrifice === true ? "graveyard" : to)) movedWas.push(before);
     /* What it is now, for `remember`: what it became -- or, exiled and returned at once, the permanent that came back
        ("if that creature is a Bird", Splash Portal, batch 79), set below. */
@@ -364,29 +439,50 @@ export function moveZone(state, params, context, rng = null) {
     /* "Onto the battlefield under your control" (Reanimate): the ability's controller, not the card's owner. */
     if (moved !== null && params.to === "battlefield" && params.controller !== undefined && state.objects[moved])
       state.objects[moved].controller = params.controller === "you" ? context.controller : params.controller;
-    if (moved !== null && state.objects[moved]?.zone === "battlefield") arrived.push(moved);
+    if (moved !== null && state.objects[moved]?.zone === "battlefield") { arrived.push(moved); together.push(moved); }
+    /* WARPED (CR 702.185a-b; rules/stack.mjs makes the delayed trigger): exiled by warp's delayed trigger, a warped card in
+       exile, which "its owner may cast ... after the current turn has ended for as long as it remains exiled" -- a permission
+       of its owner's (rules/actions.mjs, may-play), open on a turn after `warped`, the one the spell was cast on. Sent
+       elsewhere instead, it was never exiled, and is no warped card. */
+    if (params.warped !== undefined && moved !== null && state.objects[moved]?.zone === "exile") {
+      const owner = state.objects[moved].owner;
+      state.objects[moved].warped = true;
+      (state.effects ??= []).push({id: `warp:${moved}`, rule: "may-play", affects: {ids: [moved]}, player: owner, name: state.objects[moved].card,
+        spellsOnly: true, until: "ever", afterTurn: params.warped, madeOnTurn: state.turn, sourceController: owner});
+    }
     /* "Exile it, then return that card to the battlefield" (a flicker): the card in exile is a new object (CR 400.7),
        found by what the move returned, and comes back now or at the beginning of the next end step -- under its
        owner's control unless the card says yours, with a +1/+1 counter if the card says so and it is a creature. */
     if (moved !== null && params.andReturn && state.objects[moved]) {
       /* "Then return it to the battlefield transformed under your control" (Fable of the Mirror-Breaker; CR 712.14a): its
          back face up as it enters -- not a transform (701.27) -- and a card that isn't a double-faced card stays where it is. */
+      /* "Then return it to the battlefield tapped under its owner's control" (Eldrazi Confluence; `returnTapped`). */
       const back = {effect: "moveZone", targets: [moved], to: "battlefield", ...(params.under === "you" ? {controller: context.controller} : {}),
-        ...(params.returnWithCounter ? {withCounter: params.returnWithCounter} : {}), ...(params.transformed === true ? {transformed: true} : {})};
+        ...(params.returnWithCounter ? {withCounter: params.returnWithCounter} : {}), ...(params.transformed === true ? {transformed: true} : {}),
+        ...(params.returnTapped === true ? {tapped: true} : {})};
       if (params.andReturn === "end step") delayedTrigger(state, {at: "end step", text: "Return that card to the battlefield at the beginning of the next end step.", effects: [back]}, context);
       /* "Return that card to the battlefield under its owner's control at the beginning of that player's next end step" (The
          Eternal Wanderer; CR 603.7): the next end step of a turn of the card's owner -- this turn's, if it is theirs and its
          end step has not begun. */
       else if (params.andReturn === "owner's end step") delayedTrigger(state, {at: "end step", player: state.objects[moved].owner,
         text: "Return that card to the battlefield under its owner's control at the beginning of that player's next end step.", effects: [back]}, context);
-      else {
-        /* The return remembers what came back in a context of its own, so this effect's `remember` is not overwritten. */
-        const returning = {...context};
-        events.push(...moveZone(state, {...back, remember: true}, returning));
-        landed = returning.remembered?.[0] ?? null;
-      }
+      else { returning.push({id, back}); continue; }
     }
     if (landed !== null) { became.push(landed); if (leftBy.has(id)) was[landed] = leftBy.get(id); }
+  }
+  /* "EXILE TWO TARGET ARTIFACTS, CREATURES, AND/OR LANDS YOU CONTROL, THEN RETURN THOSE CARDS TO THE BATTLEFIELD" (Ghostly
+     Flicker; Brago, King Eternal's "any number"): the instructions in order (CR 608.2c) -- every one exiled, then those cards
+     returned, together: an Aura returning among them enchants none of the others (CR 303.4f), and a token exiled this way
+     stays in exile (CR 111.8; moveOne). Each return remembers what came back in a context of its own, so this effect's
+     `remember` is what came back ("if that creature is a Bird", Splash Portal). */
+  for (const {id, back} of returning) {
+    const returned = {...context};
+    events.push(...moveZone(state, {...back, remember: true, notOnto: together}, returned));
+    const landed = returned.remembered?.[0] ?? null;
+    if (landed === null) continue;
+    together.push(landed);
+    became.push(landed);
+    if (leftBy.has(id)) was[landed] = leftBy.get(id);
   }
   /* "Shuffle it into its owner's library" (`shuffle`, batch 80): each library a card was put into, shuffled after. */
   if (params.shuffle === true) for (const owner of new Set(became.filter((id) => state.objects[id]?.zone === "library").map((id) => state.objects[id].owner))) shuffleLibrary(state, owner, rng, events);
@@ -396,15 +492,26 @@ export function moveZone(state, params, context, rng = null) {
   /* "Exile another target nonland permanent" (Oblivion Ring, `link`): what it exiled, kept against this source for the
      ability linked to it (CR 607.2a); used, the link is spent. Each time the ability exiles adds to what it exiled -- the
      same trigger twice (Panharmonicon) is "the exiled cards", both (Skyclave Apparition's ruling of 2020-09-25). */
-  if (params.link === true && context.source !== null && context.source !== undefined) {
-    const links = (state.links ??= {});
-    links[context.source] = [...(links[context.source] ?? []), ...became.filter((id) => state.objects[id])];
+  /* And what it put onto the battlefield: "Return enchanted creature card to the battlefield under your control ... When this
+     Aura leaves the battlefield, that creature's controller sacrifices it" (Animate Dead) -- that creature, while it is the
+     same object (CR 400.7), for the ability that names it (`linked`). */
+  if (params.link === true && linkOf(context) !== null) {
+    const links = (state.links ??= {}), source = linkOf(context);
+    const linked = became.filter(id => state.objects[id]?.zone === "exile");
+    for (const id of linked) state.objects[id].exiledTurn = state.turn;
+    const entered = became.filter(id => state.objects[id]?.zone === "battlefield");
+    links[source] = [...(links[source] ?? []), ...linked, ...entered];
   }
-  if (params.linked === true && state.links) delete state.links[linkOf(context)];
+  if (params.linked === true && state.links) {
+    /* Only some of them (`linkedOnly`): the others are still exiled with it (CR 607.2a). */
+    const left = params.linkedOnly ? (state.links[linkOf(context)] ?? []).filter((id) => state.objects[id] && !moving.includes(id)) : [];
+    if (left.length) state.links[linkOf(context)] = left;
+    else delete state.links[linkOf(context)];
+  }
   /* Teferi's Time Twist: "if it enters as a creature, it enters with an additional +1/+1 counter on it". */
   /* Put on it as it enters (CR 122.6), by its controller (122.6a): "twice that many instead" sees it. */
   if (params.withCounter) for (const id of arrived) if (typesOf(state, id).includes("Creature"))
-    state.objects[id].counters[params.withCounter] = (state.objects[id].counters[params.withCounter] ?? 0) + countersPlaced(state, id, params.withCounter, 1, state.objects[id].controller);
+    state.objects[id].counters[params.withCounter] = (state.objects[id].counters[params.withCounter] ?? 0) + enteringCountersPlaced(state, id, params.withCounter, 1, state.objects[id].controller);
   afterwards(state, arrived, params, context);
   return events;
 }
@@ -437,16 +544,46 @@ export function manifest(state, params, context) {
  * `mayPlay` — "Until the end of your next turn, you may play that card" (Blazing Crescendo), "you may play them this turn":
  * a permission, not a cast now (that is `play`). Its controller may play the named cards from where they are, each the way
  * it could be played from a hand -- a land as their land for the turn (CR 305.2), a spell at its type's speed, its costs
- * paid (CR 601.2a) -- until `until`: "end-of-turn", or "your-next-end", the end of that player's next turn (rules/turn.mjs).
+ * paid (CR 601.2a) -- until `until`: "end-of-turn", "your-next-end", the end of that player's next turn, or
+ * "your-next-end-step", as that player's next end step begins ("until your next end step", Shadow Urchin; rules/turn.mjs).
  * `spellsOnly` for "you may cast that card". It names objects, as `remembered` binds them: a card that moves becomes a new
  * object (CR 400.7) and leaves the permission behind -- played, or put back into a library.
+ * `onlyIf`, a condition on the permission (script/condition.mjs): "for as long as they remain exiled, you may play them IF
+ * YOU CONTROL A WIZARD" (Flameshape) -- asked of its player whenever a card would be played through it (rules/actions.mjs,
+ * permissionOpen), not once now, which an effect's own `condition` would be. A card exiled face down is played as the card it
+ * is (CR 406.3a; rules/actions.mjs, withFaceUp).
  */
+/* `from`, a zone's cards rather than named ones: "you may cast a creature spell from your graveyard this turn" (Chainer,
+   Nightmare Adept: "graveyard", `spellsOnly`, `spells` the selector, `count` 1 -- spent by the one card it lets be played),
+   "until end of turn, ... you may play cards from the top of your library. If you cast a spell this way, pay life equal to
+   its mana value rather than pay its mana cost" (Gwenom, Remorseless: "library-top", `payLife: "manaValue"`). A permission of
+   its controller's, read as a permanent's play-from is (rules/actions.mjs), whatever becomes of the source (CR 611.2a). */
 export function mayPlay(state, params, context) {
-  const ids = (params.targets ?? []).filter((id) => state.objects[id]);
+  if (params.from !== undefined) {
+    const player = context.controller;
+    const effects = (state.effects ??= []);
+    let serial = effects.length, id;
+    do { id = `may-play:${params.from}:${serial++}`; } while (effects.some(e => e.id === id));
+    effects.push({id, rule: "may-play", affects: {ids: []}, player, name: state.objects[context.source]?.card ?? context.lastKnown?.name ?? "Effect",
+      from: params.from, spells: structuredClone(params.spells ?? true), ...(params.spellsOnly === true ? {spellsOnly: true} : {}),
+      ...(params.payLife ? {payLife: params.payLife} : {}), ...(Number.isInteger(params.count) ? {count: params.count} : {}),
+      until: params.until ?? "end-of-turn", madeOnTurn: state.turn, sourceController: player});
+    return [];
+  }
+  /* "For as long as it remains exiled" (Thranduil's Decree, `zone: "exile"`): only a card there now -- one put elsewhere never
+     starts the duration, and the effect does nothing to it (CR 611.2b). */
+  const ids = (params.targets ?? []).filter((id) => state.objects[id] && (params.zone === undefined || state.objects[id].zone === params.zone));
   const player = context.controller;
   if (!ids.length || !state.players[player]) return [];
-  (state.effects ??= []).push({id: `may-play:${ids.join(",")}:${state.effects.length}`, rule: "may-play", affects: {ids}, player,
-    ...(params.spellsOnly === true ? {spellsOnly: true} : {}), until: params.until ?? "end-of-turn", madeOnTurn: state.turn, sourceController: player});
+  const effects = (state.effects ??= []);
+  let serial = effects.length, id;
+  do { id = `may-play:${ids.join(",")}:${serial++}`; } while (effects.some(e => e.id === id));
+  effects.push({id, rule: "may-play", affects: {ids}, player,
+    name: state.objects[context.source]?.card ?? context.lastKnown?.name ?? "Effect",
+    ...(params.free === true ? {free: true} : {}),
+    ...(params.graveyardToLibraryBottom === true ? {graveyardToLibraryBottom: true} : {}),
+    ...(params.spellsOnly === true ? {spellsOnly: true} : {}), ...(params.onlyIf !== undefined ? {onlyIf: structuredClone(params.onlyIf)} : {}),
+    until: params.until ?? "end-of-turn", madeOnTurn: state.turn, sourceController: player});
   return [];
 }
 
@@ -456,9 +593,12 @@ export function moveZoneAll(state, params, context, rng = null) {
   const matched = selectMatching(state, params.selector ?? {what: "permanent"}, context);
   /* A copy, because each move rewrites the zone list underneath the iteration. */
   const was = {};
+  /* "Put all creature cards from all graveyards onto the battlefield under your control" (Rise of the Dark Realms): each enters
+     under this effect's controller's control, not its owner's (CR 110.2a) -- as it enters, before what it enters with. */
+  const under = params.to === "battlefield" && params.controller === "you" ? context.controller : null;
   for (const id of [...matched]) {
     const controller = state.objects[id]?.zone === "battlefield" ? controllerOf(state, id) : null;
-    const moved = moveOne(state, id, params.to ?? "graveyard", events, {tapped: params.tapped === true});
+    const moved = moveOne(state, id, params.to ?? "graveyard", events, {tapped: params.tapped === true, controller: under});
     if (moved !== null) { arrivedAll.push(moved); if (controller !== null) was[moved] = controller; }
   }
   /* "Each player shuffles the cards from their hand into their library" (Winds of Change, batch 80, `shuffle`): each library
@@ -470,6 +610,13 @@ export function moveZoneAll(state, params, context, rng = null) {
   /* And who controlled each as it left the battlefield: "for each creature exiled this way, its controller searches"
      (Winds of Abandon; script/amount.mjs, rememberedCount's `controlledBy`). */
   if (params.remember) context.rememberedControllers = was;
+  /* "When this Vehicle enters, exile target player's graveyard" (Nautiloid Ship, `link`): every card it exiled, kept against
+     this source for its other ability's "a creature card exiled with this Vehicle" (CR 607.2a; script/filter.mjs,
+     `exiledWith`), as moveZone's `link` keeps what it exiled. */
+  if (params.link === true && linkOf(context) !== null) {
+    const exiled = arrivedAll.filter((id) => state.objects[id]?.zone === "exile");
+    (state.links ??= {})[linkOf(context)] = [...(state.links[linkOf(context)] ?? []), ...exiled];
+  }
   /* "They gain haste until end of turn" (Wake the Past). */
   afterwards(state, arrivedAll, params, context);
   return events;
@@ -480,13 +627,208 @@ export function draw(state, params, context) {
   const events = [];
   const count = params.count ?? 1;
   for (const player of playersFor(state, params.who, context.controller)) {
-    for (let i = 0; i < count; i += 1) {
-      const library = cardsIn(state, "library", player);
-      if (library.length === 0) { state.players[player].drewFromEmpty = true; break; }
-      if (moveOne(state, library[0], "hand", events, {owner: player}) !== null) events[events.length - 1].data.fields.drawn = true;
+    /* "If an opponent would draw two or more cards, instead you and that player each draw a card" (Alms Collector; rules/
+       statics.mjs, drawsInstead): whose, when two players' would, as the drawing player chose (CR 616.1; effects/asking.mjs,
+       orderDraws) -- where nobody could be asked, the first in turn order after them. The two draw in turn order from the
+       active player, each one card. */
+    const instead = drawsInstead(state, player, count);
+    if (instead.length) {
+      const you = instead.includes(params.drawOrders?.[player]) ? params.drawOrders[player] : instead[0];
+      const seats = state.players.length, rank = (p) => (p - state.activePlayer + seats) % seats;
+      for (const who of [you, player].sort((a, b) => rank(a) - rank(b))) drawOne(state, who, events);
+      continue;
     }
+    for (let i = 0; i < count; i += 1) drawOne(state, player, events);
   }
   return events;
+}
+/* One card off the top of a player's library into their hand, said to be drawn; from an empty library, the mark that loses (CR 704.5b). */
+function drawOne(state, player, events, replaced = []) {
+  /* A card the player can't draw (Narset, Parter of Veils; rules/statics.mjs, drawForbidden) is not drawn, nor tried for: no
+     draw from an empty library either (CR 101.2, 121.2b). */
+  if (drawForbidden(state, player)) return;
+  const library = cardsIn(state, "library", player);
+  /* "IF YOU WOULD DRAW A CARD WHILE YOUR LIBRARY HAS NO CARDS IN IT, YOU WIN THE GAME INSTEAD" (Laboratory Maniac; CR 614.11,
+     121.6a): replaced even with no card to draw, so it is no draw from an empty library -- and an opponent's "you can't win
+     the game" (effects/resources.mjs, winGame) leaves the player neither winning nor losing for it (its ruling). Before "draw
+     two instead": either order ends with the same win, so nobody is asked (CR 616.1). */
+  if (library.length === 0 && emptyDrawWins(state, player)) { winGame(state, {who: [player]}, {controller: player}); return; }
+  /* "DRAW TWO CARDS INSTEAD" (Teferi's Ageless Insight; CR 614.11a, 614.5): each `draws-more` not yet applied to this draw
+     replaces it with that many draws, each one the others may still replace -- all of them made before the rest of the draw
+     goes on. */
+  const more = drawsMore(state, player).find((m) => !replaced.includes(m.key));
+  if (more) { for (let i = 0; i < more.count; i += 1) drawOne(state, player, events, [...replaced, more.key]); return; }
+  if (library.length === 0) { state.players[player].drewFromEmpty = true; return; }
+  const moved = moveOne(state, library[0], "hand", events, {owner: player});
+  if (moved !== null && state.objects[moved]?.zone === "hand") {
+    const fields = events[events.length - 1].data.fields;
+    fields.drawn = true;
+    fields.drawNumber = recordDraw(state, player);
+    /* In the drawer's own draw step, which of the cards drawn there (Orcish Bowmasters; state/index.mjs). */
+    const inStep = recordDrawStepDraw(state, player);
+    if (inStep !== null) fields.drawStepNumber = inStep;
+  }
+}
+
+/* ---- DREDGE N (CR 702.52a; Life from the Loam; wave 4c, k2) ----
+
+   "If you would draw a card, you may mill N cards instead. If you do, return this card from your graveyard to your hand": a
+   replacement of one draw (CR 614.1a, 121.6), had by the card in its owner's graveyard and only there (CR 113.6) -- the
+   static `dredge` its keyword compiles to (cards/index.mjs). Usable only with N or more cards in that player's library
+   (702.52b), and never for a draw the player can't make (Narset, Parter of Veils; drawForbidden): there is no draw to
+   replace. Each card drawn is its own draw (CR 121.2), so one draw is replaced by one dredge at most, and a dredge card a
+   dredge milled may replace the next draw (the card's rulings). Whether, and with which, is the drawing player's choice
+   (CR 616.1): in the draw step (rules/turn.mjs, "dredge-draw") and as an effect resolves (script/resolution.mjs; effects/
+   asking.mjs, dredgeDraw). */
+/** The dredge cards of a player's graveyard that could replace their next draw now, each `{id, amount}`. */
+export function dredgers(state, player) {
+  if (!state.players[player] || state.players[player].lost || drawForbidden(state, player)) return [];
+  const library = cardsIn(state, "library", player).length;
+  return cardsIn(state, "graveyard", player).flatMap((id) => {
+    const rule = (state.objects[id].abilities ?? []).find((a) => a.kind === "static" && a.rule === "dredge");
+    return rule && Number.isInteger(rule.amount) && rule.amount >= 1 && rule.amount <= library ? [{id, amount: rule.amount}] : [];
+  });
+}
+/** One dredge in words, for the drawing player's question: "Dredge 3: mill three cards and return Life from the Loam to your hand". */
+const DREDGE_WORDS = ["no", "a", "two", "three", "four", "five", "six"];
+export const dredgeWords = (state, {id, amount}) =>
+  `Dredge ${amount}: mill ${DREDGE_WORDS[amount] ?? amount} card${amount === 1 ? "" : "s"} and return ${state.objects[id]?.card ?? "it"} to your hand`;
+/** A draw replaced by this card's dredge (dredgers): its N cards milled, then the card returned from its owner's graveyard to
+    their hand -- the object it was there (CR 400.7). No card is drawn, so nothing that watches draws sees it. False when it
+    cannot dredge now. */
+export function dredgeInstead(state, player, cardId, events) {
+  const could = dredgers(state, player).find((d) => d.id === cardId);
+  if (!could) return false;
+  events.push(...mill(state, {who: [player], count: could.amount}, {controller: player, source: cardId}));
+  if (state.objects[cardId]?.zone === "graveyard") moveOne(state, cardId, "hand", events, {owner: player});
+  return true;
+}
+/** A draw effect as the single draws it makes, a player for each card, in the order `draw` makes them -- Alms Collector's
+    "instead you and that player each draw a card" among them (drawsInstead, the one its drawing player chose, `drawOrders`)
+    -- for a dredge to replace any one of them (script/resolution.mjs). */
+export function singleDraws(state, params, context) {
+  const count = params.count ?? 1, draws = [];
+  for (const player of playersFor(state, params.who, context.controller)) {
+    const instead = drawsInstead(state, player, count);
+    if (instead.length) {
+      const you = instead.includes(params.drawOrders?.[player]) ? params.drawOrders[player] : instead[0];
+      const seats = state.players.length, rank = (p) => (p - state.activePlayer + seats) % seats;
+      draws.push(...[you, player].sort((a, b) => rank(a) - rank(b)));
+      continue;
+    }
+    for (let i = 0; i < count; i += 1) draws.push(player);
+  }
+  return draws;
+}
+
+/* ---- CR 616.1, before cards are drawn ----
+
+   A draw of two or more two players' Alms Collectors would replace: the drawing player chooses whose applies, asked before any
+   card is drawn (script/resolution.mjs; effects/asking.mjs, orderDraws). `{player, options}`, the options the controllers
+   whose effects would apply; or null when no draw of the effect has such a choice not yet made (`answers`, by player). */
+export function drawQuestion(state, effect, context, answers = {}) {
+  if (effect?.effect !== "draw") return null;
+  for (const player of playersFor(state, effect.who, context.controller)) {
+    const instead = drawsInstead(state, player, effect.count ?? 1);
+    if (instead.length > 1 && !instead.includes(answers[player])) return {player, options: instead, count: effect.count};
+  }
+  return null;
+}
+
+/**
+ * WHAT WOULD REPLACE A DESTRUCTION (CR 701.8, 614.1a): a permanent about to be destroyed -- by an effect that says "destroy",
+ * or by lethal damage or deathtouch's damage (CR 704.5g-h) -- and each effect instead of which it is not, by its `key`:
+ *   "regenerate": a regeneration shield on it (CR 701.19a), unless "it can't be regenerated" (`noRegenerate`, 701.19c);
+ *   "umbra:<id>": an Aura attached to it with umbra armor (CR 702.89a) -- "instead remove all damage marked on it and destroy
+ *     this Aura" -- each Aura its own effect, the Aura's ability as it now is (a lost ability is no shield), and "can't be
+ *     regenerated" no bar to it: umbra armor is not regeneration.
+ * Never for what is put into a graveyard otherwise -- a sacrifice, the legend rule, toughness 0 or less (CR 701.8b, 704.5f) --
+ * and the callers ask indestructible first: an indestructible permanent is not destroyed (CR 702.12b).
+ */
+export function destructionReplacements(state, id, {noRegenerate = false} = {}) {
+  const object = state.objects[id];
+  if (!object || object.zone !== "battlefield") return [];
+  const found = [];
+  if (!noRegenerate && (state.effects ?? []).some((e) => e.rule === "regeneration" && (e.affects?.ids ?? []).includes(id))) found.push({key: "regenerate"});
+  for (const aura of object.attachments ?? []) {
+    /* One that has left is still listed until something unattaches it (CR 400.7: a new object; rules/sba.mjs). */
+    if (state.objects[aura]?.zone !== "battlefield" || state.objects[aura].attachedTo !== id) continue;
+    if (abilitiesOf(state, aura).some((a) => a.kind === "static" && a.rule === "umbra-armor")) found.push({key: `umbra:${aura}`, aura});
+  }
+  return found;
+}
+
+/* One of them, in words, for the choice: what it does instead. */
+const replacementWords = (state, id, key) => {
+  const name = state.objects[id]?.card ?? "It";
+  if (key === "regenerate") return `Regenerate ${name}: remove all damage from it, tap it, and remove it from combat`;
+  const aura = Number(String(key).split(":")[1]);
+  return `${state.objects[aura]?.card ?? "Its Aura"}'s umbra armor: remove all damage from ${name} and destroy ${state.objects[aura]?.card ?? "that Aura"}`;
+};
+
+/**
+ * WHICH REPLACES IT, WHEN SEVERAL WOULD (CR 616.1, 616.1e): two Auras with umbra armor, or one and a regeneration shield --
+ * each ends the destruction its own way, and the permanent's controller chooses which applies; the others then have no
+ * destruction left to replace (616.1f). The questions about those of `ids` whose answer `answers` does not hold yet, the
+ * first player's in APNAP order first when several are destroyed at once (616.1, 101.4): `{player, objectId, options}`,
+ * the options its keys.
+ */
+export function destructionAsks(state, ids, answers = {}, {noRegenerate = false} = {}) {
+  const seats = state.players.length, rank = (player) => (player - (state.activePlayer ?? 0) + seats) % seats;
+  const asks = [];
+  for (const id of ids) {
+    if (answers[id] !== undefined || !state.objects[id] || keywordsOf(state, id).includes("Indestructible")) continue;
+    const candidates = destructionReplacements(state, id, {noRegenerate});
+    if (candidates.length >= 2) asks.push({player: controllerOf(state, id), objectId: id, options: candidates.map((c) => c.key)});
+  }
+  return asks.sort((a, b) => rank(a.player) - rank(b.player));
+}
+/** The question (§12.1), from what destructionToAsk found: its keys, each said as what it does. */
+export function destructionChoice(state, awaiting) {
+  const name = state.objects[awaiting.objectId]?.card ?? "That permanent";
+  return {id: `destruction-replacement:${state.turn}:${awaiting.objectId}`, title: `${name} would be destroyed: which replaces it?`, mode: "one", min: 1, max: 1,
+    options: awaiting.options.map((key, index) => ({index, label: replacementWords(state, awaiting.objectId, key), cardId: key === "regenerate" ? awaiting.objectId : Number(key.split(":")[1])}))};
+}
+/* Of what a board wipe destroys, those something would replace the destruction of first: an Aura with umbra armor destroyed
+   in the same wipe as its creature still saves it -- the destructions happen at once, and the replacement applies to the
+   event before it happens (CR 614.1) -- and the wipe takes the Aura either way. */
+const replacedFirst = (state, ids, params) => [...ids.filter((id) => destructionReplacements(state, id, {noRegenerate: params.noRegenerate === true}).length),
+  ...ids.filter((id) => !destructionReplacements(state, id, {noRegenerate: params.noRegenerate === true}).length)];
+/* What a destroy effect would destroy now, before any of it is: its targets, or what its selector matches but what it spares
+   (destroyAll) -- destructionAsks passes over the indestructible and what is not on the battlefield. */
+function wouldDestroy(state, params, context) {
+  if (params.effect === "destroy") return params.targets ?? [];
+  const spared = params.except === "remembered" ? new Set(context.remembered ?? []) : null;
+  return [...selectMatching(state, params.selector ?? {what: "permanent"}, context)].filter((id) => !spared?.has(id));
+}
+/** The question a resolving destroy must ask before it destroys anything (script/resolution.mjs), or null. */
+export function destructionQuestion(state, effect, context) {
+  if (effect?.effect !== "destroy" && effect?.effect !== "destroyAll") return null;
+  return destructionAsks(state, wouldDestroy(state, effect, context), effect.destructionAnswers ?? {}, {noRegenerate: effect.noRegenerate === true})[0] ?? null;
+}
+
+/**
+ * A DESTRUCTION REPLACED, OR NOT (CR 614.1a): with one effect that would replace it, that one; with several, the one its
+ * controller chose (`chosen`, its key; asked before -- effects/asking.mjs orderDestruction, rules/sba.mjs) -- or, where an
+ * effect is run with nobody to stop and ask (one nested in another's, outside a resolution's queue), the first found: the
+ * shield, then the Auras in the order they were attached. A regeneration shield used is rules/replacement.mjs's. Umbra armor
+ * (CR 702.89a): all damage removed from the permanent -- and deathtouch's mark with it, the damage that brought it -- and the
+ * Aura destroyed instead; something may replace the Aura's destruction in turn, and an indestructible Aura stays, the
+ * permanent saved all the same. Not regeneration: it is not tapped, and stays in combat.
+ *
+ * @returns {boolean} whether the destruction was replaced
+ */
+export function destructionReplaced(state, id, events, {noRegenerate = false, chosen = undefined} = {}) {
+  const candidates = destructionReplacements(state, id, {noRegenerate});
+  if (!candidates.length) return false;
+  const pick = candidates.length === 1 ? candidates[0] : candidates.find((c) => c.key === chosen) ?? candidates[0];
+  if (pick.key === "regenerate") return regenerated(state, id, events);
+  const object = state.objects[id];
+  object.damage = 0;
+  object.deathtouched = false;
+  events.push(event("GameEventUmbraArmor", state, {card: cardRef(state, id), aura: cardRef(state, pick.aura)}));
+  if (!keywordsOf(state, pick.aura).includes("Indestructible") && !destructionReplaced(state, pick.aura, events)) moveOne(state, pick.aura, "graveyard", events);
+  return true;
 }
 
 /**
@@ -498,14 +840,22 @@ export function draw(state, params, context) {
  */
 export function destroy(state, params, context) {
   const events = [];
+  /* "Destroy target creature. If another creature died this turn, draw a card" (Chain Assassination; Train C phase 2):
+     `remember`, what it put into a graveyard -- not the indestructible, the regenerated, nor one some replacement sent
+     elsewhere -- and each as it last existed on the battlefield (`movedWas`, CR 608.2h), as moveZone keeps them, so what
+     follows can count it out ({movedCount}, script/amount.mjs). */
+  const destroyed = [], destroyedWas = [];
   for (const id of params.targets ?? []) {
     if (!state.objects[id]) continue;
     if (keywordsOf(state, id).includes("Indestructible")) continue;
-    /* A regeneration shield replaces the destruction (CR 701.19a), unless "it can't be regenerated" (`noRegenerate`). */
-    if (params.noRegenerate !== true && regenerated(state, id, events)) continue;
-    moveOne(state, id, "graveyard", events);
+    /* A regeneration shield replaces the destruction (CR 701.19a), unless "it can't be regenerated" (`noRegenerate`); an Aura's
+       umbra armor does (CR 702.89a) -- the one its controller chose, when several would (destructionReplaced). */
+    if (destructionReplaced(state, id, events, {noRegenerate: params.noRegenerate === true, chosen: params.destructionAnswers?.[id]})) continue;
+    const before = params.remember ? lastKnown(state, id) : null;
+    const moved = moveOne(state, id, "graveyard", events);
+    if (before && moved !== null && state.objects[moved]?.zone === "graveyard") { destroyed.push(moved); destroyedWas.push(before); }
   }
-  void context;
+  if (params.remember) { context.remembered = destroyed; context.movedWas = destroyedWas; }
   return events;
 }
 
@@ -523,17 +873,23 @@ export function destroyAll(state, params, context) {
   const events = [];
   const spared = params.except === "remembered" ? new Set(context.remembered ?? []) : null;
   const matched = [...selectMatching(state, params.selector ?? {what: "permanent"}, context)].filter((id) => !spared?.has(id));
-  const doomed = matched.filter((id) => state.objects[id]?.zone === "battlefield" && !keywordsOf(state, id).includes("Indestructible"));
-  /* Each regenerated one stays (CR 701.19a), unless the card says "they can't be regenerated" (`noRegenerate`). */
-  const destroyed = [];
+  const doomed = replacedFirst(state, matched.filter((id) => state.objects[id]?.zone === "battlefield" && !keywordsOf(state, id).includes("Indestructible")), params);
+  /* Each regenerated one stays (CR 701.19a), unless the card says "they can't be regenerated" (`noRegenerate`); and each an
+     Aura's umbra armor saves (CR 702.89a), the Aura destroyed in its place -- one in this wipe too is gone already. */
+  const destroyed = [], destroyedWas = [];
   for (const id of doomed) {
-    if (params.noRegenerate !== true && regenerated(state, id, events)) continue;
+    if (destructionReplaced(state, id, events, {noRegenerate: params.noRegenerate === true, chosen: params.destructionAnswers?.[id]})) continue;
+    /* What it was as it left the battlefield (CR 608.2h), for `remember`: read before it moves. */
+    const before = params.remember ? lastKnown(state, id) : null;
     const moved = moveOne(state, id, "graveyard", events);
-    if (moved !== null) destroyed.push(moved);
+    if (moved !== null) { destroyed.push(moved); if (before) destroyedWas.push(before); }
   }
   /* "You gain 1 life for each creature destroyed this way" (Ob Nixilis, the Ascended): `remember`, what it destroyed --
-     neither the indestructible nor the regenerated -- for the effects after it ({rememberedCount: true}). */
-  if (params.remember) context.remembered = destroyed;
+     neither the indestructible nor the regenerated -- for the effects after it ({rememberedCount: true}). And each of them
+     as it last existed on the battlefield (`movedWas`): "for each nontoken creature you controlled that was destroyed this
+     way" (Ceaseless Conflict; script/amount.mjs, movedCount) asks who controlled it then, and whether it was a token -- one
+     a token has ceased to exist since (CR 704.5d), the other a card in its owner's graveyard. */
+  if (params.remember) { context.remembered = destroyed; context.movedWas = destroyedWas; }
   return events;
 }
 
@@ -552,6 +908,10 @@ export function destroyAll(state, params, context) {
  *
  * "The rest on the bottom of your library in a random order" (`rest: "bottom"`, every card that says it): in a random
  * order from the game's stream (batch 80; before it, in the order they were taken, which was not random).
+ *
+ * `found.controller: "you"`: "target opponent reveals cards ... You put that card onto the battlefield under your control"
+ * (Jhoira, Weatherlight Corsair, Train E) -- under this effect's controller's control, its owner still the player whose
+ * library it was (CR 108.3, 110.2a).
  */
 export function digUntil(state, params, context, rng = null) {
   const events = [];
@@ -574,7 +934,8 @@ export function digUntil(state, params, context, rng = null) {
     }
     for (const hit of hits) {
       const to = params.found?.to;
-      const landed = to ? moveOne(state, hit, to, events, {owner: player, tapped: params.found?.tapped === true}) : hit;
+      const landed = to ? moveOne(state, hit, to, events, {owner: player, tapped: params.found?.tapped === true,
+        ...(params.found?.controller === "you" ? {controller: context.controller} : {})}) : hit;
       if (landed !== null) found.push(landed);
     }
     if (params.rest === "graveyard" || (params.rest === "exile" && !params.exile)) for (const id of taken) moveOne(state, id, params.rest, events, {owner: player});
@@ -625,6 +986,9 @@ export function mill(state, params, context) {
  */
 export function counterSpell(state, params, context) {
   const events = [];
+  /* "If a permanent spell is countered this way, exile it instead" (Thranduil's Decree): what it countered and moved, as the
+     cards they became (CR 400.7), for the effects after it (`remember`). */
+  const moved = [];
   const fromSpells = (params.spells ?? []).map((id) => state.stack.find((entry) => entry.objectId === id)?.stackId).filter((id) => id !== undefined);
   /* `stack`: the entries a trigger is about (ward's "counter it"), bound to their stack ids (script/bind.mjs). */
   for (const stackId of [...(params.targets ?? []), ...(Array.isArray(params.stack) ? params.stack : []), ...fromSpells]) {
@@ -641,18 +1005,22 @@ export function counterSpell(state, params, context) {
          owner's library instead of into that player's graveyard" (Memory Lapse, `to: "top"`) -- or, a commander whose owner
          chose so, the command zone (CR 903.9b; effects/asking.mjs, commandersGoingHome). */
       const owner = state.objects[entry.objectId].owner;
-      const to = entry.flashback || entry.graveyardToExile || params.to === "exile" ? "exile"
-        : (params.commanderHome ?? []).includes(entry.objectId) ? "command" : params.to === "top" ? "library" : "graveyard";
-      const moved = moveOne(state, entry.objectId, to, events, {owner});
+      /* "If a permanent spell is countered this way, exile it instead" (Thranduil's Decree, `permanentTo: "exile"`): a spell that
+         would become a permanent as it resolved (CR 110.1, 608.3; rules/stack.mjs, `permanent`), exiled; any other, to its
+         owner's graveyard. */
+      const to = entry.flashback || entry.graveyardToExile || params.to === "exile" || (params.permanentTo === "exile" && entry.permanent === true) ? "exile"
+        : (params.commanderHome ?? []).includes(entry.objectId) ? "command" : params.to === "top" || entry.graveyardToLibraryBottom ? "library" : "graveyard";
+      const landed = moveOne(state, entry.objectId, to, events, {owner});
+      if (landed !== null && state.objects[landed]) moved.push(landed);
       /* "Exile it with three time counters on it ... it gains suspend" (Delay; CR 702.62): in exile, suspended. */
-      if (to === "exile" && moved !== null && state.objects[moved] && Number.isInteger(params.timeCounters)) {
-        state.objects[moved].counters.time = (state.objects[moved].counters.time ?? 0) + params.timeCounters;
-        if (params.suspend === true) state.objects[moved].suspended = true;
+      if (to === "exile" && landed !== null && state.objects[landed] && Number.isInteger(params.timeCounters)) {
+        state.objects[landed].counters.time = (state.objects[landed].counters.time ?? 0) + params.timeCounters;
+        if (params.suspend === true) state.objects[landed].suspended = true;
       }
-      if (to === "library" && moved !== null && state.objects[moved]) {
+      if (to === "library" && params.to === "top" && landed !== null && state.objects[landed]) {
         const library = state.zones.library[owner];
-        library.splice(library.indexOf(moved), 1);
-        library.unshift(moved);
+        library.splice(library.indexOf(landed), 1);
+        library.unshift(landed);
       }
     }
     events.push(event("GameEventSpellResolved", state, {
@@ -660,6 +1028,6 @@ export function counterSpell(state, params, context) {
       kind: entry.kind, countered: true, hasFizzled: false,
     }));
   }
-  void context;
+  if (params.remember) context.remembered = moved;
   return events;
 }

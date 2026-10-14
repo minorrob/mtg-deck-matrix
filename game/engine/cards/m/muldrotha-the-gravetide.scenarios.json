@@ -1,0 +1,519 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Muldrotha, the Gravetide",
+  "fixtures": {
+    "Cub": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "power": 2,
+      "toughness": 2
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "power": 2,
+      "toughness": 2
+    },
+    "Relic": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Charm": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Golem": {
+      "types": [
+        "Artifact",
+        "Creature"
+      ],
+      "subtypes": [
+        "Golem"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "power": 2,
+      "toughness": 2
+    },
+    "Study": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "You gain 1 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 1
+          }
+        ]
+      }
+    },
+    "Flash Cub": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "power": 2,
+      "toughness": 2,
+      "keywords": [
+        "Flash"
+      ]
+    },
+    "Vault": {
+      "types": [
+        "Artifact",
+        "Land"
+      ],
+      "colors": [],
+      "abilities": [
+        {
+          "id": "t-c",
+          "kind": "mana",
+          "tapSelf": true,
+          "produces": {
+            "C": 1
+          }
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "One of each: a Forest played, and an artifact, a creature and an enchantment cast from his graveyard",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Muldrotha, the Gravetide",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Forest",
+            "Relic",
+            "Cub",
+            "Charm"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Relic"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "cast": "Cub"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "cast": "Charm"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Muldrotha, the Gravetide",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Forest",
+            "Relic",
+            "Cub",
+            "Charm"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "name": "One of each type only: a second creature card stays, while an artifact is still offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Muldrotha, the Gravetide",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Cub",
+            "Bear",
+            "Relic"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Cub"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Bear"
+          },
+          "count": 0
+        },
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Relic"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "An artifact creature: cast as an artifact or as a creature, his choice -- as an artifact, and the Cub is still castable, the Relic not",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Muldrotha, the Gravetide",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Golem",
+            "Cub",
+            "Relic"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Golem"
+              },
+              "count": 2
+            }
+          ]
+        },
+        {
+          "cast": "Golem",
+          "asType": "Artifact"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Relic"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "cast": "Cub"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Muldrotha, the Gravetide",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Golem",
+            "Cub"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Relic"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "As a creature instead: the Relic is castable, the Cub not",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Muldrotha, the Gravetide",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Golem",
+            "Cub",
+            "Relic"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Golem",
+          "asType": "Creature"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Cub"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "cast": "Relic"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Muldrotha, the Gravetide",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Golem",
+            "Relic"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "An artifact land is played as a land: his land, and an artifact card is still castable",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Muldrotha, the Gravetide",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Vault",
+            "Relic"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Vault"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Relic"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Muldrotha, the Gravetide",
+            "Wastes",
+            "Vault",
+            "Relic"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Not a sorcery from his graveyard, and nothing on Maya's turn -- not even a creature with flash",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Muldrotha, the Gravetide",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Study",
+            "Flash Cub"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Study"
+              },
+              "count": 0
+            },
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Flash Cub"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Flash Cub",
+            "seat": 0
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

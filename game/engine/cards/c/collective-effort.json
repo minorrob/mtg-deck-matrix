@@ -1,0 +1,118 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Collective Effort",
+    "oracleId": "a97e760a-99c8-47ea-a875-451aca913ee7",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Escalate—Tap an untapped creature you control. (Pay this cost for each mode chosen beyond the first.)\nChoose one or more —\n• Destroy target creature with power 4 or greater.\n• Destroy target enchantment.\n• Put a +1/+1 counter on each creature target player controls.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Escalate—Tap an untapped creature you control. (Pay this cost for each mode chosen beyond the first.)",
+      "keyword": "escalate",
+      "cost": [
+        {
+          "atom": "tapCreature",
+          "count": 1,
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "spell",
+      "text": "Choose one or more —\n• Destroy target creature with power 4 or greater.\n• Destroy target enchantment.\n• Put a +1/+1 counter on each creature target player controls.",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "chooseUpTo": 3,
+          "modes": [
+            {
+              "text": "Destroy target creature with power 4 or greater.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ],
+                  "power": {
+                    "min": 4
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "destroy",
+                  "targets": {
+                    "target": 0
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Destroy target enchantment.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Enchantment"
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "destroy",
+                  "targets": {
+                    "target": 0
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Put a +1/+1 counter on each creature target player controls.",
+              "targets": [
+                {
+                  "what": "player"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "putCounterAll",
+                  "selector": {
+                    "what": "permanent",
+                    "types": [
+                      "Creature"
+                    ],
+                    "controller": {
+                      "target": 0
+                    }
+                  },
+                  "counter": "+1/+1",
+                  "count": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

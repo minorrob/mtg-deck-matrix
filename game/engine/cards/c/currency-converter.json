@@ -1,0 +1,120 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Currency Converter",
+    "oracleId": "981298e6-ddee-49c0-9377-f47f019b4138",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever you discard a card, you may exile that card from your graveyard.\n{2}, {T}: Draw a card, then discard a card.\n{T}: Put a card exiled with this artifact into its owner's graveyard. If it's a land card, create a Treasure token. If it's a nonland card, create a 2/2 black Rogue creature token.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever you discard a card, you may exile that card from your graveyard.",
+      "trigger": {
+        "on": "discarded"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "that card",
+          "to": "exile",
+          "link": true
+        }
+      ],
+      "optional": true
+    },
+    {
+      "kind": "activated",
+      "text": "{2}, {T}: Draw a card, then discard a card.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        },
+        {
+          "effect": "discard",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Put a card exiled with this artifact into its owner's graveyard. If it's a land card, create a Treasure token. If it's a nonland card, create a 2/2 black Rogue creature token.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "exile",
+          "selector": {
+            "exiledWith": "self"
+          },
+          "to": "graveyard",
+          "remember": true
+        },
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "predefined": "Treasure"
+          },
+          "condition": {
+            "about": "remembered",
+            "is": {
+              "types": [
+                "Land"
+              ]
+            }
+          }
+        },
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Rogue",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Rogue"
+            ],
+            "colors": [
+              "B"
+            ],
+            "power": 2,
+            "toughness": 2
+          },
+          "condition": {
+            "about": "remembered",
+            "is": {
+              "nonTypes": [
+                "Land"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

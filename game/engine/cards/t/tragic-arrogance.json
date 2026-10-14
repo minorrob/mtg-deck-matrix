@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tragic Arrogance",
+    "oracleId": "8a29bd35-33ef-4317-9fe5-8aaff5d7d64d",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "For each player, you choose from among the permanents that player controls an artifact, a creature, an enchantment, and a planeswalker. Then each player sacrifices all other nonland permanents they control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "For each player, you choose from among the permanents that player controls an artifact, a creature, an enchantment, and a planeswalker. Then each player sacrifices all other nonland permanents they control.",
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "who": "each",
+          "selector": {
+            "nonTypes": [
+              "Land"
+            ]
+          },
+          "keepTypes": [
+            "Artifact",
+            "Creature",
+            "Enchantment",
+            "Planeswalker"
+          ]
+        }
+      ]
+    }
+  ]
+}

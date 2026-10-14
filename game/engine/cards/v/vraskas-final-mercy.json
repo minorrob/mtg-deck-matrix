@@ -1,0 +1,85 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Vraska's Final Mercy",
+    "oracleId": "7799413d-e313-4a05-ad28-f4c926c26d28",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one —\n• You lose 2 life. Destroy target creature or planeswalker.\n• You lose 2 life. Empower Jace 6. (Put six loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one —\n• You lose 2 life. Destroy target creature or planeswalker.\n• You lose 2 life. Empower Jace 6. (Put six loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "You lose 2 life. Destroy target creature or planeswalker.",
+              "targets": [
+                {
+                  "anyOf": [
+                    {
+                      "what": "permanent",
+                      "types": [
+                        "Creature"
+                      ]
+                    },
+                    {
+                      "what": "permanent",
+                      "types": [
+                        "Planeswalker"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "loseLife",
+                  "who": "you",
+                  "amount": 2
+                },
+                {
+                  "effect": "destroy",
+                  "targets": {
+                    "target": 0
+                  }
+                }
+              ]
+            },
+            {
+              "text": "You lose 2 life. Empower Jace 6. (Put six loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "loseLife",
+                  "who": "you",
+                  "amount": 2
+                },
+                {
+                  "effect": "empowerJace",
+                  "count": 6
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

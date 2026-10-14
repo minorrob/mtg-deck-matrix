@@ -244,8 +244,8 @@ const equipTo = (s, equipment, target) => applyAction(s, 0, offers(s, "activate"
   main(s);
   throws(() => runEffects(s, [{effect: "createToken", token: {predefined: "Blood"}}], {controller: 0, source: null}), /No predefined token named Blood/,
     "a predefined token the engine does not know is refused, not made blank");
-  eq(Object.keys(PREDEFINED_TOKENS).sort(), ["Clue", "Food", "Jace", "Mutagen", "Pest", "Treasure"],
-    "the three the most-played cards make, the Pest (batch 18, Beledros Witherbloom), the Mutagen (CR 111.10v; Splinter, the Mentor), and empower Jace's Jace (tests/engine-empower-jace.mjs)");
+  eq(Object.keys(PREDEFINED_TOKENS).sort(), ["Clue", "Food", "Incubator", "Jace", "Map", "Mutagen", "Pest", "Royal Role", "Treasure"],
+    "the three the most-played cards make, the Pest (batch 18, Beledros Witherbloom), the Mutagen (CR 111.10v; Splinter, the Mentor), empower Jace's Jace (tests/engine-empower-jace.mjs), the Royal Role (CR 111.10m; Royal Treatment, tests/engine-roles.mjs), the Map (CR 111.10s; Restless Anchorage, tests/engine-explore.mjs), and the Incubator (CR 111.10i; Sunfall, tests/engine-train-e-g3.mjs)");
 }
 
 /* ---- a mana ability that sacrifices its source ---- */
@@ -338,7 +338,7 @@ const equipTo = (s, equipment, target) => applyAction(s, 0, offers(s, "activate"
   const thrill = script("Thrill of Possibility");
   eq(compileScript(thrill).problems, [], "Thrill of Possibility, as written, compiles");
   const bad = compileScript({...thrill, abilities: [{...thrill.abilities[0], additionalCost: [{atom: "payLife", amount: 3}]}]});
-  eq([bad.definition, bad.problems.some((p) => /payLife: an additional cost nothing pays yet/.test(p))], [null, true], "an additional cost the engine cannot pay is refused at compile, so the card stays unplayable");
+  eq([bad.definition, bad.problems.some((p) => /payLife: an additional cost of X life/.test(p))], [null, true], "an additional cost the engine cannot pay -- 3 life, not X (Toxic Deluge's) -- is refused at compile, so the card stays unplayable");
 }
 
 console.log(`engine-equip: ${checks} checks passed — Equip at sorcery speed moves what it grants, the Equipment stays when its creature goes, Treasure, Food and Clue by name, and additional costs chosen as offers.`);

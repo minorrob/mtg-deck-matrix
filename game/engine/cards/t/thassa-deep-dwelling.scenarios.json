@@ -1,0 +1,374 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Thassa, Deep-Dwelling",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Tide": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Merfolk"
+      ],
+      "manaCost": "{U}{U}{U}{U}",
+      "colors": [
+        "U"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Murder": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "At his end step, his Elvish Visionary exiled and returned: it draws again",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Thassa, Deep-Dwelling",
+            "Elvish Visionary"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 1,
+            "phase": "END_OF_TURN"
+          }
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Elvish Visionary"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Elvish Visionary"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Thassa, Deep-Dwelling",
+            "Elvish Visionary"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Up to one other: he chooses none; Thassa itself is not offered, and at Maya's end step it does not trigger",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Thassa, Deep-Dwelling",
+            "Tide"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 1,
+            "phase": "END_OF_TURN"
+          }
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Tide"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "answer": []
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "END_OF_TURN"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Thassa, Deep-Dwelling",
+            "Tide"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "{3}{U}: Maya's Ogre tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Thassa, Deep-Dwelling",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Thassa, Deep-Dwelling",
+          "targets": [
+            {
+              "card": "Ogre"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "tapped": "Ogre"
+        }
+      ]
+    },
+    {
+      "name": "Devotion to blue 1: Thassa isn't a creature, so Murder can aim only at the Bear",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Thassa, Deep-Dwelling",
+            "Bear",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Murder"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Murder"
+          },
+          "count": 1,
+          "targets": [
+            [
+              "Bear"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Devotion to blue 5 (Thassa and a {U}{U}{U}{U} Tide): a 6/5 creature, indestructible -- Murder leaves it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Thassa, Deep-Dwelling",
+            "Tide",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Murder"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Murder"
+              },
+              "count": 2,
+              "targets": [
+                [
+                  "Thassa, Deep-Dwelling"
+                ],
+                [
+                  "Tide"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Murder",
+          "targets": [
+            {
+              "card": "Thassa, Deep-Dwelling"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Thassa, Deep-Dwelling",
+            "Tide",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Thassa, Deep-Dwelling",
+            "power": 6,
+            "toughness": 5
+          }
+        }
+      ]
+    }
+  ]
+}

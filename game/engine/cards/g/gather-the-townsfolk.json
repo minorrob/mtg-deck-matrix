@@ -1,0 +1,60 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gather the Townsfolk",
+    "oracleId": "ff45677d-977e-4ef5-859c-52393ed71a6c",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Create two 1/1 white Human creature tokens.\nFateful hour — If you have 5 or less life, create five of those tokens instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Create two 1/1 white Human creature tokens.\nFateful hour — If you have 5 or less life, create five of those tokens instead.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "createToken",
+          "token": {
+            "name": "Human",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Human"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 1,
+            "toughness": 1
+          },
+          "count": {
+            "if": {
+              "compare": {
+                "count": {
+                  "lifeTotal": "you"
+                },
+                "atMost": 5
+              }
+            },
+            "then": 5,
+            "else": 2
+          }
+        }
+      ]
+    }
+  ]
+}

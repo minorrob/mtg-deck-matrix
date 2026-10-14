@@ -1,0 +1,140 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Twilight Mire",
+  "scenarios": [
+    {
+      "name": "{B} from a Swamp filtered into {G}{G}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Twilight Mire",
+            "Swamp"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Twilight Mire"
+              },
+              "count": 4,
+              "mana": [
+                {
+                  "C": 1
+                },
+                {
+                  "B": 2
+                },
+                {
+                  "B": 1,
+                  "G": 1
+                },
+                {
+                  "G": 2
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Twilight Mire",
+          "mana": {
+            "G": 2
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 2,
+            "B": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "{G} from a Forest pays the hybrid too: {B}{G}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Twilight Mire",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Twilight Mire",
+          "mana": {
+            "B": 1,
+            "G": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "B": 1,
+            "G": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "With nothing to filter, it adds {C} alone",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Twilight Mire"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Twilight Mire"
+              },
+              "count": 1,
+              "mana": [
+                {
+                  "C": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Twilight Mire"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 1
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,120 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mizzix's Mastery",
+    "oracleId": "40362fe0-a1a9-4d76-8c35-eac474b91af5",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Exile target card that's an instant or sorcery from your graveyard. For each card exiled this way, copy it, and you may cast the copy without paying its mana cost. Exile Mizzix's Mastery.\nOverload {5}{R}{R}{R} (You may cast this spell for its overload cost. If you do, change \"target\" in its text to \"each.\")",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Exile target card that's an instant or sorcery from your graveyard. For each card exiled this way, copy it, and you may cast the copy without paying its mana cost. Exile Mizzix's Mastery.",
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you",
+              "types": [
+                "Instant"
+              ]
+            },
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you",
+              "types": [
+                "Sorcery"
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "play",
+          "from": "targets",
+          "targets": "remembered",
+          "copies": true,
+          "free": true
+        },
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "to": "exile"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Overload {5}{R}{R}{R} (You may cast this spell for its overload cost. If you do, change \"target\" in its text to \"each.\")",
+      "keyword": "overload",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{5}{R}{R}{R}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZoneAll",
+          "selector": {
+            "what": "card",
+            "zone": "graveyard",
+            "owner": "you",
+            "anyOf": [
+              {
+                "types": [
+                  "Instant"
+                ]
+              },
+              {
+                "types": [
+                  "Sorcery"
+                ]
+              }
+            ]
+          },
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "play",
+          "from": "targets",
+          "targets": "remembered",
+          "copies": true,
+          "free": true,
+          "anyNumber": true
+        },
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "to": "exile"
+        }
+      ]
+    }
+  ]
+}

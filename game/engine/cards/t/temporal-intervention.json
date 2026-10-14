@@ -1,0 +1,65 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Temporal Intervention",
+    "oracleId": "5e8a2416-e311-41ac-a3cd-be1c2441d542",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Void — This spell costs {2} less to cast if a nonland permanent left the battlefield this turn or a spell was warped this turn.\nTarget opponent reveals their hand. You choose a nonland card from it. That player discards that card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Void — This spell costs {2} less to cast if a nonland permanent left the battlefield this turn or a spell was warped this turn.",
+      "rule": "this-costs-less",
+      "affects": {
+        "self": true
+      },
+      "amount": {
+        "if": {
+          "void": true
+        },
+        "then": 2,
+        "else": 0
+      }
+    },
+    {
+      "kind": "spell",
+      "text": "Target opponent reveals their hand. You choose a nonland card from it. That player discards that card.",
+      "targets": [
+        {
+          "what": "player",
+          "who": "opponent"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "discard",
+          "who": {
+            "target": 0
+          },
+          "chooser": "you",
+          "reveal": true,
+          "selector": {
+            "nonTypes": [
+              "Land"
+            ]
+          },
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,137 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Exploration Broodship",
+    "oracleId": "8a83ecee-092b-456c-803f-a9aaa17c4da9",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Spacecraft"
+    ],
+    "manaCost": "{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Station (Tap another creature you control: Put charge counters equal to its power on this Spacecraft. Station only as a sorcery. It's an artifact creature at 8+.)\n3+ | You may play an additional land on each of your turns.\n8+ | Flying\nOnce during each of your turns, you may cast a permanent spell from your graveyard by sacrificing a land in addition to paying its other costs.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Station",
+      "keyword": "station"
+    },
+    {
+      "kind": "static",
+      "text": "It's an artifact creature at 8+.",
+      "layer": 4,
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "apply": {
+        "addTypes": [
+          "Creature"
+        ]
+      },
+      "condition": {
+        "selfCounters": {
+          "counter": "charge",
+          "atLeast": 8
+        }
+      }
+    },
+    {
+      "kind": "static",
+      "text": "3+ | You may play an additional land on each of your turns.",
+      "rule": "extra-land-drop",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "condition": {
+        "selfCounters": {
+          "counter": "charge",
+          "atLeast": 3
+        }
+      }
+    },
+    {
+      "kind": "static",
+      "text": "8+ | Flying",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Flying"
+        ]
+      },
+      "condition": {
+        "selfCounters": {
+          "counter": "charge",
+          "atLeast": 8
+        }
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Once during each of your turns, you may cast a permanent spell from your graveyard by sacrificing a land in addition to paying its other costs.",
+      "rule": "play-from",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "zone": "graveyard",
+      "spells": {
+        "anyOf": [
+          {
+            "types": [
+              "Artifact"
+            ]
+          },
+          {
+            "types": [
+              "Battle"
+            ]
+          },
+          {
+            "types": [
+              "Creature"
+            ]
+          },
+          {
+            "types": [
+              "Enchantment"
+            ]
+          },
+          {
+            "types": [
+              "Planeswalker"
+            ]
+          }
+        ]
+      },
+      "yourTurn": true,
+      "limit": 1,
+      "additionalCost": [
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "types": [
+              "Land"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

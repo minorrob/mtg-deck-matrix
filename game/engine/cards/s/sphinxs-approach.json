@@ -1,0 +1,70 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sphinx's Approach",
+    "oracleId": "48b1ac27-430f-4fd9-a71b-6ad125c57fe3",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Draw two cards. Then you may exile this spell and four cards named Sphinx's Approach from your graveyard. If you do, search your library for a Sphinx creature card, put it onto the battlefield, then shuffle.\nA deck can have any number of cards named Sphinx's Approach.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Draw two cards. Then you may exile this spell and four cards named Sphinx's Approach from your graveyard. If you do, search your library for a Sphinx creature card, put it onto the battlefield, then shuffle.",
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 2
+        },
+        {
+          "effect": "unlessPays",
+          "who": "you",
+          "ifPaid": true,
+          "exileSelf": true,
+          "exileFromGraveyard": {
+            "count": 4,
+            "selector": {
+              "named": "Sphinx's Approach"
+            }
+          },
+          "effects": [
+            {
+              "effect": "chooseCard",
+              "zone": "library",
+              "selector": {
+                "types": [
+                  "Creature"
+                ],
+                "subtypes": [
+                  "Sphinx"
+                ]
+              },
+              "to": "battlefield",
+              "shuffle": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "A deck can have any number of cards named Sphinx's Approach.",
+      "rule": "any-number-in-deck",
+      "affects": {
+        "self": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hunted Witness",
+    "oracleId": "1fde570c-aa96-45ca-a6be-f59c8e4f4b6a",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human"
+    ],
+    "manaCost": "{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "When this creature dies, create a 1/1 white Soldier creature token with lifelink.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature dies, create a 1/1 white Soldier creature token with lifelink.",
+      "trigger": {
+        "on": "dies"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Soldier",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Soldier"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 1,
+            "toughness": 1,
+            "keywords": [
+              "Lifelink"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

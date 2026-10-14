@@ -1,0 +1,87 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bayek of Siwa",
+    "oracleId": "b0322e2e-e9f9-4fe2-a7a5-3e49665ad177",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Assassin"
+    ],
+    "manaCost": "{3}{R}{W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "Double strike\nDuring your turn, other historic creatures you control have double strike.\nDisguise {1}{R}{W} (You may cast this card face down for {3} as a 2/2 creature with ward {2}. Turn it face up any time for its disguise cost.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Double strike",
+      "keyword": "double strike"
+    },
+    {
+      "kind": "static",
+      "text": "During your turn, other historic creatures you control have double strike.",
+      "layer": 6,
+      "condition": {
+        "yourTurn": true
+      },
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "another": true,
+        "anyOf": [
+          {
+            "supertypes": [
+              "Legendary"
+            ]
+          },
+          {
+            "types": [
+              "Creature",
+              "Artifact"
+            ]
+          },
+          {
+            "subtypes": [
+              "Saga"
+            ]
+          }
+        ]
+      },
+      "apply": {
+        "addKeywords": [
+          "Double Strike"
+        ]
+      }
+    },
+    {
+      "kind": "keyword",
+      "text": "Disguise {1}{R}{W}",
+      "keyword": "disguise",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{R}{W}"
+        }
+      ]
+    }
+  ]
+}

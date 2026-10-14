@@ -1,0 +1,140 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Flooded Grove",
+  "scenarios": [
+    {
+      "name": "{G} from a Forest filtered into {U}{U}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Flooded Grove",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Flooded Grove"
+              },
+              "count": 4,
+              "mana": [
+                {
+                  "C": 1
+                },
+                {
+                  "G": 2
+                },
+                {
+                  "G": 1,
+                  "U": 1
+                },
+                {
+                  "U": 2
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Flooded Grove",
+          "mana": {
+            "U": 2
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "U": 2,
+            "G": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "{U} from a Island pays the hybrid too: {G}{U}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Flooded Grove",
+            "Island"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Flooded Grove",
+          "mana": {
+            "G": 1,
+            "U": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1,
+            "U": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "With nothing to filter, it adds {C} alone",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Flooded Grove"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Flooded Grove"
+              },
+              "count": 1,
+              "mana": [
+                {
+                  "C": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Flooded Grove"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 1
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Yoshimaru, Beloved Companion",
+    "oracleId": "c00a0be5-d9a9-4263-a87e-7bf2d128ab3a",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dog"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "If one or more +1/+1 counters would be put on a creature you control, that many plus one +1/+1 counters are put on it instead.\n{6}: Put a +1/+1 counter on target legendary creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "If one or more +1/+1 counters would be put on a creature you control, that many plus one +1/+1 counters are put on it instead.",
+      "rule": "more-counters",
+      "affects": {
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "counter": "+1/+1",
+      "plus": 1
+    },
+    {
+      "kind": "activated",
+      "text": "{6}: Put a +1/+1 counter on target legendary creature.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{6}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "supertypes": [
+            "Legendary"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

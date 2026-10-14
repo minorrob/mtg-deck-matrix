@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Culling Ritual",
+    "oracleId": "15e5136e-ed15-49a8-b027-e09436673fb4",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{B}{G}",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "colorIdentity": [
+      "B",
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Destroy each nonland permanent with mana value 2 or less. Add {B} or {G} for each permanent destroyed this way.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Destroy each nonland permanent with mana value 2 or less. Add {B} or {G} for each permanent destroyed this way.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "destroyAll",
+          "selector": {
+            "what": "permanent",
+            "nonTypes": [
+              "Land"
+            ],
+            "manaValue": {
+              "max": 2
+            }
+          },
+          "remember": true
+        },
+        {
+          "effect": "addMana",
+          "colors": [
+            "B",
+            "G"
+          ],
+          "count": {
+            "movedCount": {}
+          }
+        }
+      ]
+    }
+  ]
+}

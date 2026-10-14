@@ -1,0 +1,95 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tether Technician",
+    "oracleId": "a9d0657f-2c5e-4b6f-b8ae-d657cc0f7aef",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Minotaur",
+      "Artificer"
+    ],
+    "manaCost": "{4}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 4,
+    "toughness": 5
+  },
+  "oracleText": "Reach\nWhen this creature enters, you may discard a card. When you do, this creature deals 2 damage to any target.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Reach",
+      "keyword": "reach"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, you may discard a card. When you do, this creature deals 2 damage to any target.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "discard",
+          "count": 1,
+          "remember": true
+        },
+        {
+          "effect": "immediateTrigger",
+          "text": "When you do, this creature deals 2 damage to any target.",
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          },
+          "targets": [
+            {
+              "anyOf": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ]
+                },
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Planeswalker"
+                  ]
+                },
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Battle"
+                  ]
+                },
+                {
+                  "what": "player"
+                }
+              ]
+            }
+          ],
+          "effects": [
+            {
+              "effect": "dealDamage",
+              "amount": 2,
+              "targets": {
+                "target": 0
+              },
+              "who": {
+                "target": 0
+              }
+            }
+          ]
+        }
+      ],
+      "optional": true
+    }
+  ]
+}

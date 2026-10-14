@@ -1,0 +1,75 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Coalition Relic",
+    "oracleId": "008cb342-79f5-4df6-a6b7-0e9e22ed693f",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add one mana of any color.\n{T}: Put a charge counter on this artifact.\nAt the beginning of your first main phase, remove all charge counters from this artifact. Add one mana of any color for each charge counter removed this way.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add one mana of any color.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyColor": true
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Put a charge counter on this artifact.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "charge",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your first main phase, remove all charge counters from this artifact. Add one mana of any color for each charge counter removed this way.",
+      "trigger": {
+        "on": "step",
+        "step": "MAIN1"
+      },
+      "effects": [
+        {
+          "effect": "removeCounter",
+          "targets": "self",
+          "counter": "charge",
+          "all": true
+        },
+        {
+          "effect": "addMana",
+          "anyColor": true,
+          "count": {
+            "countersRemovedThisWay": true
+          }
+        }
+      ]
+    }
+  ]
+}

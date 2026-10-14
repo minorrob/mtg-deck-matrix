@@ -1,0 +1,83 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Edgar, Moonlit Sovereign",
+    "oracleId": "1917bda6-c0e1-4c80-8009-74c28cf6b8e9",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Werewolf",
+      "Noble"
+    ],
+    "manaCost": "{3}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Flash\nAt the beginning of your end step, if you didn't cast a spell this turn, put two +1/+1 counters on Edgar.\n{4}{G}: Put a +1/+1 counter on each creature you control with a +1/+1 counter on it.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flash",
+      "keyword": "flash"
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your end step, if you didn't cast a spell this turn, put two +1/+1 counters on Edgar.",
+      "trigger": {
+        "on": "end step"
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 2
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "spellsCastThisTurn": "you"
+          },
+          "atMost": 0
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{4}{G}: Put a +1/+1 counter on each creature you control with a +1/+1 counter on it.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{4}{G}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "putCounterAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you",
+            "counters": "+1/+1"
+          },
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

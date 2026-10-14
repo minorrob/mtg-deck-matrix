@@ -25,25 +25,30 @@
  *
  * WHAT IS DEFERRED AND NAMED: protection (CR 702.16) needs a quality — "protection from black" is
  * not a keyword, it is a keyword with an argument, and the card script has to express that;
- * landwalk the same. Fear is here (batch 59); intimidate, shadow and horsemanship are one card each in
- * the pool and belong with the long tail. Infect (batch 78) and wither change what damage DOES rather than who may block,
+ * other landwalk forms remain deferred; Forestwalk is implemented for Yavimaya Dryad, Islandwalk for Meandering Towershell. Fear is here (batch 59), and shadow (wave 4a, Minas Morgul's
+ * shadow counter); intimidate and horsemanship are one card each in the pool and belong with the long tail. Infect (batch 78) and wither change what damage DOES rather than who may block,
  * and go with the counters family.
  */
 
-import {keywordsOf, characteristicsOf} from "../rules/layers.mjs";
+import {keywordsOf, characteristicsOf, controllerOf, typesOf, subtypesOf} from "../rules/layers.mjs";
 import {toughnessOf} from "../rules/layers.mjs";
-import {combatDamageOf, ruleChanged, cantBeBlockedBy} from "../rules/statics.mjs";
+import {combatDamageOf, ruleChanged, cantBeBlockedBy, blocksOnlyOthers} from "../rules/statics.mjs";
 import {protectedFrom} from "../rules/protection.mjs";
 
 /** The families of §3.1, so a caller can ask what this module covers. */
 export const KEYWORD_FAMILIES = Object.freeze({
   /** Who may block, and whom. */
-  evasion: Object.freeze(["Flying", "Reach", "Menace", "Fear"]),
+  evasion: Object.freeze(["Flying", "Reach", "Menace", "Fear", "Forestwalk", "Islandwalk",
+    /* Shadow (CR 702.28; Minas Morgul, Dark Fortress's shadow counter, CR 122.1b): canBlockAttacker, below. */
+    "Shadow"]),
   /** What happens when damage is dealt. */
   combat: Object.freeze(["Deathtouch", "Trample", "Lifelink", "First Strike", "Double Strike", "Vigilance", "Defender",
     /* Infect (CR 702.90, batch 78): its damage is poison counters to a player and -1/-1 counters to a creature (rules/combat.mjs,
        effects/resources.mjs dealDamage). */
-    "Infect"]),
+    "Infect",
+    /* Flanking (CR 702.25a): a triggered ability, as a creature without flanking blocks this one, the blocker -1/-1 until end
+       of turn (cards/index.mjs; rules/trigger.mjs, `blockedBy`). */
+    "Flanking"]),
   /**
    * Keywords that stop something happening, enforced elsewhere in the engine but listed here so
    * that "which keywords actually do something" has one answer.
@@ -56,10 +61,15 @@ export const KEYWORD_FAMILIES = Object.freeze({
    * Ward (CR 702.21a) counters a spell or ability an opponent aims at it unless that player pays: the keyword compiles to
    * that triggered ability (cards/index.mjs), on GameEventBecomesTarget (rules/stack.mjs, becameTarget).
    */
-  protective: Object.freeze(["Indestructible", "Hexproof", "Shroud", "Ward"]),
+  /* Umbra armor (CR 702.89a): an Aura's "if enchanted permanent would be destroyed, instead remove all damage marked on it
+     and destroy this Aura" -- the static `umbra-armor` (cards/index.mjs), read wherever a permanent would be destroyed
+     (script/effects/zones.mjs, destructionReplaced). */
+  protective: Object.freeze(["Indestructible", "Hexproof", "Shroud", "Ward", "Umbra armor"]),
 });
 
 const has = (state, id, keyword) => keywordsOf(state, id).includes(keyword);
+/* The landwalks built (CR 702.14a), each with the land type it walks: Yavimaya Dryad's, and Meandering Towershell's. */
+const LANDWALKS = Object.freeze({Forestwalk: "Forest", Islandwalk: "Island"});
 
 /**
  * Whether this one creature may block that attacker (CR 509.1b).
@@ -72,12 +82,25 @@ export function canBlockAttacker(state, blockerId, attackerId) {
   if (ruleChanged(state, "cant-be-blocked", attackerId)) return false;
   /* "Can't be blocked except by Slivers", "by creatures with power 2 or less": this blocker, by what it is. */
   if (cantBeBlockedBy(state, attackerId, blockerId)) return false;
+  /* "This token can block only creatures with flying": this blocker, by what the attacker is. */
+  if (blocksOnlyOthers(state, blockerId, attackerId)) return false;
+  /* Forestwalk and Islandwalk (CR 702.14c): the defending player controls a land of that type. A dual land
+     qualifies, ownership does not, and one controlled by a different opponent does not. */
+  for (const [walk, type] of Object.entries(LANDWALKS)) {
+    if (!has(state, attackerId, walk)) continue;
+    const defender = state.combat?.attacks?.find(a => a.attacker === attackerId)?.defender ?? controllerOf(state, blockerId);
+    if (state.zones.battlefield.some(id => controllerOf(state, id) === defender
+        && typesOf(state, id).includes("Land") && subtypesOf(state, id).includes(type))) return false;
+  }
   /* Protection (CR 702.16f): not blocked by a creature with the quality. */
   if (protectedFrom(state, {card: attackerId}, blockerId)) return false;
   /* CR 702.9b: flying can be blocked only by flying or reach (CR 702.17b). Note which way round it
      is — flying restricts who may block IT, and does not restrict what it may block. */
   if (has(state, attackerId, "Flying")
       && !has(state, blockerId, "Flying") && !has(state, blockerId, "Reach")) return false;
+  /* CR 702.28b: shadow -- a creature with shadow can block or be blocked by only creatures with shadow; one without it,
+     neither (Minas Morgul, Dark Fortress's shadow counter). */
+  if (has(state, attackerId, "Shadow") !== has(state, blockerId, "Shadow")) return false;
   /* CR 702.36b: fear -- blocked only by an artifact creature or a black creature. */
   if (has(state, attackerId, "Fear")) {
     const blocker = characteristicsOf(state, blockerId);

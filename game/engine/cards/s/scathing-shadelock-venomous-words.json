@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Scathing Shadelock // Venomous Words",
+    "oracleId": "2796c3d9-9e56-40f2-8398-7a131c4657ff",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Snake",
+      "Warlock"
+    ],
+    "manaCost": "{4}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 4,
+    "toughness": 6
+  },
+  "oracleText": "At the beginning of your first main phase, this creature becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your first main phase, this creature becomes prepared.",
+      "trigger": {
+        "on": "step",
+        "step": "MAIN1"
+      },
+      "effects": [
+        {
+          "effect": "alterAttribute",
+          "targets": "self",
+          "attribute": "prepared"
+        }
+      ]
+    }
+  ],
+  "prepare": {
+    "identity": {
+      "name": "Venomous Words",
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Target creature you control gets +2/+0 and gains deathtouch until end of turn.",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Target creature you control gets +2/+0 and gains deathtouch until end of turn.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "pump",
+            "targets": {
+              "target": 0
+            },
+            "power": 2,
+            "toughness": 0,
+            "keywords": [
+              "Deathtouch"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Winding Constrictor",
+    "oracleId": "c9404d7d-a026-4082-9fcb-1ab571a136b5",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Snake"
+    ],
+    "manaCost": "{B}{G}",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "colorIdentity": [
+      "B",
+      "G"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "If one or more counters would be put on an artifact or creature you control, that many plus one of each of those kinds of counters are put on that permanent instead.\nIf you would get one or more counters, you get that many plus one of each of those kinds of counters instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "If one or more counters would be put on an artifact or creature you control, that many plus one of each of those kinds of counters are put on that permanent instead.",
+      "rule": "more-counters",
+      "affects": {
+        "what": "permanent",
+        "anyOf": [
+          {
+            "types": [
+              "Artifact"
+            ],
+            "controller": "you"
+          },
+          {
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          }
+        ]
+      },
+      "plus": 1
+    },
+    {
+      "kind": "static",
+      "text": "If you would get one or more counters, you get that many plus one of each of those kinds of counters instead.",
+      "rule": "more-counters",
+      "affects": {
+        "what": "player"
+      },
+      "players": "you",
+      "plus": 1
+    }
+  ]
+}

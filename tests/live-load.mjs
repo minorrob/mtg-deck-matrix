@@ -37,6 +37,26 @@ eq(L.names(doc()).length,45);// leader, 40 filler, Mountain, Shiny Upgrade, the 
 // A name the catalog cannot answer is fatal: no partial libraries.
 {const missing=doc();missing.owned.bench.push(['Nonexistent Card',1]);assert.throws(()=>L.build(missing,{Model:M,lookup}),/could not be resolved: Nonexistent Card/);checks++;}
 
+// TWO PARTNERS (Rob's v43, 2026-10-12: Tymna + Kraum): a deck's commander may be two names, each once in its hundred, and
+// the deck is built with both as its commanders -- finalized when both have Partner (CR 702.124), a draft otherwise.
+{
+  const tymna=card('Test Partner A',{typeLine:'Legendary Creature — Human',commander:true,keywords:['Partner'],oracleText:'Partner'});
+  const kraum=card('Test Partner B',{typeLine:'Legendary Creature — Zombie',commander:true,keywords:['Partner'],oracleText:'Partner'});
+  const loner=card('Test Loner',{typeLine:'Legendary Creature — Elf',commander:true});
+  const more=new Map([...pool,...[tymna,kraum,loner].map(c=>[L.fold(c.name),c])]),look=name=>more.get(L.fold(name))||null;
+  const pair=(b)=>({...doc(),decks:[{id:'D1',name:'Partners',commander:['Test Partner A',b],cards:[['Test Partner A',1],[b,1],...filler.map(c=>[c.name,1]),['Mountain',58]]}],
+    owned:{inDeck:{D1:[]},bench:[]},ordered:[],buy:[],upgrades:[]});
+  L.check(pair('Test Partner B'));checks++;
+  {const bad=pair('Test Partner B');bad.decks[0].cards=bad.decks[0].cards.filter(([n])=>n!=='Test Partner B');bad.decks[0].cards.push(['Mountain',1]);
+   assert.throws(()=>L.check(bad),/must appear once in its own card list \(Test Partner B\)/);checks++;}
+  {const bad=pair('Test Partner B');bad.decks[0].commander=['Test Partner A','Test Partner B','Test Loner'];assert.throws(()=>L.check(bad),/a commander, or two partners/);checks++;}
+  const built=L.build(pair('Test Partner B'),{Model:M,lookup:look}),d=built.state.decks[0];
+  eq(JSON.stringify(d.commanders.map(id=>built.state.cards[id].name)),JSON.stringify(['Test Partner A','Test Partner B']));
+  eq(d.status,'final');
+  const lone=L.build(pair('Test Loner'),{Model:M,lookup:look});
+  ok(lone.state.decks[0].status==='draft'&&lone.issues.some(i=>/two-commander pairing has not been verified/.test(i)));
+}
+
 const {state,issues,summary}=L.build(doc(),{Model:M,lookup});
 const slotOfCard=(d,cardId)=>d.slots.find(r=>r.cardId===cardId&&r.purpose==='main').id;
 M.validate(state);checks++;
@@ -212,6 +232,12 @@ eq(L.PASSWORD,'treycmload1');
     for(const d of doc.decks){const p=prior.decks.find(x=>x.id===d.id);
       eq(d.commander,p.commander);eq(d.name,p.name);assert.deepEqual(d.strategy,p.strategy);checks++;}
     eq(doc.decks.find(d=>d.id==='D1').strategy.strategy.split('.')[0],'Lorehold spirit recursion');
+    /* THE DECKS NAMED BY HAND (--decks; Rob's v43, 2026-10-12): with no committed file to carry them from, the decks'
+       names and commanders come from the list given -- and nothing is carried, the old D1's overview among it. */
+    {const named=prior.decks.map(d=>({id:d.id,name:`${d.id} by hand`,commander:d.commander}));
+     const fresh=await importWorkbook(book,{decks:named});
+     ok(fresh.doc.decks.every(d=>d.name===`${d.id} by hand`&&d.commander===prior.decks.find(x=>x.id===d.id).commander&&!d.strategy));
+     await assert.rejects(()=>importWorkbook(book,{}),/has no master_decks sheet/);checks++;}
     const master=JSON.parse(execFileSync('python3',['tools/read-sheet-rows.py',book,'Master'],{encoding:'utf8',maxBuffer:1<<28}));
     const mh=master.findIndex(r=>r[0]==='Card ID'),MH=master[mh],buyCells=master.slice(mh+1).flatMap(r=>MH.map((x,i)=>/^D\d+-Buy$/.test(String(x))&&r[i]!==null&&String(r[i]).trim()&&String(r[i]).trim()!=='0'?1:0)).reduce((a,b)=>a+b,0);
     eq(doc.upgrades.length,buyCells);ok(buyCells>100);

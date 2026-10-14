@@ -15,7 +15,7 @@ import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {isBuilt} from "../game/engine/script/effects/index.mjs";
 import {loadCardIndex} from "../game/tools/engine-cards.mjs";
-import {missingFor, BEHAVIORAL_KEYWORDS, ABILITY_KEYWORDS, DECK_RULE_KEYWORDS, FORGE_OPTIONS, FORGE_COUNTS} from "../game/tools/engine-constructs.mjs";
+import {missingFor, BEHAVIORAL_KEYWORDS, ABILITY_KEYWORDS, DECK_RULE_KEYWORDS, CAST_RULE_KEYWORDS, FORGE_OPTIONS, FORGE_COUNTS} from "../game/tools/engine-constructs.mjs";
 
 let checks = 0;
 const ok = (c, m) => { assert.ok(c, m); checks += 1; };
@@ -62,7 +62,8 @@ const md = readFileSync(new URL("../docs/engine/catalog.md", import.meta.url), "
   const bad = section("Effects").filter((e) => e.status === "built" && !isBuilt(e.engine)).map((e) => e.name);
   eq(bad, [], "an effect marked built has its primitive built");
   /* Or a partner ability, a deck rule the table holds (room/table.mjs). */
-  const behaves = (w) => [...BEHAVIORAL_KEYWORDS].some((k) => k.toLowerCase() === w.toLowerCase()) || (ABILITY_KEYWORDS[w] && isBuilt(ABILITY_KEYWORDS[w])) || DECK_RULE_KEYWORDS[w];
+  /* Or a way of casting a rules module holds (Overload, CR 702.96: rules/actions.mjs). */
+  const behaves = (w) => [...BEHAVIORAL_KEYWORDS].some((k) => k.toLowerCase() === w.toLowerCase()) || (ABILITY_KEYWORDS[w] && isBuilt(ABILITY_KEYWORDS[w])) || DECK_RULE_KEYWORDS[w] || CAST_RULE_KEYWORDS[w];
   eq(section("Keyword abilities (CR 702)").filter((e) => (e.status === "built") !== Boolean(behaves(e.name))).map((e) => e.name), [], "a keyword ability is built exactly when it behaves");
   eq(section("Keyword abilities (CR 702)").find((e) => e.rule === "702.124").status, "built", "Partner (CR 702.124) is built: the table holds it");
   ok(["built", "partial", "named", "missing"].includes(section("Choices").find((c) => c.rule === "603.5").status) && section("Choices").find((c) => c.rule === "603.5").status === "built",
@@ -73,11 +74,11 @@ const md = readFileSync(new URL("../docs/engine/catalog.md", import.meta.url), "
 {
   eq(section("Options and conditions").map((e) => e.forge).sort(), Object.keys(FORGE_OPTIONS).sort(), "every option and condition the engine is measured against is an entry");
   /* Batch 14 built "unless that player pays {N}" and judges an unless-cost by what it asks: Rhystic Study's mana no
-     longer holds it back; an unless-discard (Painful Quandary) still does. */
+     longer holds it back; an unless-sacrifice still does. (Train C phase 2 credited the unless-discard: Argentum Masticore.) */
   eq([missingFor({apis: ["Draw"], triggers: ["SpellCast"], options: ["OptionalDecider", "UnlessCost", "UnlessCostMana"]}),
-    missingFor({apis: ["LoseLife"], triggers: ["SpellCast"], options: ["UnlessCost", "UnlessCostDiscard"]}), missingFor({apis: ["Draw"], options: ["Optional"]})],
-    [[], [{kind: "option", name: "UnlessCostDiscard", why: "not built"}], []],
-    "an unless-cost holds a card back by what it asks: Rhystic Study's mana is built, an unless-discard is not; a plain \"you may\" (built) does not");
+    missingFor({apis: ["LoseLife"], triggers: ["SpellCast"], options: ["UnlessCost", "UnlessCostSac"]}), missingFor({apis: ["Draw"], options: ["Optional"]})],
+    [[], [{kind: "option", name: "UnlessCostSac", why: "not built"}], []],
+    "an unless-cost holds a card back by what it asks: Rhystic Study's mana is built, an unless-sacrifice is not; a plain \"you may\" (built) does not");
   ok(inventory.top.perCard["Rhystic Study"].options.includes("UnlessCost"), "the measurement records the option on the card itself");
 }
 
@@ -86,9 +87,11 @@ const md = readFileSync(new URL("../docs/engine/catalog.md", import.meta.url), "
   const kinds = section("Amounts the game counts");
   ok(Object.keys(FORGE_COUNTS).every((k) => kinds.some((e) => e.forge === k)), "every kind of count the engine is measured against is an entry");
   eq(kinds.find((e) => e.forge === "xPaid").status, "built", "X is a built count");
-  eq([missingFor({apis: ["LoseLife"], counts: ["Devotion"]}), missingFor({apis: ["GainLife"], counts: ["ThisTurnCast"]}), missingFor({apis: ["Draw"], counts: ["NoSuchKind"]})],
-    [[], [{kind: "count", name: "ThisTurnCast", why: "not built"}], [{kind: "count", name: "NoSuchKind", why: "unknown"}]],
-    "Gray Merchant's devotion holds nothing back; Aetherflux Reservoir's spells-cast-this-turn does, and a kind nobody listed does too");
+  eq([missingFor({apis: ["LoseLife"], counts: ["Devotion"]}), missingFor({apis: ["GainLife"], counts: ["ThisTurnActivated"]}), missingFor({apis: ["Draw"], counts: ["NoSuchKind"]})],
+    [[], [{kind: "count", name: "ThisTurnActivated", why: "not built"}], [{kind: "count", name: "NoSuchKind", why: "unknown"}]],
+    "Gray Merchant's devotion holds nothing back; abilities activated this turn, not built, do, and a kind nobody listed does too");
+  /* Train C: Aetherflux Reservoir's spells cast this turn, partial -- by card type and controller -- holds nothing back. */
+  eq(missingFor({apis: ["GainLife"], counts: ["ThisTurnCast"]}), [], "Aetherflux Reservoir's spells cast this turn, partial, holds nothing back");
   eq(missingFor({apis: ["Draw"], options: ["Count"]}), [{kind: "count", name: "Count", why: "not measured by kind"}], "a card measured before kinds were is held back by any count, not waved through");
   ok(inventory.top.perCard["Gray Merchant of Asphodel"].counts.includes("Devotion"), "the measurement records the kind on the card itself");
   eq(section("Choices").find((e) => e.name === "A value for X").status, "built", "and a value for X is a built choice: one offer per value the pool can pay");
@@ -123,7 +126,8 @@ const md = readFileSync(new URL("../docs/engine/catalog.md", import.meta.url), "
 {
   eq([inventory.top.perCard["Rhystic Study"].options.includes("UnlessCostMana"), inventory.top.perCard["Choked Estuary"].options.includes("UnlessCostReveal"),
     inventory.top.perCard["Watery Grave"].options.includes("UnlessCostPayLife")], [true, true, true], "the measurement names what each unless-cost asks: mana, a reveal, life");
-  ok(section("Options and conditions").some((e) => e.forge === "UnlessCostDiscard" && e.status === "missing"), "and an unless-discard is missing");
+  ok(section("Options and conditions").some((e) => e.forge === "UnlessCostSac" && e.status === "missing"), "and an unless-sacrifice is missing");
+  ok(section("Options and conditions").some((e) => e.forge === "UnlessCostDiscard" && e.status === "built"), "and an unless-discard built (Train C phase 2)");
 }
 
 /* ---- order ---- */

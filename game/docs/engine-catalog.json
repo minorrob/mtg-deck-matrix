@@ -9,17 +9,17 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1195,
-  "provisional": 28,
-  "everyRule": 2525
+  "defined": 1540,
+  "provisional": 25,
+  "everyRule": 2814
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 42,
+    "built": 77,
     "partial": 0,
-    "named": 16,
-    "missing": 136
+    "named": 6,
+    "missing": 111
    },
    "entries": [
     {
@@ -350,25 +350,25 @@
      "kind": "keyword ability",
      "rule": "702.185",
      "name": "Warp",
-     "engine": null,
-     "status": "missing",
+     "engine": "Warp",
+     "status": "built",
      "forge": "Warp",
      "top": 7,
      "all": 37,
-     "blocks": 7,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
      "rule": "702.96",
      "name": "Overload",
-     "engine": null,
-     "status": "named",
+     "engine": "Overload",
+     "status": "built",
      "forge": "Overload",
      "top": 7,
      "all": 28,
-     "blocks": 7,
-     "alone": 6
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -422,25 +422,25 @@
      "kind": "keyword ability",
      "rule": "702.131",
      "name": "Ascend",
-     "engine": null,
-     "status": "named",
+     "engine": "Ascend",
+     "status": "built",
      "forge": "Ascend",
      "top": 6,
      "all": 30,
-     "blocks": 6,
-     "alone": 4
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
      "rule": "702.174",
      "name": "Gift",
-     "engine": null,
-     "status": "missing",
+     "engine": "Gift",
+     "status": "built",
      "forge": "Gift",
      "top": 6,
      "all": 27,
-     "blocks": 6,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -452,7 +452,7 @@
      "top": 6,
      "all": 21,
      "blocks": 6,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "keyword ability",
@@ -494,13 +494,13 @@
      "kind": "keyword ability",
      "rule": "702.41",
      "name": "Affinity",
-     "engine": null,
-     "status": "missing",
+     "engine": "Affinity",
+     "status": "built",
      "forge": "Affinity",
      "top": 5,
      "all": 77,
-     "blocks": 5,
-     "alone": 4
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -512,7 +512,7 @@
      "top": 5,
      "all": 37,
      "blocks": 5,
-     "alone": 4
+     "alone": 5
     },
     {
      "kind": "keyword ability",
@@ -566,37 +566,37 @@
      "kind": "keyword ability",
      "rule": "702.100",
      "name": "Evolve",
-     "engine": null,
-     "status": "named",
+     "engine": "Evolve",
+     "status": "built",
      "forge": "Evolve",
      "top": 4,
      "all": 23,
-     "blocks": 4,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
      "rule": "702.61",
      "name": "Split Second",
-     "engine": null,
-     "status": "missing",
+     "engine": "Split Second",
+     "status": "built",
      "forge": "Split second",
      "top": 4,
      "all": 22,
-     "blocks": 4,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
      "rule": "702.175",
      "name": "Offspring",
      "engine": null,
-     "status": "missing",
+     "status": "named",
      "forge": "Offspring",
      "top": 4,
      "all": 21,
-     "blocks": 4,
-     "alone": 4
+     "blocks": 3,
+     "alone": 3
     },
     {
      "kind": "keyword ability",
@@ -614,13 +614,13 @@
      "kind": "keyword ability",
      "rule": "702.62",
      "name": "Suspend",
-     "engine": null,
-     "status": "missing",
+     "engine": "Suspend",
+     "status": "built",
      "forge": "Suspend",
      "top": 3,
      "all": 72,
-     "blocks": 3,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -638,13 +638,13 @@
      "kind": "keyword ability",
      "rule": "702.84",
      "name": "Unearth",
-     "engine": null,
-     "status": "named",
+     "engine": "Unearth",
+     "status": "built",
      "forge": "Unearth",
      "top": 3,
      "all": 58,
-     "blocks": 3,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -662,13 +662,13 @@
      "kind": "keyword ability",
      "rule": "702.189",
      "name": "Firebending",
-     "engine": null,
-     "status": "missing",
+     "engine": "Firebending",
+     "status": "built",
      "forge": "Firebending",
      "top": 3,
      "all": 26,
-     "blocks": 3,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -698,13 +698,13 @@
      "kind": "keyword ability",
      "rule": "702.92",
      "name": "Living Weapon",
-     "engine": null,
-     "status": "named",
+     "engine": "Living Weapon",
+     "status": "built",
      "forge": "Living Weapon",
      "top": 3,
      "all": 19,
-     "blocks": 3,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -716,7 +716,7 @@
      "top": 3,
      "all": 17,
      "blocks": 3,
-     "alone": 2
+     "alone": 3
     },
     {
      "kind": "keyword ability",
@@ -734,37 +734,37 @@
      "kind": "keyword ability",
      "rule": "702.89",
      "name": "Umbra Armor",
-     "engine": null,
-     "status": "named",
+     "engine": "Umbra Armor",
+     "status": "built",
      "forge": "Umbra armor",
      "top": 3,
      "all": 15,
-     "blocks": 3,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
      "rule": "702.52",
      "name": "Dredge",
-     "engine": null,
-     "status": "missing",
+     "engine": "Dredge",
+     "status": "built",
      "forge": "Dredge",
      "top": 3,
      "all": 14,
-     "blocks": 3,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
      "rule": "702.37",
      "name": "Morph",
-     "engine": null,
-     "status": "missing",
+     "engine": "Morph",
+     "status": "built",
      "forge": "Morph",
      "top": 2,
      "all": 153,
-     "blocks": 2,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -794,25 +794,25 @@
      "kind": "keyword ability",
      "rule": "702.28",
      "name": "Shadow",
-     "engine": null,
-     "status": "missing",
+     "engine": "Shadow",
+     "status": "built",
      "forge": "Shadow",
      "top": 2,
      "all": 39,
-     "blocks": 2,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
      "rule": "702.83",
      "name": "Exalted",
-     "engine": null,
-     "status": "missing",
+     "engine": "Exalted",
+     "status": "built",
      "forge": "Exalted",
      "top": 2,
      "all": 35,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -830,13 +830,13 @@
      "kind": "keyword ability",
      "rule": "702.66",
      "name": "Delve",
-     "engine": null,
-     "status": "missing",
+     "engine": "Delve",
+     "status": "built",
      "forge": "Delve",
      "top": 2,
      "all": 29,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -878,37 +878,37 @@
      "kind": "keyword ability",
      "rule": "702.134",
      "name": "Mentor",
-     "engine": null,
-     "status": "named",
+     "engine": "Mentor",
+     "status": "built",
      "forge": "Mentor",
      "top": 2,
      "all": 19,
-     "blocks": 2,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
      "rule": "702.101",
      "name": "Extort",
-     "engine": null,
-     "status": "missing",
+     "engine": "Extort",
+     "status": "built",
      "forge": "Extort",
      "top": 2,
      "all": 18,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
      "rule": "702.123",
      "name": "Fabricate",
-     "engine": null,
-     "status": "missing",
+     "engine": "Fabricate",
+     "status": "built",
      "forge": "Fabricate",
      "top": 2,
      "all": 16,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -926,13 +926,13 @@
      "kind": "keyword ability",
      "rule": "702.129",
      "name": "Eternalize",
-     "engine": null,
-     "status": "missing",
+     "engine": "Eternalize",
+     "status": "built",
      "forge": "Eternalize",
      "top": 2,
      "all": 12,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -968,7 +968,7 @@
      "top": 2,
      "all": 10,
      "blocks": 2,
-     "alone": 1
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -998,13 +998,13 @@
      "kind": "keyword ability",
      "rule": "702.120",
      "name": "Escalate",
-     "engine": null,
-     "status": "named",
+     "engine": "Escalate",
+     "status": "built",
      "forge": "Escalate",
      "top": 2,
      "all": 9,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -1015,8 +1015,8 @@
      "forge": "Cumulative upkeep",
      "top": 1,
      "all": 80,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -1298,13 +1298,13 @@
      "kind": "keyword ability",
      "rule": "702.173",
      "name": "Freerunning",
-     "engine": null,
-     "status": "missing",
+     "engine": "Freerunning",
+     "status": "built",
      "forge": "Freerunning",
      "top": 1,
      "all": 12,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -1316,7 +1316,7 @@
      "top": 1,
      "all": 12,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -1334,49 +1334,49 @@
      "kind": "keyword ability",
      "rule": "702.137",
      "name": "Spectacle",
-     "engine": null,
-     "status": "missing",
+     "engine": "Spectacle",
+     "status": "built",
      "forge": "Spectacle",
      "top": 1,
      "all": 11,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {
      "kind": "keyword ability",
      "rule": "702.76",
      "name": "Prowl",
-     "engine": null,
-     "status": "named",
+     "engine": "Prowl",
+     "status": "built",
      "forge": "Prowl",
      "top": 1,
      "all": 10,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {
      "kind": "keyword ability",
      "rule": "702.150",
      "name": "Compleated",
-     "engine": null,
-     "status": "missing",
+     "engine": "Compleated",
+     "status": "built",
      "forge": "Compleated",
      "top": 1,
      "all": 7,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
      "rule": "702.183",
      "name": "Tiered",
-     "engine": null,
-     "status": "missing",
+     "engine": "Tiered",
+     "status": "built",
      "forge": "Tiered",
      "top": 1,
      "all": 7,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -1406,8 +1406,8 @@
      "kind": "keyword ability",
      "rule": "702.168",
      "name": "Disguise",
-     "engine": null,
-     "status": "missing",
+     "engine": "Disguise",
+     "status": "built",
      "forge": "Disguise",
      "top": 0,
      "all": 47,
@@ -1490,8 +1490,8 @@
      "kind": "keyword ability",
      "rule": "702.25",
      "name": "Flanking",
-     "engine": null,
-     "status": "named",
+     "engine": "Flanking",
+     "status": "built",
      "forge": "Flanking",
      "top": 0,
      "all": 30,
@@ -1514,8 +1514,8 @@
      "kind": "keyword ability",
      "rule": "702.190",
      "name": "Sneak",
-     "engine": null,
-     "status": "missing",
+     "engine": "Sneak",
+     "status": "built",
      "forge": "Sneak",
      "top": 0,
      "all": 27,
@@ -1526,8 +1526,8 @@
      "kind": "keyword ability",
      "rule": "702.165",
      "name": "Backup",
-     "engine": null,
-     "status": "named",
+     "engine": "Backup",
+     "status": "built",
      "forge": "Backup",
      "top": 0,
      "all": 26,
@@ -1610,8 +1610,8 @@
      "kind": "keyword ability",
      "rule": "702.56",
      "name": "Replicate",
-     "engine": null,
-     "status": "missing",
+     "engine": "Replicate",
+     "status": "built",
      "forge": "Replicate",
      "top": 0,
      "all": 21,
@@ -1706,8 +1706,8 @@
      "kind": "keyword ability",
      "rule": "702.128",
      "name": "Embalm",
-     "engine": null,
-     "status": "missing",
+     "engine": "Embalm",
+     "status": "built",
      "forge": "Embalm",
      "top": 0,
      "all": 15,
@@ -1838,8 +1838,8 @@
      "kind": "keyword ability",
      "rule": "702.136",
      "name": "Riot",
-     "engine": null,
-     "status": "missing",
+     "engine": "Riot",
+     "status": "built",
      "forge": "Riot",
      "top": 0,
      "all": 13,
@@ -1898,8 +1898,8 @@
      "kind": "keyword ability",
      "rule": "702.117",
      "name": "Surge",
-     "engine": null,
-     "status": "missing",
+     "engine": "Surge",
+     "status": "built",
      "forge": "Surge",
      "top": 0,
      "all": 11,
@@ -2355,9 +2355,9 @@
   "Keyword actions (CR 701)": {
    "tally": {
     "built": 22,
-    "partial": 3,
+    "partial": 5,
     "named": 1,
-    "missing": 44
+    "missing": 42
    },
    "entries": [
     {
@@ -2930,11 +2930,12 @@
      "kind": "keyword action",
      "rule": "701.4",
      "name": "Behold",
-     "engine": null,
-     "status": "missing",
+     "engine": "(the rules modules)",
+     "status": "partial",
      "forge": null,
      "top": 0,
      "all": 0,
+     "note": "as a cost: an additional cost or a flashback cost's; as an effect, not yet",
      "blocks": 0,
      "alone": 0
     },
@@ -3194,11 +3195,12 @@
      "kind": "keyword action",
      "rule": "701.67",
      "name": "Waterbend",
-     "engine": null,
-     "status": "missing",
+     "engine": "(the rules modules)",
+     "status": "partial",
      "forge": null,
      "top": 0,
      "all": 0,
+     "note": "as an activated ability's cost; as a spell's additional cost, and its trigger, not yet",
      "blocks": 0,
      "alone": 0
     }
@@ -3206,10 +3208,10 @@
   },
   "Effects": {
    "tally": {
-    "built": 68,
-    "partial": 1,
-    "named": 4,
-    "missing": 119
+    "built": 78,
+    "partial": 2,
+    "named": 1,
+    "missing": 111
    },
    "entries": [
     {
@@ -3785,19 +3787,19 @@
      "forge": "ReplaceToken",
      "top": 17,
      "all": 35,
-     "blocks": 17,
+     "blocks": 4,
      "alone": 0
     },
     {
      "kind": "effect",
      "rule": null,
      "name": "ReplaceCounter",
-     "engine": "replaceCounters",
-     "status": "named",
+     "engine": "the AddCounter replacement (rules/statics)",
+     "status": "partial",
      "forge": "ReplaceCounter",
      "top": 16,
      "all": 33,
-     "blocks": 14,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -3828,13 +3830,13 @@
      "kind": "effect",
      "rule": null,
      "name": "ChooseColor",
-     "engine": null,
-     "status": "missing",
+     "engine": "chooseColor",
+     "status": "built",
      "forge": "ChooseColor",
      "top": 14,
      "all": 132,
-     "blocks": 14,
-     "alone": 10
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -3949,36 +3951,36 @@
      "rule": null,
      "name": "AddTurn",
      "engine": "addTurn",
-     "status": "named",
+     "status": "built",
      "forge": "AddTurn",
      "top": 10,
      "all": 65,
-     "blocks": 10,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
      "rule": null,
      "name": "BecomeMonarch",
-     "engine": null,
-     "status": "missing",
+     "engine": "becomeMonarch",
+     "status": "built",
      "forge": "BecomeMonarch",
      "top": 10,
      "all": 62,
-     "blocks": 10,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
      "rule": null,
      "name": "ChangeTargets",
-     "engine": null,
-     "status": "missing",
+     "engine": "changeTargets",
+     "status": "built",
      "forge": "ChangeTargets",
      "top": 10,
      "all": 43,
-     "blocks": 8,
-     "alone": 6
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4038,7 +4040,7 @@
      "top": 8,
      "all": 58,
      "blocks": 8,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -4049,8 +4051,8 @@
      "forge": "RollDice",
      "top": 7,
      "all": 131,
-     "blocks": 7,
-     "alone": 3
+     "blocks": 6,
+     "alone": 2
     },
     {
      "kind": "effect",
@@ -4073,8 +4075,8 @@
      "forge": "StoreSVar",
      "top": 6,
      "all": 68,
-     "blocks": 6,
-     "alone": 2
+     "blocks": 5,
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -4092,13 +4094,13 @@
      "kind": "effect",
      "rule": null,
      "name": "LosesGame",
-     "engine": null,
-     "status": "missing",
+     "engine": "loseGame",
+     "status": "built",
      "forge": "LosesGame",
      "top": 6,
      "all": 45,
-     "blocks": 6,
-     "alone": 4
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4133,32 +4135,32 @@
      "forge": "ChooseNumber",
      "top": 5,
      "all": 57,
-     "blocks": 5,
+     "blocks": 4,
      "alone": 1
     },
     {
      "kind": "effect",
      "rule": null,
      "name": "Protection",
-     "engine": null,
-     "status": "missing",
+     "engine": "effectUntil",
+     "status": "built",
      "forge": "Protection",
      "top": 5,
      "all": 53,
-     "blocks": 5,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
      "rule": null,
      "name": "MoveCounter",
      "engine": "moveCounters",
-     "status": "named",
+     "status": "built",
      "forge": "MoveCounter",
      "top": 5,
      "all": 32,
-     "blocks": 5,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4248,13 +4250,13 @@
      "kind": "effect",
      "rule": null,
      "name": "RearrangeTopOfLibrary",
-     "engine": null,
-     "status": "missing",
+     "engine": "rearrangeTop",
+     "status": "built",
      "forge": "RearrangeTopOfLibrary",
      "top": 3,
      "all": 32,
-     "blocks": 3,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4284,13 +4286,13 @@
      "kind": "effect",
      "rule": null,
      "name": "RevealHand",
-     "engine": null,
-     "status": "missing",
+     "engine": "peekAndReveal",
+     "status": "built",
      "forge": "RevealHand",
      "top": 2,
      "all": 80,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4385,8 +4387,8 @@
      "forge": "ChooseSource",
      "top": 1,
      "all": 67,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4416,13 +4418,13 @@
      "kind": "effect",
      "rule": null,
      "name": "ExchangeControl",
-     "engine": null,
-     "status": "missing",
+     "engine": "exchangeControl",
+     "status": "built",
      "forge": "ExchangeControl",
      "top": 1,
      "all": 35,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4566,7 +4568,7 @@
      "top": 1,
      "all": 6,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -5520,10 +5522,10 @@
   },
   "Triggers": {
    "tally": {
-    "built": 20,
+    "built": 26,
     "partial": 4,
-    "named": 2,
-    "missing": 112
+    "named": 1,
+    "missing": 107
    },
    "entries": [
     {
@@ -5686,13 +5688,13 @@
      "kind": "trigger",
      "rule": null,
      "name": "CounterAddedOnce",
-     "engine": "counter added once",
-     "status": "named",
+     "engine": "counter added",
+     "status": "built",
      "forge": "CounterAddedOnce",
      "top": 10,
      "all": 47,
-     "blocks": 10,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -5710,13 +5712,13 @@
      "kind": "trigger",
      "rule": null,
      "name": "SpellCastOrCopy",
-     "engine": null,
-     "status": "missing",
+     "engine": "spell cast",
+     "status": "built",
      "forge": "SpellCastOrCopy",
      "top": 6,
      "all": 31,
-     "blocks": 6,
-     "alone": 4
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -5782,13 +5784,13 @@
      "kind": "trigger",
      "rule": null,
      "name": "CommitCrime",
-     "engine": null,
-     "status": "missing",
+     "engine": "crime committed",
+     "status": "built",
      "forge": "CommitCrime",
      "top": 4,
      "all": 21,
-     "blocks": 4,
-     "alone": 4
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -5890,13 +5892,13 @@
      "kind": "trigger",
      "rule": null,
      "name": "Always",
-     "engine": null,
-     "status": "missing",
+     "engine": "state",
+     "status": "built",
      "forge": "Always",
      "top": 2,
      "all": 62,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -5979,8 +5981,8 @@
      "forge": "TokenCreated",
      "top": 2,
      "all": 3,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 1,
+     "alone": 1
     },
     {
      "kind": "trigger",
@@ -6010,13 +6012,13 @@
      "kind": "trigger",
      "rule": null,
      "name": "Proliferate",
-     "engine": null,
-     "status": "missing",
+     "engine": "proliferated",
+     "status": "built",
      "forge": "Proliferate",
      "top": 1,
      "all": 6,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -6136,7 +6138,7 @@
      "top": 1,
      "all": 1,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "trigger",
@@ -6238,8 +6240,8 @@
      "kind": "trigger",
      "rule": null,
      "name": "Transformed",
-     "engine": null,
-     "status": "missing",
+     "engine": "transformed",
+     "status": "built",
      "forge": "Transformed",
      "top": 0,
      "all": 30,
@@ -7297,8 +7299,8 @@
      "forge": "RaiseCost",
      "top": 10,
      "all": 91,
-     "blocks": 6,
-     "alone": 5
+     "blocks": 5,
+     "alone": 4
     },
     {
      "kind": "static",
@@ -7345,8 +7347,8 @@
      "forge": "CantBeActivated",
      "top": 5,
      "all": 34,
-     "blocks": 5,
-     "alone": 5
+     "blocks": 4,
+     "alone": 4
     },
     {
      "kind": "static",
@@ -7477,8 +7479,8 @@
      "forge": "CantSacrifice",
      "top": 2,
      "all": 10,
-     "blocks": 2,
-     "alone": 1
+     "blocks": 1,
+     "alone": 0
     },
     {
      "kind": "static",
@@ -7561,8 +7563,8 @@
      "forge": "CantDraw",
      "top": 1,
      "all": 7,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "static",
@@ -8121,9 +8123,9 @@
   "Replacement effects": {
    "tally": {
     "built": 0,
-    "partial": 5,
+    "partial": 6,
     "named": 0,
-    "missing": 29
+    "missing": 28
    },
    "entries": [
     {
@@ -8171,19 +8173,19 @@
      "forge": "CreateToken",
      "top": 17,
      "all": 32,
-     "blocks": 17,
+     "blocks": 4,
      "alone": 0
     },
     {
      "kind": "replacement",
      "rule": null,
      "name": "AddCounter",
-     "engine": null,
-     "status": "missing",
+     "engine": "rules/statics",
+     "status": "partial",
      "forge": "AddCounter",
      "top": 15,
      "all": 30,
-     "blocks": 14,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -8195,8 +8197,8 @@
      "forge": "Draw",
      "top": 7,
      "all": 37,
-     "blocks": 7,
-     "alone": 4
+     "blocks": 5,
+     "alone": 3
     },
     {
      "kind": "replacement",
@@ -8207,7 +8209,7 @@
      "forge": "GainLife",
      "top": 6,
      "all": 21,
-     "blocks": 6,
+     "blocks": 5,
      "alone": 1
     },
     {
@@ -8292,7 +8294,7 @@
      "top": 1,
      "all": 8,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "replacement",
@@ -8539,9 +8541,9 @@
   "Costs": {
    "tally": {
     "built": 5,
-    "partial": 1,
+    "partial": 2,
     "named": 10,
-    "missing": 10
+    "missing": 9
    },
    "entries": [
     {
@@ -8764,8 +8766,8 @@
      "kind": "cost",
      "rule": null,
      "name": "Waterbend",
-     "engine": null,
-     "status": "missing",
+     "engine": "waterbend",
+     "status": "partial",
      "forge": "Waterbend",
      "top": 2,
      "all": 27,
@@ -8860,10 +8862,10 @@
   },
   "Options and conditions": {
    "tally": {
-    "built": 23,
+    "built": 24,
     "partial": 5,
     "named": 0,
-    "missing": 9
+    "missing": 8
    },
    "entries": [
     {
@@ -8923,8 +8925,8 @@
      "forge": "RememberChanged",
      "top": 124,
      "all": 1168,
-     "blocks": 89,
-     "alone": 23
+     "blocks": 61,
+     "alone": 4
     },
     {
      "kind": "option",
@@ -8947,8 +8949,8 @@
      "forge": "RememberObjects",
      "top": 123,
      "all": 1460,
-     "blocks": 94,
-     "alone": 26
+     "blocks": 65,
+     "alone": 8
     },
     {
      "kind": "option",
@@ -9007,8 +9009,8 @@
      "forge": "MayPlay",
      "top": 99,
      "all": 625,
-     "blocks": 67,
-     "alone": 17
+     "blocks": 44,
+     "alone": 1
     },
     {
      "kind": "option",
@@ -9199,8 +9201,8 @@
      "forge": "Imprint",
      "top": 10,
      "all": 97,
-     "blocks": 9,
-     "alone": 7
+     "blocks": 7,
+     "alone": 5
     },
     {
      "kind": "option",
@@ -9235,7 +9237,7 @@
      "forge": "PresentZone",
      "top": 9,
      "all": 160,
-     "blocks": 8,
+     "blocks": 7,
      "alone": 4
     },
     {
@@ -9247,20 +9249,20 @@
      "forge": "UnlessCostSac",
      "top": 7,
      "all": 89,
-     "blocks": 7,
+     "blocks": 6,
      "alone": 4
     },
     {
      "kind": "option",
      "rule": null,
      "name": "Unless a player discards a card",
-     "engine": null,
-     "status": "missing",
+     "engine": "unlessPays's discard: each card in the payer's hand an option; the discarded card remembered (\"this way\")",
+     "status": "built",
      "forge": "UnlessCostDiscard",
      "top": 5,
      "all": 83,
-     "blocks": 5,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "option",
@@ -9314,10 +9316,10 @@
   },
   "Amounts the game counts": {
    "tally": {
-    "built": 15,
-    "partial": 1,
+    "built": 30,
+    "partial": 2,
     "named": 0,
-    "missing": 172
+    "missing": 156
    },
    "entries": [
     {
@@ -9419,38 +9421,38 @@
     {
      "kind": "count",
      "rule": null,
-     "name": "CounterNum",
-     "engine": null,
-     "status": "missing",
+     "name": "That many counters (the number of counters a replacement changes)",
+     "engine": "more-counters' times, plus and half (rules/statics.mjs, placeCounters)",
+     "status": "built",
      "forge": "CounterNum",
      "top": 16,
      "all": 32,
-     "blocks": 14,
+     "blocks": 0,
      "alone": 0
     },
     {
      "kind": "count",
      "rule": null,
      "name": "Cards in a library",
-     "engine": null,
-     "status": "missing",
+     "engine": "{count: {what: \"card\", zone: \"library\"}}",
+     "status": "built",
      "forge": "ValidLibrary",
      "top": 13,
      "all": 63,
-     "blocks": 13,
-     "alone": 9
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",
      "rule": null,
      "name": "Spells cast this turn",
-     "engine": null,
-     "status": "missing",
+     "engine": "amount {spellsCastThisTurn: \"you\" | \"that player\", filter?} -- by card type and controller",
+     "status": "partial",
      "forge": "ThisTurnCast",
      "top": 12,
      "all": 139,
-     "blocks": 12,
-     "alone": 8
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",
@@ -9473,8 +9475,8 @@
      "forge": "ThisTurnEntered",
      "top": 11,
      "all": 174,
-     "blocks": 10,
-     "alone": 10
+     "blocks": 9,
+     "alone": 9
     },
     {
      "kind": "count",
@@ -9521,8 +9523,8 @@
      "forge": "Amount",
      "top": 10,
      "all": 43,
-     "blocks": 10,
-     "alone": 2
+     "blocks": 8,
+     "alone": 4
     },
     {
      "kind": "count",
@@ -9552,12 +9554,12 @@
      "kind": "count",
      "rule": null,
      "name": "The monarch",
-     "engine": null,
-     "status": "missing",
+     "engine": "condition {monarch: \"you\"} (script/condition.mjs); \"while you're the monarch\", a damage trigger's monarch: \"you\"",
+     "status": "built",
      "forge": "Monarch",
      "top": 7,
      "all": 15,
-     "blocks": 7,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -9581,20 +9583,20 @@
      "forge": "ChosenNumber",
      "top": 5,
      "all": 77,
-     "blocks": 5,
+     "blocks": 4,
      "alone": 0
     },
     {
      "kind": "count",
      "rule": null,
      "name": "Attackers declared",
-     "engine": null,
-     "status": "missing",
+     "engine": "amount {creaturesAttackedWithThisTurn: \"you\" | \"that player\"} (rules/combat.mjs keeps them)",
+     "status": "built",
      "forge": "AttackersDeclared",
      "top": 5,
      "all": 62,
-     "blocks": 5,
-     "alone": 4
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",
@@ -9629,7 +9631,7 @@
      "forge": "LifeGained",
      "top": 5,
      "all": 20,
-     "blocks": 5,
+     "blocks": 4,
      "alone": 0
     },
     {
@@ -9660,13 +9662,13 @@
      "kind": "count",
      "rule": null,
      "name": "Life your opponents lost this turn",
-     "engine": null,
-     "status": "missing",
+     "engine": "amount {lifeLostThisTurn: \"opponents\"} (effects/resources.mjs keeps each player's, rules/turn.mjs clears it)",
+     "status": "built",
      "forge": "LifeOppsLostThisTurn",
      "top": 3,
      "all": 26,
-     "blocks": 3,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",
@@ -9677,20 +9679,20 @@
      "forge": "TriggerRememberAmount",
      "top": 3,
      "all": 21,
-     "blocks": 3,
-     "alone": 2
+     "blocks": 2,
+     "alone": 1
     },
     {
      "kind": "count",
      "rule": null,
      "name": "Your experience counters",
-     "engine": null,
-     "status": "missing",
+     "engine": "amount {countersOn: \"you\", counter: \"experience\"} (script/amount.mjs); putCounter's who gives them",
+     "status": "built",
      "forge": "YourCountersExperience",
      "top": 3,
      "all": 15,
-     "blocks": 3,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",
@@ -9708,12 +9710,12 @@
      "kind": "count",
      "rule": null,
      "name": "A gift promised",
-     "engine": null,
-     "status": "missing",
+     "engine": "condition {giftPromised} (script/condition.mjs): the spell's gift, a copy's, or the permanent's it became (rules/stack.mjs)",
+     "status": "built",
      "forge": "PromisedGift",
      "top": 3,
      "all": 11,
-     "blocks": 3,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -9744,13 +9746,13 @@
      "kind": "count",
      "rule": null,
      "name": "Morbid (a creature died this turn)",
-     "engine": null,
-     "status": "missing",
+     "engine": "amount {creaturesDiedThisTurn: \"you\" | \"that player\" | \"any\"} (state/index.mjs recordDeath, rules/turn.mjs clears it)",
+     "status": "built",
      "forge": "Morbid",
      "top": 2,
      "all": 41,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",
@@ -9768,13 +9770,13 @@
      "kind": "count",
      "rule": null,
      "name": "Cards you drew this turn",
-     "engine": null,
-     "status": "missing",
+     "engine": "amount {cardsDrawnThisTurn: \"you\" | \"that player\"} (state/index.mjs recordDraw, rules/turn.mjs clears it)",
+     "status": "built",
      "forge": "YouDrewThisTurn",
      "top": 2,
      "all": 30,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",
@@ -9809,7 +9811,7 @@
      "forge": "ValidStack",
      "top": 2,
      "all": 4,
-     "blocks": 2,
+     "blocks": 1,
      "alone": 1
     },
     {
@@ -9840,13 +9842,13 @@
      "kind": "count",
      "rule": null,
      "name": "Colors of mana spent (converge)",
-     "engine": null,
-     "status": "missing",
+     "engine": "amount {colorsSpent: \"self\"} (rules/actions.mjs records the mana by kind)",
+     "status": "built",
      "forge": "Converge",
      "top": 1,
      "all": 31,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",
@@ -9875,14 +9877,14 @@
     {
      "kind": "count",
      "rule": null,
-     "name": "TotalCommanderCastFromCommandZone",
-     "engine": null,
-     "status": "missing",
+     "name": "Times you've cast your commanders from the command zone",
+     "engine": "amount {commanderCasts: \"you\"} (rules/commander.mjs keeps the casts)",
+     "status": "built",
      "forge": "TotalCommanderCastFromCommandZone",
      "top": 1,
      "all": 16,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",
@@ -9899,13 +9901,13 @@
     {
      "kind": "count",
      "rule": null,
-     "name": "Blessing",
-     "engine": null,
-     "status": "missing",
+     "name": "The city's blessing (ascend)",
+     "engine": "condition {citysBlessing} (script/condition.mjs)",
+     "status": "built",
      "forge": "Blessing",
      "top": 1,
      "all": 10,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -9960,13 +9962,13 @@
      "kind": "count",
      "rule": null,
      "name": "Threshold (seven cards in your graveyard)",
-     "engine": null,
-     "status": "missing",
+     "engine": "condition {compare: {count: {count: {what: \"card\", zone: \"graveyard\", controller: \"you\"}}, atLeast: 7}}",
+     "status": "built",
      "forge": "Threshold",
      "top": 1,
      "all": 7,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",
@@ -10049,7 +10051,7 @@
      "forge": "ValidCommand",
      "top": 1,
      "all": 3,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -10098,7 +10100,7 @@
      "top": 1,
      "all": 1,
      "blocks": 1,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "count",
@@ -10116,13 +10118,13 @@
      "kind": "count",
      "rule": null,
      "name": "Colors in your commanders' identity",
-     "engine": null,
-     "status": "missing",
+     "engine": "amount {commanderColors: \"you\"} (script/amount.mjs); a cost of it unpayable without a commander",
+     "status": "built",
      "forge": "ColorsColorIdentity",
      "top": 1,
      "all": 1,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",
@@ -10331,10 +10333,10 @@
     {
      "kind": "count",
      "rule": null,
-     "name": "LastStateBattlefieldWithFallback",
-     "engine": null,
-     "status": "missing",
-     "forge": "LastStateBattlefieldWithFallback",
+     "name": "Cards that left your graveyard this turn",
+     "engine": "amount {cardsLeftGraveyardThisTurn: \"you\" | \"that player\"} (state/index.mjs keeps it, rules/turn.mjs clears it)",
+     "status": "built",
+     "forge": "LeftGraveyardThisTurn",
      "top": 0,
      "all": 8,
      "blocks": 0,
@@ -10343,10 +10345,10 @@
     {
      "kind": "count",
      "rule": null,
-     "name": "LeftGraveyardThisTurn",
+     "name": "LastStateBattlefieldWithFallback",
      "engine": null,
      "status": "missing",
-     "forge": "LeftGraveyardThisTurn",
+     "forge": "LastStateBattlefieldWithFallback",
      "top": 0,
      "all": 8,
      "blocks": 0,
@@ -11770,10 +11772,10 @@
   },
   "Other keyword constructs": {
    "tally": {
-    "built": 9,
+    "built": 11,
     "partial": 0,
     "named": 1,
-    "missing": 6
+    "missing": 4
    },
    "entries": [
     {
@@ -11840,13 +11842,13 @@
      "kind": "keyword construct",
      "rule": null,
      "name": "MayEffectFromOpeningHand",
-     "engine": null,
-     "status": "missing",
+     "engine": "MayEffectFromOpeningHand",
+     "status": "built",
      "forge": "MayEffectFromOpeningHand",
      "top": 5,
      "all": 30,
-     "blocks": 5,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword construct",
@@ -11936,12 +11938,12 @@
      "kind": "keyword construct",
      "rule": null,
      "name": "Partner with",
-     "engine": null,
-     "status": "missing",
+     "engine": "Partner with",
+     "status": "built",
      "forge": "Partner with",
      "top": 1,
      "all": 52,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {

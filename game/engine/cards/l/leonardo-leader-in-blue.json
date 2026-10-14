@@ -1,0 +1,89 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Leonardo, Leader in Blue",
+    "oracleId": "348c7e22-2179-41b8-a5d2-8dd488e7e66d",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Mutant",
+      "Ninja",
+      "Turtle"
+    ],
+    "manaCost": "{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Sneak {3}{W}{W} (You may cast this spell for {3}{W}{W} if you also return an unblocked attacker you control to hand during the declare blockers step. He enters tapped and attacking.)\nWhen Leonardo enters, if his sneak cost was paid, creatures you control get +2/+0 until end of turn.\n{1}{W}: Leonardo gains first strike until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Sneak {3}{W}{W}",
+      "keyword": "sneak",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}{W}{W}"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "When Leonardo enters, if his sneak cost was paid, creatures you control get +2/+0 until end of turn.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "power": 2,
+          "toughness": 0,
+          "until": "end-of-turn"
+        }
+      ],
+      "condition": {
+        "paidFor": "sneak"
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{1}{W}: Leonardo gains first strike until end of turn.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{W}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "First Strike"
+          ]
+        }
+      ]
+    }
+  ]
+}

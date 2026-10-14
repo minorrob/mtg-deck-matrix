@@ -51,6 +51,8 @@ const {esc:e,$,actions}=C;
  * literal, since the id is whichever deck this reader actually has. */
 /* Whichever deck this reader actually has. The tour cannot name one in advance. */
 const firstDeck=()=>{const d=C.state.decks?.find(x=>!x.archived);return d?{deck:d.id}:{};};
+/* A graph to read: your first deck's, as Explore opens it from a deck, or Sol Ring's in an empty library. */
+const graphOn=()=>{const d=firstDeck();return d.deck?d:{card:'Sol Ring'};};
 
 const TOURS=[
   {id:'build',name:'Build a deck from scratch',icon:'🜂',
@@ -113,36 +115,39 @@ const TOURS=[
    promise:'Cards found by how they interact, not by remembering them.',
    have:'Cards in your deck that you found by how they interact rather than by recalling them — and a recorded reason each one is in there.',
    steps:[
-    /* The bare input collapses to nothing while the graph is still loading, so the step points at
-       the labeled search box around it — found in the sweep, PR 6. */
-    {view:'discover',selectors:['.cm-toolbar .cm-search','#cm-graph-query','.cm-toolbar'],
+    /* Explore opens on its chooser, whose search box is where you start; the graph and everything the
+       later steps point at are there once a graph is open (tests/uat/tour-walk.mjs: this step pointed at
+       the graph's own toolbar, which the chooser does not have). */
+    {view:'discover',selectors:['.cm-explore-search','#cm-entry-query'],
      title:'Start from a card you already play',
      copy:'Every Commander-legal card is in here, including printings that carry a different name on the front.'},
-    {view:'discover',selectors:['#cm-graph'],
+    {view:'discover',params:graphOn,selectors:['#cm-graph'],
      title:'Lines are relationships, not similarity',
      copy:'This triggers that; that multiplies this. Direction is the point — it is why the graph finds cards a keyword search never would.'},
-    {view:'discover',selectors:['#cm-depth','#cm-graph-size'],
+    {view:'discover',params:graphOn,selectors:['#cm-depth','#cm-graph-size'],
      title:'How far to look',
      copy:'One step out is the obvious partners. Two or three is where the deck you had not thought of lives.'},
-    {view:'discover',selectors:['#cm-facet-summary','#cm-facet-bar'],
+    /* The filters are behind Filters · lens, in a panel that stays shut until you open it, so the step points at the
+       button (tests/uat/tour-walk.mjs: it pointed at the shut panel's empty bar). */
+    {view:'discover',params:graphOn,selectors:['[data-action=toggle-advanced-tools]'],
      title:'Narrow it',
-     copy:'By role, color, type or mechanic — so "what goes with my commander" becomes "what goes with my commander and costs under three".'},
-    {view:'discover',selectors:['#cm-card-view','#cm-graph-pop'],
+     copy:'Filters · lens opens the filters: by role, color, type or mechanic — so "what goes with my commander" becomes "what goes with my commander and costs under three".'},
+    {view:'discover',params:graphOn,selectors:['#cm-card-view','#cm-graph-pop'],
      title:'Read it here',
      copy:'Click any card and the pane fills in: the printing itself, rules text and all, plus its set, its price and the bracket it puts a deck in. Inspect sits under the art and Add and/or Buy under the bracket line; Back — to whatever you were looking at before — waits above the graph, at its top-right corner, because it undoes a move on the canvas rather than anything about this card.'},
-    {view:'discover',selectors:['.cm-stage-btn','.cm-graph-box'],
+    {view:'discover',params:graphOn,selectors:['.cm-stage-btn','.cm-graph-box'],
      title:'Give the graph the screen',
      copy:'The icon in the canvas corner collapses the nav, drops the page title and halves the card pane — the graph gets about 60% more width and runs past the bottom of the window, so you scroll into it. Search and filters fold behind the sliders button at the top right; the match count, depth and breadth stay on screen. Press the corner icon again, or Escape, to come back.'},
-    {view:'discover',selectors:['.cm-term-chips','.cm-chips-head'],
+    {view:'discover',params:graphOn,selectors:['.cm-term-chips','.cm-chips-head'],
      title:'What it is joined by',
      copy:'Every term this card shares with others, and all of them at once — no scrolling for the one that mattered. Tap one for only the cards that share it, again to hide those instead, a third time to clear. They stack, so two taps on two terms is an intersection.'},
-    {view:'discover',selectors:['.cm-pane-tab[data-tab=trace]','#cm-card-view'],
+    {view:'discover',params:graphOn,selectors:['.cm-pane-tab[data-tab=trace]','#cm-card-view'],
      title:'Watch what the deck builds',
      copy:'With a deck picked, Trace lights its cards from the commander outward — only the joins that serve its strategies, the loops that come back in gold, the cards it never touches ghosted on the outer band. Untick a strategy and the deck changes in front of you; the list in the pane is the same walk, in order.'},
-    {view:'discover',selectors:['[data-action=add-card]'],
+    {view:'discover',params:graphOn,selectors:['[data-action=add-buy]','[data-action=add-card]'],   /* the pane's Add and/or buy… (tests/uat/tour-walk.mjs) */
      title:'Take it with you',
-     copy:'Add straight to a deck’s plan, a collection group, or your wish list, without leaving the graph.'},
-    {view:'discover',selectors:['.cm-pick-actions','.cm-pane-tab[data-tab=list]','#cm-card-view'],
+     copy:'Add and/or buy… puts it straight into a deck’s plan, a collection group, or your wish list, without leaving the graph.'},
+    {view:'discover',params:graphOn,selectors:['.cm-pick-actions','.cm-pane-tab[data-tab=list]','#cm-card-view'],
      title:'Or send them to the table',
      copy:'Tick cards on the graph or in the List tab and Send to the table carries them to Library → Table, where they arrive as cards you are considering — never as copies you own. Sort them into a group there and they become planned entries.'}]},
 
@@ -175,9 +180,11 @@ const TOURS=[
     {view:'cards',params:{view:'tabletop'},selectors:['.cm-tt-mat','.cm-view-switch'],
      title:'Or sort it like a real table',
      copy:'Table lays the same rows out as piles on a mat: your cards down both sides, the middle to work in, and a band of destinations along the bottom. With no deck picked that band is your collection groups, and there is a door to a new one.'},
-    {view:'cards',params:{view:'tabletop'},selectors:['.cm-tt-trays','.cm-tt-play'],
-     title:'Four trays, four groups',
-     copy:'Bind each tray to a group and drop cards into it while you sort; the scoreboard reads how big each group is getting. Nothing is written until you confirm, so you can change your mind as often as you like.'}]},
+    /* With no deck picked the middle of the table is the sorting space (G6b-2), not trays (tests/uat/tour-walk.mjs:
+       the step pointed at trays the table no longer draws there). */
+    {view:'cards',params:{view:'tabletop'},selectors:['.cm-tt-sorting','.cm-tt-trays','.cm-tt-play'],
+     title:'Piles first, then groups',
+     copy:'The middle of the table is your sorting space: drag cards into piles of your own, name them, and drag a whole pile onto a group once you know where it goes. Nothing is written until you review and confirm, so you can change your mind as often as you like.'}]},
 
   {id:'perform',name:'Read a deck’s performance',icon:'🜔',
    job:'Is this deck good — and good at what?',
@@ -191,7 +198,9 @@ const TOURS=[
     {view:'decks',params:firstDeck,selectors:['.cm-deck-hero'],
      title:'The header is the summary',
      copy:'What the deck plays, what it costs, and how it measured — before you open anything else.'},
-    {view:'decks',params:firstDeck,selectors:['.cm-deck-summary','.cm-deck-next'],
+    /* Every measured run is in the deck's simulation history, its score, protocol and error with it; a deck not yet
+       measured shows the history's empty state (tests/uat/tour-walk.mjs: the step pointed at a summary since removed). */
+    {view:'decks',params:()=>({...firstDeck(),tab:'overview'}),selectors:['#cm-sec-history'],
      title:'What the score is',
      copy:'Points on a fixed protocol: six seeds of 20,000 games against sampled opponents. Comparable only with another score from that same protocol, and the app says so when two differ.'},
     /* A deck with no runs yet shows the panel's empty state, where neither button exists — so the
@@ -236,9 +245,11 @@ const TOURS=[
     {view:'cards',params:{view:'tabletop'},selectors:['.cm-tt-play','.cm-tt-mat'],
      title:'And when the cards arrive, a table to build on',
      copy:'Pick a deck at the top of Table and the middle becomes its play space. Lift a card into it to consider it, and the scoreboard reads where confirming would leave the deck: how many of the hundred are named, reserved, substituted, still to buy, and what finishing costs.'},
-    {view:'cards',params:{view:'tabletop'},selectors:['.cm-tt-trays','.cm-tt-tray'],
+    /* The trays are a picked deck's, and only a deck with a group can be picked; without one, the step points at the
+       picker (tests/uat/tour-walk.mjs). */
+    {view:'cards',params:()=>{const d=C.state.decks?.find(x=>!x.archived&&x.groupId);return d?{view:'tabletop',deck:d.id}:{view:'tabletop'};},selectors:['.cm-tt-trays','.cm-tt-tray','[name=ttDeck]'],
      title:'A tray puts it on the list',
-     copy:'Drop a card in a tray and confirming does two things — it adds the card to the deck’s hundred and reserves your copy for that seat. The receipt says both before anything is written, and one undo takes the whole sitting back.'}]},
+     copy:'With a deck picked, drop a card in a tray and confirming does two things — it adds the card to the deck’s hundred and reserves your copy for that seat. The receipt says both before anything is written, and one undo takes the whole sitting back.'}]},
 
   {id:'portable',name:'Move your library between devices',icon:'🜍',
    job:'Back it up, take it to a convention, and bring the changes home.',

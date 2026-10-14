@@ -1,0 +1,117 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Thassa, Deep-Dwelling",
+    "oracleId": "2396299a-c031-4020-b13e-1f9bf9d64511",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Enchantment",
+      "Creature"
+    ],
+    "subtypes": [
+      "God"
+    ],
+    "manaCost": "{3}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 6,
+    "toughness": 5
+  },
+  "oracleText": "Indestructible\nAs long as your devotion to blue is less than five, Thassa isn't a creature.\nAt the beginning of your end step, exile up to one other target creature you control, then return that card to the battlefield under your control.\n{3}{U}: Tap another target creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Indestructible",
+      "keyword": "indestructible"
+    },
+    {
+      "kind": "static",
+      "text": "As long as your devotion to blue is less than five, Thassa isn't a creature.",
+      "layer": 4,
+      "affects": {
+        "self": true
+      },
+      "condition": {
+        "compare": {
+          "count": {
+            "devotion": [
+              "U"
+            ]
+          },
+          "fewerThan": 5
+        }
+      },
+      "apply": {
+        "removeTypes": [
+          "Creature"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your end step, exile up to one other target creature you control, then return that card to the battlefield under your control.",
+      "trigger": {
+        "on": "end step"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile",
+          "andReturn": "now",
+          "under": "you"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "another": true,
+          "count": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{3}{U}: Tap another target creature.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}{U}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "another": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "tap",
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

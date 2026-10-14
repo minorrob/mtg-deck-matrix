@@ -3,7 +3,8 @@
  * A four-seat table run the way people run one: Rob at a desk hosts from New table, invites Maya, who joins from the
  * link on a phone held sideways, and seats two AIs; each person brings a deck from their own library by name, the
  * host chooses the AIs'; everyone is ready, the countdown runs out, and the game is played through the board's own
- * buttons -- Keep, a land a turn, the pass button, what the room asks -- while the house pilots play the AI seats.
+ * controls -- the draw, Pass, every question the room asks, answered as the house pilot would -- while the house pilots
+ * play the AI seats.
  * Two tables, so all seven of Rob's decks take a seat: D1-D4 at the first, D5-D7 and D1 at the second.
  *
  *   Lobby    New table with a person and two AIs; decks from the library by name; the invite link joined on a phone;
@@ -16,11 +17,14 @@
  *   Record   Tools > End game, two taps; both boards say so; Rob's own seat's record downloads, with the history and
  *            nothing of Maya's hidden cards.
  *
- * THE CARDS. The engine plays basic lands and the cards whose scripts exist (docs/engine/coverage.md); a real game of
- * Rob's decks waits on M4 and G1. Until then each card here is the engine's vanilla version of itself, as the board
- * fixture does it (tools/board-fixture.mjs): a creature its printed power and toughness, any other permanent of its
- * type, an instant or sorcery that resolves and does nothing, every land a land that taps for one colorless, each
- * costing its mana value up to four. The journeys are the UI's; the rules are G1's.
+ *   Waits    how long each person's answer took to come back as a question to a person (or the end): the room's own
+ *            time with the AI seats' play, measured in this process. Over the network it waits on a real browser on
+ *            a real network (this container's proxy carries no WebSocket), so this is the floor of the five-second rule.
+ *
+ * THE CARDS are the table's own (cloud/game-room.mjs, tableCards): every card of the seven decks is defined (477 of
+ * 477), and a card's questions -- a target, a mode, a payment, an order -- are answered through the board by
+ * tests/uat/board-person.mjs, as tests/uat/real-deck-game.mjs answers them. The rules are G1's
+ * (tools/fuzz-live.mjs); the journeys are the UI's.
  *
  * Runs only when asked (tests/uat is not in runtests.sh): it plays two whole tables and takes a few minutes.
  *
@@ -33,7 +37,8 @@ import {readFileSync, mkdirSync} from "node:fs";
 import path from "node:path";
 import {openBrowser, loadLiveState, ROOT} from "./browser-runner.mjs";
 import {basicCards} from "../../game/room/room.mjs";
-import {GameTable} from "../../cloud/game-room.mjs";
+import {GameTable, tableCards} from "../../cloud/game-room.mjs";
+import {boardPerson} from "./board-person.mjs";
 import {build, worktreeSource} from "../../tools/release-pages.mjs";
 import {joinLocation} from "../../cloud/worker.mjs";
 
@@ -45,27 +50,12 @@ if (SHOTS) mkdirSync(SHOTS, {recursive: true});
 const shot = async (page, name) => {if (SHOTS) await page.screenshot({path: path.join(SHOTS, `${name}.png`)});};
 const SIZES = [[1280, 720], [1400, 900], [1920, 1080], [2560, 1080]];
 const PHONE = {width: 844, height: 390};
-const TURNS = Number(process.env.JOURNEY_TURNS || 6);
+const TURNS = Number(process.env.JOURNEY_TURNS || 12);
 
-/* ---- the cards: each real card as the engine's vanilla version of itself ---- */
-const records = new Map(JSON.parse(readFileSync(path.join(ROOT, "data", "cards.json"), "utf8")).cards.map((c) => [c.name, c]));
+/* ---- the cards: the table's own definitions, and Rob's seven decks from the committed library ---- */
+const cards = tableCards;
 const library = JSON.parse(readFileSync(path.join(ROOT, "data", "live-state.json"), "utf8")).payload.state;
 const DECKS = library.decks.filter((d) => /^deck:live:D[1-7]$/.test(d.id)).sort((a, b) => a.id.localeCompare(b.id));
-const num = (v, d) => (/^\d+$/.test(String(v ?? "")) ? Number(v) : d);
-const cost = (r) => `{${Math.min(4, Math.max(1, Math.round((r && r.manaValue) || 1)))}}`;
-const COLORLESS = [{id: "t-c", kind: "mana", tapSelf: true, produces: {C: 1}}];
-function cards(name) {
-  const basic = basicCards(name);
-  if (basic) return basic;
-  const r = records.get(name) || records.get(String(name).split(" // ")[0]);
-  const line = (r && r.typeLine) || "";
-  if (/\bLand\b/.test(line)) return {types: ["Land"], abilities: COLORLESS};
-  /* Legendary as printed, so a commander is one the table seats (CR 903.3). */
-  if (/\bCreature\b/.test(line)) return {types: ["Creature"], ...(/\bLegendary\b/.test(line) ? {supertypes: ["Legendary"]} : {}), power: num(r.power, 2), toughness: num(r.toughness, 2), manaCost: cost(r)};
-  for (const type of ["Artifact", "Enchantment", "Planeswalker", "Battle"]) if (line.includes(type)) return {types: [type], manaCost: cost(r)};
-  for (const type of ["Instant", "Sorcery"]) if (line.includes(type)) return {types: [type], manaCost: cost(r)};
-  return {types: ["Creature"], power: 2, toughness: 2, manaCost: "{2}"};
-}
 
 /* ---- the tables: one GameTable object each, as the Worker gives every table its own ---- */
 const ROB = "rob@example.com", MAYA = "maya@example.com";
@@ -96,7 +86,7 @@ async function answer(route, email) {
 function carry(email) {
   return (ws) => {
     const id = /\/api\/tables\/([a-z0-9]+)\/connect/.exec(ws.url())[1], object = tableFor(id);
-    const server = {tags: null, closed: false, send(f) {if (!this.closed) {frames[email].push({id, f}); ws.send(f);}}, close() {this.closed = true;}};
+    const server = {tags: null, closed: false, send(f) {if (!this.closed) {frames[email].push({id, f, at: Date.now()}); ws.send(f);}}, close() {this.closed = true;}};
     serial(async () => {
       object.socketPair = () => [{}, server];
       object.upgraded = () => ({status: 101});
@@ -107,6 +97,7 @@ function carry(email) {
     ws.onClose(() => serial(async () => {if (!server.closed) {server.closed = true; await object.webSocketClose(server, 1001);}}));
   };
 }
+const waitsSeen = [], alarms = [];
 const viewsAt = (email, id) => frames[email].filter((x) => x.id === id).map((x) => JSON.parse(x.f)).filter((f) => f.view).map((f) => f.view);
 
 /* The page staging ships, marked for Play in the cloud (as tests/table-lobby.mjs serves it). */
@@ -122,6 +113,9 @@ async function person(email, viewport, {fullscreen = true} = {}) {
   /* The app at "/", where an invitation's link comes back to (cloud/worker.mjs, joinLocation). */
   await page.route((url) => url.origin === base && url.pathname === "/", (r) => r.fulfill({contentType: "text/html; charset=utf-8", body: PAGE}));
   await page.route(`${base}/api/me`, (r) => r.fulfill({json: {email}}));
+  /* The Coach's door, shut as it is until the privacy page names what it sends (cloud/worker.mjs, AI_COACH): the board
+     says so in the Coach's own words. A moment's wait, as the network has, so its typing shows. */
+  await page.route(`${base}/api/ai/coach`, async (r) => {await new Promise((go) => setTimeout(go, 300)); r.fulfill({status: 503, json: {error: "The Coach is not switched on here yet."}});});
   await page.route(`${base}/api/library**`, (r) => r.request().method() === "GET" ? r.fulfill({json: {head: null}})
     : r.fulfill({json: {head: {id: "00000000-0000-4000-8000-000000000000", revision: 1, checksum: "x", device: "test", createdAt: new Date().toISOString()}}}));
   await page.route(`${base}/api/tables**`, (r) => answer(r, email));
@@ -161,7 +155,7 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
   await rob.page.waitForFunction(() => /#table\?id=journey\d+/.test(location.hash), null, {timeout: 20000});
   const id = /#table\?id=(journey\d+)/.exec(await rob.page.evaluate(() => location.hash))[1];
   await rob.page.locator(".cm-cloud-table .cm-lobby-seat[data-seat='3']").waitFor({timeout: 20000});
-  eq((await rob.page.locator(".cm-cloud-table .cm-lobby-seat h3").allTextContents()).map((t) => t.trim()), ["Seat 1 · You", "Seat 2 · Maya", "Seat 3 · AI", "Seat 4 · AI"], `table ${n}: New table seats Rob, Maya to invite, and two AIs`);
+  eq((await rob.page.locator(".cm-cloud-table .cm-lobby-seat h3").allTextContents()).map((t) => t.trim()), ["Seat 1 · You", "Seat 2 · Maya", "Seat 3 · AI · Normal", "Seat 4 · AI · Normal"], `table ${n}: New table seats Rob, Maya to invite, and two AIs`);
   await chooseDeck(rob.page, 0, robDeck.name);
   await chooseDeck(rob.page, 2, ninaDeck.name);
   await chooseDeck(rob.page, 3, theoDeck.name);
@@ -189,38 +183,39 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
   await maya.page.locator("#cm-board").waitFor({timeout: 30000});
   ok(true, `table ${n}: Maya brings ${mayaDeck.name}; everyone is ready; the countdown runs out and both pages are the board`);
 
-  /* PLAY: through the board's own buttons, until turn TURNS, the house pilots playing the AI seats. */
+  /* PLAY: through the board's own controls, until turn TURNS, the house pilots playing the AI seats; a slice the room
+     stopped at (the Durable Object's CPU budget) is carried on by its alarm, as the Worker's is. */
   const turnOf = () => {const v = viewsAt(ROB, id).at(-1); return v ? v.state.turn : 0;};
-  const act = async ({page}) => {
-    const decision = page.locator("#cm-board-decision [data-action=board-option], .cm-phone-ask [data-action=board-option]");
-    if (await decision.count()) {
-      const keep = page.locator("#cm-board-decision [data-action=board-option], .cm-phone-ask [data-action=board-option]", {hasText: "Keep"});
-      const confirm = page.locator("[data-action=board-confirm]:not([disabled])");
-      if (await keep.count()) await keep.first().click();
-      else if (await confirm.count()) await confirm.first().click();
-      else await decision.first().click();
-      return true;
-    }
-    /* The draw is its own beat (B5): Draw a card. */
-    const draw = page.locator("[data-action=board-draw]:not([disabled])");
-    if (await draw.count()) {await draw.first().click(); return true;}
-    const land = page.locator(".cm-board-hand .cm-bcard.is-bright");
-    if (await land.count()) {await land.first().click(); return true;}
-    const pass = page.locator("[data-action=board-pass]:not([disabled])");
-    if (await pass.count()) {await pass.first().click(); return true;}
-    return false;
-  };
-  for (let i = 0; i < 600 && turnOf() < TURNS; i += 1) {
-    const moved = (await act(rob)) | (await act(maya));
-    await rob.page.waitForTimeout(moved ? 120 : 400);
+  const alarm = setInterval(() => {if (tableFor(id).room?.continuing) serial(() => tableFor(id).alarm());}, 50);
+  const people = [[rob, 0], [maya, 1]].map(([who, seat]) => boardPerson({page: who.page, seat, cards, current: () => viewsAt(who.email, id).at(-1)}));
+  alarms.push(alarm);
+  const settle = async () => {for (let i = 0; i < 300 && tableFor(id).room?.continuing; i += 1) await rob.page.waitForTimeout(50);};
+  for (let i = 0; i < 3000 && turnOf() < TURNS && viewsAt(ROB, id).at(-1)?.status !== "finished"; i += 1) {
+    const moved = (await people[0]()) | (await people[1]());
+    if (!moved) await rob.page.waitForTimeout(100);
   }
+  /* Play stops at a person's question, never mid-slice, so End game is not refused while the AIs play on. */
+  await settle();
   if (turnOf() < TURNS) {
     const v = viewsAt(ROB, id).at(-1), m = viewsAt(MAYA, id).at(-1);
     console.log("play-journeys: the table stalled", JSON.stringify({turn: v && v.state.turn, phase: v && v.state.phase, status: v && v.status, robDecision: v && v.decision && {kind: v.decision.kind, title: v.decision.title, options: (v.decision.options || []).slice(0, 4).map((o) => o.label)}, mayaDecision: m && m.decision && {kind: m.decision.kind, title: m.decision.title, mode: m.decision.mode}, waiting: v && (v.waitingOn ?? v.waiting), frames: [viewsAt(ROB, id).length, viewsAt(MAYA, id).length]}));
     console.log("ROB PAGE", (await text(rob.page, "#cm-board")).slice(0, 600).replace(/\n+/g, " | "));
     console.log("MAYA PAGE", (await text(maya.page, "#cm-board")).slice(0, 600).replace(/\n+/g, " | "));
   }
-  ok(turnOf() >= TURNS, `table ${n}: four seats play to turn ${turnOf()} through the board's buttons, the AIs played by the house pilots`);
+  const answers = people[0].waits.length + people[1].waits.length;
+  ok(turnOf() >= TURNS || viewsAt(ROB, id).at(-1)?.status === "finished", `table ${n}: four seats play to turn ${turnOf()} with the real cards, ${answers} answers through the board's controls, the AIs played by the house pilots`);
+  eq(tableFor(id).room.refusals.total, 0, `table ${n}: no AI answer was refused by the rules`);
+  /* The decks' own rules, not stand-ins: a vanilla card puts nothing but itself on the stack. */
+  const rules = new Set(viewsAt(ROB, id).flatMap((v) => v.state.stack.filter((e) => e.kind !== "spell" && e.name).map((e) => `${e.name} (${e.kind})`)));
+  ok(rules.size > 0, `table ${n}: the decks played by their own rules -- ${rules.size} abilities and triggers went on the stack (${[...rules].slice(0, 6).join(", ")}${rules.size > 6 ? ", ..." : ""})`);
+  /* WAITS: from a person's click to the room's next frame that asks a person (or ends the game), the AIs' play and
+     any slices between included; a click no such frame followed counts until now. */
+  const settled = [ROB, MAYA].flatMap((email) => frames[email].filter((x) => x.id === id).map((x) => ({at: x.at, f: JSON.parse(x.f)})))
+    .filter(({f}) => f.view && !f.view.continuing && (f.view.status === "finished" || ["s0", "s1"].includes(f.view.waitingOn))).map(({at}) => at).sort((a, b) => a - b);
+  const waits = people.flatMap((p) => p.waits).map(({title, at}) => ({title, ms: (settled.find((t) => t >= at) ?? Date.now()) - at})).sort((a, b) => a.ms - b.ms);
+  const pct = (q) => waits[Math.min(waits.length - 1, Math.floor(q * waits.length))]?.ms ?? 0;
+  waitsSeen.push(...waits.map((w) => w.ms));
+  ok(waits.length > 0 && waits.at(-1).ms < 5000, `table ${n}: every answer came back as a person's next question within five seconds, in this process (${waits.length} answers; median ${pct(0.5)} ms, 90th percentile ${pct(0.9)} ms, longest ${waits.at(-1)?.ms} ms${waits.length ? `, at "${waits.at(-1).title}"` : ""})`);
   const robViews = viewsAt(ROB, id), mayaViews = viewsAt(MAYA, id);
   const hidden = (views, me) => views.every((v) => v.state.players.every((p, seat) => seat === me || (p.zones.Hand.cards || []).every((c) => !c.name) && (p.zones.Library.cards || []).every((c) => !c.name)));
   ok(robViews.length >= TURNS && mayaViews.length >= TURNS, `table ${n}: the room sent each person their view all game (${robViews.length} to Rob, ${mayaViews.length} to Maya)`);
@@ -244,10 +239,30 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
       await rob.page.waitForTimeout(300);
       const g = await rob.page.evaluate(() => {
         const hand = [...document.querySelectorAll(".cm-board-hand .cm-bcard")];
+        /* Every caption on a board -- a zone's (Battlefield, Lands · 3), a group's (Creatures · 2), a pile's count -- is
+           read whole: no card of its zone over it, nor the life counter, a circle at the table's center. */
+        const meet = (a, b) => a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1;
+        const pie = document.querySelector("#cm-board .cm-board-table > .cm-board-pie"), round = pie && pie.getBoundingClientRect();
+        const underPie = (b) => {
+          if (!round) return false;
+          const cx = round.left + round.width / 2, cy = round.top + round.height / 2, r = round.width / 2 - 1;
+          const x = Math.max(b.left, Math.min(cx, b.right)), y = Math.max(b.top, Math.min(cy, b.bottom));
+          return (x - cx) ** 2 + (y - cy) ** 2 < r * r;
+        };
+        const covered = [];
+        for (const caption of document.querySelectorAll("#cm-board .cm-mat .cm-mat-label, #cm-board .cm-mat .cm-board-group h3, #cm-board .cm-mat .cm-board-pile figcaption > *")) {
+          const box = caption.getBoundingClientRect(), zone = caption.closest(".cm-mat-zone"), seat = caption.closest(".cm-mat")?.dataset.seat;
+          if (box.width <= 1 || box.height <= 1 || getComputedStyle(caption).visibility === "hidden" || !zone) continue;   /* a screen reader's alone */
+          const said = `seat ${seat}'s ${zone.dataset.zone} "${caption.textContent.trim()}"`;
+          const card = [...zone.querySelectorAll(".cm-bcard")].find((c) => !c.closest(".cm-board-pile") && meet(box, c.getBoundingClientRect()));
+          if (card) covered.push(`${said} under ${card.getAttribute("aria-label")?.split(/[,:]/)[0]}`);
+          else if (underPie(box)) covered.push(`${said} under the life counter`);
+        }
         return {cards: hand.length, whole: hand.every((c) => {const r = c.getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight + 0.5;}), sideways: document.documentElement.scrollWidth - document.documentElement.clientWidth,
-          boards: document.querySelectorAll("#cm-board .cm-mat").length};
+          boards: document.querySelectorAll("#cm-board .cm-mat").length, covered};
       });
       ok(g.whole && g.sideways === 0 && g.boards >= (view === "focus" ? 1 : 4), `table ${n} at ${width}x${height}, ${view}: the hand whole in the window (${g.cards} cards), ${g.boards} boards, nothing scrolling sideways`);
+      ok(g.covered.length === 0, `table ${n} at ${width}x${height}, ${view}: every zone's caption whole, no card or the life counter over it${g.covered.length ? ` -- ${g.covered.join("; ")}` : ""}`);
       await shot(rob.page, `t${n}-${view}-${width}x${height}`);
     }
     await rob.page.evaluate(() => document.fullscreenElement && document.exitFullscreen()).catch(() => {});
@@ -259,21 +274,42 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
   const phone = await maya.page.evaluate(() => {const b = document.getElementById("cm-board").getBoundingClientRect(); return {board: [Math.round(b.width), Math.round(b.height)], views: document.querySelectorAll("#cm-board [data-action=board-view]").length, sideways: document.documentElement.scrollWidth - document.documentElement.clientWidth, seats: document.querySelectorAll(".cm-phone-seat").length};});
   ok(phone.board[0] === PHONE.width && phone.board[1] === PHONE.height && phone.views === 0 && phone.sideways === 0 && phone.seats === 4, `table ${n}: on the phone held sideways, Focus only, the board the whole screen (${phone.board.join("x")}), all four seats in the strip`);
   await shot(maya.page, `t${n}-phone-landscape`);
+  /* Her hand on the phone: the rail's hand fans it over the board, Escape puts it back. */
+  const held = viewsAt(MAYA, id).at(-1).state.players[1].zones.Hand.count;
+  await maya.page.click(".cm-phone-rail [data-action=board-show-hand]");
+  await maya.page.locator(".cm-hand-show .cm-hand-fan").waitFor({timeout: 5000});
+  const fanned = await maya.page.locator(".cm-hand-slot").count();
+  ok(/Your hand · \d+/.test(await text(maya.page, ".cm-hand-show h2")) && fanned === held, `table ${n}: on the phone, the rail's hand fans her ${held} cards over the board`);
+  await shot(maya.page, `t${n}-phone-hand`);
+  await maya.page.keyboard.press("Escape");
+  await maya.page.locator(".cm-hand-show").waitFor({state: "detached", timeout: 5000});
   /* THE COACH: opened, a suggested prompt, the stub's reply, closed. */
   await rob.page.click(".cm-board-coach-open");
   await rob.page.locator("#cm-board-coach:not([hidden]) .cm-coach-input").waitFor();
   await rob.page.click("[data-action=board-coach-ask][data-q=\"What's my best play?\"]");
   await rob.page.locator(".cm-coach-msg.is-coach:not(.is-typing)").waitFor({timeout: 5000});
-  ok(/not switched on yet/.test(await text(rob.page, ".cm-coach-thread")), `table ${n}: the Coach answers a suggested prompt with the stub's honest reply`);
+  ok(/not switched on here yet/.test(await text(rob.page, ".cm-coach-thread")), `table ${n}: the Coach answers a suggested prompt with the door's honest reply while it is shut`);
   await rob.page.keyboard.press("Escape");
   await rob.page.locator("#cm-board-coach[hidden], #cm-board-coach:not(:has(.cm-coach-input))").first().waitFor({state: "attached", timeout: 5000}).catch(() => {});
+  /* CONCEDE, at the second table: Maya leaves it from the phone's settings, and the others play on. */
+  const conceding = n === 2;
+  if (conceding) {
+    await maya.page.click(".cm-phone-rail [data-action=board-tools]");
+    await maya.page.click("#cm-board-tools [data-action=board-concede]");
+    await waitText(maya.page, ".cm-board-banner", /You have left this game; the others play on/);
+    for (let i = 0; i < 100 && viewsAt(ROB, id).at(-1)?.departures?.s1 !== "conceded"; i += 1) await rob.page.waitForTimeout(50);
+    const after = viewsAt(ROB, id).at(-1);
+    ok(after.departures.s1 === "conceded" && after.status === "playing", `table ${n}: Maya concedes from the phone's settings; her board says she has left, and Rob's game goes on without her`);
+    await settle();
+  }
   /* END, and THE RECORD. */
   await rob.page.click("[data-action=board-tools]");
   await rob.page.click("#cm-board-tools [data-action=board-end]");
   await rob.page.click("#cm-board-tools [data-action=board-end][data-confirm='1']");
   await waitText(rob.page, ".cm-board-over", /ended early/).catch(async (e) => {console.log("ROB AT END", (await text(rob.page, "#cm-main")).slice(0, 500).replace(/\n+/g, " | ")); throw e;});
   await waitText(maya.page, "#cm-main", /ended early/).catch(async (e) => {console.log("MAYA AT END", (await text(maya.page, "#cm-main")).slice(0, 500).replace(/\n+/g, " | ")); throw e;});
-  ok(true, `table ${n}: Tools > End game, two taps, and both boards say it was ended early`);
+  ok(true, `table ${n}: Tools > End game, two taps, and both boards say it was ended early${conceding ? " (hers too, after she left)" : ""}`);
+  clearInterval(alarm);
   const [download] = await Promise.all([rob.page.waitForEvent("download", {timeout: 15000}), rob.page.click(".cm-board-over [data-action=board-record]")]);
   const rec = JSON.parse(readFileSync(await download.path(), "utf8"));
   const mayaHidden = new Set(mayaViews.flatMap((v) => (v.state.players[1].zones.Hand.cards || []).map((c) => c.name)).filter((name) => name && !basicCards(name) && !mayaPublic.has(name) && !robHand.has(name)));
@@ -290,7 +326,9 @@ try {
   await journey(2, rob, maya, [DECKS[4], DECKS[5], DECKS[6], DECKS[0]]);
   ok(true, `all seven decks took a seat (${DECKS.map((d) => d.name).join(", ")})`);
 } finally {
+  for (const alarm of alarms) clearInterval(alarm);
   await close();
 }
-console.log(`play-journeys: ${checks} checks passed -- two four-seat tables through the real UI: New table, the invite on a phone, decks from the library, the countdown, the game played through the board's buttons with the house pilots at the AI seats, every view at four sizes and on the phone, the Coach, End game and the record; all seven decks seated.`);
+waitsSeen.sort((a, b) => a - b);
+console.log(`play-journeys: ${checks} checks passed -- two four-seat tables through the real UI with the seven decks' own cards: New table, the invite on a phone, decks from the library, the countdown, the game played through the board's controls with the house pilots at the AI seats, every view at four sizes and on the phone, the Coach, End game and the record. Waits over ${waitsSeen.length} answers, in this process: median ${waitsSeen[Math.floor(waitsSeen.length / 2)] ?? 0} ms, longest ${waitsSeen.at(-1) ?? 0} ms.`);
 process.exit(0);

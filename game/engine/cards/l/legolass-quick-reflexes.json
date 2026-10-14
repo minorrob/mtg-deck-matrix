@@ -1,0 +1,93 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Legolas's Quick Reflexes",
+    "oracleId": "59154c04-6bc5-4b95-af1f-6de5fed05649",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Split second (As long as this spell is on the stack, players can't cast spells or activate abilities that aren't mana abilities.)\nUntap target creature. Until end of turn, it gains reach, hexproof, and \"Whenever this creature becomes tapped, it deals damage equal to its power to up to one target creature.\"",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Split second",
+      "keyword": "split second"
+    },
+    {
+      "kind": "spell",
+      "text": "Untap target creature. Until end of turn, it gains reach, hexproof, and \"Whenever this creature becomes tapped, it deals damage equal to its power to up to one target creature.\"",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "untap",
+          "targets": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Reach",
+            "Hexproof"
+          ],
+          "abilities": [
+            {
+              "kind": "triggered",
+              "text": "Whenever this creature becomes tapped, it deals damage equal to its power to up to one target creature.",
+              "trigger": {
+                "on": "becomes tapped"
+              },
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ],
+                  "count": {
+                    "min": 0,
+                    "max": 1
+                  }
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "dealDamage",
+                  "amount": {
+                    "powerOf": "self"
+                  },
+                  "targets": {
+                    "target": 0
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

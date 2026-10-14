@@ -293,3 +293,25 @@ break D5:
   28 are stored, or against a ledger without them: a stored card is skipped as "already learned".)
 - The late check and D5: `node tests/engine-learned.mjs`.
 - The counts: `node game/tools/engine-coverage.mjs`, `node game/tools/engine-catalog.mjs --check`.
+
+## Since: Tegwyll confirmed (2026-10-08)
+
+The record above is left as it was measured. One of the 28 stored definitions has since been confirmed: **Tegwyll,
+Duke of Splendor**, the one in Rob's seven decks (D7 Maralen Exile Cast), which the table refused to seat ("The table
+cannot play this card yet", `cloud/game-room.mjs` `tableCards`). Each of its abilities was checked against the engine and
+needed nothing new: flying and deathtouch (CR 702.9b, 702.2b); "Other Faeries you control get +1/+1" as a layer 7c static
+over any Faerie permanent (CR 109.2, 205.3m, 613.4c), a kindred one included, which has no power to raise (CR 208.3);
+and "Whenever another Faerie you control dies" as a trigger on any Faerie put into a graveyard from the battlefield (CR
+700.4), read as it last existed (CR 603.10a). The provisional draft was right; it is now hand-authored,
+`game/engine/cards/t/tegwyll-duke-of-splendor.json`, with fifteen scenarios of its own (a changeling, a token, a kindred
+enchantment, a wipe it dies in, Day of Black Sun taking its abilities first, control changed both ways, its owner's
+commander going home, exile that is not dying, the legend rule), and the table seats it.
+
+So that the provisional record does not linger behind the confirmed one, its stored record
+(`data/engine/scripts/86/868f0a0a-ca9e-4baf-8295-6b228aa834e5.json`) and its entry in
+`tests/fixtures/learned-scenarios.json` are withdrawn, and its ledger row says `confirmed`, naming the definition: the
+first row with the status the ledger always knew and nothing wrote. `tests/engine-learned.mjs` now holds the two to each
+other (a provisional row has its record; a confirmed one has none, a hand-authored definition of the card's current text
+where the row says, and a seat at the table; no record stays behind a hand-authored card). **27 definitions remain
+stored provisional**; in the coverage document, Rob's seven decks are 477 defined and none provisional, the library 7
+provisional, the most-played cards 27.

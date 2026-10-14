@@ -1,0 +1,81 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bring to Light",
+    "oracleId": "67183256-23cc-4af5-991e-d7148e942c63",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{G}{U}",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Converge — Search your library for a creature, instant, or sorcery card with mana value less than or equal to the number of colors of mana spent to cast this spell, exile that card, then shuffle. You may cast that card without paying its mana cost.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Converge — Search your library for a creature, instant, or sorcery card with mana value less than or equal to the number of colors of mana spent to cast this spell, exile that card, then shuffle. You may cast that card without paying its mana cost.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "count": 1,
+          "to": "exile",
+          "remember": true,
+          "shuffle": true,
+          "selector": {
+            "anyOf": [
+              {
+                "types": [
+                  "Creature"
+                ],
+                "manaValue": {
+                  "max": {
+                    "colorsSpent": "self"
+                  }
+                }
+              },
+              {
+                "types": [
+                  "Instant"
+                ],
+                "manaValue": {
+                  "max": {
+                    "colorsSpent": "self"
+                  }
+                }
+              },
+              {
+                "types": [
+                  "Sorcery"
+                ],
+                "manaValue": {
+                  "max": {
+                    "colorsSpent": "self"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "effect": "play",
+          "from": "targets",
+          "targets": "remembered",
+          "free": true
+        }
+      ]
+    }
+  ]
+}

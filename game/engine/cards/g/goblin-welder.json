@@ -1,0 +1,76 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Goblin Welder",
+    "oracleId": "9fc28e1f-f4ea-4bf8-9442-a36dba3b3b29",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin",
+      "Artificer"
+    ],
+    "manaCost": "{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "{T}: Choose target artifact a player controls and target artifact card in that player's graveyard. If both targets are still legal as this ability resolves, that player simultaneously sacrifices the artifact and returns the artifact card to the battlefield.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Choose target artifact a player controls and target artifact card in that player's graveyard. If both targets are still legal as this ability resolves, that player simultaneously sacrifices the artifact and returns the artifact card to the battlefield.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "branch",
+          "if": {
+            "targetsLegal": true
+          },
+          "then": [
+            {
+              "effect": "moveZone",
+              "targets": {
+                "target": 0
+              },
+              "sacrifice": true
+            },
+            {
+              "effect": "moveZone",
+              "targets": {
+                "target": 1
+              },
+              "to": "battlefield"
+            }
+          ]
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Artifact"
+          ]
+        },
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "types": [
+            "Artifact"
+          ],
+          "ownedByControllerOf": 0
+        }
+      ]
+    }
+  ]
+}

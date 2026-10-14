@@ -1,0 +1,386 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Evendo Brushrazer",
+  "fixtures": {
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Cub": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "power": 2,
+      "toughness": 2
+    },
+    "Tidings": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Draw a card.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "draw",
+            "count": 1
+          }
+        ]
+      }
+    },
+    "Imp": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Imp"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Thopter": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "power": 2,
+      "toughness": 2,
+      "token": true
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{T}, a Wastes sacrificed: {R}{R}, and the Ogre on top exiled -- cast from exile with that mana and a Wastes",
+      "library": [
+        "Ogre"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Evendo Brushrazer",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Evendo Brushrazer",
+          "sacrifice": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Ogre"
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Ogre"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Evendo Brushrazer",
+            "Wastes",
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "name": "Evolving Wilds sacrificed: the Forest exiled from the top is his land for the turn",
+      "library": [
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Evendo Brushrazer",
+            "Evolving Wilds"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Evolving Wilds"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        },
+        {
+          "play": "Forest"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Evendo Brushrazer",
+            "Forest"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A later turn: nothing sacrificed yet -- a token is nothing -- the exiled Imp is not his to cast; a land sacrificed, it is, and the new card too",
+      "library": [
+        "Imp",
+        "Wastes",
+        "Cub"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Evendo Brushrazer",
+            "Wastes",
+            "Ashnod's Altar",
+            "Mountain",
+            "Ogre",
+            "Thopter"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Ashnod's Altar",
+          "sacrifice": "Ogre"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Imp"
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Ashnod's Altar",
+          "sacrifice": "Thopter"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            },
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Imp"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "tap": "Evendo Brushrazer",
+          "sacrifice": "Wastes"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "cast": "Imp"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Evendo Brushrazer",
+            "Ashnod's Altar",
+            "Mountain",
+            "Imp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Cub"
+          ]
+        },
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Cub"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "A token sacrificed exiles nothing; on Maya's turn the Tidings exiled with it is not his to cast",
+      "library": [
+        "Tidings"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Evendo Brushrazer",
+            "Ashnod's Altar",
+            "Thopter",
+            "Island",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Ashnod's Altar",
+          "sacrifice": "Thopter"
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Evendo Brushrazer",
+          "sacrifice": "Wastes",
+          "seat": 0
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Tidings"
+              ]
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Tidings",
+            "seat": 0
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

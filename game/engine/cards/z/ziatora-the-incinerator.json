@@ -1,0 +1,118 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ziatora, the Incinerator",
+    "oracleId": "d46c3fb6-f1c7-4a96-ae42-5bce17fc7c1d",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Demon",
+      "Dragon"
+    ],
+    "manaCost": "{3}{B}{R}{G}",
+    "colors": [
+      "B",
+      "G",
+      "R"
+    ],
+    "colorIdentity": [
+      "B",
+      "G",
+      "R"
+    ],
+    "power": 6,
+    "toughness": 6
+  },
+  "oracleText": "Flying\nAt the beginning of your end step, you may sacrifice another creature. When you do, Ziatora deals damage equal to that creature's power to any target and you create three Treasure tokens.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your end step, you may sacrifice another creature. When you do, Ziatora deals damage equal to that creature's power to any target and you create three Treasure tokens.",
+      "trigger": {
+        "on": "end step"
+      },
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "count": 1,
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "another": true
+          },
+          "remember": true
+        },
+        {
+          "effect": "immediateTrigger",
+          "text": "When you do, Ziatora deals damage equal to that creature's power to any target and you create three Treasure tokens.",
+          "about": "remembered",
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          },
+          "targets": [
+            {
+              "anyOf": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ]
+                },
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Planeswalker"
+                  ]
+                },
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Battle"
+                  ]
+                },
+                {
+                  "what": "player"
+                }
+              ]
+            }
+          ],
+          "effects": [
+            {
+              "effect": "dealDamage",
+              "amount": {
+                "powerOf": "that card"
+              },
+              "targets": {
+                "target": 0
+              },
+              "who": {
+                "target": 0
+              }
+            },
+            {
+              "effect": "createToken",
+              "count": 3,
+              "token": {
+                "predefined": "Treasure"
+              }
+            }
+          ]
+        }
+      ],
+      "optional": true
+    }
+  ]
+}

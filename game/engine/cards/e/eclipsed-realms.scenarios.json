@@ -29,6 +29,86 @@
       ],
       "power": 1,
       "toughness": 1
+    },
+    "Elf Seer": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "c",
+          "kind": "activated",
+          "zone": "hand",
+          "cycling": true,
+          "text": "Cycling {1}",
+          "cost": [
+            {
+              "atom": "mana",
+              "cost": "{1}"
+            },
+            {
+              "atom": "discard",
+              "self": true
+            }
+          ],
+          "targets": [],
+          "effects": [
+            {
+              "effect": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    },
+    "Goblin Seer": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "c",
+          "kind": "activated",
+          "zone": "hand",
+          "cycling": true,
+          "text": "Cycling {1}",
+          "cost": [
+            {
+              "atom": "mana",
+              "cost": "{1}"
+            },
+            {
+              "atom": "discard",
+              "self": true
+            }
+          ],
+          "targets": [],
+          "effects": [
+            {
+              "effect": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
     }
   },
   "scenarios": [
@@ -111,6 +191,77 @@
           "cards": [
             "Eclipsed Realms",
             "Goblin"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Goblin chosen: its red pays a Goblin card's cycling in his hand -- a source of the chosen type -- not an Elf card's",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Eclipsed Realms",
+            "Elf Seer",
+            "Goblin Seer"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Eclipsed Realms"
+        },
+        {
+          "choose": [
+            "Goblin"
+          ]
+        },
+        {
+          "tap": "Eclipsed Realms",
+          "mana": {
+            "R": 1
+          }
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Goblin Seer"
+              },
+              "count": 1
+            },
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Elf Seer"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "activate": "Goblin Seer"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Goblin Seer"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Elf Seer",
+            "Wastes"
           ]
         }
       ]

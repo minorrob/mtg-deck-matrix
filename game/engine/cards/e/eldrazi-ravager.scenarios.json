@@ -1,0 +1,435 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Eldrazi Ravager",
+  "fixtures": {
+    "Spawn": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Eldrazi",
+        "Spawn"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "power": 0,
+      "toughness": 1
+    },
+    "Drone": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Eldrazi",
+        "Drone"
+      ],
+      "manaCost": "{2}",
+      "colors": [],
+      "power": 2,
+      "toughness": 2
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Two Eldrazi sacrificed: back to his hand from his graveyard, the Bear kept",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Eldrazi Ravager"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Spawn",
+            "Drone",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Eldrazi Ravager"
+              },
+              "count": 1,
+              "costs": [
+                [
+                  "Spawn",
+                  "Drone"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Eldrazi Ravager",
+          "sacrifice": [
+            "Spawn",
+            "Drone"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            },
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Eldrazi Ravager",
+                "Spawn",
+                "Drone"
+              ]
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Eldrazi Ravager"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Spawn",
+            "Drone"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "One Eldrazi and a Bear: it is not offered -- the Bear is no Eldrazi, and two are needed",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Eldrazi Ravager"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Spawn",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Eldrazi Ravager"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Three Eldrazi: which two is his to say, one offer each; he keeps the Drone",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Eldrazi Ravager"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Spawn",
+            "Spawn",
+            "Drone"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Eldrazi Ravager"
+              },
+              "count": 3,
+              "costs": [
+                [
+                  "Spawn",
+                  "Spawn"
+                ],
+                [
+                  "Spawn",
+                  "Drone"
+                ],
+                [
+                  "Spawn",
+                  "Drone"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Eldrazi Ravager",
+          "sacrifice": [
+            "Spawn",
+            "Spawn"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Eldrazi Ravager"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Drone"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Maya's Eldrazi are not his to sacrifice: with one of his own, not offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Eldrazi Ravager"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Spawn"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Drone",
+            "Spawn"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Eldrazi Ravager"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "On the battlefield it is not offered: the ability works from his graveyard only",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Eldrazi Ravager",
+            "Spawn",
+            "Drone"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Eldrazi Ravager"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Annihilator 1: it attacks and Maya sacrifices a permanent of her choice",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Eldrazi Ravager"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Rock"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Eldrazi Ravager"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 1,
+                "options": [
+                  "Bear",
+                  "Rock"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Rock"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Rock"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Cycling {2}: from his hand, and he draws",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Eldrazi Ravager"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Eldrazi Ravager"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Eldrazi Ravager"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wastes"
+          ]
+        }
+      ]
+    }
+  ]
+}

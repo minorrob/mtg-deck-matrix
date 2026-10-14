@@ -1,0 +1,72 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Utopia Sprawl",
+    "oracleId": "00d8efa6-a2d9-4249-8da7-b45173675329",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant Forest\nAs this Aura enters, choose a color.\nWhenever enchanted Forest is tapped for mana, its controller adds an additional one mana of the chosen color.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Enchant Forest",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Land"
+        ],
+        "subtypes": [
+          "Forest"
+        ]
+      }
+    },
+    {
+      "kind": "replacement",
+      "text": "As this Aura enters, choose a color.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "choose": [
+          "White",
+          "Blue",
+          "Black",
+          "Red",
+          "Green"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever enchanted Forest is tapped for mana, its controller adds an additional one mana of the chosen color.",
+      "trigger": {
+        "on": "tapped for mana",
+        "tapper": "any",
+        "enchanted": true
+      },
+      "effects": [
+        {
+          "effect": "addMana",
+          "chosenColor": true
+        }
+      ]
+    }
+  ]
+}

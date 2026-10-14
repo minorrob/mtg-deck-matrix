@@ -1,0 +1,550 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Koma, Cosmos Serpent",
+  "fixtures": {
+    "Shade": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Shade"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "shade-pump",
+          "kind": "activated",
+          "text": "{B}: This creature gets +1/+1 until end of turn.",
+          "targets": [],
+          "cost": [
+            {
+              "atom": "mana",
+              "cost": "{B}"
+            }
+          ],
+          "effects": [
+            {
+              "effect": "pump",
+              "targets": "self",
+              "power": 1,
+              "toughness": 1
+            }
+          ]
+        }
+      ]
+    },
+    "Spawn": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Eldrazi",
+        "Spawn"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "power": 0,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "spawn",
+          "kind": "mana",
+          "tapSelf": false,
+          "produces": {
+            "C": 1
+          },
+          "sacrificeSelf": true,
+          "text": "Sacrifice this creature: Add {C}."
+        }
+      ]
+    },
+    "Slay": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "At the beginning of each upkeep -- Rob's, then Maya's -- a 3/3 blue Serpent named Koma's Coil",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Koma, Cosmos Serpent"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "controls": [
+                "Koma, Cosmos Serpent",
+                "Koma's Coil"
+              ]
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Koma's Coil",
+                "power": 3,
+                "toughness": 3
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Koma, Cosmos Serpent",
+            "Koma's Coil",
+            "Koma's Coil"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Sacrifice a Coil: Maya's Shade is tapped, and its activated ability can't be activated this turn -- next turn it can",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Koma, Cosmos Serpent"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Shade",
+            "Swamp",
+            "Swamp"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Koma, Cosmos Serpent",
+          "modes": [
+            0
+          ],
+          "sacrifice": "Koma's Coil",
+          "targets": [
+            {
+              "card": "Shade"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "tapped": "Shade"
+            },
+            {
+              "seat": 0,
+              "controls": [
+                "Koma, Cosmos Serpent"
+              ]
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Swamp",
+          "seat": 1
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Shade",
+                "seat": 1
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Swamp",
+          "seat": 1
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Shade",
+            "seat": 1
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "A mana ability is an activated ability: Maya's Spawn, tapped by Koma, can't be sacrificed for {C} this turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Koma, Cosmos Serpent"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Spawn"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Koma, Cosmos Serpent",
+          "modes": [
+            0
+          ],
+          "sacrifice": "Koma's Coil",
+          "targets": [
+            {
+              "card": "Spawn"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "pass": 1
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Spawn",
+                "seat": 1
+              },
+              "count": 0
+            },
+            {
+              "seat": 1,
+              "tapped": "Spawn"
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Spawn",
+            "seat": 1
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "In answer to Maya's Slay, a Coil sacrificed: Koma gains indestructible until end of turn, and survives",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Koma, Cosmos Serpent"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Slay"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Swamp",
+          "seat": 1
+        },
+        {
+          "cast": "Slay",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Koma, Cosmos Serpent"
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "activate": "Koma, Cosmos Serpent",
+          "seat": 0,
+          "modes": [
+            1
+          ],
+          "sacrifice": "Koma's Coil"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Koma, Cosmos Serpent",
+                "has": [
+                  "Indestructible"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Koma, Cosmos Serpent"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Slay"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Another Serpent: Koma, a Serpent, is not his own to sacrifice -- with no Coil yet, nothing is offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Koma, Cosmos Serpent",
+            "Bear"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Koma, Cosmos Serpent"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "This spell can't be countered: Maya's Counterspell does nothing to it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Koma, Cosmos Serpent"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Counterspell"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Koma, Cosmos Serpent"
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 1
+        },
+        {
+          "cast": "Counterspell",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Koma, Cosmos Serpent"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Forest",
+            "Forest",
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Koma, Cosmos Serpent"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Counterspell"
+          ]
+        }
+      ]
+    }
+  ]
+}

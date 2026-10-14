@@ -5,7 +5,8 @@
  * it was sent and answers as the Messages API does -- so nothing here spends, and nothing here needs a key.
  *
  *   Shut     each of Rob's four decisions is a gate that is closed while unset: the AI Access application, the
- *            allowlist, the key, the caps. A library sign-in never opens it.
+ *            allowlist, the key, the caps. A library sign-in never opens it, unless the door is open to everyone
+ *            signed in (AI_EVERYONE, Rob 2026-10-14); a service token never does.
  *   Sent     only what the request carries, bounded; the key rides only in the provider's header, never back out.
  *   Spent    every call is logged -- who, what, the model that answered, tokens, cost, outcome -- and the caps
  *            are read from that log over a rolling 24 hours, before anything is sent.
@@ -16,7 +17,7 @@ import {readFileSync} from "node:fs";
 import {DatabaseSync} from "node:sqlite";
 import {handle} from "../cloud/worker.mjs";
 import {forgetKeys} from "../cloud/access.mjs";
-import {costMicros, grounded, readRequest, DEFAULT_MODEL} from "../cloud/ai.mjs";
+import {costMicros, grounded, readRequest, DEFAULT_MODEL, MODELS, PRICES} from "../cloud/ai.mjs";
 
 let checks = 0;
 const ok = (value, message) => {assert.ok(value, message); checks++;};
@@ -39,9 +40,9 @@ const b64url = (buf) => Buffer.from(buf).toString("base64url");
 const {publicKey, privateKey} = await crypto.subtle.generateKey({name: "RSASSA-PKCS1-v1_5", modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256"}, true, ["sign", "verify"]);
 const jwk = {...await crypto.subtle.exportKey("jwk", publicKey), kid: "k1"};
 let clock = Date.parse("2026-09-26T18:00:00Z");
-async function token({aud = AI_AUD, email = "rob@example.com"} = {}) {
+async function token({aud = AI_AUD, email = "rob@example.com", ...more} = {}) {
   const h = b64url(JSON.stringify({alg: "RS256", kid: "k1", typ: "JWT"}));
-  const p = b64url(JSON.stringify({aud: [aud], iss: `https://${TEAM}`, email, exp: clock / 1000 + 3600, iat: clock / 1000}));
+  const p = b64url(JSON.stringify({aud: [aud], iss: `https://${TEAM}`, ...(email === null ? {} : {email}), ...more, exp: clock / 1000 + 3600, iat: clock / 1000}));
   return `${h}.${p}.${b64url(await crypto.subtle.sign("RSASSA-PKCS1-v1_5", privateKey, new TextEncoder().encode(`${h}.${p}`)))}`;
 }
 
@@ -95,6 +96,28 @@ eq((await call({method: "GET"})).status, 405, "explain is a POST");
 eq((await call({path: "/api/ai/elsewhere"})).status, 404, "no other AI endpoint");
 eq([sent.length, calls().length], [0, 0], "none of that reached the provider or spent anything");
 
+/* EVERYONE SIGNED IN (Rob, 2026-10-14: "I want everyone I add to be able to use the AI features"): with AI_EVERYONE on,
+   the invite list is the list, and the library's own sign-in opens the door; every other gate holds as before. */
+const EVERYONE = {...OPEN, AI_EVERYONE: "on"};
+const stranger = (aud = AI_AUD) => token({aud, email: "new@example.com"});
+const {ANTHROPIC_API_KEY: _k0, ...everyoneNoKey} = EVERYONE;
+eq((await call({env: everyoneNoKey, jwt: await stranger(AUD)})).status, 503, "AI_EVERYONE on, but no key entered: still shut");
+eq((await call({env: EVERYONE, jwt: await token({aud: "aud-elsewhere", email: "new@example.com"})})).status, 401, "a token for any other application is still refused");
+eq((await call({env: EVERYONE, jwt: null})).status, 401, "and no token is still 401");
+eq((await call({jwt: await stranger()})).status, 403, "with AI_EVERYONE off, someone not on the allowlist is refused, as before");
+eq((await call({env: {...EVERYONE, SERVICE_SEATS: "on"}, jwt: await token({aud: AUD, email: null, common_name: "agent-1.access"})})).status, 403,
+  "a service token, a test identity seated at staging's tables and no person, is not let in by AI_EVERYONE");
+eq(sent.length, 0, "none of that reached the provider");
+answer = reply("[[Mountain]] is there.");
+eq((await call({env: EVERYONE, jwt: await stranger()})).status, 200, "with it on, a person Access let in who is not on the allowlist is answered");
+eq((await call({env: EVERYONE, jwt: await stranger(AUD)})).status, 200, "and the library's own sign-in opens the door");
+eq(calls().map((c) => [c.email, c.outcome]), [["new@example.com", "ok"], ["new@example.com", "ok"]], "each call logged under the person, on the same caps");
+const library = async (path, env) => (await handle(new Request(`https://crankmagic.test${path}`, {headers: {"cf-access-jwt-assertion": await stranger(AUD)}}), env, {fetchImpl, now: clock})).json();
+eq([(await library("/api/ai-advise", {...EVERYONE, AI_ADVISE: "on"})).open, (await library("/api/ai-advise", {...OPEN, AI_ADVISE: "on"})).open], [true, false], "the deck page offers the advisor to everyone signed in only with AI_EVERYONE on");
+eq([(await library("/api/ai-meter", EVERYONE)).open, (await library("/api/ai-meter", OPEN)).open], [true, false], "and the settings' meter reads the same way");
+DB.raw.prepare("DELETE FROM ai_calls").run();
+sent = [];
+
 /* SENT: an answer, and exactly what went out. */
 answer = reply("It scores [[6.5]]? No: it wins on turn 10.8 because [[Goblin Chieftain]] lands late.");
 let r = await call();
@@ -106,26 +129,33 @@ r = await call();
 eq(r.status, 200, "an answer that names only the deck's own cards is shown");
 eq([r.json.explanation.includes("turn 10.8"), r.json.cards, r.json.model], [true, ["Goblin Chieftain", "Skirk Prospector"], DEFAULT_MODEL], "the explanation, the cards it named, and the model that answered");
 const out = sent.at(-1);
-eq([out.headers["x-api-key"], out.headers["anthropic-version"], out.headers["anthropic-beta"]], [KEY, "2023-06-01", "server-side-fallback-2026-07-01"], "the key rides only in the provider's header, with the API version and the fallback beta");
-eq([out.body.model, out.body.fallbacks, out.body.output_config.format.type, out.body.messages.length], [DEFAULT_MODEL, "default", "json_schema", 1], "Claude Opus 5 unless Rob names another, a refusal re-run server-side, the answer as structured output, one message");
+eq([out.headers["x-api-key"], out.headers["anthropic-version"], out.headers["anthropic-beta"]], [KEY, "2023-06-01", undefined], "the key rides only in the provider's header, with the API version and no beta");
+eq([out.body.model, "fallbacks" in out.body, out.body.output_config.format.type, out.body.messages.length], ["claude-haiku-5-5", false, "json_schema", 1], "Claude Haiku 5.5 unless Rob names another (Rob: \"change the model use to Haiku explicitly\"); no server-side fallback, which can re-run a request on a dearer model; the answer as structured output; one message");
 const payload = JSON.parse(out.body.messages[0].content);
 eq(Object.keys(payload).sort(), ["deck", "measures", "score", "strongest", "weakest"], "what is sent is only the deck, its score and measures, and its strongest and weakest cards");
 ok(!JSON.stringify(out.body).includes("rob@example.com"), "and never who is asking");
 ok(!r.text.includes(KEY) && !JSON.stringify(calls()).includes(KEY), "the key is in no response and no log row");
-eq((await call({env: {...OPEN, AI_MODEL: "claude-sonnet-5"}}) , sent.at(-1).body.model), "claude-sonnet-5", "AI_MODEL, when Rob sets it, is the model asked");
+eq((await call({env: {...OPEN, AI_MODEL: "claude-sonnet-5-5"}}) , sent.at(-1).body.model), "claude-sonnet-5-5", "AI_MODEL, when Rob sets it, is the model asked: here Claude Sonnet 5.5, the dearest he allows");
+/* Rob, 2026-10-09: "We will always be using sonnet or other lowest cost models." */
+ok(MODELS.every((m) => PRICES[m] && PRICES[m][0] <= PRICES["claude-sonnet-5-5"][0] && PRICES[m][1] <= PRICES["claude-sonnet-5-5"][1]), `every model the door may call costs no more than Claude Sonnet 5.5 (${MODELS.join(", ")})`);
+for (const dearer of ["claude-opus-5-5", "claude-opus-5", "claude-fable-5-1", "some-new-model"]) {
+  const asked = sent.length;
+  r = await call({env: {...OPEN, AI_MODEL: dearer}});
+  eq([r.status, /model CrankMagic does not use/.test(r.json.error), sent.length], [503, true, asked], `AI_MODEL naming ${dearer} keeps the door shut, and nothing is sent`);
+}
 
 /* SPENT: the log, the prices, the meter, the caps. */
 const last = calls().at(-2);
-eq(last, {email: "rob@example.com", feature: "explain", model: DEFAULT_MODEL, input_tokens: 900, output_tokens: 300, cost_micros: 900 * 5 + 300 * 25, outcome: "ok"}, "every call is logged: who, what for, the model, the tokens and the cost at list price ($5 and $25 a million)");
-eq(costMicros("claude-sonnet-5", 900, 300), 900 * 2 + 300 * 10, "Claude Sonnet 5 at $2 and $10 a million");
+eq(last, {email: "rob@example.com", feature: "explain", model: DEFAULT_MODEL, input_tokens: 900, output_tokens: 300, cost_micros: 90 + 150, outcome: "ok"}, "every call is logged: who, what for, the model, the tokens and the cost at list price ($0.10 and $0.50 a million)");
+eq(costMicros("claude-sonnet-5-5", 900, 300), 900 * 2 + 300 * 10, "Claude Sonnet 5.5 at $2 and $10 a million");
 ok(costMicros("some-new-model", 900, 300) >= costMicros(DEFAULT_MODEL, 900, 300), "a model not in the price list is priced at the dearest rate, so the meter can only read high");
-/* A fallback to a model at another price, so an attempt priced at the wrong model's rate shows. */
-answer = reply("[[Mountain]] is there.", {model: "claude-sonnet-5", usage: {input_tokens: 1000, output_tokens: 100, iterations: [{type: "message", model: DEFAULT_MODEL, input_tokens: 800, output_tokens: 0}, {type: "fallback_message", model: "claude-sonnet-5", input_tokens: 1000, output_tokens: 100}]}});
+/* A response that itemizes its attempts at two prices, so an attempt priced at the wrong model's rate shows. */
+answer = reply("[[Mountain]] is there.", {model: "claude-sonnet-5-5", usage: {input_tokens: 1000, output_tokens: 100, iterations: [{type: "message", model: DEFAULT_MODEL, input_tokens: 800, output_tokens: 0}, {type: "message", model: "claude-sonnet-5-5", input_tokens: 1000, output_tokens: 100}]}});
 r = await call();
-eq([r.json.model, calls().at(-1).cost_micros], ["claude-sonnet-5", costMicros(DEFAULT_MODEL, 800, 0) + costMicros("claude-sonnet-5", 1000, 100)], "after a fallback, the answering model is named and each attempt is priced at its own model's rate");
+eq([r.json.model, calls().at(-1).cost_micros], ["claude-sonnet-5-5", costMicros(DEFAULT_MODEL, 800, 0) + costMicros("claude-sonnet-5-5", 1000, 100)], "a response that itemizes its attempts names the model that answered and prices each attempt at its own model's rate");
 ok(r.json.meter.capCents === 25 && r.json.meter.spentCents > 0, `the answer carries the meter: ${r.json.meter.spentCents}¢ of ${r.json.meter.capCents}¢`);
 answer = reply("", {stop: "refusal"});
-eq((await call()).status, 422, "a refusal that survives the fallback is said plainly");
+eq((await call()).status, 422, "a refusal is said plainly, never run again on another model");
 eq(calls().at(-1).outcome, "refused", "and logged");
 answer = {status: 529, json: {type: "error", error: {type: "overloaded_error", message: "internal account detail"}}};
 r = await call();
@@ -139,7 +169,7 @@ eq(calls().slice(-3).map((c) => [c.outcome, c.cost_micros]), [["error", 0], ["er
 
 /* The caps, read from the log over a rolling 24 hours, before anything is sent. */
 const before = sent.length;
-DB.raw.prepare("INSERT INTO ai_calls (id, email, feature, model, input_tokens, output_tokens, cost_micros, outcome, at) VALUES ('big', 'rob@example.com', 'explain', ?, 0, 0, 240000, 'ok', ?)").run(DEFAULT_MODEL, new Date(clock - 3600e3).toISOString());
+DB.raw.prepare("INSERT INTO ai_calls (id, email, feature, model, input_tokens, output_tokens, cost_micros, outcome, at) VALUES ('big', 'rob@example.com', 'explain', ?, 0, 0, 249800, 'ok', ?)").run(DEFAULT_MODEL, new Date(clock - 3600e3).toISOString());
 r = await call();
 eq([r.status, sent.length], [429, before], "a call whose worst case would cross the person's cap is refused before anything is sent");
 ok(/your AI spend cap/.test(r.json.error), "and says it is the person's cap, and when to come back");
@@ -147,7 +177,7 @@ clock += 25 * 3600e3;
 answer = reply("[[Mountain]].");
 eq((await call()).status, 200, "a day later the rolling window has moved on");
 allow("friend@example.com");
-DB.raw.prepare("INSERT INTO ai_calls (id, email, feature, model, input_tokens, output_tokens, cost_micros, outcome, at) VALUES ('others', 'someone@example.com', 'explain', ?, 0, 0, 990000, 'ok', ?)").run(DEFAULT_MODEL, new Date(clock - 60e3).toISOString());
+DB.raw.prepare("INSERT INTO ai_calls (id, email, feature, model, input_tokens, output_tokens, cost_micros, outcome, at) VALUES ('others', 'someone@example.com', 'explain', ?, 0, 0, 999500, 'ok', ?)").run(DEFAULT_MODEL, new Date(clock - 60e3).toISOString());
 r = await call({jwt: await token({email: "friend@example.com"})});
 eq([r.status, /CrankMagic has reached its AI spend cap/.test(r.json.error)], [429, true], "everyone's spend together meets the total cap: refused for everyone");
 

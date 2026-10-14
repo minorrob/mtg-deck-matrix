@@ -1,0 +1,450 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Pact of Negation",
+  "scenarios": [
+    {
+      "name": "For {0} on Maya's turn, it counters her Lightning Bolt; at Rob's next upkeep he pays {3}{U}{U} and stays in the game",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Pact of Negation"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Lightning Bolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "cast": "Lightning Bolt",
+          "seat": 1,
+          "targets": [
+            {
+              "player": 0
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "cast": "Pact of Negation",
+          "seat": 0,
+          "targets": [
+            {
+              "card": "Lightning Bolt"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            },
+            {
+              "seat": 1,
+              "zone": "graveyard",
+              "cards": [
+                "Lightning Bolt"
+              ]
+            },
+            {
+              "seat": 0,
+              "life": 40
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Pay {3}{U}{U}",
+                  "Don't pay"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Pay {3}{U}{U}"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Island"
+        },
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Pact of Negation"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "He doesn't pay: he loses the game",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Pact of Negation"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Lightning Bolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "cast": "Lightning Bolt",
+          "seat": 1,
+          "targets": [
+            {
+              "player": 0
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "cast": "Pact of Negation",
+          "seat": 0,
+          "targets": [
+            {
+              "card": "Lightning Bolt"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            },
+            {
+              "seat": 1,
+              "zone": "graveyard",
+              "cards": [
+                "Lightning Bolt"
+              ]
+            },
+            {
+              "seat": 0,
+              "life": 40
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Pay {3}{U}{U}",
+                  "Don't pay"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Don't pay"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "event": "GameEventPlayerLivesChanged",
+          "where": {
+            "player": {
+              "playerId": 0,
+              "name": "Rob"
+            },
+            "lost": true,
+            "lossReason": "effect"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Maya's Pact countered by Rob's: Rob's Lightning Bolt resolves, nothing to pay at her upkeep (its ruling), and Rob pays at his",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Pact of Negation",
+            "Lightning Bolt"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Pact of Negation"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Lightning Bolt",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "cast": "Pact of Negation",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Lightning Bolt"
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "cast": "Pact of Negation",
+          "seat": 0,
+          "targets": [
+            {
+              "card": "Pact of Negation",
+              "seat": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "zone": "graveyard",
+              "cards": [
+                "Pact of Negation"
+              ]
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 37
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Pay {3}{U}{U}"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Tap Island, Tap Island, Tap Wastes, Tap Wastes, Tap Wastes",
+                  "Tap Island, Tap Island, Tap Wastes, Tap Wastes, Tap Mountain"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Tap Island, Tap Island, Tap Wastes, Tap Wastes, Tap Wastes"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "tapped": "Island"
+        },
+        {
+          "seat": 0,
+          "tapped": "Mountain",
+          "is": false
+        }
+      ]
+    }
+  ]
+}

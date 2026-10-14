@@ -23,6 +23,7 @@ import {execFileSync} from "node:child_process";
 import {loadCardScripts, loadCardScenarios, loadCardIndex} from "../game/tools/engine-cards.mjs";
 import {createCardIndex, compileScript, foldName} from "../game/engine/cards/index.mjs";
 import {runScenario, SCENARIOS_SCHEMA} from "../game/engine/cards/scenario.mjs";
+import {lostIn} from "../game/engine/storage.mjs";
 import {SCRIPT_SCHEMA} from "../game/engine/script/schema.mjs";
 import {definitionsModule, DEFINITIONS_MODULE} from "../game/tools/engine-definitions.mjs";
 import {tableDefinition, DEFINITIONS} from "../game/engine/cards/definitions.mjs";
@@ -48,7 +49,8 @@ const files = loadCardScenarios();
   for (const {script, path} of scripts) {
     const card = ORACLE.get(script.identity.name);
     if (!card) { drift.push(`${path}: no oracle card named ${script.identity.name}`); continue; }
-    const num = (v) => (v !== null && v !== undefined && /^\d+$/.test(v) ? Number(v) : null);
+    /* A printed power may be below zero (Loot, the Anomaly's -2/4); a star (*) is no number. */
+    const num = (v) => (v !== null && v !== undefined && /^-?\d+$/.test(v) ? Number(v) : null);
     /* A double-faced card, modal (CR 712.3) or nonmodal (712.2, the oracle's "transform"): its identity is its front face's,
        its back face the oracle's second -- and a nonmodal one's script says it transforms (`layout`). */
     const double = card.layout === "modal_dfc" || card.layout === "transform";
@@ -104,14 +106,20 @@ const files = loadCardScenarios();
   eq(files.flatMap((f) => Object.keys(f.scenarios.fixtures ?? {}).filter((n) => index.resolve(n)).map((n) => `${f.path}: ${n}`)), [],
     "no fixture stands in for a card the directory defines: a defined card is always played from its definition");
   let scenarios = 0, assertions = 0;
+  const unsaved = [];
   for (const {scenarios: file} of files) {
     for (const scenario of file.scenarios) {
-      const {passed} = runScenario(scenario, index.definition, file.fixtures ?? {});
+      const {passed, state} = runScenario(scenario, index.definition, file.fixtures ?? {});
       scenarios += 1;
       assertions += passed.length;
+      /* As a room saves it (storage.mjs refuses a state JSON would change, so the room could not wake): a card that leaves
+         an undefined field in the state breaks the game it is played in, at its next save. */
+      const lost = lostIn(state, "state");
+      if (lost) unsaved.push(`${file.card}, "${scenario.name}": ${lost}`);
     }
   }
   ok(scenarios >= 25 && assertions >= 80, `${scenarios} scenarios played through the rules, ${assertions} assertions on what each seat sees, all passing`);
+  eq(unsaved, [], "and every scenario's state can be saved as a room saves it: nothing in it that JSON would drop or change");
 }
 
 /* ---- 3. resolve, suggest, definition ---- */
@@ -141,7 +149,7 @@ const files = loadCardScenarios();
     const {definition, problems} = compileScript(script);
     ok(definition === null && problems.some((p) => re.test(p)), `${message} (${problems.join("; ")})`);
   };
-  problem(base([{kind: "spell", text: "Take an extra turn after this one.", effects: [{effect: "addTurn"}]}]), /addTurn: declared, not built/, "a primitive declared and not built");
+  problem(base([{kind: "spell", text: "Replace a counter.", effects: [{effect: "replaceCounters"}]}]), /replaceCounters: declared, not built/, "a primitive declared and not built");
   problem(base([{kind: "keyword", text: "Equip {2}", keyword: "equip"}], ["Artifact"]), /Equip: declared, no behavior/, "a keyword with no behavior");
   /* (Batch 27 built "Discard a card"; the example of a cost nothing pays is now one that still is not.) */
   problem(base([{kind: "activated", text: "Exile a card from your graveyard: Draw a card.", cost: [{atom: "exileFromGraveyard"}], effects: [{effect: "draw"}]}], ["Artifact"]),
@@ -182,8 +190,8 @@ const files = loadCardScenarios();
   problem(base([]), /no spell ability/, "an instant that does nothing");
   problem(base([{kind: "spell", text: "a", effects: [{effect: "draw"}]}, {kind: "spell", text: "b", effects: [{effect: "draw"}]}]), /second spell ability/, "two spell abilities");
   problem({...base([]), identity: {name: "Probe", types: ["Instant"]}}, /oracleId/, "a script the schema refuses never becomes an object");
-  const mixed = createCardIndex([base([{kind: "spell", text: "Take an extra turn after this one.", effects: [{effect: "addTurn"}]}])]);
-  eq([mixed.resolve("Probe").playable, mixed.definition("Probe"), mixed.problems("Probe")], [false, null, ["addTurn: declared, not built"]],
+  const mixed = createCardIndex([base([{kind: "spell", text: "Replace a counter.", effects: [{effect: "replaceCounters"}]}])]);
+  eq([mixed.resolve("Probe").playable, mixed.definition("Probe"), mixed.problems("Probe")], [false, null, ["replaceCounters: declared, not built"]],
     "a card the engine cannot play resolves, says so and why, and has no definition to seat");
   throws(() => createCardIndex([scripts[0], scripts[0]]), /Two definitions of/, "two definitions of one card are refused, by name and file");
   throws(() => createCardIndex([{schema: SCRIPT_SCHEMA, identity: {}, abilities: []}]), /has no name/, "and a nameless one");

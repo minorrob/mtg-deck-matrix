@@ -53,16 +53,17 @@
 import {cardsIn, recordUse, shownName, eventCard} from "../state/index.mjs";
 import {applyReplacements, hitKey, damageChoicesPossible} from "./replacement.mjs";
 import {runFollowUps} from "../script/effects/index.mjs";
-import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf, abilitiesOf, deriving} from "./layers.mjs";
+import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf, abilitiesOf, deriving, subtypesOf, everyCreatureTypeOf} from "./layers.mjs";
+import {isCreatureType} from "../keywords/types.mjs";
 import {givePoison, changeLife, infects, addCounters, damagePermanent} from "../script/effects/resources.mjs";
 import {summoningSick} from "../keywords/timing.mjs";
-import {combatDamageOf, ruleChanged, attackTax, goadersOf, mustAttackOf, cantAttack as restricted, cantGainLife, attackerCaps, defenderLifted, attacksEachCombat} from "./statics.mjs";
+import {combatDamageOf, ruleChanged, attackTax, goadersOf, mustAttackOf, cantAttack as restricted, cantGainLife, lifeGained, attackerCaps, defenderLifted, attacksEachCombat} from "./statics.mjs";
 import {paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits} from "./mana.mjs";
 import {recordCommanderDamage} from "./commander.mjs";
 import {damageAssignmentProblem} from "../controller.mjs";
 import {
   canBlockAttacker, blockersAreLegal, whyBlockersAreIllegal, lethalNeededFrom,
-  combatNeedsFirstStrike, dealsFirstStrike, dealsRegular, trampleOver, lifelinkFrom, markDeathtouch,
+  dealsFirstStrike, dealsRegular, trampleOver, lifelinkFrom, markDeathtouch,
 } from "../keywords/combat.mjs";
 
 const event = (kind, state, fields) => ({kind, data: {turn: state.turn, phase: state.phase, fields}});
@@ -113,7 +114,8 @@ const planeswalkersOf = (state, player) =>
 const planeswalkerInCombat = (state, attack) => attack.planeswalker !== undefined && Boolean(state.objects[attack.planeswalker])
   && typesOf(state, attack.planeswalker).includes("Planeswalker") && controllerOf(state, attack.planeswalker) === attack.defender;
 /* Combat damage to what it attacks: the player, or the planeswalker while it is in combat; or none. */
-const toAttacked = (state, attack, amount) => (attack.planeswalker === undefined ? {toPlayer: attack.defender, amount, source: attack.attacker}
+/* None to a player who has left the game (CR 800.4e). */
+const toAttacked = (state, attack, amount) => (attack.planeswalker === undefined ? (state.players[attack.defender].lost ? null : {toPlayer: attack.defender, amount, source: attack.attacker})
   : planeswalkerInCombat(state, attack) ? {toCard: attack.planeswalker, amount, source: attack.attacker} : null);
 
 /* ---- declare attackers ---- */
@@ -167,12 +169,14 @@ function placesFilled(tight, caps) {
 const named = (list) => (list.length <= 1 ? list.join("") : `${list.slice(0, -1).join(", ")} and ${list[list.length - 1]}`);
 function requirementWords(state, required, most = null, at = []) {
   const names = named(required.map((r) => shownName(state.objects[r.id])));
-  const sources = named([...new Set(required.flatMap((r) => r.sources).map((s) => state.objects[s]?.card ?? "a permanent"))]);
-  if (most === null) return `${names} ${required.length === 1 ? "has" : "have"} to attack this combat: ${sources} says ${required.length === 1 ? "it attacks" : "they attack"} each combat if able. `
+  /* A requirement an effect made outlives its source (Legion Warboss's token, rules/statics.mjs): named as it was. */
+  const nameOf = (s) => state.objects[s]?.card ?? (state.effects ?? []).find((e) => e.rule === "attacks-each-combat" && e.sourceId === s)?.sourceName ?? "a permanent";
+  const sources = named([...new Set(required.flatMap((r) => r.sources).map(nameOf))]);
+  if (most === null) return `${names} ${required.length === 1 ? "has" : "have"} to attack this combat: ${sources} says ${required.length === 1 ? "it attacks" : "they attack"} if able. `
     + `Declare ${required.length === 1 ? "it" : "each of them"} attacking a player or a planeswalker.`;
   const places = named(at.map((pw) => state.objects[pw]?.card ?? "a planeswalker"));
   const howMany = String(COUNTED[most]?.replace(/ creatures?$/, "") ?? most);
-  return `${howMany[0].toUpperCase()}${howMany.slice(1)} of ${names} ${most === 1 ? "has" : "have"} to attack this combat: ${sources} says they attack each combat if able, and ${places} is all they can attack. `
+  return `${howMany[0].toUpperCase()}${howMany.slice(1)} of ${names} ${most === 1 ? "has" : "have"} to attack this combat: ${sources} says they attack if able, and ${places} is all they can attack. `
     + `Declare ${most === 1 ? "one of them" : `${most} of them`} attacking ${places}.`;
 }
 /* The record's `requires` (controller.mjs holds every answerer to it): at least `least` of the options naming these creatures. */
@@ -252,6 +256,7 @@ export const attackers = {
     /* "OTHER GOBLIN CREATURES YOU CONTROL ATTACK EACH COMBAT IF ABLE" (CR 508.1d): which must be among the attackers, said in
        the record with what to do instead -- every answerer held to it by controller.mjs, and a pilot able to keep to it. */
     const requires = requiresOf(state, options);
+    const budget = taxBudget(state, awaiting.player, options);
     return {
       id: `declare-attackers:${state.turn}`,
       title: "Declare attackers",
@@ -267,6 +272,7 @@ export const attackers = {
       exclusiveBy: "cardId",
       ...(capped ? {capped} : {}),
       ...(requires.length ? {requires} : {}),
+      ...(budget ? {budget} : {}),
       options,
     };
   },
@@ -362,6 +368,22 @@ const taxUnits = (state, player, picked) => {
   const attacking = new Set(picked.map((o) => o.cardId));
   return paymentUnits(state, player).filter((u) => !(u.from === "tap" && attacking.has(u.id) && !hasNow(state, u.id, "Vigilance")));
 };
+/* AN ATTACK TAX THE PLAYER CAN'T PAY (CR 508.1d, 508.1h; Propaganda with no mana, and a Goblin that must attack): said in the
+   record, so every answerer -- the pilots, the room's least answer -- declares only what can be paid for. Each option's
+   `mana` is what declaring it takes from the mana the player could pay with: its tax, and one more when the creature is
+   one of those sources and attacking taps it (taxUnits). A declaration can be paid for just when its options' `mana`
+   totals no more than the record's `budget.most`, every unit the player has. No tax on any option, and no budget. */
+function taxBudget(state, player, options) {
+  const taxes = options.map((o) => attackTax(state, [o]));
+  if (!taxes.some((n) => n > 0)) return null;
+  const units = paymentUnits(state, player);
+  const tapped = new Set(units.filter((u) => u.from === "tap").map((u) => u.id).filter((id) => !hasNow(state, id, "Vigilance")));
+  options.forEach((o, i) => {
+    const mana = taxes[i] + (tapped.has(o.cardId) ? 1 : 0);
+    if (mana > 0) o.mana = mana;
+  });
+  return {by: "mana", most: units.length};
+}
 
 /* The attack, declared: who attacks whom, tapped (CR 508.1f), and said. */
 function declareAttacks(state, player, picked, events) {
@@ -370,13 +392,9 @@ function declareAttacks(state, player, picked, events) {
     defenders: [...new Set(picked.map((o) => o.defenderId))],
     /* `defender` the defending player (CR 506.2) -- the one who blocks -- and `planeswalker` the one attacked, when it is. */
     attacks: picked.map((o) => ({attacker: o.cardId, defender: o.defenderId, ...(o.planeswalkerId !== undefined ? {planeswalker: o.planeswalkerId} : {}), blocked: false, blockers: []})),
-    /* Read by the turn table to decide whether the first-strike damage step happens (CR 510.4).
-       Recomputed once blockers are in, because a blocker with first strike makes the step
-       happen just as an attacker with it does. */
-    firstStrike: false,
+    /* Whether the first-strike damage step happens is read from the creatures as the combat damage step begins (CR 510.4;
+       rules/turn.mjs), not kept here: first strike given after the declarations counts (Interjection, Train E). */
   };
-  /* An attacker with first strike is enough on its own; a blocker can add to it later. */
-  state.combat.firstStrike = combatNeedsFirstStrike(state);
   /* "Creatures that attacked this turn", "attacks for the first time each turn": counted on each attacker. */
   for (const attack of state.combat.attacks) recordUse(state, attack.attacker, "attacked");
   /* And whom the attacking player attacked this turn -- players, not their planeswalkers (CR 506.3): "players who attacked
@@ -384,6 +402,11 @@ function declareAttacks(state, player, picked, events) {
      (rules/turn.mjs). */
   const attackedPlayers = (state.players[player].attackedPlayers ??= []);
   for (const attack of state.combat.attacks) if (attack.planeswalker === undefined && !attackedPlayers.includes(attack.defender)) attackedPlayers.push(attack.defender);
+  /* And with what: "if you attacked with two or more creatures this turn" (Minas Tirith, wave 4b; script/amount.mjs,
+     creaturesAttackedWithThisTurn) -- each creature declared as an attacker this turn (CR 508.1), once however many combats it
+     attacked in, kept against the turn it was declared in. */
+  const attackedWith = state.players[player].attackedWith?.turn === state.turn ? state.players[player].attackedWith : (state.players[player].attackedWith = {turn: state.turn, ids: []});
+  for (const attack of state.combat.attacks) if (!attackedWith.ids.includes(attack.attacker)) attackedWith.ids.push(attack.attacker);
   /* And whom it attacked: "a player it has already attacked this turn" (Port Razer; rules/statics.mjs, cantAttack). */
   for (const attack of state.combat.attacks) if (attack.planeswalker === undefined) recordUse(state, attack.attacker, `attacked:${attack.defender}`);
 
@@ -420,9 +443,10 @@ const nextDefenderToDeclare = (state, after = null) => {
 };
 
 export const blockers = {
-  open(state) {
+  /* `after`: a defending player who left the game while asked (rules/turn.mjs, goOnWithout) -- the next one is asked. */
+  open(state, after = null) {
     if (!state.combat) return false;
-    const player = nextDefenderToDeclare(state);
+    const player = nextDefenderToDeclare(state, after);
     if (player === null) return false;
     state.awaiting = {kind: "declare-blockers", player};
     return true;
@@ -477,10 +501,6 @@ export const blockers = {
       }));
     }
 
-    /* CR 510.4: whether the extra damage step happens can only be known once the blockers are in,
-       because a BLOCKER with first strike makes it happen just as an attacker with it does. */
-    state.combat.firstStrike = combatNeedsFirstStrike(state);
-
     /* The next defending player, if there is one; otherwise the step is done. */
     const next = nextDefenderToDeclare(state, awaiting.player);
     state.awaiting = next === null ? null : {kind: "declare-blockers", player: next};
@@ -525,6 +545,16 @@ const power = (state, id) => combatDamageOf(state, id);
 const onBattlefield = (state, id) => state.objects[id] !== undefined && state.objects[id].zone === "battlefield";
 /** Which combat damage step this is (CR 510.4): the first-strike step, or the regular one. */
 export const damageStep = (state) => (state.phase === "COMBAT_FIRST_STRIKE_DAMAGE" ? "first" : "regular");
+/* WHO DEALS DAMAGE IN THIS STEP (CR 510.4). In the first-strike step, a creature with first or double strike now -- and
+   which ones those were as that step began is kept (`struckFirst`). In the second step, the rest: one that had neither as
+   the first-strike step began -- even if it gained first strike since ("gains first strike until end of turn" cast in the
+   first-strike damage step, Interjection, Train E) -- and one with double strike now. With no first-strike step, the one
+   step is everyone's but a first striker's (dealsRegular) -- and none can have it then, or there would have been one. */
+const dealsIn = (state, id, step) => {
+  if (step === "first") return dealsFirstStrike(state, id);
+  const struck = state.combat?.struckFirst;
+  return Array.isArray(struck) ? !struck.includes(id) || hasNow(state, id, "Double Strike") : dealsRegular(state, id);
+};
 
 export const combatDamage = {
   /* Only an attacker that deals damage in this step (CR 510.4) and faces more than one blocker still in combat has a
@@ -532,7 +562,7 @@ export const combatDamage = {
      with trample (CR 702.19d) or nowhere. Asked once in each damage step it deals damage in. */
   open(state, step = damageStep(state)) {
     if (!state.combat) return false;
-    const dealsNow = (id) => (step === "first" ? dealsFirstStrike(state, id) : dealsRegular(state, id));
+    const dealsNow = (id) => dealsIn(state, id, step);
     const attack = state.combat.attacks.find((a) => a.assignment?.step !== step && onBattlefield(state, a.attacker) && dealsNow(a.attacker)
       && power(state, a.attacker) > 0 && a.blockers.filter((id) => onBattlefield(state, id)).length > 1);
     if (!attack) return false;
@@ -604,9 +634,11 @@ export const combatDamage = {
     if (!state.combat) return [];
     const events = [];
     const pending = [];
-    /* CR 510.4: in the first-strike step only creatures with first or double strike deal damage;
-       in the regular step, everything except a first striker that is not also double. */
-    const dealsNow = (id) => (step === "first" ? dealsFirstStrike(state, id) : dealsRegular(state, id));
+    /* CR 510.4: in the first-strike step only creatures with first or double strike deal damage -- those it began with
+       kept for the second step (dealsIn); in the regular step, the rest, and double strikers again. */
+    const dealsNow = (id) => dealsIn(state, id, step);
+    if (step === "first") state.combat.struckFirst = state.combat.attacks.flatMap((a) => [a.attacker, ...a.blockers])
+      .filter((id) => onBattlefield(state, id) && dealsFirstStrike(state, id));
     /* A creature that has left the battlefield deals no combat damage (CR 506.4). That is not a
        guard against a missing object, it is the rule: a blocker killed in the first-strike step is
        gone by the regular one and never hits back, which is the whole point of first strike. */
@@ -683,6 +715,10 @@ export const combatDamage = {
       /* What follows a prevention -- "each opponent mills that many cards" -- immediately afterward (CR 615.5). */
       if (hit.prevented === true || hit.amount <= 0) { events.push(...runFollowUps(state, hit)); continue; }
       hit.source = raw.source;
+      /* The source has dealt damage, and combat damage (CR 510.2), to a player or a permanent, for as long as it is this
+         object (CR 400.7): "has hexproof as long as they haven't dealt combat damage yet" (Ruric Thar, Magecrusher; script/
+         filter.mjs, hasDealtDamage and hasDealtCombatDamage). A hit prevented in full was never dealt (above). */
+      Object.assign(state.objects[hit.source], {hasDealtDamage: true, hasDealtCombatDamage: true});
       /* INFECT (CR 702.90b-c, batch 78): poison counters to a player, -1/-1 counters to a creature, in place of the rest. */
       const infect = infects(state, hit.source);
       if (hit.toPlayer !== undefined && hit.toPlayer !== null) {
@@ -694,6 +730,15 @@ export const combatDamage = {
         /* Dealt combat damage this turn, infect or not ("the number of opponents that were dealt combat damage this turn",
            Tymna the Weaver; script/amount.mjs). turn.mjs clears it. */
         state.players[hit.toPlayer].combatDamagedThisTurn = true;
+        /* PROWL'S RECORD (CR 702.76a): "a source that, at the time it dealt that damage, was under your control and had any
+           of this spell's creature types" -- each source that dealt combat damage to a player this turn, kept for the player
+           who controlled it, with its creature types as it dealt it (a changeling's, every one). turn.mjs clears it. */
+        if (state.objects[hit.source]) {
+          const dealer = controllerOf(state, hit.source);
+          /* And freerunning's (CR 702.173a): whether it was a commander -- one under this player's control, as it dealt it. */
+          if (state.players[dealer]) (state.players[dealer].combatDamageSources ??= []).push({types: subtypesOf(state, hit.source).filter(isCreatureType),
+            every: everyCreatureTypeOf(state, hit.source), ...(state.objects[hit.source].commander === true ? {commander: true} : {})});
+        }
         /* The damage is a loss of life (CR 120.3a), counted as one this turn (batch 78: it was not) -- or, with infect, as
            many poison counters. */
         /* Whoever controls the source puts the counters (rules/statics.mjs, playerCountersPlaced). */
@@ -726,9 +771,11 @@ export const combatDamage = {
         /* Unless its controller can't gain life (CR 119.7): the damage is dealt, and no life gained. */
         if (gains !== undefined && !cantGainLife(state, gains)) {
           const before = state.players[gains].life;
-          state.players[gains].life += linked;
+          /* "You gain twice that much life instead" (Rhox Faithmender; rules/statics.mjs, lifeGained). */
+          const gained = lifeGained(state, gains, linked);
+          state.players[gains].life += gained;
           /* Life gained this turn, as every other gain is kept (effects/resources.mjs changeLife). */
-          state.players[gains].gainedThisTurn = (state.players[gains].gainedThisTurn ?? 0) + linked;
+          state.players[gains].gainedThisTurn = (state.players[gains].gainedThisTurn ?? 0) + gained;
           events.push(event("GameEventPlayerLivesChanged", state, {
             player: {playerId: gains, name: state.players[gains].name},
             oldLives: before, newLives: state.players[gains].life, lifelink: true,
@@ -741,6 +788,19 @@ export const combatDamage = {
     return events;
   },
 };
+
+/**
+ * REMOVED FROM COMBAT (CR 506.4): a creature whose controller changes (effects/permanents.mjs, gainControl and
+ * endControlChange: a steal, an exchange, an Aura's control, a change of control ending), or that phases out, stops being an
+ * attacking, blocking, blocked or unblocked creature -- its attack gone, and its place among the blockers of each attack.
+ * Nothing that reads combat finds it again, so it neither deals nor is dealt combat damage. An attacker it was blocking stays
+ * blocked with no blocker left (CR 509.1h), and deals damage to the player only with trample (702.19d; combatDamage.deal).
+ */
+export function removeFromCombat(state, id) {
+  if (!state.combat) return;
+  state.combat.attacks = state.combat.attacks.filter((attack) => attack.attacker !== id);
+  for (const attack of state.combat.attacks) if (attack.blockers.includes(id)) attack.blockers = attack.blockers.filter((blocker) => blocker !== id);
+}
 
 /** CR 511.3: combat ends and everything stops being an attacker or a blocker. */
 export function endCombat(state) {

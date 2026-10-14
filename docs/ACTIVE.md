@@ -2,32 +2,662 @@
 
 ## Play tabletop preview, October 14, 2026
 
-**Holder:** Codex on Personal-HP, `codex/play-tabletop-preview`, based on `e6715329`.
+**Holder:** Codex on Personal-HP, `codex/ui-play-tabletop-preview`, integrating `origin/main` at `c9ad0e65`.
 Rob authorized the updated plan, starting with the reconciled checklist and working tabletop preview.
 Latest corrections: another seat shows its hand as backs; screenshots include object IDs;
 notify before configurable side-pane modules; final comprehensive UAT HTML, then staging integration.
-Mats and their cards now share one projective camera plane; the hand remains upright.
+Full screen now always uses the table, with no 3D switch. Tilt is 0–60 degrees, default 40;
+cards and mats share one physical camera perspective. Zoom is 60–120%, with 100% equal to the former 110%; table edges may clip at high zoom. Cards is separate: 100% equals the former 130%, 150% is another 40% larger. T11 is a container-free fan with seven visible
+cards and wrapping arrows for larger hands. Background and Table are independent local previews;
+host synchronization is pending. The supplied videos have been inspected for table structure.
 Requirements and remaining scope: `docs/play-overhaul/REQUIREMENTS.md`.
 
-**In progress:** opt-in Pixi ground with the existing DOM cards, three back-row seats,
+**In progress:** always-on Full screen Pixi ground with the existing DOM cards, three back-row seats,
 viewed-seat hand, camera controls and overlay rails. The isolated recorded-view harness is
 `tools/play-tabletop-preview.mjs`. It does not send actions to a live cloud match.
 The existing `collection-model.js` edit belongs to prior work and is not part of this change.
 **Preview proof:** `tests/table-tabletop.mjs` passes geometry and Chrome interaction at
-1024/1280/1400 widths, tilt 0/35, zoom 85/110, with matching mat/card projections,
-private opponent backs, persistent canvas, overlay sizing, live reduced motion and phone fallback. Removing
-perspective from the DOM matrix deliberately failed its corner assertion, then was restored.
-`tests/table-board.mjs` passes 237 checks including a real spell resolving through the
-new tabletop into a second browser. Service-worker (9), release builder (146), feature
-wiring (124) and data-integrity checks pass. Asset versions pass in an isolated snapshot
-using the committed collection model, preserving the unrelated local edit.
+1024/1280/1400 widths, tilt 0/60, zoom 60/120, with shared mat/card perspective, wrapping seven-card hands,
+private opponent backs, persistent canvas, overlay sizing, live reduced motion and phone fallback. Broken camera foreshortening and carousel wrapping deliberately failed their assertions, then were restored.
+`tests/table-board.mjs` passed 280 real-game checks after the latest module registry, shared perspective and camera correction. Service-worker (9), release builder (223), feature
+wiring (124) and data-integrity checks pass. Asset versions pass for all 123 assets with the unrelated collection-model edit held separately. The profile test uses real backup serialization against an isolated HTTP store, not a live cloud account. New zoom-limit mutations deliberately fail and are restored.
+The final focused browser pass also verifies all eleven module choices, Actions popup routing, Coach draft retention through moves, the Screen View popout beside its drawer, hand edge clipping and the 40% card-size increase.
 Commands: set UAT_CHROME to installed Chrome and GEOMETRY_REQUIRED=1 for the browser suites.
 Screenshot evidence is in `docs/play-overhaul/screenshots/`; the recorded preview runs with
 `node tools/play-tabletop-preview.mjs`. This is a preview milestone, not full-overhaul acceptance.
 
-**Outstanding:** shared events, final environments and motion, lobby, music, configurable panes,
-Counterintelligence, full UAT HTML and staging integration. Side-pane modules have not started.
-The forest is a procedural sketch. Crowded-mat layout and text readability need further polish.
+**Outstanding:** shared events, final environments and motion, lobby, music, final module acceptance,
+Counterintelligence, full UAT HTML and staging integration. Side-pane modules started after notifying Rob: profile placement, drag and keyboard order, hide/restore and public-count Counter-Intel are implemented in the preview.
+The module registry now includes Screen View, History, AI Coach, Counter-Intel, Resources, On the Stack, Card Preview, Table Vitals, Recommended Actions, Chat, and Actions. AI Coach embeds its existing conversation and preserves drafts through moves; Recommended Actions uses that service. Chat is explicitly unavailable pending the contract below. Actions routes to its assigned drawer in Full screen, with ordinary popups retained elsewhere.
+The environments are procedural placeholders for Rob's future clean background videos. Crowded-mat layout and text readability need further polish.
+
+## The lanes (AGENTS.md, *Lanes*), since 2026-10-12
+
+| Lane | Held by | Branch | Doing |
+| --- | --- | --- | --- |
+| **Engine** | Claude, a cloud container; **paused at a wave's end (`docs/handoff-2026-10-12.md`); resumes Friday 2026-10-16, a fresh session per lane** | `claude/admiring-franklin-58cxy4` | Waves to 4c merged and on staging. From 2026-10-16: **the card load program** (`docs/engine/plan-card-load-program.md`, Rob's decisions of 2026-10-14): demand capture, the sentence library and its calibration, the compiler, then the API as its backstop below 99% confidence. Wave 4d waits |
+| **UI** | Codex on Personal-HP, since 2026-10-14 | `codex/ui-play-tabletop-preview` | Latest reconciled brief and tabletop preview; details above. Previous pass: Pass 1 of the Play screen on the Replit concept: the seven steps in the strip, Full screen as the table from your chair with a 3D switch, the right pane docked with Turn Resources (notes 9 and 10), the hover card no taller than the mat, motion and callouts, the lobby's fans and launch line. The plan: `docs/ui-lane/plan-play-ui-2026-10-12.md`. Brief: `docs/ui-lane/README.md` |
+
+### Requests between the lanes
+
+Latest UI requests:
+- Provide authenticated table chat with shared ordered messages, reconnect history, sender/seat identity, send/refusal status and membership checks. The Chat module is a clearly marked placeholder until this exists; voice chat is a later feature.
+- Project authoritative round and turn-within-round into CrankRoomView, starting round 1. Define extra/skipped turns and eliminated seats; the UI must not guess from global turn divided by initial seat count.
+- Save preferences-only accounts through cloud sync. Existing sync treats a library without decks/lots as empty, so its first cloud save waits for library content. The drawer proof uses a real deck fixture and the existing authenticated backup flow against an isolated HTTP store; no production account was changed.
+
+UI appearance request (October 14, latest Rob feedback): add a host-owned `appearance: {background, table}` field to the table settings and public table view, validated against stable IDs. Initial IDs: background `volcano`, `forest`, `clouds`; table `wooden`, `stone`, `obsidian`. Persist through reconnect/rematch and freeze or authorize changes consistently with other table rules. The UI registry and local preview selectors are ready; local previews do not claim synchronization.
+
+A lane that needs something of the other's files asks here: the field or change, what it is for, an example. The
+other lane answers in the last column.
+
+| # | From | Asks for | What for | Answer |
+| --- | --- | --- | --- | --- |
+| 2 | UI | The lobby's countdown to start by itself once every seat is connected, has a deck and is ready, with no Start press; the host's Cancel stays, and a seat's Not ready stops it | The brief's lobby ("No Launch button: when every human is ready, a 10-second countdown starts, cancelable by the host"). Today the lobby reads "Launches when all are ready · n to go" and the host presses Start | `game/room/table.mjs`, where `ready` is taken: begin the countdown when nothing blocks. The lobby already follows `phase: countdown` | |
+| 3 | UI | A structured record of what happened since the last revision: `events: [{kind, …}]` on the view (damage dealt with its source and target; a spell countered and by what; tokens created with their count; proliferate; a permanent destroyed or exiled; life gained or lost with its cause; a seat out) | The callouts over the table and the sounds read these from the difference between two views and from the history's sentences (`/countered/`, `/created N … tokens/`), which is brittle and carries no cause; the brief's readouts (damage per source, what was prevented) need the facts | `game/room/history.mjs` already knows each; the view's builder in `game/room/room.mjs` | |
+| 4 | UI | Per player, the mana tapped this step (`manaTapped`), or on each land whether it was tapped for mana | Turn Resources' "mana tapped this step"; today it counts tapped lands, which includes a land tapped for anything else | the view's players | |
+| 5 | UI | On a card: whether it is a token; what an Aura or Equipment is attached to; summoning sickness; colors and mana cost; which face is up | The anchor's own list. Dice on tokens, Turn Resources by color, attachments drawn under their host, a double-faced card's right picture | the view's cards | |
+| 6 | UI | A `roll` frame at the game's start: the d20 for first player, sent to every seat with its result | The brief's die, which animates to the result it was sent | the room, at launch | |
+| 7 | UI | `tests/advisor.mjs` to pass again: its clock is fixed at 2026-10-11T12:00Z and its `ai_calls` rows are written at that clock, but the meter's 24-hour window (`cloud/ai.mjs` `since()`, through `aiMeter` in `cloud/worker.mjs`) runs on the real clock, so from 2026-10-12T11:59Z the rows fall outside it and the meter check fails on every branch, `main` included | The Actions gate is red for every PR until it is fixed; #725 (the UI pass) waits on it to merge | `cloud/worker.mjs` (`aiMeter`: pass the request's `now` to the door's `spent`), or the suite's rows at the real clock | Fixed on `main` in c629f8c1 (#723): `aiMeter` takes the request's clock. #727 puts the LLM seat's call log on the table's clock too (`cloud/game-room.mjs`), with `tools/ai-clock-breaks.py`; the AI suites pass with the machine's clock moved days either way |
+| 1 | Engine | The board to show the monarch (CR 725): the view's `state.players[i]` now carries `monarch: true` for the monarch, public to every seat, and no key for anyone else; the history says "Maya became the monarch" | Ginger, Queen of Sweets and Tamiyo, Upriser Crowned make their controller the monarch; the monarch draws a card at their end step, and a creature's combat damage to them makes its controller the monarch -- a player should see who holds it | The engine lane built it (Train E, the `monarch` branch); `docs/ui-lane/gameplay-anchor.md` lists the field. For the UI lane to show |
+| 2 | Engine | A switch in the host's Table rules (`crankmagic-table.js`): *The player who goes first skips their first draw*, on unless the host turns it off. The table's view carries `rules.skipFirstDraw` (`true` by default); the host sends it with the other rules, `POST .../rules {skipFirstDraw: false}`, refused once a seat is ready like the others. It matters only at a two-seat table: in a game of three or four nobody skips (CR 103.8c), so the switch can be shown only there | Rob, 2026-10-12: "this can be toggled off in game setup by the lobby owner". CR 103.8a as a house rule: with it off, the first player of a two-player game has a draw step on turn 1 | The engine lane built the rule, the table's field and the room's pod (`claude/first-draw-step`; `docs/ui-lane/gameplay-anchor.md`). For the UI lane to show |
+
+## 2026-10-14: Rob's decisions on the card load program
+
+Rob asked for "a card load-to-engine program" to replace session waves at about 7 cards a point. He reviewed the
+proposal (the Card Load Program page) and decided, on 2026-10-14:
+1. **The compiler first**, from oracle text; the Claude API as its backstop where the compiler's confidence in a card
+   is below 99%.
+2. **Candidate cards may play at playtest tables** (D5 changes for candidates only), labeled.
+3. "Real time" means **when a deck is saved**.
+4. Friday's work runs **in a fresh session per lane**.
+5. **Players are told their card was recorded** for the next wave.
+
+These supersede decisions 2 and 3 of 2026-10-12 (`docs/engine/plan-coverage-90.md`). The plan, the measurements
+behind it and the order of work: `docs/engine/plan-card-load-program.md`. Still Rob's to set: the backstop's daily
+cap. No lane runs the API writer before that step is built and the cap is set.
+
+Measured for it: a compiler built from the 2,470 defined cards' sentences reaches at most 21.7% of all cards and 12.5%
+of the 90% target's 4,186 still undefined (`docs/handoff-2026-10-12/sentence-reuse.mjs`). A point is about $10 of
+usage at API list prices, so a card in a session wave costs about $1.40, against an estimated 1 to 3 cents through the
+backstop.
+
+## 2026-10-14: the AI door open to everyone signed in
+
+Rob: *"I want the AI door open on staging and production for anyone that can sign in (e.g. given I am manually adding
+who can access, I'm fine with those I want everyone I add to be able to use the AI features)."*
+- **Built:** the switch `AI_EVERYONE` (`ai.everyone` in a release profile). On, the invite list is the allowlist, and
+  the door takes the app's own sign-in as well as an AI application's. Off, both hold as before. On in `cloud-staging`
+  and `cloud-production`. Production's door uses the "CrankMagic accounts" sign-in, with staging's caps, model and
+  features. The pages release and the standby keep it shut. `privacy.html` says "signed in" where it said "invited to
+  AI features". The record is in `docs/ai-door.md`, *Open to everyone signed in*.
+- **Proof:** ai-door 61, agent-seat-table 19, release-pages 216, cloud-worker 120, advisor 56, coach 60,
+  room-agent-seat 23. Breaks: `tools/ai-everyone-breaks.py`, 13 of 13 caught. Four anchors this change moved were
+  re-anchored and caught again: three in `breaks-ai-staging-on.py`, one in `ai-clock-breaks.py`.
+- **Rob's steps:**
+  - staging: delete the Access application "CrankMagic AI (staging)", whose policy is the three AI testers, or give
+    it staging's people;
+  - production: the key (`ANTHROPIC_API_KEY` on the `crankmagic` Worker; none there at 2026-10-14; staging has one);
+  - production: the go for the release that carries it. That release ships all of main since fa1a7d3b (#718 to #727),
+    the UI lane's Play pass 1 (#725) among it.
+
+## 2026-10-12: the UI lane's pass 1 on the Play screen (Fable, a Claude session in a cloud container)
+
+Rob's brief of 2026-10-12: evaluate the Replit concept (`CrankMagic-Play`, with its `HANDOFF.md`) and the board, plan
+the port, build a first pass, put it on staging, and iterate on his feedback. The plan, what was kept and what was
+refused of the concept, and the passes to come: `docs/ui-lane/plan-play-ui-2026-10-12.md`.
+
+- **Branch** `claude/nice-hypatia-4ajdyi`, from main 494bf0f (#722). The harness names the branch; the lane's
+  `claude/ui-<topic>` form is for the next topic.
+- **Built** (the board, its CSS, the mats sheet, the lobby, Settings' Play card; nothing of the engine's):
+  - the seven steps always in the strip and in Full screen's pill, done · now · to come, short forms under 1400px;
+  - Full screen as the table from your chair: the big board's mat is the whole ground; the other seats at the far sides
+    and the back as boards of their own; a **3D** switch in the rail bends the ground at a horizon, remembered on the device;
+  - the right pane docked beside the mat in Focus and Table, its own width divider, with the tabs Turn Resources · Panel
+    · History (Rob's notes 9 and 10); the hover card no taller than the mat;
+  - motion: a played card flies from the hand to the mat, a drawn one from the library, a destroyed one to its pile; a
+    tapped card turns where it lies; the turn's light crossfades; Reduce motion stills all of it;
+  - the callouts (the brief's overlay): YOUR TURN, INCOMING, HIT, KO, COUNTERED, TOKENS, DESTROYED, EXILED, +N and the
+    rest, read from the difference between two views; three at most; Settings › Play › Overlay (a slider) sets how
+    loud and how long; Tools › Try the callouts fires the set;
+  - the lobby: a seated deck's quadrant wears its commander's color fan; "Launches when all are ready · n to go";
+  - Play home: Recent games under New table.
+- **Proved** (each command from the repository root, `GEOMETRY_REQUIRED=1`):
+  - `node tests/table-board.mjs`: the ribbon, Full screen's ground and seats, 3D, the docked pane and its divider, Turn
+    Resources, the hover cap, the callouts' layer;
+  - `node tests/board-callouts.mjs` (new, in Node): the callouts' reading of a view, a hidden card never named;
+  - `node tests/table-lobby.mjs`, `node tests/settings-r3.mjs`, `node tests/a11y-board.mjs`, `node tests/board-choices.mjs`,
+    `node tests/coach.mjs`, `node tests/feature-wiring.mjs`, `node tests/room-resolve-all.mjs`, `node tests/room-beats.mjs`,
+    `node tests/playtest-harness.mjs`, `node tests/data-integrity.mjs`, `node tests/asset-versions.mjs`;
+  - breaks: `python3 game/tools/batch/breaks.py game/tools/batch/breaks-play-ui.py` (12) and `breaks-play-ui-rest.py` (7).
+- **Assumed, not proved:** the flights and the turn's light are seen in the fixture (`tools/board-fixture.mjs`) and not
+  yet held by a suite; the side seats' boards at 1280×720 are legible as presence, not to read.
+- **Asked of the engine lane:** Requests rows 2 to 6 above.
+- **Outstanding:** the merge of #725 on a green run of its head (the advisor suite's clock, Requests row 7, was fixed on
+  `main` in c629f8c and is merged into the branch); then the staging release, Rob's review, and pass 2
+  (`plan-play-ui-2026-10-12.md` §4).
+  The suites this pass touches are green on its head: a11y-board 288, table-board 281, table-lobby 89, board-callouts 33,
+  settings-r3 63, board-choices 40, coach 60, design-tokens 91; the 19 breaks all caught.
+
+## 2026-10-12: the AI call log on the clock it is handed (`claude/advisor-meter-clock`)
+
+Claude Code on Personal-HP, at Rob's request, for one small fix in the engine lane's files. `advisor` failed on main
+494bf0f4 once the real date passed 2026-10-12T12:00Z: the settings' meter read the last 24 hours on the machine's clock.
+The engine lane fixed the meter in c629f8c1 (#723). This branch fixes the one other call log on the machine's clock:
+- **The LLM seat** (`agentChoice`, `cloud/game-room.mjs`) logged its calls and read the day's caps on the machine's
+  clock. It now uses the table's clock (`this.now`), as the countdown and the away clocks do. Production is unchanged.
+- `tests/agent-seat-table.mjs`, 18 checks (from 16): calls are logged at the table's clock, and a spend logged a minute
+  before it counts against the host's day.
+- `tools/ai-clock-breaks.py`: 6 breaks, each caught by the check it targets.
+- **The suites no longer depend on the real date:** advisor, ai-door, coach, cloud-worker and agent-seat-table pass with
+  the machine's clock moved 30 days back, 2 back, 30 on and 400 on (a preload that moves `Date.now()` and a bare
+  `new Date()`; the PR has it). With the meter's old code, advisor passes 2 days back and fails 30 days on.
+- Waiting: the PR's one green Actions run, then a merge. Nothing else is open.
+
+## 2026-10-12, later: Train E, Rob's library, in waves; the plan to 90%
+
+This session (Claude, a cloud container), with session workers only. No API usage (Rob: "I don't want to use API
+usage for this").
+- **Wave 1, merged #719** (main 0b9de9a8), on staging (b1369b4b3bf3): 44 cards. With them came:
+  - warp, void and sneak;
+  - explore and the Map token.
+- **Wave 2, merged #720:** 63 cards from four workers.
+  - Engine pieces:
+    - morph;
+    - behold-and-exile;
+    - last known power in a trigger;
+    - `differentNames` and `greatestManaValue`;
+    - a goad for the rest of the game;
+    - a different opponent for each permanent given away;
+    - replicate.
+  - Fixed: whether a first-strike damage step happens is now decided as combat damage begins, not at blocks (CR 510.4).
+    A creature given first strike after blocks used to deal no combat damage.
+  - Waiting: Extrapolate the Impossible, which needs cards from outside the game (CR 400.11).
+- **Wave 3, merged #721:** 63 cards from four workers, the last of Rob's library.
+  - Engine pieces:
+    - Narset's "can't draw more than one card each turn" (CR 121.2b);
+    - a modal "you may choose the same mode more than once" (700.2d);
+    - "the first time this ability has resolved this turn";
+    - a blocks trigger naming what it blocks;
+    - a cast trigger's "while";
+    - incubate and the Incubator token;
+    - "move X counters" moving what is there;
+    - an unless cost's discard of a kind;
+    - "you may choose new targets";
+    - no maximum hand size for the rest of the game.
+  - A second worker made wave 2's CR 510.4 fix independently; wave 2's was kept.
+- **The monarch** (CR 725), merged #721:
+  - one monarch at a time, with its two inherent triggers;
+  - a monarch who leaves passes it on (725.4);
+  - `becomeMonarch`, and `monarch: "you"`;
+  - `monarch: true` in the view (Requests row 1).
+
+  With it, a creature leaves combat when its controller changes (CR 506.4). Ginger, Queen of Sweets and Tamiyo, Upriser
+  Crowned now play.
+- **Rob's library, after waves 1 to 3:** 1,216 of his v43 library's 1,217 cards play (`tableCards`). The one left is Extrapolate the Impossible,
+  which needs cards from outside the game (CR 400.11).
+- **Wave 4a, merged #722** (main 494bf0f4), on staging (5153cc15): four constructs, and 72 of the most-played Commander cards they unlock. The 80% set goes
+  from 1,275 defined to 1,347, and from 2,661 with every rule to 2,743.
+  - "You may play that card" from another zone: 17 cards. Valgavoth waits on a replacement on every route to a
+    graveyard.
+  - The cards an effect moved: 17 cards. Gix, The Legend of Kyoshi and Gisa wait.
+  - Objects an effect remembers: 19 cards. Daretti waits on emblems.
+  - Token and counter replacements: 19 cards. The Earth Crystal waits on counters divided at activation.
+
+  None of the four constructs is credited in full. Each lane names the forms still missing.
+- **Every break anchors once again.** Later merges had moved the anchors of 37 breaks across 15 files, so those breaks
+  no longer broke anything. Each was re-anchored on the code it was written for and proved caught; 1,098 breaks
+  checked. Wave 4b's merges moved 23 more, in 10 files: each re-anchored and proved caught the same way. Every one of
+  the 1,368 breaks in the 40 files now finds its code exactly once.
+- **The plan, reordered** (`docs/engine/plan-coverage-90.md`):
+  - 1,396 of the 80% set's undefined cards already have every rule, so the most-played cards come first, each wave
+    building the small constructs its cards need.
+- **Wave 4b, merged #723** (main a61244a0): 112 of the 120 most-played cards the table couldn't play (ranks 23 to 500), and three
+  more that prove its constructs. Four lanes, each building the constructs its cards needed:
+  - j1, 26 cards: an Aura on a graveyard card (Animate Dead), a land given a basic land type taps for its mana
+    (CR 305.6), protection from colors over the creatures a spell named (Akroma's Will), "if you cast it".
+  - j2, 31 cards: changing targets to this creature (Spellskite), the top of a library put back in any order
+    (`rearrangeTop`), "whenever you cast or copy" (magecraft), the amount a delayed trigger remembers (Mana Drain).
+  - j3, 30 cards: exalted, extort, eternalize, gift, an opening hand's card beginning on the battlefield (CR 103.6a),
+    base power.
+  - j4, 28 cards: "can't be activated" (Grand Abolisher), a cost raised for what a spell targets (Terror of the Peaks),
+    X paid in life (Toxic Deluge), imprint, the creatures attacked with this turn (Minas Tirith).
+  - Three lanes each built CR 305.6 on its own. One is kept (`intrinsicMana`, rules/layers.mjs, layer 4), only for a
+    land, and gives each type's ability once.
+  - Not defined, each waiting on another family: Sylvan Library, Arena of Glory, Mosswort Bridge, Six, Ragavan, Dauthi
+    Voidwalker, Birgi and Emry.
+  - The 80% set: 1,462 defined (from 1,347), 2,780 with every rule. The 90% set: 1,605 of 5,869 defined (from 1,411).
+    The defined cards now cover 60.3% of all card appearances (52.6% when the plan was written; the PRs and the
+    handoff said 52.0%, which was the 80% set's share, not the 90% target's).
+  - Breaks: j1 33, j2 45, j3 111, j4 81, each caught.
+- **Wave 4c, merged #726** (main 0540d882): 78 of the next 80 most-played cards (ranks 501 to 723), in four lanes by theme, each owning the
+  rules its cards need:
+  - k1 lands, 21: a land played as an effect resolves (Windbrisk Heights, and Mosswort Bridge, which 4b had left).
+  - k2 graveyard and combat, 19: delve, dredge, fabricate, a flashback cost that sacrifices, the rest of a dig on the
+    bottom in an order its owner chooses (CR 401.4), Commander's Plate's protection, CR 205.3d's subtypes.
+  - k3 tokens and counters, 18: dice (`rollDie`), offspring, "becomes level", +1/+1 and -1/-1 counters cancelling
+    with the deaths (CR 704.5q), Saw in Half's copies, a counter for each creature of the chosen type.
+  - k4 spells and draws, 20: affinity, a hand looked at (Gitaxian Probe), "draws more" and "an empty draw wins"
+    (Teferi's Ageless Insight, Laboratory Maniac), a fixed life payment as a cost's choice.
+  - Stopped on: Mox Diamond (an "instead of entering" asked before it enters, on every route to the battlefield);
+    The Earth Crystal (counters divided at activation, CR 601.2d); Tibalt's Trickery (a random number, a cast by
+    another player as it resolves).
+  - Two lanes built the same "tap a permanent without {T}" mana cost (Urza; Relic of Legends): one kept.
+  - **Every break still breaks something:** `tests/engine-breaks-anchors.mjs` holds each anchor to being found once
+    (`game/tools/batch/anchors.py`). It named the three breaks this wave's own merge moved, and three stale ones in
+    `train-b6-breaks.py` the earlier scans never read. 53 files, 1,712 breaks.
+  - The 80% set: 1,540 defined (from 1,462), 2,814 with every rule. The 90% set: 1,683 of 5,869. The defined cards
+    cover 62.5% of all card appearances.
+  - **On staging with wave 4b** (main 0540d882): release-acceptance 22, play-e2e 35; Workers Builds deployed version
+    fe296442, its `play-worker.js` byte for byte the release's dry run (sha256 dc3437729abb); `staging-check` signed in
+    reads 0540d882. The release of a61244a0 had stopped at `play-e2e` (Cyclonic Rift named as unplayable); #726 fixed it.
+- **Paused here at 83% of the week's usage**, at a wave's end rather than mid-wave (Rob's 90% rule): the handoff is
+  `docs/handoff-2026-10-12.md`. Wave 4d starts at rank 724 of the 80% set, plus the leftovers it lists.
+- **Open, for later waves:**
+  - **Fixed on `claude/first-draw-step`:** in a two-player game the starting player skipped the draw step's draw, not
+    the step (CR 103.8a), so its beginning triggers fired on turn 1. Now the step is skipped.
+    - A draw step brought by an added beginning phase (CR 500.8) still happens: Sphinx of the Second Sun on turn 1.
+    - The table's host may turn the skip off (Rob, 2026-10-12; Requests row 2).
+    - Breaks: `breaks-first-draw-step.py`, 16 of 16 caught.
+    - Orcish Bowmasters (wave 4b): its turn-1 scenario drew in the step that no longer happens. It now shows Rob's
+      turn-1 draw triggering it. A new dredge scenario (CR 702.52a) catches j4's "an effect's draw" break again.
+    - Crossing the lanes: `tests/table-board.mjs`, the UI lane's suite, had its turn-1 history line updated. No UI-lane
+      branch touches that file.
+  - When two limited permissions allow the same card, the engine merges them and picks one. That choice is the
+    player's.
+- **The plan to 90%** (Rob: "after wave 3 define a wave 4+ to bring us to the 90% of all cards typically used"):
+  `docs/engine/plan-coverage-90.md`.
+  - The target is 5,869 cards, of which 1,411 are defined.
+  - Waves 4a to 4c build the constructs that block the most cards.
+  - Wave 5 onward defines the rest, 60 to 90 cards a wave.
+  - The week's usage is read before each wave.
+
+## 2026-10-12: Rob's notes merged and on staging; his v43 library restored there; Train D
+
+This session (Claude, a cloud container):
+- **Merged #714** (main a8008918) on one green `suites` run: notes 1 to 8 and 14 of Rob's playtest notes (the table
+  below). Its 50 breaks are all caught. It is released to staging, and the deployed worker is byte for byte the dry
+  run's (play-worker.js 597fe3975a37).
+- **Rob's library is v43 on staging.** Rob restored `crankmagic-library-v43.json` (built from his v43 Master workbook,
+  the six Target decks only) through Settings. The cloud's head, revision 30, read back from D1 and decoded:
+  - its cards, decks, copies and groups are identical to the file;
+  - six decks, each final and ready at 100 of 100 (D1 Tymna + Kraum, D2 Chulane, D3 Kiora, D4 Felothar,
+    D5 Teysa Karlov, D6 Krenko);
+  - 1,217 cards and 2,245 copies; none of the old decks is left.
+- **Production waits on Rob's restore**, done the same way.
+- **The old saved versions are purged** (Rob's OK, 2026-10-12): every one of his versions but the head, the guard
+  `cloud/library.mjs`'s own pruning uses. Staging lost 20 and keeps v43 (revision 30); production lost 8 and keeps its
+  head of 2026-10-04 until Rob restores v43 there, after which its one old version goes too. D1 Time Travel can still
+  restore either database for 30 days.
+- **Merged #715** (main cb73f7d0) and on staging:
+  - Load Live reads two partners as a deck's commanders, and a workbook's decks named by hand (`--decks`);
+  - the board's notes 11 to 13.
+- **Merged #716** (main 4a024c1b): an AI on Claude and the deck advisor on at staging; the lanes and the UI brief; Train D's
+  first 16 cards.
+- **An AI on Claude and the deck advisor are on at staging.** Rob approved their privacy wording on
+  2026-10-12 ("Approved on privacy wording"). Production's door stays shut.
+- **Train D: all 18 of the six decks' cards now play.** 16 came in #716. Oko, Thief of Crowns and Retro-Mutation come
+  in this branch, with the engine gap that stood in their way:
+  - "Loses all abilities" now switches off a permanent's static abilities and replacement effects, not only its
+    keywords and its triggered, activated and mana abilities (CR 613.1f).
+  - An effect begun in an earlier layer keeps applying (613.6). Every static and replacement reader takes an object's
+    abilities as they are after layer 6.
+  - Eight cards already defined were wrong on about a quarter of their targets, and 16 new scenarios show each one
+    right: Song of the Dryads on a lord no longer leaves its anthem on.
+  - New: `exchangeControl` (CR 701.12), and a layer-4 change of creature types only (205.1a), so an Elked Food stays a
+    Food. `tests/engine-ability-loss.mjs`, 109 checks; `breaks-ability-loss.py`, 76 of 76 caught.
+  - **Left open:**
+    - Song of the Dryads' ability loss belongs to its layer-4 effect (CR 305.7), and is applied in layer 6.
+    - A Saga under it still reads its printed chapters.
+    - An ability lost as a permanent enters (614.12) is not built.
+
+    No card in the library depends on any of these.
+  - Next, the library's other ~175 cards.
+- **G-F: production is released, with Play open** (Rob: "Workers Builds branch is release/pages, go ahead with
+  production", 2026-10-12). Both releases were built from main fa1a7d3b, the same commit staging serves (its worker
+  byte-identical to its dry run, 40d0018f1647). Each went out by `tools/release-production.sh`, and Workers Builds
+  deployed each push of `release/pages`.
+  1. **The standby** (Play closed, the table class registered):
+     - `release/pages` 6799f713;
+     - local walks: `release-acceptance` 23 and `production-play-e2e` 27;
+     - deployed as version **a2c6fbb4**, the recovery target;
+     - the live walk at `https://crankmagic.com`: 23 checks.
+  2. **Play** (`cloud-production`):
+     - `release/pages` 04b415de;
+     - local walks: 22 and 27;
+     - deployed as version **8997e158**; `version.json` reads `fa1a7d3b`, profile `cloud-production`;
+     - the live walk: 22 checks.
+
+  Production's AI door stays shut: the version has no `AI_*` binding, and opening it is a later go of Rob's. `/api/*` is
+  behind Access.
+- **Before Part 7's second sentence:**
+  - G-D: Grok Bot's 50 games wait on the four agents' tokens.
+  - G-E: Rob's invites.
+  - Rob's v43 restore on production, which serves the current app now.
+- **Rob's choice, 2026-10-12:** a second system takes the UI lane (the board, its CSS, Settings' Play card) while this
+  session keeps the engine, the room and the card loads (the lanes above; AGENTS.md, *Lanes*). Notes 9 and 10 move to
+  that lane.
+
+## 2026-10-11: G-A built, G-B proved again with it, the rest waits on Rob
+
+This session (Claude, a cloud container) built the rest of G-A and merged each piece on the gate, released to
+staging with its deployed bytes compared:
+- AI-4, the deck advisor (#697);
+- AI-6, AI Coach settings (#698);
+- M3's monitoring (#699);
+- Train C, Rob's library: 1,130 of his 1,132 cards play (#700), and 1,131 with Gandalf since (the Gandalf record below);
+- the A11y pass (#701).
+
+It then ran G-B again on main bf0e9d21, with all of it in (the rows below): the journeys, the gallery and the A11y checks pass;
+the gate failed once in one `table-board` check, root-caused to a race in the board and fixed (#702), then passed twice on main 74f715c7. **What is left is Rob's:**
+- the privacy wording for *AI players on Claude* and *The deck advisor* (`docs/ai-door.md`);
+- the advisor's eval with his key;
+- confirming his library plays as he expects;
+- M3's two alerts and their email, and R2 with the nightly copy's window and deletion promise (`docs/ops.md`);
+- G-C's four agents' access: four service tokens, admitted at staging (M8; the steps are in `docs/playtest-harness.md`);
+- then G-D (Grok Bot), G-E (his invites) and G-F (his review and production go).
+
+Part 7's first sentence waits on G-A's approvals and G-C's agents.
+
+**Later the same day (#702 to #708, each merged on green Actions and released to staging, its worker compared byte for
+byte with the dry run):**
+- G-C's agents' access: each service token staging admits is an identity of its own (#704);
+- G-D to G-F, this side's half: the triage tool, the run's brief, the invites' runbook, and production's release
+  script, rehearsed (#705);
+- words on the accent at 4.5:1 across the app (#706);
+- Gandalf, so 1,131 of Rob's 1,132 cards play, and control for good no longer breaking a room's save (#707);
+- G-D's dress rehearsal: 50 games through the real board, every one replayed with no leak, M8's exit criteria met (#708);
+- G1 over Rob's whole library, not only his seven decks: 650 games, and the two table-stalling bugs they found fixed
+  (#710, #711), then 250 more with both fixes in, every one clean (the G1-L record below).
+
+Staging serves main 039c86dd. Every gate item that is this side's is done; what is left is Rob's (the list above, and
+G-D's 50 games by Grok Bot once the agents' tokens are in).
+
+### Rob's playtest notes, 2026-10-11
+
+Rob played Focus at staging and sent his notes through the evening, with screenshots. What each was, and where it stands:
+
+| # | Rob's note | What it was | Where it stands |
+|---|---|---|---|
+| 1 | "It says we are on turn 3, but I only played one land" | The strip's turn is the game's, counting every player's: turn 3 was his second. | **Built.** The room counts each seat's own turns (`yourTurn`); the strip reads *Turn 3 · You (your 2nd)*. |
+| 2 | "Passing the turn to the next player should always require player confirmation, never happen automatically" | His end step, with nothing to do, passed by itself, ending his turn. | **Built.** The sixth beat, `endAsks`, kept with the match as the others are: a person's own end step is always asked, and the button there reads **End turn**. A game made before it replays as it was played. |
+| 3 | "It's skipping turns when I didn't play a land" | The data says otherwise: 405 steps passed by themselves in 40 games, and not one was a main phase with the land drop unused. Playing a land is something to do (`nothingToDo`), and a spell is counted with the mana the lands on the mat could make. What he saw was note 2: the turn ending without him. | **Answered** by note 2's fix; no main phase was ever skipped. |
+| 4 | "The option to require manual transition from each of the 7 steps … a toggle in settings" | No such setting. | **Built.** Settings › Play › *Stop at every step of my turn*: kept with his preferences, told to the room by the board, on the tape (`prefer`), so a game replays where it asked. |
+| 5 | "I should also be able to click the card to untap it again" | Mana tapped and not spent could not be taken back. | **Built.** The seventh beat, `untapMana` (game/engine/rules/untap-mana.mjs): a land tapped for mana, its mana unspent and nothing since, is lit and says *Untap*; a click puts it upright. Proved by the state's hash: the game is exactly as it was before the tap. A pain land, a sacrifice or a mana trigger is never offered. Rob: "You can only untap a land if it hasn't been spent", which is the rule as built. |
+| 6 | Rampant Growth: "Search your library: nothing to find", with 19 basics in his library | **A real bug, at every table.** The table's card lookup took the room's bare basics first: no Basic supertype, no land type. Every "basic land card" search failed (Rampant Growth, Fertilid, Fabled Passage), and so did "a Plains card" and "unless you control a Forest or an Island" (Hinterland Harbor). | **Fixed.** The table plays the engine's own definitions, basics included; the room's basics are Basic and of their land type (CR 205.4c, 305.6). tests/table-basics.mjs plays all 3,876 card scenarios through the table's lookup. |
+| 7 | Valorous Stance offered only the indestructible mode on an opponent's Fertilid | As intended: Fertilid is printed 0/0, so with two +1/+1 counters it is 2/2, and the destroy mode needs toughness 4 or greater (CR 700.2a). Counters do count (CR 613.4c), as Rob asked. | **As intended.** And his follow-up is built: an option that helps an opponent says *helps Maya*, one aimed at your own *against your own* (room.mjs `leaning`), marked on the board. |
+| 8 | Freyalise's Elf Druid token's mana ability | Already fixed in #703 (another session), and on staging. | **Done** earlier. |
+| 9 | A *Turn Resources* tab beside *Panel*: by land and card type, how many can be played this turn, how many in all, the mana tapped | Not built. | **Open.** Proposed for the UI lane (above). |
+| 10 | The right pane lies over the mat; it should sit beside it like the left one, its width dragged within the same bounds | The right pane is an overlay. | **Open**, with the hover card no taller than the mat (his note of the same day). |
+| 11 | Hovering a stack entry ("1. Fertilid") shows the card beside the On the stack box | Not built. | **Built.** An entry under the pointer, focused or tapped shows its card at the hover's size beside the box: to its left where it fits, else below. Escape or the pointer leaving puts it away. |
+| 12 | A sorcery or instant is not seen while it resolves ("they should appear on the battlefield while being resolved") | The stack is a list of names. | **Built.** The On the stack box shows its top spell as a card above the list. |
+| 13 | The Lands row cuts off its last cards with no scroll bar | The zone clips. A tapped land's margins were left out of the row's measure, and it took no share of the overlap. | **Built.** A full row overlaps to fit, its tapped lands included. Past a readable strip of each card (30%), it scrolls with a bar. |
+| 14 | Show hand: the end of a long card name ran under the next card (found by a11y-board, not Rob) | The fan overlaps each card's right edge. | **Fixed.** A covered card's name wraps within what shows of it. |
+
+Breaks: `game/tools/batch/breaks-turn-flow.py` (the room, 15), `breaks-turn-flow-board.py` (the board and Settings, 10),
+`breaks-untap-mana.py` (14), `breaks-table-basics.py` (3), `breaks-leaning.py` (8).
+Notes 11 to 13: `breaks-board-rows-stack.py` (10). Load Live's partners: `breaks-live-load-partners.py` (4).
+
+## RESUMED, 2026-10-08: the review-response session (Claude, a cloud container), on Rob's "Keep building"
+
+The review-response session paused on 2026-10-06 at 97% of the week's usage (Rob: pause at 90% and "write up a
+comprehensive handoff packet for another AI platform"). Codex on Personal-HP then picked the handoff up on 2026-10-07
+(its record below): B4, B6 and B3 landed with suites and breaks (5d068d26), 53 of the seven decks' 477 cards left
+undefined. On 2026-10-08 Rob told this session "Keep building", the week's usage read back at 1%, so the baton is back
+here, on the same branch and PR #669, building on Codex's commit. **`docs/handoff-2026-10-06.md` is still the map**, with
+`docs/train-b-proof-2026-10-07.md` and `docs/production-readiness-2026-10-07.md` beside it. Train B goes on as the
+handoff's §3 says, five workers by engine area (permissions and attack statics; effects, counts and triggers; memory;
+keywords; costs and filters), merged here in turn. Rob's rule stands: at 90% of the week's usage, pause and hand off.
+
+**Where the gates stand, 2026-10-11** (Part 7 of `docs/plan-to-done-2026-09-30.md`; the records below are the proof):
+
+| Gate item | State | Proof, or whose step |
+| --- | --- | --- |
+| G-A: G1, 1,400 games | **done: 1,400 of 1,400 clean** | PR #686's head ccb250d1: every game finished, none refused, every replay identical, 0 leaks in 105,656 checks of every seat's view |
+| G-A: the AI program (AI-1 to AI-6), X13 | the door open and proven on staging; **AI-1, the Coach, on on staging**, with a daily cap of its own ($1.50, released at 905394dc); **AI-2's L1 built** (Normal and Easy, measured against L0: Normal 61%, Easy 56%, L0 itself 51%); **the LLM seat built behind its switch**, its privacy wording Rob's to approve; **AI-5 built and on staging** (each deck says whether the table can play it; Play this deck); **AI-4, the deck advisor, built behind its switch**, its privacy wording Rob's to approve; **AI-3: 1,131 of Rob's 1,132 cards play** (Train C, then Gandalf; the one left, Extrapolate the Impossible, does nothing in Commander), Rob's to confirm; **AI-6, AI Coach settings, built** | every gate set on staging (the AUD, 300¢ a day for everyone, Haiku 5.5, Rob's key, three allowlist rows), released at c025d5d0; Rob's first call through it logged ok; the Coach's privacy wording approved by Rob and released at 81bcda09 (records below) |
+| G-A: M3's monitoring and backups | **monitoring built** (Workers Logs keeps the Worker's own 5xx and sync-conflict lines; `tools/ops-week.mjs`, the weekly check); Time Travel confirmed, 30 days | **Rob:** the two alerts and their email; R2 turned on, the nightly copy's window and what deletion promises (`docs/ops.md`) |
+| G-A: the A11y pass | **done**: WCAG 2.1 AA on the board and the lobby, measured from the screen's pixels; and words on the accent at 4.5:1 across the app (the item left) | `tests/a11y-board.mjs` 288 checks, 72 breaks caught (the A11y record below); `tests/a11y-app.mjs` 48 checks, 9 breaks caught |
+| G-B: the whole gate green twice on main | **done again, with G-A complete** | dispatched Tests runs on main 74f715c7 (G-A's items in, and the drop check's race fixed): **2579 and 2580, both green**. Before them, on bf0e9d21: 2572 green, 2573 red once in `table-board`'s drop check, root-caused to a race in the board and fixed (#702, the race record below). Earlier: 2499 on def8fa89 and 2503 on eff40fdc, both green |
+| G-B: `play-e2e` under wrangler dev | done | 35 checks at every staging release |
+| G-B: hidden information in every frame | done | `play-journeys` reads every frame to both people; G1's oracle 102,879 checks, no leak |
+| G-B: the five-second rule | **done** | over a real network, Rob on staging (2026-10-10): ten turns against the AI, the longest wait *"about 3 seconds"*; here, `play-journeys` median 280 ms, longest 1.0 s; G1's 700 games with a person: each game's longest wait a median 172 ms, 99th percentile 1.6 s, the worst 3.5 s, none over 5 s |
+| G-B: `play-journeys` with the seven decks | done, again on bf0e9d21 | 82 checks: every view at 1280, 1400, 1920, 2560 and the phone, the Coach's stub, the record (PRs #681, #682; run again 2026-10-11) |
+| G-B: `crankmagic-journeys` and the tours | done, again on bf0e9d21 | `journeys.mjs`: geometry 138, workshop 504, tour-walk 7 tours and 61 steps (2026-10-11) |
+| G-B: the browser and device matrix | **done** | `docs/uat/browser-matrix.md`: Chrome, Edge and WebKit on Personal-HP (2026-10-01); the phones, held sideways, by Rob on staging (2026-10-10): *"phones work"* |
+| G-B: screenshots to Rob | done, refreshed | the gallery "CrankMagic Board Sizes", version 2: both tables, every view at four sizes and the phone, from bf0e9d21 after the A11y pass |
+| G-B: the A11y pass's checks | done | `tests/a11y-board.mjs` 288 checks on the merge with Train C (the A11y record below) |
+| G-C: staging from main, version read back | **done**, signed in too | the G-C records below; and `tools/staging-check.mjs` signed in as the session-check token (A5; 2026-10-10): staging serves 2125854a, both pages say so, `/api/me` seats the token |
+| G-C: the harness note for Grok Bot | done | `docs/playtest-harness.md`, held to the page by `tests/playtest-harness.mjs` (PR #681) |
+| G-C: the four agents' access | **built and on staging; waiting on Rob's four tokens** | at staging each service token Access admits is an identity of its own, so four agents are four seats (#704; released, and the session's token now reads back as `service:e07b4fed5ab9`, the agents' access record below); how an agent signs in, and **Rob's** five steps, in `docs/playtest-harness.md`; the proof once they're made: `node tools/staging-check.mjs --agents` |
+| G-D: Grok Bot's UAT (M8) | **ready for the agents; not run** | this side's half built: the triage tool (`tools/playtest-triage.mjs`: every game replayed from its record, every seat's view judged at every answer, M8's exit criteria; 32 checks, 22 breaks caught), the findings' outcome column, the seven decks to paste (`docs/uat/decks/`, held to the library), the run step by step (`docs/uat/playtest-run.md`); **a dress rehearsal through the real board, done: 50 games**, two people and two house AIs a table, the seven decks four at a time; the triage replayed all 50 to the same journal, with 0 thrown and 0 leaks in 21,006 checks of every seat's view; both findings were ruled (each the harness's, not the board's), and **M8's exit criteria are met** (the rehearsal record below). **Rob:** the agents' tokens (G-C), then Grok Bot's 50 games |
+| G-E: human invites | **ready for Rob's invites** | `docs/play-invites.md`, *G-E*: Rob's steps (one rule group of invitees for both Access applications), the before-the-first-invite checklist, and how their findings arrive (*Send feedback* names the release and the game). **Rob:** staging's invite list and its block page, the alerts and R2, then the invites |
+| G-F: Rob's review and production | **rehearsed; on Rob's go** | `tools/release-production.sh` and `docs/release-production.md`: the standby, then Play, each built from main, walked and committed locally, and pushed only on Rob's go; the standby rehearsed on main 1aa46cd (`release-acceptance` 23, `production-play-e2e` 27, nothing pushed). **Found:** production's Workers Builds has not deployed `release/pages` (the last deploy was by wrangler, 2026-10-01; the release of 2026-10-03 never went live). **Rob:** that build's settings, his review, each go |
+
+**What Part 7's two sentences wait on (2026-10-11).** What is this side's is built, merged and on staging: G-A's
+items, G-B twice on main, G-C's release and the agents' access. G-D to G-F are ready and rehearsed.
+- **The first sentence waits only on Rob:**
+  - G-A's approvals: the privacy wording for *AI players on Claude* and *The deck advisor* (`docs/ai-door.md`), the
+    advisor's eval with his key, and confirming his library;
+  - M3's two alerts and their email, and R2 turned on, which the nightly copy and M2's data track wait on
+    (`docs/ops.md`);
+  - G-C's four agents' tokens (`docs/playtest-harness.md`).
+- **The second** then waits on:
+  - G-D: Grok Bot's 50 games, and the fixes;
+  - G-E: Rob's invites;
+  - G-F: Rob's review, and each of his production goes (`docs/release-production.md`).
+
+**Later, 2026-10-08:** the five workers' 45 cards and CR 800.4a merged here (#676); and on Rob's go ("merge Codex's stack") Codex's #670 to #675, reviewed first, merged here too -- every card of the seven decks is now defined; #676 merged on main 09499dcd and #671 to #675 closed as merged through it. The first G1 pass (70 games over seven pods) then found two blockers, each on its own worker: Tegwyll's provisional definition kept D7 off the table (now confirmed, hand-authored, 477 of 477), and a person's answer the engine refuses (Lethal Scheme's convoke) escaped room.act after the tape had recorded it, so the room could not reopen. Codex's records of 2026-10-07 follow, as it left them.
+
+**G1, second and third passes (PR #677):** both blockers fixed (a refused answer is now a 422 with the room restored from its last save; convoke asks which mana pays the rest), and the layers' dependency trials made only where one can find a dependency (CR 613.8a; `tests/engine-layer-prune.mjs`, the slow game 2.5 times faster). Pass two, at 3df6e1b4: 70 of 70 games clean, none refused, but "longest waits" of up to 9.3 s, every one on a game's last turn. Their cause was in the harness: `tools/fuzz-live.mjs` built its pod without the table's beats, so once the person was out its timer ran while three AI seats played the game out, which no person at the table waits through (`endWhenNoPerson`, Rob's of 2026-10-06). The harness now launches its games as `game/room/table.mjs` does (the draw's click, the empty step passed, the game ending once every person is out); `tests/game-leave.mjs` checks the two pods agree, and three breaks are caught. Pass three, with that pod: **70 of 70 clean, none refused; over the 35 games with a person, the longest wait was 3.3 s, the median 0.23 s and the 90th percentile 0.43 s.** The 3.3 s is a real mid-game wait (D7|D1|D2|D3, seed 2, turn 27 of 33, a 35 s game), measured with three sweeps sharing the container: under the five-second rule, and the first one to profile. #677 merged on main 0d173a0d on green Actions.
+
+**G1's other two terms (PR #678).** G1 asks for "zero exceptions, identical replays and no leaks", and `tools/fuzz-live.mjs` judged only the first; `tests/engine-gate.mjs` proves the others for vanilla decks alone. It now has `--replay` (each game replayed from seed and tape, fingerprints compared) and `--leaks` (every seat's view read, at each of the person's questions, for a card name that seat may not know, judged by the state's own facts, never by the projection being judged). The replay found two checkpoints that could not be read back -- JSON drops a key holding undefined and the state hash keeps it -- so a Durable Object woken mid-game would have refused to resume: every effect without a sublayer wrote `sublayer: undefined`, and a permanent that became a copy kept "had no supertypes" as one (`engine-room-games` seed 7). Neither writes one now; a copy moves as itself woken or not; and `saveCheckpoint` refuses any state that would not read back, naming the field, so the class fails in every suite instead of at a wake in production. `tests/room-g1-terms.mjs` (27 checks), two in `engine-storage`, 22 breaks caught; the full local run otherwise green (386 suites, 262 game tests). The sweep then found two more such keys (the discard question's `who`, the resolution's `__about` mark), and a probe of all 70 games walking the whole state after every event found no fifth; and the leak check's false reports were fixed (a name inside a longer card name; the cards a scry, surveil or search shows the player it asks; what the journal has shown everyone). **G1 on #678: 70 of 70 games clean -- finished, nothing refused, every replay identical, 0 leaks over 5,473 checks of every seat's view in the 35 games with a person**; 34 breaks caught. #678 merged on main e5770295 on green Actions.
+
+**G-C, staging, 2026-10-08:** `tools/release-staging.sh` released main e5770295 to `release/cloud-staging` d4221982 (release-acceptance 22 checks, play-e2e 35 under `wrangler dev`); Workers Builds deployed it at 10:39:51 UTC (version 75bba14c), and the deployed `play-worker.js` is byte-identical to the release's `wrangler deploy --dry-run` bundle (2,419,636 bytes, sha256 61ec084b…). The read-back over the network (`tools/staging-check.mjs`) did not run: this environment has `CF_ACCESS_CLIENT_ID` but not `CF_ACCESS_CLIENT_SECRET` (Rob's, in the environment's settings; A5).
+
+**G1, the 1,400 games (PR #679, 2026-10-08).** Seven pods (each deck in seat 0 once, the next three after it), 100 seeds with a random person in seat 0 and 100 all house, every game with `--replay --leaks`. **1,398 of 1,400 clean -- finished, nothing refused, every replay identical, no leak: all 700 house games; 698 of the 700 with a person, 0 leaks over 102,879 checks of every seat's view.** The person's longest wait: median 0.22 s, 90th percentile 0.46 s, 99th 1.84 s, at most 4.7 s (four games at a time on four cores). The run found, and #679 fixes, each with its check:
+- **An engine exception:** a Sower of Temptation that took itself (its trigger's only target) threw as it died: `controlSourceLeft` ended what it was the source of before spending the records of changes to it. A fourth Sower scenario.
+- **A false leak report:** a history line naming a card that had left the game with its owner was read as a shorter name inside it; the check remembers every card name the game has had.
+- **The harness's person** repeated an optional loop without end (Krenko, Mob Boss with Intruder Alarm in D6: the board doubled with every activation, 2,047 Goblins and 2,034 triggers in one turn). A person picks how many times to go round (CR 732.2a): it now activates one ability at most four times a turn, then passes; it did so in 18 games.
+- **Saves that grew with the game:** the room copied the whole journal at every decision, and hashed each checkpoint three times; and collecting triggers re-read every permanent's abilities per permanent (a million reads per resolution at a thousand tokens).
+
+**The two that did not finish -- Rob's call (pod 5, D6 in the person's seat, seeds 54 and 90).** Krenko, Mob Boss with Intruder Alarm is a legal infinite combo, and four activations a turn on every player's turn still compound: by turn 50, 4,000 Goblins and 7,059 triggers on the stack. Every trigger resolving asks the person a question, and every answer saves the whole game; at a thousand permanents each resolution is about 0.2 s, and it grows with the board. Rob can do this with his own deck, and a Durable Object has 30 s of CPU per request, so a real game would stall the same way. The options: (1) a shortcut -- "pass until the stack is empty" or "repeat N times" (CR 732.2a), one decision for a thousand identical triggers, as the digital games have it; recommended. (2) A cap on the board's size. (3) Deeper engine work (incremental saves, cheaper derivations), which helps but cannot keep up with doubling alone. G1 is clean except these two, and closes when one of these is chosen and built. #679 merged on main 8787d103 on green Actions.
+
+**G-C again, 8787d103:** released to `release/cloud-staging` f903322f (release-acceptance 22, play-e2e 35); deployed at 20:17:26 UTC as version e00791d2, byte-identical to the release's dry-run bundle (2,420,554 bytes, sha256 21d7b7ee…). The first attempt was held back by the script itself: play-e2e's two-people step timed out on a Pass button the board had just redrawn away (isEnabled on a vanished element waits its 30 s); the walk now reads a vanished control as "not now" (PR #680), and walked clean, 35 checks. #680 merged on main 9c5fb728 on green Actions.
+
+**X14, `play-journeys` on the seven real decks (PR #681, 2026-10-08).** G-B's Play journey played vanilla stand-ins
+of every card; it now plays the decks' own cards (`tableCards`, all 477 defined). A person's seat is answered through
+the board's own controls as the house pilot would answer it, a target, mode, payment or order included
+(`tests/uat/board-person.mjs`, shared with `real-deck-game.mjs`), and the table's slices are carried on by its alarm,
+as the Worker's are. Two four-seat tables, D1-D4 and D5-D7 with D1, Rob at a desk and Maya on a phone held sideways,
+to turn 12: **58 checks** -- 172 answers through the board, no AI answer refused, the decks' own abilities and triggers
+on the stack, no other seat's hand or library named in any frame, every view at 1280, 1400, 1920 and 2560 and the
+phone, the phone's hand, a concession from the phone's settings with the game going on, the Coach, End game and the
+record. **The person's waits, in this process: median 292 ms, the longest 1.0 s** (1.9 s with two other browser runs
+sharing the four cores; from a click to the room's next question to a person; over the network it still needs a
+browser on a real network, Rob's or Grok Bot's). D5's whole
+game through two browsers on the shared helper: 13 checks, a natural end, none refused. The harness note for Grok Bot
+(`docs/playtest-harness.md`) now names the controls a real card's questions use, says what a refusal looks like, and
+points at `board-person.mjs` as the worked example; `tests/playtest-harness.mjs` (new, 139 checks) holds every control,
+id, class, attribute and file the note names to the page and the repository, and every control and id to a test that
+uses it. It found four the note named and no test pressed: Copy link and Withdraw now in `table-lobby` (71 checks:
+the clipboard holds the link; a withdrawn link no longer works), the phone's hand and Concede in `play-journeys`.
+Breaks: 3 of 3 in `play-journeys`, 7 of 7 in `playtest-harness`.
+#681 merged on main 53985e7a on green Actions.
+
+**Every caption on a board read whole (PR #682, 2026-10-08).** `play-journeys` now reads every caption on every board
+in every view at every size (a zone's, a group's heading, a pile's count) against the cards of its zone and the life
+counter, a circle at the table's true center. In Table view, at every size, it found five covered: the top-left
+board's graveyard count, the top-right board's "Lands · 3" and your own first group heading under the counter (whose
+inner corners it overlaps, as item 9 places it), "Lands · 2" under an untapped land (a mat with art gives the Lands row
+the piles' height, `1.4 × card + 1.3em + 2px`, and the zone's own padding pushed a 1.4-card land 8 px over its
+caption), and, at 1280x720, "Battlefield" under a second row of creatures. Fixed in `crankmagic.css`: at the table, a land
+starts at the Lands frame and its caption keeps to a tight line; the three captions at the counter moved clear of it (`--pie`
+now the table's, so the boards read it; the heading's rule carries `#matrix-v2`, since `#matrix-v2 :is(h1,h2,h3,p)` sets
+every margin); and at the table, once a board holds a group, the group's heading names what is there and
+"Battlefield" is kept for screen readers. The counter stays where it is. `play-journeys` 82 checks; the whole local run
+green (425 suites, 24.5 minutes); 5 of 5 breaks caught. Screenshots of both tables at every size and on the phone, with
+the fix before and after, published for Rob.
+#682 merged on main def8fa89 on green Actions.
+
+**G-C, def8fa89:** released to `release/cloud-staging` bc88dce3 (release-acceptance 22, play-e2e 35); deployed at
+22:50:49 UTC as version bdaece4f (number 124), a minute after the push. Its `play-worker.js` is byte-identical to the
+release's dry-run bundle (2,420,554 bytes, sha256 21d7b7ee…) -- the same bundle as 8787d103's, since #680 to #682
+changed tests and static files, not the Worker. Those files (the new `crankmagic.css` v=272) are served from the
+version's assets, which only a signed-in read can see: staging is behind Access, `workers.dev` is off for it, and the
+service token's secret is Rob's (A5). The Builds API refuses this session's token, so the build's commit is read from
+the timing.
+
+**The tour walk, run again (PR #683, 2026-10-08).** `tests/uat/tour-walk.mjs`, the one check that a tour step points at
+something on the page, had skipped itself in every run: it found Playwright only through two variables nobody set, and
+`journeys.mjs` let it. Set by hand, it could not start either -- *Take a Tour* has been in the rail's Menu since the
+redesign, and the walk served itself on 127.0.0.1, where the app hides the rail. It now uses `browser-runner.mjs`'s
+`openBrowser` (Playwright where it is installed, the repo under crankmagic.localhost), opens the Menu, lists every
+step that misses rather than stopping at the first, and `journeys.mjs` runs it required. Walked, 6 of 61 steps in four
+tours pointed at nothing or at an empty box; each now points at the page as it is (`crankmagic-tour.js` v=23): Explore
+starts on its chooser's search and the graph steps open a graph (`graphOn`: your first deck's, or Sol Ring's); Narrow
+it points at *Filters · lens*, since the filters sit in a panel shut until opened; Take it with you at *Add and/or
+buy…* (`add-buy`, renamed from `add-card`); the Collect tour's trays are the sorting space with no deck picked (G6b-2);
+What the score is at the deck's Simulation history; and A tray puts it on the list opens Table on a deck with a group,
+or points at the deck picker. **tour-walk: 7 tours, 61 steps, every one pointing at something real**; `tour` 9
+checks; the release journeys (`journeys.mjs`): geometry 138, `crankmagic-journeys` 504, tour-walk 61 steps.
+#683 merged on main eff40fdc on green Actions.
+
+**G-C, eff40fdc:** released to `release/cloud-staging` e279db77 (release-acceptance 22, play-e2e 35); deployed at
+00:16:48 UTC on 2026-10-09 as version afb87439, its `play-worker.js` byte-identical to the release's dry-run bundle
+(2,420,554 bytes, sha256 21d7b7ee…; the tours are static files, read back only signed in, A5).
+
+**The AI door, wired on staging (2026-10-09).** Rob made the Access application "CrankMagic AI (staging)" on
+`staging.crankmagic.com/api/ai/*` (Google sign-in; its "AI Testers" policy three emails), approved the privacy wording,
+and chose one cap for everyone: *"I only want a general spending cap, not per person"*, 300¢. Then: *"I want tight
+controls on the coach. It's responses should be very concise, no more than 1-3 sentences with 80% being 1 sentence,
+when in coach. We will always be using sonnet or other lowest cost models."* And: *"change the model use to Haiku
+explicitly"*, with the Coach seeing only the player's hand, the board, and their deck as a list, never its order. So:
+- **The staging release** carries `AI_ACCESS_AUD`, `AI_CAP_TOTAL_CENTS` 300, `AI_CAP_PERSON_CENTS` 300 (the same
+  number, so it never binds first) and `AI_MODEL` claude-haiku-5-5 (`tools/release-pages.mjs`, the profile's `ai`).
+  The release tool refuses any other set, and any AI variable at all in production, whose door stays shut.
+- **Haiku, and never dearer than Sonnet:** `cloud/ai.mjs` calls only `MODELS` (Claude Haiku 5.5, the default, and
+  Claude Sonnet 5.5, the ceiling); `AI_MODEL` naming any other keeps the door shut, and nothing is sent. The server-side fallback is no
+  longer asked for, since it can re-run a declined request on a dearer model; a refusal is a plain 422.
+- **The privacy wording** is on `privacy.html`, and `DELETE /api/account` deletes the person's `ai_calls` rows.
+- **The Coach's brevity** is written into AI-1 (`docs/plan-to-done-2026-09-30.md`) as Rob then put it: the Coach's
+  brief instructs the model to answer in one to three very concise sentences, aiming for one; nothing checks the
+  length afterward, and there is no 80% gate.
+- **What the Coach may see** is written into AI-1 too: the person's own hand, the board as everyone at the table sees
+  it, and their deck as a list sorted by name with the library's count, never its order, its top card or another
+  seat's hand; the Worker builds the brief from the room's own projection for that seat, not from the browser.
+- Proof: `ai-door` 50 checks, `release-pages` 188, `cloud-worker` 109.
+- **Rob's, left:** the key as a Secret on `crankmagic-staging`, a monthly limit in the Anthropic console, and the three
+  emails in `crankmagic-staging`'s `ai_allowlist` (0 rows and no secrets at last check). Both work from the dashboard.
+
+
+## Cloud production Play preparation, October 7, 2026
+
+**Holder:** Codex, `/workspace/crankmagic-cloud`, `codex/production-play-profile`,
+following Faerie draft PR #674 at `a985022f`. Commander draft PR #673 is now
+`3fdedc29`, with 35 successful actual-workerd browser checks and corrected
+runtime expectations for the now-supported Quintorius. Faerie proof remains
+57 targeted checks, 20 faults and 243 engine/regression suites.
+
+**Candidate:** explicit production Play and standby profiles, the same production
+account resources, no staging privileges, exact build binding guards and a
+standby entry closure that retains GameTable storage. Default pages is unchanged.
+108 Worker checks, 174 release-builder checks, three caught faults, and 27 actual
+local-workerd recovery checks pass. See
+`docs/production-play-profile-2026-10-07.md` for the first-migration rollback
+constraint, existing-socket/clock limitations and remaining live gates.
+
+No merge, deployment, new credentials or paid calls. Main `2ad84eb0`, Train B
+`5d068d26` and the exact-head green PRs #670–672 remain preserved. The saved cloud
+cannot currently reach staging; Actions secret presence cannot be inspected with
+the connected tool. The separate GitHub-runner route is documented, not installed.
+
+## Cloud Faerie interactions, October 7, 2026
+
+**Holder:** Codex, `/workspace/crankmagic-cloud`, `codex/faerie-interactions`,
+following commander draft PR #673 at `3fdedc29`. Mastermind, Spellstutter and
+Winnower pass 57 targeted checks, all 20 fault checks and all 243 engine/regression
+suites. See `docs/faerie-interactions-2026-10-07.md`. There are 46 distinct
+unavailable names left in the seven committed decks. Sower needs genuine
+source-duration control support; Tegwyll remains provisional.
+
+Main and Train B remain unchanged. PRs #670–672 have exact-head green Tests runs.
+No release or credential changes have occurred. GitHub-hosted staging acceptance
+is being investigated: current workflows have no staging job or Access-secret
+references, and the connected app cannot inspect secret metadata. A single
+service identity cannot stand in for a separately signed-in friend.
+
+## Cloud linked-exile commanders, October 7, 2026
+
+**Holder:** Codex, `/workspace/crankmagic-cloud`, `codex/exile-commanders`,
+following advice PR #672 at `b58b4534`. Quintorius and Maralen are implemented;
+107 targeted checks, all 38 faults caught, all 242 engine/regression suites and
+final D2/D5 two-browser natural games pass. See
+`docs/exile-commanders-2026-10-07.md` for rules scope and evidence limits.
+
+**Verified stack:** #670 `5174b836` / Actions `37630443333`, #671 `6eec6348` /
+`37632309093`, and #672 `b58b4534` / `37632350352` are all ready with successful
+full Tests runs. Main `2ad84eb0` and Train B `5d068d26` remain unchanged.
+Nothing has been merged or deployed. Current release configuration/user actions
+and the Library screenshot transfer failure are documented in
+`docs/cloud-release-gates-2026-10-07.md`. Production Play is in scope, after
+staging, data, Access and rollback gates; paid AI remains unapproved.
+
+## Cloud advice preparation, October 7, 2026
+
+**Holder:** Codex in `/workspace/crankmagic-cloud`, `codex/bounded-advice`,
+following D2 draft PR #671 at `6eec6348`. D2 and its natural browser game are pushed.
+The advice contract prepares bounded, account-scoped, versioned requests and
+checks evidence/card/option references against fresh snapshots. It cannot call
+providers, schedule work, persist credentials or mutate game/library data.
+
+**Proof:** 45 contract checks, 10 caught deliberate faults, data integrity and
+feature wiring; existing AI door's 45 fake-provider checks still pass. See
+`docs/bounded-advice-2026-10-07.md`. Paid AI remains unapproved and disabled.
+This is groundwork; monthly reservations, trusted source/UI integration and
+responsive live delivery are not claimed complete.
+
+**CI:** library PR #670 at `5174b836` is checking in Actions `37630443333` after
+repairing its sole inventory failure. D2 PR #671 remains draft/mergeable on
+`6eec6348`. Train B/main remain unchanged. Release blockers below still apply.
+
+## Cloud D2 completion, October 7, 2026
+
+**Holder:** Codex, `/workspace/crankmagic-cloud`, `codex/chulane-completion`,
+following PR #670. Train B/main remain unchanged. Guardian Project, Yavimaya
+Dryad and Claim Jumper are defined with engine behavior and rules tests.
+
+**Proof:** 241 engine/regression suites passed; 67 dedicated checks; 37 caught
+faults. A new cloud-local D2 game through two human browser sessions plus two
+house pilots finished naturally in 44 turns / 349 UI actions, zero refusals.
+Reload and all 354 hidden-information frames per person passed. See
+`docs/chulane-completion-2026-10-07.md` for commands and evidence limits.
+D2 has zero unavailable cards; 51 distinct unavailable names remain across the
+seven committed decks. This does not materialize the exact October 4 backup.
+
+**CI:** the separate library worktree repaired PR #670's generated inventory
+failure at `5174b836`; Actions `37630443333` is running. D2 is a separate draft
+follow-up. No merge or deployment. Staging egress/credentials, exact-backup
+materialization and AI budget approval remain open.
+
+## Cloud library continuation, October 7, 2026
+
+**Holder:** Codex in Rob's authorized separate cloud checkout, `/workspace/crankmagic-cloud`,
+`codex/real-deck-acceptance`. The remote follow-up was recovered at `e6715329`; Train B remains
+unchanged at `5d068d26`, PR #669 ready, with its successful Actions run freshly confirmed through
+GitHub's connected app. The offline desktop's uncommitted edit was not recovered.
+
+**Work:** direct reviewed card removal, commander changes, direct deck deletion, and a deletion
+Undo receipt that survives navigation. Ownership, reservation and physical location stay distinct.
+The evidence, commands, cloud toolchain differences and exact blockers are in
+`docs/cloud-continuation-2026-10-07.md`.
+
+**Release gates:** Access/Cloudflare credentials absent; staging egress CONNECT 403; exact October 4
+backup not materialized in cloud; AI spending unapproved. No merge or deployment, no production
+readiness claim. Continue the card coverage and real-game gates after this library increment.
+
+**CI repair:** PR #670's first ready run passed every suite except the generated
+data inventory: the recovered real-deck harness added one reader. The generated
+record is repaired; the new head still needs a green Actions run. Full local
+generator testing reaches an unrelated Scryfall HTTP 403; the inventory check itself passes.
 
 ## Library and real-deck acceptance, October 7, 2026
 
@@ -53,7 +683,7 @@ connection twice failed to load its request-header policy before any site intera
 No Access policy, credential, permission or reserved dashboard setting was changed.
 Paid AI waits on a concrete cap. D11's Claude settings are optional tooling, not a launch gate.
 
-## Train B proof record
+## The previous record: the Train B continuation, October 7, 2026 (Codex)
 
 **Holder:** Codex on Personal-HP, continuing the authorized production-readiness work on
 `claude/admiring-franklin-58cxy4` from `d8774b32`, PR #669. B4, B6 and B3 are integrated:
@@ -75,13 +705,9 @@ here, so signed-in live staging checks remain blocked. Paid AI usage waits on a 
 Reserved access, credential, persistent-permission, history and branch-deletion actions are
 untouched. The unrelated local settings file remains untracked.
 
-## PAUSED, 2026-10-06 ~18:30 UTC: read `docs/handoff-2026-10-06.md` first
+## The record before: PAUSED, 2026-10-06 ~18:30 UTC
 
-The review-response session paused at 97% of the week's usage (Rob: pause at 90% and "write up a comprehensive handoff
-packet for another AI platform"). **`docs/handoff-2026-10-06.md` is the handoff**: the gates and where each stands, what
-is on `main` (2ad84eb0, PR #668), Train B's state branch by branch and what every undefined card needs, the order to
-done, how to work and verify here, and Rob's open items. The record below is the session's last before the pause.
-
+The review-response session's last record before the pause; `docs/handoff-2026-10-06.md` is its handoff.
 
 | | |
 | --- | --- |
@@ -357,3 +983,679 @@ artifact serves the pilot now and the engine later.
   before committing.
 - `tools/board-latency.mjs` and `tools/first-draw-check.mjs` are read-only and safe against a live
   game. Neither invents a verdict it did not observe.
+
+**#685 merged on main c025d5d0 on green Actions; staging released, the AI door open there.** `tools/release-staging.sh`
+released c025d5d0 to `release/cloud-staging` 5e6d83e9 (release-acceptance and play-e2e passed). Workers Builds deployed it at
+15:42:54 UTC as version 1c4870d8, its `play-worker.js` byte-identical to the release's dry-run bundle (2,420,941 bytes,
+sha256 6537556247f6…). Its bindings: `AI_ACCESS_AUD` (the AI application), `AI_CAP_TOTAL_CENTS` and
+`AI_CAP_PERSON_CENTS` 300, `AI_MODEL` claude-haiku-5-5, and Rob's `ANTHROPIC_API_KEY`. Rob first put the key in the
+Builds section's variables, which only the build sees; he moved it to the Worker's own Variables and Secrets. The
+staging allowlist holds his three emails, all lowercase. Every gate is set: the first real call is his, from his browser.
+
+**Resolve all (PR #686, 2026-10-09).** Rob: *"#2. Yes, resolve all. Games as huge as you saw in those 2 will never happen
+because half of the board you were seeing would win before ever getting to that point."*
+- **The room:** a fourth beat, `resolveAll`, kept with the match. With a run of the same trigger on top of the stack
+  (`triggerRun`), the person is offered *Resolve all N*. Taken, the room passes for that seat through that run only, no
+  more passes than the run held, and asks again as soon as anything else is on top. It is saved with the room, so a wake
+  mid-run goes on, and the tape replays it.
+- **The board:** *Resolve all N* beside the pass, and the stack shows a run as one line, ×N.
+- **What it was not enough for:** a profile of seed 54 with it. On turn 48 the person's four Krenko activations took the
+  board from 23 permanents to 259, and one Resolve all over 252 triggers then took 25 s, about 0.1 s a resolution:
+  - each seat's legal actions, worked out at every pass, a third of the time;
+  - the saves, a fifth;
+  - the resolutions, a fifth.
+
+  A standing pass now skips its own seat's legal actions. But a board that doubles outruns any speed-up.
+- **So G1's person** also goes round no loop once its seat controls 100 permanents, as Rob says a person with that board
+  has won.
+- **Pod 5 again, clean:**
+  - seed 54: the person (D6) the last standing, 56 turns, 47.6 s, Resolve all 7 times;
+  - seed 90: the person the last standing, 38 turns, 81.9 s, Resolve all 17 times.
+
+  Both replayed identically, with 0 leaks. Seed 90's longest wait was 6.5 s on turn 34, alone on the machine: one
+  Resolve all over 79 triggers on a board of 93. Most of it was D6's Quest for the Goblin Lord asking *"you may put a
+  quest counter"* once per Goblin, each answer a save, and the AI seats' passes.
+- **Rob's answer to that (2026-10-09): "Yes to all, and yes, build #1."**
+  - **The same answer for the same question:** in a run the person let resolve, the first of a question (its words,
+    mode, limits, and every option's words and card: `questionKey`) is asked. The board says *"Resolve all: your
+    answer goes for this same question each time the run asks it"*. The room then gives that answer, yes or no, each
+    time the very same question comes again in that run. It is kept with the standing pass, so a wake and the replay
+    agree.
+  - **The house pilot's quick pass:** `passes(actions, stackSize)` is true only when `choose` would pass whatever the
+    board. The room then passes for the AI seat without working out its view. `engine-house-pilot` and
+    `room-g1-terms` check it against the full choice at every AI pass, vanilla and on Rob's decks.
+  - **Pod 5 with both:**
+    - seed 90: longest wait 2.8 s (was 6.5), 39.9 s (was 77.9), 285 decisions (was 436);
+    - seed 54: 1.1 s, 38.0 s.
+
+    Both clean, replayed identically, 0 leaks. `room-resolve-all` 59 checks.
+- **G1, the 1,400 again, on ccb250d1:** seven pods, 100 seeds each with a person in seat 0 and 100 all house, every
+  game with `--replay --leaks`, four at a time (3.7 hours of games). The results:
+  - **1,400 of 1,400 clean:** finished, none refused, every replay identical, 0 leaks in 105,656 checks of every seat's
+    view.
+  - **The person's longest wait in each of the 700 games:** median 172 ms, 90th percentile 363 ms, 99th 1.6 s, and the
+    worst 3.5 s (pod 5 seed 90, turn 34, the biggest board). None was over five seconds.
+  - **The person** stopped going round a loop 239 times.
+
+  The later commit cb92f98e changed a test only (`room-refused-answer`'s breaking pilot), so these games stand for
+  the PR.
+- **Breaks:** 26 of 26 caught: the 14 above; the answer not carried, the answer not kept, the question not told, every
+  question the same, a card not part of the question, the board silent about the run; and the quick pass too eager,
+  blind to mana, to spells, to lands, and to loyalty.
+
+**G-C, 6e24523a (#686's merge):** released to `release/cloud-staging` 17d71486; deployed at 20:35:18 UTC on 2026-10-09
+as version 469ff5a4, its `play-worker.js` byte-identical to the release's dry-run bundle (2,424,596 bytes, sha256
+54c405a478b5…).
+
+**The AI door, proven (2026-10-09).** Rob's first call, from his browser at 20:30 UTC: Explain, Claude Haiku 5.5, 566
+tokens in and 239 out, 177 micros (0.018¢), logged as ok. The door's GET reply, *"Explain is a POST."*, was his first
+sight of it signed in.
+
+**The Coach (AI-1, X13), built behind its own switch (2026-10-09).** Rob: *"begin building the coach next"*.
+- **The brief** (`game/room/coach-brief.mjs`): built by the table (`GET /table/brief`, `game/room/table.mjs` `brief`)
+  from the asking seat's own projection and the deck that seat brought. It holds the person's hand, each card with what
+  it can do now; the board as everyone sees it (life, poison, commander damage, permanents with their state, graveyards,
+  face-up exile, the command zone); the stack; the step; the history's last 20 lines; the question being asked; and the
+  deck as a counted list sorted by name, with the library's count. Never another seat's hand or library, a face-down
+  card that is not theirs, the library's order, or a top card a look showed them. The front door (`cloud/tables.mjs`)
+  forwards no such path: only the Worker's AI door asks for it, and nothing from the browser goes into it.
+- **The route:** `POST /api/ai/coach` with `{tableId, question}` (a question of at most 300 characters), behind the AI
+  door's gates (Access, the allowlist, the key, the caps, the model), then its own switch, `AI_COACH`. It is set only by
+  a release profile whose `ai.coach` is true (`tools/release-pages.mjs`); staging's is not, so staging answers *"The
+  Coach is not switched on here yet."* until Rob approves the Coach's privacy wording (drafted in `docs/ai-door.md`).
+  A table's refusal (no seat, no game yet) is passed on as the table said it.
+- **The call:** Claude Haiku 5.5 at low effort, a JSON schema `{answer, plays[{card, action, why}], threat?, show}`, and
+  the instruction as the brevity control: *"one to three at most, and aim for one"*, and that it sees no other hand or
+  library order. Nothing measures the length afterward; `COACH_MAX_TOKENS` (1,200) is a cost ceiling only. The same
+  caps and log as Explain, logged as `coach`.
+- **Grounding:** every `[[card]]` in the answer, every play's card, every id to highlight and the threat's seat must be
+  in the brief, or the answer is not shown (502) and is logged as ungrounded.
+- **The board:** the stub reply is gone. An answer shows its card names in bold; *Show me* lights the cards it names for
+  four seconds; *Why?* opens each play's reason and the threat. Signed in to the library only, the reply is a link to
+  `GET /api/ai/login?to=#table?id=…`, which comes back to the table once signed in to the AI door.
+- **Not built, by Rob's own cap choice:** the plan's per-game cap. Rob chose *"a general spending cap, not per
+  person"*, 300¢ a day for everyone, which holds the Coach as it holds Explain.
+- **Proof:** `coach` 51 checks (the brief by hand and from a real table against an AI seat whose seven-mana Bears stay in
+  its hand; the door with the table bound; the board's panel in Chromium), `release-pages` 191, `table-board` 236,
+  `playtest-harness` 150; 41 breaks caught: the brief carrying the library, its deck list in library order or uncounted, another seat's view, the brief before the game, the front door forwarding it, the switch ignored, the allowlist skipped, the browser's brief used, a table's refusal hidden, the sign-in sending anywhere, the question unbounded, Sonnet, the instruction's two lines, the effort, the log's feature, the asker sent, each of the grounding's checks, Show me, Why?, the bold, the sign-in link, the board sending its view, and the release's switch on and off.
+- **Rob's, left:** approve the Coach's privacy wording. Then it goes on `privacy.html`, staging's profile gets
+  `ai.coach: true`, and the next staging release turns the Coach on.
+
+**#687 merged on main 662e1aba on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` 658edafa (release-acceptance 22, play-e2e 35); Workers Builds deployed it at 21:43:15 UTC as
+version fa3dead1, its `play-worker.js` byte-identical to the release's dry-run bundle (2,435,420 bytes, sha256
+8ed11a8e5e4e…). The Coach is in it, switched off (`AI_COACH` unset) until Rob approves its privacy wording.
+
+**The Coach, switched on for staging (2026-10-09).** Rob: *"Coach privacy wording approved."* The wording is in the AI
+features section of `privacy.html`; staging's profile has `ai.coach: true`, so its release sets `AI_COACH` on; and
+`tools/release-pages.mjs` now refuses any release that switches the Coach on where the privacy policy does not say what
+it sends. `release-pages` 193 checks. #688 merged on main 81bcda09 on green Actions; `tools/release-staging.sh` released it
+to `release/cloud-staging` 4df68386 (release-acceptance 22, play-e2e 35), and Workers Builds deployed it at 23:08:02 UTC
+as version 1a4de099, its `play-worker.js` byte-identical to the release's dry-run bundle (2,435,420 bytes, sha256
+8ed11a8e5e4e…), its bindings `AI_COACH` on, `AI_MODEL` claude-haiku-5-5 and the key a secret. **The Coach answers on
+staging.** Production's AI door stays shut until Rob's go.
+
+**Rob's playtest, 2026-10-09: ten turns against the AI on staging, and his notes.** Each is built and held by a suite:
+- *"Draw phase should be resolved automatically by drawing a card and progress to the next screen."* The table no
+  longer launches games with the held draw (`game/room/table.mjs`, and the G1 harness with it); a game launched
+  before keeps its `drawBeat` and replays as played. *"Clicking the library pile should Draw a Card"*: in such a game
+  your Library pile is the Draw a card button too. `table-board`: turn 2's draw by itself, no button, on to Main 1.
+- *"When I play a card to the board from my hand, I don't want to have to click a pop-up to resolve it."* A fifth
+  beat, `passAfterCast` (`game/room/room.mjs`): a person's cast or activation passes the priority it brings back to
+  them (CR 117.3c), so it resolves unless someone responds. Holding priority stays the caster's choice (AGENTS.md:
+  decisions belong to the players): Tools' *Hold priority after I cast*, remembered on the device and sent with the cast
+  as `hold`. `room-beats` 33 checks (without the beat, with it, holding, a convoke cast woken mid-question, each game
+  replayed); `table-board`: a cast that passes and Maya's that holds.
+- *"I shouldn't have to acknowledge every stage."* *Turns went by* puts itself away after six seconds; OK only does it
+  sooner.
+- *"In 2-player, the screen should split down the middle vertically"*, and *"each board will be landscape on each half
+  of the screen"*: two seats sit side by side in Table view, yours on the right, each the largest 16:9 its half allows,
+  the life counter and an upright bar between them (← and →).
+- *"Card hand size should never decrease the board size. The user would just scroll down on the window to see the full
+  card if it goes below the bottom."* In every view the boards are fitted with room for a hand at the table's card size
+  (Tools), and a larger hand runs on below the window, the board scrolling to it; the strip stays at the top.
+  `table-board`: Table, Focus and Full screen at Hand cards 160%.
+- *"Needs more clear indication of whose turn it is. Icon on the Card in the left or right side pane."* The seat whose
+  turn it is: its Focus tile ringed and marked *Your turn* / *Maya's turn*, and its line of Full screen's vitals too.
+- *"Lobby music."* The pack's lobby bed (`bgm_lobby_mythic_calm`) from the first press in a table's lobby, crossfading
+  into the game's bed when the board opens; leaving the page stops it. `table-lobby`.
+- And the screenshot after End game, *"I couldn't click off of it"*: the card shown large under the pointer stayed when
+  the board was redrawn under a still pointer. A press anywhere, Escape, or a redraw with no such card under the pointer
+  now puts it away. `table-board`.
+- A phone finding on the way: a main phase's ten ways to play covered 46% of a phone held sideways; what is asked there
+  is at most a third of the height now, scrolling within.
+- *"Resolving Land should be called 'Untap Lands' during the first untap phase"*, and then *"It's the Resolve pop-up
+  that came up on my first turn in a 2-player game."* Nothing in the engine is titled *Resolve*: the only one is the pass
+  button, which names what is on top of the stack, so on that first turn something of his was waiting there to be let
+  resolve. With the cast that passes, his own spells and abilities no longer ask it; should a *Resolve* still show on a
+  first turn, a screenshot names what was on the stack.
+- **Proof:** `room-beats` 34, `table-board` 246, `table-lobby` 73, `board-choices` 38 (its scry and Zap now read with
+  the cast that passes), `game-leave` 59, `playtest-harness` 153; the full local run green but for `board-choices`,
+  since fixed; **35 breaks caught**: the cast's pass (never made, holding ignored, the answer's `hold` unread,
+  activations, not kept across a wake, on every game), the table's beats (the pass, the held draw, the harness), the
+  board's Hold priority (never sent, always sent, not kept, Tools silent), *Turns went by* waiting for OK, the turn
+  marks (none, the tile, Full screen), the peek (a press, Escape, a card gone from under the pointer), two seats
+  stacked again or fitted as rows, the upright bar (dragged up and down, deaf to ← →), the life counter's halves, the
+  hand's room (Table, Focus and Full screen each following the hand, the board not scrolling, Focus clipping it, Full
+  screen's hand growing up, the Table tray stretched), the phone's question, and the lobby's music (silent, the game's
+  bed).
+
+**#689 merged on main 2125854a on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` b6437fd6 (release-acceptance 22, play-e2e 35); Workers Builds deployed it at 00:48:13 UTC on
+2026-10-10 as version ae71a787, its `play-worker.js` byte-identical to the release's dry-run bundle (2,436,473 bytes,
+sha256 d099d931004c…). Rob's playtest notes are on staging.
+
+**Rob's two G-B steps, done (2026-10-10).** *"Longest wait was about 3 seconds. phones work."* Over his own network,
+in ten turns against the AI on staging, no wait reached five seconds; and Play on an iPhone and an Android phone held
+sideways works. Both are in `docs/uat/browser-matrix.md` (and its generator, `tests/uat/browser-matrix.mjs`, so a
+rewrite keeps them) and in the table above.
+
+**The signed-in read-back (A5), done (2026-10-10).** Rob put the service token's secret in the environment's settings
+(kept there as `CF_Access_Client_Secret`; Linux's names are case-sensitive, so `tools/staging-check.mjs` now finds the
+token's two names in any case). Its first run read version.json, `/` and `/api/me` but called `/crankmagic.html` refused:
+staging's static files answer it with their own 307 to `/crankmagic`, and the tool read every redirect as Access's. It now
+follows a redirect on the same site, the token's headers with it, and calls only one off the site or to
+`/cdn-cgi/access/` a refusal. **`node tools/staging-check.mjs --expect 2125854a…`: staging serves 2125854a (cloud-staging),
+both pages say 2125854, `/api/me` answers as `service:session-checks`; exit 0.** `staging-check` 12 checks; 3 breaks
+caught (every redirect read as Access, one off the site followed, the names in one case only).
+
+**The Coach's own daily cap (2026-10-10).** Rob: *"$1.50 for the coach per day is good."* Inside the general 300¢, for
+everyone together: `AI_CAP_COACH_CENTS` (the profile's `ai.coachCapCents`, 150 on staging), counting only calls logged
+as `coach` and checked on the call's worst case before a cent is spent, like the others. Reached, the Coach answers
+429, *"The Coach has reached its spend cap for the last 24 hours. Try again tomorrow."*, and Explain goes on.
+`tools/release-pages.mjs` refuses a release that switches the Coach on without it. `coach` 54 checks, `release-pages`
+195; **11 breaks caught** (the cap unread, read in the wrong unit, never checked, checked on what was spent without
+the call's worst case, counting every feature, counting only the asker, the feature not passed, the refusal unnamed;
+staging's cap unset, the variable never emitted, an uncapped Coach released).
+
+**AI-2's levels, decided (2026-10-10).** Rob defined the house pilot's levels of decision, L0 (legal, today's) to L3
+(chained probability, other players' likely plays included), and: *"Use Haiku 5.5. 0.25 per game is good"*; *"I do want
+to deliver on L0 as part of the LLM AI seat capability"*; *"We won't be doing L2 or L3 right now."* Researched against
+how game AIs that are not language models set difficulty, the recommendation, which Rob took (*"I agree with your
+recommendations"*): one engine with three knobs (look-ahead, knowledge, chosen mistakes), never more information; L0 the
+floor and the baseline; Easy L1 with weighted chance, Normal L1, Medium L2, Hard L3; the LLM seat asked only at close
+calls that matter, with L1's scores as its hint and the house pilot as its fallback; and, in Phase 2, the model writing
+each deck's L2 formulas once rather than at every decision. Written into AI-2 of `docs/plan-to-done-2026-09-30.md`,
+with its sources. **Next: Phase 1, L1 in the house pilot, then the LLM seat.**
+
+**#691 merged on main 905394dc on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` 1d34e211 (release-acceptance 22, play-e2e 35); Workers Builds deployed it at 21:37:33 UTC as
+version d59a3702, its `play-worker.js` byte-identical to the release's dry-run bundle (2,437,220 bytes, sha256
+ee1b400c670a…), its bindings `AI_CAP_COACH_CENTS` 150 beside `AI_CAP_TOTAL_CENTS` and `AI_CAP_PERSON_CENTS` 300. The
+Coach's $1.50 a day is live on staging.
+
+**AI-2, Phase 1: L1 built (2026-10-10).** `game/engine/pilots/scored-pilot.mjs` and `odds.mjs`, as Rob's L1 and the
+settings he agreed. It scores five choices and leaves the rest to L0:
+- the mana it spends;
+- where a spell is aimed;
+- attacks against the swing back;
+- blocks;
+- the opening hand's odds.
+
+Combat is exact. On New table an AI seat is *An AI · Normal* or *An AI · Easy*; the table, the room and the record
+keep it; the room makes the pilot with the seat's deck list and the match's seed. A seat without a setting is L0, so
+matches launched before replay unchanged.
+- **Measured** (`tools/pilot-bench.mjs`): 420 two-seat games of the seven decks per arm, on the same seeds.
+  - Control (L0 against L0): 51%.
+  - **Normal: 242 to 178, 58% (95%: 53–62%); paired with the control, 51 games won that L0 lost and 23 the other
+    way, p = 0.0015.**
+  - Easy: 55%.
+  - Decision time: the median under 0.01 ms, the slowest 24 ms.
+  - Answers refused: none.
+- **Proof:**
+  - `engine-scored-pilot` 51 checks;
+  - `room-seat-pilots` 12;
+  - `table-lobby` 74, `table-board` 246, `game-table` 154, `game-room` 520, `room-g1-terms` 45, `room-beats` 34,
+    `room-slices` 26, `game-leave` 59, `engine-house-pilot` 19, `asset-versions`, all green;
+  - **45 breaks caught**: the odds (the binomial, the tail); combat (first strike, double strike, deathtouch, indestructible, marked damage, a first striker striking twice, trample); who may block (flying, menace); the defender (chumps when not lethal, trades at any price, no walls, the dearest chump, a menace attacker blocked alone); the spells (aim, tax, the mana, the cheapest first, no plan); the attack (the swing back unweighed and unpunished, vigilance, no plan); no block plan; the hand (by land count, the same draws either way, odds without a deck); easy (beyond the band, from a stream, no chance at all); another seat's view; the room (the setting ignored, no deck, no seed, the seed forgotten on reopening, a person given a setting, the seats hiding it); the table (Easy dropped, launched without settings, the view hiding it); the lobby (the form, the seat's title).
+- **Next:** L1's activated abilities, which L0 never uses (Krenko's Goblins among them); then the LLM seat on L0.
+
+**#692 merged on main 862fae14 on green Actions** (its first run failed on `generators`: `docs/data-inventory.md` had
+not named the bench as a reader of `data/live-state.json`; regenerated with its own tool). Staging released from it:
+see below.
+
+**L1's activated abilities (2026-10-10).** L0 never takes an ability that is not a mana or loyalty ability; Krenko's
+Goblins, Chulane's, Sakura-Tribe Elder's, Priest of Forgotten Gods' and a Clue's went unused hundreds of times. L1 now
+weighs each one by what the card says it does (cards, tokens counted on its own board, a land fetched, counters, a
+look, a threat destroyed at the worthiest target) against what it costs (mana, a creature tapped, what it sacrifices
+or discards, counters, life), in its own main phase with the stack empty, once no spell fits.
+- **Where it stops,** since it keeps no count: never an ability that costs nothing; no tokens past 60 permanents of its
+  own, no draw past eight in hand or five left in the library, no ability past 150 permanents on the battlefield. The
+  first bench hung on Krenko with Intruder Alarm, doubling Goblins with every untap; the board's size now ends it.
+- **The room's part:** the quick pass is told whose turn it is and the step. A card's facts carry its subtypes and
+  activated abilities, as the card says them, read once a match.
+- **Measured** (420 games an arm, the same seeds as before):
+  - **Normal with abilities: 255 to 165, 61% (56–65%); paired, +60 / −19 against the L0 control, and +19 / −6
+    against Normal without them (p = 0.015).**
+  - Easy, its temperature raised from 1.5 (59%, too close to Normal) to 4: 56%. That is +54 / −34 against L0 and
+    +22 / −43 against Normal, each significant. So L0 51%, Easy 56%, Normal 61%.
+  - The slowest decision: 176 ms, on a board of a hundred Goblins.
+- **Proof:** `engine-scored-pilot` 60 checks, `room-seat-pilots` 15; `game-room` 520, `table-board` 246, `table-lobby`
+  74, `room-g1-terms` 45, `game-leave` 59, `room-slices` 26, `engine-x11-leave-questions` 94, `engine-derive-once` 16
+  green; **12 more breaks caught**:
+  - a free ability taken;
+  - abilities at any time;
+  - tokens without end;
+  - a sacrifice costing nothing;
+  - an ability unaimed;
+  - the quick pass blind to abilities, or looking on any turn;
+  - no ability plan;
+  - facts without abilities or subtypes;
+  - facts read anew;
+  - the quick pass not told the turn.
+
+**#692 and #693 on staging.** #692 (862fae14) was released to `release/cloud-staging` 076d3828 and deployed at 22:30:08
+UTC as version a5ff4906 (2,455,957 bytes, sha256 1641c4f82dcf…). #693 merged on main dc03fa81 on green Actions; it was
+released to 3da63aed and deployed at 22:50:02 UTC as version 9b85364a (2,463,462 bytes, sha256 93027a433636…). Each
+release passed release-acceptance (22) and play-e2e (35), and each deployed `play-worker.js` is byte-identical to its
+release's dry-run bundle. **New tables on staging seat L1 AIs at Normal or Easy, abilities and all.**
+
+**AI-2: the LLM seat, built behind its switch (2026-10-10).** *An AI · Claude* on New table, offered and seated only
+where the AI door would let the host spend on it. It plays L1 at Normal, and at its close calls the room offers it the
+decision as it would a person. A close call is the spells it would cast, or an attack, with L1's two best plans within a
+point of each other. The table's object asks Claude Haiku 5.5 on its alarm, with the seat's own view, no person's name,
+and L1's choice as the hint. Each call is logged as `pilot` under the host, within the day's caps and the game's 25¢.
+When the model cannot answer, the seat's own pilot does. Every answer is on the tape, so a replay never asks the model.
+- **Proof:**
+  - `room-agent-seat` 23 checks;
+  - `agent-seat-table` 16;
+  - `coach` 55;
+  - `table-lobby` 75;
+  - `release-pages` 200;
+  - **35 breaks caught**: when it consults (at every decision, never, on any turn, the margin always wide, holding back counted per opponent); the room (a consult ignored at a choice or at priority, the llm setting dropped, the seat made as L1, houseAnswer for a person); the table (seated without the door, llm dropped, no alarm for the seat); the object (the gate skipped, the switch or the allowlist ignored, the game's cap ignored, spend not kept, any index used, the model never asked); the brief (names sent, every hand in it, the hint dropped, a repeated index allowed); the call (on Sonnet, effort not low, logged as the Coach); the Worker's question (the switch or the allowlist ignored); the release (the switch always on, without the privacy wording, without the game's cap); the lobby (Claude always, or never, offered).
+- **Rob's, left:** approve the privacy wording in `docs/ai-door.md` ("AI players on Claude"). Then it goes on
+  `privacy.html` and staging's profile switches it on.
+- **Then:** the bench against L1 with a real model, on staging or with a key in the environment.
+
+**#694 merged on main 4a10c030 on green Actions; staging released.** The first `tools/release-staging.sh` run did not
+release. Its Play walk (play-e2e, under `wrangler dev`) stopped at the third table: polling the table for its countdown,
+one reply came back with no table, and the walk read it as one. The same walk passed on its own straight after, and the
+second release run passed both walks (release-acceptance 22, play-e2e 35) and released it to `release/cloud-staging`
+68724131. Workers Builds deployed it at 00:57:22 UTC on 2026-10-11 as version 05b81554, its `play-worker.js`
+byte-identical to the release's dry-run bundle (2,477,269 bytes, sha256 a4eb41299cb7…). Its AI bindings carry no
+`AI_PILOT`: the LLM seat is not offered on staging until Rob approves its privacy wording.
+- **The walk's reply, made to say itself:** the reply's body was not kept. A refusal is the likely one: the person's
+  rate limit is 120 requests a minute, and the walk polls twice a second on a slow machine. Both of the walk's
+  countdown polls now wait out a reply with no table and, if the wait runs out, name the table's last answer
+  (`tests/uat/play-e2e.mjs`, `tableUntil`). play-e2e 35 checks.
+
+**AI-5: your decks and the table, connected (2026-10-11).** Each deck now says whether the table can play it, before any
+table is opened. Where Play is in the cloud, a deck's tile reads *Playable at the table* or *13 cards to learn for the
+table*. Its page reads *Playable at the table · all 100 cards known* with **Play this deck**, or *87 of 100 known · 13 to
+learn* and names the cards the table cannot play yet.
+- **The question:** `POST /api/tables/known` (`cloud/tables.mjs`) asks which of a deck's card names a table cannot play,
+  with no table. One object answers it from the engine's cards alone. Its name holds a hyphen, so no table's id can be
+  it. The hub asks once for every deck; the page keeps each answer.
+- **Play this deck** opens New table with *You bring D1 Quintorius Spirits to seat 1.*, and the deck takes your seat once
+  the table is made. Already seated at a table whose game has not begun, it offers **Bring … there** instead. A deck the
+  table cannot play whole is not brought: New table names its cards, and you choose another there.
+- **New from Wizards' Play it** starts the precon's import as its chip does, and once the deck is made goes on to New
+  table with it, in place of the deck's page.
+- Only where Play is in the cloud (`crankmagic-table.js`, `C.play`); production leaves the file out, and nothing shows.
+- In passing: a long commander's name in the hub's narrow New from Wizards tile ran out of its chip (a flex item never
+  shrinks under its content); it now ellipsizes as written.
+- **Proof:**
+  - `table-lobby` 88 checks (13 new), now through the Worker's real front door (`cloud/tables.mjs`): the tiles, the
+    hub asking once, both deck pages, Play this deck to a new table, Bring … there, a deck not brought, and Play it;
+  - `game-table` 159 (the door: the names alone, one object, POST only, the size limit, shut without Play's binding);
+  - precons, decks-hub, deck-page-r3, page-budget, feature-wiring, release-pages, playtest-harness, coach unchanged and
+    green;
+  - **21 breaks: 20 caught.** The one missed was a guard no suite could see: an answer landing after the page moved on
+    writes into a page already gone. It was removed.
+- **Not built:** learning a card at *Prepare decks* (AI-3's online half). Until then *to learn* means the table refuses
+  the deck by name, as Change deck already said.
+
+**#696 merged on main 317be8f0 on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` b56404d4 (release-acceptance 22, play-e2e 35). Workers Builds deployed it at 03:18:11 UTC as
+version ba942e7f, its `play-worker.js` byte-identical to the release's dry-run bundle (2,477,826 bytes, sha256
+09f40cf9…). Its AI bindings are the Coach's alone, as before.
+
+**AI-4: the deck advisor, built behind its switch (2026-10-11).** *Ask the AI advisor* under a deck's More menu, where
+the AI door would answer the person. The page sends the deck's id and a goal; the Worker builds the brief itself from
+the person's library as last saved to the cloud, with the catalog's facts slimmed for the Worker, and asks the door's
+model at low effort. Swaps naming a card not in the brief are dropped and counted. Each swap is a row to tick, and a
+ticked one is saved as the deck's linked upgrade; nothing else changes.
+- **Proof:** `advisor` 43 checks (the seven decks' briefs equal the whole catalog's), `advisor-page` 9,
+  `release-pages` 204; 28 breaks caught.
+- **Rob's, left:** the privacy wording in `docs/ai-door.md` ("The deck advisor"), then staging's profile switches it on;
+  the eval with his key, and the swaps he would refuse.
+
+**#697 merged on main c9f87a3f on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` 819748c2 (release-acceptance 22, play-e2e 35). Workers Builds deployed it at 04:25:44 UTC as
+version 37a15ed9, its `play-worker.js` byte-identical to the release's dry-run bundle (2,814,318 bytes, sha256
+b02a0dcf…). Its AI bindings are the Coach's alone: `AI_ADVISE` is not set, so the advisor stays shut on staging
+until Rob approves its privacy wording.
+
+**AI-6: AI Coach settings, built (2026-10-11).** One panel, from Settings (its own card, *AI Coach*) and from the
+board's *Tools ▾ › AI Coach settings…*, saved with the person's preferences and synced with the library. Six controls:
+cards not owned (off), the person's own first (on), inside the bracket (on), advice short or detailed, what the Coach
+sees (board and hand, or board only), and the person's spending over the last 24 hours against their cap.
+- **The advisor's four** are read by the Worker from the library it holds, never from the page. Cards not owned come
+  from the catalog: Commander-legal, inside the commander's colors and the per-card cap, with ten places of their own.
+- **The Coach's:** *My board only* sends the question with the hand withheld, and the table's brief leaves the hand and
+  the question being asked out.
+- **Proof:** `advisor` 56 checks, `coach` 60, `settings-r3` 56, `table-board` 250, `advisor-page` 9; 26 breaks caught.
+
+**#698 merged on main d32d42ca on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` 3a123909 (release-acceptance 22, play-e2e 35). Workers Builds deployed it at 05:09:41 UTC as
+version 848671e7, its `play-worker.js` byte-identical to the release's dry-run bundle (2,824,874 bytes, sha256
+dbfa9625…). Its AI bindings are the Coach's alone, as before: the AI Coach settings are on staging, and the advisor
+they steer is still shut.
+
+**M3: monitoring, built (2026-10-11).** The Worker writes one line for each answer the operator should hear about,
+through `serve()` around `handle()` (`cloud/worker.mjs`, `opsLine`): every 5xx with its status (a 503 is a feature
+switched off, and the alerts leave it out), and a save refused as a sync conflict. A line names the route's resource,
+never the person, an id or what was sent. Each cloud release turns Workers Logs on with those lines only: the
+platform's per-request line, which carries the request's headers, stays off, and `tools/release-pages.mjs` refuses a
+release that would keep it. `tools/ops-week.mjs` is the weekly check, and it only reads. Run on staging today: no
+incidents, 3 people, 24 versions, Time Travel back to the database's birth (its 30-day window), and R2 not on.
+- **Proof:** `cloud-worker` 117 checks, `ops-week` 23, `release-pages` 210; 30 breaks caught.
+- **Rob's, left:** the two alerts with his email; R2 on, and the nightly copy's window and deletion promise
+  (`docs/ops.md`).
+
+**#699 merged on main 65d02094 on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` 4a9272a3 (release-acceptance 22, play-e2e 35). Workers Builds deployed it at 06:06:09 UTC as
+version 9e463c21, its `play-worker.js` byte-identical to the release's dry-run bundle (2,825,718 bytes, sha256
+efa5ea01…). Its AI bindings are the Coach's alone. **Workers Logs is on for crankmagic-staging as built:** the
+Worker's `script-settings` read `observability.enabled` true, `head_sampling_rate` 1, `logs.invocation_logs` false.
+
+**Train C (AI-3): Rob's whole library, learned (2026-10-11).** Of the 1,132 cards in Rob's library, 825 were playable
+before Train C; 305 of the other 307 are now defined, each with scenarios that can fail, so **1,130 of 1,132 play**.
+- **Phase 1** defined 167 with the engine as it was (seven workers by card kind).
+- **Phase 2** built the engine pieces the rest needed, in six areas: four bugs; the turn's and game's records;
+  costs that read their targets, cost atoms, behold, waterbend; replacements and last-known information; keywords
+  (split second, riot, surge, freerunning, embalm, tiered, suspend from the hand, disguise, partner with,
+  firebending, compleated, and more); combat (attacked recipients, attacks alone, losing the game).
+- **Wave 2** built the rest in five areas: selectors and conditions, with mana provenance and mana withheld from
+  casting from hand; counted amounts; revealed hands and the triggers the engine lacked; counters, copies, Roles,
+  attachments and searches; the stack as targets, prevention shields, votes and tempting offers, and the fix for an
+  attack tax the attacker can't pay (CR 508.1d). Then a last area of four. Phase 2 and wave 2 defined 138 of the
+  307, and a few cards beside them (a second Danitha, Gandalf the White) whose clauses the areas were named for.
+- **The two left, and why:** Gandalf, Goblins' Bane // Flameshape (playing a face-down exiled card, CR 406.3a, isn't
+  built) and Extrapolate the Impossible (nothing outside the game in Commander, CR 903.5e and 903.11, so it does
+  nothing there). Gandalf has been defined since (the Gandalf record below), so 1,131 play.
+- **Proof:** check-cards 2,041 definitions, 3,868 scenarios, 0 failed; about 80 new engine suites, every engine, room
+  and game suite green; 1,381 breaks, every one caught; G1's shape on a sample, 140 games: **140 of 140 clean** (seven pods, each with a person in seat 0 and all house, seeds 1-10, `--replay --leaks`): every game finished, none refused, every replay identical, 0 leaks in 8,774 checks of every seat's view; the person's longest wait in a game, median 0.16 s, 90th percentile 0.40 s, at most 1.2 s.
+- **Rob's, left:** confirm the library plays as he expects (AI-3 asks "learned and confirmed"); the two cards above.
+- **Found and fixed on the way** (each from a check that failed first): step-beginning triggers lost when the step's
+  turn-based action asks (a held draw, declare attackers or blockers) -- live tables; a negative printed power read as
+  null; an adventurer card changed just by listing what it may do; an attack tax the house pilot couldn't pay.
+
+**#700 merged on main cd3c794a on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` 6eac25f9 (release-acceptance 22, play-e2e 35). Workers Builds deployed it at 10:10:30 UTC as
+version 0261051e, its `play-worker.js` byte-identical to the release's dry-run bundle (3,301,891 bytes, sha256
+f236861e…; it grew with the engine from 2,825,718, and is 647 KiB gzipped). Its AI bindings are the Coach's alone. So
+staging's table plays 1,130 of Rob's 1,132 library cards.
+
+**The A11y pass: WCAG 2.1 AA on the board and the lobby (2026-10-11).** The new suite, run first against the base,
+failed in 172 places; it now passes 288 checks.
+- **Contrast (1.4.3, 1.4.11):** each word is measured from the screen's pixels over all 30 playmats, both themes and
+  all three views. The worst went from 1.07:1 (the hand's "3/3", light) to 4.77:1. The focus rings are two-tone, and
+  the 24 that vanished on light or mid-tone art now meet 3:1 along 97-100% of their edge. Tokens only, no raw hex.
+- **Focus (2.4.3, 2.4.7, 2.1.1, 2.1.2):** the page behind the board no longer takes Tab, Table view tabs in reading
+  order, focus survives each redraw, menus say `aria-expanded`, and modals trap and return focus.
+- **Keys in Help (2.1.1):** every key the board binds, checked against the handlers.
+- **Card names (1.1.1, 4.1.2):** combat state, chosen and selected; a face-down permanent is "Face-down creature",
+  never its name; a check scans every name and label for hidden cards.
+- **Announced (4.1.2, 4.1.3):** one polite status region beside the board, and the dialogs named and modal.
+- **Proof:** `tests/a11y-board.mjs` 288 checks, 72 breaks caught; `table-board`, `table-lobby`, `browser-geometry`,
+  `page-budget`, `play-journeys` (82) and the rest green. `table-board`'s Coach-under-the-log check measures the side
+  column as it scrolls now.
+- **Left:** "token" and "summoning sick" in a card's name (the engine's projection carries neither). The primary
+  buttons outside Play, on the light and steel-cobalt themes, are done: see the record of 2026-10-11 below.
+
+**#701 merged on main bf0e9d21 on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` 03a69b16 (release-acceptance 22, play-e2e 35). Workers Builds deployed it at 11:17:16 UTC as
+version 51634bdc, its `play-worker.js` byte-identical to the release's dry-run bundle and to #700's (3,301,891 bytes,
+sha256 f236861e…): the A11y pass changed the browser's files only. Its AI bindings are the Coach's alone.
+
+**G-B's one red, root-caused (2026-10-11).** Tests run 2573 on main bf0e9d21 failed once in `tests/table-board.mjs`:
+Maya's board was not told within 10 s that Rob's socket had dropped. Seven local runs passed. Reading the path
+found the race: the lobby reads the table every two seconds, and each read redraws who is away from the table alone
+(`C.board.show`). A read the room answered just before Rob dropped, landing just after the room's "away" frame,
+took Maya's flag down. In the check her later reads are held, so it stayed down past 10 s; on a real network it
+would have come back at the next read, two seconds on.
+- **Proof the race was the cause:** forced on main as it was (the read let through as the room told her, both landing
+  before the check first looked), the drop check failed exactly as run 2573 did: a 10 s timeout, her flag "", her
+  socket having brought `away s0`. With the fix, the same forcing passes. A new check makes the race happen every
+  time: one of Maya's reads is answered before the drop and kept on its way back until the room has told her; it
+  failed on main as it was.
+- **The fix, newest wins, as views already do:** the lobby says when it asked for each read, and the board keeps the
+  room's last frame about a seat over a read asked before that frame came (`crankmagic-board.js`,
+  `crankmagic-table.js`).
+- **Checks:** `table-board` 251 checks; `tools/table-away-breaks.py` 6 breaks, every one caught.
+- The timeout's message still says what Maya's flag read and what her socket last brought, should it fail again.
+
+**Freyalise's Elf Druid, a mana ability (2026-10-11; Claude on Personal-HP, `claude/gallant-williams-342c9c`).** The +2's
+token wrote "{T}: Add {G}." as a card's activated ability, and createToken makes a token's abilities as written, so the
+token offered a stack-using `activate` rather than an `activate-mana` (CR 605.1a). It is now `kind: "mana"`, as the
+Treasure's is; a fourth scenario taps it for {G} on turn 3 (pool {G}, stack empty); and the compiler refuses a token's
+mana ability written as a card's, by name. Of 218 token specs in 2,014 scripts, it was the only one.
+- **Checks:** check-cards 2,041 definitions and 3,869 scenarios, 0 failed; `engine-cards` 54, `engine-cards-pb9` 28,
+  `engine-learned` 253, `engine-mana-withheld` 48; definitions, coverage and catalog `--check` current.
+- **Breaks:** the old form with the guard in place is refused (NOT PLAYABLE, its three scenarios fail); with the guard
+  off, only the new scenario fails ("Rob is not offered activate-mana Elf Druid").
+
+**G-C, the agents' access (2026-10-11).** Staging seated every service token Access admitted as one identity,
+`service:session-checks`, so the four agents M8 plays staging with would have been one person: one library, one seat.
+Now each token is `service:` and twelve hex of its client id's SHA-256 (`cloud/access.mjs`). The same token is always
+the same identity and four tokens are four; none is a person's address, and the client id isn't repeated. It is still
+staging only (`SERVICE_SEATS`).
+- **How an agent gets in** (`docs/playtest-harness.md`): the token's two headers on every request. Checked against
+  staging with the session's token:
+  - Access answers the first request with its `CF_Authorization` cookie (Secure, SameSite=None, about 30 days);
+  - a request carrying only that cookie was seated as the token's identity;
+  - in Chromium, extra headers stay off a socket's handshake while the cookie goes with it, so the cookie carries the
+    table's socket.
+  
+  A real socket through Access is not yet seen: this container's proxy carries none.
+- **Checks:** `cloud-worker` 120, `staging-check` 18 (`--agents`: four identities, none admitted by production),
+  `playtest-harness` 155, `play-e2e` 35, `production-play-e2e` 27; `tools/agents-access-breaks.py` 8 breaks, every one
+  caught.
+- **Rob's:** make the four tokens; admit them on staging's application only (Service Auth, strict service token
+  authentication left off); give each agent its own; put them in the environment as `AGENT1_` to `AGENT4_` for the
+  check.
+- Once released, the session's token reads back as its own `service:` identity, and what staging kept under
+  `service:session-checks` (test data only) is no longer reached.
+
+**#704 merged on main 5a452aba on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` 6bc453a1 (release-acceptance 22, play-e2e 35). Workers Builds deployed it at 14:56:09 UTC as
+version edd03cf8, its `play-worker.js` byte-identical to the release's dry-run bundle (3,302,092 bytes). Its AI
+bindings are the Coach's alone. `tools/staging-check.mjs --expect 5a452ab`, signed in as the session's token, exits
+0: staging serves 5a452ab, both pages say so, and `/api/me` seats the token as `service:e07b4fed5ab9`, an identity of
+its own.
+
+**G-D's dress rehearsal, under way (2026-10-11).** It runs `tests/uat/real-deck-game.mjs` with `REAL_GAMES` and
+`RECORDS`:
+- two people through the real board and two house AIs at each table;
+- the seven decks four at a time;
+- playtest tables, as staging's are;
+- both people downloading each game's full record from the game-over panel.
+
+`tools/playtest-triage.mjs` on what is in: **7 games, every one replayed to the same journal, no leak in 3,092 checks
+of every seat's view.** Two findings are open, in the run's own CSV, as the agents will file theirs:
+- **PT-R-01 (S2, ui):** table 19 stopped when *Turns went by*'s OK could not be pressed for 30 s, because the board
+  kept drawing it anew. The board-person now says, when that happens, how often the board was redrawn and what the
+  seat was asked, which tells the board's fault from the harness's.
+- **PT-R-02 (S1, rules until ruled):** table 5 ended naturally, then failed the harness's frames check (a frame to
+  seat 0 named a card in another seat's hand or library) before its record was downloaded.
+  - The rules show some such names (a revealed card, a library's top played revealed), and G1's oracle found no leak
+    in its 1,400 games, so the harness's simpler check may be the stricter.
+  - The records now come first, and the check names the card, so the next one can be ruled from its record.
+
+**#705 merged on main 46407e27 on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` 625fce97 (release-acceptance 22, play-e2e 35). Workers Builds deployed it at 15:39:52 UTC as
+version cc02a843. Its `play-worker.js` is byte-identical to the release's dry-run bundle and to #704's (3,302,092
+bytes): #705 changed the browser's files only. Its AI bindings are the Coach's alone. `tools/staging-check.mjs
+--expect 46407e2` exits 0, seating the session's token as `service:e07b4fed5ab9`.
+
+**Words on the accent, across the app (2026-10-11): the A11y pass's item left.** The pass darkened the accent under
+words on the board and in the lobby (`--accent-fill`). The rest of the app's words on the accent read 3.86:1 on Felt &
+Cream and 3.98:1 on Steel & Cobalt:
+- the primary buttons and the v-primary;
+- the shop's chosen tab and the graph's chosen mode;
+- the skip link;
+- the landing's step numbers and closing panel;
+- the build's current step.
+
+They now sit on `--accent-fill`. `tests/a11y-app.mjs` reads each such rule in all four themes, and the Decks page's
+own primary buttons: 48 checks, failing in 20 places before. `tools/a11y-app-breaks.py`: 9 breaks, every one caught.
+A tenth found the list row's own primary rule dead (its detail is drawn inside the app, where the app's rule wins),
+so it was removed.
+
+**#706 merged on main fa7cbc7d on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` 2f21208a (release-acceptance 22, play-e2e 35). Workers Builds deployed it at 16:24:17 UTC as
+version 1baa83a9. Its `play-worker.js` is byte-identical to the release's dry-run bundle and to #705's (3,302,092
+bytes): #706 changed the browser's files only. Its AI bindings are the Coach's alone. `tools/staging-check.mjs
+--expect fa7cbc7` exits 0, seating the session's token as `service:e07b4fed5ab9`.
+
+**Gandalf, Goblins' Bane // Flameshape: 1,131 of Rob's 1,132 cards play (2026-10-11).** Train C's one card left for
+want of an engine piece. Flameshape looks at the top two cards and exiles them face down; while they remain exiled
+their controller may play them if they control a Wizard. What was built for it:
+- **Playing a card exiled face down (CR 406.3a).** It is offered by its real characteristics: a land under the land
+  drop's rules; a spell by its own cost, timing, targets, modes and alternative costs; an adventurer card as its
+  Adventure too. It turns face up and is revealed as it is played. It is weighed face up only while its offers and
+  questions are, the way Adventures and disguise already are, and is put back untouched unless played.
+- **Hidden until played.** Only a player who may look at it is offered it (the projection's own `mayLookAt`, now
+  exported). Every other seat sees a face-down card, in the projection and to G1's leak judge. Flameshape's controller
+  may keep looking, as CR 406.3 lets a player who looked at a card and exiled it face down.
+- **"If you control a Wizard":** an `onlyIf` on the play permission, checked each time the card would be played, so
+  a Wizard leaving removes the offer. The permission names the object, so it ends as the card leaves exile.
+- **Two fixes the card needed:** an Adventure card exiled face down kept its Adventure (a manifested one leaving the
+  battlefield had lost it too); and *nothing to do* now sees a face-down card the player could cast.
+- **Found by CI on the PR, and fixed:** the guard that offers a face-down card only to a player who may look at it
+  held every face-down card to it, and disguise weighs a library's top shown face down through the same permission.
+  So Mystic Forge could no longer cast a disguise card face down from the top of the library (`engine-disguise`, which
+  the worker had not run). The guard is now for a card exiled face down only, as the rule it follows is.
+- **Proof:** check-cards 2,042 definitions, 3,876 scenarios, 0 failed. `tests/engine-face-down-play.mjs` (new), 52
+  checks. `breaks-flameshape.py`: 32 breaks, every one caught, with `engine-disguise` among its suites and a break
+  for the guard's reach. All 359 engine, room and game suites pass here; `engine-room-games` missed its time budget
+  once at a load average of 17 and passed alone. A smoke run, not committed: eight four-seat room games with Gandalf leading red decks and a person in seat 0,
+  `--replay --leaks`. All 8 were clean, with 0 leaks in 1,367 checks of every seat's view; Flameshape was cast 95
+  times, and 8 spells and 10 lands were played from face down.
+- **Left:** Extrapolate the Impossible, which does nothing in Commander. Not built, because no defined card needs it:
+  - casting a face-down exiled card face down (CR 708.4);
+  - playing a face-down card one may not look at (CR 406.4);
+  - an effect that plays the card as it resolves.
+
+  The offers are proven down to the table's words for them (the room's `offerDetails`, in `engine-face-down-play`),
+  not yet in a browser: Gandalf is in Rob's library but not in his seven decks, and those are what the browser suites
+  play.
+
+**Found on the way, and fixed: control gained for good broke the room's save.** `gainControl` wrote `until:
+undefined` for a change for good. `storage.mjs` refuses a checkpoint that JSON would change, since the room could not
+wake from it. So a room would stop saving the moment one of these resolved: Agent of Treachery; Alexios, Deimos of
+Kosmos; Archmage's Charm; Hellkite Tyrant; Humble Defector. None is in Rob's seven decks, which is why G1's 1,400
+games never met it; but all five are defined, so an invitee's deck could bring one.
+- **The fix:** a change for good now says no duration at all (`effects/permanents.mjs`).
+- **The checks:**
+  - `engine-control`: the state of a change for good reads back from JSON as it is.
+  - `engine-cards`: every card scenario's state is now checked the way a room's save checks it, with the storage's
+    own `lostIn`, now exported. On main without the fix, this check names exactly those five cards' 7 scenarios, and
+    nothing else in the 3,869. With the fix, none of the 3,876 lose anything.
+  - `breaks-control-for-good.py`: 2 breaks, both caught. The `engine-cards` check also fails on its own with the fix
+    reverted.
+
+**#707 merged on main fd628286 on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` 39b46f0d (release-acceptance 22, play-e2e 35). Workers Builds deployed it at 18:31:25 UTC as
+version 30b5cf40, its `play-worker.js` byte-identical to the release's dry-run bundle (3,305,833 bytes; it grew with
+the engine from 3,302,092). Its AI bindings are the Coach's alone. `tools/staging-check.mjs --expect fd62828` exits 0,
+seating the session's token as `service:e07b4fed5ab9`; its first read, a minute after the deploy, found `/` still at
+fa7cbc7 at the edge, and the next found both pages at fd62828. So staging's table plays 1,131 of Rob's 1,132 cards.
+
+**G-D's dress rehearsal: done, 50 games, and M8's exit criteria met (2026-10-11).** It ran `tests/uat/real-deck-game.mjs`
+for 50 tables here, on the release's own pages and table (not on staging):
+- two people through the real board, each in a browser session of their own, and two house AIs at each table;
+- the seven decks four at a time;
+- playtest tables, as staging's are;
+- both people downloading each game's full record from the game-over panel, each record judged at once by G1's oracle.
+
+**The triage** (`tools/playtest-triage.mjs` over the run's folder, as Grok Bot's run will be triaged): **50 games, 50
+replayed to the same journal, 0 threw, 0 leaked, in 21,006 checks of every seat's view**, in 25 minutes here (about 30
+s a game). Both findings are ruled, so the exit criteria are met. Each finding was the harness's, not the board's:
+- **PT-R-01 (S2, ui): as intended.** *Turns went by*'s OK could not be pressed for 30 s (tables 19 and 33). The panel
+  puts itself away after six seconds by design (Rob, 2026-10-09: nothing to acknowledge). The harness's click outlived
+  it and waited out its 30 s; table 33's diagnostic showed the board still, at the seat's priority. The harness now
+  presses the OK while it is there, and says why when a shown OK cannot be pressed.
+- **PT-R-02 (S1, rules): as intended, CR 401.5.** The harness's own frames check, stricter than the rules, flagged
+  cards the rules show:
+  - a library's top played revealed (Conspicuous Snoop, in D6, at the first table);
+  - a card revealed and known while it stays on top (Chaos Warp at table 13; CR 701.20a, 701.20d).
+
+  G1's oracle passed every recorded game. The first table's own card can't be named: its record was not kept, because
+  the check ran before the download (since reversed). With the records on, the frames are now held to what the oracle
+  passed, so the oracle is the one judge.
+
+**What the rehearsal changed** (the follow-up PR to #707):
+- the harness's two fixes above;
+- the triage asks a CR citation of a `rules` or `card` finding ruled as intended. A `ui`, `ux` or `performance` one
+  answers to the design, which its outcome says; PT-R-01 had no rule of the game to cite, and the agents' will not
+  either. The tool is now 32 checks and 22 breaks, every one caught;
+- "play with the top card of your library revealed" cited as CR 401.5, not 401.4, in the projection, G1's oracle and
+  two suites.
+
+**The run's stops**, none the board's:
+- five where I stopped the run myself, or it reached the two-hour limit for a background job; each was resumed at its
+  table;
+- three on the harness's two findings above.
+
+A table's rerun reuses its match id (`journey0005g1`), which the agents' games on staging will not.
+
+**#708 merged on main 73279bc0 on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` 6bedebdd (release-acceptance 22, play-e2e 35). Workers Builds deployed it at 19:32:27 UTC as
+version 44986635. Its `play-worker.js` is byte-identical to the release's dry-run bundle and to #707's (3,305,833
+bytes): #708 changed comments in shipped code only, which the bundle does not carry. Its AI bindings are the Coach's
+alone. `tools/staging-check.mjs --expect 73279bc` exits 0, seating the session's token as `service:e07b4fed5ab9`.
+
+**G1-L: G1's checks over Rob's whole library (2026-10-11).** G1's 1,400 clean games played his seven decks' 477 cards; the
+rest of his library was proven by its cards' scenarios alone, and #707's save bug had lived there. `tools/fuzz-live.mjs
+--library` (#710) plays, for each seed, four Commander decks made from `data/live-load.json`'s cards (decksFromLibrary: a
+legendary creature the table plays, 99 cards of its color identity, none twice but basics; the same seed, the same decks),
+with G1's terms: finished, nothing refused over the whole match, replayed identically, no seat sent a card it may not know.
+- **The sweep, 650 games**, seat 0 a person (G1's random-legal answerer) or all four seats house AIs (Normal):
+
+  | Run | Games | Clean | Not clean |
+  |---|---:|---:|---|
+  | a person, seeds 1-300 (before either fix) | 300 | 299 | seed 229 |
+  | all AI, seeds 1001-1150 (before either fix) | 150 | 150 | |
+  | a person, seeds 301-400 (the waterbend fixed) | 100 | 100 | |
+  | all AI, seeds 1151-1250 (the waterbend fixed) | 100 | 99 | seed 1193 |
+
+  1,123 of the library's 1,126 playable cards were in at least one deck (the three not drawn are red-green cards with
+  one red-green commander to lead them); every all-AI game played to a winner, in 25 to 95 turns.
+- **Seed 229, fixed in #710: a waterbend paid with rider mana stalled the table.** Foggy Swamp Vinebender's waterbend
+  offer named its rider mana (Path of Ancestry's) against a cost it took as nothing, so once the creatures were picked
+  the rest could not be paid "without the riders". The payment was refused after the ability was on the stack, the
+  room's least answer found no question, and the person's turn was undone each time it was replayed. A waterbend offer
+  now names no rider mana; the rest is paid plain mana first, as anything but a spell is.
+- **Seed 1193, fixed after #710: amass made "Goblin" a card type.** Amass Goblins on a Zombie Army added Goblin to its
+  card types, not its subtypes (CR 701.47a, 205.3m). Braids, Arisen Nightmare's "a permanent that shares a card type with
+  it" then bound "Goblin" as a card type, and the selector's grammar refused it part-way through the sacrifice: the same
+  stall. `engine-amass`'s own check read types and subtypes together, so it could not see it; it now reads the card
+  types alone.
+- **Both are one kind: an AI's answer refused after it had changed the game.** The room assumes the rules refuse an
+  answer before they change anything, which both bugs broke. A snapshot of the game before each AI answer, to undo such a
+  refusal, was measured: about 6 ms an answer, 20 to 30 percent of a game's time on the Durable Object. It was set aside;
+  the library sweep is the guard, and `tests/fuzz-library.mjs` plays seeds 229 and 1193 clean.
+- **Proof:** `tests/fuzz-library.mjs` (new), 12 checks; `tests/engine-waterbend.mjs` and `tests/engine-amass.mjs`, each
+  a check that fails before its fix; `breaks-fuzz-library.py`, 9 breaks, every one caught; check-cards 3,876 scenarios,
+  0 failed.
+
+**#710 merged on main 9c746136 on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` be14ee56 (release-acceptance 22, play-e2e 35). Workers Builds deployed it at 22:31:19 UTC as
+version 025e7c27, its `play-worker.js` byte-identical to the release's dry-run bundle (3,305,854 bytes). Its AI bindings
+are the Coach's alone. `tools/staging-check.mjs --expect 9c74613` exits 0, seating the session's token as
+`service:e07b4fed5ab9`.
+
+**#711 merged on main 039c86dd on green Actions; staging released.** `tools/release-staging.sh` released it to
+`release/cloud-staging` 74fe31e2 (release-acceptance 22, play-e2e 35). Workers Builds deployed it at 23:00:47 UTC as
+version 20b71b9f, its `play-worker.js` byte-identical to the release's dry-run bundle (3,305,857 bytes). Its AI bindings
+are the Coach's alone. `tools/staging-check.mjs --expect 039c86d` exits 0, seating the session's token as
+`service:e07b4fed5ab9`.
+
+**G1-L's third sweep, with both fixes in: 250 of 250 clean (2026-10-11).** `tools/fuzz-live.mjs --library`, fresh seeds,
+G1's terms (finished, nothing refused over the whole match, replayed identically, no leak):
+- with a person in seat 0, seeds 401-500: 100 of 100;
+- all AI seats, seeds 1251-1400: 150 of 150.
+
+So of the library sweep's 900 games, the two that were not clean were the two stalls, both fixed (#710, #711).

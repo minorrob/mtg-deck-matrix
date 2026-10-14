@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gravelgill Scoundrel",
+    "oracleId": "6d7f7e6e-5076-4af7-afe3-3e500835c4aa",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Merfolk",
+      "Rogue"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "Vigilance\nWhenever this creature attacks, you may tap another untapped creature you control. If you do, this creature can't be blocked this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature attacks, you may tap another untapped creature you control. If you do, this creature can't be blocked this turn.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "who": "you",
+          "tap": {
+            "types": [
+              "Creature"
+            ],
+            "another": true
+          },
+          "ifPaid": true,
+          "effects": [
+            {
+              "effect": "effectUntil",
+              "targets": "self",
+              "rule": "cant-be-blocked",
+              "until": "end-of-turn"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Splatter Technique",
+    "oracleId": "2620dcfe-8738-4f81-b23d-0c1c60cf9047",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{U}{U}{R}{R}",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one —\n• Draw four cards.\n• Splatter Technique deals 4 damage to each creature and planeswalker.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one —\n• Draw four cards.\n• Splatter Technique deals 4 damage to each creature and planeswalker.",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Draw four cards.",
+              "effects": [
+                {
+                  "effect": "draw",
+                  "count": 4
+                }
+              ]
+            },
+            {
+              "text": "Splatter Technique deals 4 damage to each creature and planeswalker.",
+              "effects": [
+                {
+                  "effect": "damageAll",
+                  "amount": 4,
+                  "selector": {
+                    "what": "permanent",
+                    "anyOf": [
+                      {
+                        "types": [
+                          "Creature"
+                        ]
+                      },
+                      {
+                        "types": [
+                          "Planeswalker"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

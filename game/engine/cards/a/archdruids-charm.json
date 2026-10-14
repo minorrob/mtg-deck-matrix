@@ -1,0 +1,166 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Archdruid's Charm",
+    "oracleId": "3c1ef404-e2c6-486d-a5a2-d5779c71d498",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{G}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one —\n• Search your library for a creature or land card and reveal it. Put it onto the battlefield tapped if it's a land card. Otherwise, put it into your hand. Then shuffle.\n• Put a +1/+1 counter on target creature you control. It deals damage equal to its power to target creature you don't control.\n• Exile target artifact or enchantment.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one —\n• Search your library for a creature or land card and reveal it. Put it onto the battlefield tapped if it's a land card. Otherwise, put it into your hand. Then shuffle.\n• Put a +1/+1 counter on target creature you control. It deals damage equal to its power to target creature you don't control.\n• Exile target artifact or enchantment.",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Search your library for a creature or land card and reveal it. Put it onto the battlefield tapped if it's a land card. Otherwise, put it into your hand. Then shuffle.",
+              "effects": [
+                {
+                  "effect": "chooseCard",
+                  "zone": "library",
+                  "selector": {
+                    "anyOf": [
+                      {
+                        "types": [
+                          "Creature"
+                        ]
+                      },
+                      {
+                        "types": [
+                          "Land"
+                        ]
+                      }
+                    ]
+                  },
+                  "to": "stay",
+                  "reveal": true,
+                  "remember": true
+                },
+                {
+                  "effect": "moveZone",
+                  "targets": "remembered",
+                  "to": "battlefield",
+                  "tapped": true,
+                  "condition": {
+                    "about": "remembered",
+                    "is": {
+                      "types": [
+                        "Land"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "effect": "moveZone",
+                  "targets": "remembered",
+                  "to": "hand",
+                  "condition": {
+                    "about": "remembered",
+                    "is": {
+                      "nonTypes": [
+                        "Land"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "effect": "shuffle"
+                }
+              ]
+            },
+            {
+              "text": "Put a +1/+1 counter on target creature you control. It deals damage equal to its power to target creature you don't control.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ],
+                  "controller": "you"
+                },
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ],
+                  "controller": "opponent"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "putCounter",
+                  "targets": {
+                    "target": 0
+                  },
+                  "counter": "+1/+1",
+                  "count": 1,
+                  "remember": true
+                },
+                {
+                  "effect": "dealDamage",
+                  "from": "remembered",
+                  "targets": {
+                    "target": 1
+                  },
+                  "amount": {
+                    "powerOf": "remembered"
+                  },
+                  "condition": {
+                    "about": "remembered",
+                    "is": {}
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Exile target artifact or enchantment.",
+              "targets": [
+                {
+                  "anyOf": [
+                    {
+                      "what": "permanent",
+                      "types": [
+                        "Artifact"
+                      ]
+                    },
+                    {
+                      "what": "permanent",
+                      "types": [
+                        "Enchantment"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "moveZone",
+                  "targets": {
+                    "target": 0
+                  },
+                  "to": "exile"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

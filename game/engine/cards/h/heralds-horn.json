@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Herald's Horn",
+    "oracleId": "c02c5547-b9c9-4b2d-9d12-e87bfba8f2d2",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "As this artifact enters, choose a creature type.\nCreature spells you cast of the chosen type cost {1} less to cast.\nAt the beginning of your upkeep, look at the top card of your library. If it's a creature card of the chosen type, you may reveal it and put it into your hand.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "As this artifact enters, choose a creature type.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "choose": "creature type"
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Creature spells you cast of the chosen type cost {1} less to cast.",
+      "rule": "spells-cost-less",
+      "caster": "you",
+      "affects": {
+        "what": "spell",
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "$chosen"
+        ]
+      },
+      "amount": 1
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your upkeep, look at the top card of your library. If it's a creature card of the chosen type, you may reveal it and put it into your hand.",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "peekAndReveal",
+          "count": 1,
+          "remember": true
+        },
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "among": "remembered",
+          "selector": {
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "$chosen"
+            ]
+          },
+          "upTo": true,
+          "to": "hand",
+          "reveal": true
+        }
+      ]
+    }
+  ]
+}

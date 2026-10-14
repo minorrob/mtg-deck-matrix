@@ -24,6 +24,12 @@
  * kills the attacker and survives, or when the damage coming in would be lethal. It keeps a hand of two to
  * five lands. These are heuristics on the visible board.
  *
+ * THIS IS L0, the floor of the house pilot's levels of decision (AI-2, docs/plan-to-done-2026-09-30.md). L1 scores the
+ * choices that decide games -- the mana it spends, where a spell is aimed, the activated abilities worth their cost
+ * (which this pilot never takes), attacks against the swing back, blocks, the opening hand's odds -- and answers the
+ * rest with this pilot: `scored-pilot.mjs`. A table's AI seat is L1 at Normal or
+ * Easy; a seat without a setting, as in every match launched before settings were, is this one.
+ *
  * NOT YET: PLAN §3.6's rollouts (short deterministic playouts against the engine, whose budget is the
  * difficulty). A rollout from a seat's view has to invent the hidden cards first -- sample them from what is
  * publicly known -- or it cheats, and the card definitions that make rollouts worth their cost arrive with
@@ -36,15 +42,21 @@ export const HOUSE_PILOT_ID = "house-pilot";
  * A CHOICE'S REQUIREMENTS, MET (CR 508.1d: "other Goblin creatures you control attack each combat if able"): `indices`, with
  * as few options added as the record's `requires` asks -- for each, at least `least` of the options whose `by` value is
  * one of `values`, each value once -- keeping to `exclusiveBy` and to `capped` (no more at a planeswalker than it allows).
- * A player the answerer prefers (`prefer`, the house pilot's defender) is tried first, then players before planeswalkers.
+ * And to `budget`, what the player can pay for (an attack tax, CR 508.1d, 508.1h): the picks it is given are kept, in
+ * order, while they fit it, and what it adds fits it.
+ * A player the answerer prefers (`prefer`, the house pilot's defender) is tried first, then players before planeswalkers,
+ * each an attack for free before one that costs.
  * Pure, over the record alone: the house pilot imports nothing, and the random pilot and the card scenarios use this one.
  */
 export function meetRequirements(choice, indices, prefer = null) {
   const options = choice.options ?? [];
   const requirements = Array.isArray(choice.requires) ? choice.requires : [];
-  const room = (list, option) => option.planeswalkerId === undefined || choice.capped?.most?.[option.planeswalkerId] === undefined
-    || list.filter((i) => options[i]?.planeswalkerId === option.planeswalkerId).length < choice.capped.most[option.planeswalkerId];
-  const rank = (o) => (o.planeswalkerId === undefined ? (prefer !== null && o.defenderId === prefer ? 0 : 1) : 2);
+  const room = (list, option) => withinBudget(choice, [...list, option.index]) && (option.planeswalkerId === undefined
+    || choice.capped?.most?.[option.planeswalkerId] === undefined
+    || list.filter((i) => options[i]?.planeswalkerId === option.planeswalkerId).length < choice.capped.most[option.planeswalkerId]);
+  const costs = (o) => (choice.budget && (o[choice.budget.by] ?? 0) > 0 ? 1 : 0);
+  const rank = (o) => (o.planeswalkerId === undefined ? (prefer !== null && o.defenderId === prefer ? 0 : 1) : 2) * 2 + costs(o);
+  indices = keptWithin(choice, indices);
   /* CR 508.1c-d: satisfy the requirements together. An attacker with an uncapped alternative may need to leave a capped
      planeswalker's place for another required attacker. Backtracking only within one group would strand the later group. */
   const solve = (n, selected) => {
@@ -80,6 +92,13 @@ export function meetRequirements(choice, indices, prefer = null) {
   return out;
 }
 
+/** Whether these options keep to the record's `budget` ("total power 4 or less"; the mana an attack tax can be paid with,
+    CR 508.1h): their `by` values total no more than its `most`. With no budget, any do. */
+export const withinBudget = (choice, indices) => !choice.budget
+  || indices.reduce((n, i) => n + (choice.options?.[i]?.[choice.budget.by] ?? 0), 0) <= choice.budget.most;
+/** These options, in order, each kept while those kept still keep to the budget. */
+export const keptWithin = (choice, indices) => indices.reduce((kept, i) => (withinBudget(choice, [...kept, i]) ? [...kept, i] : kept), []);
+
 const MAIN = ["MAIN1", "MAIN2"];
 const isLand = (card) => (card?.types ?? []).includes("Land");
 const isCreature = (card) => (card?.types ?? []).includes("Creature");
@@ -111,7 +130,9 @@ export function housePilot({seat, cards = () => null} = {}) {
        nothing to pick ("up to two target creatures you control", with none). */
     if (Array.isArray(t)) return n + 1;
     if (t?.kind === "choose") return n + ((t.of ?? 1) > 0 ? 1 : 0);
-    const theirs = t.kind === "player" ? t.id !== seat : (controllerIn(view, t.id) ?? seat) !== seat;
+    /* An ability on the stack (Bolt Bend): its controller, as the stack shows it -- its stack id names no card. */
+    const theirs = t.kind === "player" ? t.id !== seat : t.kind === "ability" ? ((view.stack ?? []).find((e) => e.stackId === t.id)?.playerId ?? seat) !== seat
+      : (controllerIn(view, t.id) ?? seat) !== seat;
     return n + (theirs === (action.hostile === true) ? 1 : 0);
   }, 0);
 
@@ -137,6 +158,14 @@ export function housePilot({seat, cards = () => null} = {}) {
     id: HOUSE_PILOT_ID,
     seat,
 
+    /** True when `choose` would pass whatever the board: nothing on offer that it ever takes -- a land, a loyalty ability,
+        a spell, a face-down card turned up -- and no mana it would tap, which it does only in its own main phase with
+        the stack empty. The room then passes for it without working out its view (game/room/room.mjs). */
+    passes(actions, stackSize) {
+      return !actions.some((a) => a.kind === "play-land" || a.kind === "cast" || a.kind === "turn-face-up" || a.kind === "suspend" || (a.kind === "activate" && a.loyalty !== undefined)
+        || (a.kind === "activate-mana" && stackSize === 0));
+    },
+
     /** One of the offered actions. */
     choose(view, actions) {
       const self = me(view);
@@ -150,13 +179,20 @@ export function housePilot({seat, cards = () => null} = {}) {
       if (loyal.length) return loyal.reduce((best, a) => (a.loyalty > best.loyalty ? a : best));
       /* An X spell at X = 0 does next to nothing; at its largest it does the most (CR 107.3). */
       /* Never convoked (CR 702.51a): which creatures to tap is a plan of its own, and the pool or the lands pay instead. */
-      const casts = actions.filter((a) => a.kind === "cast" && a.x !== 0 && !a.convoke && (!(a.targets ?? []).length || aim(view, a) > 0));
-      const worth = (a) => manaValue(a.label) + (a.x ?? 0);
+      /* X paid in life (Toxic Deluge, `payLifeX`): never all of its life -- paying it, it would lose (CR 704.5a) -- and no more
+         is worth more, so the least X that does something is the one cast. */
+      const casts = actions.filter((a) => a.kind === "cast" && a.x !== 0 && !a.convoke && (!(a.targets ?? []).length || aim(view, a) > 0)
+        && !(a.payLifeX === true && a.x >= self.life));
+      const worth = (a) => manaValue(a.label) + (a.payLifeX === true ? 0 : a.x ?? 0);
       const best = casts.length ? casts.reduce((top, a) => (worth(a) > worth(top) || (worth(a) === worth(top) && aim(view, a) > aim(view, top)) ? a : top)) : null;
       /* An X spell waits for every source to be tapped first, so X is as large as the mana allows. */
       const untapped = actions.filter((a) => a.kind === "activate-mana" && !a.costChoice);
       if (best && best.x !== undefined && untapped.length && view.turnPlayerId === seat && MAIN.includes(view.phase) && view.stackSize === 0) return untapped[0];
       if (best) return best;
+      /* A card suspended from its hand (CR 702.62a), when the pool already pays its suspend cost and nothing is cast: it comes
+         back free in a few turns. */
+      const suspend = actions.find((a) => a.kind === "suspend");
+      if (suspend) return suspend;
       /* A manifested creature card of its own turned face up (CR 701.40b), when the pool already pays and nothing is cast. */
       const faceUp = actions.find((a) => a.kind === "turn-face-up");
       if (faceUp) return faceUp;
@@ -212,6 +248,21 @@ export function housePilot({seat, cards = () => null} = {}) {
         const order = options.map((o, i) => i).sort((a, b) => rank(options[b]) - rank(options[a]) || a - b);
         return {indices: firstOf(choice, order, min)};
       }
+      /* A choice held to a budget ("any number of creatures with total power 4 or less", Slaughter the Strong): the strongest
+         first while they fit, so the most power is kept. Not an attack's, planned below. */
+      if (choice.budget && !id.startsWith("declare-attackers:")) {
+        const by = choice.budget.by, order = options.map((o) => o.index).sort((a, b) => (options[b][by] ?? 0) - (options[a][by] ?? 0) || a - b);
+        const kept = [];
+        let total = 0;
+        for (const index of order) if (kept.length < max && total + (options[index][by] ?? 0) <= choice.budget.most) { kept.push(index); total += options[index][by] ?? 0; }
+        return {indices: kept};
+      }
+      /* Which permanent of a type a player keeps, chosen by this seat for each player (Tragic Arrogance): its own costliest,
+         another player's cheapest. */
+      if (id.startsWith("sacrifice-keep-type:") && options.length) {
+        const own = options[0].keeper === seat, value = (o) => manaValue(o.label);
+        return {indices: [options.reduce((best, o) => ((own ? value(o) > value(best) : value(o) < value(best)) ? o : best)).index]};
+      }
       if (id.startsWith("sacrifice:")) {
         const rank = (o) => (o.token ? -1 : manaValue(o.label));
         const order = options.map((o, i) => i).sort((a, b) => rank(options[a]) - rank(options[b]) || a - b);
@@ -237,7 +288,10 @@ export function housePilot({seat, cards = () => null} = {}) {
             .filter(([c, o]) => o && (c?.power ?? 0) > 0);
           const walls = blockersOf(p.playerId);
           const overwhelm = ready.length > walls.length;
-          const going = ready.filter(([c]) => overwhelm || !walls.some((b) => (b.power ?? 0) >= (c?.toughness ?? 0) && (b.toughness ?? 0) > (c?.power ?? 0)));
+          const sent = ready.filter(([c]) => overwhelm || !walls.some((b) => (b.power ?? 0) >= (c?.toughness ?? 0) && (b.toughness ?? 0) > (c?.power ?? 0)));
+          /* No more than it can pay for (an attack tax, CR 508.1h; the record's `budget`): the strongest first. */
+          const affordable = new Set(keptWithin(choice, sent.slice().sort(([a, x], [b, y]) => (b?.power ?? 0) - (a?.power ?? 0) || x.index - y.index).map(([, o]) => o.index)));
+          const going = sent.filter(([, o]) => affordable.has(o.index));
           const powers = going.map(([c]) => c?.power ?? 0).sort((a, b) => a - b);
           const through = powers.slice(0, Math.max(0, powers.length - walls.length)).reduce((n, x) => n + x, 0);
           return {p, going, through, lethal: through >= p.life};
@@ -282,12 +336,21 @@ export function housePilot({seat, cards = () => null} = {}) {
         const fit = firstOf(choice, [...aimed, ...rest], max);
         return {indices: fit.slice(0, Math.max(min, Math.min(max, fit.filter((i) => aimed.includes(i)).length)))};
       }
-      /* A flashback cost's creatures to tap (Battle Screech): the weakest first -- what it would least miss in combat. */
-      if (id.startsWith("choose-cost:") && choice.cost === "tap") {
+      /* A flashback cost's creatures to tap (Battle Screech), or escalate's (Collective Effort): the weakest first -- what it
+         would least miss in combat. */
+      if (id.startsWith("choose-cost:") && (choice.cost === "tap" || choice.cost === "escalate")) {
         const mine = new Map(creaturesOf(self).map((c) => [c.cardId, c]));
         const order = options.map((o, i) => i).sort((a, b) => (mine.get(options[a].cardId)?.power ?? 0) - (mine.get(options[b].cardId)?.power ?? 0) || a - b);
         return {indices: firstOf(choice, order, min)};
       }
+      /* What to behold (CR 701.4a): permanents first -- choosing one shows nothing -- then cards revealed from the hand. */
+      if (id.startsWith("choose-cost:") && choice.cost === "behold") {
+        const order = options.map((o, i) => i).sort((a, b) => Number(options[a].fromHand === true) - Number(options[b].fromHand === true) || a - b);
+        return {indices: firstOf(choice, order, min)};
+      }
+      /* Creatures tapped as an additional cost, any number of them ("three times the number of creatures tapped this way",
+         Burn at the Stake): every one it is offered, for the most the spell can do. */
+      if (id.startsWith("choose-cost:") && choice.cost === "tapAny") return {indices: options.map((o) => o.index).slice(0, max)};
       /* What a cast taps for itself (rules/actions.mjs, castTapPlans): the first way, the least flexible sources tapped,
          keeping the most colors for later. */
       if (id.startsWith("choose-cost:") && choice.cost === "mana") return {indices: [0]};
@@ -297,6 +360,13 @@ export function housePilot({seat, cards = () => null} = {}) {
         const lifeless = options.find((o) => /\|0$/.test(o.key ?? ""));
         return {indices: [(lifeless ?? options[0]).index]};
       }
+      /* "You may pay {X}" (Halo Forager): the most it can pay that is the mana value of an instant or sorcery card in a
+         graveyard -- what that X is for -- or nothing. */
+      if (id.startsWith("unless:") && options.some((o) => o.x !== undefined)) {
+        const values = new Set(view.players.flatMap((p) => zone(p, "Graveyard")).filter((c) => (known(c.name)?.types ?? []).some((t) => t === "Instant" || t === "Sorcery")).map((c) => manaValue(c.name)));
+        const best = options.filter((o) => o.x !== undefined && values.has(o.x)).reduce((top, o) => (!top || o.x > top.x ? o : top), null);
+        return {indices: [(best ?? options.find((o) => o.pay === false)).index]};
+      }
       /* Escape's other cards (CR 702.138a): the lands first, then the cheapest -- what it is least likely to want back. */
       if (id.startsWith("choose-cost:")) {
         const yard = new Map(zone(self, "Graveyard").map((c) => [c.cardId, c]));
@@ -304,9 +374,34 @@ export function housePilot({seat, cards = () => null} = {}) {
         const order = options.map((o, i) => i).sort((a, b) => rank(options[a]) - rank(options[b]) || a - b);
         return {indices: firstOf(choice, order, min)};
       }
+      /* Which counters to remove (Mabel, Bitter Recluse): from another player's permanent all it may but -1/-1 counters; from
+         its own, its -1/-1 counters alone -- and only as many others as it must. */
+      if (id.startsWith("remove-counters:") && options.length) {
+        const own = controllerIn(view, options[0].cardId) === seat, harmful = (i) => options[i].counter === "-1/-1";
+        const wanted = options.map((o) => o.index).filter((i) => own === harmful(i));
+        const rest = options.map((o) => o.index).filter((i) => !wanted.includes(i));
+        return {indices: [...wanted, ...rest].slice(0, Math.max(min, Math.min(max, wanted.length)))};
+      }
+      /* Where a counter moves (Forgotten Ancient): onto a creature of its own, else no more. */
+      if (id.startsWith("move-counters:") && options.length) {
+        const own = options.find((o) => o.cardId !== undefined && controllerIn(view, o.cardId) === seat);
+        return {indices: [(own ?? options[options.length - 1]).index]};
+      }
       /* CR 616.1: which effect changes damage dealt to it or its own first -- the one that leaves the least. */
       if (id.startsWith("order-damage:") && options.length) {
         const best = options.reduce((b, o) => ((o.leaves ?? Infinity) < (b.leaves ?? Infinity) ? o : b));
+        return {indices: [best.index]};
+      }
+      /* CR 616.1: which effect changes the counters put on its own permanent first -- the most, or of -1/-1 counters the
+         fewest (the kind is in the question's id). */
+      if (id.startsWith("order-counters:") && options.length) {
+        const fewest = id.includes(":-1/-1:");
+        const best = options.reduce((b, o) => ((fewest ? o.least < b.least : o.puts > b.puts) ? o : b));
+        return {indices: [best.index]};
+      }
+      /* CR 616.1: which effect changes the tokens it makes first (Anointed Procession, Queen Allenal) -- the most. */
+      if (id.startsWith("order-tokens:") && options.length) {
+        const best = options.reduce((b, o) => ((o.makes ?? 0) > (b.makes ?? 0) ? o : b));
         return {indices: [best.index]};
       }
       /* Anything else (trigger order, the commander's zone, an effect's choice): the first legal answer,

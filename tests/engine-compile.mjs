@@ -47,8 +47,13 @@ const handOf = (name) => scripts.find((s) => s.identity.name === name);
   eq(unfaithful, [], "every hand definition passes fidelity: each ability a sentence of the card, every clause claimed");
   const smoked = scripts.map((s) => ({name: s.identity.name, ...smokeTest(s, index.definition)}));
   eq(smoked.filter((r) => !r.ok).map((r) => `${r.name}: ${r.problems.join("; ")}`), [], "every hand definition survives its smoke game");
-  const played = smoked.filter((r) => r.played).length;
-  ok(played >= scripts.length - 2, `and ${played} of ${scripts.length} were actually played or cast in it (a counterspell for creatures has only a sorcery to answer)`);
+  /* The few a smoke game cannot cast, each for want of what its only target must be: an attacking creature (Condemn), a
+     creature dealt damage this turn (Mirrodin Avenged), a white or black spell to counter (Precise Redaction), a tapped
+     creature for the modes its mana pays (Cloud's Limit Break) -- or for want of seven cards in its player's graveyard,
+     without which it can't be cast at all (Proft, Sinister Mastermind). Named, so a card that stops being played in its
+     smoke game is found, not counted. */
+  const unplayed = smoked.filter((r) => !r.played).map((r) => r.name).sort();
+  eq(unplayed, ["Cloud's Limit Break", "Condemn", "Mirrodin Avenged", "Precise Redaction", "Proft, Sinister Mastermind"], `and the other ${scripts.length - unplayed.length} of ${scripts.length} were actually played or cast in it`);
   /* Batch 30: a card aimed at its controller's own creature spell answers the Smoke Whelp its player casts first. */
   ok(smoked.find((r) => r.name === "Double Major")?.played === true, "Double Major (\"copy target creature spell you control\") is cast in its smoke game, at its player's own creature spell");
   /* A creature whose ACTIVATED ability copies its controller's spells is cast as any creature is: no spell of its own put on
@@ -104,7 +109,7 @@ const handOf = (name) => scripts.find((s) => s.identity.name === name);
   const broken = {...handOf("Night's Whisper"), abilities: [{...handOf("Night's Whisper").abilities[0], effects: [{effect: "moveZone", targets: "self", to: "nowhere"}]}]};
   const exploded = smokeTest(broken, index.definition);
   ok(!exploded.ok && /nowhere|zone/i.test(exploded.problems.join(" ")), `a script that throws in its smoke game is refused (${exploded.problems[0]})`);
-  const unbuilt = {...handOf("Night's Whisper"), abilities: [{...handOf("Night's Whisper").abilities[0], effects: [{effect: "addTurn"}]}]};
+  const unbuilt = {...handOf("Night's Whisper"), abilities: [{...handOf("Night's Whisper").abilities[0], effects: [{effect: "replaceCounters"}]}]};
   eq([smokeTest(unbuilt, index.definition).blocked, smokeTest(unbuilt, index.definition).ok], [true, false], "one using a construct the engine has not built is blocked, not refused");
   const s = {zones: {hand: [[1]], battlefield: [1]}, objects: {1: {card: "Twice", zone: "hand"}}};
   ok(zoneProblems(s).some((p) => /object 1 is in hand and battlefield/.test(p)), "the smoke game's state check finds a card in two zones");
@@ -124,7 +129,7 @@ const handOf = (name) => scripts.find((s) => s.identity.name === name);
   const system = writerSystem(examples);
   ok(examples.length >= 5 && examples.every((e) => system.includes(JSON.stringify(e.abilities))), "the writer is shown finished definitions from the directory");
   ok(["dealDamage", "counterSpell", "createToken"].every((p) => system.includes(p)) && system.includes("{\"target\": n}"), "and the engine's own primitives and binding, read off the engine");
-  ok(!/addTurn/.test(system), "never a primitive the engine has not built (addTurn; exchangeLife until Train B built it, surveil was the example until batch 20 built it, twoPiles until 2026-10-04)");
+  ok(!/replaceCounters/.test(system), "never a primitive the engine has not built (replaceCounters; addTurn until Train B's last cards built it, exchangeLife before that, surveil until batch 20, twoPiles until 2026-10-04)");
   ok(system.includes("additionalCost") && ["Treasure", "Food", "Clue"].every((t) => system.includes(t)) && system.includes("attachedBy") && system.includes("\"Equip {N}\""),
     "the writer is told how an additional cost, a predefined token and Equip are written");
   const strict = (schema) => schema.type !== "object" || (schema.additionalProperties === false && Object.values(schema.properties).every((p) => strict(p.items ?? p)));
@@ -200,7 +205,7 @@ const job = (names, call, ledger = {cards: {}}, extra = {}) => {
   eq([r.outcome, r.stage], ["failed", "read-back"], "a read-back no refuses it");
   const boom = {...answerOf("Night's Whisper"), abilitiesJson: JSON.stringify([{...handOf("Night's Whisper").abilities[0], effects: [{effect: "moveZone", targets: "self", to: "nowhere"}]}])};
   eq((await job(["Night's Whisper"], stub({"Night's Whisper": {writer: boom}}).call).run).results[0].stage, "smoke", "a smoke game that throws refuses it");
-  const waits = {...answerOf("Night's Whisper"), abilitiesJson: JSON.stringify([{...handOf("Night's Whisper").abilities[0], effects: [{effect: "addTurn"}]}])};
+  const waits = {...answerOf("Night's Whisper"), abilitiesJson: JSON.stringify([{...handOf("Night's Whisper").abilities[0], effects: [{effect: "replaceCounters"}]}])};
   const blocked = job(["Night's Whisper"], stub({"Night's Whisper": {writer: waits}}).call);
   const rb = (await blocked.run).results[0];
   eq([rb.outcome, blocked.written[ORACLE.get("Night's Whisper").id]?.status], ["blocked", "blocked"], "a script waiting on an unbuilt construct is stored blocked, to play the day the engine builds it");

@@ -1,0 +1,80 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Recursive Recruitment",
+    "oracleId": "b73e35b0-b8c9-471a-bdff-f7dc8f453d7a",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{U}{B}",
+    "colors": [
+      "B",
+      "U"
+    ],
+    "colorIdentity": [
+      "B",
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Create two 2/2 colorless Wizard Soldier creature tokens named Cadet. If this spell was cast from a graveyard, put a +1/+1 counter on each of them for every three cards in your graveyard.\nFlashback {6}{U}{B} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Create two 2/2 colorless Wizard Soldier creature tokens named Cadet. If this spell was cast from a graveyard, put a +1/+1 counter on each of them for every three cards in your graveyard.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 2,
+          "token": {
+            "name": "Cadet",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Wizard",
+              "Soldier"
+            ],
+            "colors": [],
+            "power": 2,
+            "toughness": 2
+          },
+          "remember": true
+        },
+        {
+          "effect": "putCounter",
+          "targets": "remembered",
+          "counter": "+1/+1",
+          "count": {
+            "count": {
+              "what": "card",
+              "zone": "graveyard",
+              "owner": "you"
+            },
+            "per": 3
+          },
+          "condition": {
+            "cast": {
+              "from": "graveyard"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Flashback {6}{U}{B}",
+      "keyword": "flashback",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{6}{U}{B}"
+        }
+      ]
+    }
+  ]
+}

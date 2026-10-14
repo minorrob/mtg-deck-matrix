@@ -1,0 +1,103 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Aziza, Mage Tower Captain",
+    "oracleId": "70e10cb9-ae27-4dba-9a0d-34a78f924774",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Djinn",
+      "Sorcerer"
+    ],
+    "manaCost": "{R}{W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Whenever you cast an instant or sorcery spell, you may tap three untapped creatures you control. If you do, copy that spell. You may choose new targets for the copy.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast an instant or sorcery spell, you may tap three untapped creatures you control. If you do, copy that spell. You may choose new targets for the copy.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "filter": {
+          "anyOf": [
+            {
+              "types": [
+                "Instant"
+              ]
+            },
+            {
+              "types": [
+                "Sorcery"
+              ]
+            }
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "battlefield",
+          "selector": {
+            "types": [
+              "Creature"
+            ],
+            "controller": "you",
+            "tapped": false
+          },
+          "count": 3,
+          "to": "stay",
+          "remember": true,
+          "condition": {
+            "compare": {
+              "count": {
+                "count": {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ],
+                  "controller": "you",
+                  "tapped": false
+                }
+              },
+              "atLeast": 3
+            }
+          }
+        },
+        {
+          "effect": "tap",
+          "targets": "remembered"
+        },
+        {
+          "effect": "copySpell",
+          "spells": "that card",
+          "newTargets": true,
+          "condition": {
+            "compare": {
+              "count": {
+                "rememberedCount": true
+              },
+              "atLeast": 3
+            }
+          }
+        }
+      ],
+      "optional": true
+    }
+  ]
+}

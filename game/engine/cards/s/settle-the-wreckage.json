@@ -1,0 +1,93 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Settle the Wreckage",
+    "oracleId": "2a2ea189-b663-4f4a-bb23-ff7a4af25f71",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Exile all attacking creatures target player controls. That player may search their library for that many basic land cards, put those cards onto the battlefield tapped, then shuffle.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Exile all attacking creatures target player controls. That player may search their library for that many basic land cards, put those cards onto the battlefield tapped, then shuffle.",
+      "targets": [
+        {
+          "what": "player"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZoneAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "attacking": true,
+            "controller": {
+              "target": 0
+            }
+          },
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "modal",
+          "chooser": {
+            "target": 0
+          },
+          "title": "Search your library for that many basic land cards?",
+          "modes": [
+            {
+              "text": "Search",
+              "effects": [
+                {
+                  "effect": "chooseCard",
+                  "zone": "library",
+                  "who": {
+                    "target": 0
+                  },
+                  "selector": {
+                    "types": [
+                      "Land"
+                    ],
+                    "supertypes": [
+                      "Basic"
+                    ]
+                  },
+                  "count": {
+                    "rememberedCount": true
+                  },
+                  "destinations": [
+                    {
+                      "to": "battlefield",
+                      "tapped": true
+                    }
+                  ],
+                  "shuffle": true
+                }
+              ]
+            },
+            {
+              "text": "Don't search",
+              "effects": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

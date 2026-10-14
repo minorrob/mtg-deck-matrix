@@ -23,6 +23,7 @@ function d1() {
   const db = new DatabaseSync(":memory:");
   db.exec("PRAGMA foreign_keys = ON");
   db.exec(readFileSync(new URL("../cloud/migrations/0001_accounts.sql", import.meta.url), "utf8"));
+  db.exec(readFileSync(new URL("../cloud/migrations/0002_ai.sql", import.meta.url), "utf8"));   /* as both real databases have it */
   const statement = (sql, args = []) => ({
     bind: (...values) => statement(sql, values),
     first: async () => db.prepare(sql).get(...args) ?? null,
@@ -87,8 +88,9 @@ eq((await call("GET", "/api/me", {jwt: await token({aud: ["another-app"]})})).st
 eq((await call("GET", "/api/me", {jwt: await token({iss: "https://elsewhere.cloudflareaccess.com"})})).status, 401, "a token from another team: 401");
 eq((await call("GET", "/api/me", {jwt: await token({exp: NOW / 1000 - 120})})).status, 401, "an expired token: 401");
 eq((await call("GET", "/api/me", {jwt: await token({email: undefined, common_name: "service-token-id"})})).status, 401, "a service token, which names no person: 401");
-/* WHERE A RELEASE SEATS A SERVICE TOKEN (SERVICE_SEATS, staging only; the review response's L6): the session's checks,
-   one identity no person can be -- and still only a token Access signed for this application. */
+/* WHERE A RELEASE SEATS A SERVICE TOKEN (SERVICE_SEATS, staging only; the review response's L6, M8's agents): each
+   token Access admitted its own identity, which no person can be -- and still only a token Access signed for this
+   application. */
 {
   const seated = async (jwt) => {
     const response = await handle(new Request("https://crankmagic.test/api/me", {headers: {"cf-access-jwt-assertion": jwt}}), {...env, SERVICE_SEATS: "on"}, {fetchImpl, now: clock});
@@ -96,7 +98,11 @@ eq((await call("GET", "/api/me", {jwt: await token({email: undefined, common_nam
     return {status: response.status, json: text ? JSON.parse(text) : null};
   };
   const me = await seated(await token({email: undefined, common_name: "service-token-id"}));
-  eq([me.status, me.json?.email], [200, "service:session-checks"], "seated: a service token Access admitted is the session's checks, named as no person's address");
+  eq([me.status, /^service:[0-9a-f]{12}$/.test(me.json?.email ?? "")], [200, true], "seated: a service token Access admitted is a test identity, named as no person's address");
+  ok(!me.json.email.includes("service-token-id"), "and its name doesn't repeat the token's client id");
+  eq((await seated(await token({email: undefined, common_name: "service-token-id"}))).json?.email, me.json.email, "the same token is the same identity on every request");
+  const others = await Promise.all(["agent-2-id", "agent-3-id", "agent-4-id"].map(async (id) => (await seated(await token({email: undefined, common_name: id}))).json?.email));
+  eq(new Set([me.json.email, ...others]).size, 4, "and four tokens are four identities: four agents can take four seats (M8)");
   eq((await seated(await token({email: undefined}))).status, 401, "a token naming neither a person nor a service token: still 401");
   eq((await seated(await token({email: undefined, common_name: "service-token-id", aud: ["another-app"]}))).status, 401, "a service token for another Access application: still 401");
   eq((await seated(await token({}))).json?.email, "rob@example.com", "and a person is still themself");
@@ -193,6 +199,27 @@ eq((await call("GET", "/api/auth/login?to=https://evil.example/")).headers.get("
 eq((await call("GET", "/api/nothing")).status, 404, "an unknown endpoint: 404");
 eq(me.headers.get("x-content-type-options") + " " + me.headers.get("cache-control"), "nosniff no-store", "answers are never sniffed or cached");
 
+/* The standby release closes new Play requests without dropping the table class or
+   changing the library. A bound table would answer 200 if the gate were missing. */
+{
+  const prior = (await call("GET", "/api/library")).json;
+  let forwarded=0;
+  env.TABLES={idFromName:id=>id,get:()=>({fetch:async()=>{forwarded++;return new Response('{}',{status:200});}})};
+  env.PLAY_TABLES_CLOSED="on";
+  for(const [method,path,headers] of [
+    ["POST","/api/tables",{"x-crankmagic":"play"}],
+    ["GET","/api/tables/table0123abcd",{}],
+    ["GET","/api/tables/table0123abcd/connect",{upgrade:"websocket",origin:"https://crankmagic.test"}],
+    ["GET","/api/join/table0123abcd/AbC_dEf-0123456789xyzXYZ0123456789abcdEFGH0",{}],
+  ]) eq((await call(method,path,{headers})).status,503,`standby refuses ${method} ${path}`);
+  eq(forwarded,0,"standby never calls a table or changes its state");
+  eq((await call("GET","/api/tables/table0123abcd",{jwt:""})).status,401,"standby still requires Access");
+  eq((await call("GET","/api/library")).json,prior,"cloud library stays available and unchanged");
+  delete env.PLAY_TABLES_CLOSED;
+  eq((await call("GET","/api/tables/table0123abcd")).status,200,"reopening reaches the retained table binding");
+  delete env.TABLES;
+}
+
 /* RATE LIMITS (M3): per IP before anything else, per person once Access has said who. The bindings are
    Cloudflare's; here each is a counter with the same `limit({key}) -> {success}` shape. */
 {
@@ -227,15 +254,19 @@ eq(me.headers.get("x-content-type-options") + " " + me.headers.get("cache-contro
 {
   const rows = (email) => {
     const u = DB.raw.prepare("SELECT id FROM users WHERE email = ?").get(email);
-    if (!u) return {user: 0, versions: 0, head: 0};
-    return {user: 1, versions: Number(DB.raw.prepare("SELECT COUNT(*) AS n FROM snapshots WHERE user_id = ?").get(u.id).n), head: Number(DB.raw.prepare("SELECT COUNT(*) AS n FROM heads WHERE user_id = ?").get(u.id).n)};
+    const ai = Number(DB.raw.prepare("SELECT COUNT(*) AS n FROM ai_calls WHERE email = ?").get(email).n);
+    if (!u) return {user: 0, versions: 0, head: 0, ai};
+    return {user: 1, versions: Number(DB.raw.prepare("SELECT COUNT(*) AS n FROM snapshots WHERE user_id = ?").get(u.id).n), head: Number(DB.raw.prepare("SELECT COUNT(*) AS n FROM heads WHERE user_id = ?").get(u.id).n), ai};
   };
   clock += 120_000;
   const other = await call("PUT", "/api/library", {as: "someone@example.com", body: {...library(7), parent: null}});
   eq(other.status, 200, "another person has a library of their own");
   const robHead = (await call("GET", "/api/library")).json.head;
+  /* Two AI requests of Rob's and one of someone else's, in the call log the AI door writes (cloud/ai.mjs). */
+  const logCall = (email, id) => DB.raw.prepare("INSERT INTO ai_calls (id, email, feature, model, input_tokens, output_tokens, cost_micros, outcome, at) VALUES (?, ?, 'explain', 'claude-opus-5', 10, 10, 300, 'ok', '2026-10-09T00:00:00Z')").run(id, email);
+  logCall("rob@example.com", "a1"); logCall("rob@example.com", "a2"); logCall("someone@example.com", "a3");
   const before = rows("rob@example.com");
-  ok(before.user === 1 && before.versions > 1 && before.head === 1, `rob has an account, versions and a head to delete: ${JSON.stringify(before)}`);
+  ok(before.user === 1 && before.versions > 1 && before.head === 1 && before.ai === 2, `rob has an account, versions, a head and two AI requests to delete: ${JSON.stringify(before)}`);
 
   eq((await call("DELETE", "/api/account", {body: {confirm: "rob@example.com"}, headers: {"x-crankmagic": ""}})).status, 403, "a delete without the app's header: 403");
   eq((await call("DELETE", "/api/account", {body: {confirm: "rob@example.com"}, headers: {origin: "https://evil.example"}})).status, 403, "a delete from another site's page: 403");
@@ -245,8 +276,9 @@ eq(me.headers.get("x-content-type-options") + " " + me.headers.get("cache-contro
   eq(rows("rob@example.com"), before, "after those refusals, every row is still there");
 
   const gone = await call("DELETE", "/api/account", {body: {confirm: "  ROB@Example.com "}});
-  eq([gone.status, gone.json.deleted], [200, {email: "rob@example.com", versions: before.versions}], "the address typed in any case deletes the account, and says how many versions went");
-  eq(rows("rob@example.com"), {user: 0, versions: 0, head: 0}, "the user row, the head and every version are gone from the database");
+  eq([gone.status, gone.json.deleted], [200, {email: "rob@example.com", versions: before.versions, aiRequests: 2}], "the address typed in any case deletes the account, and says how many versions and AI requests went");
+  eq(rows("rob@example.com"), {user: 0, versions: 0, head: 0, ai: 0}, "the user row, the head, every version and the record of each AI request are gone from the database");
+  eq(rows("someone@example.com").ai, 1, "another person's AI requests stay");
   eq((await call("GET", `/api/library/versions/${robHead.id}`, {as: "someone@example.com"})).status, 404, "an old version is not reachable by anyone");
   const theirs = await call("GET", "/api/library", {as: "someone@example.com"});
   eq([theirs.status, theirs.json.head.id], [200, other.json.head.id], "the other person's library is untouched");
@@ -314,6 +346,36 @@ eq(me.headers.get("x-content-type-options") + " " + me.headers.get("cache-contro
   const once = await handle(new Request("https://crankmagic.test/api/import/archidekt?id=123", {headers: {"x-crankmagic": "import", "cf-connecting-ip": "203.0.113.5"}}), limited, {fetchImpl: upstream(() => new Response(JSON.stringify(raw))), now: clock});
   const twice = await handle(new Request("https://crankmagic.test/api/import/archidekt?id=123", {headers: {"x-crankmagic": "import", "cf-connecting-ip": "203.0.113.5"}}), limited, {fetchImpl: upstream(() => new Response(JSON.stringify(raw))), now: clock});
   eq([once.status, twice.status], [200, 429], "and the per-network rate limit holds it like every other request");
+}
+
+/* MONITORING (M3): the line each answer the operator should hear about leaves for Workers Logs -- a 5xx with its
+   status, a save refused as a conflict -- through the Worker's whole path, and never the person or what was sent. */
+{
+  const {serve, opsLine} = await import("../cloud/worker.mjs");
+  const served = async (method, path, {as = "ops@example.com", body, on = env} = {}) => {
+    const lines = [], log = {log: (x) => lines.push(["log", x]), error: (x) => lines.push(["error", x])};
+    const init = {method, headers: {"cf-access-jwt-assertion": await token({email: as}), ...(body ? {"content-type": "application/json", "x-crankmagic": "sync"} : {})}};
+    if (body) init.body = JSON.stringify(body);
+    const response = await serve(new Request(`https://crankmagic.test${path}`, init), on, {fetchImpl, now: clock}, log);
+    return {status: response.status, lines};
+  };
+  const first = await served("PUT", "/api/library", {body: {...library(1), parent: null}});
+  eq([first.status, first.lines], [200, []], "a save that lands leaves no line");
+  const again = await served("PUT", "/api/library", {body: {...library(2), parent: null}});
+  eq([again.status, again.lines], [409, [["log", {ops: "sync-conflict", status: 409, method: "PUT", route: "/api/library"}]]],
+    "a save refused because the library moved on: one sync-conflict line, the route and nothing of the person's");
+  const broken = await served("GET", "/api/me", {on: {...env, DB: {prepare() {throw new TypeError("no such table: users ops@example.com");}}}});
+  const [[level, line]] = broken.lines;
+  eq([broken.status, level, line.ops, line.status, line.route, line.error], [500, "error", "5xx", 500, "/api/me", "TypeError"],
+    "an error the Worker did not expect: a 500 to the person, and a 5xx line with the error's name");
+  ok(/worker\.mjs/.test(line.at) && !/ops@example|no such table/.test(JSON.stringify(line)),
+    `where it was thrown (${line.at.slice(0, 60)}…), never its message, which can carry what was sent`);
+  const shut = await served("GET", "/api/tables/T7Q2/lobby");
+  eq([shut.status, shut.lines.map(([, l]) => [l.ops, l.status, l.route])], [503, [["5xx", 503, "/api/tables"]]],
+    "a feature switched off: its 503 logged by status, for an alert to leave out, and the table's id folded away");
+  eq(opsLine(new Request("https://crankmagic.test/api/join/T7Q2/SECRETCODE"), 502).route, "/api/join", "an invitation's code is never in a line");
+  eq(opsLine(new Request("https://crankmagic.test/api/ai/advise", {method: "POST"}), 409), null, "a 409 that is not a save (the advisor's library not in the cloud yet) is not a conflict");
+  eq(opsLine(new Request("https://crankmagic.test/api/library"), 404), null, "nor is any other answer under 500");
 }
 
 console.log(`cloud-worker: ${checks} checks passed — Access tokens verified, writes from the app only, the head moves only from where a device left it, nothing crosses between people.`);

@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Desperate Futurescribe",
+    "oracleId": "83c12f50-e5a1-479d-afab-edb0b40412f2",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Kor",
+      "Scout"
+    ],
+    "manaCost": "{2}{W}{U}",
+    "colors": [
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "Flying\nAt the beginning of combat on your turn, another target creature you control gets +1/+1 until end of turn. If you've scried or surveilled this turn, put a +1/+1 counter on that creature instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of combat on your turn, another target creature you control gets +1/+1 until end of turn. If you've scried or surveilled this turn, put a +1/+1 counter on that creature instead.",
+      "trigger": {
+        "on": "step",
+        "step": "COMBAT_BEGIN",
+        "yours": true
+      },
+      "effects": [
+        {
+          "effect": "branch",
+          "if": {
+            "compare": {
+              "count": {
+                "scriedOrSurveilledThisTurn": "you"
+              },
+              "atLeast": 1
+            }
+          },
+          "then": [
+            {
+              "effect": "putCounter",
+              "targets": {
+                "target": 0
+              },
+              "counter": "+1/+1",
+              "count": 1
+            }
+          ],
+          "otherwise": [
+            {
+              "effect": "pump",
+              "targets": {
+                "target": 0
+              },
+              "power": 1,
+              "toughness": 1
+            }
+          ]
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "another": true
+        }
+      ]
+    }
+  ]
+}

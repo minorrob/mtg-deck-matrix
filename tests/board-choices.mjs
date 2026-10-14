@@ -69,8 +69,19 @@ const land = (color) => ({types: ["Land"], supertypes: ["Basic"], abilities: [{i
   const of = (kind, label) => actions.map((a, i) => [a, details[i]]).filter(([a]) => a.kind === kind && a.label === label).map(([, d]) => d);
   const zap = of("cast", "Zap");
   ok(zap.length === 7, `Zap is offered once per legal target: the two players and five creatures (${zap.length})`);
-  ok(zap.includes("→ Maya") && zap.includes("→ Rob (you)"), `each says what it is aimed at, the players by name, yours said so: ${zap.filter((d) => !/Goblin|Elves|Bear|Seer/.test(d)).join("; ")}`);
-  ok(zap.includes("→ Llanowar Elves (Maya's)") && zap.includes("→ Bear"), "another player's permanent says whose; your own goes unsaid");
+  ok(zap.includes("→ Maya") && zap.includes("→ Rob (you) · against you"), `each says what it is aimed at, the players by name, yours said so -- and damage at you, that it is against you: ${zap.filter((d) => !/Goblin|Elves|Bear|Seer/.test(d)).join("; ")}`);
+  ok(zap.includes("→ Llanowar Elves (Maya's)") && zap.includes("→ Bear · against your own"), "another player's permanent says whose; your own goes unsaid, but that it is against your own");
+  /* WHOSE SIDE IT IS ON (Rob, 2026-10-12; room.mjs `leaning`): a spell that helps its target aimed at an opponent's
+     permanent says it helps them -- a pump, indestructible in a chosen mode -- and the harmful mode of the same card does not. */
+  const STANCE = {types: ["Instant"], manaCost: "{R}", spell: {id: "s0", text: "Choose one", targets: [], effects: [], modal: {choose: 1, modes: [
+    {text: "Target creature gains indestructible until end of turn.", targets: [{what: "permanent", types: ["Creature"]}], effects: [{effect: "pump", targets: {target: 0}, power: 0, toughness: 0, keywords: ["Indestructible"]}]},
+    {text: "Destroy target creature.", targets: [{what: "permanent", types: ["Creature"]}], effects: [{effect: "destroy", targets: {target: 0}}]}]}}};
+  const elves = Object.keys(s.objects).map(Number).find((k) => s.objects[k].card === "Llanowar Elves"), bear = Object.keys(s.objects).map(Number).find((k) => s.objects[k].card === "Bear");
+  const stance = addObject(s, {card: "Stance", ...STANCE, owner: 0, controller: 0}, "hand", 0);
+  const aim = (modes, target) => ({kind: "cast", objectId: stance, label: "Stance", modes, targets: [{kind: "object", id: target}]});
+  eq(offerDetails(s, 0, [aim([0], elves), aim([1], elves), aim([0], bear), aim([1], bear)]).map((d) => d.split(" · ").slice(1).join(" · ")),
+    ["→ Llanowar Elves (Maya's) · helps Maya", "→ Llanowar Elves (Maya's)", "→ Bear", "→ Bear · against your own"],
+    "indestructible at Maya's creature helps Maya; destroying it is the usual; at your own, indestructible is the usual and destroying it is against your own");
   eq(zap.filter((d) => d.startsWith("→ Goblin")).sort(), ["→ Goblin (Maya's) 1/1 · 1", "→ Goblin (Maya's) 1/1 · 2"], "two of Maya's Goblins alike in every way: power and toughness said, then numbered");
   eq(new Set(zap).size, zap.length, "so no two of Zap's offers read alike");
   /* A cost chosen as it is paid -- an ability's sacrifice, a spell's discard -- in the shape the engine offers it
@@ -173,7 +184,7 @@ const bears = latest.state.players[1].zones.Battlefield.cards.filter((c) => c.na
 const targetCount = 2 + latest.state.players.reduce((n, p) => n + p.zones.Battlefield.cards.filter((c) => (c.types ?? []).includes("Creature")).length, 0);
 ok(castOptions.length === targetCount && allZaps.every((o) => o.detail), `the room's question offers each Zap once per target, each with its detail (${castOptions.map((o) => o.detail).join("; ")})`);
 eq(new Set(castOptions.map((o) => o.detail)).size, castOptions.length, `no two of one card's reading alike${bears > 1 ? `, though Maya's ${bears} Bears share a name` : ""}`);
-ok(castOptions.some((o) => o.detail === "→ Maya") && castOptions.some((o) => o.detail === "→ Rob (you)"), "the players among them, by name");
+ok(castOptions.some((o) => o.detail === "→ Maya") && castOptions.some((o) => o.detail === "→ Rob (you) · against you" && o.lean === "against you"), "the players among them, by name; the one at Rob carrying that it is against him, for the board to mark");
 
 /* ---- 2b. a second table, where Rob's spell is Peek Three ("Scry 3."), played to its question ---- */
 const SCRY_TABLE = "boardscry01";
@@ -182,11 +193,16 @@ await startTable(scryAt, SCRY_TABLE, "Peek Three");
 let scryView = null;
 const scryNode = await socket((f) => {const x = JSON.parse(f); if (x.view) scryView = x.view;}, scryAt);
 const scrySend = (v, payload) => serial(() => scryAt.webSocketMessage(scryNode, JSON.stringify({type: "act", actionId: crypto.randomUUID(), revision: v.revision, kind: "answer", choiceId: v.decision.id, ...payload})));
-const canPeek = (v) => v.state.turnPlayerId === v.seat && v.state.phase === "MAIN1" && v.decision?.kind === "priority" && v.state.players[v.seat].landsPlayed
-  && v.state.players[v.seat].zones.Hand.cards.some((c) => c.name === "Peek Three") && v.state.players[v.seat].zones.Battlefield.cards.some((c) => c.name === "Mountain" && !c.tapped);
+/* Before his land for the turn, so that once the scry is answered the room stops to ask him that, the library as the scry
+   left it (the draw no longer waits for him, so a turn passed would draw from it). */
+const canPeek = (v) => v.state.turnPlayerId === v.seat && v.state.phase === "MAIN1" && v.decision?.kind === "priority" && !v.state.players[v.seat].landsPlayed
+  && v.state.players[v.seat].zones.Hand.cards.some((c) => c.name === "Peek Three") && v.state.players[v.seat].zones.Hand.cards.some((c) => c.name === "Mountain")
+  && v.state.players[v.seat].zones.Battlefield.cards.some((c) => c.name === "Mountain" && !c.tapped);
 await playUntil(scryAt, () => scryView, scrySend, canPeek);
-ok(scryView && canPeek(scryView), `the second table reaches Rob's main phase with Peek Three in hand and a Mountain untapped (turn ${scryView?.state.turn})`);
-for (const pick of [(o) => o.act === "activate-mana" && o.label === "Mountain", (o) => o.act === "cast" && o.label === "Peek Three", (o) => o.act === "pass"])
+ok(scryView && canPeek(scryView), `the second table reaches Rob's main phase with Peek Three in hand, a Mountain untapped and his land still to play (turn ${scryView?.state.turn})`);
+/* Tapped and cast: the cast passes for him (game/room/room.mjs, passAfterCast), the AI seat passes, and the spell resolves
+   to its question. */
+for (const pick of [(o) => o.act === "activate-mana" && o.label === "Mountain", (o) => o.act === "cast" && o.label === "Peek Three"])
   await scrySend(scryView, {indices: [scryView.decision.options.find(pick).index]});
 /* The game as the table saved it (the room checkpoints at every person's decision): what no seat's view shows, the order of
    a library. */
@@ -303,9 +319,10 @@ try {
   await choose.click();
   const dialog = page.locator("#cm-dialog[open]");
   await dialog.waitFor({timeout: 5000});
-  const ways = await dialog.locator(".cm-board-choices [data-action=board-zoom-do]").allInnerTexts();
+  const ways = (await dialog.locator(".cm-board-choices [data-action=board-zoom-do]").allInnerTexts()).map((w) => w.replace(/\s+/g, " ").trim());
   eq(ways.length, castOptions.length, "pressing it opens a pop-up with every way");
-  ok(ways.includes("Cast Zap → Maya") && ways.includes("Cast Zap → Rob (you)") && ways.some((w) => /^Cast Zap → Maya Bear \(Maya's\)/.test(w)), `each by what it is aimed at: ${ways.join("; ")}`);
+  ok(ways.includes("Cast Zap → Maya") && ways.includes("Cast Zap → Rob (you) · ⚠ against you") && ways.some((w) => /^Cast Zap → Maya Bear \(Maya's\)/.test(w)), `each by what it is aimed at: ${ways.join("; ")}`);
+  eq(await dialog.locator(".cm-board-choices [data-action=board-zoom-do] .cm-lean.is-against").allInnerTexts(), ["⚠ against you"], "the one against Rob himself marked so, and only it");
   ok(await page.locator(".cm-board-also").count() === 0, "and the menu it came from is put away");
   if (SHOTS) await page.screenshot({path: path.join(SHOTS, "board-choices-1400.png")});
   await dialog.locator("[data-action=close]").first().click();
@@ -324,12 +341,15 @@ try {
   });
   ok(fit.inside && !fit.scrolls, `at 1280 by 720 every way and Close are on screen, the pop-up unscrolled (card ${fit.card}px tall)`);
   if (SHOTS) await page.screenshot({path: path.join(SHOTS, "board-choices-1280x720.png")});
-  eq((await dialog.locator(".cm-board-choices [data-action=board-zoom-do]").allInnerTexts()).sort(), [...ways].sort(), "pressing Zap in the hand opens the same pop-up, rather than casting it at the first target");
+  eq((await dialog.locator(".cm-board-choices [data-action=board-zoom-do]").allInnerTexts()).map((w) => w.replace(/\s+/g, " ").trim()).sort(), [...ways].sort(), "pressing Zap in the hand opens the same pop-up, rather than casting it at the first target");
+  /* The cast passes for Rob (game/room/room.mjs, passAfterCast) and the AI seat passes, so Zap resolves in the same turn of
+     the room as it is cast: what it hit is read off the game, Maya one life down, rather than off the stack. */
+  const mayaLife = (v) => v.state.players[1].health.life, before = mayaLife(latest), castsBefore = latest.history.filter((h) => h.text === "Rob cast Zap").length;
   await dialog.locator(".cm-board-choices [data-action=board-zoom-do]", {hasText: /^Cast Zap → Maya$/}).click();
   await page.waitForFunction(() => !document.querySelector("#cm-dialog[open]"));
-  for (let t = 0; t < 100 && !(latest.state.stack ?? []).length; t += 1) await new Promise((r) => setTimeout(r, 100));
-  const top = (latest.state.stack ?? []).at(-1);
-  ok(top && top.name === "Zap" && top.targets?.[0]?.kind === "player" && top.targets[0].id === 1, `choosing "→ Maya" casts Zap at Maya: the stack holds ${top ? `${top.name} aimed at ${JSON.stringify(top.targets)}` : "nothing"}`);
+  for (let t = 0; t < 100 && mayaLife(latest) === before; t += 1) await new Promise((r) => setTimeout(r, 100));
+  ok(mayaLife(latest) === before - 1 && latest.history.filter((h) => h.text === "Rob cast Zap").length === castsBefore + 1 && latest.history.some((h) => h.text === "Zap resolved"),
+    `choosing "→ Maya" casts Zap at Maya: it resolves, and Maya's life goes ${before} → ${mayaLife(latest)}`);
 
   /* ---- 4. the board answers scry: a pick-several pop-up, then the order of what stays ---- */
   /* The board sends what it collected and nothing else ({indices}); scry was once one ordering whose answer had to carry
@@ -360,8 +380,8 @@ try {
   eq([await cardsBox.nth(1).getAttribute("data-order"), await cardsBox.nth(0).getAttribute("data-order")], ["1", "2"], "the second of them chosen first, to go on top");
   if (SHOTS) await page.screenshot({path: path.join(SHOTS, "board-scry-order-1400.png")});
   await box.locator("[data-action=board-confirm]").click();
-  /* The game moves on to whatever Rob is asked next (with nothing left to do, the room passes for him); his draw waits
-     for him, so the library is still as the scry left it. */
+  /* The game moves on to what Rob is asked next -- his land for the turn, still to play -- so the library is still as the
+     scry left it. */
   const onScry = () => !latest?.decision || String(latest.decision.id).startsWith("scry");
   for (let t = 0; t < 100 && onScry(); t += 1) await new Promise((r) => setTimeout(r, 100));
   const libraryAfter = savedLibrary(SCRY_TABLE, robSeat), [a, b, c] = scry.options.map((o) => o.cardId);

@@ -1,0 +1,595 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Unbury",
+  "fixtures": {
+    "Elf Druid": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf",
+        "Druid"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Elf Warrior": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf",
+        "Warrior"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Goblin Warrior": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin",
+        "Warrior"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Ooze": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ooze"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Mimic": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Shapeshifter"
+      ],
+      "manaCost": "{1}{U}",
+      "colors": [
+        "U"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "keywords": [
+        "Changeling"
+      ]
+    },
+    "Their Elf": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf",
+        "Druid"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Two creature cards that share a creature type: the Elves, offered as Elves -- and as Warriors, the Elf Warrior with the Goblin; never the Ooze",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Unbury"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Elf Druid",
+            "Elf Warrior",
+            "Goblin Warrior",
+            "Ooze"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Their Elf"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Unbury"
+              },
+              "count": 6,
+              "targets": [
+                [
+                  "Elf Druid"
+                ],
+                [
+                  "Elf Warrior"
+                ],
+                [
+                  "Goblin Warrior"
+                ],
+                [
+                  "Ooze"
+                ],
+                [
+                  "two targets that share a creature type: Elf"
+                ],
+                [
+                  "two targets that share a creature type: Warrior"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Unbury",
+          "modes": [
+            1
+          ],
+          "targets": [
+            [
+              {
+                "card": "Elf Druid"
+              },
+              {
+                "card": "Elf Warrior"
+              }
+            ]
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Elf Druid",
+            "Elf Warrior"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Goblin Warrior",
+            "Ooze",
+            "Unbury"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The Warriors: an Elf and a Goblin share Warrior",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Unbury"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Elf Druid",
+            "Elf Warrior",
+            "Goblin Warrior",
+            "Ooze"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Unbury",
+          "modes": [
+            1
+          ],
+          "targets": [
+            [
+              {
+                "card": "Elf Warrior"
+              },
+              {
+                "card": "Goblin Warrior"
+              }
+            ]
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Elf Warrior",
+            "Goblin Warrior"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A changeling shares a creature type with the Ooze",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Unbury"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Ooze",
+            "Mimic"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Unbury"
+              },
+              "count": 3,
+              "targets": [
+                [
+                  "Ooze"
+                ],
+                [
+                  "Mimic"
+                ],
+                [
+                  "two targets that share a creature type: Ooze"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Unbury",
+          "modes": [
+            1
+          ],
+          "targets": [
+            [
+              {
+                "card": "Ooze"
+              },
+              {
+                "card": "Mimic"
+              }
+            ]
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Ooze",
+            "Mimic"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "No two share a creature type: only the first mode is offered; one card returns",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Unbury"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Elf Druid",
+            "Goblin Warrior",
+            "Ooze"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Unbury"
+              },
+              "count": 3,
+              "targets": [
+                [
+                  "Elf Druid"
+                ],
+                [
+                  "Goblin Warrior"
+                ],
+                [
+                  "Ooze"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Unbury",
+          "modes": [
+            0
+          ],
+          "targets": [
+            {
+              "card": "Ooze"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Ooze"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Elf Druid",
+            "Goblin Warrior",
+            "Unbury"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Rob's graveyard only: Maya's Elf is no target of either mode",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Unbury"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Elf Druid"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Their Elf"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Unbury"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Elf Druid"
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Unbury"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "An instant: cast on Maya's turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Unbury"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Ooze"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Swamp",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "cast": "Unbury",
+          "seat": 0,
+          "modes": [
+            0
+          ],
+          "targets": [
+            {
+              "card": "Ooze"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Ooze"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Surveillance Phantasm",
+    "oracleId": "b97648b7-ae98-45c9-8f0f-a52d6faf2d2d",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Bird",
+      "Illusion"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Defender, flying, vigilance\nAs long as you've scried or surveilled this turn, this creature can attack as though it didn't have defender.\n{3}{U}: Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Defender",
+      "keyword": "defender"
+    },
+    {
+      "kind": "keyword",
+      "text": "flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "static",
+      "text": "As long as you've scried or surveilled this turn, this creature can attack as though it didn't have defender.",
+      "rule": "attacks-despite-defender",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "condition": {
+        "compare": {
+          "count": {
+            "scriedOrSurveilledThisTurn": "you"
+          },
+          "atLeast": 1
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{3}{U}: Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}{U}"
+        }
+      ],
+      "targets": [],
+      "effects": [
+        {
+          "effect": "surveil",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

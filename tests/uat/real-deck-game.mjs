@@ -2,7 +2,7 @@
 
 /* A NATURAL GAME END THROUGH TWO BROWSERS, using confirmed card definitions.
  *
- * D5 Shadrix at all four seats: two browser users at 1400x900 and 1280x720, two house pilots.
+ * D5 Shadrix (default) or REAL_DECK_ID=D2 Chulane at all four seats: two browser users at 1400x900 and 1280x720, two house pilots.
  * The host creates the table, invites the second user, and both choose decks and become ready.
  * Browser users take the house pilot's suggestions over their own visible state and offered
  * choices, exclusively through UI controls. Reload preserves a pending decision; both sessions
@@ -15,22 +15,37 @@
  * vanilla stand-ins. The real library and online accounts are untouched.
  *
  * node tests/uat/real-deck-game.mjs
+ * REAL_DECK_ID=D2 selects the committed Chulane list; this never uses an external backup.
  * REAL_DECKS_REQUIRED=1 refuses a missing browser; UAT_SHOTS=<dir> saves each end screen.
  * This deliberate full-game acceptance run is outside the regular suite inventory.
+ *
+ * G-D'S DRESS REHEARSAL (M8; docs/uat/playtest-findings.md). REAL_GAMES=<n> plays n tables in a row, the seven decks
+ * four at a time (the first table D1-D4, the next D2-D5, and so on round). RECORDS=<run folder> makes every table a
+ * playtest table, as staging's are, and after each natural end both people download the full record from the
+ * board's game-over panel into <run folder>/records/, which tools/playtest-triage.mjs then replays and judges, as it
+ * will Grok Bot's runs. REAL_FIRST=<k> starts at table k, so two runs side by side play other pods, under other ids.
  */
-import {housePilot} from "../../game/engine/pilots/house-pilot.mjs";
 import assert from "node:assert/strict";
-import {readFileSync, mkdirSync} from "node:fs";
+import {readFileSync, mkdirSync, writeFileSync} from "node:fs";
 import path from "node:path";
 import {openBrowser, loadLiveState, ROOT} from "./browser-runner.mjs";
 import {basicCards} from "../../game/room/room.mjs";
 import {GameTable, tableCards} from "../../cloud/game-room.mjs";
 import {build, worktreeSource} from "../../tools/release-pages.mjs";
 import {joinLocation} from "../../cloud/worker.mjs";
+import {boardPerson} from "./board-person.mjs";
+import {replayRecord} from "../../tools/playtest-triage.mjs";
+import {checkLeaks} from "../../tools/fuzz-live.mjs";
 
 let checks = 0;
 const ok = (c, m) => {assert.ok(c, m); checks += 1; console.log(`  ok  ${m}`);};
 const eq = (a, b, m) => {assert.deepEqual(a, b, m); checks += 1; console.log(`  ok  ${m}`);};
+const DECK_ID = process.env.REAL_DECK_ID || "D5";
+assert.ok(/^(D2|D5)$/.test(DECK_ID), "REAL_DECK_ID must be D2 or D5, the completed committed deck lists");
+/* REAL_FIRST numbers the first table, so runs side by side play different pods under different match ids. */
+const PODS = !!process.env.REAL_GAMES, GAMES = Number(process.env.REAL_GAMES || 1), FIRST = Number(process.env.REAL_FIRST || 1), RECORDS = process.env.RECORDS || "";
+assert.ok(Number.isInteger(GAMES) && GAMES >= 1 && Number.isInteger(FIRST) && FIRST >= 1, "REAL_GAMES is a number of tables, and REAL_FIRST the first one's number, each 1 or more");
+if (RECORDS) mkdirSync(path.join(RECORDS, "records"), {recursive: true});
 const SHOTS = process.env.UAT_SHOTS || "";
 if (SHOTS) mkdirSync(SHOTS, {recursive: true});
 const shot = async (page, name) => {if (SHOTS) await page.screenshot({path: path.join(SHOTS, `${name}.png`)});};
@@ -44,7 +59,7 @@ const cards = tableCards;
 const ROB = "rob@example.com", MAYA = "maya@example.com";
 let clock = Date.parse("2026-09-30T20:00:00Z");
 const objects = new Map(), frames = {[ROB]: [], [MAYA]: []}, sent = {};   /* sent[tableId][email:seat]: the deck the lobby sent */
-let nextId = 0, queue = Promise.resolve();
+let nextId = FIRST - 1, queue = Promise.resolve();
 const serial = (fn) => (queue = queue.then(fn, fn));
 const objectCtx = () => {
   const map = new Map(), sockets = [];
@@ -52,7 +67,8 @@ const objectCtx = () => {
     list: async ({prefix}) => new Map([...map].filter(([k]) => k.startsWith(prefix)).sort()), setAlarm: async () => {}, deleteAlarm: async () => {}},
   acceptWebSocket: (s, tags) => {s.tags = tags; sockets.push(s);}, getWebSockets: () => sockets.filter((s) => !s.closed), getTags: (s) => s.tags};
 };
-const tableFor = (id) => {if (!objects.has(id)) objects.set(id, new GameTable(objectCtx(), {}, {cards, now: () => clock})); return objects.get(id);};
+/* With RECORDS, a playtest table, as the Worker's PLAYTEST_TABLES makes staging's: its record is the whole game. */
+const tableFor = (id) => {if (!objects.has(id)) objects.set(id, new GameTable(objectCtx(), RECORDS ? {PLAYTEST_TABLES: "on"} : {}, {cards, now: () => clock})); return objects.get(id);};
 async function answer(route, email) {
   const req = route.request(), url = new URL(req.url()), method = req.method();
   const m = /^\/api\/tables(?:\/([a-z0-9]+)(?:\/([a-z]+))?)?$/.exec(url.pathname);
@@ -135,7 +151,7 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
   await rob.page.waitForFunction(() => /#table\?id=journey\d+/.test(location.hash), null, {timeout: 20000});
   const id = /#table\?id=(journey\d+)/.exec(await rob.page.evaluate(() => location.hash))[1];
   await rob.page.locator(".cm-cloud-table .cm-lobby-seat[data-seat='3']").waitFor({timeout: 20000});
-  eq((await rob.page.locator(".cm-cloud-table .cm-lobby-seat h3").allTextContents()).map((t) => t.trim()), ["Seat 1 · You", "Seat 2 · Maya", "Seat 3 · AI", "Seat 4 · AI"], `table ${n}: New table seats Rob, Maya to invite, and two AIs`);
+  eq((await rob.page.locator(".cm-cloud-table .cm-lobby-seat h3").allTextContents()).map((t) => t.trim()), ["Seat 1 · You", "Seat 2 · Maya", "Seat 3 · AI · Normal", "Seat 4 · AI · Normal"], `table ${n}: New table seats Rob, Maya to invite, and two AIs`);
   await chooseDeck(rob.page, 0, robDeck.name);
   await chooseDeck(rob.page, 2, ninaDeck.name);
   await chooseDeck(rob.page, 3, theoDeck.name);
@@ -165,60 +181,13 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
 
   const alarm = setInterval(() => {if(tableFor(id).room?.continuing) serial(() => tableFor(id).alarm());}, 50);
   alarms.push(alarm);
-  const pilots = [0,1].map(seat => housePilot({seat, cards: tableCards}));
-  let actions = 0, reloaded = false;
   const current = person => viewsAt(person.email, id).at(-1);
-  async function visible(page, selector) {
-    const items = page.locator(selector);
-    for (let i=0; i<await items.count(); i++) if(await items.nth(i).isVisible()) return items.nth(i);
-    return null;
-  }
-  async function click(page, selector) {
-    const element = await visible(page, selector);
-    assert.ok(element, `visible control ${selector}`);
-    await element.click({timeout:10000});
-  }
+  const people = [[rob,0],[maya,1]].map(([person,seat]) => boardPerson({page: person.page, seat, cards: tableCards, current: () => current(person)}));
+  let actions = 0, reloaded = false;
   async function answer(person, seat) {
-    const v=current(person), d=v?.decision, page=person.page;
-    if (!d || v.status==='finished') return false;
-    const closed = await visible(page, '[data-action=board-went-close]');
-    if(closed) await closed.click();
-    if (d.kind==='draw') await click(page,'[data-action=board-draw]:not([disabled])');
-    else if (d.kind==='priority') {
-      const options=d.options.map(o=>({kind:o.act,objectId:o.cardId,label:o.label,option:o}));
-      const chosen=pilots[seat].choose(v.state,options).option;
-      if(chosen.act==='pass') await click(page,'[data-action=board-pass]:not([disabled])');
-      else {
-        if(!await visible(page, `#cm-board-decision [data-action=board-option][data-index="${chosen.index}"]`)) {
-          const also=await visible(page,'[data-action=board-also]');
-          if(also) await also.click();
-        }
-        const exact=await visible(page,`[data-action=board-option][data-index="${chosen.index}"]`);
-        if(exact) await exact.click();
-        else {
-          const chooser=await visible(page,`[data-action=board-choose][data-card="${chosen.cardId}"]`);
-          if(chooser) {await chooser.click(); await click(page,`[data-action=board-zoom-do][data-index="${chosen.index}"]`);}
-          else {
-            const grouped=d.options.find(o=>o.act===chosen.act&&o.label===chosen.label);
-            await click(page,`[data-action=board-option][data-index="${grouped.index}"]`);
-          }
-        }
-      }
-    } else {
-      const picked=pilots[seat].answer(v.state,d);
-      if(picked.amounts) {
-        for(let i=0;i<picked.amounts.length;i++) {
-          const field=await visible(page,`[data-board-amount="${i}"]`);
-          assert.ok(field,`amount input ${i}`); await field.fill(String(picked.amounts[i])); await field.press('Tab');
-        }
-      } else for(const i of picked.indices??[]) await click(page,`[data-action=board-option][data-index="${i}"]`);
-      if(['many','order','ack','damage','amount'].includes(d.mode)) await click(page,'[data-action=board-confirm]:not([disabled])');
-    }
+    if (!await people[seat]()) return false;
     actions++;
-    const began=Date.now();
-    while(current(person)?.revision===v.revision && Date.now()-began<15000) await page.waitForTimeout(20);
-    assert.notEqual(current(person)?.revision,v.revision,`action advances ${d.title}`);
-    if(actions%25===0) console.log(`D5 browser: ${actions} actions, turn ${current(person).state.turn}`);
+    if(actions%25===0) console.log(`${!PODS ? DECK_ID : `table ${n}`} browser: ${actions} actions, turn ${current(person).state.turn}`);
     return true;
   }
   for(let i=0;i<3000;i++) {
@@ -236,16 +205,42 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
     if(!moved) await rob.page.waitForTimeout(100);
   }
   const result=current(rob);
-  eq(result.status,'finished','real D5 game finishes naturally');
+  eq(result.status,'finished',`table ${n}: the real ${!PODS ? DECK_ID : 'decks\''} game finishes naturally`);
   eq(current(maya).status,'finished','second browser sees the same natural end');
   assert.notEqual(result.result?.reason,'ended early');
   eq(current(maya).result,result.result,'separate browser sessions agree on result');
   ok(reloaded,'reconnect exercised during a pending game');
+  /* The record each person downloads from the game-over panel: on a playtest table, the whole game. */
+  const judged=[new Set(),new Set()];
+  if (RECORDS) for (const [person,seat] of [[rob,0],[maya,1]]) {
+    const [download] = await Promise.all([person.page.waitForEvent('download',{timeout:15000}), person.page.click('.cm-board-over [data-action=board-record]')]);
+    const record = JSON.parse(readFileSync(await download.path(),'utf8'));
+    eq([record.kind,record.matchId],['full',result.matchId ?? record.matchId],`seat ${seat}: the game-over panel downloads the full record`);
+    writeFileSync(path.join(RECORDS,'records',`${record.matchId}-seat${seat}.json`), JSON.stringify(record));
+    /* And judged at once as the triage will judge it: replayed, every seat's view at every answer read by G1's oracle. */
+    if (seat === 0) {
+      /* G1's oracle, and beside it what each person's seat was shown of another's hand or library at each answer it
+         judged: the frames below are held to that. */
+      const judge = async (room, ...rest) => {
+        for (const s of [0,1]) room.view(room.seats[s].seatId).state.players.forEach((p,o)=>{if (o!==s) for (const z of ['Hand','Library']) for (const c of p.zones[z]?.cards??[]) if (c.name) judged[s].add(`${o}|${z}|${c.name}`);});
+        return checkLeaks(room, ...rest);
+      };
+      const replayed = await replayRecord(record, {cards: tableCards, judge});
+      ok(replayed.same && !replayed.exception && !replayed.leaks.length, `table ${n}: the record replays to the same journal, and no seat was sent a card it may not know (${replayed.leakChecks} checks)${replayed.leaks.length ? `: ${JSON.stringify(replayed.leaks[0])}` : replayed.exception ? `: ${replayed.exception}` : ''}`);
+    }
+  }
   for(const [person,seat] of [[rob,0],[maya,1]]) {
     const views=viewsAt(person.email,id);
-    ok(views.every(v=>v.state.players.every((p,s)=>s===seat || ['Hand','Library'].every(z=>(p.zones[z]?.cards??[]).every(c=>!c.name)))),`seat ${seat}: all ${views.length} frames hide other hands and libraries`);
+    /* A name in another seat's hand or library, said by card, zone, owner and turn. With the records, which cards the
+       rules show there is G1's oracle's to judge (above: a top Conspicuous Snoop plays revealed, CR 401.5, or one
+       Chaos Warp revealed, known while it stays on top, CR 701.20a and 701.20d), and a frame may name only a card the
+       oracle passed as shown to that seat. Without them, a library's top a permanent its owner controls plays revealed (CR 401.5). */
+    const revealsTop=(p)=>(p.zones.Battlefield?.cards??[]).some((c)=>c.name&&(cards(c.name)?.abilities??[]).some((a)=>a.kind==='static'&&a.rule==='top-revealed'));
+    const passed=(p,s,z,c,i)=>RECORDS ? judged[seat].has(`${s}|${z}|${c.name}`) : z==='Library'&&i===0&&revealsTop(p);
+    const shown=views.flatMap((v)=>v.state.players.flatMap((p,s)=>s===seat?[]:['Hand','Library'].flatMap((z)=>(p.zones[z]?.cards??[]).filter((c,i)=>c.name&&!passed(p,s,z,c,i)).map((c)=>({turn:v.state.turn,owner:s,zone:z,name:c.name})))));
+    ok(!shown.length,`seat ${seat}: all ${views.length} frames hide other hands and libraries${shown.length?` -- but ${shown.length} named a card there, first ${JSON.stringify(shown[0])}`:''}`);
     await person.page.locator('.cm-board-over').waitFor({timeout:10000});
-    await shot(person.page,`d5-natural-end-seat${seat}`);
+    await shot(person.page,`${DECK_ID.toLowerCase()}-natural-end-seat${seat}`);
   }
   const room=tableFor(id).room;
   console.log(JSON.stringify({checks,actions,turns:result.state.turn,result:result.result,refusals:room.refusals},null,2));
@@ -254,10 +249,11 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
   return id;
 }
 try {
-  const d5=DECKS.find(d=>d.id==='deck:live:D5'); assert.ok(d5);
+  const deck=DECKS.find(d=>d.id===`deck:live:${DECK_ID}`); assert.ok(deck);
   const rob=await person(ROB,{width:1400,height:900});
   const maya=await person(MAYA,{width:1280,height:720});
-  await journey(1,rob,maya,[d5,d5,d5,d5]);
+  /* One table of the one deck; or n tables, the seven decks four at a time. */
+  for (let n = FIRST; n < FIRST + GAMES; n += 1) await journey(n,rob,maya,!PODS ? [deck,deck,deck,deck] : [0,1,2,3].map((j)=>DECKS[(n-1+j)%DECKS.length]));
 } finally {for (const alarm of alarms) clearInterval(alarm); await close();}
-console.log(`D5 real browser: ${checks} checks passed`);
+console.log(`${DECK_ID} real browser: ${checks} checks passed`);
 process.exit(0);

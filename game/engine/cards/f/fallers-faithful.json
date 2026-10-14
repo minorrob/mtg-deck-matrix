@@ -1,0 +1,84 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Faller's Faithful",
+    "oracleId": "df7500e8-76b4-49b3-a427-9a28ffa14637",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Wizard"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 3,
+    "toughness": 1
+  },
+  "oracleText": "When this creature enters, destroy up to one other target creature. If that creature wasn't dealt damage this turn, its controller draws two cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, destroy up to one other target creature. If that creature wasn't dealt damage this turn, its controller draws two cards.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "branch",
+          "if": {
+            "about": "target",
+            "is": {
+              "dealtDamageThisTurn": false
+            }
+          },
+          "then": [
+            {
+              "effect": "destroy",
+              "targets": {
+                "target": 0
+              }
+            },
+            {
+              "effect": "draw",
+              "count": 2,
+              "who": {
+                "controllerOf": {
+                  "target": 0
+                }
+              }
+            }
+          ],
+          "otherwise": [
+            {
+              "effect": "destroy",
+              "targets": {
+                "target": 0
+              }
+            }
+          ]
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "another": true,
+          "count": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    }
+  ]
+}

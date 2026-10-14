@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wayward Swordtooth",
+    "oracleId": "3875aef0-3102-4fbf-be90-e4139f7a2348",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dinosaur"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Ascend (If you control ten or more permanents, you get the city's blessing for the rest of the game.)\nYou may play an additional land on each of your turns.\nThis creature can't attack or block unless you have the city's blessing.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Ascend (If you control ten or more permanents, you get the city's blessing for the rest of the game.)",
+      "keyword": "ascend"
+    },
+    {
+      "kind": "static",
+      "text": "You may play an additional land on each of your turns.",
+      "rule": "extra-land-drop",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      }
+    },
+    {
+      "kind": "static",
+      "text": "This creature can't attack or block unless you have the city's blessing.",
+      "rule": "cant-attack",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "unless": {
+        "citysBlessing": true
+      }
+    },
+    {
+      "kind": "static",
+      "text": "This creature can't attack or block unless you have the city's blessing.",
+      "rule": "cant-block",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "condition": {
+        "citysBlessing": false
+      }
+    }
+  ]
+}

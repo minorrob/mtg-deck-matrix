@@ -79,8 +79,10 @@ const zoneNames = (s, zone, seat) => (zone === "exile" ? s.zones.exile : s.zones
   s.players[0].life = 3;
   const offer = casts(s, 0, "Deep Analysis").find((a) => a.targets?.[0]?.id === 0);
   eq(Boolean(offer?.flashback), true, "at exactly 3 he can: offered");
+  /* Cast at 4, so paying leaves him in the game: at 0 he would lose, and his spell would leave the game with him (CR 800.4a). */
+  s.players[0].life = 4;
   applyAction(s, 0, offer);
-  eq([s.players[0].life, s.players[0].manaPool.U, s.players[0].manaPool.C, s.stack.at(-1).flashback], [0, 0, 0, true], "cast: {1}{U} and 3 life paid -- not its {3}{U} -- and the spell remembers how it was cast");
+  eq([s.players[0].life, s.players[0].manaPool.U, s.players[0].manaPool.C, s.stack.at(-1).flashback], [1, 0, 0, true], "cast: {1}{U} and 3 life paid -- not its {3}{U} -- and the spell remembers how it was cast");
   resolveTop(s);
   eq([zoneNames(s, "exile"), zoneNames(s, "graveyard", 0), s.objects[analysis]], [["Deep Analysis"], [], undefined], "it resolves and is exiled, not put into the graveyard");
   const fromHand = main(table());

@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Divine Visitation",
+    "oracleId": "5917216f-5b42-41fa-8976-401bdbeb782e",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "If one or more creature tokens would be created under your control, that many 4/4 white Angel creature tokens with flying and vigilance are created instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "If one or more creature tokens would be created under your control, that many 4/4 white Angel creature tokens with flying and vigilance are created instead.",
+      "rule": "tokens-instead",
+      "affects": {
+        "types": [
+          "Creature"
+        ]
+      },
+      "token": {
+        "name": "Angel",
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Angel"
+        ],
+        "colors": [
+          "W"
+        ],
+        "power": 4,
+        "toughness": 4,
+        "keywords": [
+          "Flying",
+          "Vigilance"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Buried Alive",
+    "oracleId": "8203c621-a1a0-4865-8c9a-0d4064c86107",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Search your library for up to three creature cards, put them into your graveyard, then shuffle.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Search your library for up to three creature cards, put them into your graveyard, then shuffle.",
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          },
+          "count": 3,
+          "upTo": true,
+          "to": "graveyard",
+          "shuffle": true
+        }
+      ]
+    }
+  ]
+}

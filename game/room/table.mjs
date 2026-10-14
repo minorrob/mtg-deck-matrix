@@ -23,8 +23,14 @@
  *            choosing, the AI seats still ready
  */
 import {createTable, transitionTable, countdownBlockers} from "../contracts/table-lifecycle.mjs";
+import {coachBrief} from "./coach-brief.mjs";
 import {startRoom, openRoom, RoomError, basicCards} from "./room.mjs";
 import {createMatchStore} from "../engine/storage.mjs";
+
+/* An AI seat's setting (AI-2): "easy", "llm" (an AI on Claude) or, unless one of those was chosen, "normal". */
+const levelOf = (s) => (s.level === "easy" || s.level === "llm" ? s.level : "normal");
+/** Whether the room is waiting on an LLM seat, whose answer the table's object gives (cloud/game-room.mjs). */
+export const llmWaiting = (room) => !!room && !!room.waitingOn && room.status !== "finished" && room.seats.some((s) => s.seatId === room.waitingOn && s.level === "llm");
 
 export const TABLE_SCHEMA = "CrankTable@1";
 export const RECORD_SCHEMA = "CrankGameRecord@1";
@@ -141,9 +147,12 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
   const needHost = (email) => {if (!isHost(email)) throw new TableError(403, "Only the host can do that.");};
   const needSeat = (email) => {const s = seatOf(email); if (s === null) throw new TableError(403, "You do not have a seat at this table."); return s;};
   /* THE TABLE'S RULES (Rob, 2026-09-30): the starting life (CR 903.7's 40 unless the host says otherwise) and a bracket
-     limit (none unless the host sets one). */
+     limit (none unless the host sets one). And whether the player who goes first in a two-player game skips their first
+     draw step (CR 103.8a): on unless the host turns it off, a house rule (Rob, 2026-10-12: "this can be toggled off in game
+     setup by the lobby owner"). A game of three or more has no such skip (103.8c), whatever this says. */
   const rulesOf = () => {const r = (record.lifecycle && record.lifecycle.settings) || {};
-    return {startingLife: Number.isInteger(r.startingLife) ? r.startingLife : 40, bracketLimit: Number.isInteger(r.bracketLimit) ? r.bracketLimit : null};};
+    return {startingLife: Number.isInteger(r.startingLife) ? r.startingLife : 40, bracketLimit: Number.isInteger(r.bracketLimit) ? r.bracketLimit : null,
+      skipFirstDraw: r.skipFirstDraw !== false};};
   const seatNames = (list) => list.length === 1 ? list[0] : `${list.slice(0, -1).join(", ")} and ${list.at(-1)}`;
 
   /* A seat leaves the game (by choice, or when their time ran out), and the table follows the room. */
@@ -166,15 +175,22 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
 
   const api = {
     /** A new table, the host in seat 1. Seats after the first are a person to invite or an AI. */
-    async create({tableId, host, hostName, seats, settings = {}, playtest = false}) {
+    /* `llmAllowed`: whether this host may seat an AI on Claude (the LLM seat, AI-2), which the table's object works out
+       from the AI door's gates (cloud/game-room.mjs); without it, such a seat is refused. */
+    async create({tableId, host, hostName, seats, settings = {}, playtest = false, llmAllowed = false}) {
       if (!TABLE_ID.test(String(tableId || ""))) throw new TableError(400, "A table needs its id.");
       if (await storage.get(KEY) !== null) throw new TableError(409, "This table already exists.");
       const others = Array.isArray(seats) ? seats : [];
       if (others.length < 1 || others.length > 3) throw new TableError(400, "A table seats two to four players.");
-      const all = [{kind: "human", name: clean(hostName) || "Host"}, ...others.map((s, i) => ({kind: s && s.kind === "ai" ? "ai" : "human", name: clean(s && s.name) || (s && s.kind === "ai" ? `AI ${i + 2}` : `Seat ${i + 2}`)}))];
+      /* An AI seat plays at a setting (AI-2, Rob, 2026-10-10): "easy" or "normal", normal unless the host chose easy; or
+         "llm", an AI on Claude, only where the AI door lets this host seat one. */
+      if (others.some((s) => s && s.kind === "ai" && s.level === "llm") && !llmAllowed) throw new TableError(403, "An AI on Claude needs CrankMagic's AI features, switched on here and open to you. Choose a Normal or Easy AI.");
+      const all = [{kind: "human", name: clean(hostName) || "Host"}, ...others.map((s, i) => (s && s.kind === "ai"
+        ? {kind: "ai", name: clean(s.name) || `AI ${i + 2}`, level: levelOf(s)}
+        : {kind: "human", name: clean(s && s.name) || `Seat ${i + 2}`}))];
       record = {
         schema: TABLE_SCHEMA, tableId, host, created: true,
-        lifecycle: createTable({tableId, seats: all.map((s, seatId) => ({seatId, kind: s.kind, name: s.name, occupied: seatId === 0})), settings: {startingLife: 40, bracketLimit: null, ...settings}}),
+        lifecycle: createTable({tableId, seats: all.map((s, seatId) => ({seatId, kind: s.kind, name: s.name, ...(s.level ? {level: s.level} : {}), occupied: seatId === 0})), settings: {startingLife: 40, bracketLimit: null, ...settings}}),
         members: {0: host}, invites: [], decks: {}, matches: [], away: {}, playtest: playtest === true,
       };
       await save();
@@ -244,8 +260,9 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
       await save();
       return api.view(email);
     },
-    /** The host's Table rules (Rob, 2026-09-30): the starting life and the bracket limit, and not once any seat is ready.
-        A change that would break the table is refused, saying what is wrong and what to do instead (AGENTS.md). */
+    /** The host's Table rules (Rob, 2026-09-30): the starting life, the bracket limit and the first draw's skip, and not
+        once any seat is ready. A change that would break the table is refused, saying what is wrong and what to do
+        instead (AGENTS.md). */
     async rules(email, body, now) {
       await load(); needHost(email);
       const t = record.lifecycle;
@@ -262,8 +279,10 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
         if (over.length) {const top = Math.max(...over.map((x) => x.bracket));
           throw new TableError(409, `${seatNames(over.map((x) => `${x.name}'s deck (bracket ${x.bracket})`))} ${over.length === 1 ? "is" : "are"} above ${limit}. Change ${over.length === 1 ? "that deck" : "those decks"} first, or keep the limit at ${top} or higher.`);}
       }
+      const skip = b.skipFirstDraw === undefined ? now_.skipFirstDraw : b.skipFirstDraw;
+      if (typeof skip !== "boolean") throw new TableError(400, "Whether the player who goes first skips their first draw is on or off: true or false.");
       void now;
-      record.lifecycle = {...t, settings: {...(t.settings || {}), startingLife: life, bracketLimit: limit}, revision: t.revision + 1};
+      record.lifecycle = {...t, settings: {...(t.settings || {}), startingLife: life, bracketLimit: limit, skipFirstDraw: skip}, revision: t.revision + 1};
       await save();
       return api.view(email);
     },
@@ -311,11 +330,20 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
       step({type: "tick"}, now, {launchId: matchId});
       const pod = {seats: t.seats.filter((s) => s.occupied).map((s) => ({
         seatId: seatName(s.seatId), name: s.name, pilot: s.kind === "ai" ? "house" : "human",
+        /* An AI seat's setting; a table made before settings were, normal. */
+        ...(s.kind === "ai" ? {level: levelOf(s)} : {}),
         commander: record.decks[s.seatId].commander, cards: record.decks[s.seatId].cards,
-      })), startingLife: rulesOf().startingLife,
-      /* The table's two beats (items 11 and 13): the draw waits for its click; a step with nothing to do passes itself.
-         And once every person is out, the game ends there (Rob, 2026-10-06; game/room/room.mjs). */
-      drawBeat: true, passEmpty: true, endWhenNoPerson: true};
+      })), startingLife: rulesOf().startingLife, ...(rulesOf().skipFirstDraw === false ? {skipFirstDraw: false} : {}),
+      /* The table's beats (game/room/room.mjs): a step with nothing to do passes itself (item 11); once every person is
+         out, the game ends there (Rob, 2026-10-06); a run of identical triggers may be let resolve with one decision (Rob,
+         2026-10-09: "resolve all"); and a person's cast passes for them (Rob, 2026-10-09: "I don't want to have to click a
+         pop-up to resolve it"). The draw no longer waits for a click (Rob, 2026-10-09: "Draw phase should be resolved
+         automatically by drawing a card and progress to the next screen"): a game launched before that keeps its
+         `drawBeat` with its match and replays as it was played. And a person's turn ends only when they say so (Rob,
+         2026-10-11: "passing the turn to the next player should always require player confirmation"): their end step is
+         always asked; and a land tapped for mana may be untapped while its mana is unspent ("I should also be able to
+         click the card to untap it again"). */
+      passEmpty: true, endWhenNoPerson: true, resolveAll: true, passAfterCast: true, endAsks: true, untapMana: true};
       try {
         room = await startRoom({storage: storageForRoom, matchId, cards, pod, seed: `${matchId}:${now}`, slice});
         step({type: "engine-started", launchId: matchId, matchId}, now);
@@ -375,8 +403,13 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
       const times = Object.values(record.away || {});
       if (record.lifecycle.phase === "countdown") times.push(record.lifecycle.countdownAt);
       if (record.lifecycle.phase === "playing" && (await api.currentRoom())?.continuing) times.push(now);
+      /* The LLM seat being asked: its turn is the object's to take (cloud/game-room.mjs, agentTurns), at once. */
+      if (record.lifecycle.phase === "playing" && llmWaiting(await api.currentRoom())) times.push(now);
       return times.length ? Math.min(...times) : null;
     },
+
+    /** Who made the table: whose AI features an LLM seat's calls are, and whose caps hold them. */
+    async host() {await load(); return record.host;},
 
     /** The room of the game being played, whoever asks (the object's own sockets), or null. */
     async currentRoom() {
@@ -393,6 +426,13 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
       if (record.lifecycle.phase !== "playing") throw new TableError(409, "No game is being played at this table.");
       if (!room || room.matchId !== record.lifecycle.matchId) room = await openRoom({storage, matchId: record.lifecycle.matchId, cards, slice});
       return {room, seatId: seatName(seat)};
+    },
+
+    /** THE COACH'S BRIEF (X13; game/room/coach-brief.mjs): the game as this person may see it, and the deck they brought --
+        built here, from their own seat's view, for the Worker's AI door and nothing else. */
+    async brief(email, {hand = true} = {}) {
+      const {room: game, seatId} = await api.room(email);
+      return coachBrief(game.view(seatId), record.decks[needSeat(email)], {hand});
     },
 
     /**
@@ -433,7 +473,7 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
         rules: rulesOf(),
         away: Object.entries(record.away || {}).map(([seatId, until]) => ({seatId: Number(seatId), until})),
         seats: t.seats.map((s) => ({
-          seatId: s.seatId, kind: s.kind, name: s.name, occupied: s.occupied, connected: s.connected, ready: s.ready,
+          seatId: s.seatId, kind: s.kind, name: s.name, ...(s.kind === "ai" ? {level: levelOf(s)} : {}), occupied: s.occupied, connected: s.connected, ready: s.ready,
           invited: s.invited, you: s.seatId === mine, mat: (record.mats || {})[s.seatId] || "felt",
           deck: record.decks[s.seatId] ? {name: record.decks[s.seatId].name, commander: record.decks[s.seatId].commander, bracket: record.decks[s.seatId].bracket ?? null} : null,
           ...(s.seatId === mine && record.decks[s.seatId] ? {cards: record.decks[s.seatId].cards.length, source: record.decks[s.seatId].source || null} : {}),

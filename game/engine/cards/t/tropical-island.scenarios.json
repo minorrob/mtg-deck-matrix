@@ -1,0 +1,88 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Tropical Island",
+  "scenarios": [
+    {
+      "name": "{T}: {G} or {U}, as its two basic land types give it (CR 305.6)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tropical Island"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Tropical Island"
+              },
+              "count": 2,
+              "mana": [
+                {
+                  "G": 1
+                },
+                {
+                  "U": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Tropical Island",
+          "mana": {
+            "U": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "U": 1
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Tropical Island"
+        }
+      ]
+    },
+    {
+      "name": "It is a land of both types: Hinterland Harbor enters untapped beside it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tropical Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Hinterland Harbor"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Hinterland Harbor"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Hinterland Harbor",
+          "is": false
+        }
+      ]
+    }
+  ]
+}

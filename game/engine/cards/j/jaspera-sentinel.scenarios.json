@@ -1,0 +1,338 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Jaspera Sentinel",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Elf": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "m",
+          "kind": "mana",
+          "tapSelf": true,
+          "produces": {
+            "G": 1
+          }
+        }
+      ]
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Wall": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Wall"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 0,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "One offer per other creature it may tap and color it may add; the creature chosen is tapped beside it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Jaspera Sentinel",
+            "Bear",
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wall"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Jaspera Sentinel"
+              },
+              "count": 10,
+              "costs": [
+                [
+                  "Bear"
+                ],
+                [
+                  "Bear"
+                ],
+                [
+                  "Bear"
+                ],
+                [
+                  "Bear"
+                ],
+                [
+                  "Bear"
+                ],
+                [
+                  "Ogre"
+                ],
+                [
+                  "Ogre"
+                ],
+                [
+                  "Ogre"
+                ],
+                [
+                  "Ogre"
+                ],
+                [
+                  "Ogre"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Jaspera Sentinel",
+          "mana": {
+            "U": 1
+          },
+          "tapping": "Ogre"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "U": 1
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Jaspera Sentinel"
+        },
+        {
+          "seat": 0,
+          "tapped": "Ogre"
+        },
+        {
+          "seat": 0,
+          "tapped": "Bear",
+          "is": false
+        }
+      ]
+    },
+    {
+      "name": "With no other untapped creature it is not offered: an Elf tapped for mana is no cost to pay",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Jaspera Sentinel",
+            "Elf"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Elf"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Jaspera Sentinel"
+          },
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Its own {T} waits a turn (CR 302.6), but a creature that came this turn may be the one tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Jaspera Sentinel"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Jaspera Sentinel"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": []
+    },
+    {
+      "name": "A creature that came this turn may be the one it taps",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Jaspera Sentinel"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Jaspera Sentinel",
+          "mana": {
+            "R": 1
+          },
+          "tapping": "Ogre"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "R": 1
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Ogre"
+        }
+      ]
+    },
+    {
+      "name": "A cast never taps it for itself: which creature to tap is Rob's, so he taps it first, and then the Bear is cast",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Jaspera Sentinel",
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Bear"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Jaspera Sentinel",
+          "mana": {
+            "G": 1
+          },
+          "tapping": "Ogre"
+        },
+        {
+          "cast": "Bear"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Forest",
+            "Jaspera Sentinel",
+            "Ogre"
+          ]
+        }
+      ]
+    }
+  ]
+}

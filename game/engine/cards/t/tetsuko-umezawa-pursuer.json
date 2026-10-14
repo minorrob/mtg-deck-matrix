@@ -1,0 +1,73 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tetsuko Umezawa, Pursuer",
+    "oracleId": "708d4567-a5a3-437f-bae4-ae10f1537aa9",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Mercenary"
+    ],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "Double strike\nProwess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)\nWhenever a creature an opponent controls with power or toughness 1 or less blocks, Tetsuko Umezawa deals 1 damage to that creature's controller.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Double strike",
+      "keyword": "double strike"
+    },
+    {
+      "kind": "keyword",
+      "text": "Prowess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)",
+      "keyword": "prowess"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a creature an opponent controls with power or toughness 1 or less blocks, Tetsuko Umezawa deals 1 damage to that creature's controller.",
+      "trigger": {
+        "on": "blocks",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "opponent",
+          "anyOf": [
+            {
+              "power": {
+                "max": 1
+              }
+            },
+            {
+              "toughness": {
+                "max": 1
+              }
+            }
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 1,
+          "who": "that card's controller"
+        }
+      ]
+    }
+  ]
+}

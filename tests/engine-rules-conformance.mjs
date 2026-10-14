@@ -29,6 +29,7 @@ import {checkStateBasedActions, gameOver} from "../game/engine/rules/sba.mjs";
 import {commanderTax} from "../game/engine/rules/commander.mjs";
 import {beginMulligans, mulligansDone} from "../game/engine/rules/mulligan.mjs";
 import {createRng} from "../game/engine/rng.mjs";
+import {phaseOut} from "../game/engine/script/effects/permanents.mjs";
 import {runScenario} from "../game/engine/cards/scenario.mjs";
 import {projectFor} from "../game/engine/projection.mjs";
 import {housePilot} from "../game/engine/pilots/house-pilot.mjs";
@@ -426,6 +427,39 @@ const named = (s, name) => s.zones.battlefield.filter((id) => s.objects[id].card
     "CR 101.4, 701.21a: each player chooses in turn order -- Rob's Bear still on the battlefield while Maya chooses -- and then both are sacrificed at once");
 }
 
+/* ONE OBJECT, ONE ZONE (CR 400.1, 400.7), and no token anywhere but the battlefield whenever a player could act (CR 704.5d,
+   111.7): checked after every step of the whole games below. A phased-out permanent (Teferi's Reproach) has not changed
+   zones (CR 702.26d) but is treated as though it does not exist: the engine keeps it apart, in `state.phasedOut` as the
+   zone "phased" (script/effects/permanents.mjs, phaseOut), until it phases in -- a token among them as well. */
+function zonesHold(state, label) {
+  const where = new Map();
+  const listed = (zone, id) => {
+    assert.ok(!where.has(id), `${label}: object ${id} is in two zones (CR 400.1)`);
+    where.set(id, zone);
+    assert.equal(state.objects[id]?.zone, zone, `${label}: object ${id} is listed in ${zone} and says ${state.objects[id]?.zone}`);
+  };
+  for (const [zone, lists] of Object.entries(state.zones)) for (const list of Array.isArray(lists[0]) || lists.every((x) => Array.isArray(x)) ? lists : [lists])
+    for (const id of list) listed(zone, id);
+  for (const id of state.phasedOut ?? []) listed("phased", id);
+  assert.equal(where.size, Object.keys(state.objects).length, `${label}: every object is in a zone`);
+  if (state.priorityPlayer !== null && !state.awaiting)
+    for (const o of Object.values(state.objects)) if (o.token === true && o.zone !== "phased")
+      assert.equal(o.zone, "battlefield", `${label}: a token in ${o.zone} while ${state.players[state.priorityPlayer].name} could act (CR 704.5d)`);
+}
+
+/* Phased out, a permanent and a token on it are still each in one place, and the token is no stray (CR 702.26d, 702.26h). */
+{
+  const state = createState({matchId: "phasing", seed: "phasing", players: ["Rob", "Maya"].map((name) => ({name}))});
+  const bear = addObject(state, {card: "Bear", types: ["Creature"], power: 2, toughness: 2, owner: 0, controller: 0}, "battlefield", 0);
+  const soldier = addObject(state, {card: "Soldier", types: ["Creature"], power: 1, toughness: 1, token: true, owner: 0, controller: 0}, "battlefield", 0);
+  addObject(state, {card: "Island", types: ["Land"], owner: 1, controller: 1}, "battlefield", 1);
+  state.priorityPlayer = 0;
+  phaseOut(state, {targets: [bear, soldier]}, {controller: 0, source: null});
+  eq([state.phasedOut?.length, state.objects[bear]?.zone], [2, "phased"], "the fixture phased out both of Rob's creatures, the token among them");
+  zonesHold(state, "phased out");
+  ok(true, "CR 702.26d: phased-out permanents, a token among them, are each in one place, and no token is a stray while a player could act");
+}
+
 /* ======== invariants over whole games ========
    Seeded four-seat games of house pilots on random decks of the engine's own definitions (the review's probe R, smaller),
    checked after every action and every answer -- whatever the cards, these hold at every moment:
@@ -486,16 +520,7 @@ const named = (s, name) => s.zones.battlefield.filter((id) => s.objects[id].card
       check();
     };
     function check() {
-      const where = new Map();
-      for (const [zone, lists] of Object.entries(state.zones)) for (const list of Array.isArray(lists[0]) || lists.every((x) => Array.isArray(x)) ? lists : [lists])
-        for (const id of list) {
-          assert.ok(!where.has(id), `seed ${seed}: object ${id} is in two zones (CR 400.1)`);
-          where.set(id, zone);
-          assert.equal(state.objects[id]?.zone, zone, `seed ${seed}: object ${id} is listed in ${zone} and says ${state.objects[id]?.zone}`);
-        }
-      assert.equal(where.size, Object.keys(state.objects).length, `seed ${seed}: every object is in a zone`);
-      if (state.priorityPlayer !== null && !state.awaiting)
-        for (const o of Object.values(state.objects)) if (o.token === true) assert.equal(o.zone, "battlefield", `seed ${seed}: a token in ${o.zone} while ${state.players[state.priorityPlayer].name} could act (CR 704.5d)`);
+      zonesHold(state, `seed ${seed}`);
       for (const entry of state.stack) assert.ok(!state.players[entry.playerId]?.lost, `seed ${seed}: the stack holds something of a player who has left the game (CR 800.4a)`);
       state.players.forEach((p, i) => assert.equal(p.life, life[i], `seed ${seed}: ${p.name}'s life moved without a logged event`));
       for (const p of state.players) for (const [key, n] of Object.entries(p.commanderDamage))

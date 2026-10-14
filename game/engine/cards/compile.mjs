@@ -38,7 +38,8 @@ export const COMPILED_SCHEMA = "CrankCompiledCard@1";
 /** The oracle facts a script is held to, hashed: a card whose text changes is learned again (PLAN §3.4). */
 export const oracleHash = (card) => hashState({name: card.name, mana: card.mana ?? null, type: card.type ?? "", text: card.text ?? ""});
 
-const num = (v) => (v !== null && v !== undefined && /^\d+$/.test(String(v)) ? Number(v) : null);
+/* A printed number, below zero too (Loot, the Anomaly's -2/4; CR 208.1); a star (*) is no number. */
+const num = (v) => (v !== null && v !== undefined && /^-?\d+$/.test(String(v)) ? Number(v) : null);
 const SUPERTYPES = ["Legendary", "Basic", "Snow", "World"];
 
 /** The printed facts, from the oracle record and never from the model. A modal double-faced card's are its front face's
@@ -200,6 +201,11 @@ const SMOKE_FIXTURES = Object.freeze({
   "Smoke Instant": {types: ["Instant"], manaCost: "{0}", colors: ["U"], spell: {id: "s", text: "Target player draws a card.", targets: [{what: "player"}], effects: [{effect: "draw", count: 1, who: {target: 0}}]}},
   /* A free creature the card's own player casts, so a card aimed at its controller's creature spell has one to answer. */
   "Smoke Whelp": {types: ["Creature"], manaCost: "{0}", power: 1, toughness: 1},
+  /* A changeling card, every creature type (CR 702.73a), in the hand of a card that beholds ("behold an Elf", CR 701.4a). */
+  "Smoke Changeling": {types: ["Creature"], subtypes: ["Shapeshifter"], manaCost: "{1}", keywords: ["Changeling"], power: 1, toughness: 1},
+  /* A Jace planeswalker card, in the hand of a card that beholds a Jace ("behold a Jace or pay {1}", Countersculpt): Jace is a
+     planeswalker type, which no changeling has (CR 205.3j, 702.73a). */
+  "Smoke Jace": {types: ["Planeswalker"], subtypes: ["Jace"], supertypes: ["Legendary"], manaCost: "{2}{U}", colors: ["U"], loyalty: 3},
 });
 
 /**
@@ -235,7 +241,11 @@ export function smokeScenario(script) {
      each choice of a choice of costs too ("sacrifice a creature or planeswalker or pay {3}", Silence the Echo: `oneOf`). */
   const extra = ((script.abilities ?? []).find((a) => a?.kind === "spell")?.additionalCost ?? [])
     .flatMap((a) => (a?.atom === "oneOf" && Array.isArray(a.options) ? a.options.flat() : [a]));
-  const fodderHand = extra.some((a) => a?.atom === "discard") ? ["Smoke Charm"] : [];
+  /* As many cards as its discard takes ("discard two cards", Cathartic Reunion). */
+  const fodderHand = [...Array.from({length: Math.max(0, ...extra.filter((a) => a?.atom === "discard").map((a) => a.count ?? 1))}, () => "Smoke Charm"),
+    /* And as many changeling cards as it beholds, to reveal (CR 701.4a) -- or Jace cards, for a Jace. */
+    ...extra.filter((a) => a?.atom === "behold").slice(0, 1).flatMap((a) => Array.from({length: a.count ?? 1},
+      () => ((a.selector?.subtypes ?? []).includes("Jace") ? "Smoke Jace" : "Smoke Changeling")))];
   /* A card aimed at its caster's own things ("target creature you control") gets something of the caster's to aim at. */
   const ownTargets = (script.abilities ?? []).some((a) => aims(a).some((t) => JSON.stringify(t).includes('"controller":"you"'))
     /* An Aura's target is its Enchant's: "Enchant creature you control" (Super State). */
@@ -244,7 +254,13 @@ export function smokeScenario(script) {
   /* A card aimed at a card in a graveyard ("return target permanent card ... from your graveyard", Sevinne's Reclamation;
      Reanimate) gets a creature card in its player's graveyard to aim at (batch 70), and a sorcery card ("target instant or
      sorcery card in your graveyard gains flashback", Flashback). */
-  const graveTargets = (script.abilities ?? []).some((a) => aims(a).some((t) => JSON.stringify(t).includes('"zone":"graveyard"')));
+  const graveTargets = (script.abilities ?? []).some((a) => aims(a).some((t) => JSON.stringify(t).includes('"zone":"graveyard"'))
+    /* An Aura's target is its Enchant's: "Enchant creature card in a graveyard" (Animate Dead). */
+    || (a?.kind === "keyword" && String(a.keyword).toLowerCase() === "enchant" && JSON.stringify(a.target ?? {}).includes('"zone":"graveyard"')));
+  /* As many creature cards as its counted graveyard target takes at least ("choose two target creature cards in your
+     graveyard", Victimize, wave 4b). */
+  const graveCreatures = Math.max(1, ...(script.abilities ?? []).flatMap((a) => aims(a)).filter((t) => JSON.stringify(t).includes('"zone":"graveyard"'))
+    .map((t) => (Number.isInteger(t?.count?.min) ? t.count.min : 1)));
   const steps = [];
   /* A land that asks as it enters, or triggers (a scry land), is answered and resolved before the game moves on. */
   /* A double-faced card is played, as it is cast, by its front face's name (Brightclimb Pathway // Grimclimb Pathway). */
@@ -269,7 +285,7 @@ export function smokeScenario(script) {
       setup: [
         {seat: 0, zone: "command", cards: ["Smoke Commander"]},
         {seat: 0, zone: "battlefield", cards: [...lands, ...fodderField]},
-        ...(graveTargets ? [{seat: 0, zone: "graveyard", cards: ["Smoke Bear", "Smoke Sorcery"]}] : []),
+        ...(graveTargets ? [{seat: 0, zone: "graveyard", cards: [...Array.from({length: graveCreatures}, () => "Smoke Bear"), "Smoke Sorcery"]}] : []),
         ...(isLand || script.identity.manaCost ? [{seat: 0, zone: "hand", cards: [name, ...fodderHand, ...(ownSpell ? ["Smoke Whelp"] : [])]}] : [{seat: 0, zone: "battlefield", cards: [name]}]),
         {seat: 1, zone: "battlefield", cards: ["Smoke Bear", "Smoke Giant", "Smoke Relic", "Smoke Charm", "Wastes"]},
         {seat: 1, zone: "hand", cards: [answered]},
@@ -317,8 +333,9 @@ export function smokeTest(script, cards) {
     const bad = zoneProblems(state);
     /* Whether the card was actually played: a counterspell with nothing to counter stays in hand, which is the
        fixture's limit and not the script's fault -- so it is reported, not refused. */
-    /* A double-faced card's events name the face that was cast or played. */
-    const names = script.back !== undefined || script.adventure !== undefined ? String(script.identity.name).split(" // ") : [script.identity.name];
+    /* A double-faced card's events name the face that was cast or played -- and a preparation card's its own name, the
+       only one it has in every zone (CR 722.4): "Goblin Glasswright", never the pair. */
+    const names = script.back !== undefined || script.adventure !== undefined || script.prepare !== undefined ? String(script.identity.name).split(" // ") : [script.identity.name];
     const played = (!(script.identity.types ?? []).includes("Land") && !script.identity.manaCost)
       || events.some((e) => (e.kind === "GameEventLandPlayed" && names.includes(e.data.fields.land?.name))
         || (e.kind === "GameEventSpellAbilityCast" && e.data.fields.sa?.isSpell && names.includes(e.data.fields.card?.name)));

@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Goblin Oriflamme",
+    "oracleId": "836bd011-2da5-443a-a814-19a664b98a1a",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Attacking creatures you control get +1/+0.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Attacking creatures you control get +1/+0.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "attacking": true
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 0
+      }
+    }
+  ]
+}

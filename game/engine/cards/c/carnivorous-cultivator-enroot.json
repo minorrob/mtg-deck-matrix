@@ -1,0 +1,108 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Carnivorous Cultivator // Enroot",
+    "oracleId": "db655c5a-06f6-42bc-8180-d9ca1c1d939a",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Warlock"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Deathtouch\nThis creature enters prepared.\nWhenever this creature deals combat damage to a player, return target land card from your graveyard to your hand.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Deathtouch",
+      "keyword": "deathtouch"
+    },
+    {
+      "kind": "replacement",
+      "text": "This creature enters prepared.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersPrepared": true
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature deals combat damage to a player, return target land card from your graveyard to your hand.",
+      "trigger": {
+        "on": "damage dealt",
+        "who": "self",
+        "to": "player",
+        "combat": true
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "hand"
+        }
+      ],
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "controller": "you",
+          "types": [
+            "Land"
+          ]
+        }
+      ]
+    }
+  ],
+  "prepare": {
+    "identity": {
+      "name": "Enroot",
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Search your library for a land card, put it into your graveyard, then shuffle.",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Search your library for a land card, put it into your graveyard, then shuffle.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "chooseCard",
+            "zone": "library",
+            "selector": {
+              "types": [
+                "Land"
+              ]
+            },
+            "to": "graveyard",
+            "shuffle": true
+          }
+        ]
+      }
+    ]
+  }
+}

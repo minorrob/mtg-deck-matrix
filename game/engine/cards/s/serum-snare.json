@@ -1,0 +1,70 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Serum Snare",
+    "oracleId": "fbc7350c-d392-44bf-92f7-8dd4743a73b4",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Return target nonland permanent to its owner's hand. If that permanent had mana value 3 or less, proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Return target nonland permanent to its owner's hand. If that permanent had mana value 3 or less, proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)",
+      "targets": [
+        {
+          "what": "permanent",
+          "nonTypes": [
+            "Land"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "branch",
+          "if": {
+            "about": "target",
+            "is": {
+              "manaValue": {
+                "max": 3
+              }
+            }
+          },
+          "then": [
+            {
+              "effect": "moveZone",
+              "targets": {
+                "target": 0
+              },
+              "to": "hand"
+            },
+            {
+              "effect": "proliferate"
+            }
+          ],
+          "otherwise": [
+            {
+              "effect": "moveZone",
+              "targets": {
+                "target": 0
+              },
+              "to": "hand"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

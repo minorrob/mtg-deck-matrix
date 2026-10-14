@@ -1,0 +1,82 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Subterranean Tremors",
+    "oracleId": "f0881756-de74-43b1-a9fe-c2fde93faf5a",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{X}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Subterranean Tremors deals X damage to each creature without flying. If X is 4 or more, destroy all artifacts. If X is 8 or more, create an 8/8 red Lizard creature token.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Subterranean Tremors deals X damage to each creature without flying. If X is 4 or more, destroy all artifacts. If X is 8 or more, create an 8/8 red Lizard creature token.",
+      "effects": [
+        {
+          "effect": "damageAll",
+          "amount": "X",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "nonKeywords": [
+              "Flying"
+            ]
+          }
+        },
+        {
+          "effect": "destroyAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Artifact"
+            ]
+          },
+          "condition": {
+            "compare": {
+              "count": "X",
+              "atLeast": 4
+            }
+          }
+        },
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Lizard",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Lizard"
+            ],
+            "colors": [
+              "R"
+            ],
+            "power": 8,
+            "toughness": 8
+          },
+          "condition": {
+            "compare": {
+              "count": "X",
+              "atLeast": 8
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

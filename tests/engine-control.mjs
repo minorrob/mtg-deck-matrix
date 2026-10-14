@@ -69,6 +69,9 @@ function toTurn(s, turn) {
   steal(s, [relic], 0);
   toTurn(s, 3);
   eq(s.objects[relic].controller, 0, "gained for good: still Rob's two turns later");
+  /* Written as a room saves it (storage.mjs refuses a state JSON would change): a change for good says no duration at all,
+     not one that is undefined (Agent of Treachery, Humble Defector, Hellkite Tyrant, Archmage's Charm). */
+  eq(JSON.parse(JSON.stringify(s)), s, "gained for good: the state reads back from JSON as it is, so a room can save it");
 }
 {
   /* Its triggers are its new controller's: a stolen Zulaport Cutthroat drains for Rob. */

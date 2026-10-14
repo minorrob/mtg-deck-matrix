@@ -1,0 +1,348 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Sensei's Divining Top",
+  "fixtures": {
+    "Alpha": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Horror"
+      ],
+      "manaCost": "{5}",
+      "colors": [
+        "B"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Bravo": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Horror"
+      ],
+      "manaCost": "{5}",
+      "colors": [
+        "B"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Charlie": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Horror"
+      ],
+      "manaCost": "{5}",
+      "colors": [
+        "B"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Delta": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Horror"
+      ],
+      "manaCost": "{5}",
+      "colors": [
+        "B"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Bolt": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Bolt deals 3 damage to any target.",
+        "targets": [
+          {
+            "anyOf": [
+              {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ]
+              },
+              {
+                "what": "permanent",
+                "types": [
+                  "Planeswalker"
+                ]
+              },
+              {
+                "what": "player"
+              }
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 3,
+            "targets": {
+              "target": 0
+            },
+            "who": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{1}: the top three looked at and put back Bravo, Charlie, Alpha -- drawn in that order",
+      "library": [
+        "Alpha",
+        "Bravo",
+        "Charlie",
+        "Delta"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sensei's Divining Top",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Sensei's Divining Top",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Alpha",
+                  "Bravo",
+                  "Charlie"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "answer": [
+            1,
+            2,
+            0
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bravo"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sensei's Divining Top",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "At instant speed, on Maya's turn, as often as Rob pays: the second look sees the order the first left",
+      "at": {
+        "turn": 2,
+        "phase": "MAIN1"
+      },
+      "library": [
+        "Alpha",
+        "Bravo",
+        "Charlie",
+        "Delta"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sensei's Divining Top",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "activate": "Sensei's Divining Top",
+          "seat": 0,
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            2,
+            1,
+            0
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "activate": "Sensei's Divining Top",
+          "seat": 0,
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Charlie",
+                  "Bravo",
+                  "Alpha"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "answer": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Charlie"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "{T}: Rob draws a card, then the Top goes on top of his library -- his next draw",
+      "library": [
+        "Alpha",
+        "Bravo",
+        "Charlie",
+        "Delta"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sensei's Divining Top"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Sensei's Divining Top",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "hand",
+              "cards": [
+                "Alpha"
+              ]
+            },
+            {
+              "seat": 0,
+              "zone": "battlefield",
+              "cards": []
+            },
+            {
+              "seat": 0,
+              "zone": "library",
+              "count": 20
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Alpha",
+            "Sensei's Divining Top"
+          ]
+        }
+      ]
+    }
+  ]
+}

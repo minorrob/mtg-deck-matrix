@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mondrak, Glory Dominus",
+    "oracleId": "fe83087d-c6c1-40be-9295-baaa1c6b2db1",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Phyrexian",
+      "Horror"
+    ],
+    "manaCost": "{2}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "If one or more tokens would be created under your control, twice that many of those tokens are created instead.\n{1}{W/P}{W/P}, Sacrifice two other artifacts and/or creatures: Put an indestructible counter on Mondrak. ({W/P} can be paid with either {W} or 2 life.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "If one or more tokens would be created under your control, twice that many of those tokens are created instead.",
+      "rule": "more-tokens",
+      "affects": {
+        "who": "you"
+      },
+      "times": 2
+    },
+    {
+      "kind": "activated",
+      "text": "{1}{W/P}{W/P}, Sacrifice two other artifacts and/or creatures: Put an indestructible counter on Mondrak.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{W/P}{W/P}"
+        },
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "anyOf": [
+              {
+                "types": [
+                  "Artifact"
+                ],
+                "another": true
+              },
+              {
+                "types": [
+                  "Creature"
+                ],
+                "another": true
+              }
+            ]
+          },
+          "count": 2
+        }
+      ],
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "indestructible",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

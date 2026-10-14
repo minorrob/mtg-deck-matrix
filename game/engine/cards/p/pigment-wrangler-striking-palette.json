@@ -1,0 +1,99 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Pigment Wrangler // Striking Palette",
+    "oracleId": "c008d60a-ee06-4411-b8e7-c2df13616105",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Orc",
+      "Sorcerer"
+    ],
+    "manaCost": "{4}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Flying\nThis creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "replacement",
+      "text": "This creature enters prepared.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersPrepared": true
+      }
+    }
+  ],
+  "prepare": {
+    "identity": {
+      "name": "Striking Palette",
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy.",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "delayedTrigger",
+            "when": {
+              "on": "spell cast",
+              "caster": "you",
+              "filter": {
+                "anyOf": [
+                  {
+                    "types": [
+                      "Instant"
+                    ]
+                  },
+                  {
+                    "types": [
+                      "Sorcery"
+                    ]
+                  }
+                ]
+              }
+            },
+            "thisTurn": true,
+            "once": true,
+            "text": "When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy.",
+            "effects": [
+              {
+                "effect": "copySpell",
+                "spells": "that card",
+                "newTargets": true
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

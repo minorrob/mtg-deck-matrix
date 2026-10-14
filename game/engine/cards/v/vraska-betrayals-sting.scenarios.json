@@ -1,0 +1,641 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Vraska, Betrayal's Sting",
+  "fixtures": {
+    "Sky Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2,
+      "keywords": [
+        "Flying"
+      ]
+    },
+    "Fog Sentry": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Wall"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 0,
+      "toughness": 3,
+      "abilities": [
+        {
+          "id": "a0",
+          "kind": "static",
+          "text": "Creatures can't attack you.",
+          "rule": "cant-attack",
+          "affects": {
+            "types": [
+              "Creature"
+            ]
+          },
+          "defender": "you"
+        }
+      ]
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{B/P} paid with {B}: six loyalty counters; 0: Rob draws, loses 1 life and proliferates -- seven",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Vraska, Betrayal's Sting"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Vraska, Betrayal's Sting"
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "{B}{B}{C}{C}{C}{C}",
+                  "{B}{B}{C}{C}{C} and 2 life",
+                  "{B}{C}{C}{C}{C} and 2 life"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "{B}{B}{C}{C}{C}{C}"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Vraska, Betrayal's Sting",
+                "counter": "loyalty",
+                "count": 6
+              }
+            },
+            {
+              "seat": 0,
+              "life": 40
+            }
+          ]
+        },
+        {
+          "activate": "Vraska, Betrayal's Sting",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Vraska, Betrayal's Sting (6 loyalty)"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Vraska, Betrayal's Sting (6 loyalty)"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Vraska, Betrayal's Sting",
+            "counter": "loyalty",
+            "count": 7
+          }
+        },
+        {
+          "seat": 0,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "Compleated: {B/P} paid with 2 life, and she enters with four loyalty counters",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Vraska, Betrayal's Sting"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Vraska, Betrayal's Sting"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Vraska, Betrayal's Sting",
+            "counter": "loyalty",
+            "count": 4
+          }
+        },
+        {
+          "seat": 0,
+          "life": 38
+        }
+      ]
+    },
+    {
+      "name": "-2 on Maya's flying Bear: a Treasure artifact, no longer a creature, without flying -- she taps and sacrifices it for {G}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Vraska, Betrayal's Sting"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Sky Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Vraska, Betrayal's Sting"
+        },
+        {
+          "choose": [
+            "{B}{B}{C}{C}{C}{C}"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Vraska, Betrayal's Sting",
+          "ability": "a2",
+          "targets": [
+            {
+              "card": "Sky Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Vraska, Betrayal's Sting",
+                "counter": "loyalty",
+                "count": 4
+              }
+            },
+            {
+              "seat": 1,
+              "keywords": {
+                "card": "Sky Bear",
+                "lacks": [
+                  "Flying"
+                ]
+              }
+            },
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Vraska, Betrayal's Sting"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Sky Bear",
+          "seat": 1,
+          "mana": {
+            "G": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "pool": {
+            "G": 1
+          }
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Sky Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "life": 40
+        }
+      ]
+    },
+    {
+      "name": "Three turns of 0 to nine loyalty; -9: Maya has no poison counters, and gets nine",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Vraska, Betrayal's Sting"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Vraska, Betrayal's Sting"
+        },
+        {
+          "choose": [
+            "{B}{B}{C}{C}{C}{C}"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Vraska, Betrayal's Sting",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Vraska, Betrayal's Sting (6 loyalty)"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Vraska, Betrayal's Sting",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Vraska, Betrayal's Sting (7 loyalty)"
+          ]
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Vraska, Betrayal's Sting",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Vraska, Betrayal's Sting (8 loyalty)"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Vraska, Betrayal's Sting",
+                "counter": "loyalty",
+                "count": 9
+              }
+            },
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Vraska, Betrayal's Sting"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 7,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Vraska, Betrayal's Sting",
+          "ability": "a3",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "poison": 9
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Vraska, Betrayal's Sting"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "-2 on Maya's Fog Sentry: a Treasure with no abilities, so \"creatures can't attack you\" is gone and Rob's Bear attacks her (CR 613.1f, 508.1c)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Vraska, Betrayal's Sting"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Fog Sentry"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Vraska, Betrayal's Sting"
+        },
+        {
+          "choose": [
+            "{B}{B}{C}{C}{C}{C}"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Vraska, Betrayal's Sting",
+          "ability": "a2",
+          "targets": [
+            {
+              "card": "Fog Sentry"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "attack": [
+            "Bear"
+          ],
+          "at": "Maya"
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 38
+        }
+      ]
+    }
+  ]
+}

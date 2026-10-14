@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Restoration Seminar",
+    "oracleId": "fd0a27a9-7d7e-4a16-9dd0-0715e6c97b36",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [
+      "Lesson"
+    ],
+    "manaCost": "{5}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Return target nonland permanent card from your graveyard to the battlefield.\nParadigm (Then exile this spell. After you first resolve a spell with this name, you may cast a copy of it from exile without paying its mana cost at the beginning of each of your first main phases.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Return target nonland permanent card from your graveyard to the battlefield.",
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "owner": "you",
+          "nonTypes": [
+            "Land",
+            "Instant",
+            "Sorcery"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "battlefield"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Paradigm",
+      "keyword": "paradigm"
+    }
+  ]
+}

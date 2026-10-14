@@ -32,14 +32,15 @@ import {controllerOf, typesOf} from "../../rules/layers.mjs";
 import {moveZone, moveZoneAll, draw, destroy, destroyAll, mill, counterSpell, sacrificeAll, digUntil, peekAndReveal, shuffle, exileUntil, mayPlay, manifest} from "./zones.mjs";
 import {
   addMana, tap, untap, untapAll, gainLife, loseLife, dealDamage,
-  putCounter, putCounterAll, removeCounter, proliferate, damageAll, fight, poison, winGame, multiplyCounters,
-  exchangeLife, damageEach,
+  putCounter, putCounterAll, removeCounter, proliferate, damageAll, fight, poison, winGame, loseGame, multiplyCounters,
+  exchangeLife, damageEach, moveCounters, becomeMonarch, rollDie,
 } from "./resources.mjs";
 import {
   createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup, attach, copyPermanent, regenerate, addPhase, gainControl,
-  becomeCopy, earthbend, goad, immediateTrigger, investigate, phaseOut, setState,
+  becomeCopy, earthbend, goad, immediateTrigger, investigate, phaseOut, setState, exchangeControl, incubate,
 } from "./permanents.mjs";
 import {alterAttribute} from "./attributes.mjs";
+import {addTurn} from "./turns.mjs";
 
 /**
  * The twenty-five most-used primitives across Rob's seven decks, in frequency order, with the count
@@ -81,9 +82,13 @@ export const TOP_25 = Object.freeze([
  * `effects/asking.mjs`, driven by `resolution.mjs`. Putting a throwing stub in the registry would
  * have made "is this built" answer yes to something no caller can use.
  */
-export const NEEDS_A_DECISION = Object.freeze(["dig", "scry", "surveil", "discard", "modal", "chooseCard", "proliferate", "sacrifice", "populate", "amass", "unlessPays", "copySpell", "chooseType", "play", "changeTargets", "empowerJace", "twoPiles",
+export const NEEDS_A_DECISION = Object.freeze(["dig", "scry", "surveil", "discard", "modal", "chooseCard", "proliferate", "sacrifice", "populate", "amass", "unlessPays", "copySpell", "chooseType", "chooseColor", "play", "changeTargets", "empowerJace", "twoPiles", "chooseSource", "vote",
   /* Connive (CR 701.50): which permanent connives next, and what its controller discards. */
-  "connive"]);
+  "connive",
+  /* Explore (CR 701.44): whether the revealed nonland card goes to the graveyard. */
+  "explore",
+  /* "Look at the top three cards of your library, then put them back in any order" (Ponder; wave 4b): their order. */
+  "rearrangeTop"]);
 
 /* What "each" ranges over (`repeatFor`), each with what it binds: a player -- in turn order from the active player
    (CR 101.4) -- as "that player"; a creature as "that card", and its controller as "that player". */
@@ -153,8 +158,8 @@ export const EFFECTS = Object.freeze({
   poison,
   /* Batch 65: a land made a creature, its counters, and its return. */
   earthbend,
-  /* Batch 68: "you win the game". */
-  winGame,
+  /* Batch 68: "you win the game". Train C phase 2 (p6-combat): "that player loses the game" (CR 104.3e). */
+  winGame, loseGame,
   /* Batch 69: goad. */
   goad,
   /* Batch 72: one way or the other, and a reflexive trigger ("when you do"). */
@@ -176,6 +181,17 @@ export const EFFECTS = Object.freeze({
   /* Train B (X11): life totals exchanged (CR 701.12), damage dealt by each of a set (Forge's EachDamage), and a designation
      given or taken -- monstrous (CR 701.37), prepared (CR 722.3). */
   exchangeLife, damageEach, alterAttribute,
+  /* Train B (X11): counters moved from one permanent to another (CR 122.5; Tidus, Yuna's Guardian), and extra turns (CR
+     500.7; Ichormoon Gauntlet). */
+  moveCounters, addTurn,
+  /* "Loses all abilities" (Train D): control of two permanents exchanged (CR 701.12b; Oko, Thief of Crowns). */
+  exchangeControl,
+  /* Train E: incubate (CR 701.53a; Sunfall), an Incubator token entering with +1/+1 counters. */
+  incubate,
+  /* Train E: "you become the monarch" (CR 725; Ginger, Queen of Sweets), and the monarch's own trigger (rules/trigger.mjs). */
+  becomeMonarch,
+  /* Wave 4c: "roll a d20" (CR 706; Ancient Copper Dragon), its result for what follows. */
+  rollDie,
 });
 
 /** Whether the engine can perform this primitive at all, by either route. */

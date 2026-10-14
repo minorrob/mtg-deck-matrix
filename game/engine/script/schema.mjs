@@ -34,13 +34,14 @@
 
 import {isPrimitive, isKeyword, isTriggerEvent} from "../vocabulary.mjs";
 import {compileSelector} from "./filter.mjs";
-import {targetRefs} from "./bind.mjs";
+import {targetRefs, SHARES} from "./bind.mjs";
 import {LAYERS} from "../rules/layers.mjs";
 import {STATIC_RULES, CANT_ATTACK_DEFENDERS} from "../rules/statics.mjs";
-import {amountProblems, AMOUNT_PARAMS} from "./amount.mjs";
-import {conditionProblems} from "./condition.mjs";
+import {amountProblems, AMOUNT_PARAMS, isCounted} from "./amount.mjs";
+import {conditionProblems, asksFirstResolution} from "./condition.mjs";
 import {isCreatureType} from "../keywords/types.mjs";
 import {parseManaCost} from "../rules/mana.mjs";
+import {CONTROL_DURATIONS} from "./effects/permanents.mjs";
 
 /* The facts about a target an effect may name where it takes a number (script/bind.mjs). */
 const FACT_KEYS = ["powerOf", "manaValueOf", "controllerOf"];
@@ -97,15 +98,84 @@ function checkEffect(effect, path, errors) {
     if (keys.length === 1 && FACT_KEYS.includes(keys[0]) && Number.isInteger(value[keys[0]]?.target)) continue;
     for (const message of amountProblems(value)) errors.push({path: `${path}.${key}`, message});
   }
+  /* "Each player ... discards half the cards in their hand, then sacrifices half the permanents they control" (Pox Plague;
+     effects/asking.mjs): a count counted for each player as they are asked -- on a discard or a sacrifice of a counted
+     amount, nothing whole, at random or kept. */
+  if (effect.perPlayer !== undefined && (effect.perPlayer !== true || !["discard", "sacrifice"].includes(name) || !isCounted(effect.count)
+    || ["all", "random", "keep", "keepTypes", "keepPowerAtMost"].some((key) => effect[key] !== undefined)))
+    errors.push({path: `${path}.perPlayer`, message: "perPlayer is true, on a discard or a sacrifice whose count is counted for each player"});
   /* An effect's own condition ("if this spell was cast from a graveyard", "if you do"; resolution.mjs asks it): closed, as
      an ability's is -- an unknown key refused here rather than read as true. */
   for (const message of conditionProblems(effect.condition)) errors.push({path: `${path}.condition`, message});
-  /* A reflexive trigger's own targets (CR 603.12): selectors, and every `{target: n}` its effects name declared among them. */
+  /* A reflexive trigger's own targets (CR 603.12): selectors, and every `{target: n}` its effects name declared among them.
+     What it is about: this resolution's, or what the effect before it remembered (`about: "remembered"`). */
   if (name === "immediateTrigger") {
-    for (const [index, selector] of (effect.targets ?? []).entries()) checkSelector(selector, `${path}.targets[${index}]`, errors, {choice: true});
+    if (effect.about !== undefined && effect.about !== "remembered") errors.push({path: `${path}.about`, message: "A reflexive trigger is about what its resolution is, or `about: \"remembered\"`"});
+    for (const [index, spec] of (effect.targets ?? []).entries()) {
+      /* A counted one ("up to that many target ...", CR 601.2c): its count beside the selector, its most a number or X. */
+      const {count, forEach, ...selector} = spec && typeof spec === "object" ? spec : {};
+      if (count !== undefined && !countValid(count, {x: true}))
+        errors.push({path: `${path}.targets[${index}].count`, message: "A reflexive trigger's target count is `{min, max}`, its max a whole number or \"X\" (up to that many)"});
+      /* "For each opponent, destroy up to one target creature or planeswalker that player controls" (Lich's Relic; script/bind.mjs,
+         `forEach`): for each opponent, up to one of the permanents that player controls (CR 601.2c) -- the one form built. */
+      if (forEach !== undefined && !(forEach === "opponent" && (count?.min ?? 0) === 0 && count?.max === 1
+        && (Array.isArray(selector.anyOf) ? selector.anyOf : [selector]).every((one) => (one?.what ?? "permanent") === "permanent")))
+        errors.push({path: `${path}.targets[${index}].forEach`, message: "\"For each opponent, up to one target ... that player controls\" is forEach: \"opponent\" with count {min: 0, max: 1}, its alternatives permanents"});
+      checkSelector(spec && typeof spec === "object" ? selector : spec, `${path}.targets[${index}]`, errors, {choice: true});
+    }
     for (const n of targetRefs(effect.effects ?? []))
       if (n < 0 || n >= (effect.targets ?? []).length) errors.push({path: `${path}.effects`, message: `A reflexive trigger's effect names target ${n}, and it declares ${(effect.targets ?? []).length}`});
   }
+  /* What a permanent put onto the battlefield is required to attack (CR 508.1d): "that opponent this turn" (encore), or
+     anyone "this combat" (Legion Warboss) -- effects/permanents.mjs, afterwards. */
+  if (effect.mustAttack !== undefined && !["that player", "this combat"].includes(effect.mustAttack))
+    errors.push({path: `${path}.mustAttack`, message: "What it must attack is \"that player\" (this turn) or anyone \"this combat\""});
+  /* "Each player with exactly 13 life loses the game" (Triskaidekaphobia; effects/resources.mjs): a life total, a whole number. */
+  if (effect.withLife !== undefined && (name !== "loseGame" || !Number.isInteger(effect.withLife)))
+    errors.push({path: `${path}.withLife`, message: "\"With exactly N life\" is withLife: a whole number, on loseGame"});
+  /* "Its controller creates two tokens that are copies of that creature, except their power is half that creature's power"
+     (Saw in Half; effects/permanents.mjs, movedCopies): copies of what the effect before it moved (`of: "moved"`), their power
+     and toughness halved, rounded up (`halfStats`) -- on a copyPermanent, and halving only those. */
+  if (effect.of !== undefined && !(name === "copyPermanent" && effect.of === "moved" && effect.targets === undefined && effect.selector === undefined))
+    errors.push({path: `${path}.of`, message: "Copies of what the effect before it moved are copyPermanent's of: \"moved\", with no targets or selector of their own"});
+  if (effect.halfStats !== undefined && !(effect.halfStats === true && effect.of === "moved"))
+    errors.push({path: `${path}.halfStats`, message: "halfStats is true, on copies of what the effect before it moved (of: \"moved\")"});
+  /* "Roll a d20" (CR 706.1; effects/resources.mjs): a die of `sides` sides, a whole number 2 or more. */
+  if (name === "rollDie" && !(Number.isInteger(effect.sides) && effect.sides >= 2))
+    errors.push({path: `${path}.sides`, message: "A die rolled says how many sides it has: sides, a whole number 2 or more (a d20 is 20)"});
+  /* "You become the monarch", "its controller becomes the monarch" (CR 725.3; effects/resources.mjs): one player -- its
+     controller ("you", or unsaid), a target player, or the controller of what the trigger is about. */
+  if (name === "becomeMonarch" && effect.who !== undefined && !["you", "that card's controller"].includes(effect.who) && !Number.isInteger(effect.who?.target))
+    errors.push({path: `${path}.who`, message: "One player becomes the monarch: \"you\" (unsaid), a target player ({target: n}), or \"that card's controller\""});
+  /* "The player or planeswalker that creature is attacking" (Raid Bombardment; script/bind.mjs): damage, to that one alone. */
+  if (effect.who === "attacked" && (name !== "dealDamage" || effect.targets !== undefined))
+    errors.push({path: `${path}.who`, message: "\"The player or planeswalker it's attacking\" (who: \"attacked\") is dealt damage, by dealDamage with no other target"});
+  /* Control for the turn, or "for as long as this creature remains on the battlefield" (CR 611.2b; Sower of Temptation),
+     or for good when unsaid (effects/permanents.mjs). */
+  if (name === "gainControl" && effect.until !== undefined && !CONTROL_DURATIONS.includes(effect.until))
+    errors.push({path: `${path}.until`, message: `Control is gained for good, or until ${CONTROL_DURATIONS.join(" or ")}`});
+  /* "With the greatest power", "with the greatest mana value" (Crackling Doom, Soul Shatter; End of the Hunt): what is
+     sacrificed, or a permanent chosen on the battlefield (effects/asking.mjs, greatestBy) -- never read anywhere else. */
+  if (effect.greatest !== undefined && !(["power", "manaValue"].includes(effect.greatest) && (name === "sacrifice" || (name === "chooseCard" && effect.zone === "battlefield"))))
+    errors.push({path: `${path}.greatest`, message: "\"The greatest power\" or \"mana value\" (`greatest`) is a sacrifice's, or a chooseCard's on the battlefield: \"power\" or \"manaValue\""});
+  /* "For each of those permanents, choose a different opponent. Each opponent gains control of the permanent for which they
+     were chosen" (Dack Fayden, Helping Hand; effects/asking.mjs, controlToOpponents): `toEach`, of the permanents `targets`
+     names, for good, to no one player. */
+  if (effect.toEach !== undefined && (name !== "gainControl" || effect.toEach !== "different opponent" || effect.until !== undefined || effect.toPlayer !== undefined
+    || effect.selector !== undefined || effect.targets === undefined))
+    errors.push({path: `${path}.toEach`, message: "A different opponent for each permanent (`toEach: \"different opponent\"`) is gainControl's, of its `targets`, for good, with no `toPlayer`"});
+  /* "Goaded for the rest of the game" (Dack Fayden, Helping Hand; CR 701.15a): a goad's `until` is "game" or unsaid (until
+     its controller's next turn). */
+  if (name === "goad" && effect.until !== undefined && effect.until !== "game")
+    errors.push({path: `${path}.until`, message: "A goad lasts until its controller's next turn, or for the rest of the game (`until: \"game\"`)"});
+  /* Control of two permanents exchanged (CR 701.12b; effects/permanents.mjs, exchangeControl): the one (`from`) and the other
+     (`targets`) -- or the two of `targets` -- for good. */
+  if (name === "exchangeControl" && (effect.targets === undefined || effect.until !== undefined))
+    errors.push({path: `${path}.targets`, message: "exchangeControl exchanges control of two permanents, for good: `from` the one and `targets` the other, or the two of `targets`"});
+  /* "You put that card onto the battlefield under your control" (Jhoira, Weatherlight Corsair; effects/zones.mjs, digUntil):
+     the one controller a found card is put there under besides its owner -- any other word would be read as its owner. */
+  if (name === "digUntil" && effect.found?.controller !== undefined && !(effect.found.controller === "you" && effect.found.to === "battlefield"))
+    errors.push({path: `${path}.found.controller`, message: "A card found is put onto the battlefield under its owner's control, or `controller: \"you\"` with `to: \"battlefield\"`"});
   /* "Exile ... until this leaves the battlefield" (CR 610.3): the one "until" the engine returns from. */
   if (name === "exileUntil" && effect.until !== "this leaves")
     errors.push({path: `${path}.until`, message: "exileUntil returns what it exiled when its source leaves the battlefield: `until: \"this leaves\"`"});
@@ -113,8 +183,14 @@ function checkEffect(effect, path, errors) {
   if (name === "exileUntil" && effect.sameName !== undefined) checkSelector(effect.sameName, `${path}.sameName`, errors);
   /* "Can't cast spells with the same name as that creature" (Reflector Mage): which name, and whose -- both, or it forbids
      nothing it could say. */
-  if (name === "effectUntil" && effect.rule === "cant-cast" && (effect.named === undefined || effect.who === undefined))
-    errors.push({path, message: "A cast forbidden for a while names the spells (`named`) and the players (`who`)"});
+  /* Or every spell (`allSpells`, Conduit of Worlds's "you can't cast additional spells this turn"), never beside a name. */
+  if (name === "effectUntil" && effect.rule === "cant-cast" && ((effect.named === undefined) === (effect.allSpells !== true) || effect.who === undefined
+    || (effect.allSpells !== undefined && effect.allSpells !== true)))
+    errors.push({path, message: "A cast forbidden for a while names the spells (`named`) or forbids every one (`allSpells: true`), and the players (`who`)"});
+  /* "If that creature would die this turn, exile it instead" (rules/replacement.mjs): about what it names, fixed as it
+     resolves -- `targets`, and for this turn. */
+  if (name === "effectUntil" && effect.rule === "exile-if-dies" && (effect.targets === undefined || (effect.until ?? "end-of-turn") !== "end-of-turn"))
+    errors.push({path, message: "\"If it would die this turn, exile it instead\" names what it is about (`targets`), for this turn"});
   /* "Unless you pay {3}{W}{W}" (echo): a mana cost with its colors, `mana`, in place of a generic `amount`, never beside one. */
   if (name === "unlessPays" && effect.mana !== undefined) {
     let parsed = null;
@@ -129,12 +205,58 @@ function checkEffect(effect, path, errors) {
     if (effect.sacrifice !== undefined || effect.discard !== undefined)
       errors.push({path: `${path}.returnToHand`, message: "An \"unless\" cost returns a permanent, sacrifices one or discards a card: one of them"});
   }
+  /* "You may tap another untapped Merfolk you control" (Meanders Guide): a selector of the payer's permanents, the cost's only
+     part beside mana or life. */
+  if (name === "unlessPays" && effect.tap !== undefined) {
+    checkSelector(effect.tap, `${path}.tap`, errors);
+    if (effect.sacrifice !== undefined || effect.discard !== undefined || effect.returnToHand !== undefined)
+      errors.push({path: `${path}.tap`, message: "An \"unless\" cost taps a permanent, returns one, sacrifices one or discards a card: one of them"});
+  }
+  /* "You may pay {X}. When you do, ..." (Halo Forager): X chosen as it is paid, so no amount beside it, and only a "you may". */
+  /* "You may pay {2}{R} any number of times. When you pay this cost one or more times, ..." (Bloodthirsty Adversary): a mana
+     cost, how many times chosen as it is paid, so no amount beside it, and only a "you may". */
+  if (name === "unlessPays" && effect.timesAny !== undefined && !(effect.timesAny === true && effect.ifPaid === true && typeof effect.mana === "string" && effect.mana.length
+    && effect.amount === undefined && effect.amountX === undefined && effect.manaTimes === undefined))
+    errors.push({path: `${path}.timesAny`, message: "\"You may pay a cost any number of times\" is `timesAny: true` with `ifPaid: true` and a `mana` cost, nothing else to pay beside it"});
+  if (name === "unlessPays" && effect.amountX !== undefined && !(effect.amountX === true && effect.ifPaid === true && effect.amount === undefined && effect.mana === undefined))
+    errors.push({path: `${path}.amountX`, message: "\"You may pay {X}\" is `amountX: true` with `ifPaid: true`, and no amount or mana beside it"});
+  if (name === "play" && effect.exileInstead !== undefined && effect.exileInstead !== true)
+    errors.push({path: `${path}.exileInstead`, message: "\"If that spell would be put into a graveyard, exile it instead\" is `exileInstead: true`"});
   if (name === "unlessPays" && effect.whenPaid !== undefined && !(Array.isArray(effect.whenPaid) && effect.whenPaid.length))
     errors.push({path: `${path}.whenPaid`, message: "What follows paying is a list of effects"});
   /* Where a countered spell goes instead of its owner's graveyard: exile (Force of Negation) or the top of its owner's
      library (Memory Lapse) -- any other word would be read as the graveyard. */
   if (name === "counterSpell" && effect.to !== undefined && !["exile", "top"].includes(effect.to))
     errors.push({path: `${path}.to`, message: "A countered spell goes to its owner's graveyard, or `to` \"exile\" or \"top\" instead"});
+  /* "If a permanent spell is countered this way, exile it instead" (Thranduil's Decree): a permanent spell's place instead. */
+  if (name === "counterSpell" && effect.permanentTo !== undefined && effect.permanentTo !== "exile")
+    errors.push({path: `${path}.permanentTo`, message: "A countered permanent spell goes to exile instead: `permanentTo: \"exile\"`"});
+  /* A vote (CR 701.38): two or more choices, each words of their own. */
+  if (name === "vote" && !(Array.isArray(effect.choices) && effect.choices.length >= 2 && effect.choices.every((c) => typeof c === "string" && c.length) && new Set(effect.choices).size === effect.choices.length))
+    errors.push({path: `${path}.choices`, message: "A vote is among two or more choices, each its own words"});
+  /* "Each opponent may ...": the mode that is doing so, kept for "for each opponent who does" (script/amount.mjs). */
+  if (name === "modal") (effect.modes ?? []).forEach((mode, m) => {
+    if (mode?.did !== undefined && mode.did !== true) errors.push({path: `${path}.modes[${m}].did`, message: "A mode that is doing what was offered says `did: true`"});
+  });
+  /* "For as long as it remains exiled": a permission only for a card in exile now. */
+  if (name === "mayPlay" && effect.zone !== undefined && effect.zone !== "exile")
+    errors.push({path: `${path}.zone`, message: "mayPlay's zone is \"exile\": a card there now, for as long as it remains exiled"});
+  /* "If you control a Wizard" (Flameshape): a permission's condition, closed as an effect's own is -- an unknown key refused
+     here rather than read as true. */
+  if (name === "mayPlay") for (const message of conditionProblems(effect.onlyIf)) errors.push({path: `${path}.onlyIf`, message});
+  /* A zone's cards for a while (Chainer, Nightmare Adept; Gwenom, Remorseless): its graveyard or the top of its library, in
+     place of named cards -- what may be played (`spells`, a selector), "pay life equal to its mana value" (`payLife`), and
+     how many cards before it is spent (`count`). */
+  if (name === "mayPlay" && effect.from !== undefined) {
+    if (!["graveyard", "library-top"].includes(effect.from)) errors.push({path: `${path}.from`, message: "mayPlay's `from` is \"graveyard\" or \"library-top\""});
+    if (effect.targets !== undefined || effect.zone !== undefined || effect.onlyIf !== undefined)
+      errors.push({path: `${path}.from`, message: "mayPlay from a zone names no cards: no `targets`, `zone` or `onlyIf` beside `from`"});
+    if (effect.spells !== undefined && effect.spells !== true) checkSelector(effect.spells, `${path}.spells`, errors, {choice: true});
+    if (effect.payLife !== undefined && effect.payLife !== "manaValue") errors.push({path: `${path}.payLife`, message: "payLife is \"manaValue\""});
+    if (effect.count !== undefined && !(Number.isInteger(effect.count) && effect.count >= 1)) errors.push({path: `${path}.count`, message: "count is how many cards it lets be played, 1 or more"});
+  }
+  if (name === "mayPlay" && effect.from === undefined && ["spells", "payLife", "count"].some((key) => effect[key] !== undefined))
+    errors.push({path, message: "spells, payLife and count are a mayPlay's from a zone (`from`)"});
   /* Amass (CR 701.47a): the creature type its Army is, "Goblin" for "amass Goblins 2"; the Army chosen remembered or not. */
   if (name === "amass") {
     if (!isText(effect.subtype) || !isCreatureType(effect.subtype))
@@ -150,15 +272,88 @@ function checkEffect(effect, path, errors) {
     if (effect.to === undefined && effect.targets === undefined && effect.who === undefined) errors.push({path, message: "damageEach deals its damage to itself, or to targets or players"});
     if (effect.selector !== undefined) checkSelector(effect.selector, `${path}.selector`, errors, {choice: true});
   }
+  /* "Put each creature card exiled with this artifact onto the battlefield" (Ghost Vacuum): of a linked move's cards, those a
+     selector fits (`linkedOnly`) -- only beside `linked`. */
+  if (name === "moveZone" && effect.linkedOnly !== undefined) {
+    if (effect.linked !== true) errors.push({path: `${path}.linkedOnly`, message: "linkedOnly narrows a linked move: it goes with `linked: true`"});
+    checkSelector(effect.linkedOnly, `${path}.linkedOnly`, errors);
+  }
+  /* WHAT AN EFFECT MOVED, REFERRED TO AFTER IT (wave 4a, h2): "put all artifact cards from among them onto the battlefield"
+     (Tezzeret, Master of the Bridge) -- of what a move names, those a selector fits (`only`); "then return it to the
+     battlefield tapped" (Eldrazi Confluence) -- a flicker's return, tapped (`returnTapped`, beside `andReturn`); "exile target
+     player's graveyard" kept for "a creature card exiled with this Vehicle" (Nautiloid Ship; moveZoneAll's `link`); "you may
+     attach it to a creature you control" (Armored Skyhunter; chooseCard's `attach`, a permanent chosen where it is); "put all
+     land cards from among them onto the battlefield" (Animist's Awakening; dig's `all`, nobody asked). */
+  if (name === "moveZone" && effect.only !== undefined) checkSelector(effect.only, `${path}.only`, errors);
+  if (name === "moveZone" && effect.returnTapped !== undefined && !(effect.returnTapped === true && effect.andReturn !== undefined))
+    errors.push({path: `${path}.returnTapped`, message: "A flicker's return tapped is `returnTapped: true`, beside `andReturn`"});
+  /* "Onto the battlefield under your control" (Rise of the Dark Realms, wave 4b j1; effects/zones.mjs moveZoneAll). */
+  if (name === "moveZoneAll" && effect.controller !== undefined && !(effect.controller === "you" && effect.to === "battlefield"))
+    errors.push({path: `${path}.controller`, message: "What a move of all puts onto the battlefield under its controller's control is `controller: \"you\"` with `to: \"battlefield\"`"});
+  if (name === "moveZoneAll" && effect.link !== undefined && !(effect.link === true && effect.to === "exile"))
+    errors.push({path: `${path}.link`, message: "What a move of all exiles, kept for its source's linked ability, is `link: true` with `to: \"exile\"`"});
+  if (name === "chooseCard" && effect.attach !== undefined && !(effect.attach === "remembered" && effect.to === "stay" && effect.zone === "battlefield"))
+    errors.push({path: `${path}.attach`, message: "Attaching what the effect before it put onto the battlefield to a permanent chosen is `attach: \"remembered\"`, with `zone: \"battlefield\"` and `to: \"stay\"`"});
+  /* "It loses 'enchant creature card in a graveyard' and gains 'enchant creature put onto the battlefield with this Aura.' ...
+     attach this Aura to it" (Animate Dead, wave 4b j1; effects/permanents.mjs attach): `enchants: true`, an Aura attaching
+     itself, its Enchant from then on that creature alone. */
+  if (effect.enchants !== undefined && !(name === "attach" && effect.enchants === true && effect.source === undefined))
+    errors.push({path: `${path}.enchants`, message: "An Aura that enchants only what it attaches itself to is attach's `enchants: true`, with no other `source`"});
+  if (name === "dig" && effect.all !== undefined && !(effect.all === true && effect.selector !== undefined && effect.upTo === undefined && effect.take === undefined))
+    errors.push({path: `${path}.all`, message: "Every card a selector fits, taken with nobody asked, is `all: true` beside a `selector`, with no `take` or `upTo`"});
+  /* "Put up to one of them on top of your library" (Thassa's Oracle, wave 4c k2; effects/asking.mjs, digToTop): one card, kept
+     in the library and lifted to its top -- never several, whose order on top nothing asks. */
+  if (name === "dig" && effect.to === "top" && !((effect.take ?? 1) === 1 && effect.all === undefined && effect.toByType === undefined))
+    errors.push({path: `${path}.to`, message: "A card a dig puts on top of the library is one card: `to: \"top\"` with `take: 1`, never `all` or `toByType`"});
+  /* Counters moved (moveCounters, CR 122.5; script/effects/resources.mjs): from one object onto another, of a kind named --
+     or "chosen", its controller's choice among the kinds there (effects/asking.mjs, counterKind). */
+  if (name === "moveCounters") {
+    if (effect.from === undefined) errors.push({path: `${path}.from`, message: "moveCounters says what it moves counters from: `from`, an object"});
+    if ((effect.targets === undefined) === (effect.onto === undefined)) errors.push({path: `${path}.targets`, message: "moveCounters says what it moves them onto: `targets`, an object, or `onto`, what its controller may choose among"});
+    if (typeof effect.counter !== "string") errors.push({path: `${path}.counter`, message: "moveCounters names the kind of counter it moves, or \"chosen\" for its controller's choice"});
+    /* "Move all counters" (The Ozolith, wave 4b): every kind, all of them, onto one object -- no count of its own. */
+    if (effect.counter === "all" && (effect.count !== undefined || effect.onto !== undefined))
+      errors.push({path: `${path}.counter`, message: "\"All counters\" moves every one of every kind onto its `targets`: no count, and no `onto`"});
+    /* "Move any number of +1/+1 counters from this creature onto other creatures" (Forgotten Ancient): `onto`, a selector of
+       the permanents, with `anyNumber` and a kind named (effects/asking.mjs, countersOnto). */
+    if (effect.onto !== undefined) {
+      checkSelector(effect.onto, `${path}.onto`, errors);
+      if (effect.anyNumber !== true || effect.counter === "chosen" || effect.count !== undefined)
+        errors.push({path: `${path}.onto`, message: "Counters moved onto permanents chosen as it resolves are any number (`anyNumber: true`) of a kind named, with no count"});
+    }
+    if (effect.anyNumber !== undefined && effect.onto === undefined) errors.push({path: `${path}.anyNumber`, message: "anyNumber goes with `onto`"});
+  }
   /* A designation (alterAttribute, script/effects/attributes.mjs): monstrous or prepared. */
-  if (name === "alterAttribute" && !["monstrous", "prepared"].includes(effect.attribute))
-    errors.push({path: `${path}.attribute`, message: "alterAttribute gives or takes a designation: \"monstrous\" or \"prepared\""});
+  if (name === "alterAttribute" && !["monstrous", "prepared", "solved"].includes(effect.attribute))
+    errors.push({path: `${path}.attribute`, message: "alterAttribute gives or takes a designation: \"monstrous\", \"prepared\" or \"solved\""});
+  /* Solved stays until the Case leaves the battlefield (CR 719.3b): given, never taken. */
+  if (name === "alterAttribute" && effect.attribute === "solved" && effect.value !== undefined)
+    errors.push({path: `${path}.value`, message: "A Case once solved stays solved (CR 719.3b): solved is given, never taken"});
+  /* "Each opponent may sacrifice ... For each opponent who doesn't, ..." (Braids, Arisen Nightmare; effects/asking.mjs): a
+     sacrifice that may be declined (`optional`), and what follows for each player who sacrifices nothing (`ifNot`), held to
+     the effect grammar. */
+  if (name === "sacrifice") {
+    if (effect.optional !== undefined && effect.optional !== true) errors.push({path: `${path}.optional`, message: "A sacrifice that may be declined is optional: true"});
+    /* Declined, or -- a sacrifice that must be made -- one a player can't make: "each player who can't discards a card"
+       (Plaguecrafter; effects/asking.mjs, sacrifice's `named`). Never beside keeping (Tragic Arrogance's `keep`). */
+    if (effect.ifNot !== undefined) {
+      if (!Array.isArray(effect.ifNot) || !effect.ifNot.length || effect.keep !== undefined || effect.keepTypes !== undefined || effect.keepPowerAtMost !== undefined)
+        errors.push({path: `${path}.ifNot`, message: "What follows a sacrifice declined, or one a player can't make, is a list of effects -- never beside keeping"});
+      else effect.ifNot.forEach((child, index) => checkEffect(child, `${path}.ifNot[${index}]`, errors));
+    }
+  }
+  /* "All other creatures they control that don't share a creature type with the chosen creature they control" (Winnowing;
+     effects/zones.mjs, sacrificeAll): `exceptSharing` "creature type", beside `except` "remembered" -- what it is shared with. */
+  if (effect.exceptSharing !== undefined && !(name === "sacrificeAll" && effect.exceptSharing === "creature type" && effect.except === "remembered"))
+    errors.push({path: `${path}.exceptSharing`, message: "What a sacrifice of all spares by sharing it with a creature chosen is exceptSharing: \"creature type\", on sacrificeAll beside except: \"remembered\""});
   /* A branch's test: a condition, and there must be one. */
   if (name === "branch") {
     if (effect.if === undefined) errors.push({path: `${path}.if`, message: "A branch says what decides it: `if`, a condition"});
     for (const message of conditionProblems(effect.if)) errors.push({path: `${path}.if`, message});
     for (const key of ["then", "otherwise"]) if (effect[key] !== undefined && !Array.isArray(effect[key])) errors.push({path: `${path}.${key}`, message: `A branch's ${key} is a list of effects`});
   }
+  /* What follows a prevention shield's prevention (Inkshield, Deflecting Palm; CR 615.5): effects, each held to the rest. */
+  if (name === "effectUntil" && Array.isArray(effect.then)) effect.then.forEach((child, index) => checkEffect(child, `${path}.then[${index}]`, errors));
   const children = COMPOSERS[name];
   if (!children) return;
   const nested = children(effect);
@@ -179,12 +374,14 @@ function checkSelector(selector, path, errors, {choice = false} = {}) {
 }
 
 /* A target's count: `min` a whole number (0 when absent), `max` a whole number at least 1 and at least `min`, or absent. */
-const countValid = (count) => Boolean(count) && typeof count === "object" && !Array.isArray(count)
+/* `x`: "up to that many" -- a reflexive trigger's `max: "X"`, the X it was made with (Bloodthirsty Adversary). */
+const countValid = (count, {x = false} = {}) => Boolean(count) && typeof count === "object" && !Array.isArray(count)
   && Object.keys(count).every((k) => k === "min" || k === "max")
   && (count.min === undefined || (Number.isInteger(count.min) && count.min >= 0))
-  && (count.max === undefined || (Number.isInteger(count.max) && count.max >= 1 && count.max >= (count.min ?? 0)));
+  && (count.max === undefined || (x && count.max === "X" && (count.min ?? 0) === 0) || (Number.isInteger(count.max) && count.max >= 1 && count.max >= (count.min ?? 0)));
 
-function checkAbility(ability, path, errors) {
+/* `permanent`: the card is a permanent card, whose spell ability may say only its additional cost (below). */
+function checkAbility(ability, path, errors, {permanent = false} = {}) {
   if (!ability || typeof ability !== "object") {
     errors.push({path, message: "An ability is an object"});
     return;
@@ -200,9 +397,19 @@ function checkAbility(ability, path, errors) {
   /* A target is a selector, or `{anyOf: [...]}` for "any target" (script/bind.mjs) -- either with a `count`, `{min, max}`, for
      "up to N", "any number of", "one or two" (CR 115.1, 601.2c). */
   for (const [index, spec] of (ability.targets ?? []).entries()) {
-    const {count, distinctFrom, onlyIf, differentControllers, ...selector} = spec && typeof spec === "object" ? spec : {};
+    const {count, distinctFrom, onlyIf, differentControllers, share, forEach, ownedByControllerOf, ...selector} = spec && typeof spec === "object" ? spec : {};
     if (count !== undefined && !countValid(count))
       errors.push({path: `${path}.targets[${index}].count`, message: "A target's count is `{min, max}`: whole numbers, max at least 1 and at least min, or no max for \"any number\""});
+    /* "Target artifact a player controls and target artifact card in that player's graveyard" (Goblin Welder; script/bind.mjs,
+       `ownedByControllerOf`): an earlier, single target of the same ability, a permanent -- this one a card, uncounted. */
+    if (ownedByControllerOf !== undefined && !(Number.isInteger(ownedByControllerOf) && ownedByControllerOf >= 0 && ownedByControllerOf < index && count === undefined
+      && (selector.what ?? "permanent") === "card" && ((ability.targets ?? [])[ownedByControllerOf]?.what ?? "permanent") === "permanent" && (ability.targets ?? [])[ownedByControllerOf]?.count === undefined))
+      errors.push({path: `${path}.targets[${index}].ownedByControllerOf`, message: "ownedByControllerOf names an earlier, single permanent target of the same ability, by number, on a single card target: \"in that player's graveyard\""});
+    /* "For each opponent, put X -1/-1 counters on up to one target creature that player controls" (Hapatra, the Desert Fang,
+       Train E; script/bind.mjs, `forEach`): a triggered ability's, as a reflexive trigger's is (above) -- the one form built. */
+    if (forEach !== undefined && !(ability.kind === "triggered" && forEach === "opponent" && (count?.min ?? 0) === 0 && count?.max === 1
+      && (Array.isArray(selector.anyOf) ? selector.anyOf : [selector]).every((one) => (one?.what ?? "permanent") === "permanent")))
+      errors.push({path: `${path}.targets[${index}].forEach`, message: "\"For each opponent, up to one target ... that player controls\" is forEach: \"opponent\" with count {min: 0, max: 1}, on a triggered ability, its alternatives permanents"});
     /* "A second target", "up to one other target" (script/bind.mjs, SPEC_KEYS): an earlier target of the same ability. */
     if (distinctFrom !== undefined && !(Array.isArray(distinctFrom) && distinctFrom.length && distinctFrom.every((n) => Number.isInteger(n) && n >= 0 && n < index)))
       errors.push({path: `${path}.targets[${index}].distinctFrom`, message: "distinctFrom names earlier targets of the same ability, by number: [0]"});
@@ -210,6 +417,9 @@ function checkAbility(ability, path, errors) {
     for (const message of conditionProblems(onlyIf)) errors.push({path: `${path}.targets[${index}].onlyIf`, message});
     if (differentControllers !== undefined && !(differentControllers === true && count !== undefined))
       errors.push({path: `${path}.targets[${index}].differentControllers`, message: "\"Controlled by different players\" is differentControllers: true, on a counted target"});
+    /* "From a single graveyard", "that share a creature type" (script/bind.mjs, `share`): on a counted target. */
+    if (share !== undefined && !(SHARES.includes(share) && count !== undefined))
+      errors.push({path: `${path}.targets[${index}].share`, message: `What a counted target's choices share is ${SHARES.map((s) => JSON.stringify(s)).join(" or ")}, on a counted target`});
     if (spec && typeof spec === "object" && "anyOf" in spec) {
       if (!Array.isArray(selector.anyOf) || selector.anyOf.length === 0 || Object.keys(selector).length !== 1)
         errors.push({path: `${path}.targets[${index}]`, message: "A choice of targets is `{anyOf: [selector, ...]}` and nothing else, or that with a count"});
@@ -223,9 +433,15 @@ function checkAbility(ability, path, errors) {
   if (modal) {
     for (const [m, mode] of (modal.modes ?? []).entries()) {
       for (const [index, spec] of (mode.targets ?? []).entries()) {
-        const {count, ...selector} = spec && typeof spec === "object" ? spec : {};
+        const {count, share, differentControllers, ...selector} = spec && typeof spec === "object" ? spec : {};
         if (count !== undefined && !countValid(count))
           errors.push({path: `${path}.effects[0].modes[${m}].targets[${index}].count`, message: "A target's count is `{min, max}`"});
+        if (share !== undefined && !(SHARES.includes(share) && count !== undefined))
+          errors.push({path: `${path}.effects[0].modes[${m}].targets[${index}].share`, message: `What a counted target's choices share is ${SHARES.map((s) => JSON.stringify(s)).join(" or ")}, on a counted target`});
+        /* "Any number of target tapped creatures with different controllers" (Cloud's Limit Break's Blade Beam): a mode's
+           counted target may say it, as an ability's may (script/bind.mjs). */
+        if (differentControllers !== undefined && !(differentControllers === true && count !== undefined))
+          errors.push({path: `${path}.effects[0].modes[${m}].targets[${index}].differentControllers`, message: "\"Controlled by different players\" is differentControllers: true, on a counted target"});
         if (spec && typeof spec === "object" && "anyOf" in spec) (selector.anyOf ?? []).forEach((one, at) => checkSelector(one, `${path}.effects[0].modes[${m}].targets[${index}].anyOf[${at}]`, errors));
         else checkSelector(spec && typeof spec === "object" ? selector : spec, `${path}.effects[0].modes[${m}].targets[${index}]`, errors);
       }
@@ -248,18 +464,41 @@ function checkAbility(ability, path, errors) {
 
   /* "Choose one or both" (`chooseUpTo`, Perfect Intimidation): built for a spell whose one effect is the modal, its modes
      chosen as it is cast (cards/index.mjs, rules/actions.mjs). Anywhere else the modal is asked as it resolves, as one. */
+  /* And for a triggered ability whose one effect is the modal, its modes chosen as it is put on the stack (CR 603.3c, 700.2b;
+     rules/trigger.mjs, modalWays): "at the beginning of your first main phase, choose one or more" (Black Market Connections,
+     wave 4b) -- one or more, never none (`choose: 0`) and never one mode twice (`sameMode`) there. */
   for (const [index, effect] of (ability.effects ?? []).entries()) {
     if (effect?.effect !== "modal" || effect.chooseUpTo === undefined) continue;
-    if (ability.kind !== "spell" || (ability.effects ?? []).length !== 1)
-      errors.push({path: `${path}.effects[${index}].chooseUpTo`, message: "\"Choose one or both\" is built for a spell whose one effect is the modal"});
+    const triggeredOne = ability.kind === "triggered" && effect.choose !== 0 && effect.sameMode === undefined;
+    if (!(ability.kind === "spell" || triggeredOne) || (ability.effects ?? []).length !== 1)
+      errors.push({path: `${path}.effects[${index}].chooseUpTo`, message: "\"Choose one or both\" is built for a spell whose one effect is the modal, or a triggered ability's choosing one or more"});
     if (!Number.isInteger(effect.chooseUpTo) || effect.chooseUpTo <= (effect.choose ?? 1))
       errors.push({path: `${path}.effects[${index}].chooseUpTo`, message: "chooseUpTo is how many modes at most: a whole number more than choose"});
   }
+  /* "Choose up to four. You may choose the same mode more than once" (Moment of Reckoning; CR 700.2d): `sameMode`, and
+     `choose: 0` for "up to" -- none chosen is a choice too -- each beside a chooseUpTo, so only on such a spell. */
+  for (const [index, effect] of (ability.effects ?? []).entries()) {
+    if (effect?.effect !== "modal") continue;
+    /* Or exactly so many, two or more: "Choose three. You may choose the same mode more than once" (Eldrazi Confluence). */
+    if (effect.sameMode !== undefined && !(effect.sameMode === true && (effect.chooseUpTo !== undefined || (Number.isInteger(effect.choose) && effect.choose >= 2))))
+      errors.push({path: `${path}.effects[${index}].sameMode`, message: "\"You may choose the same mode more than once\" is sameMode: true, beside chooseUpTo or a choose of two or more"});
+    if (effect.choose === 0 && effect.chooseUpTo === undefined)
+      errors.push({path: `${path}.effects[${index}].choose`, message: "choose: 0 is \"up to\" chooseUpTo modes, beside it"});
+  }
+  /* "If this is the first time this ability has resolved this turn" (`firstResolution`; Nissa, Leyline Tamer): asked of a
+     triggered or activated ability's effect as it is reached (script/resolution.mjs; rules/stack.mjs counts) -- never of the
+     ability's own condition, asked before it resolves, nor of a spell's. */
+  if ((ability.condition && typeof ability.condition === "object" && "firstResolution" in ability.condition)
+    || (!["triggered", "activated"].includes(ability.kind) && asksFirstResolution(ability.effects)))
+    errors.push({path, message: "firstResolution is asked of a triggered or activated ability's effect as it resolves"});
 
   const effectful = ["spell", "activated", "triggered"].includes(ability.kind);
   if (effectful) {
     const effects = ability.effects ?? [];
-    if (effects.length === 0)
+    /* A permanent spell's effect is its entering (CR 608.3): a permanent card's spell ability says only "as an additional cost
+       to cast this spell, ..." (Lys Alana Dignitary; CR 601.2b), and has no effects of its own (cards/index.mjs). */
+    const additionalOnly = permanent && ability.kind === "spell" && Array.isArray(ability.additionalCost) && ability.additionalCost.length > 0;
+    if (effects.length === 0 && !additionalOnly)
       errors.push({path: `${path}.effects`, message: `A ${ability.kind} ability with no effects is a definition somebody did not finish`});
     effects.forEach((effect, index) => checkEffect(effect, `${path}.effects[${index}]`, errors));
   }
@@ -276,6 +515,14 @@ function checkAbility(ability, path, errors) {
          maps `creature-dies` to `dies`, and a script has to carry the engine's spelling or
          `trigger.mjs` will never match it. */
       errors.push({path: `${path}.trigger.on`, message: `${JSON.stringify(on)} is not a trigger event the engine declares; the app's terms are bridged in vocabulary.mjs, not accepted here`});
+    }
+    /* A state trigger's state (CR 603.8): a condition, held to the condition grammar. */
+    if (on === "state") for (const message of conditionProblems(ability.trigger.state ?? null)) errors.push({path: `${path}.trigger.state`, message});
+    /* "When you cast this spell while you control a creature" (Social Snub): a condition asked as the spell is cast and never
+       again (rules/trigger.mjs) -- of a spell cast trigger, the only one that reads it, and held to the condition grammar. */
+    if (ability.trigger?.while !== undefined) {
+      if (on !== "spell cast") errors.push({path: `${path}.trigger.while`, message: "\"While\" a condition holds is read by a spell cast trigger alone"});
+      for (const message of conditionProblems(ability.trigger.while ?? null)) errors.push({path: `${path}.trigger.while`, message});
     }
     /* "Attack one of your opponents or a planeswalker they control" (CR 506.3): planeswalkers: true, beside defender: "opponent".
        "Deals combat damage to a player or planeswalker" (Grateful Apparition): planeswalkers: true, on a damage trigger
@@ -305,9 +552,31 @@ function checkAbility(ability, path, errors) {
     /* A rule is read through the whole selector grammar (rules/statics.mjs), a choice of selectors included: "creatures you
        control with power or toughness 1 or less". A layer's `affects` is the layers' narrower matcher, and is not. */
     else checkSelector(ability.affects, `${path}.affects`, errors, {choice: ability.rule !== undefined});
-    /* What causes a trigger to trigger again: an arrival, a death, an attack (rules/trigger.mjs). */
-    if (ability.rule === "triggers-again" && ability.cause !== undefined && !["enters", "dies", "attacks"].includes(ability.cause?.event))
-      errors.push({path: `${path}.cause`, message: "What causes it to trigger again is an event: enters, dies or attacks"});
+    /* "By paying life equal to its mana value rather than paying its mana cost" (Demon of Fate's Design): a free cast's cost of
+       life, its mana value. */
+    if (ability.rule === "cast-without-paying" && ability.payLife !== undefined && ability.payLife !== "manaValue")
+      errors.push({path: `${path}.payLife`, message: "payLife is \"manaValue\""});
+    if (ability.rule === "play-from") {
+      if (!["graveyard", "library-top", "exile"].includes(ability.zone)) errors.push({path: `${path}.zone`, message: "play-from zone is graveyard, library-top or exile"});
+      /* `perType`: a land and a spell of each permanent type (Muldrotha); `anyMana`: "mana of any type can be spent to cast
+         those spells" (Tinybones, CR 118.14). */
+      for (const key of ["free", "graveyardToLibraryBottom", "perType", "anyMana"]) if (ability[key] !== undefined && ability[key] !== true)
+        errors.push({path: `${path}.${key}`, message: `${key} is true`});
+      if (ability.perType === true && ability.limit !== undefined) errors.push({path: `${path}.perType`, message: "A permission kept by type has no other limit"});
+      if (ability.spells && typeof ability.spells === "object") checkSelector(ability.spells, `${path}.spells`, errors, {choice: true});
+      /* "By sacrificing a land in addition to paying its other costs" (Exploration Broodship; CR 601.2b): an additional cost of
+         the spells cast through it -- a sacrifice of a permanent the selector describes, the one form built. */
+      if (ability.additionalCost !== undefined) {
+        if (!(Array.isArray(ability.additionalCost) && ability.additionalCost.length && ability.additionalCost.every((a) => a?.atom === "sacrifice" && a.count === undefined)))
+          errors.push({path: `${path}.additionalCost`, message: "A permission's additional cost is a list of sacrifices of one permanent each ({atom: \"sacrifice\", selector})"});
+        else ability.additionalCost.forEach((a, i) => { if (a.selector !== undefined) checkSelector(a.selector, `${path}.additionalCost[${i}].selector`, errors, {choice: true}); });
+        if (ability.lands) errors.push({path: `${path}.additionalCost`, message: "An additional cost is a spell's (CR 601.2b): a permission with one lets spells be cast, not lands be played"});
+      }
+    }
+    /* What causes a trigger to trigger again: an arrival, a death, an attack, an arrival or a departure, or its controller
+       casting or copying a spell (Veyran, Voice of Duality; rules/trigger.mjs). */
+    if (ability.rule === "triggers-again" && ability.cause !== undefined && !["enters", "dies", "attacks", "enters or leaves", "cast or copy"].includes(ability.cause?.event))
+      errors.push({path: `${path}.cause`, message: "What causes it to trigger again is an event: enters, dies, attacks, or enters or leaves; or a spell's, cast or copy"});
     /* A restriction on attacking (CR 508.1c): whom, in its words, and a condition under which it does not apply. */
     if (ability.rule === "cant-attack") {
       if (ability.defender !== undefined && !CANT_ATTACK_DEFENDERS.includes(ability.defender))
@@ -318,6 +587,93 @@ function checkAbility(ability, path, errors) {
        the planeswalkers they control too. Attacking one of those is not attacking them (rules/statics.mjs). */
     if (ability.planeswalkers !== undefined && (ability.planeswalkers !== true || !(ability.rule === "attack-tax" || (ability.rule === "cant-attack" && ability.defender === "you"))))
       errors.push({path: `${path}.planeswalkers`, message: "\"Or planeswalkers you control\" is planeswalkers: true, on a tax on attacking you or a restriction on attacking you"});
+    /* "During combat, players can't cast spells or activate abilities that aren't mana abilities" (Yuriko, Blade of the
+       Mighty; CR 506.1): `duringCombat` true, on a cast or an activation forbidden -- and an activation forbidden only then,
+       its one built form (rules/statics.mjs, activationForbidden). */
+    if (ability.duringCombat !== undefined && (ability.duringCombat !== true || !["cant-cast", "cant-activate"].includes(ability.rule)))
+      errors.push({path: `${path}.duringCombat`, message: "\"During combat\" is duringCombat: true, on a cant-cast or cant-activate static"});
+    /* Or of some permanents' abilities, mana abilities among them: "during your turn, your opponents can't ... activate
+       abilities of artifacts, creatures, or enchantments" (Grand Abolisher, wave 4b; rules/statics.mjs,
+       permanentActivationForbidden) -- `of` a selector of those permanents, during its controller's turn (`duringYourTurn:
+       true`) or always ("activated abilities of artifacts can't be activated"). */
+    const ofPermanents = ability.rule === "cant-activate" && ability.of !== undefined;
+    if (ability.rule === "cant-activate" && !(ofPermanents ? [undefined, true].includes(ability.duringYourTurn) && ability.duringCombat === undefined
+      : ability.duringCombat === true && ability.duringYourTurn === undefined))
+      errors.push({path, message: "An activation forbidden is forbidden during combat (duringCombat: true), or of some permanents (`of`), always or during your turn (duringYourTurn: true): its two forms built"});
+    if (ability.of !== undefined && ability.rule !== "cant-activate") errors.push({path: `${path}.of`, message: "`of`, the permanents whose abilities can't be activated, is a cant-activate static's"});
+    if (ofPermanents) checkSelector(ability.of, `${path}.of`, errors, {choice: true});
+    /* How many counters instead (CR 614.1a; rules/statics.mjs, placeCounters): "twice that many" `times`, "that many plus
+       one" `plus`, "half that many, rounded down" `half` -- one of them -- and who must be putting them. */
+    if (ability.rule === "more-counters") {
+      if (["times", "plus", "half"].filter((key) => ability[key] !== undefined).length > 1)
+        errors.push({path, message: "More counters instead is one of times, plus or half"});
+      if (ability.times !== undefined && !(Number.isInteger(ability.times) && ability.times >= 0)) errors.push({path: `${path}.times`, message: "times is a whole number, 0 or more"});
+      if (ability.plus !== undefined && !(Number.isInteger(ability.plus) && ability.plus !== 0)) errors.push({path: `${path}.plus`, message: "plus is a whole number, not 0: 1 for \"that many plus one\", -1 for \"that many minus one\""});
+      if (ability.half !== undefined && ability.half !== true) errors.push({path: `${path}.half`, message: "half is true: half that many, rounded down"});
+      if (ability.putBy !== undefined && !["you", "opponent"].includes(ability.putBy)) errors.push({path: `${path}.putBy`, message: "putBy is \"you\" or \"opponent\": who must be putting them"});
+      /* A player's counters too: any player's ("on a permanent or player"), or its controller's ("or on yourself"); with
+         `affects: {what: "player"}`, a player's alone ("if you would get one or more counters", Winding Constrictor). */
+      if (ability.players !== undefined && ![true, "you"].includes(ability.players)) errors.push({path: `${path}.players`, message: "players is true (any player's counters too) or \"you\" (its controller's)"});
+      if (ability.affects?.what === "player" && (ability.players === undefined || Object.keys(ability.affects).length !== 1))
+        errors.push({path: `${path}.affects`, message: "A player's counters alone are affects {what: \"player\"}, and players says whose"});
+      /* "If an effect would put" (Doubling Season): not counters put as a cost. */
+      if (ability.byEffect !== undefined && ability.byEffect !== true) errors.push({path: `${path}.byEffect`, message: "byEffect is true: counters an effect puts, not a cost"});
+    }
+    /* "You may play two additional lands on each of your turns" (Azusa, Lost but Seeking; rules/actions.mjs, landDropsLeft):
+       how many more, 1 or more -- one when unsaid. */
+    if (ability.rule === "extra-land-drop" && ability.count !== undefined && !(Number.isInteger(ability.count) && ability.count >= 1))
+      errors.push({path: `${path}.count`, message: "An additional land drop says how many: a whole number, 1 or more"});
+    /* "Twice that many of those tokens instead" (rules/statics.mjs, tokensCreated): how many times, 2 or more. */
+    if (ability.rule === "more-tokens" && !(Number.isInteger(ability.times) && ability.times >= 2))
+      errors.push({path: `${path}.times`, message: "More tokens instead says how many times as many: a whole number, 2 or more"});
+    /* "That many 5/5 red Dragon creature tokens with flying are created instead" of artifact tokens: the tokens it replaces
+       by their card types, and the token made instead. */
+    /* A token a replacement makes: a spec, or a predefined token by name (CR 111.10; "an additional Food token"), which the
+       card's compiling gives its definition (cards/index.mjs). */
+    const tokenSpec = (token) => Boolean(token) && (isText(token.predefined) ? Object.keys(token).length === 1 : isText(token.name) && Array.isArray(token.types));
+    if (ability.rule === "tokens-instead") {
+      if (Object.keys(ability.affects ?? {}).some((key) => key !== "types")) errors.push({path: `${path}.affects`, message: "The tokens made instead of others are told by their card types: affects {types}"});
+      if (!tokenSpec(ability.token)) errors.push({path: `${path}.token`, message: "What is made instead is a token: {name, types, ...} or {predefined}"});
+    }
+    /* "Those tokens plus a 1/1 white Soldier creature token are created instead" of creature tokens (Queen Allenal), "plus an
+       additional Treasure token" of Treasure tokens (Xorn), of any tokens (Peregrin Took): the tokens it adds to by their card
+       types and subtypes, any unsaid, and the token it adds. */
+    if (ability.rule === "tokens-plus") {
+      if (Object.keys(ability.affects ?? {}).some((key) => !["types", "subtypes"].includes(key)) || Object.values(ability.affects ?? {}).some((v) => !Array.isArray(v) || !v.length))
+        errors.push({path: `${path}.affects`, message: "The tokens another is added to are told by their card types and subtypes, or any token: affects {types?, subtypes?}"});
+      if (!tokenSpec(ability.token)) errors.push({path: `${path}.token`, message: "What is added is a token: {name, types, ...} or {predefined}"});
+    }
+    /* "If you would create a Clue, Food, or Treasure token, instead create one of each" (Academy Manufactor): the tokens it
+       names, two or more predefined tokens (CR 111.10), each told by its subtype. */
+    if (ability.rule === "tokens-each" && !(Array.isArray(ability.each) && ability.each.length >= 2 && ability.each.every((kind) => isText(kind?.predefined) && Object.keys(kind).length === 1)))
+      errors.push({path: `${path}.each`, message: "One of each says which tokens: each, two or more [{predefined}]"});
+    /* "Draw two cards instead" (Teferi's Ageless Insight; rules/statics.mjs, drawsMore): how many cards for each one, 2 or more,
+       and the first card of the player's draw step left alone or not. */
+    if (ability.rule === "draws-more") {
+      if (!(Number.isInteger(ability.count) && ability.count >= 2)) errors.push({path: `${path}.count`, message: "More draws instead says how many cards for each: a whole number, 2 or more"});
+      if (ability.exceptFirstInDrawStep !== undefined && ability.exceptFirstInDrawStep !== true) errors.push({path: `${path}.exceptFirstInDrawStep`, message: "exceptFirstInDrawStep is true"});
+    }
+    /* "Twice that much life instead" (rules/statics.mjs, lifeGained): how many times, 2 or more. */
+    if (ability.rule === "more-life" && !(Number.isInteger(ability.times) && ability.times >= 2))
+      errors.push({path: `${path}.times`, message: "More life instead says how many times as much: a whole number, 2 or more"});
+    /* A card's own restriction on casting it (Proft, Sinister Mastermind): what lets it be cast, a condition, said. */
+    if (ability.rule === "cant-cast-self") {
+      if (ability.unless === undefined) errors.push({path: `${path}.unless`, message: "\"You can't cast this spell unless ...\" says what: `unless`, a condition"});
+      else for (const message of conditionProblems(ability.unless)) errors.push({path: `${path}.unless`, message});
+    }
+    /* What a chosen target must be for the spell to cost less (CR 601.2f): "if it targets an attacking creature" (Run Behind). */
+    if (ability.rule === "this-costs-less" && ability.targeting !== undefined) checkSelector(ability.targeting, `${path}.targeting`, errors);
+    /* "Spells your opponents cast that target this creature cost an additional 3 life to cast" (Terror of the Peaks, wave 4b;
+       rules/statics.mjs, increasesOn): what one of a spell's chosen targets must be, and the increase in life (`life`, a whole
+       number, 1 or more) in place of mana -- never beside an amount of mana. */
+    if (ability.rule === "spells-cost-more" && ability.targeting !== undefined) checkSelector(ability.targeting, `${path}.targeting`, errors);
+    if (ability.life !== undefined && !(ability.rule === "spells-cost-more" && ability.amount === undefined && Number.isInteger(ability.life) && ability.life >= 1))
+      errors.push({path: `${path}.life`, message: "An increase in life (`life`, a whole number, 1 or more) is a spells-cost-more static's, in place of its mana `amount`"});
+    /* "Can block only creatures with flying" (CR 509.1b): which attackers, a selector. */
+    if (ability.rule === "can-block-only") {
+      if (!ability.attackers || typeof ability.attackers !== "object") errors.push({path, message: "\"Can block only\" says which attackers: `attackers`, a selector"});
+      else checkSelector(ability.attackers, `${path}.attackers`, errors, {choice: true});
+    }
     if (ability.rule === "cant-be-blocked-by") {
       if (!ability.by && ability.byPowerBelowSource !== true) errors.push({path, message: "\"Can't be blocked by\" says by what: `by`, or `byPowerBelowSource`"});
       if (ability.by) checkSelector(ability.by, `${path}.by`, errors, {choice: true});
@@ -376,7 +732,8 @@ export function validateScript(script) {
   if (!Array.isArray(script.abilities)) {
     errors.push({path: "abilities", message: "A script has an abilities list, empty for a vanilla card"});
   } else {
-    script.abilities.forEach((ability, index) => checkAbility(ability, `abilities[${index}]`, errors));
+    const permanent = Array.isArray(script.identity?.types) && !script.identity.types.some((t) => t === "Instant" || t === "Sorcery");
+    script.abilities.forEach((ability, index) => checkAbility(ability, `abilities[${index}]`, errors, {permanent}));
   }
 
   /* A NONMODAL DOUBLE-FACED CARD (CR 712.2): one that transforms says so, `layout: "transform"`, beside its back face; a

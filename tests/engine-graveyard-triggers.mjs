@@ -103,8 +103,9 @@ const life = (s) => s.players.map((p) => p.life);
 const trigger = (t) => script("Odd Watcher", {types: ["Enchantment"], manaCost: "{1}", colors: []}, [{kind: "triggered", text: "Odd: you gain 1 life.", trigger: t, effects: [{effect: "gainLife", amount: 1}]}]).problems.length;
 eq([trigger({on: "put into graveyard"}), trigger({on: "put into graveyard", owner: "any", filter: {types: ["Land"]}}), trigger({on: "left graveyard", owner: "opponent"})], [0, 0, 0],
   "read: into your graveyard, into any with a filter, out of an opponent's");
-eq([trigger({on: "put into graveyard", owner: "Maya"}), trigger({on: "left graveyard", filter: {types: ["Land"]}}), trigger({on: "put into graveyard", filter: {bogus: 1}})], [1, 1, 1],
-  "refused: an owner it cannot read, a filter on cards leaving (not built), a filter it cannot read");
+eq([trigger({on: "put into graveyard", owner: "Maya"}), trigger({on: "put into graveyard", notFrom: "hand"}), trigger({on: "put into graveyard", filter: {bogus: 1}})], [1, 1, 1],
+  "refused: an owner it cannot read, \"from anywhere other than\" anything but the battlefield, a filter it cannot read");
+eq(trigger({on: "left graveyard", owner: "you", filter: {types: ["Creature"]}}), 0, "read: a creature card leaving your graveyard (Syr Konrad, the Grim, wave 4b)");
 ok(["put into graveyard", "left graveyard"].every((kind) => TRIGGER_KINDS.includes(kind) && isTriggerEvent(kind)), "both kinds a card may name, and the vocabulary's");
 
 for (const name of ["Moonshadow", "Garrison Excavator", "Quintorius, History Chaser", "Quintorius, Field Historian"]) ok(index.resolve(name)?.playable === true, `${name} is defined and playable`);

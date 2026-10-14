@@ -1,0 +1,183 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Fable of the Mirror-Breaker // Reflection of Kiki-Jiki",
+    "oracleId": "c0957e5e-c71b-439c-931c-9f55d2f76ace",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Saga"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "(As this Saga enters and after your draw step, add a lore counter.)\nI — Create a 2/2 red Goblin Shaman creature token with \"Whenever this token attacks, create a Treasure token.\"\nII — You may discard up to two cards. If you do, draw that many cards.\nIII — Exile this Saga, then return it to the battlefield transformed under your control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "As this Saga enters and after your draw step, add a lore counter.",
+      "keyword": "saga"
+    },
+    {
+      "kind": "triggered",
+      "text": "I — Create a 2/2 red Goblin Shaman creature token with \"Whenever this token attacks, create a Treasure token.\"",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 1
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Goblin Shaman",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Goblin",
+              "Shaman"
+            ],
+            "colors": [
+              "R"
+            ],
+            "power": 2,
+            "toughness": 2,
+            "abilities": [
+              {
+                "id": "goblin-shaman-treasure",
+                "kind": "triggered",
+                "text": "Whenever this token attacks, create a Treasure token.",
+                "trigger": {
+                  "on": "GameEventAttackersDeclared",
+                  "who": "self"
+                },
+                "effects": [
+                  {
+                    "effect": "createToken",
+                    "count": 1,
+                    "token": {
+                      "predefined": "Treasure"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "II — You may discard up to two cards. If you do, draw that many cards.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 2
+      },
+      "effects": [
+        {
+          "effect": "discard",
+          "count": 2,
+          "upTo": true,
+          "remember": true
+        },
+        {
+          "effect": "draw",
+          "count": {
+            "rememberedCount": true
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "III — Exile this Saga, then return it to the battlefield transformed under your control.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 3
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "to": "exile",
+          "andReturn": true,
+          "transformed": true,
+          "under": "you"
+        }
+      ]
+    }
+  ],
+  "layout": "transform",
+  "back": {
+    "identity": {
+      "name": "Reflection of Kiki-Jiki",
+      "types": [
+        "Enchantment",
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin",
+        "Shaman"
+      ],
+      "manaCost": null,
+      "colors": [
+        "R"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "oracleText": "{1}, {T}: Create a token that's a copy of another target nonlegendary creature you control, except it has haste. Sacrifice it at the beginning of the next end step.",
+    "abilities": [
+      {
+        "kind": "activated",
+        "text": "{1}, {T}: Create a token that's a copy of another target nonlegendary creature you control, except it has haste. Sacrifice it at the beginning of the next end step.",
+        "cost": [
+          {
+            "atom": "mana",
+            "cost": "{1}"
+          },
+          {
+            "atom": "{T}"
+          }
+        ],
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you",
+            "another": true,
+            "nonSupertypes": [
+              "Legendary"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "copyPermanent",
+            "targets": {
+              "target": 0
+            },
+            "except": {
+              "addKeywords": [
+                "Haste"
+              ]
+            },
+            "atEndStep": "sacrifice"
+          }
+        ]
+      }
+    ]
+  }
+}

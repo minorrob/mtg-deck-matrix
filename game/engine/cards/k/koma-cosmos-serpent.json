@@ -1,0 +1,129 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Koma, Cosmos Serpent",
+    "oracleId": "6ba0656f-e0d2-4735-9c66-3a00afa9fc23",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Serpent"
+    ],
+    "manaCost": "{3}{G}{G}{U}{U}",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": 6,
+    "toughness": 6
+  },
+  "oracleText": "This spell can't be countered.\nAt the beginning of each upkeep, create a 3/3 blue Serpent creature token named Koma's Coil.\nSacrifice another Serpent: Choose one —\n• Tap target permanent. Its activated abilities can't be activated this turn.\n• Koma gains indestructible until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This spell can't be countered.",
+      "rule": "cant-be-countered",
+      "affects": {
+        "what": "spell",
+        "self": true
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of each upkeep, create a 3/3 blue Serpent creature token named Koma's Coil.",
+      "trigger": {
+        "on": "upkeep",
+        "yours": false
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Koma's Coil",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Serpent"
+            ],
+            "colors": [
+              "U"
+            ],
+            "power": 3,
+            "toughness": 3
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "Sacrifice another Serpent: Choose one —\n• Tap target permanent. Its activated abilities can't be activated this turn.\n• Koma gains indestructible until end of turn.",
+      "cost": [
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "subtypes": [
+              "Serpent"
+            ],
+            "another": true
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Tap target permanent. Its activated abilities can't be activated this turn.",
+              "targets": [
+                {
+                  "what": "permanent"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "tap",
+                  "targets": {
+                    "target": 0
+                  }
+                },
+                {
+                  "effect": "effectUntil",
+                  "targets": {
+                    "target": 0
+                  },
+                  "rule": "cant-activate-its-abilities",
+                  "until": "end-of-turn"
+                }
+              ]
+            },
+            {
+              "text": "Koma gains indestructible until end of turn.",
+              "effects": [
+                {
+                  "effect": "pump",
+                  "targets": "self",
+                  "power": 0,
+                  "toughness": 0,
+                  "keywords": [
+                    "Indestructible"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
