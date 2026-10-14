@@ -198,3 +198,17 @@
 #cm-board-coach.is-module{position:static;inset:auto;width:100%;height:440px;max-height:70vh;min-height:280px;box-shadow:none;border:0;transform:none;z-index:auto}
 .cm-stage-module[data-module="coach"] .cm-module-body{padding:0;max-height:none;overflow:visible}
 .cm-stage-module[data-module="actions"] .cm-board-decision{position:static;width:100%;max-width:none;max-height:none;margin:0}
+
+/* Drawer stack and Card Preview use one readable card size in either drawer. */
+.cm-board[data-stage="on"]{--module-card-w:min(calc((var(--stage-side-width) - 74px) * .75),calc((clamp(180px,30vh,320px) - 20px) * 5 / 7))}
+.cm-stage-module .cm-full-pick .cm-bcard,.cm-stage-module .cm-stack-card{--bc:var(--module-card-w);width:var(--bc);max-width:100%}
+.cm-stage-module #cm-full-pick,.cm-stage-side .cm-module-body #cm-full-pick{height:auto;min-height:0;overflow:visible}
+.cm-stage-module .cm-full-pick{background:none;border:0;padding:0}
+#matrix-v2 .cm-stage-module .cm-module-stack{padding:0;border:0;background:none;box-shadow:none;max-height:none;overflow:visible;backdrop-filter:none}
+.cm-module-stack ol{list-style:none;padding:0;margin:0}
+.cm-module-stack .cm-module-stack-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,3fr);gap:10px;padding:10px 0;border-bottom:1px solid #8fa79b33}
+.cm-module-stack .cm-module-stack-row:last-child{border-bottom:0}
+.cm-stack-summary{display:flex;flex-direction:column;gap:6px;min-width:0;font-size:12px;line-height:1.4;white-space:normal;overflow-wrap:anywhere}
+.cm-stack-summary .cm-stack-position{color:#b9dec7;font-variant-numeric:tabular-nums}
+.cm-stack-summary>span{color:#b7c9bf}
+.cm-stack-image{display:flex;justify-content:center;align-items:flex-start;min-width:0}

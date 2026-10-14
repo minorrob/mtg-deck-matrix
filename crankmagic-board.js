@@ -802,7 +802,7 @@ globalThis.CrankBoard = Object.seal({
       actions: () => decision() || `<p class="cm-muted">${e(waitingText())}</p>`,
       table: () => `<div class="cm-full-vitals">${players().map(p => `<div class="${view.state.turnPlayerId === p.playerId ? "is-turn" : ""}" data-seat="${p.playerId}" style="--seat:${seatColor(p.playerId)}"><span>${e(seatLabel(p))}${turnMark(p.playerId)}</span>${vitals(p, {big:true})}</div>`).join("")}</div>`,
       inspect: () => `<div id="cm-full-pick">${pickPanel()}</div>`,
-      stack: () => stack() || `<p class="cm-muted">The stack is empty.</p>`,
+      stack: () => stack({module:true}) || `<p class="cm-muted">The stack is empty.</p>`,
       history: () => historyBand(30),
       resources: () => turnResources(),
       counter: () => `<p class="cm-muted">Public battlefield counts · cards with two types count in both.</p>${players().map(p => `<details class="cm-module-counts"><summary>${e(seatLabel(p))}</summary><dl>${["Creature", "Artifact", "Enchantment", "Land", "Planeswalker"].map(type => `<div><dt>${type}s</dt><dd>${p.zones.Battlefield.cards.filter(c => c.types.includes(type)).length}</dd></div>`).join("")}</dl></details>`).join("")}`
@@ -894,9 +894,10 @@ globalThis.CrankBoard = Object.seal({
       <ol>${recent.map((l, k) => `<li style="--age:${k}"${l.mark === "end" ? ' class="is-end"' : l.mark === "quiet" ? ' class="is-quiet"' : ""}><span>${e(l.text)}</span></li>`).join("") || `<li class="cm-muted">Nothing yet.</li>`}</ol></section>`;
   }
   /* The stack, newest first; a run of the same thing in a row (a thousand Intruder Alarm triggers) is one line, ×N. */
-  function stack() {
+  function stack({module = false} = {}) {
     const items = view.state.stack;
     if (!items.length) return "";
+    if (module) return `<section class="cm-board-stack cm-module-stack" aria-label="The stack"><p class="cm-stack-order-note">1 resolves next</p><ol>${[...items].reverse().map((s,i) => `<li class="cm-module-stack-row"><div class="cm-stack-summary${s.name ? " cm-stack-entry" : ""}"${s.name ? ` tabindex="0" data-stack-name="${e(s.name)}" aria-label="${i+1}. ${e(s.name)}, ${e(nameOf(s.playerId))}'s: show the card"` : ""}><b class="cm-stack-position">#${i+1}</b><strong>${e(s.name || "A face-down spell")}</strong><span>${e(nameOf(s.playerId))}</span></div><div class="cm-stack-image"><span class="cm-bcard cm-stack-card${s.name ? "" : " is-back"}" role="img" aria-label="${e(s.name || "A face-down spell")}, on the stack">${s.name ? `<span class="cm-bcard-name">${e(s.name)}</span><img src="${e(pictureOf(s.name))}" alt="" loading="lazy" referrerpolicy="no-referrer">` : ""}</span></div></li>`).join("")}</ol></section>`;
     const rows = [];
     for (const s of [...items].reverse()) {
       const last = rows[rows.length - 1];

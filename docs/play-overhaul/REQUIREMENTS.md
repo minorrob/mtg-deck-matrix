@@ -6,6 +6,8 @@ Rob's current instructions override the compiled brief; the later feedback captu
 
 ## Current user decisions
 
+- On the Stack uses one numbered row per active entry, newest first (#1 resolves next). Its wrapping text column occupies 25% of the available column width and shows position, card name and player; the image occupies the right column. Every image shares Card Preview sizing in either drawer.
+
 - Profile avatar/menu at top right beside Skip to end; Settings removed from the left rail. Settings includes Set Side Drawer Modules, with Left / Right / None radio columns. Reorder by drag handle or keyboard buttons within each drawer; placement and order follow the profile through library sync. Cancel preserves the prior layout.
 - Available modules: Screen View (one Full / Table / Focus popout), History, AI Coach, Counter-Intel, Resources, On the Stack, Card Preview, Table Vitals, Recommended Actions, Chat, and Actions. Recommended Actions shares the existing AI Coach conversation. Assigned Actions replaces floating decision popups in Full screen; other views retain their controls. Chat remains explicitly unavailable pending a shared service; voice is a later feature.
 - Both drawers reach the screen bottom through the hand region. Handles stay attached to exposed edges in either state. Camera follows the right drawer whether expanded or collapsed.
@@ -64,10 +66,10 @@ Preview means implemented in the desktop tabletop surface, with acceptance still
 | R29 | Acting-seat and unseen-permanent cues (3e) | Pending | Reset conditions and reconnect baseline tested. |
 | R30 | Overlay rails never resize canvas (4a) | Preview | Both handles open/close overlays; canvas box unchanged. Existing content only at this milestone. |
 | R31 | Profile drawer modules (latest correction) | Preview | Left/Right/None dialog; drag and keyboard order, hide/restore, owner isolation, reload and fresh-browser cloud restore. Counter-Intel currently shows public battlefield counts; deeper analysis remains pending. |
-| R32 | Stack cards newest first, resolved history (4a) | Pending | One source of truth with reveal shelf; all active entries remain accessible. |
+| R32 | Stack cards newest first, resolved history (4a) | Preview: active stack; resolved history pending | One source of truth with reveal shelf; all active entries remain accessible. |
 | R33 | Attack readiness uses engine facts (section 6) | Pending | Engine already has controlledSinceTurn and summoningSick; project facts without guessing next turn or attack legality. |
 | R34 | Mana and passive-effect wording (section 6) | Pending | Source count is not mana amount; text match is not a confirmed active restriction. |
-| R35 | Screenshots with stable object IDs (latest user instruction) | Preview | T01 top, T02–T04 back seats, T05 front mat, T06 command, T07 library, T08 lands, T09 battlefield, T10 camera, T11 hand, T12/T13 handles, T14 panel, T15/T16 previous/next hand cards, T17 Background, T18 Table material, T19 Cards, T20 profile, T21 player life container, M01 stack, M02 Table Vitals, M03 History, D01 drawer settings. |
+| R35 | Screenshots with stable object IDs (latest user instruction) | Preview | T01 top, T02–T04 back seats, T05 front mat, T06 command, T07 library, T08 lands, T09 battlefield, T10 camera, T11 hand, T12/T13 handles, T14 panel, T15/T16 previous/next hand cards, T17 Background, T18 Table material, T19 Cards, T20 profile, T21 player life container, M01 stack, M02 Table Vitals, M03 History, M04 Card Preview, D01 drawer settings. |
 | R36 | Final comprehensive UAT HTML (latest user instruction) | Pending | Every row has steps, expected behavior, status, evidence and an input for findings. |
 | R37 | Staging integration (latest user instruction) | Pending | Exact tested source, release verification and staging acceptance; no production release implied. |
 

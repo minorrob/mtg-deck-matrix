@@ -310,6 +310,29 @@ try {
   await page.setViewportSize({width:1400,height:900});
   await page.locator('.cm-stage-region[data-renderer="webgl"]').waitFor();
   assert.equal(await page.locator('canvas.cm-stage-canvas').count(),1,"returning to desktop mounts one surface");
+  // An actual recorded two-entry stack: newest resolves first, every entry gets a readable image.
+  for(let i=0;i<20;i++) await page.request.post(`${address}/preview/frame`,{data:'1'});
+  await openDrawerSettings();
+  for(const id of ['screen','history','coach','counter','resources','stack','inspect','table','recommended','chat','actions']) await page.locator(`input[name="module-${id}"][value="${id==='stack'?'left':id==='inspect'?'right':'none'}"]`).check();
+  await page.getByRole('button',{name:'Save drawer modules',exact:true}).click();
+  await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
+  for(const [selector,label] of [['.cm-stage-rail','Toggle board tools'],['.cm-stage-side','Toggle table panel']]) if(!await page.locator(`${selector}.is-open`).count()) await page.getByRole('button',{name:label,exact:true}).click();
+  await page.locator('.cm-stage-hand .cm-bcard').first().focus();await page.locator('.cm-stage-hand .cm-bcard').first().press('Enter');await page.mouse.move(700,20);
+  assert.deepEqual(await page.locator('.cm-stack-summary strong').allTextContents(),['Intruder Alarm','Dundoolin Weaver'],'stack entries are in resolution order');
+  assert.deepEqual(await page.locator('.cm-stack-position').allTextContents(),['#1','#2'],'each entry has its own stack position');
+  for(const width of [1400,1024]) {
+    await page.setViewportSize({width,height:900});
+    const sizes=await page.evaluate(()=>{
+      const r=e=>e.getBoundingClientRect(),preview=r(document.querySelector('.cm-full-pick .cm-bcard'));
+      return [...document.querySelectorAll('.cm-module-stack-row')].map(el=>{const card=r(el.querySelector('.cm-stack-card')),text=r(el.querySelector('.cm-stack-summary')),image=r(el.querySelector('.cm-stack-image'));return {dw:card.width-preview.width,dh:card.height-preview.height,fraction:text.width/(text.width+image.width),overflow:el.scrollWidth-el.clientWidth};});
+    });
+    assert.ok(sizes.length===2&&sizes.every(s=>Math.abs(s.dw)<.5&&Math.abs(s.dh)<.5&&Math.abs(s.fraction-.25)<.01&&s.overflow<2),'stack cards match Card Preview and use wrapping 25/75 columns');
+  }
+  // Prove the size check rejects the former small stack thumbnails, then restore.
+  const brokenSize=await page.addStyleTag({content:'.cm-stage-module .cm-stack-card{--bc:96px!important}'});
+  const mismatched=await page.evaluate(()=>Math.abs(document.querySelector('.cm-stack-card').getBoundingClientRect().width-document.querySelector('.cm-full-pick .cm-bcard').getBoundingClientRect().width));
+  assert.throws(()=>assert.ok(mismatched<.5),'a deliberately undersized stack card fails the matching-size assertion');
+  await brokenSize.evaluate(el=>el.remove());
   assert.deepEqual(errors,[],"no uncaught browser errors");
   console.log('table-tabletop: browser passed (four seats, private backs, persistent canvas, camera bounds, overlays, phone fallback)');
 } finally {server.kill();await close();}
