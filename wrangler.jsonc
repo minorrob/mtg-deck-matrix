@@ -1,7 +1,7 @@
 {
   "name": "crankmagic-staging",
   "main": "cloud/play-worker.mjs",
-  "compatibility_date": "2026-10-12",
+  "compatibility_date": "2026-10-14",
   "assets": {
     "directory": "./",
     "binding": "ASSETS",
@@ -38,7 +38,8 @@
     "AI_CAP_COACH_CENTS": "150",
     "AI_PILOT": "on",
     "AI_CAP_PILOT_GAME_CENTS": "25",
-    "AI_ADVISE": "on"
+    "AI_ADVISE": "on",
+    "AI_EVERYONE": "on"
   },
   "ratelimits": [
     {
