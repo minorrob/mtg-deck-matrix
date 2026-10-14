@@ -31,7 +31,7 @@
 import {verifyAccess, Unauthorized} from "./access.mjs";
 import {createLibrary, Conflict, Invalid, LIMITS} from "./library.mjs";
 import {archidekt, ImportError} from "./import.mjs";
-import {createAi, settings, explain, coach, advise, readQuestion, Closed} from "./ai.mjs";
+import {createAi, everyone, settings, explain, coach, advise, readQuestion, Closed} from "./ai.mjs";
 import {readAsk, openVersion, adviseBrief} from "./advise.mjs";
 import {tables} from "./tables.mjs";
 
@@ -43,7 +43,7 @@ async function aiMeter(env, email, now) {
   if (!env.DB) return {open: false};
   let config;
   try {config = settings(env);} catch {return {open: false};}
-  const ai = createAi(env.DB, {now});
+  const ai = createAi(env.DB, {now, everyone: everyone(env)});
   if (!(await ai.allowed(email))) return {open: false};
   const {mine} = await ai.spent(email);
   return {open: true, spentCents: Math.round(mine / 10000 * 100) / 100, capCents: config.capPerson / 10000};
@@ -51,7 +51,7 @@ async function aiMeter(env, email, now) {
 async function aiSeatOpen(env, email, flag = "AI_PILOT") {
   if (env[flag] !== "on" || !env.DB) return false;
   try {settings(env);} catch {return false;}
-  return createAi(env.DB).allowed(email);
+  return createAi(env.DB, {everyone: everyone(env)}).allowed(email);
 }
 
 /** An invitation's link, `/api/join/<table>/<code>`: where it sends the person -- the app, at the seat's fragment -- or
@@ -191,13 +191,16 @@ export async function handle(request, env, deps = {}) {
 }
 
 /* THE AI DOOR (M6; cloud/ai.mjs, docs/ai-door.md). Its own Access application, so a library sign-in -- which may
-   be the emailed code -- never opens it; then the allowlist, the key and the caps, each shut until Rob sets it. */
+   be the emailed code -- never opens it; then the allowlist, the key and the caps, each shut until Rob sets it. Where
+   it is open to everyone signed in (AI_EVERYONE, Rob 2026-10-14), the library's sign-in opens it too, and the invite
+   list is the allowlist. */
 const AI_BODY = 64 * 1024;
 const AI_ROUTES = {"/api/ai/explain": "Explain", "/api/ai/coach": "The Coach", "/api/ai/advise": "The advisor"};
 async function aiDoor(request, env, deps, url, ms) {
   if (!env.AI_ACCESS_AUD) return reply(503, {error: "AI features are not switched on here yet."});
   let who;
-  try {who = await verifyAccess(request, env, {fetchImpl: deps.fetchImpl, now: ms(), audience: env.AI_ACCESS_AUD});}
+  const audience = everyone(env) ? [env.AI_ACCESS_AUD, env.ACCESS_AUD] : env.AI_ACCESS_AUD;
+  try {who = await verifyAccess(request, env, {fetchImpl: deps.fetchImpl, now: ms(), audience});}
   catch (error) {
     if (error instanceof Unauthorized) return reply(401, {error: "Sign in to CrankMagic's AI features to use them.", why: error.message});
     throw error;
@@ -214,7 +217,7 @@ async function aiDoor(request, env, deps, url, ms) {
   if (!feature) return reply(404, {error: "No such endpoint."});
   if (request.method !== "POST") return reply(405, {error: `${feature} is a POST.`});
   if (!fromTheApp(request, url, "ai")) return reply(403, {error: "That request did not come from CrankMagic."});
-  const ai = createAi(env.DB, {now: () => new Date(ms()).toISOString(), ...(deps.newId ? {newId: deps.newId} : {})});
+  const ai = createAi(env.DB, {now: () => new Date(ms()).toISOString(), everyone: everyone(env), ...(deps.newId ? {newId: deps.newId} : {})});
   if (!(await ai.allowed(who.email))) return reply(403, {error: "Your account is not on CrankMagic's list for AI features. Ask the person who invited you."});
   /* The Coach sends a person's hand and board, which the privacy page must say before it is offered: its own switch. */
   if (feature === "The Coach" && env.AI_COACH !== "on") return reply(503, {error: "The Coach is not switched on here yet."});

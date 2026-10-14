@@ -8,7 +8,35 @@ sentences (the design is `docs/ai-agents.md` §4). The code is `cloud/ai.mjs`, t
 row M6) is a gate that is closed while it is unset. None of them has a default that spends money. The browser does
 not offer the feature yet.
 
-## Where it stands (2026-10-09)
+## Open to everyone signed in (Rob, 2026-10-14)
+
+Rob: *"I want the AI door open on staging and production for anyone that can sign in (e.g. given I am manually adding
+who can access, I'm fine with those I want everyone I add to be able to use the AI features)."*
+
+- **The switch** is `AI_EVERYONE` (`ai.everyone` in a release profile). On, the allowlist is everyone Access lets in,
+  so the invite list is the one list Rob keeps, and the door takes the app's own sign-in (`ACCESS_AUD`) as well as an
+  AI application's. Off, the allowlist and the AI application hold as before. The key, the caps, the model and each
+  feature's own switch are unchanged.
+- **Staging:** on (`cloud-staging`), and its key is set. **One step is Rob's:** Access still puts
+  `staging.crankmagic.com/api/ai/*` behind "CrankMagic AI (staging)", whose policy is the three AI testers, so anyone
+  else is stopped at Cloudflare before the Worker sees them. Delete that application (Zero Trust › Access ›
+  Applications), so that `/api/ai/*` falls under staging's own sign-in; or give its policy the same people as
+  staging's. The door takes either sign-in.
+- **Production:** on in `cloud-production`, with no AI application of its own: `/api/ai/*` is under "CrankMagic
+  accounts" (`crankmagic.com/api/*`), whose policy is the invite list. Staging's caps, model and features: 300¢ in any
+  24 hours for everyone together, the Coach's 150¢ inside it, 25¢ a game for an AI on Claude, and the deck advisor, on
+  Claude Haiku 5.5. **Two steps are Rob's:** the key (`ANTHROPIC_API_KEY`, a secret on the `crankmagic` Worker, with a
+  monthly limit in the Anthropic console; none at 2026-10-14), and the go for the production release that carries
+  it. Until the key is set, the door answers 503. The pages release, without Play, keeps the door shut.
+- **The privacy page** says "signed in" where it said "invited to AI features", and that each feature runs only when
+  someone asks for it (an AI player, when a table's host seats one).
+- **Proof:** `node tests/ai-door.mjs` (a person not on the allowlist answered only with the switch on; the app's
+  sign-in opens the door only with it on; a token for any other application still refused; the advisor's offer and
+  the meter follow it; a service token never let in), `node tests/agent-seat-table.mjs` (a host not on the list seats an AI on Claude only with it
+  on), `node tests/release-pages.mjs` (staging and production's Play release set it; the pages release and the
+  standby do not). Breaks: `tools/ai-everyone-breaks.py`, 13, each caught.
+
+## Where it stood (2026-10-09)
 
 | Gate | Staging | Production |
 | --- | --- | --- |
@@ -73,14 +101,14 @@ key in place.
 
 It is the "AI features" section of `privacy.html`:
 
-> **AI features.** Some people, invited to them separately, can ask CrankMagic to explain a deck's measured score.
+> **AI features.** If you are signed in, you can ask CrankMagic to explain a deck's measured score.
 > When you do, CrankMagic sends Anthropic, the company that makes the Claude AI models, only what that
 > explanation needs: the deck's name, its commander, its card names, and the score and figures the simulator
 > measured. It does not send your email address, your library, your collection or what you paid. Anthropic
 > processes the request to write the explanation and does not use it to train its models. CrankMagic keeps a
 > record of each request (who asked, when, how large it was and what it cost) to hold spending to a limit, and
-> deletes it with your account. AI features are off unless you have been invited to them, and you can ask to be
-> removed at admin@crankmagic.com.
+> deletes it with your account. AI features are open to everyone signed in to CrankMagic, and each runs only when
+> you ask for it (an AI player, when a table's host seats one). Questions about them go to admin@crankmagic.com.
 
 Rob approved it as written. `DELETE /api/account` deletes the person's `ai_calls` rows with the rest of the
 account (`cloud/library.mjs`, `forget`; proved in `tests/cloud-worker.mjs`). The allowlist row stays, because the
@@ -120,7 +148,7 @@ hand and board, which the privacy page must name before the Coach is offered.
 It is in the "AI features" section of `privacy.html`, and the staging profile has `ai.coach: true` (`AI_COACH` on).
 `tools/release-pages.mjs` refuses a release that switches the Coach on where the privacy policy does not say this.
 
-> **The Coach.** At a table, people invited to AI features can ask the Coach about their game. When you ask,
+> **The Coach.** At a table, anyone signed in can ask the Coach about their game. When you ask,
 > CrankMagic sends Anthropic your question and what you can see at that table: your own hand, the board as everyone
 > at the table sees it (including the names players use there), the stack, the game's recent history, and your deck's
 > card list. It never sends another player's hand, the order of any library, your email address, your library or your
@@ -156,7 +184,7 @@ it; the table's object checks again as it seats one, and refuses otherwise).
 ### The privacy wording for an AI on Claude (Rob approved it, 2026-10-12)
 
 > **AI players on Claude.** At a table, its host may seat an AI that plays on Claude, Anthropic's AI model, if they are
-> invited to AI features. At some of that AI's decisions, CrankMagic sends Anthropic the AI seat's own view of the game:
+> signed in. At some of that AI's decisions, CrankMagic sends Anthropic the AI seat's own view of the game:
 > its hand, the board as every player at the table sees it, and the choices it has. It never sends a person's hand, the
 > order of any library, or anyone's name: players are named by their seat. Each request is logged under the host's
 > account with what it cost, the day's limits hold it, and each game is capped at 25¢. Anthropic does not use what it
@@ -191,7 +219,7 @@ says whether to offer it).
 
 ### The privacy wording for the deck advisor (Rob approved it, 2026-10-12)
 
-> **The deck advisor.** On a deck's page, if you are invited to AI features, you may ask Claude, Anthropic's AI model, to
+> **The deck advisor.** On a deck's page, if you are signed in, you may ask Claude, Anthropic's AI model, to
 > suggest swaps. CrankMagic sends Anthropic that deck's list, each card with its roles, whether you own it, its market
 > price and rank; the cards you own, have ordered, or have on your To buy and Watching lists that could go in it, and, if
 > your AI Coach settings allow it, cards you don't own; the deck's own settings; and the goal you type, if any. It never sends your name or email, what you paid for a card, or another person's library. Each

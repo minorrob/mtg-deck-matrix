@@ -53,9 +53,10 @@ async function keys(team, {fetchImpl = fetch, now = Date.now(), refresh = false,
  * @throws {Unauthorized} for anything short of a valid token for this application naming a person
  */
 export async function verifyAccess(request, env, deps = {}) {
-  /* `deps.audience` names another Access application on the same team: the AI door has its own (cloud/ai.mjs). */
-  const team = env.ACCESS_TEAM_DOMAIN, audience = deps.audience || env.ACCESS_AUD;
-  if (!team || !audience) throw new Error("ACCESS_TEAM_DOMAIN and ACCESS_AUD must be set; refusing every request until they are");
+  /* `deps.audience` names another Access application on the same team, or a list of them: the AI door has its own
+     (cloud/ai.mjs), and takes this one's too where it is open to everyone signed in. */
+  const team = env.ACCESS_TEAM_DOMAIN, audiences = [].concat(deps.audience || env.ACCESS_AUD).filter(Boolean);
+  if (!team || !audiences.length) throw new Error("ACCESS_TEAM_DOMAIN and ACCESS_AUD must be set; refusing every request until they are");
   const token = request.headers.get("Cf-Access-Jwt-Assertion");
   if (!token) throw new Unauthorized("no Access token");
   const parts = token.split(".");
@@ -72,7 +73,8 @@ export async function verifyAccess(request, env, deps = {}) {
   try {signed = await crypto.subtle.verify("RSASSA-PKCS1-v1_5", key, bytes(parts[2]), enc.encode(`${parts[0]}.${parts[1]}`));} catch {}
   if (!signed) throw new Unauthorized("a bad signature");
   const seconds = Math.floor(now / 1000);
-  if (!(Array.isArray(claims.aud) ? claims.aud : [claims.aud]).includes(audience)) throw new Unauthorized("a token for another application");
+  const named = Array.isArray(claims.aud) ? claims.aud : [claims.aud];
+  if (!audiences.some((audience) => named.includes(audience))) throw new Unauthorized("a token for another application");
   if (claims.iss !== `https://${team}`) throw new Unauthorized("a token from another issuer");
   if (typeof claims.exp !== "number" || claims.exp < seconds - 30) throw new Unauthorized("an expired token");
   if (typeof claims.nbf === "number" && claims.nbf > seconds + 30) throw new Unauthorized("a token that is not valid yet");

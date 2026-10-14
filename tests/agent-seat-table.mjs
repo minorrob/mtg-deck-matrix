@@ -117,6 +117,8 @@ const pilotCalls = () => DB.raw.prepare("SELECT email, feature, model, outcome, 
   await refused({...OPEN, AI_CAP_TOTAL_CENTS: undefined}, ROB, "no caps: refused");
   await refused(OPEN, EVE, "a host not on the allowlist: refused");
   eq((await tableWith(OPEN, "evetableplain", {host: EVE, level: "normal"})).made.status, 201, "while a Normal AI is anyone's");
+  /* Rob, 2026-10-14: the door open to everyone signed in (AI_EVERYONE): a host Access let in seats one, list or no list. */
+  eq((await tableWith({...OPEN, AI_EVERYONE: "on"}, "evetableeveryone", {host: EVE})).made.status, 201, "with AI_EVERYONE on, a host not on the allowlist seats an AI on Claude");
 }
 
 /* ---- 2. In play, through the model, on the tape ---- */

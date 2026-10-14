@@ -24,7 +24,7 @@ import {startRoom, openRoom, RoomError, basicCards} from "../game/room/room.mjs"
 import {tableOn, TableError, llmWaiting} from "../game/room/table.mjs";
 import {tableDefinition} from "../game/engine/cards/definitions.mjs";
 import {agentBrief, pickOf} from "../game/room/agent-brief.mjs";
-import {createAi, settings, pilot, pilotWorst, Closed} from "./ai.mjs";
+import {createAi, everyone, settings, pilot, pilotWorst, Closed} from "./ai.mjs";
 
 /* WHAT THE TABLE PLAYS (M5; the plan review's A2 and C4): the basic lands, and every definition in the engine's card
    directory (game/engine/cards/definitions.mjs, generated from it). A deck whose every card is one of these takes a
@@ -293,7 +293,7 @@ export class GameTable extends GameRoom {
   async pilotOpen(email) {
     if (this.env?.AI_PILOT !== "on") return "The AI seat on Claude is not switched on here.";
     try {settings(this.env);} catch (error) {return error.message;}
-    if (!this.env.DB || !(await createAi(this.env.DB).allowed(email))) return "That account is not on CrankMagic's list for AI features.";
+    if (!this.env.DB || !(await createAi(this.env.DB, {everyone: everyone(this.env)}).allowed(email))) return "That account is not on CrankMagic's list for AI features.";
     return null;
   }
 
