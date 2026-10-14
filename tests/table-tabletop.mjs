@@ -160,19 +160,19 @@ try {
   await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
   await page.getByRole('button',{name:'Toggle table panel',exact:true}).click();
   await page.getByRole('button',{name:'Arrange modules',exact:true}).click();
-  await page.getByRole('combobox',{name:'Module to add',exact:true}).selectOption('counter');
-  await page.getByRole('button',{name:'Add',exact:true}).click();
-  await page.waitForFunction(()=>document.querySelector('[data-module="counter"]'));
-  await page.getByRole('button',{name:'Restore default layout',exact:true}).click();
-  await page.waitForFunction(()=>document.querySelector('[data-module="inspect"]'));
-  assert.equal(await page.locator('.cm-stage-rail [data-action="board-tools"]').count(),0,'Settings is no longer in the left drawer');
-  const profile=await page.getByRole('button',{name:'Profile menu',exact:true}).boundingBox(), skip=await page.locator('.cm-stage-top [data-action="board-skip"]').boundingBox();
-  assert.ok(profile.x>skip.x && profile.y<58,'profile control sits at the right of the top strip beside Skip to end');
   const openDrawerSettings=async()=>{
     await page.getByRole('button',{name:'Profile menu',exact:true}).click();
     await page.getByRole('button',{name:'Settings',exact:true}).click();
     await page.getByRole('button',{name:'Set Side Drawer Modules',exact:true}).click();
   };
+  await openDrawerSettings();
+  for(const id of ['screen','history','coach','counter','resources','stack','inspect','table','recommended','chat','actions']) await page.locator(`input[name="module-${id}"][value="${['table','inspect','stack','history','counter'].includes(id)?'right':'none'}"]`).check();
+  await page.getByRole('button',{name:'Save drawer modules',exact:true}).click();
+  await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
+  assert.equal(await page.locator('.cm-module-add, [data-action=board-module-add], [data-action=board-module-reset]').count(),0,'drawer configuration uses Settings without taking module space');
+  assert.equal(await page.locator('.cm-stage-rail [data-action="board-tools"]').count(),0,'Settings is no longer in the left drawer');
+  const profile=await page.getByRole('button',{name:'Profile menu',exact:true}).boundingBox(), skip=await page.locator('.cm-stage-top [data-action="board-skip"]').boundingBox();
+  assert.ok(profile.x>skip.x && profile.y<58,'profile control sits at the right of the top strip beside Skip to end');
   await openDrawerSettings();
   await page.getByRole('radio',{name:'History: Left',exact:true}).check();
   await page.getByRole('button',{name:'Cancel',exact:true}).click();
@@ -194,7 +194,10 @@ try {
     if(open){await page.getByRole('button',{name:'Toggle board tools',exact:true}).click();await page.getByRole('button',{name:'Toggle table panel',exact:true}).click();}
   }
   await page.getByRole('button',{name:'Toggle table panel',exact:true}).click();
-  await page.locator('.cm-stage-side').getByRole('button',{name:'Restore default layout',exact:true}).click();
+  await openDrawerSettings();
+  for(const id of ['screen','history','coach','counter','resources','stack','inspect','table','recommended','chat','actions']) await page.locator(`input[name="module-${id}"][value="${['table','inspect','stack','history','counter'].includes(id)?'right':'none'}"]`).check();
+  await page.getByRole('button',{name:'Save drawer modules',exact:true}).click();
+  await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
   await page.waitForFunction(()=>!document.querySelector('.cm-stage-rail .cm-stage-module'));
   await page.evaluate(()=>{globalThis.__canvas=document.querySelector('.cm-stage-canvas');});
   await page.getByRole('button',{name:'Close table panel',exact:true}).click();

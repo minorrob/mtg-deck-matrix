@@ -140,8 +140,6 @@
 .cm-module-body p{font-size:11px;margin:4px 0;line-height:1.5}
 .cm-module-counts{padding:6px 0;font-size:12px}.cm-module-counts summary{cursor:pointer}
 .cm-module-counts dl{margin:6px 0}.cm-module-counts dl>div{display:flex;justify-content:space-between;padding:2px 0}.cm-module-counts dd{margin:0}
-.cm-module-add{padding:12px 0;flex-shrink:0;font-size:12px}.cm-module-add label{display:grid;gap:6px;margin-bottom:8px}
-.cm-module-add select{padding:6px;background:#1c302e;color:#edf6ef;border:1px solid #698477;border-radius:4px}
 
 /* Borderless battlefield rows reserve the right edge only for the four real zones. */
 .cm-stage-front .cm-mat-grid,.cm-stage-mini .cm-mat-grid{grid-template-columns:minmax(0,1fr) repeat(2,calc(var(--bc) * .78 + 6px));grid-template-rows:repeat(3,minmax(0,1fr));gap:6px;padding:4px}

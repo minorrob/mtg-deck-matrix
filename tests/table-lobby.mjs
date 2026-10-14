@@ -27,7 +27,7 @@ import path from "node:path";
 import {fileURLToPath} from "node:url";
 import {openBrowser, loadLiveState, legendaryNames} from "./uat/browser-runner.mjs";
 import {basicCards} from "../game/room/room.mjs";
-import {GameTable} from "../cloud/game-room.mjs";
+import {GameTable, tableCards} from "../cloud/game-room.mjs";
 import {MATS} from "../game/room/table.mjs";
 import {build, worktreeSource} from "../tools/release-pages.mjs";
 import {joinLocation} from "../cloud/worker.mjs";
@@ -101,7 +101,8 @@ const objectCtx = () => {
     list: async ({prefix}) => new Map([...map].filter(([k]) => k.startsWith(prefix)).sort()), setAlarm: async () => {}, deleteAlarm: async () => {}},
   acceptWebSocket: (s, tags) => {s.tags = tags; sockets.push(s);}, getWebSockets: () => sockets, getTags: (s) => s.tags};
 };
-const tableFor = (id) => {if (!objects.has(id)) objects.set(id, new GameTable(objectCtx(), {}, {cards, now: () => clock})); return objects.get(id);};
+let useConfirmedCards = false;
+const tableFor = (id) => {if (!objects.has(id)) objects.set(id, new GameTable(objectCtx(), {}, {cards:useConfirmedCards ? tableCards : cards, now: () => clock})); return objects.get(id);};
 const TABLES = {idFromName: (name) => name, get: (id) => tableFor(id)};
 /* A person's table reads can be held in flight, to prove an answer that lands after they left the page draws nothing. */
 const held = {};
@@ -229,8 +230,8 @@ try {
   await waitText(rob.page, ".cm-table-rules", /Starting life\s*30/);
   ok(/Bracket limit\s*2 or lower/.test(await pageText(rob.page, ".cm-table-rules")), "Save puts 30 life and a bracket limit of 2 on the table's rules");
   await rob.page.click(".cm-lobby-seat[data-seat='0'] [data-action=table-deck]");
-  await rob.page.locator(".cm-table-deck").first().waitFor();
-  await rob.page.locator(".cm-table-deck").first().click();
+  await rob.page.locator("[data-action=table-use-deck]").first().waitFor();
+  await rob.page.locator("[data-action=table-use-deck]").first().click();
   await rob.page.locator("#cm-table-deck-error").waitFor({state: "visible", timeout: 10000});
   ok(/is bracket \d, above this table's limit of 2\. Choose a deck at bracket 2 or lower, or ask the host to raise the limit\./.test(await rob.page.locator("#cm-table-deck-error").innerText()), `a deck above the limit is refused, with what to do instead: "${(await rob.page.locator("#cm-table-deck-error").innerText()).trim()}"`);
   await rob.page.keyboard.press("Escape");
@@ -243,22 +244,24 @@ try {
 
   /* DECK: one the engine cannot play is refused, naming its card; then a playable one. */
   await rob.page.click(".cm-lobby-seat[data-seat='0'] [data-action=table-deck]");
-  await rob.page.locator(".cm-table-deck").first().waitFor();
-  const deckCount = await rob.page.locator(".cm-table-deck").count();
+  await rob.page.locator("[data-action=table-use-deck]").first().waitFor();
+  const deckCount = await rob.page.locator("[data-action=table-use-deck]").count();
   ok(deckCount >= 5, `Choose a deck lists the decks in your own library (${deckCount})`);
   /* M5 (the plan review's C4): each deck says how much of it the table can play before it is chosen -- here every card
      but Sol Ring. */
   await rob.page.waitForFunction(() => [...document.querySelectorAll(".cm-table-deck-known")].every((el) => el.textContent));
   const counts = await rob.page.locator(".cm-table-deck-known").allInnerTexts();
+  await rob.page.waitForFunction(()=>[...document.querySelectorAll('[data-shared-status]')].every(el=>!el.textContent.includes('Checking')));
+  ok(await rob.page.locator('[data-action=table-use-shared-deck]:disabled').count()>0,"the shared catalog refuses decks when this server deliberately lacks Sol Ring");
   ok(counts.some((t) => /^\d+ of \d+ known · \d+ to learn$/.test(t)) && counts.some((t) => /^All \d+ cards known$/.test(t)),
     `each deck says how much of it the table can play: "${counts.find((t) => /to learn/.test(t))}", "${counts.find((t) => /^All/.test(t))}"`);
   eq(await rob.page.locator("[data-action=table-use-test-deck]").count(), 0, "this table is not a playtest table, so the basic lands test deck is not offered (staging's are: tests/uat/play-e2e.mjs)");
   /* Find a deck with the refused card by trying them in turn until one is refused, then one that is not. */
   let refusedSeen = false, chosen = null;
   for (let i = 0; i < deckCount && (!refusedSeen || !chosen); i += 1) {
-    if (!(await rob.page.locator("#cm-dialog[open]").count())) {await rob.page.click(".cm-lobby-seat[data-seat='0'] [data-action=table-deck]"); await rob.page.locator(".cm-table-deck").first().waitFor();}
-    const name = (await rob.page.locator(".cm-table-deck strong").nth(i).innerText()).trim();
-    await rob.page.locator(".cm-table-deck").nth(i).click();
+    if (!(await rob.page.locator("#cm-dialog[open]").count())) {await rob.page.click(".cm-lobby-seat[data-seat='0'] [data-action=table-deck]"); await rob.page.locator("[data-action=table-use-deck]").first().waitFor();}
+    const name = (await rob.page.locator("[data-action=table-use-deck] strong").nth(i).innerText()).trim();
+    await rob.page.locator("[data-action=table-use-deck]").nth(i).click();
     await rob.page.waitForTimeout(400);
     const box = rob.page.locator("#cm-table-deck-error");
     if (await rob.page.locator("#cm-dialog[open]").count() && await box.isVisible()) {
@@ -275,9 +278,9 @@ try {
   /* The AI's deck: the host chooses it, and an AI with a deck is ready. */
   if (await rob.page.locator("#cm-dialog[open]").count()) await rob.page.keyboard.press("Escape");
   await rob.page.click(".cm-lobby-seat[data-seat='2'] [data-action=table-deck]");
-  await rob.page.locator(".cm-table-deck").first().waitFor();
+  await rob.page.locator("[data-action=table-use-deck]").first().waitFor();
   for (let i = 0; i < deckCount; i += 1) {
-    await rob.page.locator(".cm-table-deck").nth(i).click();
+    await rob.page.locator("[data-action=table-use-deck]").nth(i).click();
     await rob.page.waitForTimeout(300);
     if (!(await rob.page.locator("#cm-dialog[open]").count())) break;
   }
@@ -385,10 +388,10 @@ try {
   const sideways = await maya.page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   eq(sideways, 0, "at 390 the lobby does not scroll sideways");
   await maya.page.click(".cm-lobby-seat[data-seat='1'] [data-action=table-deck]");
-  await maya.page.locator(".cm-table-deck").first().waitFor();
+  await maya.page.locator("[data-action=table-use-deck]").first().waitFor();
   eq([await maya.page.locator(".cm-table-rules-edit").count(), /Starting life\s*30/.test(await pageText(maya.page, ".cm-table-rules"))], [0, true], "a guest sees the host's rules, 30 life, and no Edit");
   for (let i = 0; i < 40; i += 1) {
-    await maya.page.locator(".cm-table-deck").nth(i).click();
+    await maya.page.locator("[data-action=table-use-deck]").nth(i).click();
     await maya.page.waitForTimeout(300);
     if (!(await maya.page.locator("#cm-dialog[open]").count())) break;
   }
@@ -438,6 +441,7 @@ try {
   /* AN EMPTY LIBRARY (the readiness checks of 2026-10-04): a person new to CrankMagic, at a table before restoring any
      decks, is told how to bring one, and Restore opens from the dialog itself, so the seat stays theirs. */
   {
+    useConfirmedCards = true;
     const nina = await person("nina@example.com", {width: 1400, height: 900}, {library: false});
     /* Where the AI door is open to her (GET /api/ai-seat, stood in for here), New table offers an AI on Claude too. */
     await nina.page.route("**/api/ai-seat", (r) => r.fulfill({json: {open: true}}));
@@ -452,13 +456,28 @@ try {
     await nina.page.click("[data-action=table-create]");
     await nina.page.locator(".cm-lobby-seat[data-seat='0'] [data-action=table-deck]").click();
     await nina.page.locator("#cm-dialog .cm-table-deck-empty").waitFor({timeout: 15000});
-    const said = await pageText(nina.page, "#cm-dialog .cm-table-deck-empty");
-    ok(/no deck with a commander yet/.test(said) && /restore it here/.test(said) && /your seat stays yours/.test(said) && /New deck/.test(said),
-      "an empty library's deck dialog says how to bring a deck: restore the host's backup here, or New deck");
-    await nina.page.click("#cm-dialog .cm-table-deck-empty [data-action=restore]");
-    await nina.page.locator("#cm-dialog input[type=file][name=file]").waitFor({timeout: 15000});
-    ok(/Restore a full backup/.test(await pageText(nina.page, "#cm-dialog")), "and Restore from a backup file opens the restore, on the table's page");
-    ok(/#table\?id=/.test(await nina.page.evaluate(() => location.hash)), "which is still her table");
+    ok(/without adding anything/.test(await pageText(nina.page, "#cm-dialog .cm-table-deck-empty")), "a new player is directed to shared decks, without restoring anyone's library");
+    await nina.page.waitForFunction(()=>document.querySelectorAll('[data-action=table-use-shared-deck]:enabled').length===7);
+    eq(await nina.page.locator('[data-action=table-use-deck]').count(),0,"the tester starts with no personal decks");
+    const sharedNames=await nina.page.locator('[data-action=table-use-shared-deck] strong').allTextContents();
+    eq(sharedNames.length,7,"all seven shared decks are available to a fresh signed-in player");
+    if(SHOTS) {
+      await nina.page.locator('[data-action=table-use-shared-deck]').evaluateAll(els=>els.forEach((el,i)=>{const tag=document.createElement('b');tag.textContent=`D${i+1}`;el.style.position='relative';tag.style.cssText='position:absolute;right:8px;top:8px;background:#ffdb6b;color:#151a19;padding:3px;font:11px monospace';el.prepend(tag);}));
+      await shot(nina.page,'shared-decks-1400');
+    }
+    for(let i=0;i<7;i++) {
+      if(i) {await nina.page.locator(".cm-lobby-seat[data-seat='0'] [data-action=table-deck]").click();await nina.page.waitForFunction(()=>document.querySelectorAll('[data-action=table-use-shared-deck]:enabled').length===7);}
+      await nina.page.locator('[data-action=table-use-shared-deck]').nth(i).click();
+      await nina.page.waitForFunction(()=>!document.querySelector('#cm-dialog[open]'));
+      await nina.page.waitForFunction(name=>document.querySelector(".cm-lobby-seat[data-seat='0']")?.textContent.includes(name),sharedNames[i]);
+      ok((await pageText(nina.page,".cm-lobby-seat[data-seat='0']")).includes(sharedNames[i]),`the real table accepts ${sharedNames[i]} for the tester`);
+      const payload=deckBodies.at(-1).deck;
+      eq(payload.cards.length+payload.commander.length,100,'a shared deck submits the full hundred');
+      const expected=decksFromBackup(JSON.parse(readFileSync(path.join(ROOT,'data/live-state.json'),'utf8')),[sharedNames[i]])[0];
+      eq({name:payload.name,commander:payload.commander,cards:payload.cards},expected,'the selected list exactly matches the saved deck, with no stand-ins');
+      ok(!('source' in payload),'a shared deck never attributes the guest result to the owner library');
+    }
+    useConfirmedCards = false;
     await nina.context.close();
   }
 

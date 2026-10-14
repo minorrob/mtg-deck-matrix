@@ -6,6 +6,9 @@ Rob's current instructions override the compiled brief; the later feedback captu
 
 ## Current user decisions
 
+- Drawer footers have no Add module or Restore default layout controls. Configure placement through Settings > Set Side Drawer Modules; retain in-module drag and keyboard ordering.
+- Rob authorized all seven saved decks (D1-D7) for every signed-in human, so playtesters can choose a shared deck without importing a library. Ship only deck names, commanders, main-deck lists and brackets; never the collection, account data or owner source IDs. Validate against the current server before enabling selection. This is a snapshot of the committed decks, not automatic account-library sharing.
+
 - On the Stack uses one numbered row per active entry, newest first (#1 resolves next). Its wrapping text column occupies 25% of the available column width and shows position, card name and player; the image occupies the right column. Every image shares Card Preview sizing in either drawer.
 
 - Profile avatar/menu at top right beside Skip to end; Settings removed from the left rail. Settings includes Set Side Drawer Modules, with Left / Right / None radio columns. Reorder by drag handle or keyboard buttons within each drawer; placement and order follow the profile through library sync. Cancel preserves the prior layout.

@@ -792,7 +792,7 @@ globalThis.CrankBoard = Object.seal({
     }).join("")}</tbody></table><p class="cm-muted">Saved with your player profile through cloud library sync. Hiding a module keeps its game data.</p><div class="cm-form-footer">${b("Cancel", "close")}${b("Save drawer modules", "board-modules-save", {}, true)}</div></div>`);
   }
   function stageModules(side="right") {
-    const ids = paneModules(side), layout=paneLayout(), missing = PANE_MODULES.filter(([id]) => ![...layout.left,...layout.right].includes(id));
+    const ids = paneModules(side);
     if(side === "left" && !ids.length) return "";
     const bodies = {
       screen: () => b("Screen View ▸", "board-screen-menu", {}, false, {cls:"compact"}),
@@ -810,7 +810,7 @@ globalThis.CrankBoard = Object.seal({
     return `<div class="cm-stage-modules" data-module-side="${side}" aria-label="${side === "left" ? "Left" : "Right"} drawer modules">${ids.map((id, i) => {
       const title = PANE_MODULES.find(([key]) => key === id)[1];
       return `<section class="cm-stage-module" data-module="${id}" aria-label="${title} module"><header><h3>${title}</h3>${paneEditing ? `<button type="button" class="cm-module-drag" draggable="true" data-module-drag="${id}" aria-label="Drag ${title}; use the adjacent move buttons for keyboard control">⠿</button>${ib("↑", "board-module-move", `Move ${title} up`, {module:id, side, by:"-1"}, {disabled:i===0})}${ib("↓", "board-module-move", `Move ${title} down`, {module:id, side, by:"1"}, {disabled:i===ids.length-1})}${ib("×", "board-module-remove", `Remove ${title}`, {module:id, side})}` : ""}</header><div class="cm-module-body">${bodies[id]()}</div></section>`;
-    }).join("")}</div>${paneEditing ? `<div class="cm-module-add" data-module-side="${side}">${missing.length ? `<label>Add module <select aria-label="Module to add">${missing.map(([id,title]) => `<option value="${id}">${title}</option>`).join("")}</select></label>${b("Add", "board-module-add", {}, false, {cls:"compact"})}` : `<p>All modules are shown.</p>`}<p class="cm-muted">Drag a handle or use the arrows. Removing a module keeps your game data. Layout follows your profile through cloud library sync.</p>${b("Restore default layout", "board-module-reset", {}, false, {cls:"compact"})}</div>` : ""}`;
+    }).join("")}</div>`;
   }
   function stageHand(p) {
     const own = p.playerId === view.seat, cards = own ? p.zones.Hand.cards : [], n = own ? cards.length : p.zones.Hand.count;
@@ -2014,11 +2014,6 @@ globalThis.CrankBoard = Object.seal({
     return savePaneModules(ids,side);
   };
   actions["board-module-remove"] = el => savePaneModules(paneModules(el.dataset.side).filter(id => id !== el.dataset.module),el.dataset.side);
-  actions["board-module-add"] = el => {
-    const parent=el.closest(".cm-module-add"), side=parent?.dataset.moduleSide || "right", id = parent?.querySelector("select")?.value, ids = paneModules(side);
-    if (PANE_MODULES.some(([key]) => key === id) && !ids.includes(id)) return savePaneModules([...ids, id],side);
-  };
-  actions["board-module-reset"] = () => savePaneModules({left:[],right:[...DEFAULT_MODULES]});
   document.addEventListener("dragstart", event => {
     const handle = event.target.closest?.("[data-module-drag]"); if (!handle || !paneEditing) return;
     event.dataTransfer.setData("application/x-crankmagic-module", handle.dataset.moduleDrag);
