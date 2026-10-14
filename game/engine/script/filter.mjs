@@ -58,6 +58,12 @@ export const SELECTOR_KEYS = Object.freeze([
   "otherThan", "sharesCreatureTypeWith",
   /* "Each equipped creature" (Hemlock Vial). */
   "equipped",
+  /* "Each with power greater than its base power" (Kutzil, Malamet Exemplar; CR 208.4b). */
+  "powerAboveBase",
+  /* "If this creature isn't prepared" (Paradox Shaper // Omit Variables; CR 722.3): the prepared designation. */
+  "prepared",
+  /* "Target attacking or blocking creature" (Gideon's Memorial): declared as a blocker in this combat (CR 509.1g). */
+  "blocking",
   /* "Creatures your opponents control without flying or reach" (Sidar Kondo of Jamuraa), "a creature without flanking"
      (CR 702.25a): none of these keywords, through the layers. */
   "nonKeywords",
@@ -71,6 +77,9 @@ export const SELECTOR_KEYS = Object.freeze([
   /* "A permanent of their choice that shares a card type with it" (Braids, Arisen Nightmare; CR 205.2a): with what an effect
      before it moved, as it last existed. */
   "sharesCardTypeWith",
+  /* "Unless ... it's only the color its controller chose" (Selective Obliteration; CR 105.2): the one color its controller chose
+     as this resolution did (effects/asking.mjs, chooseColor's `chooser`), and no other. */
+  "onlyChosenColor",
 ]);
 
 /** The card types (CR 205.2a). */
@@ -193,12 +202,15 @@ function assertGrammar(selector) {
     if (selector[key] !== undefined && typeof selector[key] !== "boolean") throw new Error(`A selector's ${key} is true or false`);
   if (selector.fromBattlefieldThisTurn !== undefined && selector.fromBattlefieldThisTurn !== true) throw new Error("A selector's fromBattlefieldThisTurn is true: a graveyard card put there from the battlefield this turn");
   if (selector.xInManaCost !== undefined && selector.xInManaCost !== true) throw new Error("A selector's xInManaCost is true: {X} among the symbols of its mana cost");
+  if (selector.onlyChosenColor !== undefined && typeof selector.onlyChosenColor !== "boolean") throw new Error("A selector's onlyChosenColor is true or false: only the color its controller chose");
   const shared = selector.sharesCardTypeWith;
   if (shared !== undefined && shared !== "moved" && !(Array.isArray(shared) && shared.every((type) => CARD_TYPES.includes(type))))
     throw new Error("A selector's sharesCardTypeWith is \"moved\": a card type of what the effect before it moved, as it last existed");
   for (const key of ["otherThan", "sharesCreatureTypeWith"])
     if (selector[key] !== undefined && selector[key] !== "that card") throw new Error(`A selector's ${key} is "that card": the object a trigger is about`);
   if (selector.equipped !== undefined && selector.equipped !== true) throw new Error("A selector's equipped is true: an Equipment is attached to it");
+  if (selector.powerAboveBase !== undefined && selector.powerAboveBase !== true) throw new Error("A selector's powerAboveBase is true: its power greater than its base power");
+  if (selector.prepared !== undefined && typeof selector.prepared !== "boolean") throw new Error("A selector's prepared is true or false: whether the permanent is prepared (CR 722.3)");
   /* "With power less than this creature's power" (mentor, CR 702.134a): `power.lessThan` "self". */
   if (selector.power?.lessThan !== undefined && selector.power.lessThan !== "self") throw new Error("A selector's power.lessThan is \"self\": less than its source's power");
   /* "With lesser toughness" than what a trigger is about, as it last existed (Colfenor): `toughness.lessThan` "that card". */
@@ -224,9 +236,11 @@ export function shareCreatureType(state, ids) {
 }
 
 /* A player with hexproof (CR 702.11c): a permanent of theirs with the static "you have hexproof" (rules/statics.mjs), as its
-   abilities are after layer 6 (CR 613.1f). */
+   abilities are after layer 6 (CR 613.1f) -- or an effect giving it them for a while, "you gain hexproof until end of turn"
+   (Dawn's Truce; effects/permanents.mjs, effectUntil's `players`). */
 const playerHasHexproof = (state, player) => { const held = staticAbilities(state); return state.zones.battlefield.some((id) => controllerOf(state, id) === player
-  && held(id).some((a) => a.kind === "static" && a.rule === "player-hexproof")); };
+  && held(id).some((a) => a.kind === "static" && a.rule === "player-hexproof"))
+  || (state.effects ?? []).some((e) => e.rule === "player-hexproof" && (e.players ?? []).includes(player)); };
 
 /* CR 115.2, and the difference between the two keywords is the part worth getting right:
    hexproof stops opponents only (CR 702.11b); shroud stops everybody, its controller included. */
@@ -311,6 +325,13 @@ export function compileSelector(selector) {
     if (selector.colorless === false && colorsOf(state, id).length === 0) return false;
     /* "A multicolored spell" (CR 105.2b, Mage Tower Referee): two or more colors, through the layers. */
     if (selector.multicolored === true && colorsOf(state, id).length < 2) return false;
+    /* "It's only the color its controller chose" (Selective Obliteration; CR 105.2): exactly one color, through the layers, and
+       that one the color its controller chose as this resolved (`chosenColors`, by chooser; script/resolution.mjs) -- a
+       controller who chose none has no such color. `false`, any other permanent. */
+    if (selector.onlyChosenColor !== undefined) {
+      const chosen = context.chosenColors?.[controllerOf(state, id)], colors = colorsOf(state, id);
+      if ((chosen !== undefined && colors.length === 1 && colors[0] === chosen) !== selector.onlyChosenColor) return false;
+    }
     /* "An instant or sorcery card that shares a color with this planeswalker" (Kasmina): a color of its source's, now. */
     if (selector.sharesColor === "self") {
       const source = context.source !== null && context.source !== undefined && state.objects[context.source] ? colorsOf(state, context.source) : [];
@@ -427,6 +448,9 @@ export function compileSelector(selector) {
     }
     /* "Whenever a goaded creature attacks" (effects/permanents.mjs goad). */
     if (selector.goaded === true && !(state.effects ?? []).some((e) => e.rule === "goaded" && e.affects.ids.includes(id))) return false;
+    /* "At the beginning of your upkeep, if this creature isn't prepared, it becomes prepared" (Paradox Shaper; CR 722.3a-b,
+       603.4): whether it has the prepared designation now -- a permanent's alone (script/effects/attributes.mjs). */
+    if (selector.prepared !== undefined && (object.prepared === true) !== selector.prepared) return false;
     /* "With a +1/+1 counter on it", or `"any"`: "permanents you control with counters on them" (Mutational Advantage). */
     if (selector.counters !== undefined && !(selector.counters === "any" ? Object.values(object.counters ?? {}).some((n) => n > 0)
       : (object.counters?.[selector.counters] ?? 0) > 0)) return false;
@@ -439,6 +463,13 @@ export function compileSelector(selector) {
     }
     /* "With toughness greater than its power" (Bedrock Tortoise), through the layers. */
     if (selector.toughnessOverPower === true) { const c = characteristicsOf(state, id); if (!((c.toughness ?? 0) > (c.power ?? 0))) return false; }
+    /* "Each with power greater than its base power" (Kutzil, Malamet Exemplar; CR 208.4b): through the layers, its power against
+       what layer 7's first two sublayers made it (rules/layers.mjs, `basePower`). Off the battlefield, a card's printed power
+       is its base. */
+    if (selector.powerAboveBase === true) {
+      const c = object.zone === "battlefield" ? characteristicsOf(state, id) : {power: object.power, basePower: object.power};
+      if (!((c.power ?? 0) > (c.basePower ?? 0))) return false;
+    }
     /* "Each equipped creature" (Hemlock Vial; CR 301.5a): an Equipment attached to it -- an Aura is not one -- and still there:
        one that has left the battlefield is a new object, the old one gone (CR 400.7). */
     if (selector.equipped === true && !(object.attachments ?? []).some((other) => state.objects[other] && subtypesOf(state, other).includes("Equipment"))) return false;
@@ -473,6 +504,10 @@ export function compileSelector(selector) {
     if (selector.countersAtLeast && ((object.counters ?? {})[selector.countersAtLeast.counter] ?? 0) < selector.countersAtLeast.count) return false;
     /* "Target attacking creature" (Maze of Ith, CR 508.1k): declared as an attacker in this combat. */
     if (selector.attacking === true && !(state.combat?.attacks ?? []).some((attack) => attack.attacker === id)) return false;
+    /* "Target attacking or blocking creature" (Gideon's Memorial; CR 509.1g): declared as a blocker in this combat, and still
+       one -- a blocking creature until it is removed from combat or combat ends (CR 506.4), whatever became of what it
+       blocks. */
+    if (selector.blocking === true && !(state.combat?.attacks ?? []).some((attack) => (attack.blockers ?? []).includes(id))) return false;
     /* "An unblocked attacking creature" (CR 509.1h): its blockers declared -- from the declare blockers step on -- and
        none blocking it. */
     if (selector.unblocked === true && !(BLOCKERS_DECLARED.includes(state.phase) && (state.combat?.attacks ?? []).some((attack) => attack.attacker === id && !attack.blocked))) return false;

@@ -10,7 +10,10 @@
  *
  *   1. its own Access application   AI_ACCESS_AUD: the token must be for the AI application, which Rob sets to
  *                                   Google only (never the emailed code), with passkey MFA if the plan offers it
- *   2. the allowlist                a row in ai_allowlist, separate from the invite list, that Rob manages
+ *   2. the allowlist                a row in ai_allowlist, separate from the invite list, that Rob manages -- or,
+ *                                   with AI_EVERYONE on, everyone Access lets in (Rob, 2026-10-14: "I want everyone I
+ *                                   add to be able to use the AI features"): the invite list is then the list, and
+ *                                   the door takes the app's own sign-in as well as the AI application's
  *   3. the key                      ANTHROPIC_API_KEY, a Worker secret Rob enters with `wrangler secret put`; it
  *                                   never appears in chat, in this repository, in a response or in the log
  *   4. the spend caps               AI_CAP_PERSON_CENTS and AI_CAP_TOTAL_CENTS, over a rolling 24 hours, read from
@@ -107,10 +110,17 @@ export function spendOf(json, model) {
   return {model: (json && json.model) || model, input, output, micros};
 }
 
-export function createAi(db, {now = () => new Date().toISOString(), newId = () => crypto.randomUUID()} = {}) {
+/* AI_EVERYONE (Rob, 2026-10-14): everyone signed in may use the AI features, so Access's invite list is the list. */
+export const everyone = (env) => env?.AI_EVERYONE === "on";
+
+export function createAi(db, {now = () => new Date().toISOString(), newId = () => crypto.randomUUID(), everyone = false} = {}) {
   const since = () => new Date(Date.parse(now()) - 24 * 3600 * 1000).toISOString();
   return {
-    async allowed(email) {return !!(await db.prepare("SELECT 1 AS yes FROM ai_allowlist WHERE email = ?").bind(email).first());},
+    /* On the list: a row in ai_allowlist, or anyone Access has named where the door is open to everyone signed in. */
+    async allowed(email) {
+      if (everyone) return typeof email === "string" && email.includes("@");
+      return !!(await db.prepare("SELECT 1 AS yes FROM ai_allowlist WHERE email = ?").bind(email).first());
+    },
     /* What was spent in the last 24 hours: by this person, by everyone, and by everyone on this one feature. */
     async spent(email, feature = null) {
       const mine = await db.prepare("SELECT COALESCE(SUM(cost_micros), 0) AS micros FROM ai_calls WHERE email = ? AND at >= ?").bind(email, since()).first();

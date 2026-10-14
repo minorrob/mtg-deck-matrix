@@ -25,7 +25,9 @@ import {creatureTypesInGame} from "../script/effects/asking.mjs";
 import {copyOnto} from "../script/effects/permanents.mjs";
 import {ownEntering} from "./replacement.mjs";
 import {collectTriggers} from "./trigger.mjs";
-import {countersPlaced} from "./statics.mjs";
+import {enteringCountersPlaced} from "./statics.mjs";
+import {amountOf} from "../script/amount.mjs";
+import {withChosen} from "../script/chosen.mjs";
 
 /* The cards in the controller's hand a reveal could show ("an Island or Swamp card"). */
 const revealable = (state, player, selector) => cardsIn(state, "hand", player).filter((id) => matchesSelector({...selector, what: "card", zone: "hand"}, state, id, {controller: player}));
@@ -52,8 +54,9 @@ export function holdArrival(state, objectId, arrival) {
 export function enteredWith(state, id, entering) {
   const object = state.objects[id];
   if (object?.zone !== "battlefield") return [];
+  /* Put on it by its controller (CR 122.6a): "whenever you put one or more counters" sees them as theirs. */
   return Object.keys(entering?.counters ?? {}).map((counter) => ({kind: "GameEventCardCounters",
-    data: {turn: state.turn, phase: state.phase, fields: {card: eventCard(state, id), type: counter, oldValue: 0, newValue: object.counters[counter] ?? 0}}}));
+    data: {turn: state.turn, phase: state.phase, fields: {card: eventCard(state, id), type: counter, oldValue: 0, newValue: object.counters[counter] ?? 0, by: object.controller}}}));
 }
 
 /* What it may enter as a copy of: each other permanent the selector matches, "you" its controller. */
@@ -145,8 +148,23 @@ export function resolveEnteringChoice(state, awaiting, indices) {
       /* "Enter tapped as a copy" (Vesuva); and what the copied card says of its own entering. */
       const own = ownEntering(state, {objectId: awaiting.objectId, player: object.controller, types: object.types, abilities: object.abilities});
       if (awaiting.copy?.tapped || own.tapped) object.tapped = true;
-      /* Put on it as it enters (CR 122.6), by its controller (122.6a): "twice that many instead" sees them. */
-      for (const [counter, count] of Object.entries(own.counters)) object.counters[counter] = (object.counters[counter] ?? 0) + countersPlaced(state, awaiting.objectId, counter, count, object.controller);
+      /* "Except it enters with an additional +1/+1 counter on it if it's a creature, it enters with an additional loyalty
+         counter on it if it's a planeswalker" (Spark Double; CR 707.9a, 614.1c): `except.entersWithCounters`, each `if` a
+         description of what it entered as -- the copy, read now -- and the counters it adds to what the copied card's own
+         entering gives it. Never on one that entered as itself: the exception is part of the copy. */
+      const counters = {...own.counters};
+      for (const extra of awaiting.copy?.except?.entersWithCounters ?? [])
+        if (matchesSelector({...(extra.if ?? {}), what: "permanent"}, state, awaiting.objectId, {controller: object.controller, source: awaiting.objectId}))
+          counters[extra.counter] = (counters[extra.counter] ?? 0) + extra.count;
+      /* Put on it as it enters (CR 122.6), by its controller (122.6a): "twice that many instead" sees them, but not its own
+         replacement (614.12; enteringCountersPlaced) -- and said, as an entering counter is (enteredWith), with who put them:
+         "whenever a +1/+1 counter is put on" sees them too, and "whenever you put" (Exemplar of Light). */
+      for (const [counter, count] of Object.entries(counters)) {
+        const was = object.counters[counter] ?? 0;
+        object.counters[counter] = was + enteringCountersPlaced(state, awaiting.objectId, counter, count, object.controller);
+        if (object.counters[counter] > was) events.push({kind: "GameEventCardCounters", data: {turn: state.turn, phase: state.phase,
+          fields: {card: eventCard(state, awaiting.objectId), type: counter, oldValue: was, newValue: object.counters[counter], by: object.controller}}});
+      }
       for (const ask of own.asks) queueEnteringQuestion(state, awaiting.objectId, ask);
       if (object.tapped && asked?.arrival) asked.arrival.data.fields.enteredTapped = true;
     }
@@ -163,8 +181,8 @@ export function resolveEnteringChoice(state, awaiting, indices) {
   const riot = state.objects[awaiting.objectId];
   if (option.riot === "counter" && riot) {
     const was = riot.counters["+1/+1"] ?? 0;
-    riot.counters["+1/+1"] = was + countersPlaced(state, awaiting.objectId, "+1/+1", 1, riot.controller);
-    events.push({kind: "GameEventCardCounters", data: {turn: state.turn, phase: state.phase, fields: {card: eventCard(state, awaiting.objectId), type: "+1/+1", oldValue: was, newValue: riot.counters["+1/+1"]}}});
+    riot.counters["+1/+1"] = was + enteringCountersPlaced(state, awaiting.objectId, "+1/+1", 1, riot.controller);
+    events.push({kind: "GameEventCardCounters", data: {turn: state.turn, phase: state.phase, fields: {card: eventCard(state, awaiting.objectId), type: "+1/+1", oldValue: was, newValue: riot.counters["+1/+1"], by: riot.controller}}});
   }
   if (option.riot === "haste" && riot) {
     const timestamp = state.nextTimestamp;
@@ -174,6 +192,18 @@ export function resolveEnteringChoice(state, awaiting, indices) {
   }
   /* What was chosen as it entered, kept on the permanent for its abilities to read ("$chosen", script/chosen.mjs). */
   if (option.chosen !== undefined && state.objects[awaiting.objectId]) state.objects[awaiting.objectId].chosen = option.chosen;
+  /* "This artifact enters with a fellowship counter on it for each creature you control of the chosen type" (Banner of
+     Kinship; rules/replacement.mjs, withChoiceCounters): counted now, with the type just chosen, "you" its controller -- and
+     put on as it entered with them (CR 614.12, 122.6), by its controller (122.6a), as riot's counter is below. */
+  const chooser = state.objects[awaiting.objectId];
+  if (option.chosen !== undefined && chooser) for (const {counter, count} of asked?.chosenCounters ?? []) {
+    const n = amountOf(state, withChosen(count, option.chosen), {controller: chooser.controller, source: awaiting.objectId});
+    if (!(n > 0)) continue;
+    const was = chooser.counters[counter] ?? 0;
+    chooser.counters[counter] = was + enteringCountersPlaced(state, awaiting.objectId, counter, n, chooser.controller);
+    events.push({kind: "GameEventCardCounters", data: {turn: state.turn, phase: state.phase,
+      fields: {card: eventCard(state, awaiting.objectId), type: counter, oldValue: was, newValue: chooser.counters[counter], by: chooser.controller}}});
+  }
   if (option.pay) {
     /* Paying life is losing it (CR 119.4, 119.3). */
     events.push(...runEffect(state, {effect: "loseLife", amount: awaiting.life}, {controller: awaiting.player, source: awaiting.objectId}));

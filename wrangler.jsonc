@@ -1,7 +1,7 @@
 {
   "name": "crankmagic",
   "main": "cloud/play-worker.mjs",
-  "compatibility_date": "2026-10-12",
+  "compatibility_date": "2026-10-14",
   "assets": {
     "directory": "./",
     "binding": "ASSETS",
@@ -27,7 +27,17 @@
   ],
   "vars": {
     "ACCESS_TEAM_DOMAIN": "crankmagic.cloudflareaccess.com",
-    "ACCESS_AUD": "ff51f3bcda0f6f50d2f48bb9d3d96b76530c128a23cdb1cc33aa4fa6d68611a3"
+    "ACCESS_AUD": "ff51f3bcda0f6f50d2f48bb9d3d96b76530c128a23cdb1cc33aa4fa6d68611a3",
+    "AI_ACCESS_AUD": "ff51f3bcda0f6f50d2f48bb9d3d96b76530c128a23cdb1cc33aa4fa6d68611a3",
+    "AI_CAP_TOTAL_CENTS": "300",
+    "AI_CAP_PERSON_CENTS": "300",
+    "AI_MODEL": "claude-haiku-5-5",
+    "AI_COACH": "on",
+    "AI_CAP_COACH_CENTS": "150",
+    "AI_PILOT": "on",
+    "AI_CAP_PILOT_GAME_CENTS": "25",
+    "AI_ADVISE": "on",
+    "AI_EVERYONE": "on"
   },
   "ratelimits": [
     {

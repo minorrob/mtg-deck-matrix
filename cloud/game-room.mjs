@@ -24,7 +24,7 @@ import {startRoom, openRoom, RoomError, basicCards} from "../game/room/room.mjs"
 import {tableOn, TableError, llmWaiting} from "../game/room/table.mjs";
 import {tableDefinition} from "../game/engine/cards/definitions.mjs";
 import {agentBrief, pickOf} from "../game/room/agent-brief.mjs";
-import {createAi, settings, pilot, pilotWorst, Closed} from "./ai.mjs";
+import {createAi, everyone, settings, pilot, pilotWorst, Closed} from "./ai.mjs";
 
 /* WHAT THE TABLE PLAYS (M5; the plan review's A2 and C4): the basic lands, and every definition in the engine's card
    directory (game/engine/cards/definitions.mjs, generated from it). A deck whose every card is one of these takes a
@@ -293,7 +293,7 @@ export class GameTable extends GameRoom {
   async pilotOpen(email) {
     if (this.env?.AI_PILOT !== "on") return "The AI seat on Claude is not switched on here.";
     try {settings(this.env);} catch (error) {return error.message;}
-    if (!this.env.DB || !(await createAi(this.env.DB).allowed(email))) return "That account is not on CrankMagic's list for AI features.";
+    if (!this.env.DB || !(await createAi(this.env.DB, {everyone: everyone(this.env)}).allowed(email))) return "That account is not on CrankMagic's list for AI features.";
     return null;
   }
 
@@ -305,7 +305,9 @@ export class GameTable extends GameRoom {
     const key = `pilot-spent/${room.matchId}`, spent = Number(await this.ctx.storage.get(key)) || 0;
     const cap = (Number(this.env.AI_CAP_PILOT_GAME_CENTS) > 0 ? Number(this.env.AI_CAP_PILOT_GAME_CENTS) : PILOT_GAME_CENTS) * 10000;
     if (spent + pilotWorst(brief, config.model) > cap) return null;
-    const ai = createAi(this.env.DB);
+    /* The call log on the table's clock, as the countdown and the away clocks are: a suite's fixed clock logs its calls,
+       and reads the day's caps, in its own day. */
+    const ai = createAi(this.env.DB, {now: () => new Date(this.now()).toISOString()});
     let asked;
     try {asked = await pilot({ai, who: {email: host}, brief, config, fetchImpl: this.fetchImpl ?? fetch});}
     catch (error) {if (error instanceof Closed) return null; throw error;}

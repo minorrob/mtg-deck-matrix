@@ -36,12 +36,12 @@
 
 import {holdArrival, enteredWith} from "./entering.mjs";
 import {ascendAsItResolves} from "../keywords/designations.mjs";
-import {conditionHolds} from "../script/condition.mjs";
+import {conditionHolds, asksFirstResolution} from "../script/condition.mjs";
 import {moveObject, addObject, removeObject, eventCard} from "../state/index.mjs";
 import {enteringModifications} from "./replacement.mjs";
-import {countersPlaced} from "./statics.mjs";
+import {enteringCountersPlaced} from "./statics.mjs";
 import {beginResolution, resolutionPending} from "../script/resolution.mjs";
-import {delayedTrigger} from "../script/effects/permanents.mjs";
+import {delayedTrigger, enterAttacking} from "../script/effects/permanents.mjs";
 import {prepare} from "../script/effects/attributes.mjs";
 import {recheckTargets, factsOf, modalScript} from "../script/bind.mjs";
 import {characteristicsOf} from "./layers.mjs";
@@ -147,11 +147,12 @@ export function pushSpell(state, objectId, {controller, targets = [], permanent 
  * `sourceId` may be null for an ability whose source has already left the battlefield, which is a
  * legal position (CR 113.7a) rather than a bug.
  */
-export function pushAbility(state, {sourceId = null, controller, abilityId, kind = "ability", targets = [], script = null, about = null, x = null, lastKnown = null, spent = null, paidFor = null, sourceTransforms = undefined} = {}) {
+/* `name`: what an ability with no source is called -- the game's own triggers', their designation (CR 725.2; rules/trigger.mjs). */
+export function pushAbility(state, {sourceId = null, controller, abilityId, kind = "ability", targets = [], script = null, about = null, x = null, lastKnown = null, spent = null, paidFor = null, offspring = false, sourceTransforms = undefined, name = null} = {}) {
   if (!abilityId) throw new Error("An ability on the stack needs an abilityId, or nothing can resolve it");
   const source = sourceId === null ? null : state.objects[sourceId];
   const entry = entryFor(state, {
-    objectId: null, cardId: source ? source.id : null, name: source ? source.card : null,
+    objectId: null, cardId: source ? source.id : null, name: source ? source.card : name,
     playerId: controller, kind, abilityId, targets,
   });
   /* What it does, carried with it: its source may leave before it resolves, and the ability does not (CR 113.7a). */
@@ -168,6 +169,8 @@ export function pushAbility(state, {sourceId = null, controller, abilityId, kind
   /* And the alternative cost its source was cast for, as it triggered (rules/trigger.mjs): "if its surge cost was paid" is
      asked again as it resolves, its source perhaps gone (CR 603.4, 608.2h). */
   if (typeof paidFor === "string") entry.paidFor = paidFor;
+  /* And whether its source's offspring cost was paid (CR 702.175a; rules/trigger.mjs), for the same reason. */
+  if (offspring === true) entry.offspring = true;
   /* "Transform Venat" (CR 701.27f): how many times a double-faced source had transformed as its ability was put on the
      stack -- or, a delayed trigger's, as it was made (effects/permanents.mjs) -- for an instruction to transform it to be
      ignored once it has since. */
@@ -201,6 +204,8 @@ export function pushCopy(state, original, {controller, nonLegendary = false} = {
   if (original.x !== undefined) entry.x = original.x;
   /* And its modes (CR 707.10): a copy of a modal spell has the modes the original has. */
   if (Array.isArray(original.modes)) entry.modes = [...original.modes];
+  /* And its gift, promised to the same opponent (CR 707.10, 702.174k; its ruling): the copy gives it too. */
+  if (original.gift !== undefined) entry.gift = original.gift;
   state.stack.push(entry);
   return entry;
 }
@@ -221,6 +226,20 @@ function scriptOf(state, entry) {
 /** The target specs a stack entry's targets were chosen by: its spell's or its ability's, or its chosen modes'. */
 export function specsOf(state, entry) {
   return scriptOf(state, entry)?.targets ?? [];
+}
+
+/* AN ABILITY'S RESOLUTIONS THIS TURN, for "if this is the first time this ability has resolved this turn" (Nissa, Leyline
+   Tamer; script/condition.mjs, `firstResolution`): each resolution of an ability whose effects ask it -- one that fizzled
+   (CR 608.2b) or whose "if" was false (CR 603.4) did not resolve, and is not counted -- by the object it came from and which
+   of its abilities it is. Kept beside the objects, so an ability whose source has left is still counted with it (CR 113.7a),
+   and a source that has left and returned is a new object with abilities of its own (CR 400.7); a new turn counts afresh.
+   Returns how many times it resolved before this one. */
+function resolutionsBefore(state, entry, script) {
+  if (!asksFirstResolution(script.effects)) return undefined;
+  if (state.resolutions?.turn !== state.turn) state.resolutions = {turn: state.turn, counts: {}};
+  const key = `${entry.cardId}:${entry.abilityId}`, before = state.resolutions.counts[key] ?? 0;
+  state.resolutions.counts[key] = before + 1;
+  return before;
 }
 
 /**
@@ -263,6 +282,8 @@ export function resolveTop(state, effect = null, rng = null) {
   const context = {controller: entry.playerId, source, x, ...(entry.about ? {about: entry.about} : {}), ...(entry.lastKnown ? {lastKnown: entry.lastKnown} : {}), ...(attached !== null ? {attached} : {}),
     /* How the spell was cast, for its own conditions ("if this spell was cast from a graveyard"; rules/actions.mjs). */
     ...(entry.cast ? {cast: entry.cast} : {}),
+    /* The opponent its gift was promised to (CR 702.174k): "the chosen player", and "if the gift was promised". */
+    ...(entry.gift !== undefined ? {gift: entry.gift} : {}),
     ...(entry.sourceTransforms !== undefined ? {sourceTransforms: entry.sourceTransforms} : {}),
     /* What its cost sacrificed, as each last existed: "the sacrificed creature's toughness" (rules/actions.mjs). */
     ...(entry.sacrificed ? {sacrificed: entry.sacrificed} : {}),
@@ -284,9 +305,13 @@ export function resolveTop(state, effect = null, rng = null) {
   /* An intervening "if" asked again as it resolves (CR 603.4): false now, and the ability does nothing. A triggered
      ability's own condition only -- "activate only if" was asked as it was activated (CR 602.5b) and is not again. */
   if (entry.kind === "trigger" && script.condition && !conditionHolds(state, script.condition, {controller: entry.playerId, source, about: entry.about ?? undefined,
-    ...(entry.spent ? {spent: entry.spent} : {}), ...(entry.paidFor ? {paidFor: entry.paidFor} : {}), ...(entry.lastKnown ? {lastKnown: entry.lastKnown} : {})})) return finishTop(state, entry, events, false);
+    ...(entry.spent ? {spent: entry.spent} : {}), ...(entry.paidFor ? {paidFor: entry.paidFor} : {}), ...(entry.offspring ? {offspring: true} : {}),
+    ...(entry.lastKnown ? {lastKnown: entry.lastKnown} : {})})) return finishTop(state, entry, events, false);
+  /* "If this is the first time this ability has resolved this turn" (Nissa, Leyline Tamer): how many times it has before. */
+  const resolvedBefore = resolutionsBefore(state, entry, script);
   /* What its effects need to know about their targets, read once, now (CR 608.2h). */
-  const outcome = beginResolution(state, script.effects, {...context, targets, facts: factsOf(state, targets)}, rng);
+  const outcome = beginResolution(state, script.effects, {...context, targets, facts: factsOf(state, targets),
+    ...(resolvedBefore !== undefined ? {resolvedBefore} : {})}, rng);
   events.push(...outcome.events);
   if (outcome.status === "waiting") {
     entry.stage = "resolving";
@@ -401,12 +426,25 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     /* A face-down spell becomes a face-down permanent, the same characteristics (CR 702.168b). */
     const down = object.disguised === true ? {faceDown: true, disguised: true} : {};
     const arrived = moveObject(state, entry.objectId, to, ["graveyard", "library"].includes(to) ? owner : null, down);
+    /* WHAT ITS COST EXILED (CR 607.2q; rules/actions.mjs, "behold a Goblin and exile it"): the permanent it becomes has it, for
+       its ability that names the exiled card. Such a spell always becomes one as it resolves: a permanent card's spell ability
+       has no targets to fail (cards/index.mjs), and an Aura has no additional cost. One countered leaves the cards exiled under
+       its id, which no object is again (CR 400.7). */
+    if (state.links?.[entry.objectId]) {
+      state.links[arrived] = state.links[entry.objectId];
+      delete state.links[entry.objectId];
+    }
     /* A SHIELD THIS SPELL MADE deals its damage as the card it became ("Deflecting Palm deals that much damage", a
        prevention effect's `dealer`; effects/permanents.mjs) -- and one whose chosen source is this spell, a permanent spell,
        applies to the permanent it becomes (CR 609.7a). */
     for (const effect of state.effects ?? []) {
       if (effect.dealer === entry.objectId) effect.dealer = arrived;
       if (to === "battlefield" && Array.isArray(effect.sources) && effect.sources.includes(entry.objectId)) effect.sources = effect.sources.map((id) => (id === entry.objectId ? arrived : id));
+      /* AN EFFECT THAT CHANGED THE SPELL (CR 400.7a): one of a spell's or an ability's that changed this permanent spell's
+         characteristics on the stack goes on applying to the permanent it becomes -- "whenever you cast a Dragon creature
+         spell from your graveyard, it gains 'When this creature dies, exile it'" (Rivaz of the Claw). */
+      if (to === "battlefield" && effect.layer !== undefined && Array.isArray(effect.affects?.ids) && effect.affects.ids.includes(entry.objectId))
+        effect.affects = {...effect.affects, ids: effect.affects.ids.map((id) => (id === entry.objectId ? arrived : id))};
     }
     /* Rebound's delayed trigger (CR 702.88a, 603.7d: its controller the spell's): at the beginning of THEIR next upkeep, the
        card in exile -- the object it now is, so one that leaves exile meanwhile is not cast (CR 400.7) -- may be cast
@@ -416,6 +454,10 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
         effects: [{effect: "play", from: "targets", targets: [arrived], free: true}]}, {controller: entry.playerId, source: arrived});
     /* "Or was cast from your library" (Fblthp, the Lost; script/condition.mjs, `cameFrom`): a permanent spell cast from a library. */
     if (to === "battlefield" && entry.cast?.from === "library") state.objects[arrived].cameFrom = {zone: "library", owner, cast: true};
+    /* And where it was cast from, and by whom (CR 601.2a): "if you didn't cast it from your hand" (Chainer, Nightmare Adept;
+       script/condition.mjs, `castFromYourHand`). A copy was not cast (CR 707.10), and a new object after it moves again
+       (CR 400.7) was cast from nowhere. */
+    if (to === "battlefield" && entry.cast?.from !== undefined) state.objects[arrived].castFrom = {zone: entry.cast.from, by: entry.playerId};
     /* The delayed trigger's source is the card, now in exile (CR 603.7d: the source of the ability that made it). */
     if (paradigm?.delayed) paradigm.delayed.source = arrived;
     /* CR 608.3a: it enters under its caster's control -- not its owner's, when a card was cast by another player (Tinybones,
@@ -440,16 +482,31 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     if (to === "battlefield" && entry.evoked) state.objects[arrived].evoked = true;
     /* And for its prowl cost (CR 702.76a): "if its prowl cost was paid" (script/condition.mjs, `prowled`). */
     if (to === "battlefield" && entry.prowled) state.objects[arrived].prowled = true;
+    /* And its gift promised (CR 702.174b): "when this permanent enters, if its gift cost was paid" asks the permanent, and the
+       chosen player is the one promised it (script/condition.mjs `giftPromised`, script/bind.mjs). A copy entering of a
+       permanent already there was promised nothing (its ruling), and a new object after it moves again (CR 400.7) neither. */
+    if (to === "battlefield" && entry.gift !== undefined) state.objects[arrived].gift = entry.gift;
+    /* And its offspring cost paid (CR 702.175a): "when this creature enters, if its offspring cost was paid" asks the permanent
+       (script/condition.mjs, `offspringPaid`) -- a token copy of it was cast for nothing, and neither is a new object after it
+       moves again (CR 400.7). */
+    if (to === "battlefield" && entry.offspring === true) state.objects[arrived].offspring = true;
     /* And for its surge cost (CR 702.117a), or another that says so (rules/actions.mjs): "if its surge cost was paid"
        (script/condition.mjs, `paidFor`). A new object after it moves again (CR 400.7) was cast for nothing. */
     if (to === "battlefield" && entry.cast?.paidFor) state.objects[arrived].paidFor = entry.cast.paidFor;
+    /* WARP'S DELAYED TRIGGER (CR 702.185a, 603.7d: its controller the spell's): "exile the permanent this spell becomes at the
+       beginning of the next end step" -- that permanent, so one that has left the battlefield meanwhile is a new object and
+       stays where it is (CR 400.7) -- and its owner may cast it after this turn has ended for as long as it remains exiled
+       (effects/zones.mjs, moveZone's `warped`: the turn it was cast on). */
+    if (to === "battlefield" && entry.cast?.paidFor === "warp" && state.objects[arrived])
+      delayedTrigger(state, {at: "end step", text: `Warp: exile ${card.name} at the beginning of the next end step.`,
+        effects: [{effect: "moveZone", targets: [arrived], to: "exile", warped: state.turn}]}, {controller: entry.playerId, source: arrived});
     /* Cast from suspend: haste, while it is this permanent (CR 702.62a). */
     if (to === "battlefield" && entry.fromSuspend && (state.objects[arrived].types ?? []).includes("Creature"))
       (state.effects ??= []).push({id: `suspend-haste:${arrived}`, layer: 6, affects: {ids: [arrived]}, apply: {addKeywords: ["Haste"]}, until: null, sourceController: entry.playerId});
     /* And for its impending cost (CR 702.176a): marked, with its N time counters (put on it as it enters, CR 122.6). */
     if (to === "battlefield" && entry.impending) {
       state.objects[arrived].impending = true;
-      state.objects[arrived].counters.time = (state.objects[arrived].counters.time ?? 0) + countersPlaced(state, arrived, "time", entry.impending, entry.playerId);
+      state.objects[arrived].counters.time = (state.objects[arrived].counters.time ?? 0) + enteringCountersPlaced(state, arrived, "time", entry.impending, entry.playerId);
     }
     /* And the mana spent to cast it (rules/actions.mjs): "if {G}{G} was spent to cast it" asks the permanent. */
     if (to === "battlefield" && object.spent) state.objects[arrived].spent = {...object.spent};
@@ -465,8 +522,15 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
       for (const ask of entering.asks ?? []) (state.enteringQuestions ??= []).push({objectId: arrived, ...ask});
       /* Counters it enters with are put on it (CR 122.6) -- by its controller (122.6a): "twice that many instead" sees them. */
       for (const [counter, count] of Object.entries(entering.counters)) {
-        state.objects[arrived].counters[counter] = (state.objects[arrived].counters[counter] ?? 0) + countersPlaced(state, arrived, counter, count, entry.playerId);
+        state.objects[arrived].counters[counter] = (state.objects[arrived].counters[counter] ?? 0) + enteringCountersPlaced(state, arrived, counter, count, entry.playerId);
       }
+    }
+    /* SNEAK (CR 702.190b): a permanent spell whose sneak cost was paid enters tapped and attacking the player or planeswalker
+       the creature returned to pay it was attacking (rules/actions.mjs, `sneak`) -- never declared as an attacker (CR 508.4),
+       and attacking nothing if that planeswalker or player is gone (506.3c, 508.4a; effects/permanents.mjs, enterAttacking). */
+    if (to === "battlefield" && entry.sneak && state.objects[arrived]) {
+      state.objects[arrived].tapped = true;
+      enterAttacking(state, [arrived], "that player", {controller: entry.playerId, about: entry.sneak}, entry.playerId);
     }
     events.push(event("GameEventCardChangeZone", state, {
       card,

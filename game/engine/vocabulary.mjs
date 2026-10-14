@@ -62,7 +62,9 @@ export const PRIMITIVES = Object.freeze({
   zones: Object.freeze([
     "moveZone", "moveZoneAll", "draw", "discard", "mill", "shuffle", "dig", "surveil", "scry",
     "peekAndReveal", "sacrifice", "sacrificeAll", "destroy", "destroyAll", "exileUntil",
-    "returnToHand", "play", "mayPlay", "discover", "digUntil", "manifest",
+    "returnToHand", "play", "mayPlay", "discover", "digUntil", "manifest", "explore",
+    /* Wave 4b: the top of a library looked at and put back in any order (Forge's RearrangeTopOfLibrary; Ponder). */
+    "rearrangeTop",
   ]),
   mana: Object.freeze([
     "addMana", "addManaReflected", "tap", "untap", "untapAll", "costReduction", "alternativeCost",
@@ -72,11 +74,13 @@ export const PRIMITIVES = Object.freeze({
   ]),
   counters: Object.freeze([
     "putCounter", "putCounterAll", "removeCounter", "proliferate", "multiplyCounters",
-    "moveCounters", "replaceCounters", "amass", "poison", "winGame", "loseGame", "goad", "empowerJace",
+    "moveCounters", "replaceCounters", "amass", "poison", "winGame", "loseGame", "goad", "empowerJace", "becomeMonarch",
+    /* Wave 4c: "roll a d20" (CR 706; Forge's RollDice; Ancient Copper Dragon), its result counted by what follows. */
+    "rollDie",
   ]),
   permanents: Object.freeze([
     "createToken", "copyPermanent", "becomeCopy", "earthbend", "populate", "unlessPays", "animate", "animateAll", "attach", "gainControl", "setState",
-    "phaseOut", "exchangeControl",
+    "phaseOut", "exchangeControl", "incubate",
   ]),
   modifiers: Object.freeze([
     "pump", "pumpAll", "alterAttribute", "effectUntil", "grantKeyword", "regenerate",
@@ -119,6 +123,8 @@ export const TRIGGER_EVENTS = Object.freeze([
   "state",
   /* "Whenever this creature transforms into Ashling, Rimebound" (CR 701.27e; Train C, w2c-hands-triggers). */
   "transformed",
+  /* "When this Class becomes level 2" (CR 716.2a; Caretaker's Talent, Wizard Class; wave 4c). */
+  "becomes level",
 ]);
 
 /** The cost atoms of §12.2. The two symbolic ones are named; the rest are structural. */
@@ -205,7 +211,35 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
   /* Compleated (CR 702.150): fewer loyalty counters for Phyrexian mana paid with life (rules/replacement.mjs). */
   "compleated",
   /* Disguise (CR 702.168): cast face down for {3}, turned face up for its cost (rules/actions.mjs). */
-  "disguise"];
+  "disguise",
+  /* Morph (CR 702.37): the same without ward (rules/actions.mjs, state/index.mjs). */
+  "morph",
+  /* Train E: warp (CR 702.185), an alternative cost from the hand, exiled at the next end step and cast again later; and sneak
+     (CR 702.190), one in its caster's declare blockers step, entering tapped and attacking (cards/index.mjs, rules/actions.mjs,
+     rules/stack.mjs). */
+  "warp", "sneak",
+  /* Train E, wave 2: replicate (CR 702.56a; Lose Focus), an additional cost paid any number of times and a cast trigger
+     copying the spell for each (cards/index.mjs, rules/actions.mjs). */
+  "replicate",
+  /* Wave 4a: shadow (CR 702.28), a keyword counter's (Minas Morgul, Dark Fortress; CR 122.1b; keywords/combat.mjs). */
+  "shadow",
+  /* Wave 4c: affinity (CR 702.41), the spell's own cost reduction for each of a kind of permanent its caster controls
+     (cards/index.mjs). */
+  "affinity",
+  /* Wave 4b: exalted (CR 702.83) and extort (CR 702.101), triggered abilities; eternalize (CR 702.129), embalm's 4/4 black
+     copy; gift (CR 702.174), an optional additional cost choosing an opponent (cards/index.mjs, rules/actions.mjs). */
+  "exalted", "extort", "eternalize", "gift",
+  /* Wave 4c: offspring (CR 702.175), an optional additional cost and a 1/1 token copy as it enters (cards/index.mjs,
+     rules/actions.mjs). */
+  "offspring",
+  /* Wave 4c, k2: fabricate (CR 702.123a; Marionette Apprentice), a triggered ability -- +1/+1 counters or Servo tokens, its
+     controller's choice as it resolves (cards/index.mjs). */
+  "fabricate",
+  /* Wave 4c, k2: delve (CR 702.66a; Treasure Cruise, Dig Through Time), cards of the graveyard exiled to pay generic mana as a
+     spell is cast (rules/actions.mjs). */
+  "delve",
+  /* And dredge (CR 702.52a; Life from the Loam), a draw replaced from the graveyard, its player's choice (script/effects/zones.mjs). */
+  "dredge"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

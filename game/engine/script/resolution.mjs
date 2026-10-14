@@ -23,7 +23,8 @@ import {runEffect, eachOf} from "./effects/index.mjs";
 import {ASKING, commandersGoingHome} from "./effects/asking.mjs";
 import {damageQuestion, addCounters, counterQuestion} from "./effects/resources.mjs";
 import {controllerOf} from "../rules/layers.mjs";
-import {destructionQuestion, drawQuestion} from "./effects/zones.mjs";
+import {destructionQuestion, drawQuestion, dredgers, singleDraws} from "./effects/zones.mjs";
+import {tokenQuestion} from "./effects/permanents.mjs";
 import {bindEffect} from "./bind.mjs";
 import {countEffect} from "./amount.mjs";
 import {conditionHolds} from "./condition.mjs";
@@ -49,10 +50,15 @@ export function beginResolution(state, effects, context = {}, rng = null) {
       ...(context.chosen !== undefined ? {chosen: context.chosen} : {}),
       /* How a spell was cast, for "if this spell was cast from a graveyard" (script/condition.mjs, `cast`). */
       ...(context.cast ? {cast: context.cast} : {}),
+      /* The opponent a spell's gift was promised to (CR 702.174k): "the chosen player" (script/bind.mjs), "if the gift was
+         promised" (script/condition.mjs, `giftPromised`). */
+      ...(context.gift !== undefined ? {gift: context.gift} : {}),
       /* How many times its source had transformed as the ability went on the stack (CR 701.27f; rules/stack.mjs). */
       ...(context.sourceTransforms !== undefined ? {sourceTransforms: context.sourceTransforms} : {}),
       /* What the cost sacrificed, as it last existed ("the sacrificed creature's power"; script/amount.mjs). */
-      ...(context.sacrificed ? {sacrificed: context.sacrificed} : {})},
+      ...(context.sacrificed ? {sacrificed: context.sacrificed} : {}),
+      /* How many times its ability resolved before this one this turn (rules/stack.mjs; script/condition.mjs, firstResolution). */
+      ...(context.resolvedBefore !== undefined ? {resolvedBefore: context.resolvedBefore} : {})},
     events: [],
   };
   return runResolution(state, rng);
@@ -91,7 +97,9 @@ export function runResolution(state, rng = null) {
       excessDamage: resolving.context.excessDamage, rememberedControllers: resolving.context.rememberedControllers,
       /* "If a Pirate was exiled this way" (`movedWas`), "if you search your library this way" (`searched`), and the source as it
          last was (CR 113.7a): what this resolution remembers of what its effects did. */
-      movedWas: resolving.context.movedWas, searched: resolving.context.searched, lastKnown: resolving.context.lastKnown})) {
+      movedWas: resolving.context.movedWas, searched: resolving.context.searched, lastKnown: resolving.context.lastKnown,
+      /* "If this is the first time this ability has resolved this turn" (rules/stack.mjs counts them). */
+      resolvedBefore: resolving.context.resolvedBefore, gift: resolving.context.gift})) {
       resolving.queue.shift();
       continue;
     }
@@ -101,7 +109,8 @@ export function runResolution(state, rng = null) {
     if (effect?.effect === "branch") {
       const holds = conditionHolds(state, effect.if, {controller: resolving.context.controller, source: resolving.context.source, about: resolving.context.about,
         remembered: resolving.context.remembered, targets: resolving.context.targets, cast: resolving.context.cast,
-        movedWas: resolving.context.movedWas, searched: resolving.context.searched, lastKnown: resolving.context.lastKnown});
+        movedWas: resolving.context.movedWas, searched: resolving.context.searched, lastKnown: resolving.context.lastKnown, resolvedBefore: resolving.context.resolvedBefore,
+        gift: resolving.context.gift});
       resolving.queue.shift();
       resolving.queue.unshift(...structuredClone((holds ? effect.then : effect.otherwise) ?? []));
       continue;
@@ -147,6 +156,18 @@ export function runResolution(state, rng = null) {
     if (effect?.effect === "addMana" && effect.anyColor === true && effect.mana === undefined) {
       resolving.queue[0] = {effect: "manaColors", count: Number.isInteger(effect.count) ? effect.count : 1, ...(effect.oneColor === true ? {oneColor: true} : {}),
         ...(effect.spendOnly ? {spendOnly: effect.spendOnly} : {})};
+      continue;
+    }
+    /* "LOOK AT TARGET PLAYER'S HAND" (Gitaxian Probe; CR 701.20e): a look at a hand is shown to its looker while they look,
+       and asked of them so they may (effects/asking.mjs, handLook). */
+    if (effect?.effect === "peekAndReveal" && effect.zone === "hand") {
+      resolving.queue[0] = {effect: "handLook", who: effect.who};
+      continue;
+    }
+    /* "ADD {B} OR {G} FOR EACH PERMANENT DESTROYED THIS WAY" (Culling Ritual; CR 106.1a): one of `colors` for each mana, its
+       controller's to say mana by mana (effects/asking.mjs, manaColors) -- how many counted now, as the effect reaches the head. */
+    if (effect?.effect === "addMana" && Array.isArray(effect.colors) && effect.mana === undefined) {
+      resolving.queue[0] = {effect: "manaColors", count: Number.isInteger(effect.count) ? effect.count : 1, colors: [...effect.colors]};
       continue;
     }
     if (effect?.effect === "empowerJace") {
@@ -224,14 +245,31 @@ export function runResolution(state, rng = null) {
        goes, its controller's choice as it resolves (effects/asking.mjs, countersOnto). */
     else if (effect?.effect === "moveCounters" && effect.onto !== undefined)
       resolving.queue[0] = {effect: "countersOnto", then: effect};
+    /* "For each of those permanents, choose a different opponent. Each opponent gains control of the permanent for which they
+       were chosen" (Dack Fayden, Helping Hand): whose each becomes, its controller's choice as it resolves (CR 608.2d;
+       effects/asking.mjs, controlToOpponents). */
+    else if (effect?.effect === "gainControl" && effect.toEach === "different opponent")
+      resolving.queue[0] = {effect: "controlToOpponents", then: effect};
     /* CR 616.1: counters that two or more effects would change, where the order changes how many -- the permanent's
        controller chooses which applies first, before any is put on (effects/asking.mjs, orderCounters). */
     else if ((asked = counterQuestion(state, effect, resolving.context, effect?.counterOrders ?? {})))
       resolving.queue[0] = {effect: "orderCounters", put: effect, answers: effect.counterOrders ?? {}, question: asked};
+    /* CR 616.1: tokens two or more effects would change, where the order changes what is made -- Anointed Procession and
+       Queen Allenal's Soldier -- their controller chooses which applies first, before any is made (effects/asking.mjs,
+       orderTokens). */
+    else if ((asked = tokenQuestion(state, effect, resolving.context, effect?.tokenOrders ?? {})))
+      resolving.queue[0] = {effect: "orderTokens", make: effect, answers: effect.tokenOrders ?? {}, question: asked};
     /* CR 616.1: a draw two players' Alms Collectors would replace -- the drawing player chooses whose, before any card is
        drawn (effects/asking.mjs, orderDraws). */
     else if ((asked = drawQuestion(state, effect, resolving.context, effect?.drawOrders ?? {})))
       resolving.queue[0] = {effect: "orderDraws", draw: effect, answers: effect.drawOrders ?? {}, question: asked};
+    /* DREDGE (CR 702.52a; Life from the Loam, wave 4c k2): a draw a dredge card in a drawing player's graveyard could replace --
+       each card drawn its own draw (CR 121.2) -- rewritten as it reaches the head into its single draws (effects/zones.mjs,
+       singleDraws: Alms Collector's, asked above, among them), each the drawing player's question when a dredge could replace
+       it then and a plain draw when none could (effects/asking.mjs, dredgeDraw): a dredge card the first dredge milled may
+       replace the next. */
+    else if (effect?.effect === "draw" && singleDraws(state, effect, resolving.context).some((player) => dredgers(state, player).length))
+      resolving.queue.splice(0, 1, ...singleDraws(state, effect, resolving.context).map((player) => ({effect: "dredgeDraw", player})));
     /* CR 616.1: a destruction two or more effects would replace, ending differently (umbra armor; effects/zones.mjs) -- the
        permanent's controller chooses which, before anything is destroyed (effects/asking.mjs, orderDestruction). */
     else if (destructionQuestion(state, effect, resolving.context)) resolving.queue[0] = {effect: "orderDestruction", destroy: effect};
@@ -343,6 +381,10 @@ function carryOn(state, outcome, rng) {
   if (!Array.isArray(outcome) && typeof outcome.chosen === "string") state.resolving.context.chosen = outcome.chosen;
   /* "Choose a color": the color, for the effects after it ("$chosenColor", script/chosen.mjs). */
   if (!Array.isArray(outcome) && typeof outcome.chosenColor === "string") state.resolving.context.chosenColor = outcome.chosenColor;
+  /* And whose it is (`colorChooser`): "each player chooses a color. Then exile each permanent unless ... it's only the color
+     its controller chose" (Selective Obliteration) -- each player's own, for a selector's `onlyChosenColor` (script/filter.mjs). */
+  if (!Array.isArray(outcome) && typeof outcome.chosenColor === "string" && Number.isInteger(outcome.colorChooser))
+    state.resolving.context.chosenColors = {...(state.resolving.context.chosenColors ?? {}), [outcome.colorChooser]: outcome.chosenColor};
   /* "You may pay {X}" (Halo Forager; CR 107.3f): the X its payer chose and paid, for what follows -- "when you do, ... with
      mana value X". */
   if (!Array.isArray(outcome) && Number.isInteger(outcome.paidX)) state.resolving.context.x = outcome.paidX;

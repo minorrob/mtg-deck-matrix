@@ -249,15 +249,20 @@ export function offerDetails(state, seat, actions) {
     /* The modes chosen as it is cast (CR 700.2), in the card's words. */
     /* And an activated ability's, chosen as it is activated (Aetheric Amplifier): its own modes' words. */
     const modal = a.kind === "activate" ? (state.objects[a.objectId]?.abilities ?? []).find((b) => b.id === a.abilityId)?.modal : card(a.objectId)?.spell?.modal;
-    if (Array.isArray(a.modes)) parts.push(a.modes.map((i) => modal?.modes?.[i]?.text ?? `mode ${i + 1}`).join(" + "));
+    /* None at all ("choose up to four", Moment of Reckoning): said so. */
+    if (Array.isArray(a.modes)) parts.push(a.modes.length ? a.modes.map((i) => modal?.modes?.[i]?.text ?? `mode ${i + 1}`).join(" + ") : "no modes");
     if (a.x !== undefined) parts.push(`X = ${a.x}`);
     /* A manifested permanent of the seat's own turned face up for its card's mana cost (CR 701.40b): the label is the card,
        which only this seat is offered (CR 708.5). */
-    /* Or for its disguise cost (CR 702.168d), said as its card says it. */
-    if (a.kind === "turn-face-up") parts.push(a.disguise ? `turn face up for its disguise cost, ${(state.objects[a.objectId]?.faceDownCard?.abilities ?? []).find((b) => b.rule === "disguise")?.cost?.[0]?.cost ?? ""}`
-      : `turn face up for ${state.objects[a.objectId]?.faceDownCard?.manaCost ?? "its mana cost"}`);
-    /* Cast face down with disguise (CR 702.168a): as a 2/2 with ward {2}, for {3}. */
-    if (a.kind === "cast" && a.disguise) parts.push("face down for {3}, a 2/2 with ward {2}");
+    /* Or for its disguise cost (CR 702.168d), said as its card says it -- or its morph cost (CR 702.37e). */
+    const faceDownWay = (abilities) => (abilities ?? []).find((b) => b.kind === "static" && (b.rule === "disguise" || b.rule === "morph"));
+    if (a.kind === "turn-face-up") {
+      const way = a.disguise ? faceDownWay(state.objects[a.objectId]?.faceDownCard?.abilities) : null;
+      parts.push(a.disguise ? `turn face up for its ${way?.rule ?? "disguise"} cost, ${way?.cost?.[0]?.cost ?? ""}`
+        : `turn face up for ${state.objects[a.objectId]?.faceDownCard?.manaCost ?? "its mana cost"}`);
+    }
+    /* Cast face down with disguise (CR 702.168a): as a 2/2 with ward {2}, for {3}; with morph (CR 702.37a), a 2/2 with no text. */
+    if (a.kind === "cast" && a.disguise) parts.push(faceDownWay(state.objects[a.objectId]?.abilities)?.rule === "morph" ? "face down for {3}, a 2/2 with no text" : "face down for {3}, a 2/2 with ward {2}");
     /* Suspended from the hand (CR 702.62a): its words ("Suspend 5--{W}"), and the mana that pays, when that is a choice. */
     if (a.kind === "suspend") parts.push(a.payWith !== undefined ? `${a.text ?? "suspend"}, paying ${paymentWords(a.payment)}` : a.text ?? "suspend");
     /* A counted target (script/bind.mjs): what is still to be picked ("up to two targets"), or the ones picked. */
@@ -288,6 +293,8 @@ export function offerDetails(state, seat, actions) {
     if (a.free) parts.push("without paying its mana cost");
     /* An additional cost's mana, beside its other choice ("blight 1 or pay {3}"). */
     if (a.extraMana) parts.push(`paying ${a.extraMana} more`);
+    /* A gift promised (CR 702.174a): to whom, the caster's choice of opponent. */
+    if (a.gift !== undefined) parts.push(`promising ${player(a.gift)} a gift`);
     /* Tapped for as it is cast (the board's one click): the sources, or that the caster picks them. */
     if (a.autoTap) {
       const ways = castTapPlans(state, seat, a, 2);
@@ -295,11 +302,14 @@ export function offerDetails(state, seat, actions) {
     }
     /* Convoke (CR 702.51a): creatures help pay, picked once it is taken. */
     if (a.convoke) parts.push("convoking, tapping creatures you choose");
+    /* Delve (CR 702.66a): cards of the graveyard help pay, picked once it is taken (wave 4c, k2). */
+    if (a.delve) parts.push("delving, exiling cards you choose from your graveyard");
     /* Flashback (CR 702.34a): from the graveyard for its flashback cost, exiled after -- and the creatures it taps, picked
        once it is taken. */
+    /* And the permanents it sacrifices ("Flashback--Sacrifice three creatures", Dread Return), picked once it is taken too. */
     if (a.flashback) {
-      const tap = flashbackCost(state, seat, a.objectId)?.tap;
-      parts.push(tap ? `flashback, tapping ${tappersInWords(tap)}` : "flashback");
+      const back = flashbackCost(state, seat, a.objectId), tap = back?.tap, sacrifice = back?.sacrifice;
+      parts.push(`flashback${tap ? `, tapping ${tappersInWords(tap)}` : ""}${sacrifice ? `, sacrificing ${inWords(sacrifice.count)} you choose` : ""}`);
     }
     /* Escape (CR 702.138a): from the graveyard for its escape cost -- its mana, and the other cards it will take. */
     if (a.escape !== undefined) {
@@ -737,12 +747,15 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       if (await storage.get(ROOM_KEY) !== null) throw new RoomError(409, "This table already has a game.");
       /* The table's starting life (its host's rule), kept with the match so a replay deals the same game. */
       const startingLife = pod && pod.startingLife !== undefined ? pod.startingLife : undefined;
+      /* And whether the starting player of a two-player game skips their first draw step (CR 103.8a), which the host may
+         turn off: only a pod that turns it off says so, and the match keeps it the same way. */
+      const rules = {...(startingLife !== undefined ? {startingLife} : {}), ...(pod && pod.skipFirstDraw === false ? {skipFirstDraw: false} : {})};
       const beats = {...(pod && pod.drawBeat === true ? {drawBeat: true} : {}), ...(pod && pod.passEmpty === true ? {passEmpty: true} : {}),
         ...(pod && pod.endWhenNoPerson === true ? {endWhenNoPerson: true} : {}), ...(pod && pod.resolveAll === true ? {resolveAll: true} : {}),
         ...(pod && pod.passAfterCast === true ? {passAfterCast: true} : {}), ...(pod && pod.endAsks === true ? {endAsks: true} : {}),
         ...(pod && pod.untapMana === true ? {untapMana: true} : {})};
       passEmpty = beats.passEmpty === true; endWhenNoPerson = beats.endWhenNoPerson === true; resolveAll = beats.resolveAll === true; passAfterCast = beats.passAfterCast === true; endAsks = beats.endAsks === true; untapMana = beats.untapMana === true;
-      try {state = createState({matchId, seed, players: seats.map((s) => ({name: s.name})), ...(startingLife !== undefined ? {startingLife} : {}), ...(beats.drawBeat ? {drawBeat: true} : {})});}
+      try {state = createState({matchId, seed, players: seats.map((s) => ({name: s.name})), ...rules, ...(beats.drawBeat ? {drawBeat: true} : {})});}
       catch (error) {throw new RoomError(400, error.message);}
       seats.forEach((s, seat) => {
         for (const name of s.commander) addObject(state, {...cards(name), card: name, owner: seat, controller: seat, commander: true}, "command", seat);
@@ -753,7 +766,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       controller = createController();
       matchSeed = seed;
       pilots = seats.map((s, seat) => (s.pilot === "house" ? pilotMade(seat) : null));
-      await store.saveMatch({pod: {seats, ...(startingLife !== undefined ? {startingLife} : {}), ...beats}, seed});
+      await store.saveMatch({pod: {seats, ...rules, ...beats}, seed});
       write(beginMulligans(state, rng));
       drive();
       await persist();

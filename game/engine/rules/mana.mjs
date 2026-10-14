@@ -29,7 +29,8 @@
  */
 
 export const COLORS = Object.freeze(["W", "U", "B", "R", "G"]);
-import {eventCard} from "../state/index.mjs";
+import {eventCard, activationsForbidden} from "../state/index.mjs";
+import {permanentActivationForbidden} from "./statics.mjs";
 import {sickForAbilities} from "../keywords/timing.mjs";
 import {abilitiesOf} from "./layers.mjs";
 
@@ -412,6 +413,18 @@ export function convokePayments(pool, cost, creatures, options = {}, limit = PAY
   return [...found.values()];
 }
 
+/* ---- delve (CR 702.66a): cards of the graveyard help cast a spell ----
+ *
+ * Each card its caster exiles from their graveyard while casting it pays for {1} of the spell's total cost -- generic mana
+ * only, never a colored symbol, and never more cards than that generic (702.66a; the card's ruling). Not an additional or
+ * alternative cost (702.66b): what is left is paid from the pool. `extra` is the generic beyond the cost's own (a tax, an
+ * increase), as `payments` reads it; the cost it leaves has none beside it. `n` is never more than the two together: the
+ * callers count it so (rules/actions.mjs, delveRange, delveWays).
+ */
+export function lessGeneric(cost, extra, n) {
+  return {...cost, generic: cost.generic + extra - n};
+}
+
 /* ---- paying "unless" (CR 118.12) for a player who does not hold priority ----
  *
  * The payer answers a question in the middle of a resolution and has no priority in which to tap, so paying taps for
@@ -419,11 +432,21 @@ export function convokePayments(pool, cost, creatures, options = {}, limit = PAY
  * that has been theirs since their turn began -- each adding its first kind of mana. Generic mana only.
  */
 const PAY_ORDER = ["C", "W", "U", "B", "R", "G"];
+/* A MANA ABILITY WHOSE MANA IS ANOTHER WHILE ITS PERMANENT HAS A COUNTER (`instead`): "{T}: Add {C}. If Gemstone Caverns has a
+   luck counter on it, instead add one mana of any color" -- the ability as it adds mana now, read as each counter is now. */
+export function manaAbilityNow(state, id, ability) {
+  if (!ability?.instead || !((state.objects[id]?.counters?.[ability.instead.counter] ?? 0) > 0)) return ability;
+  const {counter: _counter, ...adds} = ability.instead;
+  return {...Object.fromEntries(Object.entries(ability).filter(([key]) => !["produces", "instead"].includes(key))), ...adds};
+}
 function plainSources(state, player) {
   const out = [];
   for (const id of state.zones.battlefield) {
     const object = state.objects[id];
     if (object.controller !== player || object.tapped) continue;
+    /* Its mana abilities can't be activated (Koma, Cosmos Serpent; Grand Abolisher's opponents, during its controller's turn;
+       CR 602.5, 605.1a): it pays for nothing. */
+    if (activationsForbidden(state, id) || permanentActivationForbidden(state, id)) continue;
     /* CR 302.6: a creature's {T} waits until it has been theirs since their turn began (or "as though it had haste",
        CR 702.10c: keywords/timing.mjs). */
     if (sickForAbilities(state, id)) continue;
@@ -431,7 +454,7 @@ function plainSources(state, player) {
        creature, or which card, is the payer's to choose (rules/actions.mjs). */
     const ability = abilitiesOf(state, id).find((a) => a.kind === "mana" && a.tapSelf && !a.cost && !a.payLife && !a.sacrifice && !a.sacrificeSelf && !a.condition && !a.spendOnly
       && !a.tapCreature && !a.exileFromGraveyard && (a.produces || a.anyColor === true));
-    if (ability) out.push({id, ability});
+    if (ability) out.push({id, ability: manaAbilityNow(state, id, ability)});
   }
   return out;
 }

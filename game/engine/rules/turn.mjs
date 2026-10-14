@@ -35,20 +35,21 @@
  *   CR 500.4: mana pools empty at the end of every step and phase, not at end of turn.
  */
 
-import {cardsIn, moveObject, eventCard, recordDraw, recordDiscard} from "../state/index.mjs";
+import {cardsIn, moveObject, eventCard, recordDraw, recordDrawStepDraw, recordDiscard} from "../state/index.mjs";
 import {attackers, blockers, combatDamage, endCombat} from "./combat.mjs";
+import {combatNeedsFirstStrike} from "../keywords/combat.mjs";
 import {checkStateBasedActions, gameOver, finishCommanderReplacement, legendChoice, finishLegendRule, finishDestructionChoice} from "./sba.mjs";
-import {destructionChoice} from "../script/effects/zones.mjs";
+import {destructionChoice, dredgers, dredgeInstead, dredgeWords} from "../script/effects/zones.mjs";
 import {commanderChoice} from "./commander.mjs";
 import {damageOrderChoice} from "./replacement.mjs";
 import {mulliganChoice, resolveMulligan} from "./mulligan.mjs";
 import {answerResolution, answerDeparted, resolutionChoice} from "../script/resolution.mjs";
 import {finishResolving} from "./stack.mjs";
 import {priorityOrder} from "./priority.mjs";
-import {playerRuleChanged, untapsDuringOthers, ruleChanged} from "./statics.mjs";
-import {emptyRestricted} from "./restricted-mana.mjs";
+import {playerRuleChanged, untapsDuringOthers, ruleChanged, drawForbidden, emptyDrawWins} from "./statics.mjs";
+import {emptyRestricted, colorlessPool} from "./restricted-mana.mjs";
 import {endCopies, phaseIn, endControlChange, nextRecord} from "../script/effects/permanents.mjs";
-import {untapOne} from "../script/effects/resources.mjs";
+import {untapOne, winGame} from "../script/effects/resources.mjs";
 import {runEffect} from "../script/effects/index.mjs";
 import {askEntering, enteringChoice, resolveEnteringChoice} from "./entering.mjs";
 import {collectTriggers, openTriggers, askTriggerTargets, triggerChoice, resolveTriggerOrder, triggerTargetsChoice, resolveTriggerTargets, triggerCountedChoice, resolveTriggerCounted} from "./trigger.mjs";
@@ -65,7 +66,7 @@ import {deriving} from "./layers.mjs";
 export const STEPS = Object.freeze([
   {phase: "UNTAP", priority: false},
   {phase: "UPKEEP", priority: true},
-  {phase: "DRAW", priority: true},
+  {phase: "DRAW", priority: true, when: "drawStep"},
   {phase: "MAIN1", priority: true},
   {phase: "COMBAT_BEGIN", priority: true},
   {phase: "COMBAT_DECLARE_ATTACKERS", priority: true},
@@ -81,14 +82,20 @@ export const STEPS = Object.freeze([
 export const PHASE_NAMES = Object.freeze(STEPS.map((s) => s.phase));
 
 /* Whether a conditional step happens at all this turn. Predicates over state rather than flags, so
-   a rule that decides a step lives in one place. */
+   a rule that decides a step lives in one place. `added`: the step is one of a phase an effect added (CR 500.8). */
 const CONDITIONS = {
+  /* CR 103.8a: the starting player's first draw step in a two-player game does not happen -- the step, not only its draw,
+     so nothing triggers at its beginning (Teferi's Puzzle Box) and nobody receives priority in it. That is the turn's own
+     draw step: one an added beginning phase brings (CR 500.8) happens. In a game of three or more every draw step happens
+     (103.8c). */
+  drawStep: (state, added = false) => added || !skipsFirstDraw(state),
   /* CR 506.5: no attackers, no declare blockers step and no combat damage step. */
   attackers: (state) => (state.combat?.attacks?.length ?? 0) > 0,
-  /* CR 510.4: the first-strike damage step exists only if a creature in combat has first or double
-     strike. `combat.firstStrike` is set when attackers are declared and stays false until phase 2
-     gives creatures keywords, so for now the step never happens — which is correct, not deferred. */
-  firstStrike: (state) => CONDITIONS.attackers(state) && (state.combat?.firstStrike ?? false) === true,
+  /* CR 510.4: the first-strike damage step exists only if an attacking or blocking creature has first or double strike
+     AS THE COMBAT DAMAGE STEP BEGINS -- read then, as the declare blockers step ends, not as the attackers and blockers
+     were declared: "target creature gets +2/+2 and gains first strike until end of turn" cast after blocks (Interjection,
+     Train E) makes the step happen, and its creature deals its damage in it. */
+  firstStrike: (state) => CONDITIONS.attackers(state) && combatNeedsFirstStrike(state),
 };
 
 /** The step the game is in, as the name the board already reads. */
@@ -172,8 +179,14 @@ function untap(state, events) {
    not throw and does not lose the game here: the player is marked, and state-based actions turn the
    mark into a loss in 1.5. Throwing would make an ordinary, legal game position into a crash. */
 export function draw(state, player, events) {
+  /* A draw the player can't make (Narset, Parter of Veils: one drawn already this turn; rules/statics.mjs) is not made --
+     nor is it a draw from an empty library (CR 101.2, 121.2b). */
+  if (drawForbidden(state, player)) return null;
   const library = cardsIn(state, "library", player);
   if (library.length === 0) {
+    /* "You win the game instead" (Laboratory Maniac; CR 614.11, 121.6a): replaced, and no draw from an empty library
+       (script/effects/zones.mjs says why, for an effect's draw). */
+    if (emptyDrawWins(state, player)) { winGame(state, {who: [player]}, {controller: player}); return null; }
     state.players[player].drewFromEmpty = true;
     return null;
   }
@@ -186,13 +199,18 @@ export function draw(state, player, events) {
     to: {zoneType: ZONE_LABEL.hand, player: {playerId: player}},
     /* A draw (CR 121.1), as "whenever you draw a card" watches for; a search that puts a card into a hand is not one. */
     drawn: true, drawNumber: recordDraw(state, player),
+    /* And which of those drawn in the drawer's own draw step, there (Orcish Bowmasters; state/index.mjs). */
+    ...drawStep(state, player),
   }));
   return moved;
 }
 
+const drawStep = (state, player) => { const n = recordDrawStepDraw(state, player); return n === null ? {} : {drawStepNumber: n}; };
+
 /* CR 103.8a, and note that it is a two-player rule. */
 const skipsFirstDraw = (state) =>
-  state.players.length === 2 && state.turn === 1 && state.activePlayer === state.startingPlayer;
+  /* Unless the table's host turned the skip off, a house rule (game/room/table.mjs): then that player has the step too. */
+  state.skipFirstDraw !== false && state.players.length === 2 && state.turn === 1 && state.activePlayer === state.startingPlayer;
 
 /* CR 500.4. Reported only when there was something to empty: an empty pool emptying again is not
    news, and a board that announces it every step buries what matters. */
@@ -203,11 +221,19 @@ function emptyManaPools(state, events) {
      spends plain mana before rider mana. */
   const combatGoesOn = state.phase.startsWith("COMBAT_") && state.phase !== "COMBAT_END";
   for (const player of state.players) {
-    /* And the mana that could be spent only on some things (rules/restricted-mana.mjs). */
-    emptyRestricted(player);
     const kept = combatGoesOn ? Object.fromEntries(Object.entries(player.combatMana ?? {}).map(([color, n]) => [color, Math.min(n, player.manaPool[color])]).filter(([, n]) => n > 0)) : {};
     if (Object.keys(kept).length) player.combatMana = kept;
     else delete player.combatMana;
+    /* "IF YOU WOULD LOSE UNSPENT MANA, THAT MANA BECOMES COLORLESS INSTEAD" (Omnath, Locus of the Void; CR 614.1a): none of
+       it is lost -- what would have been becomes {C}, the mana kept beside the pool too, its restrictions and riders with it
+       (rules/restricted-mana.mjs) -- and nothing is emptied, so nothing is said. Mana not lost now (firebending's, kept)
+       stays as it is. */
+    if (playerRuleChanged(state, "mana-becomes-colorless", player.id)) {
+      colorlessPool(state, player.id, kept);
+      continue;
+    }
+    /* And the mana that could be spent only on some things (rules/restricted-mana.mjs). */
+    emptyRestricted(player);
     const had = Object.fromEntries(Object.entries(player.manaPool).map(([color, n]) => [color, n - (kept[color] ?? 0)]));
     const total = Object.values(had).reduce((a, b) => a + b, 0);
     if (total === 0) continue;
@@ -298,6 +324,10 @@ function choiceFor(state) {
   /* The held draw (item 13): one thing to do, and nothing else happens until it is done. */
   if (awaiting.kind === "draw-card")
     return {id: `draw:${state.turn}`, title: "Draw a card", kind: "draw", mode: "one", min: 1, max: 1, options: [{index: 0, label: "Draw a card"}]};
+  /* The draw step's draw, or a dredge in its place (CR 702.52a): a question like any other, never the beat's one button. */
+  if (awaiting.kind === "dredge-draw")
+    return {id: `dredge-draw:${state.turn}`, title: "Your draw step: draw a card, or dredge instead", mode: "one", min: 1, max: 1,
+      options: [{index: 0, label: "Draw a card"}, ...dredgers(state, awaiting.player).map((d, i) => ({index: i + 1, cardId: d.id, label: dredgeWords(state, d)}))]};
   if (awaiting.kind === "discard-to-hand-size") {
     const hand = cardsIn(state, "hand", awaiting.player);
     return {
@@ -449,6 +479,18 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
     grantStepPriority(state, events);
     return events;
   }
+  /* Drawn, or dredged: the card's N milled and the card returned to its owner's hand, and no card drawn (CR 702.52a). */
+  if (awaiting.kind === "dredge-draw") {
+    const could = dredgers(state, awaiting.player);
+    const [index] = indices ?? [];
+    if (!Array.isArray(indices) || indices.length !== 1 || !(Number.isInteger(index) && index >= 0 && index <= could.length)) throw new Error("Invalid selection");
+    const events = [];
+    state.awaiting = null;
+    if (index === 0) draw(state, awaiting.player, events);
+    else dredgeInstead(state, awaiting.player, could[index - 1].id, events);
+    grantStepPriority(state, events);
+    return events;
+  }
   if (awaiting.kind === "assign-combat-damage") {
     const events = combatDamage.resolve(state, awaiting, amounts ?? indices);
     /* Another attacker may also face several blockers; each gets its own question, and only once
@@ -518,10 +560,15 @@ function arrive(state, events) {
      to their next. Before anything triggers at its beginning, or anyone has priority in it. */
   if (state.phase === "END_OF_TURN" && (state.effects ?? []).some((e) => e.until === "your-next-end-step"))
     state.effects = state.effects.filter((e) => !(e.until === "your-next-end-step" && e.sourceController === state.activePlayer));
-  if (state.phase === "DRAW" && !skipsFirstDraw(state) && !state.players[state.activePlayer].lost) {
+  /* A draw step skipped (CR 103.8a) is never arrived at: `drawStep`, above. */
+  if (state.phase === "DRAW" && !state.players[state.activePlayer].lost) {
     /* CR 504.1 makes the draw a turn-based action, not a choice. A table that asks for the beat (item 13) holds it
        until the player's click: the same card, at the player's moment, and priority after it (CR 504.2). */
-    if (state.drawBeat) state.awaiting = {kind: "draw-card", player: state.activePlayer};
+    /* DREDGE (CR 702.52a; Life from the Loam, wave 4c k2): a dredge card in their graveyard could replace that draw --
+       whether, and with which, is theirs to choose (CR 616.1), asked as the draw is made, and the draw held for it as the
+       beat holds it (script/effects/zones.mjs, dredgers). */
+    if (dredgers(state, state.activePlayer).length) state.awaiting = {kind: "dredge-draw", player: state.activePlayer};
+    else if (state.drawBeat) state.awaiting = {kind: "draw-card", player: state.activePlayer};
     else draw(state, state.activePlayer, events);
   }
   /* CR 714.3b: as the precombat main phase begins, the active player puts a lore counter on each Saga they control -- what
@@ -629,7 +676,7 @@ export function beginGame(state, startingPlayer = 0) {
  * Move to the next step and perform it.
  *
  * Conditional steps are skipped here rather than entered and immediately left, because entering a
- * step is what makes its triggers fire (CR 506.5, 510.4).
+ * step is what makes its triggers fire (CR 103.8a, 506.5, 510.4).
  *
  * @returns {Array} events for the caller to journal
  */
@@ -667,7 +714,7 @@ export function advance(state) {
   let next;
   while (next === undefined && (state.stepQueue ?? []).length) {
     const queued = state.stepQueue.shift();
-    if (!STEPS[queued].when || CONDITIONS[STEPS[queued].when](state)) next = queued;
+    if (!STEPS[queued].when || CONDITIONS[STEPS[queued].when](state, true)) next = queued;
   }
   if (next === undefined) {
     next = (Number.isInteger(state.resumeAfter) ? state.resumeAfter : state.stepIndex) + 1;
@@ -719,6 +766,8 @@ export function advance(state) {
     state.stepQueue = [];
     state.resumeAfter = null;
     state.combatsThisTurn = 0;
+    /* And the nonland permanents that left the battlefield (state/index.mjs, recordDeath; void). */
+    if (state.nonlandLeftThisTurn) state.nonlandLeftThisTurn = 0;
     for (const player of state.players) {
       if (player.lostThisTurn) player.lostThisTurn = 0;
       if (player.drawnThisTurn) player.drawnThisTurn = 0;
@@ -744,6 +793,8 @@ export function advance(state) {
       if (player.diedThisTurn) player.diedThisTurn = 0;
       if (player.noncombatDamagedThisTurn) player.noncombatDamagedThisTurn = false;
       if (player.scriedThisTurn) player.scriedThisTurn = 0;
+      /* And the nontoken permanents each sacrificed (script/effects/zones.mjs, sacrificeOne; Evendo Brushrazer). */
+      if (player.sacrificedNontokenThisTurn) player.sacrificedNontokenThisTurn = 0;
     }
     next = 0;
   }

@@ -179,8 +179,11 @@ export function housePilot({seat, cards = () => null} = {}) {
       if (loyal.length) return loyal.reduce((best, a) => (a.loyalty > best.loyalty ? a : best));
       /* An X spell at X = 0 does next to nothing; at its largest it does the most (CR 107.3). */
       /* Never convoked (CR 702.51a): which creatures to tap is a plan of its own, and the pool or the lands pay instead. */
-      const casts = actions.filter((a) => a.kind === "cast" && a.x !== 0 && !a.convoke && (!(a.targets ?? []).length || aim(view, a) > 0));
-      const worth = (a) => manaValue(a.label) + (a.x ?? 0);
+      /* X paid in life (Toxic Deluge, `payLifeX`): never all of its life -- paying it, it would lose (CR 704.5a) -- and no more
+         is worth more, so the least X that does something is the one cast. */
+      const casts = actions.filter((a) => a.kind === "cast" && a.x !== 0 && !a.convoke && (!(a.targets ?? []).length || aim(view, a) > 0)
+        && !(a.payLifeX === true && a.x >= self.life));
+      const worth = (a) => manaValue(a.label) + (a.payLifeX === true ? 0 : a.x ?? 0);
       const best = casts.length ? casts.reduce((top, a) => (worth(a) > worth(top) || (worth(a) === worth(top) && aim(view, a) > aim(view, top)) ? a : top)) : null;
       /* An X spell waits for every source to be tapped first, so X is as large as the mana allows. */
       const untapped = actions.filter((a) => a.kind === "activate-mana" && !a.costChoice);
@@ -394,6 +397,11 @@ export function housePilot({seat, cards = () => null} = {}) {
       if (id.startsWith("order-counters:") && options.length) {
         const fewest = id.includes(":-1/-1:");
         const best = options.reduce((b, o) => ((fewest ? o.least < b.least : o.puts > b.puts) ? o : b));
+        return {indices: [best.index]};
+      }
+      /* CR 616.1: which effect changes the tokens it makes first (Anointed Procession, Queen Allenal) -- the most. */
+      if (id.startsWith("order-tokens:") && options.length) {
+        const best = options.reduce((b, o) => ((o.makes ?? 0) > (b.makes ?? 0) ? o : b));
         return {indices: [best.index]};
       }
       /* Anything else (trigger order, the commander's zone, an effect's choice): the first legal answer,

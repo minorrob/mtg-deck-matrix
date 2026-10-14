@@ -61,13 +61,17 @@ export const STATIC_RULES = Object.freeze({
   "negative-power-as-positive": "rules/combat.mjs",
   /** CR 402.2's exception: "You have no maximum hand size" (Reliquary Tower, Thought Vessel). turn.mjs, at cleanup. */
   "no-maximum-hand-size": "rules/turn.mjs",
+  /** CR 500.4 replaced (CR 614.1a, 106.4): "If you would lose unspent mana, that mana becomes colorless instead" (Omnath, Locus
+      of the Void): `affects` the players whose pools it keeps (a player selector, "you" its controller). turn.mjs, as each
+      step and phase ends (emptyManaPools). */
+  "mana-becomes-colorless": "rules/turn.mjs",
   /** CR 601.2f: "Artifact spells you cast cost {1} less to cast" (the Medallions, Foundry Inspector). actions.mjs. */
   "spells-cost-less": "rules/actions.mjs",
   /** CR 601.2f: "Noncreature spells cost {1} more to cast" (Thalia), "spells your opponents cast cost {2} more" (God-
       Pharaoh's Statue): `caster` any (the default), you or opponent; `affects` the spell; `amount`. actions.mjs, castCost.
-      "Spells that target this creature cost more" is not built: a spell's own reduction reads its chosen targets
-      (costReduction's `targets`), and costIncrease reads none yet. "During your turn, spells
-      your opponents cast cost {1} more" (Tithe Taker): its `condition`, asked at each cast. */
+      "Spells your opponents cast that target this creature cost an additional 3 life to cast" (Terror of the Peaks, wave
+      4b): `targeting`, a selector one of the spell's chosen targets must fit, and `life` in place of mana (lifeIncrease).
+      "During your turn, spells your opponents cast cost {1} more" (Tithe Taker): its `condition`, asked at each cast. */
   "spells-cost-more": "rules/actions.mjs",
   /** CR 602.2b, 601.2f: "During your turn, ... abilities your opponents activate cost {1} more to activate unless they're
       mana abilities" (Tithe Taker): `affects` the players whose activations cost more (a player selector, "you" its
@@ -124,12 +128,26 @@ export const STATIC_RULES = Object.freeze({
       and lifelink in combat (rules/combat.mjs). */
   "more-life": "script/effects/resources.mjs",
   /** "If an effect would create one or more tokens under your control, it creates twice that many of those tokens instead"
-      (Anointed Procession; CR 614.1a): `times`. tokensCreated, read where tokens are made (script/effects/permanents.mjs). */
+      (Anointed Procession; CR 614.1a): `affects` the player whose tokens they are -- "you", or anyone's (Primal Vigor) --
+      `times`. tokensCreated, read where tokens are made (script/effects/permanents.mjs). */
   "more-tokens": "script/effects/permanents.mjs",
   /** "If an opponent would draw two or more cards, instead you and that player each draw a card" (Alms Collector; CR
       614.1a): `affects` the players whose draws it replaces, from its controller's side. drawsInstead, read by the draw
       effect (script/effects/zones.mjs). */
   "draws-instead": "script/effects/zones.mjs",
+  /** "Each opponent can't draw more than one card each turn" (Narset, Parter of Veils; CR 121.2b): `affects` the players it
+      binds, from its controller's side. drawForbidden, read where a card is drawn -- the draw step's (rules/turn.mjs), an
+      effect's (script/effects/zones.mjs) -- and where a "you may draw" is offered (script/effects/asking.mjs, modal). */
+  "cant-draw-more-than-one": "script/effects/zones.mjs",
+  /** "If you would draw a card while your library has no cards in it, you win the game instead" (Laboratory Maniac; CR 614.11,
+      121.6a, 104.2b): `affects` the players whose draws it replaces, from its controller's side. emptyDrawWins, read where a
+      card is drawn -- the draw step's (rules/turn.mjs), an effect's (script/effects/zones.mjs). */
+  "empty-draw-wins": "script/effects/zones.mjs",
+  /** "If you would draw a card except the first one you draw in each of your draw steps, draw two cards instead" (Teferi's
+      Ageless Insight; CR 614.11, 614.11a, 614.5): `affects` the players, from its controller's side, `count` the cards drawn
+      instead, `exceptFirstInDrawStep`. drawsMore, read where an effect's card is drawn (script/effects/zones.mjs); the draw
+      step's own draw is always the first of that step (CR 504.1, 504.2), so rules/turn.mjs never asks. */
+  "draws-more": "script/effects/zones.mjs",
   /** "Alexios ... can't be sacrificed" (Alexios, Deimos of Kosmos; CR 701.21a): `affects` what can't. cantBeSacrificed, read
       where a permanent would be sacrificed (script/effects/zones.mjs, sacrificeOne) and where one is chosen to be: the
       sacrifice effect and an "unless" cost (script/effects/asking.mjs), a cost (rules/actions.mjs). */
@@ -138,13 +156,23 @@ export const STATIC_RULES = Object.freeze({
       flying are created instead" (Draconic Visitor): `affects` the tokens it replaces, `token` what is made instead.
       tokensCreated (script/effects/permanents.mjs). */
   "tokens-instead": "script/effects/permanents.mjs",
+  /** "If one or more creature tokens would be created under your control, those tokens plus a 1/1 white Soldier creature
+      token are created instead" (Queen Allenal of Ruadach; CR 614.1a): `affects` the tokens it adds to, by their card
+      types and subtypes (any token, unsaid: Peregrin Took), `token` the one it adds. tokensCreated (script/effects/permanents.mjs). */
+  "tokens-plus": "script/effects/permanents.mjs",
+  /** "If you would create a Clue, Food, or Treasure token, instead create one of each" (Academy Manufactor; CR 614.1a):
+      `each`, the tokens it names, each a predefined token (CR 111.10). tokensCreated (script/effects/permanents.mjs). */
+  "tokens-each": "script/effects/permanents.mjs",
   /** "Your opponents can't cast spells from anywhere other than their hands", "during your turn", "more than one spell each
       turn" (CantBeCast): castForbidden, read where a cast is offered. rules/actions.mjs. And for a while, by an effect
       (effectUntil): "can't cast spells with the same name as that creature until your next turn" (Reflector Mage). */
   "cant-cast": "rules/actions.mjs",
   /** CR 602.5: "During combat, players can't ... activate abilities that aren't mana abilities" (Yuriko, Blade of the
-      Mighty): `affects` the players it binds (a player selector), `duringCombat` -- the only form built -- and never a mana
-      ability (CR 605). activationForbidden, read where an activation is offered. rules/actions.mjs. */
+      Mighty): `affects` the players it binds (a player selector), `duringCombat`, and never a mana ability (CR 605).
+      activationForbidden, read where an activation is offered. rules/actions.mjs. Or of some permanents' abilities, their
+      mana abilities too: "during your turn, your opponents can't ... activate abilities of artifacts, creatures, or
+      enchantments" (Grand Abolisher, wave 4b) -- `of` a selector of the permanents, `duringYourTurn` or always.
+      permanentActivationForbidden, read wherever a permanent's ability is offered or tapped to pay. */
   "cant-activate": "rules/actions.mjs",
   /** "Creatures can't attack you unless their controller pays {2} for each" (CantAttackUnless): attackTax, paid as attackers
       are declared. rules/combat.mjs. */
@@ -184,6 +212,10 @@ export const STATIC_RULES = Object.freeze({
   /** Storm (CR 702.40a): the keyword kept as this static, read as the spell is cast (cards/index.mjs; batch 77 names it
       here, where every rule a definition carries is named). */
   "storm": "rules/actions.mjs",
+  /** Dredge N (CR 702.52a; Life from the Loam, wave 4c k2): the keyword kept as this static, with its N (`amount`), read in its
+      owner's graveyard wherever that player would draw a card -- the draw step (rules/turn.mjs) and a draw effect
+      (script/resolution.mjs) -- a replacement its player may choose (script/effects/zones.mjs, dredgers). */
+  "dredge": "script/effects/zones.mjs",
   /** Rebound (CR 702.88a): the keyword kept as this static (cards/index.mjs), read as the spell leaves the stack: cast from
       its owner's hand and resolved, it is exiled and may be cast free at its caster's next upkeep (Ephemerate). */
   "rebound": "rules/stack.mjs",
@@ -193,6 +225,9 @@ export const STATIC_RULES = Object.freeze({
   /** Disguise [cost] (CR 702.168a): the keyword kept as this static (cards/index.mjs), read where the card could be cast --
       cast face down for {3} -- and on the face-down permanent, turned face up for its cost (rules/actions.mjs). */
   "disguise": "rules/actions.mjs",
+  /** Morph [cost] (CR 702.37a): the keyword kept as this static (cards/index.mjs), read as disguise's is -- cast face down for
+      {3}, a 2/2 with no text, and on the face-down permanent turned face up for its morph cost (rules/actions.mjs). */
+  "morph": "rules/actions.mjs",
   /** Paradigm (CR 702.192a): the keyword kept as this static (cards/index.mjs), read as the spell resolves -- the delayed
       trigger made the first time a spell of its name resolves for its controller, and the spell exiled. rules/stack.mjs. */
   "paradigm": "rules/stack.mjs",
@@ -224,6 +259,12 @@ export const STATIC_RULES = Object.freeze({
       blockers it can't be blocked by), "creatures with power less than this creature's power can't block creatures you
       control" (`byPowerBelowSource`). keywords/combat.mjs, as each blocker is checked. */
   "cant-be-blocked-by": "keywords/combat.mjs",
+  /** CR 509.1b: "This token can block only creatures with flying" (Pinnacle Emissary's Drones): `affects` the blockers, and
+      `attackers` the only ones each may block, a selector. keywords/combat.mjs, as each blocker is checked (blocksOnlyOthers). */
+  "can-block-only": "keywords/combat.mjs",
+  /** CR 613.1b: "You control enchanted permanent" (Tractor Beam): an Aura's, `affects` what it is attached to. Made a control
+      change of the Aura's own as the game is checked (rules/sba.mjs; script/effects/permanents.mjs, controlByAuras). */
+  "control-enchanted": "script/effects/permanents.mjs",
   /** "This spell can't be countered" (the spell's own, read while it is on the stack, `affects: {what: "spell", self: true}`)
       and "creature spells you control can't be countered" (a permanent's, over spells): a counter effect does nothing to
       such a spell (CR 101.2: "can't" beats "can"). script/effects/zones.mjs, counterSpell. */
@@ -275,7 +316,9 @@ export function freeCast(state, player, cardId) {
         if (manaValue(parseManaCost(object.manaCost ?? "")) > cap) continue;
       }
       if (ability.limit && usesThisTurn(state, holderId, `free:${ability.id}`) >= ability.limit) continue;
-      return {source: holderId, abilityId: ability.id, limited: Boolean(ability.limit)};
+      /* "By paying life equal to its mana value rather than paying its mana cost" (Demon of Fate's Design; CR 118.9): the
+         alternative cost is that life, not nothing (`payLife`, rules/actions.mjs). */
+      return {source: holderId, abilityId: ability.id, limited: Boolean(ability.limit), ...(ability.payLife ? {payLife: ability.payLife} : {})};
     }
   }
   return null;
@@ -353,6 +396,32 @@ export function activationForbidden(state, player) {
 }
 
 /**
+ * "DURING YOUR TURN, YOUR OPPONENTS CAN'T ... ACTIVATE ABILITIES OF ARTIFACTS, CREATURES, OR ENCHANTMENTS" (Grand Abolisher,
+ * wave 4b; CR 602.5): whether a static ability forbids this permanent's controller activating its abilities now -- a
+ * `cant-activate` static with `of`, a selector of the permanents whose abilities it is about (read from the static's
+ * controller's side), its `affects` the players it binds, `duringYourTurn` its controller's turn, and its `condition`. Its
+ * mana abilities too (CR 605.1a: a mana ability is an activated ability; the card says nothing to spare them). On the
+ * battlefield only: a card's abilities in a hand or a graveyard (cycling) are no permanent's (the card's ruling), so it is
+ * read wherever a permanent's activated or mana ability is offered, or tapped to pay (rules/actions.mjs, rules/mana.mjs).
+ */
+export function permanentActivationForbidden(state, id) {
+  const player = controllerOf(state, id);
+  const held = staticAbilities(state);
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of held(holderId)) {
+      if (ability.kind !== "static" || ability.rule !== "cant-activate" || ability.of === undefined) continue;
+      const context = {controller: holder.controller, source: holderId};
+      if (ability.duringYourTurn && state.activePlayer !== holder.controller) continue;
+      if (!compileSelector({what: "player", ...(ability.affects ?? {})})(state, player, context)) continue;
+      if (!conditionHolds(state, ability.condition, context)) continue;
+      if (compileSelector({...ability.of, what: "permanent"})(state, id, context)) return true;
+    }
+  }
+  return false;
+}
+
+/**
  * WHETHER A PLAYER CAN'T GAIN LIFE (CR 119.7): a permanent's "your opponents can't gain life" or "players can't gain life",
  * whose `affects` names this player from its controller's side. Effects that would have them gain life don't, lifelink
  * gains them nothing (702.15b), and no life is gained to be seen ("whenever you gain life").
@@ -372,31 +441,156 @@ export function cantGainLife(state, player) {
 
 /**
  * WHAT TOKENS AN EFFECT CREATES (CR 614.1a, 111.1): `count` tokens like `values` -- a token's spec, or the copiable values
- * of a copy -- about to be created under `controller`'s control, after
- *   `tokens-instead`  "if one or more artifact tokens would be created under your control, that many 5/5 red Dragon creature
- *                     tokens with flying are created instead" (Draconic Visitor): its controller's; `affects` the tokens it
- *                     replaces, by their card types, read as a description of what is not yet there (script/filter.mjs,
- *                     matchesLastKnown); `token` what is made instead, as many;
- *   `more-tokens`     "if an effect would create one or more tokens under your control, it creates twice that many of
- *                     those tokens instead" (Anointed Procession): `affects` the player creating them, "you" its
- *                     controller; `times`.
- * Each applies once (CR 614.5). Every Draconic Visitor makes the same Dragons, and doubling and making Dragons instead end
- * the same in either order, so nobody is asked (CR 616.1).
+ * of a copy -- about to be created under `controller`'s control. The event is the tokens it would make, in groups, each one
+ * token's values and how many of it, the effect's own first (`own`: made as the effect makes them, so a copy is a copy).
+ * Each replacement effect rewrites the event as it then stands (CR 614.6):
+ *   `more-tokens`     "it creates twice that many of those tokens instead" (Anointed Procession, Parallel Lives, Doubling
+ *                     Season; Primal Vigor's for every player): `affects` the player creating them, "you" its controller;
+ *                     every group `times` as many;
+ *   `tokens-instead`  "that many 4/4 white Angel creature tokens with flying and vigilance are created instead" of creature
+ *                     tokens (Divine Visitation; Draconic Visitor's Dragons of artifact ones): its controller's; each group
+ *                     `affects` describes, by card types, made as `token` instead, as many;
+ *   `tokens-plus`     "those tokens plus a 1/1 white Soldier creature token" of creature tokens (Queen Allenal of Ruadach),
+ *                     "plus an additional Treasure token" of Treasure tokens (Xorn), "plus an additional Food token" of any
+ *                     (Peregrin Took): its controller's; one `token` more, while a group `affects` describes -- by card
+ *                     types and subtypes, any token unsaid -- is made;
+ *   `tokens-each`     "if you would create a Clue, Food, or Treasure token, instead create one of each" (Academy
+ *                     Manufactor): its controller's; each group of a kind `each` names -- a token with that kind's subtype --
+ *                     joined by as many of each other kind (its rulings: that many of each; three times that many with two).
+ * What is not yet there is read as a description (script/filter.mjs, matchesLastKnown): a Treasure is an artifact token
+ * before it is made. Every token in the event is made as the effect says its tokens are -- tapped, attacking, gaining haste,
+ * with counters (effects/permanents.mjs) -- but none has the abilities the effect's own were created with: a replacement
+ * says what its tokens are (the rulings of Queen Allenal, Divine Visitation, Doubling Season and Mondrak, Glory Dominus).
  *
- * @returns {{count: number, instead: ?object}} how many, and the spec made instead when one is
+ * Each applies once (CR 614.5), and only while it applies to the event as it now stands (CR 616.1e-f): an adder of creature
+ * tokens adds to a Treasure only once something has made it one. Their order is the affected player's -- the tokens'
+ * controller (CR 616.1) -- whenever two orders end differently: a doubler and an adder, Dragons and an adder of artifact
+ * tokens, Angels and the Queen's Soldier (Angels and a Soldier, or Angels only). Doublers alone, adders alone, or the same
+ * Dragons twice end the same in any order, and nobody is asked. A resolution asks before any is made (effects/asking.mjs,
+ * orderTokens), each answer kept with the effect and replayed here through `orders`; `askable` when the caller can stop to
+ * ask, the next unanswered choice coming back as `question`. Where nothing can stop to ask, the order that makes the most.
+ *
+ * @returns {{groups: Array<{token: object, count: number, own?: true}>, question?: object}} what is made, the effect's own
+ *   first; where it stopped to ask, the event as it then stood
  */
-export function tokensCreated(state, controller, count, values) {
-  let n = count, instead = null;
+export function tokensCreated(state, controller, count, values, {orders = [], askable = false} = {}) {
+  const {event, question} = tokenEvent(state, controller, count, values, orders, askable);
+  return question ? {groups: event, question} : {groups: event};
+}
+/* The event as `orders` leave it: done, or stopped at the next question, with the effects not yet applied (`rest`). */
+function tokenEvent(state, controller, count, values, orders, askable) {
+  let event = [{token: values, count, own: true}], rest = tokenChangers(state, controller), used = 0;
+  for (let now = applying(rest, event); now.length; now = applying(rest, event)) {
+    let next = now[0];
+    if (now.length > 1 && tokenEnds(rest, event).size > 1) {
+      const answered = orders[used] === undefined ? undefined : now.find((c) => tokenEffectKey(c) === orders[used]);
+      if (answered) { used += 1; next = answered; }
+      else if (askable) return {event, rest, question: {player: controller, options: now.map(tokenEffectKey)}};
+      else next = now.reduce((top, c) => (mostAfter(rest, c, event) > mostAfter(rest, top, event) ? c : top), now[0]);
+    }
+    event = tokenChange(next.ability, event);
+    rest = rest.filter((c) => c !== next);
+  }
+  return {event, rest};
+}
+/* The effects that would change tokens made under `controller`'s control: a doubler of the player its `affects` names, the
+   rest of their own controller's. */
+const TOKENS_CHANGED = ["tokens-instead", "tokens-plus", "tokens-each"];
+function tokenChangers(state, controller) {
+  const changers = [];
   const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
     for (const ability of held(holderId)) {
       if (ability.kind !== "static") continue;
-      if (ability.rule === "tokens-instead" && holder.controller === controller && matchesLastKnown(ability.affects, values)) instead = ability.token;
-      if (ability.rule === "more-tokens" && compileSelector({what: "player", ...ability.affects})(state, controller, {controller: holder.controller, source: holderId})) n *= ability.times;
+      if (ability.rule === "more-tokens" && compileSelector({what: "player", ...ability.affects})(state, controller, {controller: holder.controller, source: holderId})) changers.push({holderId, ability});
+      if (!TOKENS_CHANGED.includes(ability.rule) || holder.controller !== controller) continue;
+      /* A predefined token is given its definition as the card is compiled (cards/index.mjs, predefinedIn); one that was not
+         would be made as a nameless creature. */
+      if ([ability.token, ...(ability.each ?? [])].some((token) => token?.predefined)) throw new Error(`${ability.text ?? ability.rule}: a predefined token not compiled into its definition`);
+      changers.push({holderId, ability});
     }
   }
-  return {count: n, instead};
+  return changers;
+}
+const live = (event) => event.filter((g) => g.count > 0);
+/* Whether `affects` describes a token not yet made: by card types and subtypes; any token, unsaid. */
+const describes = (affects, token) => matchesLastKnown(affects ?? {}, token);
+/* Which of `each` a token is (tokens-each): the one whose subtype it has -- a Food Golem is a Food. */
+const kindOf = (ability, token) => (ability.each ?? []).find((kind) => (kind.subtypes ?? []).some((t) => (token.subtypes ?? []).includes(t)));
+/* Which of them apply to the event as it now stands (CR 616.1f): a doubler to any tokens; the rest while a token they
+   describe is made. */
+const applying = (rest, event) => rest.filter(({ability}) => live(event).some((g) => (ability.rule === "more-tokens" ? true
+  : ability.rule === "tokens-each" ? Boolean(kindOf(ability, g.token)) : describes(ability.affects, g.token))));
+/* What one of them makes of the event. */
+function tokenChange(ability, event) {
+  if (ability.rule === "more-tokens") return event.map((g) => ({...g, count: g.count * ability.times}));
+  /* Made as its token instead: no longer the effect's own (a copy is not made a copy). */
+  if (ability.rule === "tokens-instead") return event.map((g) => (g.count > 0 && describes(ability.affects, g.token) ? {token: ability.token, count: g.count} : g));
+  if (ability.rule === "tokens-each") return event.flatMap((g) => {
+    const kind = g.count > 0 ? kindOf(ability, g.token) : undefined;
+    return kind ? [g, ...ability.each.filter((k) => k !== kind).map((k) => ({token: k, count: g.count}))] : [g];
+  });
+  return [...event, {token: ability.token, count: 1}];
+}
+const tokensIn = (event) => event.reduce((n, g) => n + g.count, 0);
+const nameOf = (token) => token?.name ?? token?.card ?? null;
+/* What the event makes, by name: "1 Angel, 1 Soldier". */
+function makes(event) {
+  const by = new Map();
+  for (const g of live(event)) by.set(nameOf(g.token) ?? "token", (by.get(nameOf(g.token) ?? "token") ?? 0) + g.count);
+  return [...by].map(([name, n]) => `${n} ${name}`).sort().join(", ");
+}
+/* Every way the event can end, over every order of them (CR 616.1) -- each end what it makes, and how many -- and the most
+   tokens any order after `first` makes. An order already followed from the same point is not followed again. */
+function tokenEnds(rest, event, out = new Map(), seen = new Set()) {
+  const key = `${rest.map(tokenEffectKey).sort().join(" ")}|${makes(event)}`;
+  if (seen.has(key)) return out;
+  seen.add(key);
+  const now = applying(rest, event);
+  if (!now.length) { out.set(makes(event), tokensIn(event)); return out; }
+  for (const c of now) tokenEnds(rest.filter((o) => o !== c), tokenChange(c.ability, event), out, seen);
+  return out;
+}
+const mostAfter = (rest, first, event) => Math.max(...tokenEnds(rest.filter((o) => o !== first), tokenChange(first.ability, event)).values());
+/** Which effect an answer names: its holder and ability (CR 614.5 is per effect). */
+export const tokenEffectKey = ({holderId, ability}) => `${holderId}:${ability.id}`;
+
+/**
+ * The choice for CR 616.1 over tokens: which of the effects that would change them applies next, asked of their controller.
+ * `awaiting` carries the event (`controller`, `count` and `values` as the effect would make them, the answers so far) and
+ * the candidates (`options`, tokenEffectKey). Each option says where it leads -- "Anointed Procession first: 4 tokens" --
+ * with `makes`, the most it can end at, for a pilot; two that would read alike but end differently (Angels and a Soldier,
+ * or two Angels) say what each makes.
+ */
+export function tokenOrderChoice(state, awaiting) {
+  const {event, rest} = tokenEvent(state, awaiting.controller, awaiting.count, awaiting.values, awaiting.answered ?? [], true);
+  const byKey = new Map(rest.map((c) => [tokenEffectKey(c), c]));
+  const names = awaiting.options.map((key) => state.objects[byKey.get(key)?.holderId]?.card);
+  const nameOfHolder = (c) => { const card = state.objects[c.holderId].card; return names.filter((n) => n === card).length > 1 ? `${state.players[state.objects[c.holderId].controller].name}'s ${card}` : card; };
+  const ends = new Map(), ranges = new Map();
+  const options = awaiting.options.map((key, index) => {
+    const c = byKey.get(key);
+    if (!c) return {index, label: "An effect no longer there", makes: tokensIn(event)};
+    const after = tokenEnds(rest.filter((o) => o !== c), tokenChange(c.ability, event));
+    const counts = [...after.values()], lo = Math.min(...counts), hi = Math.max(...counts);
+    ends.set(index, [...after.keys()].sort().join(" or "));
+    ranges.set(index, lo === hi ? `${lo}` : `${lo} to ${hi}`);
+    return {index, label: `${nameOfHolder(c)} first: ${ranges.get(index)} token${hi === 1 ? "" : "s"}`, cardId: c.holderId, makes: hi};
+  });
+  /* Two that make as many tokens but different ones say what each makes -- Divine Visitation first, an Angel and a Soldier;
+     the Queen first, two Angels. Two that are the same (two permanents of one name) are numbered, so no two read the same. */
+  const telling = options.filter((o) => ends.has(o.index) && options.some((other) => ends.has(other.index)
+    && ranges.get(other.index) === ranges.get(o.index) && ends.get(other.index) !== ends.get(o.index)));
+  for (const option of telling) option.label = `${option.label} (${ends.get(option.index)})`;
+  for (const option of options) {
+    const alike = options.filter((o) => o.label === option.label);
+    if (alike.length > 1) alike.forEach((o, n) => { o.label = `${o.label} (${n + 1})`; });
+  }
+  const kinds = new Set(live(event).map((g) => nameOf(g.token)));
+  const name = kinds.size === 1 && [...kinds][0] ? `${[...kinds][0]} ` : "";
+  return {id: `order-tokens:${state.turn}:${awaiting.key}:${(awaiting.answered ?? []).length}`,
+    title: `${tokensIn(event)} ${name}token${tokensIn(event) === 1 ? "" : "s"}: which applies first?`, mode: "one", min: 1, max: 1, options};
 }
 
 /**
@@ -413,6 +607,52 @@ export function cantBeSacrificed(state, id) {
         && matchesSelector({what: "permanent", ...ability.affects}, state, id, {controller: holder.controller, source: holderId})) return true;
   }
   return false;
+}
+
+/**
+ * "EACH OPPONENT CAN'T DRAW MORE THAN ONE CARD EACH TURN" (Narset, Parter of Veils; CR 121.2b, 101.2): whether `player` may not
+ * draw `count` more cards now -- a `cant-draw-more-than-one` static's `affects` names them, from its controller's side, and
+ * this turn's draws (state/index.mjs, recordDraw: those before the static was there among them, its ruling) and these would
+ * be more than one. Each card of a draw is its own (CR 121.2): the draw of two is carried out as far as it may be, and a
+ * choice to draw two is no choice the player may take (121.2b). A draw replaced was never made (CR 614.6), so is not counted.
+ */
+export function drawForbidden(state, player, count = 1) {
+  if ((state.players[player]?.drawnThisTurn ?? 0) + count <= 1) return false;
+  return playerRuleChanged(state, "cant-draw-more-than-one", player);
+}
+
+/**
+ * "IF YOU WOULD DRAW A CARD WHILE YOUR LIBRARY HAS NO CARDS IN IT, YOU WIN THE GAME INSTEAD" (Laboratory Maniac; CR 614.11,
+ * 121.6a): whether an `empty-draw-wins` static names `player`, who would now draw from an empty library. Asked only once the
+ * draw is one the player may make (drawForbidden first: a draw that can't happen is no event to replace, CR 101.2).
+ */
+export function emptyDrawWins(state, player) {
+  return playerRuleChanged(state, "empty-draw-wins", player);
+}
+
+/**
+ * "IF YOU WOULD DRAW A CARD EXCEPT THE FIRST ONE YOU DRAW IN EACH OF YOUR DRAW STEPS, DRAW TWO CARDS INSTEAD" (Teferi's Ageless
+ * Insight; CR 614.11, 614.11a): the `draws-more` statics whose `affects` names `player` for the card they would draw now, each
+ * `{key, count}` -- its holder and ability, so each applies once to a draw and to the draws it became (CR 614.5), and
+ * another's still may: two of them make four. `exceptFirstInDrawStep`: not the first card the player would draw in their own
+ * draw step -- none drawn there yet this turn (state/index.mjs, recordDrawStepDraw), the step's own draw or, it skipped, an
+ * effect's. Only multiplying draws is built, so their order never changes the outcome and nobody is asked (CR 616.1).
+ */
+export function drawsMore(state, player) {
+  const steps = state.players[player]?.drawStepDraws;
+  const first = state.phase === "DRAW" && state.activePlayer === player && !(steps?.turn === state.turn && steps.count > 0);
+  const found = [];
+  const held = staticAbilities(state);
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of held(holderId)) {
+      if (ability.kind !== "static" || ability.rule !== "draws-more") continue;
+      if (ability.exceptFirstInDrawStep === true && first) continue;
+      if (compileSelector({what: "player", ...ability.affects})(state, player, {controller: holder.controller, source: holderId}))
+        found.push({key: `${holderId}:${ability.id}`, count: ability.count});
+    }
+  }
+  return found;
 }
 
 /**
@@ -457,15 +697,20 @@ export function lifeGained(state, player, amount) {
 
 /**
  * HOW MANY COUNTERS ARE PUT ON (`more-counters`; CR 614.1a, 122.6). Each such static is a replacement effect over the
- * permanents it `affects` -- and, `players: true`, the players -- and the kind it names (`counter`; any, unsaid):
+ * permanents it `affects` -- and, `players`, the players: `true` any ("on a permanent or player", Vorinclex), "you" its
+ * controller ("or on yourself", Lae'zel, Vlaakith's Champion); with `affects: {what: "player"}`, players' alone ("if you
+ * would get one or more counters", Winding Constrictor) -- and the kind it names (`counter`; any, unsaid):
  *   `times`  "twice that many ... instead" (Branching Evolution, Innkeeper's Talent, Vorinclex, Monstrous Raider's for you);
  *            0, "can't have -1/-1 counters put on them" (Darksteel Angel); 2 when it says none of these three;
  *   `plus`   "that many plus one" (Hardened Scales, Yoshimaru, Beloved Companion), -1 "that many minus one";
  *   `half`   "half that many ..., rounded down" (Vorinclex's for its opponents).
  * `putBy` the player who must be putting them: "you" its controller, "opponent" one of its opponents. `by` is that player --
  * an effect's controller, a cost's payer, an infect source's controller, and for a permanent entering with counters its
- * controller (CR 122.6a). A condition is read now: Innkeeper's Talent's while it is level 3 or more (CR 716.2a). A
- * permanent entering with counters is read as it has entered.
+ * controller (CR 122.6a). `byEffect`, "if an effect would put" (Doubling Season): not counters put as a cost -- a loyalty
+ * ability's +1 is not doubled (its ruling; CR 118.1, 602.2b), a planeswalker's loyalty as it enters is (CR 122.6). A
+ * condition is read now: Innkeeper's Talent's while it is level 3 or more (CR 716.2a). A permanent entering with counters is
+ * read as it has entered -- and its own effect over a set of permanents including it does not yet apply to it (CR 614.12;
+ * the rulings of Kami of Whispered Hopes, Ozolith and Winding Constrictor): `entering`.
  *
  * EACH APPLIES ONCE, AND ONLY TO ONE OR MORE (CR 614.5): one that leaves none ends the event, and nothing after it applies --
  * half of one counter is none, and Hardened Scales then has nothing to add one to.
@@ -479,8 +724,9 @@ export function lifeGained(state, player, amount) {
  * order that player chooses on all but rare boards, as damage takes the least where it cannot ask (rules/replacement.mjs).
  */
 const putterFits = (putBy, by, you) => putBy === undefined || (putBy === "you" ? by === you : putBy === "opponent" && by !== null && by !== undefined && by !== you);
-const changesCounters = (state, ability, holder, holderId, kind, by) => ability.kind === "static" && ability.rule === "more-counters"
+const changesCounters = (state, ability, holder, holderId, kind, by, cost) => ability.kind === "static" && ability.rule === "more-counters"
   && (!ability.counter || ability.counter === kind) && putterFits(ability.putBy, by, holder.controller)
+  && !(cost && ability.byEffect === true)
   && conditionHolds(state, ability.condition, {controller: holder.controller, source: holderId});
 /* "Can't have -1/-1 counters put on them" (Darksteel Angel): `times` 0, none at all. */
 const timesOf = (ability) => (Number.isInteger(ability.times) && ability.times >= 0 ? ability.times : 2);
@@ -496,16 +742,19 @@ function counterEnds(candidates, n, out = new Set()) {
   for (const c of candidates) counterEnds(candidates.filter((o) => o !== c), counterChange(c.ability, n), out);
   return out;
 }
-/* The effects that would change counters of this kind put on this permanent (`id`) or player (`player`) by `by`. */
-function counterCandidates(state, {id = null, player = null}, kind, by) {
+/* The effects that would change counters of this kind put on this permanent (`id`) or player (`player`) by `by` -- as a cost
+   (`cost`), or as the permanent enters (`entering`). */
+function counterCandidates(state, {id = null, player = null}, kind, by, {cost = false, entering = false} = {}) {
   const found = [];
   const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
     for (const ability of held(holderId)) {
-      if (!changesCounters(state, ability, holder, holderId, kind, by)) continue;
-      if (player !== null ? ability.players !== true
-        : !matchesSelector({what: "permanent", ...ability.affects}, state, id, {controller: holder.controller, source: holderId})) continue;
+      if (!changesCounters(state, ability, holder, holderId, kind, by, cost)) continue;
+      if (player !== null ? !(ability.players === true || (ability.players === "you" && player === holder.controller))
+        : ability.affects?.what === "player" || !matchesSelector({what: "permanent", ...ability.affects}, state, id, {controller: holder.controller, source: holderId})) continue;
+      /* Entering, it applies to itself only an effect of its own alone ("this creature enters with ..."; CR 614.12). */
+      if (entering && holderId === id && ability.affects?.self !== true) continue;
       found.push({holderId, ability});
     }
   }
@@ -518,13 +767,14 @@ export const counterEffectKey = ({holderId, ability}) => `${holderId}:${ability.
  * How many counters of `kind` are put on a permanent (`id`) or a player (`player`) when `count` would be, by `by`.
  * `orders`: the affected player's answers so far, each the effect they chose to apply next (counterEffectKey); `askable`
  * when the caller can stop to ask, and the next unanswered choice then comes back as `question`, nothing applied past it.
+ * `cost`: put as a cost is paid (rules/actions.mjs); `entering`: put on the permanent as it enters (CR 122.6).
  *
  * @returns {{count: number, question?: {player: number, options: string[], count: number}}}
  */
-export function placeCounters(state, {id = null, player = null}, kind, count, by = null, {orders = [], askable = false} = {}) {
+export function placeCounters(state, {id = null, player = null}, kind, count, by = null, {orders = [], askable = false, cost = false, entering = false} = {}) {
   if (!(count > 0) || (player !== null ? !state.players[player] : !state.objects[id])) return {count};
   const affected = player !== null ? player : controllerOf(state, id);
-  let rest = counterCandidates(state, {id, player}, kind, by), n = count, used = 0;
+  let rest = counterCandidates(state, {id, player}, kind, by, {cost, entering}), n = count, used = 0;
   while (rest.length && n > 0) {
     let next = rest[0];
     if (rest.length > 1 && counterEnds(rest, n).size > 1) {
@@ -544,7 +794,10 @@ export function placeCounters(state, {id = null, player = null}, kind, count, by
   return {count: Math.max(0, n)};
 }
 export const countersPlaced = (state, id, kind, count, by = null, orders = []) => placeCounters(state, {id}, kind, count, by, {orders}).count;
-/** The same for counters put on a player (CR 122.1: poison and the rest): only a static that says `players: true`. */
+/** The counters a permanent enters with (CR 122.6), put on as it enters by `by` -- its controller, unless an effect says
+    (122.6a): not by its own effect over a set of permanents (CR 614.12). */
+export const enteringCountersPlaced = (state, id, kind, count, by = null) => placeCounters(state, {id}, kind, count, by, {entering: true}).count;
+/** The same for counters put on a player (CR 122.1: poison and the rest): only a static that says `players`. */
 export const playerCountersPlaced = (state, player, kind, count, by = null) => placeCounters(state, {player}, kind, count, by).count;
 
 /**
@@ -693,6 +946,12 @@ export function attacksEachCombat(state, id) {
      creature, for the one combat phase it names -- its source named, as a static's holder is, gone or not. */
   for (const effect of state.effects ?? [])
     if (effect.rule === "attacks-each-combat" && effect.combat === (state.combatsThisTurn ?? 0) && effect.affects.ids.includes(id)) sources.push(effect.sourceId);
+  /* And "creatures your opponents control attack this turn if able" (Bident of Thassa; effectUntil's `rule:
+     "attacks-each-combat"` with `affects`): a rule changed for every combat of the turn, not a characteristic, so it takes in
+     each creature as it now is -- one that entered or changed control after it resolved too (CR 611.2c) -- the opponents of
+     its controller as it resolved. */
+  for (const effect of state.effects ?? [])
+    if (effect.rule === "attacks-each-combat" && effect.combat === undefined && staticAffects(state, effect, id, effect.sourceController)) sources.push(effect.sourceId);
   return sources;
 }
 
@@ -775,6 +1034,24 @@ export function cantBeBlockedBy(state, attackerId, blockerId) {
   for (const effect of state.effects ?? []) {
     if (effect.rule !== "cant-be-blocked-by" || !(effect.affects?.ids ?? []).includes(attackerId)) continue;
     if (matchesSelector({what: "permanent", ...(effect.by ?? {})}, state, blockerId, {controller: effect.sourceController})) return true;
+  }
+  return false;
+}
+
+/**
+ * Whether a static ability says this blocker can block only attackers of a kind, and this attacker is not one (CR 509.1b,
+ * "can-block-only"): "This token can block only creatures with flying" (Pinnacle Emissary's Drones) -- the blocker one the
+ * ability affects, the attacker one its `attackers` does not describe. "You" is the ability's controller.
+ */
+export function blocksOnlyOthers(state, blockerId, attackerId) {
+  const held = staticAbilities(state);
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of held(holderId)) {
+      if (ability.kind !== "static" || ability.rule !== "can-block-only") continue;
+      const context = {controller: holder.controller, source: holderId};
+      if (matchesSelector(ability.affects, state, blockerId, context) && !matchesSelector({what: "permanent", ...(ability.attackers ?? {})}, state, attackerId, context)) return true;
+    }
   }
   return false;
 }
@@ -876,12 +1153,14 @@ export function equipCostReduction(state, player, targets) {
   return total;
 }
 
-/** HOW MUCH MORE A SPELL COSTS (CR 601.2f): every `spells-cost-more` static on the battlefield whose spell selector fits
- *  this card, cast by whom it says -- anyone, unless it says you or an opponent. Generic mana, summed. */
-export function costIncrease(state, player, cardId) {
+/* Every `spells-cost-more` static on the battlefield that makes this card cost more as this player casts it: its caster
+   (anyone, unless it says you or an opponent), its spell selector, its condition -- and, for "spells your opponents cast that
+   target this creature" (Terror of the Peaks, wave 4b; CR 601.2c, then 601.2f), `targeting`, a selector one of the spell's
+   chosen targets must fit, read from the static's side (a counted target's choices among them). With no targets known yet,
+   none fits it. */
+function increasesOn(state, player, cardId, targets) {
   const object = state.objects[cardId];
-  if (!object) return 0;
-  let total = 0;
+  const found = [];
   const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
@@ -891,11 +1170,42 @@ export function costIncrease(state, player, cardId) {
       const caster = ability.caster ?? "any";
       if (caster === "you" && player !== holder.controller) continue;
       if (caster === "opponent" && player === holder.controller) continue;
-      if (!matchesSelector({...(ability.affects ?? {}), what: "card", zone: object.zone}, state, cardId, {controller: holder.controller, source: holderId})) continue;
+      const context = {controller: holder.controller, source: holderId};
+      if (!matchesSelector({...(ability.affects ?? {}), what: "card", zone: object.zone}, state, cardId, context)) continue;
       /* "During your turn" (Tithe Taker): only while its condition holds, asked at each cast. */
-      if (!conditionHolds(state, ability.condition, {controller: holder.controller, source: holderId})) continue;
-      total += amountOf(state, ability.amount ?? 1, {controller: holder.controller, source: holderId});
+      if (!conditionHolds(state, ability.condition, context)) continue;
+      if (ability.targeting !== undefined && !targetsFit(state, ability.targeting, (targets ?? []).flat(), context)) continue;
+      found.push({ability, holderId, holder});
     }
+  }
+  return found;
+}
+
+/** Whether a cost a static on the battlefield adds reads the spell's chosen targets (`targeting`): the caster's ways to
+ *  choose them are then each costed (rules/actions.mjs, aimsFor). */
+export const costsReadTargets = (state) => {
+  const held = staticAbilities(state);
+  return state.zones.battlefield.some((holderId) => held(holderId).some((a) => a.kind === "static" && a.rule === "spells-cost-more" && a.targeting !== undefined));
+};
+
+/** HOW MUCH LIFE MORE A SPELL COSTS (CR 601.2f, 119.4): "spells your opponents cast that target this creature cost an
+ *  additional 3 life to cast" (Terror of the Peaks, wave 4b) -- each `spells-cost-more` static with `life` that applies
+ *  (increasesOn), summed. A cast without paying its mana cost still pays it (CR 118.9d). */
+export function lifeIncrease(state, player, cardId, targets = null) {
+  /* One in mana adds no life (`life` absent). */
+  return increasesOn(state, player, cardId, targets).reduce((n, {ability, holderId, holder}) => n + amountOf(state, ability.life ?? 0, {controller: holder.controller, source: holderId}), 0);
+}
+
+/** HOW MUCH MORE A SPELL COSTS (CR 601.2f): every `spells-cost-more` static on the battlefield whose spell selector fits
+ *  this card, cast by whom it says -- anyone, unless it says you or an opponent (increasesOn). Generic mana, summed. */
+export function costIncrease(state, player, cardId, targets = null) {
+  const object = state.objects[cardId];
+  if (!object) return 0;
+  let total = 0;
+  for (const {ability, holderId, holder} of increasesOn(state, player, cardId, targets)) {
+    /* One in life is paid in life (lifeIncrease, below), not in mana. */
+    if (ability.life !== undefined) continue;
+    total += amountOf(state, ability.amount ?? 1, {controller: holder.controller, source: holderId});
   }
   /* And for a while (effects/permanents.mjs, effectUntil): "noncreature spells your opponents cast cost {2} more to cast
      until your next turn" (Elspeth Conquers Death, batch 79) -- the caster and the amount in what it applies, whose
@@ -967,7 +1277,9 @@ export function playerRuleChanged(state, rule, player) {
       if (compileSelector(ability.affects)(state, player, {controller: holder.controller, source: holderId})) return true;
     }
   }
-  return false;
+  /* Or an effect a spell made, for the players it names, for as long as it lasts: "you have no maximum hand size for the
+     rest of the game" (Wisdom of Ages; CR 402.2, 611.2a; effects/permanents.mjs, effectUntil's `players`). */
+  return (state.effects ?? []).some((effect) => effect.rule === rule && (effect.players ?? []).includes(player));
 }
 
 /** Whether any static ability on the battlefield -- or an effect with a duration ("can't be blocked this turn") -- changes `rule` for this object. */

@@ -50,10 +50,10 @@ import {lastKnown, toughnessOf, typesOf, keywordsOf, controllerOf, deriving, sta
 import {matchesSelector} from "../script/filter.mjs";
 import {commanderToAsk, resolveCommanderChoice, recordCommanderDamage} from "./commander.mjs";
 import {sacrificeOne, moveOne, returnExiledUntil, leavingRef, destructionReplaced, destructionAsks} from "../script/effects/zones.mjs";
-import {changeLife} from "../script/effects/resources.mjs";
+import {changeLife, crown} from "../script/effects/resources.mjs";
 import {enduringStories, citysBlessings} from "../keywords/designations.mjs";
 import {preparedCopyStays} from "../script/effects/attributes.mjs";
-import {endControlChange, nextRecord, endCounterDurations} from "../script/effects/permanents.mjs";
+import {endControlChange, nextRecord, endCounterDurations, controlByAuras} from "../script/effects/permanents.mjs";
 import {protectedFrom} from "./protection.mjs";
 import {answerForDeparted, goOnWithout} from "./turn.mjs";
 
@@ -172,6 +172,24 @@ export function leaveGame(state, player, reason, events) {
   removePlayerFromBoard(state, player.id, events);
 }
 
+/**
+ * THE MONARCH HAS LEFT THE GAME (CR 725.4): the active player becomes the monarch -- or, the active player leaving too or
+ * gone already (their turn goes on without them, CR 800.4j), the next player in turn order still in the game. With nobody
+ * left, the game goes on with no monarch. Asked once every player leaving at that moment has left -- the losses one check
+ * finds together (checkStateBasedActions), the players an effect makes lose at once (effects/resources.mjs, loseGame) -- so
+ * that "the active player is leaving the game" is known of them all.
+ *
+ * @returns {Array} the events, with the new monarch's when there is one
+ */
+export function monarchLeft(state, events = []) {
+  if (!Number.isInteger(state.monarch) || !state.players[state.monarch].lost) return events;
+  const seats = state.players.length;
+  const heir = Array.from({length: seats}, (_, step) => (state.activePlayer + step) % seats).find((id) => !state.players[id].lost);
+  if (heir === undefined) delete state.monarch;
+  else crown(state, heir, events);
+  return events;
+}
+
 /* A spell or ability that was resolving has left the stack with the player who left (800.4a): nothing is left of it to
    resolve, and a question it was asking anyone is withdrawn. */
 function cutShort(state) {
@@ -220,6 +238,9 @@ export function checkStateBasedActions(state) {
      checked, before the actions, which never add a permanent (keywords/designations.mjs). Ascend (CR 702.131b) the same
      way: ten permanents, and the city's blessing for the rest of the game. Both in one question, every object derived once. */
   const events = deriving(state, () => [...enduringStories(state), ...citysBlessings(state)]);
+  /* "You control enchanted permanent" (Tractor Beam; CR 613.1b): an Aura's control change made or ended as it now applies,
+     before any action reads who controls what (effects/permanents.mjs). */
+  controlByAuras(state, events);
   /* A creature dying can put a player to zero, and that player leaving can empty a zone. Ten passes
      is far more than any real position needs; reaching it would mean two actions were undoing each
      other, which is a bug worth an exception rather than an infinite loop. */
@@ -248,19 +269,6 @@ export function checkStateBasedActions(state) {
       }
     }
 
-    /* CR 704.5q: a permanent with both +1/+1 and -1/-1 counters loses N of each, N the smaller. */
-    for (const id of state.zones.battlefield) {
-      const counters = state.objects[id].counters ?? {};
-      const n = Math.min(counters["+1/+1"] ?? 0, counters["-1/-1"] ?? 0);
-      if (n <= 0) continue;
-      for (const kind of ["+1/+1", "-1/-1"]) {
-        const before = counters[kind];
-        counters[kind] = before - n;
-        events.push(event("GameEventCardCounters", state, {card: cardRef(state, id), type: kind, oldValue: before, newValue: counters[kind]}));
-      }
-      acted = true;
-    }
-
     /* CR 704.5m: an Aura attached to nothing, or to a permanent its Enchant could not enchant, is put into its owner's
        graveyard -- through the replacements and with its last known information, so "when this Aura is put into a
        graveyard" still sees it. Unlike an Equipment, it does not stay. */
@@ -268,7 +276,13 @@ export function checkStateBasedActions(state) {
       const object = state.objects[id];
       if (!object.enchant) continue;
       const host = object.attachedTo === null || object.attachedTo === undefined ? null : state.objects[object.attachedTo];
-      if (host && host.zone === "battlefield" && host.id !== id && matchesSelector(object.enchant, state, object.attachedTo, {controller: object.controller, source: id})) continue;
+      /* "Enchant creature card in a graveyard" (Animate Dead; CR 303.4a): a card in the zone its Enchant names, still that card
+         (CR 400.7) -- and, once "it loses 'enchant creature card in a graveyard' and gains 'enchant creature put onto the
+         battlefield with this Aura'" (`enchantOnly`, effects/permanents.mjs attach), that one creature alone, while it is one. */
+      const inZone = host && (host.zone === "battlefield" || (object.enchant.what === "card" && host.zone === object.enchant.zone));
+      const legal = object.enchantOnly !== undefined ? Boolean(host) && host.zone === "battlefield" && host.id === object.enchantOnly && typesOf(state, host.id).includes("Creature")
+        : inZone && host.id !== id && matchesSelector(object.enchant, state, object.attachedTo, {controller: object.controller, source: id});
+      if (legal) continue;
       auraToGraveyard(state, id, events);
       acted = true;
     }
@@ -298,7 +312,9 @@ export function checkStateBasedActions(state) {
       const host = state.objects[object.attachedTo];
       const equipment = (object.subtypes ?? []).includes("Equipment");
       const attachable = !typesOf(state, id).includes("Creature") && (Boolean(object.enchant) || equipment);
-      if (host && host.zone === "battlefield" && attachable && (!equipment || typesOf(state, object.attachedTo).includes("Creature"))
+      /* An Aura enchanting a card in a graveyard (Animate Dead) stays attached to it, as the check above found legal. */
+      const there = host && (host.zone === "battlefield" || (object.enchant?.what === "card" && host.zone === object.enchant.zone));
+      if (there && attachable && (!equipment || typesOf(state, object.attachedTo).includes("Creature"))
         /* Nor enchanted or equipped by one it has protection from (CR 702.16c-d): unattached here, an Aura then put into
            its owner's graveyard by the check above, as an Aura attached to nothing (CR 704.5m). */
         && !protectedFrom(state, {card: object.attachedTo}, id)) continue;
@@ -412,6 +428,22 @@ export function checkStateBasedActions(state) {
       acted = true;
     }
 
+    /* CR 704.5q: a permanent with both +1/+1 and -1/-1 counters loses N of each, N the smaller -- after the checks above in
+       the same pass, so that it happens at once with them (CR 704.3): a creature those counters bring to 0 toughness dies
+       with both kinds on it, and "the number of +1/+1 counters on this creature" is the number it had (Chasm Skulker's
+       ruling). Removing them in pairs changes no power or toughness, so nothing the checks above read is changed by it. */
+    for (const id of state.zones.battlefield) {
+      const counters = state.objects[id].counters ?? {};
+      const n = Math.min(counters["+1/+1"] ?? 0, counters["-1/-1"] ?? 0);
+      if (n <= 0) continue;
+      for (const kind of ["+1/+1", "-1/-1"]) {
+        const before = counters[kind];
+        counters[kind] = before - n;
+        events.push(event("GameEventCardCounters", state, {card: cardRef(state, id), type: kind, oldValue: before, newValue: counters[kind]}));
+      }
+      acted = true;
+    }
+
     /* CR 714.4: a Saga whose lore counters have reached its final chapter, and that is the source of no chapter ability
        that has triggered and not yet left the stack, is sacrificed. */
     for (const id of [...state.zones.battlefield]) {
@@ -432,6 +464,8 @@ export function checkStateBasedActions(state) {
       leaveGame(state, player, reason, events);
       acted = true;
     }
+    /* The monarch among those who left: the designation passes on as they leave (CR 725.4). */
+    monarchLeft(state, events);
 
     if (!acted) {
       /* CR 903.9a: a commander put into a graveyard or exile since the last check -- its OWNER may put it into the

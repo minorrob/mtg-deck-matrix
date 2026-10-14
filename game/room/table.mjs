@@ -147,9 +147,12 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
   const needHost = (email) => {if (!isHost(email)) throw new TableError(403, "Only the host can do that.");};
   const needSeat = (email) => {const s = seatOf(email); if (s === null) throw new TableError(403, "You do not have a seat at this table."); return s;};
   /* THE TABLE'S RULES (Rob, 2026-09-30): the starting life (CR 903.7's 40 unless the host says otherwise) and a bracket
-     limit (none unless the host sets one). */
+     limit (none unless the host sets one). And whether the player who goes first in a two-player game skips their first
+     draw step (CR 103.8a): on unless the host turns it off, a house rule (Rob, 2026-10-12: "this can be toggled off in game
+     setup by the lobby owner"). A game of three or more has no such skip (103.8c), whatever this says. */
   const rulesOf = () => {const r = (record.lifecycle && record.lifecycle.settings) || {};
-    return {startingLife: Number.isInteger(r.startingLife) ? r.startingLife : 40, bracketLimit: Number.isInteger(r.bracketLimit) ? r.bracketLimit : null};};
+    return {startingLife: Number.isInteger(r.startingLife) ? r.startingLife : 40, bracketLimit: Number.isInteger(r.bracketLimit) ? r.bracketLimit : null,
+      skipFirstDraw: r.skipFirstDraw !== false};};
   const seatNames = (list) => list.length === 1 ? list[0] : `${list.slice(0, -1).join(", ")} and ${list.at(-1)}`;
 
   /* A seat leaves the game (by choice, or when their time ran out), and the table follows the room. */
@@ -257,8 +260,9 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
       await save();
       return api.view(email);
     },
-    /** The host's Table rules (Rob, 2026-09-30): the starting life and the bracket limit, and not once any seat is ready.
-        A change that would break the table is refused, saying what is wrong and what to do instead (AGENTS.md). */
+    /** The host's Table rules (Rob, 2026-09-30): the starting life, the bracket limit and the first draw's skip, and not
+        once any seat is ready. A change that would break the table is refused, saying what is wrong and what to do
+        instead (AGENTS.md). */
     async rules(email, body, now) {
       await load(); needHost(email);
       const t = record.lifecycle;
@@ -275,8 +279,10 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
         if (over.length) {const top = Math.max(...over.map((x) => x.bracket));
           throw new TableError(409, `${seatNames(over.map((x) => `${x.name}'s deck (bracket ${x.bracket})`))} ${over.length === 1 ? "is" : "are"} above ${limit}. Change ${over.length === 1 ? "that deck" : "those decks"} first, or keep the limit at ${top} or higher.`);}
       }
+      const skip = b.skipFirstDraw === undefined ? now_.skipFirstDraw : b.skipFirstDraw;
+      if (typeof skip !== "boolean") throw new TableError(400, "Whether the player who goes first skips their first draw is on or off: true or false.");
       void now;
-      record.lifecycle = {...t, settings: {...(t.settings || {}), startingLife: life, bracketLimit: limit}, revision: t.revision + 1};
+      record.lifecycle = {...t, settings: {...(t.settings || {}), startingLife: life, bracketLimit: limit, skipFirstDraw: skip}, revision: t.revision + 1};
       await save();
       return api.view(email);
     },
@@ -327,7 +333,7 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
         /* An AI seat's setting; a table made before settings were, normal. */
         ...(s.kind === "ai" ? {level: levelOf(s)} : {}),
         commander: record.decks[s.seatId].commander, cards: record.decks[s.seatId].cards,
-      })), startingLife: rulesOf().startingLife,
+      })), startingLife: rulesOf().startingLife, ...(rulesOf().skipFirstDraw === false ? {skipFirstDraw: false} : {}),
       /* The table's beats (game/room/room.mjs): a step with nothing to do passes itself (item 11); once every person is
          out, the game ends there (Rob, 2026-10-06); a run of identical triggers may be let resolve with one decision (Rob,
          2026-10-09: "resolve all"); and a person's cast passes for them (Rob, 2026-10-09: "I don't want to have to click a

@@ -52,7 +52,7 @@
 import {compileSelector, selectMatching, creatureTypesOf, shareCreatureType} from "./filter.mjs";
 import {powerOf, toughnessOf, controllerOf} from "../rules/layers.mjs";
 import {namesChosen, withChosen, namesChosenColor, withChosenColor} from "./chosen.mjs";
-import {valueCostOf, shownName} from "../state/index.mjs";
+import {valueCostOf, shownName, xOnStack} from "../state/index.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {amountOf, AMOUNT_PARAMS} from "./amount.mjs";
 import {conditionHolds} from "./condition.mjs";
@@ -77,8 +77,12 @@ export const TARGET_CHOICES_MAX = 4096;
  *                               than one of each opponent's, and as many as there are opponents. Each one chosen keeps the
  *                               player it was chosen for (`forPlayer`), and is illegal as the ability resolves once that player
  *                               no longer controls it (CR 608.2b), whoever controls it then
+ *   `ownedByControllerOf: n`   "target artifact a player controls and target artifact card in that player's graveyard" (Goblin
+ *                               Welder): a card whose owner -- whose graveyard it is in (CR 400.3) -- controls the permanent
+ *                               chosen for target n, as it is chosen and again as the ability resolves (CR 608.2b): that
+ *                               permanent gone, or another player's now, and this target is illegal too (relatedLegal)
  * None is part of what a target may be (the selector), so each is set aside beside `count`. */
-export const SPEC_KEYS = Object.freeze(["count", "distinctFrom", "onlyIf", "differentControllers", "share", "forEach"]);
+export const SPEC_KEYS = Object.freeze(["count", "distinctFrom", "onlyIf", "differentControllers", "share", "forEach", "ownedByControllerOf"]);
 /** What a counted target's choices may share (`share`). */
 export const SHARES = Object.freeze(["graveyard", "creature type"]);
 const selectorOf = (spec) => Object.fromEntries(Object.entries(spec && typeof spec === "object" ? spec : {}).filter(([key]) => !SPEC_KEYS.includes(key)));
@@ -128,6 +132,14 @@ const kindOf = (selector) => ((selector.what ?? "permanent") === "player" ? "pla
    stack entry holds them so far (`context.chosenTargets`, or the way being built). */
 const otherThan = (spec, chosen) => (Array.isArray(spec?.distinctFrom) ? spec.distinctFrom.flatMap((n) => [].concat((chosen ?? [])[n] ?? [])).filter((t) => t && (t.kind === "object" || t.kind === "player")) : []);
 const sameTarget = (a, b) => a.kind === b.kind && a.id === b.id;
+/* "In that player's graveyard" (`ownedByControllerOf`): the candidate a card owned by whoever controls the permanent chosen for
+   that target -- with none chosen there yet, or that one gone, no candidate is. Any other spec, every candidate. */
+function relatedLegal(state, spec, chosen, candidate) {
+  if (!Number.isInteger(spec?.ownedByControllerOf)) return true;
+  const first = (chosen ?? [])[spec.ownedByControllerOf];
+  return Boolean(first) && !Array.isArray(first) && first.kind === "object" && state.objects[first.id]?.zone === "battlefield"
+    && candidate?.kind === "object" && state.objects[candidate.id]?.owner === controllerOf(state, first.id);
+}
 
 /** Every legal choice for one target, as `{kind, id}`: in the selectors' order, each in its stable order. */
 export function targetCandidates(state, spec, context) {
@@ -136,7 +148,10 @@ export function targetCandidates(state, spec, context) {
   for (const selector of targetAlternatives(spec)) {
     const kind = kindOf(selector);
     for (const id of selectMatching(state, selector, context)) {
-      if (!found.some((c) => c.kind === kind && c.id === id) && !others.some((o) => sameTarget(o, {kind, id}))) found.push({kind, id});
+      if (!found.some((c) => c.kind === kind && c.id === id) && !others.some((o) => sameTarget(o, {kind, id}))
+        /* Of the targets chosen so far, when they are known (an offer's, a stack entry's); every way's own, otherwise
+           (targetChoices, below). */
+        && (!Number.isInteger(spec?.ownedByControllerOf) || !Array.isArray(context?.chosenTargets) || relatedLegal(state, spec, context.chosenTargets, {kind, id}))) found.push({kind, id});
     }
   }
   return found;
@@ -215,8 +230,10 @@ export function targetChoices(state, specs, context) {
       continue;
     }
     const next = [];
-    /* "A second target creature" (`distinctFrom`): never the one chosen for that other target. */
-    for (const chosen of choices) for (const candidate of candidates) if (!otherThan(spec, chosen).some((o) => sameTarget(o, candidate))) next.push([...chosen, candidate]);
+    /* "A second target creature" (`distinctFrom`): never the one chosen for that other target. "In that player's graveyard"
+       (`ownedByControllerOf`): only a card of the player who controls the permanent that way chose. */
+    for (const chosen of choices) for (const candidate of candidates)
+      if (!otherThan(spec, chosen).some((o) => sameTarget(o, candidate)) && relatedLegal(state, spec, chosen, candidate)) next.push([...chosen, candidate]);
     choices = next;
     if (choices.length > TARGET_CHOICES_MAX)
       throw new Error(`More than ${TARGET_CHOICES_MAX} ways to choose these targets; a card that needs this many is refused at prepare`);
@@ -313,6 +330,10 @@ export function recheckTargets(state, specs, chosen, context) {
     legal += 1;
     return was;
   });
+  /* "In that player's graveyard" (`ownedByControllerOf`, CR 608.2b): the permanent it is about gone or illegal, or another
+     player's now, and this card is no longer a legal target either. */
+  for (const [index, spec] of (specs ?? []).entries())
+    if (Number.isInteger(spec?.ownedByControllerOf) && targets[index] && !relatedLegal(state, spec, targets, targets[index])) { targets[index] = null; legal -= 1; }
   return {targets, fizzles: had > 0 && legal === 0};
 }
 
@@ -334,18 +355,31 @@ export function factsOf(state, targets) {
     return {powerOf: o.zone === "battlefield" ? powerOf(state, t.id) : (o.power ?? 0),
       /* "Its controller gains life equal to its toughness" (Condemn): as it was, before the effect moved it. */
       toughnessOf: o.zone === "battlefield" ? toughnessOf(state, t.id) : (o.toughness ?? 0),
-      /* A transformed permanent's is its front face's (CR 202.3b). */
-      manaValueOf: valueCostOf(o) ? manaValue(parseManaCost(valueCostOf(o))) : 0,
+      /* A transformed permanent's is its front face's (CR 202.3b). A spell's on the stack counts X as the value chosen for it
+         (CR 202.3e): "add an amount of {C} equal to that spell's mana value" (Mana Drain), "lose life equal to that spell's
+         mana value" (Imp's Mischief) -- read as the resolution begins, before the spell is countered or moved. */
+      manaValueOf: valueCostOf(o) ? manaValue(parseManaCost(valueCostOf(o)), {x: xOnStack(state, t.id)}) : 0,
       controllerOf: o.zone === "battlefield" ? controllerOf(state, t.id) : o.controller,
       /* A face-down permanent has no name (CR 708.2; Reflector Mage's ruling): a lock by its name locks nothing. */
       ownerOf: o.owner, nameOf: o.faceDown === true ? null : o.card};
   });
 }
 /* A fact's value, or undefined when its target became illegal. */
-function factValue(value, context) {
+/* A target's power or toughness while it is still the same object -- in the zone it was expected to be in, never moved (CR
+   400.7) -- is its current one (CR 608.2h): "Target creature you control gets +1/+0 until end of turn. It deals damage
+   equal to its power" (Assert Perfection, Burrog Barrage) reads the power the pump left. Gone from there -- Swords to
+   Plowshares' exiled creature -- it is the fact read as the resolution began, its last known information. `state` given by
+   the resolution's own binding (script/resolution.mjs). A counted target's one object ("up to one target creature") is read
+   as the fact, as before. */
+const FROM_NOW = ["powerOf", "toughnessOf"];
+function factValue(value, context, state = null) {
   const key = factRef(value);
   if (!key) return undefined;
-  return (context.facts ?? [])[value[key].target]?.[key];
+  const fact = (context.facts ?? [])[value[key].target]?.[key];
+  if (fact === undefined || state === null || !FROM_NOW.includes(key)) return fact;
+  const id = (context.targets ?? [])[value[key].target]?.id;
+  if (!state.objects[id]) return fact;
+  return key === "powerOf" ? powerOf(state, id) : toughnessOf(state, id);
 }
 
 function objectsOf(value, context) {
@@ -375,12 +409,23 @@ function playersOf(value, context, state = null) {
   /* "That attacking player draws a card" (Breena, the Demagogue): the player whose attack the trigger is about (rules/trigger.mjs,
      `attacker`), as Combat Calligrapher's token's controller is. */
   if (value === "attacking player") return Number.isInteger(context.about?.attacker) ? [context.about.attacker] : [];
+  /* "The chosen player" of a gift (CR 702.174d-i): the opponent it was promised to as the spell was cast -- the spell's own
+     (rules/stack.mjs), or the permanent's whose gift trigger this is. None promised, nobody -- nor one who has left the game
+     (CR 800.4a). */
+  if (value === "the chosen player") {
+    const gift = context.gift ?? (state && context.source !== null && context.source !== undefined ? state.objects[context.source]?.gift : undefined);
+    return Number.isInteger(gift) && !(state?.players[gift]?.lost) ? [gift] : [];
+  }
   /* "It deals 1 damage to its controller" (Vengeful Ancestor, batch 75): the controller of what the trigger is about -- the
      attacking creature -- now, while it is on the battlefield; gone, the one it last had (CR 608.2h), as it attacked. */
   if (value === "that card's controller") {
     const card = context.about?.card;
     if (state && card !== undefined && card !== null && state.objects[card]?.zone === "battlefield") return [controllerOf(state, card)];
-    return context.about?.controller !== undefined && context.about.controller !== null ? [context.about.controller] : [];
+    if (context.about?.controller !== undefined && context.about.controller !== null) return [context.about.controller];
+    /* "Whenever a creature an opponent controls dies, that player loses 2 life" (Massacre Wurm, wave 4b): a permanent that has
+       left the battlefield, by the controller it had as it last existed there (CR 603.10a, 608.2h). */
+    const was = context.about?.lastKnown?.controller;
+    return Number.isInteger(was) ? [was] : [];
   }
   if (!isRef(value)) return value;
   const chosen = (context.targets ?? [])[value.target];
@@ -403,7 +448,7 @@ export function bindEffect(effect, context, state = null) {
   for (const [key, value] of Object.entries(bound)) {
     /* Who chooses by `ownerOf` is the owner as the object now is (below), not a fact read as the resolution began. */
     if (!factRef(value) || (key === "chooser" && factRef(value) === "ownerOf")) continue;
-    const fact = factValue(value, context);
+    const fact = factValue(value, context, state);
     if (key === "who") bound.who = fact === undefined ? [] : [fact];
     else if (fact === undefined) delete bound[key];
     else bound[key] = fact;
@@ -459,7 +504,7 @@ export function bindEffect(effect, context, state = null) {
      creature's controller creates a 1/1 Myr" (Genesis Chamber): the controller of what the trigger is about. "Each opponent
      creates a 1/1 white Human creature token" (Slaughter Specialist; CR 111.2), "each opponent may create X ... tokens"
      (Tempt with Vengeance): "that player", the one a repetition is about (effects/index.mjs, repeatFor). */
-  if (isRef(bound.controller) || bound.controller === "that card's controller" || bound.controller === "that player") { const [player] = playersOf(bound.controller, context, state); bound.controller = player ?? -1; }
+  if (isRef(bound.controller) || ["that card's controller", "that player", "the chosen player"].includes(bound.controller)) { const [player] = playersOf(bound.controller, context, state); bound.controller = player ?? -1; }
   /* "That attacking player creates a ... token" (Combat Calligrapher): the player whose attack the trigger is about. */
   if (bound.controller === "attacking player") bound.controller = Number.isInteger(context.about?.attacker) ? context.about.attacker : -1;
   /* "At the beginning of each player's upkeep, that player gains control of Alexios": the player the trigger is about. */
@@ -468,8 +513,9 @@ export function bindEffect(effect, context, state = null) {
     if (player === undefined) delete bound.toPlayer; else bound.toPlayer = player;
   }
   /* Who makes a choice that is not the controller's ("its controller may draw up to two cards"): one player. */
-  if (isRef(bound.chooser) || bound.chooser === "that player") {
-    const [player] = playersOf(bound.chooser, context);
+  /* "Its controller may draw a card" (Selvala, Heart of the Wilds, wave 4b): the controller of what the trigger is about. */
+  if (isRef(bound.chooser) || bound.chooser === "that player" || bound.chooser === "that card's controller") {
+    const [player] = playersOf(bound.chooser, context, state);
     if (player === undefined) delete bound.chooser; else bound.chooser = player;
   }
   /* "The owner of target nonland permanent puts it into their library second from the top or on the bottom" (Temporal
@@ -543,11 +589,16 @@ export function modalScript(modal, modes) {
     if (isRef(value)) return {...value, target: value.target + by};
     return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, shift(v, by)]));
   };
+  /* A MODE THAT MAY BE CHOSEN MORE THAN ONCE (`sameMode`, Moment of Reckoning; CR 700.2d): each time chosen, its own instance of
+     "target" -- the same object or player as another's, or not -- so each target is a counted one of one, picked in turn once
+     the offer is taken (rules/actions.mjs): a spell aimed four times at a crowded board is a handful of offers, not every
+     product of its targets. */
+  const each = (spec) => (modal.sameMode === true && spec.count === undefined ? {...spec, count: {min: 1, max: 1}} : spec);
   for (const index of modes ?? []) {
     const mode = modal.modes[index];
     if (!mode) continue;
     effects.push(...shift(structuredClone(mode.effects ?? []), targets.length));
-    targets.push(...structuredClone(mode.targets ?? []));
+    targets.push(...structuredClone(mode.targets ?? []).map(each));
   }
   return {targets, effects};
 }

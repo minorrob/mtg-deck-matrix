@@ -127,6 +127,10 @@
   --mat-scrim:rgb(0 0 0 / .8);--tray:color-mix(in srgb,var(--table-ink) 84%,transparent);--focus-halo:var(--table-ink);--focus-ring:color-mix(in srgb,var(--color-aether) 45%,white);
   --card-face:#ece5d6;--card-face-edge:#cfc5b0;--card-back:#3a2f22;--card-back-edge:#2c231a;
   --vital-danger:#b3261e;--on-accent:#1a1611;
+  /* THE CALLOUTS' LIGHTS (crankmagic-board.js, callouts; 2026-10-12): a callout is a light over the table, not a surface
+     of the app, so its five tones are the same in every theme -- red for harm, blue for an answer, green for growth, gold
+     for value, violet for what fades -- as the mat's ink is. */
+  --callout-harm:#ff5c4d;--callout-answer:#5fd3ff;--callout-growth:#6ff06a;--callout-value:#ffd34d;--callout-fade:#c99bff;
   /* THE APP'S OWN MATS (M5, Choose mat): drawn in CSS from these, so no mat is anyone else's art. Felt is above. */
   --mat-forge:#3b2113;--mat-forge-edge:#120a06;--mat-forge-glow:#d9772f;
   --mat-cavern:#30363c;--mat-cavern-edge:#0f1215;

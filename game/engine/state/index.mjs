@@ -40,6 +40,16 @@ export function recordDraw(state, player) {
   who.drawnThisTurn = (who.drawnThisTurn ?? 0) + 1;
   return who.drawnThisTurn;
 }
+/** "Except the first one they draw in each of their draw steps" (Orcish Bowmasters, wave 4b; CR 504.1): which card this is
+ *  of those the player has drawn in their own draw step -- 1 for the first, whether the step's draw or an effect's -- or null
+ *  for a draw anywhere else. Counted on the player against the turn, a turn having one draw step. */
+export function recordDrawStepDraw(state, player) {
+  if (state.phase !== "DRAW" || state.activePlayer !== player) return null;
+  const who = state.players[player];
+  if (who.drawStepDraws?.turn !== state.turn) who.drawStepDraws = {turn: state.turn, count: 0};
+  who.drawStepDraws.count += 1;
+  return who.drawStepDraws.count;
+}
 
 /* MORBID'S RECORD: a creature DIES when it is put into a graveyard from the battlefield (CR 700.4) -- counted as it lands
    there for the player who controlled it as it last existed on the battlefield (`was`, rules/layers.mjs lastKnown: an
@@ -48,6 +58,11 @@ export function recordDraw(state, player) {
    departure from the battlefield that can end in a graveyard calls it (effects/zones.mjs moveOne; rules/sba.mjs), as it
    happens, so an effect later in the same resolution sees it; cleared as a turn begins (rules/turn.mjs). */
 export function recordDeath(state, was, zone) {
+  /* VOID'S RECORD (an ability word, CR 207.2c; Plasma Bolt, Roving Actuator, Temporal Intervention): "if a nonland permanent
+     left the battlefield this turn" -- any player's, a token too, wherever it went. Every departure from the battlefield
+     passes here with its last known information (`was`; a land animated or not is a land, CR 603.10a), so it is counted
+     as it leaves, game-wide; cleared as a turn begins (rules/turn.mjs). Read by the condition `void` (script/condition.mjs). */
+  if (was && !(was.types ?? []).includes("Land")) state.nonlandLeftThisTurn = (state.nonlandLeftThisTurn ?? 0) + 1;
   if (zone !== "graveyard" || !(was?.types ?? []).includes("Creature")) return;
   state.players[was.controller].diedThisTurn = (state.players[was.controller].diedThisTurn ?? 0) + 1;
 }
@@ -63,7 +78,7 @@ export function recordDiscard(state, player) {
 /**
  * A new game state.
  *
- * @param {{matchId: string, seed: string, players: Array<{name: string}>, startingLife?: number, drawBeat?: boolean}} pod
+ * @param {{matchId: string, seed: string, players: Array<{name: string}>, startingLife?: number, drawBeat?: boolean, skipFirstDraw?: boolean}} pod
  */
 export function createState(pod) {
   const seats = pod?.players ?? [];
@@ -99,6 +114,9 @@ export function createState(pod) {
        holds the draw step's draw until its player says Draw a card. Only a pod that asks carries the key, so every
        game made before it hashes, checkpoints and replays exactly as it did. */
     ...(pod?.drawBeat === true ? {drawBeat: true} : {}),
+    /* A two-player game's starting player skips their first draw step (CR 103.8a; rules/turn.mjs) unless the table's host
+       turned that off, a house rule (game/room/table.mjs). Only a pod that turns it off carries the key, as above. */
+    ...(pod?.skipFirstDraw === false ? {skipFirstDraw: false} : {}),
     players: seats.map((seat, id) => ({
       id,
       name: seat.name ?? `Seat ${id + 1}`,
@@ -203,6 +221,12 @@ export function valueCostOf(object) {
   return object.manaCost ?? null;
 }
 
+/** The value of X in an object's mana value (CR 202.3e): the one chosen for it while it is a spell on the stack -- its stack
+    entry's, a copy's copied with it (CR 707.10) -- and zero anywhere else, where no stack entry is its. */
+export function xOnStack(state, id) {
+  return (state?.stack ?? []).find((e) => e.objectId === id)?.x ?? 0;
+}
+
 /* A FACE-DOWN PERMANENT'S CHARACTERISTICS (CR 708.2a, 701.40a): a nameless 2/2 creature, textless, without subtypes or a
    mana cost -- and so colorless, with no supertype -- its copiable values while it is face down. */
 const FACE_DOWN = Object.freeze({card: null, types: ["Creature"], subtypes: [], supertypes: [], manaCost: null, colors: [], power: 2, toughness: 2, keywords: [], abilities: []});
@@ -210,13 +234,17 @@ const FACE_DOWN = Object.freeze({card: null, types: ["Creature"], subtypes: [], 
    it is face down. Its ward is the triggered ability a printed "Ward {2}" compiles to (cards/index.mjs). */
 const FACE_DOWN_DISGUISED = Object.freeze({...FACE_DOWN, keywords: ["Ward"], abilities: [{id: "disguise-ward", kind: "triggered", text: "Ward {2}",
   trigger: {on: "GameEventBecomesTarget", who: "self", by: "opponent"}, effects: [{effect: "unlessPays", who: "that player", amount: 2, effects: [{effect: "counterSpell", stack: "that"}]}]}]});
+/* CAST WITH MORPH (CR 702.37a, 702.37c): a 2/2 face-down creature with no text -- the plain characteristics, no ward. Which
+   a card cast face down by its own keyword has is its keyword's (cards/index.mjs keeps morph and disguise as statics); the
+   `disguised` mark below is either's, "cast face down by its keyword", turned face up for that keyword's cost alone. */
+const castFaceDownAs = (card) => ((card?.abilities ?? []).some((a) => a?.kind === "static" && a.rule === "morph") ? FACE_DOWN : FACE_DOWN_DISGUISED);
 /* A CARD EXILED FACE DOWN (CR 406.3a): no characteristics at all -- no name, no types, no cost, nothing. */
 const FACE_DOWN_EXILED = Object.freeze({card: null, types: [], subtypes: [], supertypes: [], manaCost: null, colors: [], power: null, toughness: null, keywords: [], abilities: []});
 /* What the card is, kept beside a face-down permanent's own (`faceDownCard`): seen by its controller (CR 708.5,
    projection.mjs), and what it becomes as it is turned face up (708.8) or leaves the battlefield (708.9). */
 /* A permanent's copiable values (CR 707.2): what a copy effect writes onto it (effects/permanents.mjs, becomeCopy), its own
    kept beside them as `uncopied` -- only the values it has, so it is the same object woken from storage as in memory. */
-export const COPY_KEYS = Object.freeze(["card", "manaCost", "types", "subtypes", "supertypes", "colors", "keywords", "abilities", "power", "toughness", "spell", "enchant"]);
+export const COPY_KEYS = Object.freeze(["card", "manaCost", "types", "subtypes", "supertypes", "colors", "keywords", "abilities", "power", "toughness", "loyalty", "spell", "enchant"]);
 /* An adventurer card's two sets of characteristics (`adventurer`, CR 715.2) are the card's too: kept beside it face down, so a
    card exiled face down and played from there may still be cast as its Adventure (715.3), and one manifested leaves the
    battlefield as the card it is (708.9). */
@@ -263,7 +291,7 @@ const adventureSide = (adventurer, shown) => Object.fromEntries(FACE_KEYS.map((k
 export function shownFaceDown(object) {
   const faceDownCard = Object.fromEntries(CARD_KEYS.filter((key) => object[key] !== undefined).map((key) => [key, object[key]]));
   const rest = Object.fromEntries(Object.entries(object).filter(([key]) => !CARD_KEYS.includes(key)));
-  return {...rest, ...structuredClone(FACE_DOWN_DISGUISED), faceDown: true, disguised: true, faceDownCard};
+  return {...rest, ...structuredClone(castFaceDownAs(object)), faceDown: true, disguised: true, faceDownCard};
 }
 
 /** A card exiled face down, as it is turned face up to be played (CR 406.3a: "the card is turned face up just before the
@@ -450,6 +478,15 @@ export function usesThisTurn(state, id, key) {
   const used = state.objects[id]?.used;
   return used && used.turn === state.turn ? used.counts[key] ?? 0 : 0;
 }
+/* "TAP TARGET PERMANENT. ITS ACTIVATED ABILITIES CAN'T BE ACTIVATED THIS TURN" (Koma, Cosmos Serpent; CR 602.5): the
+   permanents an effect named as it resolved (effectUntil's `rule: "cant-activate-its-abilities"`, its targets), each of
+   whose activated abilities -- its mana abilities too (CR 605.1a) -- is offered to nobody while the effect lasts: not where
+   activations are offered, nor where a cost taps a source for mana (rules/actions.mjs, rules/mana.mjs). One that leaves
+   and returns is a new object (CR 400.7), and none of them. */
+export const ACTIVATIONS_FORBIDDEN = "cant-activate-its-abilities";
+export function activationsForbidden(state, id) {
+  return (state.effects ?? []).some((effect) => effect.rule === ACTIVATIONS_FORBIDDEN && (effect.affects?.ids ?? []).includes(id));
+}
 export function recordUse(state, id, key) {
   const object = state.objects[id];
   if (!object) return;
@@ -492,12 +529,12 @@ export function moveObject(state, id, zone, player = null, {faceDown = false, tr
      from: a double-faced card's front face (712.8a, 712.15). */
   if (faceDown && zone === "battlefield") {
     const faceDownCard = Object.fromEntries(CARD_KEYS.filter((key) => from[key] !== undefined).map((key) => [key, from[key]]));
-    return addObject(state, {...(disguised ? FACE_DOWN_DISGUISED : FACE_DOWN), ...kept, faceDown: true, ...(disguised ? {disguised: true} : {}), faceDownCard}, zone, player);
+    return addObject(state, {...(disguised ? castFaceDownAs(from) : FACE_DOWN), ...kept, faceDown: true, ...(disguised ? {disguised: true} : {}), faceDownCard}, zone, player);
   }
   /* CAST FACE DOWN (disguise, CR 702.168b): a face-down spell, with the characteristics it was cast with. */
   if (disguised && zone === "stack") {
     const faceDownCard = Object.fromEntries(CARD_KEYS.filter((key) => from[key] !== undefined).map((key) => [key, from[key]]));
-    return addObject(state, {...FACE_DOWN_DISGUISED, ...kept, faceDown: true, disguised: true, faceDownCard}, zone, player);
+    return addObject(state, {...castFaceDownAs(from), ...kept, faceDown: true, disguised: true, faceDownCard}, zone, player);
   }
   /* EXILED FACE DOWN (hideaway, CR 702.75a): a card with no characteristics there (406.3a) -- not even a face-down
      permanent's 2/2 -- what it is kept beside it, as onto the battlefield; as it leaves exile it moves as the card it is

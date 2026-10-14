@@ -47,7 +47,7 @@
 
 import {compileSelector, matchesSelector} from "../script/filter.mjs";
 import {amountOf, isCounted} from "../script/amount.mjs";
-import {chosenFor} from "../script/chosen.mjs";
+import {chosenFor, namesChosen} from "../script/chosen.mjs";
 import {protectedFrom} from "./protection.mjs";
 import {controllerOf, staticAbilities} from "./layers.mjs";
 
@@ -87,6 +87,27 @@ const FINALITY = Object.freeze({id: "finality-counter", kind: "replacement", wat
 const EXILE_IF_DIES = Object.freeze({id: "exile-if-dies", kind: "replacement", text: "If it would die this turn, exile it instead",
   watches: {event: "zone-change", from: "battlefield", to: "graveyard"}, change: {to: "exile"}});
 
+/* A REPLACEMENT EFFECT A RESOLUTION MADE ABOUT WHAT IT NAMED (CR 614.1, 611.2a): effectUntil's lasting effects, each read as
+   the replacement it is for the event about to happen, or null:
+   - `enters-with-counters` -- "when you next cast a creature spell this turn, that creature enters with an additional +1/+1
+     counter on it" (Summon: Fenrir's chapter II; CR 614.1c): the spell it was made about (`affects.ids`), entering as the
+     permanent it becomes (rules/stack.mjs asks about the spell's object), with `counters`;
+   - `damage-doubled` -- "until your next turn, if a source would deal damage to that player or a permanent that player
+     controls, it deals double that damage instead" (Lightning, Army of One's Stagger; CR 614.1a): the players it remembers
+     (`players`), and what each controls as the damage is dealt.
+   Each its own effect, by its timestamp: two of them double twice (CR 614.5). */
+function rememberedReplacement(state, effect, proposal) {
+  if (effect.rule === "enters-with-counters" && proposal.event === "enters" && (effect.affects?.ids ?? []).includes(proposal.objectId))
+    return {id: `enters-with-counters:${effect.timestamp}`, kind: "replacement", watches: {event: "enters"}, change: {entersWithCounters: {...effect.counters}}};
+  if (effect.rule === "damage-doubled" && proposal.event === "damage") {
+    const toPlayer = proposal.toPlayer !== undefined && proposal.toPlayer !== null ? proposal.toPlayer : null;
+    const whose = toPlayer !== null ? toPlayer : state.objects[proposal.toCard] ? controllerOf(state, proposal.toCard) : null;
+    if (whose !== null && (effect.players ?? []).includes(whose))
+      return {id: `damage-doubled:${effect.timestamp}`, kind: "replacement", name: effect.name, watches: {event: "damage"}, change: {multiply: 2}};
+  }
+  return null;
+}
+
 /** Where an effect has to be for it to act on the battlefield (CR 113.6). */
 const ACTING_ZONES = ["battlefield"];
 
@@ -116,6 +137,10 @@ function applies(state, ability, holder, proposal) {
     if (watches.filter) {
       const entering = state.objects[proposal.objectId];
       if (!entering) return false;
+      /* A token is made on the battlefield (CR 111.1, effects/permanents.mjs makeToken): read as the permanent it is there,
+         under the control it was made under -- never by its own abilities, which are for what enters after it (CR 614.12). */
+      if (entering.zone === "battlefield" && entering.token === true)
+        return entering.id !== holder.id && compileSelector({...chosenFor(watches.filter, holder), what: "permanent"})(state, proposal.objectId, {controller: holder.controller, source: holder.id});
       const what = entering.zone === "stack" ? "spell" : "card";
       if (!compileSelector({...chosenFor(watches.filter, holder), what, ...(what === "card" ? {zone: entering.zone} : {})})(state, proposal.objectId, {controller: holder.controller, source: holder.id})) return false;
     }
@@ -222,6 +247,12 @@ function applicable(state, proposal) {
   /* And "if it would die this turn, exile it instead" about it (EXILE_IF_DIES). */
   if ((state.effects ?? []).some((effect) => effect.rule === "exile-if-dies" && effect.affects.ids.includes(proposal.objectId))
     && applies(state, EXILE_IF_DIES, moving, proposal)) found.push({holderId: proposal.objectId, ability: EXILE_IF_DIES});
+  /* Replacement effects a resolving spell or ability made, each about what it named then -- remembered by the effect, not
+     held by any permanent -- each its own candidate (CR 614.5), ordered with the others as any is (CR 616.1). */
+  for (const effect of state.effects ?? []) {
+    const ability = rememberedReplacement(state, effect, proposal);
+    if (ability && !(proposal.appliedBy ?? []).includes(appliedKey(null, ability))) found.push({holderId: null, ability});
+  }
   /* A permanent's replacement effects come from its abilities as they are after layer 6 (CR 613.1f, 614.12): one that has
      lost all its abilities -- Infinite Coursework on a damage doubler, Day of Black Sun's creatures as they die -- has none. */
   const held = staticAbilities(state);
@@ -340,7 +371,13 @@ function applyOne(state, {holderId, ability, effect = null}, proposal, dry = fal
   /* "This creature enters prepared" (Goblin Glasswright; CR 614.1c, 722.3a): a designation it enters with, given as it
      arrives (effects/attributes.mjs, prepare) -- and with it the copy of its prepare spell in exile (722.3c). */
   if (ability.change?.entersPrepared === true) next.designations = [...new Set([...(next.designations ?? []), "prepared"])];
-  if (ability.change?.entersWithCounters) {
+  /* "As this artifact enters, choose a creature type. This artifact enters with a fellowship counter on it for each creature
+     you control of the chosen type" (Banner of Kinship; wave 4c): a count that reads the choice made as it enters, which
+     the engine asks once it is there (rules/entering.mjs) -- so counted with the answer and put on then, as it entered
+     with them (CR 614.12, 122.6), kept here beside the choice (`chosenCounters`, withChoiceCounters below). */
+  if (ability.change?.entersWithCounters && namesChosen(ability.change.entersWithCounters.count)) {
+    next.chosenCounters = [...(next.chosenCounters ?? []), structuredClone(ability.change.entersWithCounters)];
+  } else if (ability.change?.entersWithCounters) {
     const {counter, count} = ability.change.entersWithCounters;
     /* "With X +1/+1 counters on it" (CR 107.3m: the X paid to cast it), "a +1/+1 counter for each Zombie card in your
        graveyard", "X, where X is the greatest power among other creatures you control": counted as it is about to enter,
@@ -494,7 +531,18 @@ export function enteringModifications(state, {objectId, player, types, abilities
      rules/actions.mjs), if it would enter with any. */
   if (phyrexianLife > 0 && counters.loyalty > 0 && (state.objects[objectId]?.keywords ?? []).includes("Compleated"))
     counters.loyalty = Math.max(0, counters.loyalty - 2 * phyrexianLife);
-  return {tapped: proposal.tapped === true, counters, asks: proposal.asks ?? [], designations: proposal.designations ?? []};
+  return {tapped: proposal.tapped === true, counters, asks: withChoiceCounters(proposal), designations: proposal.designations ?? []};
+}
+
+/* THE COUNTERS A CHOICE COUNTS (Banner of Kinship; `chosenCounters`, applyOne above): carried on the entering's "choose"
+   question, counted and put on once it is answered (rules/entering.mjs) -- in whichever order the two replacements applied,
+   so their order is no question of anyone's (CR 616.1: the same either way). With no choice to make, nothing is of the
+   chosen type (script/chosen.mjs, NONE_CHOSEN), and there are none. */
+function withChoiceCounters(proposal) {
+  const asks = proposal.asks ?? [];
+  if (!(proposal.chosenCounters ?? []).length) return asks;
+  const at = asks.findIndex((ask) => ask.choose !== undefined);
+  return at < 0 ? asks : asks.map((ask, i) => (i === at ? {...ask, chosenCounters: proposal.chosenCounters} : ask));
 }
 
 /**
@@ -507,7 +555,11 @@ export function enteringModifications(state, {objectId, player, types, abilities
 export function ownEntering(state, {objectId, player, types, abilities}) {
   const own = (abilities ?? []).filter((ability) => !ability.change?.copyOf);
   const {proposal} = applyReplacements(state, {event: "enters", objectId, player, types: types ?? [], x: 0, entering: {abilities: own}, tapped: false, counters: {}, ownOnly: true});
-  return {tapped: proposal.tapped === true, counters: proposal.counters ?? {}, asks: proposal.asks ?? []};
+  /* A planeswalker copied as it enters (Spark Double, Clever Impersonator) has that planeswalker's printed loyalty, a copiable
+     value (CR 707.2), and enters with that many loyalty counters (CR 306.5b), as enteringModifications gives any other. */
+  const counters = {...(proposal.counters ?? {})}, loyalty = state.objects[objectId]?.loyalty;
+  if ((types ?? []).includes("Planeswalker") && Number.isInteger(loyalty)) counters.loyalty = (counters.loyalty ?? 0) + loyalty;
+  return {tapped: proposal.tapped === true, counters, asks: withChoiceCounters(proposal)};
 }
 
 /* How an event ends under every order of the effects that apply to it (CR 616.1f: each applied, then what still applies),
@@ -528,6 +580,8 @@ export function damageChoicesPossible(state) {
   /* A shield among the prevention effects (Inkshield) is ordered with the rest (applicable, above). */
   const lasting = (state.effects ?? []).filter((e) => e.rule === "prevent-damage");
   let n = lasting.some(isShield) ? lasting.length : 0;
+  /* And a doubler a resolution made (Lightning, Army of One's Stagger; rememberedReplacement). */
+  n += (state.effects ?? []).filter((e) => e.rule === "damage-doubled").length;
   if (n >= 2) return true;
   const held = staticAbilities(state);
   for (const id of state.zones.battlefield)

@@ -28,9 +28,9 @@
 
 import {cardsIn, moveObject, addObject, valueCostOf, rememberExileLooker, usesThisTurn, recordUse, recordDiscard} from "../../state/index.mjs";
 import {compileSelector, selectMatching} from "../filter.mjs";
-import {event, cardRef, moveOne, playersFor, sacrificeOne, destructionQuestion, destructionChoice} from "./zones.mjs";
+import {event, cardRef, moveOne, playersFor, sacrificeOne, destructionQuestion, destructionChoice, dredgers, dredgeInstead, dredgeWords, draw as drawEffect} from "./zones.mjs";
 import {proliferate as giveEachAnother, addCounters, putCounter, moveCounters, removeCounter} from "./resources.mjs";
-import {makeCopies, afterwards, joinAttack, attackPlaces, attachTo, createToken, effectUntil, COPY_KEYS} from "./permanents.mjs";
+import {makeCopies, afterwards, joinAttack, attackPlaces, attachTo, createToken, effectUntil, COPY_KEYS, gainControl, attach} from "./permanents.mjs";
 import {payGeneric, canPayGeneric, parseManaCost, manaValue, paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits, unlessPlans, planWords, payPlan} from "../../rules/mana.mjs";
 import {typesOf, characteristicsOf, everyCreatureTypeOf, controllerOf, lastKnown, staticAbilities} from "../../rules/layers.mjs";
 import {isLandType} from "../../keywords/types.mjs";
@@ -39,9 +39,9 @@ import {loseLife, DAMAGING, damageQuestion, addMana} from "./resources.mjs";
 import {damageOrderChoice} from "../../rules/replacement.mjs";
 import {targetCandidates, targetName} from "../bind.mjs";
 import {commanderTax} from "../../rules/commander.mjs";
-import {cantBeCountered, counterOrderChoice, cantBeSacrificed} from "../../rules/statics.mjs";
+import {cantBeCountered, counterOrderChoice, cantBeSacrificed, tokenOrderChoice, drawForbidden} from "../../rules/statics.mjs";
 import {amountOf} from "../amount.mjs";
-import {castNow, castChoicesNow} from "../../rules/actions.mjs";
+import {castNow, castChoicesNow, landChoicesNow, withFaceUp} from "../../rules/actions.mjs";
 
 const cardOptions = (state, ids) => ids.map((id, index) => ({index, label: state.objects[id].card, cardId: id}));
 
@@ -147,6 +147,46 @@ export const scry = {
       return {events: [], again: true};
     }
     return finishScry(state, awaiting, top, bottom);
+  },
+};
+
+/* ---- rearrangeTop (Forge's RearrangeTopOfLibrary): "look at the top three cards of your library, then put them back in any
+   order" (Ponder, Sensei's Divining Top, Halimar Depths). `count` cards off the top of the library of the player `who` names
+   (its controller's own unless it says), looked at by this effect's controller alone -- nothing is revealed -- and put back
+   on top in the order that player chooses, the first chosen on top: one question, an order of them all. One card has no
+   order to choose: it is looked at, and nobody is asked; none, and nothing happens. What the looker then knows is the top
+   of that library as it now is (state.looks; projection.mjs). ---- */
+function knowsTop(state, viewer, owner, ids) {
+  state.looks = [...(state.looks ?? []).filter((l) => !(l.viewer === viewer && l.owner === owner)), {viewer, owner, ids: [...ids]}];
+}
+export const rearrangeTop = {
+  open(state, params, context) {
+    const [owner] = playersFor(state, params.who, context.controller);
+    if (owner === undefined) return false;
+    const looked = cardsIn(state, "library", owner).slice(0, params.count ?? 1);
+    if (looked.length === 0) return false;
+    if (looked.length === 1) { knowsTop(state, context.controller, owner, looked); return false; }
+    state.awaiting = {kind: "effect-choice", effect: "rearrangeTop", player: context.controller, owner, cards: looked};
+    return true;
+  },
+  choice(state, awaiting) {
+    const whose = awaiting.owner === awaiting.player ? "your" : `${state.players[awaiting.owner]?.name ?? "that player"}'s`;
+    return {id: `rearrangeTop:${awaiting.cards.join(",")}`, title: `Put them back on top of ${whose} library in any order, the first you choose on top`,
+      mode: "order", min: awaiting.cards.length, max: awaiting.cards.length, options: cardOptions(state, awaiting.cards)};
+  },
+  /* The cards in the order named (inOrder: one an answer leaves out keeps its place after them), lifted out and put back on
+     top together -- one still there, since a card no longer in the library is left where it is. */
+  apply(state, awaiting, indices) {
+    const library = state.zones.library[awaiting.owner];
+    const back = inOrder(awaiting.cards, indices).filter((id) => library.includes(id));
+    for (const id of back) library.splice(library.indexOf(id), 1);
+    library.unshift(...back);
+    knowsTop(state, awaiting.player, awaiting.owner, back);
+    return {events: []};
+  },
+  /* The looker has left the game (CR 800.4a): the cards stay where they are, in the order they were. */
+  left() {
+    return [];
   },
 };
 
@@ -281,7 +321,7 @@ function showRevealed(state, player, ids) {
 }
 const unshowRevealed = (state, player) => { if (state.looks) state.looks = state.looks.filter((l) => !(l.revealed === true && l.owner === player)); };
 /* What dig does with the cards not taken: "the bottom" is a library move -- in a random order when the card says so, else
-   in the order they were looked at; anywhere else is an ordinary zone change. */
+   in the order given (the order its owner chose, digRestAsked below); anywhere else is an ordinary zone change. */
 function digRest(state, player, cards, {rest, random}, rng, events) {
   const left = cards.filter((id) => state.objects[id]);
   if (random && !rng) throw new Error("A random order needs the game's random stream");
@@ -293,6 +333,28 @@ function digRest(state, player, cards, {rest, random}, rng, events) {
     if (at >= 0) library.splice(at, 1);
     library.push(id);
   }
+}
+/* "THE REST ON THE BOTTOM OF YOUR LIBRARY IN ANY ORDER" (Dig Through Time, Growing Rites of Itlimoc; wave 4c, k2): two or more
+   cards put on the bottom of a library at once go there in the order their owner chooses (CR 401.4) -- the looker, whose
+   library it is -- one question, an order of them all, the first chosen highest. Never asked for one card, for "in a random
+   order" (`random`), or for the rest put anywhere else. Asked after what was taken has moved; `found`, what the dig took,
+   kept for "remember" until the order is answered. True when it asks. */
+function digRestAsked(state, awaiting, cards, found) {
+  const left = cards.filter((id) => state.objects[id]?.zone === "library");
+  if ((awaiting.rest ?? "bottom") !== "bottom" || awaiting.random === true || left.length < 2) return false;
+  state.awaiting = {kind: "effect-choice", effect: "dig", player: awaiting.player, step: "order", cards: left, rest: "bottom",
+    ...(awaiting.remember ? {remember: true, found: [...found]} : {})};
+  return true;
+}
+/* "Put up to one of them on top of your library" (Thassa's Oracle; `to: "top"`): the card taken stays in the library, lifted
+   to its top -- no zone change -- before the rest go to the bottom. One card, so there is no order to choose. */
+function digToTop(state, player, id) {
+  const library = state.zones.library[player];
+  const at = library.indexOf(id);
+  if (at < 0) return null;
+  library.splice(at, 1);
+  library.unshift(id);
+  return id;
 }
 /* "PUT ANY NUMBER OF NONLAND PERMANENT CARDS WITH TOTAL MANA VALUE 4 OR LESS FROM AMONG THEM ONTO THE BATTLEFIELD" (Ao, the Dawn
    Sky; `totalManaValueAtMost`): which cards is the looker's choice, made one card at a time -- each question offers only the
@@ -311,6 +373,7 @@ function digMoved(state, awaiting, chosen, events) {
        hand" (Zimone's Experiment; `toByType`): each to the first destination whose card types it has -- a land creature is a
        land card, and the lands come first. */
     const where = awaiting.toByType?.find((w) => w.types.some((type) => (state.objects[id].types ?? []).includes(type))) ?? {to: awaiting.to};
+    if (where.to === "top") { if (digToTop(state, awaiting.player, id) !== null) found.push(id); continue; }
     const moved = moveOne(state, id, where.to, events, {owner: awaiting.player, ...(where.tapped === true ? {tapped: true} : {}),
       ...(awaiting.faceDown ? {faceDown: true, lookers: [awaiting.player], ...(awaiting.link !== undefined ? {exiledBy: awaiting.link} : {})} : {})});
     if (moved !== null && state.objects[moved]) found.push(moved);
@@ -325,6 +388,7 @@ function digMoved(state, awaiting, chosen, events) {
 function digTaken(state, awaiting, chosen, rng) {
   const events = digRevealing(state, awaiting, chosen);
   const found = digMoved(state, awaiting, chosen, events);
+  if (digRestAsked(state, awaiting, awaiting.cards.filter((id) => !chosen.includes(id)), found)) return {events, again: true};
   digRest(state, awaiting.player, awaiting.cards.filter((id) => !chosen.includes(id)), awaiting, rng, events);
   return awaiting.remember ? {events, remembered: found} : events;
 }
@@ -348,7 +412,22 @@ export const dig = {
     /* Nothing among them that may be taken: nobody is asked, and the rest go where they go. */
     if (offered.length === 0) {
       const events = [...revealed];
+      /* Two or more of them to the bottom in any order: that order is still the looker's to choose (digRestAsked). */
+      if (digRestAsked(state, {player: context.controller, rest: params.rest, random: params.random === true}, looked, [])) { state.resolving?.events.push(...events); return true; }
       digRest(state, context.controller, looked, {rest: params.rest ?? "bottom", random: params.random === true}, rng, events);
+      return {events};
+    }
+    /* "REVEAL THE TOP X CARDS OF YOUR LIBRARY. PUT ALL LAND CARDS FROM AMONG THEM ONTO THE BATTLEFIELD TAPPED and the rest on
+       the bottom of your library in a random order" (Animist's Awakening; `all`): every card the selector fits is taken --
+       nobody chooses, so nobody is asked -- and what it took is remembered for the effects after it ("untap those lands"). */
+    if (params.all === true) {
+      const events = [...revealed];
+      const taking = {player: context.controller, cards: looked, to: params.to ?? "hand", rest: params.rest ?? "bottom", random: params.random === true,
+        ...(Array.isArray(params.toByType) ? {toByType: structuredClone(params.toByType)} : {})};
+      const found = digMoved(state, taking, offered, events);
+      if (params.remember) context.remembered = found;
+      if (digRestAsked(state, taking, looked.filter((id) => !offered.includes(id)), found)) { state.resolving?.events.push(...events); return true; }
+      digRest(state, context.controller, looked.filter((id) => !offered.includes(id)), taking, rng, events);
       return {events};
     }
     if (revealed.length) { state.resolving?.events.push(...revealed); showRevealed(state, context.controller, looked); }
@@ -368,6 +447,9 @@ export const dig = {
   },
 
   choice(state, awaiting) {
+    /* The rest's order on the bottom (digRestAsked): all of them, the first chosen highest. */
+    if (awaiting.step === "order") return {id: `dig-order:${awaiting.cards.join(",")}`, title: "Put the rest on the bottom of your library in any order, the first you choose highest",
+      mode: "order", min: awaiting.cards.length, max: awaiting.cards.length, options: cardOptions(state, awaiting.cards)};
     const offered = awaiting.offered ?? awaiting.cards;
     if (awaiting.budget !== undefined) {
       const left = budgetLeft(state, awaiting);
@@ -388,6 +470,14 @@ export const dig = {
   },
 
   apply(state, awaiting, indices, extra = {}, rng = null) {
+    /* The order answered (inOrder: one an answer leaves out keeps its place after them): to the bottom in that order, each
+       still in the library -- and what the dig took, remembered now. */
+    if (awaiting.step === "order") {
+      if ((indices ?? []).some((i) => awaiting.cards[i] === undefined) || new Set(indices ?? []).size !== (indices ?? []).length) throw new Error("Invalid selection");
+      const events = [];
+      digRest(state, awaiting.player, inOrder(awaiting.cards, indices).filter((id) => state.objects[id]?.zone === "library"), {rest: "bottom", random: false}, rng, events);
+      return awaiting.remember ? {events, remembered: (awaiting.found ?? []).filter((id) => state.objects[id])} : events;
+    }
     if (awaiting.budget !== undefined) {
       const left = budgetLeft(state, awaiting);
       if ((indices ?? []).length !== 1 || !(indices[0] >= 0 && indices[0] <= left.length)) throw new Error("Invalid selection");
@@ -406,6 +496,7 @@ export const dig = {
     const events = digRevealing(state, awaiting, chosen);
     const taken = new Set(chosen);
     const found = digMoved(state, awaiting, chosen, events);
+    if (digRestAsked(state, awaiting, awaiting.cards.filter((id) => !taken.has(id)), found)) return {events, again: true};
     digRest(state, awaiting.player, awaiting.cards.filter((id) => !taken.has(id)), awaiting, rng, events);
     return awaiting.remember ? {events, remembered: found} : events;
   },
@@ -599,15 +690,26 @@ function chosenFromHandApply(state, awaiting, indices) {
 /* "Do this only once each turn" (Tidus, Yuna's Guardian; cards/index.mjs, `onceEachTurn`): what this permanent's ability has
    done this turn, kept on the permanent as its uses are (state/index.mjs) -- so a new object may again (CR 400.7). */
 const onceKey = (params, context) => (params.onceEachTurn !== undefined && Number.isInteger(context.source) ? `once:${params.onceEachTurn}` : null);
+/* A CHOICE TO DRAW ITS CHOOSER CAN'T TAKE (Narset, Parter of Veils' opponents; CR 121.3, 121.2b): a mode that begins by having
+   its chooser draw -- "you may draw a card", "you may draw a card. If you do, discard a card" -- when they can't draw that many
+   more this turn (rules/statics.mjs, drawForbidden): "you may draw two cards" not even for their first. */
+const drawRefused = (state, mode, chooser, context) => {
+  const first = (mode.effects ?? [])[0];
+  if (first?.effect !== "draw" || first.who !== undefined || chooser !== context.controller) return false;
+  const count = first.count ?? 1;
+  return drawForbidden(state, chooser, typeof count === "number" ? count : amountOf(state, count, context));
+};
 export const modal = {
   open(state, params, context) {
     const key = onceKey(params, context);
     /* Done once this turn: the mode that does it (`once`) is gone, and only "No" is left -- no choice, so nothing is asked. */
     const done = key !== null && usesThisTurn(state, context.source, key) > 0;
-    const modes = (params.modes ?? []).filter((mode) => !(done && mode.once === true));
-    if (modes.length === 0 || (done && modes.every((mode) => !(mode.effects ?? []).length))) return false;
-    const choose = Math.min(params.choose ?? 1, modes.length);
     const chooser = Number.isInteger(params.chooser) ? params.chooser : context.controller;
+    /* And a draw its chooser can't choose: gone, and with only "No" left, nothing is asked. */
+    const refused = (params.modes ?? []).some((mode) => drawRefused(state, mode, chooser, context));
+    const modes = (params.modes ?? []).filter((mode) => !(done && mode.once === true) && !drawRefused(state, mode, chooser, context));
+    if (modes.length === 0 || ((done || refused) && modes.every((mode) => !(mode.effects ?? []).length))) return false;
+    const choose = Math.min(params.choose ?? 1, modes.length);
     state.awaiting = {
       /* Usually the controller's; "its controller may draw up to two cards" is that player's (`chooser`, bound to them). */
       kind: "effect-choice", effect: "modal", player: chooser,
@@ -723,6 +825,14 @@ const greatestBy = {
   /* A transformed permanent's is its front face's (CR 202.3b). */
   manaValue: (state, id) => (valueCostOf(state.objects[id]) ? manaValue(parseManaCost(valueCostOf(state.objects[id]))) : 0),
 };
+/* "Target opponent exiles a creature or planeswalker they control with the greatest mana value among creatures and
+   planeswalkers they control" (End of the Hunt; chooseCard's `greatest`, on the battlefield -- script/schema.mjs): of the
+   permanents that fit, those with the most -- a tie the chooser's to break (CR 608.2d), as a sacrifice's is. */
+const greatestOf = (state, greatest, ids) => {
+  if (!greatest) return ids;
+  const value = greatestBy[greatest], most = Math.max(...ids.map((id) => value(state, id)));
+  return ids.filter((id) => value(state, id) === most);
+};
 const offeredToSacrifice = (state, player, awaiting) => {
   const mine = sacrificeable(state, player, awaiting.selector, awaiting.source ?? null);
   if (!awaiting.greatest || !mine.length) return mine;
@@ -809,8 +919,12 @@ export const sacrifice = {
        the last has chosen -- and `ifNot`, what follows for each of them who sacrifices nothing, a player with nothing to
        sacrifice among them, "that player" each in turn order (unrefused, below). */
     if (params.optional === true) Object.assign(asked, {optional: true, everyone, ...(Array.isArray(params.ifNot) ? {ifNot: structuredClone(params.ifNot)} : {})});
+    /* "EACH PLAYER SACRIFICES A CREATURE OR PLANESWALKER OF THEIR CHOICE. EACH PLAYER WHO CAN'T DISCARDS A CARD" (Plaguecrafter):
+       a sacrifice that must be made, and `ifNot` what follows for each player named who sacrificed nothing -- only one with
+       nothing they could sacrifice -- "that player" each in turn order (unrefused, below), once every sacrifice is made. */
+    else if (Array.isArray(params.ifNot)) Object.assign(asked, {ifNot: structuredClone(params.ifNot), named: everyone});
     if (queue.length === 0) {
-      if (asked.optional) return {events: [], splice: unrefused(state, asked, [])};
+      if (asked.optional || asked.named) return {events: [], splice: unrefused(state, asked, [])};
       /* Nobody has a choice to make, and what the keeping does is still done: each keeps all they have. */
       if (!asked.everyone) return false;
       const events = [];
@@ -904,7 +1018,7 @@ export const sacrifice = {
       }
       if (awaiting.remember === player) remembering = [...remembering, ...gone];
     }
-    const refused = awaiting.optional ? unrefused(state, awaiting, decided) : null;
+    const refused = awaiting.optional || awaiting.named ? unrefused(state, awaiting, decided) : null;
     return remembering || refused ? {events, ...(remembering ? {remembered: remembering, movedWas} : {}), ...(refused ? {splice: refused} : {})} : events;
   },
 
@@ -918,11 +1032,11 @@ export const sacrifice = {
 /* WHAT FOLLOWS A "MAY SACRIFICE" NOT TAKEN (`ifNot`): for each player named who sacrificed nothing -- declined, or had nothing
    to -- in turn order from the active player, its effects with that player "that player" (a mark before them, as a
    repetition's are spliced, script/resolution.mjs), and the resolution's own subject back after the last. None, and
-   nothing follows. */
+   nothing follows. And what follows a sacrifice that must be made, for each player named who couldn't (`named`, Plaguecrafter). */
 function unrefused(state, awaiting, decided) {
   if (!Array.isArray(awaiting.ifNot)) return [];
   const gave = new Set(decided.filter((d) => d.ids.length > 0).map((d) => d.player));
-  const refusers = awaiting.everyone.filter((player) => !gave.has(player) && !state.players[player].lost);
+  const refusers = (awaiting.everyone ?? awaiting.named).filter((player) => !gave.has(player) && !state.players[player].lost);
   const before = state.resolving?.context?.about;
   return [...refusers.flatMap((player) => [{effect: "__about", about: {...(before ?? {}), player}}, ...structuredClone(awaiting.ifNot)]),
     {effect: "__about", ...(before !== undefined ? {about: before} : {})}];
@@ -1016,6 +1130,11 @@ const lifeAsked = (awaiting) => awaiting.life > 0 || (awaiting.life === 0 && !(a
 const noun = (selector) => (selector?.subtypes?.length ? `a ${selector.subtypes[0]}` : selector?.types?.length ? `a ${selector.types[0].toLowerCase()}` : "a permanent");
 /* "Another creature you control" (Faerie Impostor): `another` read against the "unless" ability's own source. */
 const otherNoun = (selector) => (selector?.another === true ? noun(selector).replace(/^a /, "another ") : noun(selector));
+/* "Then discard two cards unless you discard a creature card" (Thirst for Identity; CR 118.12, 701.9a): `discard` a selector
+   of the card in hand -- each card of the payer's it describes its own option, and with none there, not paying is all there
+   is. Any card, as ward's discard is, when it is not one. */
+const discardFits = (state, discard, id, player) => typeof discard !== "object" || compileSelector({...discard, what: "card", zone: "hand"})(state, id, {controller: player});
+const discardNoun = (discard) => (typeof discard === "object" ? `${noun(discard)} card` : "a card");
 /* "Exile this spell and four cards named Sphinx's Approach from your graveyard" (`exileSelf`, `exileFromGraveyard`): the
    cards of the payer's graveyard its selector describes, and the spell itself -- a card on the stack, as it resolves; a copy
    is no card to exile (CR 707.10a), so with one there is no paying. */
@@ -1033,7 +1152,7 @@ function costWords(awaiting, state) {
   if (awaiting.amountX) return "pay {X}";
   if (awaiting.timesAny) return `pay ${awaiting.mana} any number of times`;
   const paid = [awaiting.mana ?? null, awaiting.amount > 0 ? `{${awaiting.amount}}` : null, lifeAsked(awaiting) ? `${awaiting.life} life` : null].filter(Boolean);
-  const other = awaiting.discard ? "discard a card" : awaiting.sacrificeCount ? `sacrifice ${awaiting.sacrificeCount} permanents` : awaiting.sacrifice ? `sacrifice ${noun(awaiting.sacrifice)}`
+  const other = awaiting.discard ? `discard ${discardNoun(awaiting.discard)}` : awaiting.sacrificeCount ? `sacrifice ${awaiting.sacrificeCount} permanents` : awaiting.sacrifice ? `sacrifice ${noun(awaiting.sacrifice)}`
     : awaiting.returnToHand ? `return ${otherNoun(awaiting.returnToHand)} you control to its owner's hand`
     : awaiting.tap ? `tap ${otherNoun(awaiting.tap).replace(/^(a|another) /, "$1 untapped ").replace(/^a untapped/, "an untapped")} you control` : null;
   return [other, paid.length ? `pay ${paid.join(" and ")}` : null].filter(Boolean).join(" and ") || `pay {${awaiting.amount}}`;
@@ -1076,7 +1195,8 @@ function payOptions(state, awaiting) {
     }
     return mine.map((id) => ({label: `Sacrifice ${state.objects[id].card}${also}`, pay: true, sacrifice: id, cardId: id}));
   }
-  if (awaiting.discard) return cardsIn(state, "hand", player).map((id) => ({label: `Discard ${state.objects[id].card}${also}`, pay: true, discard: id, cardId: id}));
+  if (awaiting.discard) return cardsIn(state, "hand", player).filter((id) => discardFits(state, awaiting.discard, id, player))
+    .map((id) => ({label: `Discard ${state.objects[id].card}${also}`, pay: true, discard: id, cardId: id}));
   if (awaiting.exileFromGraveyard) {
     const cards = graveyardToExile(state, awaiting);
     /* Having said they pay, with more than that many there: which ones. */
@@ -1295,8 +1415,11 @@ export const chooseType = {
    script/bind.mjs, chosen.mjs). ---- */
 const COLOR_NAMES = Object.freeze([["W", "White"], ["U", "Blue"], ["B", "Black"], ["R", "Red"], ["G", "Green"]]);
 export const chooseColor = {
+  /* "Each player chooses a color" (Selective Obliteration): repeated for each player, the one a repetition is about choosing
+     (`chooser: "that player"`, bound to them, script/bind.mjs) -- each one's color kept by whose it is (`colorChooser`;
+     script/resolution.mjs, the context's `chosenColors`), for a selector's `onlyChosenColor` (script/filter.mjs). */
   open(state, params, context) {
-    state.awaiting = {kind: "effect-choice", effect: "chooseColor", player: context.controller, source: context.source ?? null};
+    state.awaiting = {kind: "effect-choice", effect: "chooseColor", player: Number.isInteger(params.chooser) ? params.chooser : context.controller, source: context.source ?? null};
     return true;
   },
   choice(state, awaiting) {
@@ -1307,7 +1430,7 @@ export const chooseColor = {
   apply(state, awaiting, indices) {
     const picked = (indices ?? []).length === 1 ? COLOR_NAMES[indices[0]] : undefined;
     if (!picked) throw new Error("Choose one color");
-    return {events: [], chosenColor: picked[0]};
+    return {events: [], chosenColor: picked[0], colorChooser: awaiting.player};
   },
 };
 
@@ -1320,23 +1443,29 @@ export const chooseColor = {
    event. None to add, and nobody is asked. A mana ability's color is chosen as it is activated (rules/actions.mjs), never
    here. */
 const MANA_COLORS = Object.freeze([["W", "White"], ["U", "Blue"], ["B", "Black"], ["R", "Red"], ["G", "Green"]]);
+/* "Add {B} or {G} for each permanent destroyed this way" (Culling Ritual): of those colors only (`colors`), each mana its
+   own choice among them; otherwise any of the five. */
+const colorsOffered = (awaiting) => (Array.isArray(awaiting.colors) ? MANA_COLORS.filter(([color]) => awaiting.colors.includes(color)) : MANA_COLORS);
 export const manaColors = {
   open(state, params, context) {
     const count = Math.max(0, Number.isInteger(params.count) ? params.count : 1);
     if (count === 0 || !state.players[context.controller]) return false;
     state.awaiting = {kind: "effect-choice", effect: "manaColors", player: context.controller, count, chosen: [], source: context.source ?? null,
-      ...(params.oneColor === true ? {oneColor: true} : {}), ...(params.spendOnly ? {spendOnly: params.spendOnly} : {})};
+      ...(params.oneColor === true ? {oneColor: true} : {}), ...(params.spendOnly ? {spendOnly: params.spendOnly} : {}),
+      ...(Array.isArray(params.colors) ? {colors: [...params.colors]} : {})};
     return true;
   },
   choice(state, awaiting) {
     const name = awaiting.source !== null ? state.objects[awaiting.source]?.card : null;
+    const named = colorsOffered(awaiting).map(([, label]) => label.toLowerCase());
+    const of = Array.isArray(awaiting.colors) ? `${named.slice(0, -1).join(", ")} or ${named[named.length - 1]}` : "any color";
     return {id: `manaColors:${awaiting.player}:${state.turn}:${awaiting.chosen.length}`,
       title: awaiting.oneColor ? `${name ? `${name}: a` : "A"}dd ${awaiting.count} mana of any one color`
-        : `${name ? `${name}: a` : "A"}dd one mana of any color${awaiting.count > 1 ? ` (${awaiting.chosen.length + 1} of ${awaiting.count})` : ""}`,
-      mode: "one", min: 1, max: 1, options: MANA_COLORS.map(([, label], index) => ({index, label}))};
+        : `${name ? `${name}: a` : "A"}dd one mana of ${of}${awaiting.count > 1 ? ` (${awaiting.chosen.length + 1} of ${awaiting.count})` : ""}`,
+      mode: "one", min: 1, max: 1, options: colorsOffered(awaiting).map(([, label], index) => ({index, label}))};
   },
   apply(state, awaiting, indices) {
-    const picked = (indices ?? []).length === 1 ? MANA_COLORS[indices[0]] : undefined;
+    const picked = (indices ?? []).length === 1 ? colorsOffered(awaiting)[indices[0]] : undefined;
     if (!picked) throw new Error("Choose one color for the mana");
     /* Of one color: the color once, for all of it. */
     const chosen = awaiting.oneColor ? Array.from({length: awaiting.count}, () => picked[0]) : [...awaiting.chosen, picked[0]];
@@ -1350,6 +1479,44 @@ export const manaColors = {
   },
 };
 
+/* ---- handLook: "look at target player's hand" (Gitaxian Probe; CR 701.20e, 701.20a) ----
+
+   peekAndReveal's `zone: "hand"` (script/resolution.mjs puts this in its place). Each hand `who` names is shown to this
+   effect's controller alone, for as long as they look: an acknowledgment asked of them (`ack`), the hand's cards its options,
+   and in their view only that hand face up (projection.mjs, `handLookedBy`) -- to nobody once they have seen it. The hands
+   one at a time, in turn order from the active player (CR 101.4). An empty hand has nothing to look at, nor does the
+   controller's own, already theirs to see: nobody is asked. Nothing moves (CR 701.20b), and the history names no card. */
+export const handLook = {
+  open(state, params, context) {
+    const seats = state.players.length, apnap = (p) => (p - state.activePlayer + seats) % seats;
+    const hands = playersFor(state, params.who, context.controller).filter((p) => p !== context.controller && cardsIn(state, "hand", p).length > 0)
+      .sort((a, b) => apnap(a) - apnap(b));
+    if (!hands.length) return false;
+    state.awaiting = {kind: "effect-choice", effect: "handLook", player: context.controller, from: hands[0], remaining: hands.slice(1), cards: cardsIn(state, "hand", hands[0]),
+      handLookedBy: context.controller, source: context.source ?? null};
+    return true;
+  },
+  choice(state, awaiting) {
+    const name = awaiting.source !== null ? state.objects[awaiting.source]?.card : null;
+    return {id: `handLook:${awaiting.from}:${state.turn}`, title: `${name ? `${name}: ` : ""}you look at ${state.players[awaiting.from].name}'s hand`,
+      mode: "ack", min: 0, max: 0, options: cardOptions(state, awaiting.cards)};
+  },
+  apply(state, awaiting, indices) {
+    if ((indices ?? []).length !== 0) throw new Error("Nothing is chosen from a hand you look at: say you have seen it");
+    /* One who has left the game since took their hand with them (CR 800.4a). */
+    const next = (awaiting.remaining ?? []).filter((p) => !state.players[p].lost);
+    if (next.length) {
+      state.awaiting = {...awaiting, from: next[0], remaining: next.slice(1), cards: cardsIn(state, "hand", next[0])};
+      return {events: [], again: true};
+    }
+    return [];
+  },
+  /* The looker has left the game (CR 800.4a): the spell left with them, and nobody looks. */
+  left() {
+    return [];
+  },
+};
+
 /* ---- copySpell (CR 707.10): "copy target instant or sorcery spell. You may choose new targets for the copy." ----
 
    `spells` are the spells copied, by their objects on the stack (a target, or "that card" -- the spell a trigger is
@@ -1359,7 +1526,7 @@ export const manaColors = {
    copy is never its own target (CR 115.5). `except.nonLegendary`: "except it isn't legendary" (Double Major). The
    copies are made as the question opens, so what they did is in the resolution's events even when nothing is asked. */
 const ordinal = (n) => ["first", "second", "third", "fourth"][n] ?? `#${n + 1}`;
-function retargetOptions(state, question) {
+function retargetOptions(state, question, {withOthers = false} = {}) {
   const entry = state.stack.find((e) => e.stackId === question.stackId);
   const spec = entry ? specsOf(state, entry)[question.index] : null;
   if (!entry || !spec) return null;
@@ -1368,7 +1535,9 @@ function retargetOptions(state, question) {
   const current = (Array.isArray(was) ? was[0] : was) ?? null;
   /* An ability's source is the object it came from (entry.cardId), while it is still that object (CR 113.7a). */
   const source = entry.objectId ?? (entry.cardId !== null && state.objects[entry.cardId] ? entry.cardId : null);
-  const others = targetCandidates(state, spec, {controller: entry.playerId, source, ...(entry.about ? {about: entry.about} : {}), ...(entry.x !== undefined ? {x: entry.x} : {})})
+  /* `withOthers`: read against the entry's other targets as they stand -- "another target" (`distinctFrom`) not one of them. */
+  const others = targetCandidates(state, spec, {controller: entry.playerId, source, ...(entry.about ? {about: entry.about} : {}), ...(entry.x !== undefined ? {x: entry.x} : {}),
+    ...(withOthers ? {chosenTargets: entry.targets} : {})})
     /* Never itself (CR 115.5): a spell its own object, an ability its own entry. */
     .filter((c) => !(c.kind === "object" && c.id === entry.objectId) && !(c.kind === "ability" && c.id === entry.stackId))
     .filter((c) => !(current && c.kind === current.kind && c.id === current.id));
@@ -1434,6 +1603,35 @@ export const changeTargets = {
     /* The spell it names by its object (`spells`), or the spell or ability by its stack entry (`stack`, Bolt Bend). */
     const entry = state.stack.find((e) => (e.objectId !== null && (params.spells ?? []).includes(e.objectId)) || (Array.isArray(params.stack) && params.stack.includes(e.stackId)));
     if (!entry) return false;
+    /* "CHANGE A TARGET OF TARGET SPELL OR ABILITY TO THIS CREATURE" (Spellskite; "the target of target instant or sorcery
+       spell with a single target to this creature", Hydroelectric Specimen; CR 115.7a-b): one of its targets changed to this
+       effect's source, a target that source could legally be instead -- by that target's own requirements, never one it is
+       already, and not one another target of it must differ from (`distinctFrom`, both ways). Which one, when more than one
+       could, is this effect's controller's choice; none, and every target is unchanged (CR 115.7a), nobody asked. The source
+       no longer on the battlefield, the resolution has none (rules/stack.mjs), and there is nothing to change one to. A
+       counted target's list is left as it is (NAMED). */
+    if (params.to === "self") {
+      const self = context.source;
+      const specs = specsOf(state, entry);
+      const isSelf = (t) => t?.kind === "object" && t.id === self;
+      const indices = entry.targets.map((_, index) => index).filter((index) => !Array.isArray(entry.targets[index])
+        && !specs.some((spec, j) => j !== index && (spec?.distinctFrom ?? []).includes(index) && [].concat(entry.targets[j] ?? []).some(isSelf))
+        && (retargetOptions(state, {stackId: entry.stackId, index}, {withOthers: true})?.others ?? []).some(isSelf));
+      if (!indices.length) return false;
+      if (indices.length === 1) return {events: changeTargets.retarget(state, entry, indices[0], {kind: "object", id: self})};
+      state.awaiting = {kind: "effect-choice", effect: "changeTargets", player: context.controller, toSelf: {stackId: entry.stackId, indices, self}};
+      return true;
+    }
+    /* "YOU MAY CHOOSE NEW TARGETS FOR TARGET INSTANT OR SORCERY SPELL" (Wild Ricochet; CR 115.7d): `may`, each of that spell's
+       targets kept or changed to another it could have, a question at a time, as a copy's are (copySpell) -- one with no
+       other choice is not asked about, and with none to ask, nobody is. A counted target's list is kept, as a copy's is. */
+    if (params.may === true) {
+      const questions = entry.targets.map((t, index) => ({stackId: entry.stackId, index, list: Array.isArray(t)}))
+        .filter((q) => !q.list && (retargetOptions(state, q)?.others ?? []).length > 0).map(({stackId, index}) => ({stackId, index}));
+      if (!questions.length) return false;
+      state.awaiting = {kind: "effect-choice", effect: "changeTargets", player: context.controller, questions};
+      return true;
+    }
     /* "With a single target" (its own targeting asked that): the one there is -- a counted target's list holding one
        included, the others empty. */
     const index = entry.targets.findIndex((t) => (Array.isArray(t) ? t.length > 0 : Boolean(t)));
@@ -1443,23 +1641,44 @@ export const changeTargets = {
     state.awaiting = {kind: "effect-choice", effect: "changeTargets", player: context.controller, question};
     return true;
   },
+  /* A target of `entry`, at `index`, made `chosen` -- the same shape it had, a counted list holding one -- and it becoming the
+     spell's or ability's target (ward, CR 702.21a). */
+  retarget(state, entry, index, chosen) {
+    entry.targets[index] = Array.isArray(entry.targets[index]) ? [chosen] : chosen;
+    return chosen.kind === "object" ? becameTarget(state, entry, chosen.id) : [];
+  },
   choice(state, awaiting) {
+    /* "Change a target ... to this creature": which of its targets becomes it. */
+    if (awaiting.toSelf) {
+      const {stackId, indices, self} = awaiting.toSelf, entry = state.stack.find((e) => e.stackId === stackId);
+      const many = (entry ? specsOf(state, entry) : []).length > 1;
+      return {id: `changeTargets:${stackId}:to-self`, title: `${entry?.name ?? "The spell"}: which target becomes ${state.objects[self]?.card ?? "this"}?`, mode: "one", min: 1, max: 1,
+        options: indices.map((index, i) => ({index: i, label: `${many ? `Its ${ordinal(index)} target, ` : ""}${targetName(state, entry?.targets[index]) || "its target, now gone"}`, targetIndex: index}))};
+    }
+    /* `may`: copySpell's question -- keep it, or one of the others -- about this spell's own target. */
+    if (awaiting.questions) {
+      const question = awaiting.questions[0], entry = state.stack.find((e) => e.stackId === question.stackId);
+      const many = (entry ? specsOf(state, entry) : []).length > 1;
+      return {...copySpell.choice(state, awaiting), id: `changeTargets:${question.stackId}:${question.index}`,
+        title: `${entry?.name ?? "The spell"}: keep ${many ? `its ${ordinal(question.index)} target` : "its target"}, or choose a new one?`};
+    }
     const {entry, others} = retargetOptions(state, awaiting.question) ?? {entry: null, others: []};
     return {id: `changeTargets:${awaiting.question.stackId}`, title: `${entry?.name ?? "The spell"}: its new target`, mode: "one", min: 1, max: 1,
       options: others.map((c, i) => ({index: i, label: targetName(state, c), ...(c.kind === "object" ? {cardId: c.id} : {}), target: c}))};
   },
   apply(state, awaiting, indices) {
+    /* `may`: answered as a copy's new targets are, one question at a time. */
+    if (awaiting.questions) return copySpell.apply(state, awaiting, indices);
     const option = changeTargets.choice(state, awaiting).options[(indices ?? [])[0]];
     if (!option) throw new Error("Invalid selection");
-    const entry = state.stack.find((e) => e.stackId === awaiting.question.stackId);
-    const events = [];
-    if (entry) {
-      const index = awaiting.question.index ?? 0, chosen = {kind: option.target.kind, id: option.target.id};
-      entry.targets[index] = Array.isArray(entry.targets[index]) ? [chosen] : chosen;
-      /* It becomes the spell's target (ward, CR 702.21a). */
-      if (option.target.kind === "object") events.push(...becameTarget(state, entry, option.target.id));
+    /* "To this creature": the target chosen becomes it. */
+    if (awaiting.toSelf) {
+      const entry = state.stack.find((e) => e.stackId === awaiting.toSelf.stackId);
+      return {events: entry ? changeTargets.retarget(state, entry, option.targetIndex, {kind: "object", id: awaiting.toSelf.self}) : []};
     }
-    return {events};
+    const entry = state.stack.find((e) => e.stackId === awaiting.question.stackId);
+    /* It becomes the spell's target (ward, CR 702.21a). */
+    return {events: entry ? changeTargets.retarget(state, entry, awaiting.question.index ?? 0, {kind: option.target.kind, id: option.target.id}) : []};
   },
 };
 
@@ -1609,6 +1828,35 @@ export const enchantWhat = {
   },
 };
 
+/* ---- dredgeDraw (CR 702.52a, 616.1; wave 4c, k2): one card drawn as an effect resolves, or a dredge in its place -- the
+   drawing player's choice among the dredge cards of their graveyard that could replace it now (effects/zones.mjs, dredgers);
+   with none, the card is drawn and nobody is asked. Queued by script/resolution.mjs, one for each card a draw would draw;
+   never written in a card script. ---- */
+export const dredgeDraw = {
+  open(state, params, context) {
+    if (!dredgers(state, params.player).length) return {events: drawEffect(state, {who: [params.player], count: 1}, context)};
+    state.awaiting = {kind: "effect-choice", effect: "dredgeDraw", player: params.player, cards: dredgers(state, params.player).map((d) => d.id)};
+    return true;
+  },
+  choice(state, awaiting) {
+    const could = new Map(dredgers(state, awaiting.player).map((d) => [d.id, d.amount]));
+    return {id: `dredge:${state.turn}:${awaiting.cards.join(",")}`, title: "You would draw a card: draw it, or dredge instead", mode: "one", min: 1, max: 1,
+      options: [{index: 0, label: "Draw a card"}, ...awaiting.cards.map((id, i) => ({index: i + 1, cardId: id, label: dredgeWords(state, {id, amount: could.get(id)})}))]};
+  },
+  apply(state, awaiting, indices) {
+    const [index] = indices ?? [];
+    if ((indices ?? []).length !== 1 || !(Number.isInteger(index) && index >= 0 && index <= awaiting.cards.length)) throw new Error("Invalid selection");
+    const events = [];
+    if (index === 0) return drawEffect(state, {who: [awaiting.player], count: 1}, {controller: awaiting.player});
+    if (!dredgeInstead(state, awaiting.player, awaiting.cards[index - 1], events)) throw new Error("That card can no longer dredge: draw the card, or dredge with another");
+    return events;
+  },
+  /* The drawing player has left the game (CR 800.4a): nothing is drawn. */
+  left() {
+    return [];
+  },
+};
+
 /** The four, by the name a card script uses. */
 /* ---- chooseCard: a search (CR 701.23) ---- */
 
@@ -1642,7 +1890,12 @@ function stepCards(state, awaiting) {
 }
 export const chooseCard = {
   open(state, params, context, rng = null) {
-    const zone = params.zone ?? "library";
+    /* "SEARCH YOUR LIBRARY AND GRAVEYARD" (Finale of Devastation's "and/or", both chosen; CR 701.23): `zones`, each the
+       searcher's own, searched as one -- every one's cards in the one question, each found where it is, its zone said beside
+       it; the library among them hidden, so a search for a card with a quality may find nothing (701.23b), and searched
+       ("if you search your library this way", `searched`). */
+    const zones = Array.isArray(params.zones) && params.zones.length > 1 ? params.zones : null;
+    const zone = zones ? (zones.includes("library") ? "library" : zones[0]) : params.zone ?? "library";
     const [player] = playersFor(state, params.who, context.controller);
     if (player === undefined) return false;
     /* A description, or a choice of them (`anyOf`): "a Plains, Island, Swamp, or Mountain card". */
@@ -1672,27 +1925,36 @@ export const chooseCard = {
        beside `among`, each wherever it went -- a public zone, the one a leaving trigger can find it in (CR 400.7e) -- and read
        as it is there (CR 608.2h). */
     const anywhere = zone === "any";
-    const pool = (among ? amongIds.filter((id) => (anywhere ? state.objects[id] !== undefined : state.objects[id]?.zone === zone)) : onField ? [...state.zones.battlefield] : cardsIn(state, zone, zone === "exile" ? null : player))
+    const pool = (zones ? zones.flatMap((z) => cardsIn(state, z, player)) : among ? amongIds.filter((id) => (anywhere ? state.objects[id] !== undefined : state.objects[id]?.zone === zone)) : onField ? [...state.zones.battlefield] : cardsIn(state, zone, zone === "exile" ? null : player))
       .filter((id) => !except?.has(id));
     /* "For each player, choose a creature that player controls" (The Eternal Wanderer): the player a repetition is about,
        for a selector's "that player" (script/resolution.mjs, repeatFor). */
-    const fits = (id) => (anywhere ? alternatives.map((one) => compileSelector({...one, what: "card", zone: state.objects[id].zone})) : matchers)
-      .some((m) => m(state, id, {controller: player, source: context.source, ...(context.about ? {about: context.about} : {})}));
-    const fitting = pool.filter(fits);
+    const fits = (id) => (anywhere || zones ? alternatives.map((one) => compileSelector({...one, what: "card", zone: state.objects[id].zone})) : matchers)
+      /* And the X its spell was cast with: "a creature card with mana value X or less" (Finale of Devastation; script/filter.mjs). */
+      .some((m) => m(state, id, {controller: player, source: context.source, ...(context.about ? {about: context.about} : {}), ...(context.x !== undefined ? {x: context.x} : {})}));
+    const fitting = greatestOf(state, params.greatest, pool.filter(fits));
     /* "Up to four cards with different names" (Gifts Ungiven): one of each name offered -- which of two identical cards in a
        library is found changes nothing, and no answer can then name two of a name. */
     const cards = params.differentNames === true ? fitting.filter((id, i) => fitting.findIndex((other) => state.objects[other].card === state.objects[id].card) === i) : fitting;
     /* From among what was looked at or moved (Risen Reef's "if it's a land card"), with nothing that fits: nothing to choose,
        and nobody is asked -- the cards are face up to the chooser, so there is no failing to find (CR 701.23b is a search's). */
     /* Exile is face up (CR 406.3): what fits there is seen, so there is no failing to find it either. */
-    const faceUp = among || onField || zone === "exile";
+    /* So is the command zone (CR 400.2): "put your commander into your hand from the command zone" (Command Beacon, wave 4b)
+       takes the one there, and with none there nobody is asked. */
+    const faceUp = among || onField || zone === "exile" || zone === "command";
     if (faceUp && cards.length === 0) return false;
+    /* "IF AN EQUIPMENT IS PUT ONTO THE BATTLEFIELD THIS WAY, YOU MAY ATTACH IT TO A CREATURE YOU CONTROL" (Armored Skyhunter;
+       `attach: "remembered"`, beside `to: "stay"`): "it" is what the effect before it put there (CR 701.3a) -- the permanent
+       chosen is what it is attached to, not a target. It no longer there, there is nothing to attach, and nobody is asked. */
+    const attaching = params.attach === "remembered" ? (context.remembered ?? []).find((id) => state.objects[id]?.zone === "battlefield") : undefined;
+    if (params.attach === "remembered" && attaching === undefined) return false;
     const count = params.count ?? 1;
     const min = params.upTo || (!faceUp && hasQuality(params.selector)) ? 0 : Math.min(count, cards.length);
     const awaiting = {
-      kind: "effect-choice", effect: "chooseCard", player, zone, cards, min, max: Math.min(count, cards.length),
+      kind: "effect-choice", effect: "chooseCard", player, zone, ...(zones ? {zones: [...zones]} : {}), cards, min, max: Math.min(count, cards.length),
       destinations: params.destinations ?? [{to: params.to ?? "hand", ...(params.tapped ? {tapped: true} : {})}],
       shuffle: params.shuffle === true, reveal: params.reveal === true, controller: params.controller === "you" ? context.controller : params.controller ?? null,
+      ...(attaching !== undefined ? {attaching} : {}),
       /* "Untap that land" (Fabled Passage): what it found, for the effects after it (resolution.mjs). "Add": beside what was
          remembered before -- each player's creature chosen in turn, "not chosen this way" all of them (The Eternal Wanderer). */
       ...(params.remember ? {remember: params.remember === "add" ? "add" : true} : {}),
@@ -1734,13 +1996,24 @@ export const chooseCard = {
       title: awaiting.zone === "battlefield" ? (awaiting.max > 1 ? "Choose permanents" : "Choose a permanent")
         /* A card in exile -- "a card exiled with this artifact" -- is chosen, not searched for. */
         : awaiting.zone === "exile" ? (awaiting.max > 1 ? "Choose cards in exile" : "Choose a card in exile")
+        /* Your commander, from the command zone (Command Beacon): chosen there, not searched for. */
+        : awaiting.zone === "command" ? "Choose a card in your command zone"
         /* Among cards wherever they went (Spirit of Resilience): chosen, not searched for. */
         : awaiting.zone === "any" ? (awaiting.max > 1 ? "Choose cards from among them" : "Choose a card from among them")
+        /* Two zones searched as one (Finale of Devastation): both named. */
+        : awaiting.zones ? `Search your ${awaiting.zones.map((z) => ZONE_WORD[z]).join(" and ")}`
         : awaiting.max === 0 ? `Search your ${ZONE_WORD[awaiting.zone]}: nothing to find` : `Search your ${ZONE_WORD[awaiting.zone]}`,
       mode: awaiting.max <= 1 ? (awaiting.min === 0 ? "many" : "one") : "many",
       min: awaiting.min,
       max: awaiting.max,
-      options: cardOptions(state, awaiting.cards),
+      /* "Then look at the exiled cards and put them on top of your library in any order" (Scroll Rack): a card exiled face
+         down that its chooser may look at (CR 406.3; projection.mjs, `lookers`) is named to them by the card it is. */
+      options: cardOptions(state, awaiting.cards).map((option) => {
+        const object = state.objects[option.cardId];
+        /* Searched in two zones at once: where each card is, said beside it ("Bear, in your graveyard"). */
+        if (awaiting.zones) return {...option, label: `${option.label}, in your ${ZONE_WORD[object?.zone] ?? object?.zone}`};
+        return object?.faceDown === true && (object.lookers ?? []).includes(awaiting.player) ? {...option, label: object.faceDownCard?.card ?? option.label} : option;
+      }),
     };
   },
 
@@ -1790,7 +2063,12 @@ export const chooseCard = {
       }
       /* "Put a -1/-1 counter on a creature you control" (blight, CR 701.68a): a permanent chosen where it is, and left there --
          remembered for what follows ("the blighted creature", 701.68c). */
-      if (where.to === "stay") { found.push(id); return; }
+      if (where.to === "stay") {
+        found.push(id);
+        /* Armored Skyhunter's Equipment, attached to the creature chosen (CR 701.3a; effects/permanents.mjs, attach). */
+        if (awaiting.attaching !== undefined) events.push(...attach(state, {source: awaiting.attaching, targets: [id]}, {controller: player}));
+        return;
+      }
       const moved = moveOne(state, id, where.to, events, {owner: state.objects[id].owner, controller: awaiting.controller, tapped: where.tapped === true});
       if (moved !== null && state.objects[moved]) found.push(moved);
       if (moved !== null && state.objects[moved] && where.to === "battlefield") {
@@ -1852,7 +2130,12 @@ export const chooseCard = {
    caster's to choose, and unlessPlans has no ways to pay one -- nor one with an additional cost to choose (castChoicesNow). */
 const manaCostOf = (state, id, adventure) => (adventure ? state.objects[id].adventurer?.adventure?.manaCost : state.objects[id].manaCost) ?? "";
 const payableCost = (state, player, cost) => !cost || unlessPlans(state, player, cost, 1).plans.length > 0;
-const playable = (state, player, pool, {most, free, anyMana, payMana = false}) => {
+/* "YOU MAY PLAY THE EXILED CARD WITHOUT PAYING ITS MANA COST" (Windbrisk Heights; `lands`, CR 305.2a): played, not only cast --
+   a land card among them is played as a land (rules/actions.mjs, landChoicesNow: its player's turn, a land play left, CR
+   305.2b, 305.3), for nothing, since a land has no mana cost. And a card exiled face down -- a hideaway card (CR 702.75a) -- is
+   weighed as the card it is, its mana value and its targets too, since it is turned face up just before it is played (CR
+   406.3a; rules/actions.mjs, withFaceUp); castNow plays it the same way. */
+const playable = (state, player, pool, {most, free, anyMana, payMana = false, lands = false}) => {
   /* Its mana value as it would be cast: an adventurer card cast as its Adventure has the Adventure's (CR 715.3a). */
   const valueOf = (id, adventure = false) => {
     const cost = adventure ? state.objects[id].adventurer?.adventure?.manaCost : state.objects[id].manaCost;
@@ -1860,15 +2143,16 @@ const playable = (state, player, pool, {most, free, anyMana, payMana = false}) =
   };
   const owed = (id, adventure) => (free ? (state.objects[id].zone === "command" ? commanderTax(state, player, id) : 0) : anyMana ? valueOf(id, adventure) : null);
   /* A card cast a moment ago is on the stack as a new object (CR 400.7): its id here no longer names anything. */
-  return pool.filter((id) => state.objects[id] && (valueOf(id) <= most || (Boolean(state.objects[id].adventurer) && valueOf(id, true) <= most)))
-    .flatMap((id) => castChoicesNow(state, player, id).filter((action) => valueOf(id, action.adventure === true) <= most).flatMap((action) => {
-      if (payMana) {
-        const cost = manaCostOf(state, id, action.adventure === true);
-        return payableCost(state, player, cost) ? [{...action, cost}] : [];
-      }
-      const pay = owed(id, action.adventure === true);
-      return pay === null || !canPayGeneric(state, player, pay) ? [] : [{...action, owed: pay}];
-    }));
+  return pool.filter((id) => state.objects[id]).flatMap((id) => withFaceUp(state, id, () => [...(lands ? landChoicesNow(state, player, id) : []),
+    ...(valueOf(id) <= most || (Boolean(state.objects[id].adventurer) && valueOf(id, true) <= most) ? castChoicesNow(state, player, id) : [])
+      .filter((action) => valueOf(id, action.adventure === true) <= most).flatMap((action) => {
+        if (payMana) {
+          const cost = manaCostOf(state, id, action.adventure === true);
+          return payableCost(state, player, cost) ? [{...action, cost}] : [];
+        }
+        const pay = owed(id, action.adventure === true);
+        return pay === null || !canPayGeneric(state, player, pay) ? [] : [{...action, owed: pay}];
+      })]));
 };
 export const play = {
   open(state, params, context) {
@@ -1897,14 +2181,15 @@ export const play = {
       : (params.targets ?? []).filter((id) => state.objects[id] && !["battlefield", "stack"].includes(state.objects[id].zone)
         /* "For each player, you may cast a card that player milled this way" (The Ur-Sphinx): `ownedBy` "that player". */
         && (params.ownedBy !== "that player" || state.objects[id].owner === context.about?.player));
-    const terms = {most, free: params.free === true, anyMana: params.anyMana === true, payMana: params.payMana === true};
+    const terms = {most, free: params.free === true, anyMana: params.anyMana === true, payMana: params.payMana === true, lands: params.lands === true};
     /* "If that spell would be put into a graveyard, exile it instead" (Halo Forager): the spell cast, so marked (rules/actions.mjs). */
     const exileInstead = params.exileInstead === true ? {exileInstead: true} : {};
     const choices = playable(state, player, pool, terms);
     if (!choices.length) return false;
     /* For `anyNumber`, what may still be cast and on what terms, to ask again (a number, not Infinity: state is JSON). */
     state.awaiting = {kind: "effect-choice", effect: "play", player, choices,
-      ...(params.anyNumber === true ? {again: {pool, ...terms, most: Number.isFinite(most) ? most : null}, cast: 0} : {}), ...exileInstead};
+      ...(params.anyNumber === true ? {again: {pool, ...terms, most: Number.isFinite(most) ? most : null}, cast: 0} : {}), ...exileInstead,
+      ...(terms.lands ? {lands: true} : {})};
     return true;
   },
   choice(state, awaiting) {
@@ -1916,9 +2201,11 @@ export const play = {
       return {id: `play-plan:${awaiting.player}:${state.turn}:${awaiting.cast ?? 0}`, title: `Pay ${awaiting.planning.cost}: choose the mana`, mode: "one", min: 1, max: 1,
         options: plans.map((plan, index) => ({index, label: planWords(units, plan)}))};
     }
-    return {id: `play:${awaiting.player}:${state.turn}${awaiting.again ? `:${awaiting.cast}` : ""}`, title: awaiting.cast ? "Cast another spell?" : "Cast a spell?", mode: "one", min: 1, max: 1,
+    /* Played, a land among them (`lands`): the question says "play". */
+    const [title, decline] = awaiting.lands ? ["Play the card?", "Don't play"] : [awaiting.cast ? "Cast another spell?" : "Cast a spell?", "Don't cast"];
+    return {id: `play:${awaiting.player}:${state.turn}${awaiting.again ? `:${awaiting.cast}` : ""}`, title, mode: "one", min: 1, max: 1,
       options: [...awaiting.choices.map((c, index) => ({index, label: c.targetNames?.length ? `${c.label} → ${c.targetNames.join(", ")}` : c.label, cardId: c.objectId})),
-        {index: awaiting.choices.length, label: "Don't cast"}]};
+        {index: awaiting.choices.length, label: decline}]};
   },
   apply(state, awaiting, indices) {
     let chosen, events;
@@ -2099,6 +2386,87 @@ export const orderCounters = {
   },
 };
 
+/* ---- explore (CR 701.44) ----
+
+   "Target creature you control explores" (a Map token's, CR 111.10s; Restless Anchorage makes them): the exploring
+   permanent's controller reveals the top card of their library (CR 701.44a). A land card goes to their hand. Anything
+   else -- or nothing, a library with no card to reveal -- puts a +1/+1 counter on the exploring permanent, if it is still
+   on the battlefield, and that player may put the revealed card into their graveyard: one question, surveil's shape, the
+   card shown to every seat while it is open. One no longer on the battlefield is told whose by its last known information
+   (701.44c). One permanent explores, the first of `targets`; it has explored whatever of this could be done (701.44b) --
+   nothing here triggers on that yet. */
+export const explore = {
+  open(state, params, context) {
+    const [id] = params.targets ?? [];
+    if (id === undefined || id === null) return false;
+    const here = state.objects[id]?.zone === "battlefield";
+    const player = here ? controllerOf(state, id) : context.lastKnown?.cardId === id ? context.lastKnown.controller : context.controller;
+    if (!state.players[player] || state.players[player].lost) return false;
+    const [top] = cardsIn(state, "library", player);
+    const events = top === undefined ? [] : revealedEvents(state, player, [top]);
+    if (top !== undefined && typesOf(state, top).includes("Land")) {
+      moveOne(state, top, "hand", events, {owner: player});
+      return {events};
+    }
+    if (here) addCounters(state, id, "+1/+1", 1, events, player);
+    if (top === undefined) return {events};
+    state.resolving?.events.push(...events);
+    showRevealed(state, player, [top]);
+    state.awaiting = {kind: "effect-choice", effect: "explore", player, cards: [top]};
+    return true;
+  },
+  choice(state, awaiting) {
+    return {id: `explore:${awaiting.cards.join(",")}`, title: `Explore: you may put ${state.objects[awaiting.cards[0]]?.card ?? "the revealed card"} into your graveyard`,
+      mode: "many", min: 0, max: 1, options: cardOptions(state, awaiting.cards)};
+  },
+  apply(state, awaiting, indices) {
+    const events = [];
+    unshowRevealed(state, awaiting.player);
+    const chosen = (indices ?? []).map((index) => awaiting.cards[index]).filter((id) => id !== undefined && state.objects[id]?.zone === "library");
+    for (const id of chosen) moveOne(state, id, "graveyard", events, {owner: state.objects[id].owner});
+    return events;
+  },
+  /* The exploring player has left the game, their library with them (CR 800.4a): nothing to put anywhere. */
+  left(state, awaiting) {
+    unshowRevealed(state, awaiting.player);
+    return [];
+  },
+};
+
+/* ---- the order of the effects that change tokens made (CR 616.1) ----
+
+   Two or more replacement effects would change the tokens one effect makes, and the order changes what is made: Anointed
+   Procession's "twice that many of those tokens" and Queen Allenal of Ruadach's "those tokens plus a 1/1 white Soldier" --
+   one Elemental becomes two and a Soldier, or two and two Soldiers. The tokens' controller chooses which applies first;
+   asked BEFORE any is made, an event at a time (a copy effect's, each original), and then the effect is done with every
+   answer (`tokenOrders`, by event). The resolution puts this question in front of a createToken or copyPermanent that has
+   one (script/resolution.mjs; effects/permanents.mjs, tokenQuestion); an order that ends the same either way is never
+   asked (rules/statics.mjs, tokensCreated). */
+export const orderTokens = {
+  /* Opened only with the question the resolution found in front of it (`question`), so there is always one to ask. */
+  open(state, params) {
+    const {question} = params;
+    state.awaiting = {kind: "effect-choice", effect: "orderTokens", player: question.player, key: question.key, controller: question.controller,
+      count: question.count, values: question.values, options: question.options, answered: question.answered, answers: params.answers, make: params.make};
+    return true;
+  },
+  choice(state, awaiting) {
+    return tokenOrderChoice(state, awaiting);
+  },
+  /* The effect itself again, with this answer added, where it stood in the resolution: asked once more while an order is still
+     to be chosen, and done once none is. */
+  apply(state, awaiting, indices) {
+    const chosen = Array.isArray(indices) && indices.length === 1 ? awaiting.options[indices[0]] : undefined;
+    if (chosen === undefined) throw new Error("Invalid selection");
+    const answers = {...awaiting.answers, [awaiting.key]: [...(awaiting.answers[awaiting.key] ?? []), chosen]};
+    return {events: [], splice: [{...awaiting.make, tokenOrders: answers}]};
+  },
+  /* The tokens' controller has left the game: none is made under their control (CR 800.4a; effects/permanents.mjs). */
+  left(state, awaiting) {
+    return {events: [], splice: [{...awaiting.make, tokenOrders: awaiting.answers}]};
+  },
+};
+
 /* ---- whose Alms Collector replaces a draw (CR 616.1) ----
 
    Maya would draw three cards, and Rob's and Trey's Alms Collectors would each replace it: "instead you and that player each
@@ -2163,6 +2531,52 @@ export const conniveWhich = {
      (CR 800.4a; script/resolution.mjs, connive, leaves out a player no longer in the game). */
   left(state, awaiting) {
     return {events: [], splice: [{effect: "connive", conniving: [...awaiting.theirs, ...awaiting.rest], count: awaiting.n}]};
+  },
+};
+
+/* ---- control given away, a different opponent for each (Train E: Dack Fayden, Helping Hand) ----
+
+   "For each of those permanents, choose a different opponent. Each opponent gains control of the permanent for which they
+   were chosen": gainControl's `toEach: "different opponent"`, put here by the resolution (script/resolution.mjs). Its
+   controller chooses (CR 608.2d), permanent by permanent in the order the effect names them, among the opponents still in
+   the game not chosen yet (CR 102.3, 800.4a) -- with one left, the rules leave no choice and nobody is asked; with none, the
+   rest stay where they are. Then each opponent gains control of theirs, at once and for good (CR 613.1b;
+   effects/permanents.mjs, gainControl). One gone from the battlefield since is a new object (CR 400.7), and none of them. */
+const unchosenOpponents = (awaiting, given) => awaiting.opponents.filter((player) => !given.includes(player));
+function giveEachAway(state, awaiting) {
+  let given = awaiting.given;
+  while (given.length < awaiting.permanents.length) {
+    const left = unchosenOpponents(awaiting, given);
+    if (left.length > 1) {
+      state.awaiting = {...awaiting, given};
+      return true;
+    }
+    if (!left.length) break;
+    given = [...given, left[0]];
+  }
+  for (const [i, player] of given.entries()) gainControl(state, {targets: [awaiting.permanents[i]], toPlayer: player}, {controller: awaiting.player, source: awaiting.source});
+  return {events: []};
+}
+export const controlToOpponents = {
+  open(state, params, context) {
+    const permanents = [...new Set(params.then.targets ?? [])].filter((id) => state.objects[id]?.zone === "battlefield");
+    const opponents = state.players.filter((p) => p.id !== context.controller && !p.lost).map((p) => p.id);
+    return giveEachAway(state, {kind: "effect-choice", effect: "controlToOpponents", player: context.controller, source: context.source ?? null, permanents, opponents, given: []});
+  },
+  choice(state, awaiting) {
+    const id = awaiting.permanents[awaiting.given.length];
+    return {id: `controlToOpponents:${awaiting.player}:${state.turn}:${id}`, title: `Choose an opponent to gain control of ${state.objects[id]?.card ?? "that permanent"}`,
+      mode: "one", min: 1, max: 1, options: unchosenOpponents(awaiting, awaiting.given).map((player, index) => ({index, label: state.players[player].name, playerId: player}))};
+  },
+  apply(state, awaiting, indices) {
+    const player = Array.isArray(indices) && indices.length === 1 ? unchosenOpponents(awaiting, awaiting.given)[indices[0]] : undefined;
+    if (player === undefined) throw new Error("Invalid selection");
+    const outcome = giveEachAway(state, {...awaiting, given: [...awaiting.given, player]});
+    return outcome === true ? {events: [], again: true} : outcome;
+  },
+  /* Its controller has left the game: their ability left with them (CR 800.4a), and nobody gains anything. */
+  left() {
+    return {events: []};
   },
 };
 
@@ -2342,5 +2756,11 @@ export const chooseInstead = {
   },
 };
 
-export const ASKING = Object.freeze({twoPiles, scry, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, chooseColor, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage, orderCounters, orderDraws,
-  conniveWhich, manaColors, counterKind, countersToRemove, countersOnto, orderDestruction, chooseInstead, chooseSource, vote});
+export const ASKING = Object.freeze({twoPiles, scry, rearrangeTop, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, chooseColor, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage, orderCounters, orderTokens, orderDraws, explore,
+  conniveWhich, manaColors, counterKind, countersToRemove, countersOnto, orderDestruction, chooseInstead, chooseSource, vote,
+  /* Wave 4c: a hand looked at (Gitaxian Probe). */
+  handLook,
+  /* Train E: a different opponent for each permanent given away (Dack Fayden, Helping Hand). */
+  controlToOpponents,
+  /* Wave 4c, k2: a draw, or a dredge in its place (CR 702.52a). */
+  dredgeDraw});

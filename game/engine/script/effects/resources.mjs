@@ -23,7 +23,7 @@ import {event, cardRef, playersFor} from "./zones.mjs";
 import {markDeathtouch, lifelinkFrom} from "../../keywords/combat.mjs";
 import {typesOf, powerOf, toughnessOf, keywordsOf, isKeywordCounter, controllerOf} from "../../rules/layers.mjs";
 import {cantGainLife, lifeGained, countersPlaced, playerCountersPlaced, placeCounters} from "../../rules/statics.mjs";
-import {playerRuled, leaveGame} from "../../rules/sba.mjs";
+import {playerRuled, leaveGame, monarchLeft} from "../../rules/sba.mjs";
 import {amountOf} from "../amount.mjs";
 import {recordUse} from "../../state/index.mjs";
 
@@ -313,6 +313,8 @@ export function addCounters(state, id, kind, count, events, by = null, orders = 
   }
   events.push(event("GameEventCardCounters", state, {
     card: cardRef(state, id), type: kind, oldValue: before, newValue: object.counters[kind],
+    /* Who put them: "whenever you put one or more +1/+1 counters on this creature" (Exemplar of Light; rules/trigger.mjs). */
+    ...(Number.isInteger(by) ? {by} : {}),
   }));
 }
 
@@ -412,7 +414,51 @@ export function loseGame(state, params, context) {
     .filter((id) => params.withLife === undefined || state.players[id].life === params.withLife)
     .filter((id) => !playerRuled(state, "cant-lose", id));
   for (const id of losing) leaveGame(state, state.players[id], "effect", events);
+  /* The monarch among them: the designation passes on once they have all gone (CR 725.4; rules/sba.mjs). */
+  return monarchLeft(state, events);
+}
+
+/**
+ * `rollDie` -- "roll a d20" (Ancient Copper Dragon; wave 4c; CR 706.1-706.2): its controller rolls a die of `sides` sides,
+ * each result as likely as any other -- from the game's random stream (rng.mjs), as a shuffle is, never chosen. The result
+ * is what follows reads, "a number of Treasure tokens equal to the result" (`{dieRolled: true}`, script/amount.mjs), and
+ * said to everyone. Nothing yet modifies a roll or watches for one ("whenever you roll a die", CR 706.2's results changed).
+ */
+export function rollDie(state, params, context, rng = null) {
+  if (!rng) throw new Error("A die roll needs the game's random stream");
+  /* A die of no number of sides is no die: nothing rolled (the schema refuses a script that says one, script/schema.mjs). */
+  if (!(Number.isInteger(params.sides) && params.sides >= 2)) return [];
+  const result = rng.int(params.sides) + 1;
+  context.rolled = result;
+  return [event("GameEventDieRolled", state, {player: {playerId: context.controller, name: state.players[context.controller]?.name}, sides: params.sides, result})];
+}
+
+/**
+ * THE MONARCH (CR 725): a designation of the game's, not of any card -- none until an effect makes a player the monarch
+ * (725.1), and one player's at most (725.3): `state.monarch`, that player's seat, unsaid while there is none, so a game made
+ * before it hashes and replays as it did. As a player becomes it the monarch before stops being it. One who is the monarch
+ * already does not become it again, and one who has left the game cannot (CR 800.4a). What being it does is two triggered
+ * abilities of the game's own (rules/trigger.mjs, INHERENT_TRIGGERS), and what passes it on as its player leaves, the rule
+ * of rules/sba.mjs (monarchLeft). Said to everyone: the designation is public.
+ *
+ * @returns {Array} the events, with one more when a player became the monarch
+ */
+export function crown(state, player, events = []) {
+  if (state.players[player].lost || state.monarch === player) return events;
+  state.monarch = player;
+  events.push(event("GameEventBecomeMonarch", state, {player: {playerId: player, name: state.players[player].name}}));
   return events;
+}
+
+/**
+ * `becomeMonarch` -- "you become the monarch" (Ginger, Queen of Sweets; Tamiyo, Upriser Crowned), and "its controller
+ * becomes the monarch" (the monarch's own trigger, CR 725.2: `who: "that card's controller"`, the creature's controller now,
+ * or as it last was; script/bind.mjs): `who` one player -- unsaid, the effect's controller; a target player, or nobody once
+ * that target is gone (CR 608.2b).
+ */
+export function becomeMonarch(state, params, context) {
+  const [player] = playersFor(state, params.who ?? "you", context.controller);
+  return player === undefined ? [] : crown(state, player);
 }
 
 /* Who puts them, for "if you would put" (rules/statics.mjs): the effect's controller -- or, "that player ... puts a +1/+1
@@ -436,6 +482,10 @@ export function putCounter(state, params, context) {
     const counters = state.players[player].counters;
     if (count > 0) counters[params.counter] = (counters[params.counter] ?? 0) + count;
   }
+  /* "Put a +1/+1 counter on target creature you control, then it deals damage equal to its power" (Knockout Maneuver, Train
+     E): `remember`, what it was told to put them on -- a counter put or not, a target no longer legal not among them (CR
+     608.2b) -- for the effects after it, which read "it" as it then is (CR 608.2h), its power with the counter. */
+  if (params.remember) context.remembered = [...(params.targets ?? [])];
   return events;
 }
 
@@ -459,6 +509,11 @@ function counterPlacements(state, params, context, all) {
      existed, as many (CR 608.2h) -- put on as counters are, so what changes counters put on changes these too. */
   if (params.countersOf === "self")
     return ids.flatMap((id) => Object.entries(context.lastKnown?.counters ?? {}).map(([had, n]) => ({id, kind: had, count: n})));
+  /* "Whenever a creature you control leaves the battlefield, if it had counters on it, put those counters on The Ozolith"
+     (wave 4b): each kind the creature the trigger is about had as it last existed, as many (CR 603.10a, 608.2h) -- not moved
+     off it, so a second Ozolith gets them too (the card's ruling). */
+  if (params.countersOf === "that card")
+    return ids.flatMap((id) => Object.entries(context.about?.lastKnown?.counters ?? {}).map(([had, n]) => ({id, kind: had, count: n})));
   return ids.map((id) => ({id, kind, count}));
 }
 /** Which placement an answer belongs to: the permanent, and the kind. */
@@ -531,8 +586,9 @@ export function removeCounter(state, params, context) {
 /**
  * `moveCounters` -- CR 122.5: "you may move a counter from target creature you control onto a second target creature you
  * control" (Tidus, Yuna's Guardian). `count` counters of the kind `counter` taken off `from` (an object, bound as a target
- * is) and put on the effect's `targets` (the second object). All or nothing (122.5): nothing moves when the two are the
- * same object, when the first has fewer than that many of that kind, or when either is no longer on the battlefield. They
+ * is) and put on the effect's `targets` (the second object). Nothing moves (122.5) when the two are the same object, when
+ * the first has none of that kind, or when either is no longer on the battlefield; with fewer than that many there, those
+ * there move (CR 609.3; Train E, Tester of the Tangential's "move X +1/+1 counters"). They
  * are put on as any counters are (addCounters): what watches for counters being put on sees them (CR 122.6), and "twice
  * that many instead" applies. Which kind, when the card leaves it to its controller (`counter: "chosen"`), is asked first
  * (script/resolution.mjs; effects/asking.mjs, counterKind) -- never here.
@@ -543,14 +599,24 @@ export function moveCounters(state, params, context) {
   /* "Onto other creatures" (Forgotten Ancient): where each goes is asked (effects/asking.mjs, countersOnto), never decided here. */
   if (params.onto !== undefined) throw new Error("moveCounters onto permanents its controller chooses asks where: run it through resolution.mjs");
   const [from] = params.from ?? [], [to] = params.targets ?? [];
+  /* "Move all counters from The Ozolith onto target creature" (wave 4b; CR 122.5): every kind there, all of each, each moved as
+     one kind is below. */
+  if (params.counter === "all") {
+    const there = Object.entries(state.objects[from]?.counters ?? {});
+    return there.flatMap(([kind, n]) => moveCounters(state, {...params, counter: kind, count: n}, context));
+  }
   const kind = params.counter ?? "+1/+1", n = Math.max(0, params.count ?? 1);
   if (from === undefined || to === undefined || from === to || n === 0) return events;
   const source = state.objects[from], destination = state.objects[to];
-  if (source?.zone !== "battlefield" || destination?.zone !== "battlefield" || (source.counters?.[kind] ?? 0) < n) return events;
+  if (source?.zone !== "battlefield" || destination?.zone !== "battlefield" || (source.counters?.[kind] ?? 0) < 1) return events;
+  /* "Move X +1/+1 counters from this creature onto another target creature" (Tester of the Tangential, Train E) with fewer
+     than X there: each counter that can move does, and the rest cannot (CR 122.5: none of a kind it has not got; 609.3: as
+     much as possible). */
+  const moving = Math.min(n, source.counters[kind]);
   const before = source.counters[kind];
-  source.counters[kind] = before - n;
+  source.counters[kind] = before - moving;
   events.push(event("GameEventCardCounters", state, {card: cardRef(state, from), type: kind, oldValue: before, newValue: source.counters[kind]}));
-  addCounters(state, to, kind, n, events, context.controller);
+  addCounters(state, to, kind, moving, events, context.controller);
   return events;
 }
 
