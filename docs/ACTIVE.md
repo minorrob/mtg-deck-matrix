@@ -1,5 +1,34 @@
 # Who holds the work
 
+## Play tabletop preview, October 14, 2026
+
+**Holder:** Codex on Personal-HP, `codex/play-tabletop-preview`, based on `e6715329`.
+Rob authorized the updated plan, starting with the reconciled checklist and working tabletop preview.
+Latest corrections: another seat shows its hand as backs; screenshots include object IDs;
+notify before configurable side-pane modules; final comprehensive UAT HTML, then staging integration.
+Mats and their cards now share one projective camera plane; the hand remains upright.
+Requirements and remaining scope: `docs/play-overhaul/REQUIREMENTS.md`.
+
+**In progress:** opt-in Pixi ground with the existing DOM cards, three back-row seats,
+viewed-seat hand, camera controls and overlay rails. The isolated recorded-view harness is
+`tools/play-tabletop-preview.mjs`. It does not send actions to a live cloud match.
+The existing `collection-model.js` edit belongs to prior work and is not part of this change.
+**Preview proof:** `tests/table-tabletop.mjs` passes geometry and Chrome interaction at
+1024/1280/1400 widths, tilt 0/35, zoom 85/110, with matching mat/card projections,
+private opponent backs, persistent canvas, overlay sizing, live reduced motion and phone fallback. Removing
+perspective from the DOM matrix deliberately failed its corner assertion, then was restored.
+`tests/table-board.mjs` passes 237 checks including a real spell resolving through the
+new tabletop into a second browser. Service-worker (9), release builder (146), feature
+wiring (124) and data-integrity checks pass. Asset versions pass in an isolated snapshot
+using the committed collection model, preserving the unrelated local edit.
+Commands: set UAT_CHROME to installed Chrome and GEOMETRY_REQUIRED=1 for the browser suites.
+Screenshot evidence is in `docs/play-overhaul/screenshots/`; the recorded preview runs with
+`node tools/play-tabletop-preview.mjs`. This is a preview milestone, not full-overhaul acceptance.
+
+**Outstanding:** shared events, final environments and motion, lobby, music, configurable panes,
+Counterintelligence, full UAT HTML and staging integration. Side-pane modules have not started.
+The forest is a procedural sketch. Crowded-mat layout and text readability need further polish.
+
 ## Library and real-deck acceptance, October 7, 2026
 
 **Holder:** Codex on Personal-HP, `codex/real-deck-acceptance`, based on the verified

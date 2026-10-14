@@ -887,8 +887,16 @@ try {
   await waitText(second.page, ".cm-board-waiting", new RegExp(`Waiting on ${firstName_}`), 10000);
   ok(true, "and the caster's strip says who the table waits on");
   await shot(firstBoard.page, "resolve-" + (firstBoard === rob ? "1400" : "1280"));
-  await firstBoard.page.click(".cm-board-strip [data-action=board-pass]");
+  // The new tabletop must submit the same real room answer as the established strip.
+  await firstBoard.page.click('[data-action=board-view][data-view=full]');
+  await firstBoard.page.getByRole('button', {name: 'Tabletop preview', exact: true}).click();
+  await firstBoard.page.locator('.cm-stage-region[data-renderer="webgl"]').waitFor();
+  await firstBoard.page.click('.cm-stage-top [data-action=board-pass]');
   await waitText(second.page, ".cm-board-mat .cm-board-field", new RegExp(castName));
+  ok(true, "the tabletop resolves a spell through the real room and the other browser receives its permanent");
+  await firstBoard.page.getByRole('button', {name: 'Toggle board tools', exact: true}).click();
+  await firstBoard.page.getByRole('button', {name: 'Tabletop preview', exact: true}).click();
+  await firstBoard.page.click('[data-action=board-view][data-view=focus][aria-label="Leave full screen"]');
   ok(true, `and it resolves: ${castName} is on the battlefield`);
   ok(await heard(ROB, "sfx/sfx_cast_creature.mp3") && await heard(MAYA, "sfx/sfx_cast_creature.mp3"), "the creature cast is heard at both boards, as a creature summoned");
   /* B5, items 10 and 12: ANOTHER PLAYER'S TURN. Rob plays a land on turn 3, which gives him the two mana for an instant;

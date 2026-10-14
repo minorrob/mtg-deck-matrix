@@ -148,6 +148,10 @@ globalThis.CrankBoard = Object.freeze({
   const SPLIT_KEY = {panel: "cm-board-split:panel", side: "cm-board-split:side"}, SPLIT = [0.2, 0.8], SPLIT_AT = {panel: 0.45, side: 0.4};
   const paneWidth = () => {const raw = stored(PANE_KEY), v = Number(raw); return raw !== null && v >= PANE[0] && v <= PANE[1] ? v : 168;};
   const splitOf = (k) => {const raw = stored(SPLIT_KEY[k]), v = Number(raw); return raw !== null && v >= SPLIT[0] && v <= SPLIT[1] ? v : SPLIT_AT[k];};
+  const STAGE_KEY = "cm-board-3d";
+  let stageOn = stored(STAGE_KEY) === "on", stageSide = false, stageRail = false, cameraOpen = false, stageError = "";
+  const camera = {tilt: stored("cm-board-tilt") === null ? 18 : Math.max(0, Math.min(35, Number(stored("cm-board-tilt")) || 0)), zoom: Math.max(85, Math.min(110, Number(stored("cm-board-zoom")) || 100))};
+  const stageEnabled = () => stageOn && mode === "full" && !phone() && innerWidth >= 1024;
   let drag = null;          /* a bar being dragged: {kind: "rows"|"hand"|"pane"|"panel"|"side", x, y, from, per} */
   /* THE TABLE'S SOUND (B8; crankmagic-audio.js): one player for the page, armed by the first press on the board. */
   let audio = null;
@@ -594,6 +598,7 @@ globalThis.CrankBoard = Object.freeze({
     const s = view.state, me = players()[view.seat], big = players()[focus] || me, others = players().filter((p) => p.playerId !== big.playerId);
     const {step, next} = stepInfo();
     const rail = `<nav class="cm-full-rail" aria-label="Board"><span class="cm-full-turn" title="Turn ${s.turn}">T${s.turn}</span>${switcher(true)}
+      ${ib("3D", "board-stage", "Tabletop preview", {}, {pressed: stageOn})}
       ${ib("⟳", "board-rotate", "Rotate: the next seat's board", {by: "1"})}
       <span class="cm-board-tools">${ib(CLOCK, "board-history", "History")}${historyOpen ? historyMenu() : ""}</span>
       ${ib(COACH, "board-coach", "CrankMagic Coach", {}, {pressed: coach.open})}
@@ -606,11 +611,47 @@ globalThis.CrankBoard = Object.freeze({
     const viewing = big.playerId !== view.seat;
     const corner = `<div class="cm-full-corner${viewing ? " cm-full-viewing" : ""}">${vitals(big, {big: true})}<span class="cm-full-corner-name">${viewing ? `Viewing ${e(big.name)}` : e(seatLabel(big))}</span>
       ${viewing ? `${ib("⟳", "board-rotate", "Rotate: the next seat's board", {by: "1"})}${b("My board", "board-focus", {seat: String(view.seat)}, true, {cls: "compact"})}` : ""}</div>`;
+    if (stageEnabled()) return stageView({rail, pill, corner, big, others, me});
     return `${rail}<div class="cm-full-center">
         <div class="cm-full-others" style="--cols:${Math.max(1, others.length)}">${others.map((p) => `<div class="cm-full-other" style="--seat:${seatColor(p.playerId)}">${mat(p, {size: "opp", focusButton: true})}</div>`).join("")}</div>
         <div class="cm-full-mine">${pill}${mat(big, {size: "full", head: "none"})}${corner}${viewing ? handBacks(big) : hand()}</div></div>
       <aside class="cm-full-side" aria-label="The table" style="--split:${Math.round(splitOf("side") * 100)}%"><div class="cm-full-vitals">${players().map((p) => `<div style="--seat:${seatColor(p.playerId)}"><span>${e(seatLabel(p))}</span>${vitals(p, {big: true})}</div>`).join("")}</div>
         <div id="cm-full-pick">${pickPanel()}</div>${splitBar("side")}${went()}${decision()}${stack()}${historyBand(30)}</aside>`;
+  }
+  /* The latest wireframe: three seats across the back, the viewed seat's upright hand at the foot.
+     The old Full layout remains the graphics fallback and the opt-out. */
+  function stageView({rail, pill, corner, big, others, me}) {
+    const rear = others.map((p) => `<section class="cm-stage-rear" data-seat="${p.playerId}" style="--seat:${seatColor(p.playerId)}">
+      <button type="button" class="cm-stage-seat-label" data-action="board-focus" data-seat="${p.playerId}" aria-label="View ${e(p.name)}'s board, ${p.health.life} life"><span>${e(p.name)}</span><b>${p.health.life}</b><small>${e((commanderOf(p) || {}).name || "Command zone")}</small></button>
+      <div class="cm-stage-mini">${mat(p, {size: "opp", head: "none"})}</div></section>`).join("");
+    const mana = big.mana.reduce((n, m) => n + m.amount, 0);
+    return `<header class="cm-stage-top"><span class="cm-stage-self">${vitals(me)}<b>${e(me.name)}</b></span>${ribbon(true)}
+      <span class="cm-stage-priority">${view.state.turnPlayerId === view.seat ? "Your turn" : `${e(nameOf(view.state.turnPlayerId))}'s turn`}<br>Priority: ${e(nameOf(view.state.priorityPlayerId))}</span>${pill}${alsoButton()}</header>
+      <div class="cm-full-mine cm-stage-region" aria-label="Tabletop preview">
+        <div class="cm-stage-caption"><span>TABLETOP PREVIEW</span><small>Forest · local camera</small></div>
+        ${rear}<div class="cm-stage-front">${mat(big, {size: "full", head: "none"})}${corner}</div>
+        <div class="cm-stage-camera"><button type="button" data-action="board-camera" aria-expanded="${cameraOpen}">Camera ▾</button>${cameraOpen ? `<div><span>View seats</span>${ib("◀", "board-rotate", "Previous seat", {by: "-1"})}${ib("▶", "board-rotate", "Next seat", {by: "1"})}
+        <label>Tilt <input type="range" min="0" max="35" value="${camera.tilt}" data-stage-camera="tilt" aria-label="Table tilt"><output>${camera.tilt}°</output></label>
+        <label>Zoom <input type="range" min="85" max="110" value="${camera.zoom}" data-stage-camera="zoom" aria-label="Table zoom"><output>${camera.zoom}%</output></label></div>` : ""}</div>
+        <span class="cm-stage-error" role="status">${e(stageError)}</span>${ask()}
+      </div>
+      <div class="cm-stage-hand"><span class="cm-stage-resources">${e(big.name)} · ${mana} mana available · Land drop ${big.landsPlayed ? "used" : "available"}</span>${big.playerId === view.seat ? hand() : handBacks(big)}</div>
+      <div class="cm-stage-rail${stageRail ? " is-open" : ""}">${rail}</div>${ib(stageRail ? "◂" : "▸", "board-stage-rail", "Toggle board tools", {}, {cls: "cm-stage-handle cm-stage-left", pressed: stageRail})}
+      <aside class="cm-full-side cm-stage-side${stageSide ? " is-open" : ""}" aria-label="The table" ${stageSide ? "" : "inert"} style="--split:${Math.round(splitOf("side") * 100)}%"><header><b>The table</b>${ib("✕", "board-stage-side", "Close table panel")}</header>
+        <div id="cm-full-pick">${pickPanel()}</div>${splitBar("side")}${went()}${decision()}${stack()}${historyBand(30)}</aside>
+      ${ib(stageSide ? "▸" : "◂", "board-stage-side", "Toggle table panel", {}, {cls: "cm-stage-handle cm-stage-right", pressed: stageSide})}`;
+  }
+  function fitStage(host) {
+    const region = host.querySelector(".cm-stage-region");
+    if (!region || !globalThis.CrankStage) {globalThis.CrankStage?.unmount(); return;}
+    const big = players()[focus] || players()[view.seat];
+    const opts = {tilt: camera.tilt, zoom: camera.zoom, reduced: globalThis.CrankMotion?.reduced() ?? false,
+      mats: [big, ...players().filter((p) => p.playerId !== big.playerId)].map((p) => matOf(p.playerId)),
+      combat: view.state.phase.startsWith("COMBAT_"), instant: view.state.stack.some((s) => /Instant/i.test(typeLineOf(s))),
+      onError(message) {stageError = message; const el = document.querySelector(".cm-stage-error"); if (el) el.textContent = `${message} Use 3D in Board tools to return to the standard board.`;}};
+    CrankStage.mount(region, opts); CrankStage.layout(region.getBoundingClientRect(), opts);
+    const tray = host.querySelector(".cm-stage-hand");
+    if (tray) tray.style.setProperty("--hc", `${Math.max(44, Math.min(112 * scaleOf("hand") / 100, (tray.clientHeight - 42) * 5 / 7))}px`);
   }
   function pickPanel() {
     const id = hover ?? selected, pick = id === null ? null : findCard(id);
@@ -933,7 +974,13 @@ globalThis.CrankBoard = Object.freeze({
     gameChip();
     const active = document.activeElement;
     const caret = active && active.matches && active.matches("[data-board-history-filter]") ? active.selectionStart : null;
+    const focusData = stageEnabled() && active?.closest?.("#cm-board") ? {action: active.dataset.action, card: active.dataset.card, seat: active.dataset.seat, camera: active.dataset.stageCamera} : null;
     render();
+    if (focusData) {
+      const next = [...document.querySelectorAll("#cm-board button, #cm-board input")].find((el) =>
+        (focusData.action || focusData.camera) && el.dataset.action === focusData.action && el.dataset.card === focusData.card && el.dataset.seat === focusData.seat && el.dataset.stageCamera === focusData.camera);
+      next?.focus({preventScroll: true});
+    }
     const context = document.getElementById("cm-coach-context");
     if (context && view) context.textContent = coachContext();
     if (caret === null) return;
@@ -962,6 +1009,7 @@ globalThis.CrankBoard = Object.freeze({
     if (!view) {host.innerHTML = `<p class="cm-board-loading" role="status">${status === "reconnecting" ? "Reconnecting to the table…" : "Opening the board…"}</p>`; return;}
     if (phone()) {
       host.dataset.view = "focus";
+      delete host.dataset.stage; globalThis.CrankStage?.unmount();
       host.dataset.phone = innerHeight > innerWidth ? "portrait" : "landscape";
       host.innerHTML = `${phoneView()}${showHand()}${banner()}`;
       fit();
@@ -970,6 +1018,7 @@ globalThis.CrankBoard = Object.freeze({
     delete host.dataset.phone;
     applyScales(host);
     host.dataset.view = mode;
+    host.dataset.stage = stageEnabled() ? "on" : "off";
     host.dataset.coach = coach.open ? "open" : "shut";
     if (mode === "full") host.innerHTML = `${fullView()}${showHand()}${panel()}${banner()}`;
     else if (mode === "table") host.innerHTML = `${strip()}${tableView()}${showHand()}${panel()}${banner()}`;
@@ -1024,7 +1073,7 @@ globalThis.CrankBoard = Object.freeze({
         main.style.setProperty("--tray-top", `${Math.round(8 + matW * 9 / 16 + GAP)}px`);
       }
       const big = host.querySelector(".cm-full-mine");
-      if (big) {
+      if (big && !stageEnabled()) {
         /* The hand is whole (item 25): the tray is a full row along the big board's foot, the board keeping that much
            clear under its Lands, and its cards no taller than a third of the big board leaves room for. */
         const bigBox = big.getBoundingClientRect(), scale = scaleOf("hand") / 100;
@@ -1042,6 +1091,7 @@ globalThis.CrankBoard = Object.freeze({
         const box = sec.getBoundingClientRect(), opts = sec.querySelector(".cm-board-options"), room = box.height - 20 - (opts && opts.children.length ? opts.getBoundingClientRect().height + 8 : 0);
         sec.style.setProperty("--pick-w", `${Math.max(56, Math.floor(Math.min(box.width - 20, room * 5 / 7)))}px`);
       }
+      fitStage(host);
       overlap(host);
       dock();
       if (tbl) sea(tbl); else stopSea();
@@ -1178,7 +1228,7 @@ globalThis.CrankBoard = Object.freeze({
     detach() {
       attached = false;
       if (audio) audio.stopBgm(400);
-      stopSea(); if (observer) {observer.disconnect(); observer = null;} peek(null); leaveFullscreen();
+      globalThis.CrankStage?.unmount(); stopSea(); if (observer) {observer.disconnect(); observer = null;} peek(null); leaveFullscreen();
       tools = false; confirmEnd = false; historyOpen = false; menuOpen = false; stepsOpen = false; alsoOpen = false; showing = null; held = null;
       coach.open = false; clearTimeout(coach.timer); coach.typing = false;
       gameChip();
@@ -1192,7 +1242,7 @@ globalThis.CrankBoard = Object.freeze({
     close() {
       attached = false;
       if (audio) audio.stopBgm(400);
-      disconnect(); stopSea(); if (observer) {observer.disconnect(); observer = null;}
+      disconnect(); globalThis.CrankStage?.unmount(); stopSea(); if (observer) {observer.disconnect(); observer = null;}
       document.getElementById("cm-game-on")?.remove();
       tableId = null; view = null; table = null; tools = false; confirmEnd = false; selected = null; hover = null; showing = null; held = null;
       historyOpen = false; historyFilter = ""; menuOpen = false; stepsOpen = false; panelOpen = false; skipping = null; records = null;
@@ -1265,6 +1315,20 @@ globalThis.CrankBoard = Object.freeze({
     focus = ((focus ?? view.seat) + Number(el.dataset.by) + n) % n;
     draw();
   };
+  actions["board-stage"] = () => {stageOn = !stageOn; stageError = ""; keep(STAGE_KEY, stageOn ? "on" : "off"); draw();};
+  actions["board-stage-side"] = () => {stageSide = !stageSide; draw();};
+  actions["board-stage-rail"] = () => {stageRail = !stageRail; draw();};
+  actions["board-camera"] = () => {cameraOpen = !cameraOpen; draw();};
+  document.addEventListener("input", (event) => {
+    const el = event.target.closest?.("[data-stage-camera]"); if (!el) return;
+    const key = el.dataset.stageCamera; camera[key] = Number(el.value);
+    el.parentElement.querySelector("output").textContent = `${el.value}${key === "tilt" ? "°" : "%"}`;
+    fit();
+  });
+  document.addEventListener("change", (event) => {
+    const el = event.target.closest?.("[data-stage-camera]"); if (el) keep(`cm-board-${el.dataset.stageCamera}`, el.value);
+  });
+  document.addEventListener("visibilitychange", () => {if (attached && view && !document.hidden) fit();});
   actions["board-pane"] = () => {paneShut = !paneShut; draw();};
   actions["board-menu"] = () => {menuOpen = !menuOpen; stepsOpen = false; tools = false; historyOpen = false; alsoOpen = false; draw();};
   actions["board-also"] = () => {alsoOpen = !alsoOpen; menuOpen = false; stepsOpen = false; tools = false; historyOpen = false; draw();};
