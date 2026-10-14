@@ -112,6 +112,12 @@ export const PROFILES = {
      Production games never expose playtest records or admit the service identity. */
   "cloud-production": {
     ...RELEASE, ...PRODUCTION, leaveOut: LOCAL_PLAY, play: "cloud", tables: {playtest: false},
+    /* THE AI DOOR, open in production to everyone signed in (Rob, 2026-10-14: "I want the AI door open on staging and
+       production for anyone that can sign in ... I want everyone I add to be able to use the AI features"). No AI
+       application of its own: the door takes the "CrankMagic accounts" sign-in, whose policy is the invite list. The
+       caps, the model and the features are staging's. The key is a Worker secret Rob enters himself, never here; until
+       he does, the door answers 503. */
+    ai: {aud: PRODUCTION.cloud.access.aud, everyone: true, capTotalCents: 300, model: "claude-haiku-5-5", coach: true, coachCapCents: 150, pilot: true, pilotGameCents: 25, advise: true},
   },
   /* Register/retain the same Durable Object class while the public app keeps Play closed.
      This is a recovery candidate, not a pause of existing sockets or their game clocks.
@@ -140,7 +146,8 @@ export const PROFILES = {
        its own inside the general one, for everyone together (Rob: "$1.50 for the coach per day is good"). An AI on Claude
        (AI-2), each game capped at 25 cents, and the deck advisor (AI-4) are on too: Rob approved what privacy.html says
        each sends on 2026-10-12. */
-    ai: {aud: "d3e7b5812c81536cb707c64cca2196e1ee7854cbca6791f4d7bd2ef4b649f6db", capTotalCents: 300, model: "claude-haiku-5-5", coach: true, coachCapCents: 150, pilot: true, pilotGameCents: 25, advise: true},
+    /* Open to everyone signed in since 2026-10-14 (Rob, as for production): the door takes staging's own sign-in too. */
+    ai: {aud: "d3e7b5812c81536cb707c64cca2196e1ee7854cbca6791f4d7bd2ef4b649f6db", everyone: true, capTotalCents: 300, model: "claude-haiku-5-5", coach: true, coachCapCents: 150, pilot: true, pilotGameCents: 25, advise: true},
     cloud: {database: {name: "crankmagic-staging", id: "b7f806ec-c9e8-4265-9f23-7d9705db9a26"}, limits: {ip: "2001", person: "2002"}, access: {team: "crankmagic.cloudflareaccess.com", aud: "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5"}},
   },
 };
@@ -171,6 +178,9 @@ export const aiVars = (profile) => (profile.ai ? {
   /* The deck advisor (AI-4) sends a deck's list and the person's own cards and lists: its own switch, on only once the
      privacy page says so. */
   ...(profile.ai.advise ? {AI_ADVISE: "on"} : {}),
+  /* Everyone signed in (Rob, 2026-10-14: "I want everyone I add to be able to use the AI features"): the invite list is
+     the allowlist, and the door takes the app's own sign-in too. */
+  ...(profile.ai.everyone ? {AI_EVERYONE: "on"} : {}),
 } : {});
 /* RATE LIMITS ON /api/* (M3): requests a minute, counted at the edge by Cloudflare's Rate Limiting bindings,
    which cloud/worker.mjs asks before it does anything. Per IP first, so a flood is turned away before any

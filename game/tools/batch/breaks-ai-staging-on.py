@@ -8,15 +8,17 @@ Run from the repository root, with nothing else editing the worktree:
 """
 SUITES = ['tests/release-pages.mjs']
 BREAKS = [
+    # Staging's own line: production's profile carries the same features since 2026-10-14, so each anchor ends at
+    # staging's database, which follows only staging's.
     ('staging seats no AI on Claude', 'tools/release-pages.mjs',
-     'coachCapCents: 150, pilot: true, pilotGameCents: 25, advise: true},',
-     'coachCapCents: 150, advise: true},'),
+     'coachCapCents: 150, pilot: true, pilotGameCents: 25, advise: true},\n    cloud: {database: {name: "crankmagic-staging"',
+     'coachCapCents: 150, advise: true},\n    cloud: {database: {name: "crankmagic-staging"'),
     ('staging offers no deck advisor', 'tools/release-pages.mjs',
-     'coachCapCents: 150, pilot: true, pilotGameCents: 25, advise: true},',
-     'coachCapCents: 150, pilot: true, pilotGameCents: 25},'),
+     'coachCapCents: 150, pilot: true, pilotGameCents: 25, advise: true},\n    cloud: {database: {name: "crankmagic-staging"',
+     'coachCapCents: 150, pilot: true, pilotGameCents: 25},\n    cloud: {database: {name: "crankmagic-staging"'),
     ('each game uncapped', 'tools/release-pages.mjs',
-     'pilot: true, pilotGameCents: 25, advise: true},',
-     'pilot: true, pilotGameCents: 0, advise: true},'),
+     'pilot: true, pilotGameCents: 25, advise: true},\n    cloud: {database: {name: "crankmagic-staging"',
+     'pilot: true, pilotGameCents: 0, advise: true},\n    cloud: {database: {name: "crankmagic-staging"'),
     ('the policy says nothing of an AI on Claude', 'privacy.html',
      '<p><strong>AI players on Claude.</strong>',
      '<p><strong>AI players.</strong>'),

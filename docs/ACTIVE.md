@@ -43,6 +43,25 @@ of the 90% target's 4,186 still undefined (`docs/handoff-2026-10-12/sentence-reu
 usage at API list prices, so a card in a session wave costs about $1.40, against an estimated 1 to 3 cents through the
 backstop.
 
+## 2026-10-14: the AI door open to everyone signed in
+
+Rob: *"I want the AI door open on staging and production for anyone that can sign in (e.g. given I am manually adding
+who can access, I'm fine with those I want everyone I add to be able to use the AI features)."*
+- **Built:** the switch `AI_EVERYONE` (`ai.everyone` in a release profile). On, the invite list is the allowlist, and
+  the door takes the app's own sign-in as well as an AI application's. Off, both hold as before. On in `cloud-staging`
+  and `cloud-production`. Production's door uses the "CrankMagic accounts" sign-in, with staging's caps, model and
+  features. The pages release and the standby keep it shut. `privacy.html` says "signed in" where it said "invited to
+  AI features". The record is in `docs/ai-door.md`, *Open to everyone signed in*.
+- **Proof:** ai-door 61, agent-seat-table 19, release-pages 216, cloud-worker 120, advisor 56, coach 60,
+  room-agent-seat 23. Breaks: `tools/ai-everyone-breaks.py`, 13 of 13 caught. Four anchors this change moved were
+  re-anchored and caught again: three in `breaks-ai-staging-on.py`, one in `ai-clock-breaks.py`.
+- **Rob's steps:**
+  - staging: delete the Access application "CrankMagic AI (staging)", whose policy is the three AI testers, or give
+    it staging's people;
+  - production: the key (`ANTHROPIC_API_KEY` on the `crankmagic` Worker; none there at 2026-10-14; staging has one);
+  - production: the go for the release that carries it. That release ships all of main since fa1a7d3b (#718 to #727),
+    the UI lane's Play pass 1 (#725) among it.
+
 ## 2026-10-12: the UI lane's pass 1 on the Play screen (Fable, a Claude session in a cloud container)
 
 Rob's brief of 2026-10-12: evaluate the Replit concept (`CrankMagic-Play`, with its `HANDOFF.md`) and the board, plan
