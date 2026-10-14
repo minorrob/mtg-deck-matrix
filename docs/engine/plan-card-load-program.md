@@ -98,3 +98,31 @@ Each step is its own PR with its suites, breaks and a staging release, as the wa
 
 Waves of hand-written cards (wave 4d onward, `docs/handoff-2026-10-12.md`) wait while steps 1 to 4 are built, unless
 Rob says otherwise: those steps are what makes later waves cheaper.
+
+## Running a lane (Rob's decision 4)
+
+A session's cost per step grows with everything it has read, because every step re-reads the whole conversation. The
+engine lane's long session reached about 700,000 tokens, so each of its steps cost many times a fresh session's. So:
+
+- **One step of the order above, one session, one PR.** The session claims its lane in `docs/ACTIVE.md`, drives its PR
+  to green, merges it, releases staging, records the outcome in `docs/ACTIVE.md`, and stops. The next step is a new
+  session, which starts from the repository, not from the last session's conversation.
+- **Read narrowly.** `grep` and line ranges, never a whole generated file or a whole data file; a command's output cut
+  to what is needed (`tail`, `head`, `--stat`). Long results go to a file, and the session reads the lines it needs.
+- **Workers report briefly.** A worker's own reading stays in its context; what it sends back goes into the lead's for
+  every later step. Ask for 30 lines or fewer, with the details in the branch or a file.
+- **Stop early rather than compact.** A session whose context has been summarized, or that is past one PR, writes its
+  state to `docs/ACTIVE.md` and stops; a new one resumes from there.
+- **Measure it.** Note the week's usage when a session starts and when it stops, and put the points it used in its PR.
+
+The kickoff prompt, with `<N>` and `<step>` filled in from the order above:
+
+> You are the engine lane, step `<N>` of `docs/engine/plan-card-load-program.md`: `<step>`. Read `AGENTS.md`,
+> `docs/ACTIVE.md` and `docs/engine/plan-card-load-program.md` first, and claim the lane in `docs/ACTIVE.md`. Do step
+> `<N>` only, as one PR. Read narrowly: grep and line ranges, never a whole generated or data file, command output cut
+> to what you need. If you use workers, ask each for a report of 30 lines or fewer. When the PR is merged and on
+> staging, record it in `docs/ACTIVE.md` and stop with a five-line report: what merged, its proof, what the next step
+> needs. Do not start the next step.
+
+Steps 1 and 2 touch different files and can run at once, in two sessions. Step 3 starts when step 2 has merged; step 4
+when step 3 has, and when Rob has set the backstop's cap.
