@@ -88,3 +88,14 @@ The preview proves the new layout on the existing card renderer, a persistent Pi
 ## Execution sequence
 
 Baseline and this checklist; event contracts; tabletop preview and regression checks; lobby; motion and stack awareness; environments and audio; configurable side-pane modules and Counterintelligence; final UAT HTML and staging release. The preview may land before the shared event layer because it displays current projected state and does not yet infer animation events.
+
+## UI control references, October 14
+
+Use these first-party references for subsequent UI details while preserving the game's visual style:
+
+- [shadcn/ui Sidebar](https://ui.shadcn.com/docs/components/radix/sidebar): sidebar structure, separate collapse controls, and edge rails. For this game, retain both outside-edge handles and avoid making the entire edge an ambiguous toggle/resize target.
+- [Radix Icon Button](https://www.radix-ui.com/themes/docs/components/icon-button): compact icon actions and restrained visual variants; also use its component library as a reference for popovers, menus, dialogs, and sliders.
+- [Atlassian navigation layout](https://atlassian.design/components/navigation-system/layout): full-height navigation and explicit expand/collapse controls.
+- [W3C target size](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum): minimum 24-by-24 CSS-pixel targets, with specified exceptions. Keep controls easy to click even when their artwork is small.
+
+Applied to T12/T13: 24-by-32-pixel tabs replace 27-by-60-pixel buttons, with thin directional chevrons, subtle borders, distinct hover and keyboard focus, and unchanged attachment to the drawer's outer edge. These are design references, not new framework dependencies.

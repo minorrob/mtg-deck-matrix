@@ -11,6 +11,7 @@ cards and mats share one physical camera perspective. Zoom is 60–120%, with 10
 cards and wrapping arrows for larger hands. Background and Table are independent local previews;
 host synchronization is pending. The supplied videos have been inspected for table structure.
 Latest readability correction: upper-left player life totals have a black container at 80% transparency, with opaque text. Chrome inspection confirms rgba(0,0,0,0.2) and text opacity 1; screenshot T21 is in tabletop-14-life-readability.png. Feature wiring, service-worker and asset-version checks pass; the unrelated collection-model edit remains untouched.
+Drawer controls T12/T13 now use 24-by-32-pixel edge tabs with thin chevrons, hover and keyboard-focus feedback. Browser inspection at widths 1400 and 1024 confirms size, edge attachment in both states, and Enter/Space toggling. Reference links for shadcn/ui, Radix, Atlassian and W3C are recorded in the requirements checklist. Feature wiring, service-worker and isolated asset-version checks pass.
 Requirements and remaining scope: `docs/play-overhaul/REQUIREMENTS.md`.
 
 **In progress:** always-on Full screen Pixi ground with the existing DOM cards, three back-row seats,

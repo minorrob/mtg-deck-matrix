@@ -61,7 +61,15 @@
 .cm-stage-side{position:absolute;top:58px;right:0;bottom:0;width:var(--stage-side-width);height:calc(100% - 58px)!important;background:#112526fa;border-left:1px solid #5e8a77;padding:12px;z-index:15;transform:translateX(100%);visibility:hidden;color:#edf6ef;overflow:auto}
 .cm-stage-side.is-open{transform:none;visibility:visible}
 .cm-stage-side>header{display:flex;justify-content:space-between;align-items:center;font-size:12px}.cm-stage-side #cm-full-pick{min-height:160px}.cm-stage-side .cm-board-band{min-height:130px}
-#matrix-v2 .cm-stage-handle{position:absolute;top:44%;width:27px;min-width:0;height:60px;padding:0;border:1px solid #5e8a77;border-radius:8px;background:#102425ef;color:#c3e2ce;z-index:16;font-size:18px}
+#matrix-v2 .cm-stage-handle{position:absolute;top:44%;display:grid;place-items:center;width:24px;min-width:24px;height:32px;min-height:32px;padding:0;border:1px solid #8fa79b55;background:#102425c7;color:#c3d6cb;z-index:16;font-size:0;box-shadow:0 2px 6px #0003;transition:background-color .12s,border-color .12s,color .12s}
+#matrix-v2 .cm-stage-handle::before{content:"";position:absolute;left:50%;top:50%;width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:translate(-50%,-50%) rotate(var(--drawer-chevron))}
+#matrix-v2 .cm-stage-left{border-radius:0 6px 6px 0;--drawer-chevron:-45deg}
+#matrix-v2 .cm-stage-right{border-radius:6px 0 0 6px;--drawer-chevron:135deg}
+#matrix-v2 .cm-stage-left[aria-pressed="true"]{--drawer-chevron:135deg}
+#matrix-v2 .cm-stage-right[aria-pressed="true"]{--drawer-chevron:-45deg}
+#matrix-v2 .cm-stage-handle:hover,#matrix-v2 .cm-stage-handle:focus-visible{background:#24483d;border-color:#a8c5b2;color:#f3fff7}
+#matrix-v2 .cm-stage-handle:focus-visible{outline:2px solid #a8dfbf;outline-offset:-2px}
+@media(prefers-reduced-motion:reduce){#matrix-v2 .cm-stage-handle{transition:none}}
 .cm-stage-left{left:0}.cm-stage-right{right:0}
 .cm-stage-error{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);z-index:8;max-width:75%;font-size:12px;color:#fff2b7;background:#172727}
 .cm-stage-region .cm-board-ask{z-index:12;max-width:80%;left:50%;transform:translateX(-50%);bottom:4px}
