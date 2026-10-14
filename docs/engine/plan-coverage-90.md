@@ -65,6 +65,10 @@ usage is read before each wave. The work stops for a handoff at 90% of the week'
 
 ## Rob's decisions (2026-10-12)
 
+**Decisions 2 and 3 are superseded by Rob's decisions of 2026-10-14** (`plan-card-load-program.md`): a compiler from
+oracle text first, the Claude API as its backstop below 99% confidence, and candidates at playtest tables. Decision 1,
+the target, stands.
+
 Rob: *"I don't want to use API usage for this. Continue forward, and your plan is auto-approved."*
 
 1. **The target:** the most-played 90% of card appearances, 5,869 cards.

@@ -4,7 +4,7 @@
 
 | Lane | Held by | Branch | Doing |
 | --- | --- | --- | --- |
-| **Engine** | Claude, a cloud container; **paused 2026-10-12 at 90% of the week's usage: `docs/handoff-2026-10-12.md`** | `claude/admiring-franklin-58cxy4` | Waves 4 and after, to the most-played 90% of Commander cards (`docs/engine/plan-coverage-90.md`); waves to 4c merged and on staging; next, wave 4d |
+| **Engine** | Claude, a cloud container; **paused at a wave's end (`docs/handoff-2026-10-12.md`); resumes Friday 2026-10-16, a fresh session per lane** | `claude/admiring-franklin-58cxy4` | Waves to 4c merged and on staging. From 2026-10-16: **the card load program** (`docs/engine/plan-card-load-program.md`, Rob's decisions of 2026-10-14): demand capture, the sentence library and its calibration, the compiler, then the API as its backstop below 99% confidence. Wave 4d waits |
 | **UI** | Fable (a Claude session in a cloud container), since 2026-10-12 | `claude/nice-hypatia-4ajdyi` (the session's own branch, by its harness; the `claude/ui-<topic>` form waits for the next topic) | Pass 1 of the Play screen on the Replit concept: the seven steps in the strip, Full screen as the table from your chair with a 3D switch, the right pane docked with Turn Resources (notes 9 and 10), the hover card no taller than the mat, motion and callouts, the lobby's fans and launch line. The plan: `docs/ui-lane/plan-play-ui-2026-10-12.md`. Brief: `docs/ui-lane/README.md` |
 
 ### Requests between the lanes
@@ -22,6 +22,26 @@ other lane answers in the last column.
 | 7 | UI | `tests/advisor.mjs` to pass again: its clock is fixed at 2026-10-11T12:00Z and its `ai_calls` rows are written at that clock, but the meter's 24-hour window (`cloud/ai.mjs` `since()`, through `aiMeter` in `cloud/worker.mjs`) runs on the real clock, so from 2026-10-12T11:59Z the rows fall outside it and the meter check fails on every branch, `main` included | The Actions gate is red for every PR until it is fixed; #725 (the UI pass) waits on it to merge | `cloud/worker.mjs` (`aiMeter`: pass the request's `now` to the door's `spent`), or the suite's rows at the real clock | Fixed on `main` in c629f8c1 (#723): `aiMeter` takes the request's clock. #727 puts the LLM seat's call log on the table's clock too (`cloud/game-room.mjs`), with `tools/ai-clock-breaks.py`; the AI suites pass with the machine's clock moved days either way |
 | 1 | Engine | The board to show the monarch (CR 725): the view's `state.players[i]` now carries `monarch: true` for the monarch, public to every seat, and no key for anyone else; the history says "Maya became the monarch" | Ginger, Queen of Sweets and Tamiyo, Upriser Crowned make their controller the monarch; the monarch draws a card at their end step, and a creature's combat damage to them makes its controller the monarch -- a player should see who holds it | The engine lane built it (Train E, the `monarch` branch); `docs/ui-lane/gameplay-anchor.md` lists the field. For the UI lane to show |
 | 2 | Engine | A switch in the host's Table rules (`crankmagic-table.js`): *The player who goes first skips their first draw*, on unless the host turns it off. The table's view carries `rules.skipFirstDraw` (`true` by default); the host sends it with the other rules, `POST .../rules {skipFirstDraw: false}`, refused once a seat is ready like the others. It matters only at a two-seat table: in a game of three or four nobody skips (CR 103.8c), so the switch can be shown only there | Rob, 2026-10-12: "this can be toggled off in game setup by the lobby owner". CR 103.8a as a house rule: with it off, the first player of a two-player game has a draw step on turn 1 | The engine lane built the rule, the table's field and the room's pod (`claude/first-draw-step`; `docs/ui-lane/gameplay-anchor.md`). For the UI lane to show |
+
+## 2026-10-14: Rob's decisions on the card load program
+
+Rob asked for "a card load-to-engine program" to replace session waves at about 7 cards a point. He reviewed the
+proposal (the Card Load Program page) and decided, on 2026-10-14:
+1. **The compiler first**, from oracle text; the Claude API as its backstop where the compiler's confidence in a card
+   is below 99%.
+2. **Candidate cards may play at playtest tables** (D5 changes for candidates only), labeled.
+3. "Real time" means **when a deck is saved**.
+4. Friday's work runs **in a fresh session per lane**.
+5. **Players are told their card was recorded** for the next wave.
+
+These supersede decisions 2 and 3 of 2026-10-12 (`docs/engine/plan-coverage-90.md`). The plan, the measurements
+behind it and the order of work: `docs/engine/plan-card-load-program.md`. Still Rob's to set: the backstop's daily
+cap. No lane runs the API writer before that step is built and the cap is set.
+
+Measured for it: a compiler built from the 2,470 defined cards' sentences reaches at most 21.7% of all cards and 12.5%
+of the 90% target's 4,186 still undefined (`docs/handoff-2026-10-12/sentence-reuse.mjs`). A point is about $10 of
+usage at API list prices, so a card in a session wave costs about $1.40, against an estimated 1 to 3 cents through the
+backstop.
 
 ## 2026-10-12: the UI lane's pass 1 on the Play screen (Fable, a Claude session in a cloud container)
 
@@ -149,7 +169,8 @@ usage for this").
   - Not defined, each waiting on another family: Sylvan Library, Arena of Glory, Mosswort Bridge, Six, Ragavan, Dauthi
     Voidwalker, Birgi and Emry.
   - The 80% set: 1,462 defined (from 1,347), 2,780 with every rule. The 90% set: 1,605 of 5,869 defined (from 1,411).
-    The defined cards now cover 60.3% of all card appearances (52.0% when the plan was written).
+    The defined cards now cover 60.3% of all card appearances (52.6% when the plan was written; the PRs and the
+    handoff said 52.0%, which was the 80% set's share, not the 90% target's).
   - Breaks: j1 33, j2 45, j3 111, j4 81, each caught.
 - **Wave 4c, merged #726** (main 0540d882): 78 of the next 80 most-played cards (ranks 501 to 723), in four lanes by theme, each owning the
   rules its cards need:

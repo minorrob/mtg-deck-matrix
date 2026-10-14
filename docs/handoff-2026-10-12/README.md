@@ -13,6 +13,7 @@ wave the same way (`docs/handoff-2026-10-12.md`, section 5). Each takes its path
 | `resolve-readme.py README.md` | README conflicts: ours for the suite count, both sides for each suite's entry |
 | `break-one.py <breaks file> <label> ...` | One break at a time: applied, its file's suites run until one fails, the file restored |
 | `run-list-at.sh <checkout> <out dir> <suite> ...` | Suites four at a time, a log each; prints "passed N of M" and the failures |
+| `sentence-reuse.mjs <root>` | How many cards have every oracle sentence already in a defined card: the most a compiler built from them reaches, over all cards and over the 90% target (`docs/engine/plan-card-load-program.md`) |
 | `verify-staging.sh <work dir> <previous version prefix>` | After `tools/release-staging.sh`: waits for Workers Builds, compares the deployed `play-worker.js` with the dry run's, lists the AI bindings; needs `CLOUDFLARE_ACCOUNT_ID`, `WRANGLER` and a Cloudflare token (read-only) |
 
 The suite list a wave verifies (build it in the checkout):
