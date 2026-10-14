@@ -154,6 +154,7 @@
 .cm-stage-seat-label small::before{content:"— ";color:inherit}
 .cm-stage-mini>.cm-mat{--bc:var(--rear-card,24px)}
 .cm-stage-caption{letter-spacing:0;text-shadow:0 1px 4px #000;font-size:11px;gap:3px}
+.cm-stage-life-list{display:flex;flex-direction:column;gap:4px;padding:8px 10px;border-radius:6px;background:rgba(0,0,0,.2);color:#f4f1e9}
 .cm-stage-life{font-size:12px}
 .cm-stage-camera>div{row-gap:3px}
 

@@ -758,7 +758,7 @@ globalThis.CrankBoard = Object.seal({
     return `<header class="cm-stage-top"><span class="cm-stage-self">${vitals(me)}<b>${e(me.name)}</b></span>${ribbon(true)}
       <span class="cm-stage-priority">${view.state.turnPlayerId === view.seat ? "Your turn" : `${e(nameOf(view.state.turnPlayerId))}'s turn`}<br>Priority: ${e(nameOf(view.state.priorityPlayerId))}</span>${alsoButton()}${pill}${stageProfile(me)}</header>
       <div class="cm-full-mine cm-stage-region" aria-label="Tabletop">
-        <div class="cm-stage-caption"><span>TURN ${view.state.turn}</span>${others.map(p=>`<span class="cm-stage-life">${e(p.name)} · <b>${p.health.life}</b></span>`).join("")}</div>
+        <div class="cm-stage-caption"><span>TURN ${view.state.turn}</span><div class="cm-stage-life-list" role="group" aria-label="Player life totals">${others.map(p=>`<span class="cm-stage-life">${e(p.name)} · <b>${p.health.life}</b></span>`).join("")}</div></div>
         ${rear}<div class="cm-stage-front">${mat(big, {size: "full", head: "none"})}${corner}</div>
         <div class="cm-stage-camera"><button type="button" data-action="board-camera" aria-expanded="${cameraOpen}">Camera ▾</button>${cameraOpen ? `<div><span>View seats</span>${ib("◀", "board-rotate", "Previous seat", {by: "-1"})}${ib("▶", "board-rotate", "Next seat", {by: "1"})}
         <label>Tilt <input type="range" min="0" max="60" value="${camera.tilt}" data-stage-camera="tilt" aria-label="Table tilt"><output>${camera.tilt}°</output></label>
