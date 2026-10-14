@@ -43,6 +43,25 @@ of the 90% target's 4,186 still undefined (`docs/handoff-2026-10-12/sentence-reu
 usage at API list prices, so a card in a session wave costs about $1.40, against an estimated 1 to 3 cents through the
 backstop.
 
+## 2026-10-14: main c9ad0e65 on staging and in production (Rob: "Release it all to prod")
+
+- **Staging:** `release/cloud-staging` e3b62777. Local walks: `release-acceptance` 22, `play-e2e` 35. Workers Builds
+  deployed version **1585a9a3**, its `play-worker.js` byte for byte the dry run (sha256 a3f3f187df92), the AI settings
+  bound with `AI_EVERYONE`. `staging-check`, signed in, reads c9ad0e65.
+- **Production** (`cloud-production`, by `tools/release-production.sh`):
+  - `release/pages` b0cdc46e, on 04b415de;
+  - local walks: `release-acceptance` 22 and `production-play-e2e` 27;
+  - Workers Builds deployed version **5bfe13ab**, its `play-worker.js` byte for byte the dry run (a3f3f187df92), the
+    AI settings bound on the "CrankMagic Accounts" sign-in;
+  - `version.json` reads c9ad0e65, profile `cloud-production`;
+  - the live walk at `https://crankmagic.com`: 22 checks, with `UAT_LIVE_NETWORK=1`. Without it, the walk's Scryfall
+    stub stopped *Measure* on 44 cards only Scryfall knows; `docs/release-production.md` now says so.
+  - **The rollback target** is the previous Play version, **8997e158** (fa1a7d3b), or the standby **a2c6fbb4**.
+  - It carries #718 to #732: the card waves 1 to 4c, the first-draw rule, the UI lane's Play pass 1, the AI door
+    open to everyone signed in.
+- **The AI door in production waits on the key:** `ANTHROPIC_API_KEY` on the `crankmagic` Worker (none at
+  2026-10-14). Until then it answers 503. On staging it waits on the AI testers' Access application, deleted or widened.
+
 ## 2026-10-14: the AI door open to everyone signed in
 
 Rob: *"I want the AI door open on staging and production for anyone that can sign in (e.g. given I am manually adding
