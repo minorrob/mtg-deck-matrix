@@ -457,23 +457,24 @@ try {
     await nina.page.locator(".cm-lobby-seat[data-seat='0'] [data-action=table-deck]").click();
     await nina.page.locator("#cm-dialog .cm-table-deck-empty").waitFor({timeout: 15000});
     ok(/without adding anything/.test(await pageText(nina.page, "#cm-dialog .cm-table-deck-empty")), "a new player is directed to shared decks, without restoring anyone's library");
-    await nina.page.waitForFunction(()=>document.querySelectorAll('[data-action=table-use-shared-deck]:enabled').length===7);
+    await nina.page.waitForFunction(()=>document.querySelectorAll('[data-action=table-use-shared-deck]:enabled').length===6);
     eq(await nina.page.locator('[data-action=table-use-deck]').count(),0,"the tester starts with no personal decks");
     const sharedNames=await nina.page.locator('[data-action=table-use-shared-deck] strong').allTextContents();
-    eq(sharedNames.length,7,"all seven shared decks are available to a fresh signed-in player");
+    eq(sharedNames.length,6,"all six verified staging decks are available to a fresh signed-in player");
     if(SHOTS) {
       await nina.page.locator('[data-action=table-use-shared-deck]').evaluateAll(els=>els.forEach((el,i)=>{const tag=document.createElement('b');tag.textContent=`D${i+1}`;el.style.position='relative';tag.style.cssText='position:absolute;right:8px;top:8px;background:#ffdb6b;color:#151a19;padding:3px;font:11px monospace';el.prepend(tag);}));
       await shot(nina.page,'shared-decks-1400');
     }
-    for(let i=0;i<7;i++) {
-      if(i) {await nina.page.locator(".cm-lobby-seat[data-seat='0'] [data-action=table-deck]").click();await nina.page.waitForFunction(()=>document.querySelectorAll('[data-action=table-use-shared-deck]:enabled').length===7);}
+    for(let i=0;i<6;i++) {
+      if(i) {await nina.page.locator(".cm-lobby-seat[data-seat='0'] [data-action=table-deck]").click();await nina.page.waitForFunction(()=>document.querySelectorAll('[data-action=table-use-shared-deck]:enabled').length===6);}
       await nina.page.locator('[data-action=table-use-shared-deck]').nth(i).click();
       await nina.page.waitForFunction(()=>!document.querySelector('#cm-dialog[open]'));
       await nina.page.waitForFunction(name=>document.querySelector(".cm-lobby-seat[data-seat='0']")?.textContent.includes(name),sharedNames[i]);
       ok((await pageText(nina.page,".cm-lobby-seat[data-seat='0']")).includes(sharedNames[i]),`the real table accepts ${sharedNames[i]} for the tester`);
       const payload=deckBodies.at(-1).deck;
       eq(payload.cards.length+payload.commander.length,100,'a shared deck submits the full hundred');
-      const expected=decksFromBackup(JSON.parse(readFileSync(path.join(ROOT,'data/live-state.json'),'utf8')),[sharedNames[i]])[0];
+      const published=JSON.parse(readFileSync(path.join(ROOT,'tests/fixtures/shared-staging-decks.json'),'utf8')).decks.find(d=>d.name===sharedNames[i]);
+      const expected={name:published.name,commander:published.commander,cards:published.cards};
       eq({name:payload.name,commander:payload.commander,cards:payload.cards},expected,'the selected list exactly matches the saved deck, with no stand-ins');
       ok(!('source' in payload),'a shared deck never attributes the guest result to the owner library');
     }

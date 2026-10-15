@@ -1,12 +1,13 @@
 # Draft execution plan for the October 14 playtest feedback
 
-Prepared October 15, 2026. Status: ready for Rob’s review; implementation awaits his go-ahead. This plan follows the latest feedback and clarifications, superseding earlier UI decisions where they conflict. It changes no running game or deployment.
+Prepared October 15, 2026. Status: execution authorized by Rob, starting with staging-deck verification and commander casting. This plan follows the latest feedback and clarifications, superseding earlier UI decisions where they conflict. Completion and release evidence are recorded in docs/ACTIVE.md.
 
 The intended experience is a readable mobile board, direct interaction with cards, fewer unnecessary confirmations, and a clear explanation of who must act and why. Preserve server authority, private hands, reconnect behavior, and replay compatibility throughout.
 
 ## Confirmed decisions
 
 - Mobile needs a layout and interaction redesign: buttons, overlays, menus, and card inspection must work without obstructing play.
+- Mobile uses one fixed Focused view, without a view selector. Desktop Full/Table/Focus share header, modules, and collapsible drawers; non-Full views retain applicable drawer resizing. Camera exists in every view and contains desktop view switching; Tilt appears only in Full. Remove the former Screen View placement and migrate existing layout preferences safely.
 - Select a spell, highlight mana sources, tap the desired sources, then explicitly confirm the cast. Auto-pay is an optional shortcut.
 - The zoom slider should have ample headroom. Comfortable card reading while retaining most cards should fall around the middle to upper-middle; the maximum should be intentionally oversized. There is no 800 by 800 pixel target.
 - Provide a separate card-angle control in Camera, allowing battlefield cards to stand above the tabletop while retaining natural perspective. Keep board tilt separate.
@@ -227,6 +228,17 @@ UI work belongs to the existing UI lane. Rules, room persistence, projections, a
 
 ## Information still needed
 
-A supported authenticated staging read or owner export is still needed for the current six decks and their exact D3 identity; the source environment is confirmed as staging. A table link or exported record is needed to identify Luke's card and missed draw. These gaps block the corresponding replacement/bug claim, not the other planning work. Cloudflare sending availability, quota, and the invitation admission path need account-level verification during execution.
+The current six staging decks were verified from revision 36: D1 Tymna the Weaver + Kraum, Ludevic’s Opus; D2 Chulane; D3 Kiora of Salt and Sand; D4 Felothar; D5 Teysa Karlov; D6 Krenko. Their complete lists passed the real lobby checks locally. A table link or exported record is needed to identify Luke's card and missed draw. These gaps block the corresponding replacement/bug claim, not the other planning work. Cloudflare sending availability, quota, and the invitation admission path need account-level verification during execution.
 
-Specific phone/browser details will refine device acceptance, but do not block the draft mobile design. The garbled phrase about the cast animation and player name is not treated as a firm specification: prototype a restrained, player-labeled cast movement and review it before choosing exact motion or placement. No implementation or deployment is authorized by this planning update; Rob's go-ahead starts execution.
+Specific phone/browser details will refine device acceptance, but do not block the mobile design. The garbled phrase about the cast animation and player name is not treated as a firm specification: prototype a restrained, player-labeled cast movement and review it before choosing exact motion or placement. Rob authorized execution on October 15; validate each increment before its staging release.
+
+
+## P14 — Deck and library sharing, invitations and profiles (authorized October 15)
+
+Share Deck sits directly below Change Commander on deck tiles and in a deck's More menu. A compact dialog provides registered-user autocomplete, public access and Email Deck. Save and Cancel sit at the bottom right; Send appears only on Email Deck and requires a valid address. Reviewer permits viewing and playing; Collaborator adds editing. Public sharing is for signed-in players. Owners can change permissions and revoke them. Decks has My Decks and Shared Decks; the latter lists public decks and explicit grants and feeds Play's deck chooser.
+
+Share Library sits below Publish your To Trade list. It shares card identities and inventory quantities/status, excluding account settings, history, purchase prices and private lot notes. Collaborator edits use the existing collection rules and owner-library version check. Shared editing never changes a game already using its own deck snapshot. Notification email comes from notifications@crankmagic.com, with delivery failures visible and retryable. Publishing does not broadcast mail to every registered player; specific grants notify their recipients.
+
+Only the designated administrator sees Invite to CrankMagic. The server enforces that restriction, admits precisely the invited address through the configured Access applications, creates its profile, and sends the invitation. Profile settings below Account provide a display name, cropped image and verified email change. A verified change retains the canonical library/game identity and retires the former sign-in. Settings uses compact desktop columns and a single mobile column.
+
+Acceptance: authenticated owner/reviewer/collaborator/stranger tests; direct API refusal of unauthorized writes; revocation and stale-save conflict; keyboard selection and stale-search rejection; mobile fit; profile/identity retention; email failures and retry; inviter-only admission; real staging mail and a recipient walking from invitation through deck selection. Current Cloudflare Email Sending API access returns Unauthorized (2036), so live mail and admission remain blocked on configuring permissions, the sender domain and the scoped Access token. Local tests use isolated SQLite and simulated provider responses. No external invitations are sent by automated tests.

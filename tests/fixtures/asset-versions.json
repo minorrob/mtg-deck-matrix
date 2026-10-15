@@ -154,8 +154,8 @@
       "sha": "5dd742bd996b24a6"
     },
     "crankmagic-app.js": {
-      "version": 492,
-      "sha": "8cc11584fa32a2b2"
+      "version": 494,
+      "sha": "e760180517e9274a"
     },
     "crankmagic-assets.js": {
       "version": 35,
@@ -166,8 +166,8 @@
       "sha": "ddab072cfc45df40"
     },
     "crankmagic-board.js": {
-      "version": 49,
-      "sha": "d9169fc3a6a43e9d"
+      "version": 50,
+      "sha": "650a70239d9878cc"
     },
     "crankmagic-brand.js": {
       "version": 6,
@@ -190,12 +190,12 @@
       "sha": "ff45272f85b35fdf"
     },
     "crankmagic-collection.js": {
-      "version": 100,
-      "sha": "f2feb6fe38605dce"
+      "version": 101,
+      "sha": "b8b7f01251f60230"
     },
     "crankmagic-decks.js": {
-      "version": 104,
-      "sha": "add921c3fc7ffa74"
+      "version": 105,
+      "sha": "1f0ae1d6a380a289"
     },
     "crankmagic-design.css": {
       "version": 26,
@@ -310,16 +310,20 @@
       "sha": "006f5c23f82da7aa"
     },
     "crankmagic-settings.js": {
-      "version": 11,
-      "sha": "d8ca2c32fe19b915"
+      "version": 12,
+      "sha": "0df2769d4864837f"
+    },
+    "crankmagic-sharing.js": {
+      "version": 2,
+      "sha": "be7e03276bc0b7a1"
     },
     "crankmagic-sim.js": {
       "version": 24,
       "sha": "cf2673a40327b2ef"
     },
     "crankmagic-stage.css": {
-      "version": 12,
-      "sha": "ad58157c8d7e4453"
+      "version": 13,
+      "sha": "e4b8e94836af4f5f"
     },
     "crankmagic-stage.js": {
       "version": 4,
@@ -330,12 +334,12 @@
       "sha": "07440b83396bb9e2"
     },
     "crankmagic-sw.js": {
-      "version": 476,
-      "sha": "fb72dddcbf362918"
+      "version": 478,
+      "sha": "dc8dd1b292e19b7f"
     },
     "crankmagic-table.js": {
-      "version": 28,
-      "sha": "8f0327016be31c37"
+      "version": 29,
+      "sha": "fe42116791b85c09"
     },
     "crankmagic-tabletop.js": {
       "version": 30,
@@ -354,8 +358,8 @@
       "sha": "ca657a27caa9093d"
     },
     "crankmagic.css": {
-      "version": 288,
-      "sha": "a5e01e83df610a7b"
+      "version": 289,
+      "sha": "d99c021c9bfc8b08"
     },
     "custom-model.js": {
       "version": 3,
