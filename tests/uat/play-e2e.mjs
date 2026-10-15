@@ -283,7 +283,7 @@ try {
         await p.getByText("Backup restored after checksum verification.").first().waitFor({timeout: 30000});
         return text;
       };
-      eq([await restore(page, BASE), await restore(newcomer, NBASE)], [review, review], `the host and the newcomer each restore the library in Settings, and its review reads "${review}"`);
+      eq(await restore(page, BASE), review, `the host restores the library in Settings, and its review reads "${review}"`);
 
       /* The host's table: a person's seat and an AI's. */
       await page.goto(`${BASE}/index.html#table`);
@@ -310,13 +310,22 @@ try {
       const seen = await newcomer.evaluate(async (u) => (await (await fetch(u, {cache: "no-store"})).json()).table.seats.map((s) => [s.you, s.occupied]), turl);
       eq(seen.slice(0, 2), [[false, true], [true, true]], "the newcomer opens the link, signed in as themself, and sits in seat 2");
       await newcomer.locator(`.cm-lobby-seat[data-seat="1"]`).getByRole("button", {name: /^Choose a deck$/}).click();
+      const shared = newcomer.locator('#cm-dialog [data-action=table-use-shared-deck]');
+      await until("all seven shared decks to be validated", async () => shared.evaluateAll(els => els.length === 7 && els.every(el => !el.disabled)), 30000);
+      eq(await newcomer.locator('#cm-dialog [data-action=table-use-deck]').count(), 0, "the signed-in invitee has no library decks or import requirement");
+      await shared.filter({hasText: "Krenko"}).click();
+      await newcomer.locator('.cm-lobby-seat[data-seat="1"] .cm-seat-line', {hasText: "Krenko"}).waitFor({timeout:15000});
+      ok(true, "the empty-library invitee selects Rob's shared Krenko deck through the deployed Worker");
+      eq(await restore(newcomer, NBASE), review, "backup restoration also remains available to an invitee");
+      await newcomer.goto(`${NBASE}/index.html#table?id=${tableId}`);
+      await newcomer.locator('.cm-lobby-seat[data-seat="1"]').getByRole('button', {name: /^(Choose|Change).*deck$/}).click();
       const rows = newcomer.locator("#cm-dialog .cm-table-deck[data-action=table-use-deck]");
       await rows.first().waitFor({timeout: 15000});
       await until("the dialog's known counts", async () => newcomer.locator("#cm-dialog [data-known-for]").evaluateAll((els) => els.length > 0 && els.every((el) => el.textContent.trim())), 30000);
       const known = Object.fromEntries(await rows.evaluateAll((els) => els.map((el) => [el.querySelector("strong").textContent.trim(), el.querySelector("[data-known-for]").textContent.trim()])));
       eq([known["Elves (e2e)"], known["Goblins with a gap (e2e)"]], ["All 100 cards known", "99 of 100 known · 1 to learn"], "the deck dialog says which decks the table can play, before one is chosen");
-      await rows.filter({has: newcomer.locator("strong").getByText("Elves (e2e)", {exact: true})}).click();
-      await newcomer.locator(`.cm-lobby-seat[data-seat="1"] .cm-seat-line`, {hasText: "Elves (e2e)"}).waitFor({timeout: 15000});
+      await newcomer.locator("#cm-dialog [data-action=table-use-shared-deck]").filter({hasText:"Krenko"}).click();
+      await newcomer.locator(`.cm-lobby-seat[data-seat="1"] .cm-seat-line`, {hasText: "Krenko"}).waitFor({timeout: 15000});
       await newcomer.locator(`.cm-lobby-seat[data-seat="1"]`).getByRole("button", {name: /^Ready$/}).click();
 
       /* The host seats their deck and the AI's, and starts. */

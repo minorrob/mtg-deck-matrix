@@ -9,7 +9,7 @@ Rob's current instructions override the compiled brief; the later feedback captu
 - Drawer footers have no Add module or Restore default layout controls. Configure placement through Settings > Set Side Drawer Modules; retain in-module drag and keyboard ordering.
 - Rob authorized all seven saved decks (D1-D7) for every signed-in human, so playtesters can choose a shared deck without importing a library. Ship only deck names, commanders, main-deck lists and brackets; never the collection, account data or owner source IDs. Validate against the current server before enabling selection. This is a snapshot of the committed decks, not automatic account-library sharing.
 
-- On the Stack uses one numbered row per active entry, newest first (#1 resolves next). Its wrapping text column occupies 25% of the available column width and shows position, card name and player; the image occupies the right column. Every image shares Card Preview sizing in either drawer.
+- On the Stack is one overlapping card pile beside a 25% wrapping list of numbered names and players. Clicking a name animates that card to the front; clicking the pile cycles and wraps. Browsing never changes resolution order (#1 resolves next). The front card matches Card Preview size. Reduced motion skips the shuffle animation.
 
 - Profile avatar/menu at top right beside Skip to end; Settings removed from the left rail. Settings includes Set Side Drawer Modules, with Left / Right / None radio columns. Reorder by drag handle or keyboard buttons within each drawer; placement and order follow the profile through library sync. Cancel preserves the prior layout.
 - Available modules: Screen View (one Full / Table / Focus popout), History, AI Coach, Counter-Intel, Resources, On the Stack, Card Preview, Table Vitals, Recommended Actions, Chat, and Actions. Recommended Actions shares the existing AI Coach conversation. Assigned Actions replaces floating decision popups in Full screen; other views retain their controls. Chat remains explicitly unavailable pending a shared service; voice is a later feature.
@@ -17,19 +17,20 @@ Rob's current instructions override the compiled brief; the later feedback captu
 - Borderless rows: creatures, artifacts/enchantments, then lands. Zone piles form a two-by-two block on the right. Rear-seat labels sit below mats, commander inline, without health; opponent health sits upper left in a black container at 80% transparency (20% opacity), with fully opaque text.
 - Table Zoom is 60–120%, with 100% matching the former 110% scale. Small sizes may be unreadable; large sizes may clip table edges, as explicitly requested. Card size is separate: 100% matches the former 130%, and 150% is 40% larger than the new 100%. Hand bottoms slightly clip the screen edge and card tops overlap the table front.
 - Tabletop card size has a separate camera slider; slider spacing is halved. Tilt uses a fixed camera scale with natural depth perspective; zero degrees is flat.
-- Pending: replace the procedural table/environment with reference-video quality. Clean locked-camera environment loops remain separate from table material and gameplay objects.
+- The supplied October 14, 8:52 PM lava video is the Volcano background. Its audio stream is removed; the 8-second video loops behind the table, with a still poster for reduced motion and loading. Table material remains a separate setting. Other environments and the table still need final artwork.
+- Battlefield cards can be dragged to reorder within their existing creature, artifact/enchantment, or land section. Alt+Left/Right provides keyboard ordering. Positions snap into existing card slots and persist for this player, match, seat and device; no gameplay action or zone change is sent.
 - Pending round contract: Round x, Turn y must handle extra turns and eliminated seats using authoritative progression, not global turn divided by initial seat count.
 
 - Full screen always uses the 3D tabletop. Remove both the 3D toggle and the opt-in preview toggle. Zero tilt provides the flat view.
 - Tilt is an angle from 0 to 60 degrees, default 40 degrees. Cards and mats share the same physical camera perspective, without separate card deformation; the hand stays upright.
 - T11 is a container-free fan, seven cards at most. Larger hands have previous/next arrows, wrapping indefinitely in either direction. Each viewed seat keeps its own carousel position; opponent faces stay private.
-- Match the reference video's floating table with rounded edges, thickness and a distinct surrounding environment. Background and Table are independent appearance choices (for example Volcano and Wooden). Background-only videos will be supplied by Rob. The current procedural environments remain placeholders.
+- Match the reference video's floating table with rounded edges, thickness and a distinct surrounding environment. Background and Table are independent appearance choices (for example Volcano and Wooden). Background-only videos will be supplied by Rob. Volcano now uses the supplied video; the other procedural environments remain placeholders.
 - Prepare host-selected shared appearance as a table setting; current local appearance controls are explicitly labeled as this-device previews, not synchronized host controls.
 
 - When viewing another seat, show that player's hand count and card backs. Return to your own seat to see your cards. Never reveal another player's private faces. This supersedes the initial execution plan's own-hand proposal.
 - Send screenshots after meaningful UI updates, with stable visible object IDs for feedback.
 - Notify Rob before building the configurable side-pane modules.
-- At the end of the complete overhaul, provide a standalone HTML UAT guide covering every feature and aspect, expected results, and ways to record findings.
+- Latest instruction: no HTML UAT guide is needed; Rob will transcribe the playtest game for feedback.
 - Integrate the completed, verified work into staging. The staging release branch must be updated through the repository's release builder if it is generated; production is a separate release.
 
 ## Status legend
@@ -73,7 +74,7 @@ Preview means implemented in the desktop tabletop surface, with acceptance still
 | R33 | Attack readiness uses engine facts (section 6) | Pending | Engine already has controlledSinceTurn and summoningSick; project facts without guessing next turn or attack legality. |
 | R34 | Mana and passive-effect wording (section 6) | Pending | Source count is not mana amount; text match is not a confirmed active restriction. |
 | R35 | Screenshots with stable object IDs (latest user instruction) | Preview | T01 top, T02–T04 back seats, T05 front mat, T06 command, T07 library, T08 lands, T09 battlefield, T10 camera, T11 hand, T12/T13 handles, T14 panel, T15/T16 previous/next hand cards, T17 Background, T18 Table material, T19 Cards, T20 profile, T21 player life container, M01 stack, M02 Table Vitals, M03 History, M04 Card Preview, D01 drawer settings. |
-| R36 | Final comprehensive UAT HTML (latest user instruction) | Pending | Every row has steps, expected behavior, status, evidence and an input for findings. |
+| R36 | UAT feedback (latest user instruction) | HTML canceled by Rob | Rob will transcribe the game; retain screenshots and automated release checks. |
 | R37 | Staging integration (latest user instruction) | Pending | Exact tested source, release verification and staging acceptance; no production release implied. |
 
 ## Reconciled technical decisions
@@ -92,7 +93,7 @@ The preview proves the new layout on the existing card renderer, a persistent Pi
 
 ## Execution sequence
 
-Baseline and this checklist; event contracts; tabletop preview and regression checks; lobby; motion and stack awareness; environments and audio; configurable side-pane modules and Counterintelligence; final UAT HTML and staging release. The preview may land before the shared event layer because it displays current projected state and does not yet infer animation events.
+Baseline and this checklist; event contracts; tabletop preview and regression checks; lobby; motion and stack awareness; environments and audio; configurable side-pane modules and Counterintelligence; recorded playtest feedback and staging release. The preview may land before the shared event layer because it displays current projected state and does not yet infer animation events.
 
 ## UI control references, October 14
 

@@ -313,6 +313,35 @@ try {
   await page.setViewportSize({width:1400,height:900});
   await page.locator('.cm-stage-region[data-renderer="webgl"]').waitFor();
   assert.equal(await page.locator('canvas.cm-stage-canvas').count(),1,"returning to desktop mounts one surface");
+  await page.setViewportSize({width:1400,height:900});
+  for(const [selector,label] of [['.cm-stage-rail','Toggle board tools'],['.cm-stage-side','Toggle table panel']]) if(await page.locator(`${selector}.is-open`).count()) await page.getByRole('button',{name:label,exact:true}).click();
+  if(!await page.getByRole('combobox',{name:'Background',exact:true}).count()) await page.getByRole('button',{name:'Camera',exact:false}).click();
+  await page.getByRole('combobox',{name:'Background',exact:true}).selectOption('volcano');
+  await page.getByRole('button',{name:'Camera',exact:false}).click();
+  const row=page.locator('.cm-stage-front [data-card-section$=":others"]');
+  const order=()=>row.locator('[data-arrange-card]').evaluateAll(els=>els.map(el=>el.dataset.card));
+  const originalOrder=await order();assert.ok(originalOrder.length>=2);
+  const dropBox=await row.locator('[data-arrange-card]').first().boundingBox();
+  await row.locator('[data-arrange-card]').nth(1).dragTo(row.locator('[data-arrange-card]').first(),{targetPosition:{x:dropBox.width/2-5,y:dropBox.height/2}});
+  assert.deepEqual((await order()).slice(0,2),[originalOrder[1],originalOrder[0]],'dragging snaps cards into order within their section');
+  await row.locator('[data-arrange-card]').first().focus();await row.locator('[data-arrange-card]').first().press('Alt+ArrowRight');
+  assert.deepEqual(await order(),originalOrder,'keyboard ordering gives the same arrangement control');
+  await row.locator('[data-arrange-card]').nth(1).focus();await row.locator('[data-arrange-card]').nth(1).press('Alt+ArrowLeft');
+  const arranged=await order();
+  const lands=page.locator('.cm-stage-front [data-card-section$=":lands"] [data-arrange-card]');
+  await row.locator('[data-arrange-card]').first().dragTo(lands.first());
+  assert.deepEqual(await order(),arranged,'dragging into a different section cannot move a card');
+  await page.reload();await page.locator('.cm-stage-region[data-renderer="webgl"]').waitFor();
+  assert.deepEqual(await order(),arranged,'arrangement survives reloading the game');
+  await page.waitForFunction(()=>document.querySelector('.cm-stage-environment video')?.readyState>=2);
+  assert.ok(await page.locator('.cm-stage-environment video').evaluate(v=>v.muted&&v.loop&&v.paused),'the silent background is paused for reduced motion');
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  await page.waitForFunction(()=>document.querySelector('.cm-stage-environment video')?.currentTime>0);
+  await page.evaluate(()=>globalThis.__backgroundVideo=document.querySelector('.cm-stage-environment video'));
+  await page.getByRole('button',{name:'Toggle table panel',exact:true}).click();
+  assert.ok(await page.evaluate(()=>__backgroundVideo===document.querySelector('.cm-stage-environment video')),'redrawing drawers preserves the video element');
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await page.waitForFunction(()=>document.querySelector('.cm-stage-environment video')?.paused);
   // An actual recorded two-entry stack: newest resolves first, every entry gets a readable image.
   for(let i=0;i<20;i++) await page.request.post(`${address}/preview/frame`,{data:'1'});
   await openDrawerSettings();
@@ -323,14 +352,27 @@ try {
   await page.locator('.cm-stage-hand .cm-bcard').first().focus();await page.locator('.cm-stage-hand .cm-bcard').first().press('Enter');await page.mouse.move(700,20);
   assert.deepEqual(await page.locator('.cm-stack-summary strong').allTextContents(),['Intruder Alarm','Dundoolin Weaver'],'stack entries are in resolution order');
   assert.deepEqual(await page.locator('.cm-stack-position').allTextContents(),['#1','#2'],'each entry has its own stack position');
+  assert.equal(await page.locator('.cm-stack-pile').count(),1,'one overlapping pile represents the whole stack');
+  assert.equal(await page.locator('.cm-module-stack-row').count(),0,'no separate card rows');
   for(const width of [1400,1024]) {
     await page.setViewportSize({width,height:900});
-    const sizes=await page.evaluate(()=>{
-      const r=e=>e.getBoundingClientRect(),preview=r(document.querySelector('.cm-full-pick .cm-bcard'));
-      return [...document.querySelectorAll('.cm-module-stack-row')].map(el=>{const card=r(el.querySelector('.cm-stack-card')),text=r(el.querySelector('.cm-stack-summary')),image=r(el.querySelector('.cm-stack-image'));return {dw:card.width-preview.width,dh:card.height-preview.height,fraction:text.width/(text.width+image.width),overflow:el.scrollWidth-el.clientWidth};});
+    const size=await page.evaluate(()=>{
+      const r=e=>e.getBoundingClientRect(),preview=r(document.querySelector('.cm-full-pick .cm-bcard')),card=r(document.querySelector('[data-stack-depth="0"]')),text=r(document.querySelector('.cm-stack-list')),image=r(document.querySelector('.cm-stack-image')),row=document.querySelector('.cm-stack-browser');
+      return {dw:card.width-preview.width,dh:card.height-preview.height,fraction:text.width/(text.width+image.width),overflow:row.scrollWidth-row.clientWidth};
     });
-    assert.ok(sizes.length===2&&sizes.every(s=>Math.abs(s.dw)<.5&&Math.abs(s.dh)<.5&&Math.abs(s.fraction-.25)<.01&&s.overflow<2),'stack cards match Card Preview and use wrapping 25/75 columns');
+    assert.ok(Math.abs(size.dw)<.5&&Math.abs(size.dh)<.5&&Math.abs(size.fraction-.25)<.01&&size.overflow<2,'pile front matches Card Preview with a wrapping 25% name list');
   }
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  await page.locator('.cm-stack-summary').nth(1).click();
+  assert.match(await page.locator('.cm-stack-pile').getAttribute('aria-label'),/Dundoolin Weaver/,'a card name brings that card to the front');
+  assert.ok(await page.locator('.cm-stack-pile').evaluate(el=>el.getAnimations({subtree:true}).length)>0,'selection animates cards cycling through the pile');
+  await page.waitForTimeout(400);
+  await page.locator('.cm-stack-pile').click();await page.waitForTimeout(400);
+  assert.match(await page.locator('.cm-stack-pile').getAttribute('aria-label'),/Intruder Alarm/,'clicking the pile cycles and wraps');
+  assert.deepEqual(await page.locator('.cm-stack-position').allTextContents(),['#1','#2'],'browsing does not change resolution order');
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await page.locator('.cm-stack-summary').nth(1).focus();await page.locator('.cm-stack-summary').nth(1).press('Enter');
+  assert.equal(await page.locator('.cm-stack-pile').evaluate(el=>el.getAnimations({subtree:true}).length),0,'reduced motion changes the shown card without animation');
   // Prove the size check rejects the former small stack thumbnails, then restore.
   const brokenSize=await page.addStyleTag({content:'.cm-stage-module .cm-stack-card{--bc:96px!important}'});
   const mismatched=await page.evaluate(()=>Math.abs(document.querySelector('.cm-stack-card').getBoundingClientRect().width-document.querySelector('.cm-full-pick .cm-bcard').getBoundingClientRect().width));

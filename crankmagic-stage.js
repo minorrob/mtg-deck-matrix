@@ -24,7 +24,7 @@
     const front = surface({x:margin,y:frontY,width:w-margin*2,height:planeHeight-frontY-18});
     return {width:w,height:h,planeHeight,sx,sy,ox,oy,angle,quad,rear,front};
   }
-  const appearances = Object.freeze({backgrounds: [{id:"volcano",name:"Volcano"},{id:"forest",name:"Forest"},{id:"clouds",name:"Cloud sea"}],
+  const appearances = Object.freeze({backgrounds: [{id:"volcano",name:"Volcano",video:"assets/environments/volcano.webm?v=1",poster:"assets/environments/volcano-poster.jpg?v=1"},{id:"forest",name:"Forest"},{id:"clouds",name:"Cloud sea"}],
     tables: [{id:"wooden",name:"Wooden"},{id:"stone",name:"Stone"},{id:"obsidian",name:"Obsidian"}]});
   function carousel(count, start = 0, limit = 7) {
     const n = Math.max(0, Math.floor(Number(count) || 0));
@@ -47,10 +47,24 @@
     return library;
   }
   let current = null, generation = 0;
+  function environment(s) {
+    const scene=appearances.backgrounds.find(x=>x.id===(s.opts.background || 'volcano')), board=s.host.closest('.cm-board');
+    s.host.classList.toggle('has-video',!!scene?.video);
+    if(!board || !scene?.video){s.environment?.remove();s.video?.pause();return;}
+    if(!s.environment){
+      s.environment=document.createElement('div');s.environment.className='cm-stage-environment';s.environment.setAttribute('aria-hidden','true');
+      s.video=document.createElement('video');s.video.muted=true;s.video.defaultMuted=true;s.video.loop=true;s.video.playsInline=true;s.video.preload='metadata';s.video.setAttribute('tabindex','-1');s.environment.append(s.video);
+      s.visibility=()=>environment(s);document.addEventListener('visibilitychange',s.visibility);
+    }
+    if(s.video.getAttribute('src')!==scene.video){s.video.poster=scene.poster;s.video.src=scene.video;}
+    if(s.environment.parentElement!==board)board.prepend(s.environment);
+    if(s.opts.reduced || document.hidden)s.video.pause();else if(s.video.paused)s.video.play().catch(()=>{});
+  }
   function mount(host, opts = {}) {
-    if (current) {current.host = host; current.opts = opts; if (current.app) host.prepend(current.app.canvas); return current.ready;}
+    if (current) {current.host = host; current.opts = opts; if (current.app) host.prepend(current.app.canvas); environment(current); return current.ready;}
     const state = current = {host, opts, app: null, box: null, textures: new Map(), pending: new Set(), frame: null, stamp: ++generation};
-    state.unhear = root.CrankMotion?.onChange(() => {state.opts.reduced = root.CrankMotion.reduced(); if (state.box) paint(state);});
+    state.unhear = root.CrankMotion?.onChange(() => {state.opts.reduced = root.CrankMotion.reduced(); environment(state); if (state.box) paint(state);});
+    environment(state);
     state.ready = load().then(async (P) => {
       if (current !== state) return;
       await P.Assets.init({preferences: {preferWorkers: false}});
@@ -68,7 +82,7 @@
   }
   function layout(box, opts = {}) {
     if (!current) return;
-    current.box = box; current.opts = {...current.opts, ...opts};
+    current.box = box; current.opts = {...current.opts, ...opts};environment(current);
     const g = geometry(box.width, box.height, {tilt: opts.tilt, zoom: opts.zoom, seats: (opts.mats || []).length - 1});
     for (const [i, el] of [...current.host.querySelectorAll(".cm-stage-rear")].entries()) {position(el, g.rear[i]); el.style.setProperty("--rear-card", `${Math.max(18, (g.rear[i].height-28)/4.8)}px`);}
     position(current.host.querySelector(".cm-stage-front"), g.front);
@@ -88,8 +102,9 @@
     for (const child of app.stage.removeChildren()) child.destroy({children: true});
     const bg = new P.Graphics(); app.stage.addChild(bg);
     const scene = o.background || "volcano", material = o.table || "wooden";
-    bg.rect(0,0,g.width,g.height).fill(scene === "volcano" ? 0x191216 : scene === "clouds" ? 0x243f53 : 0x101e19);
-    if (scene === "volcano") {
+    const videoScene=!!appearances.backgrounds.find(x=>x.id===scene)?.video;
+    if(!videoScene) bg.rect(0,0,g.width,g.height).fill(scene === "volcano" ? 0x191216 : scene === "clouds" ? 0x243f53 : 0x101e19);
+    if (!videoScene && scene === "volcano") {
       // A replaceable procedural environment until the host's background loops are supplied.
       for (let i=5;i>0;i--) bg.ellipse(g.width*.5,g.height*.85,g.width*.11*i,g.height*.08*i).fill({color:0xee620a,alpha:.025});
       for (let i=0;i<19;i++) {
@@ -97,10 +112,10 @@
         bg.poly([x-80,y+95,x-48,y-35,x+22,y-68,x+92,y+20,x+48,y+100]).fill(i%2?0x2b2528:0x211e22).stroke({color:0x55413a,width:2,alpha:.5});
         if(i%2===0) for (const [width,color,alpha] of [[16,0xe33b05,.15],[7,0xe45b08,.5],[2,0xffbb42,.9]]) bg.moveTo(x-80,y+95).lineTo(x-48,y-35).lineTo(x+22,y-68).stroke({width,color,alpha});
       }
-    } else if (scene === "forest") {
+    } else if (!videoScene && scene === "forest") {
       for (let i=0;i<24;i++) {const x=(i*.071%1)*g.width;bg.poly([x-55,g.height,x-11,0,x+9,0,x+65,g.height]).fill({color:i%2?0x294b35:0x162d29,alpha:.8});}
       for (let i=0;i<14;i++) bg.ellipse((i*.173%1)*g.width,g.height*(i%3)*.12,150,85).fill({color:0x497b4a,alpha:.13});
-    } else {
+    } else if (!videoScene) {
       for (let i=0;i<30;i++) bg.ellipse((i*.137%1)*g.width,(i*.217%1)*g.height,180,50).fill({color:0xd4e6e2,alpha:.045});
     }
     const edge = o.combat ? 0xf0a963 : o.instant ? 0x8ecbff : 0xc8ae77;
@@ -145,7 +160,7 @@
       if (current !== s) return;
       if (time - last > 32 || last < 0) {
         last = time; motes.clear();
-        if (!o.reduced) for (let i = 0; i < 24; i++) {
+        if (!o.reduced && !videoScene) for (let i = 0; i < 24; i++) {
           const x = (i * .137 % 1) * g.width;
           const y = ((i * .217 + time / 120000) % 1) * g.height;
           // Keep decorative light outside the cards' main area.
@@ -153,7 +168,7 @@
         }
         app.render();
       }
-      if (!o.reduced && !document.hidden) s.frame = requestAnimationFrame(frame);
+      if (!o.reduced && !document.hidden && !videoScene) s.frame = requestAnimationFrame(frame);
     };
     cancelAnimationFrame(s.frame); frame();
     s.host.dataset.renderer = "webgl";
@@ -161,7 +176,7 @@
   function unmount() {
     const s = current; current = null; generation++;
     if (!s) return;
-    cancelAnimationFrame(s.frame); s.unhear?.();
+    cancelAnimationFrame(s.frame); s.unhear?.();s.video?.pause();s.environment?.remove();if(s.visibility)document.removeEventListener("visibilitychange",s.visibility);
     s.app?.destroy(true, {children: true});s.surfaceTexture?.destroy(true);
   }
   root.CrankStage = Object.freeze({geometry, carousel, appearances, mount, layout, unmount});

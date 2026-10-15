@@ -120,6 +120,7 @@ globalThis.CrankBoard = Object.seal({
   const VIEWS = [["table", "⊞", "Table"], ["focus", "◧", "Focus"], ["full", "⛶", "Full screen"]];
   const VIEW_KEY = "cm-board-view";
   let mode = (() => {try {const v = localStorage.getItem(VIEW_KEY); return VIEWS.some(([k]) => k === v) ? v : "focus";} catch {return "focus";}})();
+  let stackSelected = null;
   let selected = null, hover = null;   /* Full screen: the card shown large in the side column (picked, and under the pointer) */
   let showing = null, held = null;     /* Show hand: null, "fan" or "held"; the card held up */
   /* Turns that went by while you waited: said for a few seconds, then put away by itself -- nothing to acknowledge (Rob,
@@ -449,7 +450,7 @@ globalThis.CrankBoard = Object.seal({
     }
     return words;
   }
-  function card(c, {where = "mat", action = "board-card"} = {}) {
+  function card(c, {where = "mat", action = "board-card", arrange = false} = {}) {
     const opts = optionsFor(c.cardId), mine = view.decision && !sending;
     const bright = mine && opts.length > 0, chosen = opts.some((o) => picked.includes(o.index));
     const creature = c.name && c.types.includes("Creature") && c.power !== null, upright = UPRIGHT.has(where), fight = combatOf(c);
@@ -466,9 +467,9 @@ globalThis.CrankBoard = Object.seal({
     const named = c.name || (c.faceDown ? `Face-down ${(c.types || []).includes("Creature") ? "creature" : "card"}` : "A hidden card");
     const label = `${named}${state.length ? ", " + state.join(", ") : ""}${bright ? `: ${can.join(" or ")}${opts.length > can.length ? `, ${opts.length} ways` : ""}` : ""}`;
     if (!c.name && !c.faceDown) return `<div class="cm-bcard is-back" role="img" aria-label="${e(label)}"></div>`;
-    return `<button type="button" class="${cls}" data-action="${action}" data-card="${c.cardId}" aria-label="${e(label)}">
+    return `<button type="button" class="${cls}" data-action="${action}" data-card="${c.cardId}"${arrange ? ` draggable="true" data-arrange-card="true" title="Drag within this section to reorder; Alt + Left or Right works with a keyboard"` : ""} aria-label="${e(label)}">
       ${c.name ? `<span class="cm-bcard-name">${e(c.name)}</span>` : ""}${creature ? `<span class="cm-bcard-pt">${c.power}/${c.toughness}</span>` : ""}
-      ${c.name ? `<img src="${e(pictureOf(c.name))}" alt="" loading="lazy" referrerpolicy="no-referrer">` : ""}${marks ? `<span class="cm-bcard-marks">${marks}</span>` : ""}</button>`;
+      ${c.name ? `<img src="${e(pictureOf(c.name))}" alt="" draggable="false" loading="lazy" referrerpolicy="no-referrer">` : ""}${marks ? `<span class="cm-bcard-marks">${marks}</span>` : ""}</button>`;
   }
 
   /* ---- the strip ---- */
@@ -640,12 +641,28 @@ globalThis.CrankBoard = Object.seal({
       : `<div class="cm-bcard is-empty${back && zone.count ? " is-back" : ""}" aria-hidden="true">${back && zone.count ? `<b class="cm-bcard-count">${zone.count}</b>` : ""}</div>`;
     return `<figure class="cm-mat-zone cm-board-pile" data-zone="${e(label.toLowerCase())}" aria-label="${e(label)}, ${zone.count}" title="${e(label)}, ${zone.count}">${face}<figcaption><em>${e(label)}</em><b>${zone.count}</b></figcaption></figure>`;
   }
+  const cardOrders=new Map();
+  const cardOrderKey=section=>`cm-card-order:${C.signedInAs?.() || 'local'}:${view?.matchId || tableId}:${view?.seat}:${section}`;
+  function arrangedCards(cards,section) {
+    const key=cardOrderKey(section);let order=cardOrders.get(key);
+    if(!order){try{const parsed=JSON.parse(stored(key) || '[]');order=Array.isArray(parsed)?parsed.map(String):[];}catch{order=[];}cardOrders.set(key,order);}
+    const ranked=new Map(order.map((id,i)=>[id,i]));
+    return [...cards].sort((a,b)=>(ranked.get(String(a.cardId))??Infinity)-(ranked.get(String(b.cardId))??Infinity));
+  }
+  function cardSection(cards,section) {return `<div class="cm-board-cards" data-card-section="${section}">${arrangedCards(cards,section).map(c=>card(c,{arrange:true})).join('')}</div>`;}
+  function reorderCard(section,id,targetId,after=false) {
+    const cards=[...section.querySelectorAll('[data-arrange-card]')],from=cards.find(el=>el.dataset.card===id),to=cards.find(el=>el.dataset.card===targetId);
+    if(!from || from===to)return;
+    if(to)section.insertBefore(from,after ? to.nextSibling : to);else section.append(from);
+    const order=[...section.querySelectorAll('[data-arrange-card]')].map(el=>el.dataset.card),key=cardOrderKey(section.dataset.cardSection);
+    cardOrders.set(key,order);keep(key,JSON.stringify(order));
+  }
   function mat(p, {size = "focus", head = "top", focusButton = false} = {}) {
     const i = p.playerId, you = i === view.seat, z = p.zones, field = z.Battlefield.cards;
     const lands = field.filter((c) => c.types.includes("Land"));
     const creatures = field.filter((c) => !c.types.includes("Land") && c.types.includes("Creature"));
     const other = field.filter((c) => !c.types.includes("Land") && !c.types.includes("Creature"));
-    const group = (label, cards) => cards.length ? `<div class="cm-board-group" data-card-group="${label === "Creatures" ? "creatures" : "others"}"><h3>${e(label)} · ${cards.length}</h3><div class="cm-board-cards">${cards.map((c) => card(c)).join("")}</div></div>` : "";
+    const group = (label, cards) => cards.length ? `<div class="cm-board-group" data-card-group="${label === "Creatures" ? "creatures" : "others"}"><h3>${e(label)} · ${cards.length}</h3>${cardSection(cards,`${i}:${label === "Creatures" ? "creatures" : "others"}`)}</div>` : "";
     const mana = p.mana.reduce((n, m) => n + m.amount, 0);
     const bare = size === "full" || size === "opp" || size === "side" || size === "phone";
     const active = view.state.turnPlayerId === i;
@@ -656,7 +673,7 @@ globalThis.CrankBoard = Object.seal({
         ${focusButton ? b("⤢ Focus", "board-focus", {seat: String(i)}, false, {cls: "compact"}) : ""}</header>`;
     const body = `<div class="cm-mat-grid cm-seatboard-body">
         <div class="cm-mat-zone cm-board-field" data-zone="battlefield">${group("Creatures", creatures)}${group("Artifacts & enchantments", other)}${!creatures.length && !other.length ? `<p class="cm-board-empty">No permanents yet.</p>` : ""}<i class="cm-mat-label">Battlefield</i></div>
-        <div class="cm-mat-zone cm-board-lands" data-zone="lands"><div class="cm-board-cards">${lands.map((c) => card(c)).join("")}</div><i class="cm-mat-label">Lands · ${lands.length}</i></div>
+        <div class="cm-mat-zone cm-board-lands" data-zone="lands">${cardSection(lands,`${i}:lands`)}<i class="cm-mat-label">Lands · ${lands.length}</i></div>
         ${you ? `<span class="cm-board-chip">${mana} mana open · land drop ${p.landsPlayed ? "used" : "1 left"}</span>` : ""}
         ${pile("Command", z.Command, z.Command.cards[0])}${pile("Exile", z.Exile, z.Exile.cards.at(-1))}
         ${size === "focus" ? historyBand(6) : ""}
@@ -897,7 +914,11 @@ globalThis.CrankBoard = Object.seal({
   function stack({module = false} = {}) {
     const items = view.state.stack;
     if (!items.length) return "";
-    if (module) return `<section class="cm-board-stack cm-module-stack" aria-label="The stack"><p class="cm-stack-order-note">1 resolves next</p><ol>${[...items].reverse().map((s,i) => `<li class="cm-module-stack-row"><div class="cm-stack-summary${s.name ? " cm-stack-entry" : ""}"${s.name ? ` tabindex="0" data-stack-name="${e(s.name)}" aria-label="${i+1}. ${e(s.name)}, ${e(nameOf(s.playerId))}'s: show the card"` : ""}><b class="cm-stack-position">#${i+1}</b><strong>${e(s.name || "A face-down spell")}</strong><span>${e(nameOf(s.playerId))}</span></div><div class="cm-stack-image"><span class="cm-bcard cm-stack-card${s.name ? "" : " is-back"}" role="img" aria-label="${e(s.name || "A face-down spell")}, on the stack">${s.name ? `<span class="cm-bcard-name">${e(s.name)}</span><img src="${e(pictureOf(s.name))}" alt="" loading="lazy" referrerpolicy="no-referrer">` : ""}</span></div></li>`).join("")}</ol></section>`;
+    if (module) {
+      const ordered=[...items].reverse(), selectedIndex=Math.max(0,ordered.findIndex(s=>String(s.stackId)===stackSelected));
+      const shown=ordered[selectedIndex], visible=CrankStage.carousel(ordered.length,selectedIndex,5);
+      return `<section class="cm-board-stack cm-module-stack" aria-label="The stack"><p class="cm-stack-order-note">#1 resolves next · click the pile to browse</p><div class="cm-stack-browser"><ol class="cm-stack-list">${ordered.map((s,i)=>`<li><button type="button" class="cm-stack-summary" data-action="board-stack-select" data-stack-id="${e(String(s.stackId))}" aria-pressed="${i===selectedIndex}"><b class="cm-stack-position">#${i+1}</b><strong>${e(s.name || 'A face-down spell')}</strong><span>${e(nameOf(s.playerId))}</span></button></li>`).join('')}</ol><div class="cm-stack-image"><button type="button" class="cm-stack-pile" data-action="board-stack-cycle" aria-label="${e(shown.name || 'A face-down spell')}, stack position ${selectedIndex+1} of ${ordered.length}; show next card" style="--pile-depth:${visible.length-1}">${visible.map((index,depth)=>{const s=ordered[index];return `<span class="cm-bcard cm-stack-card${s.name ? '' : ' is-back'}" data-stack-depth="${depth}" style="--depth:${depth};z-index:${visible.length-depth}" aria-hidden="true">${s.name ? `<span class="cm-bcard-name">${e(s.name)}</span><img src="${e(pictureOf(s.name))}" alt="" draggable="false" referrerpolicy="no-referrer">` : ''}</span>`;}).join('')}</button></div></div></section>`;
+    }
     const rows = [];
     for (const s of [...items].reverse()) {
       const last = rows[rows.length - 1];
@@ -1902,7 +1923,7 @@ globalThis.CrankBoard = Object.seal({
       if (audio) audio.stopBgm(400);
       disconnect(); globalThis.CrankStage?.unmount(); stopSea(); if (observer) {observer.disconnect(); observer = null;}
       document.getElementById("cm-game-on")?.remove();
-      tableId = null; view = null; table = null; tools = false; confirmEnd = false; selected = null; hover = null; showing = null; held = null;
+      stackSelected = null; tableId = null; view = null; table = null; tools = false; confirmEnd = false; selected = null; hover = null; showing = null; held = null;
       historyOpen = false; historyFilter = ""; menuOpen = false; stepsOpen = false; panelOpen = false; skipping = null; records = null;
       coach.open = false; coach.thread = []; coach.typing = false; coach.asked += 1; peek(null); leaveFullscreen();
     },
@@ -1978,6 +1999,28 @@ globalThis.CrankBoard = Object.seal({
     draw();
   };
 
+  function selectStack(id, fromPile=false) {
+    const entries=[...(view?.state.stack || [])].reverse(), section=document.querySelector('.cm-module-stack');
+    if(!section || !entries.some(s=>String(s.stackId)===id)) return;
+    const old=section.querySelector('[data-stack-depth="0"]')?.cloneNode(true);
+    const currentId=section.querySelector('[aria-pressed="true"]')?.dataset.stackId;
+    if(id===currentId) return;
+    const keyboard=section.contains(document.activeElement), scroll=section.querySelector('.cm-stack-list').scrollTop;
+    stackSelected=id;section.outerHTML=stack({module:true});
+    const next=document.querySelector('.cm-module-stack'), pile=next.querySelector('.cm-stack-pile'), front=pile.querySelector('[data-stack-depth="0"]');
+    next.querySelector('.cm-stack-list').scrollTop=scroll;
+    if(!reduced()) {
+      if(old){old.classList.add('cm-stack-ghost');old.style.zIndex='9';pile.append(old);old.animate([{transform:'translate(0,0)'},{transform:'translate(30%,12px) rotate(7deg)',offset:.5},{transform:'translate(12px,18px) scale(.95)',opacity:0}],{duration:360,easing:'ease-in-out'}).finished.catch(()=>{}).finally(()=>old.remove());}
+      front.animate([{transform:'translate(12px,18px) scale(.95)'},{transform:'translate(-15%,4px) rotate(-4deg)',offset:.5},{transform:'translate(0,0)'}],{duration:360,easing:'ease-in-out'});
+    }
+    if(keyboard) (fromPile ? pile : [...next.querySelectorAll('[data-stack-id]')].find(el=>el.dataset.stackId===id))?.focus({preventScroll:true});
+  }
+  actions['board-stack-select']=el=>selectStack(el.dataset.stackId);
+  actions['board-stack-cycle']=()=>{
+    const entries=[...(view?.state.stack || [])].reverse();if(entries.length<2)return;
+    const index=Math.max(0,entries.findIndex(s=>String(s.stackId)===stackSelected));
+    selectStack(String(entries[(index+1)%entries.length].stackId),true);
+  };
   actions["board-hand-cycle"] = (el) => {
     const seat=Number(el.dataset.seat), p=players().find(x=>x.playerId===seat), n=p?.zones.Hand.count || 0;
     if(n>7) {
@@ -2014,6 +2057,29 @@ globalThis.CrankBoard = Object.seal({
     return savePaneModules(ids,side);
   };
   actions["board-module-remove"] = el => savePaneModules(paneModules(el.dataset.side).filter(id => id !== el.dataset.module),el.dataset.side);
+  let arranging=null;
+  const clearCardDrop=()=>document.querySelectorAll('.cm-card-drop').forEach(el=>el.classList.remove('cm-card-drop'));
+  document.addEventListener('dragstart',event=>{
+    const card=event.target.closest?.('[data-arrange-card]'),section=card?.closest('[data-card-section]');if(!section)return;
+    arranging={id:card.dataset.card,section:section.dataset.cardSection};event.dataTransfer.setData('application/x-crankmagic-card',JSON.stringify(arranging));event.dataTransfer.effectAllowed='move';peek(null);
+  });
+  document.addEventListener('dragover',event=>{
+    const section=event.target.closest?.('[data-card-section]');clearCardDrop();
+    if(!arranging || section?.dataset.cardSection!==arranging.section)return;
+    event.preventDefault();event.dataTransfer.dropEffect='move';event.target.closest?.('[data-arrange-card]')?.classList.add('cm-card-drop');
+  });
+  document.addEventListener('drop',event=>{
+    const section=event.target.closest?.('[data-card-section]');clearCardDrop();
+    if(!arranging || section?.dataset.cardSection!==arranging.section)return;
+    event.preventDefault();const target=event.target.closest?.('[data-arrange-card]'),box=target?.getBoundingClientRect();
+    reorderCard(section,arranging.id,target?.dataset.card,box ? event.clientX>box.left+box.width/2 : false);arranging=null;
+  });
+  document.addEventListener('dragend',()=>{arranging=null;clearCardDrop();});
+  document.addEventListener('keydown',event=>{
+    const card=event.target.closest?.('[data-arrange-card]');if(!card || !event.altKey || !['ArrowLeft','ArrowRight'].includes(event.key))return;
+    event.preventDefault();const section=card.closest('[data-card-section]'),cards=[...section.querySelectorAll('[data-arrange-card]')],i=cards.indexOf(card),right=event.key==='ArrowRight',target=cards[i+(right?1:-1)];
+    if(target){reorderCard(section,card.dataset.card,target.dataset.card,right);card.focus({preventScroll:true});}
+  });
   document.addEventListener("dragstart", event => {
     const handle = event.target.closest?.("[data-module-drag]"); if (!handle || !paneEditing) return;
     event.dataTransfer.setData("application/x-crankmagic-module", handle.dataset.moduleDrag);
