@@ -31,6 +31,7 @@ views.settings=async()=>{
       +`<div class="cm-settings-row">${b('Confirmations…','confirm-skips')}</div>`)
    +card('play','Play',
       `<div class="cm-settings-row"><button type="button" class="v-button cm-chip-toggle" data-action="set-step-by-step" aria-pressed="${stepByStep}">Stop at every step of my turn</button></div>`
+      +`<div class="cm-settings-row">${C.sideDrawerSettings?b('Set Side Drawer Modules','board-modules-settings'):''}</div>`
       +`<p class="cm-settings-label">Overlay</p><div class="cm-settings-row"><label class="cm-settings-slider">Callouts over the table<input type="range" min="0" max="100" step="1" value="${overlay}" data-settings-overlay aria-label="Callouts over the table" aria-valuetext="${overlay===0?'off':overlay+'%'}"><output>${overlay===0?'Off':overlay+'%'}</output></label></div>`
       +`<p class="cm-muted">What just happened at the table, called out in a word over the board: an attack coming in, a hit, a spell countered, your turn. Off at the left; louder and longer toward the right. Reduce motion shows each one without its entrance.</p>`
       +`<p class="cm-muted">Off, a step of your turn with nothing in it for you to do passes by itself, and the table stops where there is something: a land to play, a spell you can pay for, an attack. On, it stops at every step (upkeep, draw, main, combat, the end step), and you move on from each one yourself. Either way your turn never ends by itself: in your end step the button reads End turn. At a table, from its next step.</p>`)

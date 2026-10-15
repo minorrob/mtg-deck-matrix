@@ -167,6 +167,9 @@ ok(verify(new Map([...sb, ["wrangler.jsonc", Buffer.from(JSON.stringify({...sw2,
   "a release that would hand the Worker its own signing keys is refused");
 /* PLAY IN THE CLOUD, ON STAGING (Rob, 2026-09-29: "execute the play release and merge to staging"). */
 const stagingProfile = PROFILES["cloud-staging"];
+ok(["crankmagic-stage.js", "crankmagic-stage.css", "vendor/pixi.min.js", "vendor/pixi-csp.min.js", "vendor/PIXI-LICENSE.txt"].every(f => sb.has(f)), "staging carries the tabletop renderer, CSP adapter and upstream license");
+ok(![...built.keys()].some(f => f.startsWith("vendor/pixi") || f === "vendor/PIXI-LICENSE.txt"), "the non-Play profile does not include the tabletop renderer");
+
 eq([sw2.durable_objects, sw2.migrations], [{bindings: [{name: "TABLES", class_name: "GameTable"}]}, [{tag: "tables-v1", new_sqlite_classes: ["GameTable"]}]], "staging binds TABLES to the table's Durable Object, made once by a SQLite-class migration");
 ok(PAGES.every((p) => sb.get(p).toString("utf8").includes('<meta name="crankmagic-play" content="cloud">')), "both staging pages are marked Play in the cloud");
 ok(["crankmagic-table.js", "crankmagic-board.js"].every((f) => sb.has(f)), "the table's lobby and its board are in it");

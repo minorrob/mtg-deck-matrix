@@ -1,13 +1,56 @@
 # Who holds the work
 
+## Play tabletop preview, October 14, 2026
+
+**Holder:** Codex on Personal-HP, `codex/ui-play-tabletop-preview`, integrated `origin/main` at `24aa166b`.
+Rob authorized the updated plan, starting with the reconciled checklist and working tabletop preview. On October 14 he explicitly transferred staging release ownership to Codex and authorized publishing this tested update so invitees can use his shared decks. Production remains unchanged.
+Latest corrections: another seat shows its hand as backs; screenshots include object IDs;
+notify before configurable side-pane modules. Rob canceled the HTML UAT guide and will transcribe the game; staging release remains authorized.
+Full screen now always uses the table, with no 3D switch. Tilt is 0–60 degrees, default 40;
+cards and mats share one physical camera perspective. Zoom is 60–120%, with 100% equal to the former 110%; table edges may clip at high zoom. Cards is separate: 100% equals the former 130%, 150% is another 40% larger. T11 is a container-free fan with seven visible
+cards and wrapping arrows for larger hands. Background and Table are independent local previews;
+host synchronization is pending. The supplied videos have been inspected for table structure.
+Latest readability correction: upper-left player life totals have a black container at 80% transparency, with opaque text. Chrome inspection confirms rgba(0,0,0,0.2) and text opacity 1; screenshot T21 is in tabletop-14-life-readability.png. Feature wiring, service-worker and asset-version checks pass; the unrelated collection-model edit remains untouched.
+Drawer controls T12/T13 now use 24-by-32-pixel edge tabs with thin chevrons, hover and keyboard-focus feedback. Browser inspection at widths 1400 and 1024 confirms size, edge attachment in both states, and Enter/Space toggling. Reference links for shadcn/ui, Radix, Atlassian and W3C are recorded in the requirements checklist. Feature wiring, service-worker and isolated asset-version checks pass.
+On the Stack now uses one overlapping card pile beside a numbered, wrapping name/player list. Clicking a name animates that card forward; clicking the pile cycles and wraps without changing resolution order. Stack and Card Preview share a size (178.56 by 249.98 pixels in the measured 900-high viewport). Chrome checks pass at widths 1400 and 1024, including reduced motion and a deliberately broken thumbnail-size assertion. The supplied October 14, 8:52 PM video is the Volcano background: an 8-second VP9 WebM with its audio stream removed, a still poster, and pause on reduced motion or hidden tabs. Battlefield cards can be dragged within their section or moved with Alt+Left/Right; ordering persists per profile, match, viewed seat and section without changing game state. The focused tabletop browser suite passes the interaction, refresh persistence, cross-section refusal and video checks. Evidence: `screenshots/tabletop-19-pile-video.png` (M01 stack, M04 Card Preview).
+Latest playtest update: drawer Add module / Restore default layout footers and their unused handlers are removed; Settings > Set Side Drawer Modules remains the placement control. Rob explicitly authorized every signed-in human to choose his decks. The lobby now offers a snapshot of all seven committed D1-D7 deck lists, without importing the collection or attaching the owner's library source IDs. Every shared choice is disabled until the active server confirms its card names. `tests/table-lobby.mjs` passes 118 checks, including an empty-library player submitting all seven complete, exact lists to the real rules server and an intentionally missing Sol Ring disabling affected decks. The focused tabletop browser suite passes through Settings-only configuration. Screenshots: tabletop-17-module-space.png (M01/M04) and tabletop-18-shared-decks.png (D1-D7). Staging publication is pending; no live availability is claimed.
+Latest staging-runtime proof: `tests/uat/play-e2e.mjs` passes 38 checks, including a separate signed-in invitee with an empty library seeing all seven validated shared decks, choosing Krenko, playing through turn 4 with the host, reconnecting, and replaying the completed record.
+Requirements and remaining scope: `docs/play-overhaul/REQUIREMENTS.md`.
+
+**In progress:** always-on Full screen Pixi ground with the existing DOM cards, three back-row seats,
+viewed-seat hand, camera controls and overlay rails. The isolated recorded-view harness is
+`tools/play-tabletop-preview.mjs`. It does not send actions to a live cloud match.
+The existing `collection-model.js` edit belongs to prior work and is not part of this change.
+**Preview proof:** `tests/table-tabletop.mjs` passes geometry and Chrome interaction at
+1024/1280/1400 widths, tilt 0/60, zoom 60/120, with shared mat/card perspective, wrapping seven-card hands,
+private opponent backs, persistent canvas, overlay sizing, live reduced motion and phone fallback. Broken camera foreshortening and carousel wrapping deliberately failed their assertions, then were restored.
+`tests/table-board.mjs` passed 280 real-game checks after the latest module registry, shared perspective and camera correction. Service-worker (9), release builder (223), feature
+wiring (124) and data-integrity checks pass. Asset versions pass for all 123 assets with the unrelated collection-model edit held separately. The profile test uses real backup serialization against an isolated HTTP store, not a live cloud account. New zoom-limit mutations deliberately fail and are restored.
+The final focused browser pass also verifies all eleven module choices, Actions popup routing, Coach draft retention through moves, the Screen View popout beside its drawer, hand edge clipping and the 40% card-size increase.
+Commands: set UAT_CHROME to installed Chrome and GEOMETRY_REQUIRED=1 for the browser suites.
+Screenshot evidence is in `docs/play-overhaul/screenshots/`; the recorded preview runs with
+`node tools/play-tabletop-preview.mjs`. This is a preview milestone, not full-overhaul acceptance.
+
+**Outstanding:** shared events, final environments and motion, lobby, music, final module acceptance,
+Counterintelligence and staging integration. Side-pane modules started after notifying Rob: profile placement, drag and keyboard order, hide/restore and public-count Counter-Intel are implemented in the preview.
+The module registry now includes Screen View, History, AI Coach, Counter-Intel, Resources, On the Stack, Card Preview, Table Vitals, Recommended Actions, Chat, and Actions. AI Coach embeds its existing conversation and preserves drafts through moves; Recommended Actions uses that service. Chat is explicitly unavailable pending the contract below. Actions routes to its assigned drawer in Full screen, with ordinary popups retained elsewhere.
+Volcano uses Rob's supplied video; other environments and the table artwork still need final assets. Crowded-mat layout and text readability need further polish.
+
 ## The lanes (AGENTS.md, *Lanes*), since 2026-10-12
 
 | Lane | Held by | Branch | Doing |
 | --- | --- | --- | --- |
 | **Engine** | Claude, a cloud container; **paused at a wave's end (`docs/handoff-2026-10-12.md`); resumes Friday 2026-10-16, a fresh session per lane** | `claude/admiring-franklin-58cxy4` | Waves to 4c merged and on staging. From 2026-10-16: **the card load program** (`docs/engine/plan-card-load-program.md`, Rob's decisions of 2026-10-14): demand capture, the sentence library and its calibration, the compiler, then the API as its backstop below 99% confidence. Wave 4d waits |
-| **UI** | Fable (a Claude session in a cloud container), since 2026-10-12 | `claude/nice-hypatia-4ajdyi` (the session's own branch, by its harness; the `claude/ui-<topic>` form waits for the next topic) | Pass 1 of the Play screen on the Replit concept: the seven steps in the strip, Full screen as the table from your chair with a 3D switch, the right pane docked with Turn Resources (notes 9 and 10), the hover card no taller than the mat, motion and callouts, the lobby's fans and launch line. The plan: `docs/ui-lane/plan-play-ui-2026-10-12.md`. Brief: `docs/ui-lane/README.md` |
+| **UI** | Codex on Personal-HP, since 2026-10-14 | `codex/ui-play-tabletop-preview` | Latest reconciled brief and tabletop preview; details above. Previous pass: Pass 1 of the Play screen on the Replit concept: the seven steps in the strip, Full screen as the table from your chair with a 3D switch, the right pane docked with Turn Resources (notes 9 and 10), the hover card no taller than the mat, motion and callouts, the lobby's fans and launch line. The plan: `docs/ui-lane/plan-play-ui-2026-10-12.md`. Brief: `docs/ui-lane/README.md` |
 
 ### Requests between the lanes
+
+Latest UI requests:
+- Provide authenticated table chat with shared ordered messages, reconnect history, sender/seat identity, send/refusal status and membership checks. The Chat module is a clearly marked placeholder until this exists; voice chat is a later feature.
+- Project authoritative round and turn-within-round into CrankRoomView, starting round 1. Define extra/skipped turns and eliminated seats; the UI must not guess from global turn divided by initial seat count.
+- Save preferences-only accounts through cloud sync. Existing sync treats a library without decks/lots as empty, so its first cloud save waits for library content. The drawer proof uses a real deck fixture and the existing authenticated backup flow against an isolated HTTP store; no production account was changed.
+
+UI appearance request (October 14, latest Rob feedback): add a host-owned `appearance: {background, table}` field to the table settings and public table view, validated against stable IDs. Initial IDs: background `volcano`, `forest`, `clouds`; table `wooden`, `stone`, `obsidian`. Persist through reconnect/rematch and freeze or authorize changes consistently with other table rules. The UI registry and local preview selectors are ready; local previews do not claim synchronization.
 
 A lane that needs something of the other's files asks here: the field or change, what it is for, an example. The
 other lane answers in the last column.
