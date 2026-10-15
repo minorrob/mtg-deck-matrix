@@ -17,6 +17,8 @@ Latest playtest update: drawer Add module / Restore default layout footers and t
 Latest staging-runtime proof: `tests/uat/play-e2e.mjs` passes 38 checks, including a separate signed-in invitee with an empty library seeing all seven validated shared decks, choosing Krenko, playing through turn 4 with the host, reconnecting, and replaying the completed record.
 Requirements and remaining scope: `docs/play-overhaul/REQUIREMENTS.md`.
 
+October 15 planning update: Rob requested a plan only after the multiplayer playtest, with implementation waiting for his go-ahead. The draft is `docs/play-overhaul/PLAYTEST-PLAN-2026-10-15.md`. Confirmed: mobile redesign, manual mana tapping with optional Auto-pay, and comfortable zoom near the middle to upper-middle with an oversized maximum. The game record for Luke’s reported missed draw has not been located locally; authenticated staging-log access is unavailable. Run 38663852137 finished with failures in a11y-board (old full-rail locator timeout), engine-breaks-anchors (four stale UI anchors), and generators (data inventory drift). Those are included in the baseline repair story; no application or engine behavior was changed for this planning request.
+
 **In progress:** always-on Full screen Pixi ground with the existing DOM cards, three back-row seats,
 viewed-seat hand, camera controls and overlay rails. The isolated recorded-view harness is
 `tools/play-tabletop-preview.mjs`. It does not send actions to a live cloud match.
