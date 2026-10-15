@@ -14,6 +14,11 @@ The intended experience is a readable mobile board, direct interaction with card
 - Animate a confirmed draw from library to hand, and label the pending draw action Draw card.
 - Prefer direct blocker selection and assignment on the board, with a shared combat display, provided complete legal choices remain available.
 - No HTML UAT guide is needed. Continue screenshots with object IDs and use game feedback and records.
+- Yield turn passes only the toggling player's priority for the current opponent's turn, preserving required choices. It expires at that turn's end.
+- Commander availability includes feasible payments from untapped sources. Use the same payment interaction as hand spells, with a small tax badge at the commander's top-right.
+- Replace the shared catalog with the exact six decks currently in Rob's **staging** profile. Verify D1's two partner commanders and D3 against those records before publication.
+- Add Game Logs to the account menu on the main site and Play; complete the updated Play home/lobby.
+- Table setup uses Human / AI seat types. Humans get an email field and Send; AI gets Easy / Normal / Claude.
 
 ## Findings from the current implementation
 
@@ -26,6 +31,12 @@ Automatic passing currently requires an empty stack: game/engine/rules/actions.m
 The Draw a card action already exists in crankmagic-board.js. New tables omit drawBeat because an October 9 instruction requested automatic drawing; older matches retain their saved behavior. The latest request reverses that interaction for new games. Diagnose the reported phase-label timing as part of the change, and keep recorded games replayable under their original policy.
 
 Combat projection already includes attackers, defending players, blockers, and stack targets. Reuse these IDs. The blocker decision already enumerates legal blocker/attacker pairs; a new board interface should submit the same validated decisions.
+
+The previous shared catalog was sourced from the committed data/live-state.json snapshot and published D1–D7. Rob reports that these are outdated decks. A passing test against that snapshot proved consistency with the wrong source, not accuracy against his current account. Replace that acceptance criterion with authenticated staging-profile provenance and exact list comparisons.
+
+game/engine/rules/commander.mjs already tracks commanderCasts by persistent commander identity. Inspect affordability and cast-action generation before changing tax logic. The file also documents incomplete command-zone replacement handling for certain non-effect moves; include these in the commander audit.
+
+crankmagic-table.js routes Play without a table ID straight to newTable(). The newer Play home is still pending under R24 in REQUIREMENTS.md. Current invitation actions create a one-day seat link, not a delivered email. cloud/game-room.mjs already exposes a finished-game record endpoint; crankmagic-account.js builds the account menu. Reuse these paths and extend their contracts instead of building separate account or game-history stores.
 
 ## Rules boundaries
 
@@ -109,9 +120,100 @@ Use deterministic scenarios for each rules change, browser tests for each intera
 
 Present screenshots with IDs after each visible milestone. Record proven behavior separately from unresolved feedback. Release small completed increments to staging after approval; do not interpret the prior one-time instruction to publish despite a particular regression run as a permanent exemption for future work.
 
+### P09 Add explicit Yield turn without surrendering decisions
+
+Show Yield turn only during another player's turn. A persistent active indicator names that turn and exposes Stop yielding. Store the policy on the server by match, seat, and authoritative turn ID, so it works across tabs and reconnects and expires even when an extra turn belongs to the same opponent. It must never carry into a new game or the player's own turn.
+
+While enabled, pass every priority opportunity for that player, including newly added spells/abilities, being targeted, and drawing a new playable card. Unlike P04's conservative no-response optimization, this is the player's explicit instruction even when a response exists. Do not silently cancel it because the board becomes dangerous. Explain this scope next to the toggle before activation; activation itself needs no extra confirmation dialog.
+
+Suspend passing whenever that player has a required decision: targets, modes, optional-effect yes/no, trigger ordering, replacement choices, commander destination, payments requested during resolution, discards, or blockers. Ask normally, then resume yielding within the same turn. Never answer No blocks or decline a may effect on the player's behalf. Define precedence: required decisions first, explicit Yield turn next, ordinary stop/hold preferences afterward. Restore those preferences when yielding ends.
+
+Serialize Stop yielding with game actions. A stop affects future passes once acknowledged; it cannot undo an already accepted pass or resolved spell. Show connection/acknowledgment state so a local toggle cannot imply a server cancellation that has not happened. Test late cancellation, two tabs, reconnect, extra/skipped turns, end-turn effects, removal of the active player, and mandatory choices while yielded. Aggregate pass history for readability while preserving diagnostic events.
+
+### P10 Make commander casting consistent and show accurate tax
+
+Provide one server-owned castability/payment feasibility contract for hand and command-zone spells. Highlight a commander when a legal casting opportunity and a feasible complete payment exist. Check source activation costs, restrictions, and mutually exclusive output choices: one land that taps for either black or green cannot supply both with the same activation. Exercise that exact negative case and a positive two-source case. Pool-only affordability must not hide an otherwise payable commander.
+
+Select the commander, choose required casting options, highlight sources, and complete P06's manual payment or reviewed Auto-pay. Show an unavailable reason when timing, cost, targets, or another restriction prevents casting. Keep inspection available regardless. The highlight means at least one legal casting configuration exists; changing X, modes, targets, or additional costs may require another payment.
+
+Tax is **+{2} generic per prior cast of that commander from the command zone**, not per death or return; partner commanders track separately. Keep the existing cast counter and display its projected next-cast surcharge as a small, readable top-right badge, with details on focus/tap. A countered cast still counts; casting from hand and putting a commander onto the battlefield need separate tests. [Commander rules](https://magic.wizards.com/en/formats/commander) and [partner guidance](https://magic.wizards.com/en/news/feature/commander-2016-mechanics-2016-10-24) establish the distinction.
+
+The badge shows tax; the payment view shows the actual final cost after applicable increases, reductions, and alternative/additional costs. Never edit printed mana value to display tax. Test cancellation before casting, rejected casts, countered casts, multiple returns, two partners, alternate faces, owner/controller differences, cost reductions, and reconnect/replay. Audit command-zone destination choices without replacing them with an automatic return policy.
+
+### P11 Replace the incorrect shared decks from the current staging profile
+
+Read the signed-in owner's staging profile through the supported authenticated account path or an owner-provided export. Record the profile revision and exact six deck IDs, commander IDs, quantities, and canonical card identities in a private comparison. Do not substitute the repository snapshot, infer decks from colors, or reconstruct lists from speech.
+
+D1 is expected to be the partner pair transcribed as “Kimna, the Weaver and Krom, Ludivet,” likely Tymna the Weaver and Kraum, Ludevic's Opus; the saved records must confirm that. D3's transcribed “Tewara, salted sand” remains unverified. Both checkpoints and a six-deck count must match before replacing the catalog. If they do not, stop the replacement and present the mismatch.
+
+Replace all outdated shared choices atomically for future selections, including the extra seventh entry. Preserve Rob's private profile and immutable deck snapshots in existing games and replay records. Every signed-in human retains read/use access to the corrected shared choices, without gaining edit access to Rob's account or collection. Prefer a versioned shared-deck publication sourced from the authenticated profile, with explicit refresh and provenance, over another disconnected hardcoded copy.
+
+Before Ready, validate every deck against the actual staging engine: complete main deck, both partners where applicable, combined color identity, quantities, and card support. Names resolving is insufficient proof of implemented effects. Coordinate unsupported cards with the existing card-load program, surface any authorized playtest-candidate limitations accurately, and never silently substitute another card. Cache image assets without making image-download completion a rules requirement; provide readable text fallback.
+
+Acceptance: an empty-library invitee selects and submits each of the exact six lists; partner selection/counts are correct; no old choices remain; unauthorized users cannot edit the publication; a newer profile revision cannot overwrite a running game's list. Include a human review of the six-deck roster before the release is called ready.
+
+### P12 Add account Game Logs and useful issue reports
+
+Add Game Logs to the shared account menu used by the website header and the Play profile control. Keep it reachable in Full screen and on mobile. Build a paginated list of the signed-in player's games with local date/time, table, participants' display names, deck/commander names, result or unfinished status, and a link to the game record. Support returning to an active table without abandoning its seat.
+
+Reuse the existing record endpoint and enforce membership on both listing and record access. Separate ordinary player-visible history from full diagnostic exports: a normal log must not reveal opponents' hidden cards, future draws, invite tokens, or private account information. Respect the existing explicit playtest export policy and label when a debug export includes otherwise private information. Do not commit raw profile backups or full game records to this public repository.
+
+Include engine/build and deck revisions, event/decision IDs, chosen modes/targets, draw events, automatic-pass reasons, and rejection details in appropriately protected diagnostic records. A Report game issue action can attach the current match/revision and the player's notes. Cover an interrupted game, reconnect, old-version replay, missing/expired records, and a nonparticipant attempting access. Use this path to locate Luke's missed-draw sequence; no guessed card fix.
+
+### P13 Complete Play home, seat setup, and Cloudflare email invitations
+
+Use the latest reconciled requirements and existing lobby concept to implement Play home: Resume game, New table, Join invitation, and Recent games. Keep shared deck selection easy to reach. Navigation from the left-side Play item, deep links, refresh, and browser Back must reach the same updated experience. Preserve invitation return paths through sign-in. Port the reference design into the current application; do not restore superseded prototype controls or introduce a second Play application. Features needing unavailable data, such as public open-table discovery, must not be filled with fake activity.
+
+Each enabled seat shows its name and a Human / AI type selector. Human adds Email and Send; AI replaces those with Easy / Normal / Claude. Use Add/remove seat for optional seats so Nobody is not confused with a player type. On narrow screens, each row becomes a labeled card. Claude is an opponent implementation, not a promise of greater difficulty; expose availability and failure state without silently changing it to Normal.
+
+Sending requires a real table and reserved seat. If Send is used before creation, validate the setup, persist one draft lobby, and send against that stable table/seat; prevent duplicate table creation on retries. Leaving setup must retain a visible resumable draft or offer explicit cancellation. Changing a sent seat's email or type revokes its prior invitation. Define the host, invited, joined, deck-validating, ready, disconnected, and countdown states. Any readiness-breaking change cancels the launch countdown and is visible to every participant.
+
+Cloudflare now documents outbound **Email Sending (beta)** on Workers Paid, distinct from incoming Email Routing. Verify availability and quota in this account, then onboard crankmagic.com and configure the sending binding and SPF/DKIM/DMARC records without overwriting existing mail configuration. Sending to arbitrary invitees requires the sending domain to be onboarded. This plan does not assume that an existing routing setup is enough. [Service overview](https://developers.cloudflare.com/email-service/), [domain setup](https://developers.cloudflare.com/email-service/get-started/send-emails/), [recipient limits](https://developers.cloudflare.com/email-service/platform/limits/).
+
+Use a dedicated sender at the requested domain and one recipient per invitation, with the host display name, table name, environment, expiration, and sign-in/join link. Keep sending in the Worker; no mail credentials in browser code. Add authenticated host authorization, per-account/recipient rate limits, deduplicated jobs, bounded retries, and delivery-failure handling. Distinguish queued, provider-accepted, bounced/failed, and joined states; provider acceptance is not proof of inbox delivery. Retain copy-link fallback.
+
+Bind each token to table, seat, intended signed-in email, and expiry. Redeem once with an explicit authenticated join action so an email scanner visiting the URL cannot consume it. Support resend/revoke and correct wrong-account guidance. Verify the Cloudflare Access admission path: today's seat link does not add an address to the site's allowlist. Complete a scoped invitation/admission flow or identify the exact admission prerequisite before claiming Send makes someone able to play; do not open the whole site as a shortcut.
+
+Acceptance: a fresh invitee receives a real staging invitation, signs in, claims only the intended seat, chooses a corrected shared deck with no collection import, and reaches Ready. Also cover expired/revoked links, changed email, repeated Send, two simultaneous claim attempts, mailbox failure, unavailable Claude, and host cancellation. Automated tests use captured mail; real sends are limited to explicitly designated test recipients during execution.
+
+## Rules and game-flow audit across the stories
+
+Use the September 25, 2026 [Comprehensive Rules](https://media.wizards.com/2026/downloads/MagicCompRules%2020260925.txt) as the rules baseline, rechecked at implementation. The following are regression scenarios and interface requirements, not a claim that every listed mechanic is already supported. For each, record existing coverage, a reproducible defect if present, the responsible story, and the release impact. Prioritize mechanics present in the six verified decks while preserving complete engine validation for all offered actions.
+
+| Risk to exercise | Planned safeguard and acceptance scenario | Story |
+| --- | --- | --- |
+| UI conflates turn owner, priority holder, decision owner, and viewed seat | Use distinct projected identities; switching the camera never changes action ownership. Test a defender's choice during an opponent's turn. | P02/P04/P09 |
+| Automatic progress skips a trigger or required choice | Test simultaneous triggers, controller-chosen ordering, replacement/prevention choices, state-based actions, and newly created priority windows. Never auto-answer choices through Yield turn. | P01/P04/P09 |
+| A card has several effects or separate triggers | Trace each effect to an event; cover modes, “then,” conditional clauses, illegal targets, source removal, copied abilities, and draw replacements. Include Luke's actual card when recovered. | P01/P12 |
+| Availability is inferred from apparent mana or card type | Test alternative/no-mana costs, usable other zones, special actions, split second, restricted mana, summoning-sick mana creatures, and source activation costs. Use server decisions for highlighting. | P04/P06/P10 |
+| Payment shortcut commits resources the player did not intend | Review life, sacrifice, discard, filter, convoke/delve, and optional costs where supported. Separate preview from irreversible activations; never present Cancel as universal undo. | P06 |
+| Draw button invents a response window or duplicates a draw | Test upkeep stops, normal-draw acknowledgment, replacement choices, empty-library events, extra draws, and actions after the draw; deduplicate by decision ID. | P05 |
+| Combat pictures imply guaranteed damage | Show draft/confirmed blocks distinctly, retain post-block response windows, and test blocked attackers losing blockers, deathtouch, trample, first/double strike, and multiple defenders. | P07 |
+| Decorative rearrangement changes meaning | Preserve attachments, tapped status, counters, control changes, token groups, and face-down privacy while dragging/tilting; grouping must not merge distinct legal targets. | P02/P03/P07 |
+| Commander identity is lost during movement | Test separate partners, tax, command-zone choices, commander damage, copied commanders, and reanimation against persistent identities. | P10/P11 |
+| End-of-turn automation skips cleanup decisions | Exercise discard, expiring effects, cleanup triggers, extra phases/turns, skipped turns, and eliminated seats. Round labels must come from the room, not initial seat-count arithmetic. | P04/P09 |
+| Disconnect or elimination deadlocks multiplayer | Test leave/rejoin during each decision type, pending objects controlled/owned by a departed player, host departure, final result, and rematch. Never equate Yield turn with concession or consent to a timeout choice. | P08/P09/P13 |
+| Long trigger chains freeze the screen | Bound work per server tick without dropping events; show progress, preserve interruptible preferences at valid boundaries, and use explicit loop choices rather than an arbitrary silent cutoff. | P04/P08 |
+
+Unsupported interactions found in this audit become explicit engine work or clear setup restrictions for the affected deck. An interface fallback cannot compensate for an incorrect rules result.
+
+## Interaction and performance acceptance
+
+Keep one current decision with one authoritative submission path. Show selection locally at once, mark pending submission, and commit game facts only from the server. Preserve drafts when compatible updates arrive; invalidate stale targets with a specific explanation. Repeated clicks and reconnect replays must not repeat an action. Network errors must retain recoverable input and name the next step.
+
+Use text/icons as well as color for legal sources, selected cards, and urgent actions. Provide tap-select/tap-destination and keyboard alternatives wherever dragging is available. Aim for roughly 44-pixel touch hit areas for frequent phone actions while keeping visible controls compact, and ensure target spacing satisfies the [W3C target-size guidance](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html). [Dragging guidance](https://www.w3.org/WAI/WCAG22/Understanding/dragging-movements.html) supports a non-drag pointer path as well as keyboard operation.
+
+Use restrained motion, reduced-motion equivalents, preserved focus, and concise live-region announcements. Do not announce every auto-pass or force the camera to follow every spell. Keep end-to-end game flow independent of animation completion. On phones, show the current actor/decision and hand first; public-card inspection and combat assignment must remain available with drawers closed.
+
+Measure local input feedback, render duration, memory, and reconnect recovery on a real phone with a crowded board, long stack/history, video enabled/disabled, slow network, and image failures. Target local feedback within 100 ms and stable 30 fps or better on the agreed minimum device; set a separate measured budget for server round trips. Reduce decorative video/particles and unnecessary repainting first. Keep selected/targetable cards represented when optimizing offscreen rendering. Evaluate median and slow-case results rather than a single successful desktop run.
+
+Record task success and misclicks for joining, choosing a shared deck, inspecting a rear-seat card, paying for a commander, yielding/reclaiming priority, blocking, and returning from Game Logs. Use those observations to refine the mobile prototype before broad rollout.
+
 ## Sequence and ownership
 
-P01 baseline investigation and P02 mobile design come first. The server changes for P04/P05 and the specific card defect should land before their dependent UI. P03 geometry can then use the approved mobile layout. P06 precedes the final P07 interaction design so the board has consistent selection and confirmation behavior. P07 first ships its display, then direct assignment after parity checks. P08 validates each completed increment and the combined game.
+Start with P01's baseline and P11's authenticated deck verification, while P02 establishes the mobile interaction design. Add P12's record access early so real-game failures can be diagnosed. Engine work for P04/P05/P09 and the specific card defect precedes dependent UI; P06 and P10 share one feasibility/payment implementation. P03 uses the approved mobile layout. P07 first ships its display, then direct assignment after payment/selection conventions and rules parity are proven. P13's updated lobby and corrected deck catalog form the invitation milestone. P08 gates every increment and the combined four-player game.
+
+Suggested review milestones: (1) verified six-deck roster and recovered diagnostics; (2) mobile/navigation prototype with object-ID screenshots; (3) commander payment, Yield turn, draw and priority scenarios; (4) shared combat display and complete blocker assignment; (5) invitation-to-finished-game staging walkthrough. Correcting the shared catalog can ship independently once its provenance and engine support are proven; it need not wait for the entire visual redesign.
 
 UI work belongs to the existing UI lane. Rules, room persistence, projections, and card definitions belong to the engine lane; assign exclusive ownership before implementation so the sessions do not edit the same files. Existing public view contracts should be extended only when needed. No framework or rendering-engine replacement is justified yet; test the current hybrid renderer against the mobile and upright-card prototypes first.
 
@@ -125,4 +227,6 @@ UI work belongs to the existing UI lane. Rules, room persistence, projections, a
 
 ## Information still needed
 
-A table link or exported record is needed to identify Luke’s card and the missed draw. Specific phone/browser details will refine device acceptance, but do not block the draft mobile design. The garbled phrase about the cast animation and player name is not treated as a firm specification: prototype a restrained, player-labeled cast movement and review it before choosing exact motion or placement.
+A supported authenticated staging read or owner export is still needed for the current six decks and their exact D3 identity; the source environment is confirmed as staging. A table link or exported record is needed to identify Luke's card and missed draw. These gaps block the corresponding replacement/bug claim, not the other planning work. Cloudflare sending availability, quota, and the invitation admission path need account-level verification during execution.
+
+Specific phone/browser details will refine device acceptance, but do not block the draft mobile design. The garbled phrase about the cast animation and player name is not treated as a firm specification: prototype a restrained, player-labeled cast movement and review it before choosing exact motion or placement. No implementation or deployment is authorized by this planning update; Rob's go-ahead starts execution.
