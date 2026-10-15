@@ -2,8 +2,8 @@
 
 ## Play tabletop preview, October 14, 2026
 
-**Holder:** Codex on Personal-HP, `codex/ui-play-tabletop-preview`, integrating `origin/main` at `c9ad0e65`.
-Rob authorized the updated plan, starting with the reconciled checklist and working tabletop preview.
+**Holder:** Codex on Personal-HP, `codex/ui-play-tabletop-preview`, integrated `origin/main` at `24aa166b`.
+Rob authorized the updated plan, starting with the reconciled checklist and working tabletop preview. On October 14 he explicitly transferred staging release ownership to Codex and authorized publishing this tested update so invitees can use his shared decks. Production remains unchanged.
 Latest corrections: another seat shows its hand as backs; screenshots include object IDs;
 notify before configurable side-pane modules; final comprehensive UAT HTML, then staging integration.
 Full screen now always uses the table, with no 3D switch. Tilt is 0–60 degrees, default 40;
