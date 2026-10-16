@@ -28,7 +28,7 @@ import net from "node:net";
 import {mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync} from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import {build, worktreeSource} from "../../tools/release-pages.mjs";
+import {build, worktreeSource, commitSource} from "../../tools/release-pages.mjs";
 import {replayTape} from "../../game/room/replay.mjs";
 import {tableCards} from "../../cloud/game-room.mjs";
 import {NO_PERSON_REASON} from "../../game/room/room.mjs";
@@ -51,7 +51,7 @@ const [none] = JSON.parse(readFileSync(new URL("../../data/engine/top-cards.json
 
 /* The build, with test Access values, in site/ with its configuration beside it (see cloud-e2e). */
 const dir = mkdtempSync(path.join(os.tmpdir(), "crankmagic-play-e2e-")), site = path.join(dir, "site");
-const {built, problems} = build({source: worktreeSource(), profileName: "cloud-staging"});
+const {built, problems} = build({source: process.env.UAT_REF ? commitSource(process.env.UAT_REF) : worktreeSource(), profileName: "cloud-staging"});
 eq(problems, [], "the staging release with Play builds and verifies");
 for (const [f, body] of built) {mkdirSync(path.dirname(path.join(site, f)), {recursive: true}); writeFileSync(path.join(site, f), body);}
 const config = JSON.parse(built.get("wrangler.jsonc").toString("utf8"));
@@ -284,6 +284,15 @@ try {
         return text;
       };
       eq(await restore(page, BASE), review, `the host restores the library in Settings, and its review reads "${review}"`);
+      await page.locator('[data-action=account-sync]').first().click();
+      await until('the host library to reach the cloud', async () => (await api('GET', '/api/me')).json?.head);
+      const sharedDeck = await page.evaluate(async () => {
+        const r = await fetch('/api/social/settings', {method:'PUT',headers:{'content-type':'application/json','x-crankmagic':'sync'},
+          body:JSON.stringify({kind:'deck',sourceId:'goblins',revision:0,publicRole:'reviewer',grants:[]})});
+        return {status:r.status,body:await r.json()};
+      });
+      eq(sharedDeck.status,200,'the host publishes a live library deck through the authenticated sharing service');
+      eq(sharedDeck.body.settings.publicRole,'reviewer','the shared deck is playable without edit permission');
 
       /* The host's table: a person's seat and an AI's. */
       await page.goto(`${BASE}/index.html#table`);
@@ -311,11 +320,12 @@ try {
       eq(seen.slice(0, 2), [[false, true], [true, true]], "the newcomer opens the link, signed in as themself, and sits in seat 2");
       await newcomer.locator(`.cm-lobby-seat[data-seat="1"]`).getByRole("button", {name: /^Choose a deck$/}).click();
       const shared = newcomer.locator('#cm-dialog [data-action=table-use-shared-deck]');
-      await until("all seven shared decks to be validated", async () => shared.evaluateAll(els => els.length === 7 && els.every(el => !el.disabled)), 30000);
+      await until("the account-shared deck to be validated", async () => shared.evaluateAll(els => els.length === 1 && els.every(el => !el.disabled)), 30000);
+      eq(await shared.first().getAttribute('data-shared-deck'),sharedDeck.body.settings.id,'the chooser uses the live share instead of a bundled sample deck');
       eq(await newcomer.locator('#cm-dialog [data-action=table-use-deck]').count(), 0, "the signed-in invitee has no library decks or import requirement");
       await shared.filter({hasText: "Krenko"}).click();
       await newcomer.locator('.cm-lobby-seat[data-seat="1"] .cm-seat-line', {hasText: "Krenko"}).waitFor({timeout:15000});
-      ok(true, "the empty-library invitee selects Rob's shared Krenko deck through the deployed Worker");
+      ok(true, "the empty-library invitee selects the host's shared Krenko deck through the local Worker runtime");
       eq(await restore(newcomer, NBASE), review, "backup restoration also remains available to an invitee");
       await newcomer.goto(`${NBASE}/index.html#table?id=${tableId}`);
       await newcomer.locator('.cm-lobby-seat[data-seat="1"]').getByRole('button', {name: /^(Choose|Change).*deck$/}).click();
@@ -417,6 +427,7 @@ try {
   proxy.close();
   server.kill();
   await new Promise((r) => setTimeout(r, 500));
+  if(path.dirname(path.resolve(dir))!==path.resolve(os.tmpdir())||!path.basename(dir).startsWith('crankmagic-play-e2e-'))throw Error('Refusing cleanup outside the test temporary directory');
   try {rmSync(dir, {recursive: true, force: true});} catch {}
 }
 console.log(`play-e2e: ${checks} checks passed — the staging release's Play under wrangler dev: the Play tab is the table, a table is a playtest table, the alarm launches the game, the board opens over the socket, and the full record downloads and replays.`);
