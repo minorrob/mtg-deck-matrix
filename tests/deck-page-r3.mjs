@@ -96,8 +96,8 @@ try {
   await page.locator(".cm-deck-hero").getByRole("button", {name: /^More/}).click();
   await page.locator(".cm-menu:popover-open").waitFor();
   const entries = await menuEntries(page);
-  eq(entries.slice(0, 10), ["§This deck", "Measure", "Trace in Explore", "Guide & SWOT", "Export / print", "Compare with…", "Rename & edit definition", "Change commander", "Archive", "Delete deck…"],
-    "the More menu leads with the design's order");
+  eq(entries.slice(0, 11), ["§This deck", "Measure", "Trace in Explore", "Guide & SWOT", "Export / print", "Compare with…", "Rename & edit definition", "Change commander", "Share Deck", "Archive", "Delete deck…"],
+    "the More menu places Share Deck after Change commander and preserves the remaining order");
   ok(entries.includes("Change the collection group") || entries.includes("Attach a collection group"), "and still carries the collection group entry (Change or Attach, as the deck has one or not)");
   for (const kept of ["Reserve available copies", "Recommendations", "Reports & advice", "About this page"])
     ok(entries.some((x) => x === kept || x.startsWith(kept)), `and still carries ${kept}`);

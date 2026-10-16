@@ -30,6 +30,7 @@
 import {characteristicsOf, deriving, staticAbilities} from "./rules/layers.mjs";
 import {conditionHolds} from "./script/condition.mjs";
 import {commanderKeyOf} from "./state/index.mjs";
+import {commanderTax} from "./rules/commander.mjs";
 
 export const PROJECTION_SCHEMA = "CommanderProbeProjection@1";
 
@@ -110,6 +111,7 @@ function cardFor(state, id, canSeeFace, viewer = null) {
     /* Which commander (state/index.mjs, commanderKeyOf): the key its damage is kept under in every player's
        `health.commanderDamage`, the same in every zone, so the board can say whose commander dealt it. */
     ...(object.commander === true ? {commanderKey: commanderKeyOf(object)} : {}),
+    ...(object.commander === true && object.zone === "command" && named ? {commanderTax:commanderTax(state,object.owner,id)} : {}),
   };
 }
 

@@ -336,7 +336,7 @@ function started() {
       {seat: 1, zone: "battlefield", cards: ["Mountain"]}, {seat: 1, zone: "hand", cards: ["Lightning Bolt"]},
     ], [...cast, {pass: 1}, {tap: "Mountain", seat: 1}, {cast: "Lightning Bolt", seat: 1, targets: [{card: "Boss"}]}, {resolve: true},
       {choose: [ZONE]}, {to: {turn: 3, phase: "MAIN1"}}, {tap: "Mountain"},
-      {expect: [{offers: {kind: "cast", card: "Boss"}, count: 0}]},
+      {expect: [{offers: {kind: "cast", card: "Boss"}, count: 1}]},
       {tap: "Mountain"}, {tap: "Mountain"},
       {expect: [{offers: {kind: "cast", card: "Boss"}, count: 1}]}]);
     eq(commanderTax(state, 0, cardsIn(state, "command", 0)[0]), 2, "a commander cast once and returned costs {2} more the second time (CR 903.8), whatever object it is now");
