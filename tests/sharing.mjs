@@ -5,7 +5,7 @@ import {gzipSync} from 'node:zlib';
 import {sharing,ShareError,sharedIdentity} from '../cloud/sharing.mjs';
 import {createLibrary} from '../cloud/library.mjs';
 const raw=new DatabaseSync(':memory:');raw.exec('PRAGMA foreign_keys=ON');
-for(const f of ['0001_accounts','0002_ai','0003_sharing','0004_mail_retries'])raw.exec(readFileSync(new URL('../cloud/migrations/'+f+'.sql',import.meta.url),'utf8'));
+for(const f of ['0001_accounts','0002_ai','0003_sharing','0004_mail_retries','0005_access_invites'])raw.exec(readFileSync(new URL('../cloud/migrations/'+f+'.sql',import.meta.url),'utf8'));
 const stmt=(sql,args=[])=>({bind:(...v)=>stmt(sql,v),first:async()=>raw.prepare(sql).get(...args)||null,all:async()=>({results:raw.prepare(sql).all(...args)}),run:async()=>({meta:{changes:Number(raw.prepare(sql).run(...args).changes)}}),sync:()=>({meta:{changes:Number(raw.prepare(sql).run(...args).changes)}})});
 const db={prepare:s=>stmt(s),batch:async list=>{raw.exec('BEGIN');try{const out=list.map(x=>x.sync());raw.exec('COMMIT');return out;}catch(e){raw.exec('ROLLBACK');throw e;}}};
 const M=globalThis.CrankCollection,E=globalThis.CrankExchange,lib=createLibrary(db);
@@ -43,9 +43,37 @@ const library=await svc.save(owner,{kind:'library',sourceId:'library',revision:0
 const changed=await svc.edit(writer,li.id,{head:li.head,command:{type:'quantity',lotId:'owned',quantity:6}});eq(changed.content.lots[0].quantity,6,'library collaborator edits quantity');
 failMail=true;const mail=await svc.emailDeck(owner,{id,email:'friend@example.com'},'https://example.com');eq(mail.status,'failed','delivery failure reported');failMail=false;eq((await svc.delivery(owner,mail.id)).status,'sent','retry delivers');const count=sent.length;await svc.delivery(owner,mail.id);eq(sent.length,count,'sent messages not resent');await rejects(()=>svc.delivery(stranger,mail.id),404);
 await rejects(()=>svc.invite(stranger,{name:'New',email:'new@example.com'},'https://example.com'),403);await rejects(()=>svc.invite(owner,{name:'New',email:'new@example.com'},'https://example.com'),503);
-let admissions=[];const ready=sharing(db,{...env,SHARING_ENABLED:'on',ACCESS_INVITE_TOKEN:'test-only',ACCESS_INVITE_APP_IDS:'00000000-0000-0000-0000-000000000000',CLOUDFLARE_ACCOUNT_ID:'test-only'},{now,fetchImpl:async(url,args)=>{if(url==='https://api.resend.com/emails')return mailFetch(url,args);admissions.push(JSON.parse(args.body));return Response.json({success:true});}});
-eq((await ready.invite(owner,{name:'New Player',email:'new@example.com'},'https://example.com')).status,'sent','invitation after admission');eq(admissions[0].include,[{email:{email:'new@example.com'}}],'only invited address admitted');
+let admissions=[];const policyId='11111111-1111-1111-1111-111111111111',appId='00000000-0000-0000-0000-000000000000';
+let accessPolicy={id:policyId,reusable:true,app_count:1,name:'Invited',decision:'allow',include:[{group:{id:'existing-group'}}],require:[{login_method:{id:'existing-provider'}}],exclude:[{email:{email:'blocked@example.com'}}],session_duration:'12h'};
+const accessEnv={...env,SHARING_ENABLED:'on',ACCESS_INVITE_TOKEN:'test-only',ACCESS_INVITE_APP_IDS:appId,ACCESS_INVITE_POLICY_ID:policyId,CLOUDFLARE_ACCOUNT_ID:'0'.repeat(32)};
+let failAccess=false,holdAccess=null;
+const accessFetch=async(url,args)=>{
+  if(url==='https://api.resend.com/emails')return mailFetch(url,args);
+  assert.equal(args.redirect,'error');assert.ok(args.signal instanceof AbortSignal);
+  if(failAccess)return Response.json({success:false},{status:403});
+  if(holdAccess)await holdAccess;
+  if(url.endsWith(`/apps/${appId}`)){assert.equal(args.method,'GET');return Response.json({success:true,result:{policies:[{id:policyId}]}});}
+  assert.ok(url.endsWith(`/access/policies/${policyId}`),'only configured reusable policy is writable');
+  if(args.method==='PUT'){const body=JSON.parse(args.body);admissions.push(body);accessPolicy={...accessPolicy,...body};}
+  else assert.equal(args.method,'GET');
+  return Response.json({success:true,result:accessPolicy});
+};
+const ready=sharing(db,accessEnv,{now,fetchImpl:accessFetch});
+eq((await ready.invite(owner,{name:'New Player',email:'new@example.com'},'https://example.com')).status,'sent','invitation after admission');eq(admissions[0].include,[{group:{id:'existing-group'}},{email:{email:'new@example.com'}}],'only invited address added; existing group preserved');
+eq([admissions[0].require,admissions[0].exclude,admissions[0].session_duration],[accessPolicy.require,accessPolicy.exclude,'12h'],'invitation preserves policy restrictions');
 await ready.invite(owner,{name:'New Player',email:'new@example.com'},'https://example.com');eq(admissions.length,1,'retry does not add another policy');
+const sentBeforeFailure=sent.length;failAccess=true;
+await rejects(()=>ready.invite(owner,{name:'Rejected',email:'rejected@example.com'},'https://example.com'),502);failAccess=false;
+eq(sent.length,sentBeforeFailure,'Access failure sends no invitation');
+eq(raw.prepare('SELECT count(*) AS n FROM access_invite_locks').get().n,0,'failed admission releases its lock');
+accessPolicy.app_count=2;await rejects(()=>ready.invite(owner,{name:'Wrong app',email:'wrong@example.com'},'https://example.com'),503);accessPolicy.app_count=1;
+let releaseAccess;holdAccess=new Promise(r=>releaseAccess=r);
+const firstInvite=ready.invite(owner,{name:'Concurrent One',email:'one@example.com'},'https://example.com');
+while(!raw.prepare('SELECT count(*) AS n FROM access_invite_locks').get().n)await new Promise(r=>setTimeout(r,0));
+await rejects(()=>ready.invite(owner,{name:'Concurrent Two',email:'two@example.com'},'https://example.com'),409);
+releaseAccess();holdAccess=null;await firstInvite;
+await ready.invite(owner,{name:'Concurrent Two',email:'two@example.com'},'https://example.com');
+eq(accessPolicy.include.filter(r=>r.email).map(r=>r.email.email),['new@example.com','one@example.com','two@example.com'],'concurrent retry preserves both invitations');
 await rejects(()=>svc.updateProfile(owner,{name:'X',avatar:'https://evil.example/pixel'}),400);
 const beforeEmailSettings=await svc.settings(owner,'deck','deck:one');
 await svc.emailDeck(owner,{sourceId:'deck:one',email:'copy@example.com'},'https://example.com');

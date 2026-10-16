@@ -5,6 +5,7 @@ import '../collection-exchange.js';
 import {createLibrary, Conflict} from './library.mjs';
 import {ADVISE_CARDS,ADVISE_FIELDS} from './advise-cards.mjs';
 import {mailReady,sendMail} from './mail.mjs';
+import {admitAddress} from './access-invites.mjs';
 const M = globalThis.CrankCollection, E = globalThis.CrankExchange;
 export class ShareError extends Error {constructor(message, status=400){super(message);this.status=status;}}
 // Keep the original game/library identity stable when its verified sign-in address changes.
@@ -115,12 +116,7 @@ export function sharing(db,env,{now=()=>new Date().toISOString(),fetchImpl=fetch
     return delivery(person,await queue(person,to,`CrankMagic deck: ${c.name}`,text));
   }
   async function admit(to){
-    if(!env.ACCESS_INVITE_TOKEN||!env.ACCESS_INVITE_APP_IDS||!env.CLOUDFLARE_ACCOUNT_ID)fail('Cloudflare Access invitation permissions are not configured. Your sign-in is unchanged.',503);
-    for(const app of env.ACCESS_INVITE_APP_IDS.split(',').map(x=>x.trim()).filter(Boolean)){
-      if(!/^[\da-f-]{36}$/.test(app))fail('The Access application configuration is invalid.',503);
-      const response=await fetchImpl(`https://api.cloudflare.com/client/v4/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/access/apps/${app}/policies`,{method:'POST',headers:{authorization:`Bearer ${env.ACCESS_INVITE_TOKEN}`,'content-type':'application/json'},body:JSON.stringify({name:`CrankMagic invitation ${await E.hash(to)}`,decision:'allow',include:[{email:{email:to}}],require:[],exclude:[]})});
-      const value=await response.json();if(!response.ok||value.success!==true)fail('Access did not admit this address. Your sign-in is unchanged. Ask the administrator to check invitation permissions.',502);
-    }
+    await admitAddress(db,env,to,{now,fetchImpl,fail});
   }
   return {profile,list,read,settings,save,edit,queue,delivery,emailDeck,
     async requestEmail(person,input,origin){
@@ -150,11 +146,7 @@ export function sharing(db,env,{now=()=>new Date().toISOString(),fetchImpl=fetch
       await q("INSERT INTO account_invitations(email,name,invited_by,created_at,status) VALUES (?,?,?,?,'pending') ON CONFLICT(email) DO UPDATE SET name=excluded.name",to,name,person.id,now()).run();
       const prior=await q('SELECT status FROM account_invitations WHERE email=?',to).first();
       if(prior.status!=='admitted'){
-        for(const app of env.ACCESS_INVITE_APP_IDS.split(',').map(x=>x.trim()).filter(Boolean)){
-          if(!/^[\da-f-]{36}$/.test(app))fail('The Access application configuration is invalid.',503);
-          const response=await fetchImpl(`https://api.cloudflare.com/client/v4/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/access/apps/${app}/policies`,{method:'POST',headers:{authorization:`Bearer ${env.ACCESS_INVITE_TOKEN}`,'content-type':'application/json'},body:JSON.stringify({name:`CrankMagic invitation ${await E.hash(to)}`,decision:'allow',include:[{email:{email:to}}],require:[],exclude:[]})});
-          const value=await response.json();if(!response.ok||value.success!==true)fail('Access did not admit this address. No invitation email was sent; ask the administrator to check invitation permissions.',502);
-        }
+        await admit(to);
         await q("UPDATE account_invitations SET status='admitted' WHERE email=?",to).run();
       }
       const invited=await library.user(canonical);await profile(invited);await q("UPDATE profiles SET name=? WHERE user_id=? AND name=''",name,invited.id).run();
