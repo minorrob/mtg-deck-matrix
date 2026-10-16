@@ -148,7 +148,7 @@ export const PROFILES = {
        each sends on 2026-10-12. */
     /* Open to everyone signed in since 2026-10-14 (Rob, as for production): the door takes staging's own sign-in too. */
     ai: {aud: "d3e7b5812c81536cb707c64cca2196e1ee7854cbca6791f4d7bd2ef4b649f6db", everyone: true, capTotalCents: 300, model: "claude-haiku-5-5", coach: true, coachCapCents: 150, pilot: true, pilotGameCents: 25, advise: true},
-    sharing: {adminId: "1"}, // Verified against the owner of staging snapshot revision 36.
+    sharing: {adminId: "1", accountId: "02e7ae6d703281008f546c63378c6ddb", accessAppIds: "16fef6e1-0437-4bbd-b7fe-a81419dc09fa"}, // Staging only; secret tokens are deployed separately.
     cloud: {database: {name: "crankmagic-staging", id: "b7f806ec-c9e8-4265-9f23-7d9705db9a26"}, limits: {ip: "2001", person: "2002"}, access: {team: "crankmagic.cloudflareaccess.com", aud: "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5"}},
   },
 };
@@ -208,7 +208,7 @@ export const HOST_FILES = {
       preview_urls: false,
       ...(profile.cloud ? {
         d1_databases: [{binding: "DB", database_name: profile.cloud.database.name, database_id: profile.cloud.database.id, migrations_dir: "cloud/migrations"}],
-        vars: {...(profile.sharing ? {SHARING_ENABLED: "on", INVITE_ADMIN_ID: profile.sharing.adminId} : {}), ACCESS_TEAM_DOMAIN: profile.cloud.access.team, ACCESS_AUD: profile.cloud.access.aud, ...(profile.tables?.playtest ? {PLAYTEST_TABLES: "on"} : {}), ...(profile.serviceSeats ? {SERVICE_SEATS: "on"} : {}), ...(profile.tables?.closed ? {PLAY_TABLES_CLOSED: "on"} : {}), ...aiVars(profile)},
+        vars: {...(profile.sharing ? {SHARING_ENABLED: "on", INVITE_ADMIN_ID: profile.sharing.adminId, CLOUDFLARE_ACCOUNT_ID: profile.sharing.accountId, ACCESS_INVITE_APP_IDS: profile.sharing.accessAppIds} : {}), ACCESS_TEAM_DOMAIN: profile.cloud.access.team, ACCESS_AUD: profile.cloud.access.aud, ...(profile.tables?.playtest ? {PLAYTEST_TABLES: "on"} : {}), ...(profile.serviceSeats ? {SERVICE_SEATS: "on"} : {}), ...(profile.tables?.closed ? {PLAY_TABLES_CLOSED: "on"} : {}), ...aiVars(profile)},
         ratelimits: [
           {name: "LIMIT_IP", namespace_id: profile.cloud.limits.ip, simple: {limit: LIMITS_PER_MINUTE.ip, period: 60}},
           {name: "LIMIT_PERSON", namespace_id: profile.cloud.limits.person, simple: {limit: LIMITS_PER_MINUTE.person, period: 60}},
@@ -493,7 +493,7 @@ export function verify(built, profile) {
   for (const [f, body] of built) {
     if (!/\.(html|js|mjs|css|md|json|txt)$|^LICENSE$/.test(f)) continue;
     for (const m of body.toString("utf8").matchAll(/[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}/g))
-      if (![PUBLIC_CONTACT, "notifications@crankmagic.com"].includes(m[0].toLowerCase())) problems.push(`${f} names an email address other than ${PUBLIC_CONTACT} (${m[0].slice(0, 2)}…@${m[0].split("@")[1]})`);
+      if (![PUBLIC_CONTACT, "notifications@crankmagic.com", "invite@crankmagic.com"].includes(m[0].toLowerCase())) problems.push(`${f} names an email address other than ${PUBLIC_CONTACT} (${m[0].slice(0, 2)}…@${m[0].split("@")[1]})`);
   }
   /* The service worker's lists are the app's own statement of what it fetches: all must be here. */
   const sw = built.get("crankmagic-sw.js")?.toString("utf8") || "";
