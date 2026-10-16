@@ -15,7 +15,7 @@ import assert from "node:assert/strict";
 import {legalActions, applyAction, tapUnits} from "../game/engine/rules/actions.mjs";
 import {awaitingChoice, resolveAwaiting} from "../game/engine/rules/turn.mjs";
 import {recordCommanderCast} from "../game/engine/rules/commander.mjs";
-import {parseManaCost, manaValue, tapPlans, automaticPayment} from "../game/engine/rules/mana.mjs";
+import {parseManaCost, manaValue, tapPlans, automaticPayment, poolSize} from "../game/engine/rules/mana.mjs";
 import {projectFor} from "../game/engine/projection.mjs";
 import {housePilot} from "../game/engine/pilots/house-pilot.mjs";
 import {offerDetails} from "../game/room/room.mjs";
@@ -39,6 +39,9 @@ const FIX = {
   Vault: {types: ["Artifact"], manaCost: "{1}", abilities: [mana({C: 2})]},
 };
 const play = (name, setup, steps = []) => runScenario({name, setup, steps}, index.definition, FIX).state;
+/* A match that tops floating mana up from its untapped sources and taps a source for all it makes (`pooledTaps`), as a table's
+   new matches do; `play` is a match launched before, which offers what it offered then. */
+const pooledPlay = (name, setup, steps = []) => runScenario({name, setup, steps, pooledTaps: true}, index.definition, FIX).state;
 const named = (s, card) => s.zones.battlefield.filter((id) => s.objects[id].card === card);
 const tapped = (s) => s.zones.battlefield.filter((id) => s.objects[id].tapped).map((id) => s.objects[id].card).sort();
 const casts = (s, card) => legalActions(s, 0).filter((a) => a.kind === "cast" && (card === undefined || a.label === card));
@@ -131,8 +134,13 @@ const onStack = (s) => s.stack.map((e) => s.objects[e.objectId]?.card);
 }
 {
   /* Left to tapping by hand. */
-  const pooled = play("pool", [at(0, "battlefield", "Forest", "Forest", "Forest"), at(0, "hand", "Bear")], [{tap: "Forest"}]);
-  eq(casts(pooled, "Bear").length, 0, "{G} already in the pool, two Forests untapped: no tap-and-cast (tap one more, and the pool pays)");
+  eq(casts(play("pool", [at(0, "battlefield", "Forest", "Forest", "Forest"), at(0, "hand", "Bear")], [{tap: "Forest"}]), "Bear").length, 0,
+    "{G} already in the pool, two Forests untapped, a match launched before: no tap-and-cast (tap one more, and the pool pays)");
+  const pooled = pooledPlay("pool", [at(0, "battlefield", "Forest", "Forest", "Forest"), at(0, "hand", "Bear")], [{tap: "Forest"}]);
+  eq(casts(pooled, "Bear").length, 1, "floating mana and an untapped source together make the spell available");
+  applyAction(pooled,0,casts(pooled,"Bear")[0]);
+  if(pooled.awaiting) resolveAwaiting(pooled,[0]);
+  eq([onStack(pooled),tapped(pooled).length,poolSize(pooled.players[0].manaPool)],[["Bear"],2,0],"the floating mana is spent and only one additional Forest taps");
   const both = play("pool pays", [at(0, "battlefield", "Forest", "Forest"), at(0, "hand", "Bear")], [{tap: "Forest"}, {tap: "Forest"}]);
   eq(casts(both, "Bear").map((a) => a.autoTap ?? false), [false], "both tapped by hand: the pool pays, as always");
   eq([casts(play("x", [at(0, "battlefield", "Forest", "Forest"), at(0, "hand", "Hydra")]), "Hydra").length,
@@ -159,6 +167,28 @@ const onStack = (s) => s.stack.map((e) => s.objects[e.objectId]?.card);
   eq([seer.awaiting, tapped(seer)], [null, ["Forest", "Wastes"]], "{C}{G}: the Wastes and the Forest, one way");
 }
 {
+  eq(casts(play("a two-mana rock, a match launched before", [at(0, "battlefield", "Forest", "Vault"), at(0, "command", "Leader")]), "Leader").length, 0,
+    "a match launched before taps a source for one mana only, so the two-mana rock is left to tapping by hand");
+  const s=pooledPlay("commander with a two-mana rock",[at(0,"battlefield","Forest","Vault"),at(0,"command","Leader")]);
+  const [cast]=casts(s,"Leader");
+  ok(cast?.autoTap,"a commander is offered with an untapped Forest and two-mana rock");
+  applyAction(s,0,cast);
+  if(s.awaiting) resolveAwaiting(s,[0]);
+  eq([onStack(s),tapped(s),s.players[0].manaPool.C],[["Leader"],["Forest","Vault"],1],"the commander casts and surplus colorless mana remains");
+  const tax=pooledPlay("tax with a rock",[at(0,"battlefield","Forest","Vault"),at(0,"command","Leader")]);
+  recordCommanderCast(tax,0,tax.zones.command[0][0]);
+  eq(casts(tax,"Leader").length,0,"three available mana cannot pay the taxed four-mana commander");
+  const enough=pooledPlay("tax with pool and rock",[at(0,"battlefield","Forest","Forest","Vault"),at(0,"command","Leader")],[{tap:"Forest"}]);
+  recordCommanderCast(enough,0,enough.zones.command[0][0]);
+  applyAction(enough,0,casts(enough,"Leader")[0]);
+  if(enough.awaiting) resolveAwaiting(enough,[0]);
+  eq([onStack(enough),poolSize(enough.players[0].manaPool)],[["Leader"],0],"floating mana, a land and a rock pay the commander tax together");
+  const dual=pooledPlay("one dual cannot pay twice",[at(0,"battlefield","Grove"),at(0,"command","Leader")]);
+  eq(casts(dual,"Leader").length,0,"a dual's output alternatives never count as two sources");
+  const restricted=pooledPlay("mana restrictions",[at(0,"battlefield","Forest","Ache"),at(0,"command","Leader")]);
+  eq(casts(restricted,"Leader").length,0,"a pain source is not silently activated by the safe-source shortcut");
+}
+{
   /* Refused: a way that is not one, or a tap-and-cast nobody offered. */
   const s = play("forged", [at(0, "battlefield", "Forest", "Forest", "Island"), at(0, "hand", "Bear")]);
   const [cast] = casts(s, "Bear");
@@ -170,4 +200,4 @@ const onStack = (s) => s.stack.map((e) => s.objects[e.objectId]?.card);
   checks += 1;
 }
 
-console.log(`engine-tap-to-cast: ${checks} checks passed -- a spell the pool cannot pay cast in one action by tapping its caster's plain sources: without asking when there is one way, asked when there are more, the least flexible first; the pool, {X}, Phyrexian, a painland, two-mana and summoning-sick sources left to tapping by hand.`);
+console.log(`engine-tap-to-cast: ${checks} checks passed -- a spell the pool cannot pay cast in one action by tapping its caster's plain sources: without asking when there is one way, asked when there are more, the least flexible first; floating mana and multi-mana sources combine; costly, variable and restricted sources remain explicit.`);
