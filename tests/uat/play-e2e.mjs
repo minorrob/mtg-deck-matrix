@@ -324,7 +324,9 @@ try {
       eq(await shared.first().getAttribute('data-shared-deck'),sharedDeck.body.settings.id,'the chooser uses the live share instead of a bundled sample deck');
       eq(await newcomer.locator('#cm-dialog [data-action=table-use-deck]').count(), 0, "the signed-in invitee has no library decks or import requirement");
       await shared.filter({hasText: "Krenko"}).click();
-      await newcomer.locator('.cm-lobby-seat[data-seat="1"] .cm-seat-line', {hasText: "Krenko"}).waitFor({timeout:15000});
+      await newcomer.locator('.cm-lobby-seat[data-seat="1"] .cm-seat-line', {hasText: "Goblins (e2e)"}).waitFor({timeout:15000});
+      const seated = await newcomer.evaluate(async u => (await (await fetch(u)).json()).table.seats[1].deck, turl);
+      eq(seated.commander,['Krenko, Mob Boss'],'the chosen live deck retains its commander');
       ok(true, "the empty-library invitee selects the host's shared Krenko deck through the local Worker runtime");
       eq(await restore(newcomer, NBASE), review, "backup restoration also remains available to an invitee");
       await newcomer.goto(`${NBASE}/index.html#table?id=${tableId}`);
@@ -335,7 +337,7 @@ try {
       const known = Object.fromEntries(await rows.evaluateAll((els) => els.map((el) => [el.querySelector("strong").textContent.trim(), el.querySelector("[data-known-for]").textContent.trim()])));
       eq([known["Elves (e2e)"], known["Goblins with a gap (e2e)"]], ["All 100 cards known", "99 of 100 known · 1 to learn"], "the deck dialog says which decks the table can play, before one is chosen");
       await newcomer.locator("#cm-dialog [data-action=table-use-shared-deck]").filter({hasText:"Krenko"}).click();
-      await newcomer.locator(`.cm-lobby-seat[data-seat="1"] .cm-seat-line`, {hasText: "Krenko"}).waitFor({timeout: 15000});
+      await newcomer.locator(`.cm-lobby-seat[data-seat="1"] .cm-seat-line`, {hasText: "Goblins (e2e)"}).waitFor({timeout: 15000});
       await newcomer.locator(`.cm-lobby-seat[data-seat="1"]`).getByRole("button", {name: /^Ready$/}).click();
 
       /* The host seats their deck and the AI's, and starts. */
