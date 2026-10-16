@@ -4,12 +4,12 @@ import '../collection-model.js';
 import '../collection-exchange.js';
 import {createLibrary, Conflict} from './library.mjs';
 import {ADVISE_CARDS,ADVISE_FIELDS} from './advise-cards.mjs';
+import {mailReady,sendMail} from './mail.mjs';
 const M = globalThis.CrankCollection, E = globalThis.CrankExchange;
 export class ShareError extends Error {constructor(message, status=400){super(message);this.status=status;}}
 // Keep the original game/library identity stable when its verified sign-in address changes.
 export async function sharedIdentity(db,email){const row=await db.prepare('SELECT i.active,u.email AS canonical FROM account_identities i JOIN users u ON u.id=i.user_id WHERE i.email=?').bind(email).first();return row?row.active?row.canonical:null:email;}
 const fail=(message,status=400)=>{throw new ShareError(message,status);};
-const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const str=(s,max)=>typeof s==='string'&&s.trim().length<=max?s.trim():fail('Enter a shorter value.');
 const email=s=>{const v=str(s,254).toLowerCase();return /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(v)?v:fail('Enter a valid email address.');};
 const role=r=>['reviewer','collaborator'].includes(r)?r:fail('Choose Reviewer or Collaborator.');
@@ -22,7 +22,7 @@ export function sharing(db,env,{now=()=>new Date().toISOString(),fetchImpl=fetch
   async function profile(person){
     await q("INSERT INTO profiles(user_id,name,avatar,updated_at) VALUES (?,'','',?) ON CONFLICT(user_id) DO NOTHING",person.id,now()).run();
     const p=await q('SELECT name,avatar,email FROM profiles WHERE user_id=?',person.id).first();
-    return {...p,id:person.id,email:p.email||person.email,canInvite:String(person.id)===String(env.INVITE_ADMIN_ID||''),emailReady:!!env.EMAIL};
+    return {...p,id:person.id,email:p.email||person.email,canInvite:String(person.id)===String(env.INVITE_ADMIN_ID||''),emailReady:mailReady(env)};
   }
   async function snapshot(owner){const head=await library.head(owner);if(!head)fail('Sync your library to the cloud before sharing it.',409);const version=await library.version(owner,head.id);return {head,data:await decode(version.body)};}
   async function permitted(id,person,write=false,owner=false){
@@ -61,10 +61,12 @@ export function sharing(db,env,{now=()=>new Date().toISOString(),fetchImpl=fetch
   async function delivery(person,id){
     const row=await q('SELECT * FROM share_mail WHERE id=? AND actor_id=?',id,person.id).first();if(!row)fail('Message unavailable.',404);
     if(row.status==='sent')return {id,status:'sent'};
-    if(!env.EMAIL)return {id,status:'pending',error:'Email sending is not configured. Sharing is saved; use Retry notification after setup.'};
-    const claim=await q("UPDATE share_mail SET status='sending',attempts=attempts+1 WHERE id=? AND status IN ('pending','failed') AND attempts<5",id).run();
+    if(!mailReady(env))return {id,status:'pending',error:'Email sending is not configured. Sharing is saved; use Retry notification after setup.'};
+    const at=now(),cutoff=new Date(Date.parse(at)-23*60*60*1000).toISOString(),stale=new Date(Date.parse(at)-120000).toISOString();
+    if(row.attempts>0&&(!row.first_attempt_at||row.first_attempt_at<=cutoff))return {id,status:row.status,error:'The safe email retry window expired. Ask the administrator to check delivery before sending again.'};
+    const claim=await q("UPDATE share_mail SET status='sending',attempts=attempts+1,first_attempt_at=COALESCE(first_attempt_at,?),last_attempt_at=? WHERE id=? AND (status IN ('pending','failed') OR (status='sending' AND last_attempt_at<?)) AND attempts<5 AND (attempts=0 OR first_attempt_at>?)",at,at,id,stale,cutoff).run();
     if(!claim.meta.changes)return {id,status:row.status,error:'This message is already being sent or needs administrator review.'};
-    try {const sent=await env.EMAIL.send({from:{email:'notifications@crankmagic.com',name:'CrankMagic'},to:row.recipient,subject:row.subject,text:row.text,html:`<div style="font:16px/1.6 system-ui;white-space:pre-wrap">${esc(row.text)}</div>`});await q("UPDATE share_mail SET status='sent',message_id=?,text='' WHERE id=?",sent.messageId,id).run();return {id,status:'sent'};}
+    try {const sent=await sendMail(env,row,fetchImpl);await q("UPDATE share_mail SET status='sent',message_id=?,text='' WHERE id=?",sent.messageId,id).run();return {id,status:'sent'};}
     catch {await q("UPDATE share_mail SET status='failed' WHERE id=?",id).run();return {id,status:'failed',error:'Sharing is saved, but the email could not be sent. Retry notification.'};}
   }
   async function save(person,input,origin){
@@ -122,7 +124,7 @@ export function sharing(db,env,{now=()=>new Date().toISOString(),fetchImpl=fetch
   }
   return {profile,list,read,settings,save,edit,queue,delivery,emailDeck,
     async requestEmail(person,input,origin){
-      if(!env.EMAIL||env.SHARING_ENABLED!=='on')fail('Verified email changes need the sharing service and Email Sending configured. Your current address is unchanged.',503);
+      if(!mailReady(env)||env.SHARING_ENABLED!=='on')fail('Verified email changes need the sharing service and email delivery configured. Your current address is unchanged.',503);
       const to=email(input.email),current=await profile(person);
       if(to===current.email)fail('This is already your email address.');
       if(await q('SELECT id FROM users WHERE email=? UNION SELECT user_id AS id FROM profiles WHERE email=? UNION SELECT user_id AS id FROM account_identities WHERE email=?',to,to,to).first())fail('That address is already associated with an account. Use another address or contact support.',409);
@@ -144,7 +146,7 @@ export function sharing(db,env,{now=()=>new Date().toISOString(),fetchImpl=fetch
     async invite(person,input,origin){
       if(String(person.id)!==String(env.INVITE_ADMIN_ID||''))fail('Only the CrankMagic administrator can invite new accounts.',403);
       const to=email(input.email),name=str(input.name,80),canonical=await sharedIdentity(db,to);if(canonical===null)fail('That sign-in address was retired. Invite the person at their current address.',409);if(!name)fail('Enter the invited person’s name.');
-      if(!env.EMAIL||!env.ACCESS_INVITE_TOKEN||!env.ACCESS_INVITE_APP_IDS||!env.CLOUDFLARE_ACCOUNT_ID)fail('Invitations need Email Sending and Access invitation permissions configured by the administrator.',503);
+      if(!mailReady(env)||!env.ACCESS_INVITE_TOKEN||!env.ACCESS_INVITE_APP_IDS||!env.CLOUDFLARE_ACCOUNT_ID)fail('Invitations need email delivery and Access invitation permissions configured by the administrator.',503);
       await q("INSERT INTO account_invitations(email,name,invited_by,created_at,status) VALUES (?,?,?,?,'pending') ON CONFLICT(email) DO UPDATE SET name=excluded.name",to,name,person.id,now()).run();
       const prior=await q('SELECT status FROM account_invitations WHERE email=?',to).first();
       if(prior.status!=='admitted'){
