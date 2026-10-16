@@ -148,8 +148,8 @@ export const PROFILES = {
        each sends on 2026-10-12. */
     /* Open to everyone signed in since 2026-10-14 (Rob, as for production): the door takes staging's own sign-in too. */
     ai: {aud: "d3e7b5812c81536cb707c64cca2196e1ee7854cbca6791f4d7bd2ef4b649f6db", everyone: true, capTotalCents: 300, model: "claude-haiku-5-5", coach: true, coachCapCents: 150, pilot: true, pilotGameCents: 25, advise: true},
-    sharing: {adminId: "1", accountId: "02e7ae6d703281008f546c63378c6ddb", accessAppIds: "16fef6e1-0437-4bbd-b7fe-a81419dc09fa", accessPolicyId: "8b802602-b991-4986-b8a1-d2c16b3cf5c3"}, // Staging only; secret tokens are deployed separately.
     cloud: {database: {name: "crankmagic-staging", id: "b7f806ec-c9e8-4265-9f23-7d9705db9a26"}, limits: {ip: "2001", person: "2002"}, access: {team: "crankmagic.cloudflareaccess.com", aud: "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5"}},
+    sharing: {adminId: "1", accountId: "02e7ae6d703281008f546c63378c6ddb", accessAppIds: "16fef6e1-0437-4bbd-b7fe-a81419dc09fa", accessPolicyId: "8b802602-b991-4986-b8a1-d2c16b3cf5c3"}, // Staging only; secret tokens are deployed separately.
   },
 };
 
