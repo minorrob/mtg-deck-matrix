@@ -177,7 +177,7 @@ globalThis.CrankBoard = Object.seal({
   let stageSide = false, stageRail = false, cameraOpen = false, stageError = "";
   let paneEditing = false, paneSaving = false, profileOpen = false;
   let screenMenu = null;
-  const PANE_MODULES = [["history", "History"], ["coach", "AI Coach"], ["counter", "Counter-Intel"], ["resources", "Resources"], ["stack", "On the Stack"], ["inspect", "Card Preview"], ["table", "Table Vitals"], ["recommended", "Recommended Actions"], ["chat", "Chat"], ["actions", "Actions"]];
+  const PANE_MODULES = [["screen", "Screen View"], ["history", "History"], ["coach", "AI Coach"], ["counter", "Counter-Intel"], ["resources", "Resources"], ["stack", "On the Stack"], ["inspect", "Card Preview"], ["table", "Table Vitals"], ["recommended", "Recommended Actions"], ["chat", "Chat"], ["actions", "Actions"]];
   const DEFAULT_MODULES = ["table", "inspect", "stack", "history", "counter"];
   // Preferences travel in the existing account library. Never apply a previous account's layout.
   function paneLayout() {
@@ -204,7 +204,7 @@ globalThis.CrankBoard = Object.seal({
   }
   const camera = {cards: Math.max(70, Math.min(150, Number(stored("cm-stage-card-size-v2")) || 100)), tilt: stored("cm-board-tilt-v2") === null ? 40 : Math.max(0, Math.min(60, Number(stored("cm-board-tilt-v2")) || 0)), zoom: Math.max(60, Math.min(120, Number(stored("cm-board-zoom-v2")) || 100))};
   const stageEnabled = () => mode === "full" && !phone();
-  const moduleSide = id => !phone() ? ["left","right"].find(side => paneModules(side).includes(id)) : undefined;
+  const moduleSide = id => stageEnabled() ? ["left","right"].find(side => paneModules(side).includes(id)) : undefined;
   const openModuleDrawer = id => {const side=moduleSide(id); if(side === "left") stageRail=true; if(side === "right") stageSide=true;};
   const handStarts = new Map();
   const appearance = {background: stored("cm-stage-background") || "volcano", table: stored("cm-stage-table") || "wooden"};
@@ -636,7 +636,7 @@ globalThis.CrankBoard = Object.seal({
   function pile(label, zone, top, {back = false, draw: drawing = false} = {}) {
     /* Your library, while your draw waits for you (a game launched with the held draw): clicking it draws, as Draw a card
        does (Rob, 2026-10-09: "Clicking the library pile should Draw a Card also on a Draw turn"). */
-    const face = label === "Command" && zone.cards.length ? `<div class="cm-command-cards">${zone.cards.map(c=>`<div class="cm-command-card">${card(c)}<span class="cm-command-tax" title="${e(c.name)}: additional generic mana for the next command-zone cast">+{${Number(c.commanderTax)||0}}</span></div>`).join("")}</div>` : top ? card(top) : drawing
+    const face = top ? card(top) : drawing
       ? `<button type="button" class="cm-bcard is-back is-bright" data-action="board-draw" aria-label="Draw a card: your library, ${zone.count}"${sending ? " disabled" : ""}><b class="cm-bcard-count">${zone.count}</b></button>`
       : `<div class="cm-bcard is-empty${back && zone.count ? " is-back" : ""}" aria-hidden="true">${back && zone.count ? `<b class="cm-bcard-count">${zone.count}</b>` : ""}</div>`;
     return `<figure class="cm-mat-zone cm-board-pile" data-zone="${e(label.toLowerCase())}" aria-label="${e(label)}, ${zone.count}" title="${e(label)}, ${zone.count}">${face}<figcaption><em>${e(label)}</em><b>${zone.count}</b></figcaption></figure>`;
@@ -747,10 +747,10 @@ globalThis.CrankBoard = Object.seal({
     const pane = paneShut
       ? `<nav class="cm-board-pane is-shut" aria-label="Boards">${ib("▸", "board-pane", "Show the boards", {}, {pressed: false})}${players().map((x) => `<button type="button" class="cm-board-dot${focus === x.playerId ? " is-focus" : ""}" data-action="board-focus" data-seat="${x.playerId}" style="--seat:${seatColor(x.playerId)}" aria-label="${e(seatLabel(x))}: ${x.health.life} life" title="${e(seatLabel(x))}">${x.health.life}</button>`).join("")}</nav>`
       : `<nav class="cm-board-pane" aria-label="Boards"><div class="cm-board-pane-head"><span>Boards</span>${ib("◂", "board-pane", "Collapse the boards", {}, {pressed: true})}</div>${players().map(tile).join("")}
-        ${b("My board", "board-focus", {seat: String(view.seat)}, true)}
+        ${b("My board", "board-focus", {seat: String(view.seat)}, true)}${b("⊞ Table view", "board-view", {view: "table"})}
         <button type="button" class="cm-board-coach-open" data-action="board-coach" aria-pressed="${coach.open}" aria-label="CrankMagic Coach">${COACH}Coach</button></nav>`;
     const paneGrip = paneShut ? "" : `<span class="cm-board-panegrip">${grip("pane", "The boards' width: drag, or use the arrow keys", paneWidth(), PANE, "vertical")}</span>`;
-    return `<div class="cm-board-body" style="--pane-w:${paneShut ? 44 : paneWidth()}px;--panel-w:${panelWidth()}px">${pane}${paneGrip}<div class="cm-board-main"><div class="cm-board-stage">${fan(p.playerId)}${mat(p, {size: "focus"})}</div>${ask()}${hand()}</div></div>`;
+    return `<div class="cm-board-body${panelOpen ? " has-panel" : ""}" style="--pane-w:${paneShut ? 44 : paneWidth()}px;--panel-w:${panelWidth()}px">${pane}${paneGrip}<div class="cm-board-main"><div class="cm-board-stage">${fan(p.playerId)}${mat(p, {size: "focus"})}</div>${ask()}${hand()}</div>${panel()}</div>`;
   }
   /* THE FULL SCREEN VIEW: the page given to the game. A slim rail; the others across the top, the big board across
      the foot -- yours, or whichever ⟳ Rotate has walked to -- with the step, Next and Pass over it and your hand along
@@ -772,36 +772,29 @@ globalThis.CrankBoard = Object.seal({
       <button type="button" class="cm-stage-seat-label" data-action="board-focus" data-seat="${p.playerId}" aria-label="View ${e(p.name)}'s board, ${p.health.life} life"><span>${e(p.name)}</span><small>${e((commanderOf(p) || {}).name || "Command zone")}</small></button>
       <div class="cm-stage-mini">${mat(p, {size: "opp", head: "none"})}</div></section>`).join("");
     const mana = big.mana.reduce((n, m) => n + m.amount, 0);
-    return `${boardHeader()}
+    return `<header class="cm-stage-top"><span class="cm-stage-self">${vitals(me)}<b>${e(me.name)}</b></span>${ribbon(true)}
+      <span class="cm-stage-priority">${view.state.turnPlayerId === view.seat ? "Your turn" : `${e(nameOf(view.state.turnPlayerId))}'s turn`}<br>Priority: ${e(nameOf(view.state.priorityPlayerId))}</span>${alsoButton()}${pill}${stageProfile(me)}</header>
       <div class="cm-full-mine cm-stage-region" aria-label="Tabletop">
         <div class="cm-stage-caption"><span>TURN ${view.state.turn}</span><div class="cm-stage-life-list" role="group" aria-label="Player life totals">${others.map(p=>`<span class="cm-stage-life">${e(p.name)} · <b>${p.health.life}</b></span>`).join("")}</div></div>
         ${rear}<div class="cm-stage-front">${mat(big, {size: "full", head: "none"})}${corner}</div>
-        ${cameraMenu()}
-        <span class="cm-stage-error" role="status">${e(stageError)}</span>${ask()}
-      </div>
-      ${stageHand(big)}${screenPopover()}
-      ${boardDrawers()}`;
-  }
-  function boardHeader() {
-    const me=players()[view.seat];
-    const pill=`<div class="cm-full-pill"><span class="cm-board-waiting">${e(waitingText())}</span>${passButton()}${b(skipWords(true),"board-skip",{},false,{cls:"compact"})}</div>`;
-    return `<header class="cm-stage-top"><span class="cm-stage-self">${vitals(me)}<b>${e(me.name)}</b></span>${ribbon(true)}
-      <span class="cm-stage-priority">${view.state.turnPlayerId === view.seat ? "Your turn" : `${e(nameOf(view.state.turnPlayerId))}'s turn`}<br>Priority: ${e(nameOf(view.state.priorityPlayerId))}</span>${alsoButton()}${pill}${stageProfile(me)}</header>`;
-  }
-  function boardDrawers() { return `<aside class="cm-stage-rail${stageRail ? " is-open" : ""}" aria-label="Left drawer" ${stageRail ? "" : "inert"}>${stageModules("left")}</aside>${ib(stageRail ? "◂" : "▸", "board-stage-rail", "Toggle board tools", {}, {cls: "cm-stage-handle cm-stage-left", pressed: stageRail})}
-      <aside class="cm-full-side cm-stage-side${stageSide ? " is-open" : ""}" aria-label="The table" ${stageSide ? "" : "inert"} style="--split:${Math.round(splitOf("side") * 100)}%"><header><b>Your pane</b>${ib("⚙", "board-modules-edit", "Arrange modules", {}, {pressed: paneEditing})}${ib("✕", "board-stage-side", "Close table panel")}</header>
-        ${stageModules()}</aside>
-      ${ib(stageSide ? "▸" : "◂", "board-stage-side", "Toggle table panel", {}, {cls: "cm-stage-handle cm-stage-right", pressed: stageSide})}`; }
-  function cameraMenu() { return `<div class="cm-stage-camera"><button type="button" data-action="board-camera" aria-expanded="${cameraOpen}">Camera ▾</button>${cameraOpen ? `<div>${phone() ? "" : switcher()}<span>View seats</span>${ib("◀", "board-rotate", "Previous seat", {by: "-1"})}${ib("▶", "board-rotate", "Next seat", {by: "1"})}
-        ${stageEnabled() ? `<label>Tilt <input type="range" min="0" max="60" value="${camera.tilt}" data-stage-camera="tilt" aria-label="Table tilt"><output>${camera.tilt}°</output></label>` : ""}
+        <div class="cm-stage-camera"><button type="button" data-action="board-camera" aria-expanded="${cameraOpen}">Camera ▾</button>${cameraOpen ? `<div><span>View seats</span>${ib("◀", "board-rotate", "Previous seat", {by: "-1"})}${ib("▶", "board-rotate", "Next seat", {by: "1"})}
+        <label>Tilt <input type="range" min="0" max="60" value="${camera.tilt}" data-stage-camera="tilt" aria-label="Table tilt"><output>${camera.tilt}°</output></label>
         <label>Zoom <input type="range" min="60" max="120" value="${camera.zoom}" data-stage-camera="zoom" aria-label="Table zoom"><output>${camera.zoom}%</output></label>
         <label>Cards <input type="range" min="70" max="150" value="${camera.cards}" data-stage-camera="cards" aria-label="Tabletop card size"><output>${camera.cards}%</output></label>
         <p class="cm-stage-style-note">Appearance preview · this device</p>
         <label class="cm-stage-style">Background <select data-stage-style="background" aria-label="Background">${(CrankStage.appearances.backgrounds).map(x=>`<option value="${x.id}"${appearance.background===x.id?" selected":""}>${x.name}</option>`).join("")}</select></label>
-        <label class="cm-stage-style">Table <select data-stage-style="table" aria-label="Table material">${(CrankStage.appearances.tables).map(x=>`<option value="${x.id}"${appearance.table===x.id?" selected":""}>${x.name}</option>`).join("")}</select></label></div>` : ""}</div>`; }
+        <label class="cm-stage-style">Table <select data-stage-style="table" aria-label="Table material">${(CrankStage.appearances.tables).map(x=>`<option value="${x.id}"${appearance.table===x.id?" selected":""}>${x.name}</option>`).join("")}</select></label></div>` : ""}</div>
+        <span class="cm-stage-error" role="status">${e(stageError)}</span>${ask()}
+      </div>
+      ${stageHand(big)}${screenPopover()}
+      <aside class="cm-stage-rail${stageRail ? " is-open" : ""}" aria-label="Left drawer" ${stageRail ? "" : "inert"}>${stageModules("left")}</aside>${ib(stageRail ? "◂" : "▸", "board-stage-rail", "Toggle board tools", {}, {cls: "cm-stage-handle cm-stage-left", pressed: stageRail})}
+      <aside class="cm-full-side cm-stage-side${stageSide ? " is-open" : ""}" aria-label="The table" ${stageSide ? "" : "inert"} style="--split:${Math.round(splitOf("side") * 100)}%"><header><b>Your pane</b>${ib("⚙", "board-modules-edit", "Arrange modules", {}, {pressed: paneEditing})}${ib("✕", "board-stage-side", "Close table panel")}</header>
+        ${stageModules()}</aside>
+      ${ib(stageSide ? "▸" : "◂", "board-stage-side", "Toggle table panel", {}, {cls: "cm-stage-handle cm-stage-right", pressed: stageSide})}`;
+  }
   function stageProfile(me) {
     const initials = (me.name || "Player").trim().split(/\s+/).slice(0,2).map(s=>s[0]).join("").toUpperCase();
-    return `<div class="cm-stage-profile"><button type="button" class="cm-profile-avatar" data-action="board-profile" aria-label="Profile menu" aria-expanded="${profileOpen}" title="${e(me.name)} · Profile menu"><span aria-hidden="true">${e(initials)}</span></button>${profileOpen ? `<div class="cm-profile-menu" role="group" aria-label="Profile">${C.profileMenu?.()||""}<strong>${e(me.name)}</strong>${b("Settings", "board-tools")}${b("Arrange drawer order", "board-modules-edit")}${b("Account & app settings", "open-settings")}${b("Help", "page-help", {help:"table"})}</div>` : ""}${tools ? toolsMenu() : ""}</div>`;
+    return `<div class="cm-stage-profile"><button type="button" class="cm-profile-avatar" data-action="board-profile" aria-label="Profile menu" aria-expanded="${profileOpen}" title="${e(me.name)} · Profile menu"><span aria-hidden="true">${e(initials)}</span></button>${profileOpen ? `<div class="cm-profile-menu" role="group" aria-label="Profile"><strong>${e(me.name)}</strong>${b("Screen View", "board-screen-menu")}${b("Settings", "board-tools")}${b("Arrange drawer order", "board-modules-edit")}${b("Account & app settings", "open-settings")}${b("Help", "page-help", {help:"table"})}</div>` : ""}${tools ? toolsMenu() : ""}</div>`;
   }
   function screenPopover() {
     if(!screenMenu) return "";
@@ -1211,7 +1204,7 @@ globalThis.CrankBoard = Object.seal({
       ${seats.map((x) => `<button type="button" class="cm-phone-seat${x.playerId === p.playerId ? " is-focus" : ""}" data-action="board-focus" data-seat="${x.playerId}" aria-pressed="${x.playerId === p.playerId}" style="--seat:${seatColor(x.playerId)}">
         <span>${e(x.playerId === view.seat ? "You" : x.name)}</span><b>${x.health.life}</b><small>${e(seatFlag(x))}</small></button>`).join("")}
       <div class="cm-phone-rotate">${b("‹", "board-rotate", {by: "-1"}, false, {cls: "compact"})}${b("›", "board-rotate", {by: "1"}, false, {cls: "compact"})}</div></aside>`;
-    return `${rail}${cameraMenu()}<div class="cm-phone-center">${pill}${mat(p, {size: "phone", head: "none"})}<div class="cm-phone-ask">${went()}${decision()}${stack()}</div></div>${strip}`;
+    return `${rail}<div class="cm-phone-center">${pill}${mat(p, {size: "phone", head: "none"})}<div class="cm-phone-ask">${went()}${decision()}${stack()}</div></div>${strip}`;
   }
   /* THE COACH (the handoff's play-coach). It lives beside the board, not inside it, so the views that arrive
      while someone types redraw the board and leave the composer, and whatever is in it, alone. */
@@ -1603,7 +1596,7 @@ globalThis.CrankBoard = Object.seal({
     if (!view) {host.innerHTML = `<p class="cm-board-loading">${status === "reconnecting" ? "Reconnecting to the table…" : "Opening the board…"}</p>`; return;}
     if (phone()) {
       host.dataset.view = "focus";
-      delete host.dataset.stage; delete host.dataset.shell; globalThis.CrankStage?.unmount();
+      delete host.dataset.stage; globalThis.CrankStage?.unmount();
       host.dataset.phone = innerHeight > innerWidth ? "portrait" : "landscape";
       host.innerHTML = `${phoneView()}${showHand()}${banner()}`;
       fit();
@@ -1618,11 +1611,10 @@ globalThis.CrankBoard = Object.seal({
     /* The turn moved to another seat a moment ago: this paint's light arrives, crossfading (~600 ms). */
     if (performance.now() - turnLit < 900) host.dataset.turnChanged = "1"; else delete host.dataset.turnChanged;
     host.style.setProperty("--panel-w", `${panelWidth()}px`);
-    host.classList.remove("has-panel");
-    host.dataset.shell="shared";
+    host.classList.toggle("has-panel", panelOpen && mode !== "full");
     if (mode === "full") host.innerHTML = `${fullView()}${showHand()}${panel()}${banner()}`;
-    else if (mode === "table") host.innerHTML = `${boardHeader()}${tableView()}${cameraMenu()}${boardDrawers()}${showHand()}${banner()}`;
-    else host.innerHTML = `${boardHeader()}${focusView()}${cameraMenu()}${boardDrawers()}${showHand()}${banner()}`;
+    else if (mode === "table") host.innerHTML = `${strip()}${tableView()}${panel()}${showHand()}${banner()}`;
+    else host.innerHTML = `${strip()}${focusView()}${showHand()}${banner()}`;
     fit();
   }
 
@@ -2141,7 +2133,7 @@ globalThis.CrankBoard = Object.seal({
      the DOCUMENT, not the board: a browser shows only the fullscreen element's own subtree, and the Coach, the app's
      dialogs (Table vitals, Card zoom) and its notices live beside the board, so they opened unseen (item 22). */
   function setMode(next) {
-    if (phone() || !VIEWS.some(([k]) => k === next)) return;
+    if (!VIEWS.some(([k]) => k === next)) return;
     mode = next; tools = false; confirmEnd = false; menuOpen = false; stepsOpen = false; historyOpen = false;
     /* Full screen opens on your own board (its point is your playable space); ⟳ walks round from there. */
     if (view) focus = mode === "full" ? view.seat : (focus ?? view.seat);

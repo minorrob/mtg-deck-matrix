@@ -55,7 +55,7 @@
 import {cardsIn, moveObject, usesThisTurn, recordUse, showFace, showAdventure, shownFaceDown, shownFaceUp, turnFaceUp, eventCard, commanderKeyOf, recordDiscard, activationsForbidden, valueCostOf} from "../state/index.mjs";
 import {mayLookAt} from "../projection.mjs";
 import {pushSpell, pushAbility, becameTarget, crimeCommitted} from "./stack.mjs";
-import {spend, parseManaCost, automaticPayment, canPay, chosenPayment, paymentOptions, paymentKey, paymentWords, PAY_CHOICES, manaValue, poolSize, tapPlans, sourceTapPlans, convokeCanPay, convokePayments, lessGeneric} from "./mana.mjs";
+import {spend, parseManaCost, automaticPayment, canPay, chosenPayment, paymentOptions, paymentKey, paymentWords, PAY_CHOICES, manaValue, poolSize, tapPlans, convokeCanPay, convokePayments, lessGeneric} from "./mana.mjs";
 import {commanderTax, recordCommanderCast, commanderIdentity} from "./commander.mjs";
 import {COLORS, MANA_KEYS, manaAbilityNow} from "./mana.mjs";
 import {sickForAbilities, hasFlash, splitSecondOnStack} from "../keywords/timing.mjs";
@@ -1421,10 +1421,10 @@ const manaTappers = (state, player, sourceId, selector, tapsSelf = true) => stat
 /**
  * THE SOURCES A CAST MAY TAP (rules/mana.mjs, tapPlans): each untapped source whose mana ability is offered now and asks
  * nothing but {T} -- no mana, life, sacrifice or counters, nothing else done (a painland's damage), nor a restriction on
- * what its mana is spent on. The default reads single-mana choices; bundles also reads multi-mana outputs. Each `{id, colors, via}`: the colors it can make, and for each the
+ * what its mana is spent on -- for one mana. Each `{id, colors, via}`: the colors it can make, and for each the
  * activation that makes it.
  */
-export function tapUnits(state, player, offered = manaOffers(state, player), bundles = false) {
+export function tapUnits(state, player, offered = manaOffers(state, player)) {
   const units = new Map();
   for (const offer of offered) {
     if (offer.costChoice) continue;
@@ -1435,13 +1435,12 @@ export function tapUnits(state, player, offered = manaOffers(state, player), bun
       /* Nor mana that can't be spent to cast spells from the hand (Heartwood Crafter): tapped by its player, it is in the pool. */
       || ability.cantSpend) continue;
     const made = Object.entries(offer.mana ?? {}).filter(([, n]) => n > 0);
-    if (!made.length || (!bundles && (made.length !== 1 || made[0][1] !== 1))) continue;
-    const color = made.length === 1 && made[0][1] === 1 ? made[0][0] : made.map(([k,n])=>`${k}:${n}`).join('+');
-    if (!units.has(offer.objectId)) units.set(offer.objectId, {id: offer.objectId, colors: [], via: {}, ...(bundles ? {outputs:{}} : {})});
+    if (made.length !== 1 || made[0][1] !== 1) continue;
+    const color = made[0][0];
+    if (!units.has(offer.objectId)) units.set(offer.objectId, {id: offer.objectId, colors: [], via: {}});
     const unit = units.get(offer.objectId);
     if (unit.via[color]) continue;
     unit.colors.push(color);
-    if (bundles) unit.outputs[color] = offer.mana;
     unit.via[color] = {abilityId: offer.abilityId, ...(offer.produce !== undefined ? {produce: offer.produce} : {})};
   }
   return [...units.values()];
@@ -1451,19 +1450,13 @@ export function tapUnits(state, player, offered = manaOffers(state, player), bun
    nothing in the pool -- so the mana tapped is exactly the cost, and paying it is no further choice. */
 /* X paid in life (`payLifeX`, Toxic Deluge) is no X its sources' mana pays: it is tapped for as any other. */
 const tapCastable = (state, player, action) => ["hand", "command"].includes(action.from) && !action.free && !action.flashback
-  && action.escape === undefined && action.alternative === undefined && (action.x === undefined || action.payLifeX === true);
+  && action.escape === undefined && action.alternative === undefined && (action.x === undefined || action.payLifeX === true)
+  && poolSize(poolFor(state, player, {spell: action.objectId})) === 0;
 
 /** How many ways to tap for a cast are asked at most: the least flexible first (tapPlans), so the sensible ones. */
 const TAP_CHOICES = 24;
 /** A way to tap, in words: the sources' names, in the order they are tapped ("Forest, Forest, Island"). */
 export const tapWords = (state, plan) => plan.taps.map((t) => state.objects[t.id]?.card ?? "a source").join(", ");
-
-function fundingPlans(state, player, id, cost, limit, units = tapUnits(state, player, undefined, true)) {
-  const pool = poolFor(state, player, {spell:id});
-  if(poolSize(pool)===0 && units.every(u=>u.colors.every(c=>MANA_KEYS.includes(c))))
-    return tapPlans(units,cost,limit).map(plan=>({...plan,payment:{mana:Object.fromEntries(MANA_KEYS.map(k=>[k,plan.taps.filter(t=>t.color===k).length])),life:0}}));
-  return sourceTapPlans(units,pool,cost,limit);
-}
 
 /** The ways to tap for this cast (`action.autoTap`), up to `limit`, as `tapPlans` says them. */
 export function castTapPlans(state, player, action, limit = 2) {
@@ -1471,7 +1464,7 @@ export function castTapPlans(state, player, action, limit = 2) {
   const tax = action.from === "command" ? commanderTax(state, player, action.objectId) : 0;
   /* An Adventure's cost, cast as one (CR 715.3a). */
   const {cost, x} = asCast(state, action, () => castCost(state, player, action.objectId, tax, false, null, action.extraMana ?? "", action.targets));
-  return fundingPlans(state, player, action.objectId, {...cost, generic: cost.generic + x}, limit);
+  return tapPlans(tapUnits(state, player), {...cost, generic: cost.generic + x}, limit);
 }
 
 /* AN ADVENTURER CARD WEIGHED AS ITS ADVENTURE (CR 715.3a): shown as one for the length of `fn` -- its cost, its timing, its
@@ -1624,11 +1617,11 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
     let autoTap = false;
     /* Not with creatures tapped as an additional cost or for escalate: one tapped for mana as the cast taps its sources could
        not then be tapped for it (their mana is paid from the pool first). */
-    if (!payment && !canPay(pool,cost,{life:lifeLeft,x}) && xMana === null && !freely && !back && !fled && !way && !tapsAny && !variant.escalateTap && ["hand", "command"].includes(from)) {
-      const [plan] = fundingPlans(state, player, id, {...cost, generic: cost.generic + x}, 1, tappable());
+    if (!payment && xMana === null && !freely && !back && !fled && !way && !tapsAny && !variant.escalateTap && ["hand", "command"].includes(from) && poolSize(pool) === 0) {
+      const [plan] = tapPlans(tappable(), {...cost, generic: cost.generic + x}, 1);
       if (plan) {
         autoTap = true;
-        payment = plan.payment;
+        payment = {mana: Object.fromEntries(MANA_KEYS.map((k) => [k, plan.taps.filter((t) => t.color === k).length])), life: 0};
       }
     }
     /* MORE THAN ONE WAY FROM THE POOL (X8b): which mana pays decides what can be cast after, so it is the caster's to say --
@@ -1770,7 +1763,7 @@ function offers(state, player) {
   if (splitSecondOnStack(state)) return actions;
   /* What a cast could tap, read once and only if a cast asks (castTapPlans). */
   let units = null;
-  const tappable = () => (units ??= tapUnits(state, player, mana, true));
+  const tappable = () => (units ??= tapUnits(state, player, mana));
 
   /* CR 601.2. Offered only when the pool can pay: the engine does not offer what it cannot do.
      A commander is castable from the COMMAND ZONE as well as from hand (CR 903.8), and its tax is
@@ -2471,9 +2464,9 @@ function performOffered(state, player, action, during) {
       const ways = castTapPlans(state, player, action, TAP_CHOICES);
       const tapped = action.tapPlan !== undefined ? ways.find((w) => w.key === action.tapPlan) : ways.length === 1 ? ways[0] : null;
       if (!tapped) throw new Error(`${object.card} cannot be tapped for that way now`);
-      const units = new Map(tapUnits(state, player, undefined, true).map((u) => [u.id, u]));
+      const units = new Map(tapUnits(state, player).map((u) => [u.id, u]));
       for (const tap of tapped.taps) events.push(...perform(state, player, {kind: "activate-mana", objectId: tap.id, label: state.objects[tap.id].card, ...units.get(tap.id).via[tap.color]}));
-      tappedFor = tapped.payment;
+      tappedFor = {mana: Object.fromEntries(MANA_KEYS.map((k) => [k, tapped.taps.filter((t) => t.color === k).length])), life: 0};
     }
     if (action.via !== undefined && !permission) throw new Error(`${object.card} cannot be cast that way now`);
     if (lifeCost !== null && lifeCost > state.players[player].life) throw new Error(`${object.card} costs ${lifeCost} life, and ${state.players[player].name} has ${state.players[player].life}`);

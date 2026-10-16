@@ -146,7 +146,7 @@ const aimedAt = (actions) => actions.map((a) => (a.targets ?? []).map((t) => t.i
   t.objects[tired].tapped = true;
   put(t, WASTES, 0, "battlefield");
   t.players[0].manaPool.W = 1;
-  eq([casts(t, "Magnificent End").length, nothingToDo(t, 0)], [1, false], "{W} floating and one Wastes: offered using both funding sources");
+  eq([casts(t, "Magnificent End").length, nothingToDo(t, 0)], [0, false], "{W} floating and one Wastes: not offered yet, and something to do");
 }
 {
   /* Warrior's Blades: Equip {3}, {1} less for each +1/+1 counter on the creature it targets -- offered at the creature with two

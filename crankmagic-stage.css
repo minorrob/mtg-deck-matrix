@@ -223,7 +223,3 @@
 .cm-bcard[data-arrange-card]{cursor:grab}.cm-bcard[data-arrange-card]:active{cursor:grabbing}.cm-bcard.cm-card-drop{outline:3px solid #a8dfbf;outline-offset:2px}
 
 .cm-stack-list{max-height:calc(var(--module-card-w)*1.4 + 24px);overflow-y:auto;scrollbar-width:thin}
-
-/* Each partner remains selectable, with its own next-cast tax. */
-.cm-command-cards{display:flex;flex-wrap:wrap;gap:4px;max-width:100%}.cm-command-card{position:relative}.cm-command-tax{position:absolute;top:2px;right:2px;z-index:3;border-radius:4px;padding:1px 4px;background:#101d20eb;color:#fff;font:11px/1.4 system-ui;pointer-events:none}
-

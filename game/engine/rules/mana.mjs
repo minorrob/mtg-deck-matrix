@@ -353,42 +353,6 @@ export function tapPlans(units, cost, limit = 2) {
   });
 }
 
-/** Complete source activations plus floating mana. Each source is used at most once,
- * even when it has several possible outputs. Surplus stays in the pool. Only callers
- * that have excluded activation costs, spending restrictions and side effects use this. */
-export function sourceTapPlans(units, pool, cost, limit = 2) {
-  if (cost.variable > 0 || cost.symbols.some(s => !["generic", "colored", "hybrid"].includes(s.kind))) return [];
-  const size = cost.generic + cost.symbols.filter(s => s.kind !== "generic").length;
-  const ordered = [...units].sort((a,b) => {
-    const flexibility = u => Object.values(u.outputs).some(p => MANA_KEYS.some(k => k !== "C" && p[k])) ? Object.keys(u.outputs).length : 0;
-    return flexibility(a) - flexibility(b);
-  });
-  const result = [], dead = new Set();
-  const add = (a,b) => Object.fromEntries(MANA_KEYS.map(k => [k,(a[k]||0)+(b[k]||0)]));
-  const ceiling = Array(ordered.length+1); ceiling[ordered.length] = {};
-  for(let i=ordered.length-1;i>=0;i--) ceiling[i]=add(ceiling[i+1],Object.fromEntries(MANA_KEYS.map(k=>[k,Math.max(0,...Object.values(ordered[i].outputs).map(p=>p[k]||0))])));
-  const visit = (i, available, taps, budget) => {
-    if(result.length >= limit) return;
-    const payments = paymentOptions(available,cost,{life:0},limit-result.length);
-    if(payments.length) {
-      for(const payment of payments) result.push({taps,payment,key:`sources:${taps.map(t=>`${t.id}:${t.color}`).join(';')}|${paymentKey(payment)}`});
-      return;
-    }
-    if(i===ordered.length || taps.length===budget || !canPay(add(available,ceiling[i]),cost,{life:0})) return;
-    const key=`${i}|${budget-taps.length}|${MANA_KEYS.map(k=>Math.min(size,available[k]||0)).join(',')}`;
-    if(dead.has(key)) return;
-    const before=result.length, unit=ordered[i];
-    for(const [color,mana] of Object.entries(unit.outputs)) {
-      visit(i+1,add(available,mana),[...taps,{id:unit.id,color}],budget);
-      if(result.length>=limit) return;
-    }
-    visit(i+1,available,taps,budget);
-    if(result.length===before) dead.add(key);
-  };
-  for(let budget=0;budget<=Math.min(size,ordered.length) && !result.length;budget++) visit(0,pool,[],budget);
-  return result;
-}
-
 /* ---- convoke (CR 702.51a): creatures help cast a spell ----
  *
  * Each untapped creature its caster taps pays one mana of the spell's total cost instead: a colored one of a color the
