@@ -363,24 +363,27 @@ try {
          ago may be gone -- asked of a vanished element, isEnabled waits its whole 30 s for it to come back (the staging
          walk of 8787d103, 2026-10-08). Gone is "not now"; `until` asks again. */
       const enabled = (l) => l.isEnabled({timeout: 2000}).catch(() => false);
-      const act = async (p) => {
+      const act = async (p) => {try {
         const went = p.locator("[data-action=board-went-close]");
         if (await went.count()) {await went.first().click(); return;}
         const d = p.locator("#cm-board-decision:not(.is-also)").first();
         if (await d.count()) {
           assert.ok(!/cannot answer/.test((await d.textContent()) || ""), "the board can answer what it is asked");
-          const confirm = d.locator("[data-action=board-confirm]"), opts = d.locator("[data-action=board-option]");
+          const confirm = d.locator("[data-action=board-confirm]"), opts = d.locator("[data-action=board-option]:enabled");
           if (await confirm.count()) {
-            for (let i = 0; i < await opts.count() && !(await enabled(confirm)); i++) await opts.nth(i).click();
-            if (await enabled(confirm)) await confirm.click();
-          } else if (await opts.count()) await opts.first().click();
+            for (let i = 0; i < await opts.count() && !(await enabled(confirm)); i++) await opts.nth(i).click({timeout:2000});
+            if (await enabled(confirm)) await confirm.click({timeout:2000});
+          } else if (await opts.count()) await opts.first().click({timeout:2000});
           return;
         }
         for (const action of ["board-draw", "board-pass"]) {
           const b = p.locator(`[data-action=${action}]`).first();
           if (await b.count() && await enabled(b)) {await b.click(); return;}
         }
-      };
+      } catch(error) {
+        // A socket update can replace the decision between lookup and click. Retry on the next bounded turn walk.
+        if(error.name!=='TimeoutError')throw error;
+      }};
       const turnOf = async (p) => Number((/Turn (\d+)/.exec((await p.locator(".cm-board-turn").first().textContent().catch(() => "")) || "") || [0, 0])[1]);
       await until("both people to reach turn 3", async () => {await act(page); await act(newcomer); return Math.min(await turnOf(page), await turnOf(newcomer)) >= 3;}, 180000);
       ok(true, `both people play through their boards to turn ${await turnOf(page)}`);
