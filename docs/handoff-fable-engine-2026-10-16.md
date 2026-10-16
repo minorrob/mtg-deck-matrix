@@ -176,3 +176,7 @@ Track the email release in [Linear ROB-10](https://linear.app/robs-build/issue/R
 Canonical local checkout is `C:/Users/robmi/CrankMagic/repo`; the browser's local preview is not evidence of a deployment. Unrelated `collection-model.js` edits and four untracked background MP3s belong to other work; do not discard, commit, or reset them. A broad `git add .`, hard reset, or whole-branch cherry-pick is inappropriate.
 
 Your next report should state: branch/commit, exact engine or simulation scope, verified tests including negative proof, changed public contracts, and remaining release risks. Link the small PR and update your ACTIVE section. Coordinate the release owner before any staging deployment; production remains unchanged unless Rob separately authorizes it.
+
+### Release follow-up at the end of this checkpoint
+
+PR #736 is ready at `ae1f677d`; GitHub regression run `38936762897` is in progress. The six verified owner-backed public Reviewer shares have now been inserted in staging, guarded against a changed profile head; the library itself was not modified. Account invitation, registered-user notification and Email Deck browser checks are prepared for the separately designated test recipient, but have not run against the live application. Deployment is still pending. Check the newer ACTIVE entry and actual live version endpoints before assuming this snapshot remains current.
