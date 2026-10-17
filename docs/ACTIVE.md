@@ -58,7 +58,7 @@ Volcano uses Rob's supplied video; other environments and the table artwork stil
 
 | Lane | Held by | Branch | Doing |
 | --- | --- | --- | --- |
-| **Engine and simulation** | Fable on the external platform, resuming October 16 per Rob | Fable claims a new branch from current main | Engine, simulation, card loads; selective review of the existing commander/payment patch and playtest issues. See the October 16 Fable handoff. |
+| **Engine and simulation** | Fable (Claude Code, a cloud container), resumed October 16 per Rob | `claude/admiring-franklin-58cxy4` | Engine, simulation, card loads. Linear: ROB-71 and its children (ROB-12, ROB-13, ROB-73 to ROB-95). Now: ROB-12. See "2026-10-17: the engine lane resumed" below. |
 | **UI and user management** | Codex on Personal-HP | `codex/ui-playtest-plan-oct15`; focused release `codex/staging-resend-oct16` | UI/Babylon, account profiles, sharing, Resend and invitations; coordinates current staging release. |
 
 ### Requests between the lanes
@@ -83,6 +83,25 @@ other lane answers in the last column.
 | 7 | UI | `tests/advisor.mjs` to pass again: its clock is fixed at 2026-10-11T12:00Z and its `ai_calls` rows are written at that clock, but the meter's 24-hour window (`cloud/ai.mjs` `since()`, through `aiMeter` in `cloud/worker.mjs`) runs on the real clock, so from 2026-10-12T11:59Z the rows fall outside it and the meter check fails on every branch, `main` included | The Actions gate is red for every PR until it is fixed; #725 (the UI pass) waits on it to merge | `cloud/worker.mjs` (`aiMeter`: pass the request's `now` to the door's `spent`), or the suite's rows at the real clock | Fixed on `main` in c629f8c1 (#723): `aiMeter` takes the request's clock. #727 puts the LLM seat's call log on the table's clock too (`cloud/game-room.mjs`), with `tools/ai-clock-breaks.py`; the AI suites pass with the machine's clock moved days either way |
 | 1 | Engine | The board to show the monarch (CR 725): the view's `state.players[i]` now carries `monarch: true` for the monarch, public to every seat, and no key for anyone else; the history says "Maya became the monarch" | Ginger, Queen of Sweets and Tamiyo, Upriser Crowned make their controller the monarch; the monarch draws a card at their end step, and a creature's combat damage to them makes its controller the monarch -- a player should see who holds it | The engine lane built it (Train E, the `monarch` branch); `docs/ui-lane/gameplay-anchor.md` lists the field. For the UI lane to show |
 | 2 | Engine | A switch in the host's Table rules (`crankmagic-table.js`): *The player who goes first skips their first draw*, on unless the host turns it off. The table's view carries `rules.skipFirstDraw` (`true` by default); the host sends it with the other rules, `POST .../rules {skipFirstDraw: false}`, refused once a seat is ready like the others. It matters only at a two-seat table: in a game of three or four nobody skips (CR 103.8c), so the switch can be shown only there | Rob, 2026-10-12: "this can be toggled off in game setup by the lobby owner". CR 103.8a as a house rule: with it off, the first player of a two-player game has a draw step on turn 1 | The engine lane built the rule, the table's field and the room's pod (`claude/first-draw-step`; `docs/ui-lane/gameplay-anchor.md`). For the UI lane to show |
+
+## 2026-10-17: the engine lane resumed (Fable, `claude/admiring-franklin-58cxy4`; Linear ROB-71)
+
+- **Linear:** every engine, simulation and card-load item in the backlog and the plan is filed under ROB-71, in an order of work Rob may change:
+  ROB-12, ROB-13, ROB-73 to ROB-95, the card load program as ROB-85 with its steps ROB-86 to ROB-92. ROB-70 is closed as a duplicate of
+  ROB-17. Each child names the Codex issue it unblocks.
+- **Triage of the October 16 handoff:** implementing ROB-12 (floating mana, multi-mana sources, commander tax). Next: ROB-81 (a
+  battlefield static changes cards in other zones, CR 611.3a), ROB-13 (auto-pass, Yield turn), ROB-73 (Draw card), ROB-94 (the six
+  live decks). Deferred with issues filed: the UI contracts (ROB-74 to ROB-78), the room's countdown and d20 (ROB-79, ROB-80), the
+  commander audit (ROB-82), the card load program, the simulation audit (ROB-84), constructs and waves (ROB-83, ROB-93). Blocked:
+  ROB-17, on the game record.
+- **ROB-12:** the engine and test paths of 377d6487 ported, behind a pod key: a table's new match carries `pooledTaps: true`, and a
+  match launched before offers what it offered and replays the same. A view key, `commanderTax`, on a command-zone commander. Proof:
+  engine-tap-to-cast 64, engine-commander 56, engine-cost-targets 42, room-pooled-taps 8 (new), game-table 168; breaks-pooled-taps
+  15 of 15; the four anchors it moved re-anchored and caught again.
+- **Waiting on Rob:** the backstop's daily cap (ROB-90); the AI door's two settings (ROB-95: the staging AI Access app, and the
+  production key); whether waves 4d onward wait on card-load steps 1 to 4 (ROB-93).
+- **With the Opus session holding Codex's lane** (`docs/HANDOFF-OPUS-2026-10-17.md`): coordinated in ROB-11. No `cloud/**` or UI
+  file in this lane's PRs; no staging deploy until that session's release of #737 is out and it agrees.
 
 ## 2026-10-14: Rob's decisions on the card load program
 
