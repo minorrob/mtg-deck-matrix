@@ -13,6 +13,11 @@
 .cm-stage-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
 .cm-stage-caption{position:absolute;left:18px;top:12px;z-index:2;display:flex;flex-direction:column;gap:4px;font-size:10px;letter-spacing:.13em;color:#b9d1bc;pointer-events:none}
 .cm-stage-caption small{font-size:10px;letter-spacing:0;color:#93aaa0}
+/* The words over the tabletop read at 4.5:1 on any mat and in any theme (tests/a11y-board.mjs): the turn's caption on a dark plate, a fanned card's name on a title plate. */
+.cm-stage-caption>span{align-self:flex-start;background:#0a1d20e6;padding:2px 7px;border-radius:6px;color:#e4efe6}
+.cm-stage-fan-slot .cm-bcard-name{background:#f6f1e4;color:#1f1c18;border-radius:2px;padding:2px 6px;left:5%;right:5%}
+/* and, as the Focus hand does, a fanned name ends before the next card begins: no glyph lies under that card's translucent edge */
+.cm-stage-fan-slot:not(:last-child) .cm-bcard-name{right:max(5%,calc(100% - var(--fan-step,106px) + 16px))}
 .cm-stage-front,.cm-stage-rear{position:absolute;z-index:1;min-width:0;min-height:0}
 .cm-stage-front>.cm-mat,.cm-stage-mini>.cm-mat{background:transparent!important;height:100%;width:100%;border:0;box-shadow:none!important;--pad:4px;--mat-reserve:0px}
 .cm-stage-front>.cm-mat{--bc:var(--stage-card,96px);padding-top:38px}
@@ -103,7 +108,8 @@
 .cm-stage-fan{position:relative;height:100%;width:min(92vw,1000px);margin:0 auto;background:none;border:0;pointer-events:none;--fan-step:calc(var(--hc,140px) * .76)}
 .cm-stage-fan-cards{position:absolute;inset:28px 0 0;pointer-events:none}
 .cm-stage-fan-slot{position:absolute;left:50%;top:0;width:var(--hc,140px);height:calc(var(--hc,140px)*1.4);transform:translateX(calc(-50% + var(--fan-x)*var(--fan-step))) translateY(var(--fan-y)) rotate(var(--fan-angle));transform-origin:50% 100%;pointer-events:auto}
-.cm-stage-fan-slot .cm-bcard{--bc:var(--hc,140px);width:var(--bc);cursor:pointer;transform-origin:50% 100%;box-shadow:0 8px 20px #0009;transition:transform .16s}
+/* The fan's shadow falls right and down, under the next card, never left over the previous card's name (tests/a11y-board.mjs reads a name against the ground its glyphs lie on). */
+.cm-stage-fan-slot .cm-bcard{--bc:var(--hc,140px);width:var(--bc);cursor:pointer;transform-origin:50% 100%;box-shadow:10px 10px 16px -8px #000b;transition:transform .16s}
 .cm-stage-fan-slot:hover,.cm-stage-fan-slot:focus-within{z-index:20!important}
 .cm-stage-fan-slot .cm-bcard:hover,.cm-stage-fan-slot .cm-bcard:focus-visible{transform:translateY(-22px)}
 .cm-stage-fan-slot .cm-bcard.is-dim{filter:brightness(.85) saturate(.85)}
@@ -156,7 +162,7 @@
 .cm-stage-front .cm-board-pile[data-zone="exile"],.cm-stage-mini .cm-board-pile[data-zone="exile"]{grid-column:3!important;grid-row:1}
 .cm-stage-front .cm-board-pile[data-zone="library"],.cm-stage-mini .cm-board-pile[data-zone="library"]{grid-column:2!important;grid-row:2 / 4}
 .cm-stage-front .cm-board-pile[data-zone="graveyard"],.cm-stage-mini .cm-board-pile[data-zone="graveyard"]{grid-column:3!important;grid-row:2 / 4}
-.cm-stage-rear .cm-stage-seat-label{order:2;display:flex;align-items:center;gap:6px;min-height:22px;padding:2px 6px;background:none;border:0;white-space:nowrap}
+.cm-stage-rear .cm-stage-seat-label{order:2;display:flex;align-items:center;gap:6px;min-height:22px;padding:2px 6px;background:#091b1de6;border:0;border-radius:6px;white-space:nowrap}
 .cm-stage-seat-label small::before{content:"— ";color:inherit}
 .cm-stage-mini>.cm-mat{--bc:var(--rear-card,24px)}
 .cm-stage-caption{letter-spacing:0;text-shadow:0 1px 4px #000;font-size:11px;gap:3px}
