@@ -3,13 +3,19 @@
 table from your chair with its 3D switch, the right pane docked with Turn Resources, the hover card no taller than the
 mat, the callouts. crankmagic-board.js and crankmagic.css, held by the board's browser suite.
 
-Browser suite: run with GEOMETRY_REQUIRED=1, from the repository root, with nothing else editing the worktree:
+Full screen is now the tabletop (#734): always 3D, with no switch, its depth the Camera's tilt, every other seat across
+the back. "3D never on the board" breaks the tilt the board hands the stage, which tests/table-tabletop.mjs holds. Three
+breaks went with what they broke (2026-10-17): "the ground is felt, not the mat" (the ground is now the Camera's Table
+and Background, not the big board's mat), "one other seat put at the left, not the back" (no seat is placed by count
+any more) and "3D forgotten" (the switch is gone; its successor, the tilt kept as cm-board-tilt-v2, is in no suite).
+
+Browser suites: run with GEOMETRY_REQUIRED=1, from the repository root, with nothing else editing the worktree:
 
     GEOMETRY_REQUIRED=1 python3 game/tools/batch/breaks.py game/tools/batch/breaks-play-ui.py
 
 The reading of the callouts, the lobby and Settings are in breaks-play-ui-rest.py, whose suites are quicker.
 """
-SUITES = ['tests/table-board.mjs']
+SUITES = ['tests/table-board.mjs', 'tests/table-tabletop.mjs']
 BREAKS = [
     ('the strip shows the step alone, not the seven', 'crankmagic-board.js',
      '      <span class="cm-board-tools cm-board-turnsteps">${turnRibbon()}${stepsOpen ? stepsMenu() : ""}</span>\n      <span class="cm-board-prompt">',
@@ -32,18 +38,9 @@ BREAKS = [
     ('the hover card taller than the mat', 'crankmagic.css',
      ',calc(var(--peek-max,100vh) * 5 / 7))',
      ')'),
-    ('the ground is felt, not the mat', 'crankmagic-board.js',
-     'data-mat="${e(matOf(big.playerId))}"',
-     'data-mat="felt"'),
-    ('one other seat put at the left, not the back', 'crankmagic-board.js',
-     'n === 2 ? ["left", "right"] : ["back"]',
-     'n === 2 ? ["left", "right"] : ["left"]'),
     ('3D never on the board', 'crankmagic-board.js',
-     '    host.dataset["3d"] = mode === "full" && three ? "on" : "off";',
-     '    host.dataset["3d"] = "off";'),
-    ('3D forgotten', 'crankmagic-board.js',
-     '  actions["board-3d"] = () => {three = !three; keep(THREE_KEY, three ? "on" : "off"); draw();};',
-     '  actions["board-3d"] = () => {three = !three; draw();};'),
+     'const opts = {tilt: camera.tilt, zoom: camera.zoom,',
+     'const opts = {tilt: 0, zoom: camera.zoom,'),
     ('no layer for the callouts', 'crankmagic-board.js',
      '<div class="cm-board-callouts" id="cm-board-callouts" aria-hidden="true"></div>',
      ''),
