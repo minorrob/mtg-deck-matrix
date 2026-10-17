@@ -337,7 +337,7 @@ async function readWords(page, scope, label, {min = 6} = {}) {
   spent.words[0] += Date.now() - t; spent.words[1] += 1;
   const read = words.filter((w) => w.glyphs > 0 || w.flat), low = read.filter((w) => w.worst < w.need);
   for (const w of read) {const k = kindOf(w), was = worstSeen.get(k); if (!was || w.worst < was.worst) worstSeen.set(k, {...w, label});}
-  ok(read.length >= min && !low.length, `${label}: every word reads at 4.5:1 (3:1 large) at its worst glyph pixel (${read.length} read${low.length ? `; under: ${low.sort((x, y) => x.worst - y.worst).slice(0, 8).map((w) => `"${w.text}" (.${w.cls}, ${w.where}) ${w.worst} of ${w.need}`).join("; ")}` : `; the lowest ${read.sort((x, y) => x.worst / x.need - y.worst / y.need)[0]?.worst}`})`);
+  ok(read.length >= min && !low.length, `${label}: every word reads at 4.5:1 (3:1 large) at its worst glyph pixel (${read.length} read${low.length ? `; under: ${low.sort((x, y) => x.worst - y.worst).slice(0, 8).map((w) => `"${w.text}" (.${w.cls}, ${w.where}${w.trail ? ", in " + w.trail : ""}; ink ${w.rgba.slice(0, 3).map(Math.round).join(",")}${w.op < 1 ? " at " + w.op : ""}) ${w.worst} of ${w.need}`).join("; ")}` : `; the lowest ${read.sort((x, y) => x.worst / x.need - y.worst / y.need)[0]?.worst}`})`);
   return words;
 }
 
