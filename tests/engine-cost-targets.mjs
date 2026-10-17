@@ -139,14 +139,19 @@ const aimedAt = (actions) => actions.map((a) => (a.targets ?? []).map((t) => t.i
   eq(nothingToDo(s, 0), false, "a tapped creature to aim at: two mana is enough, so something to do");
   s.objects[tapped].tapped = false;
   eq(nothingToDo(s, 0), true, "none tapped: it costs five, and there are two");
-  /* With mana in the pool its sources are not tapped for it (castTapPlans), so it is not offered: "nothing to do" weighs it. */
-  const t = table();
-  put(t, card("Magnificent End"), 0, "hand");
-  const tired = put(t, creature("Tired", 5, 5), 1, "battlefield");
-  t.objects[tired].tapped = true;
-  put(t, WASTES, 0, "battlefield");
-  t.players[0].manaPool.W = 1;
-  eq([casts(t, "Magnificent End").length, nothingToDo(t, 0)], [0, false], "{W} floating and one Wastes: not offered yet, and something to do");
+  /* With mana in the pool its sources are not tapped for it (castTapPlans) unless the match tops floating mana up
+     (`pooledTaps`, a table's new matches): not offered before, offered after, and "nothing to do" weighs it either way. */
+  for (const pooledTaps of [false, true]) {
+    const t = table();
+    if (pooledTaps) t.pooledTaps = true;
+    put(t, card("Magnificent End"), 0, "hand");
+    const tired = put(t, creature("Tired", 5, 5), 1, "battlefield");
+    t.objects[tired].tapped = true;
+    put(t, WASTES, 0, "battlefield");
+    t.players[0].manaPool.W = 1;
+    eq([casts(t, "Magnificent End").length, nothingToDo(t, 0)], [pooledTaps ? 1 : 0, false],
+      pooledTaps ? "{W} floating and one Wastes, the floating mana topped up: offered, paid by both" : "{W} floating and one Wastes: not offered yet, and something to do");
+  }
 }
 {
   /* Warrior's Blades: Equip {3}, {1} less for each +1/+1 counter on the creature it targets -- offered at the creature with two

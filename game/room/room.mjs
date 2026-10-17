@@ -755,7 +755,10 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         ...(pod && pod.passAfterCast === true ? {passAfterCast: true} : {}), ...(pod && pod.endAsks === true ? {endAsks: true} : {}),
         ...(pod && pod.untapMana === true ? {untapMana: true} : {})};
       passEmpty = beats.passEmpty === true; endWhenNoPerson = beats.endWhenNoPerson === true; resolveAll = beats.resolveAll === true; passAfterCast = beats.passAfterCast === true; endAsks = beats.endAsks === true; untapMana = beats.untapMana === true;
-      try {state = createState({matchId, seed, players: seats.map((s) => ({name: s.name})), ...rules, ...(beats.drawBeat ? {drawBeat: true} : {})});}
+      /* And whether a cast tapped for tops up floating mana and taps a source for all it makes (`pooledTaps`, rules/actions.mjs):
+         a match launched before it lacks the key, and so offers what it offered then. */
+      const pooled = pod && pod.pooledTaps === true ? {pooledTaps: true} : {};
+      try {state = createState({matchId, seed, players: seats.map((s) => ({name: s.name})), ...rules, ...(beats.drawBeat ? {drawBeat: true} : {}), ...pooled});}
       catch (error) {throw new RoomError(400, error.message);}
       seats.forEach((s, seat) => {
         for (const name of s.commander) addObject(state, {...cards(name), card: name, owner: seat, controller: seat, commander: true}, "command", seat);
@@ -766,7 +769,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       controller = createController();
       matchSeed = seed;
       pilots = seats.map((s, seat) => (s.pilot === "house" ? pilotMade(seat) : null));
-      await store.saveMatch({pod: {seats, ...rules, ...beats}, seed});
+      await store.saveMatch({pod: {seats, ...rules, ...beats, ...pooled}, seed});
       write(beginMulligans(state, rng));
       drive();
       await persist();
