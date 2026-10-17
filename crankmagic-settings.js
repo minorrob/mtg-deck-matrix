@@ -23,6 +23,7 @@ views.settings=async()=>{
   C.main.innerHTML=C.pageHead('Settings','','settings','<p class="cm-decks-summary">Account, appearance, play, prices and data.</p>')
    +`<div class="cm-settings">`
    +card('account','Account',`<div id="cm-settings-account"><p class="cm-muted">Signing in is not offered on this copy of CrankMagic, so the library has no cloud copy here. Save a backup file below to keep an extra one.</p></div>`)
+   +card('profile','Profile','<div id="cm-settings-profile"><p>Sign in to set your name and profile picture.</p></div>')
    +card('appearance','Appearance',
       `<p class="cm-settings-label">Theme</p><div class="cm-theme-cards" role="group" aria-label="Theme">${C.THEMES.map(swatch).join('')}</div>`
       +`<p class="cm-settings-label">Default card size</p><div class="cm-settings-row">${C.cardScaleSlider({label:false,scope:'default'})}</div><p class="cm-muted">The size cards are drawn at everywhere: the hover preview, the card inspector's picture, and any view you have not sized. The Table and the Play board have their own slider, which sets that view's size over this one. Remembered on this device; a phone's scale stops sooner so the largest card still fits.</p>`
@@ -47,7 +48,7 @@ views.settings=async()=>{
    +card('about','About',`<p id="cm-save-status" class="cm-muted"></p><div id="cm-data-dates" class="cm-data-dates"></div>${version?'':'<p class="cm-muted">A development copy: no release version.</p>'}`
       +`<p class="cm-settings-links"><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="THIRD-PARTY-NOTICES.md">Third-party notices</a><a href="LICENSE">License</a></p>`)
    +`</div>`;
-  C.describeData();C.status?.();C.drawAccount?.();
+  C.describeData();C.status?.();C.drawAccount?.();C.drawProfile?.();
 };
 
 actions['open-settings']=()=>C.go('settings');
