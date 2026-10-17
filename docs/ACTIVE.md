@@ -84,7 +84,7 @@ Volcano uses Rob's supplied video; other environments and the table artwork stil
 
 | Lane | Held by | Branch | Doing |
 | --- | --- | --- | --- |
-| **Engine and simulation** | Fable (Claude Code, a cloud container), resumed October 16 per Rob | `claude/admiring-franklin-58cxy4` | Engine, simulation, card loads. Linear: ROB-71 and its children (ROB-12, ROB-13, ROB-73 to ROB-95). Now: ROB-12. See "2026-10-17: the engine lane resumed" below. |
+| **Engine and simulation** | Fable (Claude Code, a cloud container), resumed October 16 per Rob | `claude/admiring-franklin-58cxy4` | Engine, simulation, card loads. Linear: ROB-71 and its children (ROB-12, ROB-13, ROB-73 to ROB-95). ROB-12 merged (#739); now ROB-81. See "2026-10-17: the engine lane resumed" below. |
 | **UI and user management** | Codex on Personal-HP | `codex/ui-playtest-plan-oct15`; focused release `codex/staging-resend-oct16` | UI/Babylon, account profiles, sharing, Resend and invitations; coordinates current staging release. |
 
 ### Requests between the lanes
@@ -120,6 +120,11 @@ other lane answers in the last column.
   live decks). Deferred with issues filed: the UI contracts (ROB-74 to ROB-78), the room's countdown and d20 (ROB-79, ROB-80), the
   commander audit (ROB-82), the card load program, the simulation audit (ROB-84), constructs and waves (ROB-83, ROB-93). Blocked:
   ROB-17, on the game record.
+- **Merged:** #739 (ROB-12) as main 7fcf26b2, on Rob's go under the same exception as #736 (CI red only on a11y-board and the four
+  UI anchors, both red on main; ROB-15, ROB-16). **On staging:** main 7fcf26b2 (with #737) as `release/cloud-staging` 44af45b4,
+  Workers version 2192fe90, play-worker.js byte-identical to the release (9e59b223bdd8); `staging-check --expect 7fcf26b2`
+  passes; release-acceptance 22, Play walk 42. ROB-12 Done. Production unchanged.
+  Next on the branch: ROB-81, its PR. A tested patch for the four UI anchors is in ROB-16, for the UI lane to take or hand back.
 - **ROB-12:** the engine and test paths of 377d6487 ported, behind a pod key: a table's new match carries `pooledTaps: true`, and a
   match launched before offers what it offered and replays the same. A view key, `commanderTax`, on a command-zone commander. Proof:
   engine-tap-to-cast 64, engine-commander 56, engine-cost-targets 42, room-pooled-taps 8 (new), game-table 168; breaks-pooled-taps
