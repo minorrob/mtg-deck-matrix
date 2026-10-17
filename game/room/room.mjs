@@ -769,7 +769,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       controller = createController();
       matchSeed = seed;
       pilots = seats.map((s, seat) => (s.pilot === "house" ? pilotMade(seat) : null));
-      await store.saveMatch({pod: {seats, ...rules, ...beats}, seed});
+      await store.saveMatch({pod: {seats, ...rules, ...beats, ...pooled}, seed});
       write(beginMulligans(state, rng));
       drive();
       await persist();
