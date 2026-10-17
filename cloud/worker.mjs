@@ -34,6 +34,7 @@ import {archidekt, ImportError} from "./import.mjs";
 import {createAi, everyone, settings, explain, coach, advise, readQuestion, Closed} from "./ai.mjs";
 import {readAsk, openVersion, adviseBrief} from "./advise.mjs";
 import {tables} from "./tables.mjs";
+import {social, ShareError, sharedIdentity} from "./sharing.mjs";
 
 /** Whether this person may seat an AI on Claude: the same gates as the table's object checks when it seats one. */
 /* AI COACH SETTINGS (AI-6): the person's own spending over the last 24 hours against their cap, from the call log, for
@@ -124,6 +125,12 @@ export async function handle(request, env, deps = {}) {
     throw error;
   }
   if (await overLimit(env.LIMIT_PERSON, who.email)) return tooMany("your account");
+  const loginEmail = who.email;
+  if (env.SHARING_ENABLED === 'on') {
+    const canonical = await sharedIdentity(env.DB, loginEmail);
+    if (!canonical) return reply(401, {error: 'Your email address changed. Sign out and sign in with your verified new address.'});
+    who = {...who, email: canonical};
+  }
   /* Recovery entry gate: keep the GameTable class/storage, but admit no new HTTP or socket
      connections while the public app has Play closed. Existing sockets and clocks are not paused. */
   if (env.PLAY_TABLES_CLOSED === "on" && (path === "/api/tables" || path.startsWith("/api/tables/") || joinLocation(url)))
@@ -142,6 +149,10 @@ export async function handle(request, env, deps = {}) {
   const library = createLibrary(env.DB, {now: () => new Date(ms()).toISOString(), ...(deps.newId ? {newId: deps.newId} : {})});
   const person = await library.user(who.email);
   try {
+    if (path.startsWith('/api/social/')) {
+      if (env.SHARING_ENABLED !== 'on') return reply(503, {error: 'Sharing is not enabled on this copy yet.'});
+      return reply(200, await social(request, env, person, {now: () => new Date(ms()).toISOString(), ...(deps.fetchImpl ? {fetchImpl: deps.fetchImpl} : {})}));
+    }
     if (method === "GET" && path === "/api/auth/login") {
       /* Only a fragment of this app may be the destination: never another site, never another path. */
       const to = url.searchParams.get("to") || "";
@@ -155,7 +166,7 @@ export async function handle(request, env, deps = {}) {
        `to` already carried it; nothing here keeps it, and it seats only someone Access admits. */
     const joined = method === "GET" ? joinLocation(url) : null;
     if (joined) return new Response(null, {status: 302, headers: {location: joined, "cache-control": "no-store", "referrer-policy": "no-referrer"}});
-    if (method === "GET" && path === "/api/me") return reply(200, {email: person.email, since: person.createdAt, head: await library.head(person.id)});
+    if (method === "GET" && path === "/api/me") return reply(200, {email: loginEmail, since: person.createdAt, head: await library.head(person.id)});
     /* AN AI ON CLAUDE (AI-2): New table offers one only where the table's object would seat it (cloud/game-room.mjs
        `pilotOpen`): the switch on, the door's key, caps and model set, and this person on the allowlist. */
     if (method === "GET" && path === "/api/ai-seat") return reply(200, {open: await aiSeatOpen(env, person.email)});
@@ -174,7 +185,7 @@ export async function handle(request, env, deps = {}) {
        again later starts an empty account; removing the sign-in itself is Access's, and Rob's runbook step. */
     if (method === "DELETE" && path === "/api/account") {
       const input = await body(request);
-      if (String(input.confirm || "").trim().toLowerCase() !== person.email) return reply(400, {error: "Type the address you are signed in as to delete this account. Nothing was deleted."});
+      if (String(input.confirm || "").trim().toLowerCase() !== loginEmail) return reply(400, {error: "Type the address you are signed in as to delete this account. Nothing was deleted."});
       return reply(200, {deleted: {email: person.email, ...await library.forget(person.id, person.email)}});
     }
     const version = /^\/api\/library\/versions\/([0-9a-f-]{36})$/.exec(path);
@@ -184,6 +195,7 @@ export async function handle(request, env, deps = {}) {
     }
     return reply(404, {error: "No such endpoint."});
   } catch (error) {
+    if (error instanceof ShareError) return reply(error.status, {error: error.message});
     if (error instanceof Conflict) return reply(409, {error: "Your library changed on another device since this one last saved.", head: error.head});
     if (error instanceof Invalid) return reply(400, {error: `The cloud refused that: ${error.message}.`});
     throw error;
@@ -206,6 +218,11 @@ async function aiDoor(request, env, deps, url, ms) {
     throw error;
   }
   if (await overLimit(env.LIMIT_PERSON, who.email)) return tooMany("your account");
+  if (env.SHARING_ENABLED === 'on') {
+    const canonical = await sharedIdentity(env.DB, who.email);
+    if (!canonical) return reply(401, {error: 'Sign in with your verified new email address.'});
+    who = {...who, email: canonical};
+  }
   /* Signed in to the AI door, back to the app: the board sends a person here when its first question finds them signed
      in to the library only (Access's sign-in keeps a path and drops a fragment, so the place to return is `to`). */
   if (request.method === "GET" && url.pathname === "/api/ai/login") {
