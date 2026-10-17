@@ -102,7 +102,14 @@ function printed(state, id) {
    cannot ask what they are still deriving. Anything else would be ignored, and a static would affect more than it says:
    the card compiler refuses it (cards/index.mjs). */
 export const LAYER_AFFECTS_KEYS = Object.freeze(["anyOf", "what", "ids", "types", "subtypes", "supertypes", "controller", "token", "another", "self", "attachedBy", "colors", "colorless", "countersAtLeast", "tapped", "counters",
-  "keywords", "hasDealtDamage", "hasDealtCombatDamage", "attacking"]);
+  "keywords", "hasDealtDamage", "hasDealtCombatDamage", "attacking", "zone"]);
+
+/* "CREATURES YOU CONTROL" MEANS CREATURE PERMANENTS (CR 109.2): a description that names no other zone takes in the battlefield
+   only -- not a creature card in a hand, a graveyard, a library or exile, nor a creature spell. `zone`, as the selector
+   grammar says it (script/filter.mjs), names another it reads ("creature cards in your graveyard", "graveyard"), or "any"
+   (Maskwood Nexus: creature spells and creature cards that aren't on the battlefield too). An effect on named objects
+   (`ids`) is on those, wherever they are. */
+const inZone = (wanted, zone) => wanted === "any" || (wanted ?? "battlefield") === zone;
 
 function affects(state, effect, current, sourceController) {
   const rule = effect.affects ?? {};
@@ -113,6 +120,7 @@ function affects(state, effect, current, sourceController) {
     return anyOf.some((one) => affects(state, {...effect, affects: {...shared, ...one}}, current, sourceController));
   }
   if (rule.ids && !rule.ids.includes(current.id)) return false;
+  if (!rule.ids && !inZone(rule.zone, state.objects[current.id]?.zone)) return false;
   /* "For as long as that land has a blight counter on it" (Ultima, Origin of Oblivion; CR 611.2b): an effect's object while
      it has a counter of that kind -- and once it has none, no longer (rules/sba.mjs ends it for good, endCounterDurations). */
   if (effect.whileCounter && !(((current.counters ?? {})[effect.whileCounter] ?? 0) > 0)) return false;

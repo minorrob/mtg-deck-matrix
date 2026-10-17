@@ -205,4 +205,26 @@ const anthem = (over = {}) => ({id: "anthem", kind: "static", layer: 7, sublayer
   eq(s.objects[bear].power, 2, "the printed value is untouched, which is what makes an effect leaving free");
 }
 
+/* ---- a permanent's static ability affects permanents only, unless it says otherwise (CR 611.3a) ---- */
+{
+  const s = started();
+  addObject(s, {card: "Glorious Anthem", types: ["Enchantment"], owner: 0, controller: 0, abilities: [anthem()]}, "battlefield");
+  const out = addObject(s, creature({card: "Out", owner: 0, controller: 0}), "battlefield");
+  const held = addObject(s, creature({card: "Held", owner: 0, controller: 0}), "hand", 0);
+  const dead = addObject(s, creature({card: "Dead", owner: 0, controller: 0}), "graveyard", 0);
+  const deep = addObject(s, creature({card: "Deep", owner: 0, controller: 0}), "library", 0);
+  const gone = addObject(s, creature({card: "Gone", owner: 0, controller: 0}), "exile", 0);
+  eq([out, held, dead, deep, gone].map((id) => powerOf(s, id)), [3, 2, 2, 2, 2],
+    "an anthem on the battlefield: its controller's creature there gets +1/+1, and a creature card in their hand, graveyard, library or exile does not -- it is a permanent's ability, and says nothing of other zones");
+  /* "Creature cards in your graveyard have ..." names its zone, and is read there. */
+  addObject(s, {card: "Crypt Lord", types: ["Enchantment"], owner: 0, controller: 0,
+    abilities: [anthem({id: "crypt", text: "Creature cards in your graveyard get +1/+1.", affects: {types: ["Creature"], controller: "you", zone: "graveyard"}})]}, "battlefield");
+  eq([out, held, dead].map((id) => powerOf(s, id)), [3, 2, 3], "a static that names the graveyard affects the cards there, and only there");
+  /* Maskwood Nexus: creatures you control, and creature spells and creature cards you own anywhere else. */
+  addObject(s, {card: "Every Zone", types: ["Artifact"], owner: 0, controller: 0, abilities: [{id: "every", kind: "static", layer: 4, text: "Every creature type, everywhere.",
+    affects: {types: ["Creature"], controller: "you", zone: "any"}, apply: {allCreatureTypes: true}}]}, "battlefield");
+  eq([out, held, dead, deep, gone].map((id) => characteristicsOf(s, id).everyCreatureType === true), [true, true, true, true, true],
+    "a static that says every zone is read in every zone");
+}
+
 console.log(`engine-layers: ${checks} checks passed — printed values stay printed, layers are categories rather than priorities, 7b comes before 7c whatever the timestamps, and dependency beats timestamp.`);
