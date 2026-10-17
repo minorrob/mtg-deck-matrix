@@ -11,10 +11,12 @@ export async function admitAddress(db,env,to,{now,fetchImpl,fail}) {
   const error='Access did not admit this address. No invitation email was sent; ask the administrator to check invitation permissions.';
   const call=async(path,method='GET',body)=>{
     try {
-      const response=await fetchImpl(base+path,{method,redirect:'error',signal:AbortSignal.timeout(10000),
+      const response=await fetchImpl(base+path,{method,redirect:'manual',signal:AbortSignal.timeout(10000),
         headers:{authorization:`Bearer ${env.ACCESS_INVITE_TOKEN}`,'content-type':'application/json'},
         ...(body?{body:JSON.stringify(body)}:{})});
-      const value=await response.json();if(!response.ok||value.success!==true||!value.result)fail(error,502);
+      // workerd rejects redirect:'error'. Never follow redirects with the bearer token.
+      if(!response.ok){await response.body?.cancel();fail(error,502);}
+      const value=await response.json();if(value.success!==true||!value.result)fail(error,502);
       return value.result;
     } catch {fail(error,502);}
   };
