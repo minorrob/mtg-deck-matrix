@@ -7,7 +7,7 @@
 SUITES = ['tests/agent-seat-table.mjs', 'tests/advisor.mjs', 'tests/ai-door.mjs', 'tests/coach.mjs', 'tests/cloud-worker.mjs']
 WORKER, ROOM, AI = 'cloud/worker.mjs', 'cloud/game-room.mjs', 'cloud/ai.mjs'
 BREAKS = [
-    ("the meter's log on the machine's clock", WORKER, 'createAi(env.DB, {now})', 'createAi(env.DB)'),
+    ("the meter's log on the machine's clock", WORKER, 'createAi(env.DB, {now, everyone: everyone(env)})', 'createAi(env.DB, {everyone: everyone(env)})'),
     ("the meter route drops the request's clock", WORKER, 'await aiMeter(env, person.email, () => new Date(ms()).toISOString())', 'await aiMeter(env, person.email)'),
     ("the AI routes' log on the machine's clock", WORKER, 'createAi(env.DB, {now: () => new Date(ms()).toISOString(), ', 'createAi(env.DB, {'),
     ("the LLM seat's log on the machine's clock", ROOM, 'createAi(this.env.DB, {now: () => new Date(this.now()).toISOString()})', 'createAi(this.env.DB)'),

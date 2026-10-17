@@ -151,8 +151,8 @@ eq(pw.vars, {ACCESS_TEAM_DOMAIN: "crankmagic.cloudflareaccess.com", ACCESS_AUD: 
   "and it trusts the CrankMagic accounts application (crankmagic.com/api/*, the invite list), read from its sign-in redirect");
 const staging = build({source: worktreeSource(), profileName: "cloud-staging"});
 eq(staging.problems, [], "the staging build is complete, its Access application's team and audience included");
-eq(JSON.parse(staging.built.get("wrangler.jsonc").toString("utf8")).vars, {ACCESS_TEAM_DOMAIN: "crankmagic.cloudflareaccess.com", ACCESS_AUD: "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5", PLAYTEST_TABLES: "on", SERVICE_SEATS: "on",
-  AI_ACCESS_AUD: "d3e7b5812c81536cb707c64cca2196e1ee7854cbca6791f4d7bd2ef4b649f6db", AI_CAP_TOTAL_CENTS: "300", AI_CAP_PERSON_CENTS: "300", AI_MODEL: "claude-haiku-5-5", AI_COACH: "on", AI_CAP_COACH_CENTS: "150", AI_PILOT: "on", AI_CAP_PILOT_GAME_CENTS: "25", AI_ADVISE: "on"},
+eq(JSON.parse(staging.built.get("wrangler.jsonc").toString("utf8")).vars, {ACCESS_TEAM_DOMAIN: "crankmagic.cloudflareaccess.com", ACCESS_AUD: "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5", PLAYTEST_TABLES: "on", SERVICE_SEATS: "on", SHARING_ENABLED: "on", INVITE_ADMIN_ID: "1", CLOUDFLARE_ACCOUNT_ID: "02e7ae6d703281008f546c63378c6ddb", ACCESS_INVITE_APP_IDS: "16fef6e1-0437-4bbd-b7fe-a81419dc09fa", ACCESS_INVITE_POLICY_ID: "8b802602-b991-4986-b8a1-d2c16b3cf5c3",
+  AI_ACCESS_AUD: "d3e7b5812c81536cb707c64cca2196e1ee7854cbca6791f4d7bd2ef4b649f6db", AI_CAP_TOTAL_CENTS: "300", AI_CAP_PERSON_CENTS: "300", AI_MODEL: "claude-haiku-5-5", AI_COACH: "on", AI_CAP_COACH_CENTS: "150", AI_PILOT: "on", AI_CAP_PILOT_GAME_CENTS: "25", AI_ADVISE: "on", AI_EVERYONE: "on"},
   "and the Worker trusts that team's keys for that application only (read from the sign-in redirect's kid, and confirmed by Rob from the dashboard); its tables are playtest tables (M8b)");
 const sb = staging.built, sw2 = JSON.parse(sb.get("wrangler.jsonc").toString("utf8"));
 eq([sw2.name, sw2.main, sw2.assets, sw2.routes], ["crankmagic-staging", PLAY_WORKER, {directory: "./", binding: "ASSETS", run_worker_first: ["/api/*"]}, [{pattern: "staging.crankmagic.com", custom_domain: true}]],
@@ -167,6 +167,9 @@ ok(verify(new Map([...sb, ["wrangler.jsonc", Buffer.from(JSON.stringify({...sw2,
   "a release that would hand the Worker its own signing keys is refused");
 /* PLAY IN THE CLOUD, ON STAGING (Rob, 2026-09-29: "execute the play release and merge to staging"). */
 const stagingProfile = PROFILES["cloud-staging"];
+ok(["crankmagic-stage.js", "crankmagic-stage.css", "vendor/pixi.min.js", "vendor/pixi-csp.min.js", "vendor/PIXI-LICENSE.txt"].every(f => sb.has(f)), "staging carries the tabletop renderer, CSP adapter and upstream license");
+ok(![...built.keys()].some(f => f.startsWith("vendor/pixi") || f === "vendor/PIXI-LICENSE.txt"), "the non-Play profile does not include the tabletop renderer");
+
 eq([sw2.durable_objects, sw2.migrations], [{bindings: [{name: "TABLES", class_name: "GameTable"}]}, [{tag: "tables-v1", new_sqlite_classes: ["GameTable"]}]], "staging binds TABLES to the table's Durable Object, made once by a SQLite-class migration");
 ok(PAGES.every((p) => sb.get(p).toString("utf8").includes('<meta name="crankmagic-play" content="cloud">')), "both staging pages are marked Play in the cloud");
 ok(["crankmagic-table.js", "crankmagic-board.js"].every((f) => sb.has(f)), "the table's lobby and its board are in it");
@@ -183,7 +186,7 @@ ok(["crankmagic-game.js", "crankmagic-lobby.js", "crankmagic-online.js", "crankm
 const engine = workerModules(worktreeSource());
 eq(engine.problems, [], "Play's Worker imports only modules in this tree, and nothing a Worker cannot bundle");
 eq([...sb.keys()].filter((f) => /^game\//.test(f)).sort(), engine.files.filter((f) => /^game\//.test(f)), `the engine the table carries is in the tree for wrangler to bundle (${engine.files.length - 2} modules of game/), and nothing else of game/`);
-ok(engine.files.every((f) => /\.mjs$/.test(f)) && !engine.files.some((f) => /^data\//.test(f)), "modules only: no card data, no JSON");
+ok(engine.files.every((f) => /\.mjs$/.test(f) || ['collection-model.js','collection-exchange.js'].includes(f)) && !engine.files.some((f) => /^data\//.test(f)), "modules only: no card data, no JSON");
 ok(engine.files.includes("game/engine/cards/definitions.mjs") && sb.has("game/engine/cards/definitions.mjs"),
   "and the cards the table plays are one of them (M5): every definition in the directory, generated as a module and bundled with the engine");
 ok(sb.get(".assetsignore").toString("utf8").split("\n").includes("game/"), "and none of it is published as a file");
@@ -198,8 +201,9 @@ ok(verify(playConfig(built, (c) => ({...c, vars: {...c.vars, PLAYTEST_TABLES: "o
 ok(verify(playConfig(built, (c) => ({...c, vars: {...c.vars, SERVICE_SEATS: "on"}})), profile).some((p) => p.includes("SERVICE_SEATS is on")), "production seating a service token is refused: an automated check would be a person there");
 ok(verify(playConfig(sb, (c) => ({...c, vars: {...c.vars, SERVICE_SEATS: undefined}})), stagingProfile).some((p) => p.includes("service token is not seated")), "and staging without it, its session checks shut out");
 eq(pw.vars.SERVICE_SEATS, undefined, "production's Worker never seats a service token");
-/* The AI door (Rob, 2026-10-09): open on staging with its own application and one cap for everyone; shut in production. */
-ok(Object.keys(pw.vars).every((name) => !/^AI_/.test(name)), "production's AI door stays shut: no AI application, no caps");
+/* The AI door (Rob, 2026-10-09): open on staging with its own application and one cap for everyone; since 2026-10-14 open
+   to everyone signed in, on staging and in production's Play release (below). The pages release, without Play, keeps it shut. */
+ok(Object.keys(pw.vars).every((name) => !/^AI_/.test(name)), "the pages release keeps the AI door shut: no AI application, no caps");
 ok(verify(playConfig(built, (c) => ({...c, vars: {...c.vars, AI_ACCESS_AUD: "d3e7b5812c81536cb707c64cca2196e1ee7854cbca6791f4d7bd2ef4b649f6db", AI_CAP_TOTAL_CENTS: "300", AI_CAP_PERSON_CENTS: "300"}})), profile).some((p) => p.includes("AI door is shut")), "a production release that opens the AI door is refused");
 ok(verify(playConfig(sb, (c) => ({...c, vars: {...c.vars, AI_ACCESS_AUD: "ff51f3bcda0f6f50d2f48bb9d3d96b76530c128a23cdb1cc33aa4fa6d68611a3"}})), stagingProfile).some((p) => p.includes("open the AI door")), "and staging's door trusting another application is refused");
 ok(verify(playConfig(sb, (c) => ({...c, vars: {...c.vars, AI_CAP_PERSON_CENTS: undefined}})), stagingProfile).some((p) => p.includes("open the AI door")), "as is staging with a cap missing, which would keep the door shut");
@@ -266,6 +270,9 @@ for (const name of ["cloud-production", "cloud-production-standby"]) {
   eq(b.has("crankmagic-board.js"), !closed, `${name} public Play modules match its entry state`);
   eq(JSON.parse(b.get("version.json")).profile, name, `${name} is identified for exact readback`);
   ok(b.get(".assetsignore").toString().includes("game/\n"), `${name} engine remains private`);
+  /* Rob, 2026-10-14: "I want the AI door open on staging and production for anyone that can sign in." */
+  eq(Object.fromEntries(Object.entries(c.vars).filter(([k]) => /^AI_/.test(k))), closed ? {} : {AI_ACCESS_AUD: pw.vars.ACCESS_AUD, AI_CAP_TOTAL_CENTS: "300", AI_CAP_PERSON_CENTS: "300", AI_MODEL: "claude-haiku-5-5", AI_COACH: "on", AI_CAP_COACH_CENTS: "150", AI_PILOT: "on", AI_CAP_PILOT_GAME_CENTS: "25", AI_ADVISE: "on", AI_EVERYONE: "on"},
+    closed ? `${name} keeps the AI door shut` : `${name} opens the AI door to everyone signed in, on the accounts application's own sign-in, with staging's caps and model`);
   for (const [label, mutate, message] of [
     ["staging database", x => {x.d1_databases[0].database_id=sw2.d1_databases[0].database_id;}, "database as DB"],
     ["staging audience", x => {x.vars.ACCESS_AUD=sw2.vars.ACCESS_AUD;}, "exact Access application"],
@@ -275,6 +282,7 @@ for (const name of ["cloud-production", "cloud-production-standby"]) {
     ["playtest record", x => {x.vars.PLAYTEST_TABLES="on";}, "full record"],
     ["wrong entry state", x => {x.vars.PLAY_TABLES_CLOSED=closed ? "off" : "on";}, "entry state"],
     ["deleted table class", x => {x.migrations.push({tag:"remove-tables",deleted_classes:["GameTable"]});}, "migration"],
+    ["AI door not its profile's", x => {if (closed) x.vars.AI_EVERYONE = "on"; else delete x.vars.AI_EVERYONE;}, "AI door"],
   ]) ok(verify(playConfig(b, x => {mutate(x);return x;}),p).some(v=>v.includes(message)), `${name} refuses ${label}`);
 }
 eq(releaseBranch("cloud-staging"), "release/cloud-staging", "staging keeps its separate release record");

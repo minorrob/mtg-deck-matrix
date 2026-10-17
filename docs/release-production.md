@@ -29,8 +29,9 @@ Nothing here pushes to production by itself. Each push below is Rob's go, every 
   person, the Coach, Settings and AI Coach settings, *Send feedback*, account deletion.
 - **Every finding remedied:** `node tools/playtest-triage.mjs` meets its exit criteria on G-D's run, and G-E's run
   has no finding open but those Rob rules can wait.
-- **The AI door stays shut on production.** No production profile carries AI settings, and
-  `tools/release-pages.mjs` refuses a production release that opens the door. Opening it is a later go of its own.
+- **The AI door:** open in `cloud-production` since Rob's go of 2026-10-14, to everyone signed in (`docs/ai-door.md`,
+  *Open to everyone signed in*). The `pages` release and the standby keep it shut, and `tools/release-pages.mjs`
+  refuses a release whose AI settings are not its profile's.
 
 ## The two releases
 
@@ -47,7 +48,10 @@ The release checkout is a worktree with `node_modules`; `WRANGLER` is the pinned
    - **Read back:**
      - Workers Builds deploys it;
      - `curl -s https://crankmagic.com/version.json` says this commit and profile `cloud-production-standby`;
-     - the live walk passes: `UAT_BASE=https://crankmagic.com node tests/uat/release-acceptance.mjs`.
+     - the live walk passes: `UAT_BASE=https://crankmagic.com UAT_LIVE_NETWORK=1 node tests/uat/release-acceptance.mjs`.
+       `UAT_LIVE_NETWORK=1` lets Scryfall answer, as it does for a person on the site and in the release scripts' own
+       walks. Without it the walk answers from the shipped catalog only, and on 2026-10-14 it stopped at *Measure*:
+       the draft held 44 cards that only Scryfall knows.
    - **Record the deployed version id** (`wrangler deployments list`, or the API's `/deployments`). That version is
      the recovery target.
    - **Rehearsed 2026-10-11** on main `1aa46cd`: built, `release-acceptance` 23 checks, `production-play-e2e` 27,

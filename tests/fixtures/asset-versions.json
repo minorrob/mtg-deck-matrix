@@ -154,8 +154,8 @@
       "sha": "5dd742bd996b24a6"
     },
     "crankmagic-app.js": {
-      "version": 482,
-      "sha": "9a4e3612ff52e0dd"
+      "version": 496,
+      "sha": "376e438da2eaca55"
     },
     "crankmagic-assets.js": {
       "version": 35,
@@ -166,8 +166,8 @@
       "sha": "ddab072cfc45df40"
     },
     "crankmagic-board.js": {
-      "version": 40,
-      "sha": "7774819d330c1c80"
+      "version": 51,
+      "sha": "d9169fc3a6a43e9d"
     },
     "crankmagic-brand.js": {
       "version": 6,
@@ -190,12 +190,12 @@
       "sha": "ff45272f85b35fdf"
     },
     "crankmagic-collection.js": {
-      "version": 100,
-      "sha": "f2feb6fe38605dce"
+      "version": 101,
+      "sha": "b8b7f01251f60230"
     },
     "crankmagic-decks.js": {
-      "version": 104,
-      "sha": "add921c3fc7ffa74"
+      "version": 105,
+      "sha": "1f0ae1d6a380a289"
     },
     "crankmagic-design.css": {
       "version": 26,
@@ -310,24 +310,36 @@
       "sha": "430a2293c29f4df7"
     },
     "crankmagic-settings.js": {
-      "version": 10,
-      "sha": "1a30a7901348fb33"
+      "version": 12,
+      "sha": "0df2769d4864837f"
+    },
+    "crankmagic-sharing.js": {
+      "version": 2,
+      "sha": "be7e03276bc0b7a1"
     },
     "crankmagic-sim.js": {
       "version": 24,
       "sha": "cf2673a40327b2ef"
+    },
+    "crankmagic-stage.css": {
+      "version": 14,
+      "sha": "ad58157c8d7e4453"
+    },
+    "crankmagic-stage.js": {
+      "version": 4,
+      "sha": "0dff95d04827bd5a"
     },
     "crankmagic-strategies.js": {
       "version": 4,
       "sha": "07440b83396bb9e2"
     },
     "crankmagic-sw.js": {
-      "version": 466,
-      "sha": "f73676253f46588e"
+      "version": 480,
+      "sha": "10eac6946e231775"
     },
     "crankmagic-table.js": {
-      "version": 27,
-      "sha": "1d037269dc9666e2"
+      "version": 29,
+      "sha": "fe42116791b85c09"
     },
     "crankmagic-tabletop.js": {
       "version": 30,
@@ -346,8 +358,8 @@
       "sha": "ca657a27caa9093d"
     },
     "crankmagic.css": {
-      "version": 289,
-      "sha": "c2eefa1815a66dd9"
+      "version": 290,
+      "sha": "24c93b0ee69f5b94"
     },
     "custom-model.js": {
       "version": 3,
@@ -468,6 +480,14 @@
     "user-state.js": {
       "version": 5,
       "sha": "434751e1995a6cf2"
+    },
+    "vendor/pixi-csp.min.js": {
+      "version": 8,
+      "sha": "4af5c20952cf2e1b"
+    },
+    "vendor/pixi.min.js": {
+      "version": 8,
+      "sha": "17f6ec595ff92e0d"
     },
     "xlsx-reader.js": {
       "version": 2,

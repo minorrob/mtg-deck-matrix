@@ -1,13 +1,74 @@
 # Who holds the work
 
+## Play tabletop preview, October 14, 2026
+
+October 16 CI result and release hold: run 38936762897 completed with a11y-board, deck-page-r3 and engine-breaks-anchors failures. The new Share Deck menu expectation is corrected (41 checks pass), and placing the staging sharing profile after cloud restores three release-profile mutation anchors without changing configuration. All 359 packaged files remain byte-identical to the accepted candidate (work/check-resend-artifact.mjs). The anchor scan now reports only the four pre-existing board anchors. An isolated accessibility diagnostic replacing its obsolete container selector exposes further assumptions about the retired rail, keyboard order and side pane; no accessibility assertions were removed and no diagnostic changes were copied into the release. Staging deployment and live mail remain pending the release gate. Prepared separate recipient login, read-only permission and playable-deck lobby scripts in ignored work/. Recurring release automation was rejected by automatic approval review and was not created; continuation is supervised in this chat. Production unchanged. ROB-10 retains the release evidence.
+
+October 16 lane ownership confirmed by Rob: Fable owns the game engine and simulation model; Codex owns UI and user management. Read `docs/handoff-fable-engine-2026-10-16.md` for the verified main/staging/production versions, pending commander patch to port selectively, playtest rules backlog, card-load program, and cross-lane contracts. Codex will not continue editing engine/simulation code. Shared cloud integration, migration numbering and releases require coordination; Codex retains the in-progress Resend staging release. Migrations 0003–0005 are now applied to staging, both secrets are installed, and the reusable invitation policy preserves its rules. Owner test-browser sign-in is authenticated. Release-acceptance 22 and local multiplayer 42 passed; application deployment and real email/new-invitee validation remain pending. Production source remains c9ad0e65; staging remains da39a2ed.
+
+October 16 invitation admission checkpoint: staging now has ACCESS_INVITE_TOKEN and RESEND_API_KEY; owner authenticated the dedicated test browser with an email code. Staging’s existing Invited policy was converted to reusable, retaining its ID, rules, precedence and sole app attachment. The admission helper only updates that configured policy, preserves existing rules, checks attachment and readback, and serializes updates with migration 0005’s D1 lease. It never creates per-invite legacy policies. Local proof: sharing 68, cloud-worker 126; removing prior include rules makes the preservation assertion fail, then restoration passes. Updated multiplayer acceptance checks the live saved deck name and its commander independently. Focused release branch codex/staging-resend-oct16 retains main’s deployed board/engine; the working UI branch keeps the unfinished camera/header and commander work. Application deployment, migrations 0003-0005, six public live deck shares and authenticated invitation/sharing delivery are still pending. Linear ROB-10. Production unchanged; preserve unrelated collection-model and four MP3s.
+
+October 16 focused email release candidate: branch `codex/staging-resend-oct16` carries scoped sharing/profiles and the Resend adapter from `4d86d73a`. The board, stage stylesheet and game engine match deployed main `da39a2ed`; the unfinished shared header and commander work remain on `codex/ui-playtest-plan-oct15`. Cache hashes were regenerated with `node tests/asset-versions.mjs --update` in an isolated source snapshot. The multiplayer acceptance suite now accepts `UAT_REF` and publishes a test account’s live Reviewer deck instead of expecting seven bundled decks. Owner reports email-code sign-in succeeds; the dedicated test-browser session is still missing. The service credential should be an account-owned API token with Access Apps and Policies Edit, stored as `ACCESS_INVITE_TOKEN` on staging. Resend’s restricted sender key is installed; admission secret, migrations 0003/0004, live six-deck shares, authenticated acceptance and deployment remain pending. Current staging profile revision 37 was checksum-verified and still has six 100-card decks, including D1 Tymna/Kraum and D3 Kiora. Linear: ROB-10. No production release.
+
+October 15 execution authorization: Rob approved the updated plan, starting with authenticated staging-deck verification and commander casting, then the remaining stories. Codex holds `codex/ui-playtest-plan-oct15` for this work. The engine lane is recorded paused until October 16; this authorized fix includes the narrowly required payment/commander engine changes and their tests, with no card-load-program work. Latest UI scope: mobile has one fixed Focused view; desktop shares header, configurable modules and collapsible drawers across Full/Table/Focus, retaining applicable non-Full drawer resizing. Camera appears in every view, owns desktop view switching, and shows Tilt only in Full. Screenshots retain feedback IDs. Cloudflare sign-in succeeded. Staging revision 36 verifies the current six: D1 Tymna + Kraum, D2 Chulane, D3 Kiora of Salt and Sand, D4 Felothar, D5 Teysa Karlov, D6 Krenko. The local shared catalog and fixture now match; the real lobby suite passed 114 checks. October 15 scope also includes live deck/library sharing, Reviewer/Collaborator permissions, shared decks in Play, administrator invitations, profiles and compact Settings. This explicitly authorized work includes the needed cloud API and migration while the engine lane remains paused. Cloudflare Email Sending inspection returned Unauthorized (2036); delivery setup is not yet proven.
+
+October 15 sharing checkpoint: P14 adds live owner-backed deck/library grants, Reviewer/Collaborator roles, explicit public access, revocation, autocomplete, Email Deck, account-only invitations, profiles and compact Settings. Verified staging owner ID is 1. Local proof: `node tests/sharing.mjs` (42 checks), `node tests/cloud-worker.mjs` (126), `node tests/sharing-ui.mjs` (11 browser checks), `node tests/settings-r3.mjs` (63), `node tests/table-lobby.mjs` (114), `node tests/release-pages.mjs` (223), feature wiring (124), service worker (9), and version hashes (124 assets with the unrelated collection-model edit held separately). Removing the write-permission check makes the Reviewer edit test fail. Wrangler's staging dry run bundles the Worker; its duplicate commander-case warning comes from the preserved unrelated local collection-model edit, which is excluded from this branch's commits. Screenshots S01-S04/P01-P04 are under `docs/play-overhaul/screenshots/sharing-*` and `settings-*`.
+
+Not deployed: apply migration 0003 and seed the six verified live deck IDs as public Reviewer shares before switching the staging chooser to account-based sharing. Email Sending returns Unauthorized (2036) despite the CLI's email scope. The sender domain, EMAIL binding, scoped ACCESS_INVITE_TOKEN, CLOUDFLARE_ACCOUNT_ID and ACCESS_INVITE_APP_IDS still need live configuration/verification. Never commit those credentials. Verified email changes preserve the canonical library/table identity; the former sign-in is denied. No automated test sends actual email. The earlier shared desktop header/Camera refactor is still in progress and has not passed the updated board suites; do not release that unfinished board tree. The rest of P01-P13 remains authorized and outstanding. Preserve the unrelated collection-model.js edit and four MP3s.
+
+**Holder:** Codex on Personal-HP, `codex/ui-play-tabletop-preview`, merged as `da39a2ed` on main via PR #734 (tested UI head `25669945`).
+Rob authorized the updated plan, starting with the reconciled checklist and working tabletop preview. On October 14 he explicitly transferred staging release ownership to Codex and authorized publishing this tested update so invitees can use his shared decks. Production remains unchanged.
+Latest corrections: another seat shows its hand as backs; screenshots include object IDs;
+notify before configurable side-pane modules. Rob canceled the HTML UAT guide and will transcribe the game; staging release remains authorized.
+Full screen now always uses the table, with no 3D switch. Tilt is 0–60 degrees, default 40;
+cards and mats share one physical camera perspective. Zoom is 60–120%, with 100% equal to the former 110%; table edges may clip at high zoom. Cards is separate: 100% equals the former 130%, 150% is another 40% larger. T11 is a container-free fan with seven visible
+cards and wrapping arrows for larger hands. Background and Table are independent local previews;
+host synchronization is pending. The supplied videos have been inspected for table structure.
+Latest readability correction: upper-left player life totals have a black container at 80% transparency, with opaque text. Chrome inspection confirms rgba(0,0,0,0.2) and text opacity 1; screenshot T21 is in tabletop-14-life-readability.png. Feature wiring, service-worker and asset-version checks pass; the unrelated collection-model edit remains untouched.
+Drawer controls T12/T13 now use 24-by-32-pixel edge tabs with thin chevrons, hover and keyboard-focus feedback. Browser inspection at widths 1400 and 1024 confirms size, edge attachment in both states, and Enter/Space toggling. Reference links for shadcn/ui, Radix, Atlassian and W3C are recorded in the requirements checklist. Feature wiring, service-worker and isolated asset-version checks pass.
+On the Stack now uses one overlapping card pile beside a numbered, wrapping name/player list. Clicking a name animates that card forward; clicking the pile cycles and wraps without changing resolution order. Stack and Card Preview share a size (178.56 by 249.98 pixels in the measured 900-high viewport). Chrome checks pass at widths 1400 and 1024, including reduced motion and a deliberately broken thumbnail-size assertion. The supplied October 14, 8:52 PM video is the Volcano background: an 8-second VP9 WebM with its audio stream removed, a still poster, and pause on reduced motion or hidden tabs. Battlefield cards can be dragged within their section or moved with Alt+Left/Right; ordering persists per profile, match, viewed seat and section without changing game state. The focused tabletop browser suite passes the interaction, refresh persistence, cross-section refusal and video checks. Evidence: `screenshots/tabletop-19-pile-video.png` (M01 stack, M04 Card Preview).
+Latest playtest update: drawer Add module / Restore default layout footers and their unused handlers are removed; Settings > Set Side Drawer Modules remains the placement control. Rob explicitly authorized every signed-in human to choose his decks. The lobby now offers a snapshot of all seven committed D1-D7 deck lists, without importing the collection or attaching the owner's library source IDs. Every shared choice is disabled until the active server confirms its card names. `tests/table-lobby.mjs` passes 118 checks, including an empty-library player submitting all seven complete, exact lists to the real rules server and an intentionally missing Sol Ring disabling affected decks. The focused tabletop browser suite passes through Settings-only configuration. Screenshots: tabletop-17-module-space.png (M01/M04) and tabletop-18-shared-decks.png (D1-D7). Staging was published from main `da39a2ed` as release `bad37e87`; Cloudflare Workers Builds succeeded (build `3fa1ab35-59bc-4baa-9ec6-97cbf7d0a9fd`, deployed version `2e431de5-dee3-41a0-af02-12f0d950176a`). The published 352-file tree matches the accepted build byte for byte. `tests/uat/release-acceptance.mjs` passed 22 checks on that build with live Scryfall access. Rob explicitly instructed publishing regardless of the full regression result; Actions run `38663852137` was still running at publication, so this release does not claim a green full-suite gate. Authenticated live readback was unavailable because this session has no staging Access service credentials; the deployment proof is Cloudflare’s successful staging build. No production release was requested or published.
+Latest staging-runtime proof: `tests/uat/play-e2e.mjs` passes 38 checks, including a separate signed-in invitee with an empty library seeing all seven validated shared decks, choosing Krenko, playing through turn 4 with the host, reconnecting, and replaying the completed record.
+Requirements and remaining scope: `docs/play-overhaul/REQUIREMENTS.md`.
+
+October 15 planning update: Rob requested a plan only after the multiplayer playtest, with implementation waiting for his go-ahead. The draft is `docs/play-overhaul/PLAYTEST-PLAN-2026-10-15.md`. Confirmed: mobile redesign, manual mana tapping with optional Auto-pay, and comfortable zoom near the middle to upper-middle with an oversized maximum. The game record for Luke’s reported missed draw has not been located locally; authenticated staging-log access is unavailable. Run 38663852137 finished with failures in a11y-board (old full-rail locator timeout), engine-breaks-anchors (four stale UI anchors), and generators (data inventory drift). Those are included in the baseline repair story; no application or engine behavior was changed for this planning request.
+
+October 15 expanded draft, branch `codex/ui-playtest-plan-oct15`, draft PR #735: P09–P13 cover turn-scoped Yield turn (auto-pass priority, preserve required choices), commander affordability and per-commander cast tax, corrected shared decks from Rob's staging profile, account Game Logs, and updated Play home/lobby with Human / AI seats and Cloudflare email delivery. Rob confirmed Easy / Normal / Claude. The earlier seven-deck repository snapshot is the wrong source; do not reuse it as proof of the current six. Authenticated profile/export verification, D1's partners and exact D3 identity, and Luke's game record remain outstanding. The plan adds cross-story rules scenarios, mobile accessibility, performance, invitation admission, and privacy acceptance. Current Cloudflare docs support outbound Email Sending beta on Workers Paid; this account's setup remains unverified. Documentation only: implementation still awaits Rob's go-ahead; preserve the unrelated collection-model.js and audio files.
+
+**In progress:** always-on Full screen Pixi ground with the existing DOM cards, three back-row seats,
+viewed-seat hand, camera controls and overlay rails. The isolated recorded-view harness is
+`tools/play-tabletop-preview.mjs`. It does not send actions to a live cloud match.
+The existing `collection-model.js` edit belongs to prior work and is not part of this change; temporarily held for exact-tree release checks, then restored from stash `3c136218f9be752fba3ff7ac1809fcbe80a68d07`. The stash and four unrelated audio files are retained.
+**Preview proof:** `tests/table-tabletop.mjs` passes geometry and Chrome interaction at
+1024/1280/1400 widths, tilt 0/60, zoom 60/120, with shared mat/card perspective, wrapping seven-card hands,
+private opponent backs, persistent canvas, overlay sizing, live reduced motion and phone fallback. Broken camera foreshortening and carousel wrapping deliberately failed their assertions, then were restored.
+`tests/table-board.mjs` passed 280 real-game checks after the latest module registry, shared perspective and camera correction. Service-worker (9), release builder (223), feature
+wiring (124) and data-integrity checks pass. Asset versions pass for all 123 assets with the unrelated collection-model edit held separately. The profile test uses real backup serialization against an isolated HTTP store, not a live cloud account. New zoom-limit mutations deliberately fail and are restored.
+The final focused browser pass also verifies all eleven module choices, Actions popup routing, Coach draft retention through moves, the Screen View popout beside its drawer, hand edge clipping and the 40% card-size increase.
+Commands: set UAT_CHROME to installed Chrome and GEOMETRY_REQUIRED=1 for the browser suites.
+Screenshot evidence is in `docs/play-overhaul/screenshots/`; the recorded preview runs with
+`node tools/play-tabletop-preview.mjs`. This is a preview milestone, not full-overhaul acceptance.
+
+**Outstanding:** shared events, final environments and motion, lobby, music, final module acceptance,
+Counterintelligence. The current preview milestone is deployed to staging. Side-pane modules started after notifying Rob: profile placement, drag and keyboard order, hide/restore and public-count Counter-Intel are implemented in the preview.
+The module registry now includes Screen View, History, AI Coach, Counter-Intel, Resources, On the Stack, Card Preview, Table Vitals, Recommended Actions, Chat, and Actions. AI Coach embeds its existing conversation and preserves drafts through moves; Recommended Actions uses that service. Chat is explicitly unavailable pending the contract below. Actions routes to its assigned drawer in Full screen, with ordinary popups retained elsewhere.
+Volcano uses Rob's supplied video; other environments and the table artwork still need final assets. Crowded-mat layout and text readability need further polish.
+
 ## The lanes (AGENTS.md, *Lanes*), since 2026-10-12
 
 | Lane | Held by | Branch | Doing |
 | --- | --- | --- | --- |
-| **Engine** | Claude, a cloud container; **paused 2026-10-12 at 90% of the week's usage: `docs/handoff-2026-10-12.md`** | `claude/admiring-franklin-58cxy4` | Waves 4 and after, to the most-played 90% of Commander cards (`docs/engine/plan-coverage-90.md`); waves to 4c merged and on staging; next, wave 4d |
-| **UI** | Fable (a Claude session in a cloud container), since 2026-10-12 | `claude/nice-hypatia-4ajdyi` (the session's own branch, by its harness; the `claude/ui-<topic>` form waits for the next topic) | Pass 1 of the Play screen on the Replit concept: the seven steps in the strip, Full screen as the table from your chair with a 3D switch, the right pane docked with Turn Resources (notes 9 and 10), the hover card no taller than the mat, motion and callouts, the lobby's fans and launch line. The plan: `docs/ui-lane/plan-play-ui-2026-10-12.md`. Brief: `docs/ui-lane/README.md` |
+| **Engine and simulation** | Fable on the external platform, resuming October 16 per Rob | Fable claims a new branch from current main | Engine, simulation, card loads; selective review of the existing commander/payment patch and playtest issues. See the October 16 Fable handoff. |
+| **UI and user management** | Codex on Personal-HP | `codex/ui-playtest-plan-oct15`; focused release `codex/staging-resend-oct16` | UI/Babylon, account profiles, sharing, Resend and invitations; coordinates current staging release. |
 
 ### Requests between the lanes
+
+Latest UI requests:
+- Provide authenticated table chat with shared ordered messages, reconnect history, sender/seat identity, send/refusal status and membership checks. The Chat module is a clearly marked placeholder until this exists; voice chat is a later feature.
+- Project authoritative round and turn-within-round into CrankRoomView, starting round 1. Define extra/skipped turns and eliminated seats; the UI must not guess from global turn divided by initial seat count.
+- Save preferences-only accounts through cloud sync. Existing sync treats a library without decks/lots as empty, so its first cloud save waits for library content. The drawer proof uses a real deck fixture and the existing authenticated backup flow against an isolated HTTP store; no production account was changed.
+
+UI appearance request (October 14, latest Rob feedback): add a host-owned `appearance: {background, table}` field to the table settings and public table view, validated against stable IDs. Initial IDs: background `volcano`, `forest`, `clouds`; table `wooden`, `stone`, `obsidian`. Persist through reconnect/rematch and freeze or authorize changes consistently with other table rules. The UI registry and local preview selectors are ready; local previews do not claim synchronization.
 
 A lane that needs something of the other's files asks here: the field or change, what it is for, an example. The
 other lane answers in the last column.
@@ -22,6 +83,64 @@ other lane answers in the last column.
 | 7 | UI | `tests/advisor.mjs` to pass again: its clock is fixed at 2026-10-11T12:00Z and its `ai_calls` rows are written at that clock, but the meter's 24-hour window (`cloud/ai.mjs` `since()`, through `aiMeter` in `cloud/worker.mjs`) runs on the real clock, so from 2026-10-12T11:59Z the rows fall outside it and the meter check fails on every branch, `main` included | The Actions gate is red for every PR until it is fixed; #725 (the UI pass) waits on it to merge | `cloud/worker.mjs` (`aiMeter`: pass the request's `now` to the door's `spent`), or the suite's rows at the real clock | Fixed on `main` in c629f8c1 (#723): `aiMeter` takes the request's clock. #727 puts the LLM seat's call log on the table's clock too (`cloud/game-room.mjs`), with `tools/ai-clock-breaks.py`; the AI suites pass with the machine's clock moved days either way |
 | 1 | Engine | The board to show the monarch (CR 725): the view's `state.players[i]` now carries `monarch: true` for the monarch, public to every seat, and no key for anyone else; the history says "Maya became the monarch" | Ginger, Queen of Sweets and Tamiyo, Upriser Crowned make their controller the monarch; the monarch draws a card at their end step, and a creature's combat damage to them makes its controller the monarch -- a player should see who holds it | The engine lane built it (Train E, the `monarch` branch); `docs/ui-lane/gameplay-anchor.md` lists the field. For the UI lane to show |
 | 2 | Engine | A switch in the host's Table rules (`crankmagic-table.js`): *The player who goes first skips their first draw*, on unless the host turns it off. The table's view carries `rules.skipFirstDraw` (`true` by default); the host sends it with the other rules, `POST .../rules {skipFirstDraw: false}`, refused once a seat is ready like the others. It matters only at a two-seat table: in a game of three or four nobody skips (CR 103.8c), so the switch can be shown only there | Rob, 2026-10-12: "this can be toggled off in game setup by the lobby owner". CR 103.8a as a house rule: with it off, the first player of a two-player game has a draw step on turn 1 | The engine lane built the rule, the table's field and the room's pod (`claude/first-draw-step`; `docs/ui-lane/gameplay-anchor.md`). For the UI lane to show |
+
+## 2026-10-14: Rob's decisions on the card load program
+
+Rob asked for "a card load-to-engine program" to replace session waves at about 7 cards a point. He reviewed the
+proposal (the Card Load Program page) and decided, on 2026-10-14:
+1. **The compiler first**, from oracle text; the Claude API as its backstop where the compiler's confidence in a card
+   is below 99%.
+2. **Candidate cards may play at playtest tables** (D5 changes for candidates only), labeled.
+3. "Real time" means **when a deck is saved**.
+4. Friday's work runs **in a fresh session per lane**.
+5. **Players are told their card was recorded** for the next wave.
+
+These supersede decisions 2 and 3 of 2026-10-12 (`docs/engine/plan-coverage-90.md`). The plan, the measurements
+behind it and the order of work: `docs/engine/plan-card-load-program.md`. Still Rob's to set: the backstop's daily
+cap. No lane runs the API writer before that step is built and the cap is set.
+
+Measured for it: a compiler built from the 2,470 defined cards' sentences reaches at most 21.7% of all cards and 12.5%
+of the 90% target's 4,186 still undefined (`docs/handoff-2026-10-12/sentence-reuse.mjs`). A point is about $10 of
+usage at API list prices, so a card in a session wave costs about $1.40, against an estimated 1 to 3 cents through the
+backstop.
+
+## 2026-10-14: main c9ad0e65 on staging and in production (Rob: "Release it all to prod")
+
+- **Staging:** `release/cloud-staging` e3b62777. Local walks: `release-acceptance` 22, `play-e2e` 35. Workers Builds
+  deployed version **1585a9a3**, its `play-worker.js` byte for byte the dry run (sha256 a3f3f187df92), the AI settings
+  bound with `AI_EVERYONE`. `staging-check`, signed in, reads c9ad0e65.
+- **Production** (`cloud-production`, by `tools/release-production.sh`):
+  - `release/pages` b0cdc46e, on 04b415de;
+  - local walks: `release-acceptance` 22 and `production-play-e2e` 27;
+  - Workers Builds deployed version **5bfe13ab**, its `play-worker.js` byte for byte the dry run (a3f3f187df92), the
+    AI settings bound on the "CrankMagic Accounts" sign-in;
+  - `version.json` reads c9ad0e65, profile `cloud-production`;
+  - the live walk at `https://crankmagic.com`: 22 checks, with `UAT_LIVE_NETWORK=1`. Without it, the walk's Scryfall
+    stub stopped *Measure* on 44 cards only Scryfall knows; `docs/release-production.md` now says so.
+  - **The rollback target** is the previous Play version, **8997e158** (fa1a7d3b), or the standby **a2c6fbb4**.
+  - It carries #718 to #732: the card waves 1 to 4c, the first-draw rule, the UI lane's Play pass 1, the AI door
+    open to everyone signed in.
+- **The AI door in production waits on the key:** `ANTHROPIC_API_KEY` on the `crankmagic` Worker (none at
+  2026-10-14). Until then it answers 503. On staging it waits on the AI testers' Access application, deleted or widened.
+
+## 2026-10-14: the AI door open to everyone signed in
+
+Rob: *"I want the AI door open on staging and production for anyone that can sign in (e.g. given I am manually adding
+who can access, I'm fine with those I want everyone I add to be able to use the AI features)."*
+- **Built:** the switch `AI_EVERYONE` (`ai.everyone` in a release profile). On, the invite list is the allowlist, and
+  the door takes the app's own sign-in as well as an AI application's. Off, both hold as before. On in `cloud-staging`
+  and `cloud-production`. Production's door uses the "CrankMagic accounts" sign-in, with staging's caps, model and
+  features. The pages release and the standby keep it shut. `privacy.html` says "signed in" where it said "invited to
+  AI features". The record is in `docs/ai-door.md`, *Open to everyone signed in*.
+- **Proof:** ai-door 61, agent-seat-table 19, release-pages 216, cloud-worker 120, advisor 56, coach 60,
+  room-agent-seat 23. Breaks: `tools/ai-everyone-breaks.py`, 13 of 13 caught. Four anchors this change moved were
+  re-anchored and caught again: three in `breaks-ai-staging-on.py`, one in `ai-clock-breaks.py`.
+- **Rob's steps:**
+  - staging: delete the Access application "CrankMagic AI (staging)", whose policy is the three AI testers, or give
+    it staging's people;
+  - production: the key (`ANTHROPIC_API_KEY` on the `crankmagic` Worker; none there at 2026-10-14; staging has one);
+  - production: the go for the release that carries it. That release ships all of main since fa1a7d3b (#718 to #727),
+    the UI lane's Play pass 1 (#725) among it.
 
 ## 2026-10-13: the lobby's buttons in reach at any window size (`claude/ui-lobby-seat-buttons`; Claude on Personal-HP)
 
@@ -164,7 +283,8 @@ usage for this").
   - Not defined, each waiting on another family: Sylvan Library, Arena of Glory, Mosswort Bridge, Six, Ragavan, Dauthi
     Voidwalker, Birgi and Emry.
   - The 80% set: 1,462 defined (from 1,347), 2,780 with every rule. The 90% set: 1,605 of 5,869 defined (from 1,411).
-    The defined cards now cover 60.3% of all card appearances (52.0% when the plan was written).
+    The defined cards now cover 60.3% of all card appearances (52.6% when the plan was written; the PRs and the
+    handoff said 52.0%, which was the 80% set's share, not the 90% target's).
   - Breaks: j1 33, j2 45, j3 111, j4 81, each caught.
 - **Wave 4c, merged #726** (main 0540d882): 78 of the next 80 most-played cards (ranks 501 to 723), in four lanes by theme, each owning the
   rules its cards need:
