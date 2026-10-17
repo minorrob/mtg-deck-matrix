@@ -117,6 +117,9 @@ export function createState(pod) {
     /* A two-player game's starting player skips their first draw step (CR 103.8a; rules/turn.mjs) unless the table's host
        turned that off, a house rule (game/room/table.mjs). Only a pod that turns it off carries the key, as above. */
     ...(pod?.skipFirstDraw === false ? {skipFirstDraw: false} : {}),
+    /* A cast tapped for tops up floating mana, and a source of more than one mana is tapped for all of it (rules/actions.mjs,
+       `pooledTaps`; Rob, 2026-10-15). Only a pod that asks carries the key, as above. */
+    ...(pod?.pooledTaps === true ? {pooledTaps: true} : {}),
     players: seats.map((seat, id) => ({
       id,
       name: seat.name ?? `Seat ${id + 1}`,
