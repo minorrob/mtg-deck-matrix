@@ -5,7 +5,7 @@ Bot: well-instructed work, federated across worker bots and orchestrated by one 
 nuanced design work. This package is the instruction set. Everything in it is bounded: one base commit, one branch per task,
 an exclusive file scope, explicit exclusions, acceptance criteria that a command proves, and a fixed return format.
 
-**Base commit for every task:** `main` at `7fcf26b2` or later (October 17; it holds #737 and the engine lane's #739; the earlier 1990ad1d base is superseded). The relay prompt is `ORCHESTRATOR-PROMPT-2026-10-17.md`.
+**Base commit for every task:** `main` at `9cf57d0c` or later (its full CI run is green) (October 17; it holds #737 and the engine lane's #739; the earlier 1990ad1d base is superseded). The relay prompt is `ORCHESTRATOR-PROMPT-2026-10-17.md`.
 **Read first, in this order:** `AGENTS.md`, `docs/ACTIVE.md` (top section and the lanes table), this file, then the task's own
 sources. **Repository:** https://github.com/minorrob/mtg-deck-matrix . **Linear:** project *CrankMagic — Tabletop Experience*,
 team *Army of 1*; the tracking issue for this package is named in ROB-11.
@@ -73,7 +73,12 @@ engine lane and are not touched):
 failure; no line of the file outside the four entries changed (`git diff --stat` shows one file, and the diff shows only those
 entries).
 
-### G2 · ROB-15 · Retarget the board accessibility suite to the current tabletop, deleting no coverage
+### G2 · ROB-15 · Retarget the board accessibility suite to the current tabletop — WITHDRAWN (October 17, 22:40 UTC)
+
+**Not for a bot.** PR #729 (another Claude session, merged to main as 9cf57d0c) rewrote `tests/a11y-board.mjs` for the tabletop and
+fixed what it found (contrast plates, one renderer across Full screen's visits); main's full CI run is green. Remaining accessibility
+work is filed as follow-ups on ROB-15, not as a bot task. The text below is kept as the record of what was asked.
+
 
 **Why:** `tests/a11y-board.mjs` (1,102 lines) is red on `main` at its first wait for `.cm-full-rail`, a container the board no
 longer has. It also expects `.cm-board-strip`, `.cm-board-pane`, `.cm-full-pill`, `.cm-full-side`, `.cm-full-others` and a
