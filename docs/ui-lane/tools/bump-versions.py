@@ -3,7 +3,7 @@ then the service worker's in the app, then the app's in the pages and the worker
 `node tests/asset-versions.mjs --update`."""
 import re, sys, pathlib
 ROOT = pathlib.Path.cwd()
-CHANGED = ["crankmagic-board.js", "crankmagic.css", "crankmagic-mats.css", "crankmagic-table.js", "crankmagic-settings.js"]
+CHANGED = ["crankmagic-stage.css", "crankmagic-stage.js"]   # the files this change ships; edit before each run
 PAGES = ["index.html", "crankmagic.html", "crankmagic-sw.js"]
 
 def bump(files, asset):

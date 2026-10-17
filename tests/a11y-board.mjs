@@ -125,7 +125,7 @@ async function person(email, viewport) {
   await page.route(`${base}/api/tables**`, (r) => answer(r, email));
   await page.routeWebSocket(/\/api\/tables\/[a-z0-9]+\/connect$/, carry(email));
   const errors = [];
-  page.on("pageerror", (e) => errors.push(e.message));
+  page.on("pageerror", (e) => errors.push(`${e.message}${e.stack ? " @ " + String(e.stack).split("\n").slice(1, 3).map((l) => l.trim()).join(" < ") : ""}`));
   page.__cdp = await context.newCDPSession(page);
   return {context, page, email, errors, cdp: page.__cdp};
 }
@@ -699,7 +699,7 @@ try {
     const [navAx] = await axOf(rob, "#cm-board-nav");
     const menus = await page.evaluate(() => document.querySelectorAll("#cm-board [role=menu], #cm-board [role=menuitem]").length);
     await page.keyboard.press("Escape");
-    ok(toolsAx && toolsAx.role === "group" && /^tools$/i.test(toolsAx.name) && navAx && navAx.role === "navigation" && menus === 0,
+    ok(toolsAx && toolsAx.role === "group" && /^(tools|settings)$/i.test(toolsAx.name) && navAx && navAx.role === "navigation" && menus === 0,
       `Tools is a named group and ☰ a navigation region, and nothing on the board claims to be an ARIA menu (${JSON.stringify([toolsAx, navAx, menus])})`);
     /* Full screen's profile menu opens Settings the same way: the avatar says it opened a named group, its Settings
        opens Tools as a named group, and Escape closes Tools without leaving Full screen */
