@@ -353,6 +353,107 @@ export function tapPlans(units, cost, limit = 2) {
   });
 }
 
+/** THE WAYS TO TAP FOR A COST ON TOP OF FLOATING MANA (`pooledTaps`, rules/actions.mjs): each source tapped once for one of
+ * its outputs, whole -- a two-mana rock makes both -- and the surplus left in the pool. The fewest sources first, then the
+ * least flexible (a basic before a dual, a dual before a five-color land). Sources alike (the same outputs) are one kind:
+ * the first of a kind is tapped before the second, and a kind's outputs are chosen in order, so two Forests are one way,
+ * not two, and each way is found once. Only callers that have excluded activation costs, spending restrictions and side
+ * effects use this; a symbol it does not pay ({X}, snow, Phyrexian, {2/W}) leaves the cost to tapping by hand. The search
+ * stops after SEARCH_LIMIT steps with what it found: on a crowded board a cast it cannot work out in time is not tapped
+ * for, and its player taps by hand -- an omitted shortcut, never a spell made illegal. */
+export const SEARCH_LIMIT = 4000;
+export function sourceTapPlans(units, pool, cost, limit = 2) {
+  if (cost.variable > 0 || cost.symbols.some((s) => !["generic", "colored", "hybrid"].includes(s.kind))) return [];
+  const size = cost.generic + cost.symbols.filter((s) => s.kind !== "generic").length;
+  const kind = (u) => Object.keys(u.outputs).sort().join("/");
+  const flexibility = (u) => Object.values(u.outputs).some((p) => MANA_KEYS.some((k) => k !== "C" && p[k])) ? Object.keys(u.outputs).length : 0;
+  const ordered = [...units].sort((a, b) => flexibility(a) - flexibility(b) || (kind(a) < kind(b) ? -1 : kind(a) > kind(b) ? 1 : 0));
+  const outputs = ordered.map((u) => Object.entries(u.outputs));
+  const alike = ordered.map((u, i) => i > 0 && kind(u) === kind(ordered[i - 1]));
+  const add = (a, b) => Object.fromEntries(MANA_KEYS.map((k) => [k, (a[k] || 0) + (b[k] || 0)]));
+  const ceiling = Array(ordered.length + 1); ceiling[ordered.length] = {};
+  for (let i = ordered.length - 1; i >= 0; i--) ceiling[i] = add(ceiling[i + 1], Object.fromEntries(MANA_KEYS.map((k) => [k, Math.max(0, ...outputs[i].map(([, p]) => p[k] || 0))])));
+  const result = [], dead = new Set();
+  let steps = 0;
+  /* `last`: the output the source before took, -1 when it was left -- what a source alike to it may still do. */
+  const visit = (i, available, taps, budget, last) => {
+    if (result.length >= limit || ++steps > SEARCH_LIMIT) return;
+    const payments = paymentOptions(available, cost, {life: 0}, limit - result.length);
+    if (payments.length) {
+      for (const payment of payments) result.push({taps, payment, key: `sources:${taps.map((t) => `${t.kind}=${t.color}`).join(";")}|${paymentKey(payment)}`});
+      return;
+    }
+    if (i === ordered.length || taps.length === budget || !canPay(add(available, ceiling[i]), cost, {life: 0})) return;
+    const key = `${i}|${budget - taps.length}|${alike[i] ? last : "*"}|${MANA_KEYS.map((k) => Math.min(size, available[k] || 0)).join(",")}`;
+    if (dead.has(key)) return;
+    const before = result.length, unit = ordered[i];
+    /* After a source alike that was left, this one is left too; after one tapped for an output, this one for that or a later. */
+    if (!alike[i] || last >= 0) for (let j = alike[i] ? last : 0; j < outputs[i].length; j++) {
+      const [color, mana] = outputs[i][j];
+      visit(i + 1, add(available, mana), [...taps, {id: unit.id, color, kind: kind(unit)}], budget, j);
+      if (result.length >= limit || steps > SEARCH_LIMIT) return;
+    }
+    visit(i + 1, available, taps, budget, -1);
+    if (result.length === before && steps <= SEARCH_LIMIT) dead.add(key);
+  };
+  /* No fewer sources than the largest outputs need to make up what the pool lacks. */
+  const most = ordered.map((_, i) => Math.max(...outputs[i].map(([, p]) => poolSize(p)))).sort((a, b) => b - a);
+  let least = 0;
+  for (let made = poolSize(pool); made < size && least < most.length; least++) made += most[least];
+  for (let budget = least; budget <= Math.min(size, ordered.length) && !result.length && steps <= SEARCH_LIMIT; budget++) visit(0, pool, [], budget, -1);
+  return result.map(({taps, payment, key}) => ({taps: taps.map(({id, color}) => ({id, color})), payment, key}));
+}
+
+/** ONE WAY TO TAP, BUILT RATHER THAN SEARCHED (what a cast offered from floating mana taps when nobody is asked; Rob's
+ * playtest, 2026-10-15: "use appropriate floating mana; reserve required colors; prefer basic lands for colored
+ * requirements ... use suitable colorless production for generic portions"). The floating mana first; then each colored
+ * and hybrid symbol it leaves from the least flexible source that makes it; then the generic from the rock whose mana
+ * fits it exactly or best, then the least flexible source left. Null when that does not pay -- the search decides then. */
+export function quickTapPlan(units, pool, cost) {
+  if (cost.variable > 0 || cost.symbols.some((s) => !["generic", "colored", "hybrid"].includes(s.kind))) return null;
+  const size = cost.generic + cost.symbols.filter((s) => s.kind !== "generic").length;
+  const kind = (u) => Object.keys(u.outputs).sort().join("/");
+  const flexibility = (u) => Object.values(u.outputs).some((p) => MANA_KEYS.some((k) => k !== "C" && p[k])) ? Object.keys(u.outputs).length : 0;
+  const ordered = [...units].sort((a, b) => flexibility(a) - flexibility(b) || (kind(a) < kind(b) ? -1 : kind(a) > kind(b) ? 1 : 0));
+  const single = (u) => Object.values(u.outputs).every((p) => poolSize(p) === 1);
+  let available = {...pool};
+  const taps = [], used = new Set(), held = {};
+  const tap = (u, color) => { used.add(u.id); taps.push({id: u.id, color}); for (const k of MANA_KEYS) available[k] = (available[k] || 0) + (u.outputs[color][k] || 0); };
+  const spare = (k) => (available[k] || 0) - (held[k] || 0);
+  /* A symbol of one of `colors`: held from the floating mana or what is tapped, else tapped for from the least flexible
+     source that makes it -- a one-mana source before a rock. */
+  const cover = (colors) => {
+    const have = colors.find((k) => spare(k) > 0);
+    if (have) { held[have] = (held[have] || 0) + 1; return true; }
+    for (const pick of [single, (u) => !single(u)]) for (const u of ordered) {
+      if (used.has(u.id) || !pick(u)) continue;
+      const out = Object.keys(u.outputs).find((o) => colors.some((k) => u.outputs[o][k] > 0));
+      if (out === undefined) continue;
+      tap(u, out);
+      const k = colors.find((c) => spare(c) > 0);
+      held[k] = (held[k] || 0) + 1;
+      return true;
+    }
+    return false;
+  };
+  for (const s of cost.symbols) if (s.kind === "colored" && !cover([s.color])) return null;
+  for (const s of cost.symbols) if (s.kind === "hybrid" && !cover(s.either)) return null;
+  const paid = () => paymentOptions(available, cost, {life: 0}, 1)[0];
+  let payment = paid();
+  while (!payment) {
+    const short = size - poolSize(available);
+    const left = ordered.filter((u) => !used.has(u.id));
+    if (!left.length) return null;
+    const out = (u) => Math.max(...Object.values(u.outputs).map(poolSize));
+    const fits = left.filter((u) => out(u) <= Math.max(short, 1)).sort((a, b) => out(b) - out(a));
+    const next = fits[0] ?? left.sort((a, b) => out(a) - out(b))[0];
+    const color = Object.keys(next.outputs).sort((a, b) => poolSize(next.outputs[b]) - poolSize(next.outputs[a]))[0];
+    tap(next, color);
+    payment = paid();
+  }
+  return {taps, payment, key: `sources:${taps.map((t) => `${kind(units.find((u) => u.id === t.id))}=${t.color}`).join(";")}|${paymentKey(payment)}`};
+}
+
 /* ---- convoke (CR 702.51a): creatures help cast a spell ----
  *
  * Each untapped creature its caster taps pays one mana of the spell's total cost instead: a colored one of a color the
