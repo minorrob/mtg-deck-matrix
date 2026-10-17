@@ -1,7 +1,9 @@
 # Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE.
 """The Play board's first pass on the Replit concept (Rob, 2026-10-12): the seven steps in the strip, Full screen as the
 table from your chair with its 3D switch, the right pane docked with Turn Resources, the hover card no taller than the
-mat, the callouts. crankmagic-board.js and crankmagic.css, held by the board's browser suite.
+mat, the callouts. crankmagic-board.js and crankmagic.css, held by the board's browser suite. The four breaks on Full
+screen's ground, its far sides and the 3D switch were removed on 2026-10-17: Codex rebuilt Full screen on the tabletop
+with no 3D switch (docs/ACTIVE.md, Play tabletop preview), so the code they anchored on is gone.
 
 Browser suite: run with GEOMETRY_REQUIRED=1, from the repository root, with nothing else editing the worktree:
 
@@ -32,18 +34,6 @@ BREAKS = [
     ('the hover card taller than the mat', 'crankmagic.css',
      ',calc(var(--peek-max,100vh) * 5 / 7))',
      ')'),
-    ('the ground is felt, not the mat', 'crankmagic-board.js',
-     'data-mat="${e(matOf(big.playerId))}"',
-     'data-mat="felt"'),
-    ('one other seat put at the left, not the back', 'crankmagic-board.js',
-     'n === 2 ? ["left", "right"] : ["back"]',
-     'n === 2 ? ["left", "right"] : ["left"]'),
-    ('3D never on the board', 'crankmagic-board.js',
-     '    host.dataset["3d"] = mode === "full" && three ? "on" : "off";',
-     '    host.dataset["3d"] = "off";'),
-    ('3D forgotten', 'crankmagic-board.js',
-     '  actions["board-3d"] = () => {three = !three; keep(THREE_KEY, three ? "on" : "off"); draw();};',
-     '  actions["board-3d"] = () => {three = !three; draw();};'),
     ('no layer for the callouts', 'crankmagic-board.js',
      '<div class="cm-board-callouts" id="cm-board-callouts" aria-hidden="true"></div>',
      ''),

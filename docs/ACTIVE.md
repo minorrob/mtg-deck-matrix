@@ -225,6 +225,25 @@ refused of the concept, and the passes to come: `docs/ui-lane/plan-play-ui-2026-
   The suites this pass touches are green on its head: a11y-board 288, table-board 281, table-lobby 89, board-callouts 33,
   settings-r3 63, board-choices 40, coach 60, design-tokens 91; the 19 breaks all caught.
 
+- **Handed off (2026-10-12, merged 2026-10-17):** `docs/ui-lane/astra/` (its `README.md` first): the handoff, Rob's two
+  briefs, Play home and the deals, assembled when this lane passed to Codex. Main has moved since (Codex's Play
+  overhaul, `docs/play-overhaul/`; the lanes as the table above states them now); where that directory and newer
+  records differ, the newer wins, as its README says.
+
+- **2026-10-17, the gate for #729 (Rob: "fix the a11y walk here"):** `tests/a11y-board.mjs` was red on main since the
+  tabletop rewrite (#734) removed the Full screen rail it drove (ROB-15), and `engine-breaks-anchors` for four breaks of
+  pass 1 on code the rewrite removed (ROB-16). Both fixed on `claude/nice-hypatia-4ajdyi`:
+  - the walk's Full screen section rewritten for the tabletop (its regions, Tools through the profile menu's Settings,
+    the table panel's last control in view and its scroll, a view left through Screen View, the words read over
+    the tabletop); the four stale breaks dropped;
+  - what the walk then found in the tabletop, fixed in `crankmagic-stage.css` and `crankmagic-stage.js`: the rear seat
+    label's commander name and the turn caption under 4.5:1 over the mats (now on dark plates), a fanned card's name
+    under 3:1 (now on a title plate), and Pixi 8's accessibility listeners reaching a destroyed renderer after leaving
+    Full screen (one renderer is now kept across visits; the stage is emptied and the canvas detached instead);
+  - **found, not fixed, for the UI lane:** opening Settings from Full screen's profile menu drops the keyboard focus
+    to the page body (the Settings button is redrawn away); the old rail kept it. The walk asserts what holds.
+  - Breaks: `game/tools/batch/breaks-a11y-tabletop.py`.
+
 ## 2026-10-12: the AI call log on the clock it is handed (`claude/advisor-meter-clock`)
 
 Claude Code on Personal-HP, at Rob's request, for one small fix in the engine lane's files. `advisor` failed on main
