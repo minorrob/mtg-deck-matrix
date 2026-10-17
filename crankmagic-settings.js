@@ -29,6 +29,7 @@ views.settings=async()=>{
       +`<p class="cm-settings-label">Default card size</p><div class="cm-settings-row">${C.cardScaleSlider({label:false,scope:'default'})}</div><p class="cm-muted">The size cards are drawn at everywhere: the hover preview, the card inspector's picture, and any view you have not sized. The Table and the Play board have their own slider, which sets that view's size over this one. Remembered on this device; a phone's scale stops sooner so the largest card still fits.</p>`
       +`<p class="cm-settings-label">Motion</p><div class="cm-settings-row"><button type="button" class="v-button cm-chip-toggle" data-action="set-motion" aria-pressed="${still}">Reduce motion</button></div>`
       +`<p class="cm-muted">Stills the animated backgrounds and transitions. Your device's own setting does the same whatever this says.</p>`
+      +(globalThis.CrankStage?`<p class="cm-settings-label">Table design</p><div class="cm-settings-row"><label class="cm-settings-select">Table <select data-settings-table aria-label="Table design">${CrankStage.appearances.tables.map(t=>`<option value="${e(t.id)}"${CrankStage.tableDesign(tableChoice()).id===t.id?' selected':''}>${e(t.name)}</option>`).join('')}</select></label></div><p class="cm-muted">The table the game is played on, for this device. The same choice is in the Camera menu at the table.</p>`:'')
       +`<div class="cm-settings-row">${b('Confirmations…','confirm-skips')}</div>`)
    +card('play','Play',
       `<div class="cm-settings-row"><button type="button" class="v-button cm-chip-toggle" data-action="set-step-by-step" aria-pressed="${stepByStep}">Stop at every step of my turn</button></div>`
@@ -89,5 +90,7 @@ actions['set-motion']=async()=>{const on=!(C.state.preferences&&C.state.preferen
 actions['save-budget-cap']=async el=>{const form=el.closest('[data-settings-cap]'),raw=String(form?.elements.cap.value??'').trim(),n=raw===''?null:Number(raw);
   if(n!==null&&!(Number.isFinite(n)&&n>0))throw Error('A budget cap is a number of dollars above zero, or empty for the pod’s rule.');
   await commit({type:'preferences',values:{defaultBudgetCap:n}});notice(n===null?'Decks with no cap of their own follow the pod’s rule again.':`Decks with no cap of their own are held to ${money(n)}.`);};
+const tableChoice=()=>{try{return localStorage.getItem('cm-stage-table')||'';}catch{return '';}};
+document.addEventListener('change',ev=>{const el=ev.target.closest?.('[data-settings-table]');if(!el||!globalThis.CrankStage)return;const design=CrankStage.tableDesign(el.value);if(design.id!==el.value)return;try{localStorage.setItem('cm-stage-table',design.id);}catch{}notice(`Table: ${design.name}.`);});
 document.addEventListener('submit',ev=>{const form=ev.target.closest?.('[data-settings-cap]');if(!form)return;ev.preventDefault();form.querySelector('[data-action="save-budget-cap"]')?.click();});
 });

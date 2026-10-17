@@ -207,7 +207,9 @@ globalThis.CrankBoard = Object.seal({
   const moduleSide = id => stageEnabled() ? ["left","right"].find(side => paneModules(side).includes(id)) : undefined;
   const openModuleDrawer = id => {const side=moduleSide(id); if(side === "left") stageRail=true; if(side === "right") stageSide=true;};
   const handStarts = new Map();
-  const appearance = {background: stored("cm-stage-background") || "volcano", table: stored("cm-stage-table") || "wooden"};
+  const appearance = {background: stored("cm-stage-background") || "volcano", table: stored("cm-stage-table") || ""};
+  /* The table design: a saved id, an older one (wooden, stone, obsidian) or none, resolved through the catalog (ROB-100). */
+  const tableDesignId = (id) => (globalThis.CrankStage ? CrankStage.tableDesign(id).id : id);
   let drag = null;          /* a bar being dragged: {kind: "rows"|"hand"|"pane"|"panel"|"side", x, y, from, per} */
   /* THE TABLE'S SOUND (B8; crankmagic-audio.js): one player for the page, armed by the first press on the board. */
   let audio = null;
@@ -783,7 +785,7 @@ globalThis.CrankBoard = Object.seal({
         <label>Cards <input type="range" min="70" max="150" value="${camera.cards}" data-stage-camera="cards" aria-label="Tabletop card size"><output>${camera.cards}%</output></label>
         <p class="cm-stage-style-note">Appearance preview · this device</p>
         <label class="cm-stage-style">Background <select data-stage-style="background" aria-label="Background">${(CrankStage.appearances.backgrounds).map(x=>`<option value="${x.id}"${appearance.background===x.id?" selected":""}>${x.name}</option>`).join("")}</select></label>
-        <label class="cm-stage-style">Table <select data-stage-style="table" aria-label="Table material">${(CrankStage.appearances.tables).map(x=>`<option value="${x.id}"${appearance.table===x.id?" selected":""}>${x.name}</option>`).join("")}</select></label></div>` : ""}</div>
+        <label class="cm-stage-style">Table <select data-stage-style="table" aria-label="Table design">${(CrankStage.appearances.tables).map(x=>`<option value="${x.id}"${tableDesignId(appearance.table)===x.id?" selected":""}>${x.name}</option>`).join("")}</select></label></div>` : ""}</div>
         <span class="cm-stage-error" role="status">${e(stageError)}</span>${ask()}
       </div>
       ${stageHand(big)}${screenPopover()}
@@ -847,7 +849,7 @@ globalThis.CrankBoard = Object.seal({
     if (!region || !globalThis.CrankStage) {globalThis.CrankStage?.unmount(); return;}
     const big = players()[focus] || players()[view.seat];
     const opts = {tilt: camera.tilt, zoom: camera.zoom, cards: camera.cards, reduced: globalThis.CrankMotion?.reduced() ?? false,
-      background: table?.appearance?.background || appearance.background, table: table?.appearance?.table || appearance.table,
+      background: table?.appearance?.background || appearance.background, table: tableDesignId(table?.appearance?.table || appearance.table),
       mats: [big, ...players().filter((p) => p.playerId !== big.playerId)].map((p) => matOf(p.playerId)),
       combat: view.state.phase.startsWith("COMBAT_"), instant: view.state.stack.some((s) => /Instant/i.test(typeLineOf(s))),
       onError(message) {stageError = message; const el = document.querySelector(".cm-stage-error"); if (el) el.textContent = `${message} Use Focus view in Board tools if graphics are unavailable.`;}};

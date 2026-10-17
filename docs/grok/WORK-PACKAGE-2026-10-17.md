@@ -5,7 +5,7 @@ Bot: well-instructed work, federated across worker bots and orchestrated by one 
 nuanced design work. This package is the instruction set. Everything in it is bounded: one base commit, one branch per task,
 an exclusive file scope, explicit exclusions, acceptance criteria that a command proves, and a fixed return format.
 
-**Base commit for every task:** `main` at `1990ad1d02171b6418fd54d9eeeb0ebda37a438c` (October 17; PR #737 merged, on staging).
+**Base commit for every task:** `main` at `7fcf26b2` or later (October 17; it holds #737 and the engine lane's #739; the earlier 1990ad1d base is superseded). The relay prompt is `ORCHESTRATOR-PROMPT-2026-10-17.md`.
 **Read first, in this order:** `AGENTS.md`, `docs/ACTIVE.md` (top section and the lanes table), this file, then the task's own
 sources. **Repository:** https://github.com/minorrob/mtg-deck-matrix . **Linear:** project *CrankMagic — Tabletop Experience*,
 team *Army of 1*; the tracking issue for this package is named in ROB-11.
