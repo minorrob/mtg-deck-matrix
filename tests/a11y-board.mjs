@@ -325,7 +325,8 @@ async function wordsContrast(page, scope, label = "") {
     if (process.env.A11Y_DEBUG && low && low.ratio < it.need) console.log("  debug", it.text, it.cls, it.trail, JSON.stringify({rgba: it.rgba, op: it.op, rects: it.rects, low}));
     ratios.sort((x, y) => x - y);
     const at = (q) => round(ratios[Math.min(ratios.length - 1, Math.floor(ratios.length * q))]);
-    return {text: it.text, cls: it.cls, where: it.where, need: it.need, glyphs: flat ? 0 : ratios.length, flat, worst: ratios.length ? round(ratios[0]) : null, p01: ratios.length ? at(0.01) : null, p05: ratios.length ? at(0.05) : null};
+    return {text: it.text, cls: it.cls, where: it.where, need: it.need, glyphs: flat ? 0 : ratios.length, flat, worst: ratios.length ? round(ratios[0]) : null, p01: ratios.length ? at(0.01) : null, p05: ratios.length ? at(0.05) : null,
+      trail: it.trail, ink: it.rgba.slice(0, 3).map(Math.round), op: round(it.op), low: low ? {x: low.x, y: low.y, shown: low.shown, bare: low.bare} : null};
   });
 }
 /* The worst word of each kind, kept for the report. */
@@ -337,7 +338,7 @@ async function readWords(page, scope, label, {min = 6} = {}) {
   spent.words[0] += Date.now() - t; spent.words[1] += 1;
   const read = words.filter((w) => w.glyphs > 0 || w.flat), low = read.filter((w) => w.worst < w.need);
   for (const w of read) {const k = kindOf(w), was = worstSeen.get(k); if (!was || w.worst < was.worst) worstSeen.set(k, {...w, label});}
-  ok(read.length >= min && !low.length, `${label}: every word reads at 4.5:1 (3:1 large) at its worst glyph pixel (${read.length} read${low.length ? `; under: ${low.sort((x, y) => x.worst - y.worst).slice(0, 8).map((w) => `"${w.text}" (.${w.cls}, ${w.where}${w.trail ? ", in " + w.trail : ""}; ink ${w.rgba.slice(0, 3).map(Math.round).join(",")}${w.op < 1 ? " at " + w.op : ""}) ${w.worst} of ${w.need}`).join("; ")}` : `; the lowest ${read.sort((x, y) => x.worst / x.need - y.worst / y.need)[0]?.worst}`})`);
+  ok(read.length >= min && !low.length, `${label}: every word reads at 4.5:1 (3:1 large) at its worst glyph pixel (${read.length} read${low.length ? `; under: ${low.sort((x, y) => x.worst - y.worst).slice(0, 8).map((w) => `"${w.text}" (.${w.cls}, ${w.where}${w.trail ? ", in " + w.trail : ""}; ink ${w.ink.join(",")}${w.op < 1 ? " at " + w.op : ""}${w.low ? `; lowest at ${w.low.x},${w.low.y}: ${w.low.shown.join(",")} on ${w.low.bare.join(",")}` : ""}) ${w.worst} of ${w.need}`).join("; ")}` : `; the lowest ${read.sort((x, y) => x.worst / x.need - y.worst / y.need)[0]?.worst}`})`);
   return words;
 }
 
