@@ -49,7 +49,7 @@ const accessEnv={...env,SHARING_ENABLED:'on',ACCESS_INVITE_TOKEN:'test-only',ACC
 let failAccess=false,holdAccess=null;
 const accessFetch=async(url,args)=>{
   if(url==='https://api.resend.com/emails')return mailFetch(url,args);
-  assert.equal(args.redirect,'error');assert.ok(args.signal instanceof AbortSignal);
+  assert.equal(args.redirect,'manual');assert.ok(args.signal instanceof AbortSignal);
   if(failAccess)return Response.json({success:false},{status:403});
   if(holdAccess)await holdAccess;
   if(url.endsWith(`/apps/${appId}`)){assert.equal(args.method,'GET');return Response.json({success:true,result:{policies:[{id:policyId}]}});}
@@ -91,7 +91,7 @@ eq((await ready.read(id,owner)).access,'owner','ownership survives email change'
 eq((await svc.profile(owner)).emailReady,true,'Resend key enables email readiness');
 eq((await sharing(db,{}).profile(owner)).emailReady,false,'missing key disables readiness');
 eq(requests[0].headers.authorization,'Bearer test-only','secret used only in provider authorization');
-eq(requests[0].redirect,'error','credentials cannot follow redirects');
+eq(requests[0].redirect,'manual','credentials cannot follow redirects');
 eq(requests[0].signal instanceof AbortSignal,true,'provider call has timeout');
 const retryId=await svc.queue(owner,'retry@example.com','Retry test','Exact same payload');
 failMail=true;await svc.delivery(owner,retryId);const failedRequest=requests.at(-1);failMail=false;
