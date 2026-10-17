@@ -39,7 +39,12 @@ integrates: a Grok PR is merged by the lane holder after review, never by a bot.
 
 ## The tasks
 
-### G1 · ROB-16 · Re-anchor the four stale board breaks
+### G1 · ROB-16 · Re-anchor the four stale board breaks — WITHDRAWN (October 17, 17:45 UTC)
+
+**Not for a bot.** The engine lane posted a verified patch on ROB-16 before any bot started (re-anchor one break, replace one, retire
+the two 3D breaks the removed switch made moot); it lands as its own small PR. The coordinator skips G1. The text below is kept as
+the record of what was asked.
+
 
 **Why:** `tests/engine-breaks-anchors.mjs` is red on `main` because four entries in `game/tools/batch/breaks-play-ui.py` name
 text that no longer exists in `crankmagic-board.js`, so those breaks change nothing and prove nothing.
