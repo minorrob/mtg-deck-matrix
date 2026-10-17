@@ -493,6 +493,9 @@ there, kept across a wake and replayed -- and the board's button beside the pass
 `room-untap-mana` holds Untap (Rob, 2026-10-11): a land tapped for mana, its mana unspent and nothing since, offered back
 to its person -- any of a run of taps, the game then exactly as before the first, to its hash -- and never a tap that did
 more (a pain land's damage), nor after a pass; kept with the room, replayed, and never taken by the fuzz harness's person.
+`room-pooled-taps` holds floating mana and the sources left paying a cast together (`pooledTaps`; Rob's playtest,
+2026-10-15): a table's new match offers the spell the pool and an untapped source pay between them, a match launched
+before offers what it offered, the saved match keeps which, and a game with the key replays the same.
 `table-basics` holds the table's basic lands as basic lands (Rob, 2026-10-11, Rampant Growth finding nothing): the table
 plays the engine's own definitions, the room's own basics are Basic and of their land type, and every card's scenarios
 pass played with the table's own lookup.
@@ -903,7 +906,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 512 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 513 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1137,6 +1140,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `room-beats` — `tests/room-beats.mjs`
 - `room-resolve-all` — `tests/room-resolve-all.mjs`
 - `room-untap-mana` — `tests/room-untap-mana.mjs`
+- `room-pooled-taps` — `tests/room-pooled-taps.mjs`
 - `table-basics` — `tests/table-basics.mjs`
 - `coach` — `tests/coach.mjs`
 - `board-choices` — `tests/board-choices.mjs`
