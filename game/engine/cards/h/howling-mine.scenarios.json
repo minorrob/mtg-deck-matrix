@@ -3,7 +3,7 @@
   "card": "Howling Mine",
   "scenarios": [
     {
-      "name": "Untapped: each player's draw step, that player draws one more",
+      "name": "Untapped: each player's draw step, that player draws one more -- none for Rob on turn 1, who went first in a two-player game and has no draw step then (CR 103.8a)",
       "setup": [
         {
           "seat": 0,
@@ -17,6 +17,22 @@
         {
           "to": {
             "turn": 2,
+            "phase": "UPKEEP",
+            "settle": true
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "hand",
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
             "phase": "MAIN1",
             "settle": true
           }
@@ -31,7 +47,7 @@
         {
           "seat": 0,
           "zone": "hand",
-          "count": 1
+          "count": 2
         }
       ]
     },

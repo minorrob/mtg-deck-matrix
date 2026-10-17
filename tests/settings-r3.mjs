@@ -52,7 +52,7 @@ try {
   /* 2. Settings, with everything that left the Menu. */
   await toSettings(page);
   ok(page.url().endsWith("#settings"), `Menu → Settings opens #settings (${page.url()})`);
-  eq(await page.$$eval(".cm-settings-card h2", (hs) => hs.map((h) => h.textContent)), ["Account", "Appearance", "Play", "Prices", "AI Coach", "Data", "About"], "Settings has the design's five sections, Play and AI Coach (AI-6)");
+  eq(await page.$$eval(".cm-settings-card h2", (hs) => hs.map((h) => h.textContent)), ["Account", "Profile", "Appearance", "Play", "Prices", "AI Coach", "Data", "About"], "Settings has the design's five sections, Play and AI Coach (AI-6)");
   /* AI COACH SETTINGS (AI-6): six controls, their defaults, saved with the preferences; the meter from the door. */
   await page.route(`${base}/api/ai-meter`, (r) => r.fulfill({json: {open: true, spentCents: 0.4, capCents: 25}}));
   const aiPanel = async () => {await page.locator(".cm-settings-card", {has: page.locator("h2", {hasText: "AI Coach"})}).getByRole("button", {name: "AI Coach settings…"}).click(); await page.locator("#cm-ai-settings").waitFor({timeout: 10000});};

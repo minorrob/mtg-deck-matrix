@@ -4,6 +4,12 @@
 Astra into a single directory path." This directory is that path. Everything Astra needs to read is here or named
 here; nothing depends on any session's container.*
 
+> **Merged 2026-10-17, five days after it was written.** Main moved meanwhile: Codex's Play overhaul (`docs/play-overhaul/`,
+> its `REQUIREMENTS.md` and `INSTRUCTIONS.md`), the lanes as `docs/ACTIVE.md` now states them (Fable the engine and
+> simulation, Codex the UI and user management), and Full screen rebuilt on a tabletop with no 3D switch. This directory
+> is the record of pass 1 and of Rob's direction on 2026-10-12; by section 2's precedence, `docs/ACTIVE.md` and
+> `docs/play-overhaul/` are newer and win where they differ.
+
 ## 1. Read, in this order
 
 | # | File | What it is |

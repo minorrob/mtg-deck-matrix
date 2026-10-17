@@ -64,7 +64,7 @@ function declare(s, turn, names) {
   eq((s.pendingTriggers ?? []).map((t) => t.abilityId), ["d"], "\"at the beginning of your draw step\" has triggered as the step began, and waits");
   resolveAwaiting(s, [0]);
   to(s, 3, "MAIN1");
-  eq(s.players[0].life, 42, "and resolves, every draw step of Rob's: turn 1's, and turn 3's under the held draw (it was lost there)");
+  eq(s.players[0].life, 41, "and resolves, every draw step of Rob's: turn 3's under the held draw (it was lost there) -- and none on turn 1, when Rob, first in a two-player game, had no draw step (CR 103.8a)");
 }
 {
   /* Towershell's return with a creature declared: the declaration asks, and the step's beginning is read before it. */

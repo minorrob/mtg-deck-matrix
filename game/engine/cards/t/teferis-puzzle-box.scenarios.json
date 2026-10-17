@@ -304,6 +304,237 @@
           ]
         }
       ]
+    },
+    {
+      "name": "On the battlefield as a two-player game begins: Rob goes first and has no draw step on turn 1 (CR 103.8a), so it does not trigger for him; at Maya's draw step on turn 2 it does",
+      "library": [
+        "Mountain",
+        "Island",
+        "Plains",
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Teferi's Puzzle Box"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rock"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bear",
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "hand",
+              "cards": [
+                "Rock"
+              ]
+            },
+            {
+              "seat": 0,
+              "zone": "library",
+              "count": 20
+            },
+            {
+              "stack": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "DRAW"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            },
+            {
+              "seat": 1,
+              "zone": "hand",
+              "cards": [
+                "Bear",
+                "Ogre",
+                "Mountain"
+              ]
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 1,
+                "options": [
+                  "Bear",
+                  "Ogre",
+                  "Mountain"
+                ],
+                "min": 3
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Ogre",
+            "Mountain",
+            "Bear"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Island",
+            "Plains",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rock"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 20
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "With the table's house rule that the first player draws (CR 103.8a's skip turned off): Rob has his draw step on turn 1, and it triggers there",
+      "skipFirstDraw": false,
+      "at": {
+        "turn": 1,
+        "phase": "DRAW"
+      },
+      "library": [
+        "Mountain",
+        "Island",
+        "Plains",
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Teferi's Puzzle Box"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rock"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bear",
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "stack": 1
+            },
+            {
+              "seat": 0,
+              "zone": "hand",
+              "cards": [
+                "Rock",
+                "Mountain"
+              ]
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Rock",
+                  "Mountain"
+                ],
+                "min": 2
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Mountain",
+            "Rock"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 19
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bear",
+            "Ogre"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
     }
   ]
 }

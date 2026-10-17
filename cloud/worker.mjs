@@ -31,9 +31,10 @@
 import {verifyAccess, Unauthorized} from "./access.mjs";
 import {createLibrary, Conflict, Invalid, LIMITS} from "./library.mjs";
 import {archidekt, ImportError} from "./import.mjs";
-import {createAi, settings, explain, coach, advise, readQuestion, Closed} from "./ai.mjs";
+import {createAi, everyone, settings, explain, coach, advise, readQuestion, Closed} from "./ai.mjs";
 import {readAsk, openVersion, adviseBrief} from "./advise.mjs";
 import {tables} from "./tables.mjs";
+import {social, ShareError, sharedIdentity} from "./sharing.mjs";
 
 /** Whether this person may seat an AI on Claude: the same gates as the table's object checks when it seats one. */
 /* AI COACH SETTINGS (AI-6): the person's own spending over the last 24 hours against their cap, from the call log, for
@@ -43,7 +44,7 @@ async function aiMeter(env, email, now) {
   if (!env.DB) return {open: false};
   let config;
   try {config = settings(env);} catch {return {open: false};}
-  const ai = createAi(env.DB, {now});
+  const ai = createAi(env.DB, {now, everyone: everyone(env)});
   if (!(await ai.allowed(email))) return {open: false};
   const {mine} = await ai.spent(email);
   return {open: true, spentCents: Math.round(mine / 10000 * 100) / 100, capCents: config.capPerson / 10000};
@@ -51,7 +52,7 @@ async function aiMeter(env, email, now) {
 async function aiSeatOpen(env, email, flag = "AI_PILOT") {
   if (env[flag] !== "on" || !env.DB) return false;
   try {settings(env);} catch {return false;}
-  return createAi(env.DB).allowed(email);
+  return createAi(env.DB, {everyone: everyone(env)}).allowed(email);
 }
 
 /** An invitation's link, `/api/join/<table>/<code>`: where it sends the person -- the app, at the seat's fragment -- or
@@ -124,6 +125,12 @@ export async function handle(request, env, deps = {}) {
     throw error;
   }
   if (await overLimit(env.LIMIT_PERSON, who.email)) return tooMany("your account");
+  const loginEmail = who.email;
+  if (env.SHARING_ENABLED === 'on') {
+    const canonical = await sharedIdentity(env.DB, loginEmail);
+    if (!canonical) return reply(401, {error: 'Your email address changed. Sign out and sign in with your verified new address.'});
+    who = {...who, email: canonical};
+  }
   /* Recovery entry gate: keep the GameTable class/storage, but admit no new HTTP or socket
      connections while the public app has Play closed. Existing sockets and clocks are not paused. */
   if (env.PLAY_TABLES_CLOSED === "on" && (path === "/api/tables" || path.startsWith("/api/tables/") || joinLocation(url)))
@@ -142,6 +149,10 @@ export async function handle(request, env, deps = {}) {
   const library = createLibrary(env.DB, {now: () => new Date(ms()).toISOString(), ...(deps.newId ? {newId: deps.newId} : {})});
   const person = await library.user(who.email);
   try {
+    if (path.startsWith('/api/social/')) {
+      if (env.SHARING_ENABLED !== 'on') return reply(503, {error: 'Sharing is not enabled on this copy yet.'});
+      return reply(200, await social(request, env, person, {now: () => new Date(ms()).toISOString(), ...(deps.fetchImpl ? {fetchImpl: deps.fetchImpl} : {})}));
+    }
     if (method === "GET" && path === "/api/auth/login") {
       /* Only a fragment of this app may be the destination: never another site, never another path. */
       const to = url.searchParams.get("to") || "";
@@ -155,7 +166,7 @@ export async function handle(request, env, deps = {}) {
        `to` already carried it; nothing here keeps it, and it seats only someone Access admits. */
     const joined = method === "GET" ? joinLocation(url) : null;
     if (joined) return new Response(null, {status: 302, headers: {location: joined, "cache-control": "no-store", "referrer-policy": "no-referrer"}});
-    if (method === "GET" && path === "/api/me") return reply(200, {email: person.email, since: person.createdAt, head: await library.head(person.id)});
+    if (method === "GET" && path === "/api/me") return reply(200, {email: loginEmail, since: person.createdAt, head: await library.head(person.id)});
     /* AN AI ON CLAUDE (AI-2): New table offers one only where the table's object would seat it (cloud/game-room.mjs
        `pilotOpen`): the switch on, the door's key, caps and model set, and this person on the allowlist. */
     if (method === "GET" && path === "/api/ai-seat") return reply(200, {open: await aiSeatOpen(env, person.email)});
@@ -174,7 +185,7 @@ export async function handle(request, env, deps = {}) {
        again later starts an empty account; removing the sign-in itself is Access's, and Rob's runbook step. */
     if (method === "DELETE" && path === "/api/account") {
       const input = await body(request);
-      if (String(input.confirm || "").trim().toLowerCase() !== person.email) return reply(400, {error: "Type the address you are signed in as to delete this account. Nothing was deleted."});
+      if (String(input.confirm || "").trim().toLowerCase() !== loginEmail) return reply(400, {error: "Type the address you are signed in as to delete this account. Nothing was deleted."});
       return reply(200, {deleted: {email: person.email, ...await library.forget(person.id, person.email)}});
     }
     const version = /^\/api\/library\/versions\/([0-9a-f-]{36})$/.exec(path);
@@ -184,6 +195,7 @@ export async function handle(request, env, deps = {}) {
     }
     return reply(404, {error: "No such endpoint."});
   } catch (error) {
+    if (error instanceof ShareError) return reply(error.status, {error: error.message});
     if (error instanceof Conflict) return reply(409, {error: "Your library changed on another device since this one last saved.", head: error.head});
     if (error instanceof Invalid) return reply(400, {error: `The cloud refused that: ${error.message}.`});
     throw error;
@@ -191,18 +203,26 @@ export async function handle(request, env, deps = {}) {
 }
 
 /* THE AI DOOR (M6; cloud/ai.mjs, docs/ai-door.md). Its own Access application, so a library sign-in -- which may
-   be the emailed code -- never opens it; then the allowlist, the key and the caps, each shut until Rob sets it. */
+   be the emailed code -- never opens it; then the allowlist, the key and the caps, each shut until Rob sets it. Where
+   it is open to everyone signed in (AI_EVERYONE, Rob 2026-10-14), the library's sign-in opens it too, and the invite
+   list is the allowlist. */
 const AI_BODY = 64 * 1024;
 const AI_ROUTES = {"/api/ai/explain": "Explain", "/api/ai/coach": "The Coach", "/api/ai/advise": "The advisor"};
 async function aiDoor(request, env, deps, url, ms) {
   if (!env.AI_ACCESS_AUD) return reply(503, {error: "AI features are not switched on here yet."});
   let who;
-  try {who = await verifyAccess(request, env, {fetchImpl: deps.fetchImpl, now: ms(), audience: env.AI_ACCESS_AUD});}
+  const audience = everyone(env) ? [env.AI_ACCESS_AUD, env.ACCESS_AUD] : env.AI_ACCESS_AUD;
+  try {who = await verifyAccess(request, env, {fetchImpl: deps.fetchImpl, now: ms(), audience});}
   catch (error) {
     if (error instanceof Unauthorized) return reply(401, {error: "Sign in to CrankMagic's AI features to use them.", why: error.message});
     throw error;
   }
   if (await overLimit(env.LIMIT_PERSON, who.email)) return tooMany("your account");
+  if (env.SHARING_ENABLED === 'on') {
+    const canonical = await sharedIdentity(env.DB, who.email);
+    if (!canonical) return reply(401, {error: 'Sign in with your verified new email address.'});
+    who = {...who, email: canonical};
+  }
   /* Signed in to the AI door, back to the app: the board sends a person here when its first question finds them signed
      in to the library only (Access's sign-in keeps a path and drops a fragment, so the place to return is `to`). */
   if (request.method === "GET" && url.pathname === "/api/ai/login") {
@@ -214,7 +234,7 @@ async function aiDoor(request, env, deps, url, ms) {
   if (!feature) return reply(404, {error: "No such endpoint."});
   if (request.method !== "POST") return reply(405, {error: `${feature} is a POST.`});
   if (!fromTheApp(request, url, "ai")) return reply(403, {error: "That request did not come from CrankMagic."});
-  const ai = createAi(env.DB, {now: () => new Date(ms()).toISOString(), ...(deps.newId ? {newId: deps.newId} : {})});
+  const ai = createAi(env.DB, {now: () => new Date(ms()).toISOString(), everyone: everyone(env), ...(deps.newId ? {newId: deps.newId} : {})});
   if (!(await ai.allowed(who.email))) return reply(403, {error: "Your account is not on CrankMagic's list for AI features. Ask the person who invited you."});
   /* The Coach sends a person's hand and board, which the privacy page must say before it is offered: its own switch. */
   if (feature === "The Coach" && env.AI_COACH !== "on") return reply(503, {error: "The Coach is not switched on here yet."});

@@ -5,7 +5,8 @@
  * it was sent and answers as the Messages API does -- so nothing here spends, and nothing here needs a key.
  *
  *   Shut     each of Rob's four decisions is a gate that is closed while unset: the AI Access application, the
- *            allowlist, the key, the caps. A library sign-in never opens it.
+ *            allowlist, the key, the caps. A library sign-in never opens it, unless the door is open to everyone
+ *            signed in (AI_EVERYONE, Rob 2026-10-14); a service token never does.
  *   Sent     only what the request carries, bounded; the key rides only in the provider's header, never back out.
  *   Spent    every call is logged -- who, what, the model that answered, tokens, cost, outcome -- and the caps
  *            are read from that log over a rolling 24 hours, before anything is sent.
@@ -39,9 +40,9 @@ const b64url = (buf) => Buffer.from(buf).toString("base64url");
 const {publicKey, privateKey} = await crypto.subtle.generateKey({name: "RSASSA-PKCS1-v1_5", modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256"}, true, ["sign", "verify"]);
 const jwk = {...await crypto.subtle.exportKey("jwk", publicKey), kid: "k1"};
 let clock = Date.parse("2026-09-26T18:00:00Z");
-async function token({aud = AI_AUD, email = "rob@example.com"} = {}) {
+async function token({aud = AI_AUD, email = "rob@example.com", ...more} = {}) {
   const h = b64url(JSON.stringify({alg: "RS256", kid: "k1", typ: "JWT"}));
-  const p = b64url(JSON.stringify({aud: [aud], iss: `https://${TEAM}`, email, exp: clock / 1000 + 3600, iat: clock / 1000}));
+  const p = b64url(JSON.stringify({aud: [aud], iss: `https://${TEAM}`, ...(email === null ? {} : {email}), ...more, exp: clock / 1000 + 3600, iat: clock / 1000}));
   return `${h}.${p}.${b64url(await crypto.subtle.sign("RSASSA-PKCS1-v1_5", privateKey, new TextEncoder().encode(`${h}.${p}`)))}`;
 }
 
@@ -94,6 +95,28 @@ eq((await call({headers: {"x-crankmagic": "sync"}})).status, 403, "a request wit
 eq((await call({method: "GET"})).status, 405, "explain is a POST");
 eq((await call({path: "/api/ai/elsewhere"})).status, 404, "no other AI endpoint");
 eq([sent.length, calls().length], [0, 0], "none of that reached the provider or spent anything");
+
+/* EVERYONE SIGNED IN (Rob, 2026-10-14: "I want everyone I add to be able to use the AI features"): with AI_EVERYONE on,
+   the invite list is the list, and the library's own sign-in opens the door; every other gate holds as before. */
+const EVERYONE = {...OPEN, AI_EVERYONE: "on"};
+const stranger = (aud = AI_AUD) => token({aud, email: "new@example.com"});
+const {ANTHROPIC_API_KEY: _k0, ...everyoneNoKey} = EVERYONE;
+eq((await call({env: everyoneNoKey, jwt: await stranger(AUD)})).status, 503, "AI_EVERYONE on, but no key entered: still shut");
+eq((await call({env: EVERYONE, jwt: await token({aud: "aud-elsewhere", email: "new@example.com"})})).status, 401, "a token for any other application is still refused");
+eq((await call({env: EVERYONE, jwt: null})).status, 401, "and no token is still 401");
+eq((await call({jwt: await stranger()})).status, 403, "with AI_EVERYONE off, someone not on the allowlist is refused, as before");
+eq((await call({env: {...EVERYONE, SERVICE_SEATS: "on"}, jwt: await token({aud: AUD, email: null, common_name: "agent-1.access"})})).status, 403,
+  "a service token, a test identity seated at staging's tables and no person, is not let in by AI_EVERYONE");
+eq(sent.length, 0, "none of that reached the provider");
+answer = reply("[[Mountain]] is there.");
+eq((await call({env: EVERYONE, jwt: await stranger()})).status, 200, "with it on, a person Access let in who is not on the allowlist is answered");
+eq((await call({env: EVERYONE, jwt: await stranger(AUD)})).status, 200, "and the library's own sign-in opens the door");
+eq(calls().map((c) => [c.email, c.outcome]), [["new@example.com", "ok"], ["new@example.com", "ok"]], "each call logged under the person, on the same caps");
+const library = async (path, env) => (await handle(new Request(`https://crankmagic.test${path}`, {headers: {"cf-access-jwt-assertion": await stranger(AUD)}}), env, {fetchImpl, now: clock})).json();
+eq([(await library("/api/ai-advise", {...EVERYONE, AI_ADVISE: "on"})).open, (await library("/api/ai-advise", {...OPEN, AI_ADVISE: "on"})).open], [true, false], "the deck page offers the advisor to everyone signed in only with AI_EVERYONE on");
+eq([(await library("/api/ai-meter", EVERYONE)).open, (await library("/api/ai-meter", OPEN)).open], [true, false], "and the settings' meter reads the same way");
+DB.raw.prepare("DELETE FROM ai_calls").run();
+sent = [];
 
 /* SENT: an answer, and exactly what went out. */
 answer = reply("It scores [[6.5]]? No: it wins on turn 10.8 because [[Goblin Chieftain]] lands late.");
