@@ -631,6 +631,8 @@ try {
   const fullGeo = await maya.page.evaluate(() => {const r = document.getElementById("cm-board").getBoundingClientRect(); return [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height), innerWidth, innerHeight, document.documentElement.scrollWidth - document.documentElement.clientWidth];});
   ok(fullGeo[0] === 0 && fullGeo[1] === 0 && fullGeo[2] === fullGeo[4] && fullGeo[3] === fullGeo[5] && fullGeo[6] === 0, `Full screen takes the whole window by itself where the browser gives no full screen (${fullGeo.slice(0, 4).join(",")} of ${fullGeo[4]}×${fullGeo[5]})`);
   ok(await maya.page.locator(".cm-stage-rear .cm-seatboard").count() === 1 && await maya.page.locator(".cm-full-mine .cm-seatboard.is-you").count() === 1, "the other seat across the top, hers across the foot");
+  const backRow = await maya.page.evaluate(() => {const w = (s) => parseFloat(getComputedStyle(document.querySelector(s)).width); return {rear: w(".cm-stage-rear"), front: w(".cm-stage-front")};});
+  ok(Math.abs(backRow.rear - backRow.front) < 1, `the one other seat spans the whole back row, as wide as her own mat (${Math.round(backRow.rear)} of ${Math.round(backRow.front)}px), not a third of it`);
   ok(await maya.page.locator('[data-action=board-3d], [data-action=board-stage]').count()===0, "Full screen always uses the tabletop; there is no 3D toggle");
   await maya.page.getByRole('button',{name:'Camera',exact:false}).click();
   await maya.page.getByRole('slider',{name:'Table tilt',exact:true}).fill('0');
