@@ -81,8 +81,10 @@ export function runScenario(scenario, cards, fixtures = {}) {
   const names = ["Rob", "Maya", "Trey", "Sam"].slice(0, seats);
   /* `skipFirstDraw: false`: the table's house rule that the starting player of a two-player game has their first draw step
      after all (CR 103.8a; game/room/table.mjs). */
+  /* `pooledTaps: true`: a cast tapped for tops up floating mana and taps a source for all it makes (rules/actions.mjs), as a
+     table's new matches do. */
   const state = createState({matchId: "scenario", seed: scenario.name, players: names.map((name) => ({name})),
-    ...(scenario.skipFirstDraw === false ? {skipFirstDraw: false} : {})});
+    ...(scenario.skipFirstDraw === false ? {skipFirstDraw: false} : {}), ...(scenario.pooledTaps === true ? {pooledTaps: true} : {})});
   const rng = createRng(scenario.name);
   const record = (list) => { events.push(...(list ?? [])); return list; };
 

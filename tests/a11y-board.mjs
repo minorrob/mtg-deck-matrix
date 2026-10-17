@@ -125,14 +125,20 @@ async function person(email, viewport) {
   await page.route(`${base}/api/tables**`, (r) => answer(r, email));
   await page.routeWebSocket(/\/api\/tables\/[a-z0-9]+\/connect$/, carry(email));
   const errors = [];
-  page.on("pageerror", (e) => errors.push(e.message));
+  page.on("pageerror", (e) => errors.push(`${e.message}${e.stack ? " @ " + String(e.stack).split("\n").slice(1, 3).map((l) => l.trim()).join(" < ") : ""}`));
   page.__cdp = await context.newCDPSession(page);
   return {context, page, email, errors, cdp: page.__cdp};
 }
 const theme = (page, choice) => page.evaluate((t) => document.querySelector(`[data-action=set-theme][data-theme-choice=${t}]`).click(), choice);
 const view = async (page, v) => {
+  if (!(await page.locator(`[data-action=board-view][data-view=${v}]`).count())) {
+    /* the tabletop's Full screen keeps the view buttons in its Screen View popout, under the profile menu */
+    await page.click(".cm-stage-top [data-action=board-profile]");
+    await page.click(".cm-profile-menu [data-action=board-screen-menu]");
+    await page.locator(".cm-screen-popout").waitFor();
+  }
   await page.click(`[data-action=board-view][data-view=${v}]`);
-  await page.locator(v === "full" ? ".cm-full-rail" : v === "table" ? ".cm-board-table" : ".cm-board-mat").waitFor();
+  await page.locator(v === "full" ? ".cm-stage-top" : v === "table" ? ".cm-board-table" : ".cm-board-mat").waitFor();
   await page.waitForTimeout(120);
 };
 /* Rest the pointer where nothing reacts to it (a card under it would be shown large). */
@@ -252,8 +258,8 @@ async function wordsContrast(page, scope, label = "") {
       ox.clearRect(0, 0, 1, 1); ox.fillStyle = "rgb(1, 2, 3)"; ox.fillStyle = st.color; ox.fillRect(0, 0, 1, 1);
       const [cr, cg, cb, ca] = ox.getImageData(0, 0, 1, 1).data, rgba = [Math.min(255, cr * bright), Math.min(255, cg * bright), Math.min(255, cb * bright), ca / 255];
       const size = parseFloat(st.fontSize), weight = Number(st.fontWeight) || 400, symbol = !/[\p{L}\p{N}]/u.test(words);
-      const where = el.closest(".cm-mat") ? "mat" : el.closest(".cm-board-hand") ? "hand" : el.closest(".cm-board-strip, .cm-full-pill, .cm-phone-pill") ? "strip"
-        : el.closest(".cm-board-pane, .cm-full-side, .cm-full-rail") ? "side" : el.closest(".cm-board-table") ? "table" : el.closest(".cm-lobby-seat") ? "seat" : el.closest(".cm-table-center") ? "rules" : "page";
+      const where = el.closest(".cm-mat") ? "mat" : el.closest(".cm-board-hand") ? "hand" : el.closest(".cm-board-strip, .cm-stage-top, .cm-full-pill, .cm-phone-pill") ? "strip"
+        : el.closest(".cm-board-pane, .cm-full-side, .cm-full-rail, .cm-stage-rail, .cm-stage-side") ? "side" : el.closest(".cm-board-table") ? "table" : el.closest(".cm-lobby-seat") ? "seat" : el.closest(".cm-table-center") ? "rules" : "page";
       out.push({text: words.slice(0, 40), cls: String(el.className && el.className.baseVal !== undefined ? el.className.baseVal : el.className || el.tagName).slice(0, 40) || el.tagName,
         where, rgba, op, need: symbol || size >= 24 || (size >= 18.66 && weight >= 700) ? 3 : 4.5, rects, nodes: own,
         /* on top where it is drawn (not under a card's picture, say): what is at its middle is it, or holds it */
@@ -319,7 +325,8 @@ async function wordsContrast(page, scope, label = "") {
     if (process.env.A11Y_DEBUG && low && low.ratio < it.need) console.log("  debug", it.text, it.cls, it.trail, JSON.stringify({rgba: it.rgba, op: it.op, rects: it.rects, low}));
     ratios.sort((x, y) => x - y);
     const at = (q) => round(ratios[Math.min(ratios.length - 1, Math.floor(ratios.length * q))]);
-    return {text: it.text, cls: it.cls, where: it.where, need: it.need, glyphs: flat ? 0 : ratios.length, flat, worst: ratios.length ? round(ratios[0]) : null, p01: ratios.length ? at(0.01) : null, p05: ratios.length ? at(0.05) : null};
+    return {text: it.text, cls: it.cls, where: it.where, need: it.need, glyphs: flat ? 0 : ratios.length, flat, worst: ratios.length ? round(ratios[0]) : null, p01: ratios.length ? at(0.01) : null, p05: ratios.length ? at(0.05) : null,
+      trail: it.trail, ink: it.rgba.slice(0, 3).map(Math.round), op: round(it.op), low: low ? {x: low.x, y: low.y, shown: low.shown, bare: low.bare} : null};
   });
 }
 /* The worst word of each kind, kept for the report. */
@@ -331,7 +338,7 @@ async function readWords(page, scope, label, {min = 6} = {}) {
   spent.words[0] += Date.now() - t; spent.words[1] += 1;
   const read = words.filter((w) => w.glyphs > 0 || w.flat), low = read.filter((w) => w.worst < w.need);
   for (const w of read) {const k = kindOf(w), was = worstSeen.get(k); if (!was || w.worst < was.worst) worstSeen.set(k, {...w, label});}
-  ok(read.length >= min && !low.length, `${label}: every word reads at 4.5:1 (3:1 large) at its worst glyph pixel (${read.length} read${low.length ? `; under: ${low.sort((x, y) => x.worst - y.worst).slice(0, 8).map((w) => `"${w.text}" (.${w.cls}, ${w.where}) ${w.worst} of ${w.need}`).join("; ")}` : `; the lowest ${read.sort((x, y) => x.worst / x.need - y.worst / y.need)[0]?.worst}`})`);
+  ok(read.length >= min && !low.length, `${label}: every word reads at 4.5:1 (3:1 large) at its worst glyph pixel (${read.length} read${low.length ? `; under: ${low.sort((x, y) => x.worst - y.worst).slice(0, 8).map((w) => `"${w.text}" (.${w.cls}, ${w.where}${w.trail ? ", in " + w.trail : ""}; ink ${w.ink.join(",")}${w.op < 1 ? " at " + w.op : ""}${w.low ? `; lowest at ${w.low.x},${w.low.y}: ${w.low.shown.join(",")} on ${w.low.bare.join(",")}` : ""}) ${w.worst} of ${w.need}`).join("; ")}` : `; the lowest ${read.sort((x, y) => x.worst / x.need - y.worst / y.need)[0]?.worst}`})`);
   return words;
 }
 
@@ -406,8 +413,8 @@ function regionOf() {
     if (!el.closest("#cm-board")) return `outside:${el.tagName.toLowerCase()}${el.id ? "#" + el.id : ""}.${String(el.className || "").split(" ")[0]}`;
     const slot = el.closest(".cm-board-slot");
     if (slot) return `board-${slot.dataset.area}`;
-    for (const [q, name] of [[".cm-hand-show", "fan"], [".cm-board-strip", "strip"], [".cm-full-rail", "rail"], [".cm-board-pane", "seats"], [".cm-board-panegrip", "seats"], [".cm-full-pill", "pill"], [".cm-full-others", "others"],
-      [".cm-board-ask", "ask"], [".cm-board-hand", "hand"], [".cm-board-rowbar", "rowbar"], [".cm-board-pie", "counter"], [".cm-full-side", "side"], [".cm-full-mine", "board"], [".cm-board-stage", "board"], [".cm-board-panel", "panel"]]) if (el.closest(q)) return name;
+    for (const [q, name] of [[".cm-hand-show", "fan"], [".cm-board-strip", "strip"], [".cm-stage-top", "strip"], [".cm-full-rail", "rail"], [".cm-board-pane", "seats"], [".cm-board-panegrip", "seats"], [".cm-full-pill", "pill"], [".cm-full-others", "others"], [".cm-stage-rear", "others"],
+      [".cm-board-ask", "ask"], [".cm-board-hand", "hand"], [".cm-stage-hand", "hand"], [".cm-board-rowbar", "rowbar"], [".cm-board-pie", "counter"], [".cm-full-side", "side"], [".cm-stage-rail", "side"], [".cm-stage-handle", "side"], [".cm-full-mine", "board"], [".cm-board-stage", "board"], [".cm-board-panel", "panel"]]) if (el.closest(q)) return name;
     return `board:${el.className}`;
   };
 }
@@ -598,8 +605,9 @@ try {
     focus: ["strip", "seats", "board", "ask", "hand"],
     /* Table: the strip, the boards as they sit (top row left to right, then the bottom), the bar, the life counter, the hand */
     table: ["strip", "board-a", "board-b", "board-c", "board-d", "rowbar", "counter", "ask", "hand"],
-    /* Full screen: the rail, the others, the pill, your board, your hand, the side column */
-    full: ["rail", "others", "pill", "board", "hand", "side"],
+    /* Full screen (the tabletop): the top strip with the pill and the profile, the other seats across the back, your board
+       with its corner and the camera, what the room asks, your hand, then the two drawers' handles */
+    full: ["strip", "others", "board", "ask", "hand", "side"],
   };
   for (const who of [rob, maya]) {
     const page = who.page, w = page.viewportSize().width;
@@ -692,54 +700,51 @@ try {
     const [navAx] = await axOf(rob, "#cm-board-nav");
     const menus = await page.evaluate(() => document.querySelectorAll("#cm-board [role=menu], #cm-board [role=menuitem]").length);
     await page.keyboard.press("Escape");
-    ok(toolsAx && toolsAx.role === "group" && /^tools$/i.test(toolsAx.name) && navAx && navAx.role === "navigation" && menus === 0,
+    ok(toolsAx && toolsAx.role === "group" && /^(tools|settings)$/i.test(toolsAx.name) && navAx && navAx.role === "navigation" && menus === 0,
       `Tools is a named group and ☰ a navigation region, and nothing on the board claims to be an ARIA menu (${JSON.stringify([toolsAx, navAx, menus])})`);
-    /* Full screen's rail opens Tools the same way */
+    /* Full screen's profile menu opens Settings the same way: the avatar says it opened a named group, its Settings
+       opens Tools as a named group, and Escape closes Tools without leaving Full screen */
     await view(page, "full");
-    const gear = page.locator(".cm-full-rail [data-action=board-tools]");
+    const avatar = page.locator(".cm-stage-top [data-action=board-profile]");
     await page.keyboard.press("Shift");
-    await gear.focus();
+    await avatar.focus();
+    await page.keyboard.press("Enter");
+    await page.locator(".cm-profile-menu").waitFor();
+    const [profileAx] = await axOf(rob, ".cm-profile-menu");
+    const opened = await avatar.getAttribute("aria-expanded");
+    await page.locator(".cm-profile-menu [data-action=board-tools]").focus();
     await page.keyboard.press("Enter");
     await page.locator("#cm-board-tools").waitFor();
-    const said = await page.locator(".cm-full-rail [data-action=board-tools]").getAttribute("aria-expanded");
+    const [fullToolsAx] = await axOf(rob, "#cm-board-tools");
     await page.keyboard.press("Escape");
     await page.locator("#cm-board-tools").waitFor({state: "detached"});
-    const back = await page.evaluate(() => document.activeElement.matches(".cm-full-rail [data-action=board-tools]"));
-    ok(said === "true" && back, `Full screen's ⚙ says it opened Tools (aria-expanded ${said}), and Escape gives the focus back to it (${back})`);
-    /* THE SIDE COLUMN SCROLLS: with the Coach open (the column half as tall) and the card given its most room, the log's
-       clock, the column's last control, is brought into view when the keyboard reaches it, not cut off under the Coach */
-    await page.click(".cm-full-rail [data-action=board-coach]");
-    await page.locator("#cm-board-coach:not([hidden]) .cm-coach-input").waitFor();
-    const split = page.locator(".cm-full-side [data-drag=side]");
-    await page.keyboard.press("Shift");
-    await split.focus();
-    let moved = 0;
-    for (let was = await split.getAttribute("aria-valuenow"); moved < 40; moved += 1) {
-      await page.keyboard.press("ArrowDown");
-      const now = await split.getAttribute("aria-valuenow");
-      if (now === was) break;
-      was = now;
-    }
-    const clock = page.locator(".cm-full-side .cm-board-band [data-action=board-history]");
-    await clock.focus();
-    const inView = await clock.evaluate((el) => {
-      const r = el.getBoundingClientRect(), side = el.closest(".cm-full-side").getBoundingClientRect(), hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-      return {whole: r.height > 0 && r.top >= side.top - 0.5 && r.bottom <= side.bottom + 0.5, top: !!hit && el.contains(hit)};
+    const stayed = await page.locator(".cm-stage-top").count() === 1;
+    ok(opened === "true" && profileAx && profileAx.role === "group" && /^profile$/i.test(profileAx.name) && fullToolsAx && fullToolsAx.role === "group" && /^settings$/i.test(fullToolsAx.name) && stayed,
+      `Full screen's avatar says it opened the profile menu (aria-expanded ${opened}), a named group; its Settings opens Tools as a named group; Escape closes Tools and keeps Full screen (${JSON.stringify([profileAx, fullToolsAx, stayed])})`);
+    /* THE TABLE PANEL SCROLLS: opened by its handle, the panel's last control is brought into view when the keyboard
+       reaches it, not cut off below the panel's foot */
+    await page.click(".cm-stage-handle.cm-stage-right");
+    await page.locator(".cm-stage-side.is-open").waitFor();
+    const drawer = await page.evaluate(() => {
+      const s = document.querySelector(".cm-stage-side"), sel = "button, a[href], input, select, textarea, summary, [tabindex]:not([tabindex='-1'])";
+      const last = [...s.querySelectorAll(sel)].filter((el) => !el.disabled && !el.closest("[inert], [hidden]") && el.getBoundingClientRect().height > 0).at(-1);
+      if (!last) return {control: null};
+      last.focus();
+      const r = last.getBoundingClientRect(), side = s.getBoundingClientRect(), hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      return {control: (last.getAttribute("aria-label") || last.textContent).trim().slice(0, 30), whole: r.top >= side.top - 0.5 && r.bottom <= side.bottom + 0.5, top: !!hit && last.contains(hit)};
     });
-    ok(inView.whole && inView.top, `with the Coach open and the card at its most room, Full screen's side column brings the log's clock into view when it has the focus (${JSON.stringify(inView)})`);
-    /* and what runs over the column is not lost (1.4.4): the wheel scrolls it to its foot, as it would at 200% */
-    const over = await page.evaluate(() => {const s = document.querySelector(".cm-full-side"); s.scrollTop = 0; return s.scrollHeight > s.clientHeight + 1;});
-    const sideBox = await page.locator(".cm-full-side").boundingBox();
+    ok(!!drawer.control && drawer.whole && drawer.top, `Full screen's table panel brings its last control into view when it has the focus (${JSON.stringify(drawer)})`);
+    /* and what runs over the panel is not lost (1.4.4): the wheel scrolls it to its foot, as it would at 200% */
+    const over = await page.evaluate(() => {const s = document.querySelector(".cm-stage-side"); s.scrollTop = 0; return s.scrollHeight > s.clientHeight + 1;});
+    const sideBox = await page.locator(".cm-stage-side").boundingBox();
     await page.mouse.move(sideBox.x + sideBox.width / 2, sideBox.y + 20);
     await page.mouse.wheel(0, 2000);
     await page.waitForTimeout(500);
-    const foot = await page.evaluate(() => {const s = document.querySelector(".cm-full-side"); return s.scrollTop + s.clientHeight >= s.scrollHeight - 2;});
-    ok(over && foot, `and the column, run over, scrolls to its foot by the wheel (runs over: ${over}; its foot reached: ${foot})`);
+    const foot = await page.evaluate(() => {const s = document.querySelector(".cm-stage-side"); return s.scrollTop + s.clientHeight >= s.scrollHeight - 2;});
+    ok(over ? foot : drawer.whole, over ? `and the panel, run over, scrolls to its foot by the wheel (its foot reached: ${foot})` : `and the panel, which fits this window whole, needs no scroll (its last control whole: ${drawer.whole})`);
     await rest(page);
-    await split.focus();
-    for (let i = 0; i < moved; i += 1) await page.keyboard.press("ArrowUp");
-    await page.click(".cm-full-rail [data-action=board-coach]");
-    await page.locator("#cm-board-coach").waitFor({state: "hidden"});
+    await page.click(".cm-stage-side [data-action=board-stage-side]");
+    await page.waitForFunction(() => !document.querySelector(".cm-stage-side.is-open"));
     await view(page, "focus");
   }
   {
@@ -1043,7 +1048,7 @@ try {
       if (all || who === rob) {
         await view(page, "full");
         await rest(page);
-        await readWords(page, all ? "#cm-board" : "#cm-board .cm-full-center", `${t} at ${w}, Full screen, the ${mine} and ${theirs} mats`);
+        await readWords(page, all ? "#cm-board" : "#cm-board .cm-full-mine", `${t} at ${w}, Full screen, the ${mine} and ${theirs} mats`);
         if (all) await shot(page, `full-${t}`);
         if (i === 2) await shot(page, `full-${t}-2`);
       }

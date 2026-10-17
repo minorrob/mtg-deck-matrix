@@ -330,16 +330,18 @@ function started() {
   }
 
   /* The tax (CR 903.8) follows the commander, not the object: after one cast and one return it costs {2} more. */
-  {
-    const {state} = play("the tax after a return", [
+  /* With one Mountain tapped and two untapped, the taxed {2}{R}... is offered only where the match tops floating mana up
+     from its untapped sources (`pooledTaps`, a table's new matches); a match launched before offers it once the pool pays. */
+  for (const pooledTaps of [false, true]) {
+    const {state} = play(`the tax after a return${pooledTaps ? ", floating mana topped up" : ""}`, [
       {seat: 0, zone: "command", cards: ["Boss"]}, {seat: 0, zone: "battlefield", cards: ["Mountain", "Mountain", "Mountain"]},
       {seat: 1, zone: "battlefield", cards: ["Mountain"]}, {seat: 1, zone: "hand", cards: ["Lightning Bolt"]},
     ], [...cast, {pass: 1}, {tap: "Mountain", seat: 1}, {cast: "Lightning Bolt", seat: 1, targets: [{card: "Boss"}]}, {resolve: true},
       {choose: [ZONE]}, {to: {turn: 3, phase: "MAIN1"}}, {tap: "Mountain"},
-      {expect: [{offers: {kind: "cast", card: "Boss"}, count: 0}]},
+      {expect: [{offers: {kind: "cast", card: "Boss"}, count: pooledTaps ? 1 : 0}]},
       {tap: "Mountain"}, {tap: "Mountain"},
-      {expect: [{offers: {kind: "cast", card: "Boss"}, count: 1}]}]);
-    eq(commanderTax(state, 0, cardsIn(state, "command", 0)[0]), 2, "a commander cast once and returned costs {2} more the second time (CR 903.8), whatever object it is now");
+      {expect: [{offers: {kind: "cast", card: "Boss"}, count: 1}]}], pooledTaps ? {pooledTaps} : {});
+    eq(commanderTax(state, 0, cardsIn(state, "command", 0)[0]), 2, `a commander cast once and returned costs {2} more the second time (CR 903.8), whatever object it is now${pooledTaps ? " (pooled taps)" : ""}`);
   }
 
   /* Commander damage (CR 903.10a) counts combat damage from the same commander over the game, across its zone changes. */

@@ -3,11 +3,12 @@
 table from your chair with its 3D switch, the right pane docked with Turn Resources, the hover card no taller than the
 mat, the callouts. crankmagic-board.js and crankmagic.css, held by the board's browser suite.
 
-Full screen is now the tabletop (#734): always 3D, with no switch, its depth the Camera's tilt, every other seat across
-the back. "3D never on the board" breaks the tilt the board hands the stage, which tests/table-tabletop.mjs holds. Three
-breaks went with what they broke (2026-10-17): "the ground is felt, not the mat" (the ground is now the Camera's Table
-and Background, not the big board's mat), "one other seat put at the left, not the back" (no seat is placed by count
-any more) and "3D forgotten" (the switch is gone; its successor, the tilt kept as cm-board-tilt-v2, is in no suite).
+Codex rebuilt Full screen on the tabletop (#734; docs/ACTIVE.md, Play tabletop preview): always 3D, with no switch, its
+depth the Camera's tilt, every other seat across the back. "3D never on the board" now breaks the tilt the board hands
+the stage, which tests/table-tabletop.mjs holds. The other three breaks on Full screen went with the code they anchored
+on (2026-10-17): "the ground is felt, not the mat" (the ground is now the Camera's Table and Background, not the big
+board's mat), "one other seat put at the left, not the back" (no seat is placed by count any more) and "3D forgotten"
+(the switch is gone; its successor is the tilt kept as cm-board-tilt-v2).
 
 Browser suites: run with GEOMETRY_REQUIRED=1, from the repository root, with nothing else editing the worktree:
 
