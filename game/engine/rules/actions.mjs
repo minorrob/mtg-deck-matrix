@@ -1421,8 +1421,9 @@ const manaTappers = (state, player, sourceId, selector, tapsSelf = true) => stat
 /**
  * THE SOURCES A CAST MAY TAP (rules/mana.mjs, tapPlans): each untapped source whose mana ability is offered now and asks
  * nothing but {T} -- no mana, life, sacrifice or counters, nothing else done (a painland's damage), nor a restriction on
- * what its mana is spent on. The default reads single-mana choices; bundles also reads multi-mana outputs. Each `{id, colors, via}`: the colors it can make, and for each the
- * activation that makes it.
+ * what its mana is spent on. Each `{id, colors, via}`: the colors it can make, and for each the activation that makes it.
+ * Only a source that makes one mana at a time, unless `bundles` (`pooledTaps`): then a source's other outputs too -- a
+ * two-mana rock's `C:2` -- each with the mana it makes, whole, in `outputs`.
  */
 export function tapUnits(state, player, offered = manaOffers(state, player), bundles = false) {
   const units = new Map();
@@ -1436,8 +1437,8 @@ export function tapUnits(state, player, offered = manaOffers(state, player), bun
       || ability.cantSpend) continue;
     const made = Object.entries(offer.mana ?? {}).filter(([, n]) => n > 0);
     if (!made.length || (!bundles && (made.length !== 1 || made[0][1] !== 1))) continue;
-    const color = made.length === 1 && made[0][1] === 1 ? made[0][0] : made.map(([k,n])=>`${k}:${n}`).join('+');
-    if (!units.has(offer.objectId)) units.set(offer.objectId, {id: offer.objectId, colors: [], via: {}, ...(bundles ? {outputs:{}} : {})});
+    const color = made.length === 1 && made[0][1] === 1 ? made[0][0] : made.map(([k, n]) => `${k}:${n}`).join("+");
+    if (!units.has(offer.objectId)) units.set(offer.objectId, {id: offer.objectId, colors: [], via: {}, ...(bundles ? {outputs: {}} : {})});
     const unit = units.get(offer.objectId);
     if (unit.via[color]) continue;
     unit.colors.push(color);
@@ -1474,11 +1475,12 @@ function fundingPlans(state, player, id, cost, limit, units = tapUnits(state, pl
   const empty = poolSize(pool) === 0;
   if (!pooledTaps(state) || (empty && units.every((u) => u.colors.every((c) => MANA_KEYS.includes(c)))))
     return !empty ? [] : tapPlans(units, cost, limit).map((plan) => ({...plan, payment: {mana: Object.fromEntries(MANA_KEYS.map((k) => [k, plan.taps.filter((t) => t.color === k).length])), life: 0}}));
-  /* The one an unasked cast taps is built (quickTapPlan); asking which way lists what the search finds, that one among them. */
+  /* The one an unasked cast taps is built (quickTapPlan); asking which way lists what the search finds with that one first,
+     so the first way asked is the way the offer was priced at. */
   const quick = quickTapPlan(units, pool, cost);
   if (limit === 1) return quick ? [quick] : sourceTapPlans(units, pool, cost, 1);
   const found = sourceTapPlans(units, pool, cost, limit);
-  return quick && !found.some((w) => w.key === quick.key) ? [quick, ...found].slice(0, limit) : found;
+  return quick ? [quick, ...found.filter((w) => w.key !== quick.key)].slice(0, limit) : found;
 }
 
 /** The ways to tap for this cast (`action.autoTap`), up to `limit`, as `tapPlans` says them. */
