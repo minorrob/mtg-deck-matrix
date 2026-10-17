@@ -28,7 +28,7 @@ import net from "node:net";
 import {mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync} from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import {build, worktreeSource} from "../../tools/release-pages.mjs";
+import {build, worktreeSource, commitSource} from "../../tools/release-pages.mjs";
 import {replayTape} from "../../game/room/replay.mjs";
 import {tableCards} from "../../cloud/game-room.mjs";
 import {NO_PERSON_REASON} from "../../game/room/room.mjs";
@@ -51,7 +51,7 @@ const [none] = JSON.parse(readFileSync(new URL("../../data/engine/top-cards.json
 
 /* The build, with test Access values, in site/ with its configuration beside it (see cloud-e2e). */
 const dir = mkdtempSync(path.join(os.tmpdir(), "crankmagic-play-e2e-")), site = path.join(dir, "site");
-const {built, problems} = build({source: worktreeSource(), profileName: "cloud-staging"});
+const {built, problems} = build({source: process.env.UAT_REF ? commitSource(process.env.UAT_REF) : worktreeSource(), profileName: "cloud-staging"});
 eq(problems, [], "the staging release with Play builds and verifies");
 for (const [f, body] of built) {mkdirSync(path.dirname(path.join(site, f)), {recursive: true}); writeFileSync(path.join(site, f), body);}
 const config = JSON.parse(built.get("wrangler.jsonc").toString("utf8"));
@@ -283,7 +283,16 @@ try {
         await p.getByText("Backup restored after checksum verification.").first().waitFor({timeout: 30000});
         return text;
       };
-      eq([await restore(page, BASE), await restore(newcomer, NBASE)], [review, review], `the host and the newcomer each restore the library in Settings, and its review reads "${review}"`);
+      eq(await restore(page, BASE), review, `the host restores the library in Settings, and its review reads "${review}"`);
+      await page.locator('[data-action=account-sync]').first().click();
+      await until('the host library to reach the cloud', async () => (await api('GET', '/api/me')).json?.head);
+      const sharedDeck = await page.evaluate(async () => {
+        const r = await fetch('/api/social/settings', {method:'PUT',headers:{'content-type':'application/json','x-crankmagic':'sync'},
+          body:JSON.stringify({kind:'deck',sourceId:'goblins',revision:0,publicRole:'reviewer',grants:[]})});
+        return {status:r.status,body:await r.json()};
+      });
+      eq(sharedDeck.status,200,'the host publishes a live library deck through the authenticated sharing service');
+      eq(sharedDeck.body.settings.publicRole,'reviewer','the shared deck is playable without edit permission');
 
       /* The host's table: a person's seat and an AI's. */
       await page.goto(`${BASE}/index.html#table`);
@@ -310,13 +319,25 @@ try {
       const seen = await newcomer.evaluate(async (u) => (await (await fetch(u, {cache: "no-store"})).json()).table.seats.map((s) => [s.you, s.occupied]), turl);
       eq(seen.slice(0, 2), [[false, true], [true, true]], "the newcomer opens the link, signed in as themself, and sits in seat 2");
       await newcomer.locator(`.cm-lobby-seat[data-seat="1"]`).getByRole("button", {name: /^Choose a deck$/}).click();
+      const shared = newcomer.locator('#cm-dialog [data-action=table-use-shared-deck]');
+      await until("the account-shared deck to be validated", async () => shared.evaluateAll(els => els.length === 1 && els.every(el => !el.disabled)), 30000);
+      eq(await shared.first().getAttribute('data-shared-deck'),sharedDeck.body.settings.id,'the chooser uses the live share instead of a bundled sample deck');
+      eq(await newcomer.locator('#cm-dialog [data-action=table-use-deck]').count(), 0, "the signed-in invitee has no library decks or import requirement");
+      await shared.filter({hasText: "Krenko"}).click();
+      await newcomer.locator('.cm-lobby-seat[data-seat="1"] .cm-seat-line', {hasText: "Goblins (e2e)"}).waitFor({timeout:15000});
+      const seated = await newcomer.evaluate(async u => (await (await fetch(u)).json()).table.seats[1].deck, turl);
+      eq(seated.commander,['Krenko, Mob Boss'],'the chosen live deck retains its commander');
+      ok(true, "the empty-library invitee selects the host's shared Krenko deck through the local Worker runtime");
+      eq(await restore(newcomer, NBASE), review, "backup restoration also remains available to an invitee");
+      await newcomer.goto(`${NBASE}/index.html#table?id=${tableId}`);
+      await newcomer.locator('.cm-lobby-seat[data-seat="1"]').getByRole('button', {name: /^(Choose|Change).*deck$/}).click();
       const rows = newcomer.locator("#cm-dialog .cm-table-deck[data-action=table-use-deck]");
       await rows.first().waitFor({timeout: 15000});
       await until("the dialog's known counts", async () => newcomer.locator("#cm-dialog [data-known-for]").evaluateAll((els) => els.length > 0 && els.every((el) => el.textContent.trim())), 30000);
       const known = Object.fromEntries(await rows.evaluateAll((els) => els.map((el) => [el.querySelector("strong").textContent.trim(), el.querySelector("[data-known-for]").textContent.trim()])));
       eq([known["Elves (e2e)"], known["Goblins with a gap (e2e)"]], ["All 100 cards known", "99 of 100 known · 1 to learn"], "the deck dialog says which decks the table can play, before one is chosen");
-      await rows.filter({has: newcomer.locator("strong").getByText("Elves (e2e)", {exact: true})}).click();
-      await newcomer.locator(`.cm-lobby-seat[data-seat="1"] .cm-seat-line`, {hasText: "Elves (e2e)"}).waitFor({timeout: 15000});
+      await newcomer.locator("#cm-dialog [data-action=table-use-shared-deck]").filter({hasText:"Krenko"}).click();
+      await newcomer.locator(`.cm-lobby-seat[data-seat="1"] .cm-seat-line`, {hasText: "Goblins (e2e)"}).waitFor({timeout: 15000});
       await newcomer.locator(`.cm-lobby-seat[data-seat="1"]`).getByRole("button", {name: /^Ready$/}).click();
 
       /* The host seats their deck and the AI's, and starts. */
@@ -342,24 +363,27 @@ try {
          ago may be gone -- asked of a vanished element, isEnabled waits its whole 30 s for it to come back (the staging
          walk of 8787d103, 2026-10-08). Gone is "not now"; `until` asks again. */
       const enabled = (l) => l.isEnabled({timeout: 2000}).catch(() => false);
-      const act = async (p) => {
+      const act = async (p) => {try {
         const went = p.locator("[data-action=board-went-close]");
         if (await went.count()) {await went.first().click(); return;}
         const d = p.locator("#cm-board-decision:not(.is-also)").first();
         if (await d.count()) {
           assert.ok(!/cannot answer/.test((await d.textContent()) || ""), "the board can answer what it is asked");
-          const confirm = d.locator("[data-action=board-confirm]"), opts = d.locator("[data-action=board-option]");
+          const confirm = d.locator("[data-action=board-confirm]"), opts = d.locator("[data-action=board-option]:enabled");
           if (await confirm.count()) {
-            for (let i = 0; i < await opts.count() && !(await enabled(confirm)); i++) await opts.nth(i).click();
-            if (await enabled(confirm)) await confirm.click();
-          } else if (await opts.count()) await opts.first().click();
+            for (let i = 0; i < await opts.count() && !(await enabled(confirm)); i++) await opts.nth(i).click({timeout:2000});
+            if (await enabled(confirm)) await confirm.click({timeout:2000});
+          } else if (await opts.count()) await opts.first().click({timeout:2000});
           return;
         }
         for (const action of ["board-draw", "board-pass"]) {
           const b = p.locator(`[data-action=${action}]`).first();
           if (await b.count() && await enabled(b)) {await b.click(); return;}
         }
-      };
+      } catch(error) {
+        // A socket update can replace the decision between lookup and click. Retry on the next bounded turn walk.
+        if(error.name!=='TimeoutError')throw error;
+      }};
       const turnOf = async (p) => Number((/Turn (\d+)/.exec((await p.locator(".cm-board-turn").first().textContent().catch(() => "")) || "") || [0, 0])[1]);
       await until("both people to reach turn 3", async () => {await act(page); await act(newcomer); return Math.min(await turnOf(page), await turnOf(newcomer)) >= 3;}, 180000);
       ok(true, `both people play through their boards to turn ${await turnOf(page)}`);
@@ -408,6 +432,7 @@ try {
   proxy.close();
   server.kill();
   await new Promise((r) => setTimeout(r, 500));
+  if(path.dirname(path.resolve(dir))!==path.resolve(os.tmpdir())||!path.basename(dir).startsWith('crankmagic-play-e2e-'))throw Error('Refusing cleanup outside the test temporary directory');
   try {rmSync(dir, {recursive: true, force: true});} catch {}
 }
 console.log(`play-e2e: ${checks} checks passed — the staging release's Play under wrangler dev: the Play tab is the table, a table is a playtest table, the alarm launches the game, the board opens over the socket, and the full record downloads and replays.`);

@@ -151,7 +151,7 @@ eq(pw.vars, {ACCESS_TEAM_DOMAIN: "crankmagic.cloudflareaccess.com", ACCESS_AUD: 
   "and it trusts the CrankMagic accounts application (crankmagic.com/api/*, the invite list), read from its sign-in redirect");
 const staging = build({source: worktreeSource(), profileName: "cloud-staging"});
 eq(staging.problems, [], "the staging build is complete, its Access application's team and audience included");
-eq(JSON.parse(staging.built.get("wrangler.jsonc").toString("utf8")).vars, {ACCESS_TEAM_DOMAIN: "crankmagic.cloudflareaccess.com", ACCESS_AUD: "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5", PLAYTEST_TABLES: "on", SERVICE_SEATS: "on",
+eq(JSON.parse(staging.built.get("wrangler.jsonc").toString("utf8")).vars, {ACCESS_TEAM_DOMAIN: "crankmagic.cloudflareaccess.com", ACCESS_AUD: "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5", PLAYTEST_TABLES: "on", SERVICE_SEATS: "on", SHARING_ENABLED: "on", INVITE_ADMIN_ID: "1", CLOUDFLARE_ACCOUNT_ID: "02e7ae6d703281008f546c63378c6ddb", ACCESS_INVITE_APP_IDS: "16fef6e1-0437-4bbd-b7fe-a81419dc09fa", ACCESS_INVITE_POLICY_ID: "8b802602-b991-4986-b8a1-d2c16b3cf5c3",
   AI_ACCESS_AUD: "d3e7b5812c81536cb707c64cca2196e1ee7854cbca6791f4d7bd2ef4b649f6db", AI_CAP_TOTAL_CENTS: "300", AI_CAP_PERSON_CENTS: "300", AI_MODEL: "claude-haiku-5-5", AI_COACH: "on", AI_CAP_COACH_CENTS: "150", AI_PILOT: "on", AI_CAP_PILOT_GAME_CENTS: "25", AI_ADVISE: "on", AI_EVERYONE: "on"},
   "and the Worker trusts that team's keys for that application only (read from the sign-in redirect's kid, and confirmed by Rob from the dashboard); its tables are playtest tables (M8b)");
 const sb = staging.built, sw2 = JSON.parse(sb.get("wrangler.jsonc").toString("utf8"));
@@ -167,6 +167,9 @@ ok(verify(new Map([...sb, ["wrangler.jsonc", Buffer.from(JSON.stringify({...sw2,
   "a release that would hand the Worker its own signing keys is refused");
 /* PLAY IN THE CLOUD, ON STAGING (Rob, 2026-09-29: "execute the play release and merge to staging"). */
 const stagingProfile = PROFILES["cloud-staging"];
+ok(["crankmagic-stage.js", "crankmagic-stage.css", "vendor/pixi.min.js", "vendor/pixi-csp.min.js", "vendor/PIXI-LICENSE.txt"].every(f => sb.has(f)), "staging carries the tabletop renderer, CSP adapter and upstream license");
+ok(![...built.keys()].some(f => f.startsWith("vendor/pixi") || f === "vendor/PIXI-LICENSE.txt"), "the non-Play profile does not include the tabletop renderer");
+
 eq([sw2.durable_objects, sw2.migrations], [{bindings: [{name: "TABLES", class_name: "GameTable"}]}, [{tag: "tables-v1", new_sqlite_classes: ["GameTable"]}]], "staging binds TABLES to the table's Durable Object, made once by a SQLite-class migration");
 ok(PAGES.every((p) => sb.get(p).toString("utf8").includes('<meta name="crankmagic-play" content="cloud">')), "both staging pages are marked Play in the cloud");
 ok(["crankmagic-table.js", "crankmagic-board.js"].every((f) => sb.has(f)), "the table's lobby and its board are in it");
@@ -183,7 +186,7 @@ ok(["crankmagic-game.js", "crankmagic-lobby.js", "crankmagic-online.js", "crankm
 const engine = workerModules(worktreeSource());
 eq(engine.problems, [], "Play's Worker imports only modules in this tree, and nothing a Worker cannot bundle");
 eq([...sb.keys()].filter((f) => /^game\//.test(f)).sort(), engine.files.filter((f) => /^game\//.test(f)), `the engine the table carries is in the tree for wrangler to bundle (${engine.files.length - 2} modules of game/), and nothing else of game/`);
-ok(engine.files.every((f) => /\.mjs$/.test(f)) && !engine.files.some((f) => /^data\//.test(f)), "modules only: no card data, no JSON");
+ok(engine.files.every((f) => /\.mjs$/.test(f) || ['collection-model.js','collection-exchange.js'].includes(f)) && !engine.files.some((f) => /^data\//.test(f)), "modules only: no card data, no JSON");
 ok(engine.files.includes("game/engine/cards/definitions.mjs") && sb.has("game/engine/cards/definitions.mjs"),
   "and the cards the table plays are one of them (M5): every definition in the directory, generated as a module and bundled with the engine");
 ok(sb.get(".assetsignore").toString("utf8").split("\n").includes("game/"), "and none of it is published as a file");

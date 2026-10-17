@@ -102,8 +102,7 @@ CrankMagic is not affiliated with any of them.
 
 ## Runtime dependencies
 
-**None.** The application ships no framework and no vendored libraries; it is
-plain JavaScript, CSS and HTML. Playwright is installed in CI for the browser
+**PixiJS 8.11.0** (MIT), vendored at `vendor/pixi.min.js` with its `vendor/pixi-csp.min.js` compatibility module, renders the optional cloud tabletop ground. Source: https://github.com/pixijs/pixijs/tree/v8.11.0. The upstream license is in `vendor/PIXI-LICENSE.txt`. The application otherwise remains plain JavaScript, CSS and HTML. Playwright is installed in CI for the browser
 suites and is not part of the application.
 
 ---

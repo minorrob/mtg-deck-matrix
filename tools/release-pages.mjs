@@ -68,13 +68,13 @@ export const ROOTS = ["index.html", "crankmagic.html", "graph.html", "not-invite
    the two files stay in the repository for the tools that build them and are never served. */
 export const NEVER = /^(game|tools|tests|docs|design|prototype|graph|payload|payload_v3|schema|\.github|\.claude)\/|^data\/(engine|source|archive|game-logs)\/|^data\/live-(state|load)\.json$/;
 
-const PLAY = ["crankmagic-mats.css", "crankmagic-seat-art.js", "crankmagic-game.js", "crankmagic-lobby.js", "crankmagic-online.js", "crankmagic-online.css", "collection-lobby-draft.js", "crankmagic-table.js", "crankmagic-board.js", "crankmagic-audio.js"];
+const PLAY = ["crankmagic-mats.css", "crankmagic-seat-art.js", "crankmagic-game.js", "crankmagic-lobby.js", "crankmagic-online.js", "crankmagic-online.css", "collection-lobby-draft.js", "crankmagic-table.js", "crankmagic-board.js", "crankmagic-audio.js", "crankmagic-stage.js", "crankmagic-stage.css", "vendor/pixi.min.js", "vendor/pixi-csp.min.js", "vendor/PIXI-LICENSE.txt"];
 /* PLAY IN THE CLOUD (M5): the table's lobby, the seats it draws, Rob's artwork mats, the board, and its sound (B8: the pack
    in assets/audio/, reached only from crankmagic-audio.js), over the Worker's /api/tables. The rest of PLAY is the
    local game host's (a Node server on this machine or a tunnel), which no release carries. */
-const PLAY_CLOUD = ["crankmagic-mats.css", "crankmagic-seat-art.js", "crankmagic-table.js", "crankmagic-board.js", "crankmagic-audio.js"];
+const PLAY_CLOUD = ["crankmagic-mats.css", "crankmagic-seat-art.js", "crankmagic-table.js", "crankmagic-board.js", "crankmagic-audio.js", "crankmagic-stage.js", "crankmagic-stage.css", "vendor/pixi.min.js", "vendor/pixi-csp.min.js", "vendor/PIXI-LICENSE.txt"];
 const LOCAL_PLAY = PLAY.filter((f) => !PLAY_CLOUD.includes(f));
-const ACCOUNTS = ["cloud-sync.js", "crankmagic-account.js"];
+const ACCOUNTS = ["cloud-sync.js", "crankmagic-account.js", "crankmagic-sharing.js"];
 /* What every release shares: Play says Coming Soon, no game host, served by Cloudflare. */
 const RELEASE = {
   play: "coming-soon",
@@ -149,6 +149,7 @@ export const PROFILES = {
     /* Open to everyone signed in since 2026-10-14 (Rob, as for production): the door takes staging's own sign-in too. */
     ai: {aud: "d3e7b5812c81536cb707c64cca2196e1ee7854cbca6791f4d7bd2ef4b649f6db", everyone: true, capTotalCents: 300, model: "claude-haiku-5-5", coach: true, coachCapCents: 150, pilot: true, pilotGameCents: 25, advise: true},
     cloud: {database: {name: "crankmagic-staging", id: "b7f806ec-c9e8-4265-9f23-7d9705db9a26"}, limits: {ip: "2001", person: "2002"}, access: {team: "crankmagic.cloudflareaccess.com", aud: "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5"}},
+    sharing: {adminId: "1", accountId: "02e7ae6d703281008f546c63378c6ddb", accessAppIds: "16fef6e1-0437-4bbd-b7fe-a81419dc09fa", accessPolicyId: "8b802602-b991-4986-b8a1-d2c16b3cf5c3"}, // Staging only; secret tokens are deployed separately.
   },
 };
 
@@ -207,7 +208,7 @@ export const HOST_FILES = {
       preview_urls: false,
       ...(profile.cloud ? {
         d1_databases: [{binding: "DB", database_name: profile.cloud.database.name, database_id: profile.cloud.database.id, migrations_dir: "cloud/migrations"}],
-        vars: {ACCESS_TEAM_DOMAIN: profile.cloud.access.team, ACCESS_AUD: profile.cloud.access.aud, ...(profile.tables?.playtest ? {PLAYTEST_TABLES: "on"} : {}), ...(profile.serviceSeats ? {SERVICE_SEATS: "on"} : {}), ...(profile.tables?.closed ? {PLAY_TABLES_CLOSED: "on"} : {}), ...aiVars(profile)},
+        vars: {...(profile.sharing ? {SHARING_ENABLED: "on", INVITE_ADMIN_ID: profile.sharing.adminId, CLOUDFLARE_ACCOUNT_ID: profile.sharing.accountId, ACCESS_INVITE_APP_IDS: profile.sharing.accessAppIds, ACCESS_INVITE_POLICY_ID: profile.sharing.accessPolicyId} : {}), ACCESS_TEAM_DOMAIN: profile.cloud.access.team, ACCESS_AUD: profile.cloud.access.aud, ...(profile.tables?.playtest ? {PLAYTEST_TABLES: "on"} : {}), ...(profile.serviceSeats ? {SERVICE_SEATS: "on"} : {}), ...(profile.tables?.closed ? {PLAY_TABLES_CLOSED: "on"} : {}), ...aiVars(profile)},
         ratelimits: [
           {name: "LIMIT_IP", namespace_id: profile.cloud.limits.ip, simple: {limit: LIMITS_PER_MINUTE.ip, period: 60}},
           {name: "LIMIT_PERSON", namespace_id: profile.cloud.limits.person, simple: {limit: LIMITS_PER_MINUTE.person, period: 60}},
@@ -302,6 +303,8 @@ export function referencesOf(file, text, files) {
       }
     }
   }
+  // Keep the pinned renderer's license with both distributed library files.
+  if (/^vendor\/pixi(?:-csp)?\.min\.js$/.test(file)) add("PIXI-LICENSE.txt");
   found.delete(file);
   return found;
 }
@@ -331,7 +334,7 @@ export function workerModules(source, entry = PLAY_WORKER) {
       const spec = m[1] || m[2];
       if (!spec.startsWith(".")) {problems.push(`${f} imports ${spec}, which Play's Worker cannot bundle from the release`); continue;}
       const target = path.posix.normalize(path.posix.join(path.posix.dirname(f), spec));
-      if (!/\.mjs$/.test(target)) {problems.push(`${f} imports ${target}, which is not a module`); continue;}
+      if (!/\.m?js$/.test(target)) {problems.push(`${f} imports ${target}, which is not a module`); continue;}
       queue.push(target);
     }
   }
@@ -490,7 +493,7 @@ export function verify(built, profile) {
   for (const [f, body] of built) {
     if (!/\.(html|js|mjs|css|md|json|txt)$|^LICENSE$/.test(f)) continue;
     for (const m of body.toString("utf8").matchAll(/[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}/g))
-      if (m[0].toLowerCase() !== PUBLIC_CONTACT) problems.push(`${f} names an email address other than ${PUBLIC_CONTACT} (${m[0].slice(0, 2)}…@${m[0].split("@")[1]})`);
+      if (![PUBLIC_CONTACT, "notifications@crankmagic.com", "invite@crankmagic.com"].includes(m[0].toLowerCase())) problems.push(`${f} names an email address other than ${PUBLIC_CONTACT} (${m[0].slice(0, 2)}…@${m[0].split("@")[1]})`);
   }
   /* The service worker's lists are the app's own statement of what it fetches: all must be here. */
   const sw = built.get("crankmagic-sw.js")?.toString("utf8") || "";
