@@ -1,23 +1,23 @@
 {
   "workstream": "claude-deck",
-  "updated": "2026-10-18T05:50:00Z",
-  "updated_by": "Claude · Deck intelligence (the session that wrote the program charter)",
-  "branch": "claude/deck-composition, claude/deck-synergies (models); claude/crankmagic-invitations-ob12tu (the program, PR #740)",
-  "now": "The composition model is on PR #749 (ROB-114) and the synergies model on its own branch (ROB-115), both waiting on green runs; next card resolution (ROB-131) and buildFromCriteria (ROB-109).",
+  "updated": "2026-10-18T06:30:00Z",
+  "updated_by": "Claude · Deck intelligence (the cloud session)",
+  "branch": "claude/deck-criteria (ROB-109); claude/deck-legality (PR #753); claude/deck-resolve (PR #752); claude/deck-composition (PR #749); claude/deck-synergies (PR #750)",
+  "now": "Five models built and on ready PRs (composition, synergies, card resolution, Commander legality, build from criteria); merging each on green, then buyPlan (ROB-119) and the swap records (ROB-117).",
   "items": [
     {
       "id": "ROB-138",
       "outcome": "joyful",
       "feature": "The program readout: one page that shows every feature in my words, where it stands, what remains, and my queue",
-      "status": "review",
-      "remaining_hours": 1,
+      "status": "done",
+      "remaining_hours": 0,
       "evidence": [
         {
           "label": "PR #740",
           "url": "https://github.com/minorrob/mtg-deck-matrix/pull/740"
         }
       ],
-      "note": "Built; waits on PR #740 merging so the page reads main."
+      "note": "Merged (main a40f17d5); the page reads main."
     },
     {
       "id": "ROB-137",
@@ -31,15 +31,29 @@
       "id": "ROB-104",
       "outcome": "play-any-deck",
       "feature": "Commander legality checked before a table starts (banned list, color identity, singleton, 100 cards, partners)",
-      "status": "backlog",
-      "remaining_hours": 8
+      "status": "review",
+      "remaining_hours": 1,
+      "evidence": [
+        {
+          "label": "PR #753",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/pull/753"
+        }
+      ],
+      "note": "44 cases, a failing and a passing per rule, eleven breaks; the banned list dated; waits on the merge. The lobby and the Lab each wire one line."
     },
     {
       "id": "ROB-109",
       "outcome": "deck-creation",
       "feature": "Build me a deck from my criteria: playstyle, budget, bracket, commander optional, colors optional",
-      "status": "backlog",
-      "remaining_hours": 30
+      "status": "review",
+      "remaining_hours": 3,
+      "evidence": [
+        {
+          "label": "branch claude/deck-criteria",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/tree/claude/deck-criteria"
+        }
+      ],
+      "note": "Six criteria sets legal, on budget, in bracket, every slot explained; seven breaks; PR next. The screen (ROB-110) is the Workshop's."
     },
     {
       "id": "ROB-111",
@@ -60,28 +74,28 @@
       "outcome": "deck-tuning",
       "feature": "Composition model: ramp, interaction, defense, offense, win conditions against targets",
       "status": "review",
-      "remaining_hours": 2,
+      "remaining_hours": 1,
       "evidence": [
         {
           "label": "PR #749",
           "url": "https://github.com/minorrob/mtg-deck-matrix/pull/749"
         }
       ],
-      "note": "Built and proven (197 checks, five breaks); waits on the green run and the merge."
+      "note": "197 checks, five breaks; one follow-up commit for a catalog-row shape; waits on the merge."
     },
     {
       "id": "ROB-115",
       "outcome": "deck-tuning",
       "feature": "Synergies and chains inside the deck, and the one card that would complete a chain",
       "status": "review",
-      "remaining_hours": 2,
+      "remaining_hours": 1,
       "evidence": [
         {
-          "label": "branch claude/deck-synergies",
-          "url": "https://github.com/minorrob/mtg-deck-matrix/tree/claude/deck-synergies"
+          "label": "PR #750",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/pull/750"
         }
       ],
-      "note": "Built and proven on Krenko (the Bombardment-and-Staff engine, the Staff proposed back); waits on the green run and the merge."
+      "note": "38 checks on Krenko, four breaks; waits on the merge."
     },
     {
       "id": "ROB-116",
@@ -150,8 +164,15 @@
       "id": "ROB-131",
       "outcome": "ai",
       "feature": "Card indexing resolution: a misspelled name, any export line, or a photo resolved to the catalog",
-      "status": "backlog",
-      "remaining_hours": 20
+      "status": "review",
+      "remaining_hours": 1,
+      "evidence": [
+        {
+          "label": "PR #752",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/pull/752"
+        }
+      ],
+      "note": "178 of 200 real-world lines offline, 22 held, 0 wrong accepts; five breaks; waits on the merge."
     },
     {
       "id": "ROB-132",
