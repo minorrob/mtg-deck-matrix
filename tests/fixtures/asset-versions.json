@@ -117,6 +117,10 @@
       "version": 1,
       "sha": "b977a10c3c5e4174"
     },
+    "card-resolve.js": {
+      "version": 1,
+      "sha": "d0f79d413154e2a8"
+    },
     "cloud-sync.js": {
       "version": 1,
       "sha": "c176ec80b57f56fb"
@@ -154,8 +158,8 @@
       "sha": "5dd742bd996b24a6"
     },
     "crankmagic-app.js": {
-      "version": 502,
-      "sha": "ca7c9e050a5c8c50"
+      "version": 503,
+      "sha": "a18aa21f4f2d17f1"
     },
     "crankmagic-assets.js": {
       "version": 36,
@@ -210,8 +214,8 @@
       "sha": "cc0b2830cf6bdeb5"
     },
     "crankmagic-exchange-ui.js": {
-      "version": 15,
-      "sha": "6702417b7ae716b8"
+      "version": 16,
+      "sha": "0fd5e88c2d2e0093"
     },
     "crankmagic-facets.js": {
       "version": 15,
@@ -338,8 +342,8 @@
       "sha": "07440b83396bb9e2"
     },
     "crankmagic-sw.js": {
-      "version": 486,
-      "sha": "dd727a80088cb9f5"
+      "version": 487,
+      "sha": "eae931b2adcabcb3"
     },
     "crankmagic-table.js": {
       "version": 29,
