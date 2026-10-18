@@ -20,7 +20,7 @@
     "No politics: opponents never team up, and never target each other's threats instead of ours.",
     "Tutors draw the best of three random cards instead of choosing exactly.",
     "Tokens are modeled as extra power on the creature that makes them, not as separate bodies.",
-    "Alternate win conditions and storm are scored as a large threat rather than an instant win.",
+    "A card that says \"you win the game\" is cast as a finisher-priority body and FLAGGED (unwatchedWinPaths), never scored as a win: the condition attached to it is the part this model does not read. Storm is a one-turn mana burst from the spells cast that turn, not a storm count resolving copies.",
     "Mana fixing is ideal within the colors actually available from lands in play.",
     "A land that goes and gets a basic is modeled as entering tapped, because the basic it fetches arrives tapped; neither the mana some of them charge to crack nor the land itself being spent is modeled.",
     "Where a keyword states its real effect only in reminder text -- basic landcycling, investigate -- the card is credited with nothing for it, because reminder text is stripped before a card is read.",

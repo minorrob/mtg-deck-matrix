@@ -41,10 +41,10 @@
      them lazily off the global. Versions must match the ?v= the pages use, or a browser
      that has one page cached serves the worker a different engine than the page. */
   const ENGINE_SCRIPTS = [
-    "sim-engine.js?v=14",
+    "sim-engine.js?v=15",
     "combat.js?v=3",
     "pilot-policy.js?v=4",
-    "deck-measure.js?v=10"
+    "deck-measure.js?v=11"
   ];
 
   /* NAMED PROTOCOLS, AND WHY THE NAME IS PART OF THE NUMBER.
@@ -223,6 +223,8 @@
         score: {value: result.score, unit: "points"},
         scoreStandardError: {value: result.se, unit: "points"},
         winRate: {value: pct(result.winRate), unit: "%"},
+        /* Between seeds, like the score's; a one-seed run carries 0 and must not be read as certainty. */
+        winRateStandardError: {value: result.winRateSe == null ? null : pct(result.winRateSe), unit: "%"},
         /* Reported beside the win rate, never folded into it. A game the turn cap ended
            is not a loss, and a reader comparing a slow deck with a fast one should be
            able to see how much of the gap is the cutoff. */
@@ -264,6 +266,7 @@
       scoreParts: result.scoreParts || [],
       perCard: result.perCard || [],
       perSeedScores: result.perSeedScores || [],
+      perSeedWinRates: result.perSeedWinRates || [],
       run: {
         games: result.games,
         elapsedMs: result.elapsedMs,

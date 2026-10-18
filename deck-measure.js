@@ -84,10 +84,11 @@
      order that keeps a browser run identical to the Node one: the card-facts
      file first, then whatever the caller attached to the entry.
 
-     data/cards.json carries no power or toughness for any card, so the engine
-     estimates a creature's power from its mana value -- here exactly as in the
-     sweep and the ladders. Feeding it the printed figures would measure this
-     deck on a footing no other published number shares. */
+     data/cards.json has carried power and toughness for its creatures since
+     tools/add-power-toughness.mjs put them there (1,127 of 2,367 rows today), and
+     the printed body is passed through below (v2.5: creatures fight with their
+     printed power and toughness); a card the file lacks still falls back to the
+     mana-value estimate, as every published number did before v2.5. */
   /* Color identity arrives in two shapes. card-facts.json and Scryfall give an
      array, ["W","B"]; graph.json packs it into a string, "WB", because that is
      how the export writes it. The engine indexes it, so a string silently
@@ -273,6 +274,22 @@
       funScore: round(mean((r) => r.funScore || 0), 4),
       podFunScore: round(mean((r) => r.podFunScore || 0), 4),
       perSeedScores: scores.map((v) => round(v, 1)),
+      /* THE WIN RATE'S OWN ERROR, between seeds, the way the score's is. The engine's winRateInterval is the binomial
+         interval inside one run, which says how a coin would scatter and not how the shuffle moved this deck; the
+         audit (docs/engine/sim-model-audit.md, ROB-84) found no between-seed figure for anything but the score. A
+         one-seed run has none, and says so with zero. */
+      perSeedWinRates: runs.map((r) => round(r.winRate, 4)),
+      winRateSe: round(Math.sqrt(runs.reduce((sum, r) => sum + (r.winRate - mean((x) => x.winRate)) ** 2, 0) / Math.max(1, runs.length - 1) / runs.length), 4),
+      /* The two figures the evidence pack has named since v2.7 and the browser path never filled (the audit's sixth
+         stale item): how much a game happens, and the most that happens in one turn. Averaged over seeds. */
+      avgSpellsPerGame: round(mean((r) => r.avgSpellsPerGame || 0), 2),
+      avgStormPeak: round(mean((r) => r.avgStormPeak || 0), 2),
+      /* The end-turn histogram summed across seeds, trimmed to the turns that happened, in turn order. */
+      endTurnCounts: (() => {
+        const total = new Map();
+        runs.forEach((run) => (run.endTurnCounts || []).forEach((row) => { if (row && row.games > 0) total.set(row.turn, (total.get(row.turn) || 0) + row.games); }));
+        return [...total.entries()].sort((a, b) => a[0] - b[0]).map(([turn, games]) => ({turn, games}));
+      })(),
       /* WHAT KILLED YOU, which is the only figure in the engine that answers "why did I
          lose" rather than "how often". Counted on every run since the engine was written
          and dropped at this line ever since -- so a reader could see 11% and not that

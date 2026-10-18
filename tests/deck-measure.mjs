@@ -127,6 +127,20 @@ check("the hash is stable across runs and carried on the result", () => {
   assert.equal(a.hash, Measure.lineupHash(cards));
 });
 
+check("the win rate carries its own between-seed error, and the figures the pack names are filled", () => {
+  const cards = Measure.hydrate(tunedHundred("D6", "Krenko, Mob Boss"), facts);
+  const r = Measure.measure(cards, {config, seats, seedCount: 3, games: 2000});
+  assert.equal(r.perSeedWinRates.length, 3, "one win rate per seed");
+  assert.ok(r.winRateSe > 0 && r.winRateSe < 0.05, `a three-seed run has a win-rate error between seeds (${r.winRateSe})`);
+  const mean = r.perSeedWinRates.reduce((n, v) => n + v, 0) / 3;
+  const sd = Math.sqrt(r.perSeedWinRates.reduce((n, v) => n + (v - mean) ** 2, 0) / 2);
+  assert.ok(Math.abs(r.winRateSe - sd / Math.sqrt(3)) < 0.001, "and it is the seed-to-seed standard deviation over the square root of the seeds");
+  assert.ok(r.avgSpellsPerGame > 5 && r.avgStormPeak >= 1, `spells per game and the biggest turn are averaged (${r.avgSpellsPerGame}, ${r.avgStormPeak})`);
+  assert.ok(r.endTurnCounts.length > 3 && r.endTurnCounts.reduce((n, x) => n + x.games, 0) === r.games && r.endTurnCounts.every((x, i, a) => i === 0 || a[i - 1].turn < x.turn), "the end-turn histogram sums to the games, in turn order");
+  const one = Measure.measure(cards, {config, seats, preview: true});
+  assert.equal(one.winRateSe, 0, "a one-seed run has no between-seed error, and says zero rather than inventing one");
+});
+
 console.log(`deck-measure: ${checks} checks passed · ` +
   parity.map((p) => `${p.label} ${p.got}`).join("  ") +
   " · all matching data/deck-ratings.json");
