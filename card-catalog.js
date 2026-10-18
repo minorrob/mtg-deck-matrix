@@ -82,6 +82,17 @@
   /* The labels a card earns, for "plays as" lines and picker rows. */
   function playStyles(c){return MECHANICS.filter(([l])=>matchesMechanic(c,l)).map(([l])=>l);}
   async function create(options){const byName=new Map(),byAlias=new Map(),byId=new Map(),byOracle=new Map();let graph=null,universeDate='',rankDate='',priceDate='',graphDate='',graphLoading=null,playedLoading=null;const fetcher=options.fetchImpl||fetch;
+    /* PROGRESS TRACKING ACROSS MULTIPLE FILES. When onProgress is provided, track combined
+       download progress across all catalog files with weights based on typical sizes:
+       universe ~200KB, cards ~2MB, facts ~4MB, ranks ~300KB, flavorNames ~50KB, total ~6.5MB.
+       Clamp individual files to 99% until parsing completes, show 100% only when all done. */
+    const weights={universe:200,cards:2000,facts:4000,ranks:300,flavorNames:50};
+    let totalWeight=weights.universe+weights.cards+weights.facts;
+    if(options.urls.ranks)totalWeight+=weights.ranks;
+    if(options.urls.flavorNames)totalWeight+=weights.flavorNames;
+    const progress={universe:0,cards:0,facts:0,ranks:0,flavorNames:0};
+    const updateProgress=()=>{if(!options.onProgress)return;const loaded=Object.entries(progress).reduce((sum,[k,v])=>sum+(weights[k]||0)*v,0);options.onProgress(Math.min(99,Math.round(loaded/totalWeight*100)),100);};
+    const trackFile=(name,callback)=>(loaded,total)=>{progress[name]=Math.min(0.99,total>0?loaded/total:0);updateProgress();if(callback)callback(loaded,total);};
     /* THE NAME ON THE CARD IN YOUR HAND. byName is keyed on the ORACLE name, which is the
        name the rules use and not always the name printed on the card: a Secret Lair prints
        Jodah, the Unifier as "SpongeBob SquarePants". search() has matched flavor names
@@ -111,7 +122,8 @@
     async function load(url,progressCallback=null){const cached=await options.repository?.cacheGet(url);try{const response=await fetcher(url,{cache:'default'});if(!response.ok)throw Error('HTTP '+response.status);
       /* STREAM WITH PROGRESS TRACKING. When a Content-Length header is present and a progress
          callback is provided, read the response body as a stream and report bytes received.
-         Otherwise fall back to response.json() directly (existing behavior). */
+         Clamp to 99% until JSON parsing completes. Falls back to response.json() when no
+         Content-Length (indeterminate progress) or no callback (existing behavior). */
       if(progressCallback&&response.headers.has('Content-Length')&&response.body){
         const total=parseInt(response.headers.get('Content-Length'),10);
         const reader=response.body.getReader();
@@ -130,7 +142,7 @@
         return data;
       }
       const data=await response.json();options.repository?.cachePut(url,data).catch(()=>{});return data;}catch(error){if(cached)return cached;throw Error('The public card catalog is unavailable offline. Reconnect once to download it, or import a backup containing your cards. '+error.message);}}
-    const expect=typeof options.urls.expect==='function'?options.urls.expect:(json)=>json;const settled=await Promise.allSettled([load(options.urls.universe).then(j=>expect(j,'universe')),load(options.urls.cards).then(j=>expect(j,'cards')),load(options.urls.facts).then(j=>expect(j,'facts')),options.urls.ranks?load(options.urls.ranks).then(j=>expect(j,'ranks')):Promise.resolve(null),options.urls.flavorNames?load(options.urls.flavorNames).then(j=>expect(j,'flavorNames')):Promise.resolve(null)]);
+    const expect=typeof options.urls.expect==='function'?options.urls.expect:(json)=>json;const settled=await Promise.allSettled([load(options.urls.universe,trackFile('universe')).then(j=>expect(j,'universe')),load(options.urls.cards,trackFile('cards')).then(j=>expect(j,'cards')),load(options.urls.facts,trackFile('facts')).then(j=>expect(j,'facts')),options.urls.ranks?load(options.urls.ranks,trackFile('ranks')).then(j=>expect(j,'ranks')):Promise.resolve(null),options.urls.flavorNames?load(options.urls.flavorNames,trackFile('flavorNames')).then(j=>expect(j,'flavorNames')):Promise.resolve(null)]);
     if(settled[0].status==='fulfilled'){const data=settled[0].value;universeDate=data.generatedAt;for(const [name,ci,rarity,mv,type,rank,commander] of data.cards)add({name,ci,rarity,mv,type,rank,commander:!!commander,verified:true,legalities:{commander:'legal'},updatedAt:universeDate});}
     if(settled[1].status==='fulfilled'){priceDate=settled[1].value.generatedAt||'';for(const c of settled[1].value.cards)add({...c,shipped:true});}
     if(settled[2].status==='fulfilled')for(const [name,c] of Object.entries(settled[2].value.cards))add({name,...c});
@@ -146,6 +158,8 @@
     if(settled[4].status==='fulfilled'&&settled[4].value){const byOracle=new Map();
       for(const [flavor,name] of settled[4].value.cards||[]){const key=folded(name);if(!byOracle.has(key))byOracle.set(key,[]);byOracle.get(key).push(flavor);}
       for(const [key,names] of byOracle){const c=byName.get(key);if(c)add({...c,flavorName:c.flavorName||names[0],flavorNames:[...new Set([...(c.flavorNames||[]),...names])]});}}
+    // Mark all files complete at 100% after processing
+    if(options.onProgress){Object.keys(progress).forEach(k=>progress[k]=1);options.onProgress(100,100);}
     // An empty offline catalog must not prevent opening backup restore or User Functions.
     function search(query,{commander=false,mechanic='',rankMax=null,limit=80,colors=null}={}){const q=folded(query),m=folded(mechanic),within=colors&&colors.length?new Set(colors):null;return [...byId.values()].filter(c=>(!commander||c.commander&&c.legalities.commander==='legal')&&(!q||folded(c.name).includes(q)||(c.flavorNames||[]).some(f=>folded(f).includes(q)))&&(!m||matchesMechanic(c,m))&&(!within||(c.colorIdentity||[]).every(x=>within.has(x)))&&(rankMax===null||c.commanderRank!==null&&c.commanderRank<=rankMax)).sort((a,b)=>((folded(a.name)===q||(a.flavorNames||[]).some(f=>folded(f)===q))?-1:(folded(b.name)===q||(b.flavorNames||[]).some(f=>folded(f)===q))?1:0)||((commander?a.commanderRank:a.rank)||Infinity)-((commander?b.commanderRank:b.rank)||Infinity)||a.name.localeCompare(b.name)).slice(0,limit);}
     /* LIKE FOR LIKE. A replacement picker that offers the catalog's most popular cards is

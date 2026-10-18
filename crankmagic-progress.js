@@ -131,5 +131,53 @@
                     .replace(/"/g, '&quot;');
   }
   
-  return { create };
+  /**
+   * Track progress for a fetch Response with streaming.
+   * Returns the Response body as text after tracking progress.
+   * 
+   * @param {string} label - What is being loaded
+   * @param {Response} response - Fetch Response object
+   * @param {Element} container - Where to show progress
+   * @returns {Promise<string>} Response body text
+   */
+  async function track(label, response, container) {
+    if (!response.body || !response.headers.has('Content-Length')) {
+      // No streaming possible, show indeterminate
+      const progress = create(container, {label, indeterminate: true});
+      try {
+        const text = await response.text();
+        progress.complete();
+        return text;
+      } catch (error) {
+        progress.error(error.message, 'Check the file and try again.');
+        throw error;
+      }
+    }
+    
+    const progress = create(container, {label});
+    const total = parseInt(response.headers.get('Content-Length'), 10);
+    const reader = response.body.getReader();
+    let received = 0;
+    const chunks = [];
+    
+    try {
+      while (true) {
+        const {done, value} = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        received += value.length;
+        progress.update(received, total);
+      }
+      
+      const blob = new Blob(chunks);
+      const text = await blob.text();
+      progress.complete();
+      return text;
+    } catch (error) {
+      progress.error(error.message, 'Check your connection and try again.');
+      throw error;
+    }
+  }
+  
+  return { create, track };
 });
