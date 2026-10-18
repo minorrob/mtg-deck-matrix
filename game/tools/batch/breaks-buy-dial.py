@@ -3,36 +3,16 @@
 
 SUITES = ["tests/buy-dial.mjs"]
 BREAKS = [
-    {
-        "id": "dial-no-sliders",
-        "why": "The dial renders with no sliders",
-        "file": "crankmagic-collection.js",
-        "original": 'return `<div class="cm-buy-dial"><div class="cm-dial-head"><h3>Buy priority</h3>',
-        "mutant": 'return `<div class="cm-buy-dial"><div class="cm-dial-head"><h3>Buy priority</h3></div></div>`;return `<div style="display:none">',
-        "catches": "cost slider present"
-    },
-    {
-        "id": "dial-ignores-weights",
-        "why": "The dial ignores the saved weights and always starts at 0",
-        "file": "crankmagic-collection.js",
-        "original": "const prefs=C.state.preferences,w={cost:prefs.buyWeightCost??1,speed:prefs.buyWeightSpeed??0,print:prefs.buyWeightPrint??0};",
-        "mutant": "const prefs=C.state.preferences,w={cost:0,speed:0,print:0};",
-        "catches": "cost starts at 100"
-    },
-    {
-        "id": "percentages-not-updated",
-        "why": "Dragging a slider does not update the percentages",
-        "file": "crankmagic-collection.js",
-        "original": "const updatePct=()=>{const BP=globalThis.CrankBuyPlan;if(!BP)return;",
-        "mutant": "const updatePct=()=>{return;const BP=globalThis.CrankBuyPlan;if(!BP)return;",
-        "catches": "cost at 50 shows 50%"
-    },
-    {
-        "id": "dial-hidden-phone",
-        "why": "The dial is hidden at 390 wide",
-        "file": "crankmagic-collection.js",
-        "original": 'return `<div class="cm-buy-dial">',
-        "mutant": 'return `<div class="cm-buy-dial" style="display:none">',
-        "catches": "cost slider visible at 390 wide"
-    }
+    ('dial renders with no sliders', 'crankmagic-collection.js',
+     'return `<div class="cm-buy-dial" data-testid="buy-dial"><div class="cm-dial-head"><h3>Buy priority</h3>',
+     'return `<div class="cm-buy-dial" data-testid="buy-dial"><div class="cm-dial-head"><h3>Buy priority</h3></div></div>`;return `<div style="display:none">'),
+    ('dial ignores saved weights', 'crankmagic-collection.js',
+     'function dialHTML(){const BP=globalThis.CrankBuyPlan;if(!BP){return `<div class="cm-buy-dial cm-buy-dial-error"',
+     'function dialHTML(){const BP=globalThis.CrankBuyPlan;if(!BP){return `<div class="cm-buy-dial cm-buy-dial-error";}const w={cost:0,speed:0,print:0};return `<div'),
+    ('dragging slider does not update percentages', 'crankmagic-collection.js',
+     'if(shop){C.main.addEventListener(\'input\',ev=>{const dial=ev.target.closest(\'[data-dial]\');if(!dial)return;const BP=globalThis.CrankBuyPlan;if(!BP)return;',
+     'if(shop){C.main.addEventListener(\'input\',ev=>{return;const dial=ev.target.closest(\'[data-dial]\');if(!dial)return;const BP=globalThis.CrankBuyPlan;if(!BP)return;'),
+    ('dial hidden at 390 wide', 'crankmagic-collection.js',
+     'return `<div class="cm-buy-dial" data-testid="buy-dial">',
+     'return `<div class="cm-buy-dial" data-testid="buy-dial" style="display:none">')
 ]

@@ -37,24 +37,7 @@ try {
   /* Go to Buy tab via hash navigation. */
   await page.goto(`${base}/index.html#cards?tab=buy`);
   await page.waitForLoadState('networkidle');
-  
-  /* Debug: check what's on the page. */
-  const bodyText = await page.evaluate(() => document.body.innerText);
-  console.log(`[DEBUG] Page body text (first 500 chars): ${bodyText.slice(0, 500)}`);
-  const hasMain = await page.evaluate(() => !!document.querySelector('#cm-main'));
-  const hasRoster = await page.evaluate(() => !!document.querySelector('#cm-roster-table'));
-  console.log(`[DEBUG] hasMain=${hasMain}, hasRoster=${hasRoster}`);
-  const url = page.url();
-  console.log(`[DEBUG] Current URL: ${url}`);
-  
-  /* Wait for roster table which holds the Buy tab content. */
   await page.locator('#cm-roster-table').waitFor({timeout: 15000});
-  
-  /* Check if CrankBuyPlan is loaded. */
-  const buyPlanType = await page.evaluate(() => typeof window.CrankBuyPlan);
-  console.log(`[DEBUG] window.CrankBuyPlan is ${buyPlanType}`);
-  
-  /* The dial should now be visible. */
   await page.locator('[data-testid="buy-dial"]').waitFor({timeout: 5000});
   ok(await page.locator('[data-testid="buy-dial"]').isVisible(), "the dial is visible on the Buy tab");
   
