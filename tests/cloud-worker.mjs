@@ -378,4 +378,12 @@ eq(me.headers.get("x-content-type-options") + " " + me.headers.get("cache-contro
   eq(opsLine(new Request("https://crankmagic.test/api/library"), 404), null, "nor is any other answer under 500");
 }
 
+env.DB.raw.exec(readFileSync(new URL('../cloud/migrations/0003_sharing.sql',import.meta.url),'utf8'));
+env.SHARING_ENABLED='on';
+eq((await call('GET','/api/social/me',{jwt:null})).status,401,'sharing requires authentication');
+eq((await call('PUT','/api/social/profile',{body:{name:'Player',avatar:''},headers:{origin:'https://elsewhere.example'}})).status,403,'sharing refuses a cross-origin write');
+eq((await call('PUT','/api/social/profile',{body:{name:'Player',avatar:''},headers:{'x-crankmagic':'wrong'}})).status,403,'sharing requires the app header');
+eq((await call('PUT','/api/social/profile',{body:{name:'Player',avatar:''}})).status,200,'profile writes route through authenticated identity');
+eq((await call('GET','/api/social/me')).json.name,'Player','profile persists behind Access');
+eq((await call('POST','/api/social/invite',{body:{name:'Friend',email:'friend@example.com'}})).status,403,'non-admin cannot invoke invitations directly');
 console.log(`cloud-worker: ${checks} checks passed — Access tokens verified, writes from the app only, the head moves only from where a device left it, nothing crosses between people.`);

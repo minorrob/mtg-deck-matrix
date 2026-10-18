@@ -493,6 +493,24 @@ there, kept across a wake and replayed -- and the board's button beside the pass
 `room-untap-mana` holds Untap (Rob, 2026-10-11): a land tapped for mana, its mana unspent and nothing since, offered back
 to its person -- any of a run of taps, the game then exactly as before the first, to its hash -- and never a tap that did
 more (a pain land's damage), nor after a pass; kept with the room, replayed, and never taken by the fuzz harness's person.
+`room-pooled-taps` holds floating mana and the sources left paying a cast together (`pooledTaps`; Rob's playtest,
+2026-10-15): a table's new match offers the spell the pool and an untapped source pay between them, a match launched
+before offers what it offered, the saved match keeps which, and a game with the key replays the same.
+`room-yield-turn` and `engine-pass-stack` hold the stack passed for a person with no response, and Yield turn (Linear
+ROB-13, the Oct 16 handoff): nobody asked over a spell they could do nothing about, but asked with an instant the mana
+could pay, a mana ability that does more than add mana, any other ability, or having cast holding priority; a yielded
+opponent's turn passing each priority of theirs while Declare blockers is still asked, ending with that turn (an extra
+turn a new one) or its player, never carried, offered and shown in the seat's own view alone, kept across a wake, and
+replayed -- and neither in a game launched before.
+`room-draw-card` holds Draw card (Linear ROB-73, the Oct 15 playtest's P05): the draw step's draw one decision of its own,
+`draw:<turn>`, its card the drawer's alone and another's hand a count; the same answer sent again, then or once the table
+waits on someone else, its receipt and no second card; reopened while it waits, the same question; the first player's
+first draw skipped only at two seats and only while the host keeps the rule; and an empty library drawn from, the game lost.
+`room-events` holds the table's events (`events.v1`, Linear ROB-77): every view carrying what the action behind it did, each
+event with the journal's id and the decision whose answer made it; a draw the drawer's alone, and only while the card is in
+their hand, a move between two hidden zones no event, a face-down card unnamed; two views in a row sharing none; a reconnect
+after an event it saw getting exactly what came since, or told to start over once that is older than the room keeps; and
+reopened and replayed, the same events.
 `table-basics` holds the table's basic lands as basic lands (Rob, 2026-10-11, Rampant Growth finding nothing): the table
 plays the engine's own definitions, the room's own basics are Basic and of their land type, and every card's scenarios
 pass played with the table's own lookup.
@@ -903,7 +921,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 510 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 518 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -950,6 +968,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `design-tokens` — `tests/design-tokens.mjs`
 - `first-draw-check` — `tests/first-draw-check.mjs`
 - `play-audio-pack` — `tests/play-audio-pack.mjs`
+- `readout-feeds` — `tests/readout-feeds.mjs`
 - `script-encoding` — `tests/script-encoding.mjs`
 - `wireframe-conformance` — `tests/wireframe-conformance.mjs`
 - `deck-sources` — `tests/deck-sources.mjs`
@@ -1137,6 +1156,11 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `room-beats` — `tests/room-beats.mjs`
 - `room-resolve-all` — `tests/room-resolve-all.mjs`
 - `room-untap-mana` — `tests/room-untap-mana.mjs`
+- `room-pooled-taps` — `tests/room-pooled-taps.mjs`
+- `room-yield-turn` — `tests/room-yield-turn.mjs`
+- `room-draw-card` — `tests/room-draw-card.mjs`
+- `room-events` — `tests/room-events.mjs`
+- `engine-pass-stack` — `tests/engine-pass-stack.mjs`
 - `table-basics` — `tests/table-basics.mjs`
 - `coach` — `tests/coach.mjs`
 - `board-choices` — `tests/board-choices.mjs`
@@ -1459,3 +1483,6 @@ Read [DISCLAIMER.md](DISCLAIMER.md) for the warranty, liability, trademark and i
 about its terms.
 
 The `table-tabletop` suite checks the preview geometry and its browser interactions. Start the isolated recorded-game preview with `node tools/play-tabletop-preview.mjs` (requires the browser-suite Playwright dependency).
+
+- `sharing` - `tests/sharing.mjs`: live deck/library permissions, public access, revocation, concurrent edits, privacy, notifications, owner-only invitations and verified email identity changes.
+- `sharing-ui` - `tests/sharing-ui.mjs`: keyboard user selection, sharing menus, email controls, profile saving and mobile layout with labeled screenshots.
