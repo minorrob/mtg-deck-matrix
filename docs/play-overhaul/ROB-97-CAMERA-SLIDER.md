@@ -41,5 +41,5 @@ Screenshots: [1280 x 720 Camera](screenshots/rob-97-1280x720.png),
 [scrolled Table](screenshots/rob-97-1280x720-scrolled.png), [1024](screenshots/rob-97-1024x768.png),
 [1400](screenshots/rob-97-1400x900.png), [390 x 844 phone baseline](screenshots/rob-97-phone-baseline.png).
 
-Full CI and the engine-owned staging release remain pending. Physical phones and hardware WebGL are unproven.
+PR #765 merged as `46ce600988a1f689841bc9c4efc9b4745a02b015` on October 18 after exact-head `80199320` passed [Actions run 39110978789](https://github.com/minorrob/mtg-deck-matrix/actions/runs/39110978789). Main was unchanged at `939f2609` when mergeability and the green head were rechecked. The refreshed base contains 529 root suites. Rob's staging look and the engine-owned staging release remain pending. Physical phones and hardware WebGL are unproven.
 ROB-98's separate spacing proposal awaits Rob; its proposed CSS is confined to the comparison browser.
