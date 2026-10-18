@@ -1,0 +1,36 @@
+{
+  "workstream": "claude-deck",
+  "updated": "2026-10-18T05:30:00Z",
+  "updated_by": "Claude · Deck intelligence (the session that wrote the program charter)",
+  "branch": "claude/crankmagic-invitations-ob12tu",
+  "now": "The program: Linear restructured around the north star, the readout and its feeds, the instruction sets and kick-off prompts; then the composition model (ROB-114) and card resolution (ROB-131).",
+  "items": [
+    {"id": "ROB-138", "outcome": "joyful", "feature": "The program readout: one page that shows every feature in my words, where it stands, what remains, and my queue", "status": "in_progress", "remaining_hours": 3, "evidence": [{"label": "PR #740", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/740"}]},
+    {"id": "ROB-137", "outcome": "joyful", "feature": "The launch checklist: what 100% done means, line by line", "status": "review", "remaining_hours": 2, "note": "Drafted in docs/program/LAUNCH-CHECKLIST.md; waits on Rob's approval."},
+    {"id": "ROB-104", "outcome": "play-any-deck", "feature": "Commander legality checked before a table starts (banned list, color identity, singleton, 100 cards, partners)", "status": "backlog", "remaining_hours": 8},
+    {"id": "ROB-109", "outcome": "deck-creation", "feature": "Build me a deck from my criteria: playstyle, budget, bracket, commander optional, colors optional", "status": "backlog", "remaining_hours": 30},
+    {"id": "ROB-111", "outcome": "deck-creation", "feature": "Bracket and Game Changer compliance explained in plain words, never silently enforced", "status": "backlog", "remaining_hours": 10},
+    {"id": "ROB-112", "outcome": "deck-creation", "feature": "Reasonableness measured against reference decks", "status": "backlog", "remaining_hours": 14},
+    {"id": "ROB-114", "outcome": "deck-tuning", "feature": "Composition model: ramp, interaction, defense, offense, win conditions against targets", "status": "backlog", "remaining_hours": 18},
+    {"id": "ROB-115", "outcome": "deck-tuning", "feature": "Synergies and chains inside the deck, and the one card that would complete a chain", "status": "backlog", "remaining_hours": 20},
+    {"id": "ROB-116", "outcome": "deck-tuning", "feature": "Simulation fidelity: the simulator and the rules engine agree where they overlap", "status": "backlog", "remaining_hours": 40},
+    {"id": "ROB-84", "outcome": "deck-tuning", "feature": "The simulation-model audit: what the simulator shares with the engine and what it estimates", "status": "backlog", "remaining_hours": 8},
+    {"id": "ROB-117", "outcome": "deck-tuning", "feature": "Every recommended swap names its evidence and its measured gain", "status": "backlog", "remaining_hours": 12},
+    {"id": "ROB-119", "outcome": "buying", "feature": "The vendor, print and price logic behind the priority dial", "status": "backlog", "remaining_hours": 14},
+    {"id": "ROB-121", "outcome": "buying", "feature": "Prices refreshed on a schedule and shown with their age", "status": "backlog", "remaining_hours": 10},
+    {"id": "ROB-123", "outcome": "tailored", "feature": "The builder and the advisor honor my deck preferences", "status": "backlog", "remaining_hours": 6},
+    {"id": "ROB-128", "outcome": "ai", "feature": "A play strategy and a SWOT for my deck, written by AI from the deck's measured facts", "status": "backlog", "remaining_hours": 20},
+    {"id": "ROB-129", "outcome": "ai", "feature": "The coaching service behind the drawer at the table", "status": "backlog", "remaining_hours": 16},
+    {"id": "ROB-130", "outcome": "ai", "feature": "Upgrade identification with evidence, gain and cost, owned ones first", "status": "backlog", "remaining_hours": 18},
+    {"id": "ROB-131", "outcome": "ai", "feature": "Card indexing resolution: a misspelled name, any export line, or a photo resolved to the catalog", "status": "backlog", "remaining_hours": 20},
+    {"id": "ROB-132", "outcome": "ai", "feature": "Every AI answer labeled, sourced and under my spending caps (the features' half)", "status": "backlog", "remaining_hours": 4}
+  ],
+  "asks_of_rob": [
+    {"id": "ROB-139", "ask": "Name the game inside Play", "recommendation": "Crank Table (alternatives on the issue: Spellcrank, Crankfire, The Command Table, Crank Night)", "needed_by": "before Play home and invitations carry the name", "url": "https://linear.app/robs-build/issue/ROB-139"},
+    {"id": "ROB-137", "ask": "Approve or edit the launch checklist (docs/program/LAUNCH-CHECKLIST.md): the ten lines that define 100% done", "recommendation": "Approve as drafted; change a line's words rather than its evidence", "needed_by": "this week, so every workstream builds to the same finish line", "url": "https://linear.app/robs-build/issue/ROB-137"},
+    {"id": "ROB-121", "ask": "Turn on the scheduled price refresh (a GitHub Actions cron) when the PR lands; R2 only if the snapshot outgrows the repository", "recommendation": "Daily prices, weekly graph, as plan-to-100 M2 recommended", "needed_by": "when ROB-121 is ready", "url": "https://linear.app/robs-build/issue/ROB-121"}
+  ],
+  "blocked_on": [
+    {"id": "ROB-123", "by": "ROB-122, the Preferences › Decks card", "owner": "codex-workshop"}
+  ]
+}

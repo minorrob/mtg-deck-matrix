@@ -5,7 +5,7 @@ Bot: well-instructed work, federated across worker bots and orchestrated by one 
 nuanced design work. This package is the instruction set. Everything in it is bounded: one base commit, one branch per task,
 an exclusive file scope, explicit exclusions, acceptance criteria that a command proves, and a fixed return format.
 
-**Base commit for every task:** `main` at `9cf57d0c` or later (its full CI run is green) (October 17; it holds #737 and the engine lane's #739; the earlier 1990ad1d base is superseded). The relay prompt is `ORCHESTRATOR-PROMPT-2026-10-17.md`.
+**Base commit for every task:** `main` at `20601740` or later (updated October 18; the earlier 9cf57d0c and 1990ad1d bases are superseded) (its full CI run is green) (October 17; it holds #737 and the engine lane's #739; the earlier 1990ad1d base is superseded). The relay prompt is `ORCHESTRATOR-PROMPT-2026-10-17.md`.
 **Read first, in this order:** `AGENTS.md`, `docs/ACTIVE.md` (top section and the lanes table), this file, then the task's own
 sources. **Repository:** https://github.com/minorrob/mtg-deck-matrix . **Linear:** project *CrankMagic — Tabletop Experience*,
 team *Army of 1*; the tracking issue for this package is named in ROB-11.
@@ -144,6 +144,26 @@ references per collection, every row with a decision, nothing outside the US rul
 `docs/playtest-harness.md` and `docs/uat/playtest-run.md` were written for Grok Bot's 50 games on staging. It needs four Access
 service tokens (Rob's steps are in the harness note) and nothing else from this package. Findings go in the template's columns,
 triaged by `tools/playtest-triage.mjs`. Not started until ROB-11 says the tokens exist.
+
+### G6 · ROB-136 · Performance budgets for every screen, measured on a phone and held by a suite (added October 18)
+
+**Written by Claude · Deck intelligence; reviewed and merged by it.** Exclusive files: a new `tests/budgets.mjs` and a new
+`docs/program/budgets.md`. Nothing else.
+
+**The task:** a table of budgets per route (`#decks`, `#decks?deck=<fixture>`, `#cards`, `#cards?tab=buy`, `#discover`,
+`#lab`, `#settings`, the landing page) for first paint, time to interactive, and the route's heaviest action, measured
+with Playwright 1.56 at 390 wide with 4x CPU throttling and a slow-3G network profile on the served repository
+(`node tools/serve-folder.mjs . 8798`); the suite measures them, prints the numbers, and fails when a route exceeds its
+budget by more than the tolerance written beside it. The board's budgets are ROB-67's and are referenced, not
+duplicated. Record the current numbers in the document with the machine and date; set each budget at the measured
+number rounded up to the next 100 ms, with a 25% tolerance, so the suite holds today's performance and catches a
+regression.
+
+**Acceptance:** `node tests/budgets.mjs` passes in under three minutes; `GEOMETRY_REQUIRED=1` turns its no-browser skip
+into a failure like `tests/browser-geometry.mjs`; the document names every route, budget, tolerance and source; a break
+(a `setTimeout` of 2 s inserted into one route's render in a scratch copy, not committed) fails exactly that route;
+`tests/data-integrity.mjs` passes after the suite is added (add the suite's line to `README.md`'s list and raise the
+count by one); `tools/local-ci.sh <head> 0` PASS.
 
 ## The return (one per task; the coordinator compiles them)
 

@@ -1,5 +1,7 @@
 # The prompt Rob relays to the Grok Bot coordinator (October 17, 2026; revised 22:40 UTC: G2 withdrawn, base 9cf57d0c)
 
+> **Superseded October 18** by `docs/program/KICKOFF-PROMPTS.md` §5, which adds G6 (ROB-136) and moves the base to main 20601740. Kept as the record of the first relay.
+
 Copied verbatim from the UI lane's session; the work package it points at is `WORK-PACKAGE-2026-10-17.md`.
 
 ```
