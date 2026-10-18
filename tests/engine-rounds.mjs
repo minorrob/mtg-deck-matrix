@@ -2,7 +2,7 @@
 
 /* THE ROUND AND THE TURN WITHIN IT (Linear ROB-76; rules/turn.mjs, nextRound; projection.mjs).
  *
- * The table labelled the turn by dividing the game's turn count by the seats it began with, which is wrong after an
+ * The table labeled the turn by dividing the game's turn count by the seats it began with, which is wrong after an
  * extra turn or once a player has left. The engine now keeps the round, counted from its turns as they are taken:
  *   1. Two, three and four seats, and a starting player other than seat 0: a round is every player's turn once, from the
  *      starting player's; `turnInRound` counts the turns in it from 1.
