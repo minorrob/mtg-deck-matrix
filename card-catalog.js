@@ -108,7 +108,28 @@
        record set does not carry is kept whole: the library is the record's cache for it. */
     const OVERLAY=['oracleId','scryfallId','flavorName','flavorNames','updatedAt'];
     function overlay(raw){const prior=raw&&raw.name?named(raw.name):null;if(!(prior&&prior.shipped))return add(raw);const keep={};for(const k of OVERLAY)if(raw[k]!==undefined&&raw[k]!==''&&!(Array.isArray(raw[k])&&!raw[k].length))keep[k]=raw[k];if(prior.oracleId)delete keep.oracleId;return add({...prior,...keep,flavorNames:[...new Set([...(prior.flavorNames||[]),...(raw.flavorNames||[]),...(raw.flavorName?[raw.flavorName]:[])])],shipped:true});}
-    async function load(url){const cached=await options.repository?.cacheGet(url);try{const response=await fetcher(url,{cache:'default'});if(!response.ok)throw Error('HTTP '+response.status);const data=await response.json();options.repository?.cachePut(url,data).catch(()=>{});return data;}catch(error){if(cached)return cached;throw Error('The public card catalog is unavailable offline. Reconnect once to download it, or import a backup containing your cards. '+error.message);}}
+    async function load(url,progressCallback=null){const cached=await options.repository?.cacheGet(url);try{const response=await fetcher(url,{cache:'default'});if(!response.ok)throw Error('HTTP '+response.status);
+      /* STREAM WITH PROGRESS TRACKING. When a Content-Length header is present and a progress
+         callback is provided, read the response body as a stream and report bytes received.
+         Otherwise fall back to response.json() directly (existing behavior). */
+      if(progressCallback&&response.headers.has('Content-Length')&&response.body){
+        const total=parseInt(response.headers.get('Content-Length'),10);
+        const reader=response.body.getReader();
+        let received=0;const chunks=[];
+        while(true){
+          const{done,value}=await reader.read();
+          if(done)break;
+          chunks.push(value);
+          received+=value.length;
+          if(progressCallback&&total>0)progressCallback(received,total);
+        }
+        const blob=new Blob(chunks);
+        const text=await blob.text();
+        const data=JSON.parse(text);
+        options.repository?.cachePut(url,data).catch(()=>{});
+        return data;
+      }
+      const data=await response.json();options.repository?.cachePut(url,data).catch(()=>{});return data;}catch(error){if(cached)return cached;throw Error('The public card catalog is unavailable offline. Reconnect once to download it, or import a backup containing your cards. '+error.message);}}
     const expect=typeof options.urls.expect==='function'?options.urls.expect:(json)=>json;const settled=await Promise.allSettled([load(options.urls.universe).then(j=>expect(j,'universe')),load(options.urls.cards).then(j=>expect(j,'cards')),load(options.urls.facts).then(j=>expect(j,'facts')),options.urls.ranks?load(options.urls.ranks).then(j=>expect(j,'ranks')):Promise.resolve(null),options.urls.flavorNames?load(options.urls.flavorNames).then(j=>expect(j,'flavorNames')):Promise.resolve(null)]);
     if(settled[0].status==='fulfilled'){const data=settled[0].value;universeDate=data.generatedAt;for(const [name,ci,rarity,mv,type,rank,commander] of data.cards)add({name,ci,rarity,mv,type,rank,commander:!!commander,verified:true,legalities:{commander:'legal'},updatedAt:universeDate});}
     if(settled[1].status==='fulfilled'){priceDate=settled[1].value.generatedAt||'';for(const c of settled[1].value.cards)add({...c,shipped:true});}

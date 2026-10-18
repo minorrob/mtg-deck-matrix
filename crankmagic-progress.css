@@ -1,0 +1,110 @@
+/* Loading progress indicator styles
+ * Design tokens only, 4.5:1 contrast minimum
+ * Static bar (no animation) under reduced motion
+ */
+
+.cm-progress-container {
+  margin: var(--space-3, 12px) 0;
+  padding: var(--space-3, 12px);
+  background: var(--v-panel);
+  border: 1px solid var(--v-line);
+  border-radius: var(--v-radius, 12px);
+}
+
+.cm-progress-label {
+  font-size: var(--text-body-size, 14px);
+  color: var(--v-ink);
+  margin: 0 0 var(--space-2, 8px) 0;
+  line-height: var(--leading-body, 1.5);
+}
+
+.cm-progress-percent {
+  font-weight: 700;
+  color: var(--v-accent);
+}
+
+.cm-progress-bar {
+  position: relative;
+  width: 100%;
+  height: 4px;
+  background: var(--v-raised);
+  border-radius: var(--v-radius, 12px);
+  overflow: hidden;
+}
+
+.cm-progress-fill {
+  height: 100%;
+  background: var(--v-accent);
+  border-radius: var(--v-radius, 12px);
+  transition: width 0.2s ease;
+}
+
+/* Static bar under reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .cm-progress-static .cm-progress-fill {
+    transition: none;
+  }
+}
+
+/* Indeterminate mode - show a pulsing bar */
+.cm-progress-indeterminate .cm-progress-fill {
+  width: 30% !important;
+  animation: cm-progress-pulse 2s ease-in-out infinite;
+}
+
+@keyframes cm-progress-pulse {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}
+
+/* Stop animation under reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .cm-progress-indeterminate .cm-progress-fill {
+    animation: none;
+    width: 100% !important;
+    opacity: 0.5;
+  }
+}
+
+/* Error state */
+.cm-progress-has-error {
+  background: var(--v-decision-bg);
+  border-color: var(--v-required);
+}
+
+.cm-progress-error {
+  padding: 0;
+}
+
+.cm-progress-error-message {
+  font-size: var(--text-body-size, 14px);
+  font-weight: 700;
+  color: var(--v-required);
+  margin: 0 0 var(--space-2, 8px) 0;
+}
+
+.cm-progress-error-instructions {
+  font-size: var(--text-small, 12px);
+  color: var(--v-ink);
+  margin: 0;
+  line-height: var(--leading-body, 1.5);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 520px) {
+  .cm-progress-container {
+    padding: var(--space-2, 8px);
+    margin: var(--space-2, 8px) 0;
+  }
+  
+  .cm-progress-label {
+    font-size: var(--text-small, 12px);
+  }
+}
