@@ -321,21 +321,7 @@ Titles vary, and the sample has 19 kinds. Among them:
   cards go to the bottom.
 - **Combat:**
   - "Declare attackers": one option per creature per player or planeswalker it could attack.
-  - "Declare blockers" (`declare-blockers:<turn>:<seat>`, `mode: "many"`): one option per creature per attacker it may
-    block, each with `cardId` and `attackerId`. Only legal pairs are offered. `legalBlocks: [{blocker, attackers}]` gives
-    the same pairs by blocker, for a board that drafts a creature at a time (Linear ROB-75).
-  - **Checking a draft before Confirm:** `room.check(seatId, {choiceId, indices})` returns `{ok, open, reasons}` and
-    changes nothing.
-    - A draft of blocks gets every reason the rules would refuse it for, at once: a creature on two attackers, or an
-      attacker with menace blocked by one. Each reason says what to do instead.
-    - Any other choice of options gets its first reason, as its answer would. The answer is refused for the same first
-      reason, so a passed draft is taken and a failed one is not.
-    - Another seat's question, or one no longer open, is `open: false`.
-    - Nothing is shown to another seat; only the answer makes blocks public. "No blocks" (`[]`) is always legal.
-    - The socket frame (`{type: "check", choiceId, indices}` answered by `{type: "checked", …}`) is one handler in
-      `cloud/game-room.mjs`, still to add (ROB-11).
-    - Not yet in the rules: required blocks (CR 509.1c), "can block an additional creature", "can't block alone", and
-      battles.
+  - "Declare blockers".
   - "Assign N damage".
 - **Targets, modes, and costs:** mana, sacrifice, counters, convoke, behold and others. A cost can be paid more than one
   way ("Pay {N}: choose the mana").
