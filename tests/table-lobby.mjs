@@ -87,6 +87,44 @@ const panelReading = (page) => page.evaluate(() => {
   return {worst: Math.round(worst * 10) / 10, inside, apart};
 });
 
+/* EVERY CONTROL IN REACH (Rob, 2026-10-13: an invited player, her window not maximized, had no Ready -- her seat's reading
+   and buttons ran out of its quarter of the table and were cut off). Each control of the lobby, reached as a person can
+   reach it -- the page scrolled, and a box with a scroll bar -- and never by scrolling a clipped box by script, which is
+   how Playwright's own click found Ready at 390 here while a person could not; then the point under its middle and its
+   four corners is the control. Also whether the table is stacked, and whether it is wider than itself (a hidden sideways
+   scroll that focusing a button can set off). */
+const inReach = (page) => page.evaluate(async () => {
+  const byHand = (n) => /(auto|scroll)/.test(getComputedStyle(n).overflowX + getComputedStyle(n).overflowY);
+  const table = document.querySelector(".cm-cloud-table");
+  const out = [];
+  for (const el of table.querySelectorAll("button, select, input, a[href]")) {
+    if (!el.getClientRects().length || getComputedStyle(el).visibility === "hidden") continue;
+    el.scrollIntoView({block: "center", inline: "nearest"});
+    for (let n = el.parentElement; n; n = n.parentElement) if (!byHand(n) && n !== document.scrollingElement) {n.scrollTop = 0; n.scrollLeft = 0;}
+    const pre = el.getBoundingClientRect();
+    window.scrollBy(0, pre.top - innerHeight / 2 + pre.height / 2);
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    const r = el.getBoundingClientRect();
+    const reached = [[0.5, 0.5], [0.12, 0.2], [0.88, 0.2], [0.12, 0.8], [0.88, 0.8]].every(([fx, fy]) => {
+      const x = r.left + r.width * fx, y = r.top + r.height * fy;
+      const at = x >= 0 && y >= 0 && x < innerWidth && y < innerHeight && document.elementFromPoint(x, y);
+      return !!at && (at === el || el.contains(at));
+    });
+    out.push({label: (el.textContent || el.getAttribute("aria-label") || "").trim().slice(0, 24), reached});
+  }
+  window.scrollTo(0, 0);
+  /* And a seat's words and controls clear of its own label (its name and status pill). */
+  const ov = (a, b) => a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1;
+  let overLabel = 0;
+  for (const q of table.querySelectorAll(".cm-seat-q")) {
+    const label = [...q.querySelectorAll(".cm-lobby-seat > header > *")].map((el) => el.getBoundingClientRect());
+    for (const bit of q.querySelectorAll(".cm-seat-detail span, .cm-seat-detail button")) if (label.some((l) => ov(bit.getBoundingClientRect(), l))) overLabel += 1;
+  }
+  return {controls: out, stacked: table.classList.contains("is-stacked"), sideways: table.scrollWidth - table.clientWidth, overLabel};
+});
+const reachWords = (r) => `${r.stacked ? "stacked" : "2x2"}; ${r.controls.map((c) => `${c.label}${c.reached ? "" : " (OUT OF REACH)"}`).join(", ")}; ${r.sideways}px sideways; ${r.overLabel} over a label`;
+const allInReach = (r) => r.controls.every((c) => c.reached) && r.sideways <= 0 && r.overLabel === 0;
+
 /* THE SERVER, HERE: one GameTable object per table. Every card is playable except one, so a refusal by name
    can be seen; the engine's own cards stand in for the rest (a vanilla creature). */
 const REFUSED = "Sol Ring";
@@ -395,6 +433,61 @@ try {
     await maya.page.waitForTimeout(300);
     if (!(await maya.page.locator("#cm-dialog[open]").count())) break;
   }
+  /* Her seat has a deck now, so Change deck, Choose mat and Ready: each in reach in a window not maximized, and on her phone.
+     A window 1024 wide is the one that cut Ready off; there the seats stack rather than lose a button. */
+  for (const [width, height] of [[1024, 768], [1100, 700], [390, 844]]) {
+    await maya.page.setViewportSize({width, height});
+    await maya.page.waitForTimeout(400);
+    const seen = await inReach(maya.page);
+    ok(seen.controls.some((c) => c.label === "Ready") && allInReach(seen),
+      `at ${width}x${height} every control of the lobby is in reach, Ready among them, none over a seat's label, and the table no wider than itself (${reachWords(seen)})`);
+  }
+  /* A seat clips 10px inside its quadrant. A longer reading -- here a spacer at its head, standing in for a deck's long
+     name -- that brings her buttons into that band, inside the quadrant and cut off all the same, stacks the table. */
+  await maya.page.setViewportSize({width: 1400, height: 900});
+  await maya.page.waitForTimeout(400);
+  const band = await maya.page.evaluate(() => {
+    const q = document.querySelector(".cm-cloud-table .cm-seat-q.is-you"), detail = q.querySelector(".cm-seat-detail");
+    const seat = q.querySelector(".cm-lobby-seat").getBoundingClientRect(), quad = q.getBoundingClientRect(), d = detail.getBoundingClientRect();
+    const grows = getComputedStyle(detail).alignSelf === "flex-start" ? "down" : "up";
+    const spacer = document.createElement("div");
+    spacer.className = "cm-test-spacer";
+    spacer.style.height = `${seat.bottom + 9 - d.bottom}px`;
+    detail.prepend(spacer);
+    /* The reading's own gap between its lines comes with the spacer: measured, and taken off, so it ends 9px in. */
+    spacer.style.height = `${parseFloat(spacer.style.height) - (detail.getBoundingClientRect().bottom - (seat.bottom + 9))}px`;
+    return {grows, room: Math.round(quad.bottom - seat.bottom), into: Math.round(detail.getBoundingClientRect().bottom - seat.bottom),
+      stacked: document.querySelector(".cm-cloud-table").classList.contains("is-stacked")};
+  });
+  await maya.page.evaluate(() => window.dispatchEvent(new Event("resize")));
+  await maya.page.waitForTimeout(500);
+  const inBand = await inReach(maya.page);
+  ok(band.grows === "down" && band.room === 10 && band.into === 9 && !band.stacked && inBand.stacked && allInReach(inBand),
+    `at 1400x900 her reading, grown 9px into the 10px band the seat clips inside its quadrant, stacks the table, every control in reach (her reading grows ${band.grows}, ${band.into}px into a ${band.room}px band; ${reachWords(inBand)})`);
+  await maya.page.evaluate(() => {document.querySelector(".cm-test-spacer")?.remove(); window.dispatchEvent(new Event("resize"));});
+  await maya.page.waitForTimeout(500);
+  ok(!(await inReach(maya.page)).stacked, "and with her reading as it was, the 2x2 is back");
+  await maya.page.setViewportSize({width: 390, height: 844});
+  /* Where the 2x2 holds every seat it is kept, and no seat reaches under the rules panel: at 1240 wide the table is under
+     1025px, so the panel's 246px floor is wider than its 24% share, and the seats keep clear of the floor. */
+  for (const [width, height] of [[1240, 900], [1920, 1080]]) {
+    await rob.page.setViewportSize({width, height});
+    await rob.page.waitForTimeout(400);
+    const seen = await inReach(rob.page);
+    const under = await rob.page.evaluate(() => {
+      const p = document.querySelector(".cm-cloud-table .cm-table-center").getBoundingClientRect();
+      return [...document.querySelectorAll(".cm-cloud-table .cm-seat-figure")].filter((f) => {const r = f.getBoundingClientRect(); return r.left < p.right - 1 && p.left < r.right - 1 && r.top < p.bottom - 1 && p.top < r.bottom - 1;}).length;
+    });
+    ok(!seen.stacked && under === 0 && allInReach(seen),
+      `at ${width}x${height} the host's table keeps its 2x2, no seat under the rules panel (${under}), every control in reach (${reachWords(seen)})`);
+  }
+  /* A seat clips 10px inside its quadrant: at 920x560 the host's Choose mat sat in that band, inside the quadrant and cut
+     off all the same. */
+  await rob.page.setViewportSize({width: 920, height: 560});
+  await rob.page.waitForTimeout(400);
+  const host920 = await inReach(rob.page);
+  ok(allInReach(host920), `at 920x560 every control of the host's lobby is in reach too (${reachWords(host920)})`);
+  await rob.page.setViewportSize({width: 1400, height: 900});
   await maya.page.locator(".cm-lobby-seat[data-seat='1'] [data-action=table-ready]").click();
   await waitText(maya.page, ".cm-lobby-seat[data-seat='1'] header", /Ready/);
   const narrow = await panelReading(maya.page);

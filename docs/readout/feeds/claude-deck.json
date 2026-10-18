@@ -1,23 +1,23 @@
 {
   "workstream": "claude-deck",
-  "updated": "2026-10-18T05:50:00Z",
+  "updated": "2026-10-18T10:58:25Z",
   "updated_by": "Claude · Deck intelligence (the session that wrote the program charter)",
-  "branch": "claude/deck-composition, claude/deck-synergies (models); claude/crankmagic-invitations-ob12tu (the program, PR #740)",
-  "now": "The composition model is on PR #749 (ROB-114) and the synergies model on its own branch (ROB-115), both waiting on green runs; next card resolution (ROB-131) and buildFromCriteria (ROB-109).",
+  "branch": "eight model PRs chained in merge order (#749 #750 #752 #758 #759 #757 #760 #761); the audit on #762",
+  "now": "Ten PRs merged to main today: eight models, the simulation audit, and ROB-116 steps 1 and 3. Open in this lane: ROB-116 step 2 (waits on the engine lane's playPod), then the five removable simplifications. Waiting on Rob: the popularity dial (ROB-109), ROB-95 before the AI strategy work (ROB-128/130/129/132), the Settings card for ROB-123, and his call on ROB-121.",
   "items": [
     {
       "id": "ROB-138",
       "outcome": "joyful",
       "feature": "The program readout: one page that shows every feature in my words, where it stands, what remains, and my queue",
-      "status": "review",
-      "remaining_hours": 1,
+      "status": "done",
+      "remaining_hours": 0,
       "evidence": [
         {
           "label": "PR #740",
           "url": "https://github.com/minorrob/mtg-deck-matrix/pull/740"
         }
       ],
-      "note": "Built; waits on PR #740 merging so the page reads main."
+      "note": "Merged (main a40f17d5); the page reads main."
     },
     {
       "id": "ROB-137",
@@ -31,85 +31,178 @@
       "id": "ROB-104",
       "outcome": "play-any-deck",
       "feature": "Commander legality checked before a table starts (banned list, color identity, singleton, 100 cards, partners)",
-      "status": "backlog",
-      "remaining_hours": 8
+      "status": "done",
+      "remaining_hours": 0,
+      "evidence": [
+        {
+          "label": "PR #753",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/pull/753"
+        }
+      ],
+      "note": "Merged (main 41997462). The lobby and the Lab each wire one line."
     },
     {
       "id": "ROB-109",
       "outcome": "deck-creation",
       "feature": "Build me a deck from my criteria: playstyle, budget, bracket, commander optional, colors optional",
-      "status": "backlog",
-      "remaining_hours": 30
+      "status": "done",
+      "remaining_hours": 0,
+      "evidence": [
+        {
+          "label": "PR #757",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/pull/757"
+        },
+        {
+          "label": "merged f96d4a99",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/commit/f96d4a99a10710ce48af1565ba5248e77e41aa4d"
+        }
+      ],
+      "note": "On main: PR #757 merged 2026-10-18. Six criteria sets legal, on budget, in bracket, every slot explained. One decision for Rob: a popularity dial (the reasonableness report found 0 to 12% overlap with what people play)."
     },
     {
       "id": "ROB-111",
       "outcome": "deck-creation",
       "feature": "Bracket and Game Changer compliance explained in plain words, never silently enforced",
-      "status": "backlog",
-      "remaining_hours": 10
+      "status": "done",
+      "remaining_hours": 0,
+      "evidence": [
+        {
+          "label": "PR #759",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/pull/759"
+        },
+        {
+          "label": "merged 53090ccd",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/commit/53090ccd743a3621dffc3f9b876cd96af0d2ebb4"
+        }
+      ],
+      "note": "On main: PR #759 merged 2026-10-18. Each bracket rule met, over, review or not checked, with the swap that would bring it inside; never enforced."
     },
     {
       "id": "ROB-112",
       "outcome": "deck-creation",
       "feature": "Reasonableness measured against reference decks",
-      "status": "backlog",
-      "remaining_hours": 14
+      "status": "done",
+      "remaining_hours": 0,
+      "evidence": [
+        {
+          "label": "PR #761",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/pull/761"
+        },
+        {
+          "label": "merged 939f2609",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/commit/939f2609a6a5b61048b9f7a68dc59280527b6f27"
+        }
+      ],
+      "note": "On main: PR #761 merged 2026-10-18. The dated report is committed; the suite holds a tolerance; two worse generators fail it."
     },
     {
       "id": "ROB-114",
       "outcome": "deck-tuning",
       "feature": "Composition model: ramp, interaction, defense, offense, win conditions against targets",
-      "status": "review",
-      "remaining_hours": 2,
+      "status": "done",
+      "remaining_hours": 0,
       "evidence": [
         {
           "label": "PR #749",
           "url": "https://github.com/minorrob/mtg-deck-matrix/pull/749"
+        },
+        {
+          "label": "merged 40e5ddcb",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/commit/40e5ddcba4c2cf3a627356f1d1a45b7b55be180d"
         }
       ],
-      "note": "Built and proven (197 checks, five breaks); waits on the green run and the merge."
+      "note": "On main: PR #749 merged 2026-10-18. Chained first; one follow-up commit for a catalog-row shape."
     },
     {
       "id": "ROB-115",
       "outcome": "deck-tuning",
       "feature": "Synergies and chains inside the deck, and the one card that would complete a chain",
-      "status": "review",
-      "remaining_hours": 2,
+      "status": "done",
+      "remaining_hours": 0,
       "evidence": [
         {
-          "label": "branch claude/deck-synergies",
-          "url": "https://github.com/minorrob/mtg-deck-matrix/tree/claude/deck-synergies"
+          "label": "PR #750",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/pull/750"
+        },
+        {
+          "label": "merged 06a22909",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/commit/06a2290910790f0ccc56e52ae431793bb30dc2fa"
         }
       ],
-      "note": "Built and proven on Krenko (the Bombardment-and-Staff engine, the Staff proposed back); waits on the green run and the merge."
+      "note": "On main: PR #750 merged 2026-10-18. Chained second."
     },
     {
       "id": "ROB-116",
       "outcome": "deck-tuning",
       "feature": "Simulation fidelity: the simulator and the rules engine agree where they overlap",
-      "status": "backlog",
-      "remaining_hours": 40
+      "status": "in_progress",
+      "remaining_hours": 28,
+      "blocked_on": "ROB-11: the engine's headless N-game entry point (playPod), asked 2026-10-18",
+      "note": "Steps 3 (variance in the result and the pack) and 1 (each simplification labeled with the cards it touches) are on main via PR #764. Step 2 (calibration) waits on the playPod ask; the removals follow it.",
+      "evidence": [
+        {
+          "label": "PR #764 (step 3: variance in the result and the pack)",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/pull/764"
+        },
+        {
+          "label": "merged e074d8d1 (steps 1 and 3)",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/commit/e074d8d1c3a9a72d6a5ac65b0d58e33daeaa6670"
+        }
+      ]
     },
     {
       "id": "ROB-84",
       "outcome": "deck-tuning",
       "feature": "The simulation-model audit: what the simulator shares with the engine and what it estimates",
-      "status": "backlog",
-      "remaining_hours": 8
+      "status": "done",
+      "remaining_hours": 0,
+      "evidence": [
+        {
+          "label": "PR #762",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/pull/762"
+        },
+        {
+          "label": "merged 27a23b0e",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/commit/27a23b0ea372f5c7e53eed9bd5d42916fee52a9a"
+        }
+      ],
+      "note": "On main: PR #762 merged 2026-10-18. The audit document; no code changed."
     },
     {
       "id": "ROB-117",
       "outcome": "deck-tuning",
       "feature": "Every recommended swap names its evidence and its measured gain",
-      "status": "backlog",
-      "remaining_hours": 12
+      "status": "done",
+      "remaining_hours": 0,
+      "evidence": [
+        {
+          "label": "PR #760",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/pull/760"
+        },
+        {
+          "label": "merged ec8cba20",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/commit/ec8cba2064c544752bcee8c3ffb309903086f4df"
+        }
+      ],
+      "note": "On main: PR #760 merged 2026-10-18. Evidence or nothing; unmeasured never a gain; the Workshop wires the advisor, the Lab and the AI advisor to it."
     },
     {
       "id": "ROB-119",
       "outcome": "buying",
-      "feature": "The vendor, print and price logic behind the priority dial",
-      "status": "backlog",
-      "remaining_hours": 14
+      "feature": "The buy plan behind the priority dial: which printing, from which vendor, in which box, and what the choice cost",
+      "status": "done",
+      "remaining_hours": 0,
+      "evidence": [
+        {
+          "label": "PR #758",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/pull/758"
+        },
+        {
+          "label": "merged 0fc6d6ff",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/commit/0fc6d6ff2720dab8d7684a208ecc388b8839a68e"
+        }
+      ],
+      "note": "On main: PR #758 merged 2026-10-18. Three extremes, three plans; the vendor table is the reader's to edit in Settings (ROB-118)."
     },
     {
       "id": "ROB-121",
@@ -150,8 +243,19 @@
       "id": "ROB-131",
       "outcome": "ai",
       "feature": "Card indexing resolution: a misspelled name, any export line, or a photo resolved to the catalog",
-      "status": "backlog",
-      "remaining_hours": 20
+      "status": "done",
+      "remaining_hours": 0,
+      "evidence": [
+        {
+          "label": "PR #752",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/pull/752"
+        },
+        {
+          "label": "merged 5dbdf75b",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/commit/5dbdf75beb8b13514b46f61323ede8c69cef06be"
+        }
+      ],
+      "note": "On main: PR #752 merged 2026-10-18. 178 of 200 real-world lines offline, 0 wrong accepts; chained third."
     },
     {
       "id": "ROB-132",
@@ -182,6 +286,13 @@
       "recommendation": "Daily prices, weekly graph, as plan-to-100 M2 recommended",
       "needed_by": "when ROB-121 is ready",
       "url": "https://linear.app/robs-build/issue/ROB-121"
+    },
+    {
+      "id": "ROB-109",
+      "ask": "Should the criteria builder lean toward what people play for the commander (a popularity dial), or stay synergy-first?",
+      "recommendation": "The dial, defaulting toward popularity for a commander EDHREC knows; synergy-first as the Combo playstyle's default",
+      "needed_by": "before the criteria screen (ROB-110) ships",
+      "url": "https://linear.app/robs-build/issue/ROB-109"
     }
   ],
   "blocked_on": [
@@ -189,6 +300,11 @@
       "id": "ROB-123",
       "by": "ROB-122, the Preferences › Decks card",
       "owner": "codex-workshop"
+    },
+    {
+      "id": "ROB-116",
+      "by": "ROB-11: a headless N-game entry point (playPod) from Claude · Engine",
+      "owner": "claude-engine"
     }
   ]
 }
