@@ -81,12 +81,16 @@ try {
   await toSettings(page);
   eq([await cameraTilt(), await cameraZoom(), await cameraCards()], ["0", "120", "70"], "and the camera defaults are kept through a reload");
   await page.locator("[data-settings-camera=tilt]").fill("60");
+  await page.waitForTimeout(100);
   await page.locator("[data-settings-camera=zoom]").fill("60");
+  await page.waitForTimeout(100);
   await page.locator("[data-settings-camera=cards]").fill("150");
   await page.waitForTimeout(300);
   eq((await saved()).camera, {tilt: 60, zoom: 60, cards: 150}, "and all three can be set to their opposite ends");
   await page.locator("[data-settings-camera=tilt]").fill("40");
+  await page.waitForTimeout(100);
   await page.locator("[data-settings-camera=zoom]").fill("100");
+  await page.waitForTimeout(100);
   await page.locator("[data-settings-camera=cards]").fill("100");
   await page.waitForTimeout(300);
   eq((await saved()).camera, {tilt: 40, zoom: 100, cards: 100}, "and back to the defaults");
