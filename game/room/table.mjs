@@ -343,7 +343,16 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
          2026-10-11: "passing the turn to the next player should always require player confirmation"): their end step is
          always asked; and a land tapped for mana may be untapped while its mana is unspent ("I should also be able to
          click the card to untap it again"). */
-      passEmpty: true, endWhenNoPerson: true, resolveAll: true, passAfterCast: true, endAsks: true, untapMana: true};
+      passEmpty: true, endWhenNoPerson: true, resolveAll: true, passAfterCast: true, endAsks: true, untapMana: true,
+      /* A spell offered from floating mana and the sources still untapped together, a two-mana rock tapped for both
+         (Rob's playtest, 2026-10-15: a commander should be castable with what is on the board): new matches only, so a
+         match launched before keeps its choices and its replay (rules/actions.mjs, `pooledTaps`). */
+      pooledTaps: true,
+      /* A person may yield the rest of an opponent's turn (Linear ROB-13, the Oct 16 handoff): new matches only, so one
+         launched before is asked as it was (room.mjs, `yieldTurn`). Not yet `passStack`: an opponent passed for over a spell
+         never sees it on the stack -- it arrives between two views, and the board voices and draws a spell from the stack
+         (crankmagic-audio.js, momentsFor) -- so the table asks for it once the board shows such a spell (ROB-23). */
+      yieldTurn: true};
       try {
         room = await startRoom({storage: storageForRoom, matchId, cards, pod, seed: `${matchId}:${now}`, slice});
         step({type: "engine-started", launchId: matchId, matchId}, now);

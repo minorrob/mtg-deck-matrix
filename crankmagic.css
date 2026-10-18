@@ -3191,6 +3191,28 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
 /* On a phone the seats stack, and a seat's content is laid over its sea, so a stacked seat has no height of
    its own: it takes one here, enough for the label bar, the commander's card and its controls. */
 @media(max-width:900px){.cm-cloud-table .cm-seat-q{min-height:230px}.cm-cloud-table .cm-table-center{max-height:none}}
+/* EVERY SEAT'S CONTROLS IN REACH, AT ANY WINDOW SIZE (Rob, 2026-10-13: "the buttons aren't visible when the screen isn't
+   big enough"). A quadrant clips what it holds, so in a window too small for the 2x2 table a seat's reading and buttons
+   ran out of its quarter and were cut off: a player invited to a table, in a window 1024 wide, saw Change deck and no
+   Ready. So:
+   - a seat keeps clear of the rules panel as the panel really is: half its width, its 246px floor included, and a margin;
+   - the table stacks its seats, one to a row and each as tall as what it holds, wherever the 2x2 cannot hold every seat's
+     card, reading and controls inside what clips them -- measured each time the table is drawn or the window changes
+     (crankmagic-seat-art.js, fitSeats) -- and always on a phone. */
+.cm-cloud-table .cm-q-br .cm-seat-figure,.cm-cloud-table .cm-q-tr .cm-seat-figure{right:max(24%,132px)}
+.cm-cloud-table .cm-q-bl .cm-seat-figure,.cm-cloud-table .cm-q-tl .cm-seat-figure{left:max(24%,132px)}
+.cm-cloud-table.is-stacked{grid-template-columns:minmax(0,1fr);grid-template-rows:none;aspect-ratio:auto;width:100%}
+/* Positioned and clipped: the gear stamp bleeds 18px past the panel's corner, and a static panel handed it to the table
+   to be placed against -- 62% of the table wide, 18px past its right edge -- so the stacked table was wider than its
+   column, a hidden sideways scroll that focusing a button could set off. */
+.cm-cloud-table.is-stacked .cm-table-center{position:relative;inset:auto;transform:none;width:auto;min-width:0;max-height:none;overflow:clip;order:-1;box-shadow:none}
+.cm-cloud-table.is-stacked .cm-seat-q{min-height:230px}
+.cm-cloud-table.is-stacked .cm-seat-q .cm-seat-body{padding:0;height:auto}
+.cm-cloud-table.is-stacked .cm-seat-q .cm-lobby-seat>header{left:0;right:0}
+/* The figure in the flow, so the seat grows with its reading and controls rather than cutting them off; the card a
+   fixed height, since a share of a height that now follows the content would be a share of nothing. */
+.cm-cloud-table.is-stacked .cm-seat-q .cm-seat-figure{position:relative;inset:auto;margin:46px 12px 10px}
+.cm-cloud-table.is-stacked .cm-seat-q .cm-seat-card{height:150px;max-height:none}
 /* THE CLOUD BOARD (M5, crankmagic-board.js; the handoff's Focus view). The strip is one 48px line; the pane
    holds every seat's tile; the mat is felt with its own ink in both themes, as the poster pair is, because the
    cards on it do not flip; its zones are 1px frames at about 55% white with small italic names. Cards are sized
@@ -3932,3 +3954,31 @@ button.cm-vitals{cursor:pointer}
 .cm-table-recent-row[data-outcome="win"] b{color:var(--st-inbox)}
 .cm-table-recent-row[data-outcome="loss"] b{color:var(--st-remove)}
 .cm-table-launch-note{margin:4px 0 0;font-size:12px}
+
+/* Shared access and profile controls: compact on desktop and single-column on phones. */
+.cm-sharing-dialog{width:min(550px,calc(100vw - 24px))!important}
+.cm-share-options{display:flex;gap:4px;border-bottom:1px solid var(--v-line);margin-bottom:16px}
+.cm-share-options button{flex:1;padding:10px 6px;border:0;background:transparent;color:inherit;border-bottom:2px solid transparent}
+.cm-share-options [aria-selected=true]{border-bottom-color:var(--v-accent);font-weight:700}
+#cm-share-form label{display:grid;gap:6px;font-size:13px;margin-bottom:10px}
+#cm-share-form input:not([type=checkbox]),#cm-share-form select{width:100%;min-width:0;padding:8px}
+.cm-share-search{position:relative}.cm-share-search ul{list-style:none;margin:0;padding:0;max-height:220px;overflow:auto;border-radius:8px;background:var(--v-panel)}
+.cm-share-search [role=option]{padding:9px;cursor:pointer;border-bottom:1px solid var(--v-line)}
+.cm-share-search [role=option]:hover,.cm-share-search [aria-selected=true]{background:var(--v-raised)}
+.cm-share-search small,.cm-share-grant small{display:block;color:var(--v-muted);overflow-wrap:anywhere}
+.cm-share-add{display:flex;align-items:end;gap:8px;margin-top:14px}.cm-share-add label{flex:1}
+.cm-share-grant{display:grid;grid-template-columns:minmax(0,1fr) 125px 30px;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--v-line)}
+.cm-share-grant span{min-width:0;overflow-wrap:anywhere}
+.cm-shared-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px}
+.cm-shared-table{overflow:auto;max-height:75vh}.cm-shared-table table{width:100%;border-collapse:collapse}.cm-shared-table th,.cm-shared-table td{text-align:left;padding:10px;border-bottom:1px solid var(--v-line)}
+.cm-profile-summary{display:flex;gap:12px;align-items:center;margin-bottom:14px;overflow-wrap:anywhere}
+.cm-profile-summary img,.cm-profile-placeholder{width:60px;height:60px;border-radius:50%;object-fit:cover;flex:none}
+.cm-profile-placeholder{display:grid;place-items:center;background:var(--v-raised);font-size:24px}
+#matrix-v2 .cm-settings{display:block;columns:2;column-gap:16px}
+#matrix-v2 .cm-settings-card{break-inside:avoid;display:block;margin-bottom:16px;padding:16px}
+@media(max-width:760px){#matrix-v2 .cm-settings{columns:1}.cm-share-grant{grid-template-columns:minmax(0,1fr) 110px 28px}}
+
+.cm-share-grant [data-remove-person]{border:0;border-radius:6px;background:transparent;color:inherit;font-size:20px;min-height:36px;cursor:pointer}
+@media(max-width:480px){.cm-share-grant{grid-template-columns:minmax(0,1fr) 135px 28px}.cm-share-grant select{font-size:12px}}
+
+.cm-sharing-dialog p{white-space:normal;overflow-wrap:anywhere}
