@@ -28,6 +28,8 @@ export const REGISTRY = [
   {file: "data/precons.json", id: "precons@1", generator: "tools/build-precons.mjs", checkedBy: "tools/build-precons.mjs", main: "decks"},
   {file: "data/precons-latest.json", id: "precons-latest@1", generator: "tools/build-precons.mjs", checkedBy: "tools/build-precons.mjs", main: "decks"},
   {file: "data/flavor-names.json", id: "flavor-names@1", generator: "tools/flavor-names.mjs", checkedBy: "tools/flavor-names.mjs", main: "cards"},
+  /* The Commander banned list by name, dated (ROB-104): commander-legality.js refuses these before a table starts. */
+  {file: "data/commander-banned.json", id: "commander-banned@1", generator: "tools/commander-banned.mjs", checkedBy: "tools/commander-banned.mjs", main: "cards"},
   {file: "data/commander-glossary.json", id: "commander-glossary@1", generator: HAND, checkedBy: "tools/check-glossary.mjs", main: "entries"},
   {file: "data/deck-guides.json", id: "deck-guides@1", generator: "tools/generate-guides.mjs", checkedBy: "tools/generate-guides.mjs", main: "decks"},
   {file: "data/deck-ratings.json", id: "deck-ratings@1", generator: "tools/sim/rate-decks.mjs", checkedBy: "tools/sim/rate-decks.mjs", main: "decks"},
