@@ -60,10 +60,14 @@ for (const p of [cost, speed, print]) {
 }
 
 /* 4. Shipping, lead times and the house rules. */
-const small = B.buyPlan([{name: "Thornbite Staff"}, {name: "Goblin Bombardment"}], snapshot, {cost: 1});
-ok(small.bundles.length === 1, `a small order is not split across vendors (${small.chosen})`);
-const mail = small.bundles.find((b) => b.vendor.kind === "mail");
-ok(!mail || mail.shipping === 0 || mail.subtotal < vendors.vendors.find((v) => v.id === mail.vendor.id).freeOver, "shipping is charged only under the vendor's threshold");
+const small = B.buyPlan([{name: "Thornbite Staff"}, {name: "Goblin Bombardment"}], snapshot, {cost: 1}, {local: false});
+ok(small.bundles.length === 1 && small.bundles[0].vendor.id === "tcgplayer" && small.bundles[0].subtotal < 50, `a small mail order is one bundle under the threshold (${small.chosen}, $${small.bundles[0].subtotal})`);
+eq(small.total.shipping, 3.99, "and it pays the flat shipping");
+eq(small.total.all, Math.round((small.total.cards + 3.99) * 100) / 100, "which the total carries");
+const big = cost.bundles.find((b) => b.vendor.id === "tcgplayer");
+ok(big && big.subtotal >= 50 && big.shipping === 0, `over the threshold shipping is waived ($${big && big.subtotal})`);
+const withCounter = B.buyPlan([{name: "Thornbite Staff"}, {name: "Goblin Bombardment"}], snapshot, {cost: 1});
+ok(withCounter.total.all <= small.total.all, `with a counter to walk into, the small order goes where it is cheapest all in (${withCounter.chosen}, $${withCounter.total.all} against $${small.total.all} by mail)`);
 const noLocal = B.buyPlan(needs, snapshot, {speed: 1}, {local: false});
 ok(noLocal.bundles.every((b) => b.vendor.kind === "mail") && noLocal.slowestDays === 4, `with no counter to walk into, speed is the fastest mail vendor (${noLocal.bundles.map((b) => b.vendor.name).join(", ")}, ${noLocal.slowestDays} days)`);
 const dear = cost.lines.find((l) => l.name === "Rhystic Study");
