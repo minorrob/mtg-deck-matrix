@@ -21,7 +21,7 @@ BREAKS = [
      ''),
     ('drop the undo action from the success notice', 'crankmagic-exchange-ui.js',
      "C.notice(`Imported ${data.resolved.length} rows. Press Undo to reverse this import.`,false,{action:'undo',label:'Undo'});",
-     "C.notice(`Imported ${data.resolved.length} rows.`);"),
+     "C.notice(`Imported ${data.resolved.length} rows.`,false,{undo:false});"),
     ('use network resolver even for pasted text', 'crankmagic-exchange-ui.js',
      "if(!pending.text||pending.text.trim()===''){",
      "if(true){"),
