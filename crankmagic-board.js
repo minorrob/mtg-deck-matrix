@@ -622,6 +622,29 @@ globalThis.CrankBoard = Object.seal({
       : `<div class="cm-bcard is-empty${back && zone.count ? " is-back" : ""}" aria-hidden="true">${back && zone.count ? `<b class="cm-bcard-count">${zone.count}</b>` : ""}</div>`;
     return `<figure class="cm-mat-zone cm-board-pile" data-zone="${e(label.toLowerCase())}" aria-label="${e(label)}, ${zone.count}" title="${e(label)}, ${zone.count}">${face}<figcaption><em>${e(label)}</em><b>${zone.count}</b></figcaption></figure>`;
   }
+  /* The command zone: commanders with tax badges and castability highlighting (ROB-29). */
+  function commandZone(zone) {
+    if (!zone.count) return `<figure class="cm-mat-zone cm-board-pile" data-zone="command" aria-label="Command, 0" title="Command, 0"><div class="cm-bcard is-empty" aria-hidden="true"></div><figcaption><em>Command</em><b>0</b></figcaption></figure>`;
+    const commanders = zone.cards.filter((c) => c.commander);
+    if (!commanders.length) {
+      const top = zone.cards[0];
+      return `<figure class="cm-mat-zone cm-board-pile" data-zone="command" aria-label="Command, ${zone.count}" title="Command, ${zone.count}">${card(top)}<figcaption><em>Command</em><b>${zone.count}</b></figcaption></figure>`;
+    }
+    const faces = commanders.map((c) => {
+      const opts = optionsFor(c.cardId), mine = view.decision && !sending;
+      const bright = mine && opts.length > 0, chosen = opts.some((o) => picked.includes(o.index));
+      const cls = ["cm-bcard", c.name ? "" : "is-back", bright ? "is-bright" : "", chosen ? "is-picked" : "", selected === c.cardId ? "is-selected" : ""].filter(Boolean).join(" ");
+      const tax = c.commanderTax !== undefined && c.commanderTax > 0 ? c.commanderTax : 0;
+      const state = [chosen ? "chosen" : "", selected === c.cardId ? "selected" : ""].filter(Boolean);
+      const can = [...new Set(opts.map((o) => verbFor(o)))];
+      const label = `${c.name}${state.length ? ", " + state.join(", ") : ""}${bright ? `: ${can.join(" or ")}${opts.length > can.length ? `, ${opts.length} ways` : ""}` : ""}${tax ? `, commander tax {${tax}}` : ""}`;
+      return `<button type="button" class="${cls}" data-action="board-card" data-card="${c.cardId}" aria-label="${e(label)}">
+        <span class="cm-bcard-name">${e(c.name)}</span>
+        <img src="${e(pictureOf(c.name))}" alt="" draggable="false" loading="lazy" referrerpolicy="no-referrer">
+        ${tax ? `<span class="cm-bcard-marks"><span class="cm-bcard-mark cm-commander-tax">{${tax}}</span></span>` : ""}</button>`;
+    }).join("");
+    return `<figure class="cm-mat-zone cm-board-pile" data-zone="command" aria-label="Command, ${zone.count}" title="Command, ${zone.count}">${faces}<figcaption><em>Command</em><b>${zone.count}</b></figcaption></figure>`;
+  }
   const cardOrders=new Map();
   const cardOrderKey=section=>`cm-card-order:${C.signedInAs?.() || 'local'}:${view?.matchId || tableId}:${view?.seat}:${section}`;
   function arrangedCards(cards,section) {
@@ -656,7 +679,7 @@ globalThis.CrankBoard = Object.seal({
         <div class="cm-mat-zone cm-board-field" data-zone="battlefield">${group("Creatures", creatures)}${group("Artifacts & enchantments", other)}${!creatures.length && !other.length ? `<p class="cm-board-empty">No permanents yet.</p>` : ""}<i class="cm-mat-label">Battlefield</i></div>
         <div class="cm-mat-zone cm-board-lands" data-zone="lands">${cardSection(lands,`${i}:lands`)}<i class="cm-mat-label">Lands · ${lands.length}</i></div>
         ${you ? `<span class="cm-board-chip">${mana} mana open · land drop ${p.landsPlayed ? "used" : "1 left"}</span>` : ""}
-        ${pile("Command", z.Command, z.Command.cards[0])}${pile("Exile", z.Exile, z.Exile.cards.at(-1))}
+        ${commandZone(z.Command)}${pile("Exile", z.Exile, z.Exile.cards.at(-1))}
         ${size === "focus" ? historyBand(6) : ""}
         ${pile("Library", z.Library, null, {back: true, draw: you && !!view.decision && view.decision.kind === "draw" && view.status !== "finished"})}${pile("Graveyard", z.Graveyard, z.Graveyard.cards.at(-1))}
       </div>`;
