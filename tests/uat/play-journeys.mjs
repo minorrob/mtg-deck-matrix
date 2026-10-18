@@ -179,7 +179,7 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
   await rob.page.locator("#cm-table-seconds").waitFor();
   clock += 10000;
   await serial(() => tableFor(id).alarm());
-  await rob.page.locator("#cm-board .cm-board-strip").waitFor({timeout: 30000});
+  await rob.page.locator("#cm-board .cm-stage-top").waitFor({timeout: 30000});
   await maya.page.locator("#cm-board").waitFor({timeout: 30000});
   ok(true, `table ${n}: Maya brings ${mayaDeck.name}; everyone is ready; the countdown runs out and both pages are the board`);
 
@@ -234,7 +234,8 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
   for (const [width, height] of SIZES) {
     await rob.page.setViewportSize({width, height});
     for (const view of ["table", "focus", "full"]) {
-      await rob.page.click(`[data-action=board-view][data-view=${view}]`);
+      await rob.page.click("[data-action=board-camera]");
+      await rob.page.click(`.cm-stage-camera [data-action=board-view][data-view=${view}]`);
       await rob.page.locator(view === "full" ? ".cm-full-rail" : view === "table" ? ".cm-board-table" : ".cm-board-mat").waitFor();
       await rob.page.waitForTimeout(300);
       const g = await rob.page.evaluate(() => {
@@ -266,7 +267,8 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
       await shot(rob.page, `t${n}-${view}-${width}x${height}`);
     }
     await rob.page.evaluate(() => document.fullscreenElement && document.exitFullscreen()).catch(() => {});
-    await rob.page.click("[data-action=board-view][data-view=focus]");
+    await rob.page.click("[data-action=board-camera]");
+    await rob.page.click(".cm-stage-camera [data-action=board-view][data-view=focus]");
   }
   await rob.page.setViewportSize({width: 1400, height: 900});
   /* THE PHONE, held sideways: Focus only, the board the whole screen. */
@@ -303,7 +305,8 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
     await settle();
   }
   /* END, and THE RECORD. */
-  await rob.page.click("[data-action=board-tools]");
+  await rob.page.click("[data-action=board-profile]");
+  await rob.page.click(".cm-profile-menu [data-action=board-tools]");
   await rob.page.click("#cm-board-tools [data-action=board-end]");
   await rob.page.click("#cm-board-tools [data-action=board-end][data-confirm='1']");
   await waitText(rob.page, ".cm-board-over", /ended early/).catch(async (e) => {console.log("ROB AT END", (await text(rob.page, "#cm-main")).slice(0, 500).replace(/\n+/g, " | ")); throw e;});

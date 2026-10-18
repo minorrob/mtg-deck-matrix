@@ -17,8 +17,7 @@ const swatch=([k,label,line])=>{const [palette,face]=C.THEME_FACE[k];return `<bu
 C.HELP.settings={title:'Settings',body:`<p>Your account, how the app looks, the price cap a deck is held to, and your library's data: backups, exports, history, and starting over.</p><p>A backup is an extra copy of the library, in a file you keep. Restoring one <strong>replaces</strong> the library with the file's.</p>`};
 
 views.settings=async()=>{
-  const p=C.state.preferences||{},choice=C.themeChoice(),still=Boolean(p.reduceMotion),stepByStep=(p.play||{}).stepByStep===true,rule=globalThis.CrankRules?globalThis.CrankRules.RULES.deckCap:null;
-  const overlay=Number.isFinite(Number((p.play||{}).overlay))?Math.min(100,Math.max(0,Number((p.play||{}).overlay))):60;
+  const p=C.state.preferences||{},choice=C.themeChoice(),still=Boolean(p.reduceMotion),rule=globalThis.CrankRules?globalThis.CrankRules.RULES.deckCap:null;
   const own=Number(p.defaultBudgetCap)>0?Number(p.defaultBudgetCap):null,version=document.querySelector('meta[name="crankmagic-version"]')?.content||'';
   C.main.innerHTML=C.pageHead('Settings','','settings','<p class="cm-decks-summary">Account, appearance, play, prices and data.</p>')
    +`<div class="cm-settings">`
@@ -31,12 +30,7 @@ views.settings=async()=>{
       +`<p class="cm-muted">Stills the animated backgrounds and transitions. Your device's own setting does the same whatever this says.</p>`
       +(globalThis.CrankStage?`<p class="cm-settings-label">Table design</p><div class="cm-settings-row"><label class="cm-settings-select">Table <select data-settings-table aria-label="Table design">${CrankStage.appearances.tables.map(t=>`<option value="${e(t.id)}"${CrankStage.tableDesign(tableChoice()).id===t.id?' selected':''}>${e(t.name)}</option>`).join('')}</select></label></div><p class="cm-muted">The table the game is played on, for this device. The same choice is in the Camera menu at the table.</p>`:'')
       +`<div class="cm-settings-row">${b('Confirmations…','confirm-skips')}</div>`)
-   +card('play','Play',
-      `<div class="cm-settings-row"><button type="button" class="v-button cm-chip-toggle" data-action="set-step-by-step" aria-pressed="${stepByStep}">Stop at every step of my turn</button></div>`
-      +`<div class="cm-settings-row">${C.sideDrawerSettings?b('Set Side Drawer Modules','board-modules-settings'):''}</div>`
-      +`<p class="cm-settings-label">Overlay</p><div class="cm-settings-row"><label class="cm-settings-slider">Callouts over the table<input type="range" min="0" max="100" step="1" value="${overlay}" data-settings-overlay aria-label="Callouts over the table" aria-valuetext="${overlay===0?'off':overlay+'%'}"><output>${overlay===0?'Off':overlay+'%'}</output></label></div>`
-      +`<p class="cm-muted">What just happened at the table, called out in a word over the board: an attack coming in, a hit, a spell countered, your turn. Off at the left; louder and longer toward the right. Reduce motion shows each one without its entrance.</p>`
-      +`<p class="cm-muted">Off, a step of your turn with nothing in it for you to do passes by itself, and the table stops where there is something: a land to play, a spell you can pay for, an attack. On, it stops at every step (upkeep, draw, main, combat, the end step), and you move on from each one yourself. Either way your turn never ends by itself: in your end step the button reads End turn. At a table, from its next step.</p>`)
+   +C.settingsPlayCard(card)
    +card('prices','Prices',
       `<p>Prices are in US dollars, from Scryfall's daily market prices.</p>`
       +`<form class="cm-settings-cap" data-settings-cap><label>Default budget cap ($)<input name="cap" type="number" min="1" step="1" inputmode="numeric" value="${own??''}" placeholder="${e(rule??'')}"></label>${b('Save cap','save-budget-cap',{},true)}</form>`
@@ -78,13 +72,6 @@ actions['ai-settings-save']=async()=>{const f=document.getElementById('cm-ai-set
     /* Not elements.length, which is the form's count of controls. */
     length:f.elements.adviceLength.value==='detailed'?'detailed':'short',coachSees:f.elements.coachSees.value==='board'?'board':'hand'};
   await commit({type:'preferences',values:{aiCoach:next}});actions.close();notice('AI Coach settings saved.');};
-/* STOP AT EVERY STEP OF MY TURN (Rob, 2026-10-11): kept with the preferences (`play`), and told to the room by the board
-   (crankmagic-board.js, prefer). */
-actions['set-step-by-step']=async()=>{const play=(C.state.preferences||{}).play||{},on=play.stepByStep!==true;await commit({type:'preferences',values:{play:{...play,stepByStep:on}}});notice(on?'Your turn now stops at every step; you move on from each yourself.':'Steps of your turn with nothing to do pass by themselves again. Your turn still never ends without you.');};
-/* THE OVERLAY (the callouts' loudness, 0 off to 100): a slider, previewed as it moves and saved when it is let go, with
-   the rest of the Play preferences (crankmagic-board.js reads play.overlay). */
-document.addEventListener('input',ev=>{const el=ev.target.closest?.('[data-settings-overlay]');if(!el)return;const n=Number(el.value);el.setAttribute('aria-valuetext',n===0?'off':n+'%');const out=el.parentElement.querySelector('output');if(out)out.textContent=n===0?'Off':n+'%';});
-document.addEventListener('change',async ev=>{const el=ev.target.closest?.('[data-settings-overlay]');if(!el)return;const play=(C.state.preferences||{}).play||{},n=Math.min(100,Math.max(0,Math.round(Number(el.value)||0)));await commit({type:'preferences',values:{play:{...play,overlay:n}}},{renderView:false});notice(n===0?'Callouts off.':`Callouts at ${n}%.`);});
 actions['set-motion']=async()=>{const on=!(C.state.preferences&&C.state.preferences.reduceMotion);await commit({type:'preferences',values:{reduceMotion:on}});notice(on?'Motion reduced: backgrounds and transitions hold still.':'Motion back on (your device’s own setting still applies).');};
 /* The cap is read from its own form, whichever button or key submitted it. Empty goes back to the rule. */
 actions['save-budget-cap']=async el=>{const form=el.closest('[data-settings-cap]'),raw=String(form?.elements.cap.value??'').trim(),n=raw===''?null:Number(raw);
