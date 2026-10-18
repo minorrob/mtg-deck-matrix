@@ -328,6 +328,9 @@ Titles vary, and the sample has 19 kinds. Among them:
 - `{type: "act", …}`: an answer.
 - `{type: "prefer", stepByStep: true | false}`.
 - `{type: "yield", on: true | false}`: Yield turn, and Stop yielding.
+- `{type: "view", after: "event:N"}`: the latest view, its `events` everything since event N (see Events, below). The
+  room takes `after` (`room.view(seatId, {after})`); the socket passes it once its one line is added in
+  `cloud/game-room.mjs` (asked in ROB-11). Until then a `view` frame's `after` is ignored.
 
 **Received by the screen:**
 - `view`: the whole `CrankRoomView@1` below.
@@ -352,6 +355,49 @@ Titles vary, and the sample has 19 kinds. Among them:
   person, confirmed twice); and, once the game is finished, download its record.
 - **The Coach:** a person invited to AI features may ask the Coach (an AI) about their game. It answers in text.
 
+### Events, `events.v1` (Linear ROB-77)
+
+What happened, as data, so the board need not read it from the history's sentences or from two views' difference. A spell
+cast and resolved between two views (an opponent passed for, `passStack`) arrives as `cast` then `resolve`.
+
+- **Each view carries the change it shows:** `events` holds what the action that led to this view did, newest last. Two
+  views in a row share no event; a view sent again (a refresh) may repeat the last change's, so keep the newest `eventId`
+  you have handled and skip any not newer.
+- **Each event:** `{eventId, kind, turn, phase, …}`. `eventId` is `"event:N"`, N rising through the match, the same on a
+  replay. `player` (a seat index) where someone did it. `decisionId`, where a person's answer made it: the `decision.id`
+  they answered.
+- **A card** is `{cardId, name}`; `name` is null for a face-down card.
+- **Kinds:**
+
+| Kind | Fields |
+|---|---|
+| `turn` | `player`, `extra?` |
+| `draw` | `player`, `count` (1); the drawer's own view also has `card`, while it is still in their hand |
+| `land` | `player`, `card` |
+| `cast` | `player`, `card`, `stackId` |
+| `ability` | `player`, `card`, `stackId`, `trigger?` |
+| `resolve` | `card`, `stackId` |
+| `countered` | `player`, `stackId` |
+| `tap` | `card`, `tapped` |
+| `damage` | `source`, `target` (`{player}` or `{card}`), `amount` |
+| `life` | `player`, `from`, `to` |
+| `token` | `player`, `card` (one event per token) |
+| `move` | `card`, `from`, `to`, `owner` (zones: hand, library, battlefield, graveyard, exile, stack, command, or null) |
+| `attack` | `player`, `attackers: [{card, defender: {player, planeswalker?}}]` |
+| `block` | `player`, `blocks: [{card, blocking}]` |
+| `reveal` | `player`, `card` |
+| `monarch` | `player` |
+| `roll` | `player`, `sides`, `result` |
+| `lost` | `player`, `reason?` |
+| `over` | `winner` |
+
+  Ignore a kind you don't know; no kind changes its meaning within v1.
+- **What a seat is told** is what the history tells everyone: a card moving between two hidden zones is no event, and
+  another seat's draw is a count. The no-leak harness reads every view's events.
+- **Reconnecting:** send `{type: "view", after: <the newest eventId you handled>}`. The view's `events` are then everything
+  since. The room keeps its newest 200; when what you missed is older, the view says `eventsReset: true` and has no
+  events: start from the view itself, without animating.
+
 ### The view, `CrankRoomView@1`
 
 - **Top level:**
@@ -359,7 +405,8 @@ Titles vary, and the sample has 19 kinds. Among them:
   - `departures`;
   - `seats: [{seatId, name, pilot, level?}]`;
   - `waitingOn`, `decision`, `state`, `history`;
-  - sometimes `continuing`, `stepByStep`, `yourTurn`, `yielding` and `mayYield` (the last two the seat's own only).
+  - sometimes `continuing`, `stepByStep`, `yourTurn`, `yielding` and `mayYield` (the last two the seat's own only);
+  - `eventsSchema` (`"events.v1"`), `events`, and sometimes `eventsReset` (below).
 - **`state`:** `turn`, `turnPlayerId`, `priorityPlayerId`, `phase`, `players`, `combat`, `stack`, `stackSize`,
   `gameOver`.
 - **Each player:** `{playerId, name, life, health, counters, mana, landsPlayed, monarch?, zones}`. A player's `counters`
