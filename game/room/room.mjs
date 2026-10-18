@@ -69,7 +69,8 @@ import {passPriority} from "../engine/rules/priority.mjs";
 import {gameOver, concede} from "../engine/rules/sba.mjs";
 import {beginMulligans} from "../engine/rules/mulligan.mjs";
 import {projectFor} from "../engine/projection.mjs";
-import {controllerOf, characteristicsOf} from "../engine/rules/layers.mjs";
+import {controllerOf, characteristicsOf, deriving} from "../engine/rules/layers.mjs";
+import {blockers} from "../engine/rules/combat.mjs";
 import {countWords, inWords, targetName} from "../engine/script/bind.mjs";
 import {createRng} from "../engine/rng.mjs";
 import {createJournal, hashState} from "../engine/journal.mjs";
@@ -1018,6 +1019,24 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       return {indices: given.indices ?? [], ...(given.amounts ? {amounts: given.amounts} : {}), ...(given.value !== undefined ? {value: given.value} : {}), ...(given.cancel ? {cancel: true} : {})};
     },
 
+    /**
+     * A draft of the seat's answer, checked whole and changing nothing (Linear ROB-75): `{ok, open, reasons}`. A draft of
+     * blocks is told every reason the rules would refuse it for (rules/combat.mjs, `blockers.check`, what an answer is
+     * refused by too); any other question, the first, as its answer would be. Nothing is kept, sent to another seat, taped
+     * or journalled: only the answer makes blocks public. A question no longer open says so (`open: false`), and the
+     * seat's view has the one that is.
+     */
+    check(seatId, {choiceId, indices} = {}) {
+      const seat = seatIndex(seatId);
+      if (seat < 0) throw new RoomError(403, "That seat is not at this table.");
+      const pending = controller.pending;
+      if (finished() || pendingSeat !== seat || !pending || pending.id !== choiceId)
+        return {ok: false, open: false, reasons: ["That question is no longer open. Answer the one your view shows now."]};
+      const reasons = state.awaiting?.kind === "declare-blockers"
+        ? deriving(state, () => blockers.check(state, state.awaiting, indices)).reasons
+        : [controller.check({choiceId, indices})].filter(Boolean);
+      return {ok: reasons.length === 0, open: true, reasons};
+    },
     async act(seatId, request) {
       const seat = seatIndex(seatId);
       if (seat < 0) throw new RoomError(403, "That seat is not at this table.");
