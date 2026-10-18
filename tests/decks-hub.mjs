@@ -3,7 +3,8 @@
  * In a real page with the committed library restored:
  *
  *   1. The head is the design's: Compare, then New deck as the primary; Compare waits for two ticks.
- *   2. Stage chips (All · Building · Playable · Complete, and Defining only when a deck is being defined)
+ *   2. Play status chips (All · To load · Loading · Playable · Complete; Rob, 2026-10-18), read from the model's deckStatus;
+ *      Loading shows only while a deck is loading, so the head fits the 390px budget,
  *      filter the tiles to that stage, and say so when none match.
  *   3. The sort is "Closest to finished" by default -- the fewest copies to buy, on order or standing in
  *      -- and also Name and Recently changed, which reads the change journal.
@@ -31,10 +32,10 @@ const facts = (page) => page.evaluate(async () => {
     const last = {};
     for (const row of history) { const id = row.operation && row.operation.deckId; if (id && !(id in last)) last[id] = row.at || ""; }
     return s.decks.filter((d) => !d.archived).map((d) => {
-      const x = CrankCollection.readiness(s, d);
+      const x = CrankCollection.readiness(s, d), p = CrankCollection.deckStatus(s, d);
       return {id: d.id, name: d.name, createdAt: d.createdAt, changed: last[d.id] || d.createdAt || "",
         left: (x.toBuy || 0) + (x.ordered || 0) + (x.standIns || 0),
-        stage: d.status === "draft" ? "defining" : x.complete ? "complete" : x.playable ? "playable" : "building"};
+        stage: p.complete ? "complete" : p.play};
     });
   } finally { r.close(); }
 });
@@ -59,8 +60,9 @@ try {
 
   /* 2 and 3. The default: every live deck, closest to finished first. */
   const all = await facts(page);
-  eq(await page.$$eval(".cm-decks-stages a", (as) => as.map((a) => a.textContent)), ["All", "Building", "Playable", "Complete"],
-    "the stage chips are the design's (Defining appears only when a deck is being defined)");
+  const loadingNow = all.some((d) => d.stage === "loading");
+  eq(await page.$$eval(".cm-decks-stages a", (as) => as.map((a) => a.textContent)), ["All", "To load", ...(loadingNow ? ["Loading"] : []), "Playable", "Complete"],
+    `the chips are the Play status (Rob, 2026-10-18), and Complete; Loading only while a deck is loading (${loadingNow ? "one is" : "none is"})`);
   eq(await page.$eval(".cm-decks-stages [aria-current=true]", (a) => a.textContent), "All", "All is the chip in force");
   eq(await page.$eval("#cm-decks-sort", (s) => s.value), "closest", "and the sort is Closest to finished");
   const closest = [...all].sort((a, b) => a.left - b.left || byName(a, b)).map((d) => d.id);

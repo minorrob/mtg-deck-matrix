@@ -166,7 +166,7 @@ try {
     await page.getByRole('button',{name:'Set Side Drawer Modules',exact:true}).click();
   };
   await openDrawerSettings();
-  for(const id of ['screen','history','coach','counter','resources','stack','inspect','table','recommended','chat','actions']) await page.locator(`input[name="module-${id}"][value="${['table','inspect','stack','history','counter'].includes(id)?'right':'none'}"]`).check();
+  for(const id of ['history','coach','counter','resources','stack','inspect','table','recommended','chat','actions']) await page.locator(`input[name="module-${id}"][value="${['table','inspect','stack','history','counter'].includes(id)?'right':'none'}"]`).check();
   await page.getByRole('button',{name:'Save drawer modules',exact:true}).click();
   await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
   assert.equal(await page.locator('.cm-module-add, [data-action=board-module-add], [data-action=board-module-reset]').count(),0,'drawer configuration uses Settings without taking module space');
@@ -186,16 +186,16 @@ try {
   assert.equal(await page.locator('.cm-stage-rail .cm-stage-module[data-module="history"]').count(),1,'radio moves History into the left drawer');
   assert.equal(await page.locator('.cm-stage-module[data-module="counter"]').count(),0,'None hides Counter-Intel');
   for(const open of [true,false]) {
-    const edges=await page.evaluate(()=>{
+    const edges=await page.evaluate((open)=>{
       const r=s=>document.querySelector(s).getBoundingClientRect();
-      return {left:r('.cm-stage-rail').right,leftArrow:r('.cm-stage-left').left,right:r('.cm-stage-side').left,rightArrow:r('.cm-stage-right').right};
-    });
+      return {left:open?r('.cm-stage-rail').right:r('#cm-board').left,leftArrow:r('.cm-stage-left').left,right:open?r('.cm-stage-side').left:r('#cm-board').right,rightArrow:r('.cm-stage-right').right};
+    },open);
     assert.ok(Math.abs(edges.left-edges.leftArrow)<1 && Math.abs(edges.right-edges.rightArrow)<1,`handles stay attached to drawer edges when ${open?'open':'collapsed'}`);
     if(open){await page.getByRole('button',{name:'Toggle board tools',exact:true}).click();await page.getByRole('button',{name:'Toggle table panel',exact:true}).click();}
   }
   await page.getByRole('button',{name:'Toggle table panel',exact:true}).click();
   await openDrawerSettings();
-  for(const id of ['screen','history','coach','counter','resources','stack','inspect','table','recommended','chat','actions']) await page.locator(`input[name="module-${id}"][value="${['table','inspect','stack','history','counter'].includes(id)?'right':'none'}"]`).check();
+  for(const id of ['history','coach','counter','resources','stack','inspect','table','recommended','chat','actions']) await page.locator(`input[name="module-${id}"][value="${['table','inspect','stack','history','counter'].includes(id)?'right':'none'}"]`).check();
   await page.getByRole('button',{name:'Save drawer modules',exact:true}).click();
   await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
   await page.waitForFunction(()=>!document.querySelector('.cm-stage-rail .cm-stage-module'));
@@ -220,8 +220,13 @@ try {
     assert.equal(await slider.inputValue(),await slider.getAttribute('min'),`${name} reaches minimum with pointer dragging`);
   }
   await page.getByRole('combobox',{name:'Background',exact:true}).selectOption('forest');
-  await page.getByRole('combobox',{name:'Table material',exact:true}).selectOption('stone');
-  assert.equal(await page.getByRole('combobox',{name:'Background',exact:true}).inputValue(),'forest','background is independent of the table material');
+  const designs=page.getByRole('combobox',{name:'Table design',exact:true});
+  assert.equal(await designs.locator('option').count(),7,'the Camera offers the seven table designs (ROB-100)');
+  await designs.selectOption('stone-dais');
+  assert.equal(await page.getByRole('combobox',{name:'Background',exact:true}).inputValue(),'forest','background is independent of the table design');
+  assert.equal(await page.evaluate(()=>localStorage.getItem('cm-stage-table')),'stone-dais','the table design is remembered on this device');
+  assert.equal(await page.evaluate(()=>CrankStage.tableDesign('stone').id),'stone-dais','an older saved choice (stone) maps onto its design');
+  assert.equal(await page.evaluate(()=>CrankStage.tableDesign(null).id),'medieval-banded','no saved choice means the default, medieval oak with iron bands');
   for(const width of [1400,1280,1024]) {
     await page.setViewportSize({width,height:768});
     for(const [tilt,zoom] of [[0,60],[60,120]]) {
@@ -276,8 +281,8 @@ try {
   assert.ok(handEdges.top<handEdges.board,'the hand overlaps the table front at the default camera');
   await openDrawerSettings();
   const titles=await page.locator('#cm-drawer-settings tbody th').allTextContents();
-  assert.deepEqual(titles,['Screen View','History','AI Coach','Counter-Intel','Resources','On the Stack','Card Preview','Table Vitals','Recommended Actions','Chat','Actions']);
-  for(const title of ['Screen View','AI Coach','Actions','Chat']) await page.getByRole('radio',{name:`${title}: Left`,exact:true}).check();
+  assert.deepEqual(titles,['History','AI Coach','Counter-Intel','Resources','On the Stack','Card Preview','Table Vitals','Recommended Actions','Chat','Actions']);
+  for(const title of ['AI Coach','Actions','Chat']) await page.getByRole('radio',{name:`${title}: Left`,exact:true}).check();
   await page.getByRole('button',{name:'Save drawer modules',exact:true}).click();
   await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
   assert.equal(await page.locator('.cm-stage-rail.is-open').count(),1,'assigning Actions opens its drawer for the current decision');
@@ -285,20 +290,18 @@ try {
   assert.equal(await page.locator('#cm-board-decision').count(),1,'Actions has no duplicate floating decision');
   assert.equal(await page.locator('[data-action="board-also"]').count(),0,'assigned Actions suppresses the optional-actions popup');
   assert.equal(await page.locator('.cm-stage-rail [data-action="board-rotate"], .cm-stage-rail [data-action="board-view"]').count(),0,'legacy seat and view buttons are removed from the drawer');
-  await page.getByRole('button',{name:'Screen View ▸',exact:true}).click();
-  assert.deepEqual(await page.locator('.cm-screen-popout button').allTextContents(),['Full','Table','Focus']);
-  const popout=await page.locator('.cm-screen-popout').boundingBox(), leftDrawer=await page.locator('.cm-stage-rail').boundingBox();
-  assert.ok(popout.x>=leftDrawer.x+leftDrawer.width,'Screen View opens beside the drawer edge');
-  await page.getByRole('button',{name:'Full',exact:true}).click();
+  if(!await page.locator('.cm-stage-camera [data-action=board-view]').count()) await page.locator('[data-action=board-camera]').click();
+  assert.deepEqual(await page.locator('.cm-stage-camera [data-action=board-view]').evaluateAll(es=>es.map(e=>e.dataset.view)),['table','focus','full']);
+  await page.locator('.cm-stage-camera [data-view=full]').click();
   await page.getByRole('button',{name:'Open AI Coach',exact:true}).click();
   await page.locator('.cm-stage-rail #cm-board-coach .cm-coach-input').fill('Keep this draft while moving modules');
-  await page.getByRole('button',{name:'Move AI Coach up',exact:true}).click();
+  await page.getByRole('button',{name:'Move AI Coach down',exact:true}).click();
   await page.waitForFunction(()=>document.querySelector('.cm-module-coach-host #cm-board-coach'));
   assert.equal(await page.locator('#cm-board-coach .cm-coach-input').inputValue(),'Keep this draft while moving modules','moving the Coach preserves its draft');
   assert.match(await page.locator('.cm-stage-module[data-module="chat"]').innerText(),/not connected yet/,'Chat does not pretend to send shared messages');
   await page.getByRole('button',{name:'Close the Coach',exact:true}).click();
   await openDrawerSettings();
-  for(const title of ['Screen View','AI Coach','Actions','Chat']) await page.getByRole('radio',{name:`${title}: None`,exact:true}).check();
+  for(const title of ['AI Coach','Actions','Chat']) await page.getByRole('radio',{name:`${title}: None`,exact:true}).check();
   await page.getByRole('button',{name:'Save drawer modules',exact:true}).click();
   await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
   assert.equal(await page.locator('[data-action="board-also"]').count(),1,'hiding Actions restores the floating actions control');
@@ -345,7 +348,7 @@ try {
   // An actual recorded two-entry stack: newest resolves first, every entry gets a readable image.
   for(let i=0;i<20;i++) await page.request.post(`${address}/preview/frame`,{data:'1'});
   await openDrawerSettings();
-  for(const id of ['screen','history','coach','counter','resources','stack','inspect','table','recommended','chat','actions']) await page.locator(`input[name="module-${id}"][value="${id==='stack'?'left':id==='inspect'?'right':'none'}"]`).check();
+  for(const id of ['history','coach','counter','resources','stack','inspect','table','recommended','chat','actions']) await page.locator(`input[name="module-${id}"][value="${id==='stack'?'left':id==='inspect'?'right':'none'}"]`).check();
   await page.getByRole('button',{name:'Save drawer modules',exact:true}).click();
   await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
   for(const [selector,label] of [['.cm-stage-rail','Toggle board tools'],['.cm-stage-side','Toggle table panel']]) if(!await page.locator(`${selector}.is-open`).count()) await page.getByRole('button',{name:label,exact:true}).click();

@@ -2011,13 +2011,28 @@ const sorcerySpeed = (object) => (object.types ?? []).some((type) => SORCERY_SPE
  * is no action but to pass. A mana ability counts only while there is something the mana could be for -- a spell
  * castable now, at its speed, with the pool and every untapped source together. That is a count, not a payment:
  * colors are not matched, so a doubtful case is asked rather than passed for the player.
+ *
+ * AND WITH SOMETHING ON THE STACK (`stack`; Linear ROB-13, the room's `passStack`): the same count, at instant speed --
+ * no sorcery-speed spell can be cast with the stack full (CR 307.1) -- and a mana ability that does more than add mana
+ * (`plainMana`) is a response in itself, so it is asked. Without `stack`, a player with anything on the stack is always
+ * asked, as before.
  */
-export function nothingToDo(state, player, actions = legalActions(state, player)) {
-  return deriving(state, () => idle(state, player, actions));
+export function nothingToDo(state, player, actions = legalActions(state, player), {stack = false} = {}) {
+  return deriving(state, () => idle(state, player, actions, stack));
 }
-function idle(state, player, actions) {
-  if (state.priorityPlayer !== player || state.stack.length) return false;
+/* A MANA ABILITY THAT ONLY MAKES MANA: its costs a tap and mana at most, and nothing after it but a painland's hurt to its
+   own controller (Adarkar Wastes, Ancient Tomb). One that sacrifices (Phyrexian Altar, Lotus Petal), taps another creature
+   (Jaspera Sentinel), pays life (Mana Confluence), removes counters (Ramos), mills (Millikin) or exiles (Rubble Rouser), or
+   does something else as it resolves (The Great Henge's life, Strixhaven Stadium's counter), changes the board: in response
+   to a spell, that is a play, not nothing. */
+const MANA_COSTS = ["sacrifice", "sacrificeSelf", "tapCreature", "payLife", "counterCost", "millCost", "exileFromGraveyard"];
+const selfHurt = (effect) => effect?.effect === "dealDamage" && effect.who === "you";
+export const plainMana = (ability) => Boolean(ability) && !MANA_COSTS.some((key) => ability[key] !== undefined && ability[key] !== false)
+  && (ability.then ?? []).every(selfHurt);
+function idle(state, player, actions, stack = false) {
+  if (state.priorityPlayer !== player || (state.stack.length && !stack)) return false;
   if (actions.some((a) => a.kind !== "pass" && a.kind !== "activate-mana")) return false;
+  if (state.stack.length && actions.some((a) => a.kind === "activate-mana" && !plainMana(abilitiesOf(state, a.objectId).find((x) => x.id === a.abilityId)))) return false;
   /* Each source counted once, at the most it can add net of what it costs -- a Sol Ring is two, a Signet one, and a
      dual land one however many colors it offers. */
   const best = new Map();
@@ -2028,7 +2043,8 @@ function idle(state, player, actions) {
   }
   if (!best.size) return true;
   const mana = poolSize(state.players[player].manaPool) + [...best.values()].reduce((n, v) => n + Math.max(0, v), 0);
-  const mainNow = player === state.activePlayer && MAIN_PHASES.includes(state.phase);
+  /* A sorcery's time is the player's own main phase with the stack empty (CR 307.1). */
+  const mainNow = player === state.activePlayer && MAIN_PHASES.includes(state.phase) && !state.stack.length;
   /* And what a permanent lets them cast from another zone (the top of the library, say). */
   const spells = [...cardsIn(state, "hand", player), ...cardsIn(state, "command", player).filter((id) => state.objects[id].commander === true), ...playableElsewhere(state, player, "spell")];
   /* And what they may cast from their graveyard for another cost -- flashback (CR 702.34a), escape (702.138a) -- counted at

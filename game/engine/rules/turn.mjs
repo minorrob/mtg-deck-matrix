@@ -132,6 +132,22 @@ function skippedSeats(state, from, to) {
   return skipped;
 }
 
+/* THE ROUND (Linear ROB-76): every player's turn once, from the first player's. A turn begins a new round when the order,
+   going on from `from` to `to`, comes back to the starting player's seat -- to them, or past it to the first player after
+   them still in the game, when they have left it (CR 800.4: they take no more turns). So a player who leaves takes
+   their turns out of the round, and none is counted for them. An extra turn (CR 500.7) is taken within the round of the
+   turn it follows, and never begins one: `advance` asks only of the turns in the order. Nothing in the rules counts
+   rounds; the table does, for its labels. */
+function nextRound(state, from, to) {
+  const count = state.players.length;
+  for (let step = 1; step <= count; step += 1) {
+    const at = (from + step) % count;
+    if (at === state.startingPlayer) return true;
+    if (at === to) return false;
+  }
+  return false;
+}
+
 /* THE NEXT EXTRA TURN (CR 500.7): the most recently created one whose player is still in the game -- each is added
    directly after the turn it was made in, so the last made is the next taken -- or null. One of a player who has left the
    game is dropped as it would be reached (CR 800.4a: nothing of theirs happens). */
@@ -201,6 +217,8 @@ export function draw(state, player, events) {
     drawn: true, drawNumber: recordDraw(state, player),
     /* And which of those drawn in the drawer's own draw step, there (Orcish Bowmasters; state/index.mjs). */
     ...drawStep(state, player),
+    /* The card it is in the hand (CR 400.7): the drawer's own event names it by this (game/room/events.mjs). */
+    drewAs: moved,
   }));
   return moved;
 }
@@ -553,6 +571,8 @@ function arrive(state, events) {
     playerTurn: {playerId: state.activePlayer, name: state.players[state.activePlayer].name},
     /* An extra turn (CR 500.7) says so as it begins, for the table's history (room/history.mjs). */
     ...(state.phase === "UNTAP" && state.extraTurn === true ? {extraTurn: true} : {}),
+    /* And which round it is in (`nextRound`), where the game keeps rounds, for the table's events (room/events.mjs). */
+    ...(state.phase === "UNTAP" && Number.isInteger(state.round) ? {round: state.round, turnInRound: state.turnInRound} : {}),
   }));
   if (state.phase === "UNTAP") untap(state, events);
   /* "Until your next end step, you may play those cards" (Shadow Urchin; script/effects/zones.mjs, mayPlay): over as that
@@ -662,6 +682,9 @@ export function beginGame(state, startingPlayer = 0) {
     throw new Error("The starting player must be a seat at the table");
   state.startingPlayer = startingPlayer;
   state.turn = 1;
+  /* The first round, and its first turn (`nextRound`). */
+  state.round = 1;
+  state.turnInRound = 1;
   state.activePlayer = startingPlayer;
   state.players[startingPlayer].turnBegan = 1;
   state.stepIndex = 0;
@@ -734,6 +757,11 @@ export function advance(state) {
     const extra = takeExtraTurn(state);
     if (extra) { state.activePlayer = extra.player; state.extraTurn = true; state.orderFrom = orderFrom; }
     else { state.activePlayer = nextLivingPlayer(state, orderFrom); delete state.extraTurn; delete state.orderFrom; }
+    /* The round (`nextRound`): a game saved before rounds were kept has none, and is not given one partway. */
+    if (Number.isInteger(state.round)) {
+      if (!extra && nextRound(state, orderFrom, state.activePlayer)) { state.round += 1; state.turnInRound = 1; }
+      else state.turnInRound += 1;
+    }
     state.turn += 1;
     /* "Since the beginning of your last upkeep" (echo, CR 702.30a; script/condition.mjs): the turn of theirs before this one. */
     if (state.players[state.activePlayer].turnBegan > 0) state.players[state.activePlayer].previousTurnBegan = state.players[state.activePlayer].turnBegan;

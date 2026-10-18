@@ -664,6 +664,8 @@ function drawOne(state, player, events, replaced = []) {
     const fields = events[events.length - 1].data.fields;
     fields.drawn = true;
     fields.drawNumber = recordDraw(state, player);
+    /* The card it is in the hand (CR 400.7): the drawer's own event names it by this (game/room/events.mjs). */
+    fields.drewAs = moved;
     /* In the drawer's own draw step, which of the cards drawn there (Orcish Bowmasters; state/index.mjs). */
     const inStep = recordDrawStepDraw(state, player);
     if (inStep !== null) fields.drawStepNumber = inStep;
