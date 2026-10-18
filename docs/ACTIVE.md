@@ -84,7 +84,7 @@ Volcano uses Rob's supplied video; other environments and the table artwork stil
 
 | Lane | Held by | Branch | Doing |
 | --- | --- | --- | --- |
-| **Engine and simulation** | Fable (Claude Code, a cloud container), resumed October 16 per Rob | `claude/admiring-franklin-58cxy4` | Engine, simulation, card loads. Linear: ROB-71 and its children (ROB-12, ROB-13, ROB-73 to ROB-95). ROB-12 (#739) and ROB-81 (#742) on staging, ROB-101 merged (#744); now ROB-13, then ROB-73. See "2026-10-17: the engine lane resumed" below. |
+| **Engine and simulation** | Fable (Claude Code, a cloud container), resumed October 16 per Rob | `claude/admiring-franklin-58cxy4` | Engine, simulation, card loads. Linear: ROB-71 and its children (ROB-12, ROB-13, ROB-73 to ROB-95). ROB-12 (#739) and ROB-81 (#742) on staging; ROB-101 (#744), ROB-13 (#745) and ROB-73 (#746) merged; now ROB-77. See "2026-10-17: the engine lane resumed" below. |
 | **UI and user management** | Codex on Personal-HP | `codex/ui-playtest-plan-oct15`; focused release `codex/staging-resend-oct16` | UI/Babylon, account profiles, sharing, Resend and invitations; coordinates current staging release. |
 
 ### Requests between the lanes
@@ -139,7 +139,7 @@ other lane answers in the last column.
   over the committed file while other suites read it (pilot-policy failed on #742's CI). It now regenerates into its own
   temporary directory (`tools/import_master_v2.py` takes an output path). A reader parsing the file in a loop through five
   runs: main tore 568 of 1,168 reads, the fix none. breaks-master-regenerates 2 of 2. No served file changes.
-- **ROB-13 (this branch's next PR):** two pod keys in the room.
+- **ROB-13:** two pod keys in the room.
   - `yieldTurn`, on a table's new matches: `room.yieldTurn(seatId, {on})` passes each priority of the seat's for the rest of
     an opponent's turn, still asking what the rules ask, on the tape (a `yield` entry) and replayed; it ends with that turn
     or its player. The seat's own view carries `yielding` or `mayYield`.
@@ -151,6 +151,19 @@ other lane answers in the last column.
   - The G1 harness now launches its games as the table does. The contract, and whether this lane adds the `yield` frame to
     `cloud/game-room.mjs`, are asked in ROB-11. Proof: engine-pass-stack 18, room-yield-turn 43; breaks-yield-turn 41, each
     caught.
+  - **Merged:** #745 as main 7df7064a, on green suites. **Staging held:** two tries of its release stopped at
+    release-acceptance's Measure step, live Scryfall's `/cards/collection` taking 6.5 to 30 s against the page's 10 s; the Play
+    walk passed 42 both times and nothing was pushed (staging is still 699c8999, version 0b9bce12). Retried once Scryfall
+    answers quickly again.
+- **ROB-73, merged (#746, main 20601740):** `room-draw-card` proves Draw card at the room (a double submission, a reopen while
+  it waits, the first draw's rules, an empty library); breaks-draw-card 6 of 6. Tables launching with `drawBeat` waits on
+  the board's side of ROB-24 (table-board's walk clicks no Draw card).
+- **ROB-77 (this branch's next PR):** the table's events, `events.v1` (game/room/events.mjs): each view carries what the
+  action behind it did, each event with the journal's id and the decision whose answer made it; a draw the drawer's alone
+  and only while the card is in their hand; `room.view(seatId, {after})` for a reconnect, `eventsReset` past the newest 200
+  kept. A drawn card's id in the hand is now in its engine event (`drewAs`). The socket's `after` waits on one line in
+  `cloud/game-room.mjs` (asked in ROB-11). Proof: room-events 32; breaks-table-events 17, each caught; fuzz-library's and
+  room-g1-terms' no-leak checks read every view's events.
 - **Waiting on Rob:** the backstop's daily cap (ROB-90); the AI door's two settings (ROB-95: the staging AI Access app, and the
   production key); whether waves 4d onward wait on card-load steps 1 to 4 (ROB-93).
 - **With the Opus session holding Codex's lane** (`docs/HANDOFF-OPUS-2026-10-17.md`): coordinated in ROB-11. No `cloud/**` or UI
