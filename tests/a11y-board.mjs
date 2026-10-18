@@ -131,16 +131,16 @@ async function person(email, viewport) {
 }
 const theme = (page, choice) => page.evaluate((t) => document.querySelector(`[data-action=set-theme][data-theme-choice=${t}]`).click(), choice);
 const view = async (page, v) => {
-  if (!(await page.locator(`[data-action=board-view][data-view=${v}]`).count())) {
-    /* the tabletop's Full screen keeps the view buttons in its Screen View popout, under the profile menu */
-    await page.click(".cm-stage-top [data-action=board-profile]");
-    await page.click(".cm-profile-menu [data-action=board-screen-menu]");
-    await page.locator(".cm-screen-popout").waitFor();
-  }
-  await page.click(`[data-action=board-view][data-view=${v}]`);
-  await page.locator(v === "full" ? ".cm-stage-top" : v === "table" ? ".cm-board-table" : ".cm-board-mat").waitFor();
+  if(await page.locator('.cm-profile-menu').count()) await page.locator('.cm-stage-top [data-action=board-profile]').click();
+  if(!await page.locator('.cm-stage-camera [data-action=board-view]').count()) await page.locator('[data-action=board-camera]').click();
+  await page.locator('.cm-stage-camera [data-action=board-view][data-view="'+v+'"]').click();
+  await page.locator(v === 'full' ? '.cm-stage-region' : v === 'table' ? '.cm-board-table' : '.cm-board-mat').waitFor();
   await page.waitForTimeout(120);
 };
+async function profile(page) {
+  if(!await page.locator('.cm-profile-menu').count()) await page.locator('.cm-stage-top [data-action=board-profile]').click();
+}
+async function utility(page, action) {await profile(page); await page.locator('.cm-stage-top [data-action="'+action+'"]').click();}
 /* Rest the pointer where nothing reacts to it (a card under it would be shown large). */
 const rest = async (page) => {const s = page.viewportSize(); await page.mouse.move(s.width - 2, s.height - 2);};
 
@@ -258,7 +258,7 @@ async function wordsContrast(page, scope, label = "") {
       ox.clearRect(0, 0, 1, 1); ox.fillStyle = "rgb(1, 2, 3)"; ox.fillStyle = st.color; ox.fillRect(0, 0, 1, 1);
       const [cr, cg, cb, ca] = ox.getImageData(0, 0, 1, 1).data, rgba = [Math.min(255, cr * bright), Math.min(255, cg * bright), Math.min(255, cb * bright), ca / 255];
       const size = parseFloat(st.fontSize), weight = Number(st.fontWeight) || 400, symbol = !/[\p{L}\p{N}]/u.test(words);
-      const where = el.closest(".cm-mat") ? "mat" : el.closest(".cm-board-hand") ? "hand" : el.closest(".cm-board-strip, .cm-stage-top, .cm-full-pill, .cm-phone-pill") ? "strip"
+      const where = el.closest(".cm-mat") ? "mat" : el.closest(".cm-board-hand") ? "hand" : el.closest(".cm-stage-top, .cm-full-pill, .cm-phone-pill") ? "strip"
         : el.closest(".cm-board-pane, .cm-full-side, .cm-full-rail, .cm-stage-rail, .cm-stage-side") ? "side" : el.closest(".cm-board-table") ? "table" : el.closest(".cm-lobby-seat") ? "seat" : el.closest(".cm-table-center") ? "rules" : "page";
       out.push({text: words.slice(0, 40), cls: String(el.className && el.className.baseVal !== undefined ? el.className.baseVal : el.className || el.tagName).slice(0, 40) || el.tagName,
         where, rgba, op, need: symbol || size >= 24 || (size >= 18.66 && weight >= 700) ? 3 : 4.5, rects, nodes: own,
@@ -413,8 +413,8 @@ function regionOf() {
     if (!el.closest("#cm-board")) return `outside:${el.tagName.toLowerCase()}${el.id ? "#" + el.id : ""}.${String(el.className || "").split(" ")[0]}`;
     const slot = el.closest(".cm-board-slot");
     if (slot) return `board-${slot.dataset.area}`;
-    for (const [q, name] of [[".cm-hand-show", "fan"], [".cm-board-strip", "strip"], [".cm-stage-top", "strip"], [".cm-full-rail", "rail"], [".cm-board-pane", "seats"], [".cm-board-panegrip", "seats"], [".cm-full-pill", "pill"], [".cm-full-others", "others"], [".cm-stage-rear", "others"],
-      [".cm-board-ask", "ask"], [".cm-board-hand", "hand"], [".cm-stage-hand", "hand"], [".cm-board-rowbar", "rowbar"], [".cm-board-pie", "counter"], [".cm-full-side", "side"], [".cm-stage-rail", "side"], [".cm-stage-handle", "side"], [".cm-full-mine", "board"], [".cm-board-stage", "board"], [".cm-board-panel", "panel"]]) if (el.closest(q)) return name;
+    for (const [q, name] of [[".cm-hand-show", "fan"], [".cm-stage-top", "strip"], [".cm-full-rail", "rail"], [".cm-board-pane", "seats"], [".cm-board-panegrip", "seats"], [".cm-full-pill", "pill"], [".cm-full-others", "others"], [".cm-stage-rear", "others"],
+      [".cm-board-ask", "ask"], [".cm-board-hand", "hand"], [".cm-stage-hand", "hand"], [".cm-board-rowbar", "rowbar"], [".cm-board-pie", "counter"], [".cm-full-side", "side"], [".cm-stage-rail", "side"], [".cm-stage-handle", "side"], [".cm-full-mine", "board"], [".cm-stage-camera", "camera"], [".cm-board-stage", "board"], [".cm-board-panel", "panel"]]) if (el.closest(q)) return name;
     return `board:${el.className}`;
   };
 }
@@ -578,9 +578,9 @@ try {
   lap("the lobby");
   /* ---------------- THE BOARD ---------------- */
   clock += 10000; await serial(() => object.alarm());
-  await rob.page.locator("#cm-board .cm-board-strip").waitFor({timeout: 60000});
+  await rob.page.locator("#cm-board .cm-stage-top").waitFor({timeout: 60000});
   await maya.page.goto(`${base}/index.html#table?id=${TABLE}`);
-  await maya.page.locator("#cm-board .cm-board-strip").waitFor({timeout: 60000});
+  await maya.page.locator("#cm-board .cm-stage-top").waitFor({timeout: 60000});
   await theme(maya.page, "felt-cream");
   /* A few turns, through the boards' own controls, the AIs played by the house pilots on the table's alarm. */
   const alarm = setInterval(() => {if (object.room?.continuing) serial(() => object.alarm());}, 50);
@@ -602,9 +602,9 @@ try {
   /* ---- 2. FOCUS ORDER ---- */
   const EXPECT = {
     /* Focus: the strip, the seats, the board, what the room asks, the hand */
-    focus: ["strip", "seats", "board", "ask", "hand"],
+    focus: ["strip", "seats", "board", "ask", "hand", "camera", "side"],
     /* Table: the strip, the boards as they sit (top row left to right, then the bottom), the bar, the life counter, the hand */
-    table: ["strip", "board-a", "board-b", "board-c", "board-d", "rowbar", "counter", "ask", "hand"],
+    table: ["strip", "board-a", "board-b", "board-c", "board-d", "rowbar", "counter", "ask", "hand", "camera", "side"],
     /* Full screen (the tabletop): the top strip with the pill and the profile, the other seats across the back, your board
        with its corner and the camera, what the room asks, your hand, then the two drawers' handles */
     full: ["strip", "others", "board", "ask", "hand", "side"],
@@ -643,7 +643,7 @@ try {
   for (const [who, t] of [[rob, "dark"], [maya, "light"]]) {
     const page = who.page;
     await rest(page);
-    for (const [sel, what] of [["[data-action=board-tools]", "a strip button"], ["[data-action=board-view][data-view=table]", "the view switch"], [".cm-board-tile-main", "a seat's tile"],
+    for (const [sel, what] of [[".cm-stage-top [data-action=board-profile]", "the profile button"], ["[data-action=board-camera]", "the camera button"], [".cm-board-tile-main", "a seat's tile"],
       [".cm-board-mat .cm-vitals", "the vitals pill on the mat"], [".cm-board-hand .cm-bcard", "a card in the hand"], ["[data-drag=hand]", "the hand's divider"], ["[data-board-scale=hand]", "the hand's slider"],
       [".cm-board-band [data-action=board-history]", "the history band's clock"], [".cm-board-showhand", "Show hand"]]) await readRing(page, sel, `${t}: ${what}`);
     await view(page, "table");
@@ -675,12 +675,13 @@ try {
   }
   /* A MENU closed by Escape gives the focus back to its button; one opened by the keyboard is entered by Tab. */
   for (const [action, inside] of [["board-tools", "#cm-board-tools"], ["board-menu", "#cm-board-nav"], ["board-steps", "#cm-board-steps"]]) {
-    const page = rob.page, opener = page.locator(`.cm-board-strip [data-action=${action}]`).first();
+    const page = rob.page; if(action!=="board-steps") await profile(page);
+    const opener = page.locator(`.cm-stage-top [data-action=${action}]`).first();
     await page.keyboard.press("Shift");
     await opener.focus();
     await page.keyboard.press("Enter");
     await page.locator(inside).waitFor();
-    const expanded = await page.locator(`.cm-board-strip [data-action=${action}]`).first().getAttribute("aria-expanded");
+    const expanded = await page.locator(`.cm-stage-top [data-action=${action}]`).first().getAttribute("aria-expanded");
     /* one with controls in it is the next thing Tab reaches (the steps hold only words: there is nothing to go to) */
     const controls = await page.evaluate((q) => !!document.querySelector(q).querySelector("button, a[href], input, select, textarea"), inside);
     await page.keyboard.press("Tab");
@@ -694,9 +695,9 @@ try {
      would want the arrow keys they do not take. */
   {
     const page = rob.page;
-    await page.click(".cm-board-strip [data-action=board-tools]");
+    await utility(page,"board-tools");
     const [toolsAx] = await axOf(rob, "#cm-board-tools");
-    await page.click(".cm-board-strip [data-action=board-menu]");
+    await utility(page,"board-menu");
     const [navAx] = await axOf(rob, "#cm-board-nav");
     const menus = await page.evaluate(() => document.querySelectorAll("#cm-board [role=menu], #cm-board [role=menuitem]").length);
     await page.keyboard.press("Escape");
@@ -748,13 +749,14 @@ try {
     await view(page, "focus");
   }
   {
-    const page = rob.page, opener = page.locator(".cm-board-strip [data-action=board-history]");
+    const page = rob.page; await profile(page);
+    const opener = page.locator(".cm-stage-top [data-action=board-history]");
     await page.keyboard.press("Shift");
     await opener.focus();
     await page.keyboard.press("Enter");
     await page.locator("#cm-board-history").waitFor();
     const inFilter = await page.evaluate(() => document.activeElement.matches("[data-board-history-filter]"));
-    const said = await page.locator(".cm-board-strip [data-action=board-history]").getAttribute("aria-expanded");
+    const said = await page.locator(".cm-stage-top [data-action=board-history]").getAttribute("aria-expanded");
     await page.keyboard.press("Escape");
     await page.locator("#cm-board-history").waitFor({state: "detached"});
     const back = await page.evaluate(() => document.activeElement.matches("[data-action=board-history]"));
@@ -800,7 +802,7 @@ try {
   {
     const source = readFileSync(path.join(ROOT, "crankmagic-board.js"), "utf8"), {keys, handlers} = boundKeys(source);
     const page = rob.page;
-    await page.click("[data-action=board-menu]");
+    await utility(page,"board-menu");
     await page.click("#cm-board-nav [data-action=page-help]");
     await page.locator("#cm-dialog[open] .cm-help-keys").waitFor();
     const helpKeys = new Set(await page.locator("#cm-dialog[open] .cm-help-keys kbd").allTextContents());
@@ -844,12 +846,12 @@ try {
       asked.view.decision = {id: "a11y:priority", kind: "priority", mode: "one", title: "Your priority", options: [{index: 0, act: "pass", label: "Pass priority"}, {index: 1, act: "cast", label: castable.name, cardId: castable.cardId}]};
       asked.view.waitingOn = asked.view.seatId;
       hand(ROB, asked);
-      await page.locator(".cm-board-strip [data-action=board-also]").waitFor({timeout: 5000});
+      await page.locator(".cm-stage-top [data-action=board-also]").waitFor({timeout: 5000});
       await page.keyboard.press("Shift");
-      await page.locator(".cm-board-strip [data-action=board-also]").focus();
+      await page.locator(".cm-stage-top [data-action=board-also]").focus();
       await page.keyboard.press("Enter");
       await page.locator(".cm-board-also").waitFor();
-      const said = await page.locator(".cm-board-strip [data-action=board-also]").getAttribute("aria-expanded");
+      const said = await page.locator(".cm-stage-top [data-action=board-also]").getAttribute("aria-expanded");
       await page.keyboard.press("Escape");
       const closed = await page.locator(".cm-board-also").count() === 0, back = await page.evaluate(() => document.activeElement.matches("[data-action=board-also]"));
       ok(said === "true" && closed && back, `You can also ▾ says it is open (aria-expanded ${said}); Escape closes it (${closed}) with the focus back on it (${back})`);
@@ -872,9 +874,9 @@ try {
       hand(ROB, real);
       await page.waitForTimeout(300);
     }
-    await page.click(".cm-board-strip [data-action=board-panel]");
+    await page.click(".cm-stage-right");
     await page.keyboard.press("Escape");
-    ok(await page.locator(".cm-board-panel").count() === 0, "Escape closes the Panel");
+    ok(await page.locator(".cm-stage-side.is-open").count() === 0, "Escape closes the shared drawer");
     await view(page, "full");
     await page.evaluate(() => {const a = document.activeElement; if (a && a !== document.body) a.blur();});
     await page.keyboard.press("Escape");
@@ -1072,10 +1074,17 @@ try {
   /* the pop-ups over the board: Tools, History, Show hand */
   for (const [who, t] of [[rob, "dark"], [maya, "light"]]) {
     const page = who.page;
-    await page.click("[data-action=board-tools]");
+    for(const v of ['full','table','focus']) {
+      await view(page,v);await page.click('[data-action=board-camera]');await rest(page);
+      await readWords(page,'.cm-stage-camera',`${t}: ${v} Camera`,{min:3});
+      await page.keyboard.press('Escape');
+    }
+    await profile(page);await rest(page);
+    await readWords(page,'.cm-profile-menu',`${t}: Profile`,{min:4});
+    await utility(page,"board-tools");
     await readWords(page, "#cm-board-tools", `${t}: Tools`, {min: 4});
-    await page.click("[data-action=board-tools]");
-    await page.click(".cm-board-strip [data-action=board-history]");
+    await utility(page,"board-tools");
+    await utility(page,"board-history");
     await readWords(page, "#cm-board-history", `${t}: History`, {min: 3});
     await page.keyboard.press("Escape");
     await page.click("[data-action=board-show-hand]");
@@ -1089,6 +1098,11 @@ try {
   lap("the other themes and the pop-ups");
   for (const who of [rob, maya]) ok(!who.errors.length, `${who.email}'s page threw nothing (${who.errors.slice(0, 3).join(" | ")})`);
 } catch (error) {
+  console.error(error.stack);
+  for (const context of browser.contexts()) for (const page of context.pages()) {
+    await shot(page, `failure-${context === browser.contexts()[0] ? 'rob' : 'maya'}`);
+    console.error(await page.evaluate(() => ({url:location.href,board:document.querySelector('#cm-board')?.dataset,errors:document.querySelector('#cm-notice')?.textContent})));
+  }
   /* a step that could not run is a failure too, said with the ones before it */
   if (!error.counted) failures.push(`the walk stopped: ${String(error && error.stack || error).split("\n").slice(0, 3).join(" ")}`);
 } finally {

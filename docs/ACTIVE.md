@@ -20,6 +20,8 @@
 
 ## Play tabletop preview, October 14, 2026
 
+October 18, Codex · Play resumed on `codex/play-shared-shell`, PR #754, with main `a40f17d5` (PR #740) integrated by merge commit. ROB-99 slice 1 shares the desktop header, Camera and overlay drawers and extracts Settings' Play card to `crankmagic-settings-play.js`. Local proof with `GEOMETRY_REQUIRED=1`: `table-board` 276, the shared-shell and tabletop suites, the full accessibility pass, Settings, choices 42, Coach 60 and Resolve All 59; all 23 new or moved deliberate regressions caught, none missed. Labeled desktop and phone-baseline screenshots and exact proof are in `docs/play-overhaul/ROB-99-SLICE-1.md`; wiring, data, readout, cache and anchor checks pass. Review, CI, merge and engine-owned staging release remain; a physical phone and hardware WebGL are unproven. The feed revises ROB-19 to review with 2 hours remaining and ROB-99 to 20 hours for the remaining slices. Next: ROB-98, ROB-97, ROB-18, then ROB-52/ROB-100. Original pre-handoff local edits remain safely stashed.
+
 October 17 invitation runtime diagnosis: the user-provided local ACCESS_INVITE_TOKEN verifies active and reads the configured staging app/policy (all HTTP 200). Its value was installed privately into staging's existing secret; the invitation still failed before admission. Native workerd reproduction rejects redirect:'error' before network access. Both Access admission and Resend used that unsupported option; both now use manual redirects and reject non-success responses without forwarding credentials. Native intercepted-network checks cover success, Access redirect refusal/no email, and mail redirect refusal. Reintroducing the old option fails the intended success assertion. Sharing 68, cloud-worker 126, feature-wiring 124 and data integrity passed. Runtime test is `tests/uat/sharing-runtime.mjs`, with MINIFLARE_MODULE pointing to the installed Miniflare module; installed workerd supports dates through September 30, which is used for this local check. Follow-up staging release and real mail remain pending. No engine changes. Full tracing was rejected by automatic approval review and remains disabled; no credential values were read back or logged.
 
 October 17 Linear and staging checkpoint: Rob requested the complete Codex plan/backlog in Linear. ROB-14 now indexes 55 child issues (ROB-15 through ROB-69), with source coverage for P01-P15 and R01-R37, cross-story rules/UX acceptance, current evidence, and engine/UI dependencies. Read `docs/play-overhaul/LINEAR-BACKLOG.md`. Existing Claude engine issues ROB-12/ROB-13 retain their ownership and status; shared non-Play work coordinates through ROB-11. No engine edits in this checkpoint.
@@ -289,7 +291,7 @@ refused of the concept, and the passes to come: `docs/ui-lane/plan-play-ui-2026-
   `main` in c629f8c and is merged into the branch); then the staging release, Rob's review, and pass 2
   (`plan-play-ui-2026-10-12.md` §4).
   The suites this pass touches are green on its head: a11y-board 288, table-board 281, table-lobby 89, board-callouts 33,
-  settings-r3 63, board-choices 40, coach 60, design-tokens 91; the 19 breaks all caught.
+  settings-r3 63, board-choices 42, coach 60, design-tokens 91; the 19 breaks all caught.
 
 - **Handed off (2026-10-12, merged 2026-10-17):** `docs/ui-lane/astra/` (its `README.md` first): the handoff, Rob's two
   briefs, Play home and the deals, assembled when this lane passed to Codex. Main has moved since (Codex's Play

@@ -4,6 +4,8 @@ table from your chair with its 3D switch, the right pane docked with Turn Resour
 mat, the callouts. crankmagic-board.js and crankmagic.css, held by the board's browser suite. The four breaks on Full
 screen's ground, its far sides and the 3D switch were removed on 2026-10-17: Codex rebuilt Full screen on the tabletop
 with no 3D switch (docs/ACTIVE.md, Play tabletop preview), so the code they anchored on is gone.
+ROB-99 replaces the docked panel with shared overlay drawers. Its former dock-width/layout
+breaks are replaced by drawer geometry and remembered-width breaks in breaks-play-shared-shell.py.
 
 Browser suite: run with GEOMETRY_REQUIRED=1, from the repository root, with nothing else editing the worktree:
 
@@ -14,20 +16,13 @@ The reading of the callouts, the lobby and Settings are in breaks-play-ui-rest.p
 SUITES = ['tests/table-board.mjs']
 BREAKS = [
     ('the strip shows the step alone, not the seven', 'crankmagic-board.js',
-     '      <span class="cm-board-tools cm-board-turnsteps">${turnRibbon()}${stepsOpen ? stepsMenu() : ""}</span>\n      <span class="cm-board-prompt">',
-     '      <span class="cm-board-step">${e(stepInfo().step)}</span>\n      <span class="cm-board-prompt">'),
+     '<span class="cm-board-tools cm-board-turnsteps">${turnRibbon()}${stepsOpen ? stepsMenu() : ""}</span>',
+     '<span class="cm-board-step">${e(stepInfo().step)}</span>'),
     ('no step lit in the ribbon', 'crankmagic-board.js',
      '      ? `<li class="is-now cm-board-step">${e(step)}${e(detail)}</li>`',
      '      ? `<li class="cm-board-step">${e(step)}${e(detail)}</li>`'),
-    ('the pane under the mat, not beside it', 'crankmagic.css',
-     '.cm-board-body.has-panel{grid-template-columns:var(--pane-w,168px) minmax(0,1fr) var(--panel-w,340px)}\n',
-     ''),
-    ("the pane's width forgotten", 'crankmagic-board.js',
-     '    keep(PANELW_KEY, w);\n',
-     ''),
-    ('no Turn Resources tab', 'crankmagic-board.js',
-     '  const PANEL_TABS = [["resources", "Turn Resources"], ["panel", "Panel"], ["history", "History"]];',
-     '  const PANEL_TABS = [["panel", "Panel"], ["history", "History"]];'),
+    ('no Resources module', 'crankmagic-board.js',
+     '["resources", "Resources"], ', ''),
     ('every land counted as untapped', 'crankmagic-board.js',
      '<b>${r.up}/${r.all}</b>',
      '<b>${r.all}/${r.all}</b>'),
