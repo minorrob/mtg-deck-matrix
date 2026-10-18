@@ -220,8 +220,13 @@ try {
     assert.equal(await slider.inputValue(),await slider.getAttribute('min'),`${name} reaches minimum with pointer dragging`);
   }
   await page.getByRole('combobox',{name:'Background',exact:true}).selectOption('forest');
-  await page.getByRole('combobox',{name:'Table material',exact:true}).selectOption('stone');
-  assert.equal(await page.getByRole('combobox',{name:'Background',exact:true}).inputValue(),'forest','background is independent of the table material');
+  const designs=page.getByRole('combobox',{name:'Table design',exact:true});
+  assert.equal(await designs.locator('option').count(),7,'the Camera offers the seven table designs (ROB-100)');
+  await designs.selectOption('stone-dais');
+  assert.equal(await page.getByRole('combobox',{name:'Background',exact:true}).inputValue(),'forest','background is independent of the table design');
+  assert.equal(await page.evaluate(()=>localStorage.getItem('cm-stage-table')),'stone-dais','the table design is remembered on this device');
+  assert.equal(await page.evaluate(()=>CrankStage.tableDesign('stone').id),'stone-dais','an older saved choice (stone) maps onto its design');
+  assert.equal(await page.evaluate(()=>CrankStage.tableDesign(null).id),'medieval-banded','no saved choice means the default, medieval oak with iron bands');
   for(const width of [1400,1280,1024]) {
     await page.setViewportSize({width,height:768});
     for(const [tilt,zoom] of [[0,60],[60,120]]) {

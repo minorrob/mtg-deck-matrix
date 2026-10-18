@@ -25,7 +25,23 @@
     return {width:w,height:h,planeHeight,sx,sy,ox,oy,angle,quad,rear,front};
   }
   const appearances = Object.freeze({backgrounds: [{id:"volcano",name:"Volcano",video:"assets/environments/volcano.webm?v=1",poster:"assets/environments/volcano-poster.jpg?v=1"},{id:"forest",name:"Forest"},{id:"clouds",name:"Cloud sea"}],
-    tables: [{id:"wooden",name:"Wooden"},{id:"stone",name:"Stone"},{id:"obsidian",name:"Obsidian"}]});
+    /* The table designs (Rob, 2026-10-17; ROB-100): the same catalog the Babylon lab builds as 3D objects
+       (ui-prototypes/babylon/tables.js). Until that renderer reaches the live board, this 2D stage paints each as a flat
+       fallback: the slab's side, the top, the edge, and a hint of the side treatment (`look`). Older saved choices map on. */
+    tables: [
+      {id:"medieval-banded",name:"Medieval oak, iron bands",slab:0x2a1a0f,top:0x5a3f28,edge:0x3a3d44,look:"bands"},
+      {id:"colonial-inlay",name:"Colonial lacquered mahogany",slab:0x3a1410,top:0x6b2a1a,edge:0xe4c98a,look:"inlay"},
+      {id:"glass-future",name:"Futuristic glass",slab:0x7c8a95,top:0x9fc8d8,edge:0x5fd8ff,look:"glass"},
+      {id:"tavern-plank",name:"Tavern planks",slab:0x261710,top:0x795238,edge:0xc8ae77,look:"planks",legacy:"wooden"},
+      {id:"felt-card",name:"Card-room felt",slab:0x2b1a12,top:0x1f6b3a,edge:0x3a2418,look:"felt"},
+      {id:"stone-dais",name:"Carved stone dais",slab:0x3e4240,top:0x727572,edge:0x9a9d98,look:"speckle",legacy:"stone"},
+      {id:"obsidian-glass",name:"Volcanic obsidian",slab:0x0b0a0d,top:0x1a1720,edge:0xff7a2a,look:"ember",legacy:"obsidian"}]});
+  const DEFAULT_TABLE = "medieval-banded";
+  /** The design a saved or offered id names: a current id, an older id (wooden, stone, obsidian) or nothing at all. */
+  function tableDesign(id) {
+    const list = appearances.tables;
+    return list.find(x => x.id === id) || list.find(x => x.legacy === id) || list.find(x => x.id === DEFAULT_TABLE);
+  }
   function carousel(count, start = 0, limit = 7) {
     const n = Math.max(0, Math.floor(Number(count) || 0));
     return Array.from({length:Math.min(n,limit)},(_,i)=>((start+i)%n+n)%n);
@@ -108,7 +124,7 @@
     app.renderer.resize(g.width, g.height);
     for (const child of app.stage.removeChildren()) child.destroy({children: true});
     const bg = new P.Graphics(); app.stage.addChild(bg);
-    const scene = o.background || "volcano", material = o.table || "wooden";
+    const scene = o.background || "volcano", design = tableDesign(o.table), material = design.id;
     const videoScene=!!appearances.backgrounds.find(x=>x.id===scene)?.video;
     if(!videoScene) bg.rect(0,0,g.width,g.height).fill(scene === "volcano" ? 0x191216 : scene === "clouds" ? 0x243f53 : 0x101e19);
     if (!videoScene && scene === "volcano") {
@@ -125,20 +141,27 @@
     } else if (!videoScene) {
       for (let i=0;i<30;i++) bg.ellipse((i*.137%1)*g.width,(i*.217%1)*g.height,180,50).fill({color:0xd4e6e2,alpha:.045});
     }
-    const edge = o.combat ? 0xf0a963 : o.instant ? 0x8ecbff : 0xc8ae77;
+    const edge = o.combat ? 0xf0a963 : o.instant ? 0x8ecbff : design.edge;
     const thickness = 5 + Math.sin(g.angle)*24;
     for(let i=5;i>0;i--) bg.poly(g.quad.map((n,j)=>j%2?n+18+i*5:n)).fill({color:0x000000,alpha:.065});
     const slab = new P.Graphics(); app.stage.addChild(slab);
-    slab.poly(g.quad.map((n,j)=>j%2?n+thickness:n)).fill(material === "wooden" ? 0x261710 : 0x141b20).stroke({color:0x080c0b,width:2});
+    slab.poly(g.quad.map((n,j)=>j%2?n+thickness:n)).fill(design.slab).stroke({color:0x080c0b,width:2});
     const plane = new P.Container();
     const top = new P.Graphics();plane.addChild(top);
-    top.roundRect(0,0,g.width,g.planeHeight,28).fill(material === "wooden" ? 0x795238 : material === "stone" ? 0x727572 : 0x252c38).stroke({color:edge,width:3,alpha:.85});
-    if(material === "wooden") {
+    top.roundRect(0,0,g.width,g.planeHeight,28).fill({color:design.top,alpha:design.look==="glass"?.62:1}).stroke({color:edge,width:design.look==="glass"?5:3,alpha:design.look==="glass"?1:.85});
+    const wood = ["planks","bands","inlay"].includes(design.look);
+    if(wood) {
       for(let i=1;i<32;i++){const y=i*g.planeHeight/32;top.moveTo(10,y).bezierCurveTo(g.width*.3,y-9,g.width*.68,y+12,g.width-10,y+3).stroke({color:i%3?0x3a2218:0xb08a5b,width:i%3?1:2,alpha:.35});}
       for(let i=1;i<5;i++)top.moveTo(i*g.width/5,5).lineTo(i*g.width/5,g.planeHeight-5).stroke({color:0x2b1d15,width:2,alpha:.6});
-    } else if(material === "stone") {
+    } else if(design.look === "speckle") {
       for(let i=0;i<35;i++){const x=(i*.137%1)*g.width,y=(i*.217%1)*g.planeHeight;top.moveTo(x,y).lineTo(x+38,y+15).lineTo(x+57,y+12).stroke({color:0xc7c9bf,width:1,alpha:.15});}
     }
+    /* The side treatment, flat: four riveted straps across the oak, a light inlay band on the mahogany, a leather rail
+       around the felt, ember veins through the obsidian. The glass top is translucent (above) with a lit edge. */
+    if(design.look === "bands") for(let i=1;i<=4;i++){const x=i*g.width/5-7;top.rect(x,0,14,g.planeHeight).fill({color:0x2a2c30,alpha:.9});for(let k=1;k<6;k++)top.circle(x+7,k*g.planeHeight/6,3).fill(0x8a8e96);}
+    if(design.look === "inlay") top.roundRect(16,16,g.width-32,g.planeHeight-32,18).stroke({color:0xe4c98a,width:4,alpha:.9});
+    if(design.look === "felt") {top.roundRect(0,0,g.width,g.planeHeight,28).stroke({color:0x3a2418,width:26,alpha:1});top.roundRect(13,13,g.width-26,g.planeHeight-26,18).stroke({color:0x5a3a28,width:2,alpha:.8});}
+    if(design.look === "ember") for(let i=0;i<9;i++){let x=(i*.137%1)*g.width,y=(i*.217%1)*g.planeHeight;top.moveTo(x,y);for(let k=0;k<5;k++){x+=((i*7+k*13)%11-5)*14;y+=((i*5+k*3)%9-4)*12;top.lineTo(x,y);}top.stroke({color:i%2?0xff6a1a:0xff3d00,width:2,alpha:.5});}
     top.roundRect(7,7,g.width-14,g.planeHeight-14,22).stroke({color:edge,width:1,alpha:.4});
     s.surfaceTexture?.destroy(true);
     s.surfaceTexture=P.RenderTexture.create({width:g.width,height:g.planeHeight,resolution:1});
@@ -187,5 +210,5 @@
     if (s.app) {for (const child of s.app.stage.removeChildren()) child.destroy({children: true}); s.app.canvas.remove();}
     s.surfaceTexture?.destroy(true);
   }
-  root.CrankStage = Object.freeze({geometry, carousel, appearances, mount, layout, unmount});
+  root.CrankStage = Object.freeze({geometry, carousel, appearances, tableDesign, DEFAULT_TABLE, mount, layout, unmount});
 })(globalThis);
