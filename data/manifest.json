@@ -1,6 +1,6 @@
 {
  "schema": "manifest@1",
- "generatedAt": "2026-10-18T06:31:07.237Z",
+ "generatedAt": "2026-10-18T07:03:57.323Z",
  "generator": "tools/data-manifest.mjs",
  "count": 24,
  "files": [
@@ -126,6 +126,17 @@
    "cache": "precached"
   },
   {
+   "file": "data/commander-banned.json",
+   "schema": "commander-banned@1",
+   "stamp": "2026-10-18T05:51:47.134Z",
+   "generator": "tools/commander-banned.mjs",
+   "bytes": 1923,
+   "sha256": "8cd9ef86680ead8db24e43bbf941b575ce0c8796d98c079049fc1d105f4e23e8",
+   "version": null,
+   "served": false,
+   "cache": "not served"
+  },
+  {
    "file": "data/commander-glossary.json",
    "schema": "commander-glossary@1",
    "stamp": "2026-09-07.3",
@@ -135,17 +146,6 @@
    "version": 2,
    "served": true,
    "cache": "precached"
-  },
-  {
-   "file": "data/vendors.json",
-   "schema": "vendors@1",
-   "stamp": "2026-10-18",
-   "generator": "hand-maintained",
-   "bytes": 1851,
-   "sha256": "88cf1c85417d76c48f6229b5498df71d390ad3354c9125ca69d1a6b8931cb0f1",
-   "version": null,
-   "served": false,
-   "cache": "not served"
   },
   {
    "file": "data/deck-guides.json",
