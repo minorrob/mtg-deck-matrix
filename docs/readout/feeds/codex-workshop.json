@@ -1,9 +1,9 @@
 {
   "workstream": "codex-workshop",
-  "updated": "2026-10-18T05:30:00Z",
-  "updated_by": "Seeded by Claude · Deck intelligence from Linear on October 18; Codex Astra session 2 corrects it at its first merge.",
-  "branch": "codex/workshop-<topic> (to be claimed)",
-  "now": "Not started. Kick-off: docs/program/KICKOFF-PROMPTS.md. First: finish the sharing acceptance (ROB-36, ROB-37), then the Preferences › Decks card (ROB-122) and the information dial (ROB-125).",
+  "updated": "2026-10-18T10:00:00Z",
+  "updated_by": "Codex · Workshop, sharing acceptance",
+  "branch": "codex/workshop-sharing-acceptance",
+  "now": "Proving Share Library and deck permissions for ROB-36 and ROB-37; live acceptance needs fresh owner and recipient sign-ins. Then ROB-122, ROB-125, ROB-106, and ROB-105's paste path.",
   "items": [
     {"id": "ROB-36", "outcome": "share", "feature": "Deck sharing finished: permissions, the public catalog, Email Deck", "status": "in_progress", "remaining_hours": 8},
     {"id": "ROB-37", "outcome": "share", "feature": "Share Library with Reviewer and Collaborator, proven live", "status": "in_progress", "remaining_hours": 8},

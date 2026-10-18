@@ -1,5 +1,9 @@
 # Who holds the work
 
+## Codex · Workshop: sharing acceptance, October 18, 2026
+
+Workshop claims `codex/workshop-sharing-acceptance`, from main `5f6ea9cc`, for ROB-36 and ROB-37. Rob explicitly approved an isolated checkout at `C:\Users\robmi\CrankMagic\workshop-sharing` and messaging the Play chat to coordinate; the canonical checkout stays with Play. The required charter has been read, and PR #740 is now merged. `node tests/sharing.mjs` passed 68 checks; these are isolated tests, not live acceptance. Next: browser coverage of Share Library for Reviewer and Collaborator, scoped data, refused writes, stale saves, revocation, and phone fit. Live owner authentication has expired and no recipient session is saved. No deployment, live share, email, or inventory mutation has been made. Settings waits for Play's card extraction; model functions stay with Deck intelligence. The next issues remain ROB-122, ROB-125, ROB-106, and ROB-105's paste path.
+
 ## Invitation runtime release, October 17, 2026 (Fable 5.1 cloud session, temporarily in Codex's lane)
 
 **October 18: the Play boards handed back to Codex Astra** (`docs/HANDOFF-TO-CODEX-2026-10-18.md`), and Rob's program reorganized around his north star: Linear initiative I-1 with eleven outcome projects, five workstreams (Claude · Engine, Claude · Deck intelligence, Codex · Play, Codex · Workshop, Grok), the charter `docs/program/README.md`, the readout `docs/readout/index.html` with one feed per workstream, the instruction sets `docs/program/workstreams/`, the kick-off prompts `docs/program/KICKOFF-PROMPTS.md`, and the launch checklist draft `docs/program/LAUNCH-CHECKLIST.md` (ROB-137, for Rob's approval). This session continues as Claude · Deck intelligence. The paragraphs below are the record of October 17.
