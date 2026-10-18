@@ -246,6 +246,52 @@ try {
   await object.webSocketMessage(byRoom.rob, JSON.stringify({type: "act", actionId: randomUUID(), revision: 0, kind: "answer", choiceId: "nope", indices: [0]}));
   const refusedFrame = byRoom.rob.frames.slice(stale).find((f) => f.type === "refused");
   ok(refusedFrame && refusedFrame.view.seatId === "rob", "a refused action is answered with why, and the sender's fresh view");
+  /* The frames for a reconnect, Yield turn and a draft (Linear ROB-77, ROB-13, ROB-75), over the same sockets. */
+  {
+    const counts = () => Object.values(byRoom).map((x) => x.frames.length);
+    const last = byRoom.rob.frames.filter((f) => f.type === "view").at(-1).view;
+    const newest = last.events.at(-1)?.eventId;
+    await object.webSocketMessage(byRoom.rob, JSON.stringify({type: "view", after: newest}));
+    eq([byRoom.rob.frames.at(-1).type, byRoom.rob.frames.at(-1).view.events, byRoom.rob.frames.at(-1).view.eventsReset ?? false], ["view", [], false],
+      "a reconnect after the newest event it handled: its view, with no event since");
+    await object.webSocketMessage(byRoom.rob, JSON.stringify({type: "view", after: "event:not-a-number"}));
+    eq(byRoom.rob.frames.at(-1).view.eventsReset, true, "after an event the room cannot place: told to start from the view");
+    const before = counts();
+    await object.webSocketMessage(byRoom.rob, JSON.stringify({type: "yield", on: true}));
+    const y = byRoom.rob.frames.at(-1);
+    eq([y.type, y.of, y.status, y.view?.seatId], ["refused", "yield", 409, "rob"], "a yield at a table launched without Yield turn: refused, with why and the sender's view");
+    eq(counts().map((n, i) => n - before[i]), [1, 0, 0], "to Rob alone: the refused yield moved no other seat's socket");
+    const waiting = (await object.load()).waitingOn, asked = byRoom[waiting], other = Object.entries(byRoom).find(([k]) => k !== waiting)[1];
+    const decision = asked.frames.filter((f) => f.type === "view").at(-1).view.decision;
+    const mid = counts();
+    await object.webSocketMessage(asked, JSON.stringify({type: "check", choiceId: decision.id, indices: [0]}));
+    eq([asked.frames.at(-1).type, asked.frames.at(-1).choiceId, asked.frames.at(-1).open], ["checked", decision.id, true], "a draft checked by the seat asked: an answer about the question open now");
+    await object.webSocketMessage(other, JSON.stringify({type: "check", choiceId: decision.id, indices: []}));
+    eq([other.frames.at(-1).type, other.frames.at(-1).open], ["checked", false], "and by another seat: not open to it");
+    eq(counts().map((n, i) => n - mid[i]).filter(Boolean).length, 2, "a check is answered to its sender alone: nothing is broadcast");
+  }
+  {
+    /* And at a table launched with Yield turn: Rob yields an opponent's turn over his socket, and every seat's view moves
+       (the yield may pass for him at once), his own saying he is yielding. */
+    const m2 = new Map(), socks2 = [];
+    const ctx2 = {storage: {get: async (k) => m2.get(k), put: async (k, v) => {m2.set(k, v);}, delete: async (k) => m2.delete(k), list: async ({prefix}) => new Map([...m2].filter(([k]) => k.startsWith(prefix)).sort())},
+      acceptWebSocket: (s, tags) => {s.tags = tags; socks2.push(s);}, getWebSockets: () => socks2, getTags: (s) => s.tags};
+    const o2 = new GameRoom(ctx2, {}, {cards});
+    eq((await post(o2, "/start", {matchId: "do-yield", seed: "seed-5", pod: {...POD, yieldTurn: true}})).status, 201, "a table launched with Yield turn");
+    const by2 = {rob: socket(), maya: socket()};
+    for (const [seat, x] of Object.entries(by2)) o2.accept(x, seat);
+    for (let i = 0; i < 400 && !(await o2.load()).view("rob").mayYield; i += 1) {
+      const current = (await o2.load()).waitingOn;
+      if (!current) break;
+      const v = by2[current].frames.filter((f) => f.type === "view").at(-1).view;
+      await o2.webSocketMessage(by2[current], JSON.stringify({type: "act", actionId: randomUUID(), revision: v.revision, ...person(`y-${i}`)(v.decision)}));
+    }
+    ok((await o2.load()).view("rob").mayYield, "the game reaches an opponent's turn, which Rob may yield");
+    const n = Object.values(by2).map((x) => x.frames.length);
+    await o2.webSocketMessage(by2.rob, JSON.stringify({type: "yield", on: true}));
+    eq([by2.rob.frames.length > n[0], by2.maya.frames.length > n[1]], [true, true], "Rob's yield moves every seat's view");
+    eq(by2.rob.frames.filter((f) => f.type === "view").at(-1).view.yielding, true, "and his own says he is yielding");
+  }
   await object.webSocketMessage(byRoom.rob, "{not json");
   eq(byRoom.rob.frames.at(-1).type, "refused", "a message that is not JSON is refused");
   await object.webSocketMessage(byRoom.rob, JSON.stringify({type: "view", pad: "x".repeat(20000)}));

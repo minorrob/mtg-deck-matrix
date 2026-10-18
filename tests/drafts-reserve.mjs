@@ -126,7 +126,7 @@ if (browser) try {
   eq(made.reserved, "deck:g3d", `the Bench copy of ${made.free} is reserved for the new draft as it is made`);
   await page.goto(`${base}/index.html#decks?deck=deck%3Ag3d`);
   await page.getByRole("tab", {name: /^Overview/}).waitFor({timeout: 30000});
-  eq([await page.getByRole("button", {name: "Finalize", exact: true}).count() > 0, await page.getByRole("button", {name: "Finalize & reserve"}).count()], [true, 0], "the Deck page offers Finalize, and no Finalize & reserve");
+  eq([await page.getByRole("button", {name: "Lock list", exact: true}).count() > 0, await page.getByRole("button", {name: "Finalize & reserve"}).count()], [true, 0], "the Deck page offers Lock list (Finalize until Rob's 2026-10-18 rename), and no Finalize & reserve");
   await shot(page, "draft-deck-page-1280");
   await page.goto(`${base}/index.html#cards?tab=buy`);
   await page.locator("#cm-roster-query").waitFor({timeout: 60000});

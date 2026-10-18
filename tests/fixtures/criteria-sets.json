@@ -1,0 +1,47 @@
+{
+ "about": "Six criteria sets for deck-criteria.js (Linear ROB-109), built by tests/deck-criteria.mjs over the committed stores (tests/helpers/catalog-rows.mjs) with Rob's owned counts as the library where `library` is true. Each must come back a legal hundred, within its cap and its bracket, with a reason on every slot; `expect` pins what the set is about.",
+ "sets": [
+  {
+   "id": "krenko-aggressive",
+   "says": "A given commander, the Aggressive playstyle, bracket 3, $150, owned first; the suite then fences out one card this build took and builds again",
+   "criteria": {"commander": "Krenko, Mob Boss", "playstyle": "Aggressive", "bracket": 3, "budgetUsd": 150, "seed": "a"},
+   "library": true,
+   "expect": {"commander": "Krenko, Mob Boss", "how": "given", "identity": ["R"], "strategiesInclude": ["untap-loop", "sacrifice-supply", "tribal-payoff"], "ownedAtLeast": 20, "threatAtLeast": 16, "fenceOneItWants": true}
+  },
+  {
+   "id": "green-white-value",
+   "says": "No commander: suggested for green and white, Value engine, bracket 2, $75, no library",
+   "criteria": {"colors": ["G", "W"], "playstyle": "Value engine", "bracket": 2, "budgetUsd": 75},
+   "library": false,
+   "expect": {"how": "suggested", "identityWithin": ["G", "W"], "alternativesAtLeast": 3, "gameChangersAtMost": 0, "ownedAtMost": 0}
+  },
+  {
+   "id": "combo-open",
+   "says": "Nothing but a playstyle and a bracket: Combo at bracket 4, no cap, no colors",
+   "criteria": {"playstyle": "Combo", "bracket": 4},
+   "library": false,
+   "expect": {"how": "suggested", "strategiesInclude": ["untap-loop", "copy-loop", "sacrifice-supply", "tutor-chain", "extra-turns"], "tutorAtLeast": 4, "capNull": true}
+  },
+  {
+   "id": "mono-blue-reactive-cheap",
+   "says": "Mono-blue, Reactive, bracket 1, $50: answers on a budget with no Game Changers",
+   "criteria": {"colors": ["U"], "playstyle": "Reactive", "bracket": 1, "budgetUsd": 50},
+   "library": false,
+   "expect": {"how": "suggested", "identityWithin": ["U"], "counterspellAtLeast": 4, "gameChangersAtMost": 0}
+  },
+  {
+   "id": "kenrith-pins-and-fences",
+   "says": "Five colors at bracket 5 with $400, two cards asked for and one fenced out, owned first",
+   "criteria": {"commander": "Kenrith, the Returned King", "playstyle": "Balanced", "bracket": 5, "budgetUsd": 400, "mustInclude": ["Sol Ring", "Arcane Signet"], "neverInclude": ["Smothering Tithe"]},
+   "library": true,
+   "expect": {"commander": "Kenrith, the Returned King", "how": "given", "identity": ["B", "G", "R", "U", "W"], "pinned": ["Sol Ring", "Arcane Signet"], "fenced": ["Smothering Tithe"]}
+  },
+  {
+   "id": "atraxa-combo-not-owned",
+   "says": "A given four-color commander, Combo, bracket 3, $200, owned copies not preferred",
+   "criteria": {"commander": "Atraxa, Praetors' Voice", "playstyle": "Combo", "bracket": 3, "budgetUsd": 200, "ownedFirst": false},
+   "library": true,
+   "expect": {"commander": "Atraxa, Praetors' Voice", "how": "given", "identity": ["B", "G", "U", "W"], "gameChangersAtMost": 3, "tutorAtLeast": 4}
+  }
+ ]
+}

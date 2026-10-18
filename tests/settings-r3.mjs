@@ -6,14 +6,14 @@
  *      feedback, sharing) and none of what moved: Excel, the emailed export, history and Undo,
  *      Confirmations, Clear all data, the card data ages. Reset comparison picks is gone.
  *   2. Menu → Settings opens #settings, with the design's sections, Play and AI Coach (AI-6): Account, Appearance, Play, Prices,
- *      AI Coach, Data, About. Every entry that left the Menu is there, and Publish your To Trade list is in the
+ *      Budget (Rob, 2026-10-18), AI Coach, Data, About. Every entry that left the Menu is there, and Publish your To Trade list is in the
  *      Library's More menu.
  *   3. The theme can be chosen here too, and both places show the same choice.
  *   4. Reduce motion is saved: it stills transitions and the rail's animation, survives a reload, and
  *      turns off again. So is Play's Stop at every step of my turn (Rob, 2026-10-11), with the preferences the board
  *      tells the room (tests/table-board.mjs).
- *   5. The default budget cap is what a deck with no cap of its own is held to, on the deck's own
- *      page; empty goes back to the pod's rule.
+ *   5. Budgets (Rob, 2026-10-18): a deck with no budget of its own has none; the account's budget is set here,
+ *      set against what the decks plan, and said again under the Decks page's tiles; empty is none.
  *   6. About names the card data's ages, and on a phone the cards stack in one column.
  *
  * Needs Playwright and Chromium; GEOMETRY_REQUIRED=1 (CI) turns a missing browser into a failure.
@@ -52,7 +52,7 @@ try {
   /* 2. Settings, with everything that left the Menu. */
   await toSettings(page);
   ok(page.url().endsWith("#settings"), `Menu → Settings opens #settings (${page.url()})`);
-  eq(await page.$$eval(".cm-settings-card h2", (hs) => hs.map((h) => h.textContent)), ["Account", "Profile", "Appearance", "Play", "Prices", "AI Coach", "Data", "About"], "Settings has the design's five sections, Play and AI Coach (AI-6)");
+  eq(await page.$$eval(".cm-settings-card h2", (hs) => hs.map((h) => h.textContent)), ["Account", "Profile", "Appearance", "Play", "Prices", "Budget", "AI Coach", "Data", "About"], "Settings has the design's five sections, Play and AI Coach (AI-6)");
   /* AI COACH SETTINGS (AI-6): six controls, their defaults, saved with the preferences; the meter from the door. */
   await page.route(`${base}/api/ai-meter`, (r) => r.fulfill({json: {open: true, spentCents: 0.4, capCents: 25}}));
   const aiPanel = async () => {await page.locator(".cm-settings-card", {has: page.locator("h2", {hasText: "AI Coach"})}).getByRole("button", {name: "AI Coach settings…"}).click(); await page.locator("#cm-ai-settings").waitFor({timeout: 10000});};
@@ -143,28 +143,42 @@ try {
   await page.waitForFunction(() => document.querySelector('[data-action="set-step-by-step"]')?.getAttribute("aria-pressed") === "false");
   eq(await steps(), {pressed: "false", saved: false}, "and off again");
 
-  /* 5. The default budget cap. */
+  /* 5. Budgets (Rob, 2026-10-18; docs/budgets.md). A deck's budget is its own and inherits nothing; the account's is
+     set here and set against what the decks plan to spend, and the Decks page under its tiles says the same. */
   const deck = "deck:live:D6";
-  const capOnDeck = async () => {await page.goto(`${base}/index.html#decks?deck=${encodeURIComponent(deck)}`); await page.locator(".cm-bento").waitFor({timeout: 30000}); return (await page.locator("#cm-main").innerText()).match(/Cap \$[\d,.]+/)?.[0];};
-  eq(await capOnDeck(), "Cap $225.00", "a deck with no cap of its own is held to the pod's rule, $225");
+  const budgetOnDeck = async () => {await page.goto(`${base}/index.html#decks?deck=${encodeURIComponent(deck)}`); await page.locator(".cm-bento").waitFor({timeout: 30000}); return (await page.locator("#cm-main .cm-bento-cost").innerText()).match(/No budget|Budget \$[\d,.]+/)?.[0];};
+  eq(await budgetOnDeck(), "No budget", "a deck with no budget of its own has none: it takes neither the account's nor the pod's");
+  const model = () => page.evaluate(async () => { const r = await CrankRepository.open(); try { const a = CrankCollection.budgets(await r.getState()); return {budget: a.budget, planned: a.planned, left: a.left, decks: a.decks.length}; } finally { r.close(); } });
+  const money = (n) => "$" + n.toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2});
   await page.goto(`${base}/index.html#settings`);
   await page.locator(".cm-settings").waitFor();
-  await page.getByLabel("Default budget cap ($)").fill("300");
-  await page.getByLabel("Default budget cap ($)").press("Enter");
-  await page.waitForFunction(() => /held to \$300/.test(document.getElementById("cm-notice").textContent));
-  ok(/held to \$300/.test(await page.locator(".cm-settings").innerText()), "Enter saves the cap, and Settings says what decks are held to now");
-  eq(await capOnDeck(), "Cap $300.00", "and the deck's own page holds it to the new default");
+  const atFirst = await model();
+  ok(atFirst.budget === null && atFirst.planned > 0, `no account budget yet, and the decks plan ${money(atFirst.planned)}`);
+  const card5 = () => page.locator(".cm-settings-card", {has: page.locator("h2", {hasText: "Budget"})}).innerText();
+  ok((await card5()).includes(`Your decks plan ${money(atFirst.planned)} together`), "the Budget card says what the decks plan");
+  eq(await page.locator(".cm-settings-budgets tbody tr").count(), atFirst.decks, "and lists every live deck, with its budget, cost and what it counts at");
+  await page.getByLabel("Account budget ($)").fill("1000");
+  await page.getByLabel("Account budget ($)").press("Enter");
+  await page.waitForFunction(() => /Account budget \$1,000/.test(document.getElementById("cm-notice").textContent));
+  const after = await model();
+  eq([after.budget, after.left], [1000, Math.round((1000 - atFirst.planned) * 100) / 100], "Enter saves the account budget, and the model sets it against the decks");
+  ok((await card5()).includes(`${money(Math.abs(after.left))} ${after.left < 0 ? "over" : "left"}`), "and Settings says what is left of it");
+  eq(await budgetOnDeck(), "No budget", "the deck still has no budget: the account's is never inherited");
+  await page.goto(`${base}/index.html#decks`);
+  await page.locator(".cm-deck-grid").waitFor({timeout: 30000});
+  const line = await page.locator(".cm-decks-budget").innerText();
+  ok(line.includes(`of your $${(1000).toFixed(2)} account budget`) && line.includes(`$${atFirst.planned.toFixed(2)}`), `the Decks page says the same under its tiles: ${line}`);
   await page.goto(`${base}/index.html#settings`);
   await page.locator(".cm-settings").waitFor();
-  await page.getByLabel("Default budget cap ($)").fill("-5");
-  ok(!(await page.getByLabel("Default budget cap ($)").evaluate((i) => i.validity.valid)), "the browser itself flags a cap below one dollar");
-  await page.getByRole("button", {name: "Save cap"}).click();
+  await page.getByLabel("Account budget ($)").fill("-5");
+  ok(!(await page.getByLabel("Account budget ($)").evaluate((i) => i.validity.valid)), "the browser itself flags a budget below one dollar");
+  await page.getByRole("button", {name: "Save budget"}).click();
   await page.waitForFunction(() => document.getElementById("cm-notice").classList.contains("error"));
   ok(/above zero/.test(await page.locator("#cm-notice").innerText()), "and the button refuses it too, with a reason");
-  await page.getByLabel("Default budget cap ($)").fill("");
-  await page.getByRole("button", {name: "Save cap"}).click();
-  await page.waitForFunction(() => /pod’s rule again/.test(document.getElementById("cm-notice").textContent));
-  eq(await capOnDeck(), "Cap $225.00", "an empty box goes back to the pod's rule");
+  await page.getByLabel("Account budget ($)").fill("");
+  await page.getByRole("button", {name: "Save budget"}).click();
+  await page.waitForFunction(() => /No account budget now/.test(document.getElementById("cm-notice").textContent));
+  eq((await model()).budget, null, "an empty box is no account budget");
 
   /* 6. About, and a phone. */
   await page.goto(`${base}/index.html#settings`);
@@ -243,4 +257,4 @@ try {
 } finally {
   await close();
 }
-console.log(`settings-r3: ${checks} checks passed — the Menu slimmed to INTAKE §4.7, Settings holds the rest in five sections, Play and AI Coach, Reduce motion (which stills the page) and Stop at every step are saved, and the default cap reaches a deck's own page.`);
+console.log(`settings-r3: ${checks} checks passed — the Menu slimmed to INTAKE §4.7, Settings holds the rest in five sections, Play and AI Coach, Reduce motion (which stills the page) and Stop at every step are saved, and the account's budget is set against the decks' while no deck inherits it.`);
