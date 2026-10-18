@@ -1,9 +1,9 @@
 {
   "workstream": "claude-deck",
-  "updated": "2026-10-18T08:16:30Z",
+  "updated": "2026-10-18T10:05:40Z",
   "updated_by": "Claude · Deck intelligence (the session that wrote the program charter)",
   "branch": "eight model PRs chained in merge order (#749 #750 #752 #758 #759 #757 #760 #761); the audit on #762",
-  "now": "Eight models merged to main this morning (composition, synergies, card resolution, buy plan, compliance, criteria builder, swap record, reasonableness); legality and the readout were already there. In review: the simulation audit (#762) and ROB-116 steps 1 and 3 (#764). Next: ROB-116 step 2 when the engine lane's playPod lands; Rob's word on the popularity dial (ROB-109).",
+  "now": "Nine PRs merged to main today: eight models plus ROB-116 steps 1 and 3. In review: the simulation audit (#762). Next: ROB-116 step 2 when the engine lane's playPod lands; Rob's word on the popularity dial (ROB-109).",
   "items": [
     {
       "id": "ROB-138",
@@ -136,13 +136,17 @@
       "outcome": "deck-tuning",
       "feature": "Simulation fidelity: the simulator and the rules engine agree where they overlap",
       "status": "in_progress",
-      "remaining_hours": 30,
+      "remaining_hours": 28,
       "blocked_on": "ROB-11: the engine's headless N-game entry point (playPod), asked 2026-10-18",
-      "note": "Step 3 in review on PR #764 (winRateSe, perSeedWinRates, end-turn counts; the pack carries winRateStandardError). Step 1 next; step 2 waits on the playPod ask.",
+      "note": "Steps 3 (variance in the result and the pack) and 1 (each simplification labeled with the cards it touches) are on main via PR #764. Step 2 (calibration) waits on the playPod ask; the removals follow it.",
       "evidence": [
         {
           "label": "PR #764 (step 3: variance in the result and the pack)",
           "url": "https://github.com/minorrob/mtg-deck-matrix/pull/764"
+        },
+        {
+          "label": "merged e074d8d1 (steps 1 and 3)",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/commit/e074d8d1c3a9a72d6a5ac65b0d58e33daeaa6670"
         }
       ]
     },
