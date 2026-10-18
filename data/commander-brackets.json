@@ -1,0 +1,21 @@
+{
+ "schema": "commander-brackets@1",
+ "updatedAt": "2026-10-18",
+ "generator": "hand-maintained",
+ "count": 5,
+ "source": "Wizards of the Coast's Commander Brackets as the app has carried them since the lobby's BRACKETS table (crankmagic-lobby.js) and the Lab's compliance tiers (compliance-model.js) were written from the published system; the Game Changer list is the card record's gameChanger flag (Scryfall's game_changer, refreshed with the record set). When Wizards revises the system, this file's updatedAt moves with it and the report says which date it judged by.",
+ "rules": [
+  {"id": "game-changers", "label": "Game Changers", "says": "Cards on Wizards' Game Changer list: the ones that most warp a casual table."},
+  {"id": "mass-land-denial", "label": "Mass land denial", "says": "Destroying, sacrificing or locking down everyone's lands at once."},
+  {"id": "extra-turns", "label": "Chained extra turns", "says": "Extra turns taken in a row, or an extra-turn spell that comes back to be cast again."},
+  {"id": "two-card-combos", "label": "Two-card infinite combos", "says": "Two cards that together win or lock the game on the spot."},
+  {"id": "tutors", "label": "Tutors", "says": "Cards that search the library for exactly what the deck wants; not a rule, a texture the lower brackets keep light."}
+ ],
+ "brackets": [
+  {"n": 1, "name": "Exhibition", "gameChangers": 0, "massLandDenial": false, "extraTurnChains": false, "twoCardCombos": "none", "tutorsLight": true, "says": "Ultra-casual. No Game Changers, no mass land denial, no chained extra turns, no two-card infinite combos. Winning is not the point."},
+  {"n": 2, "name": "Core", "gameChangers": 0, "massLandDenial": false, "extraTurnChains": false, "twoCardCombos": "none", "tutorsLight": true, "says": "Precon level. No Game Changers, and the same three restrictions. Games run long and end on a big turn."},
+  {"n": 3, "name": "Upgraded", "gameChangers": 3, "massLandDenial": false, "extraTurnChains": false, "twoCardCombos": "late", "tutorsLight": false, "says": "Up to three Game Changers. No mass land denial, no chained extra turns, and a two-card combo only as a late-game finish."},
+  {"n": 4, "name": "Optimized", "gameChangers": null, "massLandDenial": true, "extraTurnChains": true, "twoCardCombos": "any", "tutorsLight": false, "says": "No restrictions. The strongest build of whatever the deck wants to do."},
+  {"n": 5, "name": "cEDH", "gameChangers": null, "massLandDenial": true, "extraTurnChains": true, "twoCardCombos": "any", "tutorsLight": false, "says": "No restrictions, and every seat is playing to win as fast as the format allows."}
+ ]
+}
