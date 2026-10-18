@@ -84,7 +84,7 @@ Volcano uses Rob's supplied video; other environments and the table artwork stil
 
 | Lane | Held by | Branch | Doing |
 | --- | --- | --- | --- |
-| **Engine and simulation** | Fable (Claude Code, a cloud container), resumed October 16 per Rob | `claude/admiring-franklin-58cxy4` | Engine, simulation, card loads. Linear: ROB-71 and its children (ROB-12, ROB-13, ROB-73 to ROB-95). ROB-12 merged (#739); now ROB-81. See "2026-10-17: the engine lane resumed" below. |
+| **Engine and simulation** | Fable (Claude Code, a cloud container), resumed October 16 per Rob | `claude/admiring-franklin-58cxy4` | Engine, simulation, card loads. Linear: ROB-71 and its children (ROB-12, ROB-13, ROB-73 to ROB-95). ROB-12 (#739) and ROB-81 (#742) on staging; now ROB-101, then ROB-13. See "2026-10-17: the engine lane resumed" below. |
 | **UI and user management** | Codex on Personal-HP | `codex/ui-playtest-plan-oct15`; focused release `codex/staging-resend-oct16` | UI/Babylon, account profiles, sharing, Resend and invitations; coordinates current staging release. |
 
 ### Requests between the lanes
@@ -124,15 +124,26 @@ other lane answers in the last column.
   UI anchors, both red on main; ROB-15, ROB-16). **On staging:** main 7fcf26b2 (with #737) as `release/cloud-staging` 44af45b4,
   Workers version 2192fe90, play-worker.js byte-identical to the release (9e59b223bdd8); `staging-check --expect 7fcf26b2`
   passes; release-acceptance 22, Play walk 42. ROB-12 Done. Production unchanged.
-  Next on the branch: ROB-81, its PR. A tested patch for the four UI anchors is in ROB-16, for the UI lane to take or hand back.
+- **Merged:** #742 (ROB-81) as main 08dcb89f, on green CI (run 39077666709) once #729 (9cf57d0c) had made main green; the ROB-16
+  anchor patch was withdrawn, #729 having dropped those four breaks. **On staging:** main 08dcb89f as `release/cloud-staging`
+  699c8999, Workers version 0b9bce12, play-worker.js byte-identical to the release (0189b94b1ee1); `staging-check --expect
+  08dcb89f` passes; release-acceptance 22, Play walk 42. ROB-81 Done. Production unchanged.
 - **ROB-12:** the engine and test paths of 377d6487 ported, behind a pod key: a table's new match carries `pooledTaps: true`, and a
   match launched before offers what it offered and replays the same. A view key, `commanderTax`, on a command-zone commander. Proof:
   engine-tap-to-cast 64, engine-commander 56, engine-cost-targets 42, room-pooled-taps 8 (new), game-table 168; breaks-pooled-taps
   15 of 15; the four anchors it moved re-anchored and caught again.
+- **ROB-81:** a permanent's static affects permanents only, unless its `affects` names another zone (`zone`, or `"any"`; CR
+  109.2); an effect on named objects (`ids`) applies wherever they are. Maskwood Nexus carries `zone: "any"`. Proof:
+  engine-layers 35, engine-wave4c-k3 171; breaks-layers-zone 4 of 4.
+- **ROB-101 (this branch's next PR):** `tests/master-regenerates.mjs` regenerated `data/archive/master-v2.json` over the committed
+  file while other suites read it (pilot-policy failed on #742's CI). It now regenerates into its own temporary directory
+  (`tools/import_master_v2.py` takes an output path). A reader parsing the file in a loop through five runs: main tore 568 of
+  1,168 reads, the fix none. breaks-master-regenerates 2 of 2. No served file changes.
 - **Waiting on Rob:** the backstop's daily cap (ROB-90); the AI door's two settings (ROB-95: the staging AI Access app, and the
   production key); whether waves 4d onward wait on card-load steps 1 to 4 (ROB-93).
 - **With the Opus session holding Codex's lane** (`docs/HANDOFF-OPUS-2026-10-17.md`): coordinated in ROB-11. No `cloud/**` or UI
-  file in this lane's PRs; no staging deploy until that session's release of #737 is out and it agrees.
+  file in this lane's PRs. Staging releases of main are this lane's, as agreed there: announced in ROB-11 before the push and
+  recorded after it, never two at once.
 
 ## 2026-10-14: Rob's decisions on the card load program
 
