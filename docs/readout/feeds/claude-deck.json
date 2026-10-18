@@ -1,9 +1,9 @@
 {
   "workstream": "claude-deck",
-  "updated": "2026-10-18T05:50:00Z",
+  "updated": "2026-10-18T07:15:00Z",
   "updated_by": "Claude · Deck intelligence (the session that wrote the program charter)",
-  "branch": "claude/deck-composition, claude/deck-synergies (models); claude/crankmagic-invitations-ob12tu (the program, PR #740)",
-  "now": "The composition model is on PR #749 (ROB-114) and the synergies model on its own branch (ROB-115), both waiting on green runs; next card resolution (ROB-131) and buildFromCriteria (ROB-109).",
+  "branch": "eight model PRs chained in merge order (#749 #750 #752 #758 #759 #757 #760 #761); the audit on #762",
+  "now": "Nine PRs ready and chained in merge order; merging each on green. Legality (ROB-104) and the readout (ROB-138) are on main. Next: ROB-116 steps 1 and 3 while the engine builds playPod; Rob's word on the popularity dial (ROB-109).",
   "items": [
     {
       "id": "ROB-138",
@@ -31,85 +31,136 @@
       "id": "ROB-104",
       "outcome": "play-any-deck",
       "feature": "Commander legality checked before a table starts (banned list, color identity, singleton, 100 cards, partners)",
-      "status": "backlog",
-      "remaining_hours": 8
+      "status": "done",
+      "remaining_hours": 0,
+      "evidence": [
+        {
+          "label": "PR #753",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/pull/753"
+        }
+      ],
+      "note": "Merged (main 41997462). The lobby and the Lab each wire one line."
     },
     {
       "id": "ROB-109",
       "outcome": "deck-creation",
       "feature": "Build me a deck from my criteria: playstyle, budget, bracket, commander optional, colors optional",
-      "status": "backlog",
-      "remaining_hours": 30
+      "status": "review",
+      "remaining_hours": 3,
+      "evidence": [
+        {
+          "label": "PR #757",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/pull/757"
+        }
+      ],
+      "note": "Six criteria sets legal, on budget, in bracket, every slot explained. One decision for Rob: a popularity dial (the reasonableness report found 0 to 12% overlap with what people play)."
     },
     {
       "id": "ROB-111",
       "outcome": "deck-creation",
       "feature": "Bracket and Game Changer compliance explained in plain words, never silently enforced",
-      "status": "backlog",
-      "remaining_hours": 10
+      "status": "review",
+      "remaining_hours": 2,
+      "evidence": [
+        {
+          "label": "PR #759",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/pull/759"
+        }
+      ],
+      "note": "Each bracket rule met, over, review or not checked, with the swap that would bring it inside; never enforced."
     },
     {
       "id": "ROB-112",
       "outcome": "deck-creation",
       "feature": "Reasonableness measured against reference decks",
-      "status": "backlog",
-      "remaining_hours": 14
+      "status": "review",
+      "remaining_hours": 2,
+      "evidence": [
+        {
+          "label": "PR #761",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/pull/761"
+        }
+      ],
+      "note": "The dated report is committed; the suite holds a tolerance; two worse generators fail it."
     },
     {
       "id": "ROB-114",
       "outcome": "deck-tuning",
       "feature": "Composition model: ramp, interaction, defense, offense, win conditions against targets",
       "status": "review",
-      "remaining_hours": 2,
+      "remaining_hours": 1,
       "evidence": [
         {
           "label": "PR #749",
           "url": "https://github.com/minorrob/mtg-deck-matrix/pull/749"
         }
       ],
-      "note": "Built and proven (197 checks, five breaks); waits on the green run and the merge."
+      "note": "Chained first; one follow-up commit for a catalog-row shape."
     },
     {
       "id": "ROB-115",
       "outcome": "deck-tuning",
       "feature": "Synergies and chains inside the deck, and the one card that would complete a chain",
       "status": "review",
-      "remaining_hours": 2,
+      "remaining_hours": 1,
       "evidence": [
         {
-          "label": "branch claude/deck-synergies",
-          "url": "https://github.com/minorrob/mtg-deck-matrix/tree/claude/deck-synergies"
+          "label": "PR #750",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/pull/750"
         }
       ],
-      "note": "Built and proven on Krenko (the Bombardment-and-Staff engine, the Staff proposed back); waits on the green run and the merge."
+      "note": "Chained second."
     },
     {
       "id": "ROB-116",
       "outcome": "deck-tuning",
       "feature": "Simulation fidelity: the simulator and the rules engine agree where they overlap",
-      "status": "backlog",
-      "remaining_hours": 40
+      "status": "blocked",
+      "remaining_hours": 36,
+      "blocked_on": "ROB-11: the engine's headless N-game entry point (playPod), asked 2026-10-18",
+      "note": "Steps 1 and 3 (the simplifications list; variance on every score shown) proceed without it."
     },
     {
       "id": "ROB-84",
       "outcome": "deck-tuning",
       "feature": "The simulation-model audit: what the simulator shares with the engine and what it estimates",
-      "status": "backlog",
-      "remaining_hours": 8
+      "status": "review",
+      "remaining_hours": 1,
+      "evidence": [
+        {
+          "label": "PR #762",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/pull/762"
+        }
+      ],
+      "note": "The audit document; no code changed."
     },
     {
       "id": "ROB-117",
       "outcome": "deck-tuning",
       "feature": "Every recommended swap names its evidence and its measured gain",
-      "status": "backlog",
-      "remaining_hours": 12
+      "status": "review",
+      "remaining_hours": 2,
+      "evidence": [
+        {
+          "label": "PR #760",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/pull/760"
+        }
+      ],
+      "note": "Evidence or nothing; unmeasured never a gain; the Workshop wires the advisor, the Lab and the AI advisor to it."
     },
     {
       "id": "ROB-119",
       "outcome": "buying",
-      "feature": "The vendor, print and price logic behind the priority dial",
-      "status": "backlog",
-      "remaining_hours": 14
+      "feature": "The buy plan behind the priority dial: which printing, from which vendor, in which box, and what the choice cost",
+      "status": "review",
+      "remaining_hours": 2,
+      "evidence": [
+        {
+          "label": "PR #758",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/pull/758"
+        }
+      ],
+      "note": "Three extremes, three plans; the vendor table is the reader's to edit in Settings (ROB-118)."
     },
     {
       "id": "ROB-121",
@@ -150,8 +201,15 @@
       "id": "ROB-131",
       "outcome": "ai",
       "feature": "Card indexing resolution: a misspelled name, any export line, or a photo resolved to the catalog",
-      "status": "backlog",
-      "remaining_hours": 20
+      "status": "review",
+      "remaining_hours": 1,
+      "evidence": [
+        {
+          "label": "PR #752",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/pull/752"
+        }
+      ],
+      "note": "178 of 200 real-world lines offline, 0 wrong accepts; chained third."
     },
     {
       "id": "ROB-132",
@@ -182,6 +240,13 @@
       "recommendation": "Daily prices, weekly graph, as plan-to-100 M2 recommended",
       "needed_by": "when ROB-121 is ready",
       "url": "https://linear.app/robs-build/issue/ROB-121"
+    },
+    {
+      "id": "ROB-109",
+      "ask": "Should the criteria builder lean toward what people play for the commander (a popularity dial), or stay synergy-first?",
+      "recommendation": "The dial, defaulting toward popularity for a commander EDHREC knows; synergy-first as the Combo playstyle's default",
+      "needed_by": "before the criteria screen (ROB-110) ships",
+      "url": "https://linear.app/robs-build/issue/ROB-109"
     }
   ],
   "blocked_on": [
@@ -189,6 +254,11 @@
       "id": "ROB-123",
       "by": "ROB-122, the Preferences › Decks card",
       "owner": "codex-workshop"
+    },
+    {
+      "id": "ROB-116",
+      "by": "ROB-11: a headless N-game entry point (playPod) from Claude · Engine",
+      "owner": "claude-engine"
     }
   ]
 }
