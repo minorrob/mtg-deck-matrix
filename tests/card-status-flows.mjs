@@ -60,6 +60,7 @@ try {
   await page.locator(".cm-row-menu:popover-open").waitFor();
   eq(await page.$$eval(".cm-row-menu:popover-open .cm-menu-section", (ps) => ps.map((p) => p.textContent)), ["Use", "Ownership"], "the Status cell opens the Use moves, then the Ownership ladder");
   eq(await page.locator("#cm-dialog[open]").count(), 0, "and not the card");
+  ok(!(await page.$$eval(".cm-row-menu:popover-open .cm-rung", (bs) => bs.map((b) => b.dataset.label))).some((l) => /^(To sell|Trade)$/.test(l)), "the Ownership ladder never offers To sell or Trade: they follow the Sell and Trade uses (Rob, 2026-10-18)");
   ok(await page.$$eval("#cm-roster-table td.cm-col-quantity, #cm-roster-table td.cm-col-paid", (tds) => tds.every((td) => !td.querySelector(".cm-cell-edit, input"))), "Quantity and Paid are text, not fields");
 
   /* 2. Choose what it replaces: it becomes an option on D4, naming a card in the box, and the box does not change. */
@@ -177,6 +178,13 @@ try {
   await page.waitForFunction((id) => /Sell/.test(document.querySelector(`#cm-roster-table tr[data-record="${id}"] td.cm-col-status`)?.textContent || ""), bench.id, {timeout: 15000});
   st = await stateOf(page);
   eq([st.lots.find((l) => l.id === bench.id).offer, st.lots.find((l) => l.id === bench.id).offerKind], ["available", "sell"], "it is offered, for sale, and its row reads Sell");
+  eq(M.stateReader(st)({...st.lots.find((l) => l.id === bench.id), kind: "lot"}).ownership, "sell", "and its ownership is To sell, set by the use, not chosen");
+  await statusCell(page, bench.id).click();
+  await page.locator(".cm-row-menu:popover-open").waitFor();
+  const rungs = await page.$$eval(".cm-row-menu:popover-open .cm-rung", (bs) => bs.map((b) => [b.dataset.label, b.disabled]));
+  eq(rungs.filter(([, d]) => d), [["To sell", true]], "the Ownership section shows To sell as the current rung, locked");
+  ok(!rungs.some(([l, d]) => !d && /^(To sell|Trade)$/.test(l)), "and offers neither To sell nor Trade to choose");
+  await page.keyboard.press("Escape");
   await page.locator(`#cm-roster-table tr[data-record="${bench.id}"] [data-action=row-actions]`).click();
   await page.locator(".cm-row-menu:popover-open button", {hasText: /^Edit$/}).click();
   await page.locator("#cm-dialog[open] input[name=quantity]").fill("2");

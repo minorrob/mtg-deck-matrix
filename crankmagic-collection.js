@@ -1617,7 +1617,10 @@ function statusMenu(r){
   const current=r.kind==='lot'?r.source:'';
   const items=LADDER.map(([id,label,why])=>{
     if(r.kind==='need'&&id==='watching')return '';
-    if(id===current)return rung(label,r.kind==='need'?'this requirement is already on the to-buy list':'current status','disabled aria-current="true"',true);
+    /* TO SELL AND TRADE ARE NEVER CHOSEN HERE (Rob, 2026-10-18): they follow the copy's use. Put it in Sell or Trade
+       (the Use section) and its ownership reads To sell or Trade by itself, shown as the current rung and locked. */
+    if(id===current){const auto=r.kind==='lot'&&r.source==='owned'&&(r.offer||'none')!=='none';
+      return rung(auto?M.ownershipLabel(r.offerKind==='sell'?'sell':'trade'):label,r.kind==='need'?'this requirement is already on the to-buy list':auto?`automatic while it is offered — Back to the Bench in Use ends it`:'current status','disabled aria-current="true"',true);}
     const loses=r.kind==='lot'&&r.source==='owned'&&(r.allocation||r.location?.kind==='deck');
     if(loses)return rung(label,'takes it out of its physical deck and clears the reservation — asks first',`data-action="status-dialog" data-record="${e(r.recordId)}" data-source="${id}"`);
     const op=r.kind==='lot'?'source':r.kind==='need'?'acquire':r.kind==='entry'?'entry':'plan';

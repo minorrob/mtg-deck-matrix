@@ -68,6 +68,10 @@ A **Bench** copy is never Reserved. It goes straight into a deck as Final or as 
 
 Reserving a watched card moves it to To buy, after you confirm. A status menu offers only these pairs.
 
+**To sell and Trade are never chosen as ownership** (Rob, 2026-10-18). They follow the use: put a copy in Sell or Trade
+(the row's Use menu) and its ownership reads To sell or Trade by itself. The Ownership menu shows that as the current
+rung, locked, and offers only Watch, Ordered and Own to choose.
+
 ### Play
 
 - **For a card:**
