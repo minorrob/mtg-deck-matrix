@@ -1,5 +1,9 @@
 # ROB-99 slice 1: shared desktop shell
 
+Merged October 18 at 08:03 UTC via PR #754 as `73f55b353c3174ef735ec22ef2e733112c86a13d`.
+Exact head `b538be8e` passed Actions run `39107631823`; main was rechecked unchanged at `41997462`
+and mergeability verified immediately before the merge commit. Staging remains requested from the engine lane.
+
 Branch: `codex/play-shared-shell`, PR #754. Implementation commit `d5a2f18c`;
 latest main `41997462` integrated by merge commit `3b981760` after PR #753.
 
