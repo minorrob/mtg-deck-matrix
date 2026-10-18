@@ -45,7 +45,7 @@ alone edits, and a set of files nobody else edits.
 | **Claude · Deck intelligence** | `Claude · Deck intelligence` | Claude, the second session (this one today) | `claude/deck-<topic>` | `docs/readout/feeds/claude-deck.json` |
 | **Codex · Play** | `Codex · Play` | Codex Astra, session 1 | `codex/play-<topic>` | `docs/readout/feeds/codex-play.json` |
 | **Codex · Workshop** | `Codex · Workshop` | Codex Astra, session 2 | `codex/workshop-<topic>` | `docs/readout/feeds/codex-workshop.json` |
-| **Grok** | `Grok` | Grok Bot: one coordinator, workers on disjoint files, under a package in `docs/grok/` | `grok/<task>-<topic>` | `docs/readout/feeds/grok.json` (the coordinator) |
+| **Grok** | `Grok` | Grok Bot: one coordinator Bot directing other Grok Bots on Rob's account, on disjoint files, under a package in `docs/grok/`; it never directs Codex or Claude | `grok/<task>-<topic>` | `docs/readout/feeds/grok.json` (the coordinator) |
 | Shared contract | `Shared contract` | Agreed in ROB-11 before either side builds; each side builds its half in its own files | | |
 | Rob | `Rob's call` | Decisions, purchases, secrets, dashboard settings, logins, reviews, game nights | | the queue on the readout |
 

@@ -9,7 +9,17 @@ The packages are under `docs/grok/`; the current one is `WORK-PACKAGE-2026-10-17
 ## 1. What this lane is for
 
 Rob, October 17: "I trust it less with highly creative and nuanced work, more with well-instructed work that can be
-federated across agents and orchestrated by a single agent." So Grok takes **bounded, well-instructed, provable**
+federated across agents and orchestrated by a single agent." Rob, October 18: "Grok only orchestrates its agents.
+Grok is not orchestrating GPT or Claude."
+
+**What Grok Bot is, and what that means here.** Grok Bot (xAI, August 2026) runs several persistent Bots on one
+account; they coordinate in a shared thread, hand a task to the Bot whose description fits it, and share the
+account's connections (GitHub among them). So the coordinator here is a Grok Bot, and its workers are other Grok
+Bots on Rob's account; it never directs a Codex or Claude session, and no Codex or Claude session directs it. The
+only coordination across platforms is Linear, `docs/ACTIVE.md` and GitHub, relayed by Rob. A task that needs a
+command run (a Node suite, Playwright, Chromium) is for a worker that can run code, such as a Grok Build sub-agent in
+its own worktree; a Grok Bot worker without code execution returns the document half of such a task and says in
+its return, in those words, that it did not run the command. So Grok takes **bounded, well-instructed, provable**
 tasks: test cases, reference curation, benchmarks and budgets, data checks, fixtures, documentation that follows a
 format, the playtest harness run. Grok does not design screens, decide product behavior, touch credentials, release,
 or merge.
@@ -44,7 +54,7 @@ mark a Linear issue Done.
 | G3 test cases | ROB-27 | `docs/uat/play-test-cases-2026-10.md` | Ready to start |
 | G4 Mobbin references | ROB-61 | `docs/design/references/mobbin-2026-10.md` | Ready, if the worker has Mobbin access |
 | G5 playtest harness run | | `docs/playtest-harness.md`'s outputs | Waits on Rob's four service tokens (ROB-11) |
-| G6 performance budgets | ROB-136 | `tests/budgets.mjs`, `docs/program/budgets.md` | Ready to start; reviewed by Claude · Deck intelligence |
+| G6 performance budgets | ROB-136 | `tests/budgets.mjs`, `docs/program/budgets.md` | Ready for a worker that can run Node and Chromium (Grok Build); a Grok Bot without code execution returns the budget table only; reviewed by Claude · Deck intelligence |
 | later | ROB-67 | per package | Crowded-board benchmarks, once the board's M1 is on main |
 
 Good next tasks for a package (any workstream may write them): a fixture of 200 real-world card lines for card
