@@ -230,6 +230,12 @@ function project(state, viewer) {
     schema: PROJECTION_SCHEMA,
     viewerSeatId: viewer,
     turn: state.turn,
+    /* Where the turn is in the game, for the table's labels (Linear ROB-76; rules/turn.mjs, nextRound): `turn` counts
+       every turn taken, an extra one too. `round` and `turnInRound` are null for a game saved before rounds were kept. */
+    round: Number.isInteger(state.round) ? state.round : null,
+    turnInRound: Number.isInteger(state.turnInRound) ? state.turnInRound : null,
+    turnId: state.turn > 0 ? `turn:${state.turn}` : null,
+    extraTurn: state.extraTurn === true,
     turnPlayerId: state.activePlayer,
     priorityPlayerId: state.priorityPlayer,
     phase: state.phase,
