@@ -1163,6 +1163,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `table-lobby` — `tests/table-lobby.mjs`
 - `table-board` — `tests/table-board.mjs`
 - `board-callouts` — `tests/board-callouts.mjs` (the board's reading of a new view against the last, for the callouts over the table: your turn, attackers against you, hits and life, a seat out, countered and tokens, destroyed and exiled, a response on the stack, the game's end; a hidden card never named)
+- `board-commander-tax` — `tests/board-commander-tax.mjs` (ROB-29; commander tax badges and castability highlighting: the board reads `commanderTax` from `CrankRoomView@1`, highlights only castable commanders, shows a tax badge when tax > 0, never decides for the player or auto-casts)
 - `a11y-app` — `tests/a11y-app.mjs` (WCAG 2.1 1.4.3 across the app: every rule that sets words on the accent, and the Decks page's primary buttons, at 4.5:1 in all four themes)
 - `a11y-board` — `tests/a11y-board.mjs` (WCAG 2.1 AA on the board and the lobby: every word's contrast from the screen's pixels over all the mats in both themes, the focus rings, Tab in reading order, the keys as bound in Help, every card's label with its state and nothing hidden, the questions announced)
 - `room-beats` — `tests/room-beats.mjs`

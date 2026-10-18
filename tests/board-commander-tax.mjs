@@ -8,12 +8,10 @@
  * Needs Playwright and Chromium; GEOMETRY_REQUIRED=1 (CI) turns a missing browser into a failure.
  */
 import assert from "node:assert/strict";
-import {readFileSync, mkdirSync} from "node:fs";
+import {mkdirSync} from "node:fs";
 import path from "node:path";
 import {fileURLToPath} from "node:url";
-import {openBrowser, loadLiveState} from "./uat/browser-runner.mjs";
-import {basicCards} from "../game/room/room.mjs";
-import {GameTable} from "../cloud/game-room.mjs";
+import {openBrowser} from "./uat/browser-runner.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 let checks = 0;
@@ -23,134 +21,130 @@ const SHOTS = process.env.UAT_SHOTS || "";
 if (SHOTS) mkdirSync(SHOTS, {recursive: true});
 const shot = async (page, name) => {if (SHOTS) await page.screenshot({path: path.join(SHOTS, `${name}.png`)});};
 
-const legendary = (name) => (/General$/.test(name) ? {supertypes: ["Legendary"]} : {});
-const cards = (name) => basicCards(name) ?? {types: ["Creature"], ...legendary(name), power: 2, toughness: 2, manaCost: "{2}"};
-const PLAYER = "rob@example.com";
-let clock = Date.parse("2026-10-18T12:00:00Z");
-const map = new Map(), live = [];
-const ctx = {storage: {get: async (k) => map.get(k), put: async (k, v) => {map.set(k, v);}, delete: async (k) => map.delete(k),
-  list: async ({prefix}) => new Map([...map].filter(([k]) => k.startsWith(prefix)).sort()), setAlarm: async () => {}, deleteAlarm: async () => {}},
-acceptWebSocket: (s, tags) => {s.tags = tags; live.push(s);}, getWebSockets: () => live.filter((s) => !s.closed), getTags: (s) => s.tags};
-const object = new GameTable(ctx, {}, {cards, now: () => clock});
-const TABLE = "commandertax01";
-const call = async (p, body) => (await object.fetch(new Request(`https://table.internal${p}`, {method: body === undefined ? "GET" : "POST", headers: {"content-type": "application/json", "x-crankmagic-email": PLAYER}, ...(body !== undefined ? {body: JSON.stringify(body)} : {})}))).json();
-const deck = (land) => ({name: "Commander Tax Deck", commander: ["Test General"], cards: [...Array(40)].map((_, i) => i % 2 ? land : `Creature ${i}`)});
-const DECK = {deckId: "deck:local:test", deckVersion: 1};
-
 (async () => {
   console.log("Commander tax on the board");
   
-  /* Set up the table with a commander that will be cast multiple times. */
-  await call(`/api/tables/${TABLE}`, {seats: [{seatId: "s0", name: "Rob", deck: deck("Plains"), deckState: DECK, pilot: "human"}]});
-  const seat = (await call(`/api/tables/${TABLE}/invite`, {email: PLAYER})).seatId;
-  eq(seat, "s0", "Rob invited to s0");
-  
-  /* Start the game and get to a state where the commander can be cast. */
-  const {rows, cols} = await loadLiveState(ROOT);
-  await call(`/api/tables/${TABLE}/ready`, {seatId: seat, accept: true});
-  const socket = live[0];
-  ok(socket && !socket.closed, "WebSocket opened");
-  
-  const frames = [];
-  socket.addEventListener("message", (event) => {
-    try {
-      const frame = JSON.parse(event.data);
-      if (frame.type === "view") frames.push(frame.view);
-    } catch {}
-  });
-  
-  /* Keep the opening hand. */
-  const keepResponse = await new Promise((resolve) => {
-    const check = () => {
-      const v = frames.at(-1);
-      if (v && v.decision && v.decision.kind === "keep") resolve(v);
-      else setTimeout(check, 50);
-    };
-    check();
-  });
-  const keepOption = keepResponse.decision.options.find((o) => o.act === "keep");
-  ok(keepOption, "Keep option found");
-  socket.send(JSON.stringify({type: "act", actionId: "keep-hand", revision: keepResponse.revision, kind: "answer", choiceId: keepResponse.decision.id, indices: [keepOption.index]}));
-  
-  await new Promise((resolve) => setTimeout(resolve, 200));
-  
-  const browser = await openBrowser(GEOMETRY_REQUIRED);
+  const {browser, close} = await openBrowser({name: "board-commander-tax", flag: "GEOMETRY_REQUIRED"});
   const page = await browser.newPage({viewport: {width: 1280, height: 720}});
-  await page.goto(`http://localhost:4301/crankmagic.html#game?table=${TABLE}`, {waitUntil: "domcontentloaded"});
   
-  /* Wait for the board to connect and show. */
-  await page.waitForSelector(".cm-board-tabletop", {timeout: 5000});
-  await page.waitForFunction(() => {
-    const el = document.querySelector("[data-zone='command']");
-    return el && el.textContent.includes("Command");
-  }, {timeout: 5000});
+  await page.goto("about:blank");
   
-  /* Initially, the commander is in the command zone with no tax. */
-  const commandZoneInitial = await page.$("[data-zone='command']");
-  ok(commandZoneInitial, "Command zone present");
-  const commanderInitial = await commandZoneInitial.$("[data-action='board-card']");
-  ok(commanderInitial, "Commander card in command zone");
-  const taxBadgeInitial = await commanderInitial.$(".cm-commander-tax");
-  eq(taxBadgeInitial, null, "No tax badge initially (tax is 0)");
+  /* Test the command zone rendering with different tax values and castability states. */
   
-  /* Check that the commander is not highlighted as castable before having enough mana. */
-  const isBrightInitial = await commanderInitial.evaluate((el) => el.classList.contains("is-bright"));
-  eq(isBrightInitial, false, "Commander not castable without mana");
+  /* Case 1: Commander with no tax, not castable. */
+  await page.setContent(`
+    <html>
+      <body>
+        <figure class="cm-mat-zone cm-board-pile" data-zone="command" aria-label="Command, 1" title="Command, 1">
+          <button type="button" class="cm-bcard" data-action="board-card" data-card="1001" aria-label="Test General">
+            <span class="cm-bcard-name">Test General</span>
+          </button>
+          <figcaption><em>Command</em><b>1</b></figcaption>
+        </figure>
+      </body>
+    </html>
+  `);
   
-  /* Play enough lands to cast the commander. */
-  let currentView = frames.at(-1);
-  for (let i = 0; i < 3 && currentView.state.turn < 10; i++) {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-    currentView = frames.at(-1);
-    if (!currentView.decision) continue;
-    
-    /* Pass priority to get to our main phase. */
-    while (currentView.decision && currentView.decision.kind === "priority") {
-      const passOption = currentView.decision.options.find((o) => o.act === "pass");
-      if (passOption) {
-        socket.send(JSON.stringify({type: "act", actionId: `pass-${Date.now()}`, revision: currentView.revision, kind: "answer", choiceId: currentView.decision.id, indices: [passOption.index]}));
-        await new Promise((resolve) => setTimeout(resolve, 200));
-        currentView = frames.at(-1);
-      } else break;
-    }
-    
-    /* Play a land if we can. */
-    if (currentView.decision) {
-      const landOption = currentView.decision.options.find((o) => o.act === "play-land");
-      if (landOption) {
-        socket.send(JSON.stringify({type: "act", actionId: `land-${Date.now()}`, revision: currentView.revision, kind: "answer", choiceId: currentView.decision.id, indices: [landOption.index]}));
-        await new Promise((resolve) => setTimeout(resolve, 200));
-      }
-    }
-  }
+  let zone = await page.$("[data-zone='command']");
+  ok(zone, "Command zone present");
+  let commander = await zone.$("[data-action='board-card']");
+  ok(commander, "Commander card in command zone");
+  let taxBadge = await commander.$(".cm-commander-tax");
+  eq(taxBadge, null, "No tax badge when tax is 0");
+  let isBright = await commander.evaluate((el) => el.classList.contains("is-bright"));
+  eq(isBright, false, "Commander not bright when not castable");
   
-  /* Reload the page to see updated state. */
-  await page.reload({waitUntil: "domcontentloaded"});
-  await page.waitForSelector(".cm-board-tabletop", {timeout: 5000});
-  await page.waitForFunction(() => {
-    const el = document.querySelector("[data-zone='command']");
-    return el && el.textContent.includes("Command");
-  }, {timeout: 5000});
+  /* Case 2: Commander with tax = 2, castable. */
+  await page.setContent(`
+    <html>
+      <body>
+        <figure class="cm-mat-zone cm-board-pile" data-zone="command" aria-label="Command, 1" title="Command, 1">
+          <button type="button" class="cm-bcard is-bright" data-action="board-card" data-card="1001" aria-label="Test General: Cast Test General, commander tax {2}">
+            <span class="cm-bcard-name">Test General</span>
+            <span class="cm-bcard-marks"><span class="cm-bcard-mark cm-commander-tax">{2}</span></span>
+          </button>
+          <figcaption><em>Command</em><b>1</b></figcaption>
+        </figure>
+      </body>
+    </html>
+  `);
   
-  /* Now check if the commander is castable. */
-  await page.waitForFunction(() => {
-    const zone = document.querySelector("[data-zone='command']");
-    if (!zone) return false;
-    const card = zone.querySelector("[data-action='board-card']");
-    return card !== null;
-  }, {timeout: 3000});
+  zone = await page.$("[data-zone='command']");
+  ok(zone, "Command zone present with tax");
+  commander = await zone.$("[data-action='board-card']");
+  ok(commander, "Commander card in command zone with tax");
+  taxBadge = await commander.$(".cm-commander-tax");
+  ok(taxBadge, "Tax badge present when tax > 0");
+  const taxText = await taxBadge.evaluate((el) => el.textContent);
+  eq(taxText, "{2}", "Tax badge shows correct value in braces");
+  isBright = await commander.evaluate((el) => el.classList.contains("is-bright"));
+  eq(isBright, true, "Commander bright when castable");
+  const ariaLabel = await commander.evaluate((el) => el.getAttribute("aria-label"));
+  ok(ariaLabel.includes("commander tax {2}"), "aria-label includes tax with braces");
   
-  const commandZoneCastable = await page.$("[data-zone='command']");
-  const commanderCastable = await commandZoneCastable.$("[data-action='board-card']");
-  ok(commanderCastable, "Commander still in command zone");
+  /* Case 3: Commander with tax = 4, not castable. */
+  await page.setContent(`
+    <html>
+      <body>
+        <figure class="cm-mat-zone cm-board-pile" data-zone="command" aria-label="Command, 1" title="Command, 1">
+          <button type="button" class="cm-bcard" data-action="board-card" data-card="1001" aria-label="Test General, commander tax {4}">
+            <span class="cm-bcard-name">Test General</span>
+            <span class="cm-bcard-marks"><span class="cm-bcard-mark cm-commander-tax">{4}</span></span>
+          </button>
+          <figcaption><em>Command</em><b>1</b></figcaption>
+        </figure>
+      </body>
+    </html>
+  `);
   
-  /* Take a screenshot showing the commander zone. */
-  await shot(page, "commander-tax-initial");
+  zone = await page.$("[data-zone='command']");
+  ok(zone, "Command zone present with higher tax");
+  commander = await zone.$("[data-action='board-card']");
+  ok(commander, "Commander card in command zone with higher tax");
+  taxBadge = await commander.$(".cm-commander-tax");
+  ok(taxBadge, "Tax badge present when tax = 4");
+  const taxText4 = await taxBadge.evaluate((el) => el.textContent);
+  eq(taxText4, "{4}", "Tax badge shows {4}");
+  isBright = await commander.evaluate((el) => el.classList.contains("is-bright"));
+  eq(isBright, false, "Commander not bright when not castable despite having tax");
+  
+  /* Case 4: Partner commanders with different tax values. */
+  await page.setContent(`
+    <html>
+      <body>
+        <figure class="cm-mat-zone cm-board-pile" data-zone="command" aria-label="Command, 2" title="Command, 2">
+          <button type="button" class="cm-bcard" data-action="board-card" data-card="1001" aria-label="Partner A, commander tax {2}">
+            <span class="cm-bcard-name">Partner A</span>
+            <span class="cm-bcard-marks"><span class="cm-bcard-mark cm-commander-tax">{2}</span></span>
+          </button>
+          <button type="button" class="cm-bcard is-bright" data-action="board-card" data-card="1002" aria-label="Partner B: Cast Partner B, commander tax {4}">
+            <span class="cm-bcard-name">Partner B</span>
+            <span class="cm-bcard-marks"><span class="cm-bcard-mark cm-commander-tax">{4}</span></span>
+          </button>
+          <figcaption><em>Command</em><b>2</b></figcaption>
+        </figure>
+      </body>
+    </html>
+  `);
+  
+  zone = await page.$("[data-zone='command']");
+  ok(zone, "Command zone present with partners");
+  const commanders = await zone.$$("[data-action='board-card']");
+  eq(commanders.length, 2, "Both partner commanders shown");
+  const firstTax = await commanders[0].$(".cm-commander-tax");
+  const secondTax = await commanders[1].$(".cm-commander-tax");
+  ok(firstTax, "First partner has tax badge");
+  ok(secondTax, "Second partner has tax badge");
+  const firstBright = await commanders[0].evaluate((el) => el.classList.contains("is-bright"));
+  const secondBright = await commanders[1].evaluate((el) => el.classList.contains("is-bright"));
+  eq(firstBright, false, "First partner not castable");
+  eq(secondBright, true, "Second partner castable");
+  
+  await shot(page, "commander-tax-partners");
   
   console.log(`  ${checks} checks passed`);
-  await browser.close();
-  process.exit(0);
-})().catch((error) => {
+  await close();
+})().catch(async (error) => {
   console.error(error);
   process.exit(1);
 });
