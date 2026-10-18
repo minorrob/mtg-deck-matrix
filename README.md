@@ -931,7 +931,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 531 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 533 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1152,6 +1152,8 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `explore-r3` — `tests/explore-r3.mjs`
 - `card-states` — `tests/card-states.mjs`
 - `card-states-screens` — `tests/card-states-screens.mjs`
+- `card-status-flows` — `tests/card-status-flows.mjs`
+- `budgets` — `tests/budgets.mjs`
 - `landing-r3` — `tests/landing-r3.mjs`
 - `cards-57` — `tests/cards-57.mjs`
 - `card-size` — `tests/card-size.mjs`

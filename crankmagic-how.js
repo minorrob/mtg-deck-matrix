@@ -6,12 +6,13 @@
 (globalThis.CrankFeatures ||= []).push(function(C){const {esc:e,views}=C;
 const STEPS=[
   {n:2,title:'Test',href:'#lab',text:'Measure it in Build. Swap what underperforms.'},
-  {n:3,title:'Finalize',href:'#decks',text:'Lock in the hundred. Note upgrades to try later.'},
+  {n:3,title:'Lock the list',href:'#decks',text:'Lock in the hundred. Note upgrades to try later.'},
   {n:4,title:'Acquire',href:'#cards?tab=buy',text:'Buy or order what you don’t own, inside the budget.'},
   {n:5,title:'Assemble',href:'#cards',text:'Add the cards you own to the physical deck. Substitutes hold seats until the real ones arrive.'},
   {n:6,title:'Play',href:'#decks',text:'All 100 in the physical deck: the deck is done. Log your games.'}];
-/* The card states (docs/card-states.md): the four stages, then the one fact that finishes a deck -- its target in the box. */
-const LADDER=[['Watching','Looked at, not decided. No copy yet.'],['To buy','Decided: on your To Buy list, or a deck\u2019s list needs it.'],['Ordered','Bought, not yet in hand.'],['Owned','In hand: on the Bench, to add to a deck, or in its box as the Target or a Substitute.'],['In the box','A deck\u2019s Target, sleeved in its box.']];
+/* The card status (docs/card-states.md, Rob 2026-10-18): the ownership a card climbs, then the uses that bring it into a
+   deck -- Upgrade and Reserved on the way, Final and Substitute in the box, the only two that count toward the hundred. */
+const LADDER=[['Watch','Looked at, not decided. No copy yet.'],['To buy','Decided: on your To Buy list, or a deck\u2019s Reserved card.'],['Ordered','Bought, not yet in hand.'],['Own','In hand: on the Bench, Loading into a deck, or in its box.'],['Upgrade','Being considered to improve a deck. It names the card it would replace and changes nothing until you reserve it.'],['Reserved','Committed to take a seat: to buy, ordered, or in another deck\u2019s box. The card it replaces stays in the box as its Substitute.'],['Substitute','In the box, holding a Reserved card\u2019s seat. It counts toward the hundred.'],['Final','The list\u2019s own card, in the deck\u2019s box. Final and Substitute are the hundred you play.']];
 views.how=async()=>{
   C.main.innerHTML=C.pageHead('How a deck comes together',`<a class="v-button" href="#decks">Back to Decks</a>`)
    +`<ol class="cm-how-flow" aria-label="The six steps">
@@ -26,7 +27,7 @@ views.how=async()=>{
     <section class="cm-how-ladder" aria-label="What a card's status means">
       <h2>A card’s status, in order</h2>
       <ol class="cm-how-rungs">${LADDER.map(([k,t])=>`<li><strong>${e(k)}</strong><span>${e(t)}</span></li>`).join('')}</ol>
-      <p class="cm-muted cm-how-note">A <strong>substitute</strong> is a Bench card holding a seat in a physical deck until the real one arrives. The <strong>Bench</strong> is every owned card no deck has reserved.</p>
+      <p class="cm-muted cm-how-note">A <strong>Substitute</strong> is an owned card in a deck’s box, holding a Reserved card’s seat until it arrives. The <strong>Bench</strong> is every owned card that is for no deck.</p>
     </section>`;
 };
 });

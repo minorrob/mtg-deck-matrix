@@ -145,7 +145,7 @@ try {
   await shot("05-create-deck-page");
   /* Finalize marks the list final (G3d, D4: a draft already reserves what you own and lists the rest to buy, so
      finalizing is the badge, not the step that makes the buy list). */
-  await click("Finalize");
+  await click("Lock list");
   await click("Confirm change");
   await page.getByRole("dialog").waitFor({state: "hidden"});
   ok((await library()).decks.find((d) => d.id === saved.id).status === "final", "Finalize makes it final");

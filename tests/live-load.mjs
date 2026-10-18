@@ -93,7 +93,7 @@ ok(summary.toBuy===37);
  eq(out.issues.length,0);
  const list=out.state.groups.find(g=>g.id==='group:to-buy').entries;
  eq(list.length,2);ok(list.some(r=>r.cardId===planned.id&&r.quantity===2&&r.notes==='$4.00 each'));ok(list.some(r=>r.cardId===filler[5].id&&r.quantity===1));
- const read=M.stateReader(out.state);ok(list.every(r=>{const st=read({...r,kind:'entry',groupId:'group:to-buy'});return st.stage==='buy'&&!st.deckId;}));}
+ const read=M.stateReader(out.state);ok(list.every(r=>{const st=read({...r,kind:'entry',groupId:'group:to-buy'});return st.use==='unowned'&&st.ownership==='buy'&&!st.deckId;}));}
 /* WHICH SEAT A SUBSTITUTE HOLDS (Rob, 2026-09-26). An upgrade whose card is on the list and whose replaced card
    is a substitute in the box is that seat's need; the substitute's copy records the seat, one copy per upgrade,
    and a lot of two is split so each names its own. A replaced card not in the box is reported. */
@@ -106,7 +106,8 @@ ok(summary.toBuy===37);
  ok(subs.every(l=>/holds the seat of Filler [56]/.test(l.notes)));
  M.validate(out.state);checks++;
  const rows=M.projection(out.state).filter(r=>r.cardId===upgrade.id);ok(rows.every(r=>r.standInFor));
- const ctx=M.seats(out.state).decks.get(dk.id);ok(ctx.held.has(slotOfCard(dk,filler[5].id))&&ctx.held.has(slotOfCard(dk,filler[6].id)));
+ /* Read through the card status: each upgrade's seat is a Reserved card that replaces the substitute holding it. */
+ const read=M.stateReader(out.state),seatOf=id=>M.projection(out.state).find(r=>r.kind==='need'&&r.slotId===slotOfCard(dk,id));ok([filler[5].id,filler[6].id].every(id=>{const n=seatOf(id),st=n&&read(n);return st&&st.use==='reserved'&&st.replaces===upgrade.id;}));
  const bad=doc();bad.upgrades.push({deck:'D1',card:'Filler 5',replaces:'Ordered Extra'});ok(L.build(bad,{Model:M,lookup}).issues.some(x=>/Filler 5 \(D1\): "Ordered Extra" is in neither/.test(x)));checks++;}
 eq(summary.readiness[0].deck,'Goblins');
 
