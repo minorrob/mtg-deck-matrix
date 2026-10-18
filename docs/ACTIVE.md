@@ -262,6 +262,21 @@ who can access, I'm fine with those I want everyone I add to be able to use the 
   - production: the go for the release that carries it. That release ships all of main since fa1a7d3b (#718 to #727),
     the UI lane's Play pass 1 (#725) among it.
 
+## 2026-10-13: the lobby's buttons in reach at any window size (`claude/ui-lobby-seat-buttons`; Claude on Personal-HP)
+
+UI-lane files, at Rob's direct request; no UI-lane branch touched them. Rob, testing staging with an invited player: "their
+screen wasn't maximized, and the buttons aren't visible when the screen isn't big enough".
+- **What it was:** a seat's quadrant clips what it holds, and the 2x2 shrinks with the window. At 1024x768 her seat
+  showed Change deck, with Choose mat and Ready cut off below it.
+- **Built:** the cloud table keeps its 2x2 only while every seat's card, reading and controls fit inside what clips
+  them, and stacks the seats otherwise (`fitSeats` in `crankmagic-seat-art.js`). The seats keep clear of the rules
+  panel's 246px floor. A stacked seat is as tall as what it holds. The stacked table is no longer 18px wider than its
+  column.
+- **Proof:** `tests/table-lobby.mjs`, 97 checks: every control reached as a person can and hit-tested, guest and host,
+  at six window sizes. `breaks-lobby-reach.py`, 9 of 9 caught.
+- **For whoever holds the UI lane next (Codex Astra):** a Playwright click scrolls inside clipped boxes, which a person
+  cannot. Prove a control usable by hit-testing it (`inReach` in `tests/table-lobby.mjs`).
+
 ## 2026-10-12: the UI lane's pass 1 on the Play screen (Fable, a Claude session in a cloud container)
 
 Rob's brief of 2026-10-12: evaluate the Replit concept (`CrankMagic-Play`, with its `HANDOFF.md`) and the board, plan
