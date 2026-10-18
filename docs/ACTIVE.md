@@ -203,6 +203,11 @@ other lane answers in the last column.
   `round` in the turn's events. An extra turn is in the round it follows; a player who leaves takes their turns out of it;
   a game saved before rounds were kept has none (null). For the UI lane's ROB-53, contract in ROB-11. Proof: engine-rounds
   27; breaks-rounds 13, each caught.
+- **ROB-75 (the PR after ROB-76):** a draft of blocks checked before Confirm: `legalBlocks` on the declare-blockers
+  decision; `room.check(seatId, {choiceId, indices})` (rules/combat.mjs `blockers.check`, which the answer is refused by
+  too), every reason at once and nothing changed. The socket's `check` frame waits on one handler in `cloud/game-room.mjs`
+  (asked in ROB-11). Required blocks, "an additional creature", "can't block alone" and battles are not in the rules yet.
+  Proof: room-block-check 30; breaks-block-check 13, each caught.
 - **Waiting on Rob:** the backstop's daily cap (ROB-90); the AI door's two settings (ROB-95: the staging AI Access app, and the
   production key); whether waves 4d onward wait on card-load steps 1 to 4 (ROB-93).
 - **With the Opus session holding Codex's lane** (`docs/HANDOFF-OPUS-2026-10-17.md`): coordinated in ROB-11. No `cloud/**` or UI

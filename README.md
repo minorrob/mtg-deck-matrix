@@ -506,6 +506,11 @@ replayed -- and neither in a game launched before.
 `draw:<turn>`, its card the drawer's alone and another's hand a count; the same answer sent again, then or once the table
 waits on someone else, its receipt and no second card; reopened while it waits, the same question; the first player's
 first draw skipped only at two seats and only while the host keeps the rule; and an empty library drawn from, the game lost.
+`room-block-check` holds a draft of blocks checked before Confirm (Linear ROB-75): `legalBlocks` the decision's own pairs by
+blocker (none for a tapped creature, a flyer without reach, or an attack on another player); every reason a draft would be
+refused for, at once (a creature on two attackers, menace blocked by one), each saying what to do, and nothing changed;
+the answer refused for the same first reason; any other choice checked as its answer would be; and at the room, only the
+seat asked, about the question open now, with nothing taped, journalled or shown to another seat.
 `room-events` holds the table's events (`events.v1`, Linear ROB-77): every view carrying what the action behind it did, each
 event with the journal's id and the decision whose answer made it; a draw the drawer's alone, and only while the card is in
 their hand, a move between two hidden zones no event, a face-down card unnamed; two views in a row sharing none; a reconnect
@@ -926,7 +931,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 530 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 531 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1176,6 +1181,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `room-yield-turn` — `tests/room-yield-turn.mjs`
 - `room-draw-card` — `tests/room-draw-card.mjs`
 - `room-events` — `tests/room-events.mjs`
+- `room-block-check` — `tests/room-block-check.mjs`
 - `engine-pass-stack` — `tests/engine-pass-stack.mjs`
 - `table-basics` — `tests/table-basics.mjs`
 - `coach` — `tests/coach.mjs`
