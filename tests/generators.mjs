@@ -106,6 +106,8 @@ const CHECKABLE = [
   ["tools/data-inventory.mjs", ["--check"]],
   ["tools/compile-game-logs.mjs", ["--check"]],
   ["tools/flavor-names.mjs", ["--check"]],
+  /* The Commander banned list (ROB-104); like flavor names, its check asks Scryfall whether the committed list drifted. */
+  ["tools/commander-banned.mjs", ["--check"]],
   ["tools/graph-amplifiers.mjs", ["--check"]],
   ["tools/build-live-state.mjs", ["--check"]],
   ["tools/commander-ranks.mjs", ["--check"]],

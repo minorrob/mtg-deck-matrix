@@ -922,6 +922,7 @@ order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the file
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
 `.claude/skills/crankmagic-refresh` is the judgment around it. There are 518 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 521 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -933,6 +934,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `card-link` — `tests/card-link.mjs`
 - `card-resolve` — `tests/card-resolve.mjs`
 - `cloud-sync` — `tests/cloud-sync.mjs`
+- `commander-legality` — `tests/commander-legality.mjs`
 - `cloud-worker` — `tests/cloud-worker.mjs`
 - `collection-exchange` — `tests/collection-exchange.mjs`
 - `collection-lobby-draft` — `tests/collection-lobby-draft.mjs`
@@ -946,6 +948,8 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `crankmagic-facets` — `tests/crankmagic-facets.mjs`
 - `crankmagic-graph` — `tests/crankmagic-graph.mjs`
 - `crankmagic-graph-scoped` — `tests/crankmagic-graph-scoped.mjs`
+- `deck-synergies` — `tests/deck-synergies.mjs`
+- `deck-composition` — `tests/deck-composition.mjs`
 - `explore-scope` — `tests/explore-scope.mjs`
 - `feature-wiring` — `tests/feature-wiring.mjs`
 - `explore-progressive-disclosure` — `tests/explore-progressive-disclosure.mjs`
@@ -969,6 +973,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `design-tokens` — `tests/design-tokens.mjs`
 - `first-draw-check` — `tests/first-draw-check.mjs`
 - `play-audio-pack` — `tests/play-audio-pack.mjs`
+- `readout-feeds` — `tests/readout-feeds.mjs`
 - `script-encoding` — `tests/script-encoding.mjs`
 - `wireframe-conformance` — `tests/wireframe-conformance.mjs`
 - `deck-sources` — `tests/deck-sources.mjs`
