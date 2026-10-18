@@ -1,9 +1,9 @@
 {
   "workstream": "claude-deck",
-  "updated": "2026-10-18T10:58:25Z",
-  "updated_by": "Claude · Deck intelligence (the session that wrote the program charter)",
+  "updated": "2026-10-18T23:46:01Z",
+  "updated_by": "Claude · Deck intelligence (the session that wrote the program charter); closed 2026-10-18, see the handoff.",
   "branch": "eight model PRs chained in merge order (#749 #750 #752 #758 #759 #757 #760 #761); the audit on #762",
-  "now": "Ten PRs merged to main today: eight models, the simulation audit, and ROB-116 steps 1 and 3. Open in this lane: ROB-116 step 2 (waits on the engine lane's playPod), then the five removable simplifications. Waiting on Rob: the popularity dial (ROB-109), ROB-95 before the AI strategy work (ROB-128/130/129/132), the Settings card for ROB-123, and his call on ROB-121.",
+  "now": "Session closed 2026-10-18 evening with the lane's order of work through ROB-112 on main and ROB-116 at step 2 of 3; handoff docs/handoff-deck-intelligence-2026-10-18.md. Open in this lane: ROB-116 step 2 (waits on the engine lane's playPod), then the five removable simplifications. Waiting on Rob: the popularity dial (ROB-109), ROB-95 before ROB-128/130/129/132, the Settings card for ROB-123, his call on ROB-121.",
   "items": [
     {
       "id": "ROB-138",
