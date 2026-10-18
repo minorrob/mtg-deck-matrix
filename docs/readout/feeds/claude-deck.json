@@ -1,6 +1,6 @@
 {
   "workstream": "claude-deck",
-  "updated": "2026-10-18T07:15:00Z",
+  "updated": "2026-10-18T07:25:06Z",
   "updated_by": "Claude · Deck intelligence (the session that wrote the program charter)",
   "branch": "eight model PRs chained in merge order (#749 #750 #752 #758 #759 #757 #760 #761); the audit on #762",
   "now": "Nine PRs ready and chained in merge order; merging each on green. Legality (ROB-104) and the readout (ROB-138) are on main. Next: ROB-116 steps 1 and 3 while the engine builds playPod; Rob's word on the popularity dial (ROB-109).",
@@ -115,10 +115,16 @@
       "id": "ROB-116",
       "outcome": "deck-tuning",
       "feature": "Simulation fidelity: the simulator and the rules engine agree where they overlap",
-      "status": "blocked",
-      "remaining_hours": 36,
+      "status": "in_progress",
+      "remaining_hours": 30,
       "blocked_on": "ROB-11: the engine's headless N-game entry point (playPod), asked 2026-10-18",
-      "note": "Steps 1 and 3 (the simplifications list; variance on every score shown) proceed without it."
+      "note": "Step 3 in review on PR #764 (winRateSe, perSeedWinRates, end-turn counts; the pack carries winRateStandardError). Step 1 next; step 2 waits on the playPod ask.",
+      "evidence": [
+        {
+          "label": "PR #764 (step 3: variance in the result and the pack)",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/pull/764"
+        }
+      ]
     },
     {
       "id": "ROB-84",
