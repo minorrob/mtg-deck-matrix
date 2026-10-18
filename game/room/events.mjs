@@ -37,7 +37,9 @@ export function tableEvent(event, eventId) {
   const at = (k, fields) => ({...head, kind: k, ...fields});
   switch (kind) {
     case "GameEventTurnPhase":
-      return f.phase === "UNTAP" && f.playerTurn ? at("turn", {player: f.playerTurn.playerId, ...(f.extraTurn ? {extra: true} : {})}) : null;
+      return f.phase === "UNTAP" && f.playerTurn
+        ? at("turn", {player: f.playerTurn.playerId, ...(f.extraTurn ? {extra: true} : {}), ...(Number.isInteger(f.round) ? {round: f.round, turnInRound: f.turnInRound} : {})})
+        : null;
     case "GameEventLandPlayed":
       return at("land", {player: f.player.playerId, card: card(f.land)});
     case "GameEventSpellAbilityCast":

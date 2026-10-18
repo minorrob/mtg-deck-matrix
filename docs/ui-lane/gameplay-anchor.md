@@ -205,6 +205,16 @@ so a concept mocks this part.
   of three or four, every turn has its draw step.
 - **Turn counting:** `state.turn` counts everyone's turns, so turn 3 of a four-player game is the third player's first.
   During its own turns, a seat's view also carries `yourTurn`: which of its own turns this is.
+- **Rounds (Linear ROB-76):** label the turn from these, never by dividing `state.turn` by the seats:
+  - `state.round`, from 1: a round is every player's turn once, from the starting player's.
+  - `state.turnInRound`, from 1: the turns taken in this round so far, an extra one included.
+  - `state.turnId`, `"turn:<turn>"`: this turn's own id, the one a Yield holds for.
+  - `state.extraTurn`: true during an extra turn.
+  - The turn's owner is `state.turnPlayerId`.
+  - An extra turn (CR 500.7) is in the round of the turn it follows and never begins one. A player who leaves takes their
+    turns out of the round; once the starting player has left, rounds begin at the next player after their seat.
+  - `round` and `turnInRound` are null for a game saved before rounds were kept. All four are public, the same to every
+    seat.
 - **Lands:** one land a turn as a rule. `landsPlayed` counts this turn's.
 - **Mana:** tapping makes mana into a pool (`mana: [{color, amount}]`), which empties between steps.
 - **Combat:** `state.combat` is `{attackingPlayerId, defenders, attacks: [{attacker, defender, planeswalker?, blocked,
@@ -371,7 +381,7 @@ cast and resolved between two views (an opponent passed for, `passStack`) arrive
 
 | Kind | Fields |
 |---|---|
-| `turn` | `player`, `extra?` |
+| `turn` | `player`, `extra?`, `round`, `turnInRound` (as `state` has them; absent for a game saved before rounds were kept) |
 | `draw` | `player`, `count` (1); the drawer's own view also has `card`, while it is still in their hand |
 | `land` | `player`, `card` |
 | `cast` | `player`, `card`, `stackId` |
@@ -407,8 +417,8 @@ cast and resolved between two views (an opponent passed for, `passStack`) arrive
   - `waitingOn`, `decision`, `state`, `history`;
   - sometimes `continuing`, `stepByStep`, `yourTurn`, `yielding` and `mayYield` (the last two the seat's own only);
   - `eventsSchema` (`"events.v1"`), `events`, and sometimes `eventsReset` (below).
-- **`state`:** `turn`, `turnPlayerId`, `priorityPlayerId`, `phase`, `players`, `combat`, `stack`, `stackSize`,
-  `gameOver`.
+- **`state`:** `turn`, `round`, `turnInRound`, `turnId`, `extraTurn`, `turnPlayerId`, `priorityPlayerId`, `phase`,
+  `players`, `combat`, `stack`, `stackSize`, `gameOver`.
 - **Each player:** `{playerId, name, life, health, counters, mana, landsPlayed, monarch?, zones}`. A player's `counters`
   is an open set. `monarch: true` is on the monarch alone (one player at most, public to every seat); no other player
   carries the key, and with no monarch nobody does.

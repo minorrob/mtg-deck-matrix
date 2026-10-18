@@ -84,7 +84,7 @@ Volcano uses Rob's supplied video; other environments and the table artwork stil
 
 | Lane | Held by | Branch | Doing |
 | --- | --- | --- | --- |
-| **Engine and simulation** | Fable (Claude Code, a cloud container), resumed October 16 per Rob | `claude/admiring-franklin-58cxy4` | Engine, simulation, card loads. Linear: ROB-71 and its children (ROB-12, ROB-13, ROB-73 to ROB-95). ROB-12 (#739) and ROB-81 (#742) on staging; ROB-101 (#744), ROB-13 (#745) and ROB-73 (#746) merged; now ROB-77. See "2026-10-17: the engine lane resumed" below. |
+| **Engine and simulation** | Fable (Claude Code, a cloud container), resumed October 16 per Rob | `claude/admiring-franklin-58cxy4` | Engine, simulation, card loads. Linear: ROB-71 and its children (ROB-12, ROB-13, ROB-73 to ROB-95). ROB-12 (#739) and ROB-81 (#742) on staging; ROB-101 (#744), ROB-13 (#745) and ROB-73 (#746) merged; ROB-77 (#747), then ROB-76. See "2026-10-17: the engine lane resumed" below. |
 | **UI and user management** | Codex on Personal-HP | `codex/ui-playtest-plan-oct15`; focused release `codex/staging-resend-oct16` | UI/Babylon, account profiles, sharing, Resend and invitations; coordinates current staging release. |
 
 ### Requests between the lanes
@@ -164,6 +164,11 @@ other lane answers in the last column.
   kept. A drawn card's id in the hand is now in its engine event (`drewAs`). The socket's `after` waits on one line in
   `cloud/game-room.mjs` (asked in ROB-11). Proof: room-events 32; breaks-table-events 17, each caught; fuzz-library's and
   room-g1-terms' no-leak checks read every view's events.
+- **ROB-76 (the PR after ROB-77):** the round and the turn within it (rules/turn.mjs, `nextRound`): `state.round`,
+  `turnInRound`, `turnId` (`turn:<n>`, what a Yield holds for) and `extraTurn` in every view, the same to every seat, and
+  `round` in the turn's events. An extra turn is in the round it follows; a player who leaves takes their turns out of it;
+  a game saved before rounds were kept has none (null). For the UI lane's ROB-53, contract in ROB-11. Proof: engine-rounds
+  27; breaks-rounds 13, each caught.
 - **Waiting on Rob:** the backstop's daily cap (ROB-90); the AI door's two settings (ROB-95: the staging AI Access app, and the
   production key); whether waves 4d onward wait on card-load steps 1 to 4 (ROB-93).
 - **With the Opus session holding Codex's lane** (`docs/HANDOFF-OPUS-2026-10-17.md`): coordinated in ROB-11. No `cloud/**` or UI
