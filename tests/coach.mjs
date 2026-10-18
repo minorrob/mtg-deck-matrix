@@ -281,7 +281,7 @@ try {
   });
   await page.goto("about:blank");
   await page.goto(`${base}/index.html#table?id=${TABLE}`);
-  await page.locator("#cm-board .cm-board-strip").waitFor({timeout: 60000});
+  await page.locator("#cm-board .cm-stage-top").waitFor({timeout: 60000});
   await page.click(".cm-board-coach-open");
   answer = reply({answer: `Play [[${mine.name}]].`, plays: [{card: mine.name, action: "Cast", why: "It is the one card you can use now."}], show: [mine.id]});
   await page.click("[data-action=board-coach-ask][data-q=\"What's my best play?\"]");

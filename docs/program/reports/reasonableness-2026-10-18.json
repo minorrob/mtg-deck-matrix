@@ -1,0 +1,732 @@
+{
+ "version": "2026-10-18",
+ "at": "2026-10-18T06:58:35.096Z",
+ "protocol": "published",
+ "inputs": {
+  "edhrec": "2026-10-18T06:49:32.692Z",
+  "precons": "2026-09-28T05:09:44.436Z",
+  "live": "2026-09-30T21:39:14Z",
+  "criteria": "tests/fixtures/criteria-sets.json"
+ },
+ "results": [
+  {
+   "id": "krenko-aggressive",
+   "says": "A given commander, the Aggressive playstyle, bracket 3, $150, owned first; the suite then fences out one card this build took and builds again",
+   "criteria": {
+    "commander": "Krenko, Mob Boss",
+    "playstyle": "Aggressive",
+    "bracket": 3,
+    "budgetUsd": 150,
+    "seed": "a"
+   },
+   "commander": "Krenko, Mob Boss",
+   "how": "given",
+   "generated": {
+    "cards": 99,
+    "score": {
+     "score": 63.87,
+     "se": 0.163,
+     "games": 120000
+    },
+    "cost": 146.88,
+    "spent": 149.99,
+    "cap": 150
+   },
+   "comparisons": [
+    {
+     "kind": "edhrec",
+     "label": "EDHREC top 99 for Krenko, Mob Boss (44,585 decks, 2026-10-18)",
+     "cards": 99,
+     "composition": 4.6,
+     "byRole": {
+      "ramp": 0,
+      "draw": 9,
+      "removal": -4,
+      "counterspell": 0,
+      "wipe": -1,
+      "protection": -3,
+      "recursion": 1,
+      "tutor": -3,
+      "threat": 21,
+      "finisher": 4
+     },
+     "lands": 28,
+     "overlap": 0.077,
+     "shared": 7,
+     "referenceSize": 91,
+     "played": 0.175,
+     "score": {
+      "score": 26.33,
+      "se": 0.08,
+      "games": 120000
+     },
+     "cost": 588.13
+    },
+    {
+     "kind": "precon",
+     "label": "Built From Scratch (CM2, same colors)",
+     "cards": 99,
+     "composition": 3.3,
+     "byRole": {
+      "ramp": -2,
+      "draw": 4,
+      "removal": 3,
+      "counterspell": 0,
+      "wipe": -4,
+      "protection": 0,
+      "recursion": -1,
+      "tutor": 0,
+      "threat": 15,
+      "finisher": 4
+     },
+     "lands": -5,
+     "overlap": 0.034,
+     "shared": 2,
+     "referenceSize": 58,
+     "played": 0.175,
+     "score": {
+      "score": 60.65,
+      "se": 0.161,
+      "games": 120000
+     },
+     "cost": 104.78
+    },
+    {
+     "kind": "precon",
+     "label": "Built From Scratch (C14, same colors)",
+     "cards": 99,
+     "composition": 3.3,
+     "byRole": {
+      "ramp": -2,
+      "draw": 4,
+      "removal": 3,
+      "counterspell": 0,
+      "wipe": -4,
+      "protection": 0,
+      "recursion": -1,
+      "tutor": 0,
+      "threat": 15,
+      "finisher": 4
+     },
+     "lands": -5,
+     "overlap": 0.034,
+     "shared": 2,
+     "referenceSize": 58,
+     "played": 0.175,
+     "score": {
+      "score": 60.65,
+      "se": 0.161,
+      "games": 120000
+     },
+     "cost": 104.78
+    },
+    {
+     "kind": "own",
+     "label": "Rob's D6 Krenko Goblins",
+     "cards": 99,
+     "composition": 3.9,
+     "byRole": {
+      "ramp": 3,
+      "draw": 6,
+      "removal": 1,
+      "counterspell": 0,
+      "wipe": 0,
+      "protection": -1,
+      "recursion": 1,
+      "tutor": -1,
+      "threat": 22,
+      "finisher": 4
+     },
+     "lands": -2,
+     "overlap": 0.115,
+     "shared": 7,
+     "referenceSize": 61,
+     "played": 0.175,
+     "score": {
+      "score": 67,
+      "se": 0.093,
+      "games": 120000
+     },
+     "cost": 161.77
+    }
+   ],
+   "ms": 2651
+  },
+  {
+   "id": "green-white-value",
+   "says": "No commander: suggested for green and white, Value engine, bracket 2, $75, no library",
+   "criteria": {
+    "colors": [
+     "G",
+     "W"
+    ],
+    "playstyle": "Value engine",
+    "bracket": 2,
+    "budgetUsd": 75
+   },
+   "commander": "Samwise Gamgee",
+   "how": "suggested",
+   "generated": {
+    "cards": 99,
+    "score": {
+     "score": 65.55,
+     "se": 0.131,
+     "games": 120000
+    },
+    "cost": 73.79,
+    "spent": 75,
+    "cap": 75
+   },
+   "comparisons": [
+    {
+     "kind": "edhrec",
+     "label": "EDHREC top 99 for Samwise Gamgee (3,514 decks, 2026-10-18)",
+     "cards": 98,
+     "composition": 5.3,
+     "byRole": {
+      "ramp": -11,
+      "draw": 10,
+      "removal": 3,
+      "counterspell": 0,
+      "wipe": 1,
+      "protection": -2,
+      "recursion": 20,
+      "tutor": -1,
+      "threat": 5,
+      "finisher": 0
+     },
+     "lands": 12,
+     "overlap": 0.054,
+     "shared": 4,
+     "referenceSize": 74,
+     "played": 0.095,
+     "score": {
+      "score": 70.18,
+      "se": 0.091,
+      "games": 120000
+     },
+     "cost": 501.31
+    },
+    {
+     "kind": "precon",
+     "label": "Coven Counters (MIC, same colors)",
+     "cards": 99,
+     "composition": 5,
+     "byRole": {
+      "ramp": 2,
+      "draw": 16,
+      "removal": 4,
+      "counterspell": 0,
+      "wipe": -2,
+      "protection": -4,
+      "recursion": 20,
+      "tutor": -2,
+      "threat": 0,
+      "finisher": 0
+     },
+     "lands": -1,
+     "overlap": 0.016,
+     "shared": 1,
+     "referenceSize": 62,
+     "played": 0.095,
+     "score": {
+      "score": 78.53,
+      "se": 0.095,
+      "games": 120000
+     },
+     "cost": 47.38
+    },
+    {
+     "kind": "precon",
+     "label": "Feline Ferocity (C17, same colors)",
+     "cards": 99,
+     "composition": 4.8,
+     "byRole": {
+      "ramp": 3,
+      "draw": 10,
+      "removal": 0,
+      "counterspell": 0,
+      "wipe": 1,
+      "protection": -5,
+      "recursion": 23,
+      "tutor": -3,
+      "threat": 3,
+      "finisher": 0
+     },
+     "lands": -1,
+     "overlap": 0,
+     "shared": 0,
+     "referenceSize": 62,
+     "played": 0.095,
+     "score": {
+      "score": 53.67,
+      "se": 0.167,
+      "games": 120000
+     },
+     "cost": 116.38
+    }
+   ],
+   "ms": 2604
+  },
+  {
+   "id": "combo-open",
+   "says": "Nothing but a playstyle and a bracket: Combo at bracket 4, no cap, no colors",
+   "criteria": {
+    "playstyle": "Combo",
+    "bracket": 4
+   },
+   "commander": "Lagomos, Hand of Hatred",
+   "how": "suggested",
+   "generated": {
+    "cards": 99,
+    "score": {
+     "score": 63.88,
+     "se": 0.091,
+     "games": 120000
+    },
+    "cost": 620.96,
+    "spent": 621.18,
+    "cap": null
+   },
+   "comparisons": [
+    {
+     "kind": "edhrec",
+     "label": "EDHREC top 99 for Lagomos, Hand of Hatred (1,392 decks, 2026-10-18)",
+     "cards": 99,
+     "composition": 3.1,
+     "byRole": {
+      "ramp": -6,
+      "draw": -2,
+      "removal": -2,
+      "counterspell": 0,
+      "wipe": -6,
+      "protection": 0,
+      "recursion": 5,
+      "tutor": 7,
+      "threat": -2,
+      "finisher": 1
+     },
+     "lands": 11,
+     "overlap": 0,
+     "shared": 0,
+     "referenceSize": 74,
+     "played": 0.032,
+     "score": {
+      "score": 67.8,
+      "se": 0.175,
+      "games": 120000
+     },
+     "cost": 337.4
+    },
+    {
+     "kind": "precon",
+     "label": "Planar Portal (AFC, same colors)",
+     "cards": 99,
+     "composition": 3.4,
+     "byRole": {
+      "ramp": -3,
+      "draw": 9,
+      "removal": -3,
+      "counterspell": 0,
+      "wipe": 1,
+      "protection": 2,
+      "recursion": 6,
+      "tutor": 7,
+      "threat": 1,
+      "finisher": -2
+     },
+     "lands": -3,
+     "overlap": 0.017,
+     "shared": 1,
+     "referenceSize": 60,
+     "played": 0.032,
+     "score": {
+      "score": 64.25,
+      "se": 0.134,
+      "games": 120000
+     },
+     "cost": 100.32
+    },
+    {
+     "kind": "precon",
+     "label": "Merciless Rage (C19, same colors)",
+     "cards": 99,
+     "composition": 2.3,
+     "byRole": {
+      "ramp": 5,
+      "draw": 4,
+      "removal": -1,
+      "counterspell": 0,
+      "wipe": 0,
+      "protection": 2,
+      "recursion": -1,
+      "tutor": 7,
+      "threat": -2,
+      "finisher": 1
+     },
+     "lands": -4,
+     "overlap": 0.017,
+     "shared": 1,
+     "referenceSize": 59,
+     "played": 0.032,
+     "score": {
+      "score": 49.83,
+      "se": 0.154,
+      "games": 120000
+     },
+     "cost": 75.67
+    }
+   ],
+   "ms": 2206
+  },
+  {
+   "id": "mono-blue-reactive-cheap",
+   "says": "Mono-blue, Reactive, bracket 1, $50: answers on a budget with no Game Changers",
+   "criteria": {
+    "colors": [
+     "U"
+    ],
+    "playstyle": "Reactive",
+    "bracket": 1,
+    "budgetUsd": 50
+   },
+   "commander": "Sai, Master Thopterist",
+   "how": "suggested",
+   "generated": {
+    "cards": 99,
+    "score": {
+     "score": 71.2,
+     "se": 0.082,
+     "games": 120000
+    },
+    "cost": 49.34,
+    "spent": 49.99,
+    "cap": 50
+   },
+   "comparisons": [
+    {
+     "kind": "edhrec",
+     "label": "EDHREC top 99 for Sai, Master Thopterist (4,133 decks, 2026-10-18)",
+     "cards": 99,
+     "composition": 5.7,
+     "byRole": {
+      "ramp": -5,
+      "draw": -11,
+      "removal": 6,
+      "counterspell": 10,
+      "wipe": -1,
+      "protection": 9,
+      "recursion": 1,
+      "tutor": -3,
+      "threat": -10,
+      "finisher": -1
+     },
+     "lands": 23,
+     "overlap": 0.023,
+     "shared": 2,
+     "referenceSize": 86,
+     "played": 0.048,
+     "score": {
+      "score": 38.6,
+      "se": 0.073,
+      "games": 120000
+     },
+     "cost": 382.98
+    },
+    {
+     "kind": "precon",
+     "label": "Keen Engineering (FDC)",
+     "cards": 99,
+     "composition": 5.6,
+     "byRole": {
+      "ramp": 0,
+      "draw": -6,
+      "removal": 7,
+      "counterspell": 14,
+      "wipe": -3,
+      "protection": 14,
+      "recursion": 1,
+      "tutor": 0,
+      "threat": -10,
+      "finisher": 1
+     },
+     "lands": -4,
+     "overlap": 0.017,
+     "shared": 1,
+     "referenceSize": 59,
+     "played": 0.048,
+     "score": {
+      "score": 53.03,
+      "se": 0.08,
+      "games": 120000
+     },
+     "cost": 105.11
+    }
+   ],
+   "ms": 2662
+  },
+  {
+   "id": "kenrith-pins-and-fences",
+   "says": "Five colors at bracket 5 with $400, two cards asked for and one fenced out, owned first",
+   "criteria": {
+    "commander": "Kenrith, the Returned King",
+    "playstyle": "Balanced",
+    "bracket": 5,
+    "budgetUsd": 400,
+    "mustInclude": [
+     "Sol Ring",
+     "Arcane Signet"
+    ],
+    "neverInclude": [
+     "Smothering Tithe"
+    ]
+   },
+   "commander": "Kenrith, the Returned King",
+   "how": "given",
+   "generated": {
+    "cards": 99,
+    "score": {
+     "score": 75.38,
+     "se": 0.087,
+     "games": 120000
+    },
+    "cost": 386.07,
+    "spent": 386.59,
+    "cap": 400
+   },
+   "comparisons": [
+    {
+     "kind": "edhrec",
+     "label": "EDHREC top 99 for Kenrith, the Returned King (31,760 decks, 2026-10-18)",
+     "cards": 99,
+     "composition": 6.9,
+     "byRole": {
+      "ramp": -9,
+      "draw": 25,
+      "removal": 3,
+      "counterspell": -3,
+      "wipe": 1,
+      "protection": 3,
+      "recursion": 3,
+      "tutor": -6,
+      "threat": 16,
+      "finisher": 0
+     },
+     "lands": -16,
+     "overlap": 0.064,
+     "shared": 3,
+     "referenceSize": 47,
+     "played": 0.063,
+     "score": {
+      "score": 61.23,
+      "se": 0.071,
+      "games": 120000
+     },
+     "cost": 3078.01
+    },
+    {
+     "kind": "precon",
+     "label": "Painbow (DMC, same colors)",
+     "cards": 99,
+     "composition": 4.3,
+     "byRole": {
+      "ramp": -9,
+      "draw": 14,
+      "removal": -3,
+      "counterspell": 0,
+      "wipe": -3,
+      "protection": 8,
+      "recursion": 3,
+      "tutor": 0,
+      "threat": 3,
+      "finisher": 0
+     },
+     "lands": -3,
+     "overlap": 0.033,
+     "shared": 2,
+     "referenceSize": 60,
+     "played": 0.063,
+     "score": {
+      "score": 77.65,
+      "se": 0.076,
+      "games": 120000
+     },
+     "cost": 81.59
+    },
+    {
+     "kind": "precon",
+     "label": "Draconic Domination (C17, same colors)",
+     "cards": 99,
+     "composition": 4.6,
+     "byRole": {
+      "ramp": 0,
+      "draw": 19,
+      "removal": -2,
+      "counterspell": 0,
+      "wipe": -5,
+      "protection": 7,
+      "recursion": 1,
+      "tutor": 0,
+      "threat": -12,
+      "finisher": 0
+     },
+     "lands": -1,
+     "overlap": 0.065,
+     "shared": 4,
+     "referenceSize": 62,
+     "played": 0.063,
+     "score": {
+      "score": 54.35,
+      "se": 0.072,
+      "games": 120000
+     },
+     "cost": 119.09
+    }
+   ],
+   "ms": 4774
+  },
+  {
+   "id": "atraxa-combo-not-owned",
+   "says": "A given four-color commander, Combo, bracket 3, $200, owned copies not preferred",
+   "criteria": {
+    "commander": "Atraxa, Praetors' Voice",
+    "playstyle": "Combo",
+    "bracket": 3,
+    "budgetUsd": 200,
+    "ownedFirst": false
+   },
+   "commander": "Atraxa, Praetors' Voice",
+   "how": "given",
+   "generated": {
+    "cards": 99,
+    "score": {
+     "score": 69.75,
+     "se": 0.067,
+     "games": 120000
+    },
+    "cost": 172.01,
+    "spent": 200,
+    "cap": 200
+   },
+   "comparisons": [
+    {
+     "kind": "edhrec",
+     "label": "EDHREC top 99 for Atraxa, Praetors' Voice (45,626 decks, 2026-10-18)",
+     "cards": 99,
+     "composition": 2.1,
+     "byRole": {
+      "ramp": -6,
+      "draw": 0,
+      "removal": 2,
+      "counterspell": 0,
+      "wipe": 0,
+      "protection": 4,
+      "recursion": -1,
+      "tutor": 5,
+      "threat": -2,
+      "finisher": 1
+     },
+     "lands": 1,
+     "overlap": 0.016,
+     "shared": 1,
+     "referenceSize": 64,
+     "played": 0.063,
+     "score": {
+      "score": 64.4,
+      "se": 0.026,
+      "games": 120000
+     },
+     "cost": 856.34
+    },
+    {
+     "kind": "precon",
+     "label": "Breed Lethality (CM2)",
+     "cards": 99,
+     "composition": 3.8,
+     "byRole": {
+      "ramp": 1,
+      "draw": 4,
+      "removal": 4,
+      "counterspell": 0,
+      "wipe": -5,
+      "protection": 7,
+      "recursion": 0,
+      "tutor": 8,
+      "threat": 8,
+      "finisher": 1
+     },
+     "lands": -3,
+     "overlap": 0,
+     "shared": 0,
+     "referenceSize": 60,
+     "played": 0.063,
+     "score": {
+      "score": 77,
+      "se": 0.077,
+      "games": 120000
+     },
+     "cost": 69.01
+    },
+    {
+     "kind": "precon",
+     "label": "Breed Lethality (C16)",
+     "cards": 99,
+     "composition": 3.8,
+     "byRole": {
+      "ramp": 1,
+      "draw": 4,
+      "removal": 4,
+      "counterspell": 0,
+      "wipe": -5,
+      "protection": 7,
+      "recursion": 0,
+      "tutor": 8,
+      "threat": 8,
+      "finisher": 1
+     },
+     "lands": -3,
+     "overlap": 0,
+     "shared": 0,
+     "referenceSize": 60,
+     "played": 0.063,
+     "score": {
+      "score": 77,
+      "se": 0.077,
+      "games": 120000
+     },
+     "cost": 69.01
+    },
+    {
+     "kind": "own",
+     "label": "Rob's D3 Atraxa Proliferate",
+     "cards": 99,
+     "composition": 3,
+     "byRole": {
+      "ramp": 0,
+      "draw": -1,
+      "removal": -9,
+      "counterspell": 0,
+      "wipe": -1,
+      "protection": 2,
+      "recursion": 0,
+      "tutor": 8,
+      "threat": 8,
+      "finisher": 1
+     },
+     "lands": -1,
+     "overlap": 0.016,
+     "shared": 1,
+     "referenceSize": 62,
+     "played": 0.063,
+     "score": {
+      "score": 81.97,
+      "se": 0.088,
+      "games": 120000
+     },
+     "cost": 124.81
+    }
+   ],
+   "ms": 3451
+  }
+ ]
+}

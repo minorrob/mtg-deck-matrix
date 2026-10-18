@@ -154,20 +154,20 @@
       "sha": "5dd742bd996b24a6"
     },
     "crankmagic-app.js": {
-      "version": 497,
-      "sha": "8d6f27a4a9b9ac3d"
+      "version": 502,
+      "sha": "ca7c9e050a5c8c50"
     },
     "crankmagic-assets.js": {
-      "version": 35,
-      "sha": "07c2f6940e54854f"
+      "version": 36,
+      "sha": "5a27dc08e080223a"
     },
     "crankmagic-audio.js": {
       "version": 1,
       "sha": "ddab072cfc45df40"
     },
     "crankmagic-board.js": {
-      "version": 51,
-      "sha": "d9169fc3a6a43e9d"
+      "version": 54,
+      "sha": "73ee68b4993c01d1"
     },
     "crankmagic-brand.js": {
       "version": 6,
@@ -306,36 +306,40 @@
       "sha": "4e08c75b8d320b77"
     },
     "crankmagic-seat-art.js": {
+      "version": 2,
+      "sha": "430a2293c29f4df7"
+    },
+    "crankmagic-settings-play.js": {
       "version": 1,
-      "sha": "006f5c23f82da7aa"
+      "sha": "28329362ce68da61"
     },
     "crankmagic-settings.js": {
-      "version": 12,
-      "sha": "0df2769d4864837f"
+      "version": 14,
+      "sha": "95930a66b0dab375"
     },
     "crankmagic-sharing.js": {
       "version": 2,
       "sha": "be7e03276bc0b7a1"
     },
     "crankmagic-sim.js": {
-      "version": 24,
-      "sha": "cf2673a40327b2ef"
+      "version": 25,
+      "sha": "3a48e53437824c55"
     },
     "crankmagic-stage.css": {
-      "version": 16,
-      "sha": "91720e91a802278d"
+      "version": 18,
+      "sha": "10b498f8c042d1e2"
     },
     "crankmagic-stage.js": {
-      "version": 5,
-      "sha": "392d572da9e5011d"
+      "version": 6,
+      "sha": "b17119d3ab0a7c64"
     },
     "crankmagic-strategies.js": {
       "version": 4,
       "sha": "07440b83396bb9e2"
     },
     "crankmagic-sw.js": {
-      "version": 481,
-      "sha": "bb0e0462f727bee4"
+      "version": 486,
+      "sha": "dd727a80088cb9f5"
     },
     "crankmagic-table.js": {
       "version": 29,
@@ -358,8 +362,8 @@
       "sha": "ca657a27caa9093d"
     },
     "crankmagic.css": {
-      "version": 289,
-      "sha": "d99c021c9bfc8b08"
+      "version": 290,
+      "sha": "24c93b0ee69f5b94"
     },
     "custom-model.js": {
       "version": 3,
@@ -418,8 +422,8 @@
       "sha": "b67d05b8cebb25a9"
     },
     "deck-measure.js": {
-      "version": 10,
-      "sha": "7a86cc643ecee81d"
+      "version": 13,
+      "sha": "bdb8232a633d9cc0"
     },
     "deck-sources.js": {
       "version": 3,
@@ -462,8 +466,8 @@
       "sha": "70a6f03ab9f97b78"
     },
     "sim-engine.js": {
-      "version": 14,
-      "sha": "84cc98d705dd3aa9"
+      "version": 17,
+      "sha": "c7f9b4573043edd1"
     },
     "sim-worker.js": {
       "version": 1,
@@ -474,8 +478,8 @@
       "sha": "d11878e4eace6c31"
     },
     "sim/opponents.json": {
-      "version": 3,
-      "sha": "430f8d11c990e544"
+      "version": 5,
+      "sha": "68701db8b91355fd"
     },
     "user-state.js": {
       "version": 5,
