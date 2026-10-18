@@ -83,6 +83,38 @@
     const top = table.getBoundingClientRect().top;
     const room = Math.round(window.innerHeight - top - 24);
     table.style.setProperty('--cm-table-h', Math.max(320, room) + 'px');
+    fitSeats(table);
+  }
+
+  /* EVERY SEAT'S CONTROLS IN REACH (Rob, 2026-10-13: "the buttons aren't visible when the screen isn't big enough").
+     A quadrant clips what it holds, so the cloud table keeps its 2x2 only while every seat's card and reading -- its
+     controls among them -- lie inside what clips them. Otherwise, and always on a phone, the seats stack, each as tall as
+     what it holds (crankmagic.css, `.cm-cloud-table.is-stacked`). The rules panel needs no measuring: the seats keep
+     clear of it by construction (crankmagic.css, `max(24%,132px)`). Measured on the 2x2 itself and decided in one go --
+     the class off, the boxes read, the class back on -- so nothing is painted in between. */
+  /* The box an element is cut to: every box around it, up to the table, that clips in that direction -- the seat as well
+     as its quadrant, since the seat clips 10px inside it. */
+  function clipOf(el, table) {
+    const c = {left: -Infinity, top: -Infinity, right: Infinity, bottom: Infinity};
+    for (let n = el.parentElement; n; n = n.parentElement) {
+      const st = getComputedStyle(n), r = n.getBoundingClientRect();
+      if (st.overflowX !== 'visible') { c.left = Math.max(c.left, r.left); c.right = Math.min(c.right, r.right); }
+      if (st.overflowY !== 'visible') { c.top = Math.max(c.top, r.top); c.bottom = Math.min(c.bottom, r.bottom); }
+      if (n === table) break;
+    }
+    return c;
+  }
+  function seatsFit(table) {
+    for (const part of table.querySelectorAll('.cm-seat-q .cm-seat-card, .cm-seat-q .cm-seat-detail')) {
+      const r = part.getBoundingClientRect(), box = clipOf(part, table);
+      if (r.width && r.height && (r.left < box.left - 1 || r.right > box.right + 1 || r.top < box.top - 1 || r.bottom > box.bottom + 1)) return false;
+    }
+    return true;
+  }
+  function fitSeats(table) {
+    if (!table.classList.contains('cm-cloud-table')) return;
+    table.classList.remove('is-stacked');
+    if (window.matchMedia('(max-width: 900px)').matches || !seatsFit(table)) table.classList.add('is-stacked');
   }
   /* A resize changes the room and the canvases with it, so both are redone together. */
   let sizeTimer = null;
@@ -116,6 +148,8 @@
   function startSeas() {
     sizeTable();
     watchTableRoom();
+    /* A web font landing after the draw rewraps the seats' readings: whether they fit is asked again then. */
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(sizeTable);
     seaStops.forEach((stop) => { try { stop(); } catch (err) { /* already gone */ } });
     seaStops = [];
     if (typeof CrankSea === 'undefined') return;
