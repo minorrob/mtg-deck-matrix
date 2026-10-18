@@ -31,6 +31,8 @@ export const REGISTRY = [
   /* The Commander banned list by name, dated (ROB-104): commander-legality.js refuses these before a table starts. */
   {file: "data/commander-banned.json", id: "commander-banned@1", generator: "tools/commander-banned.mjs", checkedBy: "tools/commander-banned.mjs", main: "cards"},
   {file: "data/commander-glossary.json", id: "commander-glossary@1", generator: HAND, checkedBy: "tools/check-glossary.mjs", main: "entries"},
+  /* The Commander Brackets the compliance report judges by (ROB-111), dated. */
+  {file: "data/commander-brackets.json", id: "commander-brackets@1", generator: HAND, checkedBy: "tests/schemas.mjs", main: "brackets"},
   /* The vendor assumptions behind the buy plan (ROB-119): price factor, shipping, lead time; the reader edits them in Settings. */
   {file: "data/vendors.json", id: "vendors@1", generator: HAND, checkedBy: "tests/schemas.mjs", main: "vendors"},
   {file: "data/deck-guides.json", id: "deck-guides@1", generator: "tools/generate-guides.mjs", checkedBy: "tools/generate-guides.mjs", main: "decks"},
