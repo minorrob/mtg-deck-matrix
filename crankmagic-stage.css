@@ -123,11 +123,11 @@
 .cm-stage-style-note{margin:5px 0 1px;font-size:10px;color:#b1c6bb}
 @media(prefers-reduced-motion:reduce){.cm-stage-fan-slot .cm-bcard{transition:none}}
 
-.cm-board[data-stage="on"]{--stage-side-width:min(330px,34vw);--stage-side-offset:0px}
-.cm-board[data-stage="on"]:has(>.cm-stage-side.is-open){--stage-side-offset:var(--stage-side-width)}
-.cm-board[data-stage="on"] .cm-stage-camera{right:calc(var(--stage-side-offset) + 16px);z-index:14}
-.cm-board[data-stage="on"]>.cm-stage-right{right:var(--stage-side-offset)}
-.cm-board[data-stage="on"]:has(>.cm-stage-rail.is-open)>.cm-stage-left{left:47px}
+.cm-board[data-shell="shared"]{--stage-side-width:min(330px,34vw);--stage-side-offset:0px}
+.cm-board[data-shell="shared"]:has(>.cm-stage-side.is-open){--stage-side-offset:var(--stage-side-width)}
+.cm-board[data-shell="shared"] .cm-stage-camera{right:calc(var(--stage-side-offset) + 16px);z-index:14}
+.cm-board[data-shell="shared"]>.cm-stage-right{right:var(--stage-side-offset)}
+.cm-board[data-shell="shared"]:has(>.cm-stage-rail.is-open)>.cm-stage-left{left:47px}
 
 .cm-board[data-stage="on"][data-coach="open"]>.cm-stage-side{height:calc((100% - 58px) / 2 - 3px)!important}
 
@@ -172,10 +172,10 @@
 .cm-stage-life{font-size:12px}
 .cm-stage-camera>div{row-gap:3px}
 
-.cm-board[data-stage="on"]{--stage-left-width:47px}
-.cm-board[data-stage="on"]:has(.cm-stage-rail .cm-stage-module){--stage-left-width:min(330px,34vw)}
-.cm-board[data-stage="on"] .cm-stage-rail{width:var(--stage-left-width);overflow:auto}
-.cm-board[data-stage="on"]:has(>.cm-stage-rail.is-open)>.cm-stage-left{left:var(--stage-left-width)}
+.cm-board[data-shell="shared"]{--stage-left-width:47px}
+.cm-board[data-shell="shared"]:has(.cm-stage-rail .cm-stage-module){--stage-left-width:min(330px,34vw)}
+.cm-board[data-shell="shared"] .cm-stage-rail{width:var(--stage-left-width);overflow:auto}
+.cm-board[data-shell="shared"]:has(>.cm-stage-rail.is-open)>.cm-stage-left{left:var(--stage-left-width)}
 .cm-stage-rail:has(.cm-stage-module) .cm-full-rail{height:auto;display:flex;flex-direction:row;flex-wrap:wrap;gap:4px;padding-bottom:8px}
 .cm-stage-rail:has(.cm-stage-module) .cm-board-views{display:flex;flex-direction:row}
 .cm-stage-rail:has(.cm-stage-module) .cm-board-spacer{display:none}
@@ -188,7 +188,7 @@
 .cm-drawer-settings th,.cm-drawer-settings td{padding:7px 6px;border-bottom:1px solid var(--v-line)}
 .cm-drawer-settings th:first-child{text-align:left}.cm-drawer-settings td{text-align:center}
 #matrix-v2 .cm-drawer-settings input{width:24px;height:24px;min-height:24px;padding:0;margin:0;accent-color:var(--v-accent);cursor:pointer}
-@media(max-width:1100px){.cm-stage-priority{display:none}.cm-stage-top{gap:6px}}
+@media(max-width:1100px){.cm-stage-priority{display:block;max-width:180px}.cm-stage-top{gap:6px}}
 
 /* The fan is held at the screen edge; its lower corners disappear just below it. */
 .cm-board[data-stage="on"]>.cm-stage-hand{bottom:-12px;height:clamp(220px,34vh,330px)}
@@ -206,7 +206,7 @@
 .cm-stage-module[data-module="actions"] .cm-board-decision{position:static;width:100%;max-width:none;max-height:none;margin:0}
 
 /* Drawer stack and Card Preview use one readable card size in either drawer. */
-.cm-board[data-stage="on"]{--module-card-w:min(calc((var(--stage-side-width) - 74px) * .75),calc((clamp(180px,30vh,320px) - 20px) * 5 / 7))}
+.cm-board[data-shell="shared"]{--module-card-w:min(calc((var(--stage-side-width) - 74px) * .75),calc((clamp(180px,30vh,320px) - 20px) * 5 / 7))}
 .cm-stage-module .cm-full-pick .cm-bcard,.cm-stage-module .cm-stack-card{--bc:var(--module-card-w);width:var(--bc);max-width:100%}
 .cm-stage-module #cm-full-pick,.cm-stage-side .cm-module-body #cm-full-pick{height:auto;min-height:0;overflow:visible}
 .cm-stage-module .cm-full-pick{background:none;border:0;padding:0}
@@ -231,3 +231,38 @@
 .cm-bcard[data-arrange-card]{cursor:grab}.cm-bcard[data-arrange-card]:active{cursor:grabbing}.cm-bcard.cm-card-drop{outline:3px solid #a8dfbf;outline-offset:2px}
 
 .cm-stack-list{max-height:calc(var(--module-card-w)*1.4 + 24px);overflow-y:auto;scrollbar-width:thin}
+
+/* ROB-99: one desktop header and overlay drawers; board sizing remains per view. */
+.cm-board[data-shell="shared"]{grid-template-rows:58px minmax(0,1fr);--stage-left-offset:0px}
+.cm-board[data-shell="shared"]>.cm-stage-top{grid-column:1 / -1}
+.cm-board[data-shell="shared"]>.cm-stage-camera{position:fixed;top:68px}
+.cm-board[data-shell="shared"] .cm-stage-rail{padding:12px;color:#edf6ef;background:#112526fa}
+.cm-board[data-shell="shared"] .cm-stage-side{display:block}
+.cm-stage-camera .cm-board-views{display:flex;width:100%;gap:4px}
+.cm-stage-camera .cm-board-views button{flex:1;min-width:0;padding:0 4px!important;font-size:11px;white-space:normal}
+.cm-stage-camera .cm-board-views .cm-view-word{min-width:0;white-space:normal}
+.cm-board[data-shell="shared"][data-view="table"]{grid-template-rows:58px var(--tabletop-h,minmax(0,1fr)) auto}
+.cm-stage-top>.cm-board-turnsteps{flex:1;min-width:0}
+.cm-stage-top .cm-board-ribbon-button{width:100%;color:inherit}
+.cm-stage-camera .cm-board-scale{grid-template-columns:1fr 44px;gap:4px;height:auto;padding:6px 8px;border-radius:6px}
+.cm-stage-camera .cm-board-scale>span{grid-column:1 / -1}
+#matrix-v2 .cm-stage-camera .cm-board-scale input[type=range]{width:100%}
+
+/* Keep the waiting message in the header, clear of the top row's focus controls. */
+.cm-stage-priority>.cm-board-waiting{display:block;max-width:220px;overflow:hidden;text-overflow:ellipsis;font-size:10px}
+
+.cm-profile-menu .cm-board-menu{left:auto;right:0;max-height:calc(100vh - 180px);overflow:auto}
+.cm-board[data-shell="shared"]>.cm-stage-rail:not(.is-open),.cm-board[data-shell="shared"]>.cm-stage-side:not(.is-open){display:none}
+
+.cm-board[data-shell="shared"]:not([data-view="full"]){--stage-side-width:min(var(--panel-w,340px),45vw)}
+.cm-stage-side>.cm-board-panelgrip{position:sticky;float:left;left:0;top:0;height:100%;width:12px;margin-left:-12px}
+
+/* The shared dark header keeps its own ink in light themes; pop-ups use their panel ink. */
+.cm-stage-top{color:#edf6ef}
+.cm-stage-top .cm-board-ribbon.is-strip li.is-next{color:#edf6ef}
+.cm-stage-top .cm-board-ribbon.is-strip li.is-done{color:#b2c8bd}
+.cm-profile-menu .cm-board-menu{color:var(--v-ink)}
+.cm-stage-camera{background:#0b2023}
+#matrix-v2 .cm-stage-camera label,#matrix-v2 .cm-stage-camera output{color:#edf6ef}
+#matrix-v2 .cm-stage-camera .cm-board-views .v-button{height:38px;color:#edf6ef;background:#1c302e}
+#matrix-v2 .cm-stage-camera .cm-board-views .v-button.is-on{color:#0d120c;background:#87c6a1}

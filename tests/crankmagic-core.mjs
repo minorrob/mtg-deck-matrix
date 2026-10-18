@@ -74,9 +74,12 @@ run('acquire',{lot:{id:'incoming1',cardId:basic.id,quantity:1,source:'ordered',c
  run('acquire',{lot:{id:'want2',cardId:pool[3].id,quantity:1,source:'watching'}});eq(M.counters(state).watching,before.watching+1);run('removePending',{lotId:'want2',quantity:1});ok(!state.lots.some(l=>l.id==='want2'));eq(M.counters(state).watching,before.watching);}
 const comma=E.parse('1 Chulane, Teller of Tales\n1 Sol Ring',{deckParser:P});eq(comma.rows[0].name,'Chulane, Teller of Tales');eq(comma.rows.length,2);
 const exact=E.parse('Card name,Quantity,Printing ID,Signed,Altered\nSol Ring,2,printuuid,true,false');eq(exact.rows[0].printing.id,'printuuid');eq(exact.rows[0].printing.signed,true);eq(exact.rows[0].printing.altered,false);
-// Unknown prices and newly accepted alternatives cannot silently relax caps.
+// A budget only informs (Rob, 2026-10-18; docs/budgets.md): a locked list over its budget still takes a swap, and the
+// definition's read-out says by how much. The swap is tried on a copy, so the rest of this run is unchanged.
 run('editDeck',{deckId:'deckA',definition:{...definition,budget:1}});
-assert.throws(()=>run('swap',{deckId:'deckA',slotId:target.id,cardId:pool[2].id}),/exceeds/);checks++;
+{const tried=M.apply(state,{type:'swap',id:'core-over-budget',deckId:'deckA',slotId:target.id,cardId:pool[2].id}).state;
+ ok(M.deck(tried,'deckA').slots.some(r=>r.cardId===pool[2].id),'a swap over the budget is not refused');
+ ok(M.definitionIssues(tried,M.deck(tried,'deckA')).some(x=>/over its \$1\.00 budget/.test(x)),'and the definition says the list is over its budget');}
 run('editDeck',{deckId:'deckA',definition});
 const supplemental=C.normalize({name:'Test transcription',typeLine:'Artifact',verified:false,legalities:{commander:'unverified'}});
 run('acquire',{cards:[supplemental],lot:{id:'manual-copy',cardId:supplemental.id,quantity:2,printing:{set:'tst',collector:'007',finish:'foil'}}});

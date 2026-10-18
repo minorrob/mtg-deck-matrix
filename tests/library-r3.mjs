@@ -65,16 +65,15 @@ try {
   const figures = () => page.$$eval(".cm-kpi", (ks) => ks.map((k) => ({label: k.querySelector("span").textContent.trim(), n: Number(k.querySelector("strong").textContent.replace(/,/g, ""))})));
   const copiesShown = () => page.$eval("#cm-roster-table", (t) => { const m = (t.querySelector(".cm-paging span, .cm-status-line")?.textContent || "").match(/([\d,]+) cop(?:y|ies)/); return m ? Number(m[1].replace(/,/g, "")) : -1; });
   const cardsBefore = await figures(), recordsBefore = await records(page);
-  eq(cardsBefore.map((f) => f.label), ["Watching", "To buy", "Ordered", "Owned", "Bench", "To add", "Target", "Substitute"], "eight count cards: the stages, then where an owned card is (docs/card-states.md)");
-  eq(cardsBefore[3].n, cardsBefore[4].n + cardsBefore[5].n + cardsBefore[6].n + cardsBefore[7].n, "and the second row adds up to Owned");
-  /* The caption divides To buy by role (Rob, 2026-09-26), judged by the model on the stored library. */
+  eq(cardsBefore.map((f) => f.label), ["Final", "Substitute", "Reserved", "Upgrade", "Loading", "Bench", "Sell / Trade", "Unowned"], "eight count cards: the four deck uses, then the rest (docs/card-states.md, 2026-10-18)");
+  /* Every record counts in exactly one card, so the eight add up to every copy shown; the caption says so, and names the ownership. */
   {
     const stored = await page.evaluate(async () => { const r = await CrankRepository.open(); try { return await r.getState(); } finally { r.close(); } });
-    const read = M.stateReader(stored), buys = M.projection(stored).map(read).filter((x) => x.stage === "buy");
-    const recs = M.projection(stored);
-    const up = recs.filter((r) => { const x = read(r); return x.stage === "buy" && x.role === "upgrade"; }).reduce((n, r) => n + r.quantity, 0);
-    const res = recs.filter((r) => { const x = read(r); return x.stage === "buy" && x.role === "reserved"; }).reduce((n, r) => n + r.quantity, 0);
-    ok(buys.length > 0 && (await page.locator(".cm-kpi-caption").innerText()).includes(`To buy: ${up.toLocaleString("en-US")} upgrade${up === 1 ? "" : "s"}, ${res.toLocaleString("en-US")} reserved`), `the caption divides To buy into ${up} upgrades and ${res} reserved, as the model does`);
+    const read = M.stateReader(stored), recs = M.records(stored), all = recs.reduce((n, r) => n + (r.quantity || 1), 0);
+    eq(cardsBefore.reduce((n, f) => n + f.n, 0), all, `the eight cards add up to every copy the Library shows (${all})`);
+    const buy = recs.filter((r) => read(r).ownership === "buy").reduce((n, r) => n + (r.quantity || 1), 0);
+    const caption = await page.locator(".cm-kpi-caption").innerText();
+    ok(caption.includes(`${all.toLocaleString("en-US")} copies`) && caption.includes(`To buy ${buy.toLocaleString("en-US")}`), `the caption states the total and the ownership, To buy ${buy} among it: "${caption}"`);
   }
   for (const [i, f] of cardsBefore.entries()) {
     await page.locator(".cm-kpi").nth(i).click();
@@ -90,31 +89,34 @@ try {
   /* Two figures judged from the library as stored, not from the page's rule. */
   {
     const st = await stateOf(page), sum = (f) => st.lots.filter(f).reduce((n, l) => n + l.quantity, 0);
-    eq(cardsBefore[3].n, sum((l) => l.source === "owned"), "Owned is every owned copy");
-    eq(cardsBefore[4].n, sum((l) => l.source === "owned" && !l.allocation && l.location?.kind !== "deck"), "the Bench is the owned copies no deck reserves and no deck box holds");
-    eq(cardsBefore[2].n, sum((l) => l.source === "ordered"), "Ordered is the copies on order");
+    eq(cardsBefore[0].n, sum((l) => l.source === "owned" && l.allocation && l.location?.kind === "deck" && l.location.deckId === l.allocation.deckId), "Final is every owned copy in the box of the deck that claims it");
+    eq(cardsBefore[1].n, sum((l) => l.source === "owned" && l.location?.kind === "deck" && l.allocation?.deckId !== l.location.deckId && (l.offer || "none") === "none"), "Substitute is every other owned copy in a box");
+    /* The model needs the whole library -- deck groups and slots -- which stateOf trims, so it reads the stored one whole. */
+    const readStored = M.stateReader(await page.evaluate(async () => { const r = await CrankRepository.open(); try { return await r.getState(); } finally { r.close(); } }));
+    eq(cardsBefore[5].n, sum((l) => readStored({...l, kind: "lot"}).use === "bench"), "the Bench is what the model calls the Bench: owned, for no deck, not offered");
+    ok(sum((l) => readStored({...l, kind: "lot"}).use === "bench") <= sum((l) => l.source === "owned" && !l.allocation && l.location?.kind !== "deck"), "and never more than the owned copies no deck claims and no box holds");
   }
 
   /* 8. The name first, then its mana (Rob, 2026-09-25: "Put the card name first then mana symbols"). */
   const nameFirst = await page.$$eval("#cm-roster-table tr[data-card] td.cm-col-name", (tds) => tds.map((td) => { const n = td.querySelector(".cm-card-name"), m = td.querySelector(".cm-row-mana, .cm-row-land"); return !m || !!(n.compareDocumentPosition(m) & Node.DOCUMENT_POSITION_FOLLOWING); }));
   ok(nameFirst.length > 20 && nameFirst.every(Boolean), `in every row the card's name comes before its mana (${nameFirst.filter(Boolean).length} of ${nameFirst.length})`);
 
-  /* 9. The card states on the rows (docs/card-states.md): every pill is a word from the vocabulary, the Filters
-     dialog offers the states and the two roles outside a box, and "To add" finds exactly the owned copies Ready to add
-     lists, each wearing its role. */
-  const VOCAB = ["Watching", "To buy", "Ordered", "Bench", "To add", "Target", "Substitute"];
+  /* 9. The card status on the rows (docs/card-states.md, 2026-10-18): every pill is a word from the vocabulary, the
+     Filters dialog offers those words and two ownership readings, and "Loading" finds exactly the owned copies Ready to
+     add lists, each with its note. */
+  const VOCAB = M.STATE_LABELS;
   const pills = await page.$$eval("#cm-roster-table td.cm-col-status .cm-pill", (ps) => ps.map((p) => p.textContent.trim()));
   ok(pills.length > 20 && pills.every((p) => VOCAB.includes(p)), `every Status pill is a card-state word: ${[...new Set(pills.filter((p) => !VOCAB.includes(p)))].join(", ")}`);
   await page.getByRole("button", {name: /^Filters/}).click();
   await opened(page, "Filters");
-  eq(await page.$$eval("#cm-dialog [data-fd=status]", (bs) => bs.map((b) => b.textContent)), ["Watching", "To buy", "Ordered", "Owned (any)", "Bench", "To add", "Target", "Substitute", "Upgrade", "Reserved"], "the Filters dialog's Status chips are the card states");
-  await page.locator("[data-fd=status][data-value='To add']").click();
+  eq(await page.$$eval("#cm-dialog [data-fd=status]", (bs) => bs.map((b) => b.textContent)), ["Final", "Substitute", "Reserved", "Upgrade", "Loading", "Bench", "Sell", "Trade", "Watch", "To buy", "Ordered", "Own (any)", "To buy (any)"], "the Filters dialog's Status chips are the card status words, then two ownership readings");
+  await page.locator("[data-fd=status][data-value='Loading']").click();
   await page.locator("#cm-fd-show").click();
-  await page.waitForFunction(() => /Status: To add/.test(document.getElementById("cm-filter-chips")?.textContent || ""));
-  const toAdd = await page.$$eval("#cm-roster-table tr[data-card]", (trs) => trs.map((tr) => ({pill: tr.querySelector("td.cm-col-status .cm-pill")?.textContent.trim(), badge: !!tr.querySelector(".cm-badge-upgrade, .cm-badge-reserved"), q: Number(tr.querySelector("td.cm-col-quantity")?.textContent.trim() || 1)})));
+  await page.waitForFunction(() => /Status: Loading/.test(document.getElementById("cm-filter-chips")?.textContent || ""));
+  const toAdd = await page.$$eval("#cm-roster-table tr[data-card]", (trs) => trs.map((tr) => ({pill: tr.querySelector("td.cm-col-status .cm-pill")?.textContent.trim(), badge: !!tr.querySelector("td.cm-col-status .cm-badge-final"), q: Number(tr.querySelector("td.cm-col-quantity")?.textContent.trim() || 1)})));
   {
     const st = await stateOf(page), five = st.lots.filter((l) => l.source === "owned" && l.allocation && !(l.location?.kind === "deck" && l.location.deckId === l.allocation.deckId) && !(l.location?.kind === "deck")).reduce((n, l) => n + l.quantity, 0);
-    ok(toAdd.length > 0 && toAdd.every((r) => r.pill === "To add" && r.badge), "To add shows owned copies waiting outside their box, each wearing its role (Upgrade or Reserved)");
+    ok(toAdd.length > 0 && toAdd.every((r) => r.pill === "Loading" && r.badge), "Loading shows owned copies waiting outside their box, each saying what to do");
     eq(toAdd.reduce((n, r) => n + r.q, 0), five, `and exactly the ${five} copies reserved for a deck and not in any deck's box, judged from the stored lots`);
   }
   await page.locator("#cm-filter-chips [data-action=clear-filters]").click();
@@ -130,9 +132,9 @@ try {
     const needs = await page.evaluate(async () => { const r = await CrankRepository.open(); try { return CrankCollection.projection(await r.getState()).filter((x) => x.kind === "need").reduce((n, x) => n + x.quantity, 0); } finally { r.close(); } });
     eq(tabN, needs + list, `the To buy tab counts the decks' ${needs} needed copies and the To Buy list's ${list}`);
     eq(list, 0, "and the To Buy list repeats none of the needs");
-    /* Each row outside a box wears its role beside the pill, whole: the Status cell wraps rather than cutting it off. */
+    /* Each Reserved row wears its note beside the pill, whole: the Status cell wraps rather than cutting it off. */
     const cut = await page.$$eval("#cm-roster-table td.cm-col-status", (tds) => tds.map((td) => { const c = td.getBoundingClientRect(), b = td.querySelector(".cm-badge-upgrade, .cm-badge-reserved"); if (!b) return null; const r = b.getBoundingClientRect(); return {inside: r.left >= c.left - 0.5 && r.right <= c.right + 0.5 && r.bottom <= c.bottom + 0.5, text: b.textContent}; }).filter(Boolean));
-    ok(cut.length > 0 && cut.every((x) => x.inside && /^(Upgrade|Reserved)$/.test(x.text)), `every role badge on the To buy tab shows whole inside its Status cell (${cut.length})`);
+    ok(cut.length > 0 && cut.every((x) => x.inside && /(replaces|empty seat)/.test(x.text)), `every note on the To buy tab shows whole inside its Status cell (${cut.length})`);
   }
   await page.goto(LIB);
   await settle(page);

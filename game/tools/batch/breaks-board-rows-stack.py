@@ -1,7 +1,10 @@
 # Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE.
 """The board's rows and its stack (Rob's playtest notes, 2026-10-11): a row of lands, tapped ones among them, overlapped to
 fit and scrolled past a readable strip of each; the spell on the stack seen as its card, and each entry's card shown
-beside the box. crankmagic-board.js and crankmagic.css.
+in the shared drawer. crankmagic-board.js and crankmagic.css.
+ROB-99 replaces the desktop hover-only stack with the ordered, keyboard-operable pile already
+used by Full. Its obsolete hover/Escape placement mutations are replaced by the pile visibility
+break below; table-tabletop.mjs retains the multi-entry browsing and ordering checks.
 
 Browser suite: run with GEOMETRY_REQUIRED=1, from the repository root, with nothing else editing the worktree:
 
@@ -22,21 +25,6 @@ BREAKS = [
      '.cm-board-cards.is-scrolling{overflow-x:auto;',
      '.cm-board-cards.is-scrolling{overflow-x:hidden;'),
     ('the spell not seen on the stack', 'crankmagic-board.js',
-     '<h3>On the stack · ${items.length}</h3>${topCard}<ol>',
-     '<h3>On the stack · ${items.length}</h3><ol>'),
-    ('an entry shows nothing under the pointer', 'crankmagic-board.js',
-     '    if (entry && event.pointerType === "mouse") stackPeek(entry);\n',
-     ''),
-    ('its card stays when the pointer leaves', 'crankmagic-board.js',
-     '    else if (stackShown !== null && event.pointerType === "mouse" && !(event.target.closest && event.target.closest("#cm-stack-peek"))) stackPeek(null);\n',
-     ''),
-    ('a focus shows nothing', 'crankmagic-board.js',
-     '  document.addEventListener("focusin", (event) => {const entry = event.target.closest && event.target.closest(".cm-board-stack .cm-stack-entry"); if (entry) stackPeek(entry);});\n',
-     ''),
-    ('Escape leaves it shown', 'crankmagic-board.js',
-     '    if (event.key === "Escape" && stackShown !== null) stackPeek(null);\n',
-     ''),
-    ('drawn over the box, not beside it', 'crankmagic-board.js',
-     "    div.style.left = `${Math.round(left)}px`; div.style.top = `${Math.round(top)}px`;",
-     "    div.style.left = `${Math.round(box.left)}px`; div.style.top = `${Math.round(box.top)}px`;"),
+     '<div class="cm-stack-image"><button',
+     '<div class="cm-stack-image" hidden><button'),
 ]

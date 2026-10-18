@@ -311,6 +311,17 @@ export function createController(resume = null) {
     },
 
     /**
+     * Why an answer of these indices to the pending choice would be refused, or null, changing nothing (Linear ROB-75):
+     * what `answer` checks of a choice of options, for a board to ask before it sends one.
+     */
+    check({choiceId, indices} = {}) {
+      if (!pending || answered || choiceId !== pending.id) return "This choice has expired";
+      if (!BY_INDICES(pending.mode)) return "Only a choice of options can be checked";
+      try {validateIndices(pending, {indices});} catch (error) {return error.message;}
+      return null;
+    },
+
+    /**
      * The engine takes the answer and the choice closes. Throws if nothing has answered yet, which
      * would otherwise be a silent "the engine carried on without being told".
      */

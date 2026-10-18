@@ -579,4 +579,47 @@ assert.match(readme, /run-batch\.mjs/, "the README must show how to run a simula
 
 }
 
+{
+  // EACH SIMPLIFICATION, LABELED WITH THE CARDS IT TOUCHES (ROB-116 step 1). The sixteen sentences stay the
+  // model's own list; simplificationsFor pairs each with the cards in a given hundred that it touches, so the
+  // report can say "tutors draw the best of three: Demonic Tutor" instead of a paragraph about decks in general.
+  const labeled = Engine.simplificationsFor([
+    {name: "Demonic Tutor", typeLine: "Sorcery", manaCost: "{1}{B}", oracleText: "Search your library for a card, put that card into your hand, then shuffle."},
+    {name: "The Ozolith", typeLine: "Legendary Artifact", manaCost: "{1}", oracleText: "Whenever a creature you control leaves the battlefield, if it had counters on it, put those counters on The Ozolith.\nAt the beginning of combat on your turn, if The Ozolith has counters on it, you may move all counters from The Ozolith onto target creature."},
+    {name: "Evolving Wilds", typeLine: "Land", oracleText: "{T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle."},
+    {name: "Krenko, Mob Boss", typeLine: "Legendary Creature — Goblin Warrior", manaCost: "{2}{R}{R}", power: "3", toughness: "3", isCommander: true, oracleText: "{T}: Create X 1/1 red Goblin creature tokens, where X is the number of Goblins you control."},
+    {name: "Thassa's Oracle", typeLine: "Creature — Merfolk Wizard", manaCost: "{U}{U}", power: "1", toughness: "3", oracleText: "When Thassa's Oracle enters, look at the top X cards of your library. If X is greater than or equal to the number of cards in your library, you win the game."},
+    {name: "Counterspell", typeLine: "Instant", manaCost: "{U}{U}", oracleText: "Counter target spell."},
+    {name: "Wall of Omens", typeLine: "Creature — Wall", manaCost: "{1}{W}", power: "0", toughness: "4", oracleText: "Defender\nWhen this creature enters, draw a card."},
+    {name: "Krosan Tusker", typeLine: "Creature — Boar Beast", manaCost: "{5}{G}{G}", power: "6", toughness: "5", oracleText: "Basic landcycling {2}{G} ({2}{G}, Discard this card: Search your library for a basic land card, reveal it, put it into your hand, then shuffle.)\nWhen you cycle this card, you may draw a card."},
+    {name: "Demonic Tutor", typeLine: "Sorcery", manaCost: "{1}{B}", oracleText: "Search your library for a card, put that card into your hand, then shuffle."}
+  ]);
+  assert.equal(labeled.length, Engine.SIMPLIFICATIONS.length, "one row per simplification, no more and no fewer");
+  labeled.forEach((row, index) => {
+    assert.equal(row.n, index + 1);
+    assert.equal(row.says, Engine.SIMPLIFICATIONS[index], `row ${row.n} carries its own sentence, not a neighbor's`);
+    assert.ok(["shape", "reading", "flagged"].includes(row.kind), `row ${row.n} is the model's shape, a reading, or flagged`);
+    assert.equal(row.count, row.cards.length);
+    assert.deepEqual(row.cards, [...row.cards].sort(), `row ${row.n} names its cards in order`);
+  });
+  const by = (n) => labeled[n - 1];
+  assert.deepEqual(labeled.filter((row) => row.removable).map((row) => row.n), [3, 7, 8, 11, 12],
+    "the five a card definition could remove (the audit's §7), and no other, are marked removable");
+  assert.deepEqual(by(1).cards, ["Counterspell"], "no stack: the counterspells");
+  assert.deepEqual(by(3).cards, ["The Ozolith"], "counters moved: the card that moves them");
+  assert.deepEqual(by(7).cards, ["Demonic Tutor"], "tutors, named once however many copies");
+  assert.deepEqual(by(8).cards, ["Krenko, Mob Boss"], "token makers");
+  assert.equal(by(9).kind, "flagged");
+  assert.deepEqual(by(9).cards, ["Thassa's Oracle"], "the win the engine cannot watch");
+  assert.deepEqual(by(11).cards, ["Evolving Wilds"], "fetch lands, and not the landcycler that also searches for a basic");
+  assert.deepEqual(by(12).cards, ["Krosan Tusker"], "a keyword whose effect lives in reminder text");
+  assert.deepEqual(by(13).cards, ["Wall of Omens"], "defenders");
+  assert.equal(by(14).count, 0, "a creature commander does not touch the noncreature-commander rule");
+  [6, 10, 15, 16].forEach((n) => assert.equal(by(n).count, 0, `rule ${n} is the model's shape and names no card`));
+  assert.equal(Engine.simplificationsFor([]).length, Engine.SIMPLIFICATIONS.length, "an empty list still gets the sixteen, each touching nothing");
+  assert.ok(Engine.simplificationsFor([]).every((row) => row.count === 0));
+  const walker = Engine.simplificationsFor([{name: "Fixture Walker", typeLine: "Legendary Planeswalker — Test", manaCost: "{2}{W}{U}", isCommander: true, oracleText: "Fixture Walker can be your commander."}]);
+  assert.deepEqual(walker[13].cards, ["Fixture Walker"], "a planeswalker commander touches the noncreature-commander rule");
+}
+
 console.log(`Simulation engine verified: deterministic under seed, discriminating between decks (My Fun and Pod Fun both range-checked), and capped by the runner at ${tinyConfig.maxTotalSimulations} games.`);
