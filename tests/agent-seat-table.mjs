@@ -133,7 +133,10 @@ const pilotCalls = () => DB.raw.prepare("SELECT email, feature, model, outcome, 
   const brief = JSON.parse(sent[0].messages[0].content);
   ok(brief.players.some((p) => p.seat === "you" && Array.isArray(p.hand)) && brief.players.filter((p) => p.hand).length === 1 && brief.decision.options.length > 0,
     "the brief: its own hand alone, the board, and the decision's options");
-  ok(sent.every((b) => {const h = JSON.parse(b.messages[0].content).housePilotWouldChoose; return Array.isArray(h) && h.length > 0;}), "and every brief carries the house pilot's choice, the hint");
+  /* Its choice may be none: an attack it would not make is `[]` (a game where a person is passed for over the stack,
+     `passStack`, reached one). */
+  const hints = sent.map((b) => JSON.parse(b.messages[0].content).housePilotWouldChoose);
+  ok(hints.every(Array.isArray) && hints.some((h) => h.length > 0), `and every brief carries the house pilot's choice, the hint (${hints.filter((h) => !h.length).length} of ${hints.length} choosing none)`);
   const calls = pilotCalls();
   ok(calls.length === sent.length && calls.every((c) => c.email === ROB && c.outcome === "ok" && c.cost_micros > 0), `each call logged as pilot, under the host, ok (${calls.length})`);
   ok(calls.every((c) => c.at === new Date(clock).toISOString()), `and at the table's clock, not the machine's (${calls[0]?.at})`);

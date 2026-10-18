@@ -223,12 +223,31 @@ so a concept mocks this part.
   - Stacks can be very deep: one real game had more than 250 identical triggers waiting at once.
 - **When the server passes for a person.** It does so, so a person is asked only when there is a real choice:
   - when "pass" is their only option and the stack is empty (the history then says "…: nothing to do");
-  - right after they cast or activate, unless they sent it with `hold: true`, their own setting to keep priority.
+  - when something is on the stack and nothing they hold could answer it: no spell the mana they could make would pay
+    for at this speed, no ability, and no mana ability that does more than add mana. **Only where the table asks for it
+    (the room's `passStack`), and it doesn't yet:** a spell passed over this way is never on the stack in any view of
+    that person's. It is cast and resolved between two views, so the board must show it from the history (or the
+    events of request #3) before tables turn it on (Linear ROB-13, ROB-23);
+  - right after they cast or activate, unless they sent it with `hold: true`, their own setting to keep priority;
+  - at every priority of theirs in an opponent's turn they yielded (below).
 
   **But it always asks when:**
   - it is the person's **own end step**. That pass option carries `endsTurn: true`: passing it ends their turn.
   - the person has turned on **step by step**, for every step of their own turn.
   - an **untap** option (below) is on offer.
+  - they cast or activated with `hold: true`: priority comes back to them, and they are asked.
+- **Yield turn** (a game launched from 2026-10-18; the room's `yieldTurn`, Linear ROB-13):
+  - **Starting it:** in an opponent's turn, a seat's own view carries `mayYield: true`. Sending `{type: "yield", on:
+    true}` passes every priority of theirs for the rest of that turn, whatever they hold. Sent while they are being asked
+    for priority, that priority is passed at once.
+  - **While it holds:** their own view carries `yielding: true`. No other seat's view says so, and the history doesn't.
+  - **Still asked:** what the rules ask of them is still asked: targets, modes, a "may", blockers, discards, the order
+    of their triggers, payments. The yield holds on after they answer.
+  - **Ending it:** it ends with that turn. An extra turn is a new one, so the yield doesn't carry into it. It also ends
+    if the turn's player leaves the game, and never carries into the seat's own turn or a rematch. Stop yielding is
+    `{type: "yield", on: false}`, acknowledged by the next view.
+  - **Refused (409, with its words):** in the seat's own turn, before the game begins, for an AI seat, or in a game
+    launched before Yield turn.
 - **Resolve all:** when two or more identical triggers are on top, the priority decision may include one option that
   resolves them all (`count` says how many).
 
@@ -308,11 +327,12 @@ Titles vary, and the sample has 19 kinds. Among them:
 - `{type: "view"}`: send me the latest.
 - `{type: "act", …}`: an answer.
 - `{type: "prefer", stepByStep: true | false}`.
+- `{type: "yield", on: true | false}`: Yield turn, and Stop yielding.
 
 **Received by the screen:**
 - `view`: the whole `CrankRoomView@1` below.
 - `receipt` `{accepted, actionId}`.
-- `refused` `{actionId, status, error, view}`. A refused preference carries `of: "prefer"`.
+- `refused` `{actionId, status, error, view}`. A refused preference carries `of: "prefer"`, a refused yield `of: "yield"`.
 - `away` `{seatId, until}`.
 
 **Rules of the conversation:**
@@ -339,7 +359,7 @@ Titles vary, and the sample has 19 kinds. Among them:
   - `departures`;
   - `seats: [{seatId, name, pilot, level?}]`;
   - `waitingOn`, `decision`, `state`, `history`;
-  - sometimes `continuing`, `stepByStep` and `yourTurn`.
+  - sometimes `continuing`, `stepByStep`, `yourTurn`, `yielding` and `mayYield` (the last two the seat's own only).
 - **`state`:** `turn`, `turnPlayerId`, `priorityPlayerId`, `phase`, `players`, `combat`, `stack`, `stackSize`,
   `gameOver`.
 - **Each player:** `{playerId, name, life, health, counters, mana, landsPlayed, monarch?, zones}`. A player's `counters`
