@@ -65,7 +65,7 @@
   }
   function mount(host, opts = {}) {
     if (current) {current.host = host; current.opts = opts; if (current.app) host.prepend(current.app.canvas); environment(current); return current.ready;}
-    const state = current = {host, opts, app: null, box: null, textures: new Map(), pending: new Set(), frame: null, stamp: ++generation};
+    const state = current = {host, opts, app: null, box: null, frame: null, stamp: ++generation};
     state.unhear = root.CrankMotion?.onChange(() => {state.opts.reduced = root.CrankMotion.reduced(); environment(state); if (state.box) paint(state);});
     environment(state);
     state.ready = load().then(async (P) => {
@@ -145,21 +145,10 @@
     app.renderer.render({container:plane,target:s.surfaceTexture,clear:true});plane.destroy({children:true});
     app.stage.addChild(new P.PerspectiveMesh({texture:s.surfaceTexture,x0:g.quad[0],y0:g.quad[1],x1:g.quad[2],y1:g.quad[3],x2:g.quad[4],y2:g.quad[5],x3:g.quad[6],y3:g.quad[7]}));
     const rects = [g.front, ...g.rear];
+    // Each seat's mat, art or drawn, is the DOM's (crankmagic-stage.css): cropped to its seat, never stretched (Rob, 2026-10-18).
     rects.forEach((r, i) => {
       const mat = new P.Graphics(); app.stage.addChild(mat);
       mat.poly(r.quad).fill({color: i ? 0x21403b : 0x294942, alpha: .8}).stroke({color: edge, width: 1, alpha: i ? .2 : .4});
-      const id = o.mats?.[i];
-      if (id && /^[a-z][a-z0-9-]+$/.test(id) && !["felt", "forge", "cavern", "sea", "night"].includes(id)) {
-        const url = `assets/playmats/${id}.webp`;
-        const texture = s.textures.get(url);
-        if (texture) {
-          const mesh = new P.PerspectiveMesh({texture, x0: r.quad[0], y0: r.quad[1], x1: r.quad[2], y1: r.quad[3], x2: r.quad[4], y2: r.quad[5], x3: r.quad[6], y3: r.quad[7]});
-          mesh.alpha = i ? .68 : .74; app.stage.addChild(mesh);
-        } else if (!s.pending.has(url)) {
-          s.pending.add(url);
-          P.Assets.load(url).then((texture) => {if (current === s) {s.textures.set(url, texture); paint(s);}}).catch(() => {});
-        }
-      }
     });
     const motes = new P.Graphics(); app.stage.addChild(motes);
     let last = -1;

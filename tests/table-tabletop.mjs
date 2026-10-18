@@ -78,27 +78,26 @@ try {
   }
   await accountRoutes(page);
   page.on("pageerror",e=>errors.push(e.message));
-  /* Rob's art mats, one to a seat: the canvas paints each seat's own art on that seat's mat, the viewed seat's in front.
-     Pixi labels a loaded texture with its address, so each mesh the next paint makes says which art it carries. */
-  const paintedMats=async(act)=>{
-    await page.evaluate(()=>{
-      const Mesh=PIXI.PerspectiveMesh;
-      if(!Mesh.recorded) PIXI.PerspectiveMesh=class extends Mesh{static recorded=true;constructor(o){super(o);
-        const art=/playmats\/([a-z0-9-]+)\.webp/.exec(o.texture?.label||'')?.[1];
-        if(!art) globalThis.__paints.push([]); else globalThis.__paints.at(-1)?.push({art,quad:[o.x0,o.y0,o.x1,o.y1,o.x2,o.y2,o.x3,o.y3]});}};
-      globalThis.__paints=[];
+  /* Rob's art mats, one to a seat, the viewed seat's in front: each seat's mat draws that seat's own picture, cropped to
+     the mat (cover), never stretched, and at full strength, with nothing tinted over it (Rob, 2026-10-18). The preview
+     seats his art by seat: falls-tree, cloud-wolf, sand-lion, ember-serpent. */
+  const seatArt=['falls-tree','cloud-wolf','sand-lion','ember-serpent'];
+  const matArt=()=>page.evaluate(()=>{
+    // Background layers split at top-level commas; a layer over the picture is clear when every color in it has no alpha.
+    const layers=s=>{const out=[];let depth=0,from=0;[...s].forEach((c,i)=>{if(c==='(')depth++;else if(c===')')depth--;else if(c===','&&!depth){out.push(s.slice(from,i).trim());from=i+1;}});out.push(s.slice(from).trim());return out;};
+    const clear=layer=>[...layer.matchAll(/(rgba?|color)\(([^()]*)\)/g)].every(([,fn,args])=>fn==='color'?/\/\s*0(\.0+)?\s*$/.test(args):fn==='rgba'&&Number(args.split(',')[3])===0);
+    return [document.querySelector('.cm-stage-front'),...document.querySelectorAll('.cm-stage-rear')].map(el=>{
+      const m=el.querySelector('.cm-mat[data-mat]'), style=getComputedStyle(m), images=layers(style.backgroundImage), at=images.findIndex(l=>/playmats\//.test(l));
+      return {seat:Number(m.dataset.seat), you:m.classList.contains('is-you'), mat:m.dataset.mat, art:/playmats\/([a-z0-9-]+)\.webp/.exec(images[at]||'')?.[1]||null,
+        size:at<0?null:layers(style.backgroundSize)[at], clear:at>=0 && images.slice(0,at).every(clear)};
     });
-    await act();
-    await page.waitForFunction(()=>__paints.at(-1)?.length===1+document.querySelectorAll('.cm-stage-rear').length,null,{timeout:5000}).catch(()=>{});
-    return page.evaluate(()=>{
-      const host=document.querySelector('.cm-stage-region'), box=host.getBoundingClientRect(), x0=box.x+host.clientLeft, y0=box.y+host.clientTop;
-      const mats=[document.querySelector('.cm-stage-front'),...document.querySelectorAll('.cm-stage-rear')], painted=__paints.at(-1)||[];
-      return {seats:mats.map(el=>el.querySelector('.cm-mat[data-mat]').dataset.mat), painted:painted.map(m=>m.art),
-        placed:painted.every((m,i)=>{
-          const r=mats[i].getBoundingClientRect(), xs=m.quad.filter((_,j)=>j%2===0), ys=m.quad.filter((_,j)=>j%2===1);
-          return Math.abs(x0+Math.min(...xs)-r.left)<2 && Math.abs(x0+Math.max(...xs)-r.right)<2 && Math.abs(y0+Math.min(...ys)-r.top)<2 && Math.abs(y0+Math.max(...ys)-r.bottom)<2;
-        })};
-    });
+  });
+  const ownArt=(seats,message)=>{
+    for(const s of seats) {
+      assert.equal(s.art,seatArt[s.seat],`${message}: seat ${s.seat}'s mat draws its own picture (${s.mat})`);
+      assert.equal(s.size,'cover',`${message}: seat ${s.seat}'s picture is cropped to its mat, never stretched`);
+      assert.ok(s.clear,`${message}: seat ${s.seat}'s picture is at full strength, with no wash over it`);
+    }
   };
   await page.goto(`${address}/index.html#table?id=tablepreview01`);
   await page.locator('.cm-stage-region[data-renderer="webgl"]').waitFor();
@@ -113,13 +112,14 @@ try {
   assert.equal(await page.locator('.cm-stage-rear').count(),3,"all other seats sit across the back");
   await page.evaluate(()=>{globalThis.__canvas = document.querySelector('.cm-stage-canvas');});
   const before = await page.locator('.cm-stage-region').boundingBox();
-  const own=await paintedMats(()=>page.getByRole('button',{name:'Toggle table panel',exact:true}).click());
+  await page.getByRole('button',{name:'Toggle table panel',exact:true}).click();
   assert.deepEqual(await page.locator('.cm-stage-region').boundingBox(),before,"the panel overlays rather than resizing the board");
-  assert.deepEqual(own.seats.toSorted(),['cloud-wolf','ember-serpent','falls-tree','sand-lion'],"the preview seats four of Rob's art mats");
-  assert.deepEqual(own.painted,own.seats,"each seat's own art is painted on the canvas, the viewed seat's in front");
-  assert.ok(own.placed,"and each seat's art lies on that seat's mat");
-  /* A drawn mat (felt, forge, cavern, sea, night) has no art for the canvas: in Full screen it keeps the pattern it has in
-     every other view (Rob, 2026-10-17). Two more tables seat all five, the second beside art mats. */
+  const own=await matArt();
+  assert.deepEqual(own.map(s=>s.seat).toSorted(),[0,1,2,3],"all four seats' mats are on the table");
+  assert.deepEqual(own.map(s=>s.you),[true,false,false,false],"your own mat is in front");
+  ownArt(own,"Full screen");
+  /* A drawn mat (felt, forge, cavern, sea, night) keeps in Full screen the pattern it has in every other view (Rob,
+     2026-10-17). Two more tables seat all five, the second beside art mats. */
   const drawnMats=['felt','forge','cavern','sea','night'];
   for(const mats of ['felt,forge,cavern,sea','night,falls-tree,sand-lion,cloud-wolf']) {
     const drawn=spawn(process.execPath,["tools/play-tabletop-preview.mjs"],{env:{...process.env,PREVIEW_PORT:"0",PREVIEW_MATS:mats},stdio:["ignore","pipe","pipe"]});
@@ -251,9 +251,11 @@ try {
   await page.waitForFunction(()=>!document.querySelector('.cm-stage-rail .cm-stage-module'));
   await page.evaluate(()=>{globalThis.__canvas=document.querySelector('.cm-stage-canvas');});
   await page.getByRole('button',{name:'Close table panel',exact:true}).click();
-  const turned=await paintedMats(()=>page.locator('.cm-stage-seat-label').first().click());
+  await page.locator('.cm-stage-seat-label').first().click();
   assert.match(await page.locator('.cm-stage-fan').getAttribute('aria-label'),/Friend's hand, 7 cards/);
-  assert.ok(turned.seats[0]!==own.seats[0] && turned.painted.join()===turned.seats.join() && turned.placed,"viewing another seat brings its art to the front, and every seat keeps its own");
+  const turned=await matArt();
+  assert.ok(turned[0].seat!==own[0].seat && !turned[0].you && turned.some(s=>s.you),"viewing another seat brings that seat's mat to the front, and yours goes to the back");
+  ownArt(turned,"Viewing Friend");
   assert.equal(await page.locator('.cm-stage-hand .is-back').count(),7);
   assert.equal(await page.locator('.cm-stage-hand [data-card]').count(),0,"no opponent card identity is introduced by rotation");
   await page.getByRole('button',{name:'My board',exact:true}).click();
