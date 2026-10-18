@@ -3,7 +3,7 @@
  * deck-synergies.js (Linear ROB-115) answers, for one deck, which cards work together, which chains it can run, and
  * which one card would complete a chain it almost has. It reads the graph's own scoring (CrankGraph.relate), the loop
  * finder (CrankLoops) and the strategy vocabulary, so it is held the way tests/crankmagic-loops.mjs holds the finder:
- * on D6 Krenko Goblins from the committed live state, where the Prospector-and-Staff engine is a known fact, and on
+ * on D6 Krenko Goblins from the committed live state, where the Krenko, Bombardment and Staff engine is a known fact, and on
  * what must not be found (Sol Ring joins nothing into a chain; a pile of lands has no synergies). The completion is
  * proved by taking Thornbite Staff out of the deck and asking for it back from a pool that holds it among decoys.
  *
@@ -49,6 +49,12 @@ ok(r.strategies.includes("tribal-payoff") && r.strategies.includes("sacrifice-su
 ok(r.pairs.length >= 20, `a goblin deck has many pairs worth knowing (${r.pairs.length})`);
 ok(r.pairs.every((p, i, all) => i === 0 || all[i - 1].strength >= p.strength), "pairs are strongest first");
 ok(r.pairs.every((p) => typeof p.says === "string" && p.says.length > 5 && p.a !== p.b), "every pair has the graph's sentence and two different cards");
+ok(r.pairs.every((p) => p.strength >= Synergies.DEFAULTS.minStrength || p.declared.length > 0), "no pair below the floor is listed unless it serves a declared strategy");
+ok(r.pairsTotal < 62 * 61 / 2, "the floor keeps out most of the possible pairs");
+const spellsOnly = d6Rows.filter((x) => !x.isLand);
+const high = Synergies.pairsOf(spellsOnly, Graph.relate, [], {...Synergies.DEFAULTS, minStrength: 0.9});
+const low = Synergies.pairsOf(spellsOnly, Graph.relate, [], {...Synergies.DEFAULTS, minStrength: 0});
+ok(high.length < low.length && high.every((p) => p.strength >= 0.9), `the floor is applied: ${high.length} pairs at 0.9 against ${low.length} at 0`);
 const tribalPairs = r.pairs.filter((p) => p.serves.includes("tribal-payoff"));
 ok(tribalPairs.length >= 5, `tribal pairs are found (${tribalPairs.length})`);
 ok(r.byStrategy.find((s) => s.id === "tribal-payoff").pairs >= tribalPairs.length && r.pairsTotal >= r.pairs.length, "byStrategy counts every pair, the list shows the strongest");
@@ -61,6 +67,8 @@ const two = r.chains.list.find((c) => c.length === 2 && c.cards.includes("Krenko
 ok(two && two.closed, "the two-card engine (Krenko and the Staff) is its own chain, listed before the three-card one");
 ok(r.chains.list.indexOf(two) < r.chains.list.indexOf(engine), "shorter closed chains come first");
 ok(r.chains.list.every((c) => c.length >= 2 && c.length <= 4 && c.ids.length === new Set(c.ids).size), "every chain is two to four distinct cards");
+const deckNames = new Set(d6Rows.map((x) => x.name));
+ok(r.chains.list.every((c) => c.cards.length === c.length && c.ids.length === c.length && c.cards.every((n) => deckNames.has(n))), "a chain names exactly the cards it walks, all of them in the deck");
 ok(!r.chains.list.some((c) => c.cards.includes("Sol Ring")), "Sol Ring is on no chain");
 ok(!r.unjoined.includes("Krenko, Mob Boss"), "the commander is joined");
 ok(r.ms < 2500, `the hundred in well under the budget here (${r.ms} ms; the issue asks under a second on a desktop browser, measured when the Tune tab lands)`);
@@ -94,4 +102,4 @@ eq(e.unjoined, ["Sol Ring"], "the rock is the one unjoined spell");
 const none = Synergies.synergies(d6Rows, {relate: null, loops: Loops});
 eq(none.available, false, "without relate() the model says so instead of guessing");
 
-console.log(`deck-synergies: ${checks} checks passed — Krenko's pairs, the Prospector-and-Staff engine, the Staff proposed back, the pool in color, honest empties.`);
+console.log(`deck-synergies: ${checks} checks passed — Krenko's pairs, the Bombardment-and-Staff engine, the Staff proposed back, the pool in color, honest empties.`);
