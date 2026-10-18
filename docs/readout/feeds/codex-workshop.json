@@ -1,42 +1,226 @@
 {
   "workstream": "codex-workshop",
-  "updated": "2026-10-18T05:30:00Z",
-  "updated_by": "Seeded by Claude · Deck intelligence from Linear on October 18; Codex Astra session 2 corrects it at its first merge.",
-  "branch": "codex/workshop-<topic> (to be claimed)",
-  "now": "Not started. Kick-off: docs/program/KICKOFF-PROMPTS.md. First: finish the sharing acceptance (ROB-36, ROB-37), then the Preferences › Decks card (ROB-122) and the information dial (ROB-125).",
+  "updated": "2026-10-18T12:23:20.186Z",
+  "updated_by": "Codex · Workshop, sharing acceptance",
+  "branch": "codex/workshop-sharing-acceptance",
+  "now": "Paused at Rob’s request after pushing the scoped sharing acceptance slice in PR #769. Next: recipient browser coverage and live Share Library acceptance, then ROB-122, ROB-125, ROB-106, and ROB-105’s paste path.",
   "items": [
-    {"id": "ROB-36", "outcome": "share", "feature": "Deck sharing finished: permissions, the public catalog, Email Deck", "status": "in_progress", "remaining_hours": 8},
-    {"id": "ROB-37", "outcome": "share", "feature": "Share Library with Reviewer and Collaborator, proven live", "status": "in_progress", "remaining_hours": 8},
-    {"id": "ROB-133", "outcome": "share", "feature": "One Share action on every deck: link, email, copy as text, QR", "status": "backlog", "remaining_hours": 12},
-    {"id": "ROB-134", "outcome": "share", "feature": "A public deck page that needs no account, and add to my library from a link", "status": "backlog", "remaining_hours": 16},
-    {"id": "ROB-69", "outcome": "share", "feature": "Mail delivery and bounces observable, with recovery", "status": "backlog", "remaining_hours": 8},
-    {"id": "ROB-105", "outcome": "library", "feature": "Add cards in seconds: paste a list, snap a photo, or scan", "status": "blocked", "remaining_hours": 24, "note": "The photo path waits on card resolution (ROB-131); paste can start."},
-    {"id": "ROB-106", "outcome": "library", "feature": "Find any card, box or deck from one search box", "status": "backlog", "remaining_hours": 16},
-    {"id": "ROB-107", "outcome": "library", "feature": "Where every card is and what it is doing, readable without the glossary", "status": "backlog", "remaining_hours": 12},
-    {"id": "ROB-108", "outcome": "library", "feature": "Fast on a phone with a 10,000-card library, measured and held", "status": "backlog", "remaining_hours": 16},
-    {"id": "ROB-44", "outcome": "library", "feature": "Watch-group card capture that never changes what I own", "status": "backlog", "remaining_hours": 6},
-    {"id": "ROB-110", "outcome": "deck-creation", "feature": "The Lab's start-from-what-I-want screen, with why-this-card on every slot", "status": "blocked", "remaining_hours": 20, "note": "Waits on the generator entry (ROB-109)."},
-    {"id": "ROB-113", "outcome": "deck-tuning", "feature": "One ordered Tune tab: measure, composition, synergies, swaps, re-measure", "status": "blocked", "remaining_hours": 24, "note": "Waits on the composition and synergy models (ROB-114, ROB-115)."},
-    {"id": "ROB-118", "outcome": "buying", "feature": "The priority dial on the Buy screen: speed, print, cost", "status": "blocked", "remaining_hours": 18, "note": "Waits on the buy-plan logic (ROB-119)."},
-    {"id": "ROB-120", "outcome": "buying", "feature": "One order across decks; arrivals go to the right box", "status": "backlog", "remaining_hours": 12},
-    {"id": "ROB-122", "outcome": "tailored", "feature": "My deck preferences saved once: playstyles, budgets, brackets, colors, never-include cards", "status": "backlog", "remaining_hours": 10},
-    {"id": "ROB-125", "outcome": "tailored", "feature": "The information complexity dial: plain, standard, expert, on every screen", "status": "backlog", "remaining_hours": 24},
-    {"id": "ROB-126", "outcome": "tailored", "feature": "The workshop's look chosen by its look, remembered with my account", "status": "backlog", "remaining_hours": 10},
-    {"id": "ROB-127", "outcome": "tailored", "feature": "Preferences travel with my account, even before I have a library", "status": "backlog", "remaining_hours": 8},
-    {"id": "ROB-38", "outcome": "tailored", "feature": "Profile editing and a compact Settings layout", "status": "in_progress", "remaining_hours": 8},
-    {"id": "ROB-39", "outcome": "tailored", "feature": "Change my account email without losing anything", "status": "in_progress", "remaining_hours": 6},
-    {"id": "ROB-135", "outcome": "joyful", "feature": "First-time journey: from an empty library to a first game in under ten minutes", "status": "backlog", "remaining_hours": 20},
-    {"id": "ROB-64", "outcome": "joyful", "feature": "Usability and renderer events instrumented on staging (PostHog)", "status": "backlog", "remaining_hours": 12},
-    {"id": "ROB-65", "outcome": "joyful", "feature": "Gameplay funnels, latency and renderer-health dashboards", "status": "backlog", "remaining_hours": 8},
-    {"id": "ROB-58", "outcome": "joyful", "feature": "Paid tools' ownership, quotas and renewals recorded", "status": "in_progress", "remaining_hours": 4}
+    {
+      "id": "ROB-36",
+      "outcome": "share",
+      "feature": "Deck sharing finished: permissions, the public catalog, Email Deck",
+      "status": "in_progress",
+      "remaining_hours": 8,
+      "evidence": [
+        {
+          "label": "Draft PR #769: sharing acceptance",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/pull/769"
+        }
+      ],
+      "note": "Local sharing checks pass. Live recipient deck selection and Email Deck evidence remain open."
+    },
+    {
+      "id": "ROB-37",
+      "outcome": "share",
+      "feature": "Share Library with Reviewer and Collaborator, proven live",
+      "status": "in_progress",
+      "remaining_hours": 6,
+      "evidence": [
+        {
+          "label": "Draft PR #769: sharing acceptance",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/pull/769"
+        }
+      ],
+      "note": "87 isolated sharing checks pass; all four library mutations caught. Recipient browser coverage and live acceptance remain unproven."
+    },
+    {
+      "id": "ROB-133",
+      "outcome": "share",
+      "feature": "One Share action on every deck: link, email, copy as text, QR",
+      "status": "backlog",
+      "remaining_hours": 12
+    },
+    {
+      "id": "ROB-134",
+      "outcome": "share",
+      "feature": "A public deck page that needs no account, and add to my library from a link",
+      "status": "backlog",
+      "remaining_hours": 16
+    },
+    {
+      "id": "ROB-69",
+      "outcome": "share",
+      "feature": "Mail delivery and bounces observable, with recovery",
+      "status": "backlog",
+      "remaining_hours": 8
+    },
+    {
+      "id": "ROB-105",
+      "outcome": "library",
+      "feature": "Add cards in seconds: paste a list, snap a photo, or scan",
+      "status": "blocked",
+      "remaining_hours": 24,
+      "note": "The photo path waits on card resolution (ROB-131); paste can start."
+    },
+    {
+      "id": "ROB-106",
+      "outcome": "library",
+      "feature": "Find any card, box or deck from one search box",
+      "status": "backlog",
+      "remaining_hours": 16
+    },
+    {
+      "id": "ROB-107",
+      "outcome": "library",
+      "feature": "Where every card is and what it is doing, readable without the glossary",
+      "status": "backlog",
+      "remaining_hours": 12
+    },
+    {
+      "id": "ROB-108",
+      "outcome": "library",
+      "feature": "Fast on a phone with a 10,000-card library, measured and held",
+      "status": "backlog",
+      "remaining_hours": 16
+    },
+    {
+      "id": "ROB-44",
+      "outcome": "library",
+      "feature": "Watch-group card capture that never changes what I own",
+      "status": "backlog",
+      "remaining_hours": 6
+    },
+    {
+      "id": "ROB-110",
+      "outcome": "deck-creation",
+      "feature": "The Lab's start-from-what-I-want screen, with why-this-card on every slot",
+      "status": "blocked",
+      "remaining_hours": 20,
+      "note": "Waits on the generator entry (ROB-109)."
+    },
+    {
+      "id": "ROB-113",
+      "outcome": "deck-tuning",
+      "feature": "One ordered Tune tab: measure, composition, synergies, swaps, re-measure",
+      "status": "blocked",
+      "remaining_hours": 24,
+      "note": "Waits on the composition and synergy models (ROB-114, ROB-115)."
+    },
+    {
+      "id": "ROB-118",
+      "outcome": "buying",
+      "feature": "The priority dial on the Buy screen: speed, print, cost",
+      "status": "blocked",
+      "remaining_hours": 18,
+      "note": "Waits on the buy-plan logic (ROB-119)."
+    },
+    {
+      "id": "ROB-120",
+      "outcome": "buying",
+      "feature": "One order across decks; arrivals go to the right box",
+      "status": "backlog",
+      "remaining_hours": 12
+    },
+    {
+      "id": "ROB-122",
+      "outcome": "tailored",
+      "feature": "My deck preferences saved once: playstyles, budgets, brackets, colors, never-include cards",
+      "status": "backlog",
+      "remaining_hours": 10
+    },
+    {
+      "id": "ROB-125",
+      "outcome": "tailored",
+      "feature": "The information complexity dial: plain, standard, expert, on every screen",
+      "status": "backlog",
+      "remaining_hours": 24
+    },
+    {
+      "id": "ROB-126",
+      "outcome": "tailored",
+      "feature": "The workshop's look chosen by its look, remembered with my account",
+      "status": "backlog",
+      "remaining_hours": 10
+    },
+    {
+      "id": "ROB-127",
+      "outcome": "tailored",
+      "feature": "Preferences travel with my account, even before I have a library",
+      "status": "backlog",
+      "remaining_hours": 8
+    },
+    {
+      "id": "ROB-38",
+      "outcome": "tailored",
+      "feature": "Profile editing and a compact Settings layout",
+      "status": "in_progress",
+      "remaining_hours": 8
+    },
+    {
+      "id": "ROB-39",
+      "outcome": "tailored",
+      "feature": "Change my account email without losing anything",
+      "status": "in_progress",
+      "remaining_hours": 6
+    },
+    {
+      "id": "ROB-135",
+      "outcome": "joyful",
+      "feature": "First-time journey: from an empty library to a first game in under ten minutes",
+      "status": "backlog",
+      "remaining_hours": 20
+    },
+    {
+      "id": "ROB-64",
+      "outcome": "joyful",
+      "feature": "Usability and renderer events instrumented on staging (PostHog)",
+      "status": "backlog",
+      "remaining_hours": 12
+    },
+    {
+      "id": "ROB-65",
+      "outcome": "joyful",
+      "feature": "Gameplay funnels, latency and renderer-health dashboards",
+      "status": "backlog",
+      "remaining_hours": 8
+    },
+    {
+      "id": "ROB-58",
+      "outcome": "joyful",
+      "feature": "Paid tools' ownership, quotas and renewals recorded",
+      "status": "in_progress",
+      "remaining_hours": 4
+    }
   ],
   "asks_of_rob": [
-    {"id": "ROB-58", "ask": "Confirm which paid tools are redeemed (Runway, Higgsfield, Mobbin, Magic Patterns, Jam, PostHog) and their renewal dates, for the private operations record", "recommendation": "A one-line answer per tool on the issue; no codes or billing details", "needed_by": "before the design and instrumentation issues start", "url": "https://linear.app/robs-build/issue/ROB-58"}
+    {
+      "id": "ROB-58",
+      "ask": "Confirm which paid tools are redeemed (Runway, Higgsfield, Mobbin, Magic Patterns, Jam, PostHog) and their renewal dates, for the private operations record",
+      "recommendation": "A one-line answer per tool on the issue; no codes or billing details",
+      "needed_by": "before the design and instrumentation issues start",
+      "url": "https://linear.app/robs-build/issue/ROB-58"
+    }
   ],
   "blocked_on": [
-    {"id": "ROB-110", "by": "ROB-109 buildFromCriteria", "owner": "claude-deck"},
-    {"id": "ROB-113", "by": "ROB-114 and ROB-115", "owner": "claude-deck"},
-    {"id": "ROB-118", "by": "ROB-119 buyPlan", "owner": "claude-deck"},
-    {"id": "ROB-105", "by": "ROB-131 resolveCard (the photo path only)", "owner": "claude-deck"}
+    {
+      "id": "ROB-110",
+      "by": "ROB-109 buildFromCriteria",
+      "owner": "claude-deck"
+    },
+    {
+      "id": "ROB-113",
+      "by": "ROB-114 and ROB-115",
+      "owner": "claude-deck"
+    },
+    {
+      "id": "ROB-118",
+      "by": "ROB-119 buyPlan",
+      "owner": "claude-deck"
+    },
+    {
+      "id": "ROB-105",
+      "by": "ROB-131 resolveCard (the photo path only)",
+      "owner": "claude-deck"
+    }
   ]
 }
