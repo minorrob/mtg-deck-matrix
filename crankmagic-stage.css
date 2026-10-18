@@ -233,7 +233,7 @@
 /* ROB-99: one desktop header and overlay drawers; board sizing remains per view. */
 .cm-board[data-shell="shared"]{grid-template-rows:58px minmax(0,1fr);--stage-left-offset:0px}
 .cm-board[data-shell="shared"]>.cm-stage-top{grid-column:1 / -1}
-.cm-board[data-shell="shared"]>.cm-stage-camera{top:68px}
+.cm-board[data-shell="shared"]>.cm-stage-camera{position:fixed;top:68px}
 .cm-board[data-shell="shared"] .cm-stage-rail{padding:12px;color:#edf6ef;background:#112526fa}
 .cm-board[data-shell="shared"] .cm-stage-side{display:block}
 .cm-stage-camera .cm-board-views{display:flex;width:100%;gap:4px}
