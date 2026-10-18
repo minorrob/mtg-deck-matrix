@@ -832,7 +832,7 @@ globalThis.CrankBoard = Object.seal({
       background: table?.appearance?.background || appearance.background, table: tableDesignId(table?.appearance?.table || appearance.table),
       mats: [big, ...players().filter((p) => p.playerId !== big.playerId)].map((p) => matOf(p.playerId)),
       combat: view.state.phase.startsWith("COMBAT_"), instant: view.state.stack.some((s) => /Instant/i.test(typeLineOf(s))),
-      onError(message) {stageError = message; const el = document.querySelector(".cm-stage-error"); if (el) el.textContent = `${message} Use Focus view in Camera if graphics are unavailable.`;}};
+      onError(message) {stageError = message; const el = document.querySelector(".cm-stage-error"); if (el) el.textContent = message ? `${message} Use Focus view in Camera if graphics are unavailable.` : "";}};
     CrankStage.mount(region, opts); CrankStage.layout(region.getBoundingClientRect(), opts);
     const tray = host.querySelector(".cm-stage-hand");
     if (tray) tray.style.setProperty("--hc", `${Math.max(70, Math.min(190 * scaleOf("hand") / 100, (tray.clientHeight - 24) * 5 / 7, (host.clientWidth - 110) / 6.1))}px`);

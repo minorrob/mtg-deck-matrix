@@ -1,13 +1,13 @@
 {
   "workstream": "codex-play",
-  "updated": "2026-10-18T08:04:00Z",
+  "updated": "2026-10-18T08:42:00Z",
   "updated_by": "Codex · Play, October 18 handoff resumed",
-  "branch": "codex/play-table-camera",
-  "now": "ROB-99 slice 1 merged to main as 73f55b35 on green CI. ROB-97 in #765 passes local proof and enters CI; ROB-98's spacing and ROB-18's phone layout await Rob's screenshot choices.",
+  "branch": "codex/play-babylon-surface",
+  "now": "Shared shell #754 is on main; Table fix #765 is in CI. Full spacing and upright phone #766 await Rob. Babylon surface #767 passes browser proof but awaits Engine release contract ROB-144 before ready.",
   "items": [
     {"id": "ROB-99", "outcome": "play-experience", "feature": "The broad UI draft ported onto main in three reviewable slices", "status": "in_progress", "remaining_hours": 20, "evidence": [{"label": "PR #754", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/754"}], "note": "Slice 1 merged as 73f55b35 after exact-head CI, local browser proof and 23 deliberate regressions. Phone and remaining slider/layout slices are outstanding."},
     {"id": "ROB-19", "outcome": "play-experience", "feature": "One header, profile menu and drawers across Full, Table and Focus", "status": "review", "remaining_hours": 1, "evidence": [{"label": "PR #754", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/754"}], "note": "Merged as 73f55b35 on green CI. Rob's staging look and the engine-owned release remain; physical phone and hardware WebGL unproven."},
-    {"id": "ROB-18", "outcome": "play-experience", "feature": "One fixed Focused view on the phone with unobstructed touch controls", "status": "in_progress", "remaining_hours": 12, "note": "Native portrait/landscape layout and a bottom hand drawer are prototyped; Rob's visual review is pending before production interaction work."},
+    {"id": "ROB-18", "outcome": "play-experience", "feature": "One fixed Focused view on the phone with unobstructed touch controls", "status": "in_progress", "remaining_hours": 12, "note": "The isolated upright portrait/landscape layout passes emulated touch, geometry and two deliberate regressions. Rob's visual choice is pending before production interaction work.", "evidence": [{"label": "Phone prototype PR #766", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/766"}]},
     {"id": "ROB-20", "outcome": "play-experience", "feature": "Zoom and card-size sliders calibrated with fit, reset and per-view memory", "status": "in_progress", "remaining_hours": 8},
     {"id": "ROB-22", "outcome": "play-experience", "feature": "Crowded battlefields scroll and adjust without moving the hand", "status": "backlog", "remaining_hours": 12},
     {"id": "ROB-97", "outcome": "play-experience", "feature": "Table view: the Board cards slider off the center life dial", "status": "review", "remaining_hours": 1, "evidence": [{"label": "PR #765", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/765"}], "note": "Camera owns the slider and stays reachable when Table scrolls. Board 277, accessibility 298, Settings 63, shared-shell/tabletop and all four deliberate regressions pass. CI and staging remain."},
@@ -28,8 +28,8 @@
     {"id": "ROB-49", "outcome": "play-experience", "feature": "Resources and Table Vitals from authoritative public facts", "status": "blocked", "remaining_hours": 12, "note": "Waits on ROB-78."},
     {"id": "ROB-50", "outcome": "play-experience", "feature": "Presentation events that never replay twice; acting-seat and unseen-card cues", "status": "blocked", "remaining_hours": 12, "note": "Waits on ROB-77."},
     {"id": "ROB-53", "outcome": "play-experience", "feature": "Round and Turn labels from the engine, correct across extra and skipped turns", "status": "blocked", "remaining_hours": 4, "note": "Waits on ROB-76."},
-    {"id": "ROB-52", "outcome": "play-experience", "feature": "The Babylon 3D cards on the live table with engine authority", "status": "in_progress", "remaining_hours": 40},
-    {"id": "ROB-100", "outcome": "play-experience", "feature": "Table designs as real 3D objects, chosen in Settings (the renderer on the live board remains)", "status": "in_progress", "remaining_hours": 16, "evidence": [{"label": "PR #740", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/740"}]},
+    {"id": "ROB-52", "outcome": "play-experience", "feature": "The Babylon 3D cards on the live table with engine authority", "status": "blocked", "remaining_hours": 36, "evidence": [{"label": "Draft PR #767", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/767"}], "note": "The Babylon surface passes focused browser and deliberate-regression proof. Release verification still requires Pixi; awaits Engine contract ROB-144 on main before ready. Rigid card interaction remains ROB-52 follow-up."},
+    {"id": "ROB-100", "outcome": "play-experience", "feature": "Table designs as real 3D objects, chosen in Settings (the renderer on the live board remains)", "status": "blocked", "remaining_hours": 4, "evidence": [{"label": "PR #740", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/740"}, {"label": "Draft PR #767", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/767"}], "note": "The Babylon surface passes focused browser and deliberate-regression proof. Release verification still requires Pixi; awaits Engine contract ROB-144 on main before ready. Rigid card interaction remains ROB-52 follow-up."},
     {"id": "ROB-21", "outcome": "play-experience", "feature": "Card angle independent of the board's tilt", "status": "backlog", "remaining_hours": 16},
     {"id": "ROB-60", "outcome": "play-experience", "feature": "A convincing 3D table with physically based materials and lighting", "status": "backlog", "remaining_hours": 24},
     {"id": "ROB-59", "outcome": "play-experience", "feature": "Approved silent Volcano and Forest environment loops", "status": "backlog", "remaining_hours": 8, "note": "Uses Rob's Runway and Higgsfield subscriptions, not API credits."},
@@ -56,6 +56,8 @@
     {"id": "ROB-139", "ask": "Pick the name of the game inside Play", "recommendation": "Crank Table, matching the existing recommendation in ROB-139", "needed_by": "before applying the game name", "url": "https://linear.app/robs-build/issue/ROB-139/name-the-game-inside-play"}
   ],
   "blocked_on": [
+    {"id": "ROB-52", "by": "ROB-144 active-renderer release inventory", "owner": "claude-engine"},
+    {"id": "ROB-100", "by": "ROB-144 active-renderer release inventory", "owner": "claude-engine"},
     {"id": "ROB-25", "by": "ROB-74 payment contract", "owner": "claude-engine"},
     {"id": "ROB-26", "by": "ROB-75 combat projection", "owner": "claude-engine"},
     {"id": "ROB-49", "by": "ROB-78 card facts", "owner": "claude-engine"},
