@@ -102,7 +102,7 @@ Volcano uses Rob's supplied video; other environments and the table artwork stil
 
 | Lane | Held by | Branch | Doing |
 | --- | --- | --- | --- |
-| **Claude · Engine** (engine, rooms, Worker routing, migrations, card loads, releases) | Fable (Claude Code, a cloud container), since October 16 | `claude/admiring-franklin-58cxy4`, then `claude/engine-<topic>` | ROB-71's order under projects P-ROB-2 and P-ROB-1: ROB-76, ROB-77 in flight; then ROB-74, ROB-75, ROB-78, ROB-94, the card load program. Brief: `docs/program/workstreams/claude-engine.md`. |
+| **Claude · Engine** (engine, rooms, Worker routing, migrations, card loads, releases) | Fable (Claude Code, a cloud container), since October 16 | `claude/admiring-franklin-58cxy4`, then `claude/engine-<topic>` | Main's record on October 18: Engine, simulation, card loads. Linear: ROB-71 and its children (ROB-12, ROB-13, ROB-73 to ROB-95). ROB-12 (#739) and ROB-81 (#742) on staging; ROB-101 (#744), ROB-13 (#745) and ROB-73 (#746) merged; now ROB-77. See "2026-10-17: the engine lane resumed" below. Next, under projects P-ROB-2 and P-ROB-1: ROB-74, ROB-75, ROB-78, ROB-94, the card load program. Brief: `docs/program/workstreams/claude-engine.md`. |
 | **Claude · Deck intelligence** (the models and data under the screens; the program readout) | The second Claude session (a cloud container), since October 18 | `claude/crankmagic-invitations-ob12tu` (PR #740, this program's work), then `claude/deck-<topic>` | ROB-114, ROB-115, ROB-131, ROB-109, ROB-104, then `docs/program/workstreams/claude-deck.md` §4. Keeps `docs/readout/`. |
 | **Codex · Play** (the Play boards and the player's interaction) | Codex Astra, session 1, from October 18 (handed back: `docs/HANDOFF-TO-CODEX-2026-10-18.md`) | `codex/play-<topic>`; the broad draft `codex/ui-playtest-plan-oct15` (PR #735) stays a quarry | Settings' Play card to its own file, then ROB-99 slice 1, ROB-98, ROB-97, ROB-18, ROB-52 with ROB-100's renderer step. Brief: `docs/program/workstreams/codex-play.md`. |
 | **Codex · Workshop** (every screen outside the boards; `cloud/library`, `sharing`, `access-invites`, `mail`) | Codex Astra, session 2, from October 18 | `codex/workshop-<topic>` | ROB-36, ROB-37 to finish; ROB-122, ROB-125, ROB-106, ROB-105. Brief: `docs/program/workstreams/codex-workshop.md`. |
@@ -145,14 +145,55 @@ other lane answers in the last column.
   live decks). Deferred with issues filed: the UI contracts (ROB-74 to ROB-78), the room's countdown and d20 (ROB-79, ROB-80), the
   commander audit (ROB-82), the card load program, the simulation audit (ROB-84), constructs and waves (ROB-83, ROB-93). Blocked:
   ROB-17, on the game record.
+- **Merged:** #739 (ROB-12) as main 7fcf26b2, on Rob's go under the same exception as #736 (CI red only on a11y-board and the four
+  UI anchors, both red on main; ROB-15, ROB-16). **On staging:** main 7fcf26b2 (with #737) as `release/cloud-staging` 44af45b4,
+  Workers version 2192fe90, play-worker.js byte-identical to the release (9e59b223bdd8); `staging-check --expect 7fcf26b2`
+  passes; release-acceptance 22, Play walk 42. ROB-12 Done. Production unchanged.
+- **Merged:** #742 (ROB-81) as main 08dcb89f, on green CI (run 39077666709) once #729 (9cf57d0c) had made main green; the ROB-16
+  anchor patch was withdrawn, #729 having dropped those four breaks. **On staging:** main 08dcb89f as `release/cloud-staging`
+  699c8999, Workers version 0b9bce12, play-worker.js byte-identical to the release (0189b94b1ee1); `staging-check --expect
+  08dcb89f` passes; release-acceptance 22, Play walk 42. ROB-81 Done. Production unchanged.
 - **ROB-12:** the engine and test paths of 377d6487 ported, behind a pod key: a table's new match carries `pooledTaps: true`, and a
   match launched before offers what it offered and replays the same. A view key, `commanderTax`, on a command-zone commander. Proof:
   engine-tap-to-cast 64, engine-commander 56, engine-cost-targets 42, room-pooled-taps 8 (new), game-table 168; breaks-pooled-taps
   15 of 15; the four anchors it moved re-anchored and caught again.
+- **ROB-81:** a permanent's static affects permanents only, unless its `affects` names another zone (`zone`, or `"any"`; CR
+  109.2); an effect on named objects (`ids`) applies wherever they are. Maskwood Nexus carries `zone: "any"`. Proof:
+  engine-layers 35, engine-wave4c-k3 171; breaks-layers-zone 4 of 4.
+- **ROB-101, merged (#744, main 23c96b7e, green suites):** `tests/master-regenerates.mjs` regenerated `data/archive/master-v2.json`
+  over the committed file while other suites read it (pilot-policy failed on #742's CI). It now regenerates into its own
+  temporary directory (`tools/import_master_v2.py` takes an output path). A reader parsing the file in a loop through five
+  runs: main tore 568 of 1,168 reads, the fix none. breaks-master-regenerates 2 of 2. No served file changes.
+- **ROB-13:** two pod keys in the room.
+  - `yieldTurn`, on a table's new matches: `room.yieldTurn(seatId, {on})` passes each priority of the seat's for the rest of
+    an opponent's turn, still asking what the rules ask, on the tape (a `yield` entry) and replayed; it ends with that turn
+    or its player. The seat's own view carries `yielding` or `mayYield`.
+  - `passStack`, built but not yet asked for by the table: a person with something on the stack and no response they could
+    make passes by itself (rules/actions.mjs, nothingToDo with `stack`; a mana ability that does more than add mana is a
+    response, `plainMana`); one who cast holding priority is asked. Such a spell is never on the stack in that person's
+    views, and the board draws and voices spells from the stack, so the table turns it on once the board shows a spell
+    cast and resolved between two views (ROB-23).
+  - The G1 harness now launches its games as the table does. The contract, and whether this lane adds the `yield` frame to
+    `cloud/game-room.mjs`, are asked in ROB-11. Proof: engine-pass-stack 18, room-yield-turn 43; breaks-yield-turn 41, each
+    caught.
+  - **Merged:** #745 as main 7df7064a, on green suites. **Staging held:** two tries of its release stopped at
+    release-acceptance's Measure step, live Scryfall's `/cards/collection` taking 6.5 to 30 s against the page's 10 s; the Play
+    walk passed 42 both times and nothing was pushed (staging is still 699c8999, version 0b9bce12). Retried once Scryfall
+    answers quickly again.
+- **ROB-73, merged (#746, main 20601740):** `room-draw-card` proves Draw card at the room (a double submission, a reopen while
+  it waits, the first draw's rules, an empty library); breaks-draw-card 6 of 6. Tables launching with `drawBeat` waits on
+  the board's side of ROB-24 (table-board's walk clicks no Draw card).
+- **ROB-77 (this branch's next PR):** the table's events, `events.v1` (game/room/events.mjs): each view carries what the
+  action behind it did, each event with the journal's id and the decision whose answer made it; a draw the drawer's alone
+  and only while the card is in their hand; `room.view(seatId, {after})` for a reconnect, `eventsReset` past the newest 200
+  kept. A drawn card's id in the hand is now in its engine event (`drewAs`). The socket's `after` waits on one line in
+  `cloud/game-room.mjs` (asked in ROB-11). Proof: room-events 32; breaks-table-events 17, each caught; fuzz-library's and
+  room-g1-terms' no-leak checks read every view's events.
 - **Waiting on Rob:** the backstop's daily cap (ROB-90); the AI door's two settings (ROB-95: the staging AI Access app, and the
   production key); whether waves 4d onward wait on card-load steps 1 to 4 (ROB-93).
 - **With the Opus session holding Codex's lane** (`docs/HANDOFF-OPUS-2026-10-17.md`): coordinated in ROB-11. No `cloud/**` or UI
-  file in this lane's PRs; no staging deploy until that session's release of #737 is out and it agrees.
+  file in this lane's PRs. Staging releases of main are this lane's, as agreed there: announced in ROB-11 before the push and
+  recorded after it, never two at once.
 
 ## 2026-10-14: Rob's decisions on the card load program
 

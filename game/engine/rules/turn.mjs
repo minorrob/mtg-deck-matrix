@@ -201,6 +201,8 @@ export function draw(state, player, events) {
     drawn: true, drawNumber: recordDraw(state, player),
     /* And which of those drawn in the drawer's own draw step, there (Orcish Bowmasters; state/index.mjs). */
     ...drawStep(state, player),
+    /* The card it is in the hand (CR 400.7): the drawer's own event names it by this (game/room/events.mjs). */
+    drewAs: moved,
   }));
   return moved;
 }

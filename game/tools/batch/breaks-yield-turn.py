@@ -1,0 +1,126 @@
+# Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE.
+"""The stack passed for a person with no response, and Yield turn (Linear ROB-13, the Oct 16 handoff):
+rules/actions.mjs (nothingToDo with `stack`, plainMana), game/room/room.mjs (`passStack`, `heldBy`, `yieldTurn`), the
+tape's new entry (game/engine/storage.mjs), a table's new match asking for Yield turn (game/room/table.mjs), and the
+G1 harness launching its games as the table does (tools/fuzz-live.mjs).
+
+Run from the repository root, with nothing else editing the worktree:
+
+    python3 game/tools/batch/breaks.py game/tools/batch/breaks-yield-turn.py
+"""
+SUITES = ['tests/engine-pass-stack.mjs', 'tests/room-yield-turn.mjs', 'tests/game-table.mjs', 'tests/game-leave.mjs']
+A = 'game/engine/rules/actions.mjs'
+R = 'game/room/room.mjs'
+COSTS = 'const MANA_COSTS = ["sacrifice", "sacrificeSelf", "tapCreature", "payLife", "counterCost", "millCost", "exileFromGraveyard"];'
+BREAKS = [
+    # rules/actions.mjs
+    ('the stack never passed for anyone', A,
+     'if (state.priorityPlayer !== player || (state.stack.length && !stack)) return false;',
+     'if (state.priorityPlayer !== player || state.stack.length) return false;'),
+    ('the stack passed for in every match, those launched before too', A,
+     'if (state.priorityPlayer !== player || (state.stack.length && !stack)) return false;',
+     'if (state.priorityPlayer !== player) return false;'),
+    ('a mana ability that does more than add mana taken for nothing', A,
+     '  if (state.stack.length && actions.some((a) => a.kind === "activate-mana" && !plainMana(abilitiesOf(state, a.objectId).find((x) => x.id === a.abilityId)))) return false;\n',
+     ''),
+    ('a sorcery counted castable with the stack full', A,
+     'const mainNow = player === state.activePlayer && MAIN_PHASES.includes(state.phase) && !state.stack.length;',
+     'const mainNow = player === state.activePlayer && MAIN_PHASES.includes(state.phase);'),
+    ('what a mana ability does after it ignored', A,
+     '  && (ability.then ?? []).every(selfHurt);',
+     ';'),
+    ('a painland\'s hurt to its own controller taken for a response', A,
+     'const selfHurt = (effect) => effect?.effect === "dealDamage" && effect.who === "you";',
+     'const selfHurt = (effect) => false;'),
+] + [
+    (f'a mana ability\'s {key} not counted as more than mana', A, COSTS, COSTS.replace(f'"{key}", ', '').replace(f', "{key}"', ''))
+    for key in ['sacrifice', 'sacrificeSelf', 'tapCreature', 'payLife', 'counterCost', 'millCost', 'exileFromGraveyard']
+] + [
+    # game/room/room.mjs: passStack and held priority
+    ('the room not passing the stack', R,
+     'nothingToDo(state, seat, actions, {stack: passStack})',
+     'nothingToDo(state, seat, actions)'),
+    ('the pod\'s passStack not read', R,
+     '...(pod && pod.passStack === true ? {passStack: true} : {}), ',
+     ''),
+    ('passStack forgotten on reopening', R,
+     'passStack = record.passStack === true; heldBy',
+     'passStack = false; heldBy'),
+    ('a cast holding priority not remembered', R,
+     '      if (passStack && by === "person" && hold && (action.kind === "cast" || action.kind === "activate")) heldBy = seat;\n',
+     ''),
+    ('held priority passed for like any other', R,
+     '      const held = heldBy === seat;\n',
+     '      const held = false;\n'),
+    # Yield turn
+    ('a yield never passed for', R,
+     '      if (holds(seats[seat].seatId)) {apply(seat, {kind: "pass"}, "yield"); continue;}\n',
+     ''),
+    ('a yield that outlives its turn', R,
+     'return Boolean(y) && state.turn === y.turn && !state.players[y.active].lost;',
+     'return Boolean(y) && !state.players[y.active].lost;'),
+    ('a yield through its turn\'s player leaving', R,
+     'return Boolean(y) && state.turn === y.turn && !state.players[y.active].lost;',
+     'return Boolean(y) && state.turn === y.turn;'),
+    ('the pod\'s yieldTurn not read', R,
+     '...(pod && pod.yieldTurn === true ? {yieldTurn: true} : {})};',
+     '};'),
+    ('a match launched before may yield', R,
+     '      if (!yieldable) throw new RoomError(409, "This game was started before Yield turn, so it plays as it did: you are asked for each priority.");\n',
+     ''),
+    ('an AI seat may yield, or be offered one', R,
+     'const mayYield = (seat) => yieldable && seats[seat].pilot !== "house" && !finished()',
+     'const mayYield = (seat) => yieldable && !finished()'),
+    ('a yield offered once the game is over', R,
+     'const mayYield = (seat) => yieldable && seats[seat].pilot !== "house" && !finished()',
+     'const mayYield = (seat) => yieldable && seats[seat].pilot !== "house"'),
+    ('a yield offered before the game begins', R,
+     '&& state.stepIndex !== undefined\n    && state.activePlayer !== seat',
+     '\n    && state.activePlayer !== seat'),
+    ('a person\'s own turn yielded', R,
+     '    && state.activePlayer !== seat && !state.players[seat].lost',
+     '    && !state.players[seat].lost'),
+    ('a yield offered to a seat out of the game', R,
+     '&& !state.players[seat].lost && !state.players[state.activePlayer].lost;',
+     '&& !state.players[state.activePlayer].lost;'),
+    ('a yield offered in a turn whose player has gone', R,
+     '&& !state.players[seat].lost && !state.players[state.activePlayer].lost;',
+     '&& !state.players[seat].lost;'),
+    ('Stop yielding not heard', R,
+     '      else {const {[seatId]: _gone, ...rest} = yielding; yielding = rest;}\n',
+     ''),
+    ('yielding while asked leaves that priority asked', R,
+     '        withdraw();\n        try {drive();} catch (error) {throw await undone(error);}\n',
+     ''),
+    ('a yield not on the tape', R,
+     '      tape({kind: "yield", seat: seatId, on: want});\n',
+     ''),
+    ('a replay ignoring a yield on its tape', R,
+     '      if (entry.kind === "yield") return api.yieldTurn(entry.seat, entry);\n',
+     ''),
+    ('the yields not saved', R,
+     '...(yieldable ? {yieldTurn: true, yielding} : {})',
+     '...(yieldable ? {yieldTurn: true} : {})'),
+    ('the yields forgotten on reopening', R,
+     'yielding = record.yielding || {};',
+     'yielding = {};'),
+    ('every seat told of another\'s yield', R,
+     '...(holds(seatId) ? {yielding: true}',
+     '...(Object.keys(yielding).some(holds) ? {yielding: true}'),
+    ('the view not offering a yield it may start', R,
+     ': mayYield(seat) ? {mayYield: true} : {}),',
+     ': {}),'),
+    # The tape, and the table
+    ('the store refusing a yield entry', 'game/engine/storage.mjs',
+     '["answer", "leave", "end", "prefer", "yield"]',
+     '["answer", "leave", "end", "prefer"]'),
+    ('a table\'s new match without Yield turn', 'game/room/table.mjs',
+     '      yieldTurn: true};',
+     '      };'),
+    ('a table\'s new match passing the stack before the board shows what it passed', 'game/room/table.mjs',
+     '      yieldTurn: true};',
+     '      yieldTurn: true, passStack: true};'),
+    ('the G1 harness launching its games otherwise than the table', 'tools/fuzz-live.mjs',
+     'pooledTaps: true, yieldTurn: true, seats:',
+     'pooledTaps: true, seats:'),
+]
