@@ -133,7 +133,7 @@ other lane answers in the last column.
 | # | From | Asks for | What for | Answer |
 | --- | --- | --- | --- | --- |
 | 8 | Codex · Play → Workshop | Settings' Play card is extracted to `crankmagic-settings-play.js` in PR #754; general Settings calls its registration | Separate ownership while preserving the existing page and preferences | On main `73f55b35`; Workshop keeps `crankmagic-settings.js` |
-| 9 | Codex · Play → Engine | Release ROB-99 slice 1 from main `73f55b35` after Rob's look | Shared desktop header, Camera and drawers; proof and labeled screenshots in `docs/play-overhaul/ROB-99-SLICE-1.md` | Exact-head CI green; staging requested in ROB-11; no staging claim yet |
+| 9 | Codex · Play → Engine | Release ROB-99 slice 1 from main `73f55b35` after Rob's look | Shared desktop header, Camera and drawers; proof and labeled screenshots in `docs/play-overhaul/ROB-99-SLICE-1.md` | Exact-head CI green. **Released 2026-10-18** in main 5f6ea9cc, with #765: staging 21c97df2, production 76f7206c. Rob chose to look at it on staging (ROB-11) |
 | 2 | UI | The lobby's countdown to start by itself once every seat is connected, has a deck and is ready, with no Start press; the host's Cancel stays, and a seat's Not ready stops it | The brief's lobby ("No Launch button: when every human is ready, a 10-second countdown starts, cancelable by the host"). Today the lobby reads "Launches when all are ready · n to go" and the host presses Start | `game/room/table.mjs`, where `ready` is taken: begin the countdown when nothing blocks. The lobby already follows `phase: countdown` | |
 | 3 | UI | A structured record of what happened since the last revision: `events: [{kind, …}]` on the view (damage dealt with its source and target; a spell countered and by what; tokens created with their count; proliferate; a permanent destroyed or exiled; life gained or lost with its cause; a seat out) | The callouts over the table and the sounds read these from the difference between two views and from the history's sentences (`/countered/`, `/created N … tokens/`), which is brittle and carries no cause; the brief's readouts (damage per source, what was prevented) need the facts | `game/room/history.mjs` already knows each; the view's builder in `game/room/room.mjs` | |
 | 4 | UI | Per player, the mana tapped this step (`manaTapped`), or on each land whether it was tapped for mana | Turn Resources' "mana tapped this step"; today it counts tapped lands, which includes a land tapped for anything else | the view's players | |
@@ -141,8 +141,35 @@ other lane answers in the last column.
 | 6 | UI | A `roll` frame at the game's start: the d20 for first player, sent to every seat with its result | The brief's die, which animates to the result it was sent | the room, at launch | |
 | 7 | UI | `tests/advisor.mjs` to pass again: its clock is fixed at 2026-10-11T12:00Z and its `ai_calls` rows are written at that clock, but the meter's 24-hour window (`cloud/ai.mjs` `since()`, through `aiMeter` in `cloud/worker.mjs`) runs on the real clock, so from 2026-10-12T11:59Z the rows fall outside it and the meter check fails on every branch, `main` included | The Actions gate is red for every PR until it is fixed; #725 (the UI pass) waits on it to merge | `cloud/worker.mjs` (`aiMeter`: pass the request's `now` to the door's `spent`), or the suite's rows at the real clock | Fixed on `main` in c629f8c1 (#723): `aiMeter` takes the request's clock. #727 puts the LLM seat's call log on the table's clock too (`cloud/game-room.mjs`), with `tools/ai-clock-breaks.py`; the AI suites pass with the machine's clock moved days either way |
 | 1 | Engine | The board to show the monarch (CR 725): the view's `state.players[i]` now carries `monarch: true` for the monarch, public to every seat, and no key for anyone else; the history says "Maya became the monarch" | Ginger, Queen of Sweets and Tamiyo, Upriser Crowned make their controller the monarch; the monarch draws a card at their end step, and a creature's combat damage to them makes its controller the monarch -- a player should see who holds it | The engine lane built it (Train E, the `monarch` branch); `docs/ui-lane/gameplay-anchor.md` lists the field. For the UI lane to show |
-| 2 | Engine | A switch in the host's Table rules (`crankmagic-table.js`): *The player who goes first skips their first draw*, on unless the host turns it off. The table's view carries `rules.skipFirstDraw` (`true` by default); the host sends it with the other rules, `POST .../rules {skipFirstDraw: false}`, refused once a seat is ready like the others. It matters only at a two-seat table: in a game of three or four nobody skips (CR 103.8c), so the switch can be shown only there | Rob, 2026-10-12: "this can be toggled off in game setup by the lobby owner". CR 103.8a as a house rule: with it off, the first player of a two-player game has a draw step on turn 1 | The engine lane built the rule, the table's field and the room's pod (`claude/first-draw-step`; `docs/ui-lane/gameplay-anchor.md`). For the UI lane to show |
+| 2 | Engine | A switch in the host's Table rules (`crankmagic-table.js`): *The player who goes first skips their first draw*, on unless the host turns it off. The table's view carries `rules.skipFirstDraw` (`true` by default); the host sends it with the other rules, `POST .../rules {skipFirstDraw: false}`, refused once a seat is ready like the others. It matters only at a two-seat table: in a game of three or four nobody skips (CR 103.8c), so the switch can be shown only there | Rob, 2026-10-12: "this can be toggled off in game setup by the lobby owner". CR 103.8a as a house rule: with it off, the first player of a two-player game has a draw step on turn 1 | The engine lane built the rule, the table's field and the room's pod (`claude/first-draw-step`; `docs/ui-lane/gameplay-anchor.md`). For the UI lane to show: Linear ROB-148 |
 | 1 | Deck intelligence | A headless batch entry point that plays N seeded games with house pilots and returns facts as data: `playPod({pod, seeds, cards, turnLimit}) → [{seed, turns, winner, reason, refused, perSeat: {life, lossReason, commanderDamage, turnsTaken}, perTurn: [{turn, landsInPlay, manaProduced, cardsDrawn}]}]`, deterministic per seed, with a stated budget per game; the room already plays a whole all-house game in one call (`game/room/room.mjs` `startRoom`, as `tests/engine-room-games.mjs` does) | ROB-116's calibration harness: the same hundred played in the engine and in the simulator, the distributions compared (turn of first lethal attack, mana by turn, cards drawn); the audit `docs/engine/sim-model-audit.md` (ROB-84) found no such runner exists and the deck lane never edits `game/**`. Asked on ROB-11, 2026-10-18 | |
+
+## 2026-10-18: main 5f6ea9cc on staging and in production (Rob: "release it to staging", then "release it to production")
+
+Released by the Personal-HP Claude session that built #730, on Rob's go each time. Each release was announced in ROB-11
+before its push and recorded there after.
+- **Staging:** `release/cloud-staging` b99e2199, on e9b855e5.
+  - Local walks: `release-acceptance` 22, `play-e2e` 42.
+  - Workers Builds deployed version **21c97df2** (build 69abdbb8).
+  - Not read back signed in: the session had no Access service token, so `tools/staging-check.mjs --expect 5f6ea9cc`
+    is still to run.
+- **Production** (`cloud-production`, by `tools/release-production.sh`):
+  - `release/pages` 67fffbd1, on b0cdc46e, pushed at 13:28 UTC;
+  - local walks: `release-acceptance` 22 and `production-play-e2e` 27;
+  - Workers Builds deployed version **76f7206c** (build 66fe6ec1), at 100% since 13:29 UTC;
+  - `version.json` reads 5f6ea9cc, profile `cloud-production`;
+  - the live walk at `https://crankmagic.com`: 22 checks, with `UAT_LIVE_NETWORK=1`;
+  - **the rollback target** is **5bfe13ab** (c9ad0e65, 2026-10-14).
+- **It carries** everything merged since c9ad0e65:
+  - the lobby fix (#730, ROB-146);
+  - Play's shared shell (#754) and the Table camera fix (#765), which Rob chose to look at on staging;
+  - the tabletop preview;
+  - deck sharing and invitations, on in staging only;
+  - the Deck intelligence PRs.
+- **Production's D1 and secrets are unchanged.** Sharing is on only in `cloud-staging`, and every use of migrations
+  0003 to 0005 is behind `SHARING_ENABLED`. Production's D1 has 0001 and 0002. Before sharing is turned on in
+  production, it needs those three migrations, and `RESEND_API_KEY` and `ACCESS_INVITE_TOKEN` on the `crankmagic`
+  Worker. The AI door there still waits on `ANTHROPIC_API_KEY`.
 
 ## 2026-10-17: the engine lane resumed (Fable, `claude/admiring-franklin-58cxy4`; Linear ROB-71)
 
@@ -276,6 +303,8 @@ screen wasn't maximized, and the buttons aren't visible when the screen isn't bi
   at six window sizes. `breaks-lobby-reach.py`, 9 of 9 caught.
 - **For whoever holds the UI lane next (Codex Astra):** a Playwright click scrolls inside clipped boxes, which a person
   cannot. Prove a control usable by hit-testing it (`inReach` in `tests/table-lobby.mjs`).
+- **Merged** as #730 (5f6ea9cc) on 2026-10-18, after main had been merged in four times. `table-lobby` was 122 checks
+  on the final tree. Released to staging and production the same day (the record above; Linear ROB-146).
 
 ## 2026-10-12: the UI lane's pass 1 on the Play screen (Fable, a Claude session in a cloud container)
 
