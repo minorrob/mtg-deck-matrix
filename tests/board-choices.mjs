@@ -305,7 +305,7 @@ try {
   await page.routeWebSocket(/\/api\/tables\/[a-z0-9]+\/connect$/, carry);
   await page.goto("about:blank");
   await page.goto(`${base}/index.html#table?id=${TABLE}`);
-  await page.locator("#cm-board .cm-board-strip").waitFor({timeout: 60000});
+  await page.locator("#cm-board .cm-stage-top").waitFor({timeout: 60000});
   await page.locator("[data-action=board-also]").waitFor({timeout: 20000});
 
   const zapCard = page.locator(".cm-board-hand .cm-bcard[aria-label^='Zap']").first();
@@ -365,7 +365,9 @@ try {
   eq([(await box.locator("h3").textContent()).trim(), await cardsBox.count(), await pressed()], ["Scry 3: choose any to put on the bottom", 3, ["false", "false", "false"]],
     "the board draws Rob's scry as a pick-several pop-up: the question, a button for each card looked at, none picked");
   ok(await confirm.isEnabled() && await foot() === "0 chosen · 0 to 3", `Confirm is ready with none picked, since keeping all three is an answer ("${await foot()}")`);
-  await cardsBox.nth(2).click();
+  await cardsBox.nth(2).focus();
+  await page.keyboard.press('Enter');
+  ok(await cardsBox.nth(2).evaluate(el=>el===document.activeElement), 'a non-first many-choice option keeps keyboard focus through its redraw');
   await cardsBox.nth(0).click();
   eq(await pressed(), ["true", "false", "true"], "two cards pressed, each marked picked");
   await cardsBox.nth(2).click();
@@ -375,7 +377,9 @@ try {
   await box.locator("h3", {hasText: "Put the rest back on top"}).waitFor({timeout: 10000});
   eq([(await box.locator("h3").textContent()).trim(), await cardsBox.count()], ["Put the rest back on top of your library, the first you choose on top", 2],
     "one to the bottom and two kept: the board asks the order of the two, a second pop-up");
-  await cardsBox.nth(1).click();
+  await cardsBox.nth(1).focus();
+  await page.keyboard.press('Enter');
+  ok(await cardsBox.nth(1).evaluate(el=>el===document.activeElement), 'a non-first order option keeps keyboard focus through its redraw');
   await cardsBox.nth(0).click();
   eq([await cardsBox.nth(1).getAttribute("data-order"), await cardsBox.nth(0).getAttribute("data-order")], ["1", "2"], "the second of them chosen first, to go on top");
   if (SHOTS) await page.screenshot({path: path.join(SHOTS, "board-scry-order-1400.png")});

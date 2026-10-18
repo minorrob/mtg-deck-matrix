@@ -72,7 +72,7 @@ try{
  browser=await launchBrowser(playwright);const context=await browser.newContext({viewport:{width:1400,height:900},serviceWorkers:'block'}),page=await context.newPage();
  await stubNetwork(page,[]);const frames=[],errors=[];page.on('pageerror',e=>errors.push(e.message));
  page.on('websocket',ws=>ws.on('framereceived',f=>{try{const x=JSON.parse(f.payload);if(x.type==='view')frames.push(x.view);}catch{}}));
- await page.goto(`${BASE}/index.html#table?id=${made.json.table.tableId}`);await page.locator('#cm-board .cm-board-strip').waitFor({timeout:45000});
+ await page.goto(`${BASE}/index.html#table?id=${made.json.table.tableId}`);await page.locator('#cm-board .cm-stage-top').waitFor({timeout:45000});
  await page.waitForFunction(()=>Boolean(document.querySelector('#cm-board-decision')),null,{timeout:15000});
  eq(frames.length>0,true,'production board receives real WebSocket views');
  const before=frames.at(-1);assert.ok(before.decision?.id,'pending decision exists before recovery');
@@ -85,7 +85,7 @@ try{
  if(shots)await page.screenshot({path:path.join(shots,'production-standby.png')});
  await start('cloud-production');
  const recovered=await api('GET',url);eq([recovered.status,recovered.json.table.phase],[200,'playing'],'same persisted table remains playing after reopening');
- frames.length=0;await page.goto(`${BASE}/index.html#table?id=${made.json.table.tableId}`);await page.locator('#cm-board .cm-board-strip').waitFor({timeout:30000});
+ frames.length=0;await page.goto(`${BASE}/index.html#table?id=${made.json.table.tableId}`);await page.locator('#cm-board .cm-stage-top').waitFor({timeout:30000});
  const end=Date.now()+15000;while(!frames.length&&Date.now()<end)await page.waitForTimeout(50);
  const after=frames.at(-1);eq([after?.revision,after?.decision?.id],[before.revision,before.decision.id],'pending game revision and question survive profile changes');
  eq(after.state.players.every((p,i)=>i===0||['Hand','Library'].every(z=>(p.zones[z]?.cards??[]).every(c=>!c.name))),true,'recovered socket still hides the other hand and library');

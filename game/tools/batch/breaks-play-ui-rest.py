@@ -21,7 +21,7 @@ BREAKS = [
     ('seven at once', 'crankmagic-board.js',
      '    return out.slice(0, 6);\n  }\n  globalThis.CrankBoard.calloutsFor = calloutsFor;',
      '    return out;\n  }\n  globalThis.CrankBoard.calloutsFor = calloutsFor;'),
-    ('the Overlay not saved', 'crankmagic-settings.js',
+    ('the Overlay not saved', 'crankmagic-settings-play.js',
      "values:{play:{...play,overlay:n}}",
      "values:{play:{...play}}"),
     ('no color fan on a seated deck', 'crankmagic-table.js',

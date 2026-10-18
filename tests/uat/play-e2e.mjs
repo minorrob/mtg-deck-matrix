@@ -180,7 +180,7 @@ try {
   ok(/^[a-z0-9]+g1$/.test(playing.matchId), `the game is on (${playing.matchId}), launched by the Durable Object's alarm in workerd`);
   await page.goto(`${BASE}/index.html#table?id=${id}`);
   await page.locator("#cm-board").waitFor({timeout: 30000});
-  await page.locator("#cm-board .cm-board-strip").waitFor({timeout: 30000}).catch(async (error) => {
+  await page.locator("#cm-board .cm-stage-top").waitFor({timeout: 30000}).catch(async (error) => {
     await shot(page, "board-failed");
     console.error((await page.locator("#cm-board").evaluate((el) => el.textContent)).replace(/\s+/g, " ").slice(0, 600), errors, serverLog.slice(-3000));
     throw error;
@@ -354,7 +354,7 @@ try {
       await until("the game to start", async () => (await api("GET", turl)).json?.table?.phase === "playing", 60000);
       for (const [p, base] of [[page, BASE], [newcomer, NBASE]]) {
         await p.goto(`${base}/index.html#table?id=${tableId}`);
-        await p.locator("#cm-board .cm-board-strip").waitFor({timeout: 30000});
+        await p.locator("#cm-board .cm-stage-top").waitFor({timeout: 30000});
       }
       ok(true, "the host starts; both people's boards open on the game");
 
@@ -390,12 +390,13 @@ try {
 
       /* A reload mid-game: back on the board, and no seat away. */
       await newcomer.reload();
-      await newcomer.locator("#cm-board .cm-board-strip").waitFor({timeout: 30000});
+      await newcomer.locator("#cm-board .cm-stage-top").waitFor({timeout: 30000});
       await until("the table to settle", async () => (await api("GET", turl)).json?.table?.away?.length === 0, 15000);
       ok(true, "the newcomer reloads mid-game and is back on their board, with no seat counted away");
 
       /* The host ends it for everyone; the record replays with the table's own cards. */
-      await page.locator("[data-action=board-tools]").click();
+      await page.locator("[data-action=board-profile]").click();
+      await page.locator(".cm-profile-menu [data-action=board-tools]").click();
       await page.locator("[data-action=board-end]").click();
       await page.locator("[data-action=board-end][data-confirm]").click();
       for (const p of [page, newcomer]) await p.locator(".cm-board-over").waitFor({timeout: 30000});
