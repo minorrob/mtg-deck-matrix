@@ -39,3 +39,19 @@ four things); this page is the pointer and the order to read in.
 Read `docs/ACTIVE.md`'s lanes table and the UI lane's last bullet; take the next item from the list above; branch
 `<system>/ui-<topic>` from `main`; a draft PR at once; merge `main` in before marking ready; one green `suites` run;
 a merge commit; a line in your `docs/ACTIVE.md` section.
+
+## Learned this session, for whoever works this lane with Rob
+
+- **Merge only on a green run of the head, and never over newer work:** when `main` moves, merge it into the branch,
+  take `main`'s version of any shared file whole, and add your lines inside your own section. Rob asked for exactly
+  this twice ("ensure we aren't overwriting newer work").
+- **A red gate is diagnosed on `main` first** (a worktree of `origin/main`, the same suite): a failure red there too
+  is not the PR's, and is said once on the PR with what was ported or that no fix exists. Rob then chooses: fix it in
+  the PR, wait for its owner, or merge as admin. He chose the fix.
+- **A CI-only reading is resolved from the suite's own evidence,** not by guessing: `A11Y_SHOTS` and `A11Y_DEBUG`
+  save the measured screenshot, and the failure message now carries each word's place, ink and lowest pixel.
+  `docs/ui-lane/tools/probe-tabletop.mjs` answers a question about Full screen in four minutes instead of ten.
+- **Rob reviews from staging and screenshots** (1280×720 and 1920×1080), wants the lower-confidence areas named
+  first, and sends feedback as one batch for the next pass.
+- **At a close:** the four things in `docs/ACTIVE.md`, a handoff page, Linear commented with what was and was not
+  done, and new issues for what was found and left.
