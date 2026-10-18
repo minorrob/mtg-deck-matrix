@@ -415,8 +415,8 @@ M.validate(s);checks++;
   run('place',{lotId:'g0',deckId:'C',quantity:1,asStandIn:true});
   run('place',{lotId:'lead0',deckId:'C',quantity:1});
   {const g=M.lot(s,'g0'),l=M.lot(s,'lead0'),read=M.stateReader(s);
-   assert.deepEqual([g.location.deckId,g.allocation,read({...g,kind:'lot'}).role],['C',null,'substitute']);
-   assert.deepEqual([l.location.deckId,l.allocation&&l.allocation.deckId,l.allocation&&l.allocation.slotId,read({...l,kind:'lot'}).role],['C','C','cmdC','target']);checks+=2;}
+   assert.deepEqual([g.location.deckId,g.allocation,read({...g,kind:'lot'}).use],['C',null,'substitute']);
+   assert.deepEqual([l.location.deckId,l.allocation&&l.allocation.deckId,l.allocation&&l.allocation.slotId,read({...l,kind:'lot'}).use],['C','C','cmdC','final']);checks+=2;}
   run('place',{lotId:'g0',quantity:1,confirmed:true});
   run('bulk',{op:'place',deckId:'C',lotIds:['g0'],asStandIn:true,confirmed:true});
   assert.equal(M.lot(s,'g0').location.deckId,'C','a batch puts a substitute in a draft deck too');checks++;

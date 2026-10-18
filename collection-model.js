@@ -29,66 +29,105 @@
   const statusByLabel=new Map(STATUS.map(s=>[s.label,s]));
   /* The status a projection row wears: a need is To buy, a plan a Draft list, an option a Suggestion, a group entry in To Buy is Wanted (the want list), other entries Planned, then the copy's own source or placement. */
   const statusOf=r=>r.kind==='need'?'To buy':r.kind==='draft'?'Draft list':r.kind==='option'?'Suggestion':r.kind==='entry'?(r.groupId==='group:to-buy'?'Wanted':'Planned'):r.source==='watching'?'Watched':r.source==='ordered'?'Ordered':r.placement==='Bench'&&r.shortlistedFor?'Watched':r.placement;
-  /* THE CARD STATE, ONE TAXONOMY (Rob, 2026-09-26; docs/card-states.md is the definition and this is
-     its code). Every record a screen shows answers three questions, and the old status label answered
-     them in one word, which is how "Watched" came to mean both a card you are thinking about and an
-     owned card on the Bench shortlisted for a deck:
-       stage   -- watching, buy (To buy), ordered, owned: one line, in that order. The catalog, the
-                  universe of every card, is the stage before them and has no record.
-       deck    -- the deck the record is for, at any stage, or none; owned with none is the Bench.
-       role    -- with a deck. In the box: target (the list's own card, in its seat) or substitute
-                  (holding a seat for a target not yet in the box). Not in the box (Rob, 2026-09-26):
-                  upgrade (planned to replace a card that is in the box -- the substitute holding its
-                  seat, or the list card an upgrade swaps out) or reserved (it takes an empty seat).
-     A deck is playable when no record for it is reserved: every one of its seats holds a card.
-     And two facts that are not states: inBox (an owned target or substitute is physically in the
-     deck's box; an owned card for a deck not yet in it is what Ready to add lists) and trade (offered
-     for sale or trade). Collection groups are tags, not states, except a deck's own group, whose
-     entries are candidates for that deck. cardState reads any row the screens draw -- a copy (lot),
-     a deck's unmet need, a draft deck's list row, an uncommitted option, a group entry -- and nothing
-     else spells a state. Which not-in-box role a record has depends on the deck's box, so the library
-     is read once into seats, and stateReader(library) gives the cardState a screen uses. */
-  const STAGES=[{id:'watching',label:'Watching',owned:false},{id:'buy',label:'To buy',owned:false},{id:'ordered',label:'Ordered',owned:false},{id:'owned',label:'Owned',owned:true}];
-  const ROLES=[{id:'target',label:'Target'},{id:'substitute',label:'Substitute'},{id:'upgrade',label:'Upgrade'},{id:'reserved',label:'Reserved'}];
+  /* THE CARD STATUS: THREE QUESTIONS, ONE FUNCTION (Rob, 2026-10-18; docs/card-states.md is the definition,
+     docs/design/2026-10-18-status-axes/ the proposal he approved). It replaces the one-word taxonomy of
+     2026-09-26, whose "Target" read as "still to get" and whose "Reserved" meant an empty seat. Every record
+     a screen shows answers three questions:
+       use        -- what the copy is for. For a deck: Final (the list's own card, in the box), Substitute (in
+                     the box, holding a seat for a Reserved card), Reserved (committed to take a seat: to buy,
+                     ordered, or sitting in another deck's box), Upgrade (considered to improve the deck; it
+                     names the card it would replace and never changes it). For no deck: Bench, Sell, Trade,
+                     Unowned. Final and Substitute are the only uses that put a card in the deck and count
+                     toward its hundred.
+       ownership  -- Watch, To buy, Ordered, Own, To sell, Trade: where the copy is in the buying cycle. There
+                     is no Canceled; a card is deleted instead.
+       play       -- playable (in the box), loading (owned and the deck's own card, not put in yet), toload
+                     (still to get). The system's reading; nothing sets it by hand.
+     A Reserved card replaces the substitute holding its seat, or an empty seat. An Upgrade is an option slot,
+     whose `replaces` is the main-deck card it would replace; a candidate filed in a deck's group before that
+     rule names none yet and asks for one. cardState reads any row a screen draws -- a copy (lot), a deck's
+     unmet need, a draft row, an uncommitted option, a group entry -- and nothing else spells a status. Read
+     from one deck (`perspective`), a copy sitting in another deck's box and claimed by this deck is this
+     deck's Reserved card, "in" the box it sits in; read from anywhere else it is a Substitute where it sits. */
+  const USES=[{id:'final',label:'Final',inDeck:true},{id:'substitute',label:'Substitute',inDeck:true},{id:'reserved',label:'Reserved'},{id:'upgrade',label:'Upgrade'},{id:'bench',label:'Bench'},{id:'sell',label:'Sell'},{id:'trade',label:'Trade'},{id:'unowned',label:'Unowned'}];
+  const OWNERSHIP=[{id:'watch',label:'Watch'},{id:'buy',label:'To buy'},{id:'ordered',label:'Ordered'},{id:'own',label:'Own'},{id:'sell',label:'To sell'},{id:'trade',label:'Trade'}];
+  const PLAY=[{id:'playable',label:'Playable'},{id:'loading',label:'Loading'},{id:'toload',label:'To load'}];
+  /* Which ownership each use admits (the proposal's matrix). A status menu offers only these pairs. */
+  const USE_OWNERSHIP={final:['own'],substitute:['own'],reserved:['buy','ordered','own'],upgrade:['watch','buy','ordered','own'],bench:['own'],sell:['sell'],trade:['trade'],unowned:['watch','buy','ordered']};
   const WANT_LIST='group:to-buy';
-  /* A deck's seats: full when the app calls it playable (all its list's cards are in the box, as the list's
-     own cards or substitutes); held, the seats a substitute in the box is recorded as holding. */
+  /* What cardState needs to know about the whole library, read once: each deck's slots, which seats a
+     substitute in the box is holding (and with which card), the deck each deck group belongs to, and the
+     owned copies free to use. */
+  const seatKey=(deckId,slotId)=>deckId+'|'+slotId;
   function seats(s){
-    const decks=new Map(),groups=new Map();
+    const slots=new Map(),groups=new Map(),held=new Map(),free=new Map();
     for(const d of s.decks||[]){
-      const box=(s.lots||[]).filter(l=>l.source==='owned'&&l.location?.kind==='deck'&&l.location.deckId===d.id);
-      decks.set(d.id,{full:readiness(s,d).playable,held:new Set(box.filter(l=>l.standInFor&&l.allocation?.deckId!==d.id).map(l=>l.standInFor))});
-      if(d.groupId&&!d.archived)groups.set(d.groupId,d.id);
+      for(const r of d.slots||[])slots.set(seatKey(d.id,r.id),r);
+      if(d.groupId&&!d.archived&&!groups.has(d.groupId))groups.set(d.groupId,d.id);
     }
-    return {decks,groups};
+    for(const l of s.lots||[]){
+      if(l.source!=='owned')continue;
+      if(l.location?.kind==='deck'&&l.standInFor&&l.allocation?.deckId!==l.location.deckId){const r=slots.get(seatKey(l.location.deckId,l.standInFor));if(r&&r.committed&&!held.has(seatKey(l.location.deckId,l.standInFor)))held.set(seatKey(l.location.deckId,l.standInFor),l.cardId);}
+      if(!l.allocation&&l.location?.kind!=='deck'&&(l.offer||'none')==='none')free.set(l.cardId,(free.get(l.cardId)||0)+l.quantity);
+    }
+    return {slots,groups,held,free};
   }
-  function cardState(r,ctx=null){
-    const none={deckId:'',role:'',inBox:false,trade:'',reservedFor:''};
-    /* Not in the box: an upgrade when its seat is held -- a substitute is recorded in it, or the box is full --
-       and reserved when its seat is empty. Without the library's seats, a list card reads as reserved. */
-    const outOfBox=(deckId,slotId,purpose)=>{if(purpose&&purpose!=='main')return 'upgrade';const d=ctx&&ctx.decks.get(deckId);return d&&(d.full||d.held.has(slotId))?'upgrade':'reserved';};
-    if(r.kind==='need')return {...none,stage:'buy',deckId:r.deckId,role:outOfBox(r.deckId,r.slotId,r.purpose)};
-    if(r.kind==='draft')return {...none,stage:'watching',deckId:r.deckId,role:outOfBox(r.deckId,r.slotId,r.purpose)};
-    if(r.kind==='option')return {...none,stage:'watching',deckId:r.deckId,role:'upgrade'};
-    if(r.kind==='entry'){const deckId=ctx&&ctx.groups.get(r.groupId)||'';return {...none,stage:r.groupId===WANT_LIST?'buy':'watching',deckId,role:deckId?'upgrade':''};}
+  function cardState(r,ctx=null,perspective=''){
+    const c=ctx||{slots:new Map(),groups:new Map(),held:new Map(),free:new Map()};
+    const slotOf=(deckId,slotId)=>c.slots.get(seatKey(deckId,slotId))||null;
+    const st=(use,ownership,x={})=>({use,ownership,play:'',deckId:'',slotId:'',replaces:'',holds:'',from:'',claimedBy:'',inBox:false,...x});
+    /* A seat on the list with no copy in it yet: Reserved, replacing the substitute that holds it (or an empty seat). */
+    const seat=(deckId,slotId,ownership,x={})=>st('reserved',ownership,{deckId,slotId,play:'toload',replaces:c.held.get(seatKey(deckId,slotId))||'',...x});
+    /* An option slot: an Upgrade, naming the main-deck card it would replace. */
+    const upgrade=(deckId,slotId,ownership)=>{const o=slotOf(deckId,slotId),p=o&&o.replaces?slotOf(deckId,o.replaces):null;return st('upgrade',ownership,{deckId,slotId,replaces:p?p.cardId:''});};
+    if(r.kind==='need')return r.purpose&&r.purpose!=='main'?upgrade(r.deckId,r.slotId,'buy'):seat(r.deckId,r.slotId,'buy');
+    if(r.kind==='draft')return seat(r.deckId,r.slotId,'buy');
+    if(r.kind==='option')return upgrade(r.deckId,r.slotId,c.free.get(r.cardId)?'own':'watch');
+    if(r.kind==='entry'){const deckId=c.groups.get(r.groupId)||'';return deckId?st('upgrade','watch',{deckId}):st('unowned',r.groupId===WANT_LIST?'buy':'watch');}
     if(r.kind!=='lot')throw Error('cardState reads copies, needs, draft rows, options and group entries, not '+r.kind+'.');
-    const stage=r.source==='owned'?'owned':r.source==='ordered'?'ordered':'watching',loc=r.location||{},trade=r.offer&&r.offer!=='none'?r.offer:'';
-    /* A copy physically in a deck other than the one it is reserved for is that deck's substitute. */
-    if(stage==='owned'&&loc.kind==='deck'&&loc.deckId&&(!r.allocation||r.allocation.deckId!==loc.deckId))return {...none,stage,deckId:loc.deckId,role:'substitute',inBox:true,trade,reservedFor:r.allocation?.deckId||''};
-    if(r.allocation){const inBox=stage==='owned'&&loc.kind==='deck'&&loc.deckId===r.allocation.deckId;return {...none,stage,deckId:r.allocation.deckId,role:inBox?'target':outOfBox(r.allocation.deckId,r.allocation.slotId,r.purpose||'main'),inBox,trade};}
-    return {...none,stage,trade};
+    const owned=r.source==='owned',loc=r.location||{},a=r.allocation||null;
+    const ownership=r.source==='watching'?'watch':r.source==='ordered'?'ordered':(r.offer||'none')!=='none'?(r.offerKind==='sell'?'sell':'trade'):'own';
+    if(owned&&(ownership==='sell'||ownership==='trade'))return st(ownership,ownership);
+    const purpose=a?(slotOf(a.deckId,a.slotId)?.purpose||r.purpose||'main'):'';
+    if(owned&&loc.kind==='deck'&&loc.deckId){
+      if(a&&a.deckId===loc.deckId&&purpose==='main')return st('final','own',{deckId:loc.deckId,slotId:a.slotId,play:'playable',inBox:true});
+      if(perspective&&a&&a.deckId===perspective)return seat(a.deckId,a.slotId,'own',{from:loc.deckId});
+      const seatHeld=r.standInFor?slotOf(loc.deckId,r.standInFor):null;
+      return st('substitute','own',{deckId:loc.deckId,play:'playable',inBox:true,holds:seatHeld&&seatHeld.committed?seatHeld.cardId:'',claimedBy:a&&a.deckId!==loc.deckId?a.deckId:''});
+    }
+    if(a){
+      if(purpose!=='main')return upgrade(a.deckId,a.slotId,ownership);
+      if(owned)return st('final','own',{deckId:a.deckId,slotId:a.slotId,play:'loading',replaces:c.held.get(seatKey(a.deckId,a.slotId))||''});
+      return seat(a.deckId,a.slotId,ownership);
+    }
+    /* For no deck. A copy filed in a deck's own group is being considered for it: an Upgrade, its replaced card not named yet. */
+    const considering=(r.groupIds||[]).map(g=>c.groups.get(g)).find(Boolean)||'';
+    if(considering)return st('upgrade',ownership,{deckId:considering});
+    return owned?st('bench','own'):st('unowned',ownership);
   }
-  const stateReader=s=>{const ctx=seats(s);return r=>cardState(r,ctx);};
-  /* The one word a pill carries: the stage while a card is not owned; once owned, where it is -- the
-     Bench, To add (for a deck, not in its box yet), or its role in the box. A record for a deck that is
-     not in the box also wears its role, Upgrade or Reserved, beside the pill. */
-  const stageLabel=id=>STAGES.find(x=>x.id===id)?.label||id;
-  const roleLabel=id=>ROLES.find(x=>x.id===id)?.label||'';
-  const stateLabel=st=>st.stage!=='owned'?stageLabel(st.stage):!st.deckId?'Bench':st.inBox?roleLabel(st.role):'To add';
-  /* The pill words in lifecycle order, and the tone each is painted: the stages a card passes through
-     before it is owned, then where an owned card is. Sorting and grouping by state read this order. */
-  const STATE_LABELS=['Watching','To buy','Ordered','Bench','To add','Target','Substitute'];
-  const STATE_TONES={Watching:'watch','To buy':'buy',Ordered:'ordered',Bench:'pull','To add':'reserved',Target:'inbox',Substitute:'standin',Upgrade:'reserved',Reserved:'buy'};
+  const stateReader=(s,perspective='')=>{const ctx=seats(s);return r=>cardState(r,ctx,perspective);};
+  const useLabel=id=>USES.find(x=>x.id===id)?.label||'';
+  const ownershipLabel=id=>OWNERSHIP.find(x=>x.id===id)?.label||'';
+  const playLabel=id=>PLAY.find(x=>x.id===id)?.label||'';
+  /* The one word a pill carries: the use; Loading for the deck's own card not put in yet; and, for a card that
+     is for no deck and not owned, its ownership (Watch, To buy, Ordered), which says more than "Unowned". */
+  const stateLabel=st=>st.use==='unowned'?ownershipLabel(st.ownership):st.use==='final'&&st.play==='loading'?'Loading':useLabel(st.use);
+  /* The few words beside the pill, spelled here so every screen says them the same way. `name` turns a card id
+     into its name and `deckName` a deck id into the deck's short name. */
+  function stateNote(st,name=x=>x,deckName=x=>x){
+    if(st.use==='reserved')return [st.from?`in ${deckName(st.from)}`:ownershipLabel(st.ownership),st.replaces?`replaces ${name(st.replaces)}`:'empty seat'].join(' · ');
+    if(st.use==='upgrade')return [ownershipLabel(st.ownership),st.replaces?`would replace ${name(st.replaces)}`:'choose what it replaces'].join(' · ');
+    if(st.use==='substitute')return [st.holds?`holds the seat for ${name(st.holds)}`:'',st.claimedBy?`reserved for ${deckName(st.claimedBy)}`:''].filter(Boolean).join(' · ');
+    if(st.use==='final'&&st.play==='loading')return st.replaces?`put in for ${name(st.replaces)}`:'put it in the box';
+    return '';
+  }
+  /* Where a card is, in one word, for the Table view's piles: in a box (Final, Substitute), owned and on its way
+     into the deck's box (Loading), on the Bench, or not held yet (Watch, To buy, Ordered). */
+  const placeLabel=st=>st.use==='final'?(st.inBox?'Final':'Loading'):st.use==='substitute'?'Substitute':st.from?'Loading':st.ownership==='watch'||st.ownership==='buy'||st.ownership==='ordered'?ownershipLabel(st.ownership):'Bench';
+  /* The pill words in the order the work happens, and the tone each is painted. Sorting and grouping by
+     status read this order. */
+  const STATE_LABELS=['Watch','To buy','Ordered','Upgrade','Reserved','Loading','Bench','Final','Substitute','Sell','Trade'];
+  const STATE_TONES={Watch:'watch','To buy':'buy',Ordered:'ordered',Upgrade:'reserved',Reserved:'buy',Loading:'pull',Bench:'draft',Final:'inbox',Substitute:'standin',Sell:'remove',Trade:'remove'};
   const stateOrder=label=>{const i=STATE_LABELS.indexOf(label);return i<0?STATE_LABELS.length:i;};
   const stateTone=label=>STATE_TONES[label]||'draft';
   const statusOrder=label=>{const s=statusByLabel.get(label);return s?s.order:STATUS.length;};
@@ -282,6 +321,34 @@
     if(l.source!=='owned'||l.allocation||l.location?.kind==='deck')return '';
     for(const id of l.groupIds||[])if(index.has(id))return index.get(id);
     return '';};
+  /* EVERY ROW A SCREEN DRAWS, built once: the copies and needs of the projection, each live deck's uncommitted
+     options (its Upgrades) and every group entry, with the ids the Library gives them. */
+  function records(s){
+    const rows=projection(s);
+    for(const d of s.decks.filter(d=>!d.archived))for(const r of d.slots.filter(r=>!r.committed&&r.quantity>0))rows.push({recordId:'plan:'+d.id+':'+r.id,kind:'option',deckId:d.id,slotId:r.id,cardId:r.cardId,quantity:r.quantity,purpose:r.purpose,replaces:r.replaces||'',option:!!r.option,pinned:!!r.pinned,offer:'none',groupIds:d.groupId?[d.groupId]:[]});
+    for(const g of s.groups)for(const e of g.entries)rows.push({...clone(e),recordId:'entry:'+g.id+':'+e.id,kind:'entry',groupId:g.id,groupIds:[g.id],deckId:'',offer:'none'});
+    return rows;
+  }
+  /* A DECK BY ITS RECORDS (Rob, 2026-10-18). Every record read from this deck's side, and the counts the deck page,
+     the Library scoped to the deck and the deck tile all show: the box (Final + Substitute, the Deck total); what
+     is on its way (Loading, and Reserved: to buy, ordered, or in another deck's box); the Upgrades; and the Group
+     total, every record the deck's view lists. Play: Playable when the box holds the list, Loading when owned
+     cards cover the rest, To load otherwise, and always To load while the list is not locked. Complete: the box
+     is the list's own cards, with nothing Reserved, loading or substituting. */
+  function deckStatus(s,d,rows=null){
+    const ctx=seats(s),mine=[];
+    for(const r of rows||records(s)){const st=cardState(r,ctx,d.id);if(st.deckId===d.id)mine.push({r,st});}
+    const q=f=>mine.filter(f).reduce((n,x)=>n+(x.r.quantity||1),0);
+    const final=q(x=>x.st.use==='final'&&x.st.inBox),loading=q(x=>x.st.use==='final'&&!x.st.inBox),substitute=q(x=>x.st.use==='substitute');
+    const res=x=>x.st.use==='reserved';
+    const reserved={buy:q(x=>res(x)&&!x.st.from&&x.st.ownership==='buy'),ordered:q(x=>res(x)&&!x.st.from&&x.st.ownership==='ordered'),from:q(x=>res(x)&&!!x.st.from),empty:q(x=>res(x)&&!x.st.replaces)};
+    reserved.total=reserved.buy+reserved.ordered+reserved.from;
+    const upgrade=q(x=>x.st.use==='upgrade'),unnamedUpgrades=q(x=>x.st.use==='upgrade'&&!x.st.replaces);
+    const list=d.slots.filter(r=>r.purpose==='main').reduce((n,r)=>n+r.quantity,0),deckTotal=final+substitute,locked=d.status==='final'&&!d.archived;
+    const play=!locked||!list?'toload':deckTotal>=list?'playable':deckTotal+loading>=list?'loading':'toload';
+    return {rows:mine,list,final,loading,substitute,reserved,upgrade,unnamedUpgrades,deckTotal,groupTotal:final+loading+substitute+reserved.total+upgrade,play,locked,
+      complete:locked&&!!list&&final===list&&!loading&&!substitute&&!reserved.total};
+  }
   /* MEMOISED PER REVISION. Every page that needs the matrix asked for it again on every render
      (the deck page's Cards tab twice). One computation per state; callers get fresh row objects
      so a page that annotates a row cannot leak into the next. */
@@ -416,7 +483,7 @@
     ensure(s.preferences&&typeof s.preferences==='object'&&!Array.isArray(s.preferences),'Invalid preferences.');for(const k of ['columns','shopColumns','comparisonPicks','dismissedSuggestions','dismissedTips'])if(s.preferences[k]!==undefined)ensure(Array.isArray(s.preferences[k])&&s.preferences[k].every(x=>typeof x==='string'),'Invalid saved view preference.');const all=new Set();const id=(r,label)=>{ensure(r&&safeId(r.id),`Invalid ${label} ID.`);ensure(!all.has(r.id),`Duplicate record ID: ${r.id}`);all.add(r.id);};
     for(const [key,c] of Object.entries(s.cards)){ensure(safeId(key)&&c.id===key,'Invalid card identity.');ensure(typeof c.name==='string'&&c.name.trim()&&c.name.length<=250,'Invalid card name.');}
     for(const d of s.decks){id(d,'deck');ensure(['draft','final'].includes(d.status),'Invalid deck state.');ensure(d.kind===undefined||d.kind==='lobby','Invalid deck kind.');ensure(d.precon===undefined||(d.precon&&typeof d.precon.id==='string'&&d.precon.id&&typeof d.precon.name==='string'),'Invalid precon marker.');ensure(Array.isArray(d.slots)&&Array.isArray(d.commanders)&&Array.isArray(d.versions),'Invalid deck structure.');ensure(typeof d.name==='string'&&d.name.trim()&&d.name.length<=160,'A deck needs a valid name.');defaultDefinition(d.definition);ensure(typeof d.archived==='boolean'&&typeof d.locked==='boolean','Invalid deck flags.');if(d.groupId)group(s,d.groupId);for(const r of d.slots){id(r,'slot');ensure(typeof r.quantity==='number','Stored quantities must be numbers.');quantity(r.quantity);card(s,r.cardId);ensure(PURPOSES.includes(r.purpose),'Invalid card purpose.');ensure(typeof r.committed==='boolean'&&(r.purpose!=='main'||r.committed),'Invalid slot commitment.');if(r.purpose!=='main'){ensure(d.slots.some(x=>x.id===r.replaces&&x.purpose==='main'),'An option must reference a main-deck slot.');if(r.purpose==='bracket')ensure(Number.isInteger(r.targetBracket)&&r.targetBracket>d.definition.baseBracket&&r.targetBracket<=d.definition.bracketCeiling,'Bracket option is outside the deck definition.');}}for(const cid of d.commanders)card(s,cid);}
-    for(const l of s.lots){id(l,'lot');card(s,l.cardId);ensure(typeof l.quantity==='number','Stored quantities must be numbers.');quantity(l.quantity);ensure(l.printing&&typeof l.printing==='object'&&!Array.isArray(l.printing),'Invalid printing record.');ensure(l.paid===null||Number.isFinite(l.paid)&&l.paid>=0,'Invalid purchase cost.');ensure(l.value===undefined||Number.isFinite(l.value)&&l.value>=0,'Invalid print value.');ensure(l.paidSource===undefined||['catalog','receipt','typed'].includes(l.paidSource),'Invalid paid source.');if(l.order!==undefined){ensure(l.order&&typeof l.order==='object'&&safeId(l.order.id)&&typeof l.order.vendor==='string'&&typeof l.order.ref==='string','Invalid order record.');ensure(l.order.shipShare===undefined||Number.isFinite(l.order.shipShare)&&l.order.shipShare>=0,'Invalid shipping share.');}if(l.source==='owned')ensure(l.location&&['bench','deck'].includes(l.location.kind),'Invalid owned-card location.');ensure(SOURCES.includes(l.source),'Invalid acquisition source.');ensure(['none','available','held'].includes(l.offer),'Invalid Sell / Trade state.');ensure(l.channel===undefined||CHANNELS.includes(l.channel),'Invalid order channel.');ensure(l.offer==='none'||!l.allocation,'A copy offered for Sell / Trade is not reserved by a deck.');ensure(Array.isArray(l.groupIds)&&new Set(l.groupIds).size===l.groupIds.length,'Invalid group membership.');for(const gid of l.groupIds)group(s,gid);if(l.source!=='owned')ensure(!l.location&&l.offer==='none','Unreceived cards cannot have physical placement or an outgoing offer.');if(l.location?.kind==='deck')deck(s,l.location.deckId);if(l.allocation){const d=deck(s,l.allocation.deckId),r=slot(s,d.id,l.allocation.slotId);ensure(!d.archived,'Archived decks cannot reserve cards.');ensure(r.committed,'This optional card is a suggestion, not a commitment.');ensure(compatible(l,r),'The allocated printing does not match the deck requirement.');ensure(l.offer!=='held','A deal-held copy cannot also be allocated to a deck.');}}
+    for(const l of s.lots){id(l,'lot');card(s,l.cardId);ensure(typeof l.quantity==='number','Stored quantities must be numbers.');quantity(l.quantity);ensure(l.printing&&typeof l.printing==='object'&&!Array.isArray(l.printing),'Invalid printing record.');ensure(l.paid===null||Number.isFinite(l.paid)&&l.paid>=0,'Invalid purchase cost.');ensure(l.value===undefined||Number.isFinite(l.value)&&l.value>=0,'Invalid print value.');ensure(l.paidSource===undefined||['catalog','receipt','typed'].includes(l.paidSource),'Invalid paid source.');if(l.order!==undefined){ensure(l.order&&typeof l.order==='object'&&safeId(l.order.id)&&typeof l.order.vendor==='string'&&typeof l.order.ref==='string','Invalid order record.');ensure(l.order.shipShare===undefined||Number.isFinite(l.order.shipShare)&&l.order.shipShare>=0,'Invalid shipping share.');}if(l.source==='owned')ensure(l.location&&['bench','deck'].includes(l.location.kind),'Invalid owned-card location.');ensure(SOURCES.includes(l.source),'Invalid acquisition source.');ensure(['none','available','held'].includes(l.offer),'Invalid Sell / Trade state.');ensure(l.offerKind===undefined||['sell','trade'].includes(l.offerKind),'Invalid Sell / Trade kind.');ensure(l.channel===undefined||CHANNELS.includes(l.channel),'Invalid order channel.');ensure(l.offer==='none'||!l.allocation,'A copy offered for Sell / Trade is not reserved by a deck.');ensure(Array.isArray(l.groupIds)&&new Set(l.groupIds).size===l.groupIds.length,'Invalid group membership.');for(const gid of l.groupIds)group(s,gid);if(l.source!=='owned')ensure(!l.location&&l.offer==='none','Unreceived cards cannot have physical placement or an outgoing offer.');if(l.location?.kind==='deck')deck(s,l.location.deckId);if(l.allocation){const d=deck(s,l.allocation.deckId),r=slot(s,d.id,l.allocation.slotId);ensure(!d.archived,'Archived decks cannot reserve cards.');ensure(r.committed,'This optional card is a suggestion, not a commitment.');ensure(compatible(l,r),'The allocated printing does not match the deck requirement.');ensure(l.offer!=='held','A deal-held copy cannot also be allocated to a deck.');}}
     for(const d of s.decks)for(const r of d.slots)ensure(countFor(s,d.id,r.id)<=r.quantity,'A deck slot is over-allocated.');
     ensure(s.groups.filter(g=>g.template==='bench').length<=1,'There is one Bench.');
     for(const g of s.groups){id(g,'group');ensure(typeof g.name==='string'&&g.name.trim()&&Array.isArray(g.entries),'Invalid collection group.');ensure(TEMPLATES.includes(g.template),'Invalid group template.');ensure((g.template==='commander')===s.decks.some(d=>d.groupId===g.id),'A Commander deck group is the group of its deck.');for(const r of g.entries){id(r,'group entry');card(s,r.cardId);ensure(typeof r.quantity==='number','Stored quantities must be numbers.');quantity(r.quantity);}}
@@ -433,16 +500,33 @@
     for(const [cid,n] of counts){const c=card(s,cid),allowed=maxCopies(c);if(n>allowed)issues.push(`${c.name} exceeds its allowed number of copies.`);}
     return [...new Set(issues)];
   }
+  /* BUDGETS (Rob, 2026-10-18; docs/budgets.md). A deck's budget and the account's are the player's own figures, and
+     both only inform: nothing is refused for money, and a deck with no budget of its own has none -- it inherits
+     neither the account's nor the pod's. A deck's cost is its list at recorded prices. The account's budget is set
+     against what the decks plan to spend: each live deck counts at its budget, or at its cost where that is more, and
+     a deck with no budget counts at its cost. */
+  const cents=n=>Math.round(n*100)/100;
+  function deckBudget(s,d){const def=d.definition||{},budget=Number.isFinite(def.budget)?def.budget:null;let cost=0,unpriced=0;
+    for(const r of d.slots)if(r.purpose==='main'){const c=resolve(s.cards[r.cardId]);if(c&&Number.isFinite(c.price)&&c.price>=0)cost+=c.price*r.quantity;else unpriced+=r.quantity;}
+    cost=cents(cost);const over=budget!==null&&cost>budget;
+    return {budget,cost,unpriced,counted:budget===null?cost:Math.max(budget,cost),over,by:over?cents(cost-budget):0};}
+  function budgets(s){const raw=s.preferences&&s.preferences.accountBudget,budget=Number.isFinite(raw)&&raw>0?raw:null;
+    const decks=s.decks.filter(d=>!d.archived&&!isLobbyDeck(d)).map(d=>({deckId:d.id,name:d.name,...deckBudget(s,d)}));
+    const planned=cents(decks.reduce((n,x)=>n+x.counted,0)),budgeted=cents(decks.reduce((n,x)=>n+(x.budget||0),0));
+    return {budget,planned,budgeted,left:budget===null?null:cents(budget-planned),over:budget!==null&&planned>budget,
+      unbudgeted:decks.filter(x=>x.budget===null).length,overDecks:decks.filter(x=>x.over).length,decks};}
+  /* What the definition's price limits say about the list. Read-outs, never refusals (see BUDGETS above). */
   function definitionIssues(s,d){
     const issues=[],def=d.definition,rows=d.slots.filter(r=>r.purpose==='main');
     if(def.budget===null&&def.perCardCap===null)return issues;
-    let total=0,unknown=0;
-    for(const r of rows){const c=card(s,r.cardId);if(!Number.isFinite(c.price)||c.price<0){unknown+=r.quantity;continue;}total+=c.price*r.quantity;if(def.perCardCap!==null&&c.price>def.perCardCap)issues.push(`${c.name} exceeds the per-card price cap.`);}
-    if(unknown)issues.push(`${unknown} copies have no price estimate. Verify prices or explicitly remove the cap in Deck Definition.`);
-    if(def.budget!==null&&total>def.budget)issues.push(`Indicative list total $${total.toFixed(2)} exceeds the $${def.budget.toFixed(2)} cap. Edit Deck Definition to change your limit.`);
+    let unknown=0;
+    for(const r of rows){const c=card(s,r.cardId);if(!Number.isFinite(c.price)||c.price<0){unknown+=r.quantity;continue;}if(def.perCardCap!==null&&c.price>def.perCardCap)issues.push(`${c.name} costs more than the per-card cap.`);}
+    if(unknown)issues.push(`${unknown} cop${unknown===1?'y has':'ies have'} no price estimate.`);
+    const b=deckBudget(s,d);if(b.over)issues.push(`The list costs about $${b.cost.toFixed(2)}, $${b.by.toFixed(2)} over its $${b.budget.toFixed(2)} budget.`);
     return issues;
   }
-  function acceptance(s,d){return [...legality(s,d),...definitionIssues(s,d)];}
+  /* What a locked list must pass: the rules of Commander. Money is not among them (BUDGETS). */
+  function acceptance(s,d){return legality(s,d);}
   function apply(current,command){
     validate(current);ensure(command&&safeId(command.id),'Every change needs a unique operation ID.');const s=clone(current),c=clone(command),now=c.at||new Date().toISOString();let serial=0,summary='';const id=prefix=>`${prefix}:${c.id}:${++serial}`;
     function addCard(raw){ensure(raw&&safeId(raw.id),'Invalid card identity.');if(raw.shipped===true){s.cards[raw.id]=reference(raw);return card(s,raw.id);}const {shipped,...rest}=clone(raw);s.cards[raw.id]={...s.cards[raw.id],...rest,name:text(raw.name,250)};return card(s,raw.id);}
@@ -522,7 +606,7 @@
       tier:Number.isInteger(r.tier)&&r.tier>=1&&r.tier<=5?r.tier:null,why:text(r.why,1000),price:Number.isFinite(r.price)&&r.price>=0?r.price:null}));}
     switch(c.type){
       case 'batch':{ensure(Array.isArray(c.commands)&&c.commands.length<=100,'Invalid compound operation.');let next=s;for(const [i,part] of c.commands.entries()){ensure(part.type!=='batch','Nested compound operations are not supported.');next=apply(next,{...part,id:c.id+':'+i,at:now}).state;}Object.assign(s,next);summary=text(c.summary,500)||'Saved compound change';break;}
-      case 'acceptOption':{const d=deck(s,c.deckId),option=slot(s,d.id,c.slotId);ensure(option.purpose!=='main','Choose a linked option.');const parent=slot(s,d.id,option.replaces);ensure(parent.quantity===option.quantity,'The option quantity must match the replaced main slot.');version(d);const old=s.lots.filter(l=>l.allocation?.deckId===d.id&&l.allocation.slotId===parent.id),reserved=s.lots.filter(l=>l.allocation?.deckId===d.id&&l.allocation.slotId===option.id);for(const l of [...old,...reserved])l.allocation=null;const previous=parent.cardId;parent.cardId=option.cardId;parent.printing=clone(option.printing);parent.option=false;parent.optionWhy='';d.slots=d.slots.filter(r=>r.id!==option.id);if(d.commanders.includes(previous))d.commanders=d.commanders.map(id=>id===previous?parent.cardId:id);ensure(!d.archived,'Restore the deck first.');const issues=d.status==='final'?acceptance(s,d):[];ensure(!issues.length,issues.join('\n'));for(const l of old)release(l,c.destination);if(d.status==='final'){for(const l of reserved)allocate(l,d,parent,l.quantity);satisfy(d,parent.id);}summary='Accepted the linked option and preserved its reserved copies';break;}
+      case 'acceptOption':{const d=deck(s,c.deckId),option=slot(s,d.id,c.slotId);ensure(option.purpose!=='main','Choose a linked option.');const parent=slot(s,d.id,option.replaces);ensure(parent.quantity===option.quantity,'The option quantity must match the replaced main slot.');version(d);const old=s.lots.filter(l=>l.allocation?.deckId===d.id&&l.allocation.slotId===parent.id),reserved=s.lots.filter(l=>l.allocation?.deckId===d.id&&l.allocation.slotId===option.id);for(const l of [...old,...reserved])l.allocation=null;const previous=parent.cardId;parent.cardId=option.cardId;parent.printing=clone(option.printing);parent.option=false;parent.optionWhy='';d.slots=d.slots.filter(r=>r.id!==option.id);if(d.commanders.includes(previous))d.commanders=d.commanders.map(id=>id===previous?parent.cardId:id);ensure(!d.archived,'Restore the deck first.');const issues=d.status==='final'?acceptance(s,d):[];ensure(!issues.length,issues.join('\n'));for(const l of old){if(c.substitute&&l.source==='owned'&&l.location?.kind==='deck'&&l.location.deckId===d.id){l.standInFor=parent.id;continue;}release(l,c.destination);}if(d.status==='final'){for(const l of reserved)allocate(l,d,parent,l.quantity);satisfy(d,parent.id);}summary=c.substitute?`Reserved ${card(s,parent.cardId).name} in place of ${card(s,previous).name}, which stands in until it arrives`:'Accepted the linked option and preserved its reserved copies';break;}
       case 'verifyIdentity':{const old=card(s,c.cardId);ensure(c.confirmed===true,'Review the exact identity correction first.');ensure(c.card&&c.card.verified&&c.card.legalities?.commander==='legal','Choose a verified Commander-legal catalog identity.');const next=addCard(c.card);for(const d of s.decks){if(!d.slots.some(r=>r.cardId===old.id)&&!d.commanders.includes(old.id))continue;version(d);for(const r of d.slots)if(r.cardId===old.id)r.cardId=next.id;d.commanders=d.commanders.map(id=>id===old.id?next.id:id);if(d.status==='final'){const issues=acceptance(s,d);ensure(!issues.length,issues.join('\n'));}}for(const l of s.lots)if(l.cardId===old.id)l.cardId=next.id;for(const g of s.groups)for(const r of g.entries)if(r.cardId===old.id)r.cardId=next.id;summary=`Verified ${old.name} as ${next.name}; quantities and exact printings preserved`;break;}
       /* THE SPREADSHEET'S TWO COMMANDS. target sets how many of a card a deck LISTS, on a draft
          or a finalized deck: a finalized list may leave 100 for a while (the deck reads In
@@ -611,8 +695,8 @@
         s.decks.push(d);if(d.kind!=='lobby')satisfy(d);summary=`Created planned deck: ${d.name}`+(own?` and its collection group`:'');break;}
       case 'editDeck':{const d=deck(s,c.deckId);ensure(!d.archived,'Restore the archived deck first.');
         /* A LOBBY DECK IS A DECK ON PROBATION (UAT M-15, Rob's call of 2026-09-20). The Play lobby mints a real draft so a measurement can follow it into Decks, but a deck nobody asked for should not be a ninth tile and a hundred library rows. kind:'lobby' hides it from the tiles, the sidebar, the compare list, the Lab and the library counts until Show lobby decks is on; Save to Decks (kind:'deck') promotes it. */
-        if(c.kind!==undefined){ensure(c.kind==='deck'||c.kind==='lobby','A deck is a deck or a lobby deck.');if(c.kind==='lobby')d.kind='lobby';else delete d.kind;summary=c.kind==='lobby'?`Kept ${d.name} as a lobby deck`:`Saved ${d.name} to Decks`;}if(c.name!==undefined){const was=d.name;d.name=text(c.name,160);const g=d.groupId?s.groups.find(x=>x.id===d.groupId):null;if(g&&g.name===was)g.name=d.name;}if(c.definition)d.definition=defaultDefinition(c.definition);if(c.notes!==undefined)d.notes=text(c.notes,5000);if(c.groupId!==undefined)d.groupId=c.groupId?deckGroup(s,c.groupId,d.id):null;if(c.commanders){ensure(d.status==='draft','Use a reviewed commander replacement for a finalized list.');d.commanders=[...c.commanders];}if(c.slots){ensure(d.status==='draft','Use a reviewed replacement for a finalized list.');d.slots=rows(c.slots);resettle(d);}summary=`Updated ${d.name}`;break;}
-      case 'finalize':{const d=deck(s,c.deckId);ensure(!d.archived,'Restore the deck first.');ensure(d.status==='draft','This deck is already finalized.');const issues=acceptance(s,d);ensure(!issues.length,issues.join('\n'));d.status='final';version(d);satisfy(d);summary=c.as==='save'?`Saved ${d.name} to your decks`:`Finalized ${d.name}`;break;}
+        if(c.kind!==undefined){ensure(c.kind==='deck'||c.kind==='lobby','A deck is a deck or a lobby deck.');if(c.kind==='lobby')d.kind='lobby';else delete d.kind;summary=c.kind==='lobby'?`Kept ${d.name} as a lobby deck`:`Saved ${d.name} to Decks`;}if(c.name!==undefined){const was=d.name;d.name=text(c.name,160);const g=d.groupId?s.groups.find(x=>x.id===d.groupId):null;if(g&&g.name===was)g.name=d.name;}if(c.definition)d.definition=defaultDefinition(c.definition);if(c.notes!==undefined)d.notes=text(c.notes,5000);if(c.groupId!==undefined)d.groupId=c.groupId?deckGroup(s,c.groupId,d.id):null;if(c.commanders){ensure(d.status==='draft','Use a reviewed commander replacement for a locked list.');d.commanders=[...c.commanders];}if(c.slots){ensure(d.status==='draft','Use a reviewed replacement for a locked list.');d.slots=rows(c.slots);resettle(d);}summary=`Updated ${d.name}`;break;}
+      case 'finalize':{const d=deck(s,c.deckId);ensure(!d.archived,'Restore the deck first.');ensure(d.status==='draft','This deck’s list is already locked.');const issues=acceptance(s,d);ensure(!issues.length,issues.join('\n'));d.status='final';version(d);satisfy(d);summary=c.as==='save'?`Saved ${d.name} to your decks`:`Locked the list of ${d.name}`;break;}
       case 'lock':{const d=deck(s,c.deckId);d.locked=!!c.locked;summary=`${d.locked?'Locked':'Unlocked'} ${d.name}`;break;}
       case 'archive':{const d=deck(s,c.deckId);ensure(!d.archived,'Deck already archived.');d.archived=true;version(d);for(const l of [...s.lots].filter(l=>l.allocation?.deckId===d.id))release(l,c.destination);summary=`Archived ${d.name}; released allocations and retained actual box locations`;break;}
       case 'restoreDeck':{const d=deck(s,c.deckId);ensure(d.archived,`${d.name} is not archived.`);d.archived=false;d.status='draft';d.locked=false;summary=`Restored ${d.name} as a draft for availability review`;break;}
@@ -675,14 +759,21 @@
         const what=c.op==='source'?`Marked ${c.source}`:c.op==='place'?`Put in ${deck(s,c.deckId).name}${c.asStandIn===true?', substitutes where the list did not call for them':''}`:c.op==='bench'?'Moved to the bench':c.op==='release'?'Released to To buy':c.offer==='none'?'Cleared Sell / Trade':c.offer==='held'?'Held for a pending deal':'Offered for Sell / Trade';
         summary=`${what}: ${c.lotIds.length} record${c.lotIds.length===1?'':'s'}, ${copies} cop${copies===1?'y':'ies'}`;break;}
       case 'release':{let l=lot(s,c.lotId);warning(l);l=split(l,c.quantity);release(l,c.destination||'bench');summary='Released allocation; retained the actual physical location';break;}
-      case 'swap':{const d=deck(s,c.deckId),r=slot(s,d.id,c.slotId);ensure(!d.archived,'Restore the archived deck first.');for(const raw of c.cards||[])addCard(raw);card(s,c.cardId);version(d);const released=s.lots.filter(l=>l.allocation?.deckId===d.id&&l.allocation.slotId===r.id);for(const l of released)l.allocation=null;r.cardId=c.cardId;r.printing=clone(c.printing||{});r.pinned=!!c.pinned;r.option=false;r.optionWhy='';if(c.commander)d.commanders=d.commanders.map(cid=>cid===c.commander?c.cardId:cid);const issues=d.status==='final'?acceptance(s,d):[];ensure(!issues.length,issues.join('\n'));for(const l of released)release(l,c.destination);if(d.status==='final'){if(c.lotId){let l=lot(s,c.lotId);warning(l);l=split(l,Math.min(l.quantity,shortfall(s,d,r)));l.allocation=null;allocate(l,d,r,l.quantity);}satisfy(d,r.id);}summary=`Replaced a slot in ${d.name}; ownership unchanged`;break;}
+      case 'swap':{const d=deck(s,c.deckId),r=slot(s,d.id,c.slotId);ensure(!d.archived,'Restore the archived deck first.');for(const raw of c.cards||[])addCard(raw);card(s,c.cardId);version(d);const released=s.lots.filter(l=>l.allocation?.deckId===d.id&&l.allocation.slotId===r.id);for(const l of released)l.allocation=null;r.cardId=c.cardId;r.printing=clone(c.printing||{});r.pinned=!!c.pinned;r.option=false;r.optionWhy='';if(c.commander)d.commanders=d.commanders.map(cid=>cid===c.commander?c.cardId:cid);const issues=d.status==='final'?acceptance(s,d):[];ensure(!issues.length,issues.join('\n'));/* RESERVED REPLACES A CARD, AND THE CARD IT REPLACES STANDS IN (Rob, 2026-10-18): with `substitute`, a replaced copy
+           that is in this deck's box stays there as the Substitute holding the seat until the Reserved card is put in.
+           An Upgrade never gets here: it is an option slot, and an option changes nothing until it is reserved. */
+        for(const l of released){if(c.substitute&&l.source==='owned'&&l.location?.kind==='deck'&&l.location.deckId===d.id){l.standInFor=r.id;continue;}release(l,c.destination);}if(d.status==='final'){if(c.lotId){let l=lot(s,c.lotId);warning(l);l=split(l,Math.min(l.quantity,shortfall(s,d,r)));
+          /* A copy taken from another deck's box keeps holding the seat it leaves there until it is moved (Rob, 2026-10-18). */
+          const held=l.location?.kind==='deck'&&l.allocation&&l.allocation.deckId===l.location.deckId&&l.location.deckId!==d.id?l.allocation.slotId:'';l.allocation=null;const part=allocate(l,d,r,l.quantity);if(held)part.standInFor=held;}satisfy(d,r.id);}summary=`Replaced a slot in ${d.name}; ownership unchanged`;break;}
       case 'option':{const d=deck(s,c.deckId);ensure(!d.archived,'Restore the deck first.');const parent=slot(s,d.id,c.replaces);ensure(parent.purpose==='main','Choose a main-deck slot.');for(const raw of c.cards||[])addCard(raw);const [r]=rows([{...c.option,committed:!!c.reserve,replaces:parent.id,purpose:c.option.purpose||'upgrade'}]);ensure(r.purpose!=='main','An option is separate from the main hundred.');d.slots.push(r);if(d.status==='final'&&c.reserve)satisfy(d,r.id);summary='Saved a linked upgrade or bracket option outside the main hundred';break;}
       case 'removeOption':{const d=deck(s,c.deckId),r=slot(s,d.id,c.slotId);ensure(r.purpose!=='main','Replace a main slot instead.');const releaseLots=s.lots.filter(l=>l.allocation?.deckId===d.id&&l.allocation.slotId===r.id);d.slots=d.slots.filter(x=>x.id!==r.id);for(const l of releaseLots)release(l,c.destination);summary='Removed an optional commitment';break;}
       case 'fulfill':{const d=deck(s,c.deckId);ensure(!d.archived,'Restore this deck before reserving copies for it.');satisfy(d);summary=`Reserved eligible unassigned copies for ${d.name}`;break;}
       /* SELL / TRADE IS A BENCH FLAG. A copy put up for sale or trade stops filling a deck's claim
          -- the deck reads To Buy again -- because a card that may leave cannot also be counted
          as the deck's. */
-      case 'offer':{let l=lot(s,c.lotId);ensure(l.source==='owned','Only owned copies can be offered.');l=split(l,c.quantity);if(c.offer!=='none'&&l.allocation){warning(l);l.allocation=null;}ensure(['none','available','held'].includes(c.offer),'Invalid offer state.');l.offer=c.offer;summary=`Updated Sell / Trade: ${card(s,l.cardId).name}`;break;}
+      case 'offer':{let l=lot(s,c.lotId);ensure(l.source==='owned','Only owned copies can be offered.');l=split(l,c.quantity);if(c.offer!=='none'&&l.allocation){warning(l);l.allocation=null;}ensure(['none','available','held'].includes(c.offer),'Invalid offer state.');l.offer=c.offer;
+        /* SELL OR TRADE, SAID APART (Rob, 2026-10-18): an offer is one or the other; an offer made before this was said is Trade. */
+        if(c.offer==='none')delete l.offerKind;else{ensure(c.offerKind===undefined||['sell','trade'].includes(c.offerKind),'Choose Sell or Trade.');l.offerKind=c.offerKind||l.offerKind||'trade';}summary=`Updated Sell / Trade: ${card(s,l.cardId).name}`;break;}
       /* A COUNT IS A NUMBER YOU CAN BE WRONG ABOUT. Ordering four and receiving three used
          to mean disposing of one, which is a different sentence about a different event.
          Setting the count says what is true now. Lowering it is still a loss of copies, so
@@ -807,5 +898,5 @@
     if(offered.length)commands.push({type:'bulk',op:'offer',offer:'none',lotIds:ids(offered)});leave(lots);commands.push({type:'groupLots',groupId:g.id,lotIds:ids(lots)});
     notes.push(`${owned.length} record${owned.length===1?' is':'s are'} in ${g.name}${boxed.length?`, ${boxed.length} out of a deck's box`:''}. A 40-card deck's own rules come later.`);return {commands,notes};
   }
-  return {benchFree,TEMPLATES,TEMPLATE_LABELS,isPhysical,deckMayTake,moveCommands,draftShort,VERSION,SOURCES,PLANNED,CHANNELS,STATUS,statusOf,STAGES,ROLES,WANT_LIST,cardState,seats,stateReader,stateLabel,stageLabel,roleLabel,STATE_LABELS,stateOrder,stateTone,statusOrder,statusTone,setRecordSource,migrate,empty,starterGroups,clone,today,localDate,lineupHash,isLobbyDeck,text,quantity,print,compatible,validate,apply,defaultDefinition,legality,definitionIssues,projection,counters,readiness,ownership,eligibility,fingerprint,shortfall,deck,slot,lot,inDeck,orders,maxCopies,matrix,plan};
+  return {benchFree,TEMPLATES,TEMPLATE_LABELS,isPhysical,deckMayTake,moveCommands,draftShort,VERSION,SOURCES,PLANNED,CHANNELS,STATUS,statusOf,USES,OWNERSHIP,PLAY,USE_OWNERSHIP,WANT_LIST,cardState,seats,stateReader,useLabel,ownershipLabel,playLabel,stateNote,placeLabel,records,deckStatus,stateLabel,STATE_LABELS,stateOrder,stateTone,statusOrder,statusTone,setRecordSource,migrate,empty,starterGroups,clone,today,localDate,lineupHash,isLobbyDeck,text,quantity,print,compatible,validate,apply,defaultDefinition,legality,definitionIssues,deckBudget,budgets,projection,counters,readiness,ownership,eligibility,fingerprint,shortfall,deck,slot,lot,inDeck,orders,maxCopies,matrix,plan};
 });

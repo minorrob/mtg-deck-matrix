@@ -24,7 +24,8 @@
         "types": [
           "Creature"
         ],
-        "controller": "you"
+        "controller": "you",
+        "zone": "any"
       },
       "apply": {
         "allCreatureTypes": true

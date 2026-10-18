@@ -8,7 +8,7 @@ Magic disagree, in the order of how much each one distorts a score.
 
 ---
 
-## 1 · No creature's printed body has ever reached the engine — **measured, not fixed**
+## 1 · No creature's printed body has ever reached the engine — **measured here; fixed in engine v2.5** (creatures fight with their printed power and toughness; the section below is the record of the gap)
 
 **The gap.** `data/cards.json` carried no `power` or `toughness` field at all — 0 of 1,972
 rows — and `data/card-facts.json` had them for 60 of its 326 creatures. So for almost every
@@ -72,7 +72,7 @@ loudly rather than drifting.
 
 ---
 
-## 2 · Storm count, ritual chains and one-card wins — **named in the app, not modeled**
+## 2 · Storm count, ritual chains and one-card wins — **rituals and a one-turn storm burst modeled since v2.7; a one-card win is flagged (unwatchedWinPaths), not modeled**
 
 The engine plays creatures, mana and combat. It has no concept of a spell count within a
 turn, so a ritual into a big X spell is simulated as an expensive spell that resolved, and a

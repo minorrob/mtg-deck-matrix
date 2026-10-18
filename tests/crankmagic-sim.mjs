@@ -172,7 +172,7 @@ const fakeResult = {
   commanderCastRate: 0.92, avgCommanderTurn: 4.2, screwPct: 0.08, floodPct: 0.05,
   deadCardsAtT8: 3.1, funScore: 0.55, hash: "abcdef0123456789", games: 120000,
   elapsedMs: 5200, gamesPerSecond: 23076, measuredAt: "2026-09-08T00:00:00.000Z",
-  scoreParts: [], perCard: [], perSeedScores: [62.1, 62.9]
+  scoreParts: [], perCard: [], perSeedScores: [62.1, 62.9], perSeedWinRates: [0.32, 0.342], winRateSe: 0.011
 };
 
 function pack(overrides) {
@@ -194,11 +194,28 @@ check("the report satisfies the contract the model and the evidence module enfor
 check("turn-capped games are reported beside the win rate, not inside it", () => {
   const report = pack();
   assert.equal(report.metrics.winRate.value, 33.1);
+  assert.equal(report.metrics.winRateStandardError.value, 1.1, "the win rate's between-seed error travels as a percentage beside it");
+  assert.deepEqual(report.perSeedWinRates, [0.32, 0.342], "and the per-seed win rates travel with the per-seed scores");
+  assert.equal(Sim.packFor({...fakeResult, winRateSe: undefined, perSeedWinRates: undefined}, {protocol: "published", coverage: {}}).metrics.winRateStandardError.value, null, "a result without the figure carries null, not zero");
   assert.equal(report.metrics.incompleteGames.value, 0.7);
 });
 
 check("a measured report is marked measured, so it cannot be read as an import", () => {
   assert.equal(pack().origin, "measured");
+});
+
+check("the simplifications travel in the pack, each with its cards, and the ones that touch the list reach the limits", () => {
+  const rows = [
+    {n: 1, says: "No stack.", kind: "shape", removable: false, scope: "counterspells", count: 0, cards: []},
+    {n: 7, says: "Tutors draw the best of three.", kind: "reading", removable: true, scope: "tutors", count: 4, cards: ["Demonic Tutor", "Enlightened Tutor", "Mystical Tutor", "Vampiric Tutor"]},
+    {n: 15, says: "Opponents are curves.", kind: "shape", removable: false, scope: "the three opponents", count: 0, cards: []}
+  ];
+  const report = Sim.packFor({...fakeResult, simplifications: rows}, {protocol: "published", coverage: {}});
+  assert.deepEqual(report.simplifications, rows, "the rows travel as the engine labeled them");
+  assert.equal(report.limits.length, 5, "one sentence added for the rows that touch cards");
+  assert.match(report.limits[4], /^1 of the model's 3 simplifications touch cards in this list: tutors \(Demonic Tutor, Enlightened Tutor, Mystical Tutor and 1 more\)\./, "it counts the touched rows and names the first three cards of each");
+  assert.deepEqual(Sim.packFor(fakeResult, {protocol: "published", coverage: {}}).simplifications, [], "a result without rows carries an empty list");
+  assert.equal(Sim.packFor({...fakeResult, simplifications: rows.filter((row) => row.count === 0)}, {protocol: "published", coverage: {}}).limits.length, 4, "rows that touch nothing add no sentence");
 });
 
 check("a win the engine cannot watch reaches the reader, in the metrics and in the limits", () => {
