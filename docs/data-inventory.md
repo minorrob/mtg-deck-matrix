@@ -13,15 +13,15 @@ names the file and writes; **tests** are the suites that read it.
 
 | | |
 |---|---|
-| Artifacts | 76 (65 JSON, 11 workbooks and documents) · 79.2 MB |
+| Artifacts | 77 (66 JSON, 11 workbooks and documents) · 79.2 MB |
 | Served to the app | 17 · 45.0 MB (7.0 MB precached by the worker, 37.4 MB cached on demand) |
-| Tool inputs | 37 |
+| Tool inputs | 38 |
 | Source workbooks and documents | 11 |
 | Archive (already, or should be) | 10 |
 | Review: no reader found | 0 |
 | JSON with no version field | 4: `data/archive/buy-plans.json`, `data/archive/pull-list.json`, `data/archive/variants.json`, `data/lenses.json` |
 | JSON with no timestamp | 7: `data/archive/buy-plans.json`, `data/archive/pull-list.json`, `data/archive/variants.json`, `data/engine/onboarding-ledger.json`, `data/engine/top-cards.json`, `sim/config.json`, `sim/opponents.json` |
-| Served or tool-input JSON with no producer found | 4: `data/composition-targets.json`, `data/engine/support.json`, `data/engine/tokens.json`, `data/engine/top-cards.json` |
+| Served or tool-input JSON with no producer found | 5: `data/composition-targets.json`, `data/engine/support.json`, `data/engine/tokens.json`, `data/engine/top-cards.json`, `data/vendors.json` |
 
 ## The table
 
@@ -85,7 +85,7 @@ names the file and writes; **tests** are the suites that read it.
 | `data/lenses.json` | 19 KB | {generatedAt, lenses} · lenses 10 | — | 2026-09-11 | (a past sweep wrote it for the retired Copilot lenses; no tool writes it today) | — |  | — | — | — | **archive candidate** | its reader, sim-lenses.js, was swept with the retired pages; nothing reads it today |
 | `data/live-load.json` | 788 KB | {schema, format, version, generator, count, savedAt, …} · metadata 1,132, prints 917 | format crankmagic-live-load, version 1, schema live-load@1 | 2026-09-30 | tools/build-live-load.mjs, tools/scryfall-cache.mjs | — |  | board-fixture.mjs, build-live-load.mjs, build-live-state.mjs +6 | card-records.mjs, crankmagic-trace.mjs, fuzz-library.mjs +2 | live-load.yml | **tool input** |  |
 | `data/live-state.json` | 1.2 MB | {schema, format, version, generator, createdAt, checksum, …} | format crankmagic-backup, version 1, schema live-state@1 | 2026-09-30 | tools/pilot-bench.mjs, tools/playtest-decks.mjs, tools/render-routes.mjs +2 | — |  | build-live-state.mjs, migrate-dry-run.mjs, pilot-bench.mjs +6 | advise-brief.mjs, advisor-page.mjs, advisor.mjs +31 | live-load.yml | **tool input** | Rob's library as a backup, which the browser walks restore through Menu → Restore; never served -- Load Live went on 2026-09-24 and tools/release-pages.mjs keeps it off the site |
-| `data/manifest.json` | 8 KB | {schema, generatedAt, generator, count, files} · files 24 | schema manifest@1 | 2026-10-18 | tools/data-manifest.mjs | — |  | data-manifest.mjs, refresh.mjs | data-manifest.mjs, engine-runtime.mjs, refresh.mjs | — | **tool input** |  |
+| `data/manifest.json` | 8 KB | {schema, generatedAt, generator, count, files} · files 25 | schema manifest@1 | 2026-10-18 | tools/data-manifest.mjs | — |  | data-manifest.mjs, refresh.mjs | data-manifest.mjs, engine-runtime.mjs, refresh.mjs | — | **tool input** |  |
 | `data/precons-latest.json` | 2 KB | {schema, generatedAt, generator, count, source, releaseDate, …} | schema precons-latest@1 | 2026-09-30 | tools/build-precons.mjs | crankmagic-assets.js, crankmagic-decks.js | on demand | build-precons.mjs | precons.mjs | — | **serve** |  |
 | `data/precons.json` | 398 KB | {schema, generatedAt, generator, count, source, decks} · decks 197 | schema precons@1 | 2026-09-28 | tools/build-precons.mjs | crankmagic-assets.js, crankmagic-decks.js | on demand | build-precons.mjs, refresh.mjs | precons.mjs | — | **serve** |  |
 | `data/simulation-summary.json` | 171 KB | {schema, generator, schemaVersion, generatedAt, engine, table, …} · builds 50, altCommanderCases 47 | schemaVersion 3, schema simulation-summary@3, engine v2.8 | 2026-09-08 | tools/sim/rate-decks.mjs (declared), tools/import_summary_metrics.py (declared) | crankmagic-sim.js |  | import_summary_metrics.py, refresh.mjs, bake-sweep.mjs +6 | crankmagic-sim.mjs, data-integrity.mjs, generators.mjs +2 | — | **serve** |  |
@@ -100,6 +100,7 @@ names the file and writes; **tests** are the suites that read it.
 | `data/source/Treys_MtG_Master_-_v25.xlsx` | 435 KB | workbook | — | — | — | — |  | — | live-load.mjs | — | **source** | workbook or document the builders read; never fetched by a page |
 | `data/source/Treys_MtG_Master_v13.xlsx` | 311 KB | workbook | — | — | — | — |  | build-live-load.mjs | — | — | **source** | workbook or document the builders read; never fetched by a page |
 | `data/source/Treys_MtG_Master_v3.xlsx` | 292 KB | workbook | — | — | — | — |  | import_master_v2.py | master-regenerates.mjs | — | **source** | workbook or document the builders read; never fetched by a page |
+| `data/vendors.json` | 2 KB | {schema, updatedAt, generator, count, note, vendors} | schema vendors@1 | 2026-10-18 | — | — |  | printings-snapshot.mjs | buy-plan.mjs | — | **tool input** |  |
 | `sim/config.json` | 2 KB | {schema, generator, schemaVersion, gamesPerIteration, batchSize, maxIterations, …} | schemaVersion 2, schema sim-config@2 | — | (hand-maintained placeholder) | crankmagic-assets.js, crankmagic-lab.js |  | lib.mjs, pilot-ablation.mjs, rate-decks.mjs +2 | combat.mjs, crankmagic-sim.mjs, deck-measure.mjs +3 | — | **serve** |  |
 | `sim/opponents.json` | 9 KB | {schema, generator, count, schemaVersion, note, profiles, …} | schemaVersion 2, schema sim-opponents@2 | — | (hand-maintained placeholder) | crankmagic-assets.js |  | lib.mjs, pilot-ablation.mjs, rate-decks.mjs | combat.mjs, crankmagic-sim.mjs, deck-measure.mjs +2 | — | **serve** |  |
 | `sim/status.json` | 129 B | {schema, updatedAt, generator, state} | schema sim-status@1 | 2026-09-14 | tools/sim/lib.mjs (declared) | — |  | lib.mjs | engine-runtime.mjs, sim-engine.mjs | — | **serve** | the sweep's status placeholder the Lab reads; the run rewrites it |
