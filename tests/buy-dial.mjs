@@ -18,10 +18,6 @@ try {
   const context = await browser.newContext({viewport: {width: WIDTH_DESKTOP, height: 900}, serviceWorkers: "block"});
   const page = await context.newPage();
   
-  /* Attach console and error listeners for debug. */
-  page.on('console', (msg) => console.log(`[BROWSER CONSOLE] ${msg.type()}: ${msg.text()}`));
-  page.on('pageerror', (err) => console.error(`[BROWSER ERROR]`, err));
-  page.on('requestfailed', (req) => console.error(`[REQUEST FAILED] ${req.url()}: ${req.failure()?.errorText || 'unknown'}`));
   
   if (stub) await stub(page);
   await loadLiveState(page, base);
@@ -80,24 +76,27 @@ try {
   const initialCost = await getPct("cost");
   ok(initialCost.includes("100%"), `cost starts at 100% (got ${initialCost})`);
 
-  /* Test dragging updates percentages. */
-  await costSlider.fill("50");
+  /* Test dragging updates percentages: cost=50, speed=50, others=0 gives 50% each. */
+  await costSlider.evaluate((el) => {el.value = 50; el.dispatchEvent(new Event('input', {bubbles: true}));});
+  await page.locator('[data-dial="speed"]').evaluate((el) => {el.value = 50; el.dispatchEvent(new Event('input', {bubbles: true}));});
   await page.waitForTimeout(300);
   const costAt50 = await getPct("cost");
-  ok(costAt50.includes("50%"), `cost at 50 shows 50% (got ${costAt50})`);
+  const speedAt50 = await getPct("speed");
+  ok(costAt50.includes("50%"), `cost at 50 shows 50% when speed also 50 (got ${costAt50})`);
+  ok(speedAt50.includes("50%"), `speed at 50 shows 50% when cost also 50 (got ${speedAt50})`);
 
   /* Test min at 1400 wide. */
-  await costSlider.fill("0");
-  await page.locator('[data-dial="speed"]').fill("0");
-  await page.locator('[data-dial="print"]').fill("0");
+  await costSlider.evaluate((el) => {el.value = 0; el.dispatchEvent(new Event('input', {bubbles: true}));});
+  await page.locator('[data-dial="speed"]').evaluate((el) => {el.value = 0; el.dispatchEvent(new Event('input', {bubbles: true}));});
+  await page.locator('[data-dial="print"]').evaluate((el) => {el.value = 0; el.dispatchEvent(new Event('input', {bubbles: true}));});
   await page.waitForTimeout(300);
   const allZero = await getPct("cost");
   ok(allZero.includes("33%") || allZero.includes("34%"), `all zero gives ⅓ each at 1400 (got ${allZero})`);
 
   /* Test max at 1400 wide. */
-  await costSlider.fill("100");
-  await page.locator('[data-dial="speed"]').fill("0");
-  await page.locator('[data-dial="print"]').fill("0");
+  await costSlider.evaluate((el) => {el.value = 100; el.dispatchEvent(new Event('input', {bubbles: true}));});
+  await page.locator('[data-dial="speed"]').evaluate((el) => {el.value = 0; el.dispatchEvent(new Event('input', {bubbles: true}));});
+  await page.locator('[data-dial="print"]').evaluate((el) => {el.value = 0; el.dispatchEvent(new Event('input', {bubbles: true}));});
   await page.waitForTimeout(300);
   const cost100 = await getPct("cost");
   ok(cost100.includes("100%"), `cost 100, others 0 gives 100% at 1400 (got ${cost100})`);
@@ -109,17 +108,17 @@ try {
   ok(await costSlider.isEnabled(), "cost slider enabled at 390 wide");
 
   /* Test min at phone. */
-  await costSlider.fill("0");
-  await page.locator('[data-dial="speed"]').fill("0");
-  await page.locator('[data-dial="print"]').fill("0");
+  await costSlider.evaluate((el) => {el.value = 0; el.dispatchEvent(new Event('input', {bubbles: true}));});
+  await page.locator('[data-dial="speed"]').evaluate((el) => {el.value = 0; el.dispatchEvent(new Event('input', {bubbles: true}));});
+  await page.locator('[data-dial="print"]').evaluate((el) => {el.value = 0; el.dispatchEvent(new Event('input', {bubbles: true}));});
   await page.waitForTimeout(300);
   const phoneZero = await getPct("cost");
   ok(phoneZero.includes("33%") || phoneZero.includes("34%"), `all zero at 390 gives ⅓ each (got ${phoneZero})`);
 
   /* Test max at phone. */
-  await page.locator('[data-dial="speed"]').fill("100");
-  await costSlider.fill("0");
-  await page.locator('[data-dial="print"]').fill("0");
+  await page.locator('[data-dial="speed"]').evaluate((el) => {el.value = 100; el.dispatchEvent(new Event('input', {bubbles: true}));});
+  await costSlider.evaluate((el) => {el.value = 0; el.dispatchEvent(new Event('input', {bubbles: true}));});
+  await page.locator('[data-dial="print"]').evaluate((el) => {el.value = 0; el.dispatchEvent(new Event('input', {bubbles: true}));});
   await page.waitForTimeout(300);
   const speed100 = await getPct("speed");
   ok(speed100.includes("100%"), `speed 100 at 390 gives 100% (got ${speed100})`);
