@@ -18,7 +18,10 @@
  *   GET  /connect             Upgrade: websocket -> 101, then {type:"view"} at once
  *   ws   {type:"act", ...}    the §12.1 action envelope -> {type:"receipt"} to the sender, {type:"view"} to all; or,
  *                             refused with nothing changed, {type:"refused", status, error, view} to the sender alone
- *   ws   {type:"view"}        the sender's view again
+ *   ws   {type:"view"}        the sender's view again; with `after` (an event id), the events since it, or `eventsReset`
+ *   ws   {type:"yield", on}   Yield turn on, or Stop yielding -> every seat's view; refused as `prefer` is
+ *   ws   {type:"check", choiceId, indices}  a draft checked, nothing changed -> {type:"checked", ok, open, reasons}
+ *                             to the sender alone
  */
 import {startRoom, openRoom, RoomError, basicCards} from "../game/room/room.mjs";
 import {tableOn, TableError, llmWaiting} from "../game/room/table.mjs";
@@ -123,7 +126,23 @@ export class GameRoom {
     if (typeof message !== "string" || message.length > MAX_FRAME) return send({type: "refused", error: "That message is not one the table reads."});
     let frame;
     try {frame = JSON.parse(message);} catch {return send({type: "refused", error: "That message is not JSON."});}
-    if (frame && frame.type === "view") return send({type: "view", view: room.view(seatId)});
+    /* A reconnect names the last event it handled (`events.v1`, Linear ROB-77; game/room/room.mjs, view): the view
+       carries the events since, or says `eventsReset` when they are older than the room keeps. */
+    if (frame && frame.type === "view") return send({type: "view", view: room.view(seatId, typeof frame.after === "string" ? {after: frame.after} : {})});
+    /* Yield turn (Linear ROB-13; room.mjs, yieldTurn), and Stop yielding. Yielding can pass for the seat at once, so every
+       seat's view moves, as after an action. */
+    if (frame && frame.type === "yield") {
+      try {await room.yieldTurn(seatId, {on: frame.on === true});}
+      catch (error) {if (!(error instanceof RoomError)) throw error; return send({type: "refused", of: "yield", status: error.status, error: error.message, view: room.view(seatId)});}
+      this.broadcast();
+      return this.schedule();
+    }
+    /* A draft of the seat's answer checked before Confirm (Linear ROB-75; room.mjs, check): to the sender alone, and
+       nothing changes, so nothing is broadcast. */
+    if (frame && frame.type === "check") {
+      try {return send({type: "checked", choiceId: frame.choiceId ?? null, ...room.check(seatId, {choiceId: frame.choiceId, indices: frame.indices})});}
+      catch (error) {if (!(error instanceof RoomError)) throw error; return send({type: "refused", of: "check", status: error.status, error: error.message});}
+    }
     /* A person's way of playing (game/room/room.mjs, prefer): Settings' "stop at every step of my turn". */
     if (frame && frame.type === "prefer") {
       try {await room.prefer(seatId, {stepByStep: frame.stepByStep === true});}

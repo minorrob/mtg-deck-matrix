@@ -108,7 +108,7 @@ Volcano uses Rob's supplied video; other environments and the table artwork stil
 
 | Lane | Held by | Branch | Doing |
 | --- | --- | --- | --- |
-| **Claude · Engine** (engine, rooms, Worker routing, migrations, card loads, releases) | Fable (Claude Code, a cloud container), since October 16 | `claude/admiring-franklin-58cxy4`, then `claude/engine-<topic>` | Main's record on October 18: Engine, simulation, card loads. Linear: ROB-71 and its children (ROB-12, ROB-13, ROB-73 to ROB-95). ROB-12 (#739) and ROB-81 (#742) on staging; ROB-101 (#744), ROB-13 (#745) and ROB-73 (#746) merged; now ROB-77. See "2026-10-17: the engine lane resumed" below. Next, under projects P-ROB-2 and P-ROB-1: ROB-74, ROB-75, ROB-78, ROB-94, the card load program. Brief: `docs/program/workstreams/claude-engine.md`. |
+| **Claude · Engine** (engine, rooms, Worker routing, migrations, card loads, releases) | Fable (Claude Code, a cloud container), since October 16 | `claude/admiring-franklin-58cxy4`, then `claude/engine-<topic>` | Engine, simulation, card loads. Linear: ROB-71 and its children (ROB-12, ROB-13, ROB-73 to ROB-95). On staging: ROB-12 (#739), ROB-81 (#742), ROB-13 (#745), ROB-73 (#746), ROB-77 (#747), ROB-76 (#748), ROB-75 and the room's socket frames (#778). ROB-94 in progress. See "2026-10-17: the engine lane resumed" below. Next: card load steps 1 and 2 (ROB-86, ROB-87), each in a fresh session from its kickoff prompt; then ROB-74, ROB-78, ROB-94 and the ROB-134 routes. Brief: `docs/program/workstreams/claude-engine.md`. |
 | **Claude · Deck intelligence** (the models and data under the screens; the program readout) | The second Claude session (a cloud container), since October 18 | `claude/deck-<topic>`; ten PRs merged October 18: `deck-composition` (#749), `deck-synergies` (#750), `deck-resolve` (#752), `deck-legality` (#753), `deck-buyplan` (#758), `deck-compliance` (#759), `deck-criteria` (#757), `deck-swaps` (#760), `deck-reasonableness` (#761), `deck-sim-audit` (#762), `deck-sim-variance` (#764); the program itself merged (#740) | Done: ROB-138, 114, 115, 131, 104, 119, 111, 109, 117, 112, 84. In progress: ROB-116 (steps 1 and 3 on main; step 2 waits on the engine lane's `playPod`, Requests row 1). Waiting on Rob: the popularity dial (ROB-109), ROB-95 before ROB-128/130/129/132, the Settings card for ROB-123, his call on ROB-121. Keeps `docs/readout/` (feed `feeds/claude-deck.json` at every merge). |
 | **Codex · Play** (the Play boards and the player's interaction) | Codex Astra, session 1, from October 18 (handed back: `docs/HANDOFF-TO-CODEX-2026-10-18.md`) | `codex/play-<topic>`; the broad draft `codex/ui-playtest-plan-oct15` (PR #735) stays a quarry | Settings' Play card to its own file, then ROB-99 slice 1, ROB-98, ROB-97, ROB-18, ROB-52 with ROB-100's renderer step. Brief: `docs/program/workstreams/codex-play.md`. |
 | **Codex · Workshop** (every screen outside the boards; `cloud/library`, `sharing`, `access-invites`, `mail`) | Codex Astra, session 2, from October 18 | `codex/workshop-<topic>` | ROB-36, ROB-37 to finish; ROB-122, ROB-125, ROB-106, ROB-105. Brief: `docs/program/workstreams/codex-workshop.md`. |
@@ -122,7 +122,7 @@ protocol) is `docs/program/README.md` (October 18, 2026). Rob's queue and each l
 
 Latest UI requests:
 - Provide authenticated table chat with shared ordered messages, reconnect history, sender/seat identity, send/refusal status and membership checks. The Chat module is a clearly marked placeholder until this exists; voice chat is a later feature.
-- Project authoritative round and turn-within-round into CrankRoomView, starting round 1. Define extra/skipped turns and eliminated seats; the UI must not guess from global turn divided by initial seat count.
+- Project authoritative round and turn-within-round into CrankRoomView, starting round 1. Define extra/skipped turns and eliminated seats; the UI must not guess from global turn divided by initial seat count. *Answered: `state.round`, `turnInRound`, `turnId`, `extraTurn` (Linear ROB-76, #748), on staging since Oct 18; the anchor doc's "Rounds".*
 - Save preferences-only accounts through cloud sync. Existing sync treats a library without decks/lots as empty, so its first cloud save waits for library content. The drawer proof uses a real deck fixture and the existing authenticated backup flow against an isolated HTTP store; no production account was changed.
 
 UI appearance request (October 14, latest Rob feedback): add a host-owned `appearance: {background, table}` field to the table settings and public table view, validated against stable IDs. Initial IDs: background `volcano`, `forest`, `clouds`; table `wooden`, `stone`, `obsidian`. Persist through reconnect/rematch and freeze or authorize changes consistently with other table rules. The UI registry and local preview selectors are ready; local previews do not claim synchronization.
@@ -133,9 +133,9 @@ other lane answers in the last column.
 | # | From | Asks for | What for | Answer |
 | --- | --- | --- | --- | --- |
 | 8 | Codex · Play → Workshop | Settings' Play card is extracted to `crankmagic-settings-play.js` in PR #754; general Settings calls its registration | Separate ownership while preserving the existing page and preferences | On main `73f55b35`; Workshop keeps `crankmagic-settings.js` |
-| 9 | Codex · Play → Engine | Release ROB-99 slice 1 from main `73f55b35` after Rob's look | Shared desktop header, Camera and drawers; proof and labeled screenshots in `docs/play-overhaul/ROB-99-SLICE-1.md` | Exact-head CI green. **Released 2026-10-18** in main 5f6ea9cc, with #765: staging 21c97df2, production 76f7206c. Rob chose to look at it on staging (ROB-11) |
+| 9 | Codex · Play → Engine | Release ROB-99 slice 1 from main `73f55b35` after Rob's look | Shared desktop header, Camera and drawers; proof and labeled screenshots in `docs/play-overhaul/ROB-99-SLICE-1.md` | On staging since main 5f6ea9cc (`release/cloud-staging` b99e2199, Oct 18) and in every staging release since; on production with 5f6ea9cc (Rob's go, Oct 18) |
 | 2 | UI | The lobby's countdown to start by itself once every seat is connected, has a deck and is ready, with no Start press; the host's Cancel stays, and a seat's Not ready stops it | The brief's lobby ("No Launch button: when every human is ready, a 10-second countdown starts, cancelable by the host"). Today the lobby reads "Launches when all are ready · n to go" and the host presses Start | `game/room/table.mjs`, where `ready` is taken: begin the countdown when nothing blocks. The lobby already follows `phase: countdown` | |
-| 3 | UI | A structured record of what happened since the last revision: `events: [{kind, …}]` on the view (damage dealt with its source and target; a spell countered and by what; tokens created with their count; proliferate; a permanent destroyed or exiled; life gained or lost with its cause; a seat out) | The callouts over the table and the sounds read these from the difference between two views and from the history's sentences (`/countered/`, `/created N … tokens/`), which is brittle and carries no cause; the brief's readouts (damage per source, what was prevented) need the facts | `game/room/history.mjs` already knows each; the view's builder in `game/room/room.mjs` | |
+| 3 | UI | A structured record of what happened since the last revision: `events: [{kind, …}]` on the view (damage dealt with its source and target; a spell countered and by what; tokens created with their count; proliferate; a permanent destroyed or exiled; life gained or lost with its cause; a seat out) | The callouts over the table and the sounds read these from the difference between two views and from the history's sentences (`/countered/`, `/created N … tokens/`), which is brittle and carries no cause; the brief's readouts (damage per source, what was prevented) need the facts | `game/room/history.mjs` already knows each; the view's builder in `game/room/room.mjs` | Built: `events.v1` (Linear ROB-77, #747), on staging since Oct 18, its kinds in `docs/ui-lane/gameplay-anchor.md` (Events); a reconnect sends `{type: "view", after}` |
 | 4 | UI | Per player, the mana tapped this step (`manaTapped`), or on each land whether it was tapped for mana | Turn Resources' "mana tapped this step"; today it counts tapped lands, which includes a land tapped for anything else | the view's players | |
 | 5 | UI | On a card: whether it is a token; what an Aura or Equipment is attached to; summoning sickness; colors and mana cost; which face is up | The anchor's own list. Dice on tokens, Turn Resources by color, attachments drawn under their host, a double-faced card's right picture | the view's cards | |
 | 6 | UI | A `roll` frame at the game's start: the d20 for first player, sent to every seat with its result | The brief's die, which animates to the result it was sent | the room, at launch | |
@@ -225,11 +225,31 @@ before its push and recorded there after.
   kept. A drawn card's id in the hand is now in its engine event (`drewAs`). The socket's `after` waits on one line in
   `cloud/game-room.mjs` (asked in ROB-11). Proof: room-events 32; breaks-table-events 17, each caught; fuzz-library's and
   room-g1-terms' no-leak checks read every view's events.
+- **ROB-76, done (#748, main 2030725c; staging 7ebf7d89, version 383c0a2c byte-identical):** the round and the turn
+  within it (rules/turn.mjs, `nextRound`): `state.round`, `turnInRound`, `turnId` and `extraTurn` in every view, and
+  `round` in the turn's events. Proof: engine-rounds 27; breaks-rounds 13, each caught.
+- **ROB-75 and the socket frames, done (#778, main 62900176; staging 5634b896, version b6f37e78 byte-identical):** a
+  draft of blocks checked before Confirm (`legalBlocks` on the declare-blockers decision; `room.check`, rules/combat.mjs `blockers.check`, every reason at once and nothing changed),
+  and the three frames in `cloud/game-room.mjs`, the engine lane's file since the charter: `{type: "view", after}`
+  (ROB-77), `{type: "yield", on}` (ROB-13) and `{type: "check"}` (ROB-75). Required blocks, "an additional creature",
+  "can't block alone" and battles are not in the rules yet (ROB-149). Proof: room-block-check 30, breaks-block-check 13;
+  game-room 531, breaks-socket-frames 6; each caught.
+- **ROB-94, started:** revision 37's six decks (fresh from staging D1 with Rob's OK, kept in the ignored `game/.local/`),
+  every card defined; 72 games through the real room with `--replay --leaks`, all clean (ROB-94 in Linear).
 - **Waiting on Rob:** the backstop's daily cap (ROB-90); the AI door's two settings (ROB-95: the staging AI Access app, and the
   production key); whether waves 4d onward wait on card-load steps 1 to 4 (ROB-93).
-- **With the Opus session holding Codex's lane** (`docs/HANDOFF-OPUS-2026-10-17.md`): coordinated in ROB-11. No `cloud/**` or UI
-  file in this lane's PRs. Staging releases of main are this lane's, as agreed there: announced in ROB-11 before the push and
-  recorded after it, never two at once.
+- **Files and releases (the October 18 charter, `docs/program/README.md` section 3):** this lane edits `game/**`, the room and
+  Worker routing files in `cloud/` (`worker.mjs`, `play-worker.mjs`, `game-room.mjs`, `tables.mjs`, `ai.mjs`, `access.mjs`),
+  `migrations/**`, `data/engine/**`, the release and CI tooling, and its own feed; never `docs/ui-lane/**` or another lane's
+  `cloud/` files, which are asked for in ROB-11. Staging releases of main are this lane's: announced in ROB-11 before the push
+  and recorded after it, never two at once.
+- **The next session starts here.** This one stopped after #778, per the card load plan's "Running a lane" (one step, one
+  fresh session, one PR). Card load step 1 (ROB-86) and step 2 (ROB-87) each start from their kickoff prompt in
+  `docs/engine/plan-card-load-program.md`. Migrations as reserved in ROB-11 on Oct 18: 0006 ROB-127 (preferences), 0007
+  ROB-86 (`card_demand`), 0008 ROB-88 (`card_candidates`). Open with the engine lane: Codex · Play's answer on the anchor
+  lines for the block draft and the three frames (ROB-11, Oct 18); the ROB-134 routes (`GET /d/<shareId>`,
+  `GET /api/public/decks/<shareId>`) and their Access bypass, staging first (Rob approved it on Oct 18); the ROB-132 meter;
+  ROB-94's remaining steps; a per-turn stats field for ROB-116 once Deck intelligence names the fields (Requests row 1).
 
 ## 2026-10-14: Rob's decisions on the card load program
 
