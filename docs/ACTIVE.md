@@ -392,13 +392,13 @@ refused of the concept, and the passes to come: `docs/ui-lane/plan-play-ui-2026-
   - **Branch and commit:** `claude/nice-hypatia-4ajdyi` at main's merge commit 9cf57d0c, nothing unmerged; the
     close-out docs ride a last small PR from it.
   - **Proven:** everything above, by the commands in `docs/ui-lane/astra/handoff.md` §4 and the breaks files named.
-  - **Assumed:** nothing new. Staging still serves main 222af69 (2026-10-12): it has neither the tabletop nor
-    today's fixes. A release is the engine lane's or Rob's call (`tools/release-staging.sh`, as pass 1's was run
-    from a cloud container on Rob's say-so).
+  - **Assumed:** nothing new. Staging serves main 62900176 (2026-10-18, #775's release), which carries #729's fixes;
+    read back signed in at this close.
   - **Outstanding, and whose:** the focus loss (UI lane, the Linear issue); breaks for the tabletop's mat material,
     rear-seat layout and camera persistence against `tests/table-tabletop.mjs` (UI lane, ROB-16's leftover); Rob's
-    feedback on pass 1 and pass 2 by whoever holds the UI lane (`docs/ui-lane/astra/README.md` §4); the staging
-    release. The handoff for the next session of this lane: `docs/handoff-ui-2026-10-18.md`.
+    feedback on pass 1 and pass 2 by whoever holds the UI lane (`docs/ui-lane/astra/README.md` §4, and
+    `docs/HANDOFF-TO-CODEX-2026-10-18.md`, which is newer). The handoff for the next session of this lane:
+    `docs/handoff-ui-2026-10-18.md`.
 
 ## 2026-10-12: the AI call log on the clock it is handed (`claude/advisor-meter-clock`)
 

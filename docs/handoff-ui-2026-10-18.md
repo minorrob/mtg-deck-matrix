@@ -12,7 +12,9 @@ four things); this page is the pointer and the order to read in.
 3. `docs/ui-lane/astra/README.md`: the instructions to whoever holds the UI lane, one directory, with the precedence
    that settles any conflict; its `handoff.md` has the game in one page, the file map and the commands that prove
    each piece.
-4. `docs/play-overhaul/REQUIREMENTS.md` and `INSTRUCTIONS.md`: Codex's Play overhaul, newer than the Astra
+4. `docs/HANDOFF-TO-CODEX-2026-10-18.md`: the Play boards handed back to Codex Astra on 2026-10-18 by the session
+   that held Codex's lane on the 17th; newer than this page's reading of who holds what, and it wins.
+5. `docs/play-overhaul/REQUIREMENTS.md` and `INSTRUCTIONS.md`: Codex's Play overhaul, newer than the Astra
    directory where they differ.
 
 ## The four things
@@ -23,15 +25,14 @@ four things); this page is the pointer and the order to read in.
   rewritten for the tabletop with the three tabletop defects it found fixed (#729, main 9cf57d0c, a green `suites`
   run). Each claim's command is in `docs/ui-lane/astra/handoff.md` §4 and the breaks files
   `game/tools/batch/breaks-play-ui.py`, `breaks-play-ui-rest.py`, `breaks-a11y-tabletop.py` (all caught).
-- **Assumed:** nothing new today. Staging serves main 222af69 of 2026-10-12: it has neither Codex's tabletop
-  (#734, #736, #737) nor the fixes of #729. Production serves main fa1a7d3b.
+- **Assumed:** nothing new today. Staging serves main 62900176 of 2026-10-18 (read back signed in with
+  `tools/staging-check.mjs` at this close), which carries #729's fixes and Codex's tabletop; production is where
+  `docs/ACTIVE.md`'s latest release record says.
 - **Outstanding, and whose:**
   - ROB-154 (UI lane): Settings opened from Full screen's profile menu drops keyboard focus to the page body.
   - ROB-156 (UI lane, ROB-16's leftover): breaks for the tabletop's mat material, rear-seat layout and camera
     persistence against `tests/table-tabletop.mjs`.
   - Rob's feedback on pass 1, then pass 2 by whoever holds the UI lane (`docs/ui-lane/astra/README.md` §4).
-  - The staging release of main (the engine lane's, or Rob's; `tools/release-staging.sh` from a release worktree
-    with a local `wrangler`, as pass 1's was run on Rob's say-so).
 
 ## How to resume this lane in one line
 
