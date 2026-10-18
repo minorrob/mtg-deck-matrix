@@ -14,7 +14,7 @@
 // way.
 import {execFile} from "node:child_process";
 import {promisify} from "node:util";
-import {readFile, writeFile, mkdtemp, rm} from "node:fs/promises";
+import {readFile, mkdtemp, rm} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import assert from "node:assert/strict";
@@ -75,22 +75,16 @@ if (!python) {
   process.exit(0);
 }
 
-// The importer writes to its own fixed path and takes only the source, so the
-// only way to get a fresh copy is to let it overwrite and put the original back.
-// The restore is in a finally block: a failing assertion must not leave the
-// working tree dirty.
+// The importer writes into a temporary directory, never over the committed
+// file: suites run several at a time, and one that read master-v2.json while
+// this test rewrote it got half a file (pilot-policy, 2026-10-17).
 const dir = await mkdtemp(join(tmpdir(), "master-regen-"));
 const committedText = await readFile(COMMITTED, "utf8");
-let freshText = null;
-try {
-  await run(python, ["tools/import_master_v2.py", SOURCE]);
-  freshText = await readFile(COMMITTED, "utf8");
-} finally {
-  await writeFile(COMMITTED, committedText);
-}
+const FRESH = join(dir, "master-v2.json");
 
 try {
-  const fresh = JSON.parse(freshText);
+  await run(python, ["tools/import_master_v2.py", SOURCE, FRESH]);
+  const fresh = JSON.parse(await readFile(FRESH, "utf8"));
   const committed = JSON.parse(committedText);
 
   assert.equal(committed.source, fresh.source,

@@ -75,7 +75,7 @@ Preview means implemented in the desktop tabletop surface, with acceptance still
 | R34 | Mana and passive-effect wording (section 6) | Pending | Source count is not mana amount; text match is not a confirmed active restriction. |
 | R35 | Screenshots with stable object IDs (latest user instruction) | Preview | T01 top, T02–T04 back seats, T05 front mat, T06 command, T07 library, T08 lands, T09 battlefield, T10 camera, T11 hand, T12/T13 handles, T14 panel, T15/T16 previous/next hand cards, T17 Background, T18 Table material, T19 Cards, T20 profile, T21 player life container, M01 stack, M02 Table Vitals, M03 History, M04 Card Preview, D01 drawer settings. |
 | R36 | UAT feedback (latest user instruction) | HTML canceled by Rob | Rob will transcribe the game; retain screenshots and automated release checks. |
-| R37 | Staging integration (latest user instruction) | Pending | Exact tested source, release verification and staging acceptance; no production release implied. |
+| R37 | Staging integration (latest user instruction) | Current milestone deployed | Main da39a2ed, release bad37e87, Cloudflare version 2e431de5. Release acceptance 22 and multiplayer 38 passed. Rob waived a green full-suite prerequisite; run 38663852137 was pending at publication. Full-overhaul acceptance remains separate. |
 
 ## Reconciled technical decisions
 
