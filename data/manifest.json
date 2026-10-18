@@ -1,8 +1,8 @@
 {
  "schema": "manifest@1",
- "generatedAt": "2026-10-18T07:03:57.323Z",
+ "generatedAt": "2026-10-18T07:04:11.887Z",
  "generator": "tools/data-manifest.mjs",
- "count": 24,
+ "count": 25,
  "files": [
   {
    "file": "data/engine/oracle.json",
@@ -146,6 +146,17 @@
    "version": 2,
    "served": true,
    "cache": "precached"
+  },
+  {
+   "file": "data/vendors.json",
+   "schema": "vendors@1",
+   "stamp": "2026-10-18",
+   "generator": "hand-maintained",
+   "bytes": 1851,
+   "sha256": "88cf1c85417d76c48f6229b5498df71d390ad3354c9125ca69d1a6b8931cb0f1",
+   "version": null,
+   "served": false,
+   "cache": "not served"
   },
   {
    "file": "data/deck-guides.json",
