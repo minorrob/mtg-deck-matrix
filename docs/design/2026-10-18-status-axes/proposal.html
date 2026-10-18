@@ -1,0 +1,751 @@
+<title>Card Status Model</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one reading column (about 70ch) for argument, figures break out to the full 1100px
+   frame; CrankMagic's own moss-iron palette and Barlow Condensed headings, so the proposal looks
+   like the product it changes. Chart hues are the app's status hues, re-stepped and validated. */
+:root{
+  --bg:#f4f6f0; --panel:#fbfcf8; --raised:#eaeee3; --line:#d3dacb; --ink:#172015; --ink-2:#34402f; --muted:#5b6856;
+  --accent:#2f7d3a; --accent-soft:#dcebd8; --bad:#b4442f; --bad-soft:#f6e1dc; --warn:#8a6414;
+  --s-final:#3d8a3a; --s-sub:#7b5fb8; --s-res:#a07a22; --s-watch:#3f73b3;
+  --font-display:'Barlow Condensed','Arial Narrow',Arial,sans-serif;
+  --font-body:'Barlow',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121511; --panel:#181d17; --raised:#22291f; --line:#2f382c; --ink:#eef1e8; --ink-2:#cdd5c6; --muted:#97a391;
+  --accent:#5fae5c; --accent-soft:#223423; --bad:#e0655a; --bad-soft:#3a201c; --warn:#d6ad55;
+  --s-final:#4f9e4c; --s-sub:#9277c9; --s-res:#ad873a; --s-watch:#5a8cc8; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121511; --panel:#181d17; --raised:#22291f; --line:#2f382c; --ink:#eef1e8; --ink-2:#cdd5c6; --muted:#97a391;
+  --accent:#5fae5c; --accent-soft:#223423; --bad:#e0655a; --bad-soft:#3a201c; --warn:#d6ad55;
+  --s-final:#4f9e4c; --s-sub:#9277c9; --s-res:#ad873a; --s-watch:#5a8cc8; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.6 var(--font-body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 64px}
+.frame{max-width:1100px;margin:0 auto}
+.col{max-width:72ch}
+h1,h2,h3{font-family:var(--font-display);text-wrap:balance;margin:0;letter-spacing:.005em}
+h1{font-weight:800;font-size:clamp(40px,7vw,64px);line-height:.95;text-transform:uppercase}
+h2{font-weight:800;font-size:30px;text-transform:uppercase;line-height:1.05}
+h3{font-weight:700;font-size:21px;line-height:1.15}
+p{margin:0}
+a{color:var(--accent)}
+code,.mono{font-family:var(--font-mono);font-size:.84em}
+code{background:var(--raised);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+.eyebrow{font:600 12px/1.2 var(--font-body);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+/* Header */
+header.top{padding-block:44px 28px;border-bottom:1px solid var(--line);display:grid;gap:18px}
+.dek{font-size:19px;line-height:1.5;color:var(--ink-2);max-width:62ch}
+.meta{display:flex;flex-wrap:wrap;gap:8px 22px;font-size:14px;color:var(--muted)}
+.meta b{color:var(--ink);font-weight:600}
+.state-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;border:1px solid var(--accent);color:var(--accent);font-weight:600;font-size:13px}
+.state-chip::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent)}
+nav.toc{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;padding-block:16px;border-bottom:1px solid var(--line)}
+nav.toc a{color:var(--ink-2);text-decoration:none;border-bottom:1px solid var(--line)}
+nav.toc a:hover{color:var(--accent);border-color:var(--accent)}
+
+section{padding-block:44px 8px;display:grid;gap:18px}
+section > .head{display:grid;gap:6px}
+.lede{font-size:17px;color:var(--ink-2)}
+
+/* Tables */
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th,td{text-align:left;vertical-align:top;padding:9px 12px;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:0}
+thead th{font:600 12px/1.2 var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--raised)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+td .sub{display:block;color:var(--muted);font-size:13px}
+.tag{display:inline-block;font:600 11.5px/1 var(--font-body);letter-spacing:.06em;text-transform:uppercase;padding:4px 7px;border-radius:5px;white-space:nowrap}
+.tag.done{background:var(--accent-soft);color:var(--accent)}
+.tag.after{background:var(--raised);color:var(--muted)}
+.tag.now{background:color-mix(in oklab,var(--warn) 16%,var(--panel));color:var(--warn)}
+
+/* Pills, mirroring the app */
+.pill{display:inline-flex;align-items:center;gap:5px;font:600 12.5px/1 var(--font-body);padding:5px 9px;border-radius:999px;border:1px solid;white-space:nowrap}
+.p-final{color:var(--s-final);border-color:var(--s-final);background:color-mix(in oklab,var(--s-final) 14%,transparent)}
+.p-sub{color:var(--s-sub);border-color:var(--s-sub);background:color-mix(in oklab,var(--s-sub) 14%,transparent)}
+.p-res{color:var(--s-res);border-color:var(--s-res);background:color-mix(in oklab,var(--s-res) 14%,transparent)}
+.p-watch{color:var(--s-watch);border-color:var(--s-watch);background:color-mix(in oklab,var(--s-watch) 14%,transparent)}
+.p-plain{color:var(--ink-2);border-color:var(--line);background:var(--raised)}
+.p-bad{color:var(--bad);border-color:var(--bad);background:var(--bad-soft)}
+
+/* Figures */
+figure{margin:0;display:grid;gap:10px}
+.fig{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:18px;overflow-x:auto}
+figcaption{font-size:14px;color:var(--muted);max-width:80ch}
+figcaption b{color:var(--ink-2)}
+svg.dg{display:block;width:100%;height:auto;min-width:760px}
+svg.dg text{fill:var(--ink);font-family:var(--font-body);font-size:13px}
+svg.dg .t-b{font-weight:700}
+svg.dg .t-h{font-family:var(--font-display);font-weight:700;font-size:16px;letter-spacing:.02em}
+svg.dg .t-s{fill:var(--muted);font-size:12px}
+svg.dg .t-mono{font-family:var(--font-mono);font-size:12px}
+svg.dg .t-bad{fill:var(--bad)}
+svg.dg .t-acc{fill:var(--accent)}
+svg.dg .box{fill:var(--raised);stroke:var(--line);stroke-width:1}
+svg.dg .box-plain{fill:var(--panel);stroke:var(--line);stroke-width:1}
+svg.dg .q{fill:var(--panel);stroke:var(--ink-2);stroke-width:1.25}
+svg.dg .edge{stroke:var(--muted);stroke-width:1.5;fill:none}
+svg.dg .edge-bad{stroke:var(--bad);stroke-width:1.75;fill:none}
+svg.dg .edge-acc{stroke:var(--accent);stroke-width:1.75;fill:none}
+svg.dg .dash{stroke-dasharray:5 4}
+svg.dg .ah{fill:var(--muted)} svg.dg .ah-bad{fill:var(--bad)} svg.dg .ah-acc{fill:var(--accent)}
+svg.dg .lf-final{fill:color-mix(in oklab,var(--s-final) 16%,var(--panel));stroke:var(--s-final);stroke-width:1.5}
+svg.dg .lf-sub{fill:color-mix(in oklab,var(--s-sub) 16%,var(--panel));stroke:var(--s-sub);stroke-width:1.5}
+svg.dg .lf-res{fill:color-mix(in oklab,var(--s-res) 16%,var(--panel));stroke:var(--s-res);stroke-width:1.5}
+svg.dg .lf-watch{fill:color-mix(in oklab,var(--s-watch) 16%,var(--panel));stroke:var(--s-watch);stroke-width:1.5}
+svg.dg .lf-plain{fill:var(--raised);stroke:var(--ink-2);stroke-width:1.25}
+svg.dg .lf-bad{fill:var(--bad-soft);stroke:var(--bad);stroke-width:1.5}
+svg.dg .seg-final{fill:var(--s-final)} svg.dg .seg-sub{fill:var(--s-sub)} svg.dg .seg-res{fill:var(--s-res)}
+svg.dg .seg-watch{fill:none;stroke:var(--s-watch);stroke-width:1.5;stroke-dasharray:4 3}
+svg.dg .yes{fill:var(--accent);font-weight:700;font-size:12px} svg.dg .no{fill:var(--muted);font-weight:700;font-size:12px}
+
+/* Cause cards */
+.causes{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr))}
+.cause{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:14px 16px;display:grid;gap:8px;align-content:start;min-width:0}
+.cause .n{font:800 13px/1 var(--font-display);letter-spacing:.08em;color:var(--bad)}
+.cause h3{font-size:18px}
+.cause p{font-size:14.5px;color:var(--ink-2)}
+.cause .where{font-size:12.5px;color:var(--muted)}
+
+/* The D1 filter bars */
+.bars{display:grid;gap:14px}
+.bar-row{display:grid;grid-template-columns:minmax(0,180px) minmax(0,1fr);gap:12px;align-items:center}
+.bar-row .lbl{font-size:14px;color:var(--ink-2);line-height:1.3}
+.bar-row .lbl small{display:block;color:var(--muted);font-size:12.5px}
+.bar{display:flex;gap:2px;height:30px}
+.bar span{display:flex;align-items:center;padding:0 8px;font:600 12.5px/1 var(--font-body);color:var(--panel);border-radius:2px;white-space:nowrap;overflow:hidden;min-width:0}
+.bar span:first-child{border-radius:4px 2px 2px 4px}
+.bar span:last-child{border-radius:2px 4px 4px 2px}
+.bar .own{background:var(--s-final)}
+.bar .bench{background:repeating-linear-gradient(135deg,var(--muted) 0 6px,color-mix(in oklab,var(--muted) 70%,var(--panel)) 6px 12px)}
+@media (max-width:560px){.bar-row{grid-template-columns:1fr}}
+
+/* Axes */
+.axes{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.axis{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:16px;display:grid;gap:10px;align-content:start;min-width:0}
+.axis .who{font-size:13px;color:var(--muted)}
+.axis .vals{display:flex;flex-wrap:wrap;gap:6px}
+.axis p{font-size:14.5px;color:var(--ink-2)}
+
+/* Validity matrix */
+table.matrix th,table.matrix td{text-align:center;padding:8px 6px}
+table.matrix th[scope=row]{text-align:left;padding-left:12px;white-space:nowrap}
+.ok{color:var(--accent);font-weight:700}
+.cond{color:var(--warn);font-weight:700}
+.nope{color:var(--line);font-weight:700}
+
+/* Equations */
+.eqs{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+.eq{border-left:3px solid var(--accent);padding:6px 0 6px 12px;display:grid;gap:2px}
+.eq b{font-family:var(--font-display);font-size:20px;font-weight:700}
+.eq span{font-size:14px;color:var(--muted)}
+
+/* Chart */
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13.5px;color:var(--ink-2)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.sw-final{background:var(--s-final)} .sw-load{background:repeating-linear-gradient(135deg,var(--s-final) 0 3px,var(--panel) 3px 5px)}
+.sw-sub{background:var(--s-sub)} .sw-res{background:var(--s-res)} .sw-watch{border:1.5px dashed var(--s-watch)}
+.chart{display:grid;gap:9px;min-width:640px}
+.crow{display:grid;grid-template-columns:150px minmax(0,1fr) 140px;gap:12px;align-items:center}
+.crow .name{font-size:14px;line-height:1.2}
+.crow .name small{display:block;color:var(--muted);font-size:12px}
+.crow .tot{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.crow .tot b{color:var(--ink);font-weight:600}
+.track{position:relative;height:24px}
+.track .segs{position:absolute;inset:0;display:flex;gap:2px}
+.track .segs span{flex:none}
+.track .segs span{height:100%;border-radius:2px;cursor:default}
+.track .segs span:first-child{border-radius:4px 2px 2px 4px}
+.track .segs span:last-child{border-radius:2px 4px 4px 2px}
+.segs .final{background:var(--s-final)} .segs .load{background:repeating-linear-gradient(135deg,var(--s-final) 0 3px,var(--panel) 3px 5px)}
+.segs .sub{background:var(--s-sub)} .segs .res{background:var(--s-res)} .segs .watch{border:1.5px dashed var(--s-watch);background:color-mix(in oklab,var(--s-watch) 10%,transparent)}
+.track .hundred{position:absolute;top:-5px;bottom:-5px;width:0;border-left:1.5px solid var(--ink)}
+.crow.ex .name{font-weight:600}
+.axisrow .track{height:16px}
+.axisrow .tick{position:absolute;top:0;transform:translateX(-50%);font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+#tip{position:fixed;z-index:20;pointer-events:none;background:var(--ink);color:var(--bg);font-size:13px;line-height:1.35;padding:7px 9px;border-radius:6px;max-width:260px;box-shadow:0 4px 18px rgb(0 0 0/.25)}
+details{border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+details > summary{cursor:pointer;padding:10px 14px;font-weight:600;font-size:14.5px}
+details .tablewrap{border:0;border-top:1px solid var(--line);border-radius:0 0 10px 10px}
+
+/* Screen mocks */
+.mocks{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,480px),1fr))}
+.mock{border:1px solid var(--line);border-radius:12px;background:var(--panel);display:grid;min-width:0}
+.mock > .mh{padding:12px 16px;border-bottom:1px solid var(--line);display:grid;gap:3px}
+.mock > .mh h3{font-size:18px}
+.mock > .mb{padding:14px 16px;display:grid;gap:12px;font-size:14px;min-width:0}
+.mock ul{margin:0;padding-left:18px;display:grid;gap:4px;color:var(--ink-2);font-size:14px}
+.screen{border:1px solid var(--line);border-radius:8px;background:var(--bg);padding:12px;display:grid;gap:10px;overflow-x:auto}
+.srow{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.slabel{font:600 11px/1 var(--font-body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);width:92px}
+.ghost{font:600 12.5px/1 var(--font-body);color:var(--accent);border:1px dashed var(--accent);border-radius:999px;padding:5px 10px;background:transparent}
+.ibtn{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;border:1px solid var(--muted);color:var(--muted);font:700 11px/1 var(--font-mono)}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.tile{border:1px solid var(--line);border-radius:6px;padding:7px 8px;background:var(--panel);display:grid;gap:2px}
+.tile b{font:800 22px/1 var(--font-display)}
+.tile span{font-size:12px;color:var(--muted)}
+.t-final b{color:var(--s-final)} .t-sub b{color:var(--s-sub)} .t-res b{color:var(--s-res)} .t-watch b{color:var(--s-watch)}
+.lrow{display:grid;grid-template-columns:minmax(120px,1.6fr) auto auto 40px 60px 28px;gap:8px;align-items:center;font-size:13px;min-width:430px;padding:6px 0;border-bottom:1px solid var(--line)}
+.lrow:last-child{border-bottom:0}
+.lrow .nm{font-weight:600}
+.dd{display:inline-flex;align-items:center;gap:4px}
+.dd::after{content:"";border:4px solid transparent;border-top-color:currentColor;margin-top:4px}
+.menu{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:6px;display:grid;gap:1px;max-width:260px;font-size:13px;box-shadow:0 6px 20px rgb(0 0 0/.12)}
+.menu .sec{font:600 10.5px/1 var(--font-body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:6px 8px 3px}
+.menu .it{padding:5px 8px;border-radius:5px}
+.menu .it.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.menu .it.off{color:var(--muted)}
+.hundred-sec{display:grid;gap:4px}
+.hundred-sec h4{margin:0;font:700 14px/1.2 var(--font-display);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.hline{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px}
+
+/* Decisions */
+.decisions{display:grid;gap:10px}
+.dec{display:grid;grid-template-columns:52px minmax(0,1fr);gap:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:14px 16px}
+.dec .id{font:800 22px/1 var(--font-display);color:var(--accent)}
+.dec h3{font-size:18px;margin-bottom:4px}
+.dec p{font-size:14.5px;color:var(--ink-2)}
+.dec .rec{margin-top:6px;font-size:14px}
+.dec .rec b{color:var(--accent)}
+
+ol.plan{margin:0;padding-left:0;list-style:none;display:grid;gap:10px;counter-reset:pr}
+ol.plan li{counter-increment:pr;display:grid;grid-template-columns:44px minmax(0,1fr);gap:12px;border-bottom:1px solid var(--line);padding-bottom:10px}
+ol.plan li::before{content:"PR" counter(pr);font:800 15px/1.5 var(--font-display);color:var(--muted)}
+ol.plan h3{font-size:17px}
+ol.plan p{font-size:14.5px;color:var(--ink-2)}
+
+pre.cmd{margin:0;background:var(--raised);border-radius:8px;padding:12px 14px;overflow-x:auto;font:400 13px/1.5 var(--font-mono)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="frame">
+
+<header class="top">
+  <p class="eyebrow">Proposal · Library and Decks · October 18, 2026</p>
+  <h1>One card,<br>three statuses</h1>
+  <p class="dek">A card's "status" answers three different questions today, and four parts of the app work it out four different ways. This proposal splits it into <b>Use</b>, <b>Ownership</b> and <b>Play</b>, computes all three in one place, and makes The 100 and the Library show the same rows with the same words.</p>
+  <div class="meta">
+    <span>For <b>Rob</b></span>
+    <span>From <b>Claude</b>, taking over the Workshop screens from Codex</span>
+    <span>Branch <b class="mono">claude/wizardly-einstein-9ibb4j</b></span>
+    <span class="state-chip">Waiting for your approval</span>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Sections">
+  <a href="#reframe">1 · The ask</a><a href="#today">2 · What's wrong today</a><a href="#model">3 · The target model</a>
+  <a href="#proof">4 · Your example, proved</a><a href="#flows">5 · Reserve and arrival</a><a href="#words">6 · The words</a>
+  <a href="#screens">7 · Screen changes</a><a href="#decide">8 · Your decisions</a><a href="#plan">9 · Build plan</a><a href="#provenance">10 · Proof</a>
+</nav>
+
+<!-- 1 ─────────────────────────────────────────────── -->
+<section id="reframe">
+  <div class="head col"><p class="eyebrow">1 · Your request, reframed</p><h2>Make a card's status mean one thing, everywhere</h2></div>
+  <p class="col lede">You asked for nine changes. Seven of them come from one cause: a single "status" word is used for three different questions (what the copy is for, whether you own it, whether the deck can be played), and each screen works it out separately. Fix that once, in the data model, and The 100, the Library, the card panel and the deck tiles all agree. Two changes are plain interface fixes and do not depend on the model.</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>#</th><th>Task</th><th>Kind</th><th>State</th></tr></thead>
+      <tbody>
+        <tr><td>A1</td><td>Audit how status is stored and every place it is computed<span class="sub">collection-model.js, crankmagic-collection.js, crankmagic-decks.js, crankmagic-app.js</span></td><td>Data architecture</td><td><span class="tag done">Done</span></td></tr>
+        <tr><td>A2</td><td>Find the root cause of each D1 symptom and reproduce it on committed data</td><td>Data architecture</td><td><span class="tag done">Done</span></td></tr>
+        <tr><td>A3</td><td>Reconcile with past decisions: card states (Sep 26), Bench in deck scope (Sep 14), groups (Sep 28)</td><td>Data architecture</td><td><span class="tag done">Done</span></td></tr>
+        <tr><td>A4</td><td>Design the three axes, the rules between them, the Reserve flow and the counting rules</td><td>Data architecture</td><td><span class="tag done">Done</span></td></tr>
+        <tr><td>A5</td><td>Prototype the derivation and run it on the backup and on your 90/10/10/4 example<span class="sub">docs/design/2026-10-18-status-axes/prove.mjs</span></td><td>Data architecture</td><td><span class="tag done">Done</span></td></tr>
+        <tr><td>B1–B5</td><td>Build the model: one <code>useOf()</code>, the Reserve command, swapping in on arrival, separate Sell and Trade, retire the old word list</td><td>Model</td><td><span class="tag after">After approval</span></td></tr>
+        <tr><td>C1–C6</td><td>Screens: Library scoped to a deck, The 100, Target → Final, card panel actions, one dropdown per cell, Quantity and Paid behind Edit</td><td>Interface</td><td><span class="tag after">After approval</span></td></tr>
+        <tr><td>C7–C8</td><td>Collection group hidden behind Group rows by; tighter row menu</td><td>Interface fix</td><td><span class="tag now">Can ship first</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- 2 ─────────────────────────────────────────────── -->
+<section id="today">
+  <div class="head col"><p class="eyebrow">2 · Current state</p><h2>What you saw, and why</h2></div>
+  <div class="causes">
+    <article class="cause"><p class="n">CAUSE 1</p><h3>"Deck: D1" adds every Bench copy</h3><p>The Library's deck filter keeps every owned Bench copy alongside the deck's own cards. That is why D1 showed 598 records: your 100 D1 copies plus 520 Bench copies, each Bench row with a Reserve button.</p><p class="where">crankmagic-collection.js:50. Your Sep 14 call ("what do I own that could go in it"), recorded only as a code comment.</p></article>
+    <article class="cause"><p class="n">CAUSE 2</p><h3>The 100 works out its own status</h3><p>The 100 labels each <i>list seat</i> with its own logic, which ends in "Target". The Library labels each <i>copy</i> with <code>cardState</code>. They show different rows: a substitute is a row in the Library but only a "held by" note in The 100.</p><p class="where">crankmagic-decks.js:493 vs collection-model.js:65</p></article>
+    <article class="cause"><p class="n">CAUSE 3</p><h3>"Target" reads as "still to get"</h3><p>Since Sep 26, Target has meant "the list's own card, in the box". The word sounds like something you are aiming for, so 100 cards that are in the box look unfinished.</p><p class="where">docs/card-states.md, ROLES</p></article>
+    <article class="cause"><p class="n">CAUSE 4</p><h3>"Reserved" means the opposite of what you want</h3><p>Today Reserved means "takes an <i>empty</i> seat". What you call Reserved, a card bought or borrowed to replace a substitute, is today's "Upgrade".</p><p class="where">collection-model.js:69</p></article>
+    <article class="cause"><p class="n">CAUSE 5</p><h3>A copy claimed from another deck is counted wrong</h3><p>Llanowar Elves sits in D2's box and is claimed by D7. The Library scoped to D7 counts it as a D7 Substitute, The 100 says "To add", and the D7 tile does not count it.</p><p class="where">7 copies like this in the backup; D7 has 5</p></article>
+    <article class="cause"><p class="n">CAUSE 6</p><h3>Two word lists still in use</h3><p>The older list (Physical deck, Wanted, Planned, Watched, Draft list…) still drives row buttons, the Table view and Trace, alongside the Sep 26 list.</p><p class="where">statusOf: 7 uses; <code>placement</code> decides which buttons a row offers</p></article>
+    <article class="cause"><p class="n">CAUSE 7</p><h3>The whole row is one click target</h3><p>A click anywhere on a Library row, including its status pill, opens the card panel. In the card panel, the status chips are links that open the Library.</p><p class="where">crankmagic-collection.js:1083; crankmagic-app.js:488</p></article>
+    <article class="cause"><p class="n">CAUSE 8</p><h3>The Collection group box spills under Group rows by</h3><p>The label is capped at 240px but its select has no width rule. A long group name makes the select wider than its label, and the next control is drawn over the extra width.</p><p class="where">crankmagic.css:1222</p></article>
+  </div>
+
+  <figure>
+    <div class="fig">
+      <svg class="dg" viewBox="0 -6 980 336" role="img" aria-label="Today, one set of stored fields is read by four separate functions, and they give four different answers for the same copies.">
+        <defs>
+          <marker id="f1a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0 0L10 5L0 10z"/></marker>
+          <marker id="f1b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah-bad" d="M0 0L10 5L0 10z"/></marker>
+        </defs>
+        <rect class="box" x="16" y="20" width="300" height="290" rx="10"/>
+        <text class="t-h" x="34" y="48">STORED ON EACH COPY</text>
+        <text class="t-mono" x="34" y="78">source</text><text class="t-s" x="132" y="78">owned · ordered · watching</text>
+        <text class="t-mono" x="34" y="104">location</text><text class="t-s" x="132" y="104">Bench, or a deck's box</text>
+        <text class="t-mono" x="34" y="130">allocation</text><text class="t-s" x="132" y="130">the deck seat it is for</text>
+        <text class="t-mono" x="34" y="156">standInFor</text><text class="t-s" x="132" y="156">seat a substitute holds</text>
+        <text class="t-mono" x="34" y="182">offer</text><text class="t-s" x="132" y="182">one Sell / Trade flag</text>
+        <text class="t-mono" x="34" y="208">groupIds</text><text class="t-s" x="132" y="208">collection groups</text>
+        <line x1="34" y1="226" x2="298" y2="226" stroke="var(--line)"/>
+        <text class="t-h" x="34" y="252">ON EACH DECK</text>
+        <text class="t-mono" x="34" y="278">slots</text><text class="t-s" x="132" y="278">the list; an empty seat</text>
+        <text class="t-s" x="132" y="296">becomes a computed To buy</text>
+
+        <path class="edge" d="M316 165 C 360 165, 360 50, 398 50" marker-end="url(#f1a)"/>
+        <path class="edge" d="M316 165 C 360 165, 360 125, 398 125" marker-end="url(#f1a)"/>
+        <path class="edge" d="M316 165 C 360 165, 360 200, 398 200" marker-end="url(#f1a)"/>
+        <path class="edge" d="M316 165 C 360 165, 360 275, 398 275" marker-end="url(#f1a)"/>
+        <text class="t-h" x="400" y="14">COMPUTED BY</text>
+
+        <rect class="box-plain" x="400" y="24" width="240" height="52" rx="8"/><text class="t-mono t-b" x="416" y="46">cardState()</text><text class="t-s" x="416" y="64">Library pill, card panel chips</text>
+        <rect class="box-plain" x="400" y="99" width="240" height="52" rx="8"/><text class="t-mono t-b" x="416" y="121">status(slot)</text><text class="t-s" x="416" y="139">The 100 on the deck page</text>
+        <rect class="box-plain" x="400" y="174" width="240" height="52" rx="8"/><text class="t-mono t-b" x="416" y="196">readiness()</text><text class="t-s" x="416" y="214">deck tiles, "ready to play"</text>
+        <rect class="box-plain" x="400" y="249" width="240" height="52" rx="8"/><text class="t-mono t-b" x="416" y="271">statusOf() + placement</text><text class="t-s" x="416" y="289">row menus, Table view, Trace</text>
+
+        <path class="edge-bad" d="M640 50 H 698" marker-end="url(#f1b)"/>
+        <path class="edge-bad" d="M640 125 H 698" marker-end="url(#f1b)"/>
+        <path class="edge-bad" d="M640 200 H 698" marker-end="url(#f1b)"/>
+        <path class="edge-bad" d="M640 275 H 698" marker-end="url(#f1b)"/>
+        <text class="t-h" x="700" y="14">SAYS ABOUT THOSE 5 COPIES</text>
+
+        <rect class="lf-bad" x="700" y="24" width="264" height="52" rx="8"/><text class="t-b" x="716" y="46">"Substitute", counted for D7</text><text class="t-s" x="716" y="64">D7's Substitute tile reads 36, box holds 31</text>
+        <rect class="lf-bad" x="700" y="99" width="264" height="52" rx="8"/><text class="t-b" x="716" y="121">"To add"</text><text class="t-s" x="716" y="139">sounds like it is on your Bench</text>
+        <rect class="lf-bad" x="700" y="174" width="264" height="52" rx="8"/><text class="t-b" x="716" y="196">not counted for D7</text><text class="t-s" x="716" y="214">counted as D2's substitute</text>
+        <rect class="lf-bad" x="700" y="249" width="264" height="52" rx="8"/><text class="t-b" x="716" y="271">"Reserved"</text><text class="t-s" x="716" y="289">the older word list</text>
+      </svg>
+    </div>
+    <figcaption><b>Today: one record, four answers.</b> These are the 5 copies in the backup that sit in D2's and D4's boxes and are claimed by D7 (Llanowar Elves is one). The data is correct; the copies are exactly what you describe as Reserved. Each of the four functions labels them differently, so the screens disagree.</figcaption>
+  </figure>
+
+  <figure>
+    <div class="fig">
+      <div class="bars">
+        <div class="bar-row"><div class="lbl">Your screen, Deck: D1<small>620 copies shown</small></div>
+          <div class="bar" role="img" aria-label="100 of 620 copies are D1's; 520 are Bench copies from the whole library"><span class="own" style="flex:100">D1 · 100</span><span class="bench" style="flex:520">every Bench copy · 520</span></div></div>
+        <div class="bar-row"><div class="lbl">Backup, Deck: D1 Quintorius<small>997 copies shown</small></div>
+          <div class="bar" role="img" aria-label="108 of 997 copies are D1's; 889 are Bench copies"><span class="own" style="flex:108">D1 · 108</span><span class="bench" style="flex:889">every Bench copy · 889</span></div></div>
+      </div>
+    </div>
+    <figcaption><b>Five of every six rows under "Deck: D1" are not D1's.</b> Bar lengths are to scale. The Bench copies come from the whole library, and each gets a Reserve button (501 rows in the backup).</figcaption>
+  </figure>
+</section>
+
+<!-- 3 ─────────────────────────────────────────────── -->
+<section id="model">
+  <div class="head col"><p class="eyebrow">3 · Target state</p><h2>Three statuses, one function</h2></div>
+  <p class="col lede">Each card record answers three questions. You set two of them; the app works out the third. All three come from one function, <code>useOf(record)</code>, in the collection model, and no screen works a status out for itself. The stored data barely changes. Today's fields already hold every fact; the only additions are splitting the Sell / Trade flag in two and an optional "would replace" note on a watched card (D8).</p>
+
+  <div class="axes">
+    <article class="axis"><p class="eyebrow">Use · what the copy is for</p>
+      <div class="vals"><span class="pill p-final">Final</span><span class="pill p-sub">Substitute</span><span class="pill p-res">Reserved</span><span class="pill p-plain">Bench</span><span class="pill p-plain">Sell</span><span class="pill p-plain">Trade</span><span class="pill p-plain">Unowned</span></div>
+      <p>Final and Substitute are the only uses that put a card <b>in the deck</b> and count toward its 100.</p>
+      <p class="who">Set by you: Change status, Put in deck, Reserve</p></article>
+    <article class="axis"><p class="eyebrow">Ownership · where it is in the buying cycle</p>
+      <div class="vals"><span class="pill p-watch">Watch</span><span class="pill p-res">To buy</span><span class="pill p-plain">Ordered</span><span class="pill p-final">Own</span><span class="pill p-plain">To sell</span><span class="pill p-plain">Trade</span></div>
+      <p>No Canceled. Deleting the card removes it. Sell and Trade are stored once, here, and the Use column shows the same value.</p>
+      <p class="who">Set by you: Change status, Order, Mark arrived</p></article>
+    <article class="axis"><p class="eyebrow">Play · the system's reading</p>
+      <div class="vals"><span class="pill p-final">Playable</span><span class="pill p-plain">Loading</span><span class="pill p-res">To load</span></div>
+      <p>For a card: in the box; owned but not put in yet; or still to get. For a deck: the box holds 100; owned cards cover the gap; a seat is waiting on a card.</p>
+      <p class="who">Never set by hand. No control changes it.</p></article>
+  </div>
+
+  <h3>Which Use goes with which Ownership</h3>
+  <div class="tablewrap">
+    <table class="matrix">
+      <thead><tr><th>Use ↓ · Ownership →</th><th>Watch</th><th>To buy</th><th>Ordered</th><th>Own</th><th>To sell</th><th>Trade</th></tr></thead>
+      <tbody>
+        <tr><th scope="row"><span class="pill p-final">Final</span></th><td class="nope">·</td><td class="nope">·</td><td class="nope">·</td><td class="ok">✓ in the box</td><td class="nope">·</td><td class="nope">·</td></tr>
+        <tr><th scope="row"><span class="pill p-sub">Substitute</span></th><td class="nope">·</td><td class="nope">·</td><td class="nope">·</td><td class="ok">✓ in the box</td><td class="nope">·</td><td class="nope">·</td></tr>
+        <tr><th scope="row"><span class="pill p-res">Reserved</span></th><td class="cond">→ To buy*</td><td class="ok">✓</td><td class="ok">✓</td><td class="cond">✓ only from another deck's box</td><td class="nope">·</td><td class="nope">·</td></tr>
+        <tr><th scope="row"><span class="pill p-plain">Bench</span></th><td class="nope">·</td><td class="nope">·</td><td class="nope">·</td><td class="ok">✓</td><td class="nope">·</td><td class="nope">·</td></tr>
+        <tr><th scope="row"><span class="pill p-plain">Sell / Trade</span></th><td class="nope">·</td><td class="nope">·</td><td class="nope">·</td><td class="nope">·</td><td class="ok">✓ Sell</td><td class="ok">✓ Trade</td></tr>
+        <tr><th scope="row"><span class="pill p-plain">Unowned</span></th><td class="ok">✓</td><td class="ok">✓ no deck</td><td class="ok">✓ no deck</td><td class="nope">·</td><td class="nope">·</td><td class="nope">·</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="col muted" style="font-size:14px">* Reserving a watched card moves it to To buy, after you confirm. A Bench copy is never Reserved: you put it in the deck as Final or Substitute. Each status dropdown offers only the ✓ cells for that row, so a combination that cannot exist cannot be chosen.</p>
+
+  <figure>
+    <div class="fig">
+      <svg class="dg" viewBox="0 0 980 500" role="img" aria-label="Decision tree of the proposed useOf function: owned or not, claimed by a deck seat, offered, in a deck's box, on that deck's list. It ends in seven outcomes: Reserved, Unowned, Sell or Trade, Final, Substitute, Final Loading, Bench.">
+        <defs><marker id="f3a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0 0L10 5L0 10z"/></marker></defs>
+        <!-- edges -->
+        <path class="edge" d="M490 46 V 72" marker-end="url(#f3a)"/>
+        <path class="edge" d="M490 110 V 134 H 220 V 156" marker-end="url(#f3a)"/><text class="no" x="340" y="128">NO</text>
+        <path class="edge" d="M490 110 V 134 H 720 V 156" marker-end="url(#f3a)"/><text class="yes" x="610" y="128">YES</text>
+        <path class="edge" d="M220 194 V 218 H 120 V 240" marker-end="url(#f3a)"/><text class="yes" x="132" y="212">YES</text>
+        <path class="edge" d="M220 194 V 218 H 320 V 240" marker-end="url(#f3a)"/><text class="no" x="288" y="212">NO</text>
+        <path class="edge" d="M720 194 V 218 H 880 V 240" marker-end="url(#f3a)"/><text class="yes" x="836" y="212">YES</text>
+        <path class="edge" d="M720 194 V 218 H 630 V 252" marker-end="url(#f3a)"/><text class="no" x="642" y="212">NO</text>
+        <path class="edge" d="M630 290 V 312 H 460 V 334" marker-end="url(#f3a)"/><text class="yes" x="520" y="306">YES</text>
+        <path class="edge" d="M630 290 V 312 H 800 V 334" marker-end="url(#f3a)"/><text class="no" x="728" y="306">NO</text>
+        <path class="edge" d="M460 372 V 394 H 380 V 412" marker-end="url(#f3a)"/><text class="yes" x="388" y="390">YES</text>
+        <path class="edge" d="M460 372 V 394 H 540 V 412" marker-end="url(#f3a)"/><text class="no" x="512" y="390">NO</text>
+        <path class="edge" d="M800 372 V 394 H 720 V 412" marker-end="url(#f3a)"/><text class="yes" x="728" y="390">YES</text>
+        <path class="edge" d="M800 372 V 394 H 880 V 412" marker-end="url(#f3a)"/><text class="no" x="852" y="390">NO</text>
+        <!-- root and questions -->
+        <rect class="box" x="355" y="12" width="270" height="34" rx="17"/><text class="t-b" x="490" y="34" text-anchor="middle">A copy, or a deck seat with none</text>
+        <rect class="q" x="400" y="74" width="180" height="36" rx="18"/><text x="490" y="97" text-anchor="middle">Do you own it?</text>
+        <rect class="q" x="110" y="158" width="220" height="36" rx="18"/><text x="220" y="181" text-anchor="middle">Is a deck seat waiting for it?</text>
+        <rect class="q" x="610" y="158" width="220" height="36" rx="18"/><text x="720" y="181" text-anchor="middle">Up for sale or trade?</text>
+        <rect class="q" x="530" y="254" width="200" height="36" rx="18"/><text x="630" y="277" text-anchor="middle">In a deck's box?</text>
+        <rect class="q" x="360" y="336" width="200" height="36" rx="18"/><text x="460" y="359" text-anchor="middle">On that deck's list?</text>
+        <rect class="q" x="700" y="336" width="200" height="36" rx="18"/><text x="800" y="359" text-anchor="middle">Is a deck seat waiting for it?</text>
+        <!-- leaves -->
+        <rect class="lf-res" x="45" y="242" width="150" height="62" rx="8"/><text class="t-b" x="120" y="262" text-anchor="middle">Reserved</text><text class="t-s" x="120" y="279" text-anchor="middle">To buy or Ordered</text><text class="t-s" x="120" y="295" text-anchor="middle">Play: To load</text>
+        <rect class="lf-watch" x="245" y="242" width="150" height="62" rx="8"/><text class="t-b" x="320" y="262" text-anchor="middle">Unowned</text><text class="t-s" x="320" y="279" text-anchor="middle">Watch, To buy, Ordered</text><text class="t-s" x="320" y="295" text-anchor="middle">for a deck: Watching</text>
+        <rect class="lf-plain" x="805" y="242" width="150" height="62" rx="8"/><text class="t-b" x="880" y="262" text-anchor="middle">Sell or Trade</text><text class="t-s" x="880" y="279" text-anchor="middle">To sell or Trade</text><text class="t-s" x="880" y="295" text-anchor="middle">out of every deck</text>
+        <rect class="lf-final" x="305" y="414" width="150" height="62" rx="8"/><text class="t-b" x="380" y="434" text-anchor="middle">Final</text><text class="t-s" x="380" y="451" text-anchor="middle">Own · in the box</text><text class="t-s" x="380" y="467" text-anchor="middle">Play: Playable</text>
+        <rect class="lf-sub" x="465" y="414" width="150" height="62" rx="8"/><text class="t-b" x="540" y="434" text-anchor="middle">Substitute</text><text class="t-s" x="540" y="451" text-anchor="middle">holds a Reserved seat</text><text class="t-s" x="540" y="467" text-anchor="middle">Play: Playable</text>
+        <rect class="lf-final" x="645" y="414" width="150" height="62" rx="8" stroke-dasharray="5 3"/><text class="t-b" x="720" y="434" text-anchor="middle">Final · Loading</text><text class="t-s" x="720" y="451" text-anchor="middle">Own, not put in yet</text><text class="t-s" x="720" y="467" text-anchor="middle">Play: Loading</text>
+        <rect class="lf-plain" x="805" y="414" width="150" height="62" rx="8"/><text class="t-b" x="880" y="434" text-anchor="middle">Bench</text><text class="t-s" x="880" y="451" text-anchor="middle">Own · no deck</text><text class="t-s" x="880" y="467" text-anchor="middle">for a deck: Watching</text>
+      </svg>
+    </div>
+    <figcaption><b>The function every screen will call.</b> Five questions, seven outcomes, nothing guessed. A Substitute that another deck has claimed is still a Substitute in the box it sits in. The deck that claimed it shows the same copy as <span class="pill p-res">Reserved</span> with "in D2", so it is counted once per deck and never twice in one deck.</figcaption>
+  </figure>
+
+  <figure>
+    <div class="fig">
+      <svg class="dg" viewBox="0 0 980 300" role="img" aria-label="The list and the box share the same 90 Final cards. The list's other 10 are Reserved; the box's other 10 are Substitutes, each holding one Reserved seat. Four Watching cards sit outside both. The deck total is the box, 100. The group total is 114.">
+        <defs><marker id="f4a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah-acc" d="M0 0L10 5L0 10z"/></marker></defs>
+        <text class="t-h" x="20" y="58">THE LIST</text><text class="t-s" x="20" y="76">what you want · 100</text>
+        <text class="t-h" x="20" y="178">THE BOX</text><text class="t-s" x="20" y="196">what you play · 100</text>
+        <!-- scale: 100 units = 630px from x=170 -->
+        <rect class="seg-final" x="170" y="44" width="565" height="40" rx="4"/><text x="452" y="69" text-anchor="middle" style="fill:var(--panel);font-weight:700">Final · 90</text>
+        <rect class="seg-res" x="737" y="44" width="63" height="40" rx="4"/><text x="768" y="69" text-anchor="middle" style="fill:var(--panel);font-weight:700">10</text>
+        <rect class="seg-final" x="170" y="164" width="565" height="40" rx="4"/><text x="452" y="189" text-anchor="middle" style="fill:var(--panel);font-weight:700">Final · 90</text>
+        <rect class="seg-sub" x="737" y="164" width="63" height="40" rx="4"/><text x="768" y="189" text-anchor="middle" style="fill:var(--panel);font-weight:700">10</text>
+        <text class="t-b" x="768" y="34" text-anchor="middle">Reserved</text>
+        <text class="t-b" x="768" y="222" text-anchor="middle">Substitute</text>
+        <path class="edge-acc" d="M768 86 V 160" marker-end="url(#f4a)" marker-start="url(#f4a)"/>
+        <text class="t-s" x="780" y="120">each Substitute holds</text><text class="t-s" x="780" y="135">one Reserved seat</text>
+        <path class="edge dash" d="M300 86 V 162"/><path class="edge dash" d="M600 86 V 162"/>
+        <text class="t-s" x="452" y="128" text-anchor="middle">the same 90 cards</text>
+        <rect class="seg-watch" x="836" y="44" width="25" height="40" rx="4"/><text class="t-b" x="872" y="62">Watching 4</text><text class="t-s" x="872" y="78">considered only</text>
+        <!-- totals -->
+        <path class="edge" d="M170 236 V 246 H 800 V 236"/><text class="t-b" x="485" y="266" text-anchor="middle">Deck total = Final + Substitute = 100</text>
+        <path class="edge" d="M170 236 V 280 H 861 V 236" style="stroke:var(--ink-2)"/><text x="485" y="294" text-anchor="middle" class="t-s">Group total = Final + Substitute + Reserved + Watching = 114</text>
+      </svg>
+    </div>
+    <figcaption><b>A deck has two hundreds, and they share their Final cards.</b> The list is Final + Reserved, the box is Final + Substitute, and each Reserved seat is held by one Substitute. Every count the app shows follows from these three rules.</figcaption>
+  </figure>
+
+  <div class="eqs">
+    <div class="eq"><b>List = Final + Reserved</b><span>the 100 the deck should be</span></div>
+    <div class="eq"><b>Box = Final + Substitute</b><span>the 100 you can play tonight. This is the Deck total</span></div>
+    <div class="eq"><b>Reserved ↔ Substitute, one to one</b><span>a Reserved seat with no Substitute is an empty seat</span></div>
+    <div class="eq"><b>Playable ⇔ Box = 100</b><span>Loading: owned cards cover the gap. To load: a seat waits on a card you don't have</span></div>
+  </div>
+</section>
+
+<!-- 4 ─────────────────────────────────────────────── -->
+<section id="proof">
+  <div class="head col"><p class="eyebrow">4 · Proved on data</p><h2>Your example, and the seven decks in the backup</h2></div>
+  <p class="col lede">The prototype runs the proposed function on the production model. Your example comes out exactly as you described: 90 Final, 10 Substitute, 10 To buy, 4 Watched, a Deck total of 100 and a Group total of 114. The seven decks in the committed backup come out the same way. Today's screens give different readings of each one, listed under the chart.</p>
+  <figure>
+    <div class="fig">
+      <div class="legend" aria-hidden="true"><span><i class="sw-final"></i>Final</span><span><i class="sw-sub"></i>Substitute</span><span><i class="sw-load"></i>Final · Loading</span><span><i class="sw-res"></i>Reserved</span><span><i class="sw-watch"></i>Watching</span><span>│ the box's 100</span></div>
+      <div class="chart" id="chart" role="img" aria-label="Stacked bars per deck: Final, Substitute, Loading, Reserved and Watching. Final plus Substitute reaches 100 for every deck."></div>
+    </div>
+    <figcaption><b>Every deck's box holds exactly 100</b> (Final + Substitute, left of the line); the rest of the group sits to its right. The example row is synthetic, built to your numbers. The other rows are the committed backup (built Sep 30), not your current cloud library: your D1 Tymna + Kraum is newer than the backup. Hover a segment for its count.</figcaption>
+  </figure>
+  <details>
+    <summary>Show the numbers: today vs proposed</summary>
+    <div class="tablewrap"><table id="numbers">
+      <thead><tr><th>Deck</th><th class="num">Library "Deck:" rows today</th><th>The 100 today</th><th class="num">Final</th><th class="num">Loading</th><th class="num">Sub.</th><th class="num">Reserved</th><th class="num">Watching</th><th class="num">Deck total</th><th class="num">Group total</th><th>Play</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </details>
+</section>
+
+<!-- 5 ─────────────────────────────────────────────── -->
+<section id="flows">
+  <div class="head col"><p class="eyebrow">5 · Flows</p><h2>Reserve, arrive, move</h2></div>
+  <p class="col lede">Reserve always pairs the card with a substitute and always ends with something on To buy that you confirm: the card itself if you don't own it, or a replacement for the deck you take it from. A Bench copy is never reserved. It goes straight into the deck.</p>
+  <figure>
+    <div class="fig">
+      <svg class="dg" viewBox="0 0 980 400" role="img" aria-label="Reserve flow. If you don't own the card, confirm adding it to To buy, then pair it with a substitute; it becomes Reserved and To buy. If it is on the Bench, it is put in the deck as Final or Substitute. If it is in other decks, pick the copy, pair it with a substitute, and confirm a To buy replacement for the donor deck.">
+        <defs>
+          <marker id="f5a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0 0L10 5L0 10z"/></marker>
+          <marker id="f5b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah-acc" d="M0 0L10 5L0 10z"/></marker>
+        </defs>
+        <rect class="box" x="14" y="178" width="124" height="44" rx="22"/><text class="t-b" x="76" y="205" text-anchor="middle">Reserve for D1</text>
+        <path class="edge" d="M138 200 H 166" marker-end="url(#f5a)"/>
+        <rect class="q" x="168" y="180" width="134" height="40" rx="20"/><text x="235" y="205" text-anchor="middle">Do you own one?</text>
+        <!-- branches -->
+        <path class="edge" d="M302 200 H 312 V 70 H 418" marker-end="url(#f5a)"/><text class="no" x="322" y="62">NO</text>
+        <path class="edge" d="M302 200 H 418" marker-end="url(#f5a)"/><text class="yes" x="318" y="192">ON THE BENCH</text>
+        <path class="edge" d="M302 200 H 312 V 330 H 418" marker-end="url(#f5a)"/><text class="yes" x="318" y="322">IN OTHER DECKS</text>
+        <!-- row A -->
+        <rect class="box-plain" x="420" y="44" width="180" height="52" rx="8"/><text class="t-b" x="432" y="66">You confirm</text><text class="t-s" x="432" y="84">"Add to To buy for D1?"</text>
+        <path class="edge" d="M600 70 H 618" marker-end="url(#f5a)"/>
+        <rect class="box-plain" x="620" y="44" width="180" height="52" rx="8"/><text class="t-b" x="632" y="66">Pair with a substitute</text><text class="t-s" x="632" y="84">one in D1, or empty seat</text>
+        <path class="edge-acc" d="M800 70 H 818" marker-end="url(#f5b)"/>
+        <rect class="lf-res" x="820" y="44" width="150" height="52" rx="8"/><text class="t-b" x="832" y="66">Reserved · To buy</text><text class="t-s" x="832" y="84">D1 Play: To load</text>
+        <!-- row B -->
+        <rect class="box-plain" x="420" y="174" width="180" height="52" rx="8"/><text class="t-b" x="432" y="196">Put it in D1</text><text class="t-s" x="432" y="214">no reservation needed</text>
+        <path class="edge" d="M600 200 H 618" marker-end="url(#f5a)"/>
+        <rect class="box-plain" x="620" y="174" width="180" height="52" rx="8"/><text class="t-b" x="632" y="196">Replace a substitute?</text><text class="t-s" x="632" y="214">if so, it goes to the Bench</text>
+        <path class="edge-acc" d="M800 200 H 818" marker-end="url(#f5b)"/>
+        <rect class="lf-final" x="820" y="174" width="150" height="52" rx="8"/><text class="t-b" x="832" y="196">Final or Substitute</text><text class="t-s" x="832" y="214">by D1's list</text>
+        <!-- row C -->
+        <rect class="box-plain" x="420" y="304" width="180" height="52" rx="8"/><text class="t-b" x="432" y="326">Pick the copy</text><text class="t-s" x="432" y="344">if more than one: D3, D5…</text>
+        <path class="edge" d="M600 330 H 618" marker-end="url(#f5a)"/>
+        <rect class="box-plain" x="620" y="304" width="180" height="52" rx="8"/><text class="t-b" x="632" y="326">Pair with a substitute</text><text class="t-s" x="632" y="344">then confirm, below</text>
+        <path class="edge-acc" d="M800 330 H 818" marker-end="url(#f5b)"/>
+        <rect class="lf-res" x="820" y="304" width="150" height="52" rx="8"/><text class="t-b" x="832" y="326">Reserved · in D3</text><text class="t-s" x="832" y="344">until you move it</text>
+        <text class="t-s" x="420" y="382">You confirm: "D3 will be one short. Add a replacement to To buy for D3?"</text>
+      </svg>
+    </div>
+    <figcaption><b>Reserve, by where the card is.</b> Each confirm step is a short dialog with an <span class="ibtn">i</span> for the longer explanation. When more than one copy sits in other decks, you choose which copy, from which deck.</figcaption>
+  </figure>
+
+  <figure>
+    <div class="fig">
+      <svg class="dg" viewBox="0 0 980 260" role="img" aria-label="Ownership moves from Watch to To buy to Ordered to Own, then optionally To sell or Trade. When a reserved card arrives it becomes Final and Loading until you swap it in; its substitute goes to the Bench. When a reserved card is moved from another deck, the donor deck's seat becomes Reserved and To buy.">
+        <defs><marker id="f6a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0 0L10 5L0 10z"/></marker>
+          <marker id="f6b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah-acc" d="M0 0L10 5L0 10z"/></marker></defs>
+        <text class="t-h" x="14" y="26">OWNERSHIP</text>
+        <rect class="lf-watch" x="14" y="40" width="110" height="38" rx="19"/><text class="t-b" x="69" y="64" text-anchor="middle">Watch</text>
+        <path class="edge" d="M124 59 H 182" marker-end="url(#f6a)"/><text class="t-s" x="132" y="52">Reserve</text>
+        <rect class="lf-res" x="184" y="40" width="110" height="38" rx="19"/><text class="t-b" x="239" y="64" text-anchor="middle">To buy</text>
+        <path class="edge" d="M294 59 H 352" marker-end="url(#f6a)"/><text class="t-s" x="304" y="52">Order</text>
+        <rect class="lf-plain" x="354" y="40" width="110" height="38" rx="19"/><text class="t-b" x="409" y="64" text-anchor="middle">Ordered</text>
+        <path class="edge-acc" d="M464 59 H 522" marker-end="url(#f6b)"/><text class="t-s t-acc" x="472" y="52">Arrives</text>
+        <rect class="lf-final" x="524" y="40" width="110" height="38" rx="19"/><text class="t-b" x="579" y="64" text-anchor="middle">Own</text>
+        <path class="edge" d="M634 59 H 682" marker-end="url(#f6a)"/>
+        <rect class="lf-plain" x="684" y="40" width="130" height="38" rx="19"/><text class="t-b" x="749" y="64" text-anchor="middle">To sell · Trade</text>
+        <path class="edge dash" d="M814 59 H 842" marker-end="url(#f6a)"/>
+        <rect class="box-plain" x="844" y="40" width="124" height="38" rx="19"/><text x="906" y="64" text-anchor="middle" class="t-s">Delete</text>
+
+        <text class="t-h" x="60" y="130">WHEN A RESERVED CARD ARRIVES</text>
+        <path class="edge-acc" d="M579 80 V 104 H 32 V 140" marker-end="url(#f6b)"/>
+        <rect class="lf-final" x="14" y="142" width="210" height="44" rx="8" stroke-dasharray="5 3"/><text class="t-b" x="26" y="161">Final · Loading</text><text class="t-s" x="26" y="177">owned, not in the box yet</text>
+        <path class="edge" d="M224 164 H 262" marker-end="url(#f6a)"/>
+        <rect class="box-plain" x="264" y="142" width="240" height="44" rx="8"/><text class="t-b" x="276" y="161">"Swap in for Fractal Mascot?"</text><text class="t-s" x="276" y="177">you confirm when it is sleeved</text>
+        <path class="edge-acc" d="M504 164 H 542" marker-end="url(#f6b)"/>
+        <rect class="lf-final" x="544" y="142" width="130" height="44" rx="8"/><text class="t-b" x="556" y="168">Final</text>
+        <rect class="lf-plain" x="684" y="142" width="284" height="44" rx="8"/><text class="t-b" x="696" y="161">Fractal Mascot → Bench</text><text class="t-s" x="696" y="177">the real card now holds its seat</text>
+
+        <text class="t-h" x="14" y="224">WHEN A RESERVED CARD MOVES FROM D3</text>
+        <text class="t-s" x="14" y="246">D1: Final, and its substitute goes to the Bench. D3: that seat becomes Reserved · To buy, as you confirmed at Reserve.</text>
+      </svg>
+    </div>
+    <figcaption><b>The system sets Loading, and you finish it.</b> When an order arrives, or a card is taken from another deck, the card is Final · Loading until you confirm it is in the box. Play status is never edited by hand. It changes when the cards do.</figcaption>
+  </figure>
+</section>
+
+<!-- 6 ─────────────────────────────────────────────── -->
+<section id="words">
+  <div class="head col"><p class="eyebrow">6 · The words</p><h2>Where today's fifteen words go</h2></div>
+  <figure>
+    <div class="fig">
+      <svg class="dg" viewBox="0 0 980 470" role="img" aria-label="Mapping from today's fifteen status words to the proposed ten. Target and Physical deck become Final. Upgrade becomes Reserved. Today's Reserved becomes Reserved with an empty seat. To add becomes Final Loading.">
+        <text class="t-h" x="40" y="24">TODAY</text><text class="t-h" x="640" y="24">PROPOSED</text>
+        <!-- left words at y = 52 + i*27 -->
+        <g>
+          <text x="40" y="54">Physical deck</text><text x="40" y="81" class="t-b">Target</text><text x="40" y="108">To add</text><text x="40" y="135">Substitute</text>
+          <text x="40" y="162" class="t-b t-bad">Upgrade (seat held)</text><text x="40" y="189" class="t-b t-bad">Reserved (empty seat)</text><text x="40" y="216">Bench</text>
+          <text x="40" y="243">Watched (owned, in deck group)</text><text x="40" y="270">Watching / Watched</text><text x="40" y="297">Planned</text><text x="40" y="324">Suggestion</text>
+          <text x="40" y="351">Draft list</text><text x="40" y="378">Wanted</text><text x="40" y="405">To buy</text><text x="40" y="432">Ordered</text>
+        </g>
+        <g>
+          <rect class="lf-final" x="640" y="38" width="200" height="26" rx="13"/><text x="656" y="56" class="t-b">Final</text>
+          <rect class="lf-final" x="640" y="92" width="200" height="26" rx="13" stroke-dasharray="5 3"/><text x="656" y="110" class="t-b">Final · Loading</text>
+          <rect class="lf-sub" x="640" y="119" width="200" height="26" rx="13"/><text x="656" y="137" class="t-b">Substitute</text>
+          <rect class="lf-res" x="640" y="146" width="200" height="26" rx="13"/><text x="656" y="164" class="t-b">Reserved</text>
+          <rect class="lf-res" x="640" y="173" width="200" height="26" rx="13" stroke-dasharray="5 3"/><text x="656" y="191" class="t-b">Reserved · empty seat</text>
+          <rect class="lf-plain" x="640" y="200" width="200" height="26" rx="13"/><text x="656" y="218" class="t-b">Bench</text>
+          <rect class="lf-watch" x="640" y="254" width="200" height="26" rx="13"/><text x="656" y="272" class="t-b">Watch</text>
+          <rect class="lf-res" x="640" y="389" width="200" height="26" rx="13"/><text x="656" y="407" class="t-b">To buy</text>
+          <rect class="lf-plain" x="640" y="416" width="200" height="26" rx="13"/><text x="656" y="434" class="t-b">Ordered</text>
+          <text class="t-s" x="852" y="56">in the box</text><text class="t-s" x="852" y="110">system state</text><text class="t-s" x="852" y="164">replaces a</text><text class="t-s" x="852" y="178">substitute</text>
+          <text class="t-s" x="852" y="272">for a deck:</text><text class="t-s" x="852" y="286">Watching</text>
+        </g>
+        <!-- links: from x=300 to x=636 -->
+        <path class="edge" d="M300 50 C 470 50, 470 51, 636 51"/>
+        <path class="edge" d="M300 77 C 470 77, 470 51, 636 51" style="stroke:var(--accent);stroke-width:2"/>
+        <path class="edge" d="M300 104 C 470 104, 470 105, 636 105"/>
+        <path class="edge" d="M300 131 C 470 131, 470 132, 636 132"/>
+        <path class="edge-bad" d="M300 158 C 470 158, 470 159, 636 159"/>
+        <path class="edge-bad" d="M300 185 C 470 185, 470 186, 636 186"/>
+        <path class="edge" d="M300 212 C 470 212, 470 213, 636 213"/>
+        <path class="edge dash" d="M300 239 C 470 239, 470 213, 636 213"/>
+        <path class="edge dash" d="M300 239 C 470 239, 470 267, 636 267"/>
+        <path class="edge" d="M300 266 C 470 266, 470 267, 636 267"/>
+        <path class="edge" d="M300 293 C 470 293, 470 267, 636 267"/>
+        <path class="edge" d="M300 320 C 470 320, 470 267, 636 267"/>
+        <path class="edge" d="M300 347 C 470 347, 470 267, 636 267"/>
+        <path class="edge" d="M300 374 C 470 374, 470 402, 636 402"/>
+        <path class="edge" d="M300 401 C 470 401, 470 402, 636 402"/>
+        <path class="edge" d="M300 428 C 470 428, 470 429, 636 429"/>
+      </svg>
+    </div>
+    <figcaption><b>Two words change meaning (red).</b> Today's Upgrade is your Reserved, and today's Reserved becomes "Reserved · empty seat". A dashed line means the record keeps one status and gains a note: an owned Bench copy filed in a deck's group stays Bench and shows under that deck as Watching. Upgrade and bracket options on a slot (the Upgrades tab) become Watch for that deck, with a "would replace" note.</figcaption>
+  </figure>
+</section>
+
+<!-- 7 ─────────────────────────────────────────────── -->
+<section id="screens">
+  <div class="head col"><p class="eyebrow">7 · Screens</p><h2>What changes on screen</h2></div>
+  <div class="mocks">
+    <article class="mock">
+      <div class="mh"><h3>Library, scoped to a deck</h3><p class="muted" style="font-size:13.5px">Deck: D1 Tymna + Kraum · the same rows as The 100</p></div>
+      <div class="mb">
+        <div class="screen">
+          <div class="tiles"><div class="tile t-final"><b>90</b><span>Final</span></div><div class="tile t-sub"><b>10</b><span>Substitute</span></div><div class="tile t-res"><b>10</b><span>Reserved</span></div><div class="tile t-watch"><b>4</b><span>Watching</span></div></div>
+          <p style="font-size:12.5px" class="muted">Deck total 100 = Final 90 + Substitute 10 · Group total 114 <span class="ibtn" title="Reserved cards count toward the group, not the deck">i</span></p>
+          <div class="srow"><span class="pill p-plain">☐ Show Bench cards that could go in</span></div>
+        </div>
+        <ul><li>Shows the deck's group only: Final, Substitute, Reserved, Watching. Bench copies appear only when you tick "Show Bench cards that could go in" (D6).</li><li>A Reserve button appears only where Reserve can happen (section 5); a Bench row offers "Put in D1".</li></ul>
+      </div>
+    </article>
+    <article class="mock">
+      <div class="mh"><h3>The 100</h3><p class="muted" style="font-size:13.5px">Grouped by Use, from the same function</p></div>
+      <div class="mb">
+        <div class="screen">
+          <div class="hundred-sec"><h4>In the deck · 100</h4>
+            <div class="hline"><span class="pill p-final">Final</span> Folio of Fancies</div>
+            <div class="hline"><span class="pill p-sub">Substitute</span> Fractal Mascot <span class="muted">holds the seat for Mystic Remora</span></div></div>
+          <div class="hundred-sec"><h4>Reserved · 10</h4>
+            <div class="hline"><span class="pill p-res">To buy</span> Mystic Remora <span class="muted">replaces Fractal Mascot</span></div>
+            <div class="hline"><span class="pill p-res">In D3</span> Sol Ring <span class="muted">move it when ready</span></div></div>
+          <div class="hundred-sec"><h4>Watching · 4</h4>
+            <div class="hline"><span class="pill p-watch">Watch</span> Rhystic Study <span class="muted">would replace Folio of Fancies</span></div></div>
+        </div>
+        <ul><li>The heading counts the box (Final + Substitute). Reserved and Watching are listed under it, as in your example.</li><li>A test asserts that The 100 and the Library scoped to the same deck show the same rows and counts.</li></ul>
+      </div>
+    </article>
+    <article class="mock">
+      <div class="mh"><h3>Library row: each cell has its own dropdown</h3><p class="muted" style="font-size:13.5px">The card name opens the card panel; other cells don't</p></div>
+      <div class="mb">
+        <div class="screen">
+          <div class="lrow"><span class="nm">Folio of Fancies</span><span class="pill p-final dd">Final</span><span class="pill p-plain dd">D1 Tymna + Kraum</span><span>1</span><span>≈ $2.66</span><span class="muted">⋯</span></div>
+          <div class="menu" aria-label="Status dropdown example">
+            <p class="sec">Use</p><div class="it on">Final</div><div class="it">Substitute</div><div class="it">Bench</div><div class="it">Sell</div><div class="it">Trade</div>
+            <p class="sec">Ownership</p><div class="it on">Own</div><div class="it">To sell</div><div class="it">Trade</div>
+          </div>
+        </div>
+        <ul><li>Status opens only the moves that are valid for that row (the ✓ cells in section 3). Deck opens Change assignment. Columns with nothing to choose stay plain text.</li><li>Quantity and Paid show as text. "Edit print &amp; details" is renamed <b>Edit</b>, and only there do they become fields.</li><li>The ⋯ menu gets tighter rows (about 6px vertical padding, down from 11px).</li></ul>
+      </div>
+    </article>
+    <article class="mock">
+      <div class="mh"><h3>Card panel: Your copies and commitments</h3><p class="muted" style="font-size:13.5px">Chips are labels; the actions sit at the end of each line</p></div>
+      <div class="mb">
+        <div class="screen">
+          <div class="srow"><span class="slabel">Status</span><span class="pill p-final">Own 1</span><span class="pill p-final">Final 1</span><button class="ghost" type="button" tabindex="-1">Change status</button></div>
+          <div class="srow"><span class="slabel">Assignment</span><span class="pill p-plain">D1 Tymna + Kraum</span><button class="ghost" type="button" tabindex="-1">Change assignment</button></div>
+        </div>
+        <ul><li>A chip no longer opens the Library filtered to the card. "View library records" stays as the one way there.</li><li>Change status opens the same valid-moves list as the row. Change assignment opens Put in deck / Reserve / Move to Bench, which runs the section 5 flow.</li></ul>
+      </div>
+    </article>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Also</th><th>Change</th><th>Where</th></tr></thead>
+      <tbody>
+        <tr><td>Toolbar</td><td>Collection group no longer hidden behind Group rows by: the select gets <code>width:100%</code> and its label <code>min-width:0</code></td><td>crankmagic.css:1222</td></tr>
+        <tr><td>Deck tiles</td><td>Say Playable, Loading or To load, plus "Complete" when nothing is Reserved</td><td>crankmagic-decks.js</td></tr>
+        <tr><td>Filters dialog</td><td>Status chips become the Use and Ownership values</td><td>crankmagic-collection.js:1214</td></tr>
+        <tr><td>Table view piles, Trace, exports</td><td>Read <code>useOf</code>; the workbook's State column uses the new words</td><td>crankmagic-tabletop.js, crankmagic-trace.js, collection-exchange.js</td></tr>
+        <tr><td>How it works</td><td>Definitions of the new words, with the <span class="ibtn">i</span> text</td><td>crankmagic-how.js:14</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- 8 ─────────────────────────────────────────────── -->
+<section id="decide">
+  <div class="head col"><p class="eyebrow">8 · Your calls</p><h2>Eight decisions, each with my recommendation</h2></div>
+  <p class="col lede">Reply with the IDs, for example "approve; D2 Trade; D5 keep Finalize". Anything you don't mention, I will build as recommended.</p>
+  <div class="decisions">
+    <div class="dec"><span class="id">D1</span><div><h3>Sell and Trade appear in both your lists</h3><p>Store them once, as Ownership, and have the Use column show the same value. Two stored copies of one fact would drift apart.</p><p class="rec"><b>Recommend:</b> store once, show in both.</p></div></div>
+    <div class="dec"><span class="id">D2</span><div><h3>Today's single "Sell / Trade" flag needs to become two</h3><p>The backup has no offered copies, but your cloud library may. Each existing offer has to start as one of the two.</p><p class="rec"><b>Recommend:</b> existing offers start as Trade, and the first Library visit after the update lists them so you can change any to To sell.</p></div></div>
+    <div class="dec"><span class="id">D3</span><div><h3>Does Watching count toward the Group total?</h3><p>You said To buy counts toward the Group total and not the Deck total, but you didn't say where Watched counts.</p><p class="rec"><b>Recommend:</b> yes. The Group total is then every row you see when the Library is scoped to the deck: 114 in your example.</p></div></div>
+    <div class="dec"><span class="id">D4</span><div><h3>Taking a card from another deck puts a replacement on To buy</h3><p>I read your Reserve step 2 as covering this case too: the deck you take the copy from becomes one short.</p><p class="rec"><b>Recommend:</b> ask in the Reserve dialog. "No" leaves that seat Reserved · empty seat until you decide.</p></div></div>
+    <div class="dec"><span class="id">D5</span><div><h3>"Final" collides with the deck's Finalize button</h3><p>A deck is currently draft or final, and the button that locks the list says Finalize. Having both "a Final card" and "a final deck" will confuse people.</p><p class="rec"><b>Recommend:</b> rename the button "Lock list", and call a deck Draft or Locked.</p></div></div>
+    <div class="dec"><span class="id">D6</span><div><h3>Dropping Bench cards from the deck scope reverses your Sep 14 call</h3><p>On Sep 14 the reason for keeping them was "what do I already own that could go in it". That is still a useful question.</p><p class="rec"><b>Recommend:</b> deck scope shows the deck's group only. A "Show Bench cards that could go in" checkbox, off by default, brings the old view back on demand.</p></div></div>
+    <div class="dec"><span class="id">D7</span><div><h3>Play status and the deck stages</h3><p>Deck tiles show Defining, Building, Playable and Complete today.</p><p class="rec"><b>Recommend:</b> tiles show Play status (Playable, Loading, To load). "Complete" stays as a badge for a deck with nothing Reserved. Defining becomes To load with the note "list not locked".</p></div></div>
+    <div class="dec"><span class="id">D8</span><div><h3>A watched card can name the card it would replace</h3><p>Your example says the 4 watched cards are "replacements for certain cards in the 100".</p><p class="rec"><b>Recommend:</b> an optional "would replace" field on a watched card, shown as a note in The 100. When you reserve it, that card's substitute is suggested first.</p></div></div>
+  </div>
+</section>
+
+<!-- 9 ─────────────────────────────────────────────── -->
+<section id="plan">
+  <div class="head col"><p class="eyebrow">9 · After approval</p><h2>Build plan: six slices, each a day or less</h2></div>
+  <ol class="plan col">
+    <li><div><h3>Toolbar overlap and menu density</h3><p>CSS only; does not depend on the model, so it can ship first. Proved at 1400 and 390 wide.</p></div></li>
+    <li><div><h3>The model: <code>useOf()</code></h3><p>The function, the Use × Ownership rules and the deck totals in collection-model.js. A new suite pins your 90/10/10/4 example and the seven backup decks, and fails if any screen spells a status itself. No screen changes in this slice.</p></div></li>
+    <li><div><h3>Library and The 100 read it</h3><p>Deck scope shows the group only (D6); new count tiles and caption; The 100 grouped into In the deck, Reserved and Watching; an equality test across the two screens.</p></div></li>
+    <li><div><h3>The words</h3><p>Target → Final across 16 places, Upgrade → Reserved, the old word list retired, Finalize → Lock list (D5), How it works rewritten. Suites updated: card-states, card-states-screens, library-r3, feature-wiring, table-by-group.</p></div></li>
+    <li><div><h3>Reserve, arrival and the Sell / Trade split</h3><p>The section 5 flows as reviewed commands with Undo; the offer split migration (D2); the swap prompt when a reserved card arrives.</p></div></li>
+    <li><div><h3>Cell dropdowns and the card panel</h3><p>One dropdown per cell; Quantity and Paid behind Edit; card panel chips stop navigating; Change status and Change assignment added.</p></div></li>
+  </ol>
+  <p class="col muted" style="font-size:14px">These files are in the Codex · Workshop lane. I will record the handover in <code>docs/ACTIVE.md</code>, and fold Linear ROB-107 (plain-words status) and ROB-44 (Watch group) into this work, because both change the same words.</p>
+</section>
+
+<!-- 10 ─────────────────────────────────────────────── -->
+<section id="provenance">
+  <div class="head col"><p class="eyebrow">10 · Proof and limits</p><h2>What is proven, and what isn't</h2></div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Claim</th><th>Status</th><th>How to check</th></tr></thead>
+      <tbody>
+        <tr><td>Deck scope adds every Bench copy</td><td><span class="tag done">Proven</span></td><td>Code at crankmagic-collection.js:50; the backup reproduces it (889 Bench copies under every deck)</td></tr>
+        <tr><td>The four functions disagree about copies claimed from another deck</td><td><span class="tag done">Proven</span></td><td>prove.mjs, D7: Library 36 Substitute vs 31 in the box; The 100 "To add 5"</td></tr>
+        <tr><td>Your 90/10/10/4 example gives Deck total 100 and Group total 114</td><td><span class="tag done">Proven</span></td><td>prove.mjs, the EXAMPLE row (synthetic, built through the production model)</td></tr>
+        <tr><td>Your live D1 Tymna + Kraum reads the same way</td><td><span class="tag after">Assumed</span></td><td>Your cloud library isn't in the repo. Same code path; checked on the backup's seven decks</td></tr>
+        <tr><td>The screen mocks above</td><td><span class="tag after">Design</span></td><td>Drawn for review; built and screenshotted in slices 3 to 6</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <pre class="cmd">node docs/design/2026-10-18-status-axes/prove.mjs          # the table, per deck
+node docs/design/2026-10-18-status-axes/prove.mjs --json   # the numbers behind section 4</pre>
+</section>
+
+</div>
+<div id="tip" hidden></div>
+
+<script>
+/* Section 4 numbers: output of prove.mjs --json on main 7e74e54 (data/live-state.json, built Sep 30, 2026). */
+const DATA=[
+ {deck:'Your example',note:'synthetic, to your numbers',ex:true,final:90,load:0,sub:10,res:10,resFrom:0,watch:4,lib:120,libNote:'incl. 10 Bench, 0 Watching',hundred:'Target 90 · To buy 10'},
+ {deck:'D1 Quintorius Spirits',final:92,load:2,sub:8,res:5,resFrom:1,watch:0,lib:596,hundred:'Target 92 · To buy 5 · To add 3'},
+ {deck:'D2 Chulane Value Loop',final:76,load:2,sub:24,res:21,resFrom:1,watch:0,lib:607,hundred:'Target 76 · To buy 21 · To add 3'},
+ {deck:'D3 Atraxa Proliferate',final:87,load:1,sub:13,res:12,resFrom:0,watch:0,lib:599,hundred:'Target 87 · To buy 12 · To add 1'},
+ {deck:'D4 Felothar Walls',final:87,load:1,sub:13,res:12,resFrom:0,watch:8,lib:593,hundred:'Target 87 · To buy 12 · To add 1'},
+ {deck:'D5 Shadrix Aristocrats',final:81,load:2,sub:19,res:17,resFrom:0,watch:0,lib:594,hundred:'Target 81 · To buy 17 · To add 2'},
+ {deck:'D6 Krenko Goblins',final:85,load:1,sub:15,res:14,resFrom:0,watch:6,lib:584,hundred:'Target 85 · To buy 14 · To add 1'},
+ {deck:'D7 Maralen Exile Cast',final:69,load:0,sub:31,res:26,resFrom:5,watch:0,lib:598,hundred:'To buy 26 · Target 69 · To add 5'}
+];
+const MAX=135,pct=n=>(n/MAX*100)+'%';
+const chart=document.getElementById('chart');
+const axis=`<div class="crow axisrow" aria-hidden="true"><span></span><div class="track">${[0,25,50,75,100,125].map(t=>`<span class="tick" style="left:${pct(t)}">${t}</span>`).join('')}</div><span></span></div>`;
+chart.innerHTML=DATA.map(d=>{
+  const reserved=d.res+d.resFrom,group=d.final+d.load+d.sub+reserved+d.watch;
+  const seg=(cls,n,label)=>n?`<span class="${cls}" style="width:${pct(n)}" data-tip="${d.deck}: ${label} ${n}"></span>`:'';
+  return `<div class="crow${d.ex?' ex':''}"><span class="name">${d.deck}${d.note?`<small>${d.note}</small>`:''}</span>
+    <div class="track"><div class="segs">${seg('final',d.final,'Final, in the box')}${seg('sub',d.sub,'Substitute, in the box')}${seg('load',d.load,'Final · Loading, owned, not put in yet')}${seg('res',reserved,`Reserved (${d.res} to buy${d.resFrom?`, ${d.resFrom} in another deck's box`:''})`)}${seg('watch',d.watch,'Watching')}</div><span class="hundred" style="left:${pct(100)}"></span></div>
+    <span class="tot"><b>${d.final+d.sub}</b> deck · <b>${group}</b> group</span></div>`;
+}).join('')+axis;
+document.querySelector('#numbers tbody').innerHTML=DATA.map(d=>{
+  const reserved=d.res+d.resFrom,group=d.final+d.load+d.sub+reserved+d.watch;
+  return `<tr><td>${d.deck}</td><td class="num">${d.lib.toLocaleString('en-US')}${d.libNote?`<span class="sub">${d.libNote}</span>`:''}</td><td>${d.hundred}</td><td class="num">${d.final}</td><td class="num">${d.load}</td><td class="num">${d.sub}</td><td class="num">${reserved}${d.resFrom?`<span class="sub">${d.resFrom} in another box</span>`:''}</td><td class="num">${d.watch}</td><td class="num">${d.final+d.sub}</td><td class="num">${group}</td><td>Playable</td></tr>`;
+}).join('');
+const tip=document.getElementById('tip');
+document.addEventListener('pointerover',e=>{const t=e.target.closest('[data-tip]');if(!t){tip.hidden=true;return;}tip.textContent=t.dataset.tip;tip.hidden=false;});
+document.addEventListener('pointermove',e=>{if(tip.hidden)return;const x=Math.min(e.clientX+14,innerWidth-tip.offsetWidth-8),y=e.clientY+16;tip.style.left=x+'px';tip.style.top=y+'px';});
+</script>
