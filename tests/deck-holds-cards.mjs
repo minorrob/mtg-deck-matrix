@@ -81,9 +81,9 @@ try {
     const C = globalThis.__cm, d = C.state.decks.find((x) => x.groupId === gid), read = C.M.stateReader(C.state);
     const mine = C.state.lots.filter((l) => l.groupIds.includes(gid));
     return {status: d.status, inBox: mine.filter((l) => l.location?.kind === "deck" && l.location.deckId === d.id).length,
-      roles: [...new Set(mine.map((l) => read({...l, kind: "lot"}).role))], reserved: mine.filter((l) => l.allocation?.deckId === d.id).length, name: d.name};
+      roles: [...new Set(mine.map((l) => read({...l, kind: "lot"}).use))], reserved: mine.filter((l) => l.allocation?.deckId === d.id).length, name: d.name};
   }, before.gid);
-  eq([after.status, after.inBox, after.reserved, after.roles], ["draft", 9, 9, ["target"]], "the draft deck holds all 9 copies in its box, each reserved for its seat: Target, not Bench");
+  eq([after.status, after.inBox, after.reserved, after.roles], ["draft", 9, 9, ["final"]], "the draft deck holds all 9 copies in its box, each reserved for its seat: Final, not Bench");
   await shot(page, "draft-deck-with-copies-1280");
 
   /* G3c: the badge reads Commander + 99 live, and the deck's More menu offers its Draft list, not an empty buy list */

@@ -12,7 +12,7 @@ C.SUBNAV.decks=()=>{const r=C.route(),did=(r.view==='decks'||r.view==='pull'||r.
      can ask for var(--mana-<letter>); a colorless or unresolved commander names none. */
   const tint=d=>{const c=C.card(d.commanders[0]),ci=(c&&c.colorIdentity)||[];return /^[WUBRG]$/.test(ci[0]||'')?ci[0]:'';};
   return [...C.state.decks.filter(d=>!d.archived&&(C.showLobbyDecks||!M.isLobbyDeck(d)||d.id===did)).slice(0,12).map(d=>({label:d.name,hash:'#decks?deck='+encodeURIComponent(d.id),current:d.id===did,tint:tint(d)})),{label:'How a deck comes together',hash:'#how',current:r.view==='how'}];};
-C.HELP.decks={title:'Decks',body:`<p>Every deck you have, at its stage: <strong>Defining</strong> while the list is being written, <strong>Building</strong> while cards are still to buy or to add, <strong>Playable</strong> when substitutes make up the hundred, <strong>Complete</strong> when every reserved copy is in the physical deck.</p><p>Each tile's bar is the hundred: in the physical deck, ready to add, ordered, to buy. Tick two or more tiles to compare them; the ⋯ on a tile archives or restores it.</p>`};
+C.HELP.decks={title:'Decks',body:`<p>Every deck you have, by whether it can be played: <strong>Playable</strong> when its box holds the hundred (its Final cards and Substitutes), <strong>Loading</strong> when the cards that are missing are yours and only have to be put in, <strong>To load</strong> when a seat waits on a card you don't have yet or the list is not locked, and <strong>Complete</strong> when every card in the box is the list's own.</p><p>Each tile's bar is the hundred: in the physical deck, ready to add, ordered, to buy. Tick two or more tiles to compare them; the ⋯ on a tile archives or restores it.</p>`};
 C.HELP.deck={title:'A deck page',body:`<p>The header is the summary: commander, stage, bracket, mechanics and the latest measured score; the row beside it is the work — add what you own, buy what you do not, log the game, measure — and the rest is under More.</p><p><strong>Overview</strong> is where the deck stands: Progress counts the physical deck, ready to add, ordered and to buy; Cost is what finishing costs against the cap; the Next line says what to do first. The hundred at a glance, game record, simulation history, commander guide, strategy and SWOT all live here. <strong>The hundred</strong> is the full 100-card list by type with where each copy stands (actions on a card are in Cards). <strong>Upgrades</strong> is the working list and the Upgrade Path. <strong>Explore</strong> is deck-scoped explore and relationships (Role lens, Trace). <strong>Acquire</strong> is the buy list, orders, and acquisition tracking.</p><p>A <strong>finalized</strong> deck's reservations track what its list needs: Ready to add walks the cards you own into the physical deck, and the buy list is what is left. A <strong>draft</strong> holds the copies you put in it; Finalize checks the list is a legal hundred and puts what is missing on the buy list. An <strong>archived</strong> deck keeps its history; its copies were released, and where each one physically is stays recorded.</p>`};
 const commander=d=>d.commanders.map(id=>C.card(id)?.name||'Unknown').join(' + ');
 /* A PRECON'S OWN PATH (Rob, 2026-10-01: "When it's a precon deck that's been selected, it should have a very different
@@ -221,8 +221,11 @@ const footLinks=anyDecks?`<div class="cm-deck-footlinks">${howLink}${lobbyHidden
    order and substitutes holding seats. "Recently changed" reads the change journal for the last change that
    named the deck, and a deck nothing has changed since it was made sorts by when it was made. Archived decks,
    when shown, come last in every order. */
-const stageOf=d=>{const r=M.readiness(C.state,d);return d.archived?'archived':d.status==='draft'?'defining':r.complete?'complete':r.playable?'playable':'building';};
-const STAGES=[['all','All'],...(live.some(d=>d.status==='draft')?[['defining','Defining']]:[]),['building','Building'],['playable','Playable'],['complete','Complete']];
+/* PLAY STATUS (Rob, 2026-10-18): the system's reading, from the model's deckStatus -- the same one The hundred and the
+   Library scoped to a deck use -- with Complete beside it for a box of nothing but the list's own cards. */
+const playOf=new Map(decks.map(d=>[d.id,M.deckStatus(C.state,d)]));
+const stageOf=d=>{const x=playOf.get(d.id);return d.archived?'archived':x.complete?'complete':x.play;};
+const STAGES=[['all','All'],['toload','To load'],['loading','Loading'],['playable','Playable'],['complete','Complete']];
 const SORTS=[['closest','Closest to finished'],['name','Name'],['recent','Recently changed']];
 const stage=STAGES.some(([k])=>k===params.get('stage'))?params.get('stage'):'all',sort=SORTS.some(([k])=>k===params.get('sort'))?params.get('sort'):'closest';
 const changed=new Map();if(sort==='recent')for(const row of await C.repo.history()){const id=row.operation&&row.operation.deckId;if(id&&!changed.has(id))changed.set(id,row.at||'');}
@@ -247,17 +250,15 @@ C.main.innerHTML=(anyDecks?C.pageHead('Decks',compare+b('New deck','new-deck',{}
    on their own row under the mechanic; the footer -- bracket, latest score, hand count --
    used to wrap around them. */
 const picked=picks.includes(d.id);
-/* FOUR STAGES, ONE WORD EACH, AND A BORDER TO MATCH: Defining (green) while the list is being
-   built, Building (blue under half the list in the physical deck, purple past half), Playable
-   while substitutes make up the hundred, Complete (gold) when every reserved copy is in. */
-const badge=d.archived?['draft','Archived']:d.status==='draft'?['draft','Defining']:r.complete?['inbox','Complete']:r.playable?['standin','Playable']:['buy','Building'];
+/* THE PLAY STATUS, ONE WORD AND A COLOR: To load, Loading, Playable, and Complete for a box of the list's own cards. */
+const badge=d.archived?['draft','Archived']:{complete:['inbox','Complete'],playable:['standin','Playable'],loading:['pull','Loading'],toload:['buy','To load']}[stageOf(d)];
 /* ONE CAPTION, EACH FIGURE ONCE: what is still to buy, ordered, ready to add or standing in,
    then the record. The bar is the hundred; a deck with nothing left to do says only how many
    are in the physical deck. */
 const games=C.state.games.filter(x=>x.deckId===d.id),record=games.length?`${games.filter(x=>x.outcome==='win').length}–${games.filter(x=>x.outcome==='loss').length}`:'';
-const caption=[r.toBuy?`${r.toBuy} to buy`:'',r.ordered?`${r.ordered} ordered`:'',pullCount(r)?`${pullCount(r)} ready to add`:'',r.standIns?`${r.standIns} sub${r.standIns===1?'':'s'}`:''].filter(Boolean);
+const caption=[r.toBuy?`${r.toBuy} to buy`:'',r.ordered?`${r.ordered} ordered`:'',r.pullFromBench?`${r.pullFromBench} loading`:'',r.pullFromOtherBox?`${r.pullFromOtherBox} in another box`:'',r.standIns?`${r.standIns} sub${r.standIns===1?'':'s'}`:''].filter(Boolean);
 if(!caption.length)caption.push(`${r.sleeved} in the physical deck`);if(record)caption.push(record);
-const stage=d.archived?'archived':d.status==='draft'?'defining':r.complete?'complete':r.playable?'playable':'building';
+const stage=stageOf(d);
 /* THE TINT is the commander's first color of identity, named as a --mana-* token so the poster
    follows the theme. It carries the art's gradient, the deck-number eyebrow and the hover glow. */
 const ci=(C.card(d.commanders[0])?.colorIdentity)||[],tint=/^[WUBRG]$/.test(ci[0]||'')?`--tint:var(--mana-${ci[0]});`:'';
@@ -469,38 +470,36 @@ function glance(d,cards,curve,max,types){
     :`<div class="cm-glance-strategy"><h4>Key strategy</h4><p class="cm-muted">${lead?`Nothing in ${e(lead.name)}'s rules text names a strategy the vocabulary knows; name the deck's mechanics in its definition and they will read here.`:'The deck has no commander yet.'}</p></div>`;
   return `<section class="v-panel cm-glance" id="cm-sec-glance"><h2>The hundred at a glance <span class="cm-pull-n">${total}</span></h2><div class="cm-glance-grid">${compositionHTML(cards,curve,max,types)}${bar(byType,'By card type')}${bar(byPurpose,'By Primary Purpose, the spells')}</div>${strategy}</section>`;
 }
-/* THE CARDS TAB: the hundred by type, each with where its copy stands, read from the same
-   projection the Cards page tables -- so a row here and a row there never disagree. Actions on
-   a card (status, price, options) stay on Cards; this is the list you read. The composition
-   -- curve and type counts -- sits at its head, because it is about these cards. */
+/* THE CARDS TAB IS THE DECK'S VIEW (Rob, 2026-10-18): the same records the Library lists when it is scoped to this
+   deck, read by the same function (the model's deckStatus), with the same pill and the same words beside it -- so a
+   card cannot read one way here and another there. Four parts: In the deck, the box (Final and Substitute, by card
+   type, the only cards that count toward the hundred); Loading, the deck's own cards owned and not put in yet;
+   Reserved, the cards committed to take a seat; and Upgrades, the cards being considered, each naming what it would
+   replace. Actions on a card (status, price, options) stay on the Library; this is the list you read. The
+   composition -- curve and type counts -- sits at its head, because it is about these cards. */
 function cardsTab(d,cards,curve,max,types){
   const precon=preconOf(d);   /* a precon's cards come with it: no To buy pill on each, one Buy the Precon at the head */
-  const rows=M.projection(C.state).filter(r=>r.deckId===d.id&&r.purpose==='main'),bySlot=new Map(),subs=new Map();
-  for(const r of rows){const k=r.kind==='need'?r.slotId:r.allocation?.slotId;if(!k)continue;if(!bySlot.has(k))bySlot.set(k,[]);bySlot.get(k).push(r);}
-  /* WHICH SEAT A SUBSTITUTE IS HOLDING (play-space plan §2.12). `standInFor` is recorded when the
-     proxy goes into the box, so the seat can say who is keeping it warm — which is the reading a
-     reader wants on the list itself, rather than a count on the substitute card's own line. */
-  const heldBy=new Map();
-  for(const r of M.projection(C.state)){if(r.standInDeckId!==d.id)continue;subs.set(r.cardId,(subs.get(r.cardId)||0)+r.quantity);
-    if(r.standInFor){const n=(C.card(r.cardId)||{}).name||'';if(n)heldBy.set(r.standInFor,[...(heldBy.get(r.standInFor)||[]),n]);}}
-  const sum=(list,f)=>list.filter(f).reduce((n,r)=>n+r.quantity,0);
-  /* EACH SLOT IN CARD STATES (docs/card-states.md). The pill is the stage while the list's card is not owned --
-     Watching on a draft list, To buy, Ordered -- then To add while an owned copy waits outside the box, and
-     Target once it is in. Outside the box a slot also wears its role (Rob, 2026-09-26): Upgrade when a card in
-     the box holds its seat (a substitute, or the box is full), Reserved when the seat is empty. */
-  const seat=M.seats(C.state).decks.get(d.id),role=slot=>seat&&(seat.full||seat.held.has(slot.id))?'Upgrade':'Reserved';
-  const status=slot=>{const T=l=>[l,M.stateTone(l)];const rs=bySlot.get(slot.id)||[];const need=sum(rs,r=>r.kind==='need'),ordered=sum(rs,r=>r.kind==='lot'&&r.source==='ordered'),ready=sum(rs,r=>r.kind==='lot'&&r.source==='owned'&&r.placement!=='Physical deck');
-    return need?[slot.quantity>1?`To buy ${need}`:'To buy',M.stateTone('To buy'),role(slot)]:ordered?[...T('Ordered'),role(slot)]:ready?[...T('To add'),role(slot)]:T('Target');};
+  const ds=M.deckStatus(C.state,d),name=id=>(C.card(id)||{}).name||'',deckName=id=>{const x=C.state.decks.find(y=>y.id===id);if(!x)return '';const m=x.name.match(/^(D\d+)\b/);return m?m[1]:x.name;};
+  const line=({r,st})=>{const c=C.card(r.cardId);if(!c)return '';const label=M.stateLabel(st),note=M.stateNote(st,name,deckName),quiet=precon&&st.use==='reserved'&&!st.from&&st.ownership==='buy';
+    return `<li><span class="cm-deck-qty">${r.quantity||1}</span><button type="button" class="cm-card-name" data-action="card" data-card="${e(c.id)}">${e(c.name)}</button><span class="cm-deck-mana">${C.mana(c.manaCost,c.typeLine)}</span><span class="cm-price">${Number.isFinite(c.price)?C.money(c.price):''}</span><span class="cm-deck-flags">${quiet?'':C.pill(e(label),M.stateTone(label))}${note&&!quiet?` <span class="cm-badge cm-badge-${e(st.use)}">${e(note)}</span>`:''}${r.option?C.pill('Option','watch'):''}${c.gameChanger?C.pill('GC','remove','title="Game Changer"'):''}</span></li>`;};
+  const byMana=(a,b2)=>(Number((C.card(a.r.cardId)||{}).manaValue)||0)-(Number((C.card(b2.r.cardId)||{}).manaValue)||0)||name(a.r.cardId).localeCompare(name(b2.r.cardId));
   const ORDER=R.TYPE_ORDER,groups=new Map(ORDER.map(k=>[k,[]]));
-  for(const slot of d.slots.filter(r=>r.purpose==='main')){const c=C.card(slot.cardId);if(!c)continue;groups.get(d.commanders.includes(slot.cardId)?'Commander':ORDER.find(k=>k!=='Commander'&&k!=='Other'&&c.typeLine.includes(k))||'Other').push({slot,c});}
-  const line=({slot,c})=>{const [label,tone,fact]=status(slot),sub=subs.get(slot.cardId)||0,held=heldBy.get(slot.id)||[];return `<li><span class="cm-deck-qty">${slot.quantity}</span><button type="button" class="cm-card-name" data-action="card" data-card="${e(c.id)}">${e(c.name)}</button><span class="cm-deck-mana">${C.mana(c.manaCost,c.typeLine)}</span><span class="cm-price">${Number.isFinite(c.price)?C.money(c.price):''}</span><span class="cm-deck-flags">${precon&&/^To buy/.test(label)?'':C.pill(e(label),tone)}${fact?` <span class="cm-badge cm-badge-${fact.toLowerCase()}" title="${fact==='Upgrade'?'Replaces the card holding this seat in the box':'Takes an empty seat: the deck is short until it is in'}">${e(fact)}</span>`:''}${sub?C.pill(`${sub} substitute${sub===1?'':'s'} in the box`,'standin'):''}${held.length?C.pill(e(`held by ${held.slice(0,2).join(', ')}${held.length>2?` and ${held.length-2} more`:''}`),'standin','title="A substitute is in the box for this seat until the real card is ready."'):''}${slot.option?C.pill('Option','watch'):''}${c.gameChanger?C.pill('GC','remove','title="Game Changer"'):''}</span></li>`;};
+  for(const x of ds.rows.filter(x=>x.st.inBox)){const c=C.card(x.r.cardId);if(!c)continue;groups.get(d.commanders.includes(x.r.cardId)?'Commander':ORDER.find(k=>k!=='Commander'&&k!=='Other'&&c.typeLine.includes(k))||'Other').push(x);}
+  const part=(title,list,why)=>list.length?`<h3>${e(title)} <small>${list.reduce((n,x)=>n+(x.r.quantity||1),0)}</small>${why?` <span class="cm-muted cm-deck-part-why">${e(why)}</span>`:''}</h3><ul class="cm-deck-list">${list.sort(byMana).map(line).join('')}</ul>`:'';
+  const loading=ds.rows.filter(x=>x.st.use==='final'&&!x.st.inBox),reserved=ds.rows.filter(x=>x.st.use==='reserved'),upgrades=ds.rows.filter(x=>x.st.use==='upgrade');
   const composition=compositionHTML(cards,curve,max,types);
-  /* PLAYABLE, AND WHY (Rob, 2026-09-26): a deck plays when every seat holds a card -- no Reserved slot -- and is
-     complete when every seat holds the list's own card. The line says which, with the counts behind it. */
-  const mains=d.slots.filter(r=>r.purpose==='main'),outside=mains.map(slot=>status(slot)[2]).filter(Boolean);
-  const nUp=outside.filter(x=>x==='Upgrade').length,nRes=outside.filter(x=>x==='Reserved').length;
-  const playLine=`<p class="cm-deck-playable ${nRes?'is-short':'is-playable'}">${nRes?(precon?`<b>Not playable yet</b>: buy the precon for the ${nRes} card${nRes===1?'':'s'} you do not own`:`<b>Not playable</b>: ${nRes} card${nRes===1?'':'s'} reserved for empty seats`):`<b>Playable</b>: every seat holds a card`}${nUp?` · ${nUp} upgrade${nUp===1?'':'s'} to make`:nRes?'':' · complete'}</p>`;
-  return `<section class="v-panel cm-deck-cards" id="cm-sec-cards"><div class="cm-deck-cards-head"><h2>The hundred <span class="cm-pull-n">${cards.reduce((n,x)=>n+x.q,0)}</span></h2><div class="cm-actions">${b('View deck cards','deck-cards',{deck:d.id},true)}${b('Export deck list','deck-export',{deck:d.id})}${precon?buyPrecon(precon):''}</div></div>${playLine}${cards.length?'':'<p class="cm-muted">No cards yet. Edit the card list, or build one in the Deck Lab.</p>'}${composition}${[...groups].filter(([,l])=>l.length).map(([k,l])=>`<h3>${e(k)} <small>${l.reduce((n,x)=>n+x.slot.quantity,0)}</small></h3><ul class="cm-deck-list">${l.sort((a,b2)=>(Number(a.c.manaValue)||0)-(Number(b2.c.manaValue)||0)||a.c.name.localeCompare(b2.c.name)).map(line).join('')}</ul>`).join('')}</section>`;
+  /* PLAY, AND WHY (Rob, 2026-10-18): Playable when the box holds the list -- Final and Substitute together -- Loading
+     when owned cards cover the rest and only have to be put in, To load when a seat waits on a card not in hand. */
+  const n=v=>v.toLocaleString('en-US'),word=k=>({playable:'Playable',loading:'Loading',toload:'To load'})[k];
+  const why=ds.play==='playable'?`the box holds ${n(ds.deckTotal)}: Final ${n(ds.final)} + Substitute ${n(ds.substitute)}`
+    :!ds.locked?'the list is not locked yet'
+    :ds.play==='loading'?`${n(ds.loading)} owned card${ds.loading===1?'':'s'} to put in the box`
+    :`${n(Math.max(0,ds.list-ds.deckTotal-ds.loading))} seat${ds.list-ds.deckTotal-ds.loading===1?'':'s'} wait${ds.list-ds.deckTotal-ds.loading===1?'s':''} on a card you don't have`;
+  const extra=[ds.reserved.total?`${n(ds.reserved.total)} Reserved`:'',ds.upgrade?`${n(ds.upgrade)} Upgrade${ds.upgrade===1?'':'s'}`:'',ds.complete?'complete':''].filter(Boolean).join(' · ');
+  const playLine=`<p class="cm-deck-playable ${ds.play==='playable'?'is-playable':'is-short'}" data-play="${ds.play}"><b>${word(ds.play)}</b>: ${e(why)}${extra?` · ${e(extra)}`:''}</p>`;
+  return `<section class="v-panel cm-deck-cards" id="cm-sec-cards"><div class="cm-deck-cards-head"><h2>The hundred <span class="cm-pull-n" title="Deck total: Final and Substitute in the box">${ds.deckTotal}</span></h2><div class="cm-actions">${b('View deck cards','deck-cards',{deck:d.id},true)}${b('Export deck list','deck-export',{deck:d.id})}${precon?buyPrecon(precon):''}</div></div>${playLine}${cards.length?'':'<p class="cm-muted">No cards yet. Edit the card list, or build one in the Deck Lab.</p>'}${composition}`
+    +`${ds.deckTotal?`<h3 class="cm-deck-part">In the deck <small>${n(ds.deckTotal)}</small></h3>`:''}${[...groups].filter(([,l])=>l.length).map(([k,l])=>`<h4>${e(k)} <small>${l.reduce((m,x)=>m+(x.r.quantity||1),0)}</small></h4><ul class="cm-deck-list">${l.sort(byMana).map(line).join('')}</ul>`).join('')}`
+    +part('Loading',loading,'owned, not in the box yet')+part('Reserved',reserved,'committed to take a seat')+part('Upgrades',upgrades,'being considered')+`</section>`;
 }
 actions['deck-tab']=el=>go('decks',{deck:el.dataset.deck,tab:el.dataset.tab==='overview'?'':el.dataset.tab});
 /* THE UPGRADE PATH HAS A HOME. The ceiling cards used to interleave the Collection as

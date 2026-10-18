@@ -43,7 +43,7 @@ function button(label,action,data={},primary=false,{caret:dir='',cls=''}={}){ret
    cells, the card pop-up, the deck page, the Ready to add list -- draws it through here, so the
    color for "in the box" is the same color everywhere. `pillKind` is the mapping from the
    model's words to the seven tokens; a word it does not know wears the draft gray. */
-const PILL_KIND={...Object.fromEntries(M.STATUS.map(s=>[s.label,s.tone])),...Object.fromEntries(M.STATE_LABELS.map(l=>[l,M.stateTone(l)])),Owned:'pull',owned:'pull',ordered:'ordered','to-buy':'buy',watching:'watch',draft:'draft',remove:'remove'};
+const PILL_KIND={...Object.fromEntries(M.STATUS.map(s=>[s.label,s.tone])),...Object.fromEntries(M.STATE_LABELS.map(l=>[l,M.stateTone(l)])),Owned:'pull',owned:'pull',Own:'pull',ordered:'ordered','to-buy':'buy',watching:'watch',draft:'draft',remove:'remove'};
 function pillKind(key,placement){if((key==='owned'||key==='Owned')&&placement==='Physical deck')return 'inbox';return PILL_KIND[key]||'draft';}
 function pill(text,kind,attrs=''){return `<span class="cm-pill ${esc(kind)}" ${attrs}>${text}</span>`;}
 /* THE READINESS BAR: a deck's target as one line, cut into what is in the box, what you own
@@ -467,28 +467,22 @@ function playsAs(c){const out=[];const styles=CrankCatalog.playStyles(c);if(styl
    physically in, or wanted by, colored by that state on the same scale the counts row and
    the tables use, so a chip's color reads as its state wherever it appears. */
 function standing(id){
-  const rows=M.projection(state).filter(r=>r.cardId===id);
-  const by=pred=>rows.filter(pred).reduce((n,r)=>n+r.quantity,0);
-  const draft=[],planned=[];
-  /* A draft's missing cards are To buy rows since G3d (D4: every deck reserves and has a buy list), so they are
-     counted with the needs, not again here. */
-  for(const g of state.groups)for(const r of g.entries.filter(r=>r.cardId===id))planned.push({group:g,quantity:r.quantity});
-  const lot=pred=>by(r=>r.kind==='lot'&&pred(r));
-  /* THE CARD'S STANDING IN CARD STATES (docs/card-states.md): every record of this card -- its copies, the decks'
-     needs, draft lists, group entries -- asked the model's cardState, then counted by the state's word. Owned
-     leads; then the roles a card for a deck has outside its box -- Upgrade, it replaces a card in the box; Reserved,
-     it takes an empty seat -- and the two slot flags keep their chips. */
-  const records=[...rows,...draft.map(x=>({kind:'draft',deckId:x.deck.id,purpose:'main',quantity:x.quantity})),...planned.map(x=>({kind:'entry',groupId:x.group.id,quantity:x.quantity}))].map(((read)=>r=>({r,st:read(r)}))(M.stateReader(state)));
-  const count=f=>records.filter(({st})=>f(st)).reduce((n,{r})=>n+r.quantity,0);
-  const status=[['Owned',count(st=>st.stage==='owned')],...M.STATE_LABELS.map(l=>[l,count(st=>M.stateLabel(st)===l)]),['Upgrade',count(st=>!!st.deckId&&!st.inBox&&st.role==='upgrade')],['Reserved',count(st=>!!st.deckId&&!st.inBox&&st.role==='reserved')],['Option',lot(r=>r.option)],['Pinned',lot(r=>r.pinned)]];
-  /* One chip per deck and state: the deck the record is for, named with its state's word -- a stage while not
-     owned, the role in the box once owned, To add while not -- and, outside the box, its role ("To buy · upgrade"). */
-  const decks=new Map(),add=(deckId,label,kind,q)=>{const d=deckId&&state.decks.find(x=>x.id===deckId);if(!d||!q)return;const key=d.id+'|'+label,cur=decks.get(key)||{name:d.name,label,kind,quantity:0};cur.quantity+=q;decks.set(key,cur);};
-  for(const {r,st} of records){if(!st.deckId)continue;const l=M.stateLabel(st);add(st.deckId,!st.inBox&&(st.role==='upgrade'||st.role==='reserved')?`${l} · ${M.roleLabel(st.role).toLowerCase()}`:l,M.stateTone(l),r.quantity);}
-  const open=`data-action="library-card" data-card="${esc(id)}"`;
-  const chips=list=>list.filter(([,n])=>n>0).map(([l,n])=>`<button type="button" class="cm-pill ${esc(pillKind(l))}" ${open} title="Open Library filtered to this card">${esc(l)} <strong>${n}</strong></button>`).join('')||'<span class="cm-muted">none</span>';
-  const assignment=[...decks.values()].map(x=>`<button type="button" class="cm-pill ${esc(x.kind)}" ${open} title="${esc(x.label)} · ${x.quantity} — open Library filtered to this card">${esc(x.name)}${x.quantity>1?` <strong>${x.quantity}</strong>`:''}</button>`).concat(planned.map(x=>`<button type="button" class="cm-pill draft" ${open} title="Planned in the group ${esc(x.group.name)}">${esc(x.group.name)} · planned${x.quantity>1?` <strong>${x.quantity}</strong>`:''}</button>`)).join('');
-  return `<div class="cm-standing"><p><span class="cm-standing-label">Status</span>${chips(status)}</p><p><span class="cm-standing-label">Assignment</span>${assignment||'<span class="cm-muted">no deck</span>'}</p></div>`;
+  /* THE CARD'S STANDING (docs/card-states.md; Rob, 2026-10-18): every record of this card -- its copies, the decks'
+     seats, its Upgrades, its planned entries -- read by the model's cardState and counted by its pill word, Own first;
+     then one chip per deck the card is for, with its word. The chips are labels: a click on one no longer opens the
+     Library (View library records, below, does). The actions sit at the end of each line instead, Change status and
+     Change assignment, and open the same choices a Library row offers. */
+  const read=M.stateReader(state),records=M.records(state).filter(r=>r.cardId===id).map(r=>({r,st:read(r)}));
+  const count=f=>records.filter(({st})=>f(st)).reduce((n,{r})=>n+(r.quantity||1),0);
+  const lot=f=>records.filter(({r})=>r.kind==='lot'&&f(r)).reduce((n,{r})=>n+r.quantity,0);
+  const status=[['Own',count(st=>st.ownership==='own')],...M.STATE_LABELS.map(l=>[l,count(st=>M.stateLabel(st)===l)]),['Option',lot(r=>r.option)],['Pinned',lot(r=>r.pinned)]];
+  const name=cid=>(cardOf(cid)||{}).name||'',deckName=did=>{const d=state.decks.find(x=>x.id===did);if(!d)return '';const m=d.name.match(/^(D\d+)\b/);return m?m[1]:d.name;};
+  const decks=new Map();
+  for(const {r,st} of records){if(!st.deckId)continue;const d=state.decks.find(x=>x.id===st.deckId);if(!d)continue;const label=M.stateLabel(st),key=d.id+'|'+label,cur=decks.get(key)||{name:d.name,label,note:M.stateNote(st,name,deckName),kind:M.stateTone(label),quantity:0};cur.quantity+=(r.quantity||1);decks.set(key,cur);}
+  const chips=list=>list.filter(([,n])=>n>0).map(([l,n])=>`<span class="cm-pill ${esc(pillKind(l))}">${esc(l)} <strong>${n}</strong></span>`).join('')||'<span class="cm-muted">none</span>';
+  const assignment=[...decks.values()].map(x=>`<span class="cm-pill ${esc(x.kind)}" title="${esc(x.label)}${x.note?' · '+esc(x.note):''}">${esc(x.name)}${x.label!=='Final'?` · ${esc(x.label)}`:''}${x.quantity>1?` <strong>${x.quantity}</strong>`:''}</span>`).join('');
+  const act=(label,action)=>`<button type="button" class="v-button compact cm-standing-act" data-action="${action}" data-card="${esc(id)}">${label}</button>`;
+  return `<div class="cm-standing"><p><span class="cm-standing-label">Status</span>${chips(status)}${act('Change status','card-status')}</p><p><span class="cm-standing-label">Assignment</span>${assignment||'<span class="cm-muted">no deck</span>'}${act('Change assignment','card-assign')}</p></div>`;
 }
 /* THE TERMS THE GRAPH READS OFF THIS CARD, grouped as the Explore filters name them. They
    were the bulk of the graph's card pop-up; here they sit under the rules text they come
