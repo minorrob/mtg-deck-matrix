@@ -1,7 +1,7 @@
 # ROB-99 slice 1: shared desktop shell
 
-Branch: `codex/play-shared-shell`, draft PR #754, with `origin/main` `a40f17d5`
-merged after PR #740 landed.
+Branch: `codex/play-shared-shell`, PR #754. Implementation commit `d5a2f18c`;
+latest main `41997462` integrated by merge commit `3b981760` after PR #753.
 
 Rob, October 18: "one header and Camera in every view, Tilt only in Full."
 The first slice also extracts Settings' Play card into `crankmagic-settings-play.js`.
@@ -64,13 +64,14 @@ Across the new and moved checks: 23 deliberate regressions, all caught, none mis
 
 Additional checks: choices 42, Coach 60, Resolve All 59, feature wiring 124,
 data integrity, readout feeds 948, service worker 9 and mutation-anchor checks 9.
-The full board rerun passed 276 checks after the review fixes. Main integration,
-the release-package check and CI remain before readiness.
+The full board rerun passed 276 checks after the review fixes. The latest main
+adds deck-legality work without changing the served board; the README now counts
+520 root suites. CI results are recorded on PR #754.
 
 Asset pins: board 53, stage CSS 17, Settings 14, new Play Settings 1, service
 worker 483 and app shell 499. `node tests/asset-versions.mjs --update` records
-125 assets; the mutation anchor scan finds 1,864 anchors with no problems before
-integrating the latest deck-legality work.
+125 assets; after main integration the mutation anchor scan finds 1,875 anchors
+across 71 breaks files with no problems.
 
 The checks cover pointer and keyboard drawer
 resizing, saved widths, nested-menu bounds and Escape order, closed-drawer focus
