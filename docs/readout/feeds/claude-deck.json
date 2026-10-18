@@ -1,9 +1,9 @@
 {
   "workstream": "claude-deck",
-  "updated": "2026-10-18T10:05:40Z",
+  "updated": "2026-10-18T10:58:25Z",
   "updated_by": "Claude · Deck intelligence (the session that wrote the program charter)",
   "branch": "eight model PRs chained in merge order (#749 #750 #752 #758 #759 #757 #760 #761); the audit on #762",
-  "now": "Nine PRs merged to main today: eight models plus ROB-116 steps 1 and 3. In review: the simulation audit (#762). Next: ROB-116 step 2 when the engine lane's playPod lands; Rob's word on the popularity dial (ROB-109).",
+  "now": "Ten PRs merged to main today: eight models, the simulation audit, and ROB-116 steps 1 and 3. Open in this lane: ROB-116 step 2 (waits on the engine lane's playPod), then the five removable simplifications. Waiting on Rob: the popularity dial (ROB-109), ROB-95 before the AI strategy work (ROB-128/130/129/132), the Settings card for ROB-123, and his call on ROB-121.",
   "items": [
     {
       "id": "ROB-138",
@@ -154,15 +154,19 @@
       "id": "ROB-84",
       "outcome": "deck-tuning",
       "feature": "The simulation-model audit: what the simulator shares with the engine and what it estimates",
-      "status": "review",
-      "remaining_hours": 1,
+      "status": "done",
+      "remaining_hours": 0,
       "evidence": [
         {
           "label": "PR #762",
           "url": "https://github.com/minorrob/mtg-deck-matrix/pull/762"
+        },
+        {
+          "label": "merged 27a23b0e",
+          "url": "https://github.com/minorrob/mtg-deck-matrix/commit/27a23b0ea372f5c7e53eed9bd5d42916fee52a9a"
         }
       ],
-      "note": "The audit document; no code changed."
+      "note": "On main: PR #762 merged 2026-10-18. The audit document; no code changed."
     },
     {
       "id": "ROB-117",
