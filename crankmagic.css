@@ -4004,3 +4004,12 @@ button.cm-vitals{cursor:pointer}
 .cm-deck-cards h4 small,.cm-deck-part-why{font-weight:400;font-size:13px;color:var(--color-muted)}
 .cm-cell-menu .cm-pill{flex:none}
 .cm-status-note{min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* BUDGETS (Rob, 2026-10-18; docs/budgets.md): Settings' Budget card and the line under the Decks tiles. Over reads in
+   the remove color, as the Shop's pool does; nothing else changes, because a budget only informs. */
+#matrix-v2 .cm-settings-budget-sum{margin:0 0 8px}
+#matrix-v2 .cm-settings-budgets{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums;margin:0 0 10px;table-layout:fixed}
+#matrix-v2 .cm-settings-budgets th,#matrix-v2 .cm-settings-budgets td{padding:4px 6px;text-align:right;border-bottom:1px solid var(--v-line,rgba(127,127,127,.2));white-space:nowrap}
+#matrix-v2 .cm-settings-budgets th:first-child{text-align:left;width:42%;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+#matrix-v2 .cm-settings-budgets thead th{font-weight:600;color:var(--v-muted,inherit)}
+#matrix-v2 .cm-settings-budgets tr.cm-over td:nth-child(3),#matrix-v2 .cm-settings-budget-sum .cm-over,#matrix-v2 .cm-decks-budget .cm-over{color:var(--st-remove)}
+#matrix-v2 .cm-decks-budget{margin:14px 0 0}

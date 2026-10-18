@@ -500,16 +500,33 @@
     for(const [cid,n] of counts){const c=card(s,cid),allowed=maxCopies(c);if(n>allowed)issues.push(`${c.name} exceeds its allowed number of copies.`);}
     return [...new Set(issues)];
   }
+  /* BUDGETS (Rob, 2026-10-18; docs/budgets.md). A deck's budget and the account's are the player's own figures, and
+     both only inform: nothing is refused for money, and a deck with no budget of its own has none -- it inherits
+     neither the account's nor the pod's. A deck's cost is its list at recorded prices. The account's budget is set
+     against what the decks plan to spend: each live deck counts at its budget, or at its cost where that is more, and
+     a deck with no budget counts at its cost. */
+  const cents=n=>Math.round(n*100)/100;
+  function deckBudget(s,d){const def=d.definition||{},budget=Number.isFinite(def.budget)?def.budget:null;let cost=0,unpriced=0;
+    for(const r of d.slots)if(r.purpose==='main'){const c=resolve(s.cards[r.cardId]);if(c&&Number.isFinite(c.price)&&c.price>=0)cost+=c.price*r.quantity;else unpriced+=r.quantity;}
+    cost=cents(cost);const over=budget!==null&&cost>budget;
+    return {budget,cost,unpriced,counted:budget===null?cost:Math.max(budget,cost),over,by:over?cents(cost-budget):0};}
+  function budgets(s){const raw=s.preferences&&s.preferences.accountBudget,budget=Number.isFinite(raw)&&raw>0?raw:null;
+    const decks=s.decks.filter(d=>!d.archived&&!isLobbyDeck(d)).map(d=>({deckId:d.id,name:d.name,...deckBudget(s,d)}));
+    const planned=cents(decks.reduce((n,x)=>n+x.counted,0)),budgeted=cents(decks.reduce((n,x)=>n+(x.budget||0),0));
+    return {budget,planned,budgeted,left:budget===null?null:cents(budget-planned),over:budget!==null&&planned>budget,
+      unbudgeted:decks.filter(x=>x.budget===null).length,overDecks:decks.filter(x=>x.over).length,decks};}
+  /* What the definition's price limits say about the list. Read-outs, never refusals (see BUDGETS above). */
   function definitionIssues(s,d){
     const issues=[],def=d.definition,rows=d.slots.filter(r=>r.purpose==='main');
     if(def.budget===null&&def.perCardCap===null)return issues;
-    let total=0,unknown=0;
-    for(const r of rows){const c=card(s,r.cardId);if(!Number.isFinite(c.price)||c.price<0){unknown+=r.quantity;continue;}total+=c.price*r.quantity;if(def.perCardCap!==null&&c.price>def.perCardCap)issues.push(`${c.name} exceeds the per-card price cap.`);}
-    if(unknown)issues.push(`${unknown} copies have no price estimate. Verify prices or explicitly remove the cap in Deck Definition.`);
-    if(def.budget!==null&&total>def.budget)issues.push(`Indicative list total $${total.toFixed(2)} exceeds the $${def.budget.toFixed(2)} cap. Edit Deck Definition to change your limit.`);
+    let unknown=0;
+    for(const r of rows){const c=card(s,r.cardId);if(!Number.isFinite(c.price)||c.price<0){unknown+=r.quantity;continue;}if(def.perCardCap!==null&&c.price>def.perCardCap)issues.push(`${c.name} costs more than the per-card cap.`);}
+    if(unknown)issues.push(`${unknown} cop${unknown===1?'y has':'ies have'} no price estimate.`);
+    const b=deckBudget(s,d);if(b.over)issues.push(`The list costs about $${b.cost.toFixed(2)}, $${b.by.toFixed(2)} over its $${b.budget.toFixed(2)} budget.`);
     return issues;
   }
-  function acceptance(s,d){return [...legality(s,d),...definitionIssues(s,d)];}
+  /* What a locked list must pass: the rules of Commander. Money is not among them (BUDGETS). */
+  function acceptance(s,d){return legality(s,d);}
   function apply(current,command){
     validate(current);ensure(command&&safeId(command.id),'Every change needs a unique operation ID.');const s=clone(current),c=clone(command),now=c.at||new Date().toISOString();let serial=0,summary='';const id=prefix=>`${prefix}:${c.id}:${++serial}`;
     function addCard(raw){ensure(raw&&safeId(raw.id),'Invalid card identity.');if(raw.shipped===true){s.cards[raw.id]=reference(raw);return card(s,raw.id);}const {shipped,...rest}=clone(raw);s.cards[raw.id]={...s.cards[raw.id],...rest,name:text(raw.name,250)};return card(s,raw.id);}
@@ -881,5 +898,5 @@
     if(offered.length)commands.push({type:'bulk',op:'offer',offer:'none',lotIds:ids(offered)});leave(lots);commands.push({type:'groupLots',groupId:g.id,lotIds:ids(lots)});
     notes.push(`${owned.length} record${owned.length===1?' is':'s are'} in ${g.name}${boxed.length?`, ${boxed.length} out of a deck's box`:''}. A 40-card deck's own rules come later.`);return {commands,notes};
   }
-  return {benchFree,TEMPLATES,TEMPLATE_LABELS,isPhysical,deckMayTake,moveCommands,draftShort,VERSION,SOURCES,PLANNED,CHANNELS,STATUS,statusOf,USES,OWNERSHIP,PLAY,USE_OWNERSHIP,WANT_LIST,cardState,seats,stateReader,useLabel,ownershipLabel,playLabel,stateNote,placeLabel,records,deckStatus,stateLabel,STATE_LABELS,stateOrder,stateTone,statusOrder,statusTone,setRecordSource,migrate,empty,starterGroups,clone,today,localDate,lineupHash,isLobbyDeck,text,quantity,print,compatible,validate,apply,defaultDefinition,legality,definitionIssues,projection,counters,readiness,ownership,eligibility,fingerprint,shortfall,deck,slot,lot,inDeck,orders,maxCopies,matrix,plan};
+  return {benchFree,TEMPLATES,TEMPLATE_LABELS,isPhysical,deckMayTake,moveCommands,draftShort,VERSION,SOURCES,PLANNED,CHANNELS,STATUS,statusOf,USES,OWNERSHIP,PLAY,USE_OWNERSHIP,WANT_LIST,cardState,seats,stateReader,useLabel,ownershipLabel,playLabel,stateNote,placeLabel,records,deckStatus,stateLabel,STATE_LABELS,stateOrder,stateTone,statusOrder,statusTone,setRecordSource,migrate,empty,starterGroups,clone,today,localDate,lineupHash,isLobbyDeck,text,quantity,print,compatible,validate,apply,defaultDefinition,legality,definitionIssues,deckBudget,budgets,projection,counters,readiness,ownership,eligibility,fingerprint,shortfall,deck,slot,lot,inDeck,orders,maxCopies,matrix,plan};
 });

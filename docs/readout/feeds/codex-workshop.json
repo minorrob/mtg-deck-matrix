@@ -3,7 +3,7 @@
   "updated": "2026-10-18T23:30:00Z",
   "updated_by": "Claude (cloud session holding the Workshop screens on Rob’s October 18 handover), PR #777",
   "branch": "claude/wizardly-einstein-9ibb4j (PR #777), then codex/workshop-<topic>",
-  "now": "The card status model Rob approved on October 18 (Use, Ownership, Play, with Upgrade) is built on PR #777: one cardState, The hundred and the Library scoped to a deck list the same records, Reserve and Upgrade flows, per-cell menus. Next: ROB-36 and ROB-37, then ROB-122 and ROB-125.",
+  "now": "The card status model Rob approved on October 18 (Use, Ownership, Play, with Upgrade) is built on PR #777: one cardState, The hundred and the Library scoped to a deck list the same records, Reserve and Upgrade flows, per-cell menus. Budgets follow it (docs/budgets.md): a deck's own and the account's, informational only, the account's set against each deck's budget or its cost where that is more. Next: ROB-36 and ROB-37, then ROB-122 and ROB-125.",
   "items": [
     {"id": "ROB-36", "outcome": "share", "feature": "Deck sharing finished: permissions, the public catalog, Email Deck", "status": "in_progress", "remaining_hours": 8},
     {"id": "ROB-37", "outcome": "share", "feature": "Share Library with Reviewer and Collaborator, proven live", "status": "in_progress", "remaining_hours": 8},
