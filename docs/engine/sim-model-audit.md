@@ -123,7 +123,9 @@ body is estimated at `max(1, round(cmc × 0.9))` (`:288-303`); drain decks "shou
    `endTurnCounts`).
 
 None of these changes a number; each is a sentence or a field. They are listed here so the next person does not
-rediscover them, and the ones in the simulator's own files move with ROB-116's first commit.
+rediscover them. Items 1, 2, 3, 4 and 6 are corrected on `claude/deck-sim-variance` (ROB-116 steps 3 and 1,
+PR #764): the sentence, the comment, the note, the two headings, and `measure()` now fills the three figures. Item 5
+is in the engine lane's file and is left for it (noted on ROB-11).
 
 ## 7. What ROB-116 has to build, and what it has to ask for
 
