@@ -412,7 +412,9 @@ try {
      under AGENTS.md's 10px floor. Every pile caption, zone name and heading is 10px or larger, whole and clear of its
      neighbors; a pile too narrow for its name shows its count, and still names its zone to a screen reader and on hover. */
   {
-    const was = rob.page.viewportSize(), slider = rob.page.locator(".cm-board-rowbar [data-board-scale=board]");
+    await rob.page.locator('[data-action=board-camera]').click();
+    const was = rob.page.viewportSize(), slider = rob.page.locator(".cm-stage-camera [data-board-scale=board]");
+    eq(await rob.page.locator('[data-board-scale=board]').count(), 1, 'two-seat Table also keeps Board cards only in Camera');
     await rob.page.setViewportSize({width: 1280, height: 720});
     const before = await slider.inputValue(), lo = await slider.getAttribute("min");
     await slider.fill(lo);
@@ -438,6 +440,7 @@ try {
       `R12: at 1280x720, Board cards at its smallest, every caption, zone name and heading in the Table view is 10px or larger, whole and clear of the next (${m.count} read; under 10px ${JSON.stringify(m.small)}; cut ${JSON.stringify(m.cut)}; overlapping ${m.overlaps})`);
     ok(m.named, "and each pile still names its zone and count, to a screen reader and on hover");
     await slider.fill(before);
+    await rob.page.locator('[data-action=board-camera]').click();
     await rob.page.setViewportSize(was);
   }
   ok((await text(rob.page, `.cm-seatboard[data-seat='${activeSeat}']`)).includes(land), "the land played is on its owner's board in the Table view too");
@@ -558,17 +561,18 @@ try {
   ok(grown.hand > even.hand * 1.2 && Math.abs(grown.tw - even.tw) < 1 && Math.abs(grown.mw - even.mw) < 1 && Math.abs(grown.trayTop - even.trayTop) < 1 && even.scrolls <= 0 && grown.scrolls > 0 && /^1[2-9]\d%$/.test(handOut),
     `the bar atop the hand tray drags: 40px up, the hand's cards grow (${even.hand.toFixed(0)} → ${grown.hand.toFixed(0)}px, ${handOut}), every board keeps its size (${even.tw.toFixed(0)} → ${grown.tw.toFixed(0)}px) and the tray its place, and the hand runs on ${grown.scrolls}px below the window, to scroll down to`);
   /* The three card sizes: the board's and the hand's each their own; Tools sets both to its value. */
+  await rob.page.locator('[data-action=board-camera]').click();
   const sizes = () => rob.page.evaluate(() => {
     const land = document.querySelector(".cm-board-table [data-zone=lands] .cm-bcard"), board = land.closest(".cm-seatboard"), host = getComputedStyle(document.getElementById("cm-board"));
     return {board: parseFloat(getComputedStyle(land).width) / board.getBoundingClientRect().width, hand: parseFloat(getComputedStyle(document.querySelector(".cm-board-hand .cm-board-hand-cards .cm-bcard")).width),
-      scopes: [host.getPropertyValue("--board-scale").trim(), host.getPropertyValue("--hand-scale").trim()], outs: [...document.querySelectorAll("#cm-board .cm-board-scale output")].map((o) => o.textContent)};
+      scopes: [host.getPropertyValue("--board-scale").trim(), host.getPropertyValue("--hand-scale").trim()], outs: ["board", "hand"].map(scope => document.querySelector(`#cm-board [data-board-scale="${scope}"]`).closest('label').querySelector('output').textContent)};
   });
   await rob.page.locator(".cm-board-traybar [data-board-scale=hand]").fill("100");
   const s100 = await sizes();
-  await rob.page.locator(".cm-board-rowbar [data-board-scale=board]").fill("80");
+  await rob.page.locator(".cm-stage-camera [data-board-scale=board]").fill("80");
   const sBoard = await sizes();
   ok(Math.abs(sBoard.board / s100.board - 0.8) < 0.03 && Math.abs(sBoard.hand - s100.hand) < 0.5 && sBoard.scopes[0] === "0.8" && sBoard.outs[0] === "80%",
-    `Board cards, on the bar between the rows, sizes the boards' cards alone (to ${(sBoard.board / s100.board * 100).toFixed(0)}%; the hand stays ${sBoard.hand.toFixed(0)}px)`);
+    `Board cards, in Camera, sizes the boards' cards alone (to ${(sBoard.board / s100.board * 100).toFixed(0)}%; the hand stays ${sBoard.hand.toFixed(0)}px)`);
   await rob.page.locator(".cm-board-traybar [data-board-scale=hand]").fill("130");
   const sHand = await sizes();
   ok(Math.abs(sHand.hand / s100.hand - 1.3) < 0.02 && Math.abs(sHand.board - sBoard.board) < 0.0005 && sHand.scopes[1] === "1.3" && sHand.outs[1] === "130%",
@@ -581,6 +585,8 @@ try {
   await rob.page.locator("#cm-board-tools [data-card-scale]").fill("100");
   await utility(rob.page,"board-tools");
   eq((await sizes()).outs, ["100%", "100%"], "and back to 100%, all three agree");
+  await rob.page.locator('.cm-stage-top [data-action=board-profile]').click();
+  await rob.page.locator('[data-action=board-camera]').click();
   await rob.page.locator(".cm-seatboard:not(.is-you) [data-action=board-focus]").click();
   await rob.page.locator(".cm-board-mat").waitFor();
   ok(/Maya's hand/.test(await text(rob.page, ".cm-board-mat")) && await rob.page.getAttribute("#cm-board", "data-view") === "focus", "⤢ Focus on Maya's board puts it on the mat, in the Focus view");

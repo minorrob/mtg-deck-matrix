@@ -648,10 +648,9 @@ try {
       [".cm-board-band [data-action=board-history]", "the history band's clock"], [".cm-board-showhand", "Show hand"]]) await readRing(page, sel, `${t}: ${what}`);
     await view(page, "table");
     for (const [sel, what] of [[".cm-seatboard [data-action=board-focus]", "⤢ Focus on a board"], [".cm-board-center", "the life counter's logo"], ["[data-drag=rows]", "the rows' divider"]]) await readRing(page, sel, `${t}: ${what}`);
-    /* the rows' bar lifts over the life counter for its grip's ring alone: with its card-size slider focused, a click on
-       the counter's logo still reaches the logo */
-    await page.keyboard.press("Shift");
-    await page.locator(".cm-board-rowbar [data-board-scale=board]").focus();
+    /* Board cards now belongs to Camera. Its focus ring and open menu must leave the life counter reachable. */
+    await page.locator('[data-action=board-camera]').click();
+    await readRing(page, '.cm-stage-camera [data-board-scale=board]', `${t}: Camera's Board cards slider`);
     const reach = await page.evaluate(() => {
       const c = document.querySelector(".cm-board-center"), r = c && c.getBoundingClientRect();
       if (!r) return "no logo";
