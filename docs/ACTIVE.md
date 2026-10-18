@@ -84,7 +84,7 @@ Volcano uses Rob's supplied video; other environments and the table artwork stil
 
 | Lane | Held by | Branch | Doing |
 | --- | --- | --- | --- |
-| **Engine and simulation** | Fable (Claude Code, a cloud container), resumed October 16 per Rob | `claude/admiring-franklin-58cxy4` | Engine, simulation, card loads. Linear: ROB-71 and its children (ROB-12, ROB-13, ROB-73 to ROB-95). ROB-12 (#739) and ROB-81 (#742) on staging; now ROB-101, then ROB-13. See "2026-10-17: the engine lane resumed" below. |
+| **Engine and simulation** | Fable (Claude Code, a cloud container), resumed October 16 per Rob | `claude/admiring-franklin-58cxy4` | Engine, simulation, card loads. Linear: ROB-71 and its children (ROB-12, ROB-13, ROB-73 to ROB-95). ROB-12 (#739) and ROB-81 (#742) on staging, ROB-101 merged (#744); now ROB-13, then ROB-73. See "2026-10-17: the engine lane resumed" below. |
 | **UI and user management** | Codex on Personal-HP | `codex/ui-playtest-plan-oct15`; focused release `codex/staging-resend-oct16` | UI/Babylon, account profiles, sharing, Resend and invitations; coordinates current staging release. |
 
 ### Requests between the lanes
@@ -135,10 +135,22 @@ other lane answers in the last column.
 - **ROB-81:** a permanent's static affects permanents only, unless its `affects` names another zone (`zone`, or `"any"`; CR
   109.2); an effect on named objects (`ids`) applies wherever they are. Maskwood Nexus carries `zone: "any"`. Proof:
   engine-layers 35, engine-wave4c-k3 171; breaks-layers-zone 4 of 4.
-- **ROB-101 (this branch's next PR):** `tests/master-regenerates.mjs` regenerated `data/archive/master-v2.json` over the committed
-  file while other suites read it (pilot-policy failed on #742's CI). It now regenerates into its own temporary directory
-  (`tools/import_master_v2.py` takes an output path). A reader parsing the file in a loop through five runs: main tore 568 of
-  1,168 reads, the fix none. breaks-master-regenerates 2 of 2. No served file changes.
+- **ROB-101, merged (#744, main 23c96b7e, green suites):** `tests/master-regenerates.mjs` regenerated `data/archive/master-v2.json`
+  over the committed file while other suites read it (pilot-policy failed on #742's CI). It now regenerates into its own
+  temporary directory (`tools/import_master_v2.py` takes an output path). A reader parsing the file in a loop through five
+  runs: main tore 568 of 1,168 reads, the fix none. breaks-master-regenerates 2 of 2. No served file changes.
+- **ROB-13 (this branch's next PR):** two pod keys in the room.
+  - `yieldTurn`, on a table's new matches: `room.yieldTurn(seatId, {on})` passes each priority of the seat's for the rest of
+    an opponent's turn, still asking what the rules ask, on the tape (a `yield` entry) and replayed; it ends with that turn
+    or its player. The seat's own view carries `yielding` or `mayYield`.
+  - `passStack`, built but not yet asked for by the table: a person with something on the stack and no response they could
+    make passes by itself (rules/actions.mjs, nothingToDo with `stack`; a mana ability that does more than add mana is a
+    response, `plainMana`); one who cast holding priority is asked. Such a spell is never on the stack in that person's
+    views, and the board draws and voices spells from the stack, so the table turns it on once the board shows a spell
+    cast and resolved between two views (ROB-23).
+  - The G1 harness now launches its games as the table does. The contract, and whether this lane adds the `yield` frame to
+    `cloud/game-room.mjs`, are asked in ROB-11. Proof: engine-pass-stack 18, room-yield-turn 43; breaks-yield-turn 41, each
+    caught.
 - **Waiting on Rob:** the backstop's daily cap (ROB-90); the AI door's two settings (ROB-95: the staging AI Access app, and the
   production key); whether waves 4d onward wait on card-load steps 1 to 4 (ROB-93).
 - **With the Opus session holding Codex's lane** (`docs/HANDOFF-OPUS-2026-10-17.md`): coordinated in ROB-11. No `cloud/**` or UI
