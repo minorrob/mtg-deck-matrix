@@ -41,10 +41,10 @@
      them lazily off the global. Versions must match the ?v= the pages use, or a browser
      that has one page cached serves the worker a different engine than the page. */
   const ENGINE_SCRIPTS = [
-    "sim-engine.js?v=16",
+    "sim-engine.js?v=17",
     "combat.js?v=3",
     "pilot-policy.js?v=4",
-    "deck-measure.js?v=12"
+    "deck-measure.js?v=13"
   ];
 
   /* NAMED PROTOCOLS, AND WHY THE NAME IS PART OF THE NUMBER.
