@@ -1,8 +1,8 @@
 {
  "schema": "manifest@1",
- "generatedAt": "2026-10-18T07:21:22.430Z",
+ "generatedAt": "2026-10-18T07:05:26.689Z",
  "generator": "tools/data-manifest.mjs",
- "count": 24,
+ "count": 26,
  "files": [
   {
    "file": "data/engine/oracle.json",
@@ -148,6 +148,28 @@
    "cache": "precached"
   },
   {
+   "file": "data/commander-brackets.json",
+   "schema": "commander-brackets@1",
+   "stamp": "2026-10-18",
+   "generator": "hand-maintained",
+   "bytes": 2640,
+   "sha256": "b8db9c896663604058a4ad09f96ecfcb89eeda1e6a681ef1bace31c2915b9538",
+   "version": null,
+   "served": false,
+   "cache": "not served"
+  },
+  {
+   "file": "data/vendors.json",
+   "schema": "vendors@1",
+   "stamp": "2026-10-18",
+   "generator": "hand-maintained",
+   "bytes": 1851,
+   "sha256": "88cf1c85417d76c48f6229b5498df71d390ad3354c9125ca69d1a6b8931cb0f1",
+   "version": null,
+   "served": false,
+   "cache": "not served"
+  },
+  {
    "file": "data/deck-guides.json",
    "schema": "deck-guides@1",
    "stamp": "2026-09-08",
@@ -251,9 +273,9 @@
    "schema": "sim-opponents@2",
    "stamp": null,
    "generator": "hand-maintained",
-   "bytes": 9389,
-   "sha256": "68701db8b91355fd8c3f0bf081f751aa2e94a56dad85bbbfa612b15cc2cf0683",
-   "version": 4,
+   "bytes": 9320,
+   "sha256": "430f8d11c990e54496cef1a62fc4c2ba8df53648f708d33ce3c995aebf97270c",
+   "version": 3,
    "served": true,
    "cache": "not served"
   },
