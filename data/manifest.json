@@ -1,6 +1,6 @@
 {
  "schema": "manifest@1",
- "generatedAt": "2026-10-18T07:05:26.689Z",
+ "generatedAt": "2026-10-18T09:09:54.474Z",
  "generator": "tools/data-manifest.mjs",
  "count": 26,
  "files": [
@@ -273,9 +273,9 @@
    "schema": "sim-opponents@2",
    "stamp": null,
    "generator": "hand-maintained",
-   "bytes": 9320,
-   "sha256": "430f8d11c990e54496cef1a62fc4c2ba8df53648f708d33ce3c995aebf97270c",
-   "version": 3,
+   "bytes": 9389,
+   "sha256": "68701db8b91355fd8c3f0bf081f751aa2e94a56dad85bbbfa612b15cc2cf0683",
+   "version": 5,
    "served": true,
    "cache": "not served"
   },
