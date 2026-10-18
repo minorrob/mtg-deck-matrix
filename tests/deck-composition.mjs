@@ -150,4 +150,8 @@ ok(kr.objectives.list.find((o) => o.id === "tribal-payoff")?.served, "Krenko's t
 ok(kr.gaps.protection.verdict === "short", "Krenko is short on protection against the bracket 3 range (two pieces against a floor of three)");
 eq(kr.lands.colorBalance.map((c) => c.color), ["R"], "a mono-red deck balances one color");
 
+/* A catalog row: faces [] and an empty cost (every land the catalog normalizes) must not throw. */
+const catalogLand = Composition.normalize({name: "Mountain", typeLine: "Basic Land — Mountain", oracleText: "", manaCost: "", faces: [], colorIdentity: ["R"]});
+ok(catalogLand && catalogLand.manaValue === 0 && catalogLand.manaCost === "", "a catalog row with faces [] and no cost normalizes (it threw before)");
+
 console.log(`deck-composition: ${checks} checks passed — roles, pips, land colors, three record shapes, the targets file, and the six staging decks pinned.`);
