@@ -105,6 +105,10 @@
       "version": 1,
       "sha": "b4cc36093b2df3e8"
     },
+    "buy-plan.js": {
+      "version": 1,
+      "sha": "1fe05e167eae825f"
+    },
     "card-catalog.js": {
       "version": 25,
       "sha": "250fcc6e992b6bc3"
@@ -154,8 +158,8 @@
       "sha": "5dd742bd996b24a6"
     },
     "crankmagic-app.js": {
-      "version": 501,
-      "sha": "0c506a0bd622e18f"
+      "version": 502,
+      "sha": "ca7c9e050a5c8c50"
     },
     "crankmagic-assets.js": {
       "version": 36,
@@ -190,8 +194,8 @@
       "sha": "ff45272f85b35fdf"
     },
     "crankmagic-collection.js": {
-      "version": 101,
-      "sha": "b8b7f01251f60230"
+      "version": 102,
+      "sha": "c2e8c39db75e621c"
     },
     "crankmagic-decks.js": {
       "version": 105,
@@ -338,8 +342,8 @@
       "sha": "07440b83396bb9e2"
     },
     "crankmagic-sw.js": {
-      "version": 485,
-      "sha": "98cfffd1cb6b462d"
+      "version": 486,
+      "sha": "72ea8530a2535d9a"
     },
     "crankmagic-table.js": {
       "version": 29,

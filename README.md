@@ -922,12 +922,13 @@ order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the file
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
 `.claude/skills/crankmagic-refresh` is the judgment around it. There are 529 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 529 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 530 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`
 - `browser-geometry` — `tests/browser-geometry.mjs`
+- `buy-dial` — `tests/buy-dial.mjs`
 - `buy-plan` — `tests/buy-plan.mjs`
 - `card-classify` — `tests/card-classify.mjs`
 - `card-records` — `tests/card-records.mjs`
