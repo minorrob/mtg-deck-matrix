@@ -946,6 +946,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `crankmagic-facets` — `tests/crankmagic-facets.mjs`
 - `crankmagic-graph` — `tests/crankmagic-graph.mjs`
 - `crankmagic-graph-scoped` — `tests/crankmagic-graph-scoped.mjs`
+- `deck-composition` — `tests/deck-composition.mjs`
 - `explore-scope` — `tests/explore-scope.mjs`
 - `feature-wiring` — `tests/feature-wiring.mjs`
 - `explore-progressive-disclosure` — `tests/explore-progressive-disclosure.mjs`
