@@ -118,6 +118,31 @@ try {
   assert.deepEqual(own.seats.toSorted(),['cloud-wolf','ember-serpent','falls-tree','sand-lion'],"the preview seats four of Rob's art mats");
   assert.deepEqual(own.painted,own.seats,"each seat's own art is painted on the canvas, the viewed seat's in front");
   assert.ok(own.placed,"and each seat's art lies on that seat's mat");
+  /* A drawn mat (felt, forge, cavern, sea, night) has no art for the canvas: in Full screen it keeps the pattern it has in
+     every other view (Rob, 2026-10-17). Two more tables seat all five, the second beside art mats. */
+  const drawnMats=['felt','forge','cavern','sea','night'];
+  for(const mats of ['felt,forge,cavern,sea','night,falls-tree,sand-lion,cloud-wolf']) {
+    const drawn=spawn(process.execPath,["tools/play-tabletop-preview.mjs"],{env:{...process.env,PREVIEW_PORT:"0",PREVIEW_MATS:mats},stdio:["ignore","pipe","pipe"]});
+    try {
+      const at=await Promise.race([
+        new Promise((resolve,reject)=>{drawn.stdout.on("data",d=>{const m=String(d).match(/http:\/\/localhost:(\d+)/);if(m)resolve(`http://127.0.0.1:${m[1]}`);});drawn.once("error",reject);}),
+        new Promise((_,reject)=>{const t=setTimeout(()=>reject(new Error("preview startup timed out")),10000);t.unref();})
+      ]);
+      const look=await browser.newPage({viewport:{width:1400,height:900}});look.on("pageerror",e=>errors.push(e.message));
+      await look.goto(`${at}/index.html#table?id=tablepreview01`);await look.locator('.cm-stage-region[data-renderer="webgl"]').waitFor();
+      // The pattern each mat has outside the tabletop: the same mat, drawn again beside the stage in the same board.
+      const shown=await look.evaluate(()=>[document.querySelector('.cm-stage-front'),...document.querySelectorAll('.cm-stage-rear')].map(el=>{
+        const m=el.querySelector('.cm-mat[data-mat]'), probe=document.createElement('section');
+        probe.className=m.className;probe.dataset.mat=m.dataset.mat;document.getElementById('cm-board').append(probe);
+        const own=getComputedStyle(probe).backgroundImage;probe.remove();
+        return {mat:m.dataset.mat,image:getComputedStyle(m).backgroundImage,own};
+      }));
+      const drawnSeats=shown.filter(s=>drawnMats.includes(s.mat));
+      assert.equal(drawnSeats.length,mats.split(',').filter(id=>drawnMats.includes(id)).length,`every drawn mat of ${mats} is seated`);
+      for(const {mat,image,own:pattern} of drawnSeats) assert.ok(image!=='none' && image===pattern,`the drawn ${mat} mat shows its own pattern in Full screen, not a plain table (${image.slice(0,48)})`);
+      await look.close();
+    } finally {drawn.kill();}
+  }
   for(const width of [1400,1024]) {
     await page.setViewportSize({width,height:800});
     await page.locator(".cm-stage-side.is-open").waitFor();
