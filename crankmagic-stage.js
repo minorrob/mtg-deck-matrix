@@ -46,7 +46,10 @@
     });
     return library;
   }
-  let current = null, generation = 0;
+  /* One Application, kept across Full screen's visits and never destroyed: Pixi 8's accessibility system leaves its
+     window listeners (keydown, mousemove) behind on destroy, and the next Tab or mouse move reaches a renderer set to
+     null (tests/a11y-board.mjs, the page throws nothing). Leaving Full screen empties the stage and detaches the canvas. */
+  let current = null, generation = 0, kept = null;
   function environment(s) {
     const scene=appearances.backgrounds.find(x=>x.id===(s.opts.background || 'volcano')), board=s.host.closest('.cm-board');
     s.host.classList.toggle('has-video',!!scene?.video);
@@ -67,14 +70,18 @@
     environment(state);
     state.ready = load().then(async (P) => {
       if (current !== state) return;
-      await P.Assets.init({preferences: {preferWorkers: false}});
-      const app = new P.Application();
-      await app.init({preference: "webgl", backgroundAlpha: 0, antialias: true, resolution: Math.min(root.devicePixelRatio || 1, 1.5), autoDensity: true, autoStart: false});
-      if (current !== state) {app.destroy(true, {children: true}); return;}
+      let app = kept;
+      if (!app) {
+        await P.Assets.init({preferences: {preferWorkers: false}});
+        app = new P.Application();
+        await app.init({preference: "webgl", backgroundAlpha: 0, antialias: true, resolution: Math.min(root.devicePixelRatio || 1, 1.5), autoDensity: true, autoStart: false});
+        kept = app;
+        app.canvas.className = "cm-stage-canvas"; app.canvas.setAttribute("aria-hidden", "true");
+        app.canvas.addEventListener("webglcontextlost", (event) => {event.preventDefault(); current?.opts.onError?.("Graphics interrupted. The readable board is still available.");});
+        app.canvas.addEventListener("webglcontextrestored", () => {if (current && current.box) paint(current);});
+      }
+      if (current !== state) return;
       state.app = app;
-      app.canvas.className = "cm-stage-canvas"; app.canvas.setAttribute("aria-hidden", "true");
-      app.canvas.addEventListener("webglcontextlost", (event) => {event.preventDefault(); state.opts.onError?.("Graphics interrupted. The readable board is still available.");});
-      app.canvas.addEventListener("webglcontextrestored", () => {if (current === state && state.box) paint(state);});
       state.host.prepend(app.canvas);
       if (state.box) paint(state);
     }).catch((error) => {if (current === state) state.opts.onError?.(error.message);});
@@ -177,7 +184,8 @@
     const s = current; current = null; generation++;
     if (!s) return;
     cancelAnimationFrame(s.frame); s.unhear?.();s.video?.pause();s.environment?.remove();if(s.visibility)document.removeEventListener("visibilitychange",s.visibility);
-    s.app?.destroy(true, {children: true});s.surfaceTexture?.destroy(true);
+    if (s.app) {for (const child of s.app.stage.removeChildren()) child.destroy({children: true}); s.app.canvas.remove();}
+    s.surfaceTexture?.destroy(true);
   }
   root.CrankStage = Object.freeze({geometry, carousel, appearances, mount, layout, unmount});
 })(globalThis);
