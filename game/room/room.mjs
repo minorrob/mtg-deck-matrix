@@ -46,6 +46,15 @@
  * And a seventh, Rob's of the same day ("I should also be able to click the card to untap it again"), kept the same way:
  *   `untapMana`  a person who taps a land for mana may untap it while its mana is unspent and nothing else has happened
  *                (game/engine/rules/untap-mana.mjs), and is not passed for while they may: "Untap Forest", beside the pass.
+ * And two of the Oct 16 handoff's (Linear ROB-13), kept the same way:
+ *   `passStack`  `passEmpty` with something on the stack too: a person with no response they could make passes by itself
+ *                (rules/actions.mjs, nothingToDo with `stack`) -- unless they cast holding priority (`heldBy`), play step
+ *                by step, or may untap mana, when they are asked as before.
+ *   `yieldTurn`  a person may yield the rest of an opponent's turn (`yieldTurn`, on the tape): each priority of theirs
+ *                in it is passed for them, whatever they hold. What the rules ask of them is still asked -- targets, modes,
+ *                a "may", blockers, discards, trigger order, payments -- and the yield holds on after their answer. It ends
+ *                with that turn (the game's turn number: an extra turn is a new one), when that turn's player leaves the
+ *                game, or when they stop it; it never carries into their own turn or another match.
  *
  * WHAT IT PLAYS. Only cards the `cards` resolver can define. A pod with any other card is refused before
  * anything is written, naming every card it cannot play (docs/decisions-2026-09-25.md, M4: "refused by name;
@@ -451,6 +460,18 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
   /* Rob, 2026-10-09: the pass a person's cast or activation makes for them (`passAfterCast`), and the seat whose cast it
      waits on until priority comes back to them (`castBy`). */
   let passAfterCast = false, castBy = null;
+  /* ROB-13: the stack passed for a person with no response (`passStack`), and the seat that cast holding priority, asked when
+     it comes back to them (`heldBy`); the yields (`yieldTurn`), by seat id: the turn yielded and whose it is. */
+  let passStack = false, heldBy = null, yieldable = false, yielding = {};
+  /* A yield holds for the turn it was made in (the game's turn number: an extra turn is a new one), while that turn's player
+     is in the game. One left over from a turn gone holds nothing, and the next yield of that seat replaces it. */
+  const holds = (seatId) => {
+    const y = yielding[seatId];
+    return Boolean(y) && state.turn === y.turn && !state.players[y.active].lost;
+  };
+  /* Whether a seat may start one now: a person in the game, in an opponent's turn, whose player is in it too. */
+  const mayYield = (seat) => yieldable && seats[seat].pilot !== "house" && !finished() && state.stepIndex !== undefined
+    && state.activePlayer !== seat && !state.players[seat].lost && !state.players[state.activePlayer].lost;
   const nobodyLeft = () => seats.some((s) => s.pilot === "human") && seats.every((s, i) => s.pilot !== "human" || state.players[i].lost);
   const track = () => {
     const key = `${state.turn}:${state.stepIndex}`; if (key !== step.key) step = {key, quiet: false, acted: false};
@@ -559,6 +580,9 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         castBy = null;
         if (caster === seat) {driven = 0; apply(seat, {kind: "pass"}, "cast"); continue;}
       }
+      /* A seat that yielded the rest of this turn (`yieldTurn`) passes. Counted toward a hang as the room's own passes are:
+         the yield was one decision, not one per pass. */
+      if (holds(seats[seat].seatId)) {apply(seat, {kind: "pass"}, "yield"); continue;}
       /* Resolve all, taken: the seat passes while the same run is on top, as many times as it chose; each pass is a
          decision of theirs, so it is not counted toward a hang. Anything else on top, and they are asked again. A pass
          is always legal, so what else the seat could do is not worked out: on a board of hundreds that is most of the
@@ -589,8 +613,11 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
          passed for while it may: tapped for the wrong mana, nothing they hold can be cast with it (rules/actions.mjs,
          nothingToDo), and that is when they would want the tap back. */
       const untaps = untappable(state, taken) ? taken.takes.map((t) => ({kind: "undo-mana", objectId: t.objectId, name: t.card})) : [];
-      const asked = untaps.length > 0 || (seat === state.activePlayer && ((endAsks && state.phase === "END_OF_TURN") || prefs[seats[seat].seatId]?.stepByStep === true));
-      if (passEmpty && !asked && nothingToDo(state, seat, actions)) {apply(seat, actions.find((a) => a.kind === "pass"), "room"); continue;}
+      /* One who cast holding priority (CR 117.3c) is asked when it comes back to them, nothing else to do or not (`passStack`). */
+      const held = heldBy === seat;
+      heldBy = null;
+      const asked = held || untaps.length > 0 || (seat === state.activePlayer && ((endAsks && state.phase === "END_OF_TURN") || prefs[seats[seat].seatId]?.stepByStep === true));
+      if (passEmpty && !asked && nothingToDo(state, seat, actions, {stack: passStack})) {apply(seat, actions.find((a) => a.kind === "pass"), "room"); continue;}
       const run = resolveAll ? triggerRun(state.stack) : null;
       const offered = [...actions, ...(run ? [{kind: "resolve-all", key: run.key, n: run.n, name: run.name}] : []), ...untaps];
       controller.offer(priorityChoice(`priority:${state.turn}:${state.stepIndex}:${controller.revision}`, offered, state, seat));
@@ -657,6 +684,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     resolveAll = record.resolveAll === true; standing = record.standing || {}; endAsks = record.endAsks === true;
     untapMana = record.untapMana === true; taken = record.taken ?? null;
     passAfterCast = record.passAfterCast === true; castBy = record.castBy ?? null;
+    passStack = record.passStack === true; heldBy = record.heldBy ?? null; yieldable = record.yieldTurn === true; yielding = record.yielding || {};
     seats = record.seats; pendingSeat = record.pendingSeat; pendingActions = record.pendingActions; receipts = record.receipts || []; leaving = record.leaving || []; departures = record.departures || {}; ended = record.ended || null; history = record.history || [];
     refusals = record.refusals || {total: 0, since: point.sequence, first: []};
     continuing = record.continuing === true; driven = record.driven || 0; endWhenNoPerson = record.endWhenNoPerson === true;
@@ -677,8 +705,8 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     return new RoomError(500, `The rules engine failed after that (${error.message}), so it was not taken: nothing changed, and the game is where it was. Try another choice, or end the game.`);
   }
   /* `by`: a person, the house pilot, the room passing for a person with nothing to do (item 11), for one who chose
-     Resolve all ("standing"), or for one whose cast passes (`passAfterCast`, "cast"); `hold`, a person casting who holds
-     priority. */
+     Resolve all ("standing"), for one whose cast passes (`passAfterCast`, "cast"), or for one who yielded the turn
+     ("yield"); `hold`, a person casting who holds priority. */
   function apply(seat, action, by = "person", hold = false) {
     if (action.kind === "undo-mana") {
       step.acted = true;
@@ -712,6 +740,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       write(events);
       taken = was ? tapTaken(state, seat, action, was.mark, events, was.run) : null;
       if (passAfterCast && by === "person" && !hold && (action.kind === "cast" || action.kind === "activate")) castBy = seat;
+      if (passStack && by === "person" && hold && (action.kind === "cast" || action.kind === "activate")) heldBy = seat;
     }
   }
 
@@ -725,7 +754,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     const point = journal.checkpoint(state, rng.checkpoint());
     await store.saveCheckpoint(point);
     await store.pruneCheckpoints();
-    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, history, refusals, ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {}), ...(resolveAll ? {resolveAll, standing} : {}), ...(passAfterCast ? {passAfterCast, castBy} : {}), ...(endAsks ? {endAsks} : {}), ...(untapMana ? {untapMana, taken} : {}), ...(Object.keys(prefs).length ? {prefs} : {}), ...(turnsOf ? {turnsOf} : {})}));
+    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, history, refusals, ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {}), ...(resolveAll ? {resolveAll, standing} : {}), ...(passAfterCast ? {passAfterCast, castBy} : {}), ...(endAsks ? {endAsks} : {}), ...(untapMana ? {untapMana, taken} : {}), ...(Object.keys(prefs).length ? {prefs} : {}), ...(turnsOf ? {turnsOf} : {}), ...(passStack ? {passStack, heldBy} : {}), ...(yieldable ? {yieldTurn: true, yielding} : {})}));
   }
 
   const api = {
@@ -753,8 +782,10 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       const beats = {...(pod && pod.drawBeat === true ? {drawBeat: true} : {}), ...(pod && pod.passEmpty === true ? {passEmpty: true} : {}),
         ...(pod && pod.endWhenNoPerson === true ? {endWhenNoPerson: true} : {}), ...(pod && pod.resolveAll === true ? {resolveAll: true} : {}),
         ...(pod && pod.passAfterCast === true ? {passAfterCast: true} : {}), ...(pod && pod.endAsks === true ? {endAsks: true} : {}),
-        ...(pod && pod.untapMana === true ? {untapMana: true} : {})};
+        ...(pod && pod.untapMana === true ? {untapMana: true} : {}),
+        ...(pod && pod.passStack === true ? {passStack: true} : {}), ...(pod && pod.yieldTurn === true ? {yieldTurn: true} : {})};
       passEmpty = beats.passEmpty === true; endWhenNoPerson = beats.endWhenNoPerson === true; resolveAll = beats.resolveAll === true; passAfterCast = beats.passAfterCast === true; endAsks = beats.endAsks === true; untapMana = beats.untapMana === true;
+      passStack = beats.passStack === true; yieldable = beats.yieldTurn === true;
       /* And whether a cast tapped for tops up floating mana and taps a source for all it makes (`pooledTaps`, rules/actions.mjs):
          a match launched before it lacks the key, and so offers what it offered then. */
       const pooled = pod && pod.pooledTaps === true ? {pooledTaps: true} : {};
@@ -801,6 +832,8 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         ...(api.continuing ? {continuing: true} : {}),
         /* This seat's own way of playing, as the room holds it (prefer). */
         ...(prefs[seatId]?.stepByStep === true ? {stepByStep: true} : {}),
+        /* Its yield (`yieldTurn`), its own and no one else's: on, or one it may start now. */
+        ...(holds(seatId) ? {yielding: true} : mayYield(seat) ? {mayYield: true} : {}),
         /* Which of its own turns this is, when the turn is this seat's (the board says "your 2nd"). */
         ...(turnsOf && state.activePlayer === seat && turnsOf[seatId] ? {yourTurn: turnsOf[seatId]} : {}),
       };
@@ -832,7 +865,8 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       if (entry.kind === "leave") return api.leave(entry.seat, entry.why);
       if (entry.kind === "end") return api.end(entry.seat);
       if (entry.kind === "prefer") return api.prefer(entry.seat, entry);
-      if (entry.kind !== "answer") throw new RoomError(400, `Tape entry ${entry.n} is not an answer, a leave, an end or a way of playing.`);
+      if (entry.kind === "yield") return api.yieldTurn(entry.seat, entry);
+      if (entry.kind !== "answer") throw new RoomError(400, `Tape entry ${entry.n} is not an answer, a leave, an end, a way of playing or a yield.`);
       const seat = seatIndex(entry.seat);
       if (seat < 0 || pendingSeat !== seat) throw new RoomError(409, `The tape parts from the game at entry ${entry.n}: it answers for ${entry.seat}, and the game is waiting on ${pendingSeat === null ? "no one" : seats[pendingSeat].seatId}.`);
       withdrawKeeping();
@@ -862,6 +896,35 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       notWhileContinuing("Your way of playing can be changed");
       prefs = {...prefs, [seatId]: {stepByStep: on}};
       tape({kind: "prefer", seat: seatId, stepByStep: on});
+      await persist();
+      return api;
+    },
+
+    /**
+     * YIELD TURN (Linear ROB-13; `yieldTurn`): `on`, the rest of this opponent's turn passed for the seat -- each priority
+     * of theirs in it, whatever they hold -- and not `on`, Stop yielding. On the tape, as a way of playing is; the same as
+     * it was, it changes nothing and is not taped. Asked for priority as they yield, that priority is passed at once; a
+     * decision the rules ask of them stays theirs to answer, and the yield holds on after it. Private: no history line.
+     */
+    async yieldTurn(seatId, {on} = {}) {
+      const seat = seatIndex(seatId);
+      if (seat < 0) throw new RoomError(403, "That seat is not at this table.");
+      if (seats[seat].pilot === "house") throw new RoomError(409, "An AI seat does not yield.");
+      if (finished()) throw new RoomError(409, "This game is over.");
+      if (!yieldable) throw new RoomError(409, "This game was started before Yield turn, so it plays as it did: you are asked for each priority.");
+      const want = on === true;
+      if (holds(seatId) === want) return api;
+      if (want && !mayYield(seat)) throw new RoomError(409, state.stepIndex === undefined ? "The game has not begun: there is no turn to yield yet."
+        : state.activePlayer === seat ? "It is your own turn: Yield turn passes for you in an opponent's turn only."
+        : "You can't yield now: you are out of the game, or this turn's player is.");
+      notWhileContinuing(want ? "You can yield the turn" : "You can stop yielding");
+      if (want) yielding = {...yielding, [seatId]: {turn: state.turn, active: state.activePlayer}};
+      else {const {[seatId]: _gone, ...rest} = yielding; yielding = rest;}
+      tape({kind: "yield", seat: seatId, on: want});
+      if (want && pendingSeat === seat && pendingActions) {
+        withdraw();
+        try {drive();} catch (error) {throw await undone(error);}
+      }
       await persist();
       return api;
     },
