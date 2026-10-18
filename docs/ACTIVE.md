@@ -1,5 +1,23 @@
 # Who holds the work
 
+## Invitation runtime release, October 17, 2026 (Fable 5.1 cloud session, temporarily in Codex's lane)
+
+**October 18: the Play boards handed back to Codex Astra** (`docs/HANDOFF-TO-CODEX-2026-10-18.md`), and Rob's program reorganized around his north star: Linear initiative I-1 with eleven outcome projects, five workstreams (Claude · Engine, Claude · Deck intelligence, Codex · Play, Codex · Workshop, Grok), the charter `docs/program/README.md`, the readout `docs/readout/index.html` with one feed per workstream, the instruction sets `docs/program/workstreams/`, the kick-off prompts `docs/program/KICKOFF-PROMPTS.md`, and the launch checklist draft `docs/program/LAUNCH-CHECKLIST.md` (ROB-137, for Rob's approval). This session continues as Claude · Deck intelligence. The paragraphs below are the record of October 17.
+
+**Holder, temporary (October 17):** a Claude cloud session (Fable 5.1) on `claude/crankmagic-invitations-ob12tu`, holding Codex's lane (access/user management, invitations/sharing, Play presentation, Babylon prototype, UX feedback loop) while Codex usage resets, per Rob's October 17 handoff (`docs/HANDOFF-OPUS-2026-10-17.md` on `codex/handoff-opus-oct17`, PR #738). The engine lane (Fable, `claude/admiring-franklin-58cxy4`, ROB-71) is a separate session; coordination is in Linear ROB-11 and on GitHub only. Ownership returns to Codex with a dated `docs/HANDOFF-TO-CODEX-<date>.md`.
+
+**Done, proven:** PR #737 (`codex/invite-runtime-oct17`, fd152c64) merged to main as `1990ad1d02171b6418fd54d9eeeb0ebda37a438c` with a merge commit, on Rob's one-time exception for the two pre-existing failures in Actions run 39044154055 (`tests/a11y-board.mjs`, `tests/engine-breaks-anchors.mjs`; ROB-15, ROB-16); the run's log names no other failure. Re-run here before the merge, on fd152c64: `tests/sharing.mjs` 68, `tests/cloud-worker.mjs` 126, `tests/feature-wiring.mjs` 124; `tests/uat/sharing-runtime.mjs` under Miniflare 4.20260730.0 with `WORKER_RUNTIME_DATE=2026-08-06` (the newest date that binary supports) passes its three native scenarios; `tools/local-ci.sh fd152c64 0`: SCAN PASS, merge clean. The staging release was built from the merge commit with `tools/release-pages.mjs --ref 1990ad1d --profile cloud-staging` (359 files, 63.7 MB); against the accepted fd152c64 candidate only `index.html`, `crankmagic.html` (the version meta) and `version.json` differ, and against the live release 45d35eef only the two adapters and those three files. `tests/uat/release-acceptance.mjs` passed 22 checks on that build (local serve, live Scryfall). Committed as `release/cloud-staging` `eed2f1a49754b2746ef86c711ac24eb55f8dea3c` and pushed at 16:29 UTC. `tests/uat/play-e2e.mjs` was not re-run here (no wrangler in the container; the change touches no Play module). Production unchanged at c9ad0e65.
+
+**Deployment proof:** Workers Builds built `release/cloud-staging` eed2f1a4 (build `9a2ca50f-bfd7-4665-9054-3645f2e86b64`, success at 16:34:21 UTC) and deployed version `4992a1e5-4cd4-4285-916e-a955ab51b356` (deployment `0eaaffa8-403e-485b-a1c1-25eb7304f512`, 16:34:12 UTC). Authenticated `https://staging.crankmagic.com/version.json` (Access service token) reads `commit` and `source` `1990ad1d02171b6418fd54d9eeeb0ebda37a438c`, profile `cloud-staging`. The deployed `play-worker.js` fetched from the Workers API is byte-identical to `wrangler deploy --dry-run` of the committed release folder (4,120,548 bytes, sha256 `42f1bc7e9fb2ecb7d5641bd14d1bf12dfe63f7ce571b7c0b12d7bedad04898e2`). The `Workers Builds: crankmagic` check on the same commit fails as it has on every staging release commit (production's build trigger reading a staging branch); production's `/version.json` still reads c9ad0e65. Staging secrets were untouched (deploy by Builds, not by hand).
+
+**Live acceptance, October 17, 16:48 and 16:54 UTC (Rob's sessions; this container read only aggregates and masked policy rules):** two owner invitations sent from Rob's owner session on staging 1990ad1d, the second to an address that had never been in any Access policy or group. Each: the reusable Invited policy gained one email rule with the prior group rule preserved (`updated_at` 16:48:44Z and 16:54:56Z; the account audit log shows only these two `access_update_policy` events), the outbox job went to `sent` on its first attempt with a provider message id, the admission lock released, an account and profile were created, and the recipient opened the link, entered the emailed code and signed in (Rob's report). Still to record: the Reviewer-scoped shared decks, a refused write, and a shared deck chosen in a lobby by a recipient (ROB-10, ROB-30, ROB-36, ROB-37).
+
+**Not proven, next:** the six shared decks under Reviewer, write refusal, and a playable shared deck in a lobby, from a recipient's browser (the `/api/social/invite` route admits only `INVITE_ADMIN_ID`, and this container's Access service token names a service, not a person, so recipient-side checks come from Rob's browsers or the `work/` scripts on Personal-HP). Read-only staging facts before the test (D1 counts, no addresses read): 1 invitation row, 0 admitted, 0 mail jobs, 0 locks, 6 public shares. Linear: ROB-10, ROB-72, ROB-11.
+
+**Later on October 17 (same session):** ROB-10 and ROB-72 closed on Rob's word after the second, never-admitted address signed in. The Grok Bot work package is `docs/grok/WORK-PACKAGE-2026-10-17.md` (one coordinator, four workers on disjoint files; Linear ROB-96; not yet handed to a bot). The Play screens were reviewed against Rob's latest decisions (`docs/play-overhaul/PLAY-REVIEW-2026-10-17.md`, twelve findings, shots `review-1017-*.png`): `main` serves three desktop shells and a phone board rotated 90°; the broad draft holds the October 15 decisions but is unmergeable as is, so ROB-99 ports it in three slices. The ROB-14 backlog is reorganized into six project milestones M1–M6 with engine dependencies, and a `Lane` label group (Engine · UI · Shared · Grok). Rob's table feedback ("it is not rendering as a table edge") is ROB-100: the Babylon lab is ported onto this branch unchanged from the draft (`ui-prototypes/babylon/`, 36bb9446), and `tables.js` adds seven table designs as real 3D objects (medieval banded oak, colonial inlaid mahogany, futuristic glass, tavern planks, card-room felt, stone dais, volcanic obsidian), chosen in the lab's Camera panel and remembered per device; the default camera now frames the front edge. `node ui-prototypes/babylon/table-design-checks.mjs` proves each design on desktop and phone sizes with a mutation; shots `table-design-{desktop,phone}-<design>.png`. Step 2 (Rob: keep all seven, default medieval-banded) landed in 7ec10a92, merged with main 9cf57d0c (#729) at 37be0788: `CrankStage.appearances.tables` carries the same catalog, `CrankStage.tableDesign(id)` maps the old `wooden`/`stone`/`obsidian` onto `tavern-plank`/`stone-dais`/`obsidian-glass`, the 2D stage paints a flat fallback per design until the Babylon renderer ships, and the Camera menu's "Table design" select plus a new Settings > Appearance select choose from it per device (`cm-stage-table`); pins stage 6, board 52, settings 13, service worker 482, app shell 498; `tests/table-tabletop.mjs`, `settings-r3` 63, `a11y-board` 288, `asset-versions` 124 and `tools/local-ci.sh HEAD 0` green; shots `table-design-stage-fallback-{medieval-banded,glass-future}.png`. The Grok package's G1 and G2 are withdrawn (both landed on main through other PRs); the relay prompt is `docs/grok/ORCHESTRATOR-PROMPT-2026-10-17.md` (G3, G4; base main 9cf57d0c). Not done: the Babylon renderer on the live board (ROB-52) and host sync of the choice (ROB-51, engine lane).
+
+**Agreed with the engine lane (ROB-11, Oct 17):** no concurrent staging deploys, the slot is handed over in ROB-11 comments; migration 0006 is reserved for `card_demand` (ROB-86), this lane's next is 0007; `commanderTax` is an accepted additive `CrankRoomView@1` field, read by the UI under ROB-29 only after ROB-12 merges; ROB-15/ROB-16 stay in this lane.
+
 ## Play tabletop preview, October 14, 2026
 
 October 17 invitation runtime diagnosis: the user-provided local ACCESS_INVITE_TOKEN verifies active and reads the configured staging app/policy (all HTTP 200). Its value was installed privately into staging's existing secret; the invitation still failed before admission. Native workerd reproduction rejects redirect:'error' before network access. Both Access admission and Resend used that unsupported option; both now use manual redirects and reject non-success responses without forwarding credentials. Native intercepted-network checks cover success, Access redirect refusal/no email, and mail redirect refusal. Reintroducing the old option fails the intended success assertion. Sharing 68, cloud-worker 126, feature-wiring 124 and data integrity passed. Runtime test is `tests/uat/sharing-runtime.mjs`, with MINIFLARE_MODULE pointing to the installed Miniflare module; installed workerd supports dates through September 30, which is used for this local check. Follow-up staging release and real mail remain pending. No engine changes. Full tracing was rejected by automatic approval review and remains disabled; no credential values were read back or logged.
@@ -80,12 +98,19 @@ Counterintelligence. The current preview milestone is deployed to staging. Side-
 The module registry now includes Screen View, History, AI Coach, Counter-Intel, Resources, On the Stack, Card Preview, Table Vitals, Recommended Actions, Chat, and Actions. AI Coach embeds its existing conversation and preserves drafts through moves; Recommended Actions uses that service. Chat is explicitly unavailable pending the contract below. Actions routes to its assigned drawer in Full screen, with ordinary popups retained elsewhere.
 Volcano uses Rob's supplied video; other environments and the table artwork still need final assets. Crowded-mat layout and text readability need further polish.
 
-## The lanes (AGENTS.md, *Lanes*), since 2026-10-12
+## The lanes (AGENTS.md, *Lanes*), since 2026-10-12; five lanes since 2026-10-18
 
 | Lane | Held by | Branch | Doing |
 | --- | --- | --- | --- |
-| **Engine and simulation** | Fable (Claude Code, a cloud container), resumed October 16 per Rob | `claude/admiring-franklin-58cxy4` | Engine, simulation, card loads. Linear: ROB-71 and its children (ROB-12, ROB-13, ROB-73 to ROB-95). Now: ROB-12. See "2026-10-17: the engine lane resumed" below. |
-| **UI and user management** | Codex on Personal-HP | `codex/ui-playtest-plan-oct15`; focused release `codex/staging-resend-oct16` | UI/Babylon, account profiles, sharing, Resend and invitations; coordinates current staging release. |
+| **Claude · Engine** (engine, rooms, Worker routing, migrations, card loads, releases) | Fable (Claude Code, a cloud container), since October 16 | `claude/admiring-franklin-58cxy4`, then `claude/engine-<topic>` | Main's record on October 18: Engine, simulation, card loads. Linear: ROB-71 and its children (ROB-12, ROB-13, ROB-73 to ROB-95). ROB-12 (#739) and ROB-81 (#742) on staging; ROB-101 (#744), ROB-13 (#745) and ROB-73 (#746) merged; now ROB-77. See "2026-10-17: the engine lane resumed" below. Next, under projects P-ROB-2 and P-ROB-1: ROB-74, ROB-75, ROB-78, ROB-94, the card load program. Brief: `docs/program/workstreams/claude-engine.md`. |
+| **Claude · Deck intelligence** (the models and data under the screens; the program readout) | The second Claude session (a cloud container), since October 18 | `claude/crankmagic-invitations-ob12tu` (PR #740, this program's work), then `claude/deck-<topic>` | ROB-114, ROB-115, ROB-131, ROB-109, ROB-104, then `docs/program/workstreams/claude-deck.md` §4. Keeps `docs/readout/`. |
+| **Codex · Play** (the Play boards and the player's interaction) | Codex Astra, session 1, from October 18 (handed back: `docs/HANDOFF-TO-CODEX-2026-10-18.md`) | `codex/play-<topic>`; the broad draft `codex/ui-playtest-plan-oct15` (PR #735) stays a quarry | Settings' Play card to its own file, then ROB-99 slice 1, ROB-98, ROB-97, ROB-18, ROB-52 with ROB-100's renderer step. Brief: `docs/program/workstreams/codex-play.md`. |
+| **Codex · Workshop** (every screen outside the boards; `cloud/library`, `sharing`, `access-invites`, `mail`) | Codex Astra, session 2, from October 18 | `codex/workshop-<topic>` | ROB-36, ROB-37 to finish; ROB-122, ROB-125, ROB-106, ROB-105. Brief: `docs/program/workstreams/codex-workshop.md`. |
+| **Grok** (bounded tasks under a coordinator) | Grok Bot workers, when Rob relays the prompt | `grok/<task>-<topic>` | G3 (ROB-27), G4 (ROB-61), G6 (ROB-136) from `docs/grok/WORK-PACKAGE-2026-10-17.md`. Brief: `docs/program/workstreams/grok.md`. |
+
+The program's charter (the north star in Linear, the file ownership table, the seams, decide-or-surface, the readout
+protocol) is `docs/program/README.md` (October 18, 2026). Rob's queue and each lane's remaining hours are on
+`docs/readout/index.html`.
 
 ### Requests between the lanes
 
@@ -120,14 +145,55 @@ other lane answers in the last column.
   live decks). Deferred with issues filed: the UI contracts (ROB-74 to ROB-78), the room's countdown and d20 (ROB-79, ROB-80), the
   commander audit (ROB-82), the card load program, the simulation audit (ROB-84), constructs and waves (ROB-83, ROB-93). Blocked:
   ROB-17, on the game record.
+- **Merged:** #739 (ROB-12) as main 7fcf26b2, on Rob's go under the same exception as #736 (CI red only on a11y-board and the four
+  UI anchors, both red on main; ROB-15, ROB-16). **On staging:** main 7fcf26b2 (with #737) as `release/cloud-staging` 44af45b4,
+  Workers version 2192fe90, play-worker.js byte-identical to the release (9e59b223bdd8); `staging-check --expect 7fcf26b2`
+  passes; release-acceptance 22, Play walk 42. ROB-12 Done. Production unchanged.
+- **Merged:** #742 (ROB-81) as main 08dcb89f, on green CI (run 39077666709) once #729 (9cf57d0c) had made main green; the ROB-16
+  anchor patch was withdrawn, #729 having dropped those four breaks. **On staging:** main 08dcb89f as `release/cloud-staging`
+  699c8999, Workers version 0b9bce12, play-worker.js byte-identical to the release (0189b94b1ee1); `staging-check --expect
+  08dcb89f` passes; release-acceptance 22, Play walk 42. ROB-81 Done. Production unchanged.
 - **ROB-12:** the engine and test paths of 377d6487 ported, behind a pod key: a table's new match carries `pooledTaps: true`, and a
   match launched before offers what it offered and replays the same. A view key, `commanderTax`, on a command-zone commander. Proof:
   engine-tap-to-cast 64, engine-commander 56, engine-cost-targets 42, room-pooled-taps 8 (new), game-table 168; breaks-pooled-taps
   15 of 15; the four anchors it moved re-anchored and caught again.
+- **ROB-81:** a permanent's static affects permanents only, unless its `affects` names another zone (`zone`, or `"any"`; CR
+  109.2); an effect on named objects (`ids`) applies wherever they are. Maskwood Nexus carries `zone: "any"`. Proof:
+  engine-layers 35, engine-wave4c-k3 171; breaks-layers-zone 4 of 4.
+- **ROB-101, merged (#744, main 23c96b7e, green suites):** `tests/master-regenerates.mjs` regenerated `data/archive/master-v2.json`
+  over the committed file while other suites read it (pilot-policy failed on #742's CI). It now regenerates into its own
+  temporary directory (`tools/import_master_v2.py` takes an output path). A reader parsing the file in a loop through five
+  runs: main tore 568 of 1,168 reads, the fix none. breaks-master-regenerates 2 of 2. No served file changes.
+- **ROB-13:** two pod keys in the room.
+  - `yieldTurn`, on a table's new matches: `room.yieldTurn(seatId, {on})` passes each priority of the seat's for the rest of
+    an opponent's turn, still asking what the rules ask, on the tape (a `yield` entry) and replayed; it ends with that turn
+    or its player. The seat's own view carries `yielding` or `mayYield`.
+  - `passStack`, built but not yet asked for by the table: a person with something on the stack and no response they could
+    make passes by itself (rules/actions.mjs, nothingToDo with `stack`; a mana ability that does more than add mana is a
+    response, `plainMana`); one who cast holding priority is asked. Such a spell is never on the stack in that person's
+    views, and the board draws and voices spells from the stack, so the table turns it on once the board shows a spell
+    cast and resolved between two views (ROB-23).
+  - The G1 harness now launches its games as the table does. The contract, and whether this lane adds the `yield` frame to
+    `cloud/game-room.mjs`, are asked in ROB-11. Proof: engine-pass-stack 18, room-yield-turn 43; breaks-yield-turn 41, each
+    caught.
+  - **Merged:** #745 as main 7df7064a, on green suites. **Staging held:** two tries of its release stopped at
+    release-acceptance's Measure step, live Scryfall's `/cards/collection` taking 6.5 to 30 s against the page's 10 s; the Play
+    walk passed 42 both times and nothing was pushed (staging is still 699c8999, version 0b9bce12). Retried once Scryfall
+    answers quickly again.
+- **ROB-73, merged (#746, main 20601740):** `room-draw-card` proves Draw card at the room (a double submission, a reopen while
+  it waits, the first draw's rules, an empty library); breaks-draw-card 6 of 6. Tables launching with `drawBeat` waits on
+  the board's side of ROB-24 (table-board's walk clicks no Draw card).
+- **ROB-77 (this branch's next PR):** the table's events, `events.v1` (game/room/events.mjs): each view carries what the
+  action behind it did, each event with the journal's id and the decision whose answer made it; a draw the drawer's alone
+  and only while the card is in their hand; `room.view(seatId, {after})` for a reconnect, `eventsReset` past the newest 200
+  kept. A drawn card's id in the hand is now in its engine event (`drewAs`). The socket's `after` waits on one line in
+  `cloud/game-room.mjs` (asked in ROB-11). Proof: room-events 32; breaks-table-events 17, each caught; fuzz-library's and
+  room-g1-terms' no-leak checks read every view's events.
 - **Waiting on Rob:** the backstop's daily cap (ROB-90); the AI door's two settings (ROB-95: the staging AI Access app, and the
   production key); whether waves 4d onward wait on card-load steps 1 to 4 (ROB-93).
 - **With the Opus session holding Codex's lane** (`docs/HANDOFF-OPUS-2026-10-17.md`): coordinated in ROB-11. No `cloud/**` or UI
-  file in this lane's PRs; no staging deploy until that session's release of #737 is out and it agrees.
+  file in this lane's PRs. Staging releases of main are this lane's, as agreed there: announced in ROB-11 before the push and
+  recorded after it, never two at once.
 
 ## 2026-10-14: Rob's decisions on the card load program
 
