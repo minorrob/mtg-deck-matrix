@@ -175,7 +175,7 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
   await rob.page.locator("#cm-table-seconds").waitFor();
   clock += 10000;
   await serial(() => tableFor(id).alarm());
-  await rob.page.locator("#cm-board .cm-board-strip").waitFor({timeout: 30000});
+  await rob.page.locator("#cm-board .cm-stage-top").waitFor({timeout: 30000});
   await maya.page.locator("#cm-board").waitFor({timeout: 30000});
   ok(true, `table ${n}: Maya brings ${mayaDeck.name}; everyone is ready; the countdown runs out and both pages are the board`);
 
