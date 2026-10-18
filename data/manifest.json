@@ -1,8 +1,8 @@
 {
  "schema": "manifest@1",
- "generatedAt": "2026-10-04T15:57:15.265Z",
+ "generatedAt": "2026-10-18T06:38:11.608Z",
  "generator": "tools/data-manifest.mjs",
- "count": 23,
+ "count": 24,
  "files": [
   {
    "file": "data/engine/oracle.json",
@@ -135,6 +135,17 @@
    "version": 2,
    "served": true,
    "cache": "precached"
+  },
+  {
+   "file": "data/commander-brackets.json",
+   "schema": "commander-brackets@1",
+   "stamp": "2026-10-18",
+   "generator": "hand-maintained",
+   "bytes": 2640,
+   "sha256": "b8db9c896663604058a4ad09f96ecfcb89eeda1e6a681ef1bace31c2915b9538",
+   "version": null,
+   "served": false,
+   "cache": "not served"
   },
   {
    "file": "data/deck-guides.json",
