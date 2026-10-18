@@ -22,14 +22,21 @@ status and a place for the handoff in one object.
 Rob, 2026-10-12: *"Have another AI platform work on the UI and player interaction branches while you work on the
 engine and finishing card loads, then cleanly merge."* So two systems may now work at the same time, each in its own
 **lane**. A lane is a set of files, and nobody edits a file of another lane. Any system may hold a lane: Fable or another
-Claude session, Codex (Astra), Cursor, or Grok Bot.
+Claude session, Codex (Astra), Cursor, or Grok Bot. Since 2026-10-18 there are five lanes at once, one per AI session
+(Rob: two Codex sessions, two Claude sessions, Grok's workers), organized around his north star in Linear.
 
 | Lane | Its files | Its branches |
 | --- | --- | --- |
-| **Engine** | `game/**` (the engine and the room), `cloud/**`, `data/`, `tools/`, the card definitions, their suites, and everything not named for the UI lane | `claude/admiring-franklin-58cxy4` (the engine lane's session) |
-| **UI** | The game screen and the player's interaction with it: `crankmagic-board.js`, `crankmagic-table.js`, `crankmagic-tabletop.js`, `crankmagic-seat-art.js`, `crankmagic-sea.js`, `crankmagic-audio.js`, Settings' Play and display cards, `crankmagic.css`, `crankmagic-design.css`, and the browser suites that drive them | `<system>/ui-<topic>` |
+| **Claude · Engine** | `game/**` (the engine and the room), the Worker's routing and rooms (`cloud/worker.mjs`, `play-worker.mjs`, `game-room.mjs`, `tables.mjs`, `ai.mjs`, `access.mjs`, `migrations/**` and every migration's number), `data/engine/**`, the release and CI tooling, the engine and room suites, the release branches | `claude/admiring-franklin-58cxy4`, then `claude/engine-<topic>` |
+| **Claude · Deck intelligence** | The models and data under the screens: the generator, the simulator and its join, the classifier, strategies, loops, the graph's scoring, prices and card data and their tools, `cloud/advise*.mjs`, `sim/**`, `tools/sim/**`, `data/**` except the engine's, `.claude/skills/**`, `docs/program/**`, the readout's page and `north-star.json` | `claude/deck-<topic>` |
+| **Codex · Play** | The game screen and the player's interaction with it: `crankmagic-board.js`, `crankmagic-table.js`, `crankmagic-tabletop.js`, `crankmagic-seat-art.js`, `crankmagic-sea.js`, `crankmagic-audio.js`, `crankmagic-stage.js`, `crankmagic-stage.css`, `crankmagic-mats.css`, `crankmagic-online.*`, `crankmagic-lobby.js`, `crankmagic-game.js`, `ui-prototypes/**`, `assets/audio/**`, Settings' Play card (in its own file once extracted), `docs/play-overhaul/**`, `docs/ui-lane/**`, and the browser suites that drive them | `codex/play-<topic>` |
+| **Codex · Workshop** | Every screen outside the boards: the app shell and pages, `crankmagic.css`, `crankmagic-design.css`, Decks, the Lab, Library, Discover, Buy, Settings, accounts, sharing, the tour, the collection model and repository, `cloud/library.mjs`, `cloud/sharing.mjs`, `cloud/access-invites.mjs`, `cloud/mail.mjs`, `design/**`, `docs/design/**`, and their suites | `codex/workshop-<topic>` |
+| **Grok** | Only the files a package under `docs/grok/` names for a task, exclusively | `grok/<task>-<topic>` |
 
-`docs/ACTIVE.md` says who holds each lane now. `docs/ui-lane/README.md` is the UI lane's brief.
+The file-by-file table, the seams between the lanes and the rule for deciding versus surfacing to Rob are in
+`docs/program/README.md` (October 18, 2026). Each lane keeps a feed on the program readout (`docs/readout/`).
+
+`docs/ACTIVE.md` says who holds each lane now. `docs/program/workstreams/<lane>.md` is each lane's brief; `docs/ui-lane/README.md` is the Play lane's older brief and still holds where they do not differ.
 
 - **The room's view is the seam.** The UI lane reads `CrankRoomView@1` (`docs/ui-lane/gameplay-anchor.md`) and never
   edits `game/` or `cloud/`. A field it needs is asked for in the Requests table of `docs/ACTIVE.md`. The engine lane
@@ -41,8 +48,9 @@ Claude session, Codex (Astra), Cursor, or Grok Bot.
   - **`docs/ACTIVE.md`:** each lane writes only in its own section, and in the Requests table.
 - **Merging:** each lane merges `main` into its branch before marking a PR ready. A merge commit, never a rebase or
   force-push of a branch another system has pulled.
-- **One release owner:** the engine lane's session releases staging (`tools/release-staging.sh`), and production on
-  Rob's go. The UI lane merges to `main` and says so in `docs/ACTIVE.md`.
+- **One release owner:** the engine lane's session (Claude · Engine) releases staging (`tools/release-staging.sh`), and
+  production on Rob's go. Every other lane merges to `main` and says so in `docs/ACTIVE.md`.
+- **The readout feed:** each lane edits only `docs/readout/feeds/<lane>.json`; `tests/readout-feeds.mjs` validates them.
 - **A concept from a prototyping tool** comes back as an exported folder and a `HANDOFF.md`. The UI lane ports it into
   the board; it does not merge it as it is. A framework for the board is Rob's decision.
 - Every other rule in this file holds in both lanes. That includes breaks, the four things a handoff states, and what
