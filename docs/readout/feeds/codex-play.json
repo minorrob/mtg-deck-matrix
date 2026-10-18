@@ -1,9 +1,9 @@
 {
   "workstream": "codex-play",
-  "updated": "2026-10-18T07:10:00Z",
+  "updated": "2026-10-18T07:33:00Z",
   "updated_by": "Codex · Play, October 18 handoff resumed",
-  "branch": "codex/play-shared-shell",
-  "now": "ROB-99 slice 1 in PR #754: shared desktop shell and isolated Play settings pass local browser and mutation proof; review, CI and staging remain.",
+  "branch": "codex/play-table-camera",
+  "now": "ROB-99 slice 1 in PR #754 has passed local proof, review repairs and release packaging; CI is running. ROB-98's land-spacing comparison awaits Rob's screenshot choice.",
   "items": [
     {"id": "ROB-99", "outcome": "play-experience", "feature": "The broad UI draft ported onto main in three reviewable slices", "status": "in_progress", "remaining_hours": 20, "evidence": [{"label": "PR #754", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/754"}], "note": "Slice 1 passes local browser proof and 23 deliberate regressions. Phone and remaining slider/layout slices are outstanding; estimate revised after the first slice."},
     {"id": "ROB-19", "outcome": "play-experience", "feature": "One header, profile menu and drawers across Full, Table and Focus", "status": "review", "remaining_hours": 2, "evidence": [{"label": "PR #754", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/754"}], "note": "Desktop implementation and local proof complete. Review, CI, Rob's staging look and the engine-owned release remain; physical phone and hardware WebGL unproven."},
@@ -11,7 +11,7 @@
     {"id": "ROB-20", "outcome": "play-experience", "feature": "Zoom and card-size sliders calibrated with fit, reset and per-view memory", "status": "in_progress", "remaining_hours": 8},
     {"id": "ROB-22", "outcome": "play-experience", "feature": "Crowded battlefields scroll and adjust without moving the hand", "status": "backlog", "remaining_hours": 12},
     {"id": "ROB-97", "outcome": "play-experience", "feature": "Table view: the Board cards slider off the center life dial", "status": "backlog", "remaining_hours": 3},
-    {"id": "ROB-98", "outcome": "play-experience", "feature": "Full view: the lands row reachable under the hand fan", "status": "backlog", "remaining_hours": 4},
+    {"id": "ROB-98", "outcome": "play-experience", "feature": "Full view: the lands row reachable under the hand fan", "status": "in_progress", "remaining_hours": 3, "note": "A 48px front-mat spacing candidate clears sampled land targets during hand hover at 1024, 1280 and 1400 widths. Awaiting Rob's screenshot choice before applying it."},
     {"id": "ROB-139", "outcome": "play-experience", "feature": "The game's name applied everywhere once Rob picks it", "status": "blocked", "remaining_hours": 4, "note": "Waits on Rob's decision."},
     {"id": "ROB-32", "outcome": "play-experience", "feature": "Play home: Resume, New table, invitation and recent games", "status": "backlog", "remaining_hours": 16},
     {"id": "ROB-33", "outcome": "play-experience", "feature": "Table seats as Human or AI, with Easy, Normal or Claude", "status": "backlog", "remaining_hours": 12},
@@ -50,6 +50,7 @@
     {"id": "ROB-124", "outcome": "tailored", "feature": "My play preferences: confirmations, stops, auto-pass, camera and sound defaults", "status": "backlog", "remaining_hours": 12}
   ],
   "asks_of_rob": [
+    {"id": "ROB-98", "ask": "Choose the Full-view land-spacing treatment from the before/after screenshots", "recommendation": "Add 48px inside the front mat; it clears the tested land targets without changing the camera or hand defaults", "needed_by": "before applying the ROB-98 fix", "url": "https://linear.app/robs-build/issue/ROB-98/full-view-keep-the-lands-row-reachable-under-the-hand-fan"},
     {"id": "ROB-59", "ask": "Confirm the Runway and Higgsfield subscriptions are redeemed and say which account produces the Volcano and Forest loops", "recommendation": "Produce the first batch from the subscriptions; no API credits", "needed_by": "before M4's environment work", "url": "https://linear.app/robs-build/issue/ROB-59"},
     {"id": "ROB-139", "ask": "Pick the name of the game inside Play", "recommendation": "Crank Table, matching the existing recommendation in ROB-139", "needed_by": "before applying the game name", "url": "https://linear.app/robs-build/issue/ROB-139/name-the-game-inside-play"}
   ],
