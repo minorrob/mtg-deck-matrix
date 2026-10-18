@@ -13,7 +13,7 @@ C.SUBNAV.decks=()=>{const r=C.route(),did=(r.view==='decks'||r.view==='pull'||r.
   const tint=d=>{const c=C.card(d.commanders[0]),ci=(c&&c.colorIdentity)||[];return /^[WUBRG]$/.test(ci[0]||'')?ci[0]:'';};
   return [...C.state.decks.filter(d=>!d.archived&&(C.showLobbyDecks||!M.isLobbyDeck(d)||d.id===did)).slice(0,12).map(d=>({label:d.name,hash:'#decks?deck='+encodeURIComponent(d.id),current:d.id===did,tint:tint(d)})),{label:'How a deck comes together',hash:'#how',current:r.view==='how'}];};
 C.HELP.decks={title:'Decks',body:`<p>Every deck you have, by whether it can be played: <strong>Playable</strong> when its box holds the hundred (its Final cards and Substitutes), <strong>Loading</strong> when the cards that are missing are yours and only have to be put in, <strong>To load</strong> when a seat waits on a card you don't have yet or the list is not locked, and <strong>Complete</strong> when every card in the box is the list's own.</p><p>Each tile's bar is the hundred: in the physical deck, ready to add, ordered, to buy. Tick two or more tiles to compare them; the ⋯ on a tile archives or restores it.</p>`};
-C.HELP.deck={title:'A deck page',body:`<p>The header is the summary: commander, stage, bracket, mechanics and the latest measured score; the row beside it is the work — add what you own, buy what you do not, log the game, measure — and the rest is under More.</p><p><strong>Overview</strong> is where the deck stands: Progress counts the physical deck, ready to add, ordered and to buy; Cost is what finishing costs against the cap; the Next line says what to do first. The hundred at a glance, game record, simulation history, commander guide, strategy and SWOT all live here. <strong>The hundred</strong> is the full 100-card list by type with where each copy stands (actions on a card are in Cards). <strong>Upgrades</strong> is the working list and the Upgrade Path. <strong>Explore</strong> is deck-scoped explore and relationships (Role lens, Trace). <strong>Acquire</strong> is the buy list, orders, and acquisition tracking.</p><p>A <strong>finalized</strong> deck's reservations track what its list needs: Ready to add walks the cards you own into the physical deck, and the buy list is what is left. A <strong>draft</strong> holds the copies you put in it; Finalize checks the list is a legal hundred and puts what is missing on the buy list. An <strong>archived</strong> deck keeps its history; its copies were released, and where each one physically is stays recorded.</p>`};
+C.HELP.deck={title:'A deck page',body:`<p>The header is the summary: commander, stage, bracket, mechanics and the latest measured score; the row beside it is the work — add what you own, buy what you do not, log the game, measure — and the rest is under More.</p><p><strong>Overview</strong> is where the deck stands: Progress counts the physical deck, ready to add, ordered and to buy; Cost is what finishing costs against the cap; the Next line says what to do first. The hundred at a glance, game record, simulation history, commander guide, strategy and SWOT all live here. <strong>The hundred</strong> is the full 100-card list by type with where each copy stands (actions on a card are in Cards). <strong>Upgrades</strong> is the working list and the Upgrade Path. <strong>Explore</strong> is deck-scoped explore and relationships (Role lens, Trace). <strong>Acquire</strong> is the buy list, orders, and acquisition tracking.</p><p>A <strong>locked</strong> deck's reservations track what its list needs: Ready to add walks the cards you own into the physical deck, and the buy list is what is left. A <strong>draft</strong> holds the copies you put in it; Lock list checks the list is a legal hundred and puts what is missing on the buy list. An <strong>archived</strong> deck keeps its history; its copies were released, and where each one physically is stays recorded.</p>`};
 const commander=d=>d.commanders.map(id=>C.card(id)?.name||'Unknown').join(' + ');
 /* A PRECON'S OWN PATH (Rob, 2026-10-01: "When it's a precon deck that's been selected, it should have a very different
    acquisition path"). A deck made from a precon carries the precon's id and name (createDeck's `precon`); one made
@@ -307,7 +307,7 @@ const work=(w=>M.isLobbyDeck(d)&&!d.archived?[b('Save to Decks','promote-lobby-d
   :d.status==='final'?(()=>{const readyN=pullCount(ready)+ready.remove+M.benchFree(C.state,d).copies,primary=readyN>0?'pull':ready.toBuy>0?'buy':'log';
     const row=[['pull',b(readyN>0?`Ready to add (${readyN})`:'Ready to add','deck-pull',{deck:d.id},primary==='pull')],['buy',precon?buyPrecon(precon,primary==='buy'):b(`Buy list (${ready.toBuy})`,'deck-buy-list',{deck:d.id},primary==='buy')],['log',b('Log a game','log-game',{deck:d.id},primary==='log')]];
     return row.sort((x,y)=>(x[0]===primary?-1:0)-(y[0]===primary?-1:0)).map(x=>x[1]);})()
-  :[b('Edit card list','edit-list',{deck:d.id},true),precon?b('Save','precon-save',{deck:d.id}):b('Finalize','finalize',{deck:d.id}),b('Log a game','log-game',{deck:d.id})]);
+  :[b('Edit card list','edit-list',{deck:d.id},true),precon?b('Save','precon-save',{deck:d.id}):b('Lock list','finalize',{deck:d.id}),b('Log a game','log-game',{deck:d.id})]);
 const measure=d.archived||!cards.length?'':`<button type="button" class="v-button" data-action="measure-deck" data-deck="${e(d.id)}" title="Compare lists under the browser simulation model — not a full rules-engine game.">${latest?'Measure again':'Measure'}</button>`;
 /* THE TRACE: the deck's strategy lit from the commander outward, on Discover's canvas. */
 const traceBtn=d.archived||!cards.length?'':b('Trace','deck-trace',{deck:d.id});
@@ -330,12 +330,12 @@ const heroCard=leaders[0]&&leaders[0].image?`<div class="cm-deck-hero-card"><img
 const heroTint=/^[WUBRG]$/.test((C.card(d.commanders[0])?.colorIdentity||[])[0]||'')?`--tint:var(--mana-${(C.card(d.commanders[0]).colorIdentity)[0]});`:'';
 const body={
   overview:()=>{
-    if(!cards.length)return `<section class="v-panel" id="cm-sec-overview-empty"><h2>Overview</h2><p class="cm-muted">This deck has no cards yet. Start building your hundred or import a list.</p><div class="cm-actions">${b('Edit card list','edit-list',{deck:d.id},true)}${b('Import a list','wizard-import')}${b('Auto-build in Lab','wizard-lab')}</div><p class="cm-muted">Or finalize this deck and add cards from The hundred tab.</p></section>`;
+    if(!cards.length)return `<section class="v-panel" id="cm-sec-overview-empty"><h2>Overview</h2><p class="cm-muted">This deck has no cards yet. Start building your hundred or import a list.</p><div class="cm-actions">${b('Edit card list','edit-list',{deck:d.id},true)}${b('Import a list','wizard-import')}${b('Auto-build in Lab','wizard-lab')}</div><p class="cm-muted">Or lock this deck’s list and add cards from The hundred tab.</p></section>`;
     /* THE BENTO (Track V.4b). The Progress and Cost panel and The hundred at a glance were two
        full-width stacks; they are one six-column grid of cards now, in the guide's spans. Every
        figure is the same figure -- readiness, the rules module, the classifier -- so the cards
        agree with the Shop strip and the Orders tab by construction, as the panels did. */
-    return (d.status==='draft'&&overCap?note(`Over the ${C.money(cap)} cap by about ${C.money(spend-cap)} at recorded prices. Finalize offers to raise the cap or trim the list.`,true):'')
+    return (d.status==='draft'&&overCap?note(`Over the ${C.money(cap)} cap by about ${C.money(spend-cap)} at recorded prices. Lock list offers to raise the cap or trim the list.`,true):'')
       +bento(d,cards,curve,max,types,ready,heroTint)+guideSection()+historyHTML(d)+recordCard(d)+reportsHTML(d);
   },
   hundred:()=>cardsTab(d,cards,curve,max,types),
@@ -354,7 +354,7 @@ function nextLine(d,r){
   if(d.archived)return 'archived. Restore it as a draft to work on it again.';
   const n=d.slots.filter(x=>x.purpose==='main').reduce((a,x)=>a+x.quantity,0);
   if(d.status==='draft'&&preconOf(d))return 'save it to your decks, and buy the precon to own every card in it (Buy the Precon).';
-  if(d.status==='draft')return n<100?`finish the list (${n} of 100); the copies you own are already reserved for it, and the rest are on the buy list.`:'Finalize when the list is settled — it marks the deck final; its copies are already reserved and the rest are on the buy list.';
+  if(d.status==='draft')return n<100?`finish the list (${n} of 100); the copies you own are already reserved for it, and the rest are on the buy list.`:'Lock the list when it is settled — it marks the deck locked; its copies are already reserved and the rest are on the buy list.';
   const steps=[],pull=pullCount(r),subs=r.remove||r.standIns;
   if(pull)steps.push(`add the ${pull} card${pull===1?'':'s'} you already own (Ready to add)`);
   if(r.toBuy)steps.push(preconOf(d)?'buy the precon for the rest (Buy the Precon)':`buy ${r.toBuy} card${r.toBuy===1?'':'s'}${r.costToFinish?` (${C.money(r.costToFinish)})`:''}`);
@@ -485,13 +485,14 @@ function cardsTab(d,cards,curve,max,types){
   const byMana=(a,b2)=>(Number((C.card(a.r.cardId)||{}).manaValue)||0)-(Number((C.card(b2.r.cardId)||{}).manaValue)||0)||name(a.r.cardId).localeCompare(name(b2.r.cardId));
   const ORDER=R.TYPE_ORDER,groups=new Map(ORDER.map(k=>[k,[]]));
   for(const x of ds.rows.filter(x=>x.st.inBox)){const c=C.card(x.r.cardId);if(!c)continue;groups.get(d.commanders.includes(x.r.cardId)?'Commander':ORDER.find(k=>k!=='Commander'&&k!=='Other'&&c.typeLine.includes(k))||'Other').push(x);}
-  const part=(title,list,why)=>list.length?`<h3>${e(title)} <small>${list.reduce((n,x)=>n+(x.r.quantity||1),0)}</small>${why?` <span class="cm-muted cm-deck-part-why">${e(why)}</span>`:''}</h3><ul class="cm-deck-list">${list.sort(byMana).map(line).join('')}</ul>`:'';
+  const part=(title,list,why)=>list.length?`<h3 class="cm-deck-part">${e(title)} <small>${list.reduce((n,x)=>n+(x.r.quantity||1),0)}</small>${why?` <span class="cm-muted cm-deck-part-why">${e(why)}</span>`:''}</h3><ul class="cm-deck-list">${list.sort(byMana).map(line).join('')}</ul>`:'';
   const loading=ds.rows.filter(x=>x.st.use==='final'&&!x.st.inBox),reserved=ds.rows.filter(x=>x.st.use==='reserved'),upgrades=ds.rows.filter(x=>x.st.use==='upgrade');
   const composition=compositionHTML(cards,curve,max,types);
   /* PLAY, AND WHY (Rob, 2026-10-18): Playable when the box holds the list -- Final and Substitute together -- Loading
      when owned cards cover the rest and only have to be put in, To load when a seat waits on a card not in hand. */
   const n=v=>v.toLocaleString('en-US'),word=k=>({playable:'Playable',loading:'Loading',toload:'To load'})[k];
   const why=ds.play==='playable'?`the box holds ${n(ds.deckTotal)}: Final ${n(ds.final)} + Substitute ${n(ds.substitute)}`
+    :precon&&ds.reserved.buy?`buy the precon for the ${n(ds.reserved.buy)} card${ds.reserved.buy===1?'':'s'} you do not own`
     :!ds.locked?'the list is not locked yet'
     :ds.play==='loading'?`${n(ds.loading)} owned card${ds.loading===1?'':'s'} to put in the box`
     :`${n(Math.max(0,ds.list-ds.deckTotal-ds.loading))} seat${ds.list-ds.deckTotal-ds.loading===1?'':'s'} wait${ds.list-ds.deckTotal-ds.loading===1?'s':''} on a card you don't have`;
@@ -963,12 +964,12 @@ actions.finalize=async el=>{
     const main=fresh.slots.filter(r=>r.purpose==='main').map(r=>({c:C.card(r.cardId),q:r.quantity}));
     const spend=main.reduce((n,{c,q})=>Number.isFinite(c.price)?n+c.price*q:n,0),dearest=Math.max(0,...main.map(({c})=>Number.isFinite(c.price)?c.price:0));
     const def=fresh.definition,raise={...def,budget:def.budget!==null&&spend>def.budget?Math.ceil(spend):def.budget,perCardCap:def.perCardCap!==null&&dearest>def.perCardCap?Math.ceil(dearest*100)/100:def.perCardCap};
-    const raiseLabel=`Raise the cap${raise.budget!==def.budget?' to '+C.money(raise.budget):''}${raise.perCardCap!==def.perCardCap?(raise.budget!==def.budget?' and':'')+' the per-card cap to '+C.money(raise.perCardCap):''} and finalize`;
-    return form('This list costs more than its cap',`<div class="cm-full">${note(money.join(' '),true)}<p class="cm-muted">About ${e(C.money(spend))} at recorded prices${def.budget!==null?` against a ${e(C.money(def.budget))} total cap`:''}.</p></div>${s('What to do','how',[['raise',raiseLabel],['clear','Remove the price caps and finalize'],['trim','Keep the cap — I will trim the list first']],'raise')}`,
+    const raiseLabel=`Raise the cap${raise.budget!==def.budget?' to '+C.money(raise.budget):''}${raise.perCardCap!==def.perCardCap?(raise.budget!==def.budget?' and':'')+' the per-card cap to '+C.money(raise.perCardCap):''} and lock the list`;
+    return form('This list costs more than its cap',`<div class="cm-full">${note(money.join(' '),true)}<p class="cm-muted">About ${e(C.money(spend))} at recorded prices${def.budget!==null?` against a ${e(C.money(def.budget))} total cap`:''}.</p></div>${s('What to do','how',[['raise',raiseLabel],['clear','Remove the price caps and lock the list'],['trim','Keep the cap — I will trim the list first']],'raise')}`,
       async v=>{if(v.how==='trim')return;const definition=v.how==='raise'?raise:{...def,budget:null,perCardCap:null};
-        await commit({type:'batch',summary:`Finalized ${fresh.name} after ${v.how==='raise'?'raising':'removing'} its price cap`,commands:[{type:'editDeck',deckId:fresh.id,definition},{type:'finalize',deckId:fresh.id}]});},'Finalize');
+        await commit({type:'batch',summary:`Locked the list of ${fresh.name} after ${v.how==='raise'?'raising':'removing'} its price cap`,commands:[{type:'editDeck',deckId:fresh.id,definition},{type:'finalize',deckId:fresh.id}]});},'Lock list');
   }
-  C.review('Finalize '+fresh.name,note(`This marks the list final. The copies you own were reserved as the cards went in, and the rest are already on the buy list; finalizing changes neither. Prices and bracket expectations require your review.${current?' Every card in the list was re-checked against Scryfall just now.':''}`),{type:'finalize',deckId:d.id});
+  C.review('Lock the list of '+fresh.name,note(`This marks the list locked. The copies you own were reserved as the cards went in, and the rest are already on the buy list; locking changes neither. Prices and bracket expectations require your review.${current?' Every card in the list was re-checked against Scryfall just now.':''}`),{type:'finalize',deckId:d.id});
 };
 actions.lock=async el=>{const d=M.deck(C.state,el.dataset.deck);if(!d.locked)await refreshLegality(d);C.review(d.locked?'Unlock deck':'Lock deck',note('All copies remain visible. A lock excludes the deck’s copies from automatic build consideration unless you explicitly allow that donor.'),{type:'lock',deckId:d.id,locked:!d.locked});};
 actions.fulfill=el=>C.review('Reserve available copies',note('Unassigned eligible copies fulfill matching needs. This changes reservations; it does not physically move cards.'),{type:'fulfill',deckId:el.dataset.deck});
@@ -1097,8 +1098,8 @@ actions['report-spinoff']=async el=>{const d=M.deck(C.state,el.dataset.deck),r=C
   const create={type:'createDeck',deckId:id,name,commanders,cards,slots,definition:d.definition,notes:`Spun off from a simulation report of ${d.name} (${when(r.importedAt)}, report ${r.id}).`};
   const copy={type:'report',deckId:id,report:{...r,id:undefined,deckId:undefined,importedAt:undefined,spunOffFrom:{deckId:d.id,reportId:r.id}}};
   /* renderView:false: the page to draw is the new deck's, not this one's again. */
-  try{await C.commit({type:'batch',commands:[create,{type:'finalize',deckId:id},copy],summary:`Spun off ${name} from a simulation report and finalized it`},{renderView:false});C.notice(`${name} is a finalized deck of its own.`);}
-  catch(err){await C.commit({type:'batch',commands:[create,copy],summary:`Spun off ${name} from a simulation report as a draft`},{renderView:false});C.notice(`${name} was saved as a draft, not finalized: ${err.message}`,true);}
+  try{await C.commit({type:'batch',commands:[create,{type:'finalize',deckId:id},copy],summary:`Spun off ${name} from a simulation report and locked its list`},{renderView:false});C.notice(`${name} is a locked deck of its own.`);}
+  catch(err){await C.commit({type:'batch',commands:[create,copy],summary:`Spun off ${name} from a simulation report as a draft`},{renderView:false});C.notice(`${name} was saved as a draft, its list not locked: ${err.message}`,true);}
   actions.close();go('decks',{deck:id});};
 actions['measure-deck']=async el=>{const d=M.deck(C.state,el.dataset.deck);if(!C.measureDeck)throw Error('Measure is not loaded.');
   const say=t=>{const pill=$('#cm-deck-sim-status');if(pill){pill.hidden=false;pill.textContent=t;}};say('Starting…');

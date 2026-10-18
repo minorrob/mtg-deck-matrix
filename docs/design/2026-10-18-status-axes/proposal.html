@@ -46,6 +46,7 @@ header.top{padding-block:44px 28px;border-bottom:1px solid var(--line);display:g
 .dek{font-size:19px;line-height:1.5;color:var(--ink-2);max-width:62ch}
 .meta{display:flex;flex-wrap:wrap;gap:8px 22px;font-size:14px;color:var(--muted)}
 .meta b{color:var(--ink);font-weight:600}
+.approved{border-left:3px solid var(--accent);padding:12px 16px;margin-block:20px 4px;background:var(--panel);border-radius:0 10px 10px 0;display:grid;gap:6px;font-size:15.5px}
 .state-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;border:1px solid var(--accent);color:var(--accent);font-weight:600;font-size:13px}
 .state-chip::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent)}
 nav.toc{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;padding-block:16px;border-bottom:1px solid var(--line)}
@@ -238,9 +239,14 @@ pre.cmd{margin:0;background:var(--raised);border-radius:8px;padding:12px 14px;ov
     <span>For <b>Rob</b></span>
     <span>From <b>Claude</b>, taking over the Workshop screens from Codex</span>
     <span>Branch <b class="mono">claude/wizardly-einstein-9ibb4j</b></span>
-    <span class="state-chip">Waiting for your approval</span>
+    <span class="state-chip">Approved October 18, with Upgrade added · built</span>
   </div>
 </header>
+
+<section class="approved col" aria-label="Approval">
+  <p class="eyebrow">Approved · October 18, 2026</p>
+  <p><b>Rob approved the proposal with all eight recommended decisions and added one status, Upgrade.</b> An Upgrade is a recommendation or a watched card being considered to improve a deck: maybe buy it, maybe use it. Upgrade and Reserved both name the card they would replace. Only Reserved changes it: the replaced card becomes the Substitute holding the seat. An Upgrade changes nothing until it is reserved. The figures below show the approved model, so the example's 4 watched cards are now its 4 Upgrades. <code>docs/card-states.md</code> is the definition the code follows.</p>
+</section>
 
 <nav class="toc" aria-label="Sections">
   <a href="#reframe">1 · The ask</a><a href="#today">2 · What's wrong today</a><a href="#model">3 · The target model</a>
@@ -349,7 +355,7 @@ pre.cmd{margin:0;background:var(--raised);border-radius:8px;padding:12px 14px;ov
 
   <div class="axes">
     <article class="axis"><p class="eyebrow">Use · what the copy is for</p>
-      <div class="vals"><span class="pill p-final">Final</span><span class="pill p-sub">Substitute</span><span class="pill p-res">Reserved</span><span class="pill p-plain">Bench</span><span class="pill p-plain">Sell</span><span class="pill p-plain">Trade</span><span class="pill p-plain">Unowned</span></div>
+      <div class="vals"><span class="pill p-final">Final</span><span class="pill p-sub">Substitute</span><span class="pill p-res">Reserved</span><span class="pill p-watch">Upgrade</span><span class="pill p-plain">Bench</span><span class="pill p-plain">Sell</span><span class="pill p-plain">Trade</span><span class="pill p-plain">Unowned</span></div>
       <p>Final and Substitute are the only uses that put a card <b>in the deck</b> and count toward its 100.</p>
       <p class="who">Set by you: Change status, Put in deck, Reserve</p></article>
     <article class="axis"><p class="eyebrow">Ownership · where it is in the buying cycle</p>
@@ -370,6 +376,7 @@ pre.cmd{margin:0;background:var(--raised);border-radius:8px;padding:12px 14px;ov
         <tr><th scope="row"><span class="pill p-final">Final</span></th><td class="nope">·</td><td class="nope">·</td><td class="nope">·</td><td class="ok">✓ in the box</td><td class="nope">·</td><td class="nope">·</td></tr>
         <tr><th scope="row"><span class="pill p-sub">Substitute</span></th><td class="nope">·</td><td class="nope">·</td><td class="nope">·</td><td class="ok">✓ in the box</td><td class="nope">·</td><td class="nope">·</td></tr>
         <tr><th scope="row"><span class="pill p-res">Reserved</span></th><td class="cond">→ To buy*</td><td class="ok">✓</td><td class="ok">✓</td><td class="cond">✓ only from another deck's box</td><td class="nope">·</td><td class="nope">·</td></tr>
+        <tr><th scope="row"><span class="pill p-watch">Upgrade</span></th><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="ok">✓</td><td class="nope">·</td><td class="nope">·</td></tr>
         <tr><th scope="row"><span class="pill p-plain">Bench</span></th><td class="nope">·</td><td class="nope">·</td><td class="nope">·</td><td class="ok">✓</td><td class="nope">·</td><td class="nope">·</td></tr>
         <tr><th scope="row"><span class="pill p-plain">Sell / Trade</span></th><td class="nope">·</td><td class="nope">·</td><td class="nope">·</td><td class="nope">·</td><td class="ok">✓ Sell</td><td class="ok">✓ Trade</td></tr>
         <tr><th scope="row"><span class="pill p-plain">Unowned</span></th><td class="ok">✓</td><td class="ok">✓ no deck</td><td class="ok">✓ no deck</td><td class="nope">·</td><td class="nope">·</td><td class="nope">·</td></tr>
@@ -406,12 +413,12 @@ pre.cmd{margin:0;background:var(--raised);border-radius:8px;padding:12px 14px;ov
         <rect class="q" x="700" y="336" width="200" height="36" rx="18"/><text x="800" y="359" text-anchor="middle">Is a deck seat waiting for it?</text>
         <!-- leaves -->
         <rect class="lf-res" x="45" y="242" width="150" height="62" rx="8"/><text class="t-b" x="120" y="262" text-anchor="middle">Reserved</text><text class="t-s" x="120" y="279" text-anchor="middle">To buy or Ordered</text><text class="t-s" x="120" y="295" text-anchor="middle">Play: To load</text>
-        <rect class="lf-watch" x="245" y="242" width="150" height="62" rx="8"/><text class="t-b" x="320" y="262" text-anchor="middle">Unowned</text><text class="t-s" x="320" y="279" text-anchor="middle">Watch, To buy, Ordered</text><text class="t-s" x="320" y="295" text-anchor="middle">for a deck: Watching</text>
+        <rect class="lf-watch" x="245" y="242" width="150" height="62" rx="8"/><text class="t-b" x="320" y="262" text-anchor="middle">Unowned</text><text class="t-s" x="320" y="279" text-anchor="middle">Watch, To buy, Ordered</text><text class="t-s" x="320" y="295" text-anchor="middle">for a deck: Upgrade</text>
         <rect class="lf-plain" x="805" y="242" width="150" height="62" rx="8"/><text class="t-b" x="880" y="262" text-anchor="middle">Sell or Trade</text><text class="t-s" x="880" y="279" text-anchor="middle">To sell or Trade</text><text class="t-s" x="880" y="295" text-anchor="middle">out of every deck</text>
         <rect class="lf-final" x="305" y="414" width="150" height="62" rx="8"/><text class="t-b" x="380" y="434" text-anchor="middle">Final</text><text class="t-s" x="380" y="451" text-anchor="middle">Own · in the box</text><text class="t-s" x="380" y="467" text-anchor="middle">Play: Playable</text>
         <rect class="lf-sub" x="465" y="414" width="150" height="62" rx="8"/><text class="t-b" x="540" y="434" text-anchor="middle">Substitute</text><text class="t-s" x="540" y="451" text-anchor="middle">holds a Reserved seat</text><text class="t-s" x="540" y="467" text-anchor="middle">Play: Playable</text>
         <rect class="lf-final" x="645" y="414" width="150" height="62" rx="8" stroke-dasharray="5 3"/><text class="t-b" x="720" y="434" text-anchor="middle">Final · Loading</text><text class="t-s" x="720" y="451" text-anchor="middle">Own, not put in yet</text><text class="t-s" x="720" y="467" text-anchor="middle">Play: Loading</text>
-        <rect class="lf-plain" x="805" y="414" width="150" height="62" rx="8"/><text class="t-b" x="880" y="434" text-anchor="middle">Bench</text><text class="t-s" x="880" y="451" text-anchor="middle">Own · no deck</text><text class="t-s" x="880" y="467" text-anchor="middle">for a deck: Watching</text>
+        <rect class="lf-plain" x="805" y="414" width="150" height="62" rx="8"/><text class="t-b" x="880" y="434" text-anchor="middle">Bench</text><text class="t-s" x="880" y="451" text-anchor="middle">Own · no deck</text><text class="t-s" x="880" y="467" text-anchor="middle">for a deck: Upgrade</text>
       </svg>
     </div>
     <figcaption><b>The function every screen will call.</b> Five questions, seven outcomes, nothing guessed. A Substitute that another deck has claimed is still a Substitute in the box it sits in. The deck that claimed it shows the same copy as <span class="pill p-res">Reserved</span> with "in D2", so it is counted once per deck and never twice in one deck.</figcaption>
@@ -419,7 +426,7 @@ pre.cmd{margin:0;background:var(--raised);border-radius:8px;padding:12px 14px;ov
 
   <figure>
     <div class="fig">
-      <svg class="dg" viewBox="0 0 980 300" role="img" aria-label="The list and the box share the same 90 Final cards. The list's other 10 are Reserved; the box's other 10 are Substitutes, each holding one Reserved seat. Four Watching cards sit outside both. The deck total is the box, 100. The group total is 114.">
+      <svg class="dg" viewBox="0 0 980 300" role="img" aria-label="The list and the box share the same 90 Final cards. The list's other 10 are Reserved; the box's other 10 are Substitutes, each holding one Reserved seat. Four Upgrades sit outside both. The deck total is the box, 100. The group total is 114.">
         <defs><marker id="f4a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah-acc" d="M0 0L10 5L0 10z"/></marker></defs>
         <text class="t-h" x="20" y="58">THE LIST</text><text class="t-s" x="20" y="76">what you want · 100</text>
         <text class="t-h" x="20" y="178">THE BOX</text><text class="t-s" x="20" y="196">what you play · 100</text>
@@ -434,10 +441,10 @@ pre.cmd{margin:0;background:var(--raised);border-radius:8px;padding:12px 14px;ov
         <text class="t-s" x="780" y="120">each Substitute holds</text><text class="t-s" x="780" y="135">one Reserved seat</text>
         <path class="edge dash" d="M300 86 V 162"/><path class="edge dash" d="M600 86 V 162"/>
         <text class="t-s" x="452" y="128" text-anchor="middle">the same 90 cards</text>
-        <rect class="seg-watch" x="836" y="44" width="25" height="40" rx="4"/><text class="t-b" x="872" y="62">Watching 4</text><text class="t-s" x="872" y="78">considered only</text>
+        <rect class="seg-watch" x="836" y="44" width="25" height="40" rx="4"/><text class="t-b" x="872" y="62">Upgrade 4</text><text class="t-s" x="872" y="78">would replace</text>
         <!-- totals -->
         <path class="edge" d="M170 236 V 246 H 800 V 236"/><text class="t-b" x="485" y="266" text-anchor="middle">Deck total = Final + Substitute = 100</text>
-        <path class="edge" d="M170 236 V 280 H 861 V 236" style="stroke:var(--ink-2)"/><text x="485" y="294" text-anchor="middle" class="t-s">Group total = Final + Substitute + Reserved + Watching = 114</text>
+        <path class="edge" d="M170 236 V 280 H 861 V 236" style="stroke:var(--ink-2)"/><text x="485" y="294" text-anchor="middle" class="t-s">Group total = Final + Substitute + Reserved + Upgrade = 114</text>
       </svg>
     </div>
     <figcaption><b>A deck has two hundreds, and they share their Final cards.</b> The list is Final + Reserved, the box is Final + Substitute, and each Reserved seat is held by one Substitute. Every count the app shows follows from these three rules.</figcaption>
@@ -454,18 +461,18 @@ pre.cmd{margin:0;background:var(--raised);border-radius:8px;padding:12px 14px;ov
 <!-- 4 ─────────────────────────────────────────────── -->
 <section id="proof">
   <div class="head col"><p class="eyebrow">4 · Proved on data</p><h2>Your example, and the seven decks in the backup</h2></div>
-  <p class="col lede">The prototype runs the proposed function on the production model. Your example comes out exactly as you described: 90 Final, 10 Substitute, 10 To buy, 4 Watched, a Deck total of 100 and a Group total of 114. The seven decks in the committed backup come out the same way. Today's screens give different readings of each one, listed under the chart.</p>
+  <p class="col lede">The prototype runs the proposed function on the production model. Your example comes out exactly as you described: 90 Final, 10 Substitute, 10 Reserved (to buy) and 4 Upgrade, a Deck total of 100 and a Group total of 114. The seven decks in the committed backup come out the same way. Today's screens give different readings of each one, listed under the chart.</p>
   <figure>
     <div class="fig">
-      <div class="legend" aria-hidden="true"><span><i class="sw-final"></i>Final</span><span><i class="sw-sub"></i>Substitute</span><span><i class="sw-load"></i>Final · Loading</span><span><i class="sw-res"></i>Reserved</span><span><i class="sw-watch"></i>Watching</span><span>│ the box's 100</span></div>
-      <div class="chart" id="chart" role="img" aria-label="Stacked bars per deck: Final, Substitute, Loading, Reserved and Watching. Final plus Substitute reaches 100 for every deck."></div>
+      <div class="legend" aria-hidden="true"><span><i class="sw-final"></i>Final</span><span><i class="sw-sub"></i>Substitute</span><span><i class="sw-load"></i>Final · Loading</span><span><i class="sw-res"></i>Reserved</span><span><i class="sw-watch"></i>Upgrade</span><span>│ the box's 100</span></div>
+      <div class="chart" id="chart" role="img" aria-label="Stacked bars per deck: Final, Substitute, Loading, Reserved and Upgrade. Final plus Substitute reaches 100 for every deck."></div>
     </div>
     <figcaption><b>Every deck's box holds exactly 100</b> (Final + Substitute, left of the line); the rest of the group sits to its right. The example row is synthetic, built to your numbers. The other rows are the committed backup (built Sep 30), not your current cloud library: your D1 Tymna + Kraum is newer than the backup. Hover a segment for its count.</figcaption>
   </figure>
   <details>
     <summary>Show the numbers: today vs proposed</summary>
     <div class="tablewrap"><table id="numbers">
-      <thead><tr><th>Deck</th><th class="num">Library "Deck:" rows today</th><th>The 100 today</th><th class="num">Final</th><th class="num">Loading</th><th class="num">Sub.</th><th class="num">Reserved</th><th class="num">Watching</th><th class="num">Deck total</th><th class="num">Group total</th><th>Play</th></tr></thead>
+      <thead><tr><th>Deck</th><th class="num">Library "Deck:" rows today</th><th>The 100 today</th><th class="num">Final</th><th class="num">Loading</th><th class="num">Sub.</th><th class="num">Reserved</th><th class="num">Upgrade</th><th class="num">Deck total</th><th class="num">Group total</th><th>Play</th></tr></thead>
       <tbody></tbody>
     </table></div>
   </details>
@@ -550,7 +557,7 @@ pre.cmd{margin:0;background:var(--raised);border-radius:8px;padding:12px 14px;ov
 
 <!-- 6 ─────────────────────────────────────────────── -->
 <section id="words">
-  <div class="head col"><p class="eyebrow">6 · The words</p><h2>Where today's fifteen words go</h2></div>
+  <div class="head col"><p class="eyebrow">6 · The words</p><h2>Where the old fifteen words went</h2></div>
   <figure>
     <div class="fig">
       <svg class="dg" viewBox="0 0 980 470" role="img" aria-label="Mapping from today's fifteen status words to the proposed ten. Target and Physical deck become Final. Upgrade becomes Reserved. Today's Reserved becomes Reserved with an empty seat. To add becomes Final Loading.">
@@ -570,10 +577,11 @@ pre.cmd{margin:0;background:var(--raised);border-radius:8px;padding:12px 14px;ov
           <rect class="lf-res" x="640" y="173" width="200" height="26" rx="13" stroke-dasharray="5 3"/><text x="656" y="191" class="t-b">Reserved · empty seat</text>
           <rect class="lf-plain" x="640" y="200" width="200" height="26" rx="13"/><text x="656" y="218" class="t-b">Bench</text>
           <rect class="lf-watch" x="640" y="254" width="200" height="26" rx="13"/><text x="656" y="272" class="t-b">Watch</text>
+          <rect class="lf-watch" x="640" y="308" width="200" height="26" rx="13" stroke-dasharray="5 3"/><text x="656" y="326" class="t-b">Upgrade</text>
           <rect class="lf-res" x="640" y="389" width="200" height="26" rx="13"/><text x="656" y="407" class="t-b">To buy</text>
           <rect class="lf-plain" x="640" y="416" width="200" height="26" rx="13"/><text x="656" y="434" class="t-b">Ordered</text>
           <text class="t-s" x="852" y="56">in the box</text><text class="t-s" x="852" y="110">system state</text><text class="t-s" x="852" y="164">replaces a</text><text class="t-s" x="852" y="178">substitute</text>
-          <text class="t-s" x="852" y="272">for a deck:</text><text class="t-s" x="852" y="286">Watching</text>
+          <text class="t-s" x="852" y="272">for no deck</text><text class="t-s" x="852" y="326">names what it</text><text class="t-s" x="852" y="340">would replace</text>
         </g>
         <!-- links: from x=300 to x=636 -->
         <path class="edge" d="M300 50 C 470 50, 470 51, 636 51"/>
@@ -583,18 +591,17 @@ pre.cmd{margin:0;background:var(--raised);border-radius:8px;padding:12px 14px;ov
         <path class="edge-bad" d="M300 158 C 470 158, 470 159, 636 159"/>
         <path class="edge-bad" d="M300 185 C 470 185, 470 186, 636 186"/>
         <path class="edge" d="M300 212 C 470 212, 470 213, 636 213"/>
-        <path class="edge dash" d="M300 239 C 470 239, 470 213, 636 213"/>
-        <path class="edge dash" d="M300 239 C 470 239, 470 267, 636 267"/>
+        <path class="edge" d="M300 239 C 470 239, 470 321, 636 321"/>
         <path class="edge" d="M300 266 C 470 266, 470 267, 636 267"/>
-        <path class="edge" d="M300 293 C 470 293, 470 267, 636 267"/>
-        <path class="edge" d="M300 320 C 470 320, 470 267, 636 267"/>
+        <path class="edge" d="M300 293 C 470 293, 470 321, 636 321"/>
+        <path class="edge" d="M300 320 C 470 320, 470 321, 636 321"/>
         <path class="edge" d="M300 347 C 470 347, 470 267, 636 267"/>
         <path class="edge" d="M300 374 C 470 374, 470 402, 636 402"/>
         <path class="edge" d="M300 401 C 470 401, 470 402, 636 402"/>
         <path class="edge" d="M300 428 C 470 428, 470 429, 636 429"/>
       </svg>
     </div>
-    <figcaption><b>Two words change meaning (red).</b> Today's Upgrade is your Reserved, and today's Reserved becomes "Reserved · empty seat". A dashed line means the record keeps one status and gains a note: an owned Bench copy filed in a deck's group stays Bench and shows under that deck as Watching. Upgrade and bracket options on a slot (the Upgrades tab) become Watch for that deck, with a "would replace" note.</figcaption>
+    <figcaption><b>Two words change meaning (red).</b> Today's Upgrade is your Reserved, and today's Reserved becomes "Reserved · empty seat". Upgrade keeps its name with a narrower meaning (approved October 18): a card being considered for a deck, which names the card it would replace. Suggestions, planned cards in a deck's group and owned Bench copies filed there all become Upgrades. Those filed before this ask which card they would replace.</figcaption>
   </figure>
 </section>
 
@@ -606,11 +613,11 @@ pre.cmd{margin:0;background:var(--raised);border-radius:8px;padding:12px 14px;ov
       <div class="mh"><h3>Library, scoped to a deck</h3><p class="muted" style="font-size:13.5px">Deck: D1 Tymna + Kraum · the same rows as The 100</p></div>
       <div class="mb">
         <div class="screen">
-          <div class="tiles"><div class="tile t-final"><b>90</b><span>Final</span></div><div class="tile t-sub"><b>10</b><span>Substitute</span></div><div class="tile t-res"><b>10</b><span>Reserved</span></div><div class="tile t-watch"><b>4</b><span>Watching</span></div></div>
+          <div class="tiles"><div class="tile t-final"><b>90</b><span>Final</span></div><div class="tile t-sub"><b>10</b><span>Substitute</span></div><div class="tile t-res"><b>10</b><span>Reserved</span></div><div class="tile t-watch"><b>4</b><span>Upgrade</span></div></div>
           <p style="font-size:12.5px" class="muted">Deck total 100 = Final 90 + Substitute 10 · Group total 114 <span class="ibtn" title="Reserved cards count toward the group, not the deck">i</span></p>
           <div class="srow"><span class="pill p-plain">☐ Show Bench cards that could go in</span></div>
         </div>
-        <ul><li>Shows the deck's group only: Final, Substitute, Reserved, Watching. Bench copies appear only when you tick "Show Bench cards that could go in" (D6).</li><li>A Reserve button appears only where Reserve can happen (section 5); a Bench row offers "Put in D1".</li></ul>
+        <ul><li>Shows the deck's group only: Final, Substitute, Reserved, Upgrade. Bench copies appear only when you tick "Show Bench cards that could go in" (D6).</li><li>A Reserve button appears only where Reserve can happen (section 5); a Bench row offers "Put in D1".</li></ul>
       </div>
     </article>
     <article class="mock">
@@ -623,10 +630,10 @@ pre.cmd{margin:0;background:var(--raised);border-radius:8px;padding:12px 14px;ov
           <div class="hundred-sec"><h4>Reserved · 10</h4>
             <div class="hline"><span class="pill p-res">To buy</span> Mystic Remora <span class="muted">replaces Fractal Mascot</span></div>
             <div class="hline"><span class="pill p-res">In D3</span> Sol Ring <span class="muted">move it when ready</span></div></div>
-          <div class="hundred-sec"><h4>Watching · 4</h4>
-            <div class="hline"><span class="pill p-watch">Watch</span> Rhystic Study <span class="muted">would replace Folio of Fancies</span></div></div>
+          <div class="hundred-sec"><h4>Upgrades · 4</h4>
+            <div class="hline"><span class="pill p-watch">Upgrade</span> Rhystic Study <span class="muted">Watch · would replace Folio of Fancies</span></div></div>
         </div>
-        <ul><li>The heading counts the box (Final + Substitute). Reserved and Watching are listed under it, as in your example.</li><li>A test asserts that The 100 and the Library scoped to the same deck show the same rows and counts.</li></ul>
+        <ul><li>The heading counts the box (Final + Substitute). Loading, Reserved and Upgrades are listed under it, as in your example.</li><li>A test asserts that The 100 and the Library scoped to the same deck show the same rows and counts.</li></ul>
       </div>
     </article>
     <article class="mock">
@@ -679,7 +686,7 @@ pre.cmd{margin:0;background:var(--raised);border-radius:8px;padding:12px 14px;ov
     <div class="dec"><span class="id">D5</span><div><h3>"Final" collides with the deck's Finalize button</h3><p>A deck is currently draft or final, and the button that locks the list says Finalize. Having both "a Final card" and "a final deck" will confuse people.</p><p class="rec"><b>Recommend:</b> rename the button "Lock list", and call a deck Draft or Locked.</p></div></div>
     <div class="dec"><span class="id">D6</span><div><h3>Dropping Bench cards from the deck scope reverses your Sep 14 call</h3><p>On Sep 14 the reason for keeping them was "what do I already own that could go in it". That is still a useful question.</p><p class="rec"><b>Recommend:</b> deck scope shows the deck's group only. A "Show Bench cards that could go in" checkbox, off by default, brings the old view back on demand.</p></div></div>
     <div class="dec"><span class="id">D7</span><div><h3>Play status and the deck stages</h3><p>Deck tiles show Defining, Building, Playable and Complete today.</p><p class="rec"><b>Recommend:</b> tiles show Play status (Playable, Loading, To load). "Complete" stays as a badge for a deck with nothing Reserved. Defining becomes To load with the note "list not locked".</p></div></div>
-    <div class="dec"><span class="id">D8</span><div><h3>A watched card can name the card it would replace</h3><p>Your example says the 4 watched cards are "replacements for certain cards in the 100".</p><p class="rec"><b>Recommend:</b> an optional "would replace" field on a watched card, shown as a note in The 100. When you reserve it, that card's substitute is suggested first.</p></div></div>
+    <div class="dec"><span class="id">D8</span><div><h3>A watched card can name the card it would replace</h3><p>Your example says the 4 watched cards are "replacements for certain cards in the 100".</p><p class="rec"><b>Recommend:</b> an optional "would replace" field on a watched card, shown as a note in The 100. When you reserve it, that card's substitute is suggested first.</p><p class="rec"><b>Decided:</b> Rob made this an Upgrade status, with the replaced card required.</p></div></div>
   </div>
 </section>
 
@@ -689,7 +696,7 @@ pre.cmd{margin:0;background:var(--raised);border-radius:8px;padding:12px 14px;ov
   <ol class="plan col">
     <li><div><h3>Toolbar overlap and menu density</h3><p>CSS only; does not depend on the model, so it can ship first. Proved at 1400 and 390 wide.</p></div></li>
     <li><div><h3>The model: <code>useOf()</code></h3><p>The function, the Use × Ownership rules and the deck totals in collection-model.js. A new suite pins your 90/10/10/4 example and the seven backup decks, and fails if any screen spells a status itself. No screen changes in this slice.</p></div></li>
-    <li><div><h3>Library and The 100 read it</h3><p>Deck scope shows the group only (D6); new count tiles and caption; The 100 grouped into In the deck, Reserved and Watching; an equality test across the two screens.</p></div></li>
+    <li><div><h3>Library and The 100 read it</h3><p>Deck scope shows the group only (D6); new count tiles and caption; The 100 grouped into In the deck, Loading, Reserved and Upgrades; an equality test across the two screens.</p></div></li>
     <li><div><h3>The words</h3><p>Target → Final across 16 places, Upgrade → Reserved, the old word list retired, Finalize → Lock list (D5), How it works rewritten. Suites updated: card-states, card-states-screens, library-r3, feature-wiring, table-by-group.</p></div></li>
     <li><div><h3>Reserve, arrival and the Sell / Trade split</h3><p>The section 5 flows as reviewed commands with Undo; the offer split migration (D2); the swap prompt when a reserved card arrives.</p></div></li>
     <li><div><h3>Cell dropdowns and the card panel</h3><p>One dropdown per cell; Quantity and Paid behind Edit; card panel chips stop navigating; Change status and Change assignment added.</p></div></li>
@@ -722,7 +729,7 @@ node docs/design/2026-10-18-status-axes/prove.mjs --json   # the numbers behind 
 <script>
 /* Section 4 numbers: output of prove.mjs --json on main 7e74e54 (data/live-state.json, built Sep 30, 2026). */
 const DATA=[
- {deck:'Your example',note:'synthetic, to your numbers',ex:true,final:90,load:0,sub:10,res:10,resFrom:0,watch:4,lib:120,libNote:'incl. 10 Bench, 0 Watching',hundred:'Target 90 · To buy 10'},
+ {deck:'Your example',note:'synthetic, to your numbers',ex:true,final:90,load:0,sub:10,res:10,resFrom:0,watch:4,lib:120,libNote:'incl. 10 Bench, 0 Upgrades',hundred:'Target 90 · To buy 10'},
  {deck:'D1 Quintorius Spirits',final:92,load:2,sub:8,res:5,resFrom:1,watch:0,lib:596,hundred:'Target 92 · To buy 5 · To add 3'},
  {deck:'D2 Chulane Value Loop',final:76,load:2,sub:24,res:21,resFrom:1,watch:0,lib:607,hundred:'Target 76 · To buy 21 · To add 3'},
  {deck:'D3 Atraxa Proliferate',final:87,load:1,sub:13,res:12,resFrom:0,watch:0,lib:599,hundred:'Target 87 · To buy 12 · To add 1'},
@@ -738,7 +745,7 @@ chart.innerHTML=DATA.map(d=>{
   const reserved=d.res+d.resFrom,group=d.final+d.load+d.sub+reserved+d.watch;
   const seg=(cls,n,label)=>n?`<span class="${cls}" style="width:${pct(n)}" data-tip="${d.deck}: ${label} ${n}"></span>`:'';
   return `<div class="crow${d.ex?' ex':''}"><span class="name">${d.deck}${d.note?`<small>${d.note}</small>`:''}</span>
-    <div class="track"><div class="segs">${seg('final',d.final,'Final, in the box')}${seg('sub',d.sub,'Substitute, in the box')}${seg('load',d.load,'Final · Loading, owned, not put in yet')}${seg('res',reserved,`Reserved (${d.res} to buy${d.resFrom?`, ${d.resFrom} in another deck's box`:''})`)}${seg('watch',d.watch,'Watching')}</div><span class="hundred" style="left:${pct(100)}"></span></div>
+    <div class="track"><div class="segs">${seg('final',d.final,'Final, in the box')}${seg('sub',d.sub,'Substitute, in the box')}${seg('load',d.load,'Final · Loading, owned, not put in yet')}${seg('res',reserved,`Reserved (${d.res} to buy${d.resFrom?`, ${d.resFrom} in another deck's box`:''})`)}${seg('watch',d.watch,'Upgrade')}</div><span class="hundred" style="left:${pct(100)}"></span></div>
     <span class="tot"><b>${d.final+d.sub}</b> deck · <b>${group}</b> group</span></div>`;
 }).join('')+axis;
 document.querySelector('#numbers tbody').innerHTML=DATA.map(d=>{
