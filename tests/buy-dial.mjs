@@ -17,14 +17,46 @@ const {browser, base, stub, close} = await openBrowser({name: "buy-dial", flag: 
 try {
   const context = await browser.newContext({viewport: {width: WIDTH_DESKTOP, height: 900}, serviceWorkers: "block"});
   const page = await context.newPage();
+  
+  /* Attach console and error listeners for debug. */
+  page.on('console', (msg) => console.log(`[BROWSER CONSOLE] ${msg.type()}: ${msg.text()}`));
+  page.on('pageerror', (err) => console.error(`[BROWSER ERROR]`, err));
+  page.on('requestfailed', (req) => console.error(`[REQUEST FAILED] ${req.url()}: ${req.failure()?.errorText || 'unknown'}`));
+  
   if (stub) await stub(page);
   await loadLiveState(page, base);
 
-  /* Go to Buy tab via hash navigation - the tabs are role=tab. */
-  await page.goto(`${base}/#cards?tab=buy`);
+  /* Seed To buy items via a deck with needs (fixture data only). */
+  await page.evaluate(() => {
+    const C = globalThis.CollectionModel, M = globalThis.LineupModel;
+    if (!C || !M) return;
+    /* Create a simple deck with some needs. */
+    const deckId = M.makeDraftId();
+    M.commit(C.state, {type: 'open-draft', id: deckId, commander: 'Atraxa, Praetors\' Voice'});
+    const deck = M.deck(C.state, deckId);
+    M.commit(C.state, {type: 'roster', id: deckId, roster: [{cname: 'Lightning Bolt', qty: 1}, {cname: 'Path to Exile', qty: 1}, {cname: 'Counterspell', qty: 1}]});
+    M.commit(C.state, {type: 'finalize', id: deckId});
+  });
+
+  /* Go to Buy tab via hash navigation. */
+  await page.goto(`${base}/index.html#cards?tab=buy`);
+  await page.waitForLoadState('networkidle');
+  
+  /* Debug: check what's on the page. */
+  const bodyText = await page.evaluate(() => document.body.innerText);
+  console.log(`[DEBUG] Page body text (first 500 chars): ${bodyText.slice(0, 500)}`);
+  const hasMain = await page.evaluate(() => !!document.querySelector('#cm-main'));
+  const hasRoster = await page.evaluate(() => !!document.querySelector('#cm-roster-table'));
+  console.log(`[DEBUG] hasMain=${hasMain}, hasRoster=${hasRoster}`);
+  const url = page.url();
+  console.log(`[DEBUG] Current URL: ${url}`);
   
   /* Wait for roster table which holds the Buy tab content. */
   await page.locator('#cm-roster-table').waitFor({timeout: 15000});
+  
+  /* Check if CrankBuyPlan is loaded. */
+  const buyPlanType = await page.evaluate(() => typeof window.CrankBuyPlan);
+  console.log(`[DEBUG] window.CrankBuyPlan is ${buyPlanType}`);
   
   /* The dial should now be visible. */
   await page.locator('[data-testid="buy-dial"]').waitFor({timeout: 5000});
