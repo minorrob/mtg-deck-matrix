@@ -1,20 +1,22 @@
 {
   "workstream": "grok",
-  "updated": "2026-10-18T05:30:00Z",
-  "updated_by": "Seeded by Claude · Deck intelligence from the October 17 package; the Grok coordinator's consolidated report updates it (relayed by Rob or posted on ROB-96).",
+  "updated": "2026-10-18T11:18:00Z",
+  "updated_by": "Grok coordinator (consolidated report for ROB-96, relayed by Rob).",
   "branch": "grok/<task>-<topic> per worker",
-  "now": "Package of October 17 (docs/grok/WORK-PACKAGE-2026-10-17.md): G3 test cases and G4 Mobbin references, when Rob relays the coordinator prompt. G1 and G2 withdrawn (landed on main by other PRs).",
+  "now": "G3 accepted in draft PR #755 awaiting its workstream's review; G6 sent back three times (PR #756, budgets measured with 4x CPU only, no slow 3G, no action timings, break not proven in app code); G4 blocked with no Mobbin access; G5 waits on ROB-11 tokens.",
   "items": [
-    {"id": "ROB-96", "outcome": "joyful", "feature": "The Grok work package: one coordinator, bounded workers, consolidated returns", "status": "backlog", "remaining_hours": 2},
-    {"id": "ROB-27", "outcome": "joyful", "feature": "Test cases for the whole journey: invitation to a finished game, the three Play views, reconnect", "status": "backlog", "remaining_hours": 12},
-    {"id": "ROB-61", "outcome": "joyful", "feature": "Mobbin references turned into CrankMagic design decisions", "status": "backlog", "remaining_hours": 6, "note": "Only if the worker has Mobbin access."},
+    {"id": "ROB-96", "outcome": "joyful", "feature": "The Grok work package: one coordinator, bounded workers, consolidated returns", "status": "in_progress", "remaining_hours": 1},
+    {"id": "ROB-27", "outcome": "joyful", "feature": "Test cases for the whole journey: invitation to a finished game, the three Play views, reconnect", "status": "review", "remaining_hours": 1, "note": "Draft PR #755, 63 cases, accepted by coordinator."},
+    {"id": "ROB-61", "outcome": "joyful", "feature": "Mobbin references turned into CrankMagic design decisions", "status": "blocked", "remaining_hours": 6, "note": "No Mobbin access in worker environment; needs a worker with a Mobbin login."},
     {"id": "ROB-15", "outcome": "play-experience", "feature": "Board accessibility coverage repaired for the current tabletop", "status": "done", "remaining_hours": 0, "note": "Landed on main through PR #729 by the engine lane; G2 withdrawn."},
     {"id": "ROB-16", "outcome": "play-experience", "feature": "The four board mutation anchors restored", "status": "done", "remaining_hours": 0, "note": "Landed on main through the engine lane's patch; G1 withdrawn."},
     {"id": "ROB-67", "outcome": "joyful", "feature": "Crowded-board performance benchmarked across browser, network, room and AI", "status": "backlog", "remaining_hours": 16},
-    {"id": "ROB-136", "outcome": "joyful", "feature": "Performance budgets for every screen, measured on a phone and held by a suite", "status": "backlog", "remaining_hours": 10}
+    {"id": "ROB-136", "outcome": "joyful", "feature": "Performance budgets for every screen, measured on a phone and held by a suite", "status": "in_progress", "remaining_hours": 6, "note": "Draft PR #756 sent back: slow 3G not applied, heaviest-action timings dropped, break proven by lowering a budget rather than a 2 s app delay, README suite line pending. Needs calibration on a machine with a browser."}
   ],
   "asks_of_rob": [
-    {"id": "ROB-96", "ask": "Relay the coordinator prompt (docs/grok/ORCHESTRATOR-PROMPT-2026-10-17.md) to the Grok Bot orchestrator", "recommendation": "Relay it as is; the package names only G3 and G4", "needed_by": "when you next open Grok", "url": "https://linear.app/robs-build/issue/ROB-96"}
+    {"id": "ROB-96", "ask": "Post the coordinator consolidated report on ROB-96 and decide G6: accept with documented limits or calibrate locally", "recommendation": "Calibrate G6 locally with slow 3G and action timings before accepting", "needed_by": "before ROB-136 review", "url": "https://linear.app/robs-build/issue/ROB-96"}
   ],
-  "blocked_on": []
+  "blocked_on": [
+    {"id": "ROB-61", "by": "Mobbin access", "owner": "rob"}
+  ]
 }
