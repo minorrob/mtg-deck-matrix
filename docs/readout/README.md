@@ -73,3 +73,11 @@ evidence is on the Linear issue, never "the code exists."
 When you label a Linear issue **Rob's call**, add the same ask to your feed's `asks_of_rob` with a one-line
 recommendation; remove it when Rob answers. The queue on the page is built from the feeds, not from Linear, so an ask
 that is not in a feed is invisible to Rob.
+
+## Snapshots
+
+`snapshots/<date>.html` is the readout as it stood on a given day, with the feeds inlined and reconciled against
+Linear by the readout keeper (Claude · Deck intelligence): Linear's Done and In Progress win over a feed, blocks whose
+blockers have merged are lifted, and every correction is listed in a banner at the top of the snapshot. A snapshot is
+a record; the live page `index.html` keeps reading the feeds as each workstream last wrote them. The first is
+`snapshots/2026-10-18.html`, taken at 12:20 UTC after the day's twenty merges.
