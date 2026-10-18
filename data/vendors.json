@@ -1,0 +1,42 @@
+{
+ "schema": "vendors@1",
+ "updatedAt": "2026-10-18",
+ "generator": "hand-maintained",
+ "count": 3,
+ "note": "The vendor assumptions behind buy-plan.js (Linear ROB-119). Nothing here is scraped: Scryfall's usd is TCGplayer's market price, and each other vendor is assumed to charge a factor of it, to ship at a flat charge waived over a threshold, and to take a number of days door to door. The reader edits these in Settings; the plan repeats the assumptions it used. priceFactor is the vendor's assumed price over Scryfall's usd; shippingFlat and freeOver in US dollars; leadDays door to door; carries says what the vendor can be assumed to stock: every printing, or only what a reader confirms at the counter.",
+ "vendors": [
+  {
+   "id": "tcgplayer",
+   "name": "TCGplayer",
+   "kind": "mail",
+   "priceFactor": 1.0,
+   "shippingFlat": 3.99,
+   "freeOver": 50,
+   "leadDays": 6,
+   "carries": "every printing",
+   "says": "Scryfall's price is TCGplayer's market price; an order ships from one or more sellers, about a week door to door, with shipping waived over the threshold on a single seller's cart."
+  },
+  {
+   "id": "cardkingdom",
+   "name": "Card Kingdom",
+   "kind": "mail",
+   "priceFactor": 1.15,
+   "shippingFlat": 3.99,
+   "freeOver": 35,
+   "leadDays": 4,
+   "carries": "every printing",
+   "says": "One warehouse, one box: assumed fifteen percent over TCGplayer's market, shipping waived over the threshold, four days door to door."
+  },
+  {
+   "id": "local",
+   "name": "The local store",
+   "kind": "counter",
+   "priceFactor": 1.1,
+   "shippingFlat": 0,
+   "freeOver": 0,
+   "leadDays": 0,
+   "carries": "what the counter confirms",
+   "says": "Today, in hand, at about ten percent over market; the house rule gives the store first refusal on anything at $5 or over. The plan assumes the store can order what it lacks."
+  }
+ ]
+}

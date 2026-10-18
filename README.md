@@ -922,18 +922,22 @@ order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the file
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
 `.claude/skills/crankmagic-refresh` is the judgment around it. There are 522 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 526 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
 - `assignment-model` — `tests/assignment-model.mjs`
 - `browser-geometry` — `tests/browser-geometry.mjs`
+- `buy-plan` — `tests/buy-plan.mjs`
 - `card-classify` — `tests/card-classify.mjs`
 - `card-records` — `tests/card-records.mjs`
 - `card-images` — `tests/card-images.mjs`
 - `card-link` — `tests/card-link.mjs`
+- `card-resolve` — `tests/card-resolve.mjs`
 - `cloud-sync` — `tests/cloud-sync.mjs`
 - `commander-legality` — `tests/commander-legality.mjs`
 - `cloud-worker` — `tests/cloud-worker.mjs`
+- `compliance-report` — `tests/compliance-report.mjs`
 - `collection-exchange` — `tests/collection-exchange.mjs`
 - `collection-lobby-draft` — `tests/collection-lobby-draft.mjs`
 - `collection-model` — `tests/collection-model.mjs`
@@ -946,6 +950,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `crankmagic-facets` — `tests/crankmagic-facets.mjs`
 - `crankmagic-graph` — `tests/crankmagic-graph.mjs`
 - `crankmagic-graph-scoped` — `tests/crankmagic-graph-scoped.mjs`
+- `deck-synergies` — `tests/deck-synergies.mjs`
 - `deck-composition` — `tests/deck-composition.mjs`
 - `deck-criteria` — `tests/deck-criteria.mjs`
 - `explore-scope` — `tests/explore-scope.mjs`
@@ -1123,6 +1128,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `shop-export` — `tests/shop-export.mjs`
 - `sim-engine` — `tests/sim-engine.mjs`
 - `status-and-groupings` — `tests/status-and-groupings.mjs`
+- `swap-record` — `tests/swap-record.mjs`
 - `slot-model` — `tests/slot-model.mjs`
 - `tour` — `tests/tour.mjs`
 - `type-final` — `tests/type-final.mjs`

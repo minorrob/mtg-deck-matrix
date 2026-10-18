@@ -1,0 +1,1020 @@
+{
+ "schema": "card-resolve-lines@1",
+ "generatedAt": "2026-10-18",
+ "source": "Hand-collected from the forms real exports and real typists produce: Moxfield (SET) number and *F*, Archidekt 1x with [Category] and ^tags^, Deckbox and text-file lines, misspellings, accents and ligatures, faces of two-faced cards, flavor names from data/flavor-names.json, foreign printed names, and names that are not cards. `expect` is the oracle's name the line means, or null when the line must be held.",
+ "count": 200,
+ "kinds": {
+  "plain": 60,
+  "moxfield": 25,
+  "archidekt": 15,
+  "marker": 10,
+  "misspelling": 30,
+  "accent": 15,
+  "face": 15,
+  "flavor": 8,
+  "foreign": 12,
+  "not-a-card": 10
+ },
+ "lines": [
+  {
+   "kind": "plain",
+   "line": "1 Swords to Plowshares",
+   "expect": "Swords to Plowshares"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Path to Exile",
+   "expect": "Path to Exile"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Arcane Signet",
+   "expect": "Arcane Signet"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Command Tower",
+   "expect": "Command Tower"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Cultivate",
+   "expect": "Cultivate"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Kodama's Reach",
+   "expect": "Kodama's Reach"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Farseek",
+   "expect": "Farseek"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Rampant Growth",
+   "expect": "Rampant Growth"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Beast Within",
+   "expect": "Beast Within"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Generous Gift",
+   "expect": "Generous Gift"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Anguished Unmaking",
+   "expect": "Anguished Unmaking"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Vandalblast",
+   "expect": "Vandalblast"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Blasphemous Act",
+   "expect": "Blasphemous Act"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Toxic Deluge",
+   "expect": "Toxic Deluge"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Wrath of God",
+   "expect": "Wrath of God"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Damnation",
+   "expect": "Damnation"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Austere Command",
+   "expect": "Austere Command"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Cyclonic Rift",
+   "expect": "Cyclonic Rift"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Counterspell",
+   "expect": "Counterspell"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Negate",
+   "expect": "Negate"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Swan Song",
+   "expect": "Swan Song"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Arcane Denial",
+   "expect": "Arcane Denial"
+  },
+  {
+   "kind": "plain",
+   "line": "1 An Offer You Can't Refuse",
+   "expect": "An Offer You Can't Refuse"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Mystic Remora",
+   "expect": "Mystic Remora"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Phyrexian Arena",
+   "expect": "Phyrexian Arena"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Night's Whisper",
+   "expect": "Night's Whisper"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Sign in Blood",
+   "expect": "Sign in Blood"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Harmonize",
+   "expect": "Harmonize"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Guardian Project",
+   "expect": "Guardian Project"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Beast Whisperer",
+   "expect": "Beast Whisperer"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Eternal Witness",
+   "expect": "Eternal Witness"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Reclamation Sage",
+   "expect": "Reclamation Sage"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Solemn Simulacrum",
+   "expect": "Solemn Simulacrum"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Burnished Hart",
+   "expect": "Burnished Hart"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Wayfarer's Bauble",
+   "expect": "Wayfarer's Bauble"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Mind Stone",
+   "expect": "Mind Stone"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Fellwar Stone",
+   "expect": "Fellwar Stone"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Thought Vessel",
+   "expect": "Thought Vessel"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Talisman of Dominance",
+   "expect": "Talisman of Dominance"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Chromatic Lantern",
+   "expect": "Chromatic Lantern"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Lightning Greaves",
+   "expect": "Lightning Greaves"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Swiftfoot Boots",
+   "expect": "Swiftfoot Boots"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Heroic Intervention",
+   "expect": "Heroic Intervention"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Demonic Tutor",
+   "expect": "Demonic Tutor"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Vampiric Tutor",
+   "expect": "Vampiric Tutor"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Enlightened Tutor",
+   "expect": "Enlightened Tutor"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Worldly Tutor",
+   "expect": "Worldly Tutor"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Mystical Tutor",
+   "expect": "Mystical Tutor"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Dark Ritual",
+   "expect": "Dark Ritual"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Craterhoof Behemoth",
+   "expect": "Craterhoof Behemoth"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Finale of Devastation",
+   "expect": "Finale of Devastation"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Triumph of the Hordes",
+   "expect": "Triumph of the Hordes"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Exsanguinate",
+   "expect": "Exsanguinate"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Torment of Hailfire",
+   "expect": "Torment of Hailfire"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Expropriate",
+   "expect": "Expropriate"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Insurrection",
+   "expect": "Insurrection"
+  },
+  {
+   "kind": "plain",
+   "line": "1 Rise of the Dark Realms",
+   "expect": "Rise of the Dark Realms"
+  },
+  {
+   "kind": "plain",
+   "line": "23 Mountain",
+   "expect": "Mountain"
+  },
+  {
+   "kind": "plain",
+   "line": "12 Island",
+   "expect": "Island"
+  },
+  {
+   "kind": "plain",
+   "line": "9 Snow-Covered Forest",
+   "expect": "Snow-Covered Forest"
+  },
+  {
+   "kind": "moxfield",
+   "line": "1 Sol Ring (LTC) 292 *F*",
+   "expect": "Sol Ring"
+  },
+  {
+   "kind": "moxfield",
+   "line": "1 Lightning Bolt (2x2) 117",
+   "expect": "Lightning Bolt"
+  },
+  {
+   "kind": "moxfield",
+   "line": "1 Exotic Orchard (CLB) 343",
+   "expect": "Exotic Orchard"
+  },
+  {
+   "kind": "moxfield",
+   "line": "1 Reflecting Pool (CLB) 908 *F*",
+   "expect": "Reflecting Pool"
+  },
+  {
+   "kind": "moxfield",
+   "line": "1 Mana Confluence (jou) 163",
+   "expect": "Mana Confluence"
+  },
+  {
+   "kind": "moxfield",
+   "line": "1 City of Brass (A25) 222",
+   "expect": "City of Brass"
+  },
+  {
+   "kind": "moxfield",
+   "line": "1 Bojuka Bog (WWK) 132 *F*",
+   "expect": "Bojuka Bog"
+  },
+  {
+   "kind": "moxfield",
+   "line": "1 Reliquary Tower (m19) 254",
+   "expect": "Reliquary Tower"
+  },
+  {
+   "kind": "moxfield",
+   "line": "1 Rogue's Passage (RTR) 248",
+   "expect": "Rogue's Passage"
+  },
+  {
+   "kind": "moxfield",
+   "line": "1 Myriad Landscape (C14) 307 *F*",
+   "expect": "Myriad Landscape"
+  },
+  {
+   "kind": "moxfield",
+   "line": "1 Evolving Wilds (dom) 236",
+   "expect": "Evolving Wilds"
+  },
+  {
+   "kind": "moxfield",
+   "line": "1 Terramorphic Expanse (C21) 308",
+   "expect": "Terramorphic Expanse"
+  },
+  {
+   "kind": "moxfield",
+   "line": "1 Birds of Paradise (M12) 165 *F*",
+   "expect": "Birds of Paradise"
+  },
+  {
+   "kind": "moxfield",
+   "line": "1 Llanowar Elves (m19) 314",
+   "expect": "Llanowar Elves"
+  },
+  {
+   "kind": "moxfield",
+   "line": "1 Elvish Mystic (M15) 173",
+   "expect": "Elvish Mystic"
+  },
+  {
+   "kind": "moxfield",
+   "line": "1 Fyndhorn Elves (ICE) 239 *F*",
+   "expect": "Fyndhorn Elves"
+  },
+  {
+   "kind": "moxfield",
+   "line": "1 Sylvan Library (ema) 187",
+   "expect": "Sylvan Library"
+  },
+  {
+   "kind": "moxfield",
+   "line": "1 Sensei's Divining Top (EMA) 227",
+   "expect": "Sensei's Divining Top"
+  },
+  {
+   "kind": "moxfield",
+   "line": "1 Ponder (M12) 70 *F*",
+   "expect": "Ponder"
+  },
+  {
+   "kind": "moxfield",
+   "line": "1 Preordain (m11) 71",
+   "expect": "Preordain"
+  },
+  {
+   "kind": "moxfield",
+   "line": "1 Brainstorm (ICE) 62",
+   "expect": "Brainstorm"
+  },
+  {
+   "kind": "moxfield",
+   "line": "1 Growth Spiral (RNA) 178 *F*",
+   "expect": "Growth Spiral"
+  },
+  {
+   "kind": "moxfield",
+   "line": "1 Atraxa, Praetors' Voice (CM2) 1",
+   "expect": "Atraxa, Praetors' Voice"
+  },
+  {
+   "kind": "moxfield",
+   "line": "1 Muldrotha, the Gravetide (DOM) 199 *F*",
+   "expect": "Muldrotha, the Gravetide"
+  },
+  {
+   "kind": "moxfield",
+   "line": "1 Yuriko, the Tiger's Shadow (C18) 52",
+   "expect": "Yuriko, the Tiger's Shadow"
+  },
+  {
+   "kind": "archidekt",
+   "line": "1x Meren of Clan Nel Toth (c15) 49 [Commander{top}]",
+   "expect": "Meren of Clan Nel Toth"
+  },
+  {
+   "kind": "archidekt",
+   "line": "1x The Ur-Dragon (c17) 41 [Commander{top}] ^Have,#37d67a^",
+   "expect": "The Ur-Dragon"
+  },
+  {
+   "kind": "archidekt",
+   "line": "1x Edgar Markov (c17) 36 [Commander]",
+   "expect": "Edgar Markov"
+  },
+  {
+   "kind": "archidekt",
+   "line": "1x Korvold, Fae-Cursed King (eld) 329 [Commander] ^Have,#37d67a^",
+   "expect": "Korvold, Fae-Cursed King"
+  },
+  {
+   "kind": "archidekt",
+   "line": "1x Kenrith, the Returned King (eld) 303 [Commander]",
+   "expect": "Kenrith, the Returned King"
+  },
+  {
+   "kind": "archidekt",
+   "line": "1x Niv-Mizzet, Parun (grn) 192 [Commander] ^Have,#37d67a^",
+   "expect": "Niv-Mizzet, Parun"
+  },
+  {
+   "kind": "archidekt",
+   "line": "1x Urza, Lord High Artificer (mh1) 75 [Creature]",
+   "expect": "Urza, Lord High Artificer"
+  },
+  {
+   "kind": "archidekt",
+   "line": "1x Tymna the Weaver (c16) 48 [Commander] ^Have,#37d67a^",
+   "expect": "Tymna the Weaver"
+  },
+  {
+   "kind": "archidekt",
+   "line": "1x Thrasios, Triton Hero (c16) 47 [Commander]",
+   "expect": "Thrasios, Triton Hero"
+  },
+  {
+   "kind": "archidekt",
+   "line": "1x Kraum, Ludevic's Opus (c16) 40 [Commander] ^Have,#37d67a^",
+   "expect": "Kraum, Ludevic's Opus"
+  },
+  {
+   "kind": "archidekt",
+   "line": "1x Chandra, Torch of Defiance (kld) 110 [Planeswalker]",
+   "expect": "Chandra, Torch of Defiance"
+  },
+  {
+   "kind": "archidekt",
+   "line": "1x Liliana of the Veil (isd) 105 [Planeswalker] ^Have,#37d67a^",
+   "expect": "Liliana of the Veil"
+  },
+  {
+   "kind": "archidekt",
+   "line": "1 Karn Liberated [NPH]",
+   "expect": "Karn Liberated"
+  },
+  {
+   "kind": "archidekt",
+   "line": "1 Ugin, the Spirit Dragon [FRF] 1",
+   "expect": "Ugin, the Spirit Dragon"
+  },
+  {
+   "kind": "archidekt",
+   "line": "4x Opt [XLN]",
+   "expect": "Opt"
+  },
+  {
+   "kind": "marker",
+   "line": "1x Teferi, Hero of Dominaria",
+   "expect": "Teferi, Hero of Dominaria"
+  },
+  {
+   "kind": "marker",
+   "line": "SB: 1 Shock",
+   "expect": "Shock"
+  },
+  {
+   "kind": "marker",
+   "line": "Garruk Wildspeaker",
+   "expect": "Garruk Wildspeaker"
+  },
+  {
+   "kind": "marker",
+   "line": "  1   Vraska, Golgari Queen  ",
+   "expect": "Vraska, Golgari Queen"
+  },
+  {
+   "kind": "marker",
+   "line": "1 Elspeth, Sun's Champion # the finisher",
+   "expect": "Elspeth, Sun's Champion"
+  },
+  {
+   "kind": "marker",
+   "line": "1 Nissa, Who Shakes the World",
+   "expect": "Nissa, Who Shakes the World"
+  },
+  {
+   "kind": "marker",
+   "line": "2 Gitaxian Probe",
+   "expect": "Gitaxian Probe"
+  },
+  {
+   "kind": "marker",
+   "line": "1x Expressive Iteration *F*",
+   "expect": "Expressive Iteration"
+  },
+  {
+   "kind": "marker",
+   "line": "1 Sorin Markov (m10) 108",
+   "expect": "Sorin Markov"
+  },
+  {
+   "kind": "marker",
+   "line": "Kiora, Behemoth Beckoner",
+   "expect": "Kiora, Behemoth Beckoner"
+  },
+  {
+   "kind": "misspelling",
+   "line": "1 Cylonic Rift",
+   "expect": "Cyclonic Rift"
+  },
+  {
+   "kind": "misspelling",
+   "line": "1 Thassas Oracle",
+   "expect": "Thassa's Oracle"
+  },
+  {
+   "kind": "misspelling",
+   "line": "1 Smothering Tythe",
+   "expect": "Smothering Tithe"
+  },
+  {
+   "kind": "misspelling",
+   "line": "1 Fierce Gaurdianship",
+   "expect": "Fierce Guardianship"
+  },
+  {
+   "kind": "misspelling",
+   "line": "1 Esper Sentinal",
+   "expect": "Esper Sentinel"
+  },
+  {
+   "kind": "misspelling",
+   "line": "1 Rhystic Studdy",
+   "expect": "Rhystic Study"
+  },
+  {
+   "kind": "misspelling",
+   "line": "1 Deflecting Swatt",
+   "expect": "Deflecting Swat"
+  },
+  {
+   "kind": "misspelling",
+   "line": "1 Counterspel",
+   "expect": "Counterspell"
+  },
+  {
+   "kind": "misspelling",
+   "line": "1 Mountian",
+   "expect": "Mountain"
+  },
+  {
+   "kind": "misspelling",
+   "line": "1 Llanowar Elvs",
+   "expect": "Llanowar Elves"
+  },
+  {
+   "kind": "misspelling",
+   "line": "1 Ulamog the Ceasless Hunger",
+   "expect": "Ulamog, the Ceaseless Hunger"
+  },
+  {
+   "kind": "misspelling",
+   "line": "1 Jace, the Mind Sculpter",
+   "expect": "Jace, the Mind Sculptor"
+  },
+  {
+   "kind": "misspelling",
+   "line": "1 Craterhoof Behemouth",
+   "expect": "Craterhoof Behemoth"
+  },
+  {
+   "kind": "misspelling",
+   "line": "1 Demonic Tutour",
+   "expect": "Demonic Tutor"
+  },
+  {
+   "kind": "misspelling",
+   "line": "1 Vampiric Tuter",
+   "expect": "Vampiric Tutor"
+  },
+  {
+   "kind": "misspelling",
+   "line": "1 Swords to Plowshare",
+   "expect": "Swords to Plowshares"
+  },
+  {
+   "kind": "misspelling",
+   "line": "1 Chromatic Lantren",
+   "expect": "Chromatic Lantern"
+  },
+  {
+   "kind": "misspelling",
+   "line": "1 Lightning Greeves",
+   "expect": "Lightning Greaves"
+  },
+  {
+   "kind": "misspelling",
+   "line": "1 Swiftfoot Botos",
+   "expect": "Swiftfoot Boots"
+  },
+  {
+   "kind": "misspelling",
+   "line": "1 Heroic Intervension",
+   "expect": "Heroic Intervention"
+  },
+  {
+   "kind": "misspelling",
+   "line": "1 Eternal Witnes",
+   "expect": "Eternal Witness"
+  },
+  {
+   "kind": "misspelling",
+   "line": "1 Solemn Simulacrom",
+   "expect": "Solemn Simulacrum"
+  },
+  {
+   "kind": "misspelling",
+   "line": "1 Arcane Signit",
+   "expect": "Arcane Signet"
+  },
+  {
+   "kind": "misspelling",
+   "line": "1 Comand Tower",
+   "expect": "Command Tower"
+  },
+  {
+   "kind": "misspelling",
+   "line": "1 Kodamas Reach",
+   "expect": "Kodama's Reach"
+  },
+  {
+   "kind": "misspelling",
+   "line": "1 Blasphemous Actt",
+   "expect": "Blasphemous Act"
+  },
+  {
+   "kind": "misspelling",
+   "line": "1 Toxic Delgue",
+   "expect": "Toxic Deluge"
+  },
+  {
+   "kind": "misspelling",
+   "line": "1 Phyrexian Arean",
+   "expect": "Phyrexian Arena"
+  },
+  {
+   "kind": "misspelling",
+   "line": "1 Exsanguinat",
+   "expect": "Exsanguinate"
+  },
+  {
+   "kind": "misspelling",
+   "line": "1 Beast Wihtin",
+   "expect": "Beast Within"
+  },
+  {
+   "kind": "accent",
+   "line": "1 Æther Vial",
+   "expect": "Aether Vial"
+  },
+  {
+   "kind": "accent",
+   "line": "1 Mjolnir, Hammer of Thor",
+   "expect": "Mjölnir, Hammer of Thor"
+  },
+  {
+   "kind": "accent",
+   "line": "1 Jotun Grunt",
+   "expect": "Jötun Grunt"
+  },
+  {
+   "kind": "accent",
+   "line": "1 Lim-Dul's Vault",
+   "expect": "Lim-Dûl's Vault"
+  },
+  {
+   "kind": "accent",
+   "line": "1 Juzam Djinn",
+   "expect": "Juzám Djinn"
+  },
+  {
+   "kind": "accent",
+   "line": "1 Seance",
+   "expect": "Séance"
+  },
+  {
+   "kind": "accent",
+   "line": "1 Lorien Revealed",
+   "expect": "Lórien Revealed"
+  },
+  {
+   "kind": "accent",
+   "line": "1 Thassa’s Oracle",
+   "expect": "Thassa's Oracle"
+  },
+  {
+   "kind": "accent",
+   "line": "1 Eowyn, Fearless Knight",
+   "expect": "Éowyn, Fearless Knight"
+  },
+  {
+   "kind": "accent",
+   "line": "1 Theoden, King of Rohan",
+   "expect": "Théoden, King of Rohan"
+  },
+  {
+   "kind": "accent",
+   "line": "1 Anduril, Flame of the West",
+   "expect": "Andúril, Flame of the West"
+  },
+  {
+   "kind": "accent",
+   "line": "1 Galadriel of Lothlorien",
+   "expect": "Galadriel of Lothlórien"
+  },
+  {
+   "kind": "accent",
+   "line": "1 Dandan",
+   "expect": "Dandân"
+  },
+  {
+   "kind": "accent",
+   "line": "1 Ghazban Ogre",
+   "expect": "Ghazbán Ogre"
+  },
+  {
+   "kind": "accent",
+   "line": "1 Smeagol, Helpful Guide",
+   "expect": "Sméagol, Helpful Guide"
+  },
+  {
+   "kind": "face",
+   "line": "1 Delver of Secrets",
+   "expect": "Delver of Secrets // Insectile Aberration"
+  },
+  {
+   "kind": "face",
+   "line": "1 Insectile Aberration",
+   "expect": "Delver of Secrets // Insectile Aberration"
+  },
+  {
+   "kind": "face",
+   "line": "1 Fire/Ice",
+   "expect": "Fire // Ice"
+  },
+  {
+   "kind": "face",
+   "line": "1 Fire // Ice",
+   "expect": "Fire // Ice"
+  },
+  {
+   "kind": "face",
+   "line": "1 Wear / Tear",
+   "expect": "Wear // Tear"
+  },
+  {
+   "kind": "face",
+   "line": "1 Commit // Memory",
+   "expect": "Commit // Memory"
+  },
+  {
+   "kind": "face",
+   "line": "1 Brazen Borrower",
+   "expect": "Brazen Borrower // Petty Theft"
+  },
+  {
+   "kind": "face",
+   "line": "1 Petty Theft",
+   "expect": "Brazen Borrower // Petty Theft"
+  },
+  {
+   "kind": "face",
+   "line": "1 Bonecrusher Giant",
+   "expect": "Bonecrusher Giant // Stomp"
+  },
+  {
+   "kind": "face",
+   "line": "1 Valakut Awakening",
+   "expect": "Valakut Awakening // Valakut Stoneforge"
+  },
+  {
+   "kind": "face",
+   "line": "1 Valakut Stoneforge",
+   "expect": "Valakut Awakening // Valakut Stoneforge"
+  },
+  {
+   "kind": "face",
+   "line": "1 Fable of the Mirror-Breaker",
+   "expect": "Fable of the Mirror-Breaker // Reflection of Kiki-Jiki"
+  },
+  {
+   "kind": "face",
+   "line": "1 Westvale Abbey",
+   "expect": "Westvale Abbey // Ormendahl, Profane Prince"
+  },
+  {
+   "kind": "face",
+   "line": "1 Jace, Vryn's Prodigy",
+   "expect": "Jace, Vryn's Prodigy // Jace, Telepath Unbound"
+  },
+  {
+   "kind": "face",
+   "line": "1 Murderous Rider",
+   "expect": "Murderous Rider // Swift End"
+  },
+  {
+   "kind": "flavor",
+   "line": "1 'Tis But a Scratch!",
+   "expect": "Dismember"
+  },
+  {
+   "kind": "flavor",
+   "line": "1 Godzilla, Doom Inevitable",
+   "expect": "Yidaro, Wandering Monster"
+  },
+  {
+   "kind": "flavor",
+   "line": "1 A Promise Fulfilled",
+   "expect": "Light Up the Stage"
+  },
+  {
+   "kind": "flavor",
+   "line": "1 Aang, Ascendant Airbender",
+   "expect": "Serra Ascendant"
+  },
+  {
+   "kind": "flavor",
+   "line": "1 Absolutely Accurate Actor",
+   "expect": "Phantasmal Image"
+  },
+  {
+   "kind": "flavor",
+   "line": "1 Absorb into Time",
+   "expect": "Temporal Extortion"
+  },
+  {
+   "kind": "flavor",
+   "line": "1 Abundant Groot",
+   "expect": "Abundant Growth"
+  },
+  {
+   "kind": "flavor",
+   "line": "1 Adamantium Bonding Tank",
+   "expect": "The Ozolith"
+  },
+  {
+   "kind": "foreign",
+   "line": "1 Anillo Solar",
+   "expect": null
+  },
+  {
+   "kind": "foreign",
+   "line": "1 Sonnenring",
+   "expect": null
+  },
+  {
+   "kind": "foreign",
+   "line": "1 Anneau solaire",
+   "expect": null
+  },
+  {
+   "kind": "foreign",
+   "line": "1 Contre-sort",
+   "expect": null
+  },
+  {
+   "kind": "foreign",
+   "line": "1 Gegenzauber",
+   "expect": null
+  },
+  {
+   "kind": "foreign",
+   "line": "1 Contramagia",
+   "expect": null
+  },
+  {
+   "kind": "foreign",
+   "line": "1 Estudio Rístico",
+   "expect": null
+  },
+  {
+   "kind": "foreign",
+   "line": "1 Relámpago",
+   "expect": null
+  },
+  {
+   "kind": "foreign",
+   "line": "1 Blitzschlag",
+   "expect": null
+  },
+  {
+   "kind": "foreign",
+   "line": "1 Foudre",
+   "expect": null
+  },
+  {
+   "kind": "foreign",
+   "line": "1 Pietra del Pensiero",
+   "expect": null
+  },
+  {
+   "kind": "foreign",
+   "line": "1 Torre di Comando",
+   "expect": null
+  },
+  {
+   "kind": "not-a-card",
+   "line": "1 Pizza Delivery Dragon",
+   "expect": null
+  },
+  {
+   "kind": "not-a-card",
+   "line": "1 the one with the goblins",
+   "expect": null
+  },
+  {
+   "kind": "not-a-card",
+   "line": "1 Mana Crypt",
+   "expect": null
+  },
+  {
+   "kind": "not-a-card",
+   "line": "1 Dockside Extortionist",
+   "expect": null
+  },
+  {
+   "kind": "not-a-card",
+   "line": "1 Shok",
+   "expect": null
+  },
+  {
+   "kind": "not-a-card",
+   "line": "1 Krenko",
+   "expect": null
+  },
+  {
+   "kind": "not-a-card",
+   "line": "1 Sol Rign of Power",
+   "expect": null
+  },
+  {
+   "kind": "not-a-card",
+   "line": "1 Lightning Boltt Boltt",
+   "expect": null
+  },
+  {
+   "kind": "not-a-card",
+   "line": "1 Basic Land",
+   "expect": null
+  },
+  {
+   "kind": "not-a-card",
+   "line": "1 Token",
+   "expect": null
+  }
+ ]
+}
