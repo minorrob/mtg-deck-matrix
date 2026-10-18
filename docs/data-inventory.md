@@ -13,15 +13,15 @@ names the file and writes; **tests** are the suites that read it.
 
 | | |
 |---|---|
-| Artifacts | 74 (63 JSON, 11 workbooks and documents) · 79.2 MB |
+| Artifacts | 75 (64 JSON, 11 workbooks and documents) · 79.2 MB |
 | Served to the app | 17 · 45.0 MB (7.0 MB precached by the worker, 37.4 MB cached on demand) |
-| Tool inputs | 35 |
+| Tool inputs | 36 |
 | Source workbooks and documents | 11 |
 | Archive (already, or should be) | 10 |
 | Review: no reader found | 0 |
 | JSON with no version field | 4: `data/archive/buy-plans.json`, `data/archive/pull-list.json`, `data/archive/variants.json`, `data/lenses.json` |
 | JSON with no timestamp | 7: `data/archive/buy-plans.json`, `data/archive/pull-list.json`, `data/archive/variants.json`, `data/engine/onboarding-ledger.json`, `data/engine/top-cards.json`, `sim/config.json`, `sim/opponents.json` |
-| Served or tool-input JSON with no producer found | 3: `data/engine/support.json`, `data/engine/tokens.json`, `data/engine/top-cards.json` |
+| Served or tool-input JSON with no producer found | 4: `data/composition-targets.json`, `data/engine/support.json`, `data/engine/tokens.json`, `data/engine/top-cards.json` |
 
 ## The table
 
@@ -43,10 +43,11 @@ names the file and writes; **tests** are the suites that read it.
 | `data/commander-ranks.json` | 159 KB | {schema, generatedAt, generator, count, source, period, …} · cards 1,000, pages 10 | schema commander-ranks@1 | 2026-09-28 | tools/commander-ranks.mjs (declared) | crankmagic-assets.js | yes | commander-ranks.mjs, refresh.mjs | schemas.mjs | — | **serve** |  |
 | `data/commander-strategies.json` | 614 KB | {schema, generatedAt, generator, count, source, vocabulary, …} · commanders 2,746, vocabulary 16 | schema commander-strategies@1 | 2026-09-28 | tools/commander-strategies.mjs | crankmagic-assets.js, crankmagic-build.js, crankmagic-strategies.js | on demand | commander-strategies.mjs, refresh.mjs | build-wizard.mjs, commander-strategies.mjs | — | **serve** |  |
 | `data/commander-universe.json` | 1.5 MB | {schema, generatedAt, generator, count, source, counts, …} · cards 32,116 | schema commander-universe@1 | 2026-09-28 | tools/commander-universe.mjs | crankmagic-assets.js | yes | build-live-state.mjs, build-precons.mjs, claude-api-cost.mjs +5 | build-wizard.mjs, crankmagic-core.mjs, guide-agent.mjs +2 | — | **serve** |  |
+| `data/composition-targets.json` | 4 KB | {schema, generatedAt, generator, source, base, brackets, …} | schema composition-targets@1 | 2026-10-18 | — | — |  | — | deck-composition.mjs | — | **tool input** |  |
 | `data/deck-guides.json` | 7 KB | {schema, generator, count, schemaVersion, generatedAt, note, …} | schemaVersion 1, schema deck-guides@1 | 2026-09-08 | tools/generate-guides.mjs, tools/build_guide_shapes.py (declared) | crankmagic-assets.js, crankmagic-decks.js | yes | build_guide_shapes.py, claude-api-cost.mjs, commander-strategies.mjs +2 | card-records.mjs, guide-agent.mjs, guide-measured.mjs | — | **serve** |  |
 | `data/deck-ratings.json` | 450 KB | {schema, generator, count, schemaVersion, generatedAt, engine, …} · notes 14 | schemaVersion 1, schema deck-ratings@1, engine sim-engine.js +1 | 2026-09-19 | tools/sim/rate-decks.mjs (declared) | crankmagic-sim.js |  | refresh.mjs, generation-notes.mjs, rate-decks.mjs +1 | crankmagic-sim.mjs, deck-measure.mjs, generators.mjs +3 | — | **serve** |  |
 | `data/engine/onboarding-ledger.json` | 9 KB | {schema, cards} · cards 28 | schema CrankOnboardingLedger@1 | — | game/tools/engine-ingest.mjs (declared), game/tools/engine-compile.mjs (declared) | — |  | — | engine-learned.mjs | — | **tool input** | a learned definition or its ledger: the card directory reads the folder (game/tools/engine-cards.mjs); seated at no table until confirmed (D5) |
-| `data/engine/oracle.json` | 13.7 MB | {schema, generatedAt, generator, source, count, cards} · cards 32,116 | schema engine-oracle@1 | 2026-10-04 | tools/build-engine-cards.mjs | — |  | build-engine-cards.mjs, fuzz-live.mjs | engine-cards.mjs, engine-changeling.mjs, engine-compile.mjs +4 | — | **tool input** |  |
+| `data/engine/oracle.json` | 13.7 MB | {schema, generatedAt, generator, source, count, cards} · cards 32,116 | schema engine-oracle@1 | 2026-10-04 | tools/build-engine-cards.mjs | — |  | build-engine-cards.mjs, fuzz-live.mjs | deck-composition.mjs, engine-cards.mjs, engine-changeling.mjs +5 | — | **tool input** |  |
 | `data/engine/scripts/0c/0c26ab0d-80f6-4e5b-9d0e-af17c1519583.json` | 2 KB | {schema, name, oracleId, oracleHash, status, script, …} | schema CrankCompiledCard@1 | 2026-10-06 | game/tools/engine-ingest.mjs (declared), game/tools/engine-compile.mjs (declared) | — |  | — | — | — | **tool input** | a learned definition or its ledger: the card directory reads the folder (game/tools/engine-cards.mjs); seated at no table until confirmed (D5) |
 | `data/engine/scripts/16/16f75a65-d067-4f79-81b9-833c373cf4d2.json` | 2 KB | {schema, name, oracleId, oracleHash, status, script, …} | schema CrankCompiledCard@1 | 2026-10-06 | game/tools/engine-ingest.mjs (declared), game/tools/engine-compile.mjs (declared) | — |  | — | — | — | **tool input** | a learned definition or its ledger: the card directory reads the folder (game/tools/engine-cards.mjs); seated at no table until confirmed (D5) |
 | `data/engine/scripts/1b/1b3fb20a-e090-4286-9c03-6b71c27c45be.json` | 2 KB | {schema, name, oracleId, oracleHash, status, script, …} | schema CrankCompiledCard@1 | 2026-10-06 | game/tools/engine-ingest.mjs (declared), game/tools/engine-compile.mjs (declared) | — |  | — | — | — | **tool input** | a learned definition or its ledger: the card directory reads the folder (game/tools/engine-cards.mjs); seated at no table until confirmed (D5) |
