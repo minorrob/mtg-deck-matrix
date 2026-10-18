@@ -25,11 +25,11 @@ BREAKS = [
     
     # Castability highlighting.
     ('commanders always bright, regardless of castability', BOARD,
-     "const bright = mine && opts.length > 0, chosen = opts.some((o) => picked.includes(o.index));",
-     "const bright = true, chosen = opts.some((o) => picked.includes(o.index));"),
+     "    const faces = commanders.map((c) => {\n      const opts = optionsFor(c.cardId), mine = view.decision && !sending;\n      const bright = mine && opts.length > 0, chosen = opts.some((o) => picked.includes(o.index));",
+     "    const faces = commanders.map((c) => {\n      const opts = optionsFor(c.cardId), mine = view.decision && !sending;\n      const bright = true, chosen = opts.some((o) => picked.includes(o.index));"),
     ('commanders never bright, even when castable', BOARD,
-     "const bright = mine && opts.length > 0, chosen = opts.some((o) => picked.includes(o.index));",
-     "const bright = false, chosen = opts.some((o) => picked.includes(o.index));"),
+     "    const faces = commanders.map((c) => {\n      const opts = optionsFor(c.cardId), mine = view.decision && !sending;\n      const bright = mine && opts.length > 0, chosen = opts.some((o) => picked.includes(o.index));",
+     "    const faces = commanders.map((c) => {\n      const opts = optionsFor(c.cardId), mine = view.decision && !sending;\n      const bright = false, chosen = opts.some((o) => picked.includes(o.index));"),
     
     # The commandZone function itself.
     ('commandZone falls back to pile for all zones', BOARD,
