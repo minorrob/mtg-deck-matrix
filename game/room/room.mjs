@@ -79,6 +79,7 @@ import {housePilot, meetRequirements} from "../engine/pilots/house-pilot.mjs";
 import {scoredPilot, SETTINGS} from "../engine/pilots/scored-pilot.mjs";
 import {agentPilot} from "../engine/pilots/agent-pilot.mjs";
 import {addToHistory} from "./history.mjs";
+import {tableEvent, eventsFor, keep, EVENTS_SCHEMA} from "./events.mjs";
 
 export const ROOM_PROTOCOL = 1;
 export const ROOM_SCHEMA = "CrankRoom@1";
@@ -491,6 +492,11 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
      two replay the game (game/room/replay.mjs). House-pilot answers are not taped: the pilot is deterministic and
      answers again on replay. `tapeN` is the next number; `unsaved` waits for persist(). */
   let tapeN = 0, unsaved = [];
+  /* THE TABLE'S EVENTS (events.mjs; ROB-77): the newest, kept for a seat that reconnects; where the change being shown began
+     (`eventsMark`, a journal sequence), so a view carries what it did; the journal's next sequence; and the decision whose
+     answer is being applied (`answering`), which each event it makes names. */
+  let tableEvents = [], eventsMark = 0, eventsFloor = -1, nextSeq = 0, answering = null;
+  const begin = () => {eventsMark = nextSeq;};
   const tape = (entry) => {unsaved.push({n: tapeN, turn: state ? state.turn : 0, ...entry}); tapeN += 1;};
   const note = (text) => {history.push({turn: state ? state.turn : 0, text}); if (history.length > HISTORY_KEEP) history.splice(0, history.length - HISTORY_KEEP);};
   const finished = () => Boolean(ended) || Boolean(gameOver(state));
@@ -503,7 +509,14 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
 
   const write = (events) => {
     const names = seats.map((s) => s.name);
-    for (const e of events) {journal.write(e.kind, e.data); addToHistory(history, e, names);}
+    for (const e of events) {
+      const id = journal.write(e.kind, e.data);
+      nextSeq = Number(id.slice("event:".length)) + 1;
+      addToHistory(history, e, names);
+      const said = tableEvent(e, id);
+      if (said) tableEvents.push(answering ? {...said, decisionId: answering} : said);
+    }
+    eventsFloor = keep(tableEvents, eventsFloor);
   };
   const seatIndex = (seatId) => seats.findIndex((s) => s.seatId === seatId);
 
@@ -648,7 +661,8 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
      (rules/actions.mjs, convoked), a target the spell can no longer have -- and say what is wrong and what to do
      instead. That refusal is the person's, a RoomError (422) in the engine's own words; the caller puts the room back
      as it was (`act`, `restore`). */
-  function answerWith(seat, answer) {
+  function answerWith(seat, answer, decisionId = null) {
+    answering = decisionId;
     try {
       if (pendingActions) {
         const action = pendingActions[answer.indices[0]];
@@ -666,6 +680,8 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     } catch (error) {
       if (error instanceof RoomError) throw error;
       throw new RoomError(422, error.message, {refused: true});
+    } finally {
+      answering = null;
     }
     pendingSeat = null;
     drive();
@@ -685,12 +701,14 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     untapMana = record.untapMana === true; taken = record.taken ?? null;
     passAfterCast = record.passAfterCast === true; castBy = record.castBy ?? null;
     passStack = record.passStack === true; heldBy = record.heldBy ?? null; yieldable = record.yieldTurn === true; yielding = record.yielding || {};
+    tableEvents = record.events || []; eventsMark = record.eventsMark ?? 0; eventsFloor = record.eventsFloor ?? -1;
     seats = record.seats; pendingSeat = record.pendingSeat; pendingActions = record.pendingActions; receipts = record.receipts || []; leaving = record.leaving || []; departures = record.departures || {}; ended = record.ended || null; history = record.history || [];
     refusals = record.refusals || {total: 0, since: point.sequence, first: []};
     continuing = record.continuing === true; driven = record.driven || 0; endWhenNoPerson = record.endWhenNoPerson === true;
     state = structuredClone(point.state);
     rng = createRng(point.seed, point.rng);
     journal = createJournal({matchId, seed: point.seed}, point);
+    nextSeq = point.sequence;
     controller = createController(record.controller);
     matchSeed = point.seed;
     pilots = seats.map((s, seat) => (s.pilot === "house" ? pilotMade(seat) : null));
@@ -754,7 +772,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     const point = journal.checkpoint(state, rng.checkpoint());
     await store.saveCheckpoint(point);
     await store.pruneCheckpoints();
-    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, history, refusals, ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {}), ...(resolveAll ? {resolveAll, standing} : {}), ...(passAfterCast ? {passAfterCast, castBy} : {}), ...(endAsks ? {endAsks} : {}), ...(untapMana ? {untapMana, taken} : {}), ...(Object.keys(prefs).length ? {prefs} : {}), ...(turnsOf ? {turnsOf} : {}), ...(passStack ? {passStack, heldBy} : {}), ...(yieldable ? {yieldTurn: true, yielding} : {})}));
+    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, history, refusals, ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {}), ...(resolveAll ? {resolveAll, standing} : {}), ...(passAfterCast ? {passAfterCast, castBy} : {}), ...(endAsks ? {endAsks} : {}), ...(untapMana ? {untapMana, taken} : {}), ...(Object.keys(prefs).length ? {prefs} : {}), ...(turnsOf ? {turnsOf} : {}), ...(passStack ? {passStack, heldBy} : {}), ...(yieldable ? {yieldTurn: true, yielding} : {}), ...(tableEvents.length ? {events: tableEvents, eventsMark, eventsFloor} : {})}));
   }
 
   const api = {
@@ -773,6 +791,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     async start(pod, seed) {
       seats = readPod(pod, cards);
       if (typeof seed !== "string" || !seed) throw new RoomError(400, "A match needs its seed.");
+      begin();
       if (await storage.get(ROOM_KEY) !== null) throw new RoomError(409, "This table already has a game.");
       /* The table's starting life (its host's rule), kept with the match so a replay deals the same game. */
       const startingLife = pod && pod.startingLife !== undefined ? pod.startingLife : undefined;
@@ -813,7 +832,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     },
 
     /** What one seat may see: its projection, and the decision it is being asked, if it is the one asked. */
-    view(seatId) {
+    view(seatId, {after} = {}) {
       const seat = seatIndex(seatId);
       if (seat < 0) throw new RoomError(403, "That seat is not at this table.");
       const mine = pendingSeat === seat && controller.pending;
@@ -829,6 +848,12 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         decision: mine ? structuredClone(controller.pending) : null,
         state: projectFor(state, seat),
         history: history.slice(-HISTORY_VIEW).map(({turn, text, mark}) => ({turn, text, ...(mark ? {mark} : {})})),
+        /* What happened, as this seat may know it (events.mjs): the change this view shows -- or, asked with `after` (the last
+           event id the seat has), everything since; `eventsReset` when that is older than the room keeps. */
+        ...((said) => ({eventsSchema: EVENTS_SCHEMA, events: said.events, ...(said.reset ? {eventsReset: true} : {})}))(
+          eventsFor(tableEvents, seat, {...(after !== undefined && after !== null ? {after, floor: eventsFloor} : {from: `event:${eventsMark}`}),
+            /* A card drawn, while it is still in a hand: whose, events.mjs's `forSeat` says. */
+            knows: (id) => state.objects[id]?.zone === "hand"})),
         ...(api.continuing ? {continuing: true} : {}),
         /* This seat's own way of playing, as the room holds it (prefer). */
         ...(prefs[seatId]?.stepByStep === true ? {stepByStep: true} : {}),
@@ -842,6 +867,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     /** Play on from where a slice stopped, to the next person's decision, the end, or the next slice. */
     async resume() {
       if (!api.continuing) return api;
+      begin();
       drive();
       await persist();
       return api;
@@ -869,9 +895,11 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       if (entry.kind !== "answer") throw new RoomError(400, `Tape entry ${entry.n} is not an answer, a leave, an end, a way of playing or a yield.`);
       const seat = seatIndex(entry.seat);
       if (seat < 0 || pendingSeat !== seat) throw new RoomError(409, `The tape parts from the game at entry ${entry.n}: it answers for ${entry.seat}, and the game is waiting on ${pendingSeat === null ? "no one" : seats[pendingSeat].seatId}.`);
+      const decisionId = controller.pending?.id ?? null;
+      begin();
       withdrawKeeping();
       tape({kind: "answer", seat: entry.seat, answer: entry.answer});
-      answerWith(seat, entry.answer);
+      answerWith(seat, entry.answer, decisionId);
       await persist();
       return api;
     },
@@ -918,6 +946,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         : state.activePlayer === seat ? "It is your own turn: Yield turn passes for you in an opponent's turn only."
         : "You can't yield now: you are out of the game, or this turn's player is.");
       notWhileContinuing(want ? "You can yield the turn" : "You can stop yielding");
+      begin();
       if (want) yielding = {...yielding, [seatId]: {turn: state.turn, active: state.activePlayer}};
       else {const {[seatId]: _gone, ...rest} = yielding; yielding = rest;}
       tape({kind: "yield", seat: seatId, on: want});
@@ -937,6 +966,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       if (finished()) throw new RoomError(409, "This game is over.");
       if (departures[seatId]) throw new RoomError(409, "That seat has already left the game.");
       notWhileContinuing(why === "timed-out" ? "Their time runs out" : "You can leave the game");
+      begin();
       withdraw();
       departures[seatId] = why;
       tape({kind: "leave", seat: seatId, why});
@@ -955,6 +985,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       if (seat < 0) throw new RoomError(403, "That seat is not at this table.");
       if (finished()) throw new RoomError(409, "This game is over.");
       notWhileContinuing("You can end the game");
+      begin();
       withdraw();
       ended = {by: seatId};
       tape({kind: "end", seat: seatId});
@@ -1001,16 +1032,17 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       }
       if (pendingSeat !== seat) throw new RoomError(409, "It is not your decision.");
       let receipt;
-      const before = controller.revision;
+      const before = controller.revision, decisionId = controller.pending?.id ?? null;
       try {receipt = controller.answer(request);}
       catch (error) {throw new RoomError(/Invalid action id/.test(error.message) ? 400 : 409, error.message);}
       if (controller.revision === before) return {receipt, changed: false};  /* a retry older than this room's receipts */
       receipts = [...receipts, {actionId, seatId, body, receipt}].slice(-RECEIPTS);
       const answer = controller.take();
+      begin();
       tape({kind: "answer", seat: seatId, answer});
       /* Refused by the rules, or failed in the play after it: undone -- no receipt, no tape entry, the same question still
          theirs -- and refused, saying why. A saved tape so never holds an answer that cannot be applied again. */
-      try {answerWith(seat, answer);} catch (error) {throw await undone(error);}
+      try {answerWith(seat, answer, decisionId);} catch (error) {throw await undone(error);}
       await persist();
       return {receipt, changed: true};
     },
