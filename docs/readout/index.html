@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>CrankMagic Program Readout</title>
+<!--
+  THE READOUT: one page Rob opens to see every feature in his words, where it stands, what remains by
+  workstream, and his own queue (Linear ROB-138; docs/program/README.md section 7).
+
+  WHY STATIC JSON AND NOT LINEAR'S API. Five AI systems on three platforms update this page. None of them can
+  share an API key safely, and a page that needs a token is a page Rob cannot open from a double-click. So the
+  state lives in the repository: north-star.json (the outcomes, owned by one workstream) and one feed per
+  workstream under feeds/ (edited only by that workstream, so two sessions never touch the same file). The
+  page reads them from GitHub's raw files on main, which is public, so it is current wherever this file is
+  opened; with #local in the address it reads the files beside itself (a branch's feeds before they merge).
+  tests/readout-feeds.mjs validates every feed in CI, so a malformed feed never reaches this page.
+
+  WHAT IT COMPUTES. Progress per outcome is done items over items (hours are estimates that move; counts are
+  facts). Remaining hours per workstream are the sum of the feed's open items; days use hours_per_day from
+  north-star.json. Rob's queue is every asks_of_rob across feeds, newest feed first. Freshness: a feed older
+  than three days is marked stale, older than seven is red; Rob should distrust a stale feed, not the page.
+
+  No library, no build: this file, two JSON files, and fetch. docs/ is never released, so none of this ships.
+-->
+<style>
+/* Layout: a narrow header, the launch checklist as the spine, then workstreams, Rob's queue, outcomes, blocks.
+   Reads top to bottom on a phone, two columns of tiles on a desktop. */
+:root {
+  --bg: #f6f4ef;          /* warm paper, slightly toward the brass accent */
+  --panel: #ffffff;
+  --raised: #efece4;
+  --line: #d9d3c6;
+  --ink: #1d1a14;
+  --ink-2: #5a544a;
+  --ink-3: #8a8375;
+  --accent: #9a6b1f;      /* brass: the medieval-banded table's iron and oak */
+  --accent-ink: #ffffff;
+  --good: #2f7d4a; --warn: #b7791f; --bad: #b3362a; --info: #2b6cb0; --held: #6b6f76;
+  --good-bg: #e3f1e7; --warn-bg: #f8ecd4; --bad-bg: #f6e0dc; --info-bg: #e0ebf7; --held-bg: #e9eaec;
+  --font-ui: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --radius: 10px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15171c; --panel: #1d2026; --raised: #252931; --line: #343946; --ink: #ecebe6; --ink-2: #b6b3aa; --ink-3: #868379;
+    --accent: #d9a84b; --accent-ink: #1d1a14;
+    --good: #6fc48a; --warn: #e2b155; --bad: #ec7f72; --info: #7fb0e8; --held: #a3a8b1;
+    --good-bg: #1d3426; --warn-bg: #3a2d14; --bad-bg: #3d2320; --info-bg: #1c2d42; --held-bg: #2b2f36;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15171c; --panel: #1d2026; --raised: #252931; --line: #343946; --ink: #ecebe6; --ink-2: #b6b3aa; --ink-3: #868379;
+  --accent: #d9a84b; --accent-ink: #1d1a14;
+  --good: #6fc48a; --warn: #e2b155; --bad: #ec7f72; --info: #7fb0e8; --held: #a3a8b1;
+  --good-bg: #1d3426; --warn-bg: #3a2d14; --bad-bg: #3d2320; --info-bg: #1c2d42; --held-bg: #2b2f36;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--ink); font: 15px/1.5 var(--font-ui);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 48px;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover, a:focus-visible { text-decoration: underline; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 1180px; margin: 0 auto; }
+header.top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; padding-block: 28px 12px; border-bottom: 1px solid var(--line); }
+header.top h1 { font-size: 22px; margin: 0; font-weight: 600; letter-spacing: -0.01em; }
+header.top .sub { color: var(--ink-2); font-size: 14px; }
+.meta { font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); }
+.meta b { color: var(--ink-2); font-weight: 500; }
+section { margin-top: 28px; }
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3); margin: 0 0 12px; font-weight: 600; }
+h3 { font-size: 16px; margin: 0; font-weight: 600; text-wrap: balance; }
+.grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.tile { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; min-width: 0; }
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.big { font-size: 28px; line-height: 1.1; font-weight: 500; }
+.row { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.muted { color: var(--ink-2); }
+.small { font-size: 13px; }
+.chip { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-family: var(--font-mono); background: var(--raised); color: var(--ink-2); border: 1px solid var(--line); white-space: nowrap; }
+.chip.ws { background: var(--info-bg); color: var(--info); border-color: transparent; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 1px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.s-done { background: var(--good-bg); color: var(--good); }
+.s-in_progress { background: var(--info-bg); color: var(--info); }
+.s-review { background: var(--info-bg); color: var(--info); }
+.s-backlog { background: var(--held-bg); color: var(--held); }
+.s-blocked { background: var(--bad-bg); color: var(--bad); }
+.s-held { background: var(--held-bg); color: var(--held); }
+.fresh-ok { color: var(--good); } .fresh-stale { color: var(--warn); } .fresh-old { color: var(--bad); }
+.bar { height: 8px; background: var(--raised); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+.bar > i { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
+.bar > i.part { background: var(--info); }
+.check { display: grid; grid-template-columns: 2.2em 1fr auto; gap: 6px 12px; align-items: start; padding: 10px 0; border-top: 1px solid var(--line); }
+.check:first-of-type { border-top: 0; }
+.check .n { font-family: var(--font-mono); color: var(--ink-3); font-size: 13px; padding-top: 2px; }
+.check .t { font-weight: 600; }
+.check .line { grid-column: 2; color: var(--ink-2); font-size: 13px; }
+.check .pct { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.check .pct small { display: block; color: var(--ink-3); font-size: 11px; }
+.check .barwrap { grid-column: 2 / span 2; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 8px 10px; border-top: 1px solid var(--line); vertical-align: top; }
+th { color: var(--ink-3); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; border-top: 0; }
+td.id, th.id { font-family: var(--font-mono); white-space: nowrap; }
+td.h { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.scroll { overflow-x: auto; }
+details { border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); margin-top: 10px; }
+details > summary { list-style: none; cursor: pointer; padding: 12px 16px; display: grid; grid-template-columns: 2.2em 1fr auto; gap: 6px 12px; align-items: center; }
+details > summary::-webkit-details-marker { display: none; }
+details > summary .n { font-family: var(--font-mono); color: var(--ink-3); }
+details > summary .pct { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--ink-2); white-space: nowrap; }
+details[open] > summary { border-bottom: 1px solid var(--line); }
+.body { padding: 4px 16px 14px; }
+.ms { margin: 10px 0 4px; font-size: 13px; color: var(--ink-2); }
+.ms b { color: var(--ink); font-weight: 600; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+.filters button { font: inherit; font-size: 13px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--ink-2); cursor: pointer; }
+.filters button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.note { background: var(--warn-bg); color: var(--ink); border-left: 3px solid var(--warn); padding: 10px 12px; border-radius: 6px; font-size: 14px; }
+.err { background: var(--bad-bg); color: var(--ink); border-left: 3px solid var(--bad); padding: 10px 12px; border-radius: 6px; font-size: 14px; }
+footer { margin-top: 40px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--ink-3); font-size: 13px; }
+@media (max-width: 560px) {
+  .check { grid-template-columns: 2em 1fr; }
+  .check .pct { grid-column: 2; text-align: left; }
+  .check .barwrap { grid-column: 2; }
+  details > summary { grid-template-columns: 2em 1fr; }
+  details > summary .pct { grid-column: 2; }
+}
+@media (prefers-reduced-motion: no-preference) { .bar > i { transition: width 300ms ease-out; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div>
+    <h1 id="title">CrankMagic Program Readout</h1>
+    <div class="sub">Every feature in Rob's words, where it stands, what remains by workstream, and Rob's queue.</div>
+  </div>
+  <div class="meta" id="source">loading…</div>
+</header>
+
+<div id="errors"></div>
+
+<section id="summary">
+  <h2>Where the whole picture stands</h2>
+  <div class="grid" id="summary-tiles"></div>
+</section>
+
+<section id="launch">
+  <h2>The launch checklist: what 100% done means</h2>
+  <div class="tile" id="checklist"></div>
+</section>
+
+<section id="workstreams">
+  <h2>Each workstream: what it is doing now, and what remains</h2>
+  <div class="grid" id="ws-tiles"></div>
+</section>
+
+<section id="rob">
+  <h2>Rob's queue: only you can do these</h2>
+  <div class="tile scroll" id="rob-queue"></div>
+</section>
+
+<section id="outcomes">
+  <h2>Every outcome, every feature</h2>
+  <div class="filters" id="filters" role="group" aria-label="Filter by workstream"></div>
+  <div id="outcome-list"></div>
+</section>
+
+<section id="blocked">
+  <h2>Blocked, and on whom</h2>
+  <div class="tile scroll" id="blocked-list"></div>
+</section>
+
+<footer id="foot">
+  How this page works and how a workstream updates it: <code>docs/readout/README.md</code>. The charter: <code>docs/program/README.md</code>. Linear: the initiative <a id="init-link" href="#">I-1</a>.
+</footer>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const REPO_RAW = "https://raw.githubusercontent.com/minorrob/mtg-deck-matrix/main/docs/readout/";
+  const STATUS_WORDS = {done: "Done", in_progress: "In progress", review: "In review", backlog: "Not started", blocked: "Blocked", held: "Held"};
+  const DAY = 86400000;
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+  const fmtDate = (iso) => { const d = new Date(iso); return isNaN(d) ? "unknown" : d.toLocaleString("en-US", {month: "short", day: "numeric", hour: "numeric", minute: "2-digit"}); };
+  const n0 = (x) => Number(x || 0).toLocaleString("en-US", {maximumFractionDigits: 0});
+  const n1 = (x) => Number(x || 0).toLocaleString("en-US", {maximumFractionDigits: 1});
+
+  /* Which source: #local reads beside the page; otherwise GitHub's main, falling back to local if that fails
+     (no network, or a fork without the files). The footer names what was read, so nobody mistakes a branch's
+     feeds for main's. */
+  const wantLocal = location.hash.replace("#", "") === "local";
+  async function readJson(name) {
+    const tries = wantLocal ? [name, REPO_RAW + name] : [REPO_RAW + name, name];
+    let lastErr;
+    for (const url of tries) {
+      try {
+        const r = await fetch(url, {cache: "no-store"});
+        if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`);
+        return {data: await r.json(), from: url.startsWith("http") ? "GitHub main" : "the files beside this page"};
+      } catch (e) { lastErr = e; }
+    }
+    throw lastErr;
+  }
+
+  function freshness(iso) {
+    const age = Date.now() - new Date(iso).getTime();
+    if (!(age >= 0)) return {cls: "fresh-old", word: "no date"};
+    if (age > 7 * DAY) return {cls: "fresh-old", word: `${Math.floor(age / DAY)} days old`};
+    if (age > 3 * DAY) return {cls: "fresh-stale", word: `${Math.floor(age / DAY)} days old`};
+    if (age > DAY) return {cls: "fresh-ok", word: `${Math.floor(age / DAY)} day${age > 2 * DAY ? "s" : ""} ago`};
+    return {cls: "fresh-ok", word: "today"};
+  }
+
+  function render(ns, feeds, from) {
+    const perDay = ns.hours_per_day || 6;
+    const wsByKey = Object.fromEntries(ns.workstreams.map((w) => [w.key, w]));
+    const items = [];
+    for (const f of feeds) for (const it of f.items) items.push({...it, ws: f.workstream});
+    const open = (it) => it.status !== "done" && it.status !== "held";
+    const issueUrl = (id) => ns.linear_issue_base + id;
+
+    $("title").textContent = `${ns.title}: program readout`;
+    $("init-link").href = ns.initiative.url; $("init-link").textContent = ns.initiative.id;
+    const newest = feeds.map((f) => f.updated).sort().at(-1);
+    $("source").innerHTML = `read from <b>${esc(from)}</b> · newest feed <b>${esc(fmtDate(newest))}</b> · ${feeds.length} feeds · ${items.length} items`;
+
+    /* Summary tiles: the few numbers that change what Rob does. */
+    const remaining = items.filter(open).reduce((s, it) => s + (Number(it.remaining_hours) || 0), 0);
+    const done = items.filter((it) => it.status === "done").length;
+    const blocked = items.filter((it) => it.status === "blocked").length;
+    const asks = feeds.reduce((s, f) => s + (f.asks_of_rob || []).length, 0);
+    $("summary-tiles").innerHTML = [
+      ["Features done", `${done} <span class="muted small">of ${items.length}</span>`, "merged, released where they ship, evidence on the issue"],
+      ["Hours remaining, all workstreams", `${n0(remaining)}`, `about ${n0(remaining / perDay)} session-days at ${perDay} h a day; sessions run in parallel`],
+      ["Waiting on Rob", `${asks}`, asks ? "see Rob's queue below" : "nothing right now"],
+      ["Blocked", `${blocked}`, blocked ? "see the blocked list below" : "nothing blocked"]
+    ].map(([k, v, s]) => `<div class="tile"><div class="small muted">${esc(k)}</div><div class="big num">${v}</div><div class="small muted">${esc(s)}</div></div>`).join("");
+
+    /* The launch checklist: one line per outcome, progress by items, remaining hours. */
+    $("checklist").innerHTML = ns.outcomes.map((o) => {
+      const mine = items.filter((it) => it.outcome === o.key);
+      const d = mine.filter((it) => it.status === "done").length;
+      const pct = mine.length ? Math.round(100 * d / mine.length) : 0;
+      const hrs = mine.filter(open).reduce((s, it) => s + (Number(it.remaining_hours) || 0), 0);
+      const held = o.held ? `<span class="pill s-held">Held</span>` : "";
+      return `<div class="check">
+        <div class="n">${o.n}</div>
+        <div class="t">${esc(o.title)} ${held}</div>
+        <div class="pct">${o.held ? "" : `${pct}%<small>${d} of ${mine.length} · ${n0(hrs)} h left</small>`}</div>
+        <div class="line">${esc(o.launch_line)}</div>
+        <div class="barwrap"><div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div></div>
+      </div>`;
+    }).join("");
+
+    /* Workstream tiles. */
+    $("ws-tiles").innerHTML = ns.workstreams.map((w) => {
+      const f = feeds.find((x) => x.workstream === w.key);
+      if (!f) return `<div class="tile"><h3>${esc(w.label)}</h3><div class="err">No feed found at ${esc(w.feed)}.</div></div>`;
+      const mine = f.items;
+      const hrs = mine.filter(open).reduce((s, it) => s + (Number(it.remaining_hours) || 0), 0);
+      const inProg = mine.filter((it) => it.status === "in_progress" || it.status === "review").length;
+      const fr = freshness(f.updated);
+      return `<div class="tile">
+        <div class="row" style="justify-content:space-between"><h3>${esc(w.label)}</h3><span class="meta ${fr.cls}">updated ${esc(fr.word)}</span></div>
+        <div class="small muted">${esc(w.platform)} · ${esc(w.session)}</div>
+        <div class="row" style="margin-top:10px"><span class="big num">${n0(hrs)} h</span><span class="small muted">left · about ${n1(hrs / perDay)} days at ${perDay} h</span></div>
+        <div class="row small" style="margin-top:6px">
+          <span class="pill s-in_progress">${inProg} in progress</span>
+          <span class="pill s-done">${mine.filter((it) => it.status === "done").length} done</span>
+          <span class="pill s-blocked">${mine.filter((it) => it.status === "blocked").length} blocked</span>
+          <span class="pill s-backlog">${mine.filter((it) => it.status === "backlog").length} not started</span>
+        </div>
+        <p class="small" style="margin:10px 0 0"><b>Now:</b> ${esc(f.now)}</p>
+        <div class="meta" style="margin-top:6px">branch ${esc(f.branch)} · ${esc(f.updated_by)}</div>
+      </div>`;
+    }).join("");
+
+    /* Rob's queue: every ask across feeds, newest feed first. */
+    const queue = [];
+    for (const f of [...feeds].sort((a, b) => (a.updated < b.updated ? 1 : -1))) for (const a of f.asks_of_rob || []) queue.push({...a, ws: f.workstream});
+    $("rob-queue").innerHTML = queue.length ? `<table>
+      <thead><tr><th class="id">Issue</th><th>What only you can do</th><th>Recommendation</th><th>Needed by</th><th>Asked by</th></tr></thead>
+      <tbody>${queue.map((a) => `<tr>
+        <td class="id"><a href="${esc(a.url || issueUrl(a.id))}">${esc(a.id)}</a></td>
+        <td>${esc(a.ask)}</td><td class="muted">${esc(a.recommendation)}</td><td class="muted small">${esc(a.needed_by || "")}</td>
+        <td><span class="chip ws">${esc(wsByKey[a.ws]?.label || a.ws)}</span></td></tr>`).join("")}</tbody></table>`
+      : `<p class="muted" style="margin:0">Nothing is waiting on you.</p>`;
+
+    /* Outcomes: milestones named, items grouped by status, filterable by workstream. */
+    const filters = $("filters");
+    let active = "all";
+    const drawFilters = () => {
+      filters.innerHTML = [["all", "All workstreams"], ...ns.workstreams.map((w) => [w.key, w.label])]
+        .map(([k, l]) => `<button type="button" data-ws="${esc(k)}" aria-pressed="${k === active}">${esc(l)}</button>`).join("");
+    };
+    const order = {blocked: 0, in_progress: 1, review: 2, backlog: 3, held: 4, done: 5};
+    const drawOutcomes = () => {
+      $("outcome-list").innerHTML = ns.outcomes.map((o) => {
+        const mine = items.filter((it) => it.outcome === o.key && (active === "all" || it.ws === active)).sort((a, b) => (order[a.status] ?? 9) - (order[b.status] ?? 9) || a.id.localeCompare(b.id, "en", {numeric: true}));
+        const d = mine.filter((it) => it.status === "done").length;
+        const hrs = mine.filter(open).reduce((s, it) => s + (Number(it.remaining_hours) || 0), 0);
+        const rows = mine.map((it) => `<tr>
+          <td class="id"><a href="${issueUrl(it.id)}">${esc(it.id)}</a></td>
+          <td>${esc(it.feature)}${it.note ? `<div class="small muted">${esc(it.note)}</div>` : ""}${(it.evidence || []).length ? `<div class="small">${it.evidence.map((e) => `<a href="${esc(e.url)}">${esc(e.label)}</a>`).join(" · ")}</div>` : ""}</td>
+          <td><span class="pill s-${esc(it.status)}">${esc(STATUS_WORDS[it.status] || it.status)}</span></td>
+          <td><span class="chip ws">${esc(wsByKey[it.ws]?.label || it.ws)}</span></td>
+          <td class="h">${open(it) ? n0(it.remaining_hours) : ""}</td></tr>`).join("");
+        return `<details ${o.n <= 2 ? "open" : ""}>
+          <summary><span class="n">${o.n}</span><span><b>${esc(o.title)}</b> <a class="small" href="${esc(o.project.url)}">${esc(o.project.id)}</a></span><span class="pct">${mine.length ? `${d} of ${mine.length} done · ${n0(hrs)} h left` : "no items in this view"}</span></summary>
+          <div class="body">
+            <div class="ms"><b>Milestones:</b> ${o.milestones.map((m) => `<span class="chip">${esc(m.code)}</span> ${esc(m.name)}`).join(" · ")}</div>
+            ${mine.length ? `<div class="scroll"><table><thead><tr><th class="id">Issue</th><th>Feature, in Rob's words</th><th>Status</th><th>Owner</th><th class="h">Hours left</th></tr></thead><tbody>${rows}</tbody></table></div>` : ""}
+          </div>
+        </details>`;
+      }).join("");
+    };
+    filters.addEventListener("click", (ev) => { const b = ev.target.closest("button[data-ws]"); if (!b) return; active = b.dataset.ws; drawFilters(); drawOutcomes(); });
+    drawFilters(); drawOutcomes();
+
+    /* Blocked. */
+    const blocks = [];
+    for (const f of feeds) for (const b of f.blocked_on || []) blocks.push({...b, ws: f.workstream});
+    $("blocked-list").innerHTML = blocks.length ? `<table><thead><tr><th class="id">Issue</th><th>Blocked by</th><th>Owner of the block</th><th>Waiting workstream</th></tr></thead><tbody>${blocks.map((b) => `<tr>
+      <td class="id"><a href="${issueUrl(b.id)}">${esc(b.id)}</a></td><td>${esc(b.by)}</td>
+      <td><span class="chip ws">${esc(wsByKey[b.owner]?.label || (b.owner === "rob" ? "Rob" : b.owner))}</span></td>
+      <td><span class="chip ws">${esc(wsByKey[b.ws]?.label || b.ws)}</span></td></tr>`).join("")}</tbody></table>`
+      : `<p class="muted" style="margin:0">Nothing is blocked.</p>`;
+
+    if (ns.hold_note) $("launch").insertAdjacentHTML("beforeend", `<p class="note" style="margin-top:10px">${esc(ns.hold_note)}</p>`);
+  }
+
+  (async () => {
+    try {
+      const ns = await readJson("north-star.json");
+      const feeds = [];
+      const problems = [];
+      for (const w of ns.data.workstreams) {
+        try { feeds.push((await readJson(w.feed)).data); } catch (e) { problems.push(`${w.label}: ${e.message}`); }
+      }
+      if (problems.length) $("errors").innerHTML = `<div class="err">Some feeds could not be read: ${esc(problems.join("; "))}</div>`;
+      render(ns.data, feeds, ns.from);
+    } catch (e) {
+      $("source").textContent = "could not load";
+      $("errors").innerHTML = `<div class="err">The readout could not read its data (${esc(e.message)}). Open it from a clone with network access, or serve docs/readout with <code>node tools/serve-folder.mjs docs/readout 8797</code> and add <code>#local</code> to the address.</div>`;
+    }
+  })();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>CrankMagic · Babylon tabletop lab</title><link rel="stylesheet" href="/table.css"><script defer src="/engine.js"></script><script defer src="/tables.js"></script><script defer src="/table.js"></script></head>
+<body>
+<video id="environment" muted autoplay loop playsinline poster="/assets/environments/volcano-poster.jpg" src="/assets/environments/volcano.webm"></video><div class="shade"></div>
+<canvas id="table" aria-label="3D card table. Select a card using the card list, or pick one directly on the table." tabindex="0"></canvas>
+<header><div class="brand"><span class="id">H01</span> CRANKMAGIC <small>TABLETOP LAB</small></div><span id="game-label"></span><div class="top-actions"><button id="ids" aria-pressed="true">IDs on</button><button id="reset">Reset</button><button id="camera-toggle" aria-expanded="false">Camera <span class="id">C01</span></button></div></header>
+<nav id="seats" aria-label="View a player's mat"></nav>
+<section id="camera-panel" hidden aria-label="Camera controls"><strong>Camera · <span id="view-label">Table</span></strong><label>Table <select id="table-design" aria-label="Table design"></select></label><label class="desktop">Tilt <input id="tilt" type="range" min="0" max="60" value="40"><output id="tilt-value">40°</output></label><label>Zoom <input id="zoom" type="range" min="60" max="180" value="100"><output id="zoom-value">100%</output></label><button id="home-camera">Recenter</button><p>Drag empty space to pan. Wheel / two-finger pinch to zoom.</p></section>
+<div id="object-labels" aria-hidden="true"></div>
+<aside id="selection"><div class="eyebrow">SELECTED CARD <span class="id">I01</span></div><h1 id="card-name">Pick a card</h1><p id="card-meta">Drag to lift and move. Select to inspect or tap.</p><div class="card-actions"><button id="inspect" disabled>Inspect</button><button id="tap" disabled>Tap</button><button id="return" disabled>Return</button></div><details id="card-list"><summary>Cards on this mat</summary><div id="accessible-cards"></div></details></aside>
+<footer><span class="id">F01</span><span id="status" role="status">Loading the recorded game…</span><span class="sandbox">Recorded state · local interactions</span><button id="previous" aria-label="Previous recorded state">‹</button><button id="next" aria-label="Next recorded state">›</button></footer>
+<dialog id="inspection" aria-labelledby="inspection-name"><button id="close-inspection" aria-label="Return card to table">Close · Esc</button><span class="id">I02</span><h2 id="inspection-name"></h2><img id="inspection-image" alt=""><p id="inspection-detail"></p></dialog>
+</body></html>
