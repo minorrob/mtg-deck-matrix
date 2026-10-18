@@ -1359,7 +1359,7 @@ function drawBuyPlan(matched){const BP=globalThis.CrankBuyPlan;if(!BP)return;
   const needs=need.map(r=>({name:r.card.name,quantity:r.quantity,deck:r.deckId?M.deck(C.state,r.deckId).name:null}));
   const prefs=C.state.preferences,w={cost:prefs.buyWeightCost??1,speed:prefs.buyWeightSpeed??0,print:prefs.buyWeightPrint??0};
   /* Build a simple prices snapshot from catalog prices: one printing per card at its sheet price. */
-  const prices={generatedAt:new Date().toISOString().slice(0,10),cards:{}};
+  const prices={generatedAt:M.today(),cards:{}};
   for(const r of need){const c=r.card;if(c.price>0&&!prices.cards[c.name])prices.cards[c.name]=[{set:c.cheapestSetCode||'',setName:c.cheapestSet||'',collector:'',released:'',usd:c.price,usdFoil:null,finishes:['nonfoil'],frame:'',frameEffects:[],borderColor:'',fullArt:false,promo:false}];}
   const plan=BP.buyPlan(needs,prices,w,{vendors:null,print:{prefer:'cheapest',finish:'any',frame:'any'},rules:R,local:true});
   if(!plan||!plan.lines.length){host.innerHTML=`<p class="cm-muted">The plan could not be made: ${e(plan?.says||'no prices available')}.</p>`;return;}

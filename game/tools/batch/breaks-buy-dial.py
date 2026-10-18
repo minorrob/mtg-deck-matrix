@@ -1,7 +1,8 @@
 # Deliberate regressions for the buy priority dial (ROB-118).
 # Each break is a real mutation of crankmagic-collection.js that tests/buy-dial.mjs catches.
 
-breaks = [
+SUITES = ["tests/buy-dial.mjs"]
+BREAKS = [
     {
         "id": "dial-no-sliders",
         "why": "The dial renders with no sliders",
