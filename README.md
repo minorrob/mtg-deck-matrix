@@ -1136,6 +1136,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `table-shared-shell` — `tests/table-shared-shell.mjs`
 - `table-camera-layout` — `tests/table-camera-layout.mjs`
 - `settings-r3` — `tests/settings-r3.mjs`
+- `settings-play-prefs` — `tests/settings-play-prefs.mjs`
 - `reset-all` — `tests/reset-all.mjs`
 - `decks-hub` — `tests/decks-hub.mjs`
 - `deck-page-r3` — `tests/deck-page-r3.mjs`

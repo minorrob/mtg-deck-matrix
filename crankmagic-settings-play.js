@@ -29,7 +29,7 @@ C.playPrefs=playPrefs;C.PLAY_DEFAULTS=PLAY_DEFAULTS;
 C.settingsPlayCard=card=>{
   const p=playPrefs();
   return card('play','Play',
-      `<p class="cm-settings-label">Overlay</p><div class="cm-settings-row"><label class="cm-settings-slider">Callouts over the table<input type="range" min="0" max="100" step="1" value="${p.overlay}" data-settings-overlay aria-label="Callouts over the table" aria-valuetext="${p.overlay===0?'off':p.overlay+'%'}"><output>${p.overlay===0?'Off':p.overlay+'%'}</output></label></div>`
+      `<p class="cm-settings-label">Overlay</p><div class="cm-settings-row"><label class="cm-settings-slider">Callouts over the table<input type="range" min="0" max="100" step="1" value="${p.overlay}" data-settings-overlay aria-label="Callouts over the table" aria-valuetext="${p.overlay===0?'off':p.overlay+'%'}"><output data-overlay-output>${p.overlay===0?'Off':p.overlay+'%'}</output></label></div>`
       +`<p class="cm-muted">What just happened at the table, called out in a word over the board: an attack coming in, a hit, a spell countered, your turn. Off at the left; louder and longer toward the right. Reduce motion shows each one without its entrance.</p>`
       +`<p class="cm-settings-label">Turn flow</p>`
       +`<div class="cm-settings-row"><button type="button" class="v-button cm-chip-toggle" data-action="set-step-by-step" aria-pressed="${p.stepByStep}">Stop at every step of my turn</button></div>`
@@ -73,6 +73,6 @@ document.addEventListener('input',ev=>{const el=ev.target.closest?.('[data-setti
 document.addEventListener('change',async ev=>{const el=ev.target.closest?.('[data-settings-sound]');if(!el)return;const play=(C.state.preferences||{}).play||{},sound=play.sound||{},key=el.dataset.settingsSound,pct=Math.min(100,Math.max(0,Math.round(Number(el.value)||0))),value=pct/100;await commit({type:'preferences',values:{play:{...play,sound:{...sound,[key]:value}}}},{renderView:false});const labels={sfx:'Effects',bgm:'Music'};notice(`${labels[key]||'Volume'}: ${pct}%.`);});
 /* THE OVERLAY (the callouts' loudness, 0 off to 100): a slider, previewed as it moves and saved when it is let go, with
    the rest of the Play preferences (crankmagic-board.js reads play.overlay). */
-document.addEventListener('input',ev=>{const el=ev.target.closest?.('[data-settings-overlay]');if(!el)return;const n=Number(el.value);el.setAttribute('aria-valuetext',n===0?'off':n+'%');const out=el.parentElement.querySelector('output');if(out)out.textContent=n===0?'Off':n+'%';});
+document.addEventListener('input',ev=>{const el=ev.target.closest?.('[data-settings-overlay]');if(!el)return;const n=Number(el.value);el.setAttribute('aria-valuetext',n===0?'off':n+'%');const out=el.parentElement.querySelector('[data-overlay-output]');if(out)out.textContent=n===0?'Off':n+'%';});
 document.addEventListener('change',async ev=>{const el=ev.target.closest?.('[data-settings-overlay]');if(!el)return;const play=(C.state.preferences||{}).play||{},n=Math.min(100,Math.max(0,Math.round(Number(el.value)||0)));await commit({type:'preferences',values:{play:{...play,overlay:n}}},{renderView:false});notice(n===0?'Callouts off.':`Callouts at ${n}%.`);});
 });
