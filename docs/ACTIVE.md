@@ -118,6 +118,15 @@ The program's charter (the north star in Linear, the file ownership table, the s
 protocol) is `docs/program/README.md` (October 18, 2026). Rob's queue and each lane's remaining hours are on
 `docs/readout/index.html`.
 
+### Claude · Engine, card load step 1: demand capture (claimed 2026-10-18; Linear ROB-86)
+
+- **Held by:** a fresh Claude session in a cloud container (Rob's decision 4: one step, one session, one PR), on
+  `claude/practical-shannon-ga8i5j`, beside the engine session on `claude/admiring-franklin-58cxy4` (#748, ROB-76).
+- **Its files only:** `cloud/migrations/0006_card_demand.sql` (the number reserved for it in ROB-11),
+  `cloud/card-demand.mjs` (new), `cloud/tables.mjs`, `game/tools/card-demand.mjs` (new), the wave list's
+  `docs/handoff-2026-10-12/topneeds.mjs`, its suite and breaks. No `game/engine/**`, no UI file.
+- **Staging:** announced in ROB-11 before the release, never beside another.
+
 ### Requests between the lanes
 
 Latest UI requests:
