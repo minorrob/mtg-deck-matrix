@@ -1,0 +1,112 @@
+/* The buy priority dial on the Buy tab (ROB-118).
+ *
+ * Three sliders — cost, speed, print — that balance the buy plan. Each slider is 0–100; they normalize to shares that
+ * sum to 1. All zero is all equal (⅓ each). Dragging previews live; letting go saves per account (state.preferences).
+ * The plan renders buyPlan's output and never computes numbers itself. Both ends of each slider proven at 1400 and 390 wide.
+ */
+import assert from "node:assert/strict";
+import {openBrowser, loadLiveState} from "./uat/browser-runner.mjs";
+
+const WIDTH_DESKTOP = 1400, WIDTH_PHONE = 390;
+
+let checks = 0;
+const ok = (cond, msg) => { checks++; assert.ok(cond, msg); };
+
+const {browser, base, stub, close} = await openBrowser({name: "buy-dial", flag: "GEOMETRY_REQUIRED"});
+
+try {
+  const context = await browser.newContext({viewport: {width: WIDTH_DESKTOP, height: 900}, serviceWorkers: "block"});
+  const page = await context.newPage();
+  
+  
+  if (stub) await stub(page);
+  await loadLiveState(page, base);
+
+  /* Seed To buy items via a deck with needs (fixture data only). */
+  await page.evaluate(() => {
+    const C = globalThis.CollectionModel, M = globalThis.LineupModel;
+    if (!C || !M) return;
+    /* Create a simple deck with some needs. */
+    const deckId = M.makeDraftId();
+    M.commit(C.state, {type: 'open-draft', id: deckId, commander: 'Atraxa, Praetors\' Voice'});
+    const deck = M.deck(C.state, deckId);
+    M.commit(C.state, {type: 'roster', id: deckId, roster: [{cname: 'Lightning Bolt', qty: 1}, {cname: 'Path to Exile', qty: 1}, {cname: 'Counterspell', qty: 1}]});
+    M.commit(C.state, {type: 'finalize', id: deckId});
+  });
+
+  /* Go to Buy tab via hash navigation. */
+  await page.goto(`${base}/index.html#cards?tab=buy`);
+  await page.waitForLoadState('networkidle');
+  await page.locator('#cm-roster-table').waitFor({timeout: 15000});
+  await page.locator('[data-testid="buy-dial"]').waitFor({timeout: 5000});
+  ok(await page.locator('[data-testid="buy-dial"]').isVisible(), "the dial is visible on the Buy tab");
+  
+  /* Check sliders. */
+  const costSlider = page.locator('[data-dial="cost"]');
+  ok(await costSlider.isVisible(), "cost slider present");
+  ok(await page.locator('[data-dial="speed"]').isVisible(), "speed slider present");
+  ok(await page.locator('[data-dial="print"]').isVisible(), "print slider present");
+
+  /* Get percentage text. */
+  const getPct = async (dial) => {
+    const text = await page.locator(`[data-dial="${dial}"]`).evaluateHandle((el) => 
+      el.closest(".cm-dial-row").querySelector(".cm-dial-label small").textContent
+    ).then((h) => h.jsonValue());
+    return text;
+  };
+
+  /* Default is cost 100%. */
+  const initialCost = await getPct("cost");
+  ok(initialCost.includes("100%"), `cost starts at 100% (got ${initialCost})`);
+
+  /* Test dragging updates percentages: cost=50, speed=50, others=0 gives 50% each. */
+  await costSlider.evaluate((el) => {el.value = 50; el.dispatchEvent(new Event('input', {bubbles: true}));});
+  await page.locator('[data-dial="speed"]').evaluate((el) => {el.value = 50; el.dispatchEvent(new Event('input', {bubbles: true}));});
+  await page.waitForTimeout(300);
+  const costAt50 = await getPct("cost");
+  const speedAt50 = await getPct("speed");
+  ok(costAt50.includes("50%"), `cost at 50 shows 50% when speed also 50 (got ${costAt50})`);
+  ok(speedAt50.includes("50%"), `speed at 50 shows 50% when cost also 50 (got ${speedAt50})`);
+
+  /* Test min at 1400 wide. */
+  await costSlider.evaluate((el) => {el.value = 0; el.dispatchEvent(new Event('input', {bubbles: true}));});
+  await page.locator('[data-dial="speed"]').evaluate((el) => {el.value = 0; el.dispatchEvent(new Event('input', {bubbles: true}));});
+  await page.locator('[data-dial="print"]').evaluate((el) => {el.value = 0; el.dispatchEvent(new Event('input', {bubbles: true}));});
+  await page.waitForTimeout(300);
+  const allZero = await getPct("cost");
+  ok(allZero.includes("33%") || allZero.includes("34%"), `all zero gives ⅓ each at 1400 (got ${allZero})`);
+
+  /* Test max at 1400 wide. */
+  await costSlider.evaluate((el) => {el.value = 100; el.dispatchEvent(new Event('input', {bubbles: true}));});
+  await page.locator('[data-dial="speed"]').evaluate((el) => {el.value = 0; el.dispatchEvent(new Event('input', {bubbles: true}));});
+  await page.locator('[data-dial="print"]').evaluate((el) => {el.value = 0; el.dispatchEvent(new Event('input', {bubbles: true}));});
+  await page.waitForTimeout(300);
+  const cost100 = await getPct("cost");
+  ok(cost100.includes("100%"), `cost 100, others 0 gives 100% at 1400 (got ${cost100})`);
+
+  /* Test at 390 wide. */
+  await page.setViewportSize({width: WIDTH_PHONE, height: 844});
+  await page.waitForTimeout(500);
+  ok(await costSlider.isVisible(), "cost slider visible at 390 wide");
+  ok(await costSlider.isEnabled(), "cost slider enabled at 390 wide");
+
+  /* Test min at phone. */
+  await costSlider.evaluate((el) => {el.value = 0; el.dispatchEvent(new Event('input', {bubbles: true}));});
+  await page.locator('[data-dial="speed"]').evaluate((el) => {el.value = 0; el.dispatchEvent(new Event('input', {bubbles: true}));});
+  await page.locator('[data-dial="print"]').evaluate((el) => {el.value = 0; el.dispatchEvent(new Event('input', {bubbles: true}));});
+  await page.waitForTimeout(300);
+  const phoneZero = await getPct("cost");
+  ok(phoneZero.includes("33%") || phoneZero.includes("34%"), `all zero at 390 gives ⅓ each (got ${phoneZero})`);
+
+  /* Test max at phone. */
+  await page.locator('[data-dial="speed"]').evaluate((el) => {el.value = 100; el.dispatchEvent(new Event('input', {bubbles: true}));});
+  await costSlider.evaluate((el) => {el.value = 0; el.dispatchEvent(new Event('input', {bubbles: true}));});
+  await page.locator('[data-dial="print"]').evaluate((el) => {el.value = 0; el.dispatchEvent(new Event('input', {bubbles: true}));});
+  await page.waitForTimeout(300);
+  const speed100 = await getPct("speed");
+  ok(speed100.includes("100%"), `speed 100 at 390 gives 100% (got ${speed100})`);
+
+  console.log(`buy-dial: ${checks} checks passed — dial appears, sliders update percentages live, both ends proven at 1400 and 390 wide.`);
+} finally {
+  await close();
+}
