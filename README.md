@@ -932,6 +932,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `card-images` — `tests/card-images.mjs`
 - `card-link` — `tests/card-link.mjs`
 - `cloud-sync` — `tests/cloud-sync.mjs`
+- `commander-legality` — `tests/commander-legality.mjs`
 - `cloud-worker` — `tests/cloud-worker.mjs`
 - `collection-exchange` — `tests/collection-exchange.mjs`
 - `collection-lobby-draft` — `tests/collection-lobby-draft.mjs`
@@ -969,6 +970,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `design-tokens` — `tests/design-tokens.mjs`
 - `first-draw-check` — `tests/first-draw-check.mjs`
 - `play-audio-pack` — `tests/play-audio-pack.mjs`
+- `readout-feeds` — `tests/readout-feeds.mjs`
 - `script-encoding` — `tests/script-encoding.mjs`
 - `wireframe-conformance` — `tests/wireframe-conformance.mjs`
 - `deck-sources` — `tests/deck-sources.mjs`

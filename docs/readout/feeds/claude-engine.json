@@ -1,0 +1,48 @@
+{
+  "workstream": "claude-engine",
+  "updated": "2026-10-18T05:30:00Z",
+  "updated_by": "Seeded by Claude · Deck intelligence from Linear on October 18; the engine session corrects it at its next merge.",
+  "branch": "claude/admiring-franklin-58cxy4",
+  "now": "Round and turn in the view (ROB-76) and events.v1 (ROB-77, PR #747); the combined staging release of main.",
+  "items": [
+    {"id": "ROB-12", "outcome": "play-experience", "feature": "Cast with floating mana and several mana sources; the commander tax projected", "status": "done", "remaining_hours": 0},
+    {"id": "ROB-13", "outcome": "play-experience", "feature": "Auto-pass when a player has no meaningful response; an explicit Yield turn", "status": "done", "remaining_hours": 0},
+    {"id": "ROB-73", "outcome": "play-experience", "feature": "Draw card: the normal draw waits for one acknowledgment on new tables", "status": "done", "remaining_hours": 0},
+    {"id": "ROB-81", "outcome": "play-any-deck", "feature": "Rules bug fixed: a battlefield static no longer changes cards in hands, graveyards and libraries", "status": "done", "remaining_hours": 0},
+    {"id": "ROB-101", "outcome": "play-any-deck", "feature": "CI flake fixed: a suite no longer rewrites a data file other suites read", "status": "done", "remaining_hours": 0},
+    {"id": "ROB-76", "outcome": "play-experience", "feature": "The view says which round and whose turn it is, correctly across extra and skipped turns", "status": "in_progress", "remaining_hours": 4},
+    {"id": "ROB-77", "outcome": "play-experience", "feature": "Public events with stable IDs so the board animates once and reconnects cleanly", "status": "in_progress", "remaining_hours": 6, "evidence": [{"label": "PR #747", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/747"}]},
+    {"id": "ROB-74", "outcome": "play-experience", "feature": "Payment drafts, Confirm cast and Auto-pay the board can show", "status": "backlog", "remaining_hours": 16},
+    {"id": "ROB-75", "outcome": "play-experience", "feature": "Combat projection: legal attacker and blocker pairs, block drafts validated", "status": "backlog", "remaining_hours": 16},
+    {"id": "ROB-78", "outcome": "play-experience", "feature": "Which sources paid this step, and the card facts the board can show", "status": "backlog", "remaining_hours": 10},
+    {"id": "ROB-79", "outcome": "play-experience", "feature": "A ready table starts on a cancelable ten-second countdown", "status": "backlog", "remaining_hours": 8},
+    {"id": "ROB-80", "outcome": "play-experience", "feature": "A d20 roll at launch picks the first player, seen by every seat", "status": "backlog", "remaining_hours": 6},
+    {"id": "ROB-102", "outcome": "play-experience", "feature": "New matches launch with auto-pass and Draw card on", "status": "blocked", "remaining_hours": 4, "note": "Waits on the board (ROB-23, ROB-24) so players see what changes."},
+    {"id": "ROB-82", "outcome": "play-any-deck", "feature": "Commander rules audited: tax per cast, partners, countered casts, command-zone choices", "status": "backlog", "remaining_hours": 10},
+    {"id": "ROB-83", "outcome": "play-any-deck", "feature": "The rules constructs that block popular cards (exert, retrace, dash, emblems and more)", "status": "backlog", "remaining_hours": 24},
+    {"id": "ROB-93", "outcome": "play-any-deck", "feature": "The next waves of the most-played cards", "status": "backlog", "remaining_hours": 40, "note": "Rob decides whether waves wait on the card load program."},
+    {"id": "ROB-94", "outcome": "play-any-deck", "feature": "Rob's six live decks: every card's modes, triggers and effects proven, played and replayed", "status": "backlog", "remaining_hours": 24},
+    {"id": "ROB-17", "outcome": "play-any-deck", "feature": "Luke's missed second card effect found and reproduced", "status": "backlog", "remaining_hours": 8, "note": "Needs the game record or a table link."},
+    {"id": "ROB-86", "outcome": "play-any-deck", "feature": "Card load step 1: count which cards players ask for that cannot play yet", "status": "backlog", "remaining_hours": 10},
+    {"id": "ROB-87", "outcome": "play-any-deck", "feature": "Card load step 2: the sentence library with a measured pass rate per template", "status": "backlog", "remaining_hours": 16},
+    {"id": "ROB-88", "outcome": "play-any-deck", "feature": "Card load step 3: the compiler and a scored index of every Commander-legal card", "status": "backlog", "remaining_hours": 24},
+    {"id": "ROB-90", "outcome": "play-any-deck", "feature": "Card load step 4: the Claude API backstop under Rob's daily cap", "status": "blocked", "remaining_hours": 12, "note": "Waits on step 3 and on Rob's cap."},
+    {"id": "ROB-91", "outcome": "play-any-deck", "feature": "Card load step 5: unknown cards load when a deck is saved; candidates play only at playtest tables", "status": "backlog", "remaining_hours": 14},
+    {"id": "ROB-92", "outcome": "play-any-deck", "feature": "Card load step 6: waves review and promote candidates, demand first", "status": "backlog", "remaining_hours": 16},
+    {"id": "ROB-103", "outcome": "play-any-deck", "feature": "Paste any legal list and the lobby says exactly which cards cannot play yet, and why", "status": "backlog", "remaining_hours": 10},
+    {"id": "ROB-95", "outcome": "ai", "feature": "The AI door open to everyone signed in, on staging and production", "status": "blocked", "remaining_hours": 0, "note": "Built and released; waits on Rob's two settings."},
+    {"id": "ROB-132", "outcome": "ai", "feature": "Every AI answer labeled, sourced and under my spending caps (the meter in the Worker)", "status": "backlog", "remaining_hours": 4},
+    {"id": "ROB-40", "outcome": "tailored", "feature": "Google sign-in rejection diagnosed, email-code login kept", "status": "backlog", "remaining_hours": 4},
+    {"id": "ROB-41", "outcome": "tailored", "feature": "The hosted login page says Google once", "status": "backlog", "remaining_hours": 2},
+    {"id": "ROB-68", "outcome": "joyful", "feature": "Supabase evaluated for accounts and deck storage before any migration", "status": "backlog", "remaining_hours": 12}
+  ],
+  "asks_of_rob": [
+    {"id": "ROB-95", "ask": "Open the AI door: delete or widen the staging Access app 'CrankMagic AI (staging)'; add the Anthropic API key as a Worker secret on the production Worker (you enter it yourself)", "recommendation": "Do both; the engine lane then runs the invitee walk on staging and production", "needed_by": "before AI features (outcome 8) can be tested by anyone but you", "url": "https://linear.app/robs-build/issue/ROB-95"},
+    {"id": "ROB-90", "ask": "Set the card load backstop's daily dollar cap on staging", "recommendation": "$5 a day for the 200-card sample, then revisit with the measured cost", "needed_by": "before card load step 4 starts", "url": "https://linear.app/robs-build/issue/ROB-90"},
+    {"id": "ROB-93", "ask": "Do hand-written card waves 4d onward wait on card load steps 1 to 4?", "recommendation": "Yes: the program makes later waves cheaper; the six live decks are covered meanwhile by ROB-94", "needed_by": "when ROB-94 is done", "url": "https://linear.app/robs-build/issue/ROB-93"}
+  ],
+  "blocked_on": [
+    {"id": "ROB-102", "by": "ROB-23 and ROB-24 on the board", "owner": "codex-play"},
+    {"id": "ROB-17", "by": "the playtest record or a table link from Rob", "owner": "rob"}
+  ]
+}
