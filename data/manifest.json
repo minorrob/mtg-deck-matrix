@@ -1,8 +1,8 @@
 {
  "schema": "manifest@1",
- "generatedAt": "2026-10-18T07:04:11.887Z",
+ "generatedAt": "2026-10-18T07:04:42.766Z",
  "generator": "tools/data-manifest.mjs",
- "count": 25,
+ "count": 26,
  "files": [
   {
    "file": "data/engine/oracle.json",
@@ -146,6 +146,17 @@
    "version": 2,
    "served": true,
    "cache": "precached"
+  },
+  {
+   "file": "data/commander-brackets.json",
+   "schema": "commander-brackets@1",
+   "stamp": "2026-10-18",
+   "generator": "hand-maintained",
+   "bytes": 2640,
+   "sha256": "b8db9c896663604058a4ad09f96ecfcb89eeda1e6a681ef1bace31c2915b9538",
+   "version": null,
+   "served": false,
+   "cache": "not served"
   },
   {
    "file": "data/vendors.json",
