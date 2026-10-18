@@ -41,10 +41,10 @@
      them lazily off the global. Versions must match the ?v= the pages use, or a browser
      that has one page cached serves the worker a different engine than the page. */
   const ENGINE_SCRIPTS = [
-    "sim-engine.js?v=15",
+    "sim-engine.js?v=16",
     "combat.js?v=3",
     "pilot-policy.js?v=4",
-    "deck-measure.js?v=11"
+    "deck-measure.js?v=12"
   ];
 
   /* NAMED PROTOCOLS, AND WHY THE NAME IS PART OF THE NUMBER.
@@ -263,6 +263,10 @@
       /* WHETHER THE AVERAGE IS ONE HUMP OR TWO. A mean end turn cannot separate a deck
          that reliably finishes on twelve from one that finishes on seven or seventeen. */
       endTurnCounts: result.endTurnCounts || [],
+      /* THE MODEL'S SIMPLIFICATIONS, EACH LABELED WITH THE CARDS IN THIS LIST IT TOUCHES (ROB-116 step 1). The
+         shape ones hold for every game and carry no cards; the readings name theirs, so "tutors draw the best of
+         three" arrives beside "Demonic Tutor" and the reader can weigh it. */
+      simplifications: result.simplifications || [],
       scoreParts: result.scoreParts || [],
       perCard: result.perCard || [],
       perSeedScores: result.perSeedScores || [],
@@ -282,7 +286,14 @@
         "Turn-capped games are reported separately as incompleteGames and are still counted in the win-rate denominator."
       ].concat(result.unwatchedWinPaths
         ? [`This list carries ${result.unwatchedWinPaths} card${result.unwatchedWinPaths === 1 ? "" : "s"} that simply say "you win the game"${(result.unwatchedWinCards || []).length ? " (" + (result.unwatchedWinCards || []).join(", ") + ")" : ""}. The engine reads the card but not the condition attached to it, so whatever this deck really does to win is not in the score above — it is scored as the creatures and spells around that card.`]
-        : []),
+        : []).concat((() => {
+        /* The simplifications that touch this list, in one sentence, so the exported report says which of the
+           model's readings this hundred leans on. The ones that touch nothing here are not repeated. */
+        const touched = (result.simplifications || []).filter((row) => row && row.count > 0);
+        if (!touched.length) return [];
+        const name = (row) => row.scope + " (" + row.cards.slice(0, 3).join(", ") + (row.count > 3 ? " and " + (row.count - 3) + " more" : "") + ")";
+        return [`${touched.length} of the model's ${(result.simplifications || []).length} simplifications touch cards in this list: ${touched.map(name).join("; ")}. The rest are the model's shape and hold for every game.`];
+      })()),
       coverage: cover,
       origin: "measured"
     };

@@ -12,6 +12,7 @@ import {readFile} from "node:fs/promises";
 
 const require = createRequire(import.meta.url);
 const Measure = require("../deck-measure.js");
+const Engine = require("../sim-engine.js");
 
 const load = async (p) => JSON.parse(await readFile(new URL(p, import.meta.url), "utf8"));
 const master = await load("../data/archive/master-v2.json");
@@ -139,6 +140,16 @@ check("the win rate carries its own between-seed error, and the figures the pack
   assert.ok(r.endTurnCounts.length > 3 && r.endTurnCounts.reduce((n, x) => n + x.games, 0) === r.games && r.endTurnCounts.every((x, i, a) => i === 0 || a[i - 1].turn < x.turn), "the end-turn histogram sums to the games, in turn order");
   const one = Measure.measure(cards, {config, seats, preview: true});
   assert.equal(one.winRateSe, 0, "a one-seed run has no between-seed error, and says zero rather than inventing one");
+});
+
+check("the result labels each of the model's simplifications with the cards in the hundred it touches", () => {
+  const cards = Measure.hydrate(tunedHundred("D6", "Krenko, Mob Boss"), facts);
+  const r = Measure.measure(cards, {config, seats, preview: true});
+  assert.equal(r.simplifications.length, Engine.SIMPLIFICATIONS.length, "one row per simplification");
+  const tokens = r.simplifications.find((row) => row.scope === "token makers");
+  assert.ok(tokens.cards.includes("Krenko, Mob Boss"), `Krenko's list touches the token rule through its commander (${tokens.cards.slice(0, 4).join(", ")})`);
+  assert.ok(r.simplifications.every((row) => typeof row.says === "string" && row.says.length > 20 && Array.isArray(row.cards)));
+  assert.deepEqual(r.simplifications, Engine.simplificationsFor(cards), "and it is read off the list, not off the games");
 });
 
 console.log(`deck-measure: ${checks} checks passed · ` +

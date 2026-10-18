@@ -290,6 +290,9 @@
         runs.forEach((run) => (run.endTurnCounts || []).forEach((row) => { if (row && row.games > 0) total.set(row.turn, (total.get(row.turn) || 0) + row.games); }));
         return [...total.entries()].sort((a, b) => a[0] - b[0]).map(([turn, games]) => ({turn, games}));
       })(),
+      /* WHICH OF THE MODEL'S SIMPLIFICATIONS TOUCH THIS LIST, card by card (ROB-116 step 1: each one kept and
+         labeled on the report). A property of the hundred, not of how a game went, so read once off the list. */
+      simplifications: Engine.simplificationsFor(cards),
       /* WHAT KILLED YOU, which is the only figure in the engine that answers "why did I
          lose" rather than "how often". Counted on every run since the engine was written
          and dropped at this line ever since -- so a reader could see 11% and not that

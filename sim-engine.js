@@ -30,6 +30,49 @@
     "The fun/participation score is one reasonable operationalization of a subjective idea — a developed board and a game that didn't end suspiciously early either way — not a settled definition of \"fun.\""
   ];
 
+  /* WHICH SIMPLIFICATION TOUCHES WHICH CARD. The audit (docs/engine/sim-model-audit.md §4, ROB-84) sorted the
+     sixteen into the model's shape (no stack, no blocks, curves for opponents: kept, and true of every game) and
+     readings a card definition could replace (counter movement, tutors, tokens, fetch lands, reminder-text keywords:
+     kept for now, and labeled). ROB-116 asks that each be removed or kept and labeled on the report; this is the
+     label, per hundred: for each simplification, the cards in this list it touches, so "tutors draw the best of
+     three" reaches the reader beside "Demonic Tutor, Vampiric Tutor" and not as a sentence about decks in general.
+     The order is the order of SIMPLIFICATIONS, one row each; simplificationsFor pairs them by index. */
+  const SIMPLIFICATION_SCOPE = [
+    {kind: "shape", scope: "counterspells", touches: (p, text) => /counter target/.test(text)},
+    {kind: "shape", scope: "every creature's combat", touches: (p) => p.isCreature},
+    {kind: "reading", removable: true, scope: "counters moved between permanents", touches: (p, text) => /put those counters on|move (?:all |any number of |a |one |an? )?(?:\+1\/\+1 )?counters?/.test(text)},
+    {kind: "shape", scope: "proliferate", touches: (p) => p.isProliferate},
+    {kind: "shape", scope: "repeatable counter sources", touches: (p) => Boolean(p.addsCounterRepeatable || p.proliferateRepeatable)},
+    {kind: "shape", scope: "the table", touches: () => false},
+    {kind: "reading", removable: true, scope: "tutors", touches: (p) => p.isTutor},
+    {kind: "reading", removable: true, scope: "token makers", touches: (p) => p.boardWidth > 0},
+    {kind: "flagged", scope: "alternate wins and storm", touches: (p) => Boolean(p.altWin || p.isStorm)},
+    {kind: "shape", scope: "every mana payment", touches: () => false},
+    {kind: "reading", removable: true, scope: "fetch lands", touches: (p, text) => p.isLand && /search your library for a basic land card/.test(text)},
+    {kind: "reading", removable: true, scope: "reminder-text keywords", touches: (p, text) => /landcycling|investigate/.test(text)},
+    {kind: "shape", scope: "defenders", touches: (p) => p.isDefender},
+    {kind: "shape", scope: "a noncreature commander", touches: (p) => p.isCommander && !p.isCreature},
+    {kind: "shape", scope: "the three opponents", touches: () => false},
+    {kind: "shape", scope: "the fun score", touches: () => false}
+  ];
+
+  // The sixteen, each with the cards in this list it touches. A property of the hundred, not of a game.
+  function simplificationsFor(cards) {
+    const read = (Array.isArray(cards) ? cards : []).filter((card) => card && card.name).map((card) => ({
+      profile: classifyCard(card),
+      text: stripReminder(String(card.oracleText || "").toLowerCase().replace(/[’]/g, "'"))
+    }));
+    return SIMPLIFICATIONS.map((says, index) => {
+      const rule = SIMPLIFICATION_SCOPE[index];
+      const names = [];
+      read.forEach(({profile, text}) => {
+        if (rule.touches(profile, text) && !names.includes(profile.name)) names.push(profile.name);
+      });
+      names.sort();
+      return {n: index + 1, says, kind: rule.kind, removable: Boolean(rule.removable), scope: rule.scope, count: names.length, cards: names};
+    });
+  }
+
   const DEFAULT_TARGETS = {
     screwPct: 0.1,
     floodPct: 0.08,
@@ -2001,6 +2044,7 @@
 
   return {
     SIMPLIFICATIONS,
+    simplificationsFor,
     DEFAULT_TARGETS,
     DEFAULT_WEIGHTS,
     createRng,

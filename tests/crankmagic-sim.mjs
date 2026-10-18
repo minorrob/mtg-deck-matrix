@@ -204,6 +204,20 @@ check("a measured report is marked measured, so it cannot be read as an import",
   assert.equal(pack().origin, "measured");
 });
 
+check("the simplifications travel in the pack, each with its cards, and the ones that touch the list reach the limits", () => {
+  const rows = [
+    {n: 1, says: "No stack.", kind: "shape", removable: false, scope: "counterspells", count: 0, cards: []},
+    {n: 7, says: "Tutors draw the best of three.", kind: "reading", removable: true, scope: "tutors", count: 4, cards: ["Demonic Tutor", "Enlightened Tutor", "Mystical Tutor", "Vampiric Tutor"]},
+    {n: 15, says: "Opponents are curves.", kind: "shape", removable: false, scope: "the three opponents", count: 0, cards: []}
+  ];
+  const report = Sim.packFor({...fakeResult, simplifications: rows}, {protocol: "published", coverage: {}});
+  assert.deepEqual(report.simplifications, rows, "the rows travel as the engine labeled them");
+  assert.equal(report.limits.length, 5, "one sentence added for the rows that touch cards");
+  assert.match(report.limits[4], /^1 of the model's 3 simplifications touch cards in this list: tutors \(Demonic Tutor, Enlightened Tutor, Mystical Tutor and 1 more\)\./, "it counts the touched rows and names the first three cards of each");
+  assert.deepEqual(Sim.packFor(fakeResult, {protocol: "published", coverage: {}}).simplifications, [], "a result without rows carries an empty list");
+  assert.equal(Sim.packFor({...fakeResult, simplifications: rows.filter((row) => row.count === 0)}, {protocol: "published", coverage: {}}).limits.length, 4, "rows that touch nothing add no sentence");
+});
+
 check("a win the engine cannot watch reaches the reader, in the metrics and in the limits", () => {
   /* v2.7 started counting cards that say "you win the game" and showed the count to
      nobody. A deck built on Thassa's Oracle is not a weak deck; it is a deck this
