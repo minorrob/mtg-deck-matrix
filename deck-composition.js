@@ -80,7 +80,8 @@
      this file touches a raw record. */
   function normalize(card) {
     if (!card) return null;
-    const faces = Array.isArray(card.faces) ? card.faces : Array.isArray(card.card_faces) ? card.card_faces : null;
+    /* A record with an empty faces list (the catalog normalizes every card with faces: []) has no faces to read. */
+    const faces = Array.isArray(card.faces) && card.faces.length ? card.faces : Array.isArray(card.card_faces) && card.card_faces.length ? card.card_faces : null;
     const pick = (...keys) => { for (const k of keys) if (card[k] !== undefined && card[k] !== null && card[k] !== "") return card[k]; return undefined; };
     let text = pick("oracleText", "oracle_text", "text");
     if (text === undefined && faces) text = faces.map((f) => f.oracleText || f.oracle_text || f.text || "").join("\n");
