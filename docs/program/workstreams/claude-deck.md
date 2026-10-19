@@ -22,6 +22,7 @@ The models and data under the workshop's screens, and the program's record:
 ## 2. Read first, in this order
 
 1. `AGENTS.md`. 2. `docs/ACTIVE.md`, the top and the lanes table. 3. `docs/program/README.md`. 4. This file.
+   Then the latest handoff of this lane, `docs/handoff-deck-intelligence-2026-10-18.md`: its §8 is the next session's start.
 5. `docs/readout/README.md`. 6. `docs/INDEX-where-things-live.md` (the catalogs the product already owns).
 7. For the simulator: the header comments of `sim-engine.js`, `deck-measure.js`, `crankmagic-sim.js`;
    `docs/simulation-fidelity.md`; `docs/commander-simulator-plan-2026-09-15.md`; `.claude/skills/simulate-deck/`.
