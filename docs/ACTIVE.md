@@ -170,7 +170,8 @@ other lane answers in the last column.
     corrected it at 16:39 that day and ROB-86 records Rob's approval of 0006 as `card_demand`: **0006 ROB-86, 0007
     ROB-127, 0008 ROB-88, next free 0009.** The lanes table and the section below now say so.
   - **#776 (ROB-86)** was green on its head d2502ac8 (Actions run 39177742030) but conflicted with `main` in this file
-    after #781 and #783. This branch merges it with `main`; its PR supersedes #776 and carries its commits unchanged.
+    after #781 and #783. #784 merged it with `main` and carried its commits unchanged: **step 1 is main 78dc2a47**
+    (Oct 19, merge commit, green `suites` run 39213237634 of the exact head; GitHub shows #776 merged with it).
   - **Staging** serves main 62900176: `node tools/staging-check.mjs --expect 62900176` passed on Oct 19 with the
     staging Access service token. ROB-157 is narrower than filed: the Cloudflare API refuses this container ("Missing
     Authorization header"), so no D1 write and no check of deployed bytes, but the Access read-back works.
@@ -181,8 +182,15 @@ other lane answers in the last column.
     not applied; ROB-158 waits on ROB-157.
   - **Other lanes' close-out PRs still open:** #780 (ready) and #782 (draft, the UI lane's handoff). Both edit this file;
     they are their lanes' to merge.
-- **The engine queue, in order:** land step 1; step 2 (ROB-87, the sentence library and calibration) as this lane's
-  next PR; ROB-144 (the release verifier for the Babylon renderer, which holds Play's #767); Requests row 1 (`playPod`,
+- **Step 2 (ROB-87), PR #785:** `game/engine/cards/sentences.mjs` (the library: 5,650 templates
+  from 2,407 cards) and `game/tools/sentence-library.mjs` (the calibration). Each card held out: 520 of 2,470 translated
+  from the others' templates alone, 519 passed their own scenarios (99.8%, lower bound 98.9%); minimum count 1. Report
+  `docs/engine/sentence-calibration-2026-10-19.md`; plan `docs/engine/plan-card-load-program.md`, "Step 2, measured".
+  Proof: `tests/sentence-library.mjs` (63), `breaks-sentence-library.py` (21 of 21).
+- **Staging is not released from this session.** Main 78dc2a47 waits for the next staging release, which needs ROB-157
+  for its deployed-bytes check (and wrangler and a browser in the container that runs it).
+- **The engine queue, in order:** merge #785 (step 2); the staging release of main once ROB-157 is fixed, with
+  migration 0006 on staging D1 (ROB-158); step 3 (ROB-88) in a fresh session; ROB-144 (the release verifier for the Babylon renderer, which holds Play's #767); Requests row 1 (`playPod`,
   for ROB-116); the ROB-134 routes; ROB-94's remaining steps; ROB-74, ROB-78, ROB-149.
 
 ## 2026-10-18: main 5f6ea9cc on staging and in production (Rob: "release it to staging", then "release it to production")
