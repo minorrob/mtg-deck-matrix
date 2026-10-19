@@ -231,6 +231,29 @@ other lane answers in the last column.
   {cardId, note}` takes "report a wrong card" and hands the reports over in the game's record (`cardReports`). The board's
   label and link are Play's: Requests, Engine → Play 4. Proof: `tests/table-candidates.mjs` (41),
   `breaks-table-candidates.py` (24 of 24).
+- **ROB-164, the AI seats take what an "up to" or a search is for** (`claude/engine-pilot-picks`; a Personal-HP session
+  started by the Play readiness evaluation, Oct 19, inside the engine lane's files). Every AI seat (L0, L1 at Easy and
+  Normal, the LLM seat's L1) answered a choice whose least answer is none with none: Evolving Wilds found no land,
+  Cultivate nothing, proliferate nothing. The house pilot now has a rule for each (`picks`,
+  `game/engine/pilots/house-pilot.mjs`):
+  - a library search takes as many as it may. A land search takes the lands of the colors its hand and commanders need
+    and it lacks (a nonbasic by the mana it makes); any other search takes the costliest card it could cast by its next
+    turn, or a land when it has none to play. Diabolic Tutor and Gamble no longer take the first card offered.
+  - a "may" from its hand or graveyard is answered the same way (Chulane's land); Brainstorm's put-back is answered as
+    before.
+  - proliferate takes its own counters that help it and another's that hurt them, never an opponent's +1/+1 or loyalty.
+  - any other "any number" takes the permanents and players on its side (Peregrine Drake untaps its own lands).
+  - **Replays.** This changes no rules. The room tapes no AI answer, so the change rides on a pod key, `pilotPicks`. The
+    table asks for it on new matches, and the room keeps it with the match and hands it to every AI seat's pilot. A match
+    launched before replays as it was played. The room's facts now carry a card's `colors` and the mana it `makes`.
+  - **Measured** with `tools/fuzz-live.mjs`, which gained `--lands <n>`, `--no-picks` and the shared decks file (80
+    seeded all-AI games at Normal, the six staging decks in two sets of four, seeds 1-10, every game clean). Lands in
+    play after a seat's sixth turn went from 4.81 to 5.08: D1-D4 4.79 to 5.28, D3-D6 4.83 to 4.88. The gain is in the
+    ramp decks (Kiora +0.5 and +0.4, Chulane +0.5).
+  - **Proof:** `tests/engine-pilot-picks.mjs` (116) and `breaks-pilot-picks.py` (58 of 58). The touched suites pass:
+    `engine-room-games` (58), `room-seat-pilots` (15), `game-table` (172), `engine-house-pilot` (19) and the anchors.
+  - **Not done:** a tutor doesn't choose by the commander's plan, and surveil, scry and explore still keep everything on
+    top. Not on staging yet: the next engine-lane release carries it to tables launched after it.
 - **The engine queue, in order:** release step 5's first part to staging once merged; then the rest of the loader
   capability, at Rob's word that this body of work finishes now: step 5's save-time compile (migration 0008), step 6's
   wave tooling (review and promote candidates, demand first), step 4 built behind its switch (it runs only with Rob's cap,
