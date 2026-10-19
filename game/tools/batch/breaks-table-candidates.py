@@ -8,7 +8,7 @@ Run from the repository root, with nothing else editing the worktree:
 SUITES = ['tests/table-candidates.mjs']
 BREAKS = [
     ("a candidate left out of the module", 'game/tools/engine-candidates.mjs',
-     '    if (!record) continue;\n', '    if (!record || c.name === file.cards[0].name) continue;\n'),
+     '  for (const c of file.cards) if (byName.has(c.name)) add(', '  for (const c of file.cards) if (byName.has(c.name) && c.name !== file.cards[0].name) add('),
     ("one definition shared by every table", 'game/engine/cards/candidates.mjs',
      '  return hit ? JSON.parse(hit) : null;', '  return hit ? ((globalThis.SHARED ??= new Map()).get(hit) ?? globalThis.SHARED.set(hit, JSON.parse(hit)).get(hit)) : null;'),
     ("a pod's key ignored", 'game/room/room.mjs',
