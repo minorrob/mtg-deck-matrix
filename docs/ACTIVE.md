@@ -108,7 +108,7 @@ Volcano uses Rob's supplied video; other environments and the table artwork stil
 
 | Lane | Held by | Branch | Doing |
 | --- | --- | --- | --- |
-| **Claude · Engine** (engine, rooms, Worker routing, migrations, card loads, releases) | A Claude cloud session, since October 19 (Fable held it October 16 to 18; a fresh session built card load step 1 in #776) | `claude/exciting-sagan-qe5yuf` (the session's assigned branch), then `claude/engine-<topic>` | Engine, simulation, card loads. Linear: ROB-71 and its children (ROB-12, ROB-13, ROB-73 to ROB-95, ROB-149). On staging (main 62900176, read back by `tools/staging-check.mjs` on Oct 19): ROB-12 (#739), ROB-81 (#742), ROB-13 (#745), ROB-73 (#746), ROB-77 (#747), ROB-76 (#748), ROB-75 and the room's socket frames (#778). Card load steps 1 and 2 are on `main`: ROB-86 as 78dc2a47 (#784, carrying #776), ROB-87 as 40d14519 (#785). Step 3 (ROB-88) next, in a fresh session. Migrations: 0006 ROB-86 (`card_demand`), 0007 ROB-127, 0008 ROB-88, next free 0009. Blocked on Rob: ROB-157 (the Cloudflare API credential, so no D1 write and no deployed-bytes check). See "2026-10-19: the engine lane" below. Brief: `docs/program/workstreams/claude-engine.md`. |
+| **Claude · Engine** (engine, rooms, Worker routing, migrations, card loads, releases) | A Claude cloud session, since October 19 (Fable held it October 16 to 18; a fresh session built card load step 1 in #776) | `claude/exciting-sagan-qe5yuf` (the session's assigned branch), then `claude/engine-<topic>` | Engine, simulation, card loads. Linear: ROB-71 and its children (ROB-12, ROB-13, ROB-73 to ROB-95, ROB-149). On staging (main 78dc2a47, `release/cloud-staging` 704a7ca7, version db1962ce byte-identical): ROB-12 (#739), ROB-81 (#742), ROB-13 (#745), ROB-73 (#746), ROB-77 (#747), ROB-76 (#748), ROB-75 and the room's socket frames (#778), and card load step 1 (#784). Card load steps 1 and 2 are on `main`: ROB-86 as 78dc2a47 (#784, carrying #776), ROB-87 as 40d14519 (#785). Step 3 (ROB-88) next, in a fresh session. Migrations: 0006 ROB-86 (`card_demand`), 0007 ROB-127, 0008 ROB-88, next free 0009. Staging serves main 78dc2a47 (704a7ca7, bytes verified); migration 0006 is on staging D1. See "2026-10-19: the engine lane" below. Brief: `docs/program/workstreams/claude-engine.md`. |
 | **Claude · Deck intelligence** (the models and data under the screens; the program readout) | The second Claude session (a cloud container), since October 18 | `claude/deck-<topic>`; ten PRs merged October 18: `deck-composition` (#749), `deck-synergies` (#750), `deck-resolve` (#752), `deck-legality` (#753), `deck-buyplan` (#758), `deck-compliance` (#759), `deck-criteria` (#757), `deck-swaps` (#760), `deck-reasonableness` (#761), `deck-sim-audit` (#762), `deck-sim-variance` (#764); the program itself merged (#740) | Done: ROB-138, 114, 115, 131, 104, 119, 111, 109, 117, 112, 84. In progress: ROB-116 (steps 1 and 3 on main; step 2 waits on the engine lane's `playPod`, Requests row 1). Waiting on Rob: the popularity dial (ROB-109), ROB-95 before ROB-128/130/129/132, the Settings card for ROB-123, his call on ROB-121. Keeps `docs/readout/` (feed `feeds/claude-deck.json` at every merge). Session closed 2026-10-18 evening; handoff `docs/handoff-deck-intelligence-2026-10-18.md`. |
 | **Codex · Play** (the Play boards and the player's interaction) | Codex Astra, session 1, from October 18 (handed back: `docs/HANDOFF-TO-CODEX-2026-10-18.md`) | `codex/play-<topic>`; the broad draft `codex/ui-playtest-plan-oct15` (PR #735) stays a quarry | Settings' Play card to its own file, then ROB-99 slice 1, ROB-98, ROB-97, ROB-18, ROB-52 with ROB-100's renderer step. Brief: `docs/program/workstreams/codex-play.md`. |
 | **Codex · Workshop** (every screen outside the boards; `cloud/library`, `sharing`, `access-invites`, `mail`) | Codex Astra, session 2, from October 18. **Later on October 18, Rob handed Codex's UX/UI work to a Claude cloud session** ("You are picking up the work of GPT on the UX/UI and Play") | `codex/workshop-<topic>`; Claude: `claude/wizardly-einstein-9ibb4j` | ROB-36, ROB-37 to finish; ROB-122, ROB-125, ROB-106, ROB-105. Brief: `docs/program/workstreams/codex-workshop.md`. **Claude, October 18, closed out (handoff: `docs/HANDOFF-WORKSHOP-2026-10-18.md`):** PR #777 merged to `main` as `71155f15` (merge commit, green Actions `suites` on `13174970`), not released (the engine lane releases staging; notes on ROB-11). It carries the card status model Rob approved with Upgrade (`docs/card-states.md`; Linear ROB-150, Done; ROB-107 In Progress for the per-row sentence, bulk moves and the usability pass) and budgets (`docs/budgets.md`; ROB-151, Done; Rob kept all three defaults). Proof: `tests/card-states.mjs` (140), `tests/card-status-flows.mjs` (40), `tests/budgets.mjs` (29), `tests/uat/crankmagic-journeys.mjs` (505), breaks 8 of 8 and 6 of 6. Open: ROB-152, Rob's dashboard switch for the Workers Builds checks that fail on every PR. The Workshop lane is free for the next session Rob names; its queue is ROB-36, ROB-37, then ROB-122 and ROB-125. |
@@ -118,19 +118,35 @@ The program's charter (the north star in Linear, the file ownership table, the s
 protocol) is `docs/program/README.md` (October 18, 2026). Rob's queue and each lane's remaining hours are on
 `docs/readout/index.html`.
 
-### Claude · Engine, card load step 1: demand capture (claimed 2026-10-18; Linear ROB-86)
+### Claude · Engine, card load step 1: demand capture (Linear ROB-86): merged, on staging, session closed 2026-10-19
 
-- **Held by:** a fresh Claude session in a cloud container (Rob's decision 4: one step, one session, one PR), on
-  `claude/practical-shannon-ga8i5j`, beside the engine session on `claude/admiring-franklin-58cxy4` (#748, ROB-76).
-- **Its files only:** `cloud/migrations/0006_card_demand.sql` (the number reserved for it in ROB-11),
-  `cloud/card-demand.mjs` (new), `cloud/tables.mjs`, `game/tools/card-demand.mjs` (new), the wave list's
-  `docs/handoff-2026-10-12/topneeds.mjs`, its suite and breaks. No `game/engine/**`, no UI file.
-- **Staging:** announced in ROB-11 before the release, never beside another.
-- **Built (PR #776, commit 7e84420):** migration 0006 (`card_demand`, `card_demand_lists`); `cloud/card-demand.mjs`;
-  `cloud/tables.mjs` counts at `known` (also `{decks}`) and at a seat's deck refused; `listed` in the answer;
-  `game/tools/card-demand.mjs` ranks it, and `topneeds.mjs` puts it first. Proof: card-demand 43; breaks-card-demand
-  17 of 17; game-table 170, table-lobby 122, cloud-worker 126, release-pages 223. The deck page's line is the Play
-  lane's (Requests row 3).
+The session that built step 1 on `claude/practical-shannon-ga8i5j` has stopped. The engine lane is the Oct 19 session's
+(above). The handoff, in AGENTS.md's four parts:
+- **Branch and commits.** #776 (head d2502ac8, Actions `suites` green, run 39177742030) reached main through #784, as
+  main 78dc2a47. Staging serves it: `release/cloud-staging` 5634b896 → 704a7ca7, released by this session on Rob's go.
+  The rollback target is main 62900176 (version b6f37e78).
+- **Proven:**
+  - migration 0006 (`card_demand`, `card_demand_lists`, sha256 `a4bba8a0e313adde…`);
+  - the counting at `known` (also `{decks}`) and at a seat's deck refused, with `listed` in the answer;
+  - names and counts only, and the answer unchanged without the table;
+  - the wave ranking (`game/tools/card-demand.mjs`, `topneeds.mjs`'s fourth argument).
+- **Commands that prove it:**
+  - `node tests/card-demand.mjs` (43 checks);
+  - `python3 game/tools/batch/breaks.py game/tools/batch/breaks-card-demand.py` (17 of 17);
+  - staging: `release-acceptance` 22, `play-e2e` 42 before the push, and `tools/staging-check.mjs --expect 78dc2a47`
+    passed.
+- **Proven since, by the Oct 19 engine session once ROB-157 was fixed:** the deployed version is db1962ce, and its
+  `play-worker.js` is byte-identical to `wrangler deploy --dry-run` of `release/cloud-staging` 704a7ca7 (4,160,870 bytes,
+  sha256 `32d2dd6f663c5081…`); its 27 bindings are unchanged from b6f37e78. Migration 0006 is on staging D1 (17:20:10
+  UTC; bookmark before the write `000000d6-00000000-00005109-32543247fde961f32cebcc7da1aeee01`; ROB-158 Done).
+- **Not proven, and why:**
+  - **`known` on staging:** Access sends the service token's POST to its sign-in page; the token reads only
+    staging-check's GETs.
+- **Outstanding:**
+  - **ROB-159 (Codex · Play):** the deck page's "on the list for the next wave" line from `listed`, and the hub asking
+    `{decks}` (Requests row 3).
+  - **Production:** D1 has 0001–0002. 0006 there, and turning step 1 on, are a production release on Rob's go.
+- **Next for the engine lane:** card load step 3 (ROB-88); step 2 is main 40d14519 (#785).
 
 ### Requests between the lanes
 
@@ -178,8 +194,8 @@ other lane answers in the last column.
   - **Unreleased on `main`:** #775, #777 (card status, budgets), #779, #781, #783, and #741, #743, #751, which Rob merged
     on Oct 19 between 01:52 and 03:41 UTC (Play lane files changed at his request by the Personal-HP session; ROB-156,
     ROB-161, ROB-162, each noted). The next staging release carries them with step 1.
-  - **Migration 0006 on staging D1:** approved by Rob for the file whose sha256 begins `a4bba8a0e313adde` (ROB-86),
-    not applied; ROB-158 waits on ROB-157.
+  - **Migration 0006 on staging D1:** approved by Rob for the file whose sha256 begins `a4bba8a0e313adde` (ROB-86);
+    applied later the same day (below).
   - **Other lanes' close-out PRs still open:** #780 (ready) and #782 (draft, the UI lane's handoff). Both edit this file;
     they are their lanes' to merge.
 - **Step 2 (ROB-87), merged as main 40d14519 (#785), Done; nothing served, so no staging release:** `game/engine/cards/sentences.mjs` (the library: 5,650 templates
@@ -187,14 +203,19 @@ other lane answers in the last column.
   from the others' templates alone, 519 passed their own scenarios (99.8%, lower bound 98.9%); minimum count 1. Report
   `docs/engine/sentence-calibration-2026-10-19.md`; plan `docs/engine/plan-card-load-program.md`, "Step 2, measured".
   Proof: `tests/sentence-library.mjs` (63), `breaks-sentence-library.py` (21 of 21).
-- **Staging is not released from this session.** Main 78dc2a47 waits for the next staging release, which needs ROB-157
-  for its deployed-bytes check (and wrangler and a browser in the container that runs it).
+- **Staging and D1, later on Oct 19.** The step 1 session released main 78dc2a47 to staging at 07:57 UTC on Rob's go
+  (`release/cloud-staging` 704a7ca7). Rob fixed ROB-157 at about 17:05 UTC: the environment's `*.cloudflare.com` secret
+  had the header name `ACCESS_INVITE_TOKEN`, so Cloudflare never got an `Authorization` header. This session then proved
+  the deployed bytes (version db1962ce byte-identical to the dry run of 704a7ca7; 27 bindings unchanged) and applied
+  migration 0006 to staging D1 (ROB-158; bookmark before the write
+  `000000d6-00000000-00005109-32543247fde961f32cebcc7da1aeee01`). From a cloud session, `curl` and wrangler reach the
+  API through the proxy, which adds the credential; Node's own `fetch` needs `NODE_USE_ENV_PROXY=1` and
+  `NODE_EXTRA_CA_CERTS=/root/.ccr/ca-bundle.crt`.
 - **The next session starts here.** This one stopped after #785, per the card load plan's "Running a lane". Step 3
   (ROB-88: the compiler, the scored index, `card_candidates` as migration 0008) starts from its kickoff prompt in
   `docs/engine/plan-card-load-program.md`, on `createLibrary`/`translate` (game/engine/cards/sentences.mjs) and the
   minimum count (game/tools/sentence-library.mjs).
-- **The engine queue, in order:** the staging release of main once ROB-157 is fixed, with migration 0006 on staging D1
-  (ROB-158); step 3 (ROB-88) in a fresh session; ROB-144 (the release verifier for the Babylon renderer, which holds Play's #767); Requests row 1 (`playPod`,
+- **The engine queue, in order:** step 3 (ROB-88) in a fresh session; ROB-144 (the release verifier for the Babylon renderer, which holds Play's #767); Requests row 1 (`playPod`,
   for ROB-116); the ROB-134 routes; ROB-94's remaining steps; ROB-74, ROB-78, ROB-149.
 
 ## 2026-10-18: main 5f6ea9cc on staging and in production (Rob: "release it to staging", then "release it to production")
