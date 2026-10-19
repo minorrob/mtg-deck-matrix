@@ -78,6 +78,28 @@ try {
   }
   await accountRoutes(page);
   page.on("pageerror",e=>errors.push(e.message));
+  /* Rob's art mats, one to a seat: the canvas paints each seat's own art on that seat's mat, the viewed seat's in front.
+     Pixi labels a loaded texture with its address, so each mesh the next paint makes says which art it carries. */
+  const paintedMats=async(act)=>{
+    await page.evaluate(()=>{
+      const Mesh=PIXI.PerspectiveMesh;
+      if(!Mesh.recorded) PIXI.PerspectiveMesh=class extends Mesh{static recorded=true;constructor(o){super(o);
+        const art=/playmats\/([a-z0-9-]+)\.webp/.exec(o.texture?.label||'')?.[1];
+        if(!art) globalThis.__paints.push([]); else globalThis.__paints.at(-1)?.push({art,quad:[o.x0,o.y0,o.x1,o.y1,o.x2,o.y2,o.x3,o.y3]});}};
+      globalThis.__paints=[];
+    });
+    await act();
+    await page.waitForFunction(()=>__paints.at(-1)?.length===1+document.querySelectorAll('.cm-stage-rear').length,null,{timeout:5000}).catch(()=>{});
+    return page.evaluate(()=>{
+      const host=document.querySelector('.cm-stage-region'), box=host.getBoundingClientRect(), x0=box.x+host.clientLeft, y0=box.y+host.clientTop;
+      const mats=[document.querySelector('.cm-stage-front'),...document.querySelectorAll('.cm-stage-rear')], painted=__paints.at(-1)||[];
+      return {seats:mats.map(el=>el.querySelector('.cm-mat[data-mat]').dataset.mat), painted:painted.map(m=>m.art),
+        placed:painted.every((m,i)=>{
+          const r=mats[i].getBoundingClientRect(), xs=m.quad.filter((_,j)=>j%2===0), ys=m.quad.filter((_,j)=>j%2===1);
+          return Math.abs(x0+Math.min(...xs)-r.left)<2 && Math.abs(x0+Math.max(...xs)-r.right)<2 && Math.abs(y0+Math.min(...ys)-r.top)<2 && Math.abs(y0+Math.max(...ys)-r.bottom)<2;
+        })};
+    });
+  };
   await page.goto(`${address}/index.html#table?id=tablepreview01`);
   await page.locator('.cm-stage-region[data-renderer="webgl"]').waitFor();
   assert.equal(await page.locator('[data-action="board-3d"], [data-action="board-stage"]').count(),0,'Full screen has no 3D switch');
@@ -91,8 +113,36 @@ try {
   assert.equal(await page.locator('.cm-stage-rear').count(),3,"all other seats sit across the back");
   await page.evaluate(()=>{globalThis.__canvas = document.querySelector('.cm-stage-canvas');});
   const before = await page.locator('.cm-stage-region').boundingBox();
-  await page.getByRole('button',{name:'Toggle table panel',exact:true}).click();
+  const own=await paintedMats(()=>page.getByRole('button',{name:'Toggle table panel',exact:true}).click());
   assert.deepEqual(await page.locator('.cm-stage-region').boundingBox(),before,"the panel overlays rather than resizing the board");
+  assert.deepEqual(own.seats.toSorted(),['cloud-wolf','ember-serpent','falls-tree','sand-lion'],"the preview seats four of Rob's art mats");
+  assert.deepEqual(own.painted,own.seats,"each seat's own art is painted on the canvas, the viewed seat's in front");
+  assert.ok(own.placed,"and each seat's art lies on that seat's mat");
+  /* A drawn mat (felt, forge, cavern, sea, night) has no art for the canvas: in Full screen it keeps the pattern it has in
+     every other view (Rob, 2026-10-17). Two more tables seat all five, the second beside art mats. */
+  const drawnMats=['felt','forge','cavern','sea','night'];
+  for(const mats of ['felt,forge,cavern,sea','night,falls-tree,sand-lion,cloud-wolf']) {
+    const drawn=spawn(process.execPath,["tools/play-tabletop-preview.mjs"],{env:{...process.env,PREVIEW_PORT:"0",PREVIEW_MATS:mats},stdio:["ignore","pipe","pipe"]});
+    try {
+      const at=await Promise.race([
+        new Promise((resolve,reject)=>{drawn.stdout.on("data",d=>{const m=String(d).match(/http:\/\/localhost:(\d+)/);if(m)resolve(`http://127.0.0.1:${m[1]}`);});drawn.once("error",reject);}),
+        new Promise((_,reject)=>{const t=setTimeout(()=>reject(new Error("preview startup timed out")),10000);t.unref();})
+      ]);
+      const look=await browser.newPage({viewport:{width:1400,height:900}});look.on("pageerror",e=>errors.push(e.message));
+      await look.goto(`${at}/index.html#table?id=tablepreview01`);await look.locator('.cm-stage-region[data-renderer="webgl"]').waitFor();
+      // The pattern each mat has outside the tabletop: the same mat, drawn again beside the stage in the same board.
+      const shown=await look.evaluate(()=>[document.querySelector('.cm-stage-front'),...document.querySelectorAll('.cm-stage-rear')].map(el=>{
+        const m=el.querySelector('.cm-mat[data-mat]'), probe=document.createElement('section');
+        probe.className=m.className;probe.dataset.mat=m.dataset.mat;document.getElementById('cm-board').append(probe);
+        const own=getComputedStyle(probe).backgroundImage;probe.remove();
+        return {mat:m.dataset.mat,image:getComputedStyle(m).backgroundImage,own};
+      }));
+      const drawnSeats=shown.filter(s=>drawnMats.includes(s.mat));
+      assert.equal(drawnSeats.length,mats.split(',').filter(id=>drawnMats.includes(id)).length,`every drawn mat of ${mats} is seated`);
+      for(const {mat,image,own:pattern} of drawnSeats) assert.ok(image!=='none' && image===pattern,`the drawn ${mat} mat shows its own pattern in Full screen, not a plain table (${image.slice(0,48)})`);
+      await look.close();
+    } finally {drawn.kill();}
+  }
   for(const width of [1400,1024]) {
     await page.setViewportSize({width,height:800});
     await page.locator(".cm-stage-side.is-open").waitFor();
@@ -201,8 +251,9 @@ try {
   await page.waitForFunction(()=>!document.querySelector('.cm-stage-rail .cm-stage-module'));
   await page.evaluate(()=>{globalThis.__canvas=document.querySelector('.cm-stage-canvas');});
   await page.getByRole('button',{name:'Close table panel',exact:true}).click();
-  await page.locator('.cm-stage-seat-label').first().click();
+  const turned=await paintedMats(()=>page.locator('.cm-stage-seat-label').first().click());
   assert.match(await page.locator('.cm-stage-fan').getAttribute('aria-label'),/Friend's hand, 7 cards/);
+  assert.ok(turned.seats[0]!==own.seats[0] && turned.painted.join()===turned.seats.join() && turned.placed,"viewing another seat brings its art to the front, and every seat keeps its own");
   assert.equal(await page.locator('.cm-stage-hand .is-back').count(),7);
   assert.equal(await page.locator('.cm-stage-hand [data-card]').count(),0,"no opponent card identity is introduced by rotation");
   await page.getByRole('button',{name:'My board',exact:true}).click();
@@ -270,6 +321,16 @@ try {
   const baseCard=await cardSize();
   await page.getByRole('slider',{name:'Tabletop card size',exact:true}).fill('150');
   assert.ok(Math.abs(await cardSize()/baseCard-1.4)<.03,'150% Cards grows physical card width by about 40%');
+  // The Camera is a fact about this screen: letting go of each slider keeps it on this device, and a reload reads it back.
+  const keptCamera={'Table tilt':'27','Table zoom':'83','Tabletop card size':'121'};
+  for(const [name,value] of Object.entries(keptCamera)) await page.getByRole('slider',{name,exact:true}).fill(value);
+  await page.reload();await page.locator('.cm-stage-region[data-renderer="webgl"]').waitFor();
+  await page.getByRole('button',{name:'Camera',exact:false}).click();
+  for(const [name,value] of Object.entries(keptCamera)) assert.equal(await page.getByRole('slider',{name,exact:true}).inputValue(),value,`${name} is kept on this device through a reload`);
+  assert.ok(await page.evaluate(()=>{
+    const r=document.querySelector('.cm-stage-region').getBoundingClientRect(), g=CrankStage.geometry(r.width,r.height,{tilt:27,zoom:83,seats:3});
+    return Array.from(new DOMMatrix(getComputedStyle(document.querySelector('.cm-stage-front')).transform).toFloat64Array()).every((v,j)=>Math.abs(v-g.front.matrix[j])<.01);
+  }),'and the table is drawn again at the kept tilt and zoom');
   await page.getByRole('slider',{name:'Tabletop card size',exact:true}).fill('100');
   await page.getByRole('slider',{name:'Table tilt',exact:true}).fill('40');
   await page.getByRole('slider',{name:'Table zoom',exact:true}).fill('100');
