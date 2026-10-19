@@ -215,7 +215,14 @@ other lane answers in the last column.
   (ROB-88: the compiler, the scored index, `card_candidates` as migration 0008) starts from its kickoff prompt in
   `docs/engine/plan-card-load-program.md`, on `createLibrary`/`translate` (game/engine/cards/sentences.mjs) and the
   minimum count (game/tools/sentence-library.mjs).
-- **The engine queue, in order:** step 3 (ROB-88) in a fresh session; ROB-144 (the release verifier for the Babylon renderer, which holds Play's #767); Requests row 1 (`playPod`,
+- **Step 3 (ROB-88), on Rob's "keep adding cards to the engine":** `game/tools/card-compiler.mjs` runs the sentence
+  library on every undefined Commander card. **2,429 candidates** (`data/engine/candidates.json`): each translated whole
+  from calibrated templates, compiled, its oracle text, and its smoke game played. 12,320 more cards are one sentence
+  short; `docs/engine/card-compiler-2026-10-19.md` ranks the sentences that would complete them. Candidates are stored in
+  the repository, not D1 (0008 stays for step 5's save-time compiles); no table seats them until the next PR. Proof:
+  `tests/card-compiler.mjs` (29), `breaks-card-compiler.py` (10 of 10).
+- **The engine queue, in order:** seat the candidates at playtest tables, labeled (Rob's decision 2; step 5's half for
+  batch candidates); spell composition in the compiler (the report's "Draw a card." line); then ROB-144 (the release verifier for the Babylon renderer, which holds Play's #767); Requests row 1 (`playPod`,
   for ROB-116); the ROB-134 routes; ROB-94's remaining steps; ROB-74, ROB-78, ROB-149.
 
 ## 2026-10-18: main 5f6ea9cc on staging and in production (Rob: "release it to staging", then "release it to production")
