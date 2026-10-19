@@ -20,8 +20,16 @@
  * a card twice for the same oracle text (the ledger keys on the oracle id and the text's hash); send anything but
  * the card's public text and the engine's own vocabulary.
  *
+ * CARD LOAD STEP 4, THE BACKSTOP (docs/engine/plan-card-load-program.md; Linear ROB-90). A card the card compiler made a
+ * candidate (`data/engine/candidates.json`) costs nothing and is skipped. Any other card is handed to the writer with what
+ * the sentence library already wrote of it (card-compiler.mjs `assistOf`: its trusted sentences, written), so the writer
+ * writes only the sentences left; the card is then checked whole, as before. `--whole` asks for the whole card instead.
+ * `--held-out N` is the plan's sample: N defined cards, each held out of the library, finished by the writer and played
+ * through its own scenarios, for the pass rate and the cost per card. It spends too, so it also needs `--yes`.
+ *
  *   node game/tools/engine-compile.mjs --plan [--library | --decks | --cards "A,B"] [--sample 200]
- *   node game/tools/engine-compile.mjs --yes  [--library | --decks | --cards "A,B"] [--sample 200] [--max-cost 5]
+ *   node game/tools/engine-compile.mjs --yes  [--library | --decks | --cards "A,B"] [--sample 200] [--max-cost 5] [--whole]
+ *   node game/tools/engine-compile.mjs --yes --held-out 200 [--max-cost 5]
  */
 
 import {readFileSync, writeFileSync, mkdirSync, existsSync} from "node:fs";
@@ -31,7 +39,12 @@ import {
   COMPILED_SCHEMA, oracleHash, checkAnswer, checkReadBack, smokeTest, writerSystem, writerRequest, WRITER_SCHEMA, ADVENTURE_BY_HAND,
   READBACK_SYSTEM, READBACK_SCHEMA, readBackRequest,
 } from "../engine/cards/compile.mjs";
-import {loadCardScripts, loadCardIndex} from "./engine-cards.mjs";
+import {loadCardScripts, loadCardIndex, loadCardScenarios} from "./engine-cards.mjs";
+import {compileScript} from "../engine/cards/index.mjs";
+import {runScenario} from "../engine/cards/scenario.mjs";
+import {createLibrary, isSimple} from "../engine/cards/sentences.mjs";
+import {calibrate} from "./sentence-library.mjs";
+import {assistOf, trustOf, CANDIDATES_FILE} from "./card-compiler.mjs";
 import {readWindowsGenericCredential} from "./windows-credential.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -76,7 +89,9 @@ function examplesFrom(scripts) {
  * Learn a list of cards.
  *
  * @param {{names: string[], oracle: Map<string, object>, hand: Set<string>, cards: Function, ledger: object, call: Function,
- *   examples: object[], maxCost?: number, sample?: number, retries?: number, write?: Function, now?: Function}} job
+ *   examples: object[], maxCost?: number, sample?: number, retries?: number, write?: Function, now?: Function,
+ *   assist?: (card: object) => ?{known: object[], write: object[]}}} job  `assist`: what the sentence library already wrote of
+ *   a card (card load step 4; card-compiler.mjs `assistOf`), so the writer writes only the rest
  * @returns {Promise<{results: object[], cost: number, stopped: ?string}>}
  */
 export async function compileCards(job) {
@@ -89,6 +104,8 @@ export async function compileCards(job) {
     const card = oracle.get(name);
     if (!card) { results.push({name, outcome: "no oracle card"}); continue; }
     if (hand.has(name)) { results.push({name, outcome: "hand-authored"}); continue; }
+    /* The card compiler's candidates cost nothing (card load step 3): the writer is never asked for one. */
+    if (job.candidates?.has(name)) { results.push({name, outcome: "a candidate"}); continue; }
     /* An adventurer card is not asked of the writer at all (CR 715.2; cards/compile.mjs checkAnswer): nothing spent on it. */
     if (card.layout === "adventure") { results.push({name, outcome: "refused", problems: [ADVENTURE_BY_HAND]}); continue; }
     const hash = oracleHash(card), prior = ledger.cards[card.id];
@@ -100,18 +117,19 @@ export async function compileCards(job) {
     const usage = {writer: {input_tokens: 0, output_tokens: 0, cache_read_input_tokens: 0, cache_creation_input_tokens: 0}, reader: {input_tokens: 0, output_tokens: 0}};
     const add = (into, u) => { for (const k of Object.keys(into)) into[k] += u?.[k] ?? 0; };
     let checked = null, answer = null, errors = null, attempts = 0;
+    const assist = job.assist ? job.assist(card) : null;
     /* The writer, retried against everything the checks found wrong (schema.mjs returns every error at once). */
     while (attempts <= retries) {
       attempts += 1;
       const reply = await call({
         model: WRITER_MODEL, max_tokens: 8000,
         system: [{type: "text", text: system, cache_control: {type: "ephemeral"}}],
-        messages: [{role: "user", content: writerRequest(card, errors)}],
+        messages: [{role: "user", content: writerRequest(card, errors, assist)}],
         output_config: {effort: "medium", format: {type: "json_schema", schema: WRITER_SCHEMA}},
       });
       add(usage.writer, reply.usage);
       answer = reply.answer;
-      checked = checkAnswer(card, answer ?? {}, WRITER_MODEL);
+      checked = checkAnswer(card, answer ?? {}, WRITER_MODEL, assist?.known ?? null);
       if (!checked.stage) break;
       errors = checked.problems;
     }
@@ -120,6 +138,7 @@ export async function compileCards(job) {
       const c = spent();
       cost += c;
       ledger.cards[card.id] = {name, status, oracleHash: hash, attempts, model: WRITER_MODEL, readBackModel: READER_MODEL,
+        ...(assist ? {assisted: {known: assist.known.length, written: assist.write.length}} : {}),
         inputTokens: usage.writer.input_tokens + usage.reader.input_tokens, outputTokens: usage.writer.output_tokens + usage.reader.output_tokens,
         cost: Number(c.toFixed(6)), at: now(), ...extra};
       results.push({name, outcome: status, ...extra, cost: c});
@@ -152,6 +171,53 @@ export async function compileCards(job) {
   return {results, cost, stopped};
 }
 
+/**
+ * THE BACKSTOP'S SAMPLE (card load step 4): defined cards the library knows only in part with themselves held out, each
+ * finished by the writer from what the library wrote, checked as any card is, and played through its own scenarios.
+ * Nothing is written: the cards are defined already, and the sample measures the writer, not the directory.
+ *
+ * @param {{scripts: object[], scenarios: Map, definition: Function, oracle: Map, library, trust: Function, call: Function,
+ *   examples: object[], n: number, maxCost?: number}} job
+ * @returns {Promise<{results: {name, outcome, why?, cost, written}[], tried: number, passed: number, cost: number, stopped: ?string}>}
+ */
+export async function heldOutSample(job) {
+  const {scripts, scenarios, definition, oracle, library, trust, call, examples, n} = job;
+  const maxCost = job.maxCost ?? 5, system = writerSystem(examples);
+  const pool = scripts.filter((s) => isSimple(s) && scenarios.get(s.identity.name)?.scenarios?.length && oracle.has(s.identity.name))
+    .map((s) => ({script: s, record: oracle.get(s.identity.name)}))
+    .map((x) => ({...x, assist: assistOf(x.record, {library, trust, except: x.script.identity.name})}))
+    .filter((x) => x.assist)
+    .sort((a, b) => (a.script.identity.name < b.script.identity.name ? -1 : 1));
+  const step = Math.max(1, Math.floor(pool.length / Math.max(1, n)));
+  const chosen = pool.filter((_, i) => i % step === 0).slice(0, n);
+  const results = [];
+  let cost = 0, stopped = null;
+  for (const {script, record, assist} of chosen) {
+    if (cost >= maxCost) { stopped = `the sample reached its $${maxCost.toFixed(2)} cap`; break; }
+    const name = script.identity.name;
+    const reply = await call({
+      model: WRITER_MODEL, max_tokens: 8000,
+      system: [{type: "text", text: system, cache_control: {type: "ephemeral"}}],
+      messages: [{role: "user", content: writerRequest(record, null, assist)}],
+      output_config: {effort: "medium", format: {type: "json_schema", schema: WRITER_SCHEMA}},
+    });
+    const spent = costOf(WRITER_MODEL, reply.usage);
+    cost += spent;
+    const row = (outcome, why) => results.push({name, outcome, ...(why ? {why} : {}), cost: spent, written: assist.write.length, known: assist.known.length});
+    const checked = checkAnswer(record, reply.answer ?? {}, WRITER_MODEL, assist.known);
+    if (checked.stage) { row("failed", `${checked.stage}: ${checked.problems[0]}`); continue; }
+    const {definition: own, problems} = compileScript(checked.script);
+    if (problems.length) { row("failed", `compiles: ${problems[0]}`); continue; }
+    const file = scenarios.get(name);
+    const cards = (other) => (other === name ? structuredClone(own) : definition(other));
+    try { for (const scenario of file.scenarios) runScenario(scenario, cards, file.fixtures ?? {}); }
+    catch (error) { row("failed", `plays: ${String(error.message).split("\n")[0]}`); continue; }
+    row("passed");
+  }
+  const passed = results.filter((r) => r.outcome === "passed").length;
+  return {results, tried: results.length, passed, cost, stopped};
+}
+
 /* ---- the command line ---- */
 
 const scriptPath = (oracleId) => path.join(REPO, "data", "engine", "scripts", oracleId.slice(0, 2), `${oracleId}.json`);
@@ -179,18 +245,33 @@ async function main(args) {
     return !(prior && prior.oracleHash === oracleHash(c) && LEARNED.includes(prior.status));
   });
 
+  const directory = loadCardIndex();
+  /* What the sentence library knows, and which of its templates the calibration trusts (card load steps 2 and 3). */
+  const library = createLibrary(scripts), scenarios = new Map(loadCardScenarios().map((f) => [f.scenarios.card, f.scenarios]));
+  const trust = trustOf(library, calibrate({scripts, library, scenarios, definition: directory.definition}));
+  const candidates = new Set(JSON.parse(readFileSync(CANDIDATES_FILE, "utf8")).cards.map((c) => c.name));
+  const asked = todo.filter((n) => !candidates.has(n)), assisted = asked.filter((n) => assistOf(oracle.get(n), {library, trust})?.known.length);
+
   if (!args.includes("--yes")) {
     console.log(`engine-compile: ${names.length} cards asked for; ${names.filter((n) => hand.has(n)).length} hand-authored, ${names.filter((n) => !oracle.has(n)).length} not in the oracle data, ${todo.length} still to learn${sample !== undefined ? ` (a run with --sample ${sample} would take ${Math.min(sample, todo.length)})` : ""}.`);
+    console.log(`Of those, ${todo.length - asked.length} are the card compiler's candidates and cost nothing; ${assisted.length} of the other ${asked.length} would be finished from what the sentence library already wrote${args.includes("--whole") ? " (but --whole asks for every card whole)" : ""}.`);
     console.log("This spends money at list prices. Run it with --yes and Rob's key (ANTHROPIC_API_KEY, or the Windows Credential Manager entry crankmagic_anthropic_api).");
     process.exit(args.includes("--plan") ? 0 : 2);
   }
   const key = process.env.ANTHROPIC_API_KEY || readWindowsGenericCredential(CREDENTIAL);
   if (!key) { console.error("engine-compile: no key -- set ANTHROPIC_API_KEY or store it as crankmagic_anthropic_api in Windows Credential Manager."); process.exit(2); }
 
-  const directory = loadCardIndex();
+  if (flag("--held-out") !== null) {
+    const run = await heldOutSample({scripts, scenarios, definition: directory.definition, oracle, library, trust, call: messagesTransport(key),
+      examples: examplesFrom(scripts), n: Number(flag("--held-out")), maxCost: Number(flag("--max-cost") ?? 5)});
+    console.log(`engine-compile: held-out sample -- ${run.passed} of ${run.tried} passed their own scenarios (${run.tried ? (100 * run.passed / run.tried).toFixed(1) : "0"}%), $${run.cost.toFixed(2)} at list prices, $${run.tried ? (run.cost / run.tried).toFixed(4) : "0"} a card.${run.stopped ? ` Stopped: ${run.stopped}.` : ""}`);
+    for (const r of run.results.filter((x) => x.outcome === "failed")) console.log(`  failed ${r.name}: ${r.why}`);
+    return;
+  }
   const {results, cost, stopped} = await compileCards({
     names, oracle, hand, cards: directory.definition, ledger, call: messagesTransport(key), examples: examplesFrom(scripts),
-    maxCost: Number(flag("--max-cost") ?? 5), sample, retries: 2,
+    maxCost: Number(flag("--max-cost") ?? 5), sample, retries: 2, candidates,
+    ...(args.includes("--whole") ? {} : {assist: (card) => assistOf(card, {library, trust})}),
     write: (oracleId, compiled) => { mkdirSync(path.dirname(scriptPath(oracleId)), {recursive: true}); writeFileSync(scriptPath(oracleId), JSON.stringify(compiled, null, 2) + "\n"); },
   }).catch((error) => { writeFileSync(LEDGER, JSON.stringify(ledger, null, 2) + "\n"); throw error; });
   writeFileSync(LEDGER, JSON.stringify(ledger, null, 2) + "\n");

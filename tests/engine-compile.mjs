@@ -14,6 +14,9 @@
  *      card learned once for its oracle text and again when the text changes; the cost cap; the rules flagged.
  *   3. The command line spends nothing without --yes, and its plan says what a run would take.
  *   4. The directory reads compiled cards, and a hand-authored one wins.
+ *   5. The backstop (card load step 4): the writer handed what the sentence library already wrote of a card and asked
+ *      only for the rest; the card checked whole; a sentence written twice refused; the compiler's candidates never
+ *      asked for; the held-out sample played through each card's own scenarios, with its cost.
  */
 import assert from "node:assert/strict";
 import {readFileSync, mkdtempSync, mkdirSync, writeFileSync, rmSync} from "node:fs";
@@ -23,10 +26,13 @@ import {spawnSync} from "node:child_process";
 import {fileURLToPath} from "node:url";
 import {
   identityOf, assembleScript, checkFidelity, oracleClauses, checkReadBack, smokeTest, smokeScenario, zoneProblems,
-  writerSystem, writerRequest, WRITER_SCHEMA, READBACK_SCHEMA, checkAnswer, oracleHash, COMPILED_SCHEMA,
+  writerSystem, writerRequest, WRITER_SCHEMA, READBACK_SCHEMA, checkAnswer, oracleHash, COMPILED_SCHEMA, mergeAbilities,
 } from "../game/engine/cards/compile.mjs";
-import {compileCards, costOf, examplesFrom, WRITER_MODEL, READER_MODEL} from "../game/tools/engine-compile.mjs";
-import {loadCardScripts, loadCardIndex} from "../game/tools/engine-cards.mjs";
+import {compileCards, heldOutSample, costOf, examplesFrom, WRITER_MODEL, READER_MODEL} from "../game/tools/engine-compile.mjs";
+import {loadCardScripts, loadCardIndex, loadCardScenarios} from "../game/tools/engine-cards.mjs";
+import {createLibrary} from "../game/engine/cards/sentences.mjs";
+import {calibrate} from "../game/tools/sentence-library.mjs";
+import {assistOf, trustOf} from "../game/tools/card-compiler.mjs";
 
 let checks = 0;
 const ok = (c, m) => { assert.ok(c, m); checks += 1; };
@@ -250,6 +256,62 @@ const job = (names, call, ledger = {cards: {}}, extra = {}) => {
       "a compiled card joins the directory, marked compiled and provisional");
     eq([merged.resolve("Elvish Visionary").source, merged.definition("Elvish Visionary").abilities.length], ["hand", 1], "and where a hand-authored definition exists it wins");
   } finally { rmSync(dir, {recursive: true, force: true}); }
+}
+
+/* ---- 5. the backstop: what the library knows, the writer finishes ---- */
+const library = createLibrary(scripts);
+const scenarios = new Map(loadCardScenarios().map((f) => [f.scenarios.card, f.scenarios]));
+const trust = trustOf(library, calibrate({scripts, library, scenarios, definition: index.definition}));
+{
+  ok(writerSystem([]).includes("alreadyWritten") && writerSystem([]).includes("writeOnly"), "the writer is told what `alreadyWritten` and `writeOnly` mean");
+  /* Baleful Strix with its enters trigger distrusted: the library writes Flying and deathtouch, the writer the trigger. */
+  const strix = ORACLE.get("Baleful Strix"), own = handOf("Baleful Strix").abilities;
+  const assist = assistOf(strix, {library, trust: (id) => (/enters/.test(id) ? {ok: false} : trust(id)), except: "Baleful Strix"});
+  eq([assist.known.map((a) => a.text), assist.write.map((w) => w.text)], [["Flying", "deathtouch"], ["When this creature enters, draw a card."]],
+    "assisted: the library's trusted sentences written, the distrusted one left for the writer");
+  const req = JSON.parse(writerRequest(strix, null, assist));
+  eq([req.alreadyWritten.length, req.writeOnly], [2, ["When this creature enters, draw a card."]], "the request carries both, and asks for the one sentence");
+  const trigger = own.filter((a) => a.kind === "triggered");
+  eq(mergeAbilities(strix, assist.known, trigger).map((a) => a.text), ["Flying", "deathtouch", "When this creature enters, draw a card."], "merged in the order of the card's text");
+  const {calls, call} = stub({"Baleful Strix": {writer: {abilitiesJson: JSON.stringify(trigger), notes: "", crFlags: []}}});
+  const ledger = {cards: {}}, written = {};
+  const {results} = await compileCards({names: ["Baleful Strix"], oracle: ORACLE, hand: new Set(), cards: index.definition, ledger, call, examples: [],
+    write: (id, compiled) => { written[id] = compiled; }, assist: () => assist});
+  eq(results.map((r) => r.outcome), ["provisional"], "the card, the library's two sentences and the writer's one, passes every check");
+  eq(written[strix.id].script.abilities.map((a) => a.text), own.map((a) => a.text), "and is stored whole, as the card reads");
+  eq(ledger.cards[strix.id].assisted, {known: 2, written: 1}, "the ledger says how much the writer wrote");
+  eq(JSON.parse(calls[0].messages[0].content).writeOnly, ["When this creature enters, draw a card."], "the writer was asked for that one sentence");
+  const twice = checkAnswer(strix, {abilitiesJson: JSON.stringify([own[0], ...trigger])}, null, assist.known);
+  ok(twice.stage === "fidelity" && /already written, not to be written again: "Flying"/.test(twice.problems[0]), "a sentence already written and written again is refused: it would apply twice");
+  const none = stub({});
+  const skipped = await compileCards({names: ["Baleful Strix"], oracle: ORACLE, hand: new Set(), cards: index.definition, ledger: {cards: {}}, call: none.call, examples: [],
+    write: () => {}, candidates: new Set(["Baleful Strix"])});
+  eq([skipped.results[0].outcome, none.calls.length], ["a candidate", 0], "a card the compiler made a candidate is never asked of the writer");
+}
+{
+  /* The sample: three defined cards held out, each finished by a writer that answers with the card's own missing abilities. */
+  const right = (body) => {
+    const r = JSON.parse(body.messages[0].content), known = new Set(r.alreadyWritten.map((a) => a.text));
+    return {abilitiesJson: JSON.stringify(handOf(r.card.name).abilities.filter((a) => !known.has(a.text))), notes: "", crFlags: []};
+  };
+  const writer = async (body) => ({answer: right(body), usage: {input_tokens: 1000, output_tokens: 100}});
+  const run = await heldOutSample({scripts, scenarios, definition: index.definition, oracle: ORACLE, library, trust, call: writer, examples: [], n: 3});
+  eq([run.tried, run.passed], [3, 3], `three defined cards held out, finished from their own missing sentences, pass their own scenarios (${run.results.map((r) => r.name).join(", ")})`);
+  ok(run.results.every((r) => r.written >= 1) && Math.abs(run.cost - 3 * costOf(WRITER_MODEL, {input_tokens: 1000, output_tokens: 100})) < 1e-9, "each asked for at least one sentence, the cost counted at list prices");
+  const wrong = async (body) => {
+    const a = right(body), list = JSON.parse(a.abilitiesJson);
+    return {answer: {...a, abilitiesJson: JSON.stringify(list.slice(1))}, usage: {}};
+  };
+  const bad = await heldOutSample({scripts, scenarios, definition: index.definition, oracle: ORACLE, library, trust, call: wrong, examples: [], n: 3});
+  ok(bad.passed < 3 && bad.results.filter((r) => r.outcome === "failed").every((r) => /^fidelity: /.test(r.why)), "a writer that leaves a sentence out fails, at fidelity");
+  const miscounted = async (body) => {
+    const a = right(body);
+    return {answer: {...a, abilitiesJson: a.abilitiesJson.replace(/"count":1\b/g, "\"count\":2")}, usage: {}};
+  };
+  const played = await heldOutSample({scripts, scenarios, definition: index.definition, oracle: ORACLE, library, trust, call: miscounted, examples: [], n: 3});
+  ok(played.results.some((r) => r.outcome === "failed" && /^plays: /.test(r.why)), `one that writes every sentence with a wrong number passes every check but its scenarios: "${played.results.find((r) => r.outcome === "failed")?.why}"`);
+  const capped = await heldOutSample({scripts, scenarios, definition: index.definition, oracle: ORACLE, library, trust, call: writer, examples: [], n: 3, maxCost: 0});
+  ok(capped.tried === 0 && /cap/.test(capped.stopped), "the sample stops at its cap");
 }
 
 console.log(`engine-compile: ${checks} checks passed — the loader's four checks held against ${scripts.length} hand definitions, every refusal at its stage, a card learned once for its text, and nothing spent without --yes.`);

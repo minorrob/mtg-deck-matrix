@@ -32,7 +32,7 @@ import {fileURLToPath} from "node:url";
 import {loadCardScripts, loadCardScenarios, loadCardIndex} from "./engine-cards.mjs";
 import {compileScript} from "../engine/cards/index.mjs";
 import {identityOf, oracleHash, checkFidelity, smokeTest} from "../engine/cards/compile.mjs";
-import {createLibrary, translate, segment, templateWithout, isSimple} from "../engine/cards/sentences.mjs";
+import {createLibrary, translate, segment, templateWithout, isSimple, partialTranslate} from "../engine/cards/sentences.mjs";
 import {calibrate, BANDS} from "./sentence-library.mjs";
 
 export const CANDIDATES_SCHEMA = "CrankCardCandidates@1";
@@ -79,6 +79,31 @@ export function compileCard(record, {library, trust, definition}) {
     smoke: {played: smoke.played !== false, resolved: smoke.resolved ?? 0}, abilities: tr.script.abilities};
 }
 
+/* A template is trusted when it is in a band from the minimum count up and no card it translated failed. */
+export function trustOf(library, calibration) {
+  const minimum = calibration.minimumCount;
+  return (id) => {
+    const t = templateWithout(library, id, null);
+    const band = calibration.pooled[bandOf(t.cards)];
+    const rate = calibration.rates.get(id);
+    if (minimum === null) return {ok: false, why: "no minimum count: the calibration set none", cards: t.cards, band};
+    if (t.cards < minimum) return {ok: false, why: `seen on ${t.cards} card(s), under the minimum count ${minimum}`, cards: t.cards, band};
+    if (rate && rate.passed < rate.tried) return {ok: false, why: `failed ${rate.tried - rate.passed} of ${rate.tried} in calibration`, cards: t.cards, band};
+    return {ok: true, cards: t.cards, band};
+  };
+}
+
+/**
+ * What the writer is handed for a card the library knows only in part (card load step 4, the backstop): the abilities of
+ * its trusted spans, already written, and the sentences left to write -- or null for another layout, or a card with
+ * nothing left (the compiler's own). `except` holds a defined card out, for the backstop's held-out sample.
+ */
+export function assistOf(record, {library, trust, except = null}) {
+  if (record.layout !== "normal" || (record.faces && record.faces !== "None")) return null;
+  const partial = partialTranslate(asCard(record), library, {except, keep: (id) => trust(id).ok});
+  return partial.write.length ? partial : null;
+}
+
 /**
  * The whole compile.
  *
@@ -92,17 +117,7 @@ export function compileAll(given = {}) {
   const library = createLibrary(scripts);
   const calibration = given.calibration ?? calibrate({scripts, library,
     scenarios: new Map(loadCardScenarios().map((f) => [f.scenarios.card, f.scenarios])), definition: index.definition});
-  /* A template is trusted when it is in a band from the minimum count up and no card it translated failed. */
-  const minimum = calibration.minimumCount;
-  const trust = (id) => {
-    const t = templateWithout(library, id, null);
-    const band = calibration.pooled[bandOf(t.cards)];
-    const rate = calibration.rates.get(id);
-    if (minimum === null) return {ok: false, why: "no minimum count: the calibration set none", cards: t.cards, band};
-    if (t.cards < minimum) return {ok: false, why: `seen on ${t.cards} card(s), under the minimum count ${minimum}`, cards: t.cards, band};
-    if (rate && rate.passed < rate.tried) return {ok: false, why: `failed ${rate.tried - rate.passed} of ${rate.tried} in calibration`, cards: t.cards, band};
-    return {ok: true, cards: t.cards, band};
-  };
+  const trust = trustOf(library, calibration);
   const results = [];
   const records = oracle.cards.filter((c) => deckCard(c) && !banned.has(c.name) && !index.resolve(c.name))
     .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));

@@ -390,6 +390,28 @@ export function segment(text, name, library, except = null) {
 }
 
 /**
+ * As much of a card as the library knows, for the writer to finish (card load step 4, the backstop): the abilities of
+ * every span `keep` accepts, and the sentences left, each with its place in the text. A spell is never half written:
+ * when anything is left, its sentences are left too, so the writer writes the whole spell.
+ *
+ * @returns {{known: object[], write: {text: string, start: number}[], templates: string[]}}
+ */
+export function partialTranslate(card, library, {except = null, keep = () => true} = {}) {
+  const name = card.identity.name;
+  const {atoms, spans} = segment(card.oracleText, name, library, except);
+  const inside = (a, list) => list.some((s) => a.start >= s.start && a.end <= s.end);
+  const trusted = spans.filter((s) => keep(s.id));
+  const whole = trusted.length === spans.length && atoms.every((a) => inside(a, spans));
+  const kept = whole ? trusted : trusted.filter((s) => !s.spell);
+  const known = kept.flatMap((span) => {
+    const t = templateWithout(library, span.id, except);
+    const {slots} = templateOf(span.text, name, t.level);
+    return JSON.parse(t.body).map((body) => ({...fillBody(body, slots, name), text: span.text}));
+  });
+  return {known, write: atoms.filter((a) => !inside(a, kept)).map((a) => ({text: a.text, start: a.start})), templates: kept.map((s) => s.id)};
+}
+
+/**
  * A card's script from the library alone: its identity and text as given, its abilities filled from the templates
  * that cover its text. Nothing when any piece of the text is not in the library.
  *
