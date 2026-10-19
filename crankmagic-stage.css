@@ -20,8 +20,12 @@
 .cm-stage-fan-slot:not(:last-child) .cm-bcard-name{right:max(5%,calc(100% - var(--fan-step,106px) + 16px))}
 .cm-stage-front,.cm-stage-rear{position:absolute;z-index:1;min-width:0;min-height:0}
 .cm-stage-front>.cm-mat,.cm-stage-mini>.cm-mat{height:100%;width:100%;border:0;box-shadow:none!important;--pad:4px;--mat-reserve:0px}
-/* Rob's art mats are painted on the canvas under the cards (crankmagic-stage.js); a drawn mat keeps its own pattern here, as in every other view (Rob, 2026-10-17) */
-:is(.cm-stage-front,.cm-stage-mini)>.cm-mat:not([data-mat="felt"],[data-mat="forge"],[data-mat="cavern"],[data-mat="sea"],[data-mat="night"]){background:transparent!important}
+/* Every mat is drawn here as in every other view: a drawn mat's pattern (Rob, 2026-10-17), and Rob's art cropped to its
+   seat, never stretched; in Full screen the art is at full strength, with no wash over it (Rob, 2026-10-18) */
+.cm-stage-region{--mat-art-wash:linear-gradient(transparent,transparent)}
+/* so the piles' captions, over the art with nothing under them, take the seat labels' plate, tall enough for a descender,
+   and read at 4.5:1 over the brightest picture */
+.cm-stage-region .cm-mat .cm-board-pile figcaption{background:#091b1de6;padding:2px 4px;border-radius:5px}
 .cm-stage-front>.cm-mat{--bc:var(--stage-card,96px);padding-top:38px}
 .cm-stage-front .cm-mat-grid{display:grid;height:100%;grid-template-columns:calc(var(--bc) * 1.15) minmax(0,1fr) repeat(2,calc(var(--bc) + 4px));grid-template-rows:minmax(0,1fr) minmax(0,1fr);gap:12px;padding:5px 8px}
 .cm-stage-front .cm-board-field{grid-column:2;grid-row:1 / 3;display:flex;flex-direction:column;overflow:auto;gap:16px;padding:4px}
