@@ -231,7 +231,7 @@ other lane answers in the last column.
   {cardId, note}` takes "report a wrong card" and hands the reports over in the game's record (`cardReports`). The board's
   label and link are Play's: Requests, Engine → Play 4. Proof: `tests/table-candidates.mjs` (41),
   `breaks-table-candidates.py` (24 of 24).
-- **ROB-164, the AI seats take what an "up to" or a search is for** (`claude/engine-pilot-picks`; a Personal-HP session
+- **ROB-164, the AI seats take what an "up to" or a search is for** (#792, `claude/engine-pilot-picks`; a Personal-HP session
   started by the Play readiness evaluation, Oct 19, inside the engine lane's files). Every AI seat (L0, L1 at Easy and
   Normal, the LLM seat's L1) answered a choice whose least answer is none with none: Evolving Wilds found no land,
   Cultivate nothing, proliferate nothing. The house pilot now has a rule for each (`picks`,
