@@ -24,8 +24,8 @@ eq(ENGINE_ID, "crank", "the flag value that selects this engine");
 eq(ENGINE_PROTOCOL, 1, "the journal and projection protocol this engine speaks");
 eq(ENGINE_STATUS.phase, 1,
   "phase 1: the kernel gate has passed, which `engine-gate` runs -- a thousand four-player Commander games");
-/* The list names what is built and green, module by module. It is NOT a claim that a game can be
-   played — there is no mana and no combat — and `createGame` still refuses below. Its job is to let
+/* The list names what is built and green, module by module, mana and combat among them. Games are
+   played through the room (game/room/room.mjs), and `createGame` still refuses below. Its job is to let
    a caller ask what exists rather than find out by catching an exception. Every name here has a
    suite; a name without one would be the exact lie this field exists to prevent. */
 eq(ENGINE_STATUS.implemented,

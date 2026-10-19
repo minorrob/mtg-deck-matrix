@@ -99,6 +99,32 @@ Each step is its own PR with its suites, breaks and a staging release, as the wa
 Waves of hand-written cards (wave 4d onward, `docs/handoff-2026-10-12.md`) wait while steps 1 to 4 are built, unless
 Rob says otherwise: those steps are what makes later waves cheaper.
 
+## Step 2, measured (2026-10-19; Linear ROB-87)
+
+- **The library** (`game/engine/cards/sentences.mjs`) learns from the pairs the directory already holds, since every
+  ability carries the oracle sentence it implements. It has 5,650 templates at two levels: numbers as slots, then
+  colors, types, keywords and basic land types as well. They come from the 2,407 defined cards that have only
+  abilities. The 63 with an Adventure, a back face, a prepare spell or a layout are left out.
+- **The calibration** (`node game/tools/sentence-library.mjs`, about 4 seconds). Each defined card is held out in turn:
+  - 520 of 2,470 can be translated from the other cards' templates alone;
+  - **519 pass every one of their own scenarios: 99.8%, with a 95% lower bound of 98.9%.**
+
+  The report is `docs/engine/sentence-calibration-2026-10-19.md`. Its JSON lists every template with its count and
+  rate.
+- **The minimum count, as measured, is 1.** Every band, from templates seen on one other card up, passed at least 99%,
+  and all of them pooled have a lower bound of 99.2%. The per-template rule this plan proposed (a template seen on five
+  cards can't show 99%) is answered by pooling templates in bands instead.
+- **Not yet out of sample.** The rules were refined against these same cards:
+  - the first version passed 416 of 429 (97.0%);
+  - four general fixes brought it to 519 of 520: slots typed by kind, one sentence as several abilities, a target's
+    index never a slot, and the better-evidenced cover.
+
+  The first wave's cards, each translated before it is written, are the first independent measure.
+- **For step 3.** A card becomes a candidate when every sentence is covered, every template meets the minimum count,
+  and it passes its own generated scenarios and a smoke game. Today 21% of defined cards are fully covered with
+  themselves held out. The one failure, Goblin Piledriver, shows why the scenarios stay in the gate: another card
+  leaves the multiplier `times: 1` unwritten, so the translation drops Piledriver's `times: 2`.
+
 ## Running a lane (Rob's decision 4)
 
 A session's cost per step grows with everything it has read, because every step re-reads the whole conversation. The

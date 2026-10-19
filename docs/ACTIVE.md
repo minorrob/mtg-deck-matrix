@@ -181,6 +181,11 @@ other lane answers in the last column.
     not applied; ROB-158 waits on ROB-157.
   - **Other lanes' close-out PRs still open:** #780 (ready) and #782 (draft, the UI lane's handoff). Both edit this file;
     they are their lanes' to merge.
+- **Step 2 (ROB-87), built as this lane's next PR:** `game/engine/cards/sentences.mjs` (the library: 5,650 templates
+  from 2,407 cards) and `game/tools/sentence-library.mjs` (the calibration). Each card held out: 520 of 2,470 translated
+  from the others' templates alone, 519 passed their own scenarios (99.8%, lower bound 98.9%); minimum count 1. Report
+  `docs/engine/sentence-calibration-2026-10-19.md`; plan `docs/engine/plan-card-load-program.md`, "Step 2, measured".
+  Proof: `tests/sentence-library.mjs` (63), `breaks-sentence-library.py` (21 of 21).
 - **The engine queue, in order:** land step 1; step 2 (ROB-87, the sentence library and calibration) as this lane's
   next PR; ROB-144 (the release verifier for the Babylon renderer, which holds Play's #767); Requests row 1 (`playPod`,
   for ROB-116); the ROB-134 routes; ROB-94's remaining steps; ROB-74, ROB-78, ROB-149.
