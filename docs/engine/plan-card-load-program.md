@@ -161,6 +161,33 @@ Rob says otherwise: those steps are what makes later waves cheaper.
   those cards are a known spell plus a draw. Merging two spell templates into one spell is the compiler's next increment,
   measured by the same calibration.
 
+## Step 5, first part: candidates at playtest tables (2026-10-19; Linear ROB-91)
+
+- **What a playtest table plays.** The card directory first, then the card compiler's candidates where the directory has
+  no definition. Every other table plays the directory alone and refuses a candidate by name, as before (Rob's decision 2).
+- **How they reach the Worker.** `game/engine/cards/candidates.mjs`, generated from `data/engine/candidates.json` by
+  `node game/tools/engine-candidates.mjs --write`:
+  - 2,429 definitions, 1.36 MB (205 KB gzipped);
+  - each kept as JSON text and parsed only when a playtest table asks for the card, so the Worker doesn't parse them
+    all every time it starts;
+  - `tests/table-candidates.mjs` holds it to the candidates file.
+- **New matches only.** A playtest table's pod says `candidates` (game/room/table.mjs, `tick`). The match keeps the key,
+  so it reopens and replays with the same cards, and an AI seat still reads a candidate's facts after a reopen. A match
+  launched before has no key and never seats one.
+- **The label.** Every object made from a candidate says `candidate: true`, in every zone it moves to. A seat's view says
+  so only where the seat can name the card (projection.mjs): face down, or in a hidden hand, it is labeled for nobody.
+- **"Report a wrong card."** `POST /api/tables/:id/report {cardId, note}` at a playtest table only:
+  - the card must be a candidate the seat can see in the game being played, or in the table's last game;
+  - its name is the one the engine shows, never one the client sends;
+  - a table keeps up to 200 reports and hands them over in that game's record (`cardReports`), which the triage loop
+    reads.
+- **For Play.** The board's label and its report link are Play's files (Requests, Engine → Play 4, in `docs/ACTIVE.md`).
+  Until Play ships them, a candidate plays unlabeled on the board, though the view carries the field.
+- **Not yet.** A deck's readiness before any table (`POST /api/tables/known`, asked with no table) still counts a
+  candidate as unknown, even on staging. That keeps it on the demand list, which step 6 reviews candidates by, but
+  the hub says "to learn" for a card a staging table would seat. Compiling a card when a deck is saved (decision 3)
+  is the second part of step 5.
+
 ## Running a lane (Rob's decision 4)
 
 A session's cost per step grows with everything it has read, because every step re-reads the whole conversation. The

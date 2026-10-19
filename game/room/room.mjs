@@ -59,6 +59,9 @@
  * WHAT IT PLAYS. Only cards the `cards` resolver can define. A pod with any other card is refused before
  * anything is written, naming every card it cannot play (docs/decisions-2026-09-25.md, M4: "refused by name;
  * compiled once M7 lands"). Today that is the basic lands, as it is for the engine itself.
+ * A pod that says `candidates` (a playtest table's, Rob's decision 2) also plays the card compiler's candidates, where
+ * `cards` has no definition: each object made from one says `candidate`, which the board labels (projection.mjs). A
+ * match keeps the key, so it reopens and replays with the same cards; a pod without it never seats one.
  */
 import {createState, addObject, shownName, shownFaceUp} from "../engine/state/index.mjs";
 import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../engine/rules/turn.mjs";
@@ -392,6 +395,8 @@ export function triggerRun(stack) {
  *   pass its own (one that answers wrongly on purpose, to prove the refusal tally); the table never does
  * @param {number} slice  engine steps one call may take before it stops, saved, for `resume` (the Durable Object's
  *   alarm) to play on from; unbounded unless given
+ * @param {(name: string) => ?object} candidates  a candidate's definition (game/engine/cards/candidates.mjs), consulted
+ *   only for a pod that says `candidates`; none unless given
  */
 /**
  * WHAT ANSWERS FOR AN AI SEAT: L1 at its setting, handed its own deck list (which its player knows) and the match's seed
@@ -404,10 +409,14 @@ export function seatPilot({seat, cards, deck = [], level = null, seed = ""}) {
 /** The LLM seat's setting: L1, but its close calls are offered to the seat, for its model to answer (`consults`). */
 export const LLM = "llm";
 
-function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity) {
+function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity, candidates = () => null) {
   const store = createMatchStore(storage, matchId);
   const ROOM_KEY = `room/${matchId}`;
-  const facts = factsFrom(cards);
+  /* The cards this match plays: `cards`, and for a pod that says `candidates`, a candidate where `cards` has none, marked. */
+  const withCandidates = (name) => cards(name) ?? ((c) => (c ? {...c, candidate: true} : null))(candidates(name));
+  let seated = false;
+  const look = (name) => (seated ? withCandidates : cards)(name);
+  const facts = factsFrom(look);
   let seats, state, rng, journal, controller, pilots, pendingSeat = null, pendingActions = null, saved = 0;
   /* Accepted actions by id, with the seat that sent them: a retry is answered from here, and never reaches
      another seat's question. The newest RECEIPTS are kept, which is ample for a client's retries. */
@@ -706,6 +715,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     seats = record.seats; pendingSeat = record.pendingSeat; pendingActions = record.pendingActions; receipts = record.receipts || []; leaving = record.leaving || []; departures = record.departures || {}; ended = record.ended || null; history = record.history || [];
     refusals = record.refusals || {total: 0, since: point.sequence, first: []};
     continuing = record.continuing === true; driven = record.driven || 0; endWhenNoPerson = record.endWhenNoPerson === true;
+    seated = record.candidates === true;
     state = structuredClone(point.state);
     rng = createRng(point.seed, point.rng);
     journal = createJournal({matchId, seed: point.seed}, point);
@@ -773,7 +783,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     const point = journal.checkpoint(state, rng.checkpoint());
     await store.saveCheckpoint(point);
     await store.pruneCheckpoints();
-    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, history, refusals, ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {}), ...(resolveAll ? {resolveAll, standing} : {}), ...(passAfterCast ? {passAfterCast, castBy} : {}), ...(endAsks ? {endAsks} : {}), ...(untapMana ? {untapMana, taken} : {}), ...(Object.keys(prefs).length ? {prefs} : {}), ...(turnsOf ? {turnsOf} : {}), ...(passStack ? {passStack, heldBy} : {}), ...(yieldable ? {yieldTurn: true, yielding} : {}), ...(tableEvents.length ? {events: tableEvents, eventsMark, eventsFloor} : {})}));
+    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, history, refusals, ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {}), ...(resolveAll ? {resolveAll, standing} : {}), ...(passAfterCast ? {passAfterCast, castBy} : {}), ...(endAsks ? {endAsks} : {}), ...(untapMana ? {untapMana, taken} : {}), ...(Object.keys(prefs).length ? {prefs} : {}), ...(turnsOf ? {turnsOf} : {}), ...(passStack ? {passStack, heldBy} : {}), ...(yieldable ? {yieldTurn: true, yielding} : {}), ...(tableEvents.length ? {events: tableEvents, eventsMark, eventsFloor} : {}), ...(seated ? {candidates: true} : {})}));
   }
 
   const api = {
@@ -790,7 +800,8 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     get continuing() {return continuing && !finished();},
 
     async start(pod, seed) {
-      seats = readPod(pod, cards);
+      seated = pod?.candidates === true;
+      seats = readPod(pod, look);
       if (typeof seed !== "string" || !seed) throw new RoomError(400, "A match needs its seed.");
       begin();
       if (await storage.get(ROOM_KEY) !== null) throw new RoomError(409, "This table already has a game.");
@@ -812,15 +823,15 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       try {state = createState({matchId, seed, players: seats.map((s) => ({name: s.name})), ...rules, ...(beats.drawBeat ? {drawBeat: true} : {}), ...pooled});}
       catch (error) {throw new RoomError(400, error.message);}
       seats.forEach((s, seat) => {
-        for (const name of s.commander) addObject(state, {...cards(name), card: name, owner: seat, controller: seat, commander: true}, "command", seat);
-        for (const name of s.cards) addObject(state, {...cards(name), card: name, owner: seat, controller: seat}, "library", seat);
+        for (const name of s.commander) addObject(state, {...look(name), card: name, owner: seat, controller: seat, commander: true}, "command", seat);
+        for (const name of s.cards) addObject(state, {...look(name), card: name, owner: seat, controller: seat}, "library", seat);
       });
       rng = createRng(seed);
       journal = createJournal({matchId, seed});
       controller = createController();
       matchSeed = seed;
       pilots = seats.map((s, seat) => (s.pilot === "house" ? pilotMade(seat) : null));
-      await store.saveMatch({pod: {seats, ...rules, ...beats, ...pooled}, seed});
+      await store.saveMatch({pod: {seats, ...rules, ...beats, ...pooled, ...(seated ? {candidates: true} : {})}, seed});
       write(beginMulligans(state, rng));
       drive();
       await persist();
@@ -1069,5 +1080,5 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
   return api;
 }
 
-export const startRoom = ({storage, matchId, cards = basicCards, pod, seed, pilot, slice}) => roomOn(storage, matchId, cards, pilot, slice).start(pod, seed);
-export const openRoom = ({storage, matchId, cards = basicCards, pilot, slice}) => roomOn(storage, matchId, cards, pilot, slice).open();
+export const startRoom = ({storage, matchId, cards = basicCards, candidates, pod, seed, pilot, slice}) => roomOn(storage, matchId, cards, pilot, slice, candidates).start(pod, seed);
+export const openRoom = ({storage, matchId, cards = basicCards, candidates, pilot, slice}) => roomOn(storage, matchId, cards, pilot, slice, candidates).open();

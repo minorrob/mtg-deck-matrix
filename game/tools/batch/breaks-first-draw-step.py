@@ -49,8 +49,8 @@ BREAKS = [
      '...(pod && pod.skipFirstDraw === false ? {skipFirstDraw: false} : {})};',
      '};'),
     ('the match does not keep the table\'s rules', 'game/room/room.mjs',
-     'await store.saveMatch({pod: {seats, ...rules, ...beats, ...pooled}, seed});',
-     'await store.saveMatch({pod: {seats, ...beats, ...pooled}, seed});'),
+     'await store.saveMatch({pod: {seats, ...rules, ...beats, ...pooled, ...(seated',
+     'await store.saveMatch({pod: {seats, ...beats, ...pooled, ...(seated'),
     # The table.
     ('a new table turns the skip off', 'game/room/table.mjs',
      'skipFirstDraw: r.skipFirstDraw !== false};};',
