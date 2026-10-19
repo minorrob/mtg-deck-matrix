@@ -118,19 +118,34 @@ The program's charter (the north star in Linear, the file ownership table, the s
 protocol) is `docs/program/README.md` (October 18, 2026). Rob's queue and each lane's remaining hours are on
 `docs/readout/index.html`.
 
-### Claude · Engine, card load step 1: demand capture (claimed 2026-10-18; Linear ROB-86)
+### Claude · Engine, card load step 1: demand capture (Linear ROB-86): merged, on staging, session closed 2026-10-19
 
-- **Held by:** a fresh Claude session in a cloud container (Rob's decision 4: one step, one session, one PR), on
-  `claude/practical-shannon-ga8i5j`, beside the engine session on `claude/admiring-franklin-58cxy4` (#748, ROB-76).
-- **Its files only:** `cloud/migrations/0006_card_demand.sql` (the number reserved for it in ROB-11),
-  `cloud/card-demand.mjs` (new), `cloud/tables.mjs`, `game/tools/card-demand.mjs` (new), the wave list's
-  `docs/handoff-2026-10-12/topneeds.mjs`, its suite and breaks. No `game/engine/**`, no UI file.
-- **Staging:** announced in ROB-11 before the release, never beside another.
-- **Built (PR #776, commit 7e84420):** migration 0006 (`card_demand`, `card_demand_lists`); `cloud/card-demand.mjs`;
-  `cloud/tables.mjs` counts at `known` (also `{decks}`) and at a seat's deck refused; `listed` in the answer;
-  `game/tools/card-demand.mjs` ranks it, and `topneeds.mjs` puts it first. Proof: card-demand 43; breaks-card-demand
-  17 of 17; game-table 170, table-lobby 122, cloud-worker 126, release-pages 223. The deck page's line is the Play
-  lane's (Requests row 3).
+The session that built step 1 on `claude/practical-shannon-ga8i5j` has stopped. The engine lane is the Oct 19 session's
+(above). The handoff, in AGENTS.md's four parts:
+- **Branch and commits.** #776 (head d2502ac8, Actions `suites` green, run 39177742030) reached main through #784, as
+  main 78dc2a47. Staging serves it: `release/cloud-staging` 5634b896 → 704a7ca7, released by this session on Rob's go.
+  The rollback target is main 62900176 (version b6f37e78).
+- **Proven:**
+  - migration 0006 (`card_demand`, `card_demand_lists`, sha256 `a4bba8a0e313adde…`);
+  - the counting at `known` (also `{decks}`) and at a seat's deck refused, with `listed` in the answer;
+  - names and counts only, and the answer unchanged without the table;
+  - the wave ranking (`game/tools/card-demand.mjs`, `topneeds.mjs`'s fourth argument).
+- **Commands that prove it:**
+  - `node tests/card-demand.mjs` (43 checks);
+  - `python3 game/tools/batch/breaks.py game/tools/batch/breaks-card-demand.py` (17 of 17);
+  - staging: `release-acceptance` 22, `play-e2e` 42 before the push, and `tools/staging-check.mjs --expect 78dc2a47`
+    passed.
+- **Not proven, and why:**
+  - **The deployed version id and the byte check:** the Cloudflare API refuses this container's credential (ROB-157).
+  - **`known` on staging:** Access sends the service token's POST to its sign-in page; the token reads only
+    staging-check's GETs.
+- **Outstanding:**
+  - **ROB-158:** apply 0006 to staging D1. Rob approved it for that file, staging only. It is blocked by ROB-157, and the
+    steps are on ROB-86. Until then staging records nothing and answers as before.
+  - **ROB-159 (Codex · Play):** the deck page's "on the list for the next wave" line from `listed`, and the hub asking
+    `{decks}` (Requests row 3).
+  - **Production:** D1 has 0001–0002. 0006 there, and turning step 1 on, are a production release on Rob's go.
+- **Next for the engine lane:** card load step 2 (ROB-87), already started by the Oct 19 session.
 
 ### Requests between the lanes
 
