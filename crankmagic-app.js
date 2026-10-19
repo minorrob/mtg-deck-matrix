@@ -43,7 +43,7 @@ function button(label,action,data={},primary=false,{caret:dir='',cls=''}={}){ret
    cells, the card pop-up, the deck page, the Ready to add list -- draws it through here, so the
    color for "in the box" is the same color everywhere. `pillKind` is the mapping from the
    model's words to the seven tokens; a word it does not know wears the draft gray. */
-const PILL_KIND={...Object.fromEntries(M.STATUS.map(s=>[s.label,s.tone])),...Object.fromEntries(M.STATE_LABELS.map(l=>[l,M.stateTone(l)])),Owned:'pull',owned:'pull',ordered:'ordered','to-buy':'buy',watching:'watch',draft:'draft',remove:'remove'};
+const PILL_KIND={...Object.fromEntries(M.STATUS.map(s=>[s.label,s.tone])),...Object.fromEntries(M.STATE_LABELS.map(l=>[l,M.stateTone(l)])),Owned:'pull',owned:'pull',Own:'pull',ordered:'ordered','to-buy':'buy',watching:'watch',draft:'draft',remove:'remove'};
 function pillKind(key,placement){if((key==='owned'||key==='Owned')&&placement==='Physical deck')return 'inbox';return PILL_KIND[key]||'draft';}
 function pill(text,kind,attrs=''){return `<span class="cm-pill ${esc(kind)}" ${attrs}>${text}</span>`;}
 /* THE READINESS BAR: a deck's target as one line, cut into what is in the box, what you own
@@ -297,9 +297,6 @@ function applyMotion(){const on=Boolean(state.preferences&&state.preferences.red
    whatever the browser's own locale, never a bare ISO 2026-09-25. ISO stays for keys and files. */
 const usDate=v=>{const t=M.localDate(v);return t?t.toLocaleDateString('en-US',{dateStyle:'medium'}):'';};
 const usDateTime=v=>{const t=M.localDate(v);return t?t.toLocaleString('en-US',{dateStyle:'medium',timeStyle:'short'}):'';};
-/* A deck with no cap of its own is held to this one: the reader's default when Settings has one, the
-   pod's rule ($225) otherwise. */
-const deckCap=()=>{const v=Number(state.preferences&&state.preferences.defaultBudgetCap);return Number.isFinite(v)&&v>0?v:(globalThis.CrankRules?globalThis.CrankRules.RULES.deckCap:null);};
 async function render(){if(!catalog)return;rescueBrand();document.getElementById('matrix-v2').classList.toggle('cm-local',isLocal());describeData();applyTheme();applyMotion();applyCardScale();disposeView?.();disposeView=null;glossary?.hide();const seq=++renderSeq,r=route();/* The landing page stands alone: no rail, its own header (crankmagic-landing.js). */document.getElementById('matrix-v2').classList.toggle('cm-landing-on',r.view==='welcome');const group=NAV_GROUP[r.view]||r.view;document.querySelectorAll('[data-nav]').forEach(el=>el.setAttribute('aria-current',el.dataset.nav===group?'page':'false'));try{subnav(group);}catch(e){console.error(e);}try{const cleanup=await views[r.view](r.params);if(seq===renderSeq)disposeView=cleanup||null;else cleanup?.();}catch(err){if(seq===renderSeq)main.innerHTML=head('Unable to open this view','Your saved library is intact',err.message,button('Decks','home'));}status();openNewDeckIfAsked();}
 function status(){const line=$('#cm-save-status');if(repo&&line)line.textContent=`Library revision ${state.revision}${navigator.onLine?'':' · offline'}`;}
 /* A SITTING IS RE-VALIDATED WHENEVER THE LIBRARY MOVES (plan §2.7). Another tab confirming,
@@ -433,9 +430,9 @@ const COLLECTION_TERMS=[
   ['reserved','Reserved','A copy earmarked for one deck’s list but not yet in its box. Reserved equals owned plus ordered plus to buy on every deck.',[]],
   ['bench','Bench','Cards you own that no deck has reserved and none is shortlisting. The spare pile everything else is drawn from.',[]],
   ['watched','Watched','A card you are considering for a deck: filed in that deck’s collection group, reserving nothing and moving nothing. You may own a copy or not.',['Watching']],
-  ['to-buy','To buy','A seat in a finalized deck’s list that nothing you hold fills yet. It is what the deck asks you to buy.',[]],
+  ['to-buy','To buy','A seat in a locked deck’s list that nothing you hold fills yet. It is what the deck asks you to buy.',[]],
   ['ordered','Ordered','A copy you have paid for that has not arrived. It counts toward a deck the way an owned copy does, and cannot be put in a box.',[]],
-  ['draft-list','Draft list','A deck’s hundred before it is finalized. Since every deck reserves the copies you own as its cards go in, and lists the rest To buy, a draft’s cards read as Reserved or To buy; Finalize only marks the list settled.',[]],
+  ['draft-list','Draft list','A deck’s hundred before its list is locked. Since every deck reserves the copies you own as its cards go in, and lists the rest To buy, a draft’s cards read as Reserved or To buy; Lock list only marks the list settled.',[]],
   ['suggestion','Suggestion','A card linked to a deck as an option or an upgrade rather than as part of its hundred.',['Suggestions']],
   ['planned','Planned','A card written into a collection group as a line on a list. It is a plan, not a copy you hold.',[]],
   ['collection-group','Collection group','A named set of records. Every deck owns one, which is how a card is shortlisted for that deck without being reserved.',['Groups']],
@@ -467,28 +464,22 @@ function playsAs(c){const out=[];const styles=CrankCatalog.playStyles(c);if(styl
    physically in, or wanted by, colored by that state on the same scale the counts row and
    the tables use, so a chip's color reads as its state wherever it appears. */
 function standing(id){
-  const rows=M.projection(state).filter(r=>r.cardId===id);
-  const by=pred=>rows.filter(pred).reduce((n,r)=>n+r.quantity,0);
-  const draft=[],planned=[];
-  /* A draft's missing cards are To buy rows since G3d (D4: every deck reserves and has a buy list), so they are
-     counted with the needs, not again here. */
-  for(const g of state.groups)for(const r of g.entries.filter(r=>r.cardId===id))planned.push({group:g,quantity:r.quantity});
-  const lot=pred=>by(r=>r.kind==='lot'&&pred(r));
-  /* THE CARD'S STANDING IN CARD STATES (docs/card-states.md): every record of this card -- its copies, the decks'
-     needs, draft lists, group entries -- asked the model's cardState, then counted by the state's word. Owned
-     leads; then the roles a card for a deck has outside its box -- Upgrade, it replaces a card in the box; Reserved,
-     it takes an empty seat -- and the two slot flags keep their chips. */
-  const records=[...rows,...draft.map(x=>({kind:'draft',deckId:x.deck.id,purpose:'main',quantity:x.quantity})),...planned.map(x=>({kind:'entry',groupId:x.group.id,quantity:x.quantity}))].map(((read)=>r=>({r,st:read(r)}))(M.stateReader(state)));
-  const count=f=>records.filter(({st})=>f(st)).reduce((n,{r})=>n+r.quantity,0);
-  const status=[['Owned',count(st=>st.stage==='owned')],...M.STATE_LABELS.map(l=>[l,count(st=>M.stateLabel(st)===l)]),['Upgrade',count(st=>!!st.deckId&&!st.inBox&&st.role==='upgrade')],['Reserved',count(st=>!!st.deckId&&!st.inBox&&st.role==='reserved')],['Option',lot(r=>r.option)],['Pinned',lot(r=>r.pinned)]];
-  /* One chip per deck and state: the deck the record is for, named with its state's word -- a stage while not
-     owned, the role in the box once owned, To add while not -- and, outside the box, its role ("To buy · upgrade"). */
-  const decks=new Map(),add=(deckId,label,kind,q)=>{const d=deckId&&state.decks.find(x=>x.id===deckId);if(!d||!q)return;const key=d.id+'|'+label,cur=decks.get(key)||{name:d.name,label,kind,quantity:0};cur.quantity+=q;decks.set(key,cur);};
-  for(const {r,st} of records){if(!st.deckId)continue;const l=M.stateLabel(st);add(st.deckId,!st.inBox&&(st.role==='upgrade'||st.role==='reserved')?`${l} · ${M.roleLabel(st.role).toLowerCase()}`:l,M.stateTone(l),r.quantity);}
-  const open=`data-action="library-card" data-card="${esc(id)}"`;
-  const chips=list=>list.filter(([,n])=>n>0).map(([l,n])=>`<button type="button" class="cm-pill ${esc(pillKind(l))}" ${open} title="Open Library filtered to this card">${esc(l)} <strong>${n}</strong></button>`).join('')||'<span class="cm-muted">none</span>';
-  const assignment=[...decks.values()].map(x=>`<button type="button" class="cm-pill ${esc(x.kind)}" ${open} title="${esc(x.label)} · ${x.quantity} — open Library filtered to this card">${esc(x.name)}${x.quantity>1?` <strong>${x.quantity}</strong>`:''}</button>`).concat(planned.map(x=>`<button type="button" class="cm-pill draft" ${open} title="Planned in the group ${esc(x.group.name)}">${esc(x.group.name)} · planned${x.quantity>1?` <strong>${x.quantity}</strong>`:''}</button>`)).join('');
-  return `<div class="cm-standing"><p><span class="cm-standing-label">Status</span>${chips(status)}</p><p><span class="cm-standing-label">Assignment</span>${assignment||'<span class="cm-muted">no deck</span>'}</p></div>`;
+  /* THE CARD'S STANDING (docs/card-states.md; Rob, 2026-10-18): every record of this card -- its copies, the decks'
+     seats, its Upgrades, its planned entries -- read by the model's cardState and counted by its pill word, Own first;
+     then one chip per deck the card is for, with its word. The chips are labels: a click on one no longer opens the
+     Library (View library records, below, does). The actions sit at the end of each line instead, Change status and
+     Change assignment, and open the same choices a Library row offers. */
+  const read=M.stateReader(state),records=M.records(state).filter(r=>r.cardId===id).map(r=>({r,st:read(r)}));
+  const count=f=>records.filter(({st})=>f(st)).reduce((n,{r})=>n+(r.quantity||1),0);
+  const lot=f=>records.filter(({r})=>r.kind==='lot'&&f(r)).reduce((n,{r})=>n+r.quantity,0);
+  const status=[['Own',count(st=>st.ownership==='own')],...M.STATE_LABELS.map(l=>[l,count(st=>M.stateLabel(st)===l)]),['Option',lot(r=>r.option)],['Pinned',lot(r=>r.pinned)]];
+  const name=cid=>(cardOf(cid)||{}).name||'',deckName=did=>{const d=state.decks.find(x=>x.id===did);if(!d)return '';const m=d.name.match(/^(D\d+)\b/);return m?m[1]:d.name;};
+  const decks=new Map();
+  for(const {r,st} of records){if(!st.deckId)continue;const d=state.decks.find(x=>x.id===st.deckId);if(!d)continue;const label=M.stateLabel(st),key=d.id+'|'+label,cur=decks.get(key)||{name:d.name,label,note:M.stateNote(st,name,deckName),kind:M.stateTone(label),quantity:0};cur.quantity+=(r.quantity||1);decks.set(key,cur);}
+  const chips=list=>list.filter(([,n])=>n>0).map(([l,n])=>`<span class="cm-pill ${esc(pillKind(l))}">${esc(l)} <strong>${n}</strong></span>`).join('')||'<span class="cm-muted">none</span>';
+  const assignment=[...decks.values()].map(x=>`<span class="cm-pill ${esc(x.kind)}" title="${esc(x.label)}${x.note?' · '+esc(x.note):''}">${esc(x.name)}${x.label!=='Final'?` · ${esc(x.label)}`:''}${x.quantity>1?` <strong>${x.quantity}</strong>`:''}</span>`).join('');
+  const act=(label,action)=>`<button type="button" class="v-button compact cm-standing-act" data-action="${action}" data-card="${esc(id)}">${label}</button>`;
+  return `<div class="cm-standing"><p><span class="cm-standing-label">Status</span>${chips(status)}${act('Change status','card-status')}</p><p><span class="cm-standing-label">Assignment</span>${assignment||'<span class="cm-muted">no deck</span>'}${act('Change assignment','card-assign')}</p></div>`;
 }
 /* THE TERMS THE GRAPH READS OFF THIS CARD, grouped as the Explore filters name them. They
    were the bulk of the graph's card pop-up; here they sit under the rules text they come
@@ -503,7 +494,7 @@ async function inspector(id){let c=cardOf(id);if(!c)throw Error('Card not found.
    own copy for a card the record set does not carry. */
 const cardOf=id=>(catalog&&catalog.get(id))||state.cards[id]||null;
 const cardsOf=()=>Object.keys(state.cards).map(cardOf).filter(Boolean);
-const C={M,E,$,esc,uid,isLocal,money,cardScale,setCardScale,cardScaleRange,cardScaleSlider,card:cardOf,cards:cardsOf,source,colors,mana,button,caret,pill,pillKind,readinessBar,followAnchor,options,field,select,note,head,pageHead,helpButton,HELP,SUBNAV,termsOn,termsToggle,notice,modal,guardModal,keepFocus,focusKey,focusFind,newGroupName,groupLabel,form,go,route,render,refresh,commit,download,review,skipping,setSkip,cardPicker,compareCards,buyLink,kingdomLink,priceBlock,feedbackLink,manualCard,inspector,affected,readableLocation,actions,views,main,get state(){return state;},get repo(){return repo;},get catalog(){return catalog;},get glossary(){return glossaryView;},get sandbox(){return sandbox;},restage,setState(value){state=value;},describeData,themeChoice,THEMES,THEME_FACE,deckCap,applyMotion,status,usDate,usDateTime};
+const C={M,E,$,esc,uid,isLocal,money,cardScale,setCardScale,cardScaleRange,cardScaleSlider,card:cardOf,cards:cardsOf,source,colors,mana,button,caret,pill,pillKind,readinessBar,followAnchor,options,field,select,note,head,pageHead,helpButton,HELP,SUBNAV,termsOn,termsToggle,notice,modal,guardModal,keepFocus,focusKey,focusFind,newGroupName,groupLabel,form,go,route,render,refresh,commit,download,review,skipping,setSkip,cardPicker,compareCards,buyLink,kingdomLink,priceBlock,feedbackLink,manualCard,inspector,affected,readableLocation,actions,views,main,get state(){return state;},get repo(){return repo;},get catalog(){return catalog;},get glossary(){return glossaryView;},get sandbox(){return sandbox;},restage,setState(value){state=value;},describeData,themeChoice,THEMES,THEME_FACE,applyMotion,status,usDate,usDateTime};
 actions['verify-identity']=el=>{const old=cardOf(el.dataset.card);cardPicker('Choose the verified identity for '+old.name,async chosen=>{const verified=await catalog.details(chosen);if(!verified.verified)throw Error('This identity still needs an authoritative catalog match. Use its exact Scryfall link.');review('Verify supplemental card identity',note(`${old.name} → ${verified.name}. All current copies, groups and deck slots will use the verified identity. Ownership, exact printings and physical locations stay the same. Earlier report fingerprints remain historical.`,true),{type:'verifyIdentity',cardId:old.id,card:verified});});};
 /* A HELP BODY MAY BE A FUNCTION. The Library help reads its definitions from the glossary as
    it opens, so the drawing, the hover and the help page always say the same sentence. */
@@ -693,7 +684,7 @@ else if(document.querySelector('meta[name="crankmagic-play"]')?.content==='cloud
    now; what no longer applies is named rather than lost quietly. The warning on the way out is
    the other half: a sitting is per device, so a closed tab is the one way to lose one. */
 if(sandbox){const back=sandbox.load(state);if(back.dropped.length)notice(`${back.dropped.length} staged move${back.dropped.length===1?'':'s'} no longer appl${back.dropped.length===1?'ies':'y'} and ${back.dropped.length===1?'was':'were'} dropped: ${back.dropped.map(d=>d.cardName).join(', ')}.`,true);else if(back.restored)notice(`${back.restored} move${back.restored===1?'':'s'} still staged from your last sitting. Review and confirm, or discard, on the Cards page.`);
- addEventListener('beforeunload',event=>{if(!sandbox.open)return;event.preventDefault();event.returnValue='';});const strip=Object.values(state.cards).filter(c=>(c.shipped!==true&&catalog.get(c.id)?.shipped)||(c.shipped===true&&!c.oracleId&&catalog.get(c.id)?.oracleId)).map(c=>c.id);if(strip.length){try{const result=await repo.commit({id:uid(),type:'reconcileCards',ids:strip},state.revision);state=result.state;}catch(error){notice('The library could not be reconciled with the card records: '+error.message,true);}}}repo.subscribe(async info=>{if(info.closed)return notice('Local database was upgraded in another tab. Reload before editing.',true);if(!committing&&info.revision!==state.revision){await refresh();notice('Library refreshed after a change in another tab. Review any open form before saving.');}});await render();resetSaid();if(navigator.storage?.persist)navigator.storage.persist().catch(()=>{});if('serviceWorker' in navigator)navigator.serviceWorker.register('crankmagic-sw.js?v=486',{scope:'./'}).then(offerUpdate).catch(error=>notice('Offline app caching is unavailable: '+error.message,true));}
+ addEventListener('beforeunload',event=>{if(!sandbox.open)return;event.preventDefault();event.returnValue='';});const strip=Object.values(state.cards).filter(c=>(c.shipped!==true&&catalog.get(c.id)?.shipped)||(c.shipped===true&&!c.oracleId&&catalog.get(c.id)?.oracleId)).map(c=>c.id);if(strip.length){try{const result=await repo.commit({id:uid(),type:'reconcileCards',ids:strip},state.revision);state=result.state;}catch(error){notice('The library could not be reconciled with the card records: '+error.message,true);}}}repo.subscribe(async info=>{if(info.closed)return notice('Local database was upgraded in another tab. Reload before editing.',true);if(!committing&&info.revision!==state.revision){await refresh();notice('Library refreshed after a change in another tab. Review any open form before saving.');}});await render();resetSaid();if(navigator.storage?.persist)navigator.storage.persist().catch(()=>{});if('serviceWorker' in navigator)navigator.serviceWorker.register('crankmagic-sw.js?v=494',{scope:'./'}).then(offerUpdate).catch(error=>notice('Offline app caching is unavailable: '+error.message,true));}
 catch(error){main.innerHTML=head('Local library needs attention','Your data has not been changed',error.message)+note('CrankMagic requires HTTPS or localhost and browser storage. If a saved record is damaged, download its original contents and restore a verified backup.',true);if(repo){const raw=await repo.exportData();main.innerHTML+='<div class="cm-actions">'+button('Download original recovery record','recovery-export')+button('Restore a verified backup','recovery-restore')+'</div>';$('#cm-user-menu').innerHTML=button('Download original recovery record','recovery-export')+button('Restore a verified backup','recovery-restore');actions['recovery-export']=()=>download('CrankMagic-recovery-original.json',JSON.stringify({format:'crankmagic-recovery-record',capturedAt:new Date().toISOString(),...raw},null,2));actions['recovery-restore']=()=>form('Recover from a verified backup','<label class="cm-full">CrankMagic JSON backup<input name="file" type="file" accept=".json" required></label>'+field('Type RECOVER to confirm replacement','confirm','','required')+note('The damaged original record is retained in the restored library’s legacy archive. No quantities are inferred from it.'),async(v,f)=>{if(v.confirm!=='RECOVER')throw Error('Type RECOVER exactly.');const file=f.elements.file.files[0];if(file.size>100000000)throw Error('Backup exceeds 100 MB.');const payload=await E.readBackup(await file.text());await repo.recover(payload,raw.state);location.reload();},'Recover library');}}
 
 })();
