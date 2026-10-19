@@ -23,6 +23,11 @@
  *     longest-first through a cover with the fewest gaps), then filling each template's body with the card's own slot
  *     values, its own sentence as the ability's text.
  *
+ * A SPELL OF SEVERAL SENTENCES is learned sentence by sentence too, where each sentence is one effect with its own
+ * targets ("Exile target nonland permanent. You lose 3 life."): `spellParts` splits it, and keeps the split only when the
+ * parts put back together (`composeSpell`) are the card's own ability. A card is then translated with consecutive spell
+ * sentences composed into one spell, so "Draw a card." after a known spell is no longer a sentence nobody writes.
+ *
  * Every translation can be made with one card held out (`except`): the template's cards other than it, the body they
  * agree on. That is the calibration (game/tools/sentence-library.mjs): each defined card held out, translated from the
  * rest, and played through its own scenarios; a template's pass rate is the share of its cards that then pass. A rate is
@@ -198,6 +203,49 @@ export function fillBody(body, slots, name = "") {
   return walk(body);
 }
 
+/* SPELL COMPOSITION. A plain spell (its targets and effects, nothing else) split into one part per sentence, and put back
+   together: each part's targets are the next ones in order, exactly those its one effect refers to, so a later sentence
+   that refers to an earlier one's target ("Its controller creates two Treasure tokens.") keeps the spell whole. */
+const PLAIN_SPELL = new Set(["kind", "text", "targets", "effects"]);
+const plainSpell = (a) => a?.kind === "spell" && Array.isArray(a.effects) && Object.keys(a).every((k) => PLAIN_SPELL.has(k));
+const targetRefs = (v, out = []) => {
+  if (Array.isArray(v)) v.forEach((x) => targetRefs(x, out));
+  else if (v && typeof v === "object") for (const [k, x] of Object.entries(v)) { if (k === "target" && Number.isInteger(x)) out.push(x); else targetRefs(x, out); }
+  return out;
+};
+const retarget = (v, move) => (Array.isArray(v) ? v.map((x) => retarget(x, move))
+  : v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, k === "target" && Number.isInteger(x) ? move(x) : retarget(x, move)])) : v);
+const canonical = (v) => JSON.stringify(v, (k, x) => (x && typeof x === "object" && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort().map((key) => [key, x[key]])) : x));
+
+/** One spell from its parts, in order: their targets one list, each part's references moved past the targets before it. */
+export function composeSpell(parts, text) {
+  const targets = [], effects = [];
+  for (const part of parts) {
+    const offset = targets.length;
+    targets.push(...(part.targets ?? []));
+    effects.push(...part.effects.map((e) => retarget(e, (i) => i + offset)));
+  }
+  return {kind: "spell", text, ...(targets.length ? {targets} : {}), effects};
+}
+
+/** A plain spell of two or more sentences, one effect each, as one part per sentence -- or null where it is not that, or
+    where the parts put back together would not be the spell. */
+export function spellParts(ability) {
+  if (!plainSpell(ability)) return null;
+  const sentences = atomsOf(ability.text), effects = ability.effects, targets = ability.targets ?? [];
+  if (sentences.length < 2 || sentences.length !== effects.length) return null;
+  const parts = [];
+  let next = 0;
+  for (let i = 0; i < effects.length; i++) {
+    const refs = [...new Set(targetRefs(effects[i]))].sort((a, b) => a - b);
+    if (refs.length && (refs[0] !== next || refs.at(-1) !== next + refs.length - 1)) return null;
+    parts.push({kind: "spell", text: sentences[i].text, ...(refs.length ? {targets: targets.slice(next, next + refs.length)} : {}),
+      effects: [retarget(effects[i], (r) => r - next)]});
+    next += refs.length;
+  }
+  return canonical(composeSpell(parts, ability.text)) === canonical(ability) ? parts : null;
+}
+
 /**
  * The library: each template at each level, with every card that writes it and the body each wrote.
  *
@@ -219,7 +267,10 @@ export function createLibrary(scripts) {
       if (!bySentence.has(ability.text)) bySentence.set(ability.text, []);
       bySentence.get(ability.text).push(ability);
     }
-    for (const [text, abilities] of bySentence) {
+    /* And each sentence of a spell that splits into parts, as a spell of its own. */
+    const pairs = [...bySentence];
+    for (const ability of script.abilities) for (const part of spellParts(ability) ?? []) pairs.push([part.text, [part]]);
+    for (const [text, abilities] of pairs) {
       for (const level of [1, 2]) {
         const {key, slots} = templateOf(text, name, level);
         const id = `${level}:${key}`;
@@ -293,7 +344,7 @@ const LONGEST = 16;
 /**
  * The card's text covered with templates: the fewest pieces left over, then the fewest level-2 templates, then the best
  * evidenced, then the fewest templates (an ability that is two sentences is one span). A card gets at most one spell
- * ability.
+ * ability: plain spell templates next to each other are composed into one (`composeSpell`), any other spell stands alone.
  *
  * @returns {{atoms, gaps: string[], spans: {text, id, level}[]}}
  */
@@ -314,20 +365,23 @@ export function segment(text, name, library, except = null) {
   const score = (c) => [c.gaps, c.level2, Number(c.doubt.toFixed(9)), c.spans.length];
   const better = (a, b) => { if (!b) return true; const x = score(a), y = score(b); for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return x[i] < y[i]; return false; };
   const best = Array(n + 1).fill(null);
-  best[0] = {gaps: 0, level2: 0, doubt: 0, spells: 0, spans: [], left: []};
+  best[0] = {gaps: 0, level2: 0, doubt: 0, spells: 0, plain: true, lastSpell: false, spans: [], left: []};
   for (let i = 0; i < n; i++) {
     const at = best[i];
     if (!at) continue;
-    const skip = {...at, gaps: at.gaps + 1, left: [...at.left, atoms[i].text]};
+    const skip = {...at, gaps: at.gaps + 1, lastSpell: false, left: [...at.left, atoms[i].text]};
     if (better(skip, best[i + 1])) best[i + 1] = skip;
     for (let j = i + 1; j <= Math.min(n, i + LONGEST); j++) {
       const span = raw.slice(atoms[i].start, atoms[j - 1].end);
       const t = lookup(span);
       if (!t) continue;
-      const spell = JSON.parse(t.body).filter((a) => a.kind === "spell").length;
-      if (at.spells + spell > 1) continue;
+      const body = JSON.parse(t.body), spell = body.filter((a) => a.kind === "spell").length;
+      const plain = body.length === 1 && plainSpell(body[0]);
+      /* A second spell only as the next sentence after a first, both plain: one spell, composed. */
+      if (spell && at.spells && !(at.lastSpell && at.plain && plain)) continue;
       const c = {gaps: at.gaps, level2: at.level2 + (t.level === 2 ? 1 : 0), doubt: at.doubt + 1 / t.cards, spells: at.spells + spell,
-        spans: [...at.spans, {text: span, id: t.id, level: t.level}], left: at.left};
+        plain: spell ? at.plain && plain : at.plain, lastSpell: spell > 0,
+        spans: [...at.spans, {text: span, id: t.id, level: t.level, start: atoms[i].start, end: atoms[j - 1].end, spell: spell > 0}], left: at.left};
       if (better(c, best[j])) best[j] = c;
     }
   }
@@ -346,11 +400,21 @@ export function translate(card, library, {except = null} = {}) {
   const name = card.identity.name;
   const {gaps, spans} = segment(card.oracleText, name, library, except);
   if (gaps.length || !spans.length) return {ok: false, gaps};
-  const abilities = spans.flatMap((span) => {
+  const filled = spans.map((span) => {
     const t = templateWithout(library, span.id, except);
     const {slots} = templateOf(span.text, name, t.level);
     return JSON.parse(t.body).map((body) => ({...fillBody(body, slots, name), text: span.text}));
   });
+  /* Consecutive spell spans (segment allows them only plain and next to each other) are one spell, its text theirs. */
+  const abilities = [];
+  for (let i = 0; i < spans.length; i++) {
+    if (!spans[i].spell) { abilities.push(...filled[i]); continue; }
+    let j = i;
+    while (j + 1 < spans.length && spans[j + 1].spell) j += 1;
+    if (j === i) abilities.push(...filled[i]);
+    else abilities.push(composeSpell(filled.slice(i, j + 1).map((f) => f[0]), String(card.oracleText ?? "").slice(spans[i].start, spans[j].end)));
+    i = j;
+  }
   return {ok: true, script: {schema: card.schema ?? "CrankCardScript@1", identity: card.identity, oracleText: card.oracleText,
     source: "compiler", abilities}, templates: spans.map((s) => s.id)};
 }

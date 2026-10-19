@@ -11,14 +11,16 @@
  *   3. A card's text in pieces, each the card's own words: sentences never split inside reminder text, keyword lines
  *      split by word.
  *   4. The library on the directory: one sentence that is several abilities stays several; the better evidenced cover
- *      wins; one spell per card; a card held out is out of its own templates.
+ *      wins; one spell per card; a card held out is out of its own templates. A spell of several sentences, one effect
+ *      each, learned sentence by sentence only where its parts put back together are the spell; composed again only
+ *      from plain spell sentences next to each other.
  *   5. The calibration: every defined card held out, translated, compiled and played; the rates reproducible; a template
  *      deliberately broken drops its rate to nothing.
  *   6. The report: every template once, with its count, and its rate where it was tried.
  */
 import assert from "node:assert/strict";
 import {loadCardScripts, loadCardScenarios, loadCardIndex} from "../game/tools/engine-cards.mjs";
-import {templateOf, abstractBody, fillBody, atomsOf, createLibrary, templateWithout, segment, translate, isSimple}
+import {templateOf, abstractBody, fillBody, atomsOf, createLibrary, templateWithout, segment, translate, isSimple, spellParts, composeSpell}
   from "../game/engine/cards/sentences.mjs";
 import {calibrate, calibrateCard, report, reportMarkdown, wilsonLow, minimumCountOf, BANDS, CALIBRATION_SCHEMA} from "../game/tools/sentence-library.mjs";
 
@@ -121,6 +123,40 @@ const byName = new Map(scripts.map((s) => [s.identity.name, s]));
     `a template only ${owner} writes is not in the library with ${owner} held out`);
 }
 
+/* ---- 4b. a spell of several sentences ---- */
+function canonical(v) {
+  return JSON.stringify(v, (k, x) => (x && typeof x === "object" && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort().map((key) => [key, x[key]])) : x));
+}
+{
+  const spellOf = (name) => byName.get(name).abilities.find((a) => a.kind === "spell");
+  const unmaking = spellOf("Anguished Unmaking"), parts = spellParts(unmaking);
+  eq(parts?.map((p) => [p.text, p.targets?.length ?? 0, p.effects.map((e) => e.effect)]), [["Exile target nonland permanent.", 1, ["moveZone"]], ["You lose 3 life.", 0, ["loseLife"]]],
+    "Anguished Unmaking's spell is two parts: the exile with its target, the life loss with none");
+  eq(canonical(composeSpell(parts, unmaking.text)), canonical(unmaking), "put back together, they are its spell");
+  eq(spellParts(spellOf("An Offer You Can't Refuse")), null, "a sentence that refers to an earlier one's target (\"Its controller creates two Treasure tokens.\") keeps the spell whole");
+  eq(spellParts({...unmaking, additionalCost: [{atom: "sacrifice"}]}), null, "a spell with more than targets and effects is not split");
+  eq(spellParts({...unmaking, text: "Exile target nonland permanent and you lose 3 life."}), null, "nor one whose sentences are not one effect each");
+  eq(spellParts({kind: "spell", text: "Draw a card. You lose 3 life.", targets: [], effects: [{effect: "draw", count: 1}, {effect: "loseLife", amount: 3}]}), null,
+    "nor one that its parts put back together would not write the same way (an empty target list)");
+  eq(spellParts({kind: "spell", text: "Tap target creature. Target player draws a card.", targets: [{what: "player"}, {what: "permanent", types: ["Creature"]}],
+    effects: [{effect: "tap", targets: {target: 1}}, {effect: "draw", count: 1, player: {target: 0}}]}), null, "nor one whose targets are not listed in the order its sentences name them");
+  eq(spellParts({kind: "spell", text: "Draw a card. You lose 3 life.", targets: [{what: "player"}], effects: [{effect: "draw", count: 1}, {effect: "loseLife", amount: 3}]}), null,
+    "nor one with a target no sentence uses");
+  const two = composeSpell([{kind: "spell", targets: [{what: "permanent"}], effects: [{effect: "tap", targets: {target: 0}}]},
+    {kind: "spell", targets: [{what: "player"}], effects: [{effect: "draw", count: 1, player: {target: 0}}]}], "Tap target permanent. Target player draws a card.");
+  eq([two.targets.length, two.effects[1].player], [2, {target: 1}], "composed, a later part's target is moved past the earlier part's");
+  const draw = templateWithout(library, `1:${templateOf("Draw a card.", "X", 1).key}`);
+  ok(draw && draw.cards >= 3 && JSON.parse(draw.body)[0].kind === "spell", `"Draw a card." alone, which no card writes as its whole spell, is learned from ${draw?.cards} cards' spells`);
+  const split = scripts.filter(isSimple).flatMap((x) => x.abilities).filter((a) => spellParts(a));
+  ok(split.length >= 70 && split.every((a) => canonical(composeSpell(spellParts(a), a.text)) === canonical(a)), `${split.length} of the directory's spells learned sentence by sentence, each put back together exactly`);
+  const across = translate({identity: {name: "Test Spell"}, oracleText: "Exile target nonland permanent.\nCycling {2}\nYou lose 3 life."}, library);
+  eq(across.ok, false, "spell sentences with another ability between them are not composed");
+  const costly = [...library.templates.values()].map((t) => templateWithout(library, t.id)).find((t) => t && t.level === 1 && t.cards >= 2
+    && JSON.parse(t.body).length === 1 && JSON.parse(t.body)[0].kind === "spell" && JSON.parse(t.body)[0].additionalCost);
+  const example = library.templates.get(costly.id).examples[0].card, text = byName.get(example).abilities.find((a) => a.kind === "spell").text;
+  eq(translate({identity: {name: example}, oracleText: `${text}\nDraw a card.`}, library).ok, false, `nor is a spell with an additional cost (${example}'s) composed with another`);
+}
+
 /* ---- 5. the calibration ---- */
 const scenarios = new Map(loadCardScenarios().map((f) => [f.scenarios.card, f.scenarios]));
 const definition = loadCardIndex().definition;
@@ -135,9 +171,10 @@ const first = calibrate({scripts, scenarios, definition, library});
   const translated = first.results.filter((r) => r.templates);
   ok(translated.every((r) => translate(byName.get(r.card), library, {except: r.card}).script.abilities.filter((a) => a.kind === "spell").length <= 1),
     `none of the ${translated.length} translations has two spell abilities`);
-  const ransacking = segment(byName.get("Reckless Ransacking").oracleText, "Reckless Ransacking", library, "Reckless Ransacking");
-  eq(ransacking.spans.filter((s) => JSON.parse(templateWithout(library, s.id, "Reckless Ransacking").body).some((a) => a.kind === "spell")).length <= 1, true,
-    "Reckless Ransacking's two sentences, each another card's whole spell, are never two spells");
+  const ransacking = translate(byName.get("Reckless Ransacking"), library, {except: "Reckless Ransacking"});
+  eq([ransacking.script?.abilities.length, ransacking.script?.abilities[0].effects.map((e) => e.effect), ransacking.script?.abilities[0].text],
+    [1, ["pump", "createToken"], byName.get("Reckless Ransacking").abilities[0].text], "Reckless Ransacking's two sentences, each from other cards, are composed into its one spell");
+  eq(calibrateCard(byName.get("Reckless Ransacking"), {library, scenarios, definition}).status, "passed", "which plays every one of its own scenarios");
   const again = calibrate({scripts, scenarios, definition, library: createLibrary(scripts)});
   eq(JSON.stringify(again.results), JSON.stringify(first.results), "reproducible: the same directory, the same cards translated, the same rates");
   const uses = first.results.reduce((n, r) => n + (r.templates?.length ?? 0), 0);

@@ -18,7 +18,7 @@ templates alone, compiled, held to its oracle text and played through its own sc
 
 | Defined cards | Not templated (a second face or spell) | Not fully covered by the others' templates | Translated | Passed every scenario | Low | Failed |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 2470 | 63 | 1887 | 520 | 519 (99.8%) | 98.9% | 1 |
+| 2470 | 63 | 1861 | 546 | 545 (99.8%) | 99.0% | 1 |
 
 ## Pooled pass rate by how many other cards wrote the template
 
@@ -26,10 +26,10 @@ A card's failure counts against every template it used, so each rate is a floor.
 
 | Other cards | Templates tried | Uses | Passed | Rate | Low |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 1 | 140 | 232 | 231 | 99.6% | 97.6% |
-| 2-4 | 58 | 131 | 130 | 99.2% | 95.8% |
-| 5-9 | 28 | 135 | 135 | 100.0% | 97.2% |
-| 10-19 | 23 | 199 | 199 | 100.0% | 98.1% |
+| 1 | 148 | 243 | 242 | 99.6% | 97.7% |
+| 2-4 | 69 | 155 | 154 | 99.4% | 96.4% |
+| 5-9 | 29 | 139 | 139 | 100.0% | 97.3% |
+| 10-19 | 24 | 207 | 207 | 100.0% | 98.2% |
 | 20-49 | 10 | 82 | 82 | 100.0% | 95.5% |
 | 50+ | 6 | 164 | 164 | 100.0% | 97.7% |
 
@@ -37,10 +37,10 @@ And together, the templates seen on k or more other cards:
 
 | k or more | Uses | Passed | Rate | Low |
 | --- | ---: | ---: | ---: | ---: |
-| 1 | 943 | 941 | 99.8% | 99.2% |
-| 2 | 711 | 710 | 99.9% | 99.2% |
-| 5 | 580 | 580 | 100.0% | 99.3% |
-| 10 | 445 | 445 | 100.0% | 99.1% |
+| 1 | 990 | 988 | 99.8% | 99.3% |
+| 2 | 747 | 746 | 99.9% | 99.3% |
+| 5 | 592 | 592 | 100.0% | 99.4% |
+| 10 | 453 | 453 | 100.0% | 99.2% |
 | 20 | 246 | 246 | 100.0% | 98.5% |
 | 50 | 164 | 164 | 100.0% | 97.7% |
 
@@ -52,7 +52,7 @@ And together, the templates seen on k or more other cards:
 | --- | --- | --- |
 | Goblin Piledriver | plays: It attacks beside two Goblins and a Bear: +4/+0, a 5/2; the Goblin left home does not count: Goblin Piledriver is 3/2, not 5/2 | `2:protection from COLOR`<br>`1:whenever this creature attacks, it gets +N/+N until end of turn for each other attacking goblin` |
 
-## The templates (5650)
+## The templates (5864)
 
 Every template, with its rate where it was tried, is in `sentence-calibration-2026-10-19.json` (`columns`, `templates`).
 The twenty written by the most cards:

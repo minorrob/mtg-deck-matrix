@@ -7,7 +7,7 @@ to its oracle text and played in the loader's smoke game. The candidates are in 
 ## What a candidate is, and is not
 
 - **Every sentence comes from a calibrated template.** With each defined card held out, the library's translations passed
-  their own scenarios 519 of 520 times (docs/engine/sentence-calibration-2026-10-19.md).
+  their own scenarios 545 of 546 times (docs/engine/sentence-calibration-2026-10-19.md).
   A template that failed there vetoes every card that uses it.
 - **It compiled, its abilities are its oracle text, and its smoke game played** without breaking the game.
 - **It has no scenarios of its own yet.** It is a candidate: it plays only at playtest tables, labeled (Rob's decision 2,
@@ -17,15 +17,15 @@ to its oracle text and played in the loader's smoke game. The candidates are in 
 
 | Undefined Commander cards | Candidates | Refused | Blocked (a rule not built) | Vetoed | A sentence unknown | One sentence short | Another layout |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 29551 | **2429** | 0 | 3 | 18 | 26010 | 12320 | 1091 |
+| 29551 | **2643** | 0 | 6 | 18 | 25793 | 12544 | 1091 |
 
-The library: 5650 templates from 2407 defined cards; minimum count 1.
+The library: 5864 templates from 2407 defined cards; minimum count 1.
 
 ## Blocked, refused and vetoed
 
 | Status | Why | Cards |
 | --- | --- | ---: |
-| blocked | a permanent card's spell ability says only its additional cost | 2 |
+| blocked | a permanent card's spell ability says only its additional cost | 5 |
 | blocked | Backup 1 (When this creature enters, put a +1/+1 counter on target creature. If that's another creature, it gains the fo | 1 |
 | vetoed | 2:protection from COLOR | 18 |
 
@@ -36,15 +36,13 @@ it a template, and the compiler can then take every card below it. These are the
 
 | Sentence | Cards it would complete |
 | --- | ---: |
-| Draw a card. | 40 |
 | Swampwalk (This creature can't be blocked as long as defending player controls a Swamp.) | 23 |
 | {R}: This creature gets +1/+0 until end of turn. | 22 |
 | This creature attacks each combat if able. | 21 |
 | This creature can block only creatures with flying. | 20 |
 | Shroud (This creature can't be the target of spells or abilities.) | 18 |
-| Scry 1. (Look at the top card of your library. You may put that card on the bottom.) | 17 |
+| Cascade (When you cast this spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its m | 15 |
 | When this creature enters, it explores. (Reveal the top card of your library. Put that card into your hand if it's a land. Otherwise, put a +1/+1 counter on thi | 15 |
-| Cascade (When you cast this spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its m | 14 |
 | {B}: Regenerate this creature. | 14 |
 | Mountainwalk (This creature can't be blocked as long as defending player controls a Mountain.) | 13 |
 | When this creature becomes the target of a spell or ability, sacrifice it. | 13 |
@@ -54,7 +52,6 @@ it a template, and the compiler can then take every card below it. These are the
 | Unleash (You may have this creature enter with a +1/+1 counter on it. It can't block as long as it has a +1/+1 counter on it.) | 11 |
 | When this creature enters, put a +1/+1 counter on target creature. | 11 |
 | Wither (This deals damage to creatures in the form of -1/-1 counters.) | 11 |
-| You gain 2 life. | 11 |
 | {4}, {T}: Investigate. (Create a Clue token. It's an artifact with "{2}, Sacrifice this token: Draw a card.") | 11 |
 | Improvise (Your artifacts can help cast this spell. Each artifact you tap after you're done activating mana abilities pays for {1}.) | 10 |
 | This creature can block an additional creature each combat. | 10 |
@@ -64,15 +61,18 @@ it a template, and the compiler can then take every card below it. These are the
 | When this land enters, it deals 1 damage to target opponent. | 10 |
 | {W}, {T}: Tap target creature. | 10 |
 | Prevent all combat damage that would be dealt this turn. | 9 |
-| Scry 1. | 9 |
 | This creature can't attack unless defending player controls an Island. | 9 |
 | Undying (When this creature dies, if it had no +1/+1 counters on it, return it to the battlefield under its owner's control with a +1/+1 counter on it.) | 9 |
 | When this Equipment enters, attach it to target creature you control. | 9 |
 | Whenever this creature or another Ally you control enters, you may put a +1/+1 counter on this creature. | 9 |
-| You gain 3 life. | 9 |
 | {W}: This creature gets +0/+1 until end of turn. | 9 |
+| As an additional cost to cast this spell, sacrifice a creature. | 8 |
 | Banding (Any creatures with banding, and up to one without, can attack in a band. Bands are blocked as a group. If any creatures with banding you control are bl | 8 |
-| Create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.") | 8 |
+| Return target creature card from your graveyard to your hand. | 8 |
+| Return target permanent to its owner's hand. | 8 |
 | Whenever this creature attacks, it gets +2/+0 until end of turn. | 8 |
 | {1}{G}: Regenerate this creature. | 8 |
 | {T}: Prevent the next 1 damage that would be dealt to any target this turn. | 8 |
+| Create a Food token. (It's an artifact with "{2}, {T}, Sacrifice this token: You gain 3 life.") | 7 |
+| Draw a card at the beginning of the next turn's upkeep. | 7 |
+| If a creature dealt damage this way would die this turn, exile it instead. | 7 |
