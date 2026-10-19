@@ -1,9 +1,9 @@
 {
   "workstream": "claude-engine",
-  "updated": "2026-10-18T15:38:00Z",
-  "updated_by": "Claude · Engine (Fable), after #778 merged and went to staging.",
-  "branch": "claude/admiring-franklin-58cxy4",
-  "now": "Card load step 1 (ROB-86) and step 2 (ROB-87), each in a fresh session from its kickoff prompt; ROB-75 and the room's socket frames are on staging (#778).",
+  "updated": "2026-10-19T06:50:00Z",
+  "updated_by": "Claude · Engine (the October 19 session), reconciling the October 18 handoffs with Linear.",
+  "branch": "claude/exciting-sagan-qe5yuf",
+  "now": "Card load step 1 (ROB-86, #776) green and carried to main with its conflict resolved; migration 0006 approved for staging and waiting on the Cloudflare credential (ROB-157). Step 2 (ROB-87) next. Staging serves main 62900176.",
   "items": [
     {"id": "ROB-12", "outcome": "play-experience", "feature": "Cast with floating mana and several mana sources; the commander tax projected", "status": "done", "remaining_hours": 0},
     {"id": "ROB-13", "outcome": "play-experience", "feature": "Auto-pass when a player has no meaningful response; an explicit Yield turn", "status": "done", "remaining_hours": 0},
@@ -24,7 +24,7 @@
     {"id": "ROB-93", "outcome": "play-any-deck", "feature": "The next waves of the most-played cards", "status": "backlog", "remaining_hours": 40, "note": "Rob decides whether waves wait on the card load program."},
     {"id": "ROB-94", "outcome": "play-any-deck", "feature": "Rob's six live decks: every card's modes, triggers and effects proven, played and replayed", "status": "in_progress", "remaining_hours": 20},
     {"id": "ROB-17", "outcome": "play-any-deck", "feature": "Luke's missed second card effect found and reproduced", "status": "backlog", "remaining_hours": 8, "note": "Needs the game record or a table link."},
-    {"id": "ROB-86", "outcome": "play-any-deck", "feature": "Card load step 1: count which cards players ask for that cannot play yet", "status": "backlog", "remaining_hours": 10},
+    {"id": "ROB-86", "outcome": "play-any-deck", "feature": "Card load step 1: count which cards players ask for that cannot play yet", "status": "review", "remaining_hours": 2, "note": "Green; the merge, a staging release and migration 0006 (waits on ROB-157) remain.", "evidence": [{"label": "PR #776", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/776"}]},
     {"id": "ROB-87", "outcome": "play-any-deck", "feature": "Card load step 2: the sentence library with a measured pass rate per template", "status": "backlog", "remaining_hours": 16},
     {"id": "ROB-88", "outcome": "play-any-deck", "feature": "Card load step 3: the compiler and a scored index of every Commander-legal card", "status": "backlog", "remaining_hours": 24},
     {"id": "ROB-90", "outcome": "play-any-deck", "feature": "Card load step 4: the Claude API backstop under Rob's daily cap", "status": "blocked", "remaining_hours": 12, "note": "Waits on step 3 and on Rob's cap."},
@@ -39,6 +39,7 @@
   ],
   "asks_of_rob": [
     {"id": "ROB-95", "ask": "Open the AI door: delete or widen the staging Access app 'CrankMagic AI (staging)'; add the Anthropic API key as a Worker secret on the production Worker (you enter it yourself)", "recommendation": "Do both; the engine lane then runs the invitee walk on staging and production", "needed_by": "before AI features (outcome 8) can be tested by anyone but you", "url": "https://linear.app/robs-build/issue/ROB-95"},
+    {"id": "ROB-157", "ask": "Reconnect Cloudflare for Claude cloud sessions (the API credential is refused), then start a new session", "recommendation": "Reconnect it; migration 0006 on staging and the deployed-bytes check of every staging release wait on it", "needed_by": "before step 1 can be finished on staging", "url": "https://linear.app/robs-build/issue/ROB-157"},
     {"id": "ROB-90", "ask": "Set the card load backstop's daily dollar cap on staging", "recommendation": "$5 a day for the 200-card sample, then revisit with the measured cost", "needed_by": "before card load step 4 starts", "url": "https://linear.app/robs-build/issue/ROB-90"},
     {"id": "ROB-93", "ask": "Do hand-written card waves 4d onward wait on card load steps 1 to 4?", "recommendation": "Yes: the program makes later waves cheaper; the six live decks are covered meanwhile by ROB-94", "needed_by": "when ROB-94 is done", "url": "https://linear.app/robs-build/issue/ROB-93"}
   ],
