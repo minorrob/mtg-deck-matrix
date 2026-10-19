@@ -237,6 +237,11 @@ const job = (names, call, ledger = {cards: {}}, extra = {}) => {
   const plan = spawnSync(process.execPath, ["game/tools/engine-compile.mjs", "--plan", "--decks", "--sample", "200"], {cwd: ROOT, encoding: "utf8", env});
   eq(plan.status, 0, "--plan exits cleanly");
   ok(/cards asked for; \d+ hand-authored, \d+ not in the oracle data, \d+ still to learn/.test(plan.stdout) && /spends money/.test(plan.stdout), `and says what a run would take, for free: ${plan.stdout.split("\n")[0]}`);
+  const asked = path.join(mkdtempSync(path.join(tmpdir(), "demand-")), "demand.json");
+  writeFileSync(asked, JSON.stringify({schema: "CrankCardDemand@1", cards: [{name: "Lightning Bolt", demand: {decks: 2, asked: 3}}, {name: "A.I.M. Bot"}, {name: "Grim Lavamancer"}]}));
+  const demanded = spawnSync(process.execPath, ["game/tools/engine-compile.mjs", "--plan", "--demand", asked], {cwd: ROOT, encoding: "utf8", env});
+  ok(demanded.status === 0 && /^engine-compile: 3 cards asked for; 1 hand-authored/.test(demanded.stdout) && /1 are the card compiler's candidates and cost nothing/.test(demanded.stdout),
+    `the demand list is a run's cards, its candidates free: ${demanded.stdout.split("\n").slice(0, 2).join(" ")}`);
   const bare = spawnSync(process.execPath, ["game/tools/engine-compile.mjs", "--cards", "Lightning Bolt"], {cwd: ROOT, encoding: "utf8", env});
   ok(bare.status === 2 && /spends money/.test(bare.stdout) && !/no key/.test(bare.stderr), "without --yes it refuses with exit 2 before it looks for a key, having called nothing");
 }

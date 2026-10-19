@@ -55,4 +55,11 @@ BREAKS = [
      '      if (route === "POST /table/report") return reply(201, {report: await t.reportCard(email, await body(), now)});\n', ''),
     ("the front door's report route missing", 'cloud/tables.mjs',
      '"end", "concede", "report"]);', '"end", "concede"]);'),
+    ("the backstop's cards left out", 'game/tools/engine-candidates.mjs',
+     'export function candidatesModule(file = read(CANDIDATES_FILE), oracle = read(ORACLE_FILE), backstop = backstopScripts()) {',
+     'export function candidatesModule(file = read(CANDIDATES_FILE), oracle = read(ORACLE_FILE), backstop = []) {'),
+    ("a directory card seated from the backstop", 'game/tools/engine-candidates.mjs',
+     ' && !hand.resolve(e.script.identity.name)).map', ').map'),
+    ("a refused backstop card seated", 'game/tools/engine-candidates.mjs',
+     'e.status === "provisional" && ', ''),
 ]

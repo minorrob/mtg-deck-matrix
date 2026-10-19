@@ -27,8 +27,8 @@
  * `--held-out N` is the plan's sample: N defined cards, each held out of the library, finished by the writer and played
  * through its own scenarios, for the pass rate and the cost per card. It spends too, so it also needs `--yes`.
  *
- *   node game/tools/engine-compile.mjs --plan [--library | --decks | --cards "A,B"] [--sample 200]
- *   node game/tools/engine-compile.mjs --yes  [--library | --decks | --cards "A,B"] [--sample 200] [--max-cost 5] [--whole]
+ *   node game/tools/engine-compile.mjs --plan [--library | --decks | --cards "A,B" | --demand demand.json] [--sample 200]
+ *   node game/tools/engine-compile.mjs --yes  [--library | --decks | --cards "A,B" | --demand demand.json] [--sample 200] [--max-cost 5] [--whole]
  *   node game/tools/engine-compile.mjs --yes --held-out 200 [--max-cost 5]
  */
 
@@ -223,11 +223,17 @@ export async function heldOutSample(job) {
 const scriptPath = (oracleId) => path.join(REPO, "data", "engine", "scripts", oracleId.slice(0, 2), `${oracleId}.json`);
 const LEDGER = path.join(REPO, "data", "engine", "onboarding-ledger.json");
 
-/** The cards a run may learn: Rob's library (the Master sheet's every card), his seven decks, or named ones. */
+/** The cards a run may learn: Rob's library (the Master sheet's every card), his seven decks, named ones, or the cards
+    players asked for that no table could seat (`--demand`, the file game/tools/card-demand.mjs writes from staging's
+    `card_demand`, in its order: card load step 5, the cards wanted loaded first). */
 export function cardList(args) {
-  const live = JSON.parse(readFileSync(path.join(REPO, "data", "live-load.json"), "utf8"));
   const flag = (name) => { const i = args.indexOf(name); return i < 0 ? null : args[i + 1] ?? ""; };
   if (flag("--cards") !== null) return flag("--cards").split(",").map((s) => s.trim()).filter(Boolean);
+  if (flag("--demand") !== null) {
+    const asked = JSON.parse(readFileSync(path.resolve(flag("--demand")), "utf8"));
+    return [...new Set((Array.isArray(asked) ? asked : asked.cards ?? []).map((r) => (typeof r === "string" ? r : r?.name)).filter(Boolean))];
+  }
+  const live = JSON.parse(readFileSync(path.join(REPO, "data", "live-load.json"), "utf8"));
   if (args.includes("--decks")) return [...new Set(live.decks.flatMap((d) => d.cards.map(([n]) => n)))].sort();
   return Object.keys(live.metadata ?? {}).sort();
 }

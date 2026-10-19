@@ -29,4 +29,6 @@ BREAKS = [
      '    try { for (const scenario of file.scenarios) runScenario(scenario, cards, file.fixtures ?? {}); }\n    catch (error) { row("failed", `plays:', '    try { }\n    catch (error) { row("failed", `plays:'),
     ("the sample past its cap", 'game/tools/engine-compile.mjs',
      '    if (cost >= maxCost) { stopped = `the sample reached', '    if (false) { stopped = `the sample reached'),
+    ("the demand list not read", 'game/tools/engine-compile.mjs',
+     '  if (flag("--demand") !== null) {', '  if (false) {'),
 ]
