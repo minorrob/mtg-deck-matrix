@@ -48,6 +48,8 @@ export const AWAY_LIMIT = 5 * 60 * 1000;
 const TABLE_ID = /^[a-z0-9]{8,40}$/;
 export const MATCH_ID = /^[a-z0-9]{8,40}g[1-9][0-9]{0,5}$/;
 const KEY = "table";
+/* The candidate reports one table keeps (`reportCard`): ample for a playtest, and a bound on what one table stores. */
+const CARD_REPORTS = 200;
 
 export class TableError extends Error {
   constructor(status, message, extra = {}) {super(message); this.status = status; Object.assign(this, extra);}
@@ -127,11 +129,15 @@ function readSource(source) {
  * The table over its storage (a Durable Object's own, in the cloud).
  *
  * @param {object} storage  the M4 storage contract
- * @param {{cards?: Function, random?: (n: number) => Uint8Array, slice?: number}} options  `slice`: the engine steps a
- *   room plays in one call before it stops for the object's alarm to play on (game/room/room.mjs, `continuing`)
+ * @param {{cards?: Function, candidates?: Function, random?: (n: number) => Uint8Array, slice?: number}} options  `slice`: the
+ *   engine steps a room plays in one call before it stops for the object's alarm to play on (game/room/room.mjs,
+ *   `continuing`). `candidates`: the card compiler's (game/engine/cards/candidates.mjs), which a playtest table alone
+ *   plays where `cards` has no definition, labeled (Rob's decision 2; card load step 5)
  */
-export function tableOn(storage, {cards = basicCards, random = (n) => crypto.getRandomValues(new Uint8Array(n)), slice} = {}) {
+export function tableOn(storage, {cards = basicCards, candidates = () => null, random = (n) => crypto.getRandomValues(new Uint8Array(n)), slice} = {}) {
   let record = null, room = null;
+  /* The cards a table takes in a deck: its own, and at a playtest table a candidate where it has none. */
+  const cardsAt = (rec) => (rec?.playtest === true ? (name) => cards(name) ?? candidates(name) : cards);
   const load = async () => {
     if (!record) record = JSON.parse((await storage.get(KEY)) || "null");
     if (!record) throw new TableError(404, "There is no table here.");
@@ -239,9 +245,10 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
     /** Which of these card names the table cannot play yet (M5): what Change deck counts per deck -- "87 of 100 known,
         13 to learn" -- before a deck is brought, so a deck that is not whole is said to be so before it is refused.
         Names only, read against the table's own cards; nothing about any seat or game. */
-    unknown(names) {
+    async unknown(names) {
       if (!Array.isArray(names) || names.length > 2000) throw new TableError(400, "Send at most 2000 card names.");
-      return [...new Set(names.map((n) => clean(n, 200)).filter(Boolean))].filter((n) => !cards(n)).sort();
+      const known = cardsAt(record ?? JSON.parse((await storage.get(KEY)) || "null"));
+      return [...new Set(names.map((n) => clean(n, 200)).filter(Boolean))].filter((n) => !known(n)).sort();
     },
 
     /** A seat's deck: the person's own, or, for an AI seat, the host's choice (and an AI with a deck is ready). */
@@ -250,7 +257,7 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
       const seat = record.lifecycle.seats[seatId];
       if (!seat) throw new TableError(400, "There is no such seat.");
       if (seat.kind === "ai" ? !isHost(email) : seatOf(email) !== seatId) throw new TableError(403, "That is not your seat to choose for.");
-      const read = readDeck(deck, cards, {playtest: record.playtest === true}), limit = rulesOf().bracketLimit;
+      const read = readDeck(deck, cardsAt(record), {playtest: record.playtest === true}), limit = rulesOf().bracketLimit;
       if (limit !== null && read.bracket !== null && read.bracket > limit)
         throw new TableError(409, `${read.name} is bracket ${read.bracket}, above this table's limit of ${limit}. Choose a deck at bracket ${limit} or lower, or ask the host to raise the limit.`);
       const version = (await sha256(JSON.stringify(read))).slice(0, 16);
@@ -285,6 +292,29 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
       record.lifecycle = {...t, settings: {...(t.settings || {}), startingLife: life, bracketLimit: limit, skipFirstDraw: skip}, revision: t.revision + 1};
       await save();
       return api.view(email);
+    },
+    /** "REPORT A WRONG CARD" (Rob's decision 2; card load step 5): a candidate this seat can see, in the game being played
+        or the table's last, said to play wrong, with the person's note. Kept with the table and handed over in that game's
+        record, which the triage loop reads (tools/playtest-triage.mjs); a wave reviews the card before it joins the
+        directory (step 6). The card is the one the engine shows this seat, so nobody reports a card they cannot name. */
+    async reportCard(email, {cardId, note} = {}, now) {
+      await load();
+      const seat = needSeat(email), seatId = seatName(seat);
+      if (record.playtest !== true) throw new TableError(409, "Only a playtest table seats candidates, so there is no candidate here to report.");
+      const id = record.lifecycle.phase === "playing" ? record.lifecycle.matchId : record.matches.at(-1);
+      if (!id) throw new TableError(409, "No game has been played at this table yet.");
+      const game = room && room.matchId === id ? room : await openRoom({storage, matchId: id, cards, candidates});
+      if (!game.seats.some((s) => s.seatId === seatId)) throw new TableError(403, "You did not have a seat in that game.");
+      const state = game.view(seatId).state;
+      const seen = [...state.players.flatMap((p) => Object.values(p.zones).flatMap((z) => z.cards)), ...(state.stack || [])];
+      const card = seen.find((c) => c && c.cardId === Number(cardId) && c.candidate === true && c.name);
+      if (!card) throw new TableError(404, "That is not a candidate you can see in this game.");
+      const reports = record.cardReports || [];
+      if (reports.length >= CARD_REPORTS) throw new TableError(409, `This table has taken ${CARD_REPORTS} reports; start another table to send more.`);
+      const report = {matchId: id, seatId, card: card.name, cardId: card.cardId, turn: state.turn, note: clean(note, 500), at: now};
+      record.cardReports = [...reports, report];
+      await save();
+      return report;
     },
     /** Your seat's mat: cosmetic, so it can change at any point, the game included, and everyone sees it. */
     async mat(email, mat) {
@@ -352,9 +382,12 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
          launched before is asked as it was (room.mjs, `yieldTurn`). Not yet `passStack`: an opponent passed for over a spell
          never sees it on the stack -- it arrives between two views, and the board voices and draws a spell from the stack
          (crankmagic-audio.js, momentsFor) -- so the table asks for it once the board shows such a spell (ROB-23). */
-      yieldTurn: true};
+      yieldTurn: true,
+      /* A playtest table seats the card compiler's candidates, labeled (Rob's decision 2; card load step 5): new matches only,
+         so one launched before replays with the cards it was dealt (room.mjs, `candidates`). */
+      ...(record.playtest === true ? {candidates: true} : {})};
       try {
-        room = await startRoom({storage: storageForRoom, matchId, cards, pod, seed: `${matchId}:${now}`, slice});
+        room = await startRoom({storage: storageForRoom, matchId, cards, candidates, pod, seed: `${matchId}:${now}`, slice});
         step({type: "engine-started", launchId: matchId, matchId}, now);
         record.matches.push(matchId);
       } catch (error) {
@@ -424,7 +457,7 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
     async currentRoom() {
       await load();
       if (record.lifecycle.phase !== "playing") return null;
-      if (!room || room.matchId !== record.lifecycle.matchId) room = await openRoom({storage, matchId: record.lifecycle.matchId, cards, slice});
+      if (!room || room.matchId !== record.lifecycle.matchId) room = await openRoom({storage, matchId: record.lifecycle.matchId, cards, candidates, slice});
       return room;
     },
 
@@ -433,7 +466,7 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
       await load();
       const seat = needSeat(email);
       if (record.lifecycle.phase !== "playing") throw new TableError(409, "No game is being played at this table.");
-      if (!room || room.matchId !== record.lifecycle.matchId) room = await openRoom({storage, matchId: record.lifecycle.matchId, cards, slice});
+      if (!room || room.matchId !== record.lifecycle.matchId) room = await openRoom({storage, matchId: record.lifecycle.matchId, cards, candidates, slice});
       return {room, seatId: seatName(seat)};
     },
 
@@ -458,14 +491,15 @@ export function tableOn(storage, {cards = basicCards, random = (n) => crypto.get
       await load();
       const seat = needSeat(email), id = matchId || record.matches.at(-1);
       if (!id || !record.matches.includes(id)) throw new TableError(404, "There is no such game at this table.");
-      const game = room && room.matchId === id ? room : await openRoom({storage, matchId: id, cards});
+      const game = room && room.matchId === id ? room : await openRoom({storage, matchId: id, cards, candidates});
       if (game.status !== "finished") throw new TableError(409, "A game's record is ready once the game is over.");
       const seatId = seatName(seat);
       if (!game.seats.some((s) => s.seatId === seatId)) throw new TableError(403, "You did not have a seat in that game.");
       const mine = game.view(seatId), base = {schema: RECORD_SCHEMA, tableId: record.tableId, matchId: id, playtest: !!record.playtest, result: mine.result, departures: mine.departures, seats: game.seats, history: game.history, refusals: game.refusals};
       if (!record.playtest) return {...base, kind: "seat", seatId, view: mine};
       const store = createMatchStore(storage, id), meta = await store.loadMatch();
-      return {...base, kind: "full", seed: meta.seed, pod: meta.pod, tape: await store.readTape(), journal: await store.readJournal()};
+      const cardReports = (record.cardReports || []).filter((r) => r.matchId === id);
+      return {...base, kind: "full", seed: meta.seed, pod: meta.pod, tape: await store.readTape(), journal: await store.readJournal(), ...(cardReports.length ? {cardReports} : {})};
     },
 
     /** The table as one person sees it: every seat's state, but only their own deck's cards. */

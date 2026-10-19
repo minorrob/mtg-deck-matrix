@@ -519,6 +519,9 @@ reopened and replayed, the same events.
 `table-basics` holds the table's basic lands as basic lands (Rob, 2026-10-11, Rampant Growth finding nothing): the table
 plays the engine's own definitions, the room's own basics are Basic and of their land type, and every card's scenarios
 pass played with the table's own lookup.
+`table-candidates` holds the card compiler's candidates at playtest tables, labeled (card load step 5, Rob's decision 2):
+the Worker's module is the candidates file as it stands; a playtest table seats them and labels each one its seat can
+name, through every zone, reopened and replayed; any other table refuses them by name.
 `coach` holds the Coach (X13): its brief, the person's own hand, the board as everyone sees it and their deck as a sorted
 list, never another hand or a library's order; the table building it for the AI door alone; POST /api/ai/coach behind the
 door's gates and its own switch, asking Haiku 5.5 in one to three sentences, aiming for one; an answer naming anything not
@@ -931,7 +934,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 536 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 537 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1189,6 +1192,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `room-block-check` — `tests/room-block-check.mjs`
 - `engine-pass-stack` — `tests/engine-pass-stack.mjs`
 - `table-basics` — `tests/table-basics.mjs`
+- `table-candidates` — `tests/table-candidates.mjs`
 - `coach` — `tests/coach.mjs`
 - `board-choices` — `tests/board-choices.mjs`
 - `crankmagic-audio` — `tests/crankmagic-audio.mjs`

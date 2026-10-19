@@ -49,6 +49,8 @@ const bandOf = (k) => BANDS.findIndex(([a, b]) => k >= a && k <= b);
 
 /** The oracle record as a card the library can translate: its printed facts, its text. */
 export const asCard = (record) => ({identity: identityOf(record), oracleText: record.text ?? ""});
+/** A candidate put back together with its oracle record: the script it was compiled from (the store keeps only its abilities). */
+export const scriptOf = (candidate, record) => ({schema: "CrankCardScript@1", ...asCard(record), source: "compiler", abilities: candidate.abilities});
 
 /**
  * One card, through every check.
