@@ -125,6 +125,42 @@ Rob says otherwise: those steps are what makes later waves cheaper.
   themselves held out. The one failure, Goblin Piledriver, shows why the scenarios stay in the gate: another card
   leaves the multiplier `times: 1` unwritten, so the translation drops Piledriver's `times: 2`.
 
+## Step 3, built (2026-10-19; Linear ROB-88)
+
+- **The compiler** (`game/tools/card-compiler.mjs`, about 20 seconds) runs the library on every Commander card the
+  directory doesn't define: 29,551 cards. It checks each card, cheapest check first:
+  1. **Another layout** (a second face, an Adventure): set aside as structure.
+  2. **An unknown sentence:** the card waits for a wave.
+  3. **A distrusted template:** vetoed. That is a template from a band under the minimum count, or one whose
+     calibration recorded a failure.
+  4. **A rule the engine hasn't built:** blocked.
+  5. **Not its oracle text, or a smoke game that breaks:** refused.
+  6. **Otherwise, a candidate.**
+- **Measured.** **2,429 candidates**, almost as many as the 2,470 hand-defined cards. The rest:
+  - 18 vetoed, all by "protection from COLOR", which Goblin Piledriver's calibration failure counts against;
+  - 3 blocked (Backup's granted abilities; a permanent whose spell carries only an additional cost);
+  - 0 refused;
+  - 26,010 with an unknown sentence, 12,320 of them a single sentence short;
+  - 1,091 in another layout.
+
+  The report is `docs/engine/card-compiler-2026-10-19.md`.
+- **The store** is `data/engine/candidates.json` (CrankCardCandidates@1). For each candidate it holds:
+  - its abilities;
+  - the templates they came from;
+  - its weakest template's calibrated band;
+  - its smoke game and its oracle hash.
+
+  The printed facts stay in the oracle data, so a candidate is put back together from both (compile.mjs check 1).
+  **This departs from the plan above, which put candidates in D1 `card_candidates`.** Batch candidates are a
+  deterministic output of committed data, so they are reviewable in git and can be bundled for the table. Migration 0008
+  stays reserved for step 5, where a card is compiled when a deck is saved and only D1 can hold it.
+- **What it does not do yet.** No table seats a candidate. Rob's decision 2 puts them at playtest tables, labeled, and
+  that is the next PR. A wave still reviews each candidate before it joins the directory (step 6).
+- **The cheapest next cards** are the 12,320 that are one sentence short. The report ranks the missing sentences by how
+  many cards each would complete. Its top line, "Draw a card." (40 cards), is a composition gap, not a missing sentence:
+  those cards are a known spell plus a draw. Merging two spell templates into one spell is the compiler's next increment,
+  measured by the same calibration.
+
 ## Running a lane (Rob's decision 4)
 
 A session's cost per step grows with everything it has read, because every step re-reads the whole conversation. The

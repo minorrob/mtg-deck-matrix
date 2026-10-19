@@ -107,6 +107,7 @@ const DECLARED = {
   "data/commander-ranks.json": ["tools/commander-ranks.mjs"],
   "data/deck-guides.json": ["tools/generate-guides.mjs", "tools/build_guide_shapes.py"],
   "data/deck-ratings.json": ["tools/sim/rate-decks.mjs"],
+  "data/engine/candidates.json": ["game/tools/card-compiler.mjs"],
   "data/simulation-summary.json": ["tools/sim/rate-decks.mjs", "tools/import_summary_metrics.py"],
   "data/live-state.json": ["tools/build-live-state.mjs", ".github/workflows/live-load.yml"],
   "data/lenses.json": ["(a past sweep wrote it for the retired Copilot lenses; no tool writes it today)"],
