@@ -8,7 +8,7 @@
  *
  *   POST /api/tables                         a new table; you host it, in seat 1
  *   GET  /api/tables/:id                     the table as you see it
- *   POST /api/tables/:id/invite|uninvite|join|deck|known|ready|mat|rules|start|cancel|end|concede
+ *   POST /api/tables/:id/invite|uninvite|join|deck|known|ready|mat|rules|start|cancel|end|concede|report
  *   POST /api/tables/known                   which of these card names a table cannot play yet, asked with no table (AI-5):
  *                                            {names} or {decks: [[names], ...]} -> {unknown, listed?}
  *   GET  /api/tables/:id/connect             WebSocket to your seat, once the game is on
@@ -27,7 +27,7 @@
 import {recordDemand} from "./card-demand.mjs";
 
 const TABLE_ID = /^[a-z0-9]{8,40}$/, MATCH_ID = /^[a-z0-9]{8,40}g[1-9][0-9]{0,5}$/;
-const ACTIONS = new Set(["invite", "uninvite", "join", "deck", "known", "ready", "mat", "rules", "start", "cancel", "end", "concede"]);
+const ACTIONS = new Set(["invite", "uninvite", "join", "deck", "known", "ready", "mat", "rules", "start", "cancel", "end", "concede", "report"]);
 const HEADERS = {"content-type": "application/json; charset=utf-8", "cache-control": "no-store"};
 /* The object that answers "which of these cards can a table play" with no table (AI-5). Every table's object answers it
    from the engine's cards alone (game/room/table.mjs `unknown`), reading no table, so one object answers everyone; its
