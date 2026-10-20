@@ -59,6 +59,11 @@
  * WHAT IT PLAYS. Only cards the `cards` resolver can define. A pod with any other card is refused before
  * anything is written, naming every card it cannot play (docs/decisions-2026-09-25.md, M4: "refused by name;
  * compiled once M7 lands"). Today that is the basic lands, as it is for the engine itself.
+ * AND HOW ITS AI SEATS ANSWER, kept the same way: `pilotPicks` (Linear ROB-164, 2026-10-19) has every AI seat's
+ * pilot take what a choice it may answer with none is for -- the land a search finds, the counters proliferate adds --
+ * where a match launched before it took none (game/engine/pilots/house-pilot.mjs, `picks`). The room tapes no AI answer,
+ * so the match keeps the key and its pilots answer as they did.
+ *
  * A pod that says `candidates` (a playtest table's, Rob's decision 2) also plays the card compiler's candidates, where
  * `cards` has no definition: each object made from one says `candidate`, which the board labels (projection.mjs). A
  * match keeps the key, so it reopens and replays with the same cards; a pod without it never seats one.
@@ -79,7 +84,7 @@ import {createRng} from "../engine/rng.mjs";
 import {createJournal, hashState} from "../engine/journal.mjs";
 import {createController} from "../engine/controller.mjs";
 import {createMatchStore} from "../engine/storage.mjs";
-import {housePilot, meetRequirements} from "../engine/pilots/house-pilot.mjs";
+import {housePilot, meetRequirements, manaColors} from "../engine/pilots/house-pilot.mjs";
 import {scoredPilot, SETTINGS} from "../engine/pilots/scored-pilot.mjs";
 import {agentPilot} from "../engine/pilots/agent-pilot.mjs";
 import {addToHistory} from "./history.mjs";
@@ -118,15 +123,18 @@ export function basicCards(name) {
 
 /* Public facts the house pilot may read about a named card: what anyone reads off the card itself. */
 const manaValueOf = (cost) => (String(cost || "").match(/\{([^}]+)\}/g) || []).reduce((n, s) => {const x = s.slice(1, -1); return n + (/^\d+$/.test(x) ? Number(x) : x === "X" ? 0 : 1);}, 0);
-const factsFrom = (cards) => {
+/** The pilots' `cards`: a named card's public facts, over a definition resolver -- what a table hands its AI seats. */
+export const factsFrom = (cards) => {
   /* Read once a name: a card's facts do not change in a match. */
   const known = new Map();
   return (name) => (known.has(name) ? known.get(name) : known.set(name, factsOf(cards(name))).get(name));
 };
 const factsOf = (c) => {
   /* `x`: a cost with {X} (CR 107.3), so the house pilot taps everything before it casts. `subtypes`, and what each activated
-     ability costs and does (`activated`), as the card says: L1 weighs an ability by them (scored-pilot.mjs). */
+     ability costs and does (`activated`), as the card says: L1 weighs an ability by them (scored-pilot.mjs). Its `colors`
+     and the mana it `makes`: which land a search should find for the spells a pilot holds (house-pilot.mjs, `picks`). */
   return c ? {manaValue: manaValueOf(c.manaCost), types: c.types || [], subtypes: c.subtypes || [], power: c.power ?? null, toughness: c.toughness ?? null,
+    colors: c.colors || [], makes: manaColors(c),
     ...(/\{X\}/.test(c.manaCost || "") ? {x: true} : {}),
     activated: (c.abilities || []).filter((a) => a.kind === "activated").map((a) => ({id: a.id, cost: a.cost || [], effects: a.effects || []}))} : null;
 };
@@ -391,7 +399,7 @@ export function triggerRun(stack) {
  * @param {object} storage  the M4 storage contract (get/put/delete/list); a Durable Object's own, in the cloud
  * @param {(name: string) => ?object} cards  a card's definition for `addObject`, or null when the engine
  *   cannot play it
- * @param {Function} makePilot  what answers for an AI seat: `seatPilot`, given {seat, cards, deck, level, seed}. A suite may
+ * @param {Function} makePilot  what answers for an AI seat: `seatPilot`, given {seat, cards, deck, level, seed, picks}. A suite may
  *   pass its own (one that answers wrongly on purpose, to prove the refusal tally); the table never does
  * @param {number} slice  engine steps one call may take before it stops, saved, for `resume` (the Durable Object's
  *   alarm) to play on from; unbounded unless given
@@ -400,11 +408,11 @@ export function triggerRun(stack) {
  */
 /**
  * WHAT ANSWERS FOR AN AI SEAT: L1 at its setting, handed its own deck list (which its player knows) and the match's seed
- * (easy's chance); without a setting, L0. Both see only the seat's projection.
+ * (easy's chance); without a setting, L0. Both see only the seat's projection. `picks`: the match's `pilotPicks`.
  */
-export function seatPilot({seat, cards, deck = [], level = null, seed = ""}) {
-  if (level === LLM) return agentPilot({seat, cards, deck, seed});
-  return level ? scoredPilot({seat, cards, deck, setting: level, seed}) : housePilot({seat, cards});
+export function seatPilot({seat, cards, deck = [], level = null, seed = "", picks = false}) {
+  if (level === LLM) return agentPilot({seat, cards, deck, seed, picks});
+  return level ? scoredPilot({seat, cards, deck, setting: level, seed, picks}) : housePilot({seat, cards, picks});
 }
 /** The LLM seat's setting: L1, but its close calls are offered to the seat, for its model to answer (`consults`). */
 export const LLM = "llm";
@@ -512,7 +520,9 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
   const finished = () => Boolean(ended) || Boolean(gameOver(state));
   /* What a seat's pilot is made with: public card facts, and its seat's own deck list, setting and the match's seed. */
   let matchSeed = "";
-  const pilotMade = (seat) => makePilot({seat, cards: facts, deck: seats[seat].cards, level: seats[seat].level ?? null, seed: matchSeed});
+  /* And whether they take what a choice they may answer with none is for (`pilotPicks`), as the match was launched. */
+  let pilotPicks = false;
+  const pilotMade = (seat) => makePilot({seat, cards: facts, deck: seats[seat].cards, level: seats[seat].level ?? null, seed: matchSeed, picks: pilotPicks});
   const pilotFor = (seat) => pilots[seat] || (pilots[seat] = pilotMade(seat));
   /* Whether the LLM seat asks for this decision (agent-pilot.mjs `consult`): never a seat that has left. */
   const consults = (seat, view, offer) => seats[seat].level === LLM && !leaving.includes(seat) && pilotFor(seat).consult?.(view, offer) === true;
@@ -716,6 +726,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     refusals = record.refusals || {total: 0, since: point.sequence, first: []};
     continuing = record.continuing === true; driven = record.driven || 0; endWhenNoPerson = record.endWhenNoPerson === true;
     seated = record.candidates === true;
+    pilotPicks = record.pilotPicks === true;
     state = structuredClone(point.state);
     rng = createRng(point.seed, point.rng);
     journal = createJournal({matchId, seed: point.seed}, point);
@@ -783,7 +794,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     const point = journal.checkpoint(state, rng.checkpoint());
     await store.saveCheckpoint(point);
     await store.pruneCheckpoints();
-    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, history, refusals, ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {}), ...(resolveAll ? {resolveAll, standing} : {}), ...(passAfterCast ? {passAfterCast, castBy} : {}), ...(endAsks ? {endAsks} : {}), ...(untapMana ? {untapMana, taken} : {}), ...(Object.keys(prefs).length ? {prefs} : {}), ...(turnsOf ? {turnsOf} : {}), ...(passStack ? {passStack, heldBy} : {}), ...(yieldable ? {yieldTurn: true, yielding} : {}), ...(tableEvents.length ? {events: tableEvents, eventsMark, eventsFloor} : {}), ...(seated ? {candidates: true} : {})}));
+    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, history, refusals, ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {}), ...(resolveAll ? {resolveAll, standing} : {}), ...(passAfterCast ? {passAfterCast, castBy} : {}), ...(endAsks ? {endAsks} : {}), ...(untapMana ? {untapMana, taken} : {}), ...(Object.keys(prefs).length ? {prefs} : {}), ...(turnsOf ? {turnsOf} : {}), ...(passStack ? {passStack, heldBy} : {}), ...(yieldable ? {yieldTurn: true, yielding} : {}), ...(tableEvents.length ? {events: tableEvents, eventsMark, eventsFloor} : {}), ...(seated ? {candidates: true} : {}), ...(pilotPicks ? {pilotPicks: true} : {})}));
   }
 
   const api = {
@@ -814,12 +825,15 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         ...(pod && pod.endWhenNoPerson === true ? {endWhenNoPerson: true} : {}), ...(pod && pod.resolveAll === true ? {resolveAll: true} : {}),
         ...(pod && pod.passAfterCast === true ? {passAfterCast: true} : {}), ...(pod && pod.endAsks === true ? {endAsks: true} : {}),
         ...(pod && pod.untapMana === true ? {untapMana: true} : {}),
+        /* And whether its AI seats take what a choice they may answer with none is for (`pilotPicks`), kept the same way. */
+        ...(pod && pod.pilotPicks === true ? {pilotPicks: true} : {}),
         ...(pod && pod.passStack === true ? {passStack: true} : {}), ...(pod && pod.yieldTurn === true ? {yieldTurn: true} : {})};
       passEmpty = beats.passEmpty === true; endWhenNoPerson = beats.endWhenNoPerson === true; resolveAll = beats.resolveAll === true; passAfterCast = beats.passAfterCast === true; endAsks = beats.endAsks === true; untapMana = beats.untapMana === true;
       passStack = beats.passStack === true; yieldable = beats.yieldTurn === true;
       /* And whether a cast tapped for tops up floating mana and taps a source for all it makes (`pooledTaps`, rules/actions.mjs):
          a match launched before it lacks the key, and so offers what it offered then. */
       const pooled = pod && pod.pooledTaps === true ? {pooledTaps: true} : {};
+      pilotPicks = beats.pilotPicks === true;
       try {state = createState({matchId, seed, players: seats.map((s) => ({name: s.name})), ...rules, ...(beats.drawBeat ? {drawBeat: true} : {}), ...pooled});}
       catch (error) {throw new RoomError(400, error.message);}
       seats.forEach((s, seat) => {
