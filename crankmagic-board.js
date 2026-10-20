@@ -985,7 +985,7 @@ globalThis.CrankBoard = Object.seal({
     /* Asked in a run you chose Resolve all for: this answer goes for the same question each time the run asks it (Rob,
        2026-10-09: "Yes to all"; game/room/room.mjs). */
     const forRun = d.forRun ? `<p class="cm-muted cm-board-for-run">Resolve all: your answer goes for this same question each time the run asks it.</p>` : "";
-    return `<section class="cm-board-decision" id="cm-board-decision" aria-label="${e(d.title)}"><h3${sentence ? ' class="is-sentence"' : ""}>${e(d.title)}</h3>${forRun}
+    return `<section class="cm-board-decision" id="cm-board-decision" data-choice-id="${e(d.id)}" data-match-id="${e(view.matchId)}" aria-label="${e(d.title)}"><h3${sentence ? ' class="is-sentence"' : ""}>${e(d.title)}</h3>${forRun}
       <div class="cm-board-options">${body}</div>${foot ? `<div class="cm-board-decision-foot">${foot}</div>` : ""}</section>`;
   }
   /* What the room asks, and what is on the stack, floated over the surface under the strip. Priority is not
@@ -1550,7 +1550,13 @@ globalThis.CrankBoard = Object.seal({
     if (!host) return;
     if (showing && !handWas) handFrom = C.focusKey(document.activeElement);
     const before = motionFor !== null ? motionSnapshot(host) : null;
+    // Keep the player's place through picks and incoming views, but never carry it into another question or game.
+    const choice = host.querySelector("#cm-board-decision[data-choice-id]");
+    const choiceScroll = choice && choice.dataset.choiceId === view?.decision?.id && choice.dataset.matchId === view?.matchId
+      ? choice.querySelector(".cm-board-options")?.scrollTop : null;
     C.keepFocus(host, () => paint(host));
+    const options = host.querySelector("#cm-board-decision .cm-board-options");
+    if (choiceScroll !== null && options) options.scrollTop = choiceScroll;
     if (before) motionPlay(host, before);
     motionFor = null;
     holdHand(host);
