@@ -1,9 +1,9 @@
 {
   "workstream": "claude-engine",
-  "updated": "2026-10-19T23:30:00Z",
-  "updated_by": "Claude · Engine: the ROB-164 session (Personal-HP), started by the Play readiness evaluation, after the October 19 session's reconciliation.",
+  "updated": "2026-10-20T06:00:00Z",
+  "updated_by": "Claude, the Play readiness session (Personal-HP): #792 and #793 merged and main a9bec38f released to staging for Rob's 1-person, 3-AI play test.",
   "branch": "claude/exciting-sagan-qe5yuf",
-  "now": "Card load: steps 1 to 3 on main (step 1 on staging, migration 0006 applied); 2,429 candidate cards compiled from calibrated templates; step 5's first part (ROB-91) seats them at playtest tables, labeled, with \"report a wrong card\", in review. ROB-164: the AI seats take the land a search finds and proliferate what helps them, in review.",
+  "now": "Card load: steps 1 to 3 on main (step 1 on staging, migration 0006 applied); 2,429 candidate cards compiled from calibrated templates; step 5's first part (ROB-91) seats them at playtest tables, labeled, with \"report a wrong card\", in review. ROB-164: the AI seats take the land a search finds and proliferate what helps them, merged (#792) and on staging (main a9bec38f).",
   "items": [
     {"id": "ROB-12", "outcome": "play-experience", "feature": "Cast with floating mana and several mana sources; the commander tax projected", "status": "done", "remaining_hours": 0},
     {"id": "ROB-13", "outcome": "play-experience", "feature": "Auto-pass when a player has no meaningful response; an explicit Yield turn", "status": "done", "remaining_hours": 0},
@@ -15,7 +15,7 @@
     {"id": "ROB-74", "outcome": "play-experience", "feature": "Payment drafts, Confirm cast and Auto-pay the board can show", "status": "backlog", "remaining_hours": 16},
     {"id": "ROB-75", "outcome": "play-experience", "feature": "Combat projection: legal attacker and blocker pairs, block drafts validated", "status": "done", "remaining_hours": 0, "evidence": [{"label": "PR #778", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/778"}]},
     {"id": "ROB-149", "outcome": "play-experience", "feature": "The blocking rules ROB-75 left out: required blocks, an additional creature, can't block alone, battles", "status": "backlog", "remaining_hours": 8},
-    {"id": "ROB-164", "outcome": "play-experience", "feature": "AI opponents take the land a search finds, proliferate what helps them, and use every other \"up to\"", "status": "review", "remaining_hours": 1, "evidence": [{"label": "PR #792", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/792"}]},
+    {"id": "ROB-164", "outcome": "play-experience", "feature": "AI opponents take the land a search finds, proliferate what helps them, and use every other \"up to\"", "status": "done", "remaining_hours": 0, "evidence": [{"label": "PR #792", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/792"}], "note": "Merged as main 0cb93288; on staging with main a9bec38f. Tables launched after the release use it (pod key pilotPicks)."},
     {"id": "ROB-78", "outcome": "play-experience", "feature": "Which sources paid this step, and the card facts the board can show", "status": "backlog", "remaining_hours": 10},
     {"id": "ROB-79", "outcome": "play-experience", "feature": "A ready table starts on a cancelable ten-second countdown", "status": "backlog", "remaining_hours": 8},
     {"id": "ROB-80", "outcome": "play-experience", "feature": "A d20 roll at launch picks the first player, seen by every seat", "status": "backlog", "remaining_hours": 6},
