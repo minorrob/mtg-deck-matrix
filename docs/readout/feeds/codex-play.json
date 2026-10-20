@@ -1,9 +1,9 @@
 {
   "workstream": "codex-play",
-  "updated": "2026-10-20T15:39:39Z",
+  "updated": "2026-10-20T15:55:00Z",
   "updated_by": "Codex Play, October 20 handoff reconciled",
-  "branch": "codex/play-room-yield",
-  "now": "ROB-28 is implemented in #797 with acknowledged room Yield, passing browser and real-room checks, six caught regressions and three complete solo games. CI and staging remain; ROB-166 is requested from Engine, and ROB-165 is next.",
+  "branch": "codex/play-choice-scroll",
+  "now": "ROB-28 (#797) and ROB-165 (#798) are implemented with browser proof and caught regressions. Engine owns staging acceptance and ROB-166's terminal reason. Next is ROB-26's shared combat display, then direct blocking.",
   "items": [
     {"id": "ROB-99", "outcome": "play-experience", "feature": "The broad UI draft ported onto main in three reviewable slices", "status": "in_progress", "remaining_hours": 20, "evidence": [{"label": "PR #754", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/754"}], "note": "Slice 1 merged as 73f55b35 after exact-head CI, local browser proof and 23 deliberate regressions. Phone and remaining slider/layout slices are outstanding."},
     {"id": "ROB-19", "outcome": "play-experience", "feature": "One header, profile menu and drawers across Full, Table and Focus", "status": "done", "remaining_hours": 0, "evidence": [{"label": "PR #754", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/754"}], "note": "Merged and released with main 5f6ea9cc; confirmed by the October 20 handoff."},
@@ -51,7 +51,7 @@
     {"id": "ROB-161", "outcome": "play-experience", "feature": "Art mats retain their crop and color in Full", "status": "done", "remaining_hours": 0, "evidence": [{"label": "PR #751", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/751"}]},
     {"id": "ROB-162", "outcome": "play-experience", "feature": "Drawn mats retain their patterns in Full", "status": "done", "remaining_hours": 0, "evidence": [{"label": "PR #743", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/743"}]},
     {"id": "ROB-163", "outcome": "play-experience", "feature": "Long choices keep their heading and Confirm reachable", "status": "done", "remaining_hours": 0, "evidence": [{"label": "PR #793", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/793"}]},
-    {"id": "ROB-165", "outcome": "play-experience", "feature": "Keep a long choice at its scroll position after a pick", "status": "backlog", "remaining_hours": 2},
+    {"id": "ROB-165", "outcome": "play-experience", "feature": "Keep a long choice at its scroll position after a pick", "status": "review", "remaining_hours": 1, "note": "Implemented in #798: real pointer selection/deselection preserves the list at 1024/1280/1400; new decisions and matches reset it. Three regressions caught. Staging acceptance remains.", "evidence": [{"label": "PR #798", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/798"}]},
     {"id": "ROB-166", "outcome": "play-experience", "feature": "Explain a loss to AI opponents and file it as a loss", "status": "blocked", "remaining_hours": 2},
     {"id": "ROB-169", "outcome": "play-experience", "feature": "Show the cards when an effect lets me look at a hand", "status": "backlog", "remaining_hours": 2},
     {"id": "ROB-167", "outcome": "play-experience", "feature": "Play again from the result and lobby", "status": "blocked", "remaining_hours": 6},

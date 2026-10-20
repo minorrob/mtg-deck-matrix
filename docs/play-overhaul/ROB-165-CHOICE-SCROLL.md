@@ -27,6 +27,28 @@ The phone screenshot records the current rotated layout; ROB-18's approved uprig
 view remains separate. Physical-phone interaction and hardware WebGL are unproven.
 These choices are synthetic fixtures built from Shared D5's card names.
 
-Read-only review found only the pending asset-pin update. Mutation, remaining
-browser checks, final pins, exact-head CI and engine-owned staging are recorded
-below when complete.
+Read-only review found only the asset-pin update, now addressed. Pins build on
+PR #797: board 56, service worker 497, app 514; stage CSS remains 22. The manifest
+was regenerated once after the final cascade.
+
+Local proof, with `GEOMETRY_REQUIRED=1` and installed Chrome:
+
+- `node tests/table-tabletop.mjs`: geometry, profile and browser checks pass.
+- `python game/tools/batch/breaks.py game/tools/batch/breaks-choice-scroll.py`:
+  all three regressions caught, `missed: []` (lose the kept scroll; carry it into
+  a new decision; carry it into a new match).
+- `node tests/table-board.mjs`: 278 checks before integrating #797's three
+  additional Yield checks.
+- `node tests/a11y-board.mjs`: 298 checks; `node tests/settings-r3.mjs`: 68.
+- Feature wiring: 124; data integrity passes; the breaks-anchor scan passes.
+
+PR #797 was integrated without conflicts. The final tabletop and focused Yield
+suites pass with both changes together. One tabletop run stopped at an open
+"Review action" dialog after the earlier camera-preference reload, before the
+long-choice checks; the unchanged repeat passed. No assertion was weakened.
+This intermittent setup failure remains recorded for follow-up if it recurs.
+
+Full CI runs on GitHub. PR #798 carries #797's commits; landing this combined
+head can preserve both changes in one merge without rebuilding an already
+tested tree. Staging is released and verified by Engine after the merge request
+in ROB-11.
