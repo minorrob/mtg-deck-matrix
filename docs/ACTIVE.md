@@ -213,9 +213,14 @@ fixes.
     draw, Steady Progress's and Tezzeret's Gambit's proliferate, and Freyalise's −6. That's ROB-94's to add.
   - **Before each staging push:** release-acceptance 22 and play-e2e 42. Workers Builds `crankmagic-staging` succeeded
     on ccbaa386 and on 027c3e67.
+  - **Read back, Oct 20:** `node tools/staging-check.mjs --expect a9bec38f` exits 0. `version.json` and both pages say
+    a9bec38f (cloud-staging, 2026-10-20), and `/api/me` answers as the token's own `service:e07b4fed5ab9`.
+    `wrangler deployments status --name crankmagic-staging` shows version 30409bec at 100% since 06:13:41 UTC.
+  - **Personal-HP can read staging now.** Rob made a second Access service token, `crankmagic-staging-checks-hp`, in
+    staging's Session checks policy, and saved it in the Windows user environment as `CF_ACCESS_CLIENT_ID` and
+    `CF_ACCESS_CLIENT_SECRET`. How a session started before then reads them is in `tools/staging-check.mjs`'s header.
+    Wrangler here is signed in to Rob's account (OAuth) for the deployment reads.
 - **Not proven:**
-  - A signed-in read-back of staging: Personal-HP has no Access service token, so
-    `tools/staging-check.mjs --expect a9bec38f` is still to run.
   - The deployed bytes against the dry run.
   - A game with Rob at the table.
 - **Outstanding for the play test** (none blocks it; Rob plays on desktop, at a table started after 027c3e67, because
