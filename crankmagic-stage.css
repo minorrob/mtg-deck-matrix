@@ -306,3 +306,26 @@
 .cm-combat :focus-visible{outline:3px solid #fff;outline-offset:-3px}
 .cm-phone-center>.cm-combat{top:44px;bottom:auto;left:8px;right:8px;z-index:3;height:130px;padding:4px 6px}
 .cm-board[data-phone][data-combat] .cm-phone-center>.cm-mat{padding-top:176px}
+
+/* ROB-26: a private block draft alongside the shared, confirmed combat strip. */
+.cm-block-draft{width:100%;min-width:0;font:12px/1.4 system-ui;color:#edf6ef}
+.cm-block-draft p{margin:4px 0}
+.cm-block-tiles{display:flex;gap:4px;overflow-x:auto;padding:3px;max-width:100%}
+.cm-block-tile{display:flex;align-items:center;gap:4px;flex:0 0 128px;min-height:48px;padding:4px;border:1px solid #91a697;border-radius:5px;background:#162820;color:#fff;text-align:left;font:11px/1.3 system-ui}
+.cm-block-tile img{width:28px;height:40px;object-fit:cover}
+.cm-block-tile[aria-pressed="true"]{outline:2px solid #ffdd70;outline-offset:-2px;background:#314331}
+.cm-block-tile:focus-visible{outline:3px solid #fff;outline-offset:-3px}
+.cm-block-pairs{padding-left:16px;margin:4px 0}
+.cm-block-pairs li{margin:3px 0;overflow-wrap:anywhere}
+.cm-block-status{padding:5px;border-left:3px solid #ffdd70;background:#162820}
+.cm-block-list summary{cursor:pointer;padding:6px 0}
+.cm-block-list[open]{display:block}
+.cm-block-list .v-button{display:block;margin:4px 0;white-space:normal}
+
+.cm-phone-ask:has(.is-blocking){height:33%;max-height:33%;overflow:hidden}
+.cm-phone-ask .cm-board-decision.is-blocking{display:flex;flex-direction:column;flex-wrap:nowrap;align-items:stretch;min-height:0;height:100%;gap:2px;padding:4px 6px}
+.cm-phone-ask .is-blocking>.cm-board-options{display:block;min-height:0;overflow:auto;flex:1;padding:3px}
+.cm-phone-ask .is-blocking>.cm-board-decision-foot{flex:none}
+.cm-phone-ask .is-blocking h3{display:none}
+
+#matrix-v2 .cm-phone-ask .is-blocking>.cm-board-decision-foot .v-button{min-height:32px;height:32px;padding:0 10px}

@@ -210,6 +210,31 @@ globalThis.CrankBoard = Object.seal({
   const appearance = {background: stored("cm-stage-background") || "volcano", table: stored("cm-stage-table") || ""};
   /* The table design: a saved id, an older one (wooden, stone, obsidian) or none, resolved through the catalog (ROB-100). */
   const tableDesignId = (id) => (globalThis.CrankStage ? CrankStage.tableDesign(id).id : id);
+  let blockSelected = null, blockPending = null, blockResult = null, blockListOpen = false, blockEpoch = 0;
+  // One check in flight: checked echoes the choice ID, but not a draft/request ID.
+  const blocking = () => view?.status !== "finished" && view?.decision?.mode === "many" && Array.isArray(view.decision.legalBlocks);
+  const blockContext = () => blocking() ? JSON.stringify([view.matchId, view.revision, view.decision.id, view.decision.options, view.decision.legalBlocks]) : null;
+  const blockKey = () => JSON.stringify([blockContext(), picked]);
+  const blockValid = () => blocking() && blockResult?.key === blockKey() && blockResult.ok && blockResult.open && socket?.readyState === 1;
+  function checkBlocks() {
+    if (!blocking() || blockPending || blockResult?.key === blockKey() || socket?.readyState !== 1) return;
+    blockPending = {key: blockKey(), choiceId: view.decision.id};
+    socket.send(JSON.stringify({type: "check", choiceId: view.decision.id, indices: [...picked]}));
+  }
+  function checkedBlocks(frame) {
+    if (!blockPending || (frame.choiceId !== undefined && frame.choiceId !== blockPending.choiceId)) return;
+    const pending = blockPending; blockPending = null;
+    if (pending.key === blockKey()) blockResult = {key: pending.key, ok: frame.ok === true, open: frame.open === true,
+      reasons: frame.reasons || [frame.error || "The table could not check these blocks. Try again."]};
+    checkBlocks(); draw();
+  }
+  function draftBlock(index) {
+    if (!blocking() || sending) return;
+    const o = view.decision.options.find(o => o.index === index);
+    if (!o || !view.decision.legalBlocks.some(b => b.blocker === o.cardId && b.attackers.includes(o.attackerId))) return;
+    picked = picked.includes(index) ? picked.filter(i => i !== index) : [...picked, index];
+    blockResult = null; checkBlocks(); draw();
+  }
   let drag = null;          /* a bar being dragged: {kind: "rows"|"hand"|"pane"|"panel"|"side", x, y, from, per} */
   /* THE TABLE'S SOUND (B8; crankmagic-audio.js): one player for the page, armed by the first press on the board. */
   let audio = null;
@@ -222,6 +247,7 @@ globalThis.CrankBoard = Object.seal({
     const url = new URL(`/api/tables/${encodeURIComponent(tableId)}/connect`, location.href);
     url.protocol = location.protocol === "https:" ? "wss:" : "ws:";
     const s = new WebSocket(url);
+    blockPending = null; blockResult = null;
     socket = s; closedByUs = false; yieldReady = false; status = view ? "reconnecting" : "connecting"; draw();
     s.addEventListener("open", () => {if (socket !== s) return; retry = 0; status = "open"; draw();});
     s.addEventListener("message", (event) => {if (socket === s) receive(event.data);});
@@ -242,6 +268,7 @@ globalThis.CrankBoard = Object.seal({
     let frame;
     try {frame = JSON.parse(data);} catch {return;}
     if (frame.type === "view") adopt(frame.view);
+    else if (frame.type === "checked" || (frame.type === "refused" && frame.of === "check")) checkedBlocks(frame);
     else if (frame.type === "receipt") {sending = false; draw();}
     /* A way of playing the room did not take (the AI seats were playing on) is sent again once the game moves (prefer). */
     else if (frame.type === "refused" && frame.of === "prefer") {if (frame.view) adopt(frame.view, true);}
@@ -252,7 +279,7 @@ globalThis.CrankBoard = Object.seal({
      equal one is taken too, and a refusal's own view always is. */
   function adopt(next, force = false) {
     if (!force && view && next.revision < view.revision) return;
-    const before = view && view.decision && view.decision.id, was = view;
+    const before = view && view.decision && view.decision.id, was = view, priorBlocks = blockContext();
     view = next;
     yieldReady = true;
     if (yieldPending && (next.matchId !== yieldPending.matchId || next.state.turn !== yieldPending.turn ||
@@ -272,6 +299,8 @@ globalThis.CrankBoard = Object.seal({
     /* On a phone the board you are looking at is the only one on screen: when you are asked, it is yours. */
     if (phone() && view.decision && view.decision.id !== before) focus = view.seat;
     if ((view.decision && view.decision.id) !== before) {picked = []; amounts = []; sending = false; alsoOpen = false; if(view.decision) openModuleDrawer("actions");}
+    if (priorBlocks !== blockContext()) {blockEpoch++; picked = []; blockSelected = null; blockResult = null; blockListOpen = false;}
+    checkBlocks();
     if (selected !== null && !findCard(selected)) selected = null;
     skip();
     draw();
@@ -992,6 +1021,24 @@ globalThis.CrankBoard = Object.seal({
   /* As HTML, an offer that helps an opponent or is aimed against your own marked where it says so (Rob, 2026-10-12: "some
      indicator ... distinguishing it from spells that are negative"; game/room/room.mjs, `leaning`). */
   const sayHtml = (o) => (o.lean ? e(sayFor(o)).replace(e(o.lean), `<span class="cm-lean${o.lean.startsWith("helps") ? " is-helps" : " is-against"}">⚠ ${e(o.lean)}</span>`) : e(sayFor(o)));
+  function blockDraft() {
+    const d = view.decision, label = id => {const c = combatCard(id); return `${c ? combatName(c) : "Object"} #${id}`;};
+    const tile = (id, action, selected, index) => {
+      const c = combatCard(id);
+      return `<button type="button" class="cm-block-tile" data-action="${action}" data-block-object="${id}"${index === undefined ? "" : ` data-index="${index}"`} aria-pressed="${selected}"${sending ? " disabled" : ""}>
+        ${c?.name && !c.faceDown ? `<img src="${e(pictureOf(c.name))}" alt="" loading="lazy">` : ""}<span>${e(label(id))}</span></button>`;
+    };
+    const options = d.options.filter(o => d.legalBlocks.some(b => b.blocker === o.cardId && b.attackers.includes(o.attackerId)));
+    const selected = options.filter(o => o.cardId === blockSelected);
+    const result = blockResult?.key === blockKey() ? blockResult : null;
+    return `<div class="cm-block-draft"><p>Choose a blocker, then its attackers. Draft stays private until confirmed.</p>
+      <div class="cm-block-tiles" data-block-key="${e(`${blockEpoch}:blockers`)}" aria-label="Choose a blocker">${d.legalBlocks.map(b => tile(b.blocker, "board-block-select", blockSelected === b.blocker)).join("") || "No legal blockers."}</div>
+      ${blockSelected !== null ? `<p>Attackers for ${e(label(blockSelected))} · select again to remove</p><div class="cm-block-tiles" data-block-key="${e(`${blockEpoch}:attackers:${blockSelected}`)}" aria-label="Legal attackers">${selected.map(o => tile(o.attackerId, "board-block-pair", picked.includes(o.index), o.index)).join("")}</div>${b("Clear this blocker", "board-block-clear", {}, false, {disabled:sending})}` : ""}
+      <ul class="cm-block-pairs" aria-label="Your private block draft">${options.filter(o => picked.includes(o.index)).map(o => `<li data-draft-blocker="${o.cardId}" data-draft-attacker="${o.attackerId}">${e(label(o.cardId))} → ${e(label(o.attackerId))} ${b("Remove", "board-block-pair", {index:o.index}, false, {disabled:sending})}</li>`).join("") || "<li>No blocks selected</li>"}</ul>
+      <div class="cm-block-status" role="status">${result ? result.ok && result.open ? "The table accepts this draft." : result.reasons.map(r => `<p>${e(r)}</p>`).join("") : "Checking blocks with the table…"}</div>
+      ${result && !result.open ? b("Check again", "board-block-retry") : ""}
+      <details class="cm-block-list"${blockListOpen ? " open" : ""}><summary>All block options</summary>${options.map(o => `<button type="button" class="v-button compact" data-action="board-option" data-index="${o.index}" aria-pressed="${picked.includes(o.index)}"${sending ? " disabled" : ""}>${e(o.label)} · #${o.cardId} → #${o.attackerId}</button>`).join("")}</details></div>`;
+  }
   function decision() {
     const d = view.decision;
     if (!d || view.status === "finished" || d.kind === "draw") return "";
@@ -1016,6 +1063,10 @@ globalThis.CrankBoard = Object.seal({
       return `<section class="cm-board-decision is-also" id="cm-board-decision" aria-label="What you can do"><h3>You can also</h3><div class="cm-board-options">${body}</div></section>`;
     }
     if (["one", "boolean", "index"].includes(d.mode)) body = d.options.map((o) => opt(o)).join("");
+    else if (blocking()) {
+      body = blockDraft();
+      foot = `${b("No blocks", "board-block-none", {}, false, {disabled:sending})}${b(picked.length ? "Confirm blocks" : "Confirm no blocks", "board-confirm", {}, true, {disabled:!blockValid() || sending})}`;
+    }
     else if (d.mode === "ack") foot = b("OK", "board-confirm", {}, true, {disabled: sending});
     else if (d.mode === "many") {
       body = d.options.map((o) => opt(o, ` aria-pressed="${picked.includes(o.index)}"`)).join("");
@@ -1035,7 +1086,7 @@ globalThis.CrankBoard = Object.seal({
     /* Asked in a run you chose Resolve all for: this answer goes for the same question each time the run asks it (Rob,
        2026-10-09: "Yes to all"; game/room/room.mjs). */
     const forRun = d.forRun ? `<p class="cm-muted cm-board-for-run">Resolve all: your answer goes for this same question each time the run asks it.</p>` : "";
-    return `<section class="cm-board-decision" id="cm-board-decision" data-choice-id="${e(d.id)}" data-match-id="${e(view.matchId)}" aria-label="${e(d.title)}"><h3${sentence ? ' class="is-sentence"' : ""}>${e(d.title)}</h3>${forRun}
+    return `<section class="cm-board-decision${blocking() ? " is-blocking" : ""}" id="cm-board-decision" data-choice-id="${e(d.id)}" data-match-id="${e(view.matchId)}" aria-label="${e(d.title)}"><h3${sentence ? ' class="is-sentence"' : ""}>${e(d.title)}</h3>${forRun}
       <div class="cm-board-options">${body}</div>${foot ? `<div class="cm-board-decision-foot">${foot}</div>` : ""}</section>`;
   }
   /* What the room asks, and what is on the stack, floated over the surface under the strip. Priority is not
@@ -1605,7 +1656,9 @@ globalThis.CrankBoard = Object.seal({
     const choiceScroll = choice && choice.dataset.choiceId === view?.decision?.id && choice.dataset.matchId === view?.matchId
       ? choice.querySelector(".cm-board-options")?.scrollTop : null;
     const fight = host.querySelector(".cm-combat-groups"), fightPosition = fight && {key: fight.dataset.combatKey, x: fight.scrollLeft, y: fight.scrollTop};
+    const blockPositions = new Map([...host.querySelectorAll("[data-block-key]")].map(el => [el.dataset.blockKey, el.scrollLeft]));
     C.keepFocus(host, () => paint(host));
+    for (const el of host.querySelectorAll("[data-block-key]")) el.scrollLeft = blockPositions.get(el.dataset.blockKey) || 0;
     const options = host.querySelector("#cm-board-decision .cm-board-options");
     if (choiceScroll !== null && options) options.scrollTop = choiceScroll;
     const nextFight = host.querySelector(".cm-combat-groups");
@@ -1975,6 +2028,7 @@ globalThis.CrankBoard = Object.seal({
   /* ---- actions ---- */
   const tableApi = () => C.tableApi;
   function option(index) {
+    if (blocking()) return draftBlock(index);
     const d = view.decision;
     if (!d || sending) return;
     if (["one", "boolean", "index"].includes(d.mode)) return send({indices: [index]});
@@ -2000,6 +2054,9 @@ globalThis.CrankBoard = Object.seal({
   actions["board-card"] = (el) => {
     if (!view) return;
     const id = Number(el.dataset.card);
+    if (blocking() && !sending && view.decision.legalBlocks.some(b => b.blocker === id)) {
+      blockSelected = id; openModuleDrawer("actions"); draw(); return;
+    }
     /* Full screen and the Panel show a card large at the side, with what can be done with it, before anything is done. */
     if (mode === "full" && !phone()) {selected = id; hover = null; drawPick(); draw(); return;}
     const previewSide=moduleSide("inspect");
@@ -2041,9 +2098,24 @@ globalThis.CrankBoard = Object.seal({
     if (skipping !== null) skip();
     draw();
   };
+  actions["board-block-select"] = el => {if (!blocking() || sending) return; blockSelected = Number(el.dataset.blockObject); draw();};
+  actions["board-block-pair"] = el => draftBlock(Number(el.dataset.index));
+  actions["board-block-none"] = () => {if (!blocking() || sending) return; picked = []; blockResult = null; checkBlocks(); draw();};
+  actions["board-block-clear"] = () => {
+    if (!blocking() || sending) return;
+    picked = picked.filter(i => view.decision.options.find(o => o.index === i)?.cardId !== blockSelected);
+    blockResult = null; checkBlocks(); draw();
+  };
+  actions["board-block-retry"] = () => {blockResult = null; checkBlocks(); draw();};
+  document.addEventListener("toggle", event => {if (event.target.matches?.(".cm-block-list")) blockListOpen = event.target.open;}, true);
   actions["board-confirm"] = () => {
     const d = view.decision;
-    if (!d) return;
+    if (!d || sending) return;
+    if (blocking()) {
+      if (!blockValid()) return;
+      blockResult = null; // A receipt alone must not reopen this already submitted draft.
+      return send({indices: [...picked]});
+    }
     if (d.mode === "ack") return send({indices: []});
     if (d.mode === "damage" || d.mode === "amount") return send({amounts: d.options.map((_, i) => Number(amounts[i]) || 0)});
     send({indices: picked});
@@ -2495,5 +2567,5 @@ globalThis.CrankBoard = Object.seal({
     else setScale("hand", scaleOf("hand") + up * 5);
   });
   /* A picture that does not come leaves the card's own frame, which already names it. */
-  document.addEventListener("error", (event) => {const t = event.target; if (t && t.matches && t.matches(".cm-bcard img, .cm-combat-card img")) t.remove();}, true);
+  document.addEventListener("error", (event) => {const t = event.target; if (t && t.matches && t.matches(".cm-bcard img, .cm-combat-card img, .cm-block-tile img")) t.remove();}, true);
 });
