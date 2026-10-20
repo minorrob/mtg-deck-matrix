@@ -142,7 +142,7 @@ async function journey(n, rob, pod) {
   alarms.push(alarm);
   const current = () => viewsAt(rob.email, id).at(-1);
   const act = boardPerson({page: rob.page, seat: 0, cards: tableCards, current});
-  let actions = 0, reloaded = false;
+  let actions = 0, reloaded = false, combatFrames = 0;
   const started = Date.now();
   for (let i = 0; i < 6000; i++) {
     if (current()?.status === "finished") break;
@@ -155,6 +155,22 @@ async function journey(n, rob, pod) {
       eq(after.decision?.id, before.decision?.id, `table ${n}: reload preserves the pending question`);
       reloaded = true;
     }
+    // A human decision holds the room still: compare the displayed assignments with the real engine's view.
+    const snapshot=current();
+    if(snapshot?.decision && snapshot.state.combat?.attacks.length){
+      const publicIds=new Set(snapshot.state.players.flatMap(p=>p.zones.Battlefield.cards.map(c=>c.cardId)));
+      const expected=snapshot.state.combat.attacks.filter(a=>publicIds.has(a.attacker)).map(a=>({
+        attacker:a.attacker,target:String(a.planeswalker??`seat:${a.defender}`),
+        blockers:a.blocked?a.blockers.filter(id=>publicIds.has(id)):[]
+      })).sort((a,b)=>a.attacker-b.attacker);
+      await rob.page.waitForFunction(ids=>JSON.stringify([...document.querySelectorAll('.cm-combat-row')].map(el=>Number(el.dataset.combatAttacker)).sort((a,b)=>a-b))===JSON.stringify(ids),expected.map(a=>a.attacker));
+      const shown=await rob.page.locator('.cm-combat-row').evaluateAll(rows=>rows.map(el=>({
+        attacker:Number(el.dataset.combatAttacker),target:el.dataset.combatTarget,
+        blockers:[...el.querySelectorAll('[data-combat-role="Blocker"]')].map(b=>Number(b.dataset.card))
+      })));
+      assert.deepEqual(shown.sort((a,b)=>a.attacker-b.attacker),expected,`table ${n}: confirmed combat matches the real room at revision ${snapshot.revision}`);
+      combatFrames++;
+    }
     if (await act()) {actions++; if (actions % 50 === 0) console.log(`  table ${n}: ${actions} actions, turn ${current().state.turn}`);}
     else await rob.page.waitForTimeout(100);
   }
@@ -162,6 +178,7 @@ async function journey(n, rob, pod) {
   eq(result.status, "finished", `table ${n}: the game reaches its end through the board`);
   ok(result.result?.reason !== "ended early", `table ${n}: a real ending (${JSON.stringify(result.result)})`);
   ok(reloaded, `table ${n}: reconnect exercised during the game`);
+  ok(combatFrames>0, `table ${n}: real combat display compared at ${combatFrames} held decisions`);
   const views = viewsAt(rob.email, id);
   await rob.page.locator(".cm-board-over").waitFor({timeout: 10000});
   // A library's first projected card is not automatically public. Download through
