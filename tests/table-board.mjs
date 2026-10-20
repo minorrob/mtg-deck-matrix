@@ -814,9 +814,20 @@ try {
   ok((await text(other.page, "[data-action=board-skip]")).trim() === "Skip to end", "while on that player's own board it is still Skip to end");
   await utility(active.page,"board-tools");
   const yieldHelp = await text(active.page, "#cm-board-tools .cm-board-yield-help");
-  ok(new RegExp(`Yield this turn passes your priority for you through the rest of ${active === rob ? "Maya" : "Rob"}'s turn`).test(yieldHelp) && /you hold priority/.test(yieldHelp),
-    `Tools says what yielding does, and that until then you hold priority ("${yieldHelp.trim().slice(0, 90)}…")`);
+  ok(new RegExp(`Yield this turn passes all your priority for the rest of ${active === rob ? "Maya" : "Rob"}'s turn`).test(yieldHelp) && /required decisions/.test(yieldHelp) && /after the room acknowledges/.test(yieldHelp),
+    `Tools explains room Yield, required decisions, and acknowledged cancellation ("${yieldHelp.trim().slice(0, 90)}…")`);
   await utility(active.page,"board-tools");
+  /* ROB-28: cross the real GameTable socket seam, not only the controlled
+     acknowledgment fixture. The other person still owns this main-phase choice. */
+  const yieldingEmail = active === rob ? ROB : MAYA, peerEmail = other === rob ? ROB : MAYA;
+  await active.page.locator(".cm-stage-top [data-action=board-skip]").click();
+  await waitText(active.page, ".cm-stage-top [data-action=board-skip]", /Stop yielding/, 10000);
+  eq(views(yieldingEmail).at(-1).yielding, true, "the real room acknowledges Yield from the board");
+  ok(!views(peerEmail).at(-1).yielding, "the other person's view does not disclose the yield policy");
+  await active.page.locator(".cm-stage-top [data-action=board-skip]").click();
+  await waitText(active.page, ".cm-stage-top [data-action=board-skip]", /Yield this turn/, 10000);
+  eq(sent[yieldingEmail].map(f => JSON.parse(f)).filter(f => f.type === "yield"), [{type:"yield",on:true},{type:"yield",on:false}],
+    "Start and Stop reach the real room as explicit policy frames");
   eq(await rob.page.locator(".cm-stage-top .cm-board-ribbon li.is-now").count() + await maya.page.locator(".cm-stage-top .cm-board-ribbon li.is-now").count(), 2, "the step ribbon in each strip lights exactly one step, on every turn");
 
   /* CARD SIZE: the app's slider, in Tools; ⌘/Ctrl − steps it. */
