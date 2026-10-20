@@ -176,6 +176,56 @@ other lane answers in the last column.
 | 4 | Engine → Play | The board to label a candidate and offer "report a wrong card" (Rob's decision 2): a card in the view with `candidate: true` (`state.players[i].zones.<Zone>.cards[j]`, said only where the seat can name the card) shows a "Candidate" mark, and its link sends `POST /api/tables/:id/report {cardId, note}` (201 `{report}`; 404 when the card is not a candidate the seat can see; 409 at a table that is not a playtest table, or past its 200 reports) | Card load step 5: playtest tables seat the card compiler's candidates, which no wave has reviewed yet, so a player knows which cards may play wrong and can say so. Reports reach the triage loop in the game's record (`cardReports`) | |
 | 1 | Deck intelligence | A headless batch entry point that plays N seeded games with house pilots and returns facts as data: `playPod({pod, seeds, cards, turnLimit}) → [{seed, turns, winner, reason, refused, perSeat: {life, lossReason, commanderDamage, turnsTaken}, perTurn: [{turn, landsInPlay, manaProduced, cardsDrawn}]}]`, deterministic per seed, with a stated budget per game; the room already plays a whole all-house game in one call (`game/room/room.mjs` `startRoom`, as `tests/engine-room-games.mjs` does) | ROB-116's calibration harness: the same hundred played in the engine and in the simulator, the distributions compared (turn of first lethal attack, mana by turn, cards drawn); the audit `docs/engine/sim-model-audit.md` (ROB-84) found no such runner exists and the deck lane never edits `game/**`. Asked on ROB-11, 2026-10-18 | |
 
+## 2026-10-20: Play ready for a 1-person, 3-AI play test; main a9bec38f on staging (a Claude session on Personal-HP)
+
+Rob, Oct 19: *"Evaluate how ready the Play capability is for me to play with all the features in a 1 human v 3 AIs …
+not the refinements, just fully functional"*, then *"merge when green"* and *"keep working through the other needed fixes
+to give me a green light to play test"*. This session read, measured and released. Two sessions it proposed made the
+fixes.
+
+- **Branch and commits:**
+  - main 0cb93288 (#792, ROB-164, the AI seats' optional picks) and main a9bec38f (#793, ROB-163, Full view's long
+    choices). Each was a merge commit on a green `suites` run of its exact head, with the base unmoved: runs 39334837399
+    and 39372898353.
+  - Staging: `release/cloud-staging` e504f220 → ccbaa386 (main 0cb93288) → 027c3e67 (main a9bec38f), each by
+    `tools/release-staging.sh` from a detached `origin/main` checkout. Production is unchanged at 5f6ea9cc.
+- **Proven, and the command for each:**
+  - **Every card of the six staging decks is defined,** and all 904 of their scenarios pass. The checks were scratch
+    scripts over `tests/fixtures/shared-staging-decks.json` and `tableCards`.
+  - **Headless games:** 25 games of the six decks with Normal AI seats finished, with 0 refused AI answers. Replays were
+    identical and no seat was sent another's cards (`tools/fuzz-live.mjs --replay --leaks`).
+  - **Through the real board in Chromium,** with the GameTable carried in-process as `tests/uat/real-deck-game.mjs`
+    carries it, on main 0cb93288:
+    - three games of one person against three Normal AIs, each seat's deck chosen from the lobby's Shared decks, played
+      to the end through the board's own controls (38, 34 and 41 turns);
+    - a reload mid-game returned the same revision and the same pending question;
+    - 172–226 frames per game sent none of the AIs' cards;
+    - the AIs ended with 7–11 lands;
+    - `real-deck-game.mjs` itself passed 13 checks, a natural end at turn 36.
+  - **Cards that draw beside another effect, in the six decks:** 27 engine-level probes, all correct, so ROB-17 isn't
+    reproduced by any of these cards. Four scenarios don't assert one of their card's effects: Protege's Awakening's
+    draw, Steady Progress's and Tezzeret's Gambit's proliferate, and Freyalise's −6. That's ROB-94's to add.
+  - **Before each staging push:** release-acceptance 22 and play-e2e 42. Workers Builds `crankmagic-staging` succeeded
+    on ccbaa386 and on 027c3e67.
+- **Not proven:**
+  - A signed-in read-back of staging: Personal-HP has no Access service token, so
+    `tools/staging-check.mjs --expect a9bec38f` is still to run.
+  - The deployed bytes against the dry run.
+  - A game with Rob at the table.
+- **Outstanding for the play test** (none blocks it; Rob plays on desktop, at a table started after 027c3e67, because
+  `pilotPicks` is a new match's pod key):
+  - **Claude seats in production** need `ANTHROPIC_API_KEY` on the production Worker (ROB-95; Rob's step). Easy and
+    Normal work everywhere, and staging offers Claude.
+  - **Rough, and known:**
+    - a priority stop on every AI spell and trigger (ROB-28, ROB-102);
+    - same-named attackers unnumbered in Declare blockers (a Krenko swarm);
+    - an X spell offered only once its lands are tapped for mana (ROB-74);
+    - the loss banner reads "ended early: every person had left the game";
+    - no rematch;
+    - away more than five minutes concedes;
+    - a long pick list scrolls back to its top after each pick (ROB-163's note);
+    - the phone in portrait is drawn sideways (ROB-18, #766).
+
 ## 2026-10-19: the engine lane, reconciled with Linear (a Claude cloud session; Linear ROB-71)
 
 - **Holder:** a Claude cloud session on `claude/exciting-sagan-qe5yuf`, from main 303e31b3. Rob: *"Rationalize the
