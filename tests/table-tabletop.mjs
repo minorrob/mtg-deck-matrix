@@ -1,6 +1,6 @@
 /* Tabletop geometry and browser interaction; see tests/uat/browser-runner.mjs. */
 import assert from "node:assert/strict";
-import {readFileSync} from "node:fs";
+import {readFileSync, mkdirSync} from "node:fs";
 import vm from "node:vm";
 const scope = {console};
 vm.runInNewContext(readFileSync(new URL("../crankmagic-stage.js", import.meta.url), "utf8"), scope);
@@ -460,6 +460,19 @@ try {
     return {reached,x:r.left+r.width/2,y:r.top+r.height/2,top:r.top,bottom:r.bottom};
   },selector);
   let clearBelow=0;
+  const choiceShot=async(p,name)=>{
+    if(!process.env.UAT_SHOTS) return;
+    mkdirSync(process.env.UAT_SHOTS,{recursive:true});
+    await p.evaluate(()=>{
+      const label=document.createElement('div');
+      label.id='choice-proof-label';
+      label.textContent='C01 · Choice list';
+      label.style.cssText='position:fixed;top:4px;left:4px;z-index:9999;background:#142824;color:white;padding:4px;font:12px system-ui;pointer-events:none';
+      document.body.append(label);
+    });
+    await p.screenshot({path:`${process.env.UAT_SHOTS}/${name}.png`});
+    await p.locator('#choice-proof-label').evaluate(el=>el.remove());
+  };
   for(const count of [60,150]) {
     const long=spawn(process.execPath,["tools/play-tabletop-preview.mjs"],{env:{...process.env,PREVIEW_PORT:"0",PREVIEW_FRAME:"15",PREVIEW_OPTIONS:String(count)},stdio:["ignore","pipe","pipe"]});
     try {
@@ -469,6 +482,16 @@ try {
       ]);
       for(const [width,height] of [[1024,768],[1280,720],[1400,900]]) {
         const p=await browser.newPage({viewport:{width,height}}), sent=[], where=`${count} options at ${width}x${height}`;
+        let roomSocket, latestView;
+        await p.routeWebSocket(/\/api\/tables\//,ws=>{
+          roomSocket=ws;
+          const server=ws.connectToServer();
+          server.onMessage(message=>{
+            const frame=JSON.parse(String(message));
+            if(frame.view) latestView=frame.view;
+            ws.send(message);
+          });
+        });
         p.on("pageerror",e=>errors.push(e.message));
         p.on("websocket",ws=>ws.on("framesent",f=>sent.push(String(f.payload))));
         await p.goto(`${at}/index.html#table?id=tablepreview01`);
@@ -483,11 +506,24 @@ try {
         await p.mouse.move(list.x,list.y);
         for(let i=0,before=-1;i<40;i++){const now=await p.evaluate(()=>document.querySelector('#cm-board-decision .cm-board-options').scrollTop);if(now===before)break;before=now;await p.mouse.wheel(0,300);await p.waitForTimeout(60);}
         const last=await reach(p,'last');
+        const scrollBefore=await p.locator('#cm-board-decision .cm-board-options').evaluate(el=>el.scrollTop);
         assert.ok(last.reached,`${where}: the wheel brings the last option into reach (${Math.round(last.top)}-${Math.round(last.bottom)})`);
         for(const s of [title,tally,confirm]) assert.ok((await reach(p,s)).reached,`${where}: with the list scrolled, ${s} stays on screen`);
         await p.mouse.click(last.x,last.y);
         await p.waitForFunction(n=>document.querySelector(`#cm-board-decision [data-index="${n}"]`)?.getAttribute('aria-pressed')==='true',count-1);
         assert.match(await p.locator(tally).innerText(),/^1 chosen/,`${where}: the last option is chosen`);
+        const kept=async label=>{
+          assert.equal(await p.locator('#cm-board-decision .cm-board-options').evaluate(el=>el.scrollTop),scrollBefore,`${where}: ${label} keeps the scroll position`);
+          assert.ok((await reach(p,'last')).reached,`${where}: ${label} keeps the last option under the pointer`);
+        };
+        await kept('selecting');
+        await p.mouse.click(last.x,last.y);
+        await p.waitForFunction(n=>document.querySelector(`#cm-board-decision [data-index="${n}"]`)?.getAttribute('aria-pressed')==='false',count-1);
+        await kept('deselecting');
+        await p.mouse.click(last.x,last.y);
+        await p.waitForFunction(n=>document.querySelector(`#cm-board-decision [data-index="${n}"]`)?.getAttribute('aria-pressed')==='true',count-1);
+        await kept('selecting again');
+        if(count===150&&width===1280) await choiceShot(p,'rob-165-choice-1280x720');
         const press=await reach(p,confirm);
         assert.ok(press.reached,`${where}: Confirm is in reach once an option is chosen`);
         await p.mouse.click(press.x,press.y);
@@ -498,7 +534,30 @@ try {
         const below=await p.evaluate(()=>{const d=document.querySelector('#cm-board-decision').getBoundingClientRect(),r=document.querySelector('.cm-stage-region').getBoundingClientRect(),y=d.bottom+24;
           return r.bottom-d.bottom<40?null:!document.elementFromPoint((d.left+d.right)/2,y).closest('.cm-board-ask');});
         if(below!==null){clearBelow++;assert.ok(below,`${where}: the table just below the decision takes the pointer, not the decision's box`);}
+        // Same-sized fresh questions and matches must not inherit this list's old position.
+        for(const boundary of ['decision','match']) {
+          const next=structuredClone(latestView);
+          if(boundary==='decision') next.decision.id+=':next';
+          else next.matchId+=':next';
+          next.revision++;
+          latestView=next;
+          roomSocket.send(JSON.stringify({type:'view',view:next}));
+          await p.waitForFunction(({id,match})=>{const d=document.querySelector('#cm-board-decision');return d?.dataset.choiceId===id&&d.dataset.matchId===match;},{id:next.decision.id,match:next.matchId});
+          assert.equal(await p.locator('#cm-board-decision .cm-board-options').evaluate(el=>el.scrollTop),0,`${where}: a new ${boundary} opens at the top`);
+          await p.mouse.move(list.x,list.y);
+          await p.mouse.wheel(0,10000);
+          await p.waitForTimeout(100);
+          if(count===150) assert.ok(await p.locator('#cm-board-decision .cm-board-options').evaluate(el=>el.scrollTop>0),`${where}: reset check starts from a genuinely scrolled list`);
+        }
         await p.close();
+      }
+      if(count===150&&process.env.UAT_SHOTS) {
+        const phone=await browser.newPage({viewport:{width:390,height:844}});
+        phone.on('pageerror',e=>errors.push(e.message));
+        await phone.goto(`${at}/index.html#table?id=tablepreview01`);
+        await phone.waitForSelector('#cm-board-decision .cm-board-options');
+        await choiceShot(phone,'rob-165-choice-390x844');
+        await phone.close();
       }
     } finally {long.kill();}
   }

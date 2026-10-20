@@ -22,6 +22,8 @@ import {openBrowser, loadLiveState, ROOT} from "./browser-runner.mjs";
 import {GameTable, tableCards} from "../../cloud/game-room.mjs";
 import {build, worktreeSource} from "../../tools/release-pages.mjs";
 import {boardPerson} from "./board-person.mjs";
+import {replayRecord} from "../../tools/playtest-triage.mjs";
+import {checkLeaks} from "../../tools/fuzz-live.mjs";
 const REPO = ROOT;
 
 let checks = 0;
@@ -161,9 +163,33 @@ async function journey(n, rob, pod) {
   ok(result.result?.reason !== "ended early", `table ${n}: a real ending (${JSON.stringify(result.result)})`);
   ok(reloaded, `table ${n}: reconnect exercised during the game`);
   const views = viewsAt(rob.email, id);
-  const shown = views.flatMap((v) => v.state.players.flatMap((p, s) => s === 0 ? [] : ["Hand", "Library"].flatMap((z) => (p.zones[z]?.cards ?? []).filter((c, i) => c.name && !(z === "Library" && i === 0)).map((c) => ({turn: v.state.turn, owner: s, zone: z, name: c.name})))));
-  ok(!shown.length, `table ${n}: all ${views.length} frames hide the AIs' hands and libraries${shown.length ? ` -- but ${shown.length} named a card there, first ${JSON.stringify(shown[0])}` : ""}`);
   await rob.page.locator(".cm-board-over").waitFor({timeout: 10000});
+  // A library's first projected card is not automatically public. Download through
+  // the board and let the replay oracle judge every seat's view before accepting
+  // any opponent hand/library identity, including a legitimately revealed top.
+  const [download] = await Promise.all([rob.page.waitForEvent("download"), rob.page.click(".cm-board-over [data-action=board-record]")]);
+  const record = JSON.parse(readFileSync(await download.path(), "utf8"));
+  eq([record.kind, record.matchId], ["full", result.matchId], `table ${n}: the board downloads this game's complete record`);
+  const allowed = new Set();
+  const visibilityKey = (v, owner, zone, card) => `${v.revision}|${owner}|${zone}|${card.cardId}|${card.name}`;
+  const judge = async (room, ...args) => {
+    const leaks = await checkLeaks(room, ...args);
+    if (!leaks.length) {
+      const v = room.view(room.seats[0].seatId);
+      v.state.players.forEach((p, owner) => {if (owner !== v.seat) for (const zone of ["Hand", "Library"])
+        for (const card of p.zones[zone]?.cards ?? []) if (card.name) allowed.add(visibilityKey(v, owner, zone, card));});
+    }
+    return leaks;
+  };
+  const replay = await replayRecord(record, {cards:tableCards, judge});
+  ok(replay.same && !replay.exception && !replay.leaks.length,
+    `table ${n}: identical replay and no visibility leaks (${replay.leakChecks} checks)${replay.exception ? `: ${replay.exception}` : ""}`);
+  const unseen = frames => frames.flatMap(v => v.state.players.flatMap((p, owner) => owner === v.seat ? [] :
+    ["Hand", "Library"].flatMap(zone => (p.zones[zone]?.cards ?? []).filter(card => card.name && !allowed.has(visibilityKey(v, owner, zone, card))))));
+  const leaked = structuredClone(views[0]);
+  leaked.state.players[1].zones.Library.cards = [{cardId:-999, name:"Synthetic hidden library card"}];
+  ok(unseen([leaked]).length > 0, `table ${n}: the visibility assertion rejects an injected hidden library-top identity`);
+  ok(!unseen(views).length, `table ${n}: all ${views.length} browser frames match oracle-approved private-zone visibility`);
   const banner = (await rob.page.locator(".cm-board-over").innerText()).replace(/\s+/g, " ").slice(0, 160);
   if (SHOTS) await rob.page.screenshot({path: path.join(SHOTS, `table${n}-end.png`)});
   const room = tableFor(id).room;

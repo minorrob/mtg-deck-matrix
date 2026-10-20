@@ -167,7 +167,8 @@ Rob says otherwise: those steps are what makes later waves cheaper.
   no definition. Every other table plays the directory alone and refuses a candidate by name, as before (Rob's decision 2).
 - **How they reach the Worker.** `game/engine/cards/candidates.mjs`, generated from `data/engine/candidates.json` by
   `node game/tools/engine-candidates.mjs --write`:
-  - 2,429 definitions, 1.36 MB (205 KB gzipped);
+  - 2,429 definitions when built, 1.36 MB (205 KB gzipped); 2,668 since spell composition and the backstop's
+    cards joined (below), 1.51 MB;
   - each kept as JSON text and parsed only when a playtest table asks for the card, so the Worker doesn't parse them
     all every time it starts;
   - `tests/table-candidates.mjs` holds it to the candidates file.
@@ -187,6 +188,57 @@ Rob says otherwise: those steps are what makes later waves cheaper.
   candidate as unknown, even on staging. That keeps it on the demand list, which step 6 reviews candidates by, but
   the hub says "to learn" for a card a staging table would seat. Compiling a card when a deck is saved (decision 3)
   is the second part of step 5.
+
+## The loader, finished (2026-10-19; Linear ROB-88, ROB-90, ROB-91, ROB-92)
+
+Rob, on this body of work: *"refining the way we load cards to retain 100% accuracy while decreasing token expenses,
+and building the loader capability ... should be done once finished with your current series of tasks."* What a card
+now goes through, cheapest first:
+
+| Path | Tokens | What makes it right |
+| --- | --- | --- |
+| The card compiler (step 3) | none | Every template calibrated on held-out defined cards; the card compiles, is its oracle text, and plays a smoke game |
+| The backstop, gap-only (step 4) | only the sentences the library lacks | The library's trusted sentences arrive written; the writer writes the rest; the card is checked whole (schema, fidelity, a sentence never written twice, Haiku's read-back, the smoke game) |
+| A wave (step 6) | none, or a reviewer's reading | A reviewer approves each ability against its sentence and what the game showed; the drafted scenario then holds the card for good |
+
+- **Spell composition (step 3's increment).** A spell of several sentences, one effect each, is learned sentence by
+  sentence. The split is kept only where the parts put back together are the card's own spell, and parts are composed
+  again only when the spell sentences sit next to each other and are plain. 78 of the directory's spells split.
+  - **Calibration:** 546 cards translated with themselves held out (was 520); 545 pass, the same one failure
+    (Goblin Piledriver).
+  - **Candidates:** 2,643 (was 2,429).
+  - **One sentence short:** 12,544 cards.
+  - **Top missing sentences:** Swampwalk (23 cards), "{R}: This creature gets +1/+0 until end of turn." (22),
+    "This creature attacks each combat if able." (21), and others no defined card writes yet.
+- **The backstop, built (step 4; `game/tools/engine-compile.mjs`).**
+  - A candidate is never asked of the writer.
+  - Any other card is handed over with what the library already wrote of it (`card-compiler.mjs`, `assistOf`). The
+    writer is asked only for the rest; a spell is always written whole.
+  - Across the undefined cards that would be about 1.86 sentences a card, and 11,396 of them would need one sentence.
+  - `--held-out N` is the plan's sample: N defined cards held out, finished by the writer, and played through their own
+    scenarios, for the pass rate and the cost per card.
+  - It needs Rob's key and spends nothing without `--yes`. **It has not been run**, so the cost per card is unmeasured
+    until Rob runs the sample (ROB-90).
+- **Step 5, second part: the demand list is the queue.**
+  - Step 3 compiles every card in the oracle data, so compiling at save time would add nothing. What saving can add is
+    demand.
+  - `POST /api/tables/known {decks}` already records every card a deck lacks (step 1). Workshop's save calling it is
+    Requests, Engine → Workshop 5 in `docs/ACTIVE.md`.
+  - `engine-compile.mjs --demand <file>` (the file `card-demand.mjs` writes from staging) loads the wanted cards first.
+  - The backstop's provisional cards (`data/engine/scripts`) now seat at playtest tables beside the compiler's, labeled:
+    25 of them, which no table seated before.
+  - **This departs from the plan above**, which put the backstop in the Worker behind a switch on the AI door's daily
+    cap, and stored its cards in D1 (`card_candidates`, migration 0008). Run as a batch, Rob's `--max-cost` is the cap,
+    nothing in the Worker spends, the writer's instructions cache across a run, and every card is reviewable in git.
+  - The cost is time: a wanted card loads at the next run, not within seconds of the save. Migration 0008 is not needed
+    for this and stays reserved until Rob decides (ROB-91).
+- **Waves, built (step 6; `game/tools/card-waves.mjs`).**
+  - `--review` ranks candidates demand first and plays each one. It writes a review sheet: the oracle text beside every
+    ability, the templates and the cards that taught them, and what the game showed (each seat's life, every zone, the
+    card's keywords).
+  - What the game showed is the drafted scenario, which fails a card that plays differently (`tests/card-waves.mjs`).
+  - `--promote` writes the approved cards into the directory with their scenarios, `source: "hand"`; their sentences
+    then teach the library.
 
 ## Running a lane (Rob's decision 4)
 

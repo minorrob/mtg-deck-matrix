@@ -8,7 +8,7 @@ Run from the repository root, with nothing else editing the worktree:
 SUITES = ['tests/table-candidates.mjs']
 BREAKS = [
     ("a candidate left out of the module", 'game/tools/engine-candidates.mjs',
-     '    if (!record) continue;\n', '    if (!record || c.name === file.cards[0].name) continue;\n'),
+     '  for (const c of file.cards) if (byName.has(c.name)) add(', '  for (const c of file.cards) if (byName.has(c.name) && c.name !== file.cards[0].name) add('),
     ("one definition shared by every table", 'game/engine/cards/candidates.mjs',
      '  return hit ? JSON.parse(hit) : null;', '  return hit ? ((globalThis.SHARED ??= new Map()).get(hit) ?? globalThis.SHARED.set(hit, JSON.parse(hit)).get(hit)) : null;'),
     ("a pod's key ignored", 'game/room/room.mjs',
@@ -55,4 +55,11 @@ BREAKS = [
      '      if (route === "POST /table/report") return reply(201, {report: await t.reportCard(email, await body(), now)});\n', ''),
     ("the front door's report route missing", 'cloud/tables.mjs',
      '"end", "concede", "report"]);', '"end", "concede"]);'),
+    ("the backstop's cards left out", 'game/tools/engine-candidates.mjs',
+     'export function candidatesModule(file = read(CANDIDATES_FILE), oracle = read(ORACLE_FILE), backstop = backstopScripts()) {',
+     'export function candidatesModule(file = read(CANDIDATES_FILE), oracle = read(ORACLE_FILE), backstop = []) {'),
+    ("a directory card seated from the backstop", 'game/tools/engine-candidates.mjs',
+     ' && !hand.resolve(e.script.identity.name)).map', ').map'),
+    ("a refused backstop card seated", 'game/tools/engine-candidates.mjs',
+     'e.status === "provisional" && ', ''),
 ]
