@@ -477,8 +477,10 @@ These are acceptance requirements, not design direction.
 - **Text size:** no text smaller than 10 px. A size the person can change is changed continuously, never in steps, and
   is remembered on that device.
 - **Language:** American English and US number and date formats. Card names keep their printed spelling.
-- **Never decide for the player.** A convenience that passes priority for them must be one they turned on. It stops
-  whenever anything is on the stack, or when any other question is asked.
+- **Never decide for the player.** A convenience that passes priority for them must be one they turned on. Their own
+  Skip to end stops when anything is on the stack or another question is asked. Explicit room-backed Yield turn
+  continues through spells and abilities for the rest of the opponent's turn (the Yield turn contract above).
+  Required questions always remain theirs to answer; yielding resumes afterward within that same turn.
 - **When something can't be done,** say what is wrong and what to do, naming the thing. Never a warning that can be
   clicked past.
 

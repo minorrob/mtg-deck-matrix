@@ -26,9 +26,9 @@
  *                 card under the pointer large with what it can do, the log, and the Coach in its lower half. Full
  *                 screen asks the browser for the whole document, so the Coach and the dialogs are seen in it
  *   Skip to end   passes priority for you through the rest of this turn, and stops the moment anything is on the
- *                 stack or the room asks you something else; on another player's turn the same switch is Yield this turn
- *                 (the plan's X8c: a player holding an instant with mana open is otherwise asked at every step), and Tools
- *                 says what it does
+ *                 stack or the room asks you something else. On another player's turn, Yield this turn sends the room's
+ *                 turn-scoped policy (ROB-28): spells do not cancel it, required choices remain yours, and the view
+ *                 acknowledges Start and Stop. Tools explains its scope.
  *   vitals        a pill per seat (life, poison, a bar per commander toward 21); any pill opens Table vitals
  *   Show hand     ✋ or Space: the hand fanned over a dimmed board to contemplate; a card chosen (a click, or its
  *                 number) is held up with what it can do; Enter does it, Escape puts it back
@@ -129,6 +129,7 @@ globalThis.CrankBoard = Object.seal({
   const WENT_MS = 6000;
   let historyOpen = false, historyFilter = "", menuOpen = false, stepsOpen = false, panelOpen = false, paneShut = false, alsoOpen = false;
   let skipping = null;                 /* Skip to end: the turn being skipped through, or null */
+  let yieldPending = null, yieldReady = false; /* ROB-28: a request is not an acknowledged room policy. */
   let preferSaid = null;              /* the way of playing last told to the room: {key, revision} (prefer) */
   /* The Coach: open or not, its thread ({from: "you"|"coach", text} or {divider}), and whether it is "typing". */
   const coach = {open: false, thread: [], typing: false, asked: 0};
@@ -221,19 +222,19 @@ globalThis.CrankBoard = Object.seal({
     const url = new URL(`/api/tables/${encodeURIComponent(tableId)}/connect`, location.href);
     url.protocol = location.protocol === "https:" ? "wss:" : "ws:";
     const s = new WebSocket(url);
-    socket = s; closedByUs = false; status = view ? "reconnecting" : "connecting"; draw();
+    socket = s; closedByUs = false; yieldReady = false; status = view ? "reconnecting" : "connecting"; draw();
     s.addEventListener("open", () => {if (socket !== s) return; retry = 0; status = "open"; draw();});
     s.addEventListener("message", (event) => {if (socket === s) receive(event.data);});
     s.addEventListener("close", () => {
       if (socket !== s || closedByUs) return;
-      socket = null; status = "reconnecting"; sending = false; draw();
+      socket = null; status = "reconnecting"; sending = false; yieldPending = null; yieldReady = false; draw();
       retryTimer = setTimeout(connect, Math.min(RETRY_MAX, 1000 * 2 ** retry++));
     });
   }
   function disconnect() {
     closedByUs = true; clearTimeout(retryTimer);
     if (socket) try {socket.close(1000, "leaving the board");} catch {}
-    socket = null; status = "idle";
+    socket = null; status = "idle"; yieldPending = null; yieldReady = false;
   }
   /* What a room's "away" frame says of a seat: dropped, and back by when; or not away (null). */
   function heard(seat, until) {if (until) away.set(seat, until); else away.delete(seat);}
@@ -244,7 +245,7 @@ globalThis.CrankBoard = Object.seal({
     else if (frame.type === "receipt") {sending = false; draw();}
     /* A way of playing the room did not take (the AI seats were playing on) is sent again once the game moves (prefer). */
     else if (frame.type === "refused" && frame.of === "prefer") {if (frame.view) adopt(frame.view, true);}
-    else if (frame.type === "refused") {sending = false; C.notice(frame.error || "The table did not take that.", true); if (frame.view) adopt(frame.view, true); else draw();}
+    else if (frame.type === "refused") {sending = false; if (frame.of === "yield") yieldPending = null; C.notice(frame.error || "The table did not take that.", true); if (frame.view) adopt(frame.view, true); else draw();}
     else if (frame.type === "away") {const seat = Number(String(frame.seatId).slice(1)); awaySaid.set(seat, {until: frame.until, at: performance.now()}); heard(seat, frame.until); draw();}
   }
   /* Newest wins. The room's revision counts decisions; a game ended between them keeps its revision, so an
@@ -253,6 +254,9 @@ globalThis.CrankBoard = Object.seal({
     if (!force && view && next.revision < view.revision) return;
     const before = view && view.decision && view.decision.id, was = view;
     view = next;
+    yieldReady = true;
+    if (yieldPending && (next.matchId !== yieldPending.matchId || next.state.turn !== yieldPending.turn ||
+        next.status === "finished" || (next.yielding === true) === yieldPending.on)) yieldPending = null;
     /* Whole turns went by since this seat's last view: say which, until the turn moves on or it is put away. */
     const went = globalThis.CrankBoard.turnsWentBy(was, next);
     if (went) {
@@ -299,16 +303,32 @@ globalThis.CrankBoard = Object.seal({
   /* SKIP TO END: your priority is passed for you through the rest of this turn. It stops by itself when the turn
      ends, when anything is on the stack (a spell you may want to answer), or when the room asks you something
      that is not priority -- a decision is never made for you (AGENTS.md). */
-  /* Its words follow whose turn it is: your own you skip to its end; another player's you yield (X8c). */
+  /* ROB-28: only your own Skip to end uses a local loop. Opponent-turn Yield is
+     the room's policy, surviving spells and required choices. No optimistic
+     toggle: the next authoritative view acknowledges starting or stopping.
+     A reconnect reads that policy afresh and never replays an uncertain request. */
   const skipWords = (short = false) => {
-    const yours = !view || view.state.turnPlayerId === view.seat;
-    if (skipping === null) return yours ? "Skip to end" : "Yield this turn";
-    return short ? (yours ? "Stop skipping" : "Stop yielding") : (yours ? "Skipping · stop" : "Yielding · stop");
+    if (skipping === null) return "Skip to end";
+    return short ? "Stop skipping" : "Skipping · stop";
   };
+  const yieldHelp = () => `Yield this turn passes all your priority for the rest of ${nameOf(view.state.turnPlayerId)}'s turn, including new spells and abilities. You still choose targets, blockers, payments and other required decisions. Stop yielding affects future passes after the room acknowledges it; it cannot undo a pass.`;
+  function skipControl(short = false) {
+    if (view.state.turnPlayerId === view.seat) return b(skipWords(short), "board-skip", {}, false,
+      {cls: `compact${skipping === null ? "" : " is-on"}`, disabled: view.status === "finished"});
+    if (view.status === "finished" || (!view.mayYield && !view.yielding)) return "";
+    const active = view.yielding === true, waiting = yieldPending !== null;
+    const label = waiting ? (yieldPending.on ? "Requesting yield…" : "Stopping yield…") : active ? "Stop yielding" : "Yield this turn";
+    const detail = status !== "open" || !yieldReady ? "Reconnecting; state unconfirmed" : active
+      ? `${nameOf(view.state.turnPlayerId)} · turn ${view.state.turn}; still choose`
+      : "Pass all priority; still choose";
+    return `<span class="cm-board-yield-control" data-yield-control title="${e(yieldHelp())}">
+      <button type="button" class="v-button compact${active ? " is-on" : ""}" data-action="board-skip" aria-pressed="${active}" aria-description="${e(yieldHelp())}"${waiting || !yieldReady || status !== "open" || sending || view.continuing ? " disabled" : ""}>${e(label)}</button>
+      <small>${e(detail)}</small></span>`;
+  }
   function skip() {
     if (skipping === null) return;
     const d = view.decision;
-    if (view.status === "finished" || view.state.turn !== skipping || (d && d.kind !== "priority") || view.state.stack.length) {skipping = null; return;}
+    if (view.status === "finished" || view.state.turnPlayerId !== view.seat || view.state.turn !== skipping || (d && d.kind !== "priority") || view.state.stack.length) {skipping = null; return;}
     if (d && d.kind === "priority" && !sending) {
       const pass = d.options.find((o) => o.label === "Pass priority");
       if (pass) setTimeout(() => {if (skipping !== null && view.decision === d && !sending) send({indices: [pass.index]});}, 120);
@@ -559,14 +579,12 @@ globalThis.CrankBoard = Object.seal({
       ? `${b("End for everyone · keep the record", "board-end", {confirm: "1"}, true)}${b("Keep playing", "board-end-cancel")}`
       : b("End game", "board-end", {}, false, {disabled: over});
     const [lo, hi] = C.cardScaleRange();
-    /* HOLD PRIORITY / YIELD (the r3 Tools wireframe; X8c). Holding is the default: with a card you could use, you are asked
-       at every step, the stack empty or not. Yield passes for you through the rest of this turn, until anything is on the
-       stack or you are asked anything else, and puts itself away when the turn ends. */
+    /* Hold remains a separate cast preference; explicit Yield belongs to the room (ROB-28). */
     const yours = view.state.turnPlayerId === view.seat;
-    const priority = `<div class="cm-actions">${b(skipWords(), "board-skip", {}, false, {cls: skipping === null ? "" : "is-on", disabled: over})}</div>
+    const priority = `<div class="cm-actions">${skipControl()}</div>
       <label class="cm-board-hold"><input type="checkbox" data-board-hold${stored(HOLD_KEY) === "on" ? " checked" : ""}> Hold priority after I cast</label>
       <p class="cm-muted cm-board-hold-help">When you cast a spell or activate an ability, it resolves unless someone responds${stored(HOLD_KEY) === "on" ? "; with Hold priority on, you are asked first, to respond to it yourself" : ""}.</p>
-      <p class="cm-muted cm-board-yield-help">${yours ? "Skip to end passes your priority for you through the rest of your turn" : `Yield this turn passes your priority for you through the rest of ${e(nameOf(view.state.turnPlayerId))}'s turn`}. It stops the moment anything is on the stack or you are asked anything else, so you can still answer a spell. Until then you hold priority: with a card you could use, you are asked at every step.</p>`;
+      <p class="cm-muted cm-board-yield-help">${yours ? "Skip to end passes your priority for you through the rest of your turn. It stops when anything is on the stack or you are asked anything else." : e(yieldHelp())}</p>`;
     return `<div class="cm-board-menu" role="group" aria-label="Settings" id="cm-board-tools">
       <div class="cm-actions cm-board-menu-row">${b("Set Side Drawer Modules", "board-modules-settings")}</div>
       <div class="cm-actions cm-board-menu-row">${gb(COACH, "Recommended actions", "board-coach", {}, {cls: ""})}${b("Table vitals", "board-vitals", {})}${b("AI Coach settings…", "ai-settings", {})}</div>
@@ -763,7 +781,7 @@ globalThis.CrankBoard = Object.seal({
   }
   function boardHeader() {
     const me=players()[view.seat],s=view.state,turnName=s.turnPlayerId===null ? "" : nameOf(s.turnPlayerId);
-    const pill=`<div class="cm-full-pill">${passButton()}${resolveAllButton()}${b(skipWords(true),"board-skip",{},false,{cls:`compact${skipping === null ? "" : " is-on"}`,disabled:view.status === "finished"})}</div>`;
+    const pill=`<div class="cm-full-pill">${passButton()}${resolveAllButton()}${skipControl(true)}</div>`;
     const conn=status === "open" ? "" : `<span class="cm-board-conn">${status === "reconnecting" ? "Reconnecting…" : "Connecting…"}</span>`;
     return `<header class="cm-stage-top"><span class="cm-stage-self">${vitals(me)}<b>${e(me.name)}</b></span><span class="cm-board-tools cm-board-turnsteps">${turnRibbon()}${stepsOpen ? stepsMenu() : ""}</span>
       <span class="cm-stage-priority"><span class="cm-board-turn"${view.yourTurn ? ` title="Turn ${s.turn} of the game, counting every player's; your ${ordinal(view.yourTurn)} turn"` : ""}>${s.turn ? `Turn ${s.turn} · ${e(turnName)}${view.yourTurn ? ` (your ${ordinal(view.yourTurn)})` : ""}` : "Before turn 1"}</span><br>Priority: ${e(nameOf(view.state.priorityPlayerId))}<span class="cm-board-waiting" title="${e(waitingText())}">${e(waitingText())}</span>${conn}</span>${alsoButton()}${pill}${stageProfile(me)}</header>`;
@@ -1179,8 +1197,8 @@ globalThis.CrankBoard = Object.seal({
       <span class="cm-board-tools">${icon("⚙", "board-tools", "Settings")}${tools ? toolsMenu() : ""}</span></nav>`;
     const pill = mine
       ? `<div class="cm-phone-pill"><b>T${s.turn}</b><span class="cm-board-step">${e(step)}</span>${next ? `<span class="cm-board-next">Next: ${e(next)}</span>` : ""}
-          ${passButton()}</div>`
-      : `<div class="cm-phone-pill"><span>Viewing ${e(p.name)}</span>${b("My board", "board-focus", {seat: String(view.seat)}, true, {cls: "compact"})}</div>`;
+          ${passButton()}${view.state.turnPlayerId !== view.seat ? skipControl(true) : ""}</div>`
+      : `<div class="cm-phone-pill"><span>Viewing ${e(p.name)}</span>${b("My board", "board-focus", {seat: String(view.seat)}, true, {cls: "compact"})}${view.state.turnPlayerId !== view.seat ? skipControl(true) : ""}</div>`;
     const seats = [me, ...players().filter((x) => x.playerId !== view.seat)];
     const strip = `<aside class="cm-phone-seats" aria-label="Seats">
       ${seats.map((x) => `<button type="button" class="cm-phone-seat${x.playerId === p.playerId ? " is-focus" : ""}" data-action="board-focus" data-seat="${x.playerId}" aria-pressed="${x.playerId === p.playerId}" style="--seat:${seatColor(x.playerId)}">
@@ -1969,6 +1987,13 @@ globalThis.CrankBoard = Object.seal({
   actions["board-mute"] = () => {const a = sound(); if (!a) return; a.setMuted(!a.volumes().muted); if (!a.volumes().muted && view) {const bed = CrankAudio.bedFor(view, view.seat); if (bed) a.startBgm(bed);} draw();};
   actions["board-skip"] = () => {
     if (!view || view.status === "finished") return;
+    if (view.state.turnPlayerId !== view.seat) {
+      if (yieldPending || !yieldReady || sending || view.continuing || !socket || socket.readyState !== 1 || (!view.mayYield && !view.yielding)) return;
+      yieldPending = {on: view.yielding !== true, matchId: view.matchId, turn: view.state.turn};
+      socket.send(JSON.stringify({type: "yield", on: yieldPending.on}));
+      draw();
+      return;
+    }
     skipping = skipping === null ? view.state.turn : null;
     if (skipping !== null) skip();
     draw();
