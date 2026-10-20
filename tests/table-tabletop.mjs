@@ -504,7 +504,9 @@ try {
         assert.ok(list.top>=2.5&&list.left>=2.5,`${where}: a chosen option's outline is whole at the list's edges (${list.top}, ${list.left})`);
         assert.ok(Math.abs(list.under)<.5,`${where}: the options start under the title, as they do in every view (${list.under})`);
         await p.mouse.move(list.x,list.y);
-        for(let i=0,before=-1;i<40;i++){const now=await p.evaluate(()=>document.querySelector('#cm-board-decision .cm-board-options').scrollTop);if(now===before)break;before=now;await p.mouse.wheel(0,300);await p.waitForTimeout(60);}
+        /* Wheel until the list is at its end, each turn waited for (ROB-173): stopping when two readings matched stopped early under CI load, a turn not yet landed. A list that cannot scroll stops at once, and the assertion below says so. */
+        const scrollOf=()=>p.evaluate(()=>{const o=document.querySelector('#cm-board-decision .cm-board-options');return {top:o.scrollTop,end:o.scrollTop>=o.scrollHeight-o.clientHeight-1};});
+        for(let i=0;i<60;i++){const was=await scrollOf();if(was.end)break;await p.mouse.wheel(0,300);if(!await p.waitForFunction(t=>document.querySelector('#cm-board-decision .cm-board-options').scrollTop!==t,was.top,{timeout:3000}).then(()=>true,()=>false))break;}
         const last=await reach(p,'last');
         const scrollBefore=await p.locator('#cm-board-decision .cm-board-options').evaluate(el=>el.scrollTop);
         assert.ok(last.reached,`${where}: the wheel brings the last option into reach (${Math.round(last.top)}-${Math.round(last.bottom)})`);

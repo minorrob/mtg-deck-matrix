@@ -25,12 +25,16 @@ original.decision={id:"declare-blockers:29:1",mode:"many",min:0,max:5,title:"Dec
  options:[[72011,72001],[72012,72001],[72012,72002],[72013,72001],[72013,72002]].map(([cardId,attackerId],index)=>({index,cardId,attackerId,label:`Block #${attackerId} with #${cardId}`}))};
 const html=readFileSync(path.join(ROOT,"index.html"),"utf8").replace("</head>",'<meta name="crankmagic-accounts" content="on"><meta name="crankmagic-play" content="cloud"></head>');
 const errors=[];
-async function fixture(width,height,mode="full"){
+async function fixture(width,height,mode="full",tall=false){
   let current=structuredClone(original), socket, hold=false;
   const reply = (f, overrides={}) => socket.send(JSON.stringify({type:"checked", choiceId:f.choiceId, ok:true, open:true, reasons:[], ...overrides}));
   const frames=[], context=await browser.newContext({viewport:{width,height},reducedMotion:"reduce",serviceWorkers:"block"});
   await context.addInitScript(mode=>{localStorage.setItem("cm-board-view",mode);localStorage.setItem("crankmagic-audio-muted","true");},mode);
   const page=await context.newPage();
+  /* TALL TEXT (Oct 20): CI's Linux fonts set lines taller than a Windows desktop's, and at 1280x720 that alone pushed No
+     blocks and Confirm below the window in Focus (run 39468706080). The tall cases set every line twice its height, so
+     the question held to the window is proved on any machine, not only where the fonts happen to be tall. */
+  if(tall) await page.addInitScript(()=>document.addEventListener("DOMContentLoaded",()=>{const s=document.createElement("style");s.textContent="*{line-height:2!important}";document.head.append(s);}));
   if(stub) await stub(page);
   page.on("pageerror",e=>errors.push(e.message));
   await page.route(`${base}/index.html*`,r=>r.fulfill({contentType:"text/html",body:html}));
@@ -87,10 +91,10 @@ async function press(page,sel){
   const p=await point(page,sel);await page.mouse.click(p.x,p.y);await pause(page);}
 async function enabled(page){await page.locator(confirm+':not([disabled])').waitFor();}
 try {
- for(const [width,height,mode] of [[1024,768,"full"],[1280,720,"full"],[1400,900,"full"],[1280,720,"table"],[1280,720,"focus"],[390,844,"focus"]]){
-  if(process.env.BLOCK_CASE && process.env.BLOCK_CASE!==`${mode}-${width}`) continue;
-  const {page,context,frames,publish,reply,hold,release,drop,emit}=await fixture(width,height,mode);
-  const where=`${mode} ${width}x${height}`;console.log(where);
+ for(const [width,height,mode,tall=false] of [[1024,768,"full"],[1280,720,"full"],[1400,900,"full"],[1280,720,"table"],[1280,720,"focus"],[390,844,"focus"],[1280,720,"table",true],[1280,720,"focus",true]]){
+  if(process.env.BLOCK_CASE && process.env.BLOCK_CASE!==`${mode}-${width}${tall?"-tall":""}`) continue;
+  const {page,context,frames,publish,reply,hold,release,drop,emit}=await fixture(width,height,mode,tall);
+  const where=`${mode} ${width}x${height}${tall?" tall text":""}`;console.log(where);
   await enabled(page);
   assert.deepEqual(frames.filter(f=>f.type==='check').map(f=>f.indices),[[]],where+': initial no-block draft checked');
   assert.equal(await page.locator(select(72014)).count(),0,'tapped creature has no legal pairs');
@@ -122,6 +126,7 @@ try {
   assert.equal(frames.filter(f=>f.type==='act').length,0,'no selection publishes an answer');
   if(width===1280&&mode==='full') await shot(page,'rob-26-blocking-1280x720');
   if(width===390) await shot(page,'rob-26-blocking-390x844');
+  if(tall&&mode==='focus') await shot(page,'rob-26-blocking-1280x720-focus-tall');
   await press(page,confirm);
   assert.deepEqual(frames.filter(f=>f.type==='act').at(-1).indices,[0,1],'explicit Confirm sends both blockers once');
   assert.equal(frames.filter(f=>f.type==='act').length,1,'exactly one game action');
@@ -193,5 +198,5 @@ try {
   await context.close();
  }
  assert.deepEqual(errors,[],'no browser errors');
- console.log('board-direct-blocking: PASS (direct pairs, private drafts, full reasons, serial checks, stale match, capacity, clearing, keyboard and real pointer reach in six layouts)');
+ console.log('board-direct-blocking: PASS (direct pairs, private drafts, full reasons, serial checks, stale match, capacity, clearing, keyboard and real pointer reach in six layouts, and in Table and Focus at tall text)');
 } finally {await close();}

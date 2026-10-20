@@ -51,4 +51,11 @@ BREAKS = [
     ("phone clips confirmation below draft", "crankmagic-stage.css",
      '.cm-phone-ask .is-blocking>.cm-board-options{display:block;min-height:0;overflow:auto;flex:1;padding:3px}',
      '.cm-phone-ask .is-blocking>.cm-board-options{display:block;min-height:0;overflow:visible;flex:none;padding:3px}'),
+    # Oct 20: Table and Focus hold the question to the window (CI's taller fonts pushed No blocks below it at 1280x720).
+    ("Table and Focus let the question run below the window", T,
+     'if (ask) ask.style.maxHeight = `${Math.max(160, Math.floor(innerHeight - ask.getBoundingClientRect().top - 12))}px`;',
+     'if (ask) ask.style.maxHeight = "";'),
+    ("Table and Focus stop scrolling the question's middle", "crankmagic-stage.css",
+     '.cm-board-tabletop>.cm-board-ask>#cm-board-decision>.cm-board-options{overflow-y:auto;min-height:0;padding:3px;margin:-3px}',
+     '.cm-board-tabletop>.cm-board-ask>#cm-board-decision>.cm-board-options{overflow-y:visible;min-height:auto;padding:3px;margin:-3px}'),
 ]

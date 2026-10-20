@@ -92,6 +92,12 @@
 .cm-stage-region .cm-board-ask>#cm-board-decision{display:flex;flex-direction:column;min-height:0}
 /* 3px inside the scroll keeps a chosen option's outline (2px, 1px out) whole at the list's edges */
 .cm-stage-region .cm-board-ask>#cm-board-decision>.cm-board-options{overflow-y:auto;padding:3px;margin:-3px}
+/* Table (.cm-board-tabletop) and Focus (.cm-board-main) too (ROB-26's blocking, Oct 20): the question floats 52px into the board, which scrolls, so a long draft
+   or an open "All block options" pushed No blocks and Confirm below the window, where only scrolling the whole board
+   found them (CI's taller fonts did it at 1280x720). The question is held to the window instead (its max-height is set
+   by the board's fit(), measured from where it starts), its title and buttons kept, its middle scrolling. */
+.cm-board-main>.cm-board-ask>#cm-board-decision,.cm-board-tabletop>.cm-board-ask>#cm-board-decision{display:flex;flex-direction:column;min-height:0}
+.cm-board-main>.cm-board-ask>#cm-board-decision>.cm-board-options,.cm-board-tabletop>.cm-board-ask>#cm-board-decision>.cm-board-options{overflow-y:auto;min-height:0;padding:3px;margin:-3px}
 @media(max-width:1100px){.cm-stage-top{gap:8px;padding:5px 8px}.cm-stage-self>b{display:none}.cm-stage-top .cm-board-ribbon{gap:2px;font-size:10px}.cm-stage-top .cm-board-ribbon li{padding:4px}.cm-stage-priority{font-size:10px}.cm-stage-top .cm-full-pill{gap:3px}.cm-stage-top .cm-full-pill .v-button{padding:0 6px!important;font-size:11px}.cm-stage-caption{left:9px;font-size:10px}.cm-stage-caption small{display:none}}
 
 /* Zone slots occupy the near-left edge, followed by lands and the open battlefield. */

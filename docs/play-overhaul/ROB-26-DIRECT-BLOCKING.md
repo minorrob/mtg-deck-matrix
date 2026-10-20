@@ -65,3 +65,24 @@ normalization; 125 asset hashes and nine service-worker checks pass.
 Main 27fba609 is merged into this branch. Exact-head CI and Engine-owned
 staging acceptance remain outstanding. Production is held. #795/#796 belong to Rob's other harness;
 ROB-171/#800 remains parked for Engine ROB-172.
+
+## October 20, later: the question held to the window in Table and Focus (Claude, holding the lane)
+
+Codex's exact-head run (Actions 39468706080, head `d6f5e554`) failed one assertion: in Focus at 1280x720, after
+"All block options" opened, No blocks measured y 700–742 in a 720-high window. Locally the same case passed.
+CI's Linux fonts set lines taller than this desktop's, and the question floats 52px into a board that scrolls,
+so its foot ran below the window. Reproduced here by setting every line to twice its height: Focus lost Confirm
+at 1.7x, and Table lost it at 2x.
+
+- **The fix:** the board's `fit()`, run last after everything above the question has its size, sets the question's
+  `max-height` to what the window leaves below its top (minus 12px). Focus starts it lower than Table, so the room is
+  measured, not assumed. `crankmagic-stage.css` makes the question a shrinkable column whose middle scrolls, for Table
+  (`.cm-board-tabletop>.cm-board-ask`) and Focus (`.cm-board-main>.cm-board-ask`), as #793 did for Full. The title and
+  the No blocks and Confirm buttons stay on screen.
+- **The proof on any machine:** `tests/board-direct-blocking.mjs` adds Table and Focus at 1280x720 with every line at
+  twice its height (`BLOCK_CASE=table-1280-tall`, `focus-1280-tall`). Shot:
+  `screenshots/rob-26-blocking-1280x720-focus-tall.png`.
+- **Breaks:** two new entries in `breaks-direct-blocking.py` were each applied by hand. Each fails both tall cases:
+  * the cap removed;
+  * the middle no longer scrolling.
+- **Pins:** board 60, stage CSS 26, service worker 501, app 518.

@@ -1826,6 +1826,12 @@ globalThis.CrankBoard = Object.seal({
       overlap(host);
       dock();
       if (tbl) sea(tbl); else stopSea();
+      /* THE QUESTION HELD TO THE WINDOW in Table and Focus (ROB-26's blocking, Oct 20): it floats into a board that
+         scrolls, so a long draft or an open "All block options" pushed No blocks and Confirm below the window. It is as
+         tall as the window leaves below its top, and its middle scrolls (crankmagic-stage.css). Focus starts it lower
+         than Table, so the room is measured, not assumed -- last, once everything above it has its size. */
+      const ask = host.querySelector(".cm-board-main>.cm-board-ask, .cm-board-tabletop>.cm-board-ask");
+      if (ask) ask.style.maxHeight = `${Math.max(160, Math.floor(innerHeight - ask.getBoundingClientRect().top - 12))}px`;
     } finally {fitting = false;}
   }
   /* The Coach docked in Full screen: over the lower half of the side column, which gives its log the upper half. */
