@@ -303,6 +303,7 @@ for (const off of [false, true]) {
     : "a table that keeps CR 103.8a starts a match whose pod has no key for it, as every game before the house rule");
   eq(record.pod.pooledTaps, true, "and a table's new match tops floating mana up from its caster's sources (`pooledTaps`, rules/actions.mjs): its pod says so, and the record keeps it");
   eq([record.pod.yieldTurn, Object.hasOwn(record.pod, "passStack")], [true, false], "and lets a person yield an opponent's turn (`yieldTurn`, room.mjs), its pod says so; the stack passed for them (`passStack`) waits on the board (ROB-23)");
+  eq(record.pod.pilotPicks, true, "and its AI seats take what an \"up to\" or a search is for (`pilotPicks`, room.mjs): its pod says so, and the record keeps it");
 }
 
 /* ONLY A CARD THAT CAN BE A COMMANDER IS ONE (CR 903.3; Rob, 2026-10-01): a legendary creature, or a card that says it

@@ -444,6 +444,65 @@ try {
   const mismatched=await page.evaluate(()=>Math.abs(document.querySelector('.cm-stack-card').getBoundingClientRect().width-document.querySelector('.cm-full-pick .cm-bcard').getBoundingClientRect().width));
   assert.throws(()=>assert.ok(mismatched<.5),'a deliberately undersized stack card fails the matching-size assertion');
   await brokenSize.evaluate(el=>el.remove());
+  /* A long decision in Full screen can be finished by a person (2026-10-19): "Search your library" (frame 15) with 60 of
+     D5's card names, as a tutor across most of a library offers, and a stress list of 150 that is longer than the table at
+     every size. The title, the count and Confirm stay on screen; the wheel scrolls the options; the last option and Confirm
+     are pressed where a person sees them. Reach is hit-tested by hand: Playwright's own click scrolls inside clipped boxes. */
+  const reach=(p,selector)=>p.evaluate(selector=>{
+    const el=selector==='last'?[...document.querySelectorAll('#cm-board-decision .cm-board-options>*')].at(-1):document.querySelector(selector);
+    const byHand=n=>/(auto|scroll)/.test(getComputedStyle(n).overflowX+getComputedStyle(n).overflowY);
+    for(let n=el.parentElement;n;n=n.parentElement) if(!byHand(n)&&n!==document.scrollingElement){n.scrollTop=0;n.scrollLeft=0;}
+    const r=el.getBoundingClientRect();
+    const reached=[[.5,.5],[.12,.2],[.88,.2],[.12,.8],[.88,.8]].every(([fx,fy])=>{
+      const x=r.left+r.width*fx,y=r.top+r.height*fy,at=x>=0&&y>=0&&x<innerWidth&&y<innerHeight&&document.elementFromPoint(x,y);
+      return !!at&&(at===el||el.contains(at));
+    });
+    return {reached,x:r.left+r.width/2,y:r.top+r.height/2,top:r.top,bottom:r.bottom};
+  },selector);
+  let clearBelow=0;
+  for(const count of [60,150]) {
+    const long=spawn(process.execPath,["tools/play-tabletop-preview.mjs"],{env:{...process.env,PREVIEW_PORT:"0",PREVIEW_FRAME:"15",PREVIEW_OPTIONS:String(count)},stdio:["ignore","pipe","pipe"]});
+    try {
+      const at=await Promise.race([
+        new Promise((resolve,reject)=>{long.stdout.on("data",d=>{const m=String(d).match(/http:\/\/localhost:(\d+)/);if(m)resolve(`http://127.0.0.1:${m[1]}`);});long.once("error",reject);}),
+        new Promise((_,reject)=>{const t=setTimeout(()=>reject(new Error("preview startup timed out")),10000);t.unref();})
+      ]);
+      for(const [width,height] of [[1024,768],[1280,720],[1400,900]]) {
+        const p=await browser.newPage({viewport:{width,height}}), sent=[], where=`${count} options at ${width}x${height}`;
+        p.on("pageerror",e=>errors.push(e.message));
+        p.on("websocket",ws=>ws.on("framesent",f=>sent.push(String(f.payload))));
+        await p.goto(`${at}/index.html#table?id=tablepreview01`);
+        await p.waitForFunction(n=>document.querySelectorAll('.cm-stage-region .cm-board-ask>#cm-board-decision .cm-board-options>button').length===n,count);
+        const title='#cm-board-decision>h3', tally='#cm-board-decision .cm-board-decision-foot>.cm-muted', confirm='#cm-board-decision [data-action="board-confirm"]';
+        for(const s of [title,tally,confirm]) assert.ok((await reach(p,s)).reached,`${where}: ${s} is on screen and takes the pointer`);
+        const list=await p.evaluate(()=>{const o=document.querySelector('#cm-board-decision .cm-board-options'),r=o.getBoundingClientRect(),first=o.firstElementChild.getBoundingClientRect(),h=document.querySelector('#cm-board-decision>h3').getBoundingClientRect();
+          return {x:r.left+r.width/2,y:r.top+Math.min(r.height/2,60),over:o.scrollHeight-o.clientHeight,top:first.top-r.top,left:first.left-r.left,under:first.left-h.left};});
+        if(count===150) assert.ok(list.over>40,`${where}: the stress list is longer than the table, so its scroll is exercised (${list.over}px)`);
+        assert.ok(list.top>=2.5&&list.left>=2.5,`${where}: a chosen option's outline is whole at the list's edges (${list.top}, ${list.left})`);
+        assert.ok(Math.abs(list.under)<.5,`${where}: the options start under the title, as they do in every view (${list.under})`);
+        await p.mouse.move(list.x,list.y);
+        for(let i=0,before=-1;i<40;i++){const now=await p.evaluate(()=>document.querySelector('#cm-board-decision .cm-board-options').scrollTop);if(now===before)break;before=now;await p.mouse.wheel(0,300);await p.waitForTimeout(60);}
+        const last=await reach(p,'last');
+        assert.ok(last.reached,`${where}: the wheel brings the last option into reach (${Math.round(last.top)}-${Math.round(last.bottom)})`);
+        for(const s of [title,tally,confirm]) assert.ok((await reach(p,s)).reached,`${where}: with the list scrolled, ${s} stays on screen`);
+        await p.mouse.click(last.x,last.y);
+        await p.waitForFunction(n=>document.querySelector(`#cm-board-decision [data-index="${n}"]`)?.getAttribute('aria-pressed')==='true',count-1);
+        assert.match(await p.locator(tally).innerText(),/^1 chosen/,`${where}: the last option is chosen`);
+        const press=await reach(p,confirm);
+        assert.ok(press.reached,`${where}: Confirm is in reach once an option is chosen`);
+        await p.mouse.click(press.x,press.y);
+        for(let i=0;i<50&&!sent.some(s=>s.includes('"kind":"answer"'));i++) await p.waitForTimeout(50);
+        const answer=sent.map(s=>JSON.parse(s)).find(f=>f.kind==='answer');
+        assert.deepEqual(answer&&{choiceId:answer.choiceId,indices:answer.indices},{choiceId:'chooseCard:0:29:21',indices:[count-1]},`${where}: Confirm sends the last option as the answer`);
+        /* Under a decision shorter than the table, the table takes the pointer: the box is no taller than what it holds. */
+        const below=await p.evaluate(()=>{const d=document.querySelector('#cm-board-decision').getBoundingClientRect(),r=document.querySelector('.cm-stage-region').getBoundingClientRect(),y=d.bottom+24;
+          return r.bottom-d.bottom<40?null:!document.elementFromPoint((d.left+d.right)/2,y).closest('.cm-board-ask');});
+        if(below!==null){clearBelow++;assert.ok(below,`${where}: the table just below the decision takes the pointer, not the decision's box`);}
+        await p.close();
+      }
+    } finally {long.kill();}
+  }
+  assert.ok(clearBelow>0,'the table under a short decision was hit-tested at one size at least');
   assert.deepEqual(errors,[],"no uncaught browser errors");
   console.log('table-tabletop: browser passed (four seats, private backs, persistent canvas, camera bounds, overlays, phone fallback)');
 } finally {server.kill();await close();}

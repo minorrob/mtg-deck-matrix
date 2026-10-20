@@ -9,12 +9,18 @@ const require = createRequire(import.meta.url);
 // Playwright is a development-only dependency already used by the browser suites.
 const {wsServer} = require(path.join(path.dirname(require.resolve("playwright-core/package.json")), "lib/utilsBundle.js"));
 const sample = JSON.parse(readFileSync(path.join(ROOT, "docs/reference/replit-sample-views.json"), "utf8"));
-let index = 13, revision = 10000;
+let index = Number(process.env.PREVIEW_FRAME || 13), revision = 10000;
 const sockets = new Set();
 const current = () => {
   const v=structuredClone(sample.views[index]);v.revision=revision;
   // Explicit synthetic crowded-hand fixture for the browser suite; never used by the default preview.
   if(process.env.PREVIEW_HAND_SIZE){const hand=v.state.players[v.seat].zones.Hand,target=Number(process.env.PREVIEW_HAND_SIZE);while(hand.cards.length<target)hand.cards.push({...hand.cards[0],cardId:90000+hand.cards.length});hand.count=hand.cards.length;}
+  // Explicit synthetic long-decision fixture for the browser suite: a search across most of a library, as Diabolic Tutor
+  // makes in Rob's D5 (Teysa Karlov), its options that deck's own card names.
+  if(process.env.PREVIEW_OPTIONS&&v.decision?.options?.length){
+    const names=JSON.parse(readFileSync(path.join(ROOT,"tests/fixtures/shared-staging-decks.json"),"utf8")).decks.find(d=>d.id==="shared:D5").cards;
+    v.decision.options=Array.from({length:Number(process.env.PREVIEW_OPTIONS)},(_,i)=>({index:i,label:names[i%names.length],cardId:91000+i}));
+  }
   return v;
 };
 // Rob's art mats by seat; PREVIEW_MATS (comma-separated, by seat) seats others, such as the drawn ones, for the browser suite.
