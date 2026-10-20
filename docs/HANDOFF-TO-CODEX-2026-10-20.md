@@ -45,10 +45,10 @@ Merge `main` into any branch of yours before you bump on top. On Windows: `asset
 **`tools/play-tabletop-preview.mjs`** now also takes `PREVIEW_FRAME` and `PREVIEW_OPTIONS`, an explicit synthetic
 fixture for a long decision, like `PREVIEW_HAND_SIZE`. The default preview is unchanged.
 
-**New for you:** `tests/uat/solo-vs-ai.mjs`, added with this file. It plays one browser person against three Normal AIs,
-choosing Rob's Shared decks in the lobby, to the end through the board. It checks a mid-game reload, no leaked
-cards and no refused AI answers. Like `real-deck-game.mjs`, it sits outside the regular suite inventory. It's yours
-from here.
+**New for you:** `tests/uat/solo-vs-ai.mjs`, written with this file. It plays one browser person against three Normal
+AIs, choosing Rob's Shared decks in the lobby, to the end through the board. It checks a mid-game reload, no leaked
+cards and no refused AI answers. Like `real-deck-game.mjs`, it sits outside the regular suite inventory. It's yours:
+you took it from this branch into #797 and added the Yield check (af0aed1a), so `main` holds your copy.
 
 ## 3. The engine contracts you can now build on
 
@@ -93,6 +93,10 @@ offered only once its mana floats), ROB-49 waits on ROB-78, and ROB-54 waits on 
 - The deployed bytes on staging against the dry run.
 
 ## 5. Outstanding, in order
+
+**Done since this file was written:** you resumed on Oct 20 from this branch. ROB-28 (#797, Yield wired to the room)
+and ROB-165 (#798, a long choice keeps its scroll) merged together as main 17a1218c. They aren't on staging yet; the
+engine lane's next release carries them. The list below keeps them in their place for the record.
 
 **First, what Rob will feel in his 1-vs-3 play test** (he asked for functional, not refinements):
 
