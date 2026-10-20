@@ -516,6 +516,12 @@ event with the journal's id and the decision whose answer made it; a draw the dr
 their hand, a move between two hidden zones no event, a face-down card unnamed; two views in a row sharing none; a reconnect
 after an event it saw getting exactly what came since, or told to start over once that is older than the room keeps; and
 reopened and replayed, the same events.
+`room-ending` holds how a game ended, as data (`result.ending`, Linear ROB-166): won, draw, eliminated, conceded, timed-out
+and ended, each seat's outcome and the engine's loss reason; one person knocked out by three AI seats eliminated, by damage
+or an empty library, rather than "every person had left"; conceding and running out of time told apart, at the room and
+the table; the last of two people out read from the order the seats went out in, kept with the room; a host's End game;
+the same in every seat's view, a woken room, the replay and the finished game's record; and `winner`, `reason` and
+`endedBy` as they were.
 `table-basics` holds the table's basic lands as basic lands (Rob, 2026-10-11, Rampant Growth finding nothing): the table
 plays the engine's own definitions, the room's own basics are Basic and of their land type, and every card's scenarios
 pass played with the table's own lookup.
@@ -937,7 +943,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 541 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 542 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1194,6 +1200,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `room-yield-turn` — `tests/room-yield-turn.mjs`
 - `room-draw-card` — `tests/room-draw-card.mjs`
 - `room-events` — `tests/room-events.mjs`
+- `room-ending` — `tests/room-ending.mjs`
 - `room-block-check` — `tests/room-block-check.mjs`
 - `engine-pass-stack` — `tests/engine-pass-stack.mjs`
 - `table-basics` — `tests/table-basics.mjs`

@@ -147,6 +147,7 @@ const SLICE = 25;
   const last = room.view("s0");
   eq([last.departures.s0, last.status, last.result.winner, last.result.reason], ["timed-out", "finished", null, NO_PERSON_REASON],
     `once the AI seats stopped, his time ran out (${waited} more alarm${waited === 1 ? "" : "s"}), and with no person left the game ended there`);
+  eq([last.result.ending.kind, last.result.ending.seatId], ["timed-out", "s0"], "and its `ending` says he timed out, played in slices as in one go (tests/room-ending.mjs)");
   ok(room.history.at(-1).text === "Every person is out of the game, so it ends here · not finished" && !room.continuing, "the history says so, and nothing plays on");
   ok((await call("/table")).table.phase !== "playing" && alarms.at(-1) === null, "the table moves on, and the alarm is cleared");
 }
