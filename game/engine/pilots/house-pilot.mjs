@@ -24,6 +24,15 @@
  * kills the attacker and survives, or when the damage coming in would be lethal. It keeps a hand of two to
  * five lands. These are heuristics on the visible board.
  *
+ * WHAT IT MAY TAKE NONE OF (`picks`; Linear ROB-164, found by the Play readiness evaluation of 2026-10-19: a person and three AIs).
+ * A choice whose least answer is none -- "search your library for up to two basic land cards", a search for a card with a
+ * quality, which may fail to find (CR 701.23b), proliferate's "any number" -- used to fall through to its first `min`
+ * options: none. So an AI seat cracked Evolving Wilds for nothing and proliferated nothing. With `picks` it takes what
+ * such a choice is for: a search, as many as it may, the lands of the colors it lacks or the costliest card it could cast
+ * soon; proliferate, its own counters that help it and another player's that hurt them; any other, the permanents and
+ * players on the side it is meant for. A match launched before `picks` keeps the old answers, so it replays as it was
+ * played (game/room/room.mjs, `pilotPicks`).
+ *
  * THIS IS L0, the floor of the house pilot's levels of decision (AI-2, docs/plan-to-done-2026-09-30.md). L1 scores the
  * choices that decide games -- the mana it spends, where a spell is aimed, the activated abilities worth their cost
  * (which this pilot never takes), attacks against the swing back, blocks, the opening hand's odds -- and answers the
@@ -103,11 +112,31 @@ const MAIN = ["MAIN1", "MAIN2"];
 const isLand = (card) => (card?.types ?? []).includes("Land");
 const isCreature = (card) => (card?.types ?? []).includes("Creature");
 
+/* THE MANA A CARD MAKES, read off the card as anyone reads it: what each of its mana abilities says it adds (`produces`, one
+   way or a list of them; a basic land type's is written there too, CR 305.6), all five for "one mana of any color", and C
+   for colorless. What a land found by a search would give; the room's public facts carry it as `makes` (game/room/room.mjs).
+   Pure, over a definition. */
+const MANA = ["W", "U", "B", "R", "G", "C"];
+export function manaColors(card) {
+  const made = new Set();
+  for (const ability of card?.abilities ?? []) {
+    if (ability.kind !== "mana") continue;
+    if (ability.anyColor) for (const color of MANA.slice(0, 5)) made.add(color);
+    for (const way of [ability.produces ?? []].flat()) for (const color of Object.keys(way ?? {})) made.add(color);
+  }
+  return MANA.filter((color) => made.has(color));
+}
+/* Counters that cost the one who has them: a negative one (CR 122.1a), poison (CR 122.1f), stun (CR 122.1d), finality
+   (CR 122.1h), and the kinds a card counts against its holder. Any other kind is its holder's: +1/+1, loyalty, charge, lore. */
+const HARMFUL = new Set(["poison", "stun", "finality", "age", "burden", "doom", "rad", "depletion", "bounty"]);
+const harmful = (kind) => kind.startsWith("-") || HARMFUL.has(kind);
+
 /**
- * @param {{seat: number, cards?: (name: string) => ?{manaValue?: number, types?: string[], power?: number, toughness?: number}}} options
- *   `cards` answers public questions about a named card; without it the pilot plays what it can see.
+ * @param {{seat: number, cards?: (name: string) => ?{manaValue?: number, types?: string[], power?: number, toughness?: number}, picks?: boolean}} options
+ *   `cards` answers public questions about a named card; without it the pilot plays what it can see. `picks`: it takes what
+ *   a choice it may answer with none is for (above); without it, none.
  */
-export function housePilot({seat, cards = () => null} = {}) {
+export function housePilot({seat, cards = () => null, picks = false} = {}) {
   if (!Number.isInteger(seat) || seat < 0) throw new Error("A house pilot sits in one seat");
   const known = (name) => (name ? cards(name) : null) ?? null;
   const manaValue = (name) => known(name)?.manaValue ?? Infinity;
@@ -152,6 +181,93 @@ export function housePilot({seat, cards = () => null} = {}) {
       out.push(index);
     }
     return out;
+  }
+
+  /* ---- What it takes when it may take none (`picks`) ---- */
+
+  /* Its permanents, wherever their owners' battlefields list them: the view lists a permanent under its owner. */
+  const mine = (view) => (view.players ?? []).flatMap((p) => zone(p, "Battlefield")).filter((c) => c.controller === seat);
+  const makes = (name) => known(name)?.makes ?? manaColors(known(name));
+  /* An option's card by name: as the view shows it, or as the option says it ("Bear, in your graveyard", a search of two zones). */
+  const nameOf = (view, option) => (view.players ?? []).flatMap((p) => Object.values(p.zones ?? {}).flatMap((z) => z.cards ?? []))
+    .find((c) => c.cardId === option.cardId && c.name)?.name ?? String(option.label ?? "").replace(/, in your [a-z ]+$/, "");
+  /* Lands, best first: each the one making most of the colors its hand and commanders cost and nothing of its own makes yet,
+     then most of those it needs at all; one taken counts as made, so the next brings another color. */
+  function landOrder(view, self, choice, indices) {
+    const need = Object.fromEntries(MANA.map((color) => [color, 0]));
+    for (const c of [...zone(self, "Hand"), ...zone(self, "Command").filter((c) => c.commander)])
+      for (const color of known(c.name)?.colors ?? []) need[color] = (need[color] ?? 0) + (c.commander ? 2 : 1);
+    const have = new Set(mine(view).flatMap((c) => makes(c.name)));
+    const left = [...indices], order = [];
+    while (left.length) {
+      const score = (i) => makes(nameOf(view, choice.options[i])).reduce((n, color) => n + need[color] * (have.has(color) ? 1 : 4), 0);
+      const best = left.reduce((top, i) => (score(i) > score(top) ? i : top));
+      order.push(best);
+      left.splice(left.indexOf(best), 1);
+      for (const color of makes(nameOf(view, choice.options[best]))) have.add(color);
+    }
+    return order;
+  }
+  /* Other cards, best first: the costliest it could cast by its next turn -- a mana for each of its sources, and the land it
+     would play -- then the cheapest of the rest, which it reaches soonest. */
+  function spellOrder(view, choice, indices) {
+    const could = mine(view).filter((c) => isLand(c) || makes(c.name).length).length + 1;
+    const mv = (i) => manaValue(nameOf(view, choice.options[i]));
+    return [...indices.filter((i) => mv(i) <= could).sort((a, b) => mv(b) - mv(a) || a - b), ...indices.filter((i) => mv(i) > could).sort((a, b) => mv(a) - mv(b) || a - b)];
+  }
+  /* A player's or a permanent's counters, the kinds there are: a player's poison among them (CR 122.1f). */
+  function countersOf(view, option) {
+    if (option.playerId !== undefined) {
+      const p = view.players?.[option.playerId];
+      return Object.entries({...(p?.counters ?? {}), ...(p?.health?.poison > 0 ? {poison: p.health.poison} : {})}).filter(([, n]) => n > 0).map(([kind]) => kind);
+    }
+    const card = (view.players ?? []).flatMap((p) => zone(p, "Battlefield")).find((c) => c.cardId === option.cardId);
+    return Object.entries(card?.counters ?? {}).filter(([, n]) => n > 0).map(([kind]) => kind);
+  }
+
+  /* The answer to a choice it may answer with none -- or to any search of a library -- when it has a rule for it; null when
+     it has none. Each takes the options it wants in order, as many as it may, kept to the choice's `exclusiveBy` and
+     `capped` (firstOf); a choice held to a `budget` never comes here, the rule for it in `answer` keeping the most it can. */
+  function takes(view, self, choice) {
+    const id = String(choice.id ?? ""), options = choice.options ?? [], min = choice.min ?? 0, max = choice.max ?? 0;
+    const all = options.map((o) => o.index), title = String(choice.title ?? "");
+    /* A search (CR 701.23) of its library, or a card it may put somewhere from its hand or graveyard ("you may put a land card
+       from your hand onto the battlefield", Chulane): as many as it may of what it is for. A land search, the lands of the
+       colors it lacks; any other, the costliest card it could cast soon -- and a land first when its hand has none and it
+       has fewer than four in play. A search for a card with a quality may fail to find (CR 701.23b), but finding is why
+       the card was played. A card it must put from its hand or graveyard (Brainstorm's two, back on top) is not one it
+       wants: those are left to the first answer, below. */
+    if (id.startsWith("chooseCard:") && (/^Search your library/.test(title) || (min === 0 && /^Search your (hand|graveyard)/.test(title)))) {
+      const land = (i) => (known(nameOf(view, options[i]))?.types ?? []).includes("Land");
+      const lands = all.filter(land), others = all.filter((i) => !land(i));
+      const short = !zone(self, "Hand").some(isLand) && mine(view).filter(isLand).length < 4;
+      const order = short || !others.length ? [...landOrder(view, self, choice, lands), ...spellOrder(view, choice, others)]
+        : [...spellOrder(view, choice, others), ...landOrder(view, self, choice, lands)];
+      return firstOf(choice, order, max);
+    }
+    /* Proliferate (CR 701.34a): each permanent and player whose counters are all of a kind it wants more of -- its own where
+       each kind helps it (+1/+1, loyalty), another's where each kind hurts them (poison, -1/-1) -- so never an opponent's
+       +1/+1 or loyalty, and never its own poison. */
+    if (id.startsWith("proliferate:")) {
+      const wanted = options.filter((o) => {
+        const kinds = countersOf(view, o);
+        const own = o.playerId !== undefined ? o.playerId === seat : controllerIn(view, o.cardId) === seat;
+        return kinds.length > 0 && (own ? !kinds.some(harmful) : kinds.every(harmful));
+      });
+      return firstOf(choice, wanted.map((o) => o.index), max);
+    }
+    /* Any other choice of any number, none among them (Peregrine Drake's "untap up to five lands"; "choose up to two to keep,
+       the rest are sacrificed"): the permanents and players on the side it is meant for, as `aim` reads a spell's targets --
+       an opponent's when the choice is hostile, else its own -- the costliest first, as many as it may. A card in another
+       zone is on no side, and is left: the top of a library being surveilled, a card it may put into its graveyard. */
+    if (choice.mode === "many" && min === 0) {
+      const sided = options.filter((o) => o.targets || o.playerId !== undefined || controllerIn(view, o.cardId) !== null);
+      const aimed = sided.filter((o) => aim(view, o.targets ? o : {hostile: choice.hostile === true || o.hostile === true,
+        targets: [o.playerId !== undefined ? {kind: "player", id: o.playerId} : {kind: "card", id: o.cardId}]}) > 0);
+      const value = (o) => (o.playerId !== undefined ? 0 : known(nameOf(view, o))?.manaValue ?? 0);
+      return firstOf(choice, aimed.sort((a, b) => value(b) - value(a) || a.index - b.index).map((o) => o.index), max);
+    }
+    return null;
   }
 
   return {
@@ -403,6 +519,11 @@ export function housePilot({seat, cards = () => null} = {}) {
       if (id.startsWith("order-tokens:") && options.length) {
         const best = options.reduce((b, o) => ((o.makes ?? 0) > (b.makes ?? 0) ? o : b));
         return {indices: [best.index]};
+      }
+      /* A choice it may answer with none, or a search: what the choice is for (`picks`, above). */
+      if (picks && max > 0) {
+        const taken = takes(view, self, choice);
+        if (taken) return {indices: taken};
       }
       /* Anything else (trigger order, the commander's zone, an effect's choice): the first legal answer,
          in the order offered, which is also what a careful reader would do by default. */

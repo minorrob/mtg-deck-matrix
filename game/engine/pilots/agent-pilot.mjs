@@ -20,9 +20,9 @@ export const AGENT_PILOT_ID = "agent";
 /* How close two plans must score for the model to be asked: a little under one card's worth (scored-pilot.mjs, WEIGHTS). */
 export const CLOSE = 1;
 
-/** @param {{seat: number, cards?: Function, deck?: string[], seed?: string, close?: number}} options */
-export function agentPilot({seat, cards = () => null, deck = [], seed = "", close = CLOSE} = {}) {
-  const l1 = scoredPilot({seat, cards, deck, setting: "normal", seed});
+/** @param {{seat: number, cards?: Function, deck?: string[], seed?: string, close?: number, picks?: boolean}} options */
+export function agentPilot({seat, cards = () => null, deck = [], seed = "", close = CLOSE, picks = false} = {}) {
+  const l1 = scoredPilot({seat, cards, deck, setting: "normal", seed, picks});
   return {
     ...l1,
     id: AGENT_PILOT_ID,

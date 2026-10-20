@@ -383,6 +383,10 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
          never sees it on the stack -- it arrives between two views, and the board voices and draws a spell from the stack
          (crankmagic-audio.js, momentsFor) -- so the table asks for it once the board shows such a spell (ROB-23). */
       yieldTurn: true,
+      /* Its AI seats take what a choice they may answer with none is for -- the land Evolving Wilds finds, the counters
+         proliferate adds -- where they took none (Linear ROB-164, 2026-10-19): new matches only, so one launched
+         before replays as it was played (room.mjs, `pilotPicks`). */
+      pilotPicks: true,
       /* A playtest table seats the card compiler's candidates, labeled (Rob's decision 2; card load step 5): new matches only,
          so one launched before replays with the cards it was dealt (room.mjs, `candidates`). */
       ...(record.playtest === true ? {candidates: true} : {})};
