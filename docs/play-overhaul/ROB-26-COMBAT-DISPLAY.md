@@ -69,8 +69,10 @@ journey, and installed Chrome:
 - Read-only review's phone-space finding is fixed and has its own caught break.
 
 Final pins above #798: board 57, stage CSS 23, service worker 498, app 515.
-The manifest was regenerated once at the end; all 125 asset hashes and nine
-service-worker checks pass. This addresses the review's asset-version finding.
+The final manifest was regenerated from #798's baseline after normalizing the
+board's Windows working copy to the same LF bytes Git stores. All 125 asset
+hashes and nine service-worker checks pass. This addresses the review's
+asset-version finding and avoids a Windows-only hash passing locally.
 Exact-head CI and Engine-owned staging acceptance remain outstanding.
 
 For the next slice: map `legalBlocks` pairs back to the room's existing option
