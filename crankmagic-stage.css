@@ -7,6 +7,8 @@
 .cm-stage-top .cm-board-ribbon .is-now{background:#286c53;color:#fff}
 .cm-stage-priority{font-size:11px;line-height:1.5;color:#b2c8bd;white-space:nowrap}
 .cm-stage-top .cm-full-pill{position:static;transform:none;background:none;border:0;padding:0;max-width:none;flex-shrink:0}
+.cm-board-yield-control{display:inline-flex;flex-direction:column;align-items:center;gap:2px;max-width:180px}
+.cm-board-yield-control small{font-size:10px;line-height:1.2;white-space:normal;text-align:center;color:var(--v-ink,#edf6ef)}
 .cm-stage-top .cm-full-pill>.cm-board-step,.cm-stage-top .cm-full-pill>.cm-board-next{display:none}
 .cm-stage-top .cm-full-pill>.cm-board-waiting{position:absolute;top:62px;left:50%;transform:translateX(-50%);font-size:11px;background:#0a1d20ed;border-radius:14px;padding:3px 14px;max-width:60vw;overflow:hidden;text-overflow:ellipsis}
 .cm-stage-region{display:block;position:relative;overflow:hidden;min-height:0;min-width:0;background:radial-gradient(ellipse at 50% 10%,#315847,#071719 70%)}
