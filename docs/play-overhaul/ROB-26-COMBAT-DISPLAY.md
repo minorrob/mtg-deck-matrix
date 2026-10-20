@@ -1,7 +1,7 @@
 # ROB-26, first slice: the confirmed combat picture
 
-Branch: `codex/play-combat-display`, PR #799, created from main `d7eadfe1`
-with #798 integrated as its pending dependency.
+Branch: `codex/play-combat-display`, PR #799, created from main `d7eadfe1`.
+Main `17a1218c` (#798) is merged into this branch before readiness.
 
 Show the room's confirmed attackers, attacked player or planeswalker, and
 assigned blockers together, grouped by defender and keyed by object ID. Keep
