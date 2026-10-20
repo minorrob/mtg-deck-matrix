@@ -68,7 +68,10 @@ journey, and installed Chrome:
 - Wiring: 124; readout: 1091; data integrity and the breaks-anchor scan pass.
 - Read-only review's phone-space finding is fixed and has its own caught break.
 
-Final pins, exact-head CI and Engine-owned staging acceptance remain outstanding.
+Final pins above #798: board 57, stage CSS 23, service worker 498, app 515.
+The manifest was regenerated once at the end; all 125 asset hashes and nine
+service-worker checks pass. This addresses the review's asset-version finding.
+Exact-head CI and Engine-owned staging acceptance remain outstanding.
 
 For the next slice: map `legalBlocks` pairs back to the room's existing option
 indices; keep an accessible list; make reassignment and clearing explicit.
