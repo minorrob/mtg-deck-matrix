@@ -4,7 +4,8 @@
  * docs/engine/plan-card-load-program.md; game/engine/cards/candidates.mjs, game/room/room.mjs and table.mjs).
  *
  *   1. The module the Worker plays them from: the candidates file as it stands, every candidate in it, each definition
- *      the one its abilities and oracle record compile to, fresh each call; no directory card, no basic land.
+ *      the one its abilities and oracle record compile to, fresh each call; and the backstop's provisional cards the
+ *      directory lacks; no directory card, no basic land.
  *   2. The room: a pod that says `candidates` seats one, and every object made from it says `candidate`, through every
  *      zone it moves to; its owner's view labels it, and nobody's view labels a card they cannot name. A pod without the
  *      key refuses the card by name; the directory's own definition wins over a candidate's. Reopened and replayed, the
@@ -30,7 +31,7 @@ import {tables} from "../cloud/tables.mjs";
 import {candidateDefinition, CANDIDATE_SOURCE} from "../game/engine/cards/candidates.mjs";
 import {tableDefinition} from "../game/engine/cards/definitions.mjs";
 import {compileScript} from "../game/engine/cards/index.mjs";
-import {candidatesModule, CANDIDATES_MODULE} from "../game/tools/engine-candidates.mjs";
+import {candidatesModule, backstopScripts, CANDIDATES_MODULE} from "../game/tools/engine-candidates.mjs";
 import {scriptOf} from "../game/tools/card-compiler.mjs";
 
 let checks = 0;
@@ -46,7 +47,14 @@ const byName = new Map(oracle.cards.map((c) => [c.name, c]));
 {
   eq(readFileSync(CANDIDATES_MODULE, "utf8") === candidatesModule(), true,
     "game/engine/cards/candidates.mjs is the candidates file as it stands (if not, run `node game/tools/engine-candidates.mjs --write`)");
-  eq(CANDIDATE_SOURCE, {oracle: file.oracle, cards: file.cards.length}, `all ${file.cards.length} candidates, from the same oracle data`);
+  const backstop = backstopScripts();
+  eq(CANDIDATE_SOURCE, {oracle: file.oracle, cards: file.cards.length + backstop.length, compiler: file.cards.length, backstop: backstop.length},
+    `all ${file.cards.length} of the compiler's candidates, from the same oracle data, and the backstop's ${backstop.length} provisional cards the directory lacks`);
+  ok(backstop.length >= 1 && backstop.every((b) => JSON.stringify(candidateDefinition(b.identity.name)) === JSON.stringify(compileScript(b).definition) && !tableDefinition(b.identity.name)),
+    `each backstop card (${backstop.slice(0, 3).map((b) => b.identity.name).join(", ")}, ...) as it compiles, none a directory card`);
+  const bolt = {schema: "CrankCardScript@1", identity: {name: "Lightning Bolt"}, abilities: []}, odd = {...bolt, identity: {name: "Test Backstop Card"}};
+  eq(backstopScripts([{status: "provisional", script: bolt}, {status: "blocked", script: odd}, {status: "provisional", script: odd}]).map((s) => s.identity.name),
+    ["Test Backstop Card"], "of the backstop's cards, only a provisional one the directory does not define");
   const missing = file.cards.filter((c) => !candidateDefinition(c.name)).map((c) => c.name);
   eq(missing, [], "each one the table can be dealt");
   const sample = file.cards.filter((_, i) => i % 50 === 0);

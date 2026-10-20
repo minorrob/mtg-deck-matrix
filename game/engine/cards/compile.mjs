@@ -381,6 +381,7 @@ export function writerSystem(examples) {
     "Keyword abilities have `keyword`, lowercase (\"flying\"). Static abilities change a characteristic in a `layer` with `apply` and `affects`, or a `rule`, one of: " + v.staticRules.join(", ") + ". Replacement abilities have `watches` and `change` (\"This land enters tapped\" is watches {event: \"enters\", who: \"self\"}, change {entersTapped: true}).",
     "Use only the names above. If the card needs something not listed, write it as best the vocabulary allows and say so in `notes`; never invent a primitive.",
     "List in `crFlags` any interaction of layers (CR 613), replacement effects (CR 614), copying (CR 707) or other rule your definition depends on, as \"CR 613.1: why\". Reminder text in parentheses is not an ability.",
+    "A request may say `alreadyWritten`: abilities of this card the engine already knows, checked. Then write only the abilities for the sentences in `writeOnly`, in the same style, and never repeat one already written; a sentence may be one ability, several sentences one ability, or one sentence several abilities, as the card needs.",
     "Return only JSON matching the schema, with the abilities array written as JSON text in `abilitiesJson`. Examples of finished definitions follow.",
     ...examples.map((e) => JSON.stringify({card: {name: e.identity.name, type: typeLineOf(e.identity), manaCost: e.identity.manaCost, oracleText: e.oracleText}, abilities: e.abilities})),
   ].join("\n");
@@ -400,10 +401,19 @@ export const WRITER_SCHEMA = Object.freeze({
   },
   required: ["abilitiesJson", "notes", "crFlags"],
 });
-export const writerRequest = (card, errors = null) => JSON.stringify({
+export const writerRequest = (card, errors = null, assist = null) => JSON.stringify({
   card: {name: card.name, type: card.type, manaCost: card.mana ?? null, oracleText: card.text ?? ""},
+  /* Card load step 4: what the sentence library already wrote of this card, so the writer writes only the rest. */
+  ...(assist ? {alreadyWritten: assist.known, writeOnly: assist.write.map((w) => w.text)} : {}),
   ...(errors ? {yourLastAnswerWasRefused: errors} : {}),
 });
+
+/** The abilities the library wrote and the ones the writer wrote, as one card: in the order of their sentences in the text. */
+export function mergeAbilities(card, known, written) {
+  const text = String(card.text ?? "");
+  const at = (a) => { const i = text.indexOf(a?.text ?? "\u0000"); return i < 0 ? Infinity : i; };
+  return [...known, ...(Array.isArray(written) ? written : [])].map((a, i) => ({a, i})).sort((x, y) => at(x.a) - at(y.a) || x.i - y.i).map((x) => x.a);
+}
 
 /**
  * Checks one and two, by code, on a writer's answer.
@@ -412,11 +422,19 @@ export const writerRequest = (card, errors = null) => JSON.stringify({
  */
 /** Why an adventurer card is not learned by the loader: what a refusal of one says. */
 export const ADVENTURE_BY_HAND = "an adventurer card (CR 715) is written with its Adventure, which the loader does not write yet: define it by hand";
-export function checkAnswer(card, answer, model = null) {
+export function checkAnswer(card, answer, model = null, known = null) {
   let abilities = answer?.abilities;
   if (typeof answer?.abilitiesJson === "string") {
     try { abilities = JSON.parse(answer.abilitiesJson); }
     catch (error) { return {script: assembleScript(card, {abilities: []}, model), stage: "schema", problems: [`abilitiesJson is not JSON: ${error.message}`]}; }
+  }
+  /* A writer handed what the library already wrote (card load step 4) answers the rest: the card is both, checked whole.
+     An ability written twice would trigger or apply twice, so a sentence already written and written again is refused. */
+  if (known) {
+    const again = (Array.isArray(abilities) ? abilities : []).filter((a) => known.some((k) => k.text === a?.text)).map((a) => a.text);
+    if (again.length) return {script: assembleScript(card, {abilities: mergeAbilities(card, known, abilities)}, model), stage: "fidelity",
+      problems: [...new Set(again)].map((t) => `already written, not to be written again: "${t}"`)};
+    abilities = mergeAbilities(card, known, abilities);
   }
   const script = assembleScript(card, {abilities}, model);
   /* AN ADVENTURER CARD (CR 715.2) has two sets of characteristics and the writer is given one card's text: refused by name
