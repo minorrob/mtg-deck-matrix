@@ -201,6 +201,9 @@ export class GameRoom {
  *   POST /table/mat {mat}   your seat's mat, one of MATS in game/room/table.mjs
  *   POST /table/end      any person ends the game for everyone (the board asks a second tap first)
  *   POST /table/concede  you leave the game in play
+ *   POST /table/rematch {accept}  Play again, once the game is over: true for another game, false to leave the table
+ *        (Requests row 12, Linear ROB-167; game/room/table.mjs, rematch). The table's `rematch` says who has answered
+ *        and until when; the answer that completes everyone's may start the next game's countdown
  *   POST /table/report {cardId, note}  a candidate your seat can see said to play wrong, at a playtest table only (Rob's
  *        decision 2): kept with the table, handed over in that game's record (game/room/table.mjs, reportCard)
  *   GET  /table/record?match=<matchId>  a finished game's record (M8b): the whole game on a playtest table, your
@@ -211,6 +214,8 @@ export class GameRoom {
  * ONE ALARM, TWO CLOCKS: the countdown's end, and a dropped player's five minutes (Rob, 2026-09-26). When a
  * seat's last socket closes mid-game its clock starts and the others are told who they are waiting for and
  * until when; a socket back in time stops it; the alarm concedes whoever ran out, recorded as not finished.
+ * And Play again's two minutes once a game is over (REMATCH_WINDOW): when they run out, silence is a No and the
+ * table decides. A game that ends in the room itself wakes the alarm at once, so the table moves on to Play again.
  */
 export class GameTable extends GameRoom {
   constructor(ctx, env, options = {}) {
@@ -260,6 +265,8 @@ export class GameTable extends GameRoom {
       if (route === "POST /table/cancel") {const view = await t.cancel(email, now); await this.schedule(); return reply(200, {table: view});}
       if (route === "POST /table/end") {const room = await this.load(); const view = await t.endGame(email, now); await this.schedule(); await this.share(room); return reply(200, {table: view});}
       if (route === "POST /table/concede") {const room = await this.load(); const view = await t.concede(email, now); await this.schedule(); await this.share(room); return reply(200, {table: view});}
+      /* Play again: the answer may start the next game's countdown, or settle the table; the alarm follows either. */
+      if (route === "POST /table/rematch") {const view = await t.rematch(email, (await body()).accept, now); await this.schedule(); return reply(200, {table: view});}
       if (route === "GET /connect") {
         if (request.headers.get("upgrade") !== "websocket") return reply(426, {error: "Connect with a WebSocket."});
         const {room, seatId} = await t.room(email);

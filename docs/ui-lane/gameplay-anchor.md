@@ -158,7 +158,67 @@ so a concept mocks this part.
 - **Afterward:**
   - A finished game's record can be downloaded.
   - The result is filed in each person's own library.
-  - A rematch is not built in the cloud.
+  - Every seat still in the game is asked to play again (below).
+
+## After the game: Play again
+
+When a game ends, however it ends (a player knocked out, End game, the last person leaving, a dropped player's time
+running out), the table's `phase` becomes `rematch` and every seat still in the game is asked to play again. These
+facts come from `game/room/table.mjs` (`rematch`, `decideRematch`) and its lifecycle (`game/contracts/table-lifecycle.mjs`).
+Requests row 12, Linear ROB-167.
+
+- **The answer:** each person sends `POST /api/tables/:id/rematch` with `{"accept": true}` for another game, or
+  `{"accept": false}`, which is leaving the table (the board's Leave). It answers 200 `{table}`, the table as that
+  person now sees it.
+  - An answer can change until every person has answered. The answer that completes them decides.
+  - Answering is being there: a seat whose socket closed before the game ended is connected again by its answer.
+  - The AI seats always say yes, by themselves.
+- **Two minutes:** a person who has not answered by `rematch.deadline` (the game's end plus two minutes,
+  `REMATCH_WINDOW`) has said no. The table's own alarm decides then, whether anyone is connected or not.
+- **The next game,** once every person has answered, when the host is staying and at least two seats are:
+  - A seat whose person said no, did not answer, or left the game before it ended is released: an empty chair that
+    never blocks the next start (U-09). Its person is no longer at the table, and their `GET` answers 403. The host may
+    invite someone else to the chair.
+  - Everyone staying keeps their seat, deck and mat, and is ready: the yes is the Ready. The table's rules stay the same.
+  - The ten-second countdown starts at once (`phase: "countdown"`). The host can cancel it, as any countdown.
+  - Then the game launches as the table's next match, with a new `matchId`: `<tableId>g2`, then `g3`. A socket still
+    open from the last game is sent the new game's views. A new `matchId` is a new game.
+- **No next game:** when the host says no, does not answer, or left the game before it ended, or when fewer than two
+  seats would play, the table's games are over. It stays in `rematch` with `rematch.outcome: "closed"`, and
+  `rematch.reason` says why and to start a new table. The host's no, or the host having left, decides this at once,
+  without waiting for the others.
+- **Refused, with what to do instead:**
+
+  | When | Status | The words |
+  |---|---|---|
+  | The game is still on | 409 | "The game is still being played, so there is no Play again to answer yet. Answer it once the game is over." |
+  | No game has been played | 409 | "No game has been played at this table yet, so there is no Play again to answer. Use Ready in the lobby instead." |
+  | The next game is being set up | 409 | "There is no Play again to answer: this table's next game is already being set up. Use Ready in the lobby instead." |
+  | The table's games are over | 409 | "Play again has been decided." and `rematch.reason` |
+  | The person left that game | 409 | "You left that game, so the next one is not yours to answer. Ask the host to invite you again." |
+  | No seat at this table | 403 | "You do not have a seat at this table." |
+  | `accept` is not true or false | 400 | "Answer Play again with accept: true for another game, or false to leave the table." |
+
+- **The table's view, `table.rematch`:** `null` in every phase but `rematch`. In it:
+  - `lastMatchId`: the game just over.
+  - `deadline`: when silence becomes a no, in milliseconds on the table's clock. `GET /api/tables/:id` answers
+    `{table, now}` with that clock's time, as it does for `countdownAt`.
+  - `outcome`: `"waiting"` while answers are open, `"closed"` once the table's games are over.
+  - `reason`: why the games are over, and what to do, or `null`.
+  - `votes: [{seatId, vote}]`: each seat still in the game when it ended, its `vote` `"yes"`, `"no"` or `"pending"`.
+- **An example, one person and three AI seats.** Rob's game ends. His table reads:
+
+  ```json
+  {"phase": "rematch", "yourSeat": 0, "rematch": {"lastMatchId": "7f3c…g1", "deadline": 1792526540000,
+    "outcome": "waiting", "reason": null, "votes": [{"seatId": 0, "vote": "pending"}, {"seatId": 1, "vote": "yes"},
+    {"seatId": 2, "vote": "yes"}, {"seatId": 3, "vote": "yes"}]}}
+  ```
+
+  He presses Play again: `POST /api/tables/7f3c…/rematch {"accept": true}` answers `{"table": {"phase": "countdown",
+  "countdownAt": …, "rematch": null, …}}`, every seat `ready: true` with its deck. Ten seconds on, the table reads
+  `"phase": "playing", "matchId": "7f3c…g2"`. Had he pressed Leave (`{"accept": false}`) or waited two minutes, it would
+  read `"outcome": "closed"` and `"reason": "The host is not staying for another game, so this table's games are over.
+  Start a new table to play again."`
 
 ## Zones, and who sees what
 
@@ -362,7 +422,7 @@ Titles vary, and the sample has 19 kinds. Among them:
 - **Reconnecting:** the connection can drop. The client reconnects (waiting 1 second, doubling up to 10) and is sent
   the current view.
 - **Table actions over HTTP:** these exist; you only need to know they do. Concede; end the game for everyone (any
-  person, confirmed twice); and, once the game is finished, download its record.
+  person, confirmed twice); and, once the game is finished, download its record and answer Play again (above).
 - **The Coach:** a person invited to AI features may ask the Coach (an AI) about their game. It answers in text.
 
 ### Events, `events.v1` (Linear ROB-77)

@@ -937,7 +937,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 541 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 542 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1182,6 +1182,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `room-g1-terms` — `tests/room-g1-terms.mjs`
 - `game-table` — `tests/game-table.mjs`
 - `game-leave` — `tests/game-leave.mjs`
+- `table-rematch` — `tests/table-rematch.mjs` (Play again once a table's game is over: the next game with the same seats, decks and rules as a new match, a No releasing the seat, silence a No at two minutes on the alarm, and the table's games over when the host goes or too few stay)
 - `table-lobby` — `tests/table-lobby.mjs`
 - `table-board` — `tests/table-board.mjs`
 - `board-callouts` — `tests/board-callouts.mjs` (the board's reading of a new view against the last, for the callouts over the table: your turn, attackers against you, hits and life, a seat out, countered and tokens, destroyed and exiled, a response on the stack, the game's end; a hidden card never named)
