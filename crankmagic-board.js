@@ -1220,7 +1220,7 @@ globalThis.CrankBoard = Object.seal({
     }
     const fanned = cards.map((c, k) => {const o = k - (n - 1) / 2; return `<div class="cm-hand-slot" style="--o:${o};--a:${Math.abs(o)}" data-key="${k + 1}">${card(c, {where: "fan", action: "board-hand-hold"})}<span class="cm-hand-key">${k + 1}</span></div>`;}).join("");
     return `<div class="cm-hand-show" role="dialog" aria-modal="true" aria-label="Your hand">${close}
-      <header><h2>Your hand · ${n}</h2><p class="cm-muted">Hover to read · click to choose · 1–${Math.min(9, n) || 1} keys · Space or ✕ to put it away · bright = castable now</p></header>
+      <header><h2>Your hand · ${n}</h2><p class="cm-muted">${phone() ? "Swipe to browse · tap a card to hold it up · bright = castable now" : `Hover to read · click to choose · 1–${Math.min(9, n) || 1} keys · Space or ✕ to put it away · bright = castable now`}</p></header>
       <div class="cm-hand-fan" style="--gaps:${Math.max(1, n - 1)}">${fanned}</div></div>`;
   }
   /* CARD ZOOM. A card under the pointer a moment is shown large at the center of the screen (Rob, 2026-09-29: the
@@ -1293,7 +1293,11 @@ globalThis.CrankBoard = Object.seal({
     const el = under && under.closest && under.closest(".cm-board .cm-bcard[data-card]");
     return !!el && Number(el.dataset.card) === id && !el.closest(".cm-board-peek");
   }
-  /* A PHONE: the shorter side of the screen at most 500px. Held upright, the surface is turned to landscape. */
+  /* A PHONE: the shorter side of the screen at most 500px. One Focused view, native whichever way the phone is held (Linear
+     ROB-18; Rob, Oct 18: "Go with ... the upright Focused phone layout"): the rail and Camera along the top, the seats, the
+     turn and what is asked always in view, and the battlefield with its lands at full width between them, scrolling, the
+     piles beneath. Turned sideways, the seats are a column at the right. The hand opens as a drawer from the bottom.
+     Camera has no view switch and no Tilt. Codex's design, ported from its Oct 18 prototype (ui-prototypes/phone-focus). */
   const phone = () => Math.min(innerWidth, innerHeight) <= 500;
   function phoneView() {
     const s = view.state, me = players()[view.seat], p = players()[focus] || me, mine = p.playerId === view.seat;
@@ -1303,7 +1307,7 @@ globalThis.CrankBoard = Object.seal({
       ${icon("✋", "board-show-hand", "Your hand", `<span class="cm-phone-badge">${me.zones.Hand.count}</span>`)}
       <span class="cm-board-tools">${icon(CLOCK, "board-history", "History")}${historyOpen ? historyMenu() : ""}</span>
       ${icon(COACH, "board-coach", "CrankMagic Coach")}
-      <span class="cm-board-tools">${icon("⚙", "board-tools", "Settings")}${tools ? toolsMenu() : ""}</span></nav>`;
+      <span class="cm-board-tools">${stageProfile(me)}</span></nav>`;
     const pill = mine
       ? `<div class="cm-phone-pill"><b>T${s.turn}</b><span class="cm-board-step">${e(step)}</span>${next ? `<span class="cm-board-next">Next: ${e(next)}</span>` : ""}
           ${passButton()}${view.state.turnPlayerId !== view.seat ? skipControl(true) : ""}</div>`
@@ -1313,7 +1317,7 @@ globalThis.CrankBoard = Object.seal({
       ${seats.map((x) => `<button type="button" class="cm-phone-seat${x.playerId === p.playerId ? " is-focus" : ""}" data-action="board-focus" data-seat="${x.playerId}" aria-pressed="${x.playerId === p.playerId}" style="--seat:${seatColor(x.playerId)}">
         <span>${e(x.playerId === view.seat ? "You" : x.name)}</span><b>${x.health.life}</b><small>${e(seatFlag(x))}</small></button>`).join("")}
       <div class="cm-phone-rotate">${b("‹", "board-rotate", {by: "-1"}, false, {cls: "compact"})}${b("›", "board-rotate", {by: "1"}, false, {cls: "compact"})}</div></aside>`;
-    return `${rail}<div class="cm-phone-center">${pill}${combatStrip()}${mat(p, {size: "phone", head: "none"})}<div class="cm-phone-ask">${went()}${decision()}${stack()}</div></div>${strip}`;
+    return `${rail}${cameraMenu()}${strip}<div class="cm-phone-center">${pill}${combatStrip()}<div class="cm-phone-battlefield" tabindex="0" aria-label="Battlefield, scroll to explore">${mat(p, {size: "phone", head: "none"})}</div><div class="cm-phone-ask">${went()}${decision()}${stack()}</div></div>`;
   }
   /* THE COACH (the handoff's play-coach). It lives beside the board, not inside it, so the views that arrive
      while someone types redraw the board and leave the composer, and whatever is in it, alone. */
