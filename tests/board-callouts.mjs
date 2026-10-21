@@ -125,6 +125,23 @@ const words = (list) => list.map((c) => `${c.word}${c.number ? " " + c.number : 
   eq(got.map((c) => [c.word, c.line, c.big]), [["VICTORY", "You won", true]], "you won: VICTORY, big, alone");
   const [w2, n2] = after((n) => {n.status = "finished"; n.result = {winner: "s2", reason: "last standing"};});
   eq(calloutsFor(w2, n2).map((c) => [c.word, c.line]), [["GAME OVER", "Nina won"]], "another's win: GAME OVER, naming them");
+  ok(got[0].final === true && calloutsFor(w2, n2)[0].final === true, "the game's end is the final callout");
+}
+/* NEVER BEHIND THE GAME (Rob's one-person, three-AI table, Oct 21): the AI seats' turns come faster than callouts are read,
+   and the queue fell turns behind -- "YOUR TURN · Turn 33" on turn 38, over the game-over panel. When a view's callouts
+   come, those still waiting from more than 2 s before are passed over, a KO or a FATAL never; the game's end clears the
+   queue and the screen; one batch alone is read whole. */
+{
+  const queueCallouts = (queue, list, now) => JSON.parse(JSON.stringify(box.CrankBoard.queueCallouts(queue, list, now)));
+  const said = (q) => q.queue.map((c) => c.word);
+  const first = queueCallouts([], [{word: "YOUR TURN"}, {word: "HIT"}, {word: "KO", big: true}, {word: "LIFE"}], 1000);
+  eq([said(first), first.queue.map((c) => c.at), first.clear], [["YOUR TURN", "HIT", "KO", "LIFE"], [1000, 1000, 1000, 1000], false], "one batch is queued whole, each stamped with when it came");
+  const soon = queueCallouts(first.queue, [{word: "INCOMING"}], 2500);
+  eq(said(soon), ["YOUR TURN", "HIT", "KO", "LIFE", "INCOMING"], "the next view's within 2 s: what waits is still read, the new after it");
+  const late = queueCallouts(first.queue.slice(1), [{word: "INCOMING"}], 3500);
+  eq(said(late), ["KO", "INCOMING"], "the next view's 2.5 s on: the stale ones are passed over, the KO kept, the new read");
+  const over = queueCallouts(soon.queue, [{word: "GAME OVER", big: true, final: true}], 2600);
+  eq([said(over), over.clear], [["GAME OVER"], true], "the game's end clears the queue and the screen: its word is the last");
 }
 /* 9. Never more than six, and nothing for an older view or another game. */
 {

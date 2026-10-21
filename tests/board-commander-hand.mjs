@@ -22,12 +22,14 @@ const {browser, base, stub, close} = await openBrowser({name: "board-commander-h
 const sample = JSON.parse(readFileSync(path.join(ROOT, "docs/reference/replit-sample-views.json"), "utf8")).views[13];
 const html = readFileSync(path.join(ROOT, "index.html"), "utf8").replace("</head>", '<meta name="crankmagic-accounts" content="on"><meta name="crankmagic-play" content="cloud"></head>');
 const TYMNA = 81001, KRAUM = 81002;
+/* Why Tymna can't be cast now (ROB-24): the room's words on its own card, which nothing offered plays. */
+const TYMNA_WHY = "It costs 4 mana, the commander tax included, and you can make 3 now.";
 const commander = (cardId, name, tax) => ({cardId, name, owner: 0, controller: 0, faceDown: false, tapped: false, damage: 0, counters: {},
   types: ["Creature"], power: tax === 2 ? 0 : 4, toughness: tax === 2 ? 2 : 4, keywords: [], commander: true, commanderTax: tax});
 function commanderView() {
   const v = structuredClone(sample);
   v.revision = 30000;
-  v.state.players[0].zones.Command = {count: 2, hiddenCount: 0, cards: [commander(TYMNA, "Tymna the Weaver", 2), commander(KRAUM, "Kraum, Ludevic's Opus", 0)]};
+  v.state.players[0].zones.Command = {count: 2, hiddenCount: 0, cards: [{...commander(TYMNA, "Tymna the Weaver", 2), why: TYMNA_WHY}, commander(KRAUM, "Kraum, Ludevic's Opus", 0)]};
   v.decision = {id: "priority:25:3:900", title: "Your priority", mode: "one", min: 1, max: 1, kind: "priority",
     options: [{index: 0, label: "Pass priority", act: "pass"}, {index: 1, label: "Kraum, Ludevic's Opus", act: "cast", cardId: KRAUM}]};
   return v;
@@ -85,6 +87,7 @@ try {
       ok(apart, `${where}: the badge never lies over the name`);
       ok(await page.locator(kraum).evaluate((el) => el.classList.contains("is-bright")), `${where}: castable Kraum is lit`);
       ok(!(await page.locator(tymna).evaluate((el) => el.classList.contains("is-bright"))), `${where}: Tymna, with nothing to do, is not`);
+      ok((await page.locator(tymna).getAttribute("aria-label")).endsWith(`. ${TYMNA_WHY}`), `${where}: and says why, with her name (ROB-24)`);
       const k = await reach(page, kraum), t = await reach(page, tymna, [0.3, 0.15]);
       ok(k.ok, `${where}: Kraum takes the pointer`);
       ok(t.ok, `${where}: Tymna's uncovered top takes the pointer`);
@@ -112,6 +115,18 @@ try {
       }
       ok(acts(frames).some((f) => f.choiceId === "priority:25:3:900" && JSON.stringify(f.indices) === "[1]"), `${where}: the click casts Kraum from the command zone (${JSON.stringify(acts(frames))})`);
       ok(!errors.length, `${where}: no page error (${errors.join(" | ")})`);
+      await context.close();
+    }
+    /* ---- why Tymna can't be cast now (ROB-24): shown where her options would be, once she is picked ---- */
+    {
+      const {page, context, errors} = await fixture(commanderView(), width, height, mode);
+      const t = await reach(page, `[data-zone="command"] [data-card="${TYMNA}"]`, [0.3, 0.15]);
+      await page.mouse.click(t.x, t.y);
+      await page.waitForTimeout(400);
+      /* Card zoom or the hand's pop-up (Table, Focus, the phone); in Full, where a click selects, a notice too. */
+      const said = await page.evaluate(() => [...document.querySelectorAll(".cm-hand-why, #cm-notice")].filter((el) => el.getBoundingClientRect().width > 0).map((el) => el.textContent.trim()));
+      ok(said.includes(TYMNA_WHY), `${where}: Tymna picked, the reason she can't be cast is shown where her options would be (${JSON.stringify(said)})`);
+      ok(errors.length === 0, `${where}: no page errors`);
       await context.close();
     }
     /* ---- a look at another player's hand ---- */
