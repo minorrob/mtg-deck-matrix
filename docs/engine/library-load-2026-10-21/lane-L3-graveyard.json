@@ -40,10 +40,7 @@
    "CJ4",
    "CJ5",
    "HG1",
-   "HG2",
-   "TB1",
-   "TB2",
-   "TB5"
+   "HG2"
   ],
   "liveDecks": [
    "D1",
@@ -75,8 +72,7 @@
    ],
    "decks": [
     "D5",
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 0,
    "rank": null,
@@ -96,8 +92,7 @@
     "D7"
    ],
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 0,
    "rank": 1214,
@@ -108,52 +103,6 @@
     "Whenever a creature you control without flying dies, return it to the battlefield under its owner's control with a flying counter on it."
    ],
    "needs": []
-  },
-  {
-   "name": "Hostage Taker",
-   "scope": "live",
-   "liveDecks": [
-    "D7"
-   ],
-   "decks": [
-    "D7",
-    "TB5"
-   ],
-   "owned": 1,
-   "rank": 1539,
-   "type": "Creature — Human Pirate",
-   "layout": "normal",
-   "compiler": "unknown",
-   "gaps": [
-    "When this creature enters, exile another target creature or artifact until this creature leaves the battlefield.",
-    "You may cast that card for as long as it remains exiled, and mana of any type can be spent to cast that spell."
-   ],
-   "needs": [
-    "option:MayPlay",
-    "option:RememberChanged",
-    "option:RememberObjects"
-   ]
-  },
-  {
-   "name": "Happily Ever After",
-   "scope": "live",
-   "liveDecks": [
-    "D1"
-   ],
-   "decks": [
-    "D1",
-    "TB1"
-   ],
-   "owned": 1,
-   "rank": null,
-   "type": "Enchantment",
-   "layout": "normal",
-   "compiler": "unknown",
-   "gaps": [
-    "When this enchantment enters, each player gains 5 life and draws a card.",
-    "At the beginning of your upkeep, if there are five colors among permanents you control, there are six or more card types among permanents you control and/or cards in your graveyard, and your life total is greater than or equal to your starting life total, you win the game."
-   ],
-   "needs": null
   },
   {
    "name": "Goblin Engineer",
@@ -174,6 +123,30 @@
     "{R}, {T}, Sacrifice an artifact: Return target artifact card with mana value 3 or less from your graveyard to the battlefield."
    ],
    "needs": []
+  },
+  {
+   "name": "Hostage Taker",
+   "scope": "live",
+   "liveDecks": [
+    "D7"
+   ],
+   "decks": [
+    "D7"
+   ],
+   "owned": 1,
+   "rank": 1539,
+   "type": "Creature — Human Pirate",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature enters, exile another target creature or artifact until this creature leaves the battlefield.",
+    "You may cast that card for as long as it remains exiled, and mana of any type can be spent to cast that spell."
+   ],
+   "needs": [
+    "option:MayPlay",
+    "option:RememberChanged",
+    "option:RememberObjects"
+   ]
   },
   {
    "name": "Amphin Mutineer",
@@ -212,6 +185,26 @@
    "compiler": "unknown",
    "gaps": [
     "Whenever another Goblin you control is put into a graveyard from the battlefield, you may have this enchantment deal 1 damage to target player or planeswalker."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Happily Ever After",
+   "scope": "live",
+   "liveDecks": [
+    "D1"
+   ],
+   "decks": [
+    "D1"
+   ],
+   "owned": 1,
+   "rank": null,
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this enchantment enters, each player gains 5 life and draws a card.",
+    "At the beginning of your upkeep, if there are five colors among permanents you control, there are six or more card types among permanents you control and/or cards in your graveyard, and your life total is greater than or equal to your starting life total, you win the game."
    ],
    "needs": null
   },

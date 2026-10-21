@@ -24,17 +24,17 @@ You are lane L1 (planeswalkers, loyalty and two-faced cards) of Rob's library ca
 5. Read narrowly (grep, line ranges, cut output). End with the report BRIEF.md describes, 30 lines or fewer.
 ```
 
-## Session 2 · L2 The stack and control (18 cards, 9 in D3/D7)
+## Session 2 · L2 The stack and control (19 cards, 9 in D3/D7)
 
 Card list: `docs/engine/library-load-2026-10-21/lane-L2-stack.json`
 
 ```text
-You are lane L2 (the stack and control) of Rob's library card load of 2026-10-21, one of seven parallel sessions. Your cards are in docs/engine/library-load-2026-10-21/lane-L2-stack.json: 18 cards, most-wanted first. 9 are in decks Rob plays from boxes. Eight are D7's: Silence, Clever Concealment, Boromir Warden of the Tower, Grim Haruspex, Rebuff the Wicked, Bilbo's Gambit, Overwhelming Denial and Render Silent. Refute is D3's. If the file is attached, it is the same list.
+You are lane L2 (the stack and control) of Rob's library card load of 2026-10-21, one of seven parallel sessions. Your cards are in docs/engine/library-load-2026-10-21/lane-L2-stack.json: 19 cards, most-wanted first. 9 are in decks Rob plays from boxes. Eight are D7's: Silence, Clever Concealment, Boromir Warden of the Tower, Grim Haruspex, Rebuff the Wicked, Bilbo's Gambit, Overwhelming Denial and Render Silent. Refute is D3's. If the file is attached, it is the same list.
 
 1. Read AGENTS.md, docs/ACTIVE.md (the top, the lanes table, and "Library card load, 2026-10-21"), then docs/engine/library-load-2026-10-21/BRIEF.md, and follow it exactly. If that directory is not on main yet, read it with `git show origin/claude/focused-feynman-tt20o3:<path>` and do not commit a copy.
 2. Branch claude/engine-libload-l2-stack from origin/main. Your lane owns: counterspells and conditional counters, "can't cast spells this turn", spells cast with no mana spent, phasing (CR 702.26), morph (CR 702.37), surge, spree, flash grants, and gaining control until end of turn. Cunning Wish and Extrapolate the Impossible need cards from outside the game (CR 400.11), which is not built: stop on them unless the construct is small and fits the engine's terms. A card that needs another lane's rule: stop on it and name the rule.
 3. Define every card you can make faithful, most-wanted first, per game/tools/batch/README.md, with scenarios and one breaks file (game/tools/batch/breaks-libload-l2-stack.py, missed: []). Stop on any card that needs a large construct and say exactly what it needs.
-4. Prove it with BRIEF.md's "Done means", including `node tools/library-engine-index.mjs --check-lane docs/engine/library-load-2026-10-21/lane-L2-stack.json`. Push, then open a draft PR "Library load L2-stack: <n> of 18 cards". Do not mark it ready, merge it, release, or edit docs/ACTIVE.md: the integration session does those.
+4. Prove it with BRIEF.md's "Done means", including `node tools/library-engine-index.mjs --check-lane docs/engine/library-load-2026-10-21/lane-L2-stack.json`. Push, then open a draft PR "Library load L2-stack: <n> of 19 cards". Do not mark it ready, merge it, release, or edit docs/ACTIVE.md: the integration session does those.
 5. Read narrowly (grep, line ranges, cut output). End with the report BRIEF.md describes, 30 lines or fewer.
 ```
 
@@ -52,17 +52,17 @@ You are lane L3 (the graveyard) of Rob's library card load of 2026-10-21, one of
 5. Read narrowly (grep, line ranges, cut output). End with the report BRIEF.md describes, 30 lines or fewer.
 ```
 
-## Session 4 · L4 Combat and equipment (20 cards, 4 in D3/D4/D5/D7)
+## Session 4 · L4 Combat and equipment (21 cards, 4 in D3/D4/D5/D7)
 
 Card list: `docs/engine/library-load-2026-10-21/lane-L4-combat.json`
 
 ```text
-You are lane L4 (combat and equipment) of Rob's library card load of 2026-10-21, one of seven parallel sessions. Your cards are in docs/engine/library-load-2026-10-21/lane-L4-combat.json: 20 cards, most-wanted first. 4 are in decks Rob plays from boxes: Teysa Envoy of Ghosts (D7), Leyline Axe (D3), Umbral Mantle (D4) and Cartel Aristocrat (D5). Kaalia of the Vast is a design deck's commander (G0-D2). If the file is attached, it is the same list.
+You are lane L4 (combat and equipment) of Rob's library card load of 2026-10-21, one of seven parallel sessions. Your cards are in docs/engine/library-load-2026-10-21/lane-L4-combat.json: 21 cards, most-wanted first. 4 are in decks Rob plays from boxes: Teysa Envoy of Ghosts (D7), Leyline Axe (D3), Umbral Mantle (D4) and Cartel Aristocrat (D5). Kaalia of the Vast is a design deck's commander (G0-D2). If the file is attached, it is the same list.
 
 1. Read AGENTS.md, docs/ACTIVE.md (the top, the lanes table, and "Library card load, 2026-10-21"), then docs/engine/library-load-2026-10-21/BRIEF.md, and follow it exactly. If that directory is not on main yet, read it with `git show origin/claude/focused-feynman-tt20o3:<path>` and do not commit a copy.
 2. Branch claude/engine-libload-l4-combat from origin/main. Your lane owns: attack and block triggers and requirements ("must be blocked if able", "can't be blocked by more than one creature"), granted double strike, protection from creatures and from colors (Black Knight is vetoed on "protection from COLOR"; find out why the calibration failed it), bushido (CR 702.45), saddle, Equipment and auto-attach, and permanents that begin the game on the battlefield (Leyline Axe). A card that needs another lane's rule: stop on it and name the rule.
 3. Define every card you can make faithful, most-wanted first, per game/tools/batch/README.md, with scenarios and one breaks file (game/tools/batch/breaks-libload-l4-combat.py, missed: []). Stop on any card that needs a large construct and say exactly what it needs.
-4. Prove it with BRIEF.md's "Done means", including `node tools/library-engine-index.mjs --check-lane docs/engine/library-load-2026-10-21/lane-L4-combat.json`. Push, then open a draft PR "Library load L4-combat: <n> of 20 cards". Do not mark it ready, merge it, release, or edit docs/ACTIVE.md: the integration session does those.
+4. Prove it with BRIEF.md's "Done means", including `node tools/library-engine-index.mjs --check-lane docs/engine/library-load-2026-10-21/lane-L4-combat.json`. Push, then open a draft PR "Library load L4-combat: <n> of 21 cards". Do not mark it ready, merge it, release, or edit docs/ACTIVE.md: the integration session does those.
 5. Read narrowly (grep, line ranges, cut output). End with the report BRIEF.md describes, 30 lines or fewer.
 ```
 
@@ -122,6 +122,6 @@ You are the integration session of Rob's library card load of 2026-10-21. Seven 
    - the seeded games are clean (`node --stack-size=4000 tools/fuzz-live.mjs --library --humans 0 --seeds 1-10 --replay --leaks`, then `--humans 0,1 --seeds 11-20`);
    - `node tools/library-engine-index.mjs` with one `--check-lane` per lane file in docs/engine/library-load-2026-10-21/ lists exactly the cards the lanes stopped on;
    - `bash tools/local-ci.sh HEAD 0` reports SCAN PASS.
-5. Open one PR, "Library load: <n> of 116 cards from Rob's library", whose body lists, per live deck (D1 to D7), what still cannot be seated and why. Mark it ready and merge it on a green `suites` run with a merge commit. Close the seven lane PRs as superseded by it, naming it.
+5. Open one PR, "Library load: <n> of 118 cards from Rob's library", whose body lists, per live deck (D1 to D7), what still cannot be seated and why. Mark it ready and merge it on a green `suites` run with a merge commit. Close the seven lane PRs as superseded by it, naming it.
 6. Release staging only if docs/ACTIVE.md shows the Claude · Engine lane (the one release owner) is free or yours. Otherwise record the merge for its holder (Linear ROB-11). Record the outcome in docs/ACTIVE.md. End with a report of 30 lines or fewer.
 ```

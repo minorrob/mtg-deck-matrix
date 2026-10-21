@@ -40,10 +40,7 @@
    "CJ4",
    "CJ5",
    "HG1",
-   "HG2",
-   "TB1",
-   "TB2",
-   "TB5"
+   "HG2"
   ],
   "liveDecks": [
    "D1",
@@ -67,15 +64,61 @@
  },
  "cards": [
   {
+   "name": "Teferi, Time Raveler",
+   "scope": "live",
+   "liveDecks": [
+    "D7"
+   ],
+   "decks": [
+    "D7"
+   ],
+   "owned": 1,
+   "rank": 1104,
+   "type": "Legendary Planeswalker — Teferi",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Each opponent can cast spells only any time they could cast a sorcery.",
+    "+1: Until your next turn, you may cast sorcery spells as though they had flash.",
+    "−3: Return up to one target artifact, creature, or enchantment to its owner's hand."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Grist, the Hunger Tide",
+   "scope": "live",
+   "liveDecks": [
+    "D1"
+   ],
+   "decks": [
+    "D1"
+   ],
+   "owned": 0,
+   "rank": 1511,
+   "type": "Legendary Planeswalker — Grist",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "As long as Grist isn't on the battlefield, it's a 1/1 Insect creature in addition to its other types.",
+    "+1: Create a 1/1 black and green Insect creature token, then mill a card.",
+    "If an Insect card was milled this way, put a loyalty counter on Grist and repeat this process.",
+    "−2: You may sacrifice a creature.",
+    "When you do, destroy target creature or planeswalker.",
+    "−5: Each opponent loses life equal to the number of creature cards in your graveyard."
+   ],
+   "needs": [
+    "api:Repeat",
+    "option:UnlessCostSac"
+   ]
+  },
+  {
    "name": "Oath of Teferi",
    "scope": "live",
    "liveDecks": [
     "D1"
    ],
    "decks": [
-    "D1",
-    "TB1",
-    "TB2"
+    "D1"
    ],
    "owned": 0,
    "rank": 2388,
@@ -100,9 +143,7 @@
     "D1"
    ],
    "decks": [
-    "D1",
-    "TB1",
-    "TB2"
+    "D1"
    ],
    "owned": 1,
    "rank": null,
@@ -123,9 +164,7 @@
     "D1"
    ],
    "decks": [
-    "D1",
-    "TB1",
-    "TB2"
+    "D1"
    ],
    "owned": 1,
    "rank": null,
@@ -145,9 +184,7 @@
     "D1"
    ],
    "decks": [
-    "D1",
-    "TB1",
-    "TB2"
+    "D1"
    ],
    "owned": 1,
    "rank": null,
@@ -169,9 +206,7 @@
     "D1"
    ],
    "decks": [
-    "D1",
-    "TB1",
-    "TB2"
+    "D1"
    ],
    "owned": 1,
    "rank": null,
@@ -187,9 +222,7 @@
     "D1"
    ],
    "decks": [
-    "D1",
-    "TB1",
-    "TB2"
+    "D1"
    ],
    "owned": 1,
    "rank": null,
@@ -210,9 +243,7 @@
     "D1"
    ],
    "decks": [
-    "D1",
-    "TB1",
-    "TB2"
+    "D1"
    ],
    "owned": 1,
    "rank": null,
@@ -223,148 +254,6 @@
     "−2: Create a blue Dog Illusion creature token with \"This token's power and toughness are each equal to twice the number of cards in your hand.\"",
     "−10: Exchange your hand and library, then shuffle.",
     "You get an emblem with \"You have no maximum hand size.\""
-   ],
-   "needs": null
-  },
-  {
-   "name": "Teferi, Hero of Dominaria",
-   "scope": "live",
-   "liveDecks": [
-    "D1"
-   ],
-   "decks": [
-    "D1",
-    "TB1",
-    "TB2"
-   ],
-   "owned": 1,
-   "rank": null,
-   "type": "Legendary Planeswalker — Teferi",
-   "layout": "normal",
-   "compiler": "unknown",
-   "gaps": [
-    "+1: Draw a card.",
-    "At the beginning of the next end step, untap up to two lands.",
-    "−3: Put target nonland permanent into its owner's library third from the top.",
-    "−8: You get an emblem with \"Whenever you draw a card, exile target permanent an opponent controls.\""
-   ],
-   "needs": null
-  },
-  {
-   "name": "The Wandering Emperor",
-   "scope": "live",
-   "liveDecks": [
-    "D1"
-   ],
-   "decks": [
-    "D1",
-    "TB1",
-    "TB2"
-   ],
-   "owned": 1,
-   "rank": null,
-   "type": "Legendary Planeswalker",
-   "layout": "normal",
-   "compiler": "unknown",
-   "gaps": [
-    "As long as The Wandering Emperor entered this turn, you may activate her loyalty abilities any time you could cast an instant.",
-    "+1: Put a +1/+1 counter on up to one target creature.",
-    "It gains first strike until end of turn.",
-    "−1: Create a 2/2 white Samurai creature token with vigilance.",
-    "−2: Exile target tapped creature."
-   ],
-   "needs": null
-  },
-  {
-   "name": "Way of the Mentor",
-   "scope": "live",
-   "liveDecks": [
-    "D1"
-   ],
-   "decks": [
-    "D1",
-    "TB1",
-    "TB2"
-   ],
-   "owned": 1,
-   "rank": null,
-   "type": "Legendary Enchantment",
-   "layout": "normal",
-   "compiler": "unknown",
-   "gaps": [
-    "Whenever you gain life, put a loyalty counter on each planeswalker you control."
-   ],
-   "needs": null
-  },
-  {
-   "name": "Teferi, Time Raveler",
-   "scope": "live",
-   "liveDecks": [
-    "D7"
-   ],
-   "decks": [
-    "D7",
-    "TB5"
-   ],
-   "owned": 1,
-   "rank": 1104,
-   "type": "Legendary Planeswalker — Teferi",
-   "layout": "normal",
-   "compiler": "unknown",
-   "gaps": [
-    "Each opponent can cast spells only any time they could cast a sorcery.",
-    "+1: Until your next turn, you may cast sorcery spells as though they had flash.",
-    "−3: Return up to one target artifact, creature, or enchantment to its owner's hand."
-   ],
-   "needs": []
-  },
-  {
-   "name": "Grist, the Hunger Tide",
-   "scope": "live",
-   "liveDecks": [
-    "D1"
-   ],
-   "decks": [
-    "D1",
-    "TB1"
-   ],
-   "owned": 0,
-   "rank": 1511,
-   "type": "Legendary Planeswalker — Grist",
-   "layout": "normal",
-   "compiler": "unknown",
-   "gaps": [
-    "As long as Grist isn't on the battlefield, it's a 1/1 Insect creature in addition to its other types.",
-    "+1: Create a 1/1 black and green Insect creature token, then mill a card.",
-    "If an Insect card was milled this way, put a loyalty counter on Grist and repeat this process.",
-    "−2: You may sacrifice a creature.",
-    "When you do, destroy target creature or planeswalker.",
-    "−5: Each opponent loses life equal to the number of creature cards in your graveyard."
-   ],
-   "needs": [
-    "api:Repeat",
-    "option:UnlessCostSac"
-   ]
-  },
-  {
-   "name": "Vraska, Relic Seeker",
-   "scope": "live",
-   "liveDecks": [
-    "D1"
-   ],
-   "decks": [
-    "D1",
-    "TB1"
-   ],
-   "owned": 0,
-   "rank": null,
-   "type": "Legendary Planeswalker — Vraska",
-   "layout": "normal",
-   "compiler": "unknown",
-   "gaps": [
-    "+2: Create a 2/2 black Pirate creature token with menace.",
-    "−3: Destroy target artifact, creature, or enchantment.",
-    "−10: Target player's life total becomes 1."
    ],
    "needs": null
   },
@@ -386,6 +275,91 @@
     "trigger:Mutates",
     "keyword:Mutate"
    ]
+  },
+  {
+   "name": "Teferi, Hero of Dominaria",
+   "scope": "live",
+   "liveDecks": [
+    "D1"
+   ],
+   "decks": [
+    "D1"
+   ],
+   "owned": 1,
+   "rank": null,
+   "type": "Legendary Planeswalker — Teferi",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "+1: Draw a card.",
+    "At the beginning of the next end step, untap up to two lands.",
+    "−3: Put target nonland permanent into its owner's library third from the top.",
+    "−8: You get an emblem with \"Whenever you draw a card, exile target permanent an opponent controls.\""
+   ],
+   "needs": null
+  },
+  {
+   "name": "The Wandering Emperor",
+   "scope": "live",
+   "liveDecks": [
+    "D1"
+   ],
+   "decks": [
+    "D1"
+   ],
+   "owned": 1,
+   "rank": null,
+   "type": "Legendary Planeswalker",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "As long as The Wandering Emperor entered this turn, you may activate her loyalty abilities any time you could cast an instant.",
+    "+1: Put a +1/+1 counter on up to one target creature.",
+    "It gains first strike until end of turn.",
+    "−1: Create a 2/2 white Samurai creature token with vigilance.",
+    "−2: Exile target tapped creature."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Vraska, Relic Seeker",
+   "scope": "live",
+   "liveDecks": [
+    "D1"
+   ],
+   "decks": [
+    "D1"
+   ],
+   "owned": 0,
+   "rank": null,
+   "type": "Legendary Planeswalker — Vraska",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "+2: Create a 2/2 black Pirate creature token with menace.",
+    "−3: Destroy target artifact, creature, or enchantment.",
+    "−10: Target player's life total becomes 1."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Way of the Mentor",
+   "scope": "live",
+   "liveDecks": [
+    "D1"
+   ],
+   "decks": [
+    "D1"
+   ],
+   "owned": 1,
+   "rank": null,
+   "type": "Legendary Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever you gain life, put a loyalty counter on each planeswalker you control."
+   ],
+   "needs": null
   },
   {
    "name": "Hedron-Field Purists",

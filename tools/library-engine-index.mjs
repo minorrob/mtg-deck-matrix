@@ -18,6 +18,9 @@
  *               refused), and the coverage tool's measure says what the engine still lacks
  *   unresolved  the oracle data has no card of that name (not Commander legal, banned, or a misspelling)
  *
+ * and in one scope: `live` (in a deck played from a box), `deck` (in a design deck), `watched` (watched for a deck: a folded
+ * design's card that deck lacks) or `library` (owned, ordered, watched or to buy, and in no deck).
+ *
  * The unloaded cards are then dealt into LANES the way the waves are run (docs/handoff-2026-10-12.md, section 5): one
  * theme per lane so one lane owns each rule its cards need, most-wanted first (the live decks' cards, then the other
  * decks', then the library's, each by how many decks play it and how widely Commander plays it), at most --lane-size a
@@ -68,6 +71,8 @@ for (const list of Object.values(live.owned?.inDeck || {})) for (const [name, q]
 for (const [name, q] of live.owned?.bench || []) entry(name).owned += q;
 for (const [name, q] of live.ordered || []) entry(name).ordered += q;
 for (const [name, q] of live.buy || []) entry(name).buy += q;
+/* A watched card with a deck id is one a folded design (TB1, TB2 -> D1) has that the deck lacks: wanted for that deck. */
+for (const [name, q, forId] of live.watching || []) { const e = entry(name); e.watching = (e.watching || 0) + q; if (forId) (e.watchFor ||= []).push(forId); }
 
 /* THE ENGINE'S VIEW OF EACH. */
 const oracle = read('data/engine/oracle.json');
@@ -108,7 +113,7 @@ for (const e of cards.values()) {
    construct: more than one face, and planeswalkers. The first theme a card's type line and text match wins. */
 const THEMES = [
   ['faces', 'Cards with more than one face (split, adventure, modal double-faced, transform, flip, meld) and mutate', (c) => (c.layout && c.layout !== 'normal') || /\bMutate\b/.test(c.text || '')],
-  ['walkers', 'Planeswalkers and loyalty: walker abilities, loyalty counters, planeswalker triggers, sagas and battles', (c) => /Planeswalker|Saga|Battle/.test(c.type || '') || /loyalty|planeswalkers? you control|planeswalker spell/i.test(c.text || '')],
+  ['walkers', 'Planeswalkers and loyalty: walker abilities, loyalty counters, planeswalker triggers, sagas and battles', (c) => /Planeswalker|Saga|Battle/.test(c.type || '') || /loyalty|planeswalker spell/i.test(c.text || '')],
   ['stack', 'The stack and control: counterspells, "can\'t cast", timing restrictions, flash grants, phasing, morph, surge, spree, gaining control, cards from outside the game', (c) => /counter target|can't cast|could cast a sorcery|phase out|have flash|as though it had flash|opponent casts|outside the game|\bmorph\b|\bsurge\b|\bspree\b|gain control/i.test(c.text || '')],
   ['graveyard', 'The graveyard: recursion, death and leave-the-battlefield triggers, mill, manifest, shuffling cards away', (c) => /graveyard|\bdies\b|leaves the battlefield|\bmill|manifest|shuffles? .* into (its|their) owner's library/i.test(c.text || '')],
   ['combat', 'Combat and equipment: attack and block triggers and requirements, evasion, protection, equip, saddle, bushido', (c) => /attack|block|combat|\bequip|double strike|first strike|trample|menace|protection from|bushido|saddle/i.test(c.text || '') || /Equipment/.test(c.type || '')],
@@ -119,7 +124,7 @@ const themeOf = (c) => THEMES.find(([, , test]) => test(c))[0];
 /* A theme too small to be a session's work rides with the one that shares its rules: two-faced cards with the walkers
    (Garruk Relentless is both). */
 const RIDES_WITH = {faces: 'walkers'};
-const wanted = (c) => [c.liveDecks.length ? 0 : c.decks.length ? 1 : 2, -c.liveDecks.length, -c.decks.length, c.rank ?? 1e9, c.name];
+const wanted = (c) => [c.liveDecks.length ? 0 : c.decks.length ? 1 : c.watchFor ? 2 : 3, -c.liveDecks.length, -c.decks.length, c.rank ?? 1e9, c.name];
 const cmp = (a, b) => { const x = wanted(a), y = wanted(b); for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return x[i] < y[i] ? -1 : 1; return 0; };
 
 const all = [...cards.values()].sort((a, b) => a.name.localeCompare(b.name));
@@ -143,10 +148,10 @@ lanes.forEach((l, i) => { l.id = `L${i + 1}-${l.theme}${l.part ? '-' + l.part : 
 const candidates = all.filter((c) => c.tier === 'candidate').sort(cmp);
 
 /* THE REPORT. */
-const scope = (c) => c.liveDecks.length ? 'live' : c.decks.length ? 'deck' : 'library';
+const scope = (c) => c.liveDecks.length ? 'live' : c.decks.length ? 'deck' : c.watchFor ? 'watched' : 'library';
 console.log(`${livePath}: ${live.decks.length} decks, ${all.length} distinct cards (live decks: ${[...liveDecks].join(', ')})`);
 console.log(`  final ${count('final')} · candidate ${count('candidate')} · defined, refused ${count('defined')} · unloaded ${count('unloaded')} · unresolved ${count('unresolved')}`);
-for (const s of ['live', 'deck', 'library']) {
+for (const s of ['live', 'deck', 'watched', 'library']) {
   const of = all.filter((c) => scope(c) === s);
   console.log(`  ${s.padEnd(8)} ${String(of.length).padStart(5)} cards: final ${of.filter((c) => c.tier === 'final').length}, candidate ${of.filter((c) => c.tier === 'candidate').length}, unloaded ${of.filter((c) => c.tier === 'unloaded').length}`);
 }
@@ -160,14 +165,14 @@ if (unresolvedNames.length) console.log('  unresolved:', unresolvedNames.join(';
 if (outDir) {
   mkdirSync(outDir, {recursive: true});
   const slim = (c) => ({name: c.name, ...(c.oracleName && c.oracleName !== c.name ? {oracleName: c.oracleName} : {}), scope: scope(c),
-    liveDecks: c.liveDecks, decks: c.decks, owned: c.owned, rank: c.rank, type: c.type, layout: c.layout,
+    liveDecks: c.liveDecks, decks: c.decks, ...(c.watchFor ? {watchedFor: c.watchFor} : {}), owned: c.owned, rank: c.rank, type: c.type, layout: c.layout,
     compiler: c.compiler, gaps: c.gaps, why: c.why, needs: c.needs});
   const rel = path.relative(ROOT, path.resolve(livePath)).split(path.sep).join('/');
   const source = {collection: rel.startsWith('..') ? path.basename(livePath) : rel, workbook: live.workbook, decks: live.decks.map((d) => d.id),
     liveDecks: [...liveDecks], candidates: candidatesSummary};
   writeFileSync(path.join(outDir, 'index.json'), JSON.stringify({schema: 'library-engine-index@1', source,
     summary: {cards: all.length, final: count('final'), candidate: count('candidate'), defined: count('defined'), unloaded: count('unloaded'), unresolved: count('unresolved'), verdicts},
-    cards: all.map((c) => ({name: c.name, tier: c.tier, scope: scope(c), decks: c.decks, owned: c.owned, ...(c.problems ? {problems: c.problems} : {}), ...(c.compiler ? {compiler: c.compiler} : {})}))}, null, 1) + '\n');
+    cards: all.map((c) => ({name: c.name, tier: c.tier, scope: scope(c), decks: c.decks, ...(c.watchFor ? {watchedFor: c.watchFor} : {}), owned: c.owned, ...(c.problems ? {problems: c.problems} : {}), ...(c.compiler ? {compiler: c.compiler} : {})}))}, null, 1) + '\n');
   for (const lane of lanes) writeFileSync(path.join(outDir, `lane-${lane.id}.json`), JSON.stringify({schema: 'library-load-lane@1', lane: lane.id, theme: lane.theme, label: lane.label, source, cards: lane.cards.map(slim)}, null, 1) + '\n');
   writeFileSync(path.join(outDir, 'lane-candidate-review.json'), JSON.stringify({schema: 'library-load-lane@1', lane: 'candidates', theme: 'review', label: 'Candidates to review and promote to final', source, cards: candidates.map(slim)}, null, 1) + '\n');
   console.log(`  wrote ${outDir}: index.json, ${lanes.length} lane files, lane-candidate-review.json (${candidates.length})`);

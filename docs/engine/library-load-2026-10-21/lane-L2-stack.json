@@ -40,10 +40,7 @@
    "CJ4",
    "CJ5",
    "HG1",
-   "HG2",
-   "TB1",
-   "TB2",
-   "TB5"
+   "HG2"
   ],
   "liveDecks": [
    "D1",
@@ -73,8 +70,7 @@
     "D7"
    ],
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 0,
    "rank": 606,
@@ -93,8 +89,7 @@
     "D7"
    ],
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 0,
    "rank": 813,
@@ -113,8 +108,7 @@
     "D7"
    ],
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 1,
    "rank": 945,
@@ -137,8 +131,7 @@
     "D7"
    ],
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 1,
    "rank": 1088,
@@ -158,8 +151,7 @@
     "D7"
    ],
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 1,
    "rank": 1837,
@@ -178,8 +170,7 @@
     "D7"
    ],
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 1,
    "rank": null,
@@ -200,8 +191,7 @@
     "D7"
    ],
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 1,
    "rank": null,
@@ -212,28 +202,6 @@
     "Surge {U}{U} (You may cast this spell for its surge cost if you or a teammate has cast another spell this turn.)"
    ],
    "needs": null
-  },
-  {
-   "name": "Render Silent",
-   "scope": "live",
-   "liveDecks": [
-    "D7"
-   ],
-   "decks": [
-    "D7",
-    "TB5"
-   ],
-   "owned": 1,
-   "rank": null,
-   "type": "Instant",
-   "layout": "normal",
-   "compiler": "unknown",
-   "gaps": [
-    "Its controller can't cast spells this turn."
-   ],
-   "needs": [
-    "option:RememberObjects"
-   ]
   },
   {
    "name": "Refute",
@@ -253,6 +221,44 @@
     "Draw a card, then discard a card."
    ],
    "needs": []
+  },
+  {
+   "name": "Render Silent",
+   "scope": "live",
+   "liveDecks": [
+    "D7"
+   ],
+   "decks": [
+    "D7"
+   ],
+   "owned": 1,
+   "rank": null,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Its controller can't cast spells this turn."
+   ],
+   "needs": [
+    "option:RememberObjects"
+   ]
+  },
+  {
+   "name": "Mangara, the Diplomat",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 662,
+   "type": "Legendary Creature — Human Cleric",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, draw a card."
+   ],
+   "needs": [
+    "count:ValidAll"
+   ]
   },
   {
    "name": "Timely Ward",

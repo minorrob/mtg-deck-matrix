@@ -8,6 +8,7 @@
  *   node tools/build-live-load.mjs <workbook> --scryfall cache.json        # resolve names against a Scryfall dump too
  *   node tools/build-live-load.mjs <workbook> --decks decks.json --out f   # the decks' names and commanders by hand
  *   node tools/build-live-load.mjs <workbook> --only "D1-T,D2-T,CJ1,..."   # a Master Table workbook: just these decks
+ *   node tools/build-live-load.mjs <workbook> --only "..." --watch-into "TB1:D1,TB2:D1,TB5:D7"   # designs folded into a deck as watched cards
  *
  * The Master sheet of Rob's workbook carries, per card, how many he owns (Own), how many are
  * still to buy (Buy Count), how many are on order (Ordered), the price ($ Each), the target
@@ -343,7 +344,13 @@ export async function importStarWorkbook(workbook,{prior=null,now=new Date(),loo
        deck's bracket. A deck it has no row for is described by the row that says it holds that deck's list (TB5 is
        "D7 ... list = TB5").
      - Ownership "Watch" rows are watched cards. Nothing is on order (the Ordered column is empty), and no $ Each is kept,
-       so what was paid is carried from the committed file for cards still owned. */
+       so what was paid is carried from the committed file for cards still owned.
+     - A DESIGN CAN BE FOLDED INTO THE DECK IT VARIES (`watchInto`, {TB1: 'D1', TB2: 'D1', TB5: 'D7'}). Rob, 2026-10-21: "If
+       TB1, TB2 and TB5 are essentially the same [as D1 and D7] instead of creating those three as decks let's include the
+       cards that are different ... as watched cards in those decks." Such a design is not loaded as a deck. Each card in
+       its list that the host's hundred lacks (basic lands aside, and a card already coming in for the host aside) is a
+       watched copy filed in the host's group, which the deck page lists among its working cards; its note names the
+       designs it came from and how many copies are owned. Its Upgrade column rows go to the host. */
 const TABLE_TITLE=/^MtG Master Table\b/i;
 function masterTable(workbook){const rows=sheet(workbook,'Master');return rows&&TABLE_TITLE.test(String(rows[0]?.[0]??'').trim())?rows:null;}
 /* "Teysa Karlov (Shadrix Silverquill in the 99)", "Tymna the Weaver, Kraum, Ludevic's Opus" or "Tymna the Weaver +
@@ -367,7 +374,7 @@ export function referenceText(r){
     r.deviations?`Deviations from the shell: ${r.deviations}`:''].filter(Boolean).join('\n');
 }
 
-export async function importMasterTable(workbook,{rows,prior=null,now=new Date(),lookup,canon,notes,only=null}){
+export async function importMasterTable(workbook,{rows,prior=null,now=new Date(),lookup,canon,notes,only=null,watchInto=null}){
   const h=rows.findIndex(r=>String(r[0]??'').trim()==='Card ID');ensure(h>=0,'Master: no header row starting with "Card ID".');
   const H=rows[h].map(x=>String(x??'').trim()),at=name=>H.indexOf(name),col=name=>{const i=at(name);ensure(i>=0,`Master: no "${name}" column.`);return i;};
   const txt=v=>v===null||v===undefined?'':String(v).trim();
@@ -383,7 +390,13 @@ export async function importMasterTable(workbook,{rows,prior=null,now=new Date()
     const left=ids.filter(x=>!want.includes(x));ids=ids.filter(x=>want.includes(x));
     if(left.length)notes.push(`${left.length} deck column${left.length===1?' was':'s were'} not asked for and left out: ${left.join(', ')}.`);
   }
+  const into=Object.entries(watchInto||{}).map(([src,host])=>[String(src).trim(),String(host).trim().replace(/^(D\d+)-T$/,'$1')]);
+  for(const [src,host] of into){ensure(designs.includes(src)||live.includes(src),`Folding ${src} into ${host}: the workbook has no deck column for ${src}.`);
+    ensure(ids.includes(host)&&host!==src,`Folding ${src} into ${host}: ${host} is not a deck being loaded.`);}
+  ids=ids.filter(x=>!into.some(([src])=>src===x));
+  const readIds=[...ids,...into.map(([src])=>src)];
   const isLive=id=>live.includes(id),tCol=id=>isLive(id)?id+'-T':id,codeCol=id=>'CDS-'+tCol(id);
+  if(into.length)notes.push(`Folded into the deck each varies, as watched cards rather than decks: ${into.map(([s,h])=>`${s} into ${h}`).join(', ')}.`);
   notes.push(`${ids.length} decks: ${ids.filter(isLive).length} live (target and box: ${ids.filter(isLive).join(', ')}) and ${ids.filter(x=>!isLive(x)).length} designs loaded as drafts (${ids.filter(x=>!isLive(x)).join(', ')}).`);
 
   /* THE CARDS. Two rows that are one card (a flavor-name print beside the card) add up, as before. */
@@ -399,12 +412,12 @@ export async function importMasterTable(workbook,{rows,prior=null,now=new Date()
       t:{},a:{},code:{},box:Object.fromEntries(BOXES.map(b=>[b,num(r[at('Bench - '+b)])])),
       meta:{color:r[at('Color')],type:r[at('Type')],bracket:r[at('Bracket')],mv:r[at('MV')],description:r[at('Description')],
         purpose:r[at('Primary Purpose')],primary:r[at('Primary Mechanic')],secondary:r[at('Secondary Mechanic')],tertiary:r[at('Tertiary Mechanic')]}};
-    for(const d of ids){rec.t[d]=num(r[col(tCol(d))]);rec.code[d]=txt(r[col(codeCol(d))]);if(isLive(d))rec.a[d]=num(r[col(d+'-A')]);}
+    for(const d of readIds){rec.t[d]=num(r[col(tCol(d))]);rec.code[d]=txt(r[col(codeCol(d))]);if(isLive(d))rec.a[d]=num(r[col(d+'-A')]);}
     rec.sumA=live.reduce((n,d)=>n+num(r[col(d+'-A')]),0);
     card[id]=rec;
     if(byKey.has(key)){const first=byKey.get(key);merged.push(`${raw} into ${first.raw}`);
       first.own+=rec.own;first.buy+=rec.buy;first.ordered+=rec.ordered;first.sumA+=rec.sumA;first.price=first.price??rec.price;first.watch=first.watch&&rec.watch;
-      for(const d of ids){first.t[d]+=rec.t[d];first.code[d]=first.code[d]||rec.code[d];if(isLive(d))first.a[d]+=rec.a[d];}
+      for(const d of readIds){first.t[d]+=rec.t[d];first.code[d]=first.code[d]||rec.code[d];if(isLive(d))first.a[d]+=rec.a[d];}
       for(const b of BOXES)first.box[b]+=rec.box[b];first.notes=[first.notes,rec.notes].filter(Boolean).join(' | ');card[id]=first;continue;}
     byKey.set(key,rec);list.push(rec);
   }
@@ -463,12 +476,22 @@ export async function importMasterTable(workbook,{rows,prior=null,now=new Date()
   /* The Upgrade column ("TB5: in for Duty Beyond Death"): an owned card that comes in for one in that deck's list. */
   for(const c of list){
     const m=/^([A-Za-z0-9-]+):\s*in for\s+(.+)$/i.exec(c.upgrade);if(!m)continue;
-    const d=decks.find(x=>x.id===m[1]);if(!d){notes.push(`Upgrade column: ${c.name} names ${m[1]}, which is not loaded.`);continue;}
+    const host=into.find(([src])=>src===m[1])?.[1],d=decks.find(x=>x.id===(host||m[1]));if(!d){notes.push(`Upgrade column: ${c.name} names ${m[1]}, which is not loaded.`);continue;}
     const out=canon(m[2].trim());
     if(!d.cards.some(([n])=>Live.fold(n)===Live.fold(out))){notes.push(`Upgrade column: ${c.name} comes in for ${out}, which is not in ${d.id}.`);continue;}
     if(d.cards.some(([n])=>Live.fold(n)===Live.fold(c.name))){notes.push(`Upgrade column: ${c.name} is already in ${d.id}.`);continue;}
-    upgrades.push({deck:d.id,card:c.name,replaces:out,tier:3,price:marketPriceOf(lookup,c.name,c.price)??0,origin:'workbook',why:c.upgrade});
+    upgrades.push({deck:d.id,card:c.name,replaces:out,tier:3,price:marketPriceOf(lookup,c.name,c.price)??0,origin:'workbook',why:host?`${c.upgrade} (${m[1]} is folded into ${host})`:c.upgrade});
   }
+
+  /* THE FOLDED DESIGNS' OTHER CARDS, as watched cards of the deck each varies. */
+  const BASIC=/^(Snow-Covered )?(Plains|Island|Swamp|Mountain|Forest|Wastes)$/,watchFor=new Map();
+  for(const [src,host] of into){
+    const d=decks.find(x=>x.id===host),inHost=new Set(d.cards.map(([n])=>Live.fold(n))),coming=new Set(upgrades.filter(u=>u.deck===host).map(u=>Live.fold(u.card)));
+    for(const c of list){const k=Live.fold(c.name);if(!c.t[src]||inHost.has(k)||coming.has(k)||BASIC.test(c.name))continue;
+      const w=watchFor.get(host+'|'+k)||{c,host,sources:[]};w.sources.push(src);watchFor.set(host+'|'+k,w);}
+  }
+  for(const [,host] of into.filter(([,h],i,a)=>a.findIndex(([,x])=>x===h)===i)){const ws=[...watchFor.values()].filter(w=>w.host===host);
+    notes.push(`${host}: ${ws.length} watched card${ws.length===1?'':'s'} from ${into.filter(([,h])=>h===host).map(([s])=>s).join(' and ')} (${ws.filter(w=>w.c.own>0).length} of them owned).`);}
 
   /* COPIES. The boxes are the live decks' Dn-A; the bench is the rest, by its box. */
   const inDeck={};for(const d of ids.filter(isLive))inDeck[d]=list.filter(c=>c.a[d]).map(c=>[c.name,c.a[d]]).sort(byName);
@@ -483,7 +506,9 @@ export async function importMasterTable(workbook,{rows,prior=null,now=new Date()
   if(boxIssues.length)notes.push(`Bench copies whose boxes do not add up, left without a box: ${few(boxIssues)}.`);
   const ordered=list.filter(c=>c.ordered>0).map(c=>[c.name,c.ordered]).sort(byName);
   const buy=list.filter(c=>c.buy>0).map(c=>[c.name,c.buy,marketPriceOf(lookup,c.name,c.price)]).sort(byName);
-  const watching=list.filter(c=>c.watch&&!c.own).map(c=>[c.name,1]).sort(byName);
+  const watchedFor=new Set([...watchFor.values()].map(w=>Live.fold(w.c.name)));
+  const watching=[...[...watchFor.values()].map(w=>[w.c.name,1,w.host,`${w.host}: watched from ${w.sources.join(' and ')}, folded into ${w.host}${w.c.own>0?`; ${w.c.own} owned`:''}.`]),
+    ...list.filter(c=>c.watch&&!c.own&&!watchedFor.has(Live.fold(c.name))).map(c=>[c.name,1])].sort(byName);
   const metadata={};for(const c of list){const m=Object.fromEntries(Object.entries(c.meta).filter(([,v])=>v!==null&&v!==undefined&&v!==''&&v!=='None'));if(Object.keys(m).length)metadata[c.name]=m;}
 
   /* WHAT WAS PAID: no $ Each in this workbook, so the committed file's figure for a card still owned is kept. */
@@ -505,21 +530,21 @@ export async function importMasterTable(workbook,{rows,prior=null,now=new Date()
 
   const doc={schema:'live-load@1',format:Live.FORMAT,version:Live.VERSION,generator:'tools/build-live-load.mjs',
     count:decks.length,savedAt:now.toISOString().replace(/\.\d{3}Z$/,'Z'),workbook:basename(workbook),
-    note:"Rob's collection, built by tools/build-live-load.mjs from the Master Table workbook (its Master, Card Prints and Deck Reference sheets). Card names are exact Scryfall names. decks[].cards is each deck's hundred as it will be: in a live deck (D1-D7) a substitute's seat is the card coming in for it, and the substitute stays in the box holding that seat (upgrades). decks[].draft marks a design deck, loaded as a draft that reserves no copy. decks[].notes is the deck's Deck Reference text, the deck page's summary. owned.inDeck is what is physically in each live deck's box; owned.bench is everything else owned, each row with its bench box; ordered is in flight; buy is the shopping list, priced from the catalog (Scryfall) with the workbook's cheapest price only where the catalog has none; watching is what is watched; paid is what was paid per copy, carried for cards still owned; prints are the owned copies' prints.",
+    note:"Rob's collection, built by tools/build-live-load.mjs from the Master Table workbook (its Master, Card Prints and Deck Reference sheets). Card names are exact Scryfall names. decks[].cards is each deck's hundred as it will be: in a live deck (D1-D7) a substitute's seat is the card coming in for it, and the substitute stays in the box holding that seat (upgrades). decks[].draft marks a design deck, loaded as a draft that reserves no copy. decks[].notes is the deck's Deck Reference text, the deck page's summary. owned.inDeck is what is physically in each live deck's box; owned.bench is everything else owned, each row with its bench box; ordered is in flight; buy is the shopping list, priced from the catalog (Scryfall) with the workbook's cheapest price only where the catalog has none; watching is what is watched, a row with a deck id being a card a folded design (TB1, TB2 -> D1; TB5 -> D7) has that the deck lacks; paid is what was paid per copy, carried for cards still owned; prints are the owned copies' prints.",
     decks,owned:{inDeck,bench},ordered,buy,watching,paid,metadata,upgrades,...(Object.keys(prints).length?{prints:Object.fromEntries(Object.entries(prints).sort(byName))}:{})};
   Live.check(doc);
   const built=Live.build(doc,{Model,lookup});
   return {doc,notes,built};
 }
 
-export async function importWorkbook(workbook,{prior=null,adjust=null,scryfall=null,decks:named=null,only=null,now=new Date()}={}){
+export async function importWorkbook(workbook,{prior=null,adjust=null,scryfall=null,decks:named=null,only=null,watchInto=null,now=new Date()}={}){
   const notes=[];
   const lookup=await bundledLookup({scryfall});
   const unresolved=new Set();
   const canon=name=>{const c=lookup(name);if(!c){unresolved.add(name);return name;}return c.name;};
   const table=masterTable(workbook);
   if(table){
-    const out=await importMasterTable(workbook,{rows:table,prior,now,lookup,canon,notes,only});
+    const out=await importMasterTable(workbook,{rows:table,prior,now,lookup,canon,notes,only,watchInto});
     ensure(!unresolved.size,`${unresolved.size} name${unresolved.size===1?'':'s'} could not be resolved against the catalog: ${[...unresolved].join('; ')}.`);
     return out;
   }
@@ -735,7 +760,7 @@ export function diff(prior,doc){
 
 if(process.argv[1]&&pathToFileURL(process.argv[1]).href===import.meta.url){
   const args=process.argv.slice(2),flag=name=>{const i=args.indexOf(name);return i>=0?args[i+1]:null;},check=args.includes('--check');
-  const positional=args.filter((a,i)=>!a.startsWith('--')&&!['--adjust','--scryfall','--out','--decks','--only'].includes(args[i-1]));
+  const positional=args.filter((a,i)=>!a.startsWith('--')&&!['--adjust','--scryfall','--out','--decks','--only','--watch-into'].includes(args[i-1]));
   const out=flag('--out')?pathToFileURL(flag('--out')):SOURCE;
   try{
     const workbook=positional[0]||await newestWorkbook();
@@ -744,7 +769,8 @@ if(process.argv[1]&&pathToFileURL(process.argv[1]).href===import.meta.url){
     const scryfall=flag('--scryfall')?JSON.parse(await readFile(flag('--scryfall'),'utf8')):null;
     const decks=flag('--decks')?JSON.parse(await readFile(flag('--decks'),'utf8')):null;
     const only=flag('--only')?flag('--only').split(/[\s,]+/).filter(Boolean):null;
-    const {doc,notes,built}=await importWorkbook(workbook,{prior,adjust,scryfall,decks,only});
+    const watchInto=flag('--watch-into')?Object.fromEntries(flag('--watch-into').split(/[\s,]+/).filter(Boolean).map(p=>p.split(':'))):null;
+    const {doc,notes,built}=await importWorkbook(workbook,{prior,adjust,scryfall,decks,only,watchInto});
     console.log(`live-load from ${doc.workbook}: ${doc.decks.length} decks · ${doc.owned.bench.length} bench rows · ${doc.ordered.length} ordered rows · ${doc.buy.length} buy rows · ${doc.upgrades.length} upgrades · options ${doc.decks.reduce((n,d)=>n+(d.options||[]).length,0)} · planned ${doc.decks.reduce((n,d)=>n+(d.planned||[]).length,0)}`);
     for(const n of notes)console.log('  note: '+n);
     console.log(diff(prior,doc).join('\n'));

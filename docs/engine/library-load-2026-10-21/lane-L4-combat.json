@@ -40,10 +40,7 @@
    "CJ4",
    "CJ5",
    "HG1",
-   "HG2",
-   "TB1",
-   "TB2",
-   "TB5"
+   "HG2"
   ],
   "liveDecks": [
    "D1",
@@ -66,28 +63,6 @@
   }
  },
  "cards": [
-  {
-   "name": "Teysa, Envoy of Ghosts",
-   "scope": "live",
-   "liveDecks": [
-    "D7"
-   ],
-   "decks": [
-    "D7",
-    "TB5"
-   ],
-   "owned": 1,
-   "rank": null,
-   "type": "Legendary Creature — Human Advisor",
-   "layout": "normal",
-   "compiler": "unknown",
-   "gaps": [
-    "protection from creatures",
-    "Whenever a creature deals combat damage to you, destroy that creature.",
-    "Create a 1/1 white and black Spirit creature token with flying."
-   ],
-   "needs": null
-  },
   {
    "name": "Leyline Axe",
    "scope": "live",
@@ -146,6 +121,27 @@
    "needs": null
   },
   {
+   "name": "Teysa, Envoy of Ghosts",
+   "scope": "live",
+   "liveDecks": [
+    "D7"
+   ],
+   "decks": [
+    "D7"
+   ],
+   "owned": 1,
+   "rank": null,
+   "type": "Legendary Creature — Human Advisor",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "protection from creatures",
+    "Whenever a creature deals combat damage to you, destroy that creature.",
+    "Create a 1/1 white and black Spirit creature token with flying."
+   ],
+   "needs": null
+  },
+  {
    "name": "Kaalia of the Vast",
    "scope": "deck",
    "liveDecks": [],
@@ -199,6 +195,21 @@
     "option:RememberChanged",
     "option:RememberObjects"
    ]
+  },
+  {
+   "name": "Revenge of Ravens",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 3212,
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever a creature attacks you or a planeswalker you control, that creature's controller loses 1 life and you gain 1 life."
+   ],
+   "needs": []
   },
   {
    "name": "Bark of Doran",

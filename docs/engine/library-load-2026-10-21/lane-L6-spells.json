@@ -40,10 +40,7 @@
    "CJ4",
    "CJ5",
    "HG1",
-   "HG2",
-   "TB1",
-   "TB2",
-   "TB5"
+   "HG2"
   ],
   "liveDecks": [
    "D1",
@@ -73,9 +70,7 @@
     "D1"
    ],
    "decks": [
-    "D1",
-    "TB1",
-    "TB2"
+    "D1"
    ],
    "owned": 1,
    "rank": 854,
@@ -88,46 +83,6 @@
     "You and permanents you control gain hexproof from blue and from black until end of turn. (You and they can't be the targets of blue or black spells or abilities your opponents control.)"
    ],
    "needs": []
-  },
-  {
-   "name": "Liliana's Standard Bearer",
-   "scope": "live",
-   "liveDecks": [
-    "D7"
-   ],
-   "decks": [
-    "D7",
-    "TB5"
-   ],
-   "owned": 1,
-   "rank": null,
-   "type": "Creature — Zombie Knight",
-   "layout": "normal",
-   "compiler": "unknown",
-   "gaps": [
-    "When this creature enters, draw X cards, where X is the number of creatures that died under your control this turn."
-   ],
-   "needs": null
-  },
-  {
-   "name": "Queza, Augur of Agonies",
-   "scope": "live",
-   "liveDecks": [
-    "D7"
-   ],
-   "decks": [
-    "D7",
-    "TB5"
-   ],
-   "owned": 1,
-   "rank": null,
-   "type": "Legendary Creature — Octopus Advisor",
-   "layout": "normal",
-   "compiler": "unknown",
-   "gaps": [
-    "Whenever you draw a card, target opponent loses 1 life and you gain 1 life."
-   ],
-   "needs": null
   },
   {
    "name": "Eerie Interlude",
@@ -168,6 +123,44 @@
    "compiler": "unknown",
    "gaps": [
     "Whenever you cast a creature spell, exile up to one other target creature you control, then return that card to the battlefield under its owner's control."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Liliana's Standard Bearer",
+   "scope": "live",
+   "liveDecks": [
+    "D7"
+   ],
+   "decks": [
+    "D7"
+   ],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Zombie Knight",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature enters, draw X cards, where X is the number of creatures that died under your control this turn."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Queza, Augur of Agonies",
+   "scope": "live",
+   "liveDecks": [
+    "D7"
+   ],
+   "decks": [
+    "D7"
+   ],
+   "owned": 1,
+   "rank": null,
+   "type": "Legendary Creature — Octopus Advisor",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever you draw a card, target opponent loses 1 life and you gain 1 life."
    ],
    "needs": null
   },

@@ -37,10 +37,7 @@
    "CJ4",
    "CJ5",
    "HG1",
-   "HG2",
-   "TB1",
-   "TB2",
-   "TB5"
+   "HG2"
   ],
   "liveDecks": [
    "D1",
@@ -63,14 +60,14 @@
   }
  },
  "summary": {
-  "cards": 1362,
+  "cards": 1364,
   "final": 1246,
   "candidate": 8,
   "defined": 0,
-  "unloaded": 108,
+  "unloaded": 110,
   "unresolved": 0,
   "verdicts": {
-   "unknown": 102,
+   "unknown": 104,
    "vetoed": 1,
    "structure": 5
   }
@@ -102,8 +99,7 @@
    "tier": "candidate",
    "scope": "live",
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 1
   },
@@ -157,8 +153,10 @@
     "CJ2",
     "CJ4",
     "HG1",
-    "HG2",
-    "TB2"
+    "HG2"
+   ],
+   "watchedFor": [
+    "D1"
    ],
    "owned": 1
   },
@@ -189,9 +187,7 @@
     "G0-D1",
     "G1-D1",
     "CJ1",
-    "HG1",
-    "TB1",
-    "TB2"
+    "HG1"
    ],
    "owned": 1
   },
@@ -238,9 +234,7 @@
    "decks": [
     "D1",
     "S1-D5",
-    "S2-D3",
-    "TB1",
-    "TB2"
+    "S2-D3"
    ],
    "owned": 1
   },
@@ -249,9 +243,7 @@
    "tier": "unloaded",
    "scope": "live",
    "decks": [
-    "D1",
-    "TB1",
-    "TB2"
+    "D1"
    ],
    "owned": 1,
    "compiler": "unknown"
@@ -272,9 +264,7 @@
    "tier": "unloaded",
    "scope": "live",
    "decks": [
-    "D1",
-    "TB1",
-    "TB2"
+    "D1"
    ],
    "owned": 1,
    "compiler": "unknown"
@@ -352,8 +342,7 @@
    "tier": "final",
    "scope": "live",
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 1
   },
@@ -419,9 +408,7 @@
     "S2-D1",
     "G0-D2",
     "CJ1",
-    "CJ4",
-    "TB1",
-    "TB2"
+    "CJ4"
    ],
    "owned": 1
   },
@@ -491,8 +478,7 @@
    "tier": "final",
    "scope": "live",
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 1
   },
@@ -554,8 +540,7 @@
    "tier": "final",
    "scope": "live",
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 1
   },
@@ -593,10 +578,7 @@
     "CJ4",
     "CJ5",
     "HG1",
-    "HG2",
-    "TB1",
-    "TB2",
-    "TB5"
+    "HG2"
    ],
    "owned": 6
   },
@@ -753,8 +735,7 @@
    "tier": "final",
    "scope": "live",
    "decks": [
-    "D1",
-    "TB1"
+    "D1"
    ],
    "owned": 1
   },
@@ -771,9 +752,7 @@
    "tier": "final",
    "scope": "live",
    "decks": [
-    "D1",
-    "TB1",
-    "TB2"
+    "D1"
    ],
    "owned": 1
   },
@@ -925,8 +904,7 @@
     "G1-D3",
     "CJ2",
     "CJ4",
-    "HG1",
-    "TB5"
+    "HG1"
    ],
    "owned": 2
   },
@@ -1078,8 +1056,10 @@
     "G0-D4",
     "G1-D2",
     "CJ1",
-    "CJ5",
-    "TB2"
+    "CJ5"
+   ],
+   "watchedFor": [
+    "D1"
    ],
    "owned": 1
   },
@@ -1173,8 +1153,7 @@
    "tier": "unloaded",
    "scope": "live",
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 1,
    "compiler": "unknown"
@@ -1210,8 +1189,10 @@
    "scope": "deck",
    "decks": [
     "S1-D4",
-    "G0-D2",
-    "TB2"
+    "G0-D2"
+   ],
+   "watchedFor": [
+    "D1"
    ],
    "owned": 1
   },
@@ -1290,8 +1271,7 @@
    "tier": "final",
    "scope": "live",
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 0
   },
@@ -1487,8 +1467,7 @@
    "tier": "unloaded",
    "scope": "live",
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 1,
    "compiler": "unknown"
@@ -1550,8 +1529,7 @@
     "S1-D6",
     "G0-D1",
     "G1-D2",
-    "CJ4",
-    "TB5"
+    "CJ4"
    ],
    "owned": 1
   },
@@ -1627,8 +1605,10 @@
     "G1-D3",
     "CJ1",
     "CJ2",
-    "CJ5",
-    "TB2"
+    "CJ5"
+   ],
+   "watchedFor": [
+    "D1"
    ],
    "owned": 1
   },
@@ -1766,9 +1746,7 @@
    "tier": "unloaded",
    "scope": "live",
    "decks": [
-    "D1",
-    "TB1",
-    "TB2"
+    "D1"
    ],
    "owned": 1,
    "compiler": "unknown"
@@ -1802,8 +1780,7 @@
     "S1-D4",
     "G0-D3",
     "G0-D4",
-    "G1-D3",
-    "TB5"
+    "G1-D3"
    ],
    "owned": 3
   },
@@ -1893,9 +1870,7 @@
     "G0-D2",
     "CJ1",
     "CJ4",
-    "HG2",
-    "TB1",
-    "TB2"
+    "HG2"
    ],
    "owned": 2
   },
@@ -2045,9 +2020,7 @@
     "G1-D3",
     "CJ1",
     "CJ2",
-    "HG2",
-    "TB1",
-    "TB2"
+    "HG2"
    ],
    "owned": 2
   },
@@ -2119,8 +2092,7 @@
    "tier": "unloaded",
    "scope": "live",
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 0,
    "compiler": "unknown"
@@ -2246,9 +2218,7 @@
     "CJ4",
     "CJ5",
     "HG1",
-    "HG2",
-    "TB1",
-    "TB2"
+    "HG2"
    ],
    "owned": 4
   },
@@ -2290,8 +2260,7 @@
    "tier": "final",
    "scope": "live",
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 0
   },
@@ -2322,8 +2291,7 @@
    "decks": [
     "D1",
     "S2-D1",
-    "CJ1",
-    "TB1"
+    "CJ1"
    ],
    "owned": 2
   },
@@ -2342,8 +2310,7 @@
    "scope": "live",
    "decks": [
     "D7",
-    "S1-D4",
-    "TB5"
+    "S1-D4"
    ],
    "owned": 1
   },
@@ -2375,9 +2342,7 @@
     "S2-D1",
     "G0-D1",
     "CJ4",
-    "HG1",
-    "TB1",
-    "TB2"
+    "HG1"
    ],
    "owned": 1
   },
@@ -2396,9 +2361,10 @@
     "CJ2",
     "CJ4",
     "HG1",
-    "HG2",
-    "TB2",
-    "TB5"
+    "HG2"
+   ],
+   "watchedFor": [
+    "D1"
    ],
    "owned": 1
   },
@@ -2621,8 +2587,7 @@
     "D7",
     "S1-D1",
     "S2-D3",
-    "G1-D3",
-    "TB5"
+    "G1-D3"
    ],
    "owned": 1
   },
@@ -2704,9 +2669,7 @@
    "decks": [
     "D1",
     "S2-D1",
-    "CJ1",
-    "TB1",
-    "TB2"
+    "CJ1"
    ],
    "owned": 1
   },
@@ -2727,8 +2690,7 @@
     "G0-D1",
     "G1-D2",
     "CJ2",
-    "CJ4",
-    "TB5"
+    "CJ4"
    ],
    "owned": 1
   },
@@ -2787,9 +2749,10 @@
     "S2-D1",
     "G0-D2",
     "CJ1",
-    "CJ4",
-    "TB2",
-    "TB5"
+    "CJ4"
+   ],
+   "watchedFor": [
+    "D1"
    ],
    "owned": 3
   },
@@ -2901,9 +2864,7 @@
    "scope": "live",
    "decks": [
     "D1",
-    "D7",
-    "TB1",
-    "TB5"
+    "D7"
    ],
    "owned": 1
   },
@@ -2936,8 +2897,10 @@
    "decks": [
     "D4",
     "G0-D4",
-    "CJ5",
-    "TB2"
+    "CJ5"
+   ],
+   "watchedFor": [
+    "D1"
    ],
    "owned": 1
   },
@@ -3011,10 +2974,7 @@
     "S1-D4",
     "S2-D1",
     "CJ4",
-    "HG2",
-    "TB1",
-    "TB2",
-    "TB5"
+    "HG2"
    ],
    "owned": 2
   },
@@ -3054,8 +3014,7 @@
    "decks": [
     "D5",
     "D7",
-    "S2-D3",
-    "TB5"
+    "S2-D3"
    ],
    "owned": 2
   },
@@ -3252,9 +3211,7 @@
     "G1-D4",
     "CJ1",
     "CJ5",
-    "HG1",
-    "TB1",
-    "TB2"
+    "HG1"
    ],
    "owned": 1
   },
@@ -3504,8 +3461,7 @@
    "tier": "final",
    "scope": "live",
    "decks": [
-    "D1",
-    "TB1"
+    "D1"
    ],
    "owned": 1
   },
@@ -3542,10 +3498,7 @@
     "G1-D2",
     "G1-D3",
     "G1-D4",
-    "CJ3",
-    "TB1",
-    "TB2",
-    "TB5"
+    "CJ3"
    ],
    "owned": 5
   },
@@ -3589,9 +3542,7 @@
     "CJ4",
     "CJ5",
     "HG1",
-    "HG2",
-    "TB1",
-    "TB2"
+    "HG2"
    ],
    "owned": 4
   },
@@ -3693,9 +3644,7 @@
     "G0-D4",
     "G1-D1",
     "G1-D2",
-    "CJ5",
-    "TB1",
-    "TB2"
+    "CJ5"
    ],
    "owned": 2
   },
@@ -3724,8 +3673,10 @@
     "S2-D3",
     "G0-D3",
     "CJ2",
-    "CJ5",
-    "TB2"
+    "CJ5"
+   ],
+   "watchedFor": [
+    "D1"
    ],
    "owned": 1
   },
@@ -3796,9 +3747,7 @@
     "CJ4",
     "CJ5",
     "HG1",
-    "HG2",
-    "TB1",
-    "TB2"
+    "HG2"
    ],
    "owned": 2
   },
@@ -3824,8 +3773,7 @@
     "D1",
     "S2-D3",
     "G0-D4",
-    "G1-D2",
-    "TB1"
+    "G1-D2"
    ],
    "owned": 1
   },
@@ -3838,8 +3786,7 @@
     "S1-D4",
     "S2-D4",
     "G0-D3",
-    "CJ5",
-    "TB5"
+    "CJ5"
    ],
    "owned": 1
   },
@@ -3865,10 +3812,7 @@
     "CJ1",
     "CJ2",
     "HG1",
-    "HG2",
-    "TB1",
-    "TB2",
-    "TB5"
+    "HG2"
    ],
    "owned": 3
   },
@@ -3880,8 +3824,7 @@
     "D7",
     "S2-D1",
     "G1-D3",
-    "HG1",
-    "TB5"
+    "HG1"
    ],
    "owned": 2
   },
@@ -4015,8 +3958,10 @@
     "CJ4",
     "CJ5",
     "HG1",
-    "HG2",
-    "TB2"
+    "HG2"
+   ],
+   "watchedFor": [
+    "D1"
    ],
    "owned": 2
   },
@@ -4064,8 +4009,7 @@
     "S2-D1",
     "G0-D2",
     "CJ4",
-    "HG2",
-    "TB1"
+    "HG2"
    ],
    "owned": 1
   },
@@ -4155,8 +4099,10 @@
     "CJ4",
     "CJ5",
     "HG1",
-    "HG2",
-    "TB2"
+    "HG2"
+   ],
+   "watchedFor": [
+    "D1"
    ],
    "owned": 1
   },
@@ -4190,8 +4136,7 @@
    "tier": "final",
    "scope": "live",
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 1
   },
@@ -4204,9 +4149,7 @@
     "S2-D3",
     "G0-D4",
     "G1-D1",
-    "CJ1",
-    "TB1",
-    "TB2"
+    "CJ1"
    ],
    "owned": 1
   },
@@ -4265,9 +4208,7 @@
     "G1-D3",
     "CJ1",
     "CJ2",
-    "CJ5",
-    "TB1",
-    "TB2"
+    "CJ5"
    ],
    "owned": 83
   },
@@ -4278,9 +4219,7 @@
    "decks": [
     "D1",
     "S2-D1",
-    "CJ1",
-    "TB1",
-    "TB2"
+    "CJ1"
    ],
    "owned": 2
   },
@@ -4362,8 +4301,7 @@
     "S1-D2",
     "S2-D1",
     "G0-D3",
-    "CJ1",
-    "TB1"
+    "CJ1"
    ],
    "owned": 1
   },
@@ -4418,8 +4356,10 @@
    "decks": [
     "S2-D1",
     "G0-D4",
-    "CJ1",
-    "TB2"
+    "CJ1"
+   ],
+   "watchedFor": [
+    "D1"
    ],
    "owned": 1
   },
@@ -4552,9 +4492,7 @@
    "tier": "unloaded",
    "scope": "live",
    "decks": [
-    "D1",
-    "TB1",
-    "TB2"
+    "D1"
    ],
    "owned": 1,
    "compiler": "structure"
@@ -4575,9 +4513,7 @@
    "decks": [
     "D1",
     "G0-D1",
-    "G1-D1",
-    "TB1",
-    "TB2"
+    "G1-D1"
    ],
    "owned": 4
   },
@@ -4605,8 +4541,10 @@
     "G0-D4",
     "G1-D3",
     "CJ1",
-    "CJ5",
-    "TB2"
+    "CJ5"
+   ],
+   "watchedFor": [
+    "D1"
    ],
    "owned": 2
   },
@@ -4715,8 +4653,7 @@
    "decks": [
     "D7",
     "S1-D5",
-    "S2-D6",
-    "TB5"
+    "S2-D6"
    ],
    "owned": 2
   },
@@ -4777,9 +4714,7 @@
     "CJ2",
     "CJ4",
     "HG1",
-    "HG2",
-    "TB1",
-    "TB2"
+    "HG2"
    ],
    "owned": 2
   },
@@ -4865,8 +4800,7 @@
     "S1-D5",
     "S2-D6",
     "G0-D2",
-    "CJ4",
-    "TB5"
+    "CJ4"
    ],
    "owned": 1
   },
@@ -5222,8 +5156,7 @@
    "tier": "unloaded",
    "scope": "live",
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 1,
    "compiler": "unknown"
@@ -5240,8 +5173,7 @@
    "tier": "unloaded",
    "scope": "live",
    "decks": [
-    "D1",
-    "TB1"
+    "D1"
    ],
    "owned": 0,
    "compiler": "unknown"
@@ -5382,8 +5314,7 @@
    "tier": "unloaded",
    "scope": "live",
    "decks": [
-    "D1",
-    "TB1"
+    "D1"
    ],
    "owned": 1,
    "compiler": "unknown"
@@ -5466,9 +5397,7 @@
    "scope": "live",
    "decks": [
     "D1",
-    "D4",
-    "TB1",
-    "TB2"
+    "D4"
    ],
    "owned": 2
   },
@@ -5518,8 +5447,10 @@
     "S2-D3",
     "G0-D4",
     "G1-D2",
-    "CJ2",
-    "TB2"
+    "CJ2"
+   ],
+   "watchedFor": [
+    "D1"
    ],
    "owned": 1
   },
@@ -5566,8 +5497,7 @@
    "tier": "unloaded",
    "scope": "live",
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 1,
    "compiler": "unknown"
@@ -5609,8 +5539,7 @@
    "tier": "final",
    "scope": "live",
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 1
   },
@@ -5645,9 +5574,7 @@
    "scope": "live",
    "decks": [
     "D1",
-    "CJ1",
-    "TB1",
-    "TB2"
+    "CJ1"
    ],
    "owned": 1
   },
@@ -5754,9 +5681,7 @@
    "decks": [
     "D1",
     "S2-D3",
-    "CJ1",
-    "TB1",
-    "TB2"
+    "CJ1"
    ],
    "owned": 1
   },
@@ -5834,9 +5759,7 @@
    "tier": "unloaded",
    "scope": "live",
    "decks": [
-    "D1",
-    "TB1",
-    "TB2"
+    "D1"
    ],
    "owned": 1,
    "compiler": "unknown"
@@ -5913,10 +5836,7 @@
     "CJ2",
     "CJ4",
     "HG1",
-    "HG2",
-    "TB1",
-    "TB2",
-    "TB5"
+    "HG2"
    ],
    "owned": 91
   },
@@ -5933,9 +5853,7 @@
     "S2-D1",
     "G0-D2",
     "CJ4",
-    "HG2",
-    "TB1",
-    "TB2"
+    "HG2"
    ],
    "owned": 3
   },
@@ -5969,9 +5887,7 @@
     "D1",
     "S2-D1",
     "CJ1",
-    "HG1",
-    "TB1",
-    "TB2"
+    "HG1"
    ],
    "owned": 1
   },
@@ -5984,9 +5900,7 @@
     "S2-D1",
     "G1-D1",
     "CJ1",
-    "HG1",
-    "TB1",
-    "TB2"
+    "HG1"
    ],
    "owned": 1
   },
@@ -6096,9 +6010,7 @@
     "S2-D5",
     "G0-D3",
     "G1-D1",
-    "CJ1",
-    "TB1",
-    "TB2"
+    "CJ1"
    ],
    "owned": 1
   },
@@ -6112,9 +6024,7 @@
     "G0-D4",
     "G1-D2",
     "CJ1",
-    "CJ2",
-    "TB1",
-    "TB2"
+    "CJ2"
    ],
    "owned": 1
   },
@@ -6306,8 +6216,7 @@
    "decks": [
     "D7",
     "S1-D4",
-    "S2-D4",
-    "TB5"
+    "S2-D4"
    ],
    "owned": 1
   },
@@ -6473,8 +6382,7 @@
    "decks": [
     "D7",
     "G0-D2",
-    "CJ4",
-    "TB5"
+    "CJ4"
    ],
    "owned": 1
   },
@@ -6575,8 +6483,10 @@
    "tier": "final",
    "scope": "live",
    "decks": [
-    "D6",
-    "TB2"
+    "D6"
+   ],
+   "watchedFor": [
+    "D1"
    ],
    "owned": 1
   },
@@ -6595,8 +6505,7 @@
    "tier": "unloaded",
    "scope": "live",
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 1,
    "compiler": "unknown"
@@ -6773,8 +6682,7 @@
    "tier": "unloaded",
    "scope": "live",
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 0,
    "compiler": "unknown"
@@ -6877,10 +6785,17 @@
     "G1-D2",
     "CJ1",
     "CJ4",
-    "HG2",
-    "TB5"
+    "HG2"
    ],
    "owned": 1
+  },
+  {
+   "name": "Mangara, the Diplomat",
+   "tier": "unloaded",
+   "scope": "library",
+   "decks": [],
+   "owned": 0,
+   "compiler": "unknown"
   },
   {
    "name": "Maralen, Fae Ascendant",
@@ -6933,8 +6848,7 @@
    "tier": "final",
    "scope": "live",
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 1
   },
@@ -6943,8 +6857,7 @@
    "tier": "final",
    "scope": "live",
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 0
   },
@@ -7022,8 +6935,7 @@
     "G0-D1",
     "G1-D2",
     "CJ1",
-    "CJ4",
-    "TB5"
+    "CJ4"
    ],
    "owned": 1
   },
@@ -7081,10 +6993,7 @@
     "S1-D5",
     "S2-D1",
     "CJ1",
-    "HG2",
-    "TB1",
-    "TB2",
-    "TB5"
+    "HG2"
    ],
    "owned": 3
   },
@@ -7333,8 +7242,7 @@
     "D7",
     "S1-D5",
     "S2-D4",
-    "HG2",
-    "TB5"
+    "HG2"
    ],
    "owned": 1
   },
@@ -7402,9 +7310,7 @@
    "tier": "unloaded",
    "scope": "live",
    "decks": [
-    "D1",
-    "TB1",
-    "TB2"
+    "D1"
    ],
    "owned": 1,
    "compiler": "unknown"
@@ -7417,8 +7323,7 @@
     "D7",
     "S1-D4",
     "S2-D1",
-    "G0-D2",
-    "TB5"
+    "G0-D2"
    ],
    "owned": 1
   },
@@ -7504,8 +7409,7 @@
     "S1-D6",
     "S2-D5",
     "G0-D4",
-    "G1-D2",
-    "TB1"
+    "G1-D2"
    ],
    "owned": 1
   },
@@ -7521,9 +7425,7 @@
     "CJ2",
     "CJ4",
     "HG1",
-    "HG2",
-    "TB1",
-    "TB2"
+    "HG2"
    ],
    "owned": 1
   },
@@ -7569,9 +7471,7 @@
     "S1-D2",
     "S2-D3",
     "G0-D4",
-    "G1-D2",
-    "TB1",
-    "TB2"
+    "G1-D2"
    ],
    "owned": 1
   },
@@ -7606,10 +7506,7 @@
     "CJ1",
     "CJ4",
     "HG1",
-    "HG2",
-    "TB1",
-    "TB2",
-    "TB5"
+    "HG2"
    ],
    "owned": 3
   },
@@ -7670,8 +7567,7 @@
     "D7",
     "S1-D4",
     "G0-D2",
-    "HG2",
-    "TB5"
+    "HG2"
    ],
    "owned": 1
   },
@@ -7749,8 +7645,7 @@
    "scope": "live",
    "decks": [
     "D7",
-    "S2-D4",
-    "TB5"
+    "S2-D4"
    ],
    "owned": 1
   },
@@ -7759,9 +7654,7 @@
    "tier": "unloaded",
    "scope": "live",
    "decks": [
-    "D1",
-    "TB1",
-    "TB2"
+    "D1"
    ],
    "owned": 0,
    "compiler": "unknown"
@@ -7845,9 +7738,7 @@
     "D1",
     "S2-D3",
     "G1-D2",
-    "CJ1",
-    "TB1",
-    "TB2"
+    "CJ1"
    ],
    "owned": 1
   },
@@ -7946,8 +7837,7 @@
    "scope": "live",
    "decks": [
     "D7",
-    "S1-D5",
-    "TB5"
+    "S1-D5"
    ],
    "owned": 1
   },
@@ -8004,8 +7894,10 @@
     "G0-D3",
     "G1-D3",
     "CJ2",
-    "CJ5",
-    "TB2"
+    "CJ5"
+   ],
+   "watchedFor": [
+    "D1"
    ],
    "owned": 1
   },
@@ -8026,8 +7918,7 @@
    "tier": "unloaded",
    "scope": "live",
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 1,
    "compiler": "unknown"
@@ -8129,9 +8020,7 @@
     "CJ1",
     "CJ4",
     "CJ5",
-    "HG2",
-    "TB1",
-    "TB2"
+    "HG2"
    ],
    "owned": 2
   },
@@ -8223,8 +8112,10 @@
     "S1-D4",
     "S2-D6",
     "G0-D2",
-    "CJ4",
-    "TB2"
+    "CJ4"
+   ],
+   "watchedFor": [
+    "D1"
    ],
    "owned": 1
   },
@@ -8324,10 +8215,7 @@
     "CJ4",
     "CJ5",
     "HG1",
-    "HG2",
-    "TB1",
-    "TB2",
-    "TB5"
+    "HG2"
    ],
    "owned": 100
   },
@@ -8338,8 +8226,7 @@
    "decks": [
     "D1",
     "S2-D1",
-    "HG1",
-    "TB1"
+    "HG1"
    ],
    "owned": 3
   },
@@ -8369,8 +8256,10 @@
     "G0-D2",
     "G1-D4",
     "CJ1",
-    "CJ5",
-    "TB2"
+    "CJ5"
+   ],
+   "watchedFor": [
+    "D1"
    ],
    "owned": 1
   },
@@ -8435,8 +8324,10 @@
     "G0-D4",
     "G1-D3",
     "CJ2",
-    "HG1",
-    "TB2"
+    "HG1"
+   ],
+   "watchedFor": [
+    "D1"
    ],
    "owned": 1
   },
@@ -8530,9 +8421,7 @@
    "scope": "live",
    "decks": [
     "D1",
-    "S1-D5",
-    "TB1",
-    "TB2"
+    "S1-D5"
    ],
    "owned": 1
   },
@@ -8551,8 +8440,7 @@
     "D7",
     "S1-D4",
     "S2-D6",
-    "G1-D1",
-    "TB5"
+    "G1-D1"
    ],
    "owned": 2
   },
@@ -8573,9 +8461,7 @@
    "decks": [
     "D1",
     "S2-D1",
-    "HG1",
-    "TB1",
-    "TB2"
+    "HG1"
    ],
    "owned": 3
   },
@@ -8697,8 +8583,7 @@
    "tier": "unloaded",
    "scope": "live",
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 1,
    "compiler": "unknown"
@@ -8884,8 +8769,7 @@
    "decks": [
     "D7",
     "S2-D6",
-    "G0-D2",
-    "TB5"
+    "G0-D2"
    ],
    "owned": 1
   },
@@ -8930,8 +8814,7 @@
    "tier": "unloaded",
    "scope": "live",
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 1,
    "compiler": "unknown"
@@ -9014,9 +8897,7 @@
     "CJ4",
     "CJ5",
     "HG1",
-    "HG2",
-    "TB1",
-    "TB2"
+    "HG2"
    ],
    "owned": 1
   },
@@ -9107,8 +8988,7 @@
    "tier": "unloaded",
    "scope": "live",
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 1,
    "compiler": "unknown"
@@ -9175,8 +9055,7 @@
    "tier": "final",
    "scope": "live",
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 1
   },
@@ -9255,9 +9134,16 @@
    "scope": "live",
    "decks": [
     "D5",
-    "D7",
-    "TB5"
+    "D7"
    ],
+   "owned": 0,
+   "compiler": "unknown"
+  },
+  {
+   "name": "Revenge of Ravens",
+   "tier": "unloaded",
+   "scope": "library",
+   "decks": [],
    "owned": 0,
    "compiler": "unknown"
   },
@@ -9277,8 +9163,7 @@
    "decks": [
     "D1",
     "S1-D4",
-    "S2-D6",
-    "TB1"
+    "S2-D6"
    ],
    "owned": 1
   },
@@ -9586,8 +9471,7 @@
    "tier": "final",
    "scope": "live",
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 1
   },
@@ -9628,8 +9512,7 @@
    "scope": "live",
    "decks": [
     "D7",
-    "G0-D2",
-    "TB5"
+    "G0-D2"
    ],
    "owned": 1
   },
@@ -9652,9 +9535,7 @@
     "G1-D3",
     "CJ2",
     "CJ4",
-    "HG1",
-    "TB1",
-    "TB2"
+    "HG1"
    ],
    "owned": 2
   },
@@ -9668,8 +9549,10 @@
     "S2-D3",
     "G0-D4",
     "G1-D3",
-    "CJ2",
-    "TB2"
+    "CJ2"
+   ],
+   "watchedFor": [
+    "D1"
    ],
    "owned": 1
   },
@@ -9719,8 +9602,10 @@
     "G1-D2",
     "CJ1",
     "CJ2",
-    "CJ5",
-    "TB2"
+    "CJ5"
+   ],
+   "watchedFor": [
+    "D1"
    ],
    "owned": 1
   },
@@ -9884,9 +9769,7 @@
     "S2-D3",
     "G0-D3",
     "CJ1",
-    "CJ5",
-    "TB1",
-    "TB2"
+    "CJ5"
    ],
    "owned": 1
   },
@@ -9931,8 +9814,10 @@
     "S1-D6",
     "S2-D3",
     "G0-D1",
-    "G1-D1",
-    "TB2"
+    "G1-D1"
+   ],
+   "watchedFor": [
+    "D1"
    ],
    "owned": 1
   },
@@ -10006,9 +9891,10 @@
    "decks": [
     "D7",
     "S1-D4",
-    "CJ4",
-    "TB2",
-    "TB5"
+    "CJ4"
+   ],
+   "watchedFor": [
+    "D1"
    ],
    "owned": 1
   },
@@ -10094,8 +9980,7 @@
    "tier": "unloaded",
    "scope": "live",
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 0,
    "compiler": "unknown"
@@ -10236,8 +10121,7 @@
    "tier": "final",
    "scope": "live",
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 2
   },
@@ -10366,10 +10250,7 @@
     "CJ4",
     "CJ5",
     "HG1",
-    "HG2",
-    "TB1",
-    "TB2",
-    "TB5"
+    "HG2"
    ],
    "owned": 4
   },
@@ -10477,8 +10358,7 @@
    "decks": [
     "D7",
     "G0-D1",
-    "CJ4",
-    "TB5"
+    "CJ4"
    ],
    "owned": 1
   },
@@ -10844,8 +10724,7 @@
    "decks": [
     "D7",
     "CJ1",
-    "HG1",
-    "TB5"
+    "HG1"
    ],
    "owned": 1
   },
@@ -10911,8 +10790,7 @@
     "G1-D4",
     "CJ1",
     "CJ5",
-    "HG2",
-    "TB1"
+    "HG2"
    ],
    "owned": 2
   },
@@ -10967,9 +10845,7 @@
    "decks": [
     "D1",
     "S1-D4",
-    "CJ4",
-    "TB1",
-    "TB2"
+    "CJ4"
    ],
    "owned": 1
   },
@@ -10986,8 +10862,10 @@
     "G0-D4",
     "G1-D3",
     "CJ2",
-    "CJ5",
-    "TB2"
+    "CJ5"
+   ],
+   "watchedFor": [
+    "D1"
    ],
    "owned": 2
   },
@@ -11010,8 +10888,7 @@
    "tier": "final",
    "scope": "live",
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 1
   },
@@ -11061,10 +10938,7 @@
     "S2-D6",
     "G0-D2",
     "CJ1",
-    "HG2",
-    "TB1",
-    "TB2",
-    "TB5"
+    "HG2"
    ],
    "owned": 100
   },
@@ -11130,10 +11004,7 @@
     "CJ4",
     "CJ5",
     "HG1",
-    "HG2",
-    "TB1",
-    "TB2",
-    "TB5"
+    "HG2"
    ],
    "owned": 3
   },
@@ -11214,9 +11085,7 @@
    "scope": "live",
    "decks": [
     "D1",
-    "G0-D4",
-    "TB1",
-    "TB2"
+    "G0-D4"
    ],
    "owned": 1
   },
@@ -11228,9 +11097,7 @@
     "D1",
     "S1-D4",
     "CJ1",
-    "CJ4",
-    "TB1",
-    "TB2"
+    "CJ4"
    ],
    "owned": 1
   },
@@ -11240,8 +11107,7 @@
    "scope": "live",
    "decks": [
     "D5",
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 0
   },
@@ -11267,9 +11133,7 @@
     "G1-D3",
     "CJ2",
     "CJ4",
-    "HG1",
-    "TB1",
-    "TB2"
+    "HG1"
    ],
    "owned": 2
   },
@@ -11354,9 +11218,7 @@
    "tier": "unloaded",
    "scope": "live",
    "decks": [
-    "D1",
-    "TB1",
-    "TB2"
+    "D1"
    ],
    "owned": 1,
    "compiler": "unknown"
@@ -11374,8 +11236,7 @@
    "tier": "unloaded",
    "scope": "live",
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 1,
    "compiler": "unknown"
@@ -11394,9 +11255,7 @@
    "decks": [
     "D1",
     "S2-D1",
-    "CJ1",
-    "TB1",
-    "TB2"
+    "CJ1"
    ],
    "owned": 1
   },
@@ -11408,8 +11267,7 @@
     "D7",
     "S1-D1",
     "G1-D3",
-    "HG1",
-    "TB5"
+    "HG1"
    ],
    "owned": 1
   },
@@ -11519,8 +11377,7 @@
     "G0-D1",
     "G0-D4",
     "G1-D2",
-    "G1-D3",
-    "TB5"
+    "G1-D3"
    ],
    "owned": 3
   },
@@ -11616,10 +11473,7 @@
     "CJ4",
     "CJ5",
     "HG1",
-    "HG2",
-    "TB1",
-    "TB2",
-    "TB5"
+    "HG2"
    ],
    "owned": 4
   },
@@ -11639,8 +11493,7 @@
    "tier": "unloaded",
    "scope": "live",
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 1,
    "compiler": "unknown"
@@ -11653,8 +11506,7 @@
     "D1",
     "S2-D3",
     "G0-D4",
-    "CJ1",
-    "TB1"
+    "CJ1"
    ],
    "owned": 1
   },
@@ -11685,8 +11537,10 @@
     "D2",
     "S1-D1",
     "S2-D1",
-    "CJ1",
-    "TB2"
+    "CJ1"
+   ],
+   "watchedFor": [
+    "D1"
    ],
    "owned": 1
   },
@@ -11726,9 +11580,7 @@
    "tier": "unloaded",
    "scope": "live",
    "decks": [
-    "D1",
-    "TB1",
-    "TB2"
+    "D1"
    ],
    "owned": 1,
    "compiler": "unknown"
@@ -11749,9 +11601,7 @@
    "decks": [
     "D1",
     "S2-D1",
-    "HG1",
-    "TB1",
-    "TB2"
+    "HG1"
    ],
    "owned": 3
   },
@@ -11764,10 +11614,7 @@
     "D7",
     "S1-D4",
     "S2-D1",
-    "CJ1",
-    "TB1",
-    "TB2",
-    "TB5"
+    "CJ1"
    ],
    "owned": 3
   },
@@ -11776,8 +11623,7 @@
    "tier": "final",
    "scope": "live",
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 1
   },
@@ -12056,8 +11902,7 @@
     "D7",
     "S1-D5",
     "CJ5",
-    "HG1",
-    "TB5"
+    "HG1"
    ],
    "owned": 1
   },
@@ -12289,8 +12134,7 @@
     "G1-D3",
     "CJ2",
     "CJ4",
-    "HG1",
-    "TB1"
+    "HG1"
    ],
    "owned": 1
   },
@@ -12378,8 +12222,7 @@
    "scope": "live",
    "decks": [
     "D7",
-    "S2-D6",
-    "TB5"
+    "S2-D6"
    ],
    "owned": 1
   },
@@ -12410,8 +12253,7 @@
    "decks": [
     "D1",
     "S1-D4",
-    "CJ4",
-    "TB1"
+    "CJ4"
    ],
    "owned": 1
   },
@@ -12517,8 +12359,7 @@
     "G0-D3",
     "G0-D4",
     "G1-D3",
-    "CJ5",
-    "TB5"
+    "CJ5"
    ],
    "owned": 3
   },
@@ -12574,9 +12415,7 @@
    "tier": "unloaded",
    "scope": "live",
    "decks": [
-    "D1",
-    "TB1",
-    "TB2"
+    "D1"
    ],
    "owned": 1,
    "compiler": "unknown"
@@ -12596,9 +12435,7 @@
     "D1",
     "S2-D2",
     "S2-D4",
-    "G1-D4",
-    "TB1",
-    "TB2"
+    "G1-D4"
    ],
    "owned": 2
   },
@@ -12657,9 +12494,7 @@
     "S2-D3",
     "G1-D3",
     "CJ1",
-    "CJ2",
-    "TB1",
-    "TB2"
+    "CJ2"
    ],
    "owned": 3
   },
@@ -12716,8 +12551,10 @@
     "D4",
     "S1-D5",
     "S2-D1",
-    "G0-D2",
-    "TB2"
+    "G0-D2"
+   ],
+   "watchedFor": [
+    "D1"
    ],
    "owned": 1
   },
@@ -12789,8 +12626,7 @@
    "tier": "final",
    "scope": "live",
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 1
   },
@@ -12806,8 +12642,7 @@
    "tier": "final",
    "scope": "live",
    "decks": [
-    "D7",
-    "TB5"
+    "D7"
    ],
    "owned": 1
   },
@@ -12842,8 +12677,7 @@
    "tier": "unloaded",
    "scope": "live",
    "decks": [
-    "D1",
-    "TB1"
+    "D1"
    ],
    "owned": 0,
    "compiler": "unknown"
@@ -12871,8 +12705,7 @@
    "tier": "final",
    "scope": "live",
    "decks": [
-    "D1",
-    "TB1"
+    "D1"
    ],
    "owned": 2
   },
@@ -13053,8 +12886,7 @@
    "scope": "live",
    "decks": [
     "D1",
-    "S2-D1",
-    "TB1"
+    "S2-D1"
    ],
    "owned": 2
   },
@@ -13065,8 +12897,10 @@
    "decks": [
     "S2-D1",
     "CJ1",
-    "HG1",
-    "TB2"
+    "HG1"
+   ],
+   "watchedFor": [
+    "D1"
    ],
    "owned": 2
   },
@@ -13075,9 +12909,7 @@
    "tier": "unloaded",
    "scope": "live",
    "decks": [
-    "D1",
-    "TB1",
-    "TB2"
+    "D1"
    ],
    "owned": 1,
    "compiler": "unknown"
@@ -13090,9 +12922,7 @@
     "D1",
     "S2-D1",
     "CJ1",
-    "HG1",
-    "TB1",
-    "TB2"
+    "HG1"
    ],
    "owned": 2
   },
@@ -13102,9 +12932,7 @@
    "scope": "live",
    "decks": [
     "D1",
-    "S2-D1",
-    "TB1",
-    "TB2"
+    "S2-D1"
    ],
    "owned": 1
   },
@@ -13117,9 +12945,7 @@
     "S2-D1",
     "G0-D4",
     "G1-D2",
-    "CJ1",
-    "TB1",
-    "TB2"
+    "CJ1"
    ],
    "owned": 2
   },
@@ -13332,9 +13158,7 @@
     "D1",
     "G0-D4",
     "G1-D3",
-    "CJ4",
-    "TB1",
-    "TB2"
+    "CJ4"
    ],
    "owned": 1
   },
@@ -13507,8 +13331,10 @@
     "S2-D3",
     "G0-D4",
     "G1-D2",
-    "CJ2",
-    "TB2"
+    "CJ2"
+   ],
+   "watchedFor": [
+    "D1"
    ],
    "owned": 1
   },

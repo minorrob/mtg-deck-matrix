@@ -7,7 +7,8 @@ session after them (`README.md` here has the numbers and the table of sessions).
 
 `docs/engine/library-load-2026-10-21/lane-<lane>.json` lists your cards most-wanted first. Each card has:
 - **scope**: `live` cards are in the seven decks Rob plays from boxes (D1–D7) and come first; `deck` cards are in a
-  design deck; `library` cards are owned only.
+  design deck; `watched` cards are watched for a deck (a folded design's card the deck lacks; `watchedFor` names the deck);
+  `library` cards are owned, watched or on the buy list, and in no deck.
 - **liveDecks**, **decks** and **owned**.
 - **rank**: its place among the most-played Commander cards (`data/engine/top-cards.json`), or null.
 - **type** and **layout**.

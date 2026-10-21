@@ -84,7 +84,9 @@
     for(const [id,rows] of Object.entries(doc.owned.inDeck)){ensure(ids.has(id),`owned.inDeck names unknown deck ${id}.`);ensure(Array.isArray(rows),`owned.inDeck.${id} must be an array.`);for(const row of rows)pair(row,'owned.inDeck.'+id);}
     /* A bench row is [name, quantity, deck id or null, box]: the box ("Top Box", "Sell" ...) is optional. */
     ensure(Array.isArray(doc.owned.bench),'owned.bench must be an array.');for(const row of doc.owned.bench){forDeck(row,'owned.bench',ids);ensure(row[3]===undefined||typeof row[3]==='string',`owned.bench: ${row[0]} has a box that is not text.`);}
-    ensure(doc.watching===undefined||Array.isArray(doc.watching),'watching must be an array.');for(const row of doc.watching||[])pair(row,'watching');
+    /* A watched row is [name, quantity, deck id or null, note]: a deck id files it in that deck's group, so the deck page
+       lists it among its working cards (a folded design's cards, 2026-10-21). */
+    ensure(doc.watching===undefined||Array.isArray(doc.watching),'watching must be an array.');for(const row of doc.watching||[]){forDeck(row,'watching',ids);ensure(row[3]===undefined||typeof row[3]==='string',`watching: ${row[0]} has a note that is not text.`);}
     ensure(Array.isArray(doc.ordered),'ordered must be an array.');for(const row of doc.ordered)forDeck(row,'ordered',ids);
     ensure(Array.isArray(doc.buy),'buy must be an array.');for(const row of doc.buy){pair(row,'buy');ensure(row[2]===undefined||row[2]===null||(Number.isFinite(row[2])&&row[2]>=0),`buy: ${row[0]} has an invalid price.`);}
     /* `metadata` is optional: the workbook's own reading of each card (purpose, mechanics,
@@ -209,7 +211,7 @@
     }
     /* The Sell box's copies are offered for sale, as Sell / Trade does (offer available, kind sell). */
     for(const [name,qty,forId,box] of doc.owned.bench){const l=lot(idOf(name),qty,'owned',{kind:'bench',box:box||''},'',forId?groupOf[forId]:'');if(box==='Sell'){l.offer='available';l.offerKind='sell';}}
-    for(const [name,qty] of doc.watching||[])lot(idOf(name),qty,'watching',null,'');
+    for(const [name,qty,forId,note] of doc.watching||[])lot(idOf(name),qty,'watching',null,note||'',forId?groupOf[forId]:'');
     for(const [name,qty,forId] of doc.ordered)lot(idOf(name),qty,'ordered',null,'',forId?groupOf[forId]:'');
     /* PRINTS (W1). Each owned copy wears the print it is. A card's copies are split by the prints the file records, the
        dearest print first into the deck boxes and the rest to the bench (Rob, 2026-09-30: "always assume the most
