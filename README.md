@@ -516,9 +516,21 @@ event with the journal's id and the decision whose answer made it; a draw the dr
 their hand, a move between two hidden zones no event, a face-down card unnamed; two views in a row sharing none; a reconnect
 after an event it saw getting exactly what came since, or told to start over once that is older than the room keeps; and
 reopened and replayed, the same events.
+`room-ending` holds how a game ended, as data (`result.ending`, Linear ROB-166): won, draw, eliminated, conceded, timed-out
+and ended, each seat's outcome and the engine's loss reason; one person knocked out by three AI seats eliminated, by damage
+or an empty library, rather than "every person had left"; conceding and running out of time told apart, at the room and
+the table; the last of two people out read from the order the seats went out in, kept with the room; a host's End game;
+the same in every seat's view, a woken room, the replay and the finished game's record; and `winner`, `reason` and
+`endedBy` as they were.
 `table-basics` holds the table's basic lands as basic lands (Rob, 2026-10-11, Rampant Growth finding nothing): the table
 plays the engine's own definitions, the room's own basics are Basic and of their land type, and every card's scenarios
 pass played with the table's own lookup.
+`table-candidates` holds the card compiler's candidates at playtest tables, labeled (card load step 5, Rob's decision 2):
+the Worker's module is the candidates file as it stands, with the backstop's provisional cards; a playtest table seats
+them and labels each one its seat can name, through every zone, reopened and replayed; any other table refuses them by
+name.
+`card-waves` holds the waves that review the candidates (card load step 6): ranked demand first, each played and its
+outcome drafted as a scenario that fails a card playing differently, a review sheet, and promotion into the directory.
 `coach` holds the Coach (X13): its brief, the person's own hand, the board as everyone sees it and their deck as a sorted
 list, never another hand or a library's order; the table building it for the AI door alone; POST /api/ai/coach behind the
 door's gates and its own switch, asking Haiku 5.5 in one to three sentences, aiming for one; an answer naming anything not
@@ -931,7 +943,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 533 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 547 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -943,6 +955,9 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `card-images` — `tests/card-images.mjs`
 - `card-link` — `tests/card-link.mjs`
 - `card-resolve` — `tests/card-resolve.mjs`
+- `card-demand` — `tests/card-demand.mjs`
+- `card-compiler` — `tests/card-compiler.mjs`
+- `card-waves` — `tests/card-waves.mjs`
 - `cloud-sync` — `tests/cloud-sync.mjs`
 - `commander-legality` — `tests/commander-legality.mjs`
 - `cloud-worker` — `tests/cloud-worker.mjs`
@@ -1105,6 +1120,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-house-pilot` — `tests/engine-house-pilot.mjs`
 - `agent-seat-table` — `tests/agent-seat-table.mjs` (an AI on Claude at the table: seated only through the AI door, asked on the table's alarm, held to its game's cap)
 - `engine-scored-pilot` — `tests/engine-scored-pilot.mjs` (the house pilot's L1: draw odds, exact combat, its choices scored, Easy and Normal)
+- `engine-pilot-picks` — `tests/engine-pilot-picks.mjs` (the AI seats take what an "up to" or a search is for: the lands of the colors they lack, proliferate's good counters, their own side; old matches answered as before)
 - `engine-ingest` — `tests/engine-ingest.mjs`
 - `engine-learned` — `tests/engine-learned.mjs`
 - `engine-mana-abilities` — `tests/engine-mana-abilities.mjs`
@@ -1136,6 +1152,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `service-worker` — `tests/service-worker.mjs`
 - `shop-export` — `tests/shop-export.mjs`
 - `sim-engine` — `tests/sim-engine.mjs`
+- `sentence-library` — `tests/sentence-library.mjs`
 - `status-and-groupings` — `tests/status-and-groupings.mjs`
 - `swap-record` — `tests/swap-record.mjs`
 - `slot-model` — `tests/slot-model.mjs`
@@ -1171,6 +1188,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `room-g1-terms` — `tests/room-g1-terms.mjs`
 - `game-table` — `tests/game-table.mjs`
 - `game-leave` — `tests/game-leave.mjs`
+- `table-rematch` — `tests/table-rematch.mjs` (Play again once a table's game is over: the next game with the same seats, decks and rules as a new match, a No releasing the seat, silence a No at two minutes on the alarm, and the table's games over when the host goes or too few stay)
 - `table-lobby` — `tests/table-lobby.mjs`
 - `table-board` — `tests/table-board.mjs`
 - `board-callouts` — `tests/board-callouts.mjs` (the board's reading of a new view against the last, for the callouts over the table: your turn, attackers against you, hits and life, a seat out, countered and tokens, destroyed and exiled, a response on the stack, the game's end; a hidden card never named)
@@ -1183,11 +1201,19 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `room-yield-turn` — `tests/room-yield-turn.mjs`
 - `room-draw-card` — `tests/room-draw-card.mjs`
 - `room-events` — `tests/room-events.mjs`
+- `room-ending` — `tests/room-ending.mjs`
+- `room-combat-words` — `tests/room-combat-words.mjs`
 - `room-block-check` — `tests/room-block-check.mjs`
 - `engine-pass-stack` — `tests/engine-pass-stack.mjs`
 - `table-basics` — `tests/table-basics.mjs`
+- `table-candidates` — `tests/table-candidates.mjs`
 - `coach` — `tests/coach.mjs`
 - `board-choices` — `tests/board-choices.mjs`
+- `board-yield` — `tests/board-yield.mjs`
+- `board-combat-display` — `tests/board-combat-display.mjs`
+- `board-direct-blocking` — `tests/board-direct-blocking.mjs`
+- `board-commander-hand` — `tests/board-commander-hand.mjs`
+- `board-ending-rematch` — `tests/board-ending-rematch.mjs`
 - `crankmagic-audio` — `tests/crankmagic-audio.mjs`
 - `advice-contract` — `tests/advice-contract.mjs` (preparation-only AI requests, evidence references and stale-result rejection)
 - `advise-brief` — `tests/advise-brief.mjs`

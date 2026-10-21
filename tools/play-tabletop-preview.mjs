@@ -9,15 +9,23 @@ const require = createRequire(import.meta.url);
 // Playwright is a development-only dependency already used by the browser suites.
 const {wsServer} = require(path.join(path.dirname(require.resolve("playwright-core/package.json")), "lib/utilsBundle.js"));
 const sample = JSON.parse(readFileSync(path.join(ROOT, "docs/reference/replit-sample-views.json"), "utf8"));
-let index = 13, revision = 10000;
+let index = Number(process.env.PREVIEW_FRAME || 13), revision = 10000;
 const sockets = new Set();
 const current = () => {
   const v=structuredClone(sample.views[index]);v.revision=revision;
   // Explicit synthetic crowded-hand fixture for the browser suite; never used by the default preview.
   if(process.env.PREVIEW_HAND_SIZE){const hand=v.state.players[v.seat].zones.Hand,target=Number(process.env.PREVIEW_HAND_SIZE);while(hand.cards.length<target)hand.cards.push({...hand.cards[0],cardId:90000+hand.cards.length});hand.count=hand.cards.length;}
+  // Explicit synthetic long-decision fixture for the browser suite: a search across most of a library, as Diabolic Tutor
+  // makes in Rob's D5 (Teysa Karlov), its options that deck's own card names.
+  if(process.env.PREVIEW_OPTIONS&&v.decision?.options?.length){
+    const names=JSON.parse(readFileSync(path.join(ROOT,"tests/fixtures/shared-staging-decks.json"),"utf8")).decks.find(d=>d.id==="shared:D5").cards;
+    v.decision.options=Array.from({length:Number(process.env.PREVIEW_OPTIONS)},(_,i)=>({index:i,label:names[i%names.length],cardId:91000+i}));
+  }
   return v;
 };
-const table = () => ({tableId: "tablepreview01", phase: "playing", matchId: current().matchId, away: [], seats: current().state.players.map((p) => ({seatId: p.playerId, name: p.name, kind: "human", mat: ["falls-tree", "cloud-wolf", "sand-lion", "ember-serpent"][p.playerId], you: p.playerId === current().seat}))});
+// Rob's art mats by seat; PREVIEW_MATS (comma-separated, by seat) seats others, such as the drawn ones, for the browser suite.
+const mats = (process.env.PREVIEW_MATS || "falls-tree,cloud-wolf,sand-lion,ember-serpent").split(",");
+const table = () => ({tableId: "tablepreview01", phase: "playing", matchId: current().matchId, away: [], seats: current().state.players.map((p) => ({seatId: p.playerId, name: p.name, kind: "human", mat: mats[p.playerId], you: p.playerId === current().seat}))});
 const boot = `localStorage.setItem('cm-board-view','full');localStorage.setItem('crankmagic-audio-muted','true');
 (globalThis.CrankFeatures ||= []).push(C => {globalThis.__preview = C;const bar=document.createElement('div');bar.className='cm-preview-controls';bar.style.cssText='position:fixed;bottom:4px;right:8px;z-index:100;background:#102425ed;color:#e1f4e6;padding:5px 10px;border:1px solid #72a087;border-radius:8px;font:11px system-ui;display:flex;gap:10px;align-items:center';bar.innerHTML='<span>${process.env.PREVIEW_HAND_SIZE ? "Synthetic crowded hand" : "Recorded game"} · isolated preview</span><button data-record-step="-1">Previous state</button><button data-record-step="1">Next state</button>';document.body.append(bar);bar.addEventListener('click',e=>{const b=e.target.closest('[data-record-step]');if(b)fetch('/preview/frame',{method:'POST',body:b.dataset.recordStep});});});`;
 const mime = {".html":"text/html", ".js":"text/javascript", ".css":"text/css", ".json":"application/json", ".webp":"image/webp", ".png":"image/png", ".svg":"image/svg+xml", ".woff2":"font/woff2", ".mp3":"audio/mpeg"};

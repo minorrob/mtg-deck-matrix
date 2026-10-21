@@ -99,6 +99,147 @@ Each step is its own PR with its suites, breaks and a staging release, as the wa
 Waves of hand-written cards (wave 4d onward, `docs/handoff-2026-10-12.md`) wait while steps 1 to 4 are built, unless
 Rob says otherwise: those steps are what makes later waves cheaper.
 
+## Step 2, measured (2026-10-19; Linear ROB-87)
+
+- **The library** (`game/engine/cards/sentences.mjs`) learns from the pairs the directory already holds, since every
+  ability carries the oracle sentence it implements. It has 5,650 templates at two levels: numbers as slots, then
+  colors, types, keywords and basic land types as well. They come from the 2,407 defined cards that have only
+  abilities. The 63 with an Adventure, a back face, a prepare spell or a layout are left out.
+- **The calibration** (`node game/tools/sentence-library.mjs`, about 4 seconds). Each defined card is held out in turn:
+  - 520 of 2,470 can be translated from the other cards' templates alone;
+  - **519 pass every one of their own scenarios: 99.8%, with a 95% lower bound of 98.9%.**
+
+  The report is `docs/engine/sentence-calibration-2026-10-19.md`. Its JSON lists every template with its count and
+  rate.
+- **The minimum count, as measured, is 1.** Every band, from templates seen on one other card up, passed at least 99%,
+  and all of them pooled have a lower bound of 99.2%. The per-template rule this plan proposed (a template seen on five
+  cards can't show 99%) is answered by pooling templates in bands instead.
+- **Not yet out of sample.** The rules were refined against these same cards:
+  - the first version passed 416 of 429 (97.0%);
+  - four general fixes brought it to 519 of 520: slots typed by kind, one sentence as several abilities, a target's
+    index never a slot, and the better-evidenced cover.
+
+  The first wave's cards, each translated before it is written, are the first independent measure.
+- **For step 3.** A card becomes a candidate when every sentence is covered, every template meets the minimum count,
+  and it passes its own generated scenarios and a smoke game. Today 21% of defined cards are fully covered with
+  themselves held out. The one failure, Goblin Piledriver, shows why the scenarios stay in the gate: another card
+  leaves the multiplier `times: 1` unwritten, so the translation drops Piledriver's `times: 2`.
+
+## Step 3, built (2026-10-19; Linear ROB-88)
+
+- **The compiler** (`game/tools/card-compiler.mjs`, about 20 seconds) runs the library on every Commander card the
+  directory doesn't define: 29,551 cards. It checks each card, cheapest check first:
+  1. **Another layout** (a second face, an Adventure): set aside as structure.
+  2. **An unknown sentence:** the card waits for a wave.
+  3. **A distrusted template:** vetoed. That is a template from a band under the minimum count, or one whose
+     calibration recorded a failure.
+  4. **A rule the engine hasn't built:** blocked.
+  5. **Not its oracle text, or a smoke game that breaks:** refused.
+  6. **Otherwise, a candidate.**
+- **Measured.** **2,429 candidates**, almost as many as the 2,470 hand-defined cards. The rest:
+  - 18 vetoed, all by "protection from COLOR", which Goblin Piledriver's calibration failure counts against;
+  - 3 blocked (Backup's granted abilities; a permanent whose spell carries only an additional cost);
+  - 0 refused;
+  - 26,010 with an unknown sentence, 12,320 of them a single sentence short;
+  - 1,091 in another layout.
+
+  The report is `docs/engine/card-compiler-2026-10-19.md`.
+- **The store** is `data/engine/candidates.json` (CrankCardCandidates@1). For each candidate it holds:
+  - its abilities;
+  - the templates they came from;
+  - its weakest template's calibrated band;
+  - its smoke game and its oracle hash.
+
+  The printed facts stay in the oracle data, so a candidate is put back together from both (compile.mjs check 1).
+  **This departs from the plan above, which put candidates in D1 `card_candidates`.** Batch candidates are a
+  deterministic output of committed data, so they are reviewable in git and can be bundled for the table. Migration 0008
+  stays reserved for step 5, where a card is compiled when a deck is saved and only D1 can hold it.
+- **What it does not do yet.** No table seats a candidate. Rob's decision 2 puts them at playtest tables, labeled, and
+  that is the next PR. A wave still reviews each candidate before it joins the directory (step 6).
+- **The cheapest next cards** are the 12,320 that are one sentence short. The report ranks the missing sentences by how
+  many cards each would complete. Its top line, "Draw a card." (40 cards), is a composition gap, not a missing sentence:
+  those cards are a known spell plus a draw. Merging two spell templates into one spell is the compiler's next increment,
+  measured by the same calibration.
+
+## Step 5, first part: candidates at playtest tables (2026-10-19; Linear ROB-91)
+
+- **What a playtest table plays.** The card directory first, then the card compiler's candidates where the directory has
+  no definition. Every other table plays the directory alone and refuses a candidate by name, as before (Rob's decision 2).
+- **How they reach the Worker.** `game/engine/cards/candidates.mjs`, generated from `data/engine/candidates.json` by
+  `node game/tools/engine-candidates.mjs --write`:
+  - 2,429 definitions when built, 1.36 MB (205 KB gzipped); 2,668 since spell composition and the backstop's
+    cards joined (below), 1.51 MB;
+  - each kept as JSON text and parsed only when a playtest table asks for the card, so the Worker doesn't parse them
+    all every time it starts;
+  - `tests/table-candidates.mjs` holds it to the candidates file.
+- **New matches only.** A playtest table's pod says `candidates` (game/room/table.mjs, `tick`). The match keeps the key,
+  so it reopens and replays with the same cards, and an AI seat still reads a candidate's facts after a reopen. A match
+  launched before has no key and never seats one.
+- **The label.** Every object made from a candidate says `candidate: true`, in every zone it moves to. A seat's view says
+  so only where the seat can name the card (projection.mjs): face down, or in a hidden hand, it is labeled for nobody.
+- **"Report a wrong card."** `POST /api/tables/:id/report {cardId, note}` at a playtest table only:
+  - the card must be a candidate the seat can see in the game being played, or in the table's last game;
+  - its name is the one the engine shows, never one the client sends;
+  - a table keeps up to 200 reports and hands them over in that game's record (`cardReports`), which the triage loop
+    reads.
+- **For Play.** The board's label and its report link are Play's files (Requests, Engine → Play 4, in `docs/ACTIVE.md`).
+  Until Play ships them, a candidate plays unlabeled on the board, though the view carries the field.
+- **Not yet.** A deck's readiness before any table (`POST /api/tables/known`, asked with no table) still counts a
+  candidate as unknown, even on staging. That keeps it on the demand list, which step 6 reviews candidates by, but
+  the hub says "to learn" for a card a staging table would seat. Compiling a card when a deck is saved (decision 3)
+  is the second part of step 5.
+
+## The loader, finished (2026-10-19; Linear ROB-88, ROB-90, ROB-91, ROB-92)
+
+Rob, on this body of work: *"refining the way we load cards to retain 100% accuracy while decreasing token expenses,
+and building the loader capability ... should be done once finished with your current series of tasks."* What a card
+now goes through, cheapest first:
+
+| Path | Tokens | What makes it right |
+| --- | --- | --- |
+| The card compiler (step 3) | none | Every template calibrated on held-out defined cards; the card compiles, is its oracle text, and plays a smoke game |
+| The backstop, gap-only (step 4) | only the sentences the library lacks | The library's trusted sentences arrive written; the writer writes the rest; the card is checked whole (schema, fidelity, a sentence never written twice, Haiku's read-back, the smoke game) |
+| A wave (step 6) | none, or a reviewer's reading | A reviewer approves each ability against its sentence and what the game showed; the drafted scenario then holds the card for good |
+
+- **Spell composition (step 3's increment).** A spell of several sentences, one effect each, is learned sentence by
+  sentence. The split is kept only where the parts put back together are the card's own spell, and parts are composed
+  again only when the spell sentences sit next to each other and are plain. 78 of the directory's spells split.
+  - **Calibration:** 546 cards translated with themselves held out (was 520); 545 pass, the same one failure
+    (Goblin Piledriver).
+  - **Candidates:** 2,643 (was 2,429).
+  - **One sentence short:** 12,544 cards.
+  - **Top missing sentences:** Swampwalk (23 cards), "{R}: This creature gets +1/+0 until end of turn." (22),
+    "This creature attacks each combat if able." (21), and others no defined card writes yet.
+- **The backstop, built (step 4; `game/tools/engine-compile.mjs`).**
+  - A candidate is never asked of the writer.
+  - Any other card is handed over with what the library already wrote of it (`card-compiler.mjs`, `assistOf`). The
+    writer is asked only for the rest; a spell is always written whole.
+  - Across the undefined cards that would be about 1.86 sentences a card, and 11,396 of them would need one sentence.
+  - `--held-out N` is the plan's sample: N defined cards held out, finished by the writer, and played through their own
+    scenarios, for the pass rate and the cost per card.
+  - It needs Rob's key and spends nothing without `--yes`. **It has not been run**, so the cost per card is unmeasured
+    until Rob runs the sample (ROB-90).
+- **Step 5, second part: the demand list is the queue.**
+  - Step 3 compiles every card in the oracle data, so compiling at save time would add nothing. What saving can add is
+    demand.
+  - `POST /api/tables/known {decks}` already records every card a deck lacks (step 1). Workshop's save calling it is
+    Requests, Engine → Workshop 5 in `docs/ACTIVE.md`.
+  - `engine-compile.mjs --demand <file>` (the file `card-demand.mjs` writes from staging) loads the wanted cards first.
+  - The backstop's provisional cards (`data/engine/scripts`) now seat at playtest tables beside the compiler's, labeled:
+    25 of them, which no table seated before.
+  - **This departs from the plan above**, which put the backstop in the Worker behind a switch on the AI door's daily
+    cap, and stored its cards in D1 (`card_candidates`, migration 0008). Run as a batch, Rob's `--max-cost` is the cap,
+    nothing in the Worker spends, the writer's instructions cache across a run, and every card is reviewable in git.
+  - The cost is time: a wanted card loads at the next run, not within seconds of the save. Migration 0008 is not needed
+    for this and stays reserved until Rob decides (ROB-91).
+- **Waves, built (step 6; `game/tools/card-waves.mjs`).**
+  - `--review` ranks candidates demand first and plays each one. It writes a review sheet: the oracle text beside every
+    ability, the templates and the cards that taught them, and what the game showed (each seat's life, every zone, the
+    card's keywords).
+  - What the game showed is the drafted scenario, which fails a card that plays differently (`tests/card-waves.mjs`).
+  - `--promote` writes the approved cards into the directory with their scenarios, `source: "hand"`; their sentences
+    then teach the library.
+
 ## Running a lane (Rob's decision 4)
 
 A session's cost per step grows with everything it has read, because every step re-reads the whole conversation. The

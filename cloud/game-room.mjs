@@ -26,6 +26,7 @@
 import {startRoom, openRoom, RoomError, basicCards} from "../game/room/room.mjs";
 import {tableOn, TableError, llmWaiting} from "../game/room/table.mjs";
 import {tableDefinition} from "../game/engine/cards/definitions.mjs";
+import {candidateDefinition} from "../game/engine/cards/candidates.mjs";
 import {agentBrief, pickOf} from "../game/room/agent-brief.mjs";
 import {createAi, everyone, settings, pilot, pilotWorst, Closed} from "./ai.mjs";
 
@@ -37,6 +38,10 @@ import {createAi, everyone, settings, pilot, pilotWorst, Closed} from "./ai.mjs"
    bare ones, with no Basic and no land type, so "search your library for a basic land card" found nothing at any table
    (Rob, 2026-10-11, Rampant Growth; tests/table-basics.mjs). */
 export const tableCards = (name) => tableDefinition(name) ?? basicCards(name);
+/* And what a playtest table plays besides (Rob's decision 2; card load step 5): the card compiler's candidates
+   (game/engine/cards/candidates.mjs, generated from data/engine/candidates.json), each labeled on the board, where the
+   directory has no definition. No other table seats one (game/room/table.mjs, `candidates`). */
+export const tableCandidates = (name) => candidateDefinition(name);
 
 /* A Durable Object's storage, as the M4 storage contract (game/engine/storage.mjs): strings in, strings out. */
 export function objectStorage(storage) {
@@ -196,6 +201,11 @@ export class GameRoom {
  *   POST /table/mat {mat}   your seat's mat, one of MATS in game/room/table.mjs
  *   POST /table/end      any person ends the game for everyone (the board asks a second tap first)
  *   POST /table/concede  you leave the game in play
+ *   POST /table/rematch {accept}  Play again, once the game is over: true for another game, false to leave the table
+ *        (Requests row 12, Linear ROB-167; game/room/table.mjs, rematch). The table's `rematch` says who has answered
+ *        and until when; the answer that completes everyone's may start the next game's countdown
+ *   POST /table/report {cardId, note}  a candidate your seat can see said to play wrong, at a playtest table only (Rob's
+ *        decision 2): kept with the table, handed over in that game's record (game/room/table.mjs, reportCard)
  *   GET  /table/record?match=<matchId>  a finished game's record (M8b): the whole game on a playtest table, your
  *        own seat's elsewhere. A table is a playtest table when the Worker's PLAYTEST_TABLES is "on" as it is made.
  *   GET  /table/brief    the Coach's brief for your seat (X13), asked for by the Worker's AI door alone
@@ -204,6 +214,8 @@ export class GameRoom {
  * ONE ALARM, TWO CLOCKS: the countdown's end, and a dropped player's five minutes (Rob, 2026-09-26). When a
  * seat's last socket closes mid-game its clock starts and the others are told who they are waiting for and
  * until when; a socket back in time stops it; the alarm concedes whoever ran out, recorded as not finished.
+ * And Play again's two minutes once a game is over (REMATCH_WINDOW): when they run out, silence is a No and the
+ * table decides. A game that ends in the room itself wakes the alarm at once, so the table moves on to Play again.
  */
 export class GameTable extends GameRoom {
   constructor(ctx, env, options = {}) {
@@ -211,7 +223,7 @@ export class GameTable extends GameRoom {
     this.now = options.now || (() => Date.now());
     /* The model's fetch, for a suite to stand in for (the LLM seat); the platform's otherwise. */
     this.fetchImpl = options.fetchImpl || null;
-    this.table = tableOn(this.storage, {cards: this.cards, slice: this.slice, ...(options.random ? {random: options.random} : {})});
+    this.table = tableOn(this.storage, {cards: this.cards, candidates: options.candidates || tableCandidates, slice: this.slice, ...(options.random ? {random: options.random} : {})});
   }
 
   async load() {
@@ -244,14 +256,17 @@ export class GameTable extends GameRoom {
       if (route === "POST /table/uninvite") return reply(200, {table: await t.uninvite(email, Number((await body()).seatId), now)});
       if (route === "POST /table/join") return reply(200, {table: await t.join(email, (await body()).code, now)});
       if (route === "POST /table/deck") {const b = await body(); return reply(200, {table: await t.deck(email, Number(b.seatId), b.deck, now)});}
-      if (route === "POST /table/known") return reply(200, {unknown: t.unknown((await body()).names)});
+      if (route === "POST /table/known") return reply(200, {unknown: await t.unknown((await body()).names)});
       if (route === "POST /table/ready") return reply(200, {table: await t.ready(email, (await body()).ready, now)});
+      if (route === "POST /table/report") return reply(201, {report: await t.reportCard(email, await body(), now)});
       if (route === "POST /table/mat") return reply(200, {table: await t.mat(email, String((await body()).mat || ""))});
       if (route === "POST /table/rules") return reply(200, {table: await t.rules(email, await body(), now)});
       if (route === "POST /table/start") {await t.start(email, now); await this.schedule(); return reply(200, {table: await t.view(email)});}
       if (route === "POST /table/cancel") {const view = await t.cancel(email, now); await this.schedule(); return reply(200, {table: view});}
       if (route === "POST /table/end") {const room = await this.load(); const view = await t.endGame(email, now); await this.schedule(); await this.share(room); return reply(200, {table: view});}
       if (route === "POST /table/concede") {const room = await this.load(); const view = await t.concede(email, now); await this.schedule(); await this.share(room); return reply(200, {table: view});}
+      /* Play again: the answer may start the next game's countdown, or settle the table; the alarm follows either. */
+      if (route === "POST /table/rematch") {const view = await t.rematch(email, (await body()).accept, now); await this.schedule(); return reply(200, {table: view});}
       if (route === "GET /connect") {
         if (request.headers.get("upgrade") !== "websocket") return reply(426, {error: "Connect with a WebSocket."});
         const {room, seatId} = await t.room(email);

@@ -7,7 +7,8 @@ October 18, 2026. Proposal tested against PR #754, head `b538be8e`, before produ
 ROB-98 says "Rob picks from screenshots." Recommend **48px of additional bottom padding inside the front mat**.
 This is the smallest tested candidate; 72px and 96px also clear the sampled targets but move more of the mat.
 The camera remains at 40 degrees, Zoom 100%, Cards 100%; the hand's placement and size are unchanged.
-The comparison was presented in the Codex chat and recorded on ROB-98. Approval is pending.
+The comparison was presented in the Codex chat and recorded on ROB-98. Rob approved it on October 18: "Go with the 48px
+land spacing and the upright Focused phone layout. Implement both and keep moving through the Play work in order."
 
 | Viewport | Before | Proposed spacing |
 | --- | --- | --- |
@@ -36,3 +37,27 @@ failing baseline, so removing the spacing cannot masquerade as proof of a fix.
 No production CSS has changed. Before shipping: Rob's choice, a production browser assertion, a deliberate regression
 in a breaks file, the affected board/accessibility suites, current main merged, pins, review, CI, then an engine-owned
 staging release. Physical phones, hardware WebGL and legal mana activation on a live table are unproven.
+
+## Shipped: October 21, on `claude/play-land-spacing`
+
+Claude, holding Codex · Play while Codex is away, built this from Codex's work. That work is Codex's own Oct 18
+implementation, parked in the stash "Preserve Oct18 approved ROB-98 and drawer fixes before Oct20 playtest work", which
+is read, not applied or dropped.
+
+- **The lands.** `.cm-stage-front>.cm-mat{padding-bottom:48px}` (crankmagic-stage.css). The harness above, run again
+  on the Oct 21 board, still finds two blocked land points at 1280 x 720 without it and none with it.
+- **The proof.** `tests/table-tabletop.mjs` hit-tests the shipped CSS with no style injected. It checks every front-mat
+  land at 10%, 25% and 45% down its middle:
+  - at rest;
+  - with each of the fan's seven visible cards hovered;
+  - at 1400 x 900, 1024 x 768 and 1280 x 720.
+
+  A hand card is hovered at a point that hit-tests to it, never by Playwright's scroll into the clipped fan.
+  `game/tools/batch/breaks-land-spacing.py` removes the 48px: caught at 1280 x 720 with Soul of New Phyrexia hovered.
+- **The drawer's edge** (Rob's other Oct 18 report, Codex's fix). The right drawer's gray resize line sat 17px inside its
+  edge, over its modules: 957 against 940 at 1280 wide on the Oct 21 board. It now sits on the edge, and keyboard
+  resizing is kept. `tests/table-shared-shell.mjs` measures the line's drawn position against the drawer's edge in
+  Table and Focus. `game/tools/batch/breaks-drawer-edge.py` shifts it inward: caught.
+- **Not carried over from the stash:**
+  - its separate `table-land-reachability` suite (the same check lives in table-tabletop, which CI runs);
+  - its screenshots, which were of the Oct 18 board.

@@ -69,6 +69,17 @@ shipped catalog's prices.
 The per-card cap is unchanged: blank in the Deck Definition still writes the pod's $30 rule. Like the budget, it no
 longer blocks Lock list. It is the same check (`definitionIssues`), and only informs.
 
+## Rob's decisions on the defaults
+
+On October 18, after the build, Rob kept all three defaults ("keep the defaults on all three budget decisions"):
+
+1. **A deck's cost** is its whole list at recorded prices. It is not what was paid plus what is left to buy.
+2. **The per-card cap** still fills in the pod's $30 rule when left blank, and it no longer blocks Lock list.
+3. **The Build wizard** puts the pod's $225 in its Budget box. You can see it, change it or clear it before the deck is
+   made.
+
+Linear: ROB-151.
+
 ## History
 
 Until 2026-10-18 a deck with no budget was held to Settings' default cap, or the pod's rule, and Lock list refused a

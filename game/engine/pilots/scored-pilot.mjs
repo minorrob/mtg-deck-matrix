@@ -180,14 +180,14 @@ export function pick(plans, setting, roll, temperature = TEMPERATURE) {
 }
 
 /**
- * @param {{seat: number, cards?: Function, deck?: string[], setting?: string, seed?: string}} options
+ * @param {{seat: number, cards?: Function, deck?: string[], setting?: string, seed?: string, picks?: boolean}} options
  *   `deck`: the seat's own deck list by name, which its player knows; `setting`: "easy" or "normal"; `seed`: the match's,
- *   for easy's chance.
+ *   for easy's chance; `picks`: its floor takes what a choice it may answer with none is for (house-pilot.mjs).
  */
-export function scoredPilot({seat, cards = () => null, deck = [], setting = "normal", seed = "", parts = PARTS, weights = WEIGHTS, temperature = TEMPERATURE} = {}) {
+export function scoredPilot({seat, cards = () => null, deck = [], setting = "normal", seed = "", parts = PARTS, weights = WEIGHTS, temperature = TEMPERATURE, picks = false} = {}) {
   if (!SETTINGS.includes(setting)) throw new Error(`The house pilot plays at ${SETTINGS.join(" or ")}, not ${setting}`);
   const on = new Set(parts);
-  const floor = housePilot({seat, cards});
+  const floor = housePilot({seat, cards, picks});
   const known = (name) => (name ? cards(name) : null) ?? null;
   const manaValue = (name) => known(name)?.manaValue ?? Infinity;
   const W = weights;

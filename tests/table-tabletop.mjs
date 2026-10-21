@@ -1,6 +1,6 @@
 /* Tabletop geometry and browser interaction; see tests/uat/browser-runner.mjs. */
 import assert from "node:assert/strict";
-import {readFileSync} from "node:fs";
+import {readFileSync, mkdirSync} from "node:fs";
 import vm from "node:vm";
 const scope = {console};
 vm.runInNewContext(readFileSync(new URL("../crankmagic-stage.js", import.meta.url), "utf8"), scope);
@@ -78,6 +78,27 @@ try {
   }
   await accountRoutes(page);
   page.on("pageerror",e=>errors.push(e.message));
+  /* Rob's art mats, one to a seat, the viewed seat's in front: each seat's mat draws that seat's own picture, cropped to
+     the mat (cover), never stretched, and at full strength, with nothing tinted over it (Rob, 2026-10-18). The preview
+     seats his art by seat: falls-tree, cloud-wolf, sand-lion, ember-serpent. */
+  const seatArt=['falls-tree','cloud-wolf','sand-lion','ember-serpent'];
+  const matArt=()=>page.evaluate(()=>{
+    // Background layers split at top-level commas; a layer over the picture is clear when every color in it has no alpha.
+    const layers=s=>{const out=[];let depth=0,from=0;[...s].forEach((c,i)=>{if(c==='(')depth++;else if(c===')')depth--;else if(c===','&&!depth){out.push(s.slice(from,i).trim());from=i+1;}});out.push(s.slice(from).trim());return out;};
+    const clear=layer=>[...layer.matchAll(/(rgba?|color)\(([^()]*)\)/g)].every(([,fn,args])=>fn==='color'?/\/\s*0(\.0+)?\s*$/.test(args):fn==='rgba'&&Number(args.split(',')[3])===0);
+    return [document.querySelector('.cm-stage-front'),...document.querySelectorAll('.cm-stage-rear')].map(el=>{
+      const m=el.querySelector('.cm-mat[data-mat]'), style=getComputedStyle(m), images=layers(style.backgroundImage), at=images.findIndex(l=>/playmats\//.test(l));
+      return {seat:Number(m.dataset.seat), you:m.classList.contains('is-you'), mat:m.dataset.mat, art:/playmats\/([a-z0-9-]+)\.webp/.exec(images[at]||'')?.[1]||null,
+        size:at<0?null:layers(style.backgroundSize)[at], clear:at>=0 && images.slice(0,at).every(clear)};
+    });
+  });
+  const ownArt=(seats,message)=>{
+    for(const s of seats) {
+      assert.equal(s.art,seatArt[s.seat],`${message}: seat ${s.seat}'s mat draws its own picture (${s.mat})`);
+      assert.equal(s.size,'cover',`${message}: seat ${s.seat}'s picture is cropped to its mat, never stretched`);
+      assert.ok(s.clear,`${message}: seat ${s.seat}'s picture is at full strength, with no wash over it`);
+    }
+  };
   await page.goto(`${address}/index.html#table?id=tablepreview01`);
   await page.locator('.cm-stage-region[data-renderer="webgl"]').waitFor();
   assert.equal(await page.locator('[data-action="board-3d"], [data-action="board-stage"]').count(),0,'Full screen has no 3D switch');
@@ -89,10 +110,65 @@ try {
   await page.getByRole('button',{name:'Next hand card',exact:true}).click();
   assert.deepEqual(await fanIndices(),[0,1,2,3,4,5,6],'next wraps back through the start');
   assert.equal(await page.locator('.cm-stage-rear').count(),3,"all other seats sit across the back");
+  /* ROB-98 (Rob, Oct 18: "Go with the 48px land spacing"): every land on the front mat is reached by a pointer at its upper
+     half -- 10%, 25% and 45% down its middle -- at rest and with each card of the fan hovered, at 1400x900, 1024x768 and
+     1280x720. Without the mat's 48px foot, two hovered hand cards cover a land at 1280x720. A hand card is hovered at a
+     point that hit-tests to it, never by Playwright's scroll into a clipped fan. */
+  await page.emulateMedia({reducedMotion:'reduce'});
+  const away=async()=>{await page.mouse.move(3,65);await page.evaluate(()=>{window.scrollTo(0,0);document.querySelector('#cm-board').scrollTop=0;});await page.waitForTimeout(100);};
+  const landsBlocked=()=>page.evaluate(()=>[...document.querySelectorAll('.cm-stage-front .cm-board-lands .cm-bcard')].flatMap(card=>{
+    const r=card.getBoundingClientRect();
+    return [.1,.25,.45].filter(f=>{const hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height*f);return !(hit===card||card.contains(hit));})
+      .map(f=>`${(card.getAttribute('aria-label')||'a land').split(/[,:]/)[0]} at ${f*100}%`);
+  }));
+  for(const [width,height] of [[1400,900],[1024,768],[1280,720]]) {
+    await page.setViewportSize({width,height});await page.waitForTimeout(200);await away();
+    assert.ok(await page.locator('.cm-stage-front .cm-board-lands .cm-bcard').count()>=5,`${width}x${height}: the front mat shows its lands`);
+    assert.deepEqual(await landsBlocked(),[],`${width}x${height}: every land's upper half is reached at rest`);
+    for(const hand of await page.locator('.cm-stage-fan-slot .cm-bcard').all()) {
+      await away();
+      const name=(await hand.getAttribute('aria-label')||'a hand card').split(/[,:]/)[0];
+      const point=await hand.evaluate(el=>{const r=el.getBoundingClientRect();for(const fy of [.15,.3,.5,.7])for(const fx of [.15,.3,.5,.7]){const x=r.x+r.width*fx,y=r.y+r.height*fy;if(y>=innerHeight-5)continue;const hit=document.elementFromPoint(x,y);if(hit===el||el.contains(hit))return{x,y};}return null;});
+      assert.ok(point,`${width}x${height}: ${name} in the fan has a point a pointer reaches`);
+      await page.mouse.move(point.x,point.y);await page.waitForTimeout(50);
+      assert.deepEqual(await landsBlocked(),[],`${width}x${height}: with ${name} hovered, every land's upper half is still reached`);
+    }
+  }
+  await away();await page.emulateMedia({reducedMotion:null});
+  await page.setViewportSize({width:1400,height:900});await page.waitForTimeout(200);
   await page.evaluate(()=>{globalThis.__canvas = document.querySelector('.cm-stage-canvas');});
   const before = await page.locator('.cm-stage-region').boundingBox();
   await page.getByRole('button',{name:'Toggle table panel',exact:true}).click();
   assert.deepEqual(await page.locator('.cm-stage-region').boundingBox(),before,"the panel overlays rather than resizing the board");
+  const own=await matArt();
+  assert.deepEqual(own.map(s=>s.seat).toSorted(),[0,1,2,3],"all four seats' mats are on the table");
+  assert.deepEqual(own.map(s=>s.you),[true,false,false,false],"your own mat is in front");
+  ownArt(own,"Full screen");
+  /* A drawn mat (felt, forge, cavern, sea, night) keeps in Full screen the pattern it has in every other view (Rob,
+     2026-10-17). Two more tables seat all five, the second beside art mats. */
+  const drawnMats=['felt','forge','cavern','sea','night'];
+  for(const mats of ['felt,forge,cavern,sea','night,falls-tree,sand-lion,cloud-wolf']) {
+    const drawn=spawn(process.execPath,["tools/play-tabletop-preview.mjs"],{env:{...process.env,PREVIEW_PORT:"0",PREVIEW_MATS:mats},stdio:["ignore","pipe","pipe"]});
+    try {
+      const at=await Promise.race([
+        new Promise((resolve,reject)=>{drawn.stdout.on("data",d=>{const m=String(d).match(/http:\/\/localhost:(\d+)/);if(m)resolve(`http://127.0.0.1:${m[1]}`);});drawn.once("error",reject);}),
+        new Promise((_,reject)=>{const t=setTimeout(()=>reject(new Error("preview startup timed out")),10000);t.unref();})
+      ]);
+      const look=await browser.newPage({viewport:{width:1400,height:900}});look.on("pageerror",e=>errors.push(e.message));
+      await look.goto(`${at}/index.html#table?id=tablepreview01`);await look.locator('.cm-stage-region[data-renderer="webgl"]').waitFor();
+      // The pattern each mat has outside the tabletop: the same mat, drawn again beside the stage in the same board.
+      const shown=await look.evaluate(()=>[document.querySelector('.cm-stage-front'),...document.querySelectorAll('.cm-stage-rear')].map(el=>{
+        const m=el.querySelector('.cm-mat[data-mat]'), probe=document.createElement('section');
+        probe.className=m.className;probe.dataset.mat=m.dataset.mat;document.getElementById('cm-board').append(probe);
+        const own=getComputedStyle(probe).backgroundImage;probe.remove();
+        return {mat:m.dataset.mat,image:getComputedStyle(m).backgroundImage,own};
+      }));
+      const drawnSeats=shown.filter(s=>drawnMats.includes(s.mat));
+      assert.equal(drawnSeats.length,mats.split(',').filter(id=>drawnMats.includes(id)).length,`every drawn mat of ${mats} is seated`);
+      for(const {mat,image,own:pattern} of drawnSeats) assert.ok(image!=='none' && image===pattern,`the drawn ${mat} mat shows its own pattern in Full screen, not a plain table (${image.slice(0,48)})`);
+      await look.close();
+    } finally {drawn.kill();}
+  }
   for(const width of [1400,1024]) {
     await page.setViewportSize({width,height:800});
     await page.locator(".cm-stage-side.is-open").waitFor();
@@ -203,6 +279,9 @@ try {
   await page.getByRole('button',{name:'Close table panel',exact:true}).click();
   await page.locator('.cm-stage-seat-label').first().click();
   assert.match(await page.locator('.cm-stage-fan').getAttribute('aria-label'),/Friend's hand, 7 cards/);
+  const turned=await matArt();
+  assert.ok(turned[0].seat!==own[0].seat && !turned[0].you && turned.some(s=>s.you),"viewing another seat brings that seat's mat to the front, and yours goes to the back");
+  ownArt(turned,"Viewing Friend");
   assert.equal(await page.locator('.cm-stage-hand .is-back').count(),7);
   assert.equal(await page.locator('.cm-stage-hand [data-card]').count(),0,"no opponent card identity is introduced by rotation");
   await page.getByRole('button',{name:'My board',exact:true}).click();
@@ -270,6 +349,16 @@ try {
   const baseCard=await cardSize();
   await page.getByRole('slider',{name:'Tabletop card size',exact:true}).fill('150');
   assert.ok(Math.abs(await cardSize()/baseCard-1.4)<.03,'150% Cards grows physical card width by about 40%');
+  // The Camera is a fact about this screen: letting go of each slider keeps it on this device, and a reload reads it back.
+  const keptCamera={'Table tilt':'27','Table zoom':'83','Tabletop card size':'121'};
+  for(const [name,value] of Object.entries(keptCamera)) await page.getByRole('slider',{name,exact:true}).fill(value);
+  await page.reload();await page.locator('.cm-stage-region[data-renderer="webgl"]').waitFor();
+  await page.getByRole('button',{name:'Camera',exact:false}).click();
+  for(const [name,value] of Object.entries(keptCamera)) assert.equal(await page.getByRole('slider',{name,exact:true}).inputValue(),value,`${name} is kept on this device through a reload`);
+  assert.ok(await page.evaluate(()=>{
+    const r=document.querySelector('.cm-stage-region').getBoundingClientRect(), g=CrankStage.geometry(r.width,r.height,{tilt:27,zoom:83,seats:3});
+    return Array.from(new DOMMatrix(getComputedStyle(document.querySelector('.cm-stage-front')).transform).toFloat64Array()).every((v,j)=>Math.abs(v-g.front.matrix[j])<.01);
+  }),'and the table is drawn again at the kept tilt and zoom');
   await page.getByRole('slider',{name:'Tabletop card size',exact:true}).fill('100');
   await page.getByRole('slider',{name:'Table tilt',exact:true}).fill('40');
   await page.getByRole('slider',{name:'Table zoom',exact:true}).fill('100');
@@ -381,6 +470,126 @@ try {
   const mismatched=await page.evaluate(()=>Math.abs(document.querySelector('.cm-stack-card').getBoundingClientRect().width-document.querySelector('.cm-full-pick .cm-bcard').getBoundingClientRect().width));
   assert.throws(()=>assert.ok(mismatched<.5),'a deliberately undersized stack card fails the matching-size assertion');
   await brokenSize.evaluate(el=>el.remove());
+  /* A long decision in Full screen can be finished by a person (2026-10-19): "Search your library" (frame 15) with 60 of
+     D5's card names, as a tutor across most of a library offers, and a stress list of 150 that is longer than the table at
+     every size. The title, the count and Confirm stay on screen; the wheel scrolls the options; the last option and Confirm
+     are pressed where a person sees them. Reach is hit-tested by hand: Playwright's own click scrolls inside clipped boxes. */
+  const reach=(p,selector)=>p.evaluate(selector=>{
+    const el=selector==='last'?[...document.querySelectorAll('#cm-board-decision .cm-board-options>*')].at(-1):document.querySelector(selector);
+    const byHand=n=>/(auto|scroll)/.test(getComputedStyle(n).overflowX+getComputedStyle(n).overflowY);
+    for(let n=el.parentElement;n;n=n.parentElement) if(!byHand(n)&&n!==document.scrollingElement){n.scrollTop=0;n.scrollLeft=0;}
+    const r=el.getBoundingClientRect();
+    const reached=[[.5,.5],[.12,.2],[.88,.2],[.12,.8],[.88,.8]].every(([fx,fy])=>{
+      const x=r.left+r.width*fx,y=r.top+r.height*fy,at=x>=0&&y>=0&&x<innerWidth&&y<innerHeight&&document.elementFromPoint(x,y);
+      return !!at&&(at===el||el.contains(at));
+    });
+    return {reached,x:r.left+r.width/2,y:r.top+r.height/2,top:r.top,bottom:r.bottom};
+  },selector);
+  let clearBelow=0;
+  const choiceShot=async(p,name)=>{
+    if(!process.env.UAT_SHOTS) return;
+    mkdirSync(process.env.UAT_SHOTS,{recursive:true});
+    await p.evaluate(()=>{
+      const label=document.createElement('div');
+      label.id='choice-proof-label';
+      label.textContent='C01 · Choice list';
+      label.style.cssText='position:fixed;top:4px;left:4px;z-index:9999;background:#142824;color:white;padding:4px;font:12px system-ui;pointer-events:none';
+      document.body.append(label);
+    });
+    await p.screenshot({path:`${process.env.UAT_SHOTS}/${name}.png`});
+    await p.locator('#choice-proof-label').evaluate(el=>el.remove());
+  };
+  for(const count of [60,150]) {
+    const long=spawn(process.execPath,["tools/play-tabletop-preview.mjs"],{env:{...process.env,PREVIEW_PORT:"0",PREVIEW_FRAME:"15",PREVIEW_OPTIONS:String(count)},stdio:["ignore","pipe","pipe"]});
+    try {
+      const at=await Promise.race([
+        new Promise((resolve,reject)=>{long.stdout.on("data",d=>{const m=String(d).match(/http:\/\/localhost:(\d+)/);if(m)resolve(`http://127.0.0.1:${m[1]}`);});long.once("error",reject);}),
+        new Promise((_,reject)=>{const t=setTimeout(()=>reject(new Error("preview startup timed out")),10000);t.unref();})
+      ]);
+      for(const [width,height] of [[1024,768],[1280,720],[1400,900]]) {
+        const p=await browser.newPage({viewport:{width,height}}), sent=[], where=`${count} options at ${width}x${height}`;
+        let roomSocket, latestView;
+        await p.routeWebSocket(/\/api\/tables\//,ws=>{
+          roomSocket=ws;
+          const server=ws.connectToServer();
+          server.onMessage(message=>{
+            const frame=JSON.parse(String(message));
+            if(frame.view) latestView=frame.view;
+            ws.send(message);
+          });
+        });
+        p.on("pageerror",e=>errors.push(e.message));
+        p.on("websocket",ws=>ws.on("framesent",f=>sent.push(String(f.payload))));
+        await p.goto(`${at}/index.html#table?id=tablepreview01`);
+        await p.waitForFunction(n=>document.querySelectorAll('.cm-stage-region .cm-board-ask>#cm-board-decision .cm-board-options>button').length===n,count);
+        const title='#cm-board-decision>h3', tally='#cm-board-decision .cm-board-decision-foot>.cm-muted', confirm='#cm-board-decision [data-action="board-confirm"]';
+        for(const s of [title,tally,confirm]) assert.ok((await reach(p,s)).reached,`${where}: ${s} is on screen and takes the pointer`);
+        const list=await p.evaluate(()=>{const o=document.querySelector('#cm-board-decision .cm-board-options'),r=o.getBoundingClientRect(),first=o.firstElementChild.getBoundingClientRect(),h=document.querySelector('#cm-board-decision>h3').getBoundingClientRect();
+          return {x:r.left+r.width/2,y:r.top+Math.min(r.height/2,60),over:o.scrollHeight-o.clientHeight,top:first.top-r.top,left:first.left-r.left,under:first.left-h.left};});
+        if(count===150) assert.ok(list.over>40,`${where}: the stress list is longer than the table, so its scroll is exercised (${list.over}px)`);
+        assert.ok(list.top>=2.5&&list.left>=2.5,`${where}: a chosen option's outline is whole at the list's edges (${list.top}, ${list.left})`);
+        assert.ok(Math.abs(list.under)<.5,`${where}: the options start under the title, as they do in every view (${list.under})`);
+        await p.mouse.move(list.x,list.y);
+        /* Wheel until the list is at its end, each turn waited for (ROB-173): stopping when two readings matched stopped early under CI load, a turn not yet landed. A list that cannot scroll stops at once, and the assertion below says so. */
+        const scrollOf=()=>p.evaluate(()=>{const o=document.querySelector('#cm-board-decision .cm-board-options');return {top:o.scrollTop,end:o.scrollTop>=o.scrollHeight-o.clientHeight-1};});
+        for(let i=0;i<60;i++){const was=await scrollOf();if(was.end)break;await p.mouse.wheel(0,300);if(!await p.waitForFunction(t=>document.querySelector('#cm-board-decision .cm-board-options').scrollTop!==t,was.top,{timeout:3000}).then(()=>true,()=>false))break;}
+        const last=await reach(p,'last');
+        const scrollBefore=await p.locator('#cm-board-decision .cm-board-options').evaluate(el=>el.scrollTop);
+        assert.ok(last.reached,`${where}: the wheel brings the last option into reach (${Math.round(last.top)}-${Math.round(last.bottom)})`);
+        for(const s of [title,tally,confirm]) assert.ok((await reach(p,s)).reached,`${where}: with the list scrolled, ${s} stays on screen`);
+        await p.mouse.click(last.x,last.y);
+        await p.waitForFunction(n=>document.querySelector(`#cm-board-decision [data-index="${n}"]`)?.getAttribute('aria-pressed')==='true',count-1);
+        assert.match(await p.locator(tally).innerText(),/^1 chosen/,`${where}: the last option is chosen`);
+        const kept=async label=>{
+          assert.equal(await p.locator('#cm-board-decision .cm-board-options').evaluate(el=>el.scrollTop),scrollBefore,`${where}: ${label} keeps the scroll position`);
+          assert.ok((await reach(p,'last')).reached,`${where}: ${label} keeps the last option under the pointer`);
+        };
+        await kept('selecting');
+        await p.mouse.click(last.x,last.y);
+        await p.waitForFunction(n=>document.querySelector(`#cm-board-decision [data-index="${n}"]`)?.getAttribute('aria-pressed')==='false',count-1);
+        await kept('deselecting');
+        await p.mouse.click(last.x,last.y);
+        await p.waitForFunction(n=>document.querySelector(`#cm-board-decision [data-index="${n}"]`)?.getAttribute('aria-pressed')==='true',count-1);
+        await kept('selecting again');
+        if(count===150&&width===1280) await choiceShot(p,'rob-165-choice-1280x720');
+        const press=await reach(p,confirm);
+        assert.ok(press.reached,`${where}: Confirm is in reach once an option is chosen`);
+        await p.mouse.click(press.x,press.y);
+        for(let i=0;i<50&&!sent.some(s=>s.includes('"kind":"answer"'));i++) await p.waitForTimeout(50);
+        const answer=sent.map(s=>JSON.parse(s)).find(f=>f.kind==='answer');
+        assert.deepEqual(answer&&{choiceId:answer.choiceId,indices:answer.indices},{choiceId:'chooseCard:0:29:21',indices:[count-1]},`${where}: Confirm sends the last option as the answer`);
+        /* Under a decision shorter than the table, the table takes the pointer: the box is no taller than what it holds. */
+        const below=await p.evaluate(()=>{const d=document.querySelector('#cm-board-decision').getBoundingClientRect(),r=document.querySelector('.cm-stage-region').getBoundingClientRect(),y=d.bottom+24;
+          return r.bottom-d.bottom<40?null:!document.elementFromPoint((d.left+d.right)/2,y).closest('.cm-board-ask');});
+        if(below!==null){clearBelow++;assert.ok(below,`${where}: the table just below the decision takes the pointer, not the decision's box`);}
+        // Same-sized fresh questions and matches must not inherit this list's old position.
+        for(const boundary of ['decision','match']) {
+          const next=structuredClone(latestView);
+          if(boundary==='decision') next.decision.id+=':next';
+          else next.matchId+=':next';
+          next.revision++;
+          latestView=next;
+          roomSocket.send(JSON.stringify({type:'view',view:next}));
+          await p.waitForFunction(({id,match})=>{const d=document.querySelector('#cm-board-decision');return d?.dataset.choiceId===id&&d.dataset.matchId===match;},{id:next.decision.id,match:next.matchId});
+          assert.equal(await p.locator('#cm-board-decision .cm-board-options').evaluate(el=>el.scrollTop),0,`${where}: a new ${boundary} opens at the top`);
+          await p.mouse.move(list.x,list.y);
+          await p.mouse.wheel(0,10000);
+          await p.waitForTimeout(100);
+          if(count===150) assert.ok(await p.locator('#cm-board-decision .cm-board-options').evaluate(el=>el.scrollTop>0),`${where}: reset check starts from a genuinely scrolled list`);
+        }
+        await p.close();
+      }
+      if(count===150&&process.env.UAT_SHOTS) {
+        const phone=await browser.newPage({viewport:{width:390,height:844}});
+        phone.on('pageerror',e=>errors.push(e.message));
+        await phone.goto(`${at}/index.html#table?id=tablepreview01`);
+        await phone.waitForSelector('#cm-board-decision .cm-board-options');
+        await choiceShot(phone,'rob-165-choice-390x844');
+        await phone.close();
+      }
+    } finally {long.kill();}
+  }
+  assert.ok(clearBelow>0,'the table under a short decision was hit-tested at one size at least');
   assert.deepEqual(errors,[],"no uncaught browser errors");
   console.log('table-tabletop: browser passed (four seats, private backs, persistent canvas, camera bounds, overlays, phone fallback)');
 } finally {server.kill();await close();}
