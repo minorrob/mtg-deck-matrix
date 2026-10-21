@@ -7,7 +7,8 @@ October 18, 2026. Proposal tested against PR #754, head `b538be8e`, before produ
 ROB-98 says "Rob picks from screenshots." Recommend **48px of additional bottom padding inside the front mat**.
 This is the smallest tested candidate; 72px and 96px also clear the sampled targets but move more of the mat.
 The camera remains at 40 degrees, Zoom 100%, Cards 100%; the hand's placement and size are unchanged.
-The comparison was presented in the Codex chat and recorded on ROB-98. Approval is pending.
+Rob approved the 48px spacing and the upright Focused phone layout in the Codex chat on October 18.
+Implementation proceeds in that order, with this spacing fix on `codex/play-land-spacing` from current main.
 
 | Viewport | Before | Proposed spacing |
 | --- | --- | --- |
