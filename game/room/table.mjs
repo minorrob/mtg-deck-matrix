@@ -21,6 +21,8 @@
  *   ready    then the host starts a 10-second countdown that waits for every person, and can cancel it
  *   launch   when the countdown ends the room starts; if it cannot, the table says why and goes back to
  *            choosing, the AI seats still ready
+ *   again    when the game is over each person answers Play again, Yes or No (No is leaving), within two minutes;
+ *            the people who stay play the next game with the same seats, decks and rules (`rematch`)
  */
 import {createTable, transitionTable, countdownBlockers} from "../contracts/table-lifecycle.mjs";
 import {coachBrief} from "./coach-brief.mjs";
@@ -45,6 +47,12 @@ export const ART_MATS = Object.freeze(["cloud-wolf", "sand-lion", "ember-serpent
 export const MATS = Object.freeze([...DRAWN_MATS, ...ART_MATS]);
 /* A dropped player has this long to come back before they concede (Rob, 2026-09-26: five minutes). */
 export const AWAY_LIMIT = 5 * 60 * 1000;
+/* How long a finished game's players have to answer Play again (Requests row 12, Linear ROB-167), from the moment it ended.
+   The lifecycle counts from `rematchAt` and names no length (game/contracts/table-lifecycle.mjs, `rematch-deadline`), so
+   it is set here: two minutes, what the local host's table waited (game/server/table-broker.mjs, settleRematch) -- long
+   enough to read the result and answer, short enough that nobody waits long on a player who walked away. Past it, a
+   person who has not answered has said No. */
+export const REMATCH_WINDOW = 2 * 60 * 1000;
 const TABLE_ID = /^[a-z0-9]{8,40}$/;
 export const MATCH_ID = /^[a-z0-9]{8,40}g[1-9][0-9]{0,5}$/;
 const KEY = "table";
@@ -170,13 +178,51 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
     if (record.away) delete record.away[seat];
     await settle(now);
   }
-  /* When the game in the room is over, the table moves on to the rematch question. */
+  /* When the game in the room is over, the table moves on to the rematch question -- however it ended: through the table
+     (End game, a concession, a clock running out), or in the room itself, the last opponent knocked out over a socket,
+     which the object's alarm notices (`nextAlarm`, `tick`). */
   async function settle(now) {
     if (record.lifecycle.phase === "playing" && room && room.status === "finished") {
       step({type: "completed", matchId: record.lifecycle.matchId}, now);
       record.away = {};
+      decideRematch(now);
     }
     await save();
+  }
+  /* A person still to answer Play again: the lifecycle's own test of who is waited on (`next-selection`). */
+  const unanswered = (s) => s.kind === "human" && s.occupied && s.rematch === null;
+  /* EVERY PERSON ASKED HAS ANSWERED PLAY AGAIN, or the clock answered for them: the next game, or the end of the table.
+   *
+   * The next game is this one again: the same seats, decks and rules, every seat staying ready -- a person's Yes is their
+   * Ready, and an AI seat always stays -- and the ten-second countdown every game starts with, which the host can still
+   * cancel. The object's alarm launches it as it launches a first game, as the next match (`<tableId>g<n>`). A seat whose
+   * person said No, did not answer in time, or left the game before it ended is released by the lifecycle
+   * (`next-selection`), never refused (AGENTS.md, U-09), and its person is no longer at the table: their address, deck and
+   * mat go with them, and the host may invite someone else to the chair.
+   *
+   * There is no next game when the host is not staying -- the table's controls (start, cancel, invitations, the AI seats'
+   * decks) and its AI seats' costs are the host's, and nobody else could run the next game -- or when fewer than two seats
+   * would play. Then the table is over: it stays in `rematch` with every answer final (`closed`), and the view tells
+   * everyone at it to start a new table. The host's No, or the host's having left the game, settles that at once, with
+   * nobody kept waiting for the others' answers. Called only while Play again is undecided; the caller saves. */
+  function decideRematch(now) {
+    const t = record.lifecycle;
+    const over = (why) => {record.closed = {at: now, reason: `${why} Start a new table to play again.`};};
+    const host = t.seats[0];
+    if (!host.occupied) return over("The host left the game, so this table's games are over.");
+    if (host.rematch === false) return over("The host is not staying for another game, so this table's games are over.");
+    if (t.seats.some(unanswered)) return;
+    try {step({type: "next-selection"}, now);}
+    catch {return over("Nobody else is staying for another game, and a game needs at least two seats.");}
+    for (const s of record.lifecycle.seats) {
+      if (s.occupied) continue;
+      delete record.members[s.seatId]; delete record.decks[s.seatId];
+      if (record.mats) delete record.mats[s.seatId];
+    }
+    for (const s of record.lifecycle.seats) if (s.occupied) step({type: "ready", seatId: s.seatId, ready: true}, now);
+    /* Something may still hold the countdown -- an invitation the host sent to an empty chair meanwhile: the table then
+       waits in the lobby, everyone ready, and says what it is waiting for, as any table does. */
+    try {step({type: "countdown"}, now);} catch {/* the lobby's blockers say why */}
   }
 
   const api = {
@@ -346,13 +392,24 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
       return api.view(email);
     },
 
-    /** When the countdown has run out: launch the room with each seat's deck. Nothing happens early. */
+    /** The alarm's work: a dropped player's time running out, a game over in the room, Play again's deadline, and, when
+        the countdown has run out, the room launched with each seat's deck. Nothing happens early. */
     async tick(now, {storageForRoom = storage} = {}) {
       await load();
       /* While the AI seats play on (the room's `continuing`), a leave waits: the alarm that plays on comes back for it. */
       const playingOn = record.lifecycle.phase === "playing" && (await api.currentRoom())?.continuing;
       for (const [seat, until] of Object.entries(record.away || {})) {
         if (until <= now && record.lifecycle.phase === "playing" && !playingOn) await leaveSeat(Number(seat), "timed-out", now);
+      }
+      /* A game that ended in the room itself -- the last opponent knocked out over a socket -- has told the table nothing:
+         it moves on to Play again here. */
+      if (record.lifecycle.phase === "playing" && !playingOn && (await api.currentRoom())?.status === "finished") await settle(now);
+      /* Play again's time is up: whoever has not answered has said No (the lifecycle's `rematch-deadline`), and the table
+         decides. */
+      if (record.lifecycle.phase === "rematch" && !record.closed && record.lifecycle.seats.some(unanswered) && now >= record.lifecycle.rematchAt + REMATCH_WINDOW) {
+        step({type: "rematch-deadline"}, now);
+        decideRematch(now);
+        await save();
       }
       const t = record.lifecycle;
       if (t.phase !== "countdown" || now < t.countdownAt) return null;
@@ -422,9 +479,37 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
       return api.view(email);
     },
 
-    /** A seat's last connection closed. While a game is on, their five minutes start. */
+    /* ---- after the game: Play again (Requests row 12, Linear ROB-167) ---- */
+
+    /** A person's answer once the game is over: Yes, another game, or No, which is leaving the table. It can change until
+        every person has answered; the answer that completes them decides (`decideRematch`), and the clock decides for
+        whoever is silent (`tick`). Answering is being here: a seat a closed socket marked away is back. A person whose No
+        released their seat gets the table without a seat in it (`yourSeat: null`), and is not at the table afterward. */
+    async rematch(email, accept, now) {
+      await load();
+      const seatId = needSeat(email), t = record.lifecycle, seat = t.seats[seatId];
+      if (typeof accept !== "boolean") throw new TableError(400, "Answer Play again with accept: true for another game, or false to leave the table.");
+      if (t.phase !== "rematch") throw new TableError(409, t.phase === "playing"
+        ? "The game is still being played, so there is no Play again to answer yet. Answer it once the game is over."
+        : record.matches.length
+          ? "There is no Play again to answer: this table's next game is already being set up. Use Ready in the lobby instead."
+          : "No game has been played at this table yet, so there is no Play again to answer. Use Ready in the lobby instead.");
+      if (record.closed) throw new TableError(409, `Play again has been decided. ${record.closed.reason}`);
+      if (!seat.occupied) throw new TableError(409, "You left that game, so the next one is not yours to answer. Ask the host to invite you again.");
+      if (!seat.connected) step({type: "reconnect", seatId}, now);
+      step({type: "rematch-vote", seatId, accept}, now);
+      decideRematch(now);
+      await save();
+      return api.view(email, {any: true});
+    },
+
+    /** A seat's last connection closed. While a game is on, their five minutes start. Outside a game a socket closing
+        says nothing: only a game opens one (`room`), and the lobby reads the table instead, so the socket of a game just
+        over closing as its player turns to Play again is not their leaving. Counted, it marked a seat disconnected that
+        nothing but a game could connect again, and the next game's countdown waited on it for good. */
     async dropped(seat, now) {
       await load();
+      if (record.lifecycle.phase !== "playing") return;
       const s = record.lifecycle.seats[seat];
       if (!s || !s.occupied || s.kind !== "human" || !s.connected) return;
       step({type: "disconnect", seatId: seat}, now);
@@ -442,13 +527,16 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
       await save();
     },
 
-    /** When the object should next wake: the countdown's end, the first dropped player's time running out, or now, while
-        the AI seats play on in slices. */
+    /** When the object should next wake: the countdown's end, the first dropped player's time running out, now, while
+        the AI seats play on in slices or once the game has ended in the room, or Play again's deadline while a person
+        has yet to answer. */
     async nextAlarm(now = Date.now()) {
       await load();
       const times = Object.values(record.away || {});
       if (record.lifecycle.phase === "countdown") times.push(record.lifecycle.countdownAt);
-      if (record.lifecycle.phase === "playing" && (await api.currentRoom())?.continuing) times.push(now);
+      const current = record.lifecycle.phase === "playing" ? await api.currentRoom() : null;
+      if (current && (current.continuing || current.status === "finished")) times.push(now);
+      if (record.lifecycle.phase === "rematch" && !record.closed && record.lifecycle.seats.some(unanswered)) times.push(record.lifecycle.rematchAt + REMATCH_WINDOW);
       /* The LLM seat being asked: its turn is the object's to take (cloud/game-room.mjs, agentTurns), at once. */
       if (record.lifecycle.phase === "playing" && llmWaiting(await api.currentRoom())) times.push(now);
       return times.length ? Math.min(...times) : null;
@@ -519,6 +607,14 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
         blockers: countdownBlockers(t).map(({seatId, reason}) => ({seatId, reason})),
         rules: rulesOf(),
         away: Object.entries(record.away || {}).map(([seatId, until]) => ({seatId: Number(seatId), until})),
+        /* Play again (Requests row 12): while a finished game's players answer, the game it follows, until when, each
+           seat's answer, and -- once every person has answered and there is no next game -- that the table is over and
+           why. Null in every other phase. */
+        rematch: t.phase === "rematch" ? {
+          lastMatchId: t.matchId, deadline: t.rematchAt + REMATCH_WINDOW,
+          outcome: record.closed ? "closed" : "waiting", reason: record.closed ? record.closed.reason : null,
+          votes: t.seats.filter((s) => s.occupied).map((s) => ({seatId: s.seatId, vote: s.rematch === true ? "yes" : s.rematch === false ? "no" : "pending"})),
+        } : null,
         seats: t.seats.map((s) => ({
           seatId: s.seatId, kind: s.kind, name: s.name, ...(s.kind === "ai" ? {level: levelOf(s)} : {}), occupied: s.occupied, connected: s.connected, ready: s.ready,
           invited: s.invited, you: s.seatId === mine, mat: (record.mats || {})[s.seatId] || "felt",

@@ -65,7 +65,9 @@ async function playedTable(tableId, {playtest = false} = {}) {
   eq([rec.schema, rec.kind, rec.tableId, rec.matchId, rec.playtest], [RECORD_SCHEMA, "full", "playtest01", matchId, true], "after it ends, a playtest table's record is the full record");
   eq([typeof rec.seed, rec.pod.seats.map((s) => s.seatId), rec.tape.length > 10, rec.journal.length > 10], ["string", ["s0", "s1", "s2"], true, true], "its seed, its pod, its decision tape and its journal");
   eq(rec.tape.at(-1).kind, "end", "the tape ends where Maya ended the game");
-  eq(rec.result, {winner: null, reason: "ended early", endedBy: "s1"}, "and it says how it ended");
+  eq(rec.result, {winner: null, reason: "ended early", endedBy: "s1", ending: {kind: "ended", seatId: "s1", reason: null,
+    seats: ["s0", "s1", "s2"].map((seatId) => ({seatId, outcome: "playing", reason: null}))}},
+  "and it says how it ended: in words, as before, and as data (`ending`, Linear ROB-166) -- ended by Maya, every seat still playing");
   ok(rec.history.length > 0 && rec.history.every((l) => typeof l.text === "string"), "the public history comes with it");
   eq(rec.refusals, room.refusals, "and the match's tally of refused AI answers, counted over the whole game, not read off the history");
   ok(rec.refusals.since === 0 && Number.isInteger(rec.refusals.total), `counted from the match's start (${rec.refusals.total} refused)`);
