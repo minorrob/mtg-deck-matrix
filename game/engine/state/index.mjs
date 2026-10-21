@@ -120,6 +120,9 @@ export function createState(pod) {
     /* A cast tapped for tops up floating mana, and a source of more than one mana is tapped for all of it (rules/actions.mjs,
        `pooledTaps`; Rob, 2026-10-15). Only a pod that asks carries the key, as above. */
     ...(pod?.pooledTaps === true ? {pooledTaps: true} : {}),
+    /* And an {X} spell tapped for too, for each X the pool and the untapped sources pay together (rules/actions.mjs, `xTaps`;
+       Oct 21). Only a pod that asks carries the key, as above. */
+    ...(pod?.xTaps === true ? {xTaps: true} : {}),
     players: seats.map((seat, id) => ({
       id,
       name: seat.name ?? `Seat ${id + 1}`,

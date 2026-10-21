@@ -438,6 +438,9 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
          (Rob's playtest, 2026-10-15: a commander should be castable with what is on the board): new matches only, so a
          match launched before keeps its choices and its replay (rules/actions.mjs, `pooledTaps`). */
       pooledTaps: true,
+      /* An {X} spell tapped for too, for each X the pool and the untapped sources pay together, so a person casts it from the
+         hand, choosing X, without tapping each land first (rules/actions.mjs, `xTaps`): new matches only. */
+      xTaps: true,
       /* A person may yield the rest of an opponent's turn (Linear ROB-13, the Oct 16 handoff): new matches only, so one
          launched before is asked as it was (room.mjs, `yieldTurn`). */
       yieldTurn: true,
