@@ -42,6 +42,10 @@ try {
       if(width===1280) await screenshot(page,`${view}-${drawer==='.cm-stage-side'?'right':'left'}-drawer`);
       if(drawer==='.cm-stage-side' && view!=='full') {
         const grip=page.locator('.cm-stage-side [data-drag=panelw]'),old=await page.locator(drawer).boundingBox();
+        /* Rob's Oct 18 report (Codex's fix, ROB-98's PR): the drawer's gray resize line sat 17px inside its edge, over its
+           modules. It is drawn on the drawer's edge. */
+        const edge=await grip.evaluate(el=>{const r=el.getBoundingClientRect(),s=getComputedStyle(el,'::before');return r.x+parseFloat(s.left)+(s.transform==='none'?0:new DOMMatrix(s.transform).m41);});
+        assert.ok(Math.abs(edge-old.x)<=2,`the resize line follows the drawer edge, not its modules (${edge} vs ${old.x})`);
         await grip.focus();await page.keyboard.press('ArrowLeft');
         const resized=await page.locator(drawer).boundingBox();
         assert.ok(resized.width>old.width,'the right drawer retains keyboard resizing');
