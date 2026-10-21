@@ -315,8 +315,7 @@
 .cm-combat-blocks>span{display:flex;align-items:center;gap:4px}
 .cm-combat-arrow{font-size:18px}
 .cm-combat :focus-visible{outline:3px solid #fff;outline-offset:-3px}
-.cm-phone-center>.cm-combat{top:44px;bottom:auto;left:8px;right:8px;z-index:3;height:130px;padding:4px 6px}
-.cm-board[data-phone][data-combat] .cm-phone-center>.cm-mat{padding-top:176px}
+.cm-phone-center>.cm-combat{position:static;flex:none;height:auto;max-height:130px;overflow:auto;padding:4px 6px}
 
 /* ROB-26: a private block draft alongside the shared, confirmed combat strip. */
 .cm-block-draft{width:100%;min-width:0;font:12px/1.4 system-ui;color:#edf6ef}
@@ -338,6 +337,11 @@
 .cm-phone-ask .is-blocking>.cm-board-options{display:block;min-height:0;overflow:auto;flex:1;padding:3px}
 .cm-phone-ask .is-blocking>.cm-board-decision-foot{flex:none}
 .cm-phone-ask .is-blocking h3{display:none}
+/* Upright (ROB-18), blocking takes half the phone's height -- the blockers, the attackers for the one picked, the draft and
+   its buttons all in reach -- and the blockers share its width and wrap, rather than run past its edge. */
+.cm-board[data-phone="portrait"] .cm-phone-ask:has(.is-blocking){height:50%;max-height:50%}
+.cm-phone-ask .cm-block-tiles{flex-wrap:wrap}
+.cm-phone-ask .cm-block-tile{flex:1 1 104px;min-width:0}
 
 #matrix-v2 .cm-phone-ask .is-blocking>.cm-board-decision-foot .v-button{min-height:32px;height:32px;padding:0 10px}
 /* THE COMMANDER TAX (ROB-29): at the commander's top-right in the command zone, as Rob asked; never under 10px, light on dark
