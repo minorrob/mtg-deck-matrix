@@ -20,6 +20,8 @@
 
 ## Play tabletop preview, October 14, 2026
 
+October 21, Claude (holding Codex · Play), for Rob's one-person, three-AI table: no blockers question when there is no blocker, on `claude/no-blockers-no-question`, stacked on #823. The solo-vs-AI run asked Declare blockers of the person with "No legal blockers." on it and a No blocks to press, for most of the AI seats' attacks. The declaration is empty (CR 509.1a), so it is no choice. The room now makes it for a person with no block on offer, and the history says "Rob has no creature that can block: no blockers". A person with a block they could make is asked as ever, yielding or not. It is a new pod key, `blocksNone` (room.mjs, kept with the match, saved and reopened), and `tableOn` launches every new match with it, so a game launched before is asked as it was. `tools/fuzz-live.mjs`'s pod, the table's, carries it too. Measured on 12 seeded games of Teysa, Krenko, Tymna + Kraum and Kiora: 864 decisions for the person against 957 without it, about 8 fewer a game. Proof: the new room-blocks-none 8, game-table, the 30 suites that launch table matches, table-board, 12 of 12 fuzz-live games clean with `--replay --leaks`, and `breaks-blocks-none.py` catches all eight breaks.
+
 October 21, Claude (holding Codex · Play and the engine halves Play waits on), for Rob's one-person, three-AI table: ROB-24's "show why another card is unavailable", on `claude/why-not-playable`. While Rob holds priority, each of his hand and command cards that nothing offered plays carries `why` from the room. The engine's `whyNot` gives the first reason a person would give:
 - a land played already, or not his turn or main phase;
 - a creature at the wrong time;

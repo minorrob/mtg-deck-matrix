@@ -455,6 +455,10 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
          still asked. On unless the host turned it off (the table's rules); new matches only, so one launched before is asked
          as it was. */
       ...(rulesOf().passStack ? {passStack: true} : {}),
+      /* And Declare blockers made for a person with no creature that could block: none, the history saying why (room.mjs,
+         `blocksNone`; Rob's one-person, three-AI table, Oct 21) -- most of the AI seats' attacks asked a No blocks of him.
+         New matches only, so one launched before is asked as it was. */
+      blocksNone: true,
       /* Its AI seats take what a choice they may answer with none is for -- the land Evolving Wilds finds, the counters
          proliferate adds -- where they took none (Linear ROB-164, 2026-10-19): new matches only, so one launched
          before replays as it was played (room.mjs, `pilotPicks`). */
