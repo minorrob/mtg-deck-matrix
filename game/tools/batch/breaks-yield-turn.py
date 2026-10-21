@@ -117,10 +117,10 @@ BREAKS = [
     ('a table\'s new match without Yield turn', 'game/room/table.mjs',
      '      yieldTurn: true,\n',
      '\n'),
-    ('a table\'s new match passing the stack before the board shows what it passed', 'game/room/table.mjs',
+    ('a table\'s new match passing the stack with the host\'s rule off', 'game/room/table.mjs',
      '      yieldTurn: true,\n',
      '      yieldTurn: true, passStack: true,\n'),
     ('the G1 harness launching its games otherwise than the table', 'tools/fuzz-live.mjs',
-     'pooledTaps: true, yieldTurn: true, seats:',
-     'pooledTaps: true, seats:'),
+     'pooledTaps: true, yieldTurn: true, drawBeat: true,',
+     'pooledTaps: true, drawBeat: true,'),
 ]

@@ -142,7 +142,7 @@ async function journey(n, rob, pod) {
   alarms.push(alarm);
   const current = () => viewsAt(rob.email, id).at(-1);
   const act = boardPerson({page: rob.page, seat: 0, cards: tableCards, current});
-  let actions = 0, reloaded = false;
+  let actions = 0, reloaded = false, combatFrames = 0;
   const started = Date.now();
   for (let i = 0; i < 6000; i++) {
     if (current()?.status === "finished") break;
@@ -155,6 +155,22 @@ async function journey(n, rob, pod) {
       eq(after.decision?.id, before.decision?.id, `table ${n}: reload preserves the pending question`);
       reloaded = true;
     }
+    // A human decision holds the room still: compare the displayed assignments with the real engine's view.
+    const snapshot=current();
+    if(snapshot?.decision && snapshot.state.combat?.attacks.length){
+      const publicIds=new Set(snapshot.state.players.flatMap(p=>p.zones.Battlefield.cards.map(c=>c.cardId)));
+      const expected=snapshot.state.combat.attacks.filter(a=>publicIds.has(a.attacker)).map(a=>({
+        attacker:a.attacker,target:String(a.planeswalker??`seat:${a.defender}`),
+        blockers:a.blocked?a.blockers.filter(id=>publicIds.has(id)):[]
+      })).sort((a,b)=>a.attacker-b.attacker);
+      await rob.page.waitForFunction(ids=>JSON.stringify([...document.querySelectorAll('.cm-combat-row')].map(el=>Number(el.dataset.combatAttacker)).sort((a,b)=>a-b))===JSON.stringify(ids),expected.map(a=>a.attacker));
+      const shown=await rob.page.locator('.cm-combat-row').evaluateAll(rows=>rows.map(el=>({
+        attacker:Number(el.dataset.combatAttacker),target:el.dataset.combatTarget,
+        blockers:[...el.querySelectorAll('[data-combat-role="Blocker"]')].map(b=>Number(b.dataset.card))
+      })));
+      assert.deepEqual(shown.sort((a,b)=>a.attacker-b.attacker),expected,`table ${n}: confirmed combat matches the real room at revision ${snapshot.revision}`);
+      combatFrames++;
+    }
     if (await act()) {actions++; if (actions % 50 === 0) console.log(`  table ${n}: ${actions} actions, turn ${current().state.turn}`);}
     else await rob.page.waitForTimeout(100);
   }
@@ -162,6 +178,7 @@ async function journey(n, rob, pod) {
   eq(result.status, "finished", `table ${n}: the game reaches its end through the board`);
   ok(result.result?.reason !== "ended early", `table ${n}: a real ending (${JSON.stringify(result.result)})`);
   ok(reloaded, `table ${n}: reconnect exercised during the game`);
+  ok(combatFrames>0, `table ${n}: real combat display compared at ${combatFrames} held decisions`);
   const views = viewsAt(rob.email, id);
   await rob.page.locator(".cm-board-over").waitFor({timeout: 10000});
   // A library's first projected card is not automatically public. Download through
@@ -197,6 +214,33 @@ async function journey(n, rob, pod) {
   try { lands = room.view(room.seats[0].seatId).state.players.map((p) => (p.zones.Battlefield?.cards ?? []).filter((c) => (tableCards(c.name)?.types ?? []).includes("Land")).length); } catch {}
   console.log(JSON.stringify({table: n, actions, turns: result.state.turn, result: result.result, banner, landsAtEnd: lands, refusals: room.refusals, seconds: Math.round((Date.now() - started) / 1000)}));
   eq(room.refusals.total, 0, `table ${n}: no AI answer was refused during the whole match`);
+  /* HOW IT ENDED, SAID (ROB-166), AND PLAY AGAIN (ROB-167): the room says it as data (`result.ending`), the banner says who
+     lost and why -- never "ended early" for a loss -- and Play again on it starts the table's next match: the same seats
+     and decks, a new match id, through the lobby's countdown. PLAY_AGAIN=0 stops at the banner. */
+  const end = result.result?.ending;
+  ok(end && ["won", "draw", "eliminated", "conceded", "timed-out", "ended"].includes(end.kind), `table ${n}: the room says how it ended (${JSON.stringify(end)})`);
+  ok(end.kind === "ended" || !/ended early/i.test(banner), `table ${n}: a loss or a win never reads "ended early" (${banner})`);
+  if (end.kind === "eliminated" && end.seatId === result.seatId) ok(/^You lost/i.test(banner) && /With only AI players left/i.test(banner), `table ${n}: the banner says you lost, and why the game ends (${banner})`);
+  if (end.kind === "won") ok(/won/i.test(banner), `table ${n}: the banner names the winner (${banner})`);
+  /* Only the run's last table plays again: a person still seated at a table is taken back to it, not to New table. */
+  if (process.env.PLAY_AGAIN !== "0" && n === PODS.length) {
+    const before = result.matchId;
+    /* The table learns of a game over in the room from its alarm, which a Durable Object runs by itself: run it here. */
+    const settle = setInterval(() => serial(() => tableFor(id).alarm()), 200);
+    alarms.push(settle);
+    const again = await rob.page.locator('.cm-board-over [data-action="board-rematch"][data-accept="yes"]').evaluate((el) => {const r = el.getBoundingClientRect(), x = r.x + r.width / 2, y = r.y + r.height / 2; return {x, y, reached: el.contains(document.elementFromPoint(x, y))};});
+    ok(again.reached, `table ${n}: Play again is on the banner and takes the pointer`);
+    await rob.page.mouse.click(again.x, again.y);
+    await rob.page.locator("#cm-table-seconds").waitFor({timeout: 20000});
+    ok(true, `table ${n}: Play again answered; the lobby counts down to the next game`);
+    clock += 10000;
+    await serial(() => tableFor(id).alarm());
+    await rob.page.locator("#cm-board").waitFor({timeout: 30000});
+    await rob.page.waitForFunction(() => !document.querySelector(".cm-board-over"), null, {timeout: 30000});
+    const next = viewsAt(rob.email, id).at(-1);
+    ok(next && next.matchId !== before && /g2$/.test(next.matchId) && next.status === "playing", `table ${n}: the next match is on the board (${before} -> ${next && next.matchId}, ${next && next.status})`);
+    clearInterval(settle);
+  }
   clearInterval(alarm);
 }
 try {

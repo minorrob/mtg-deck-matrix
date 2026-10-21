@@ -69,7 +69,9 @@ try {
   /* Desktop. */
   {
     const {context, page, errors, shot} = await session({width: 1440, height: 900}, "desktop");
-    verdict("the empty Decks page offers Restore a backup, not Import", await page.getByRole("button", {name: "Restore a backup", exact: true}).count() === 1);
+    /* r3's empty Decks panel (decks-hub-empty, Sep 25): the three honest ways in, a backup among them, worded so. */
+    verdict("the empty Decks page offers Restore backup…, not Import", await page.getByRole("button", {name: "Restore backup…", exact: true}).count() === 1
+      && await page.getByRole("button", {name: "Import", exact: true}).count() === 0);
     await restore(page);
     await page.getByRole("button", {name: "Menu", exact: true}).click(); await page.waitForTimeout(300);
     verdict("Menu no longer offers Subscribe, a mirrored file or Load Live", !/Subscribe to updates|Keep a file up to date|Load Live/i.test(await page.locator("#cm-user-menu").innerText()));
@@ -164,8 +166,19 @@ try {
     await page.locator(".cm-deck-tile").first().getByRole("button").first().click();
     await page.getByRole("button", {name: "Open deck", exact: true}).click(); await page.waitForTimeout(2000);
     await shot("deck");
-    const bar = await page.evaluate(() => { const b = document.querySelector(".cm-action-bar"); if (!b) return null; return {buttons: [...b.querySelectorAll(".v-button")].map((x) => { const q = x.getBoundingClientRect(); return [Math.round(q.left), Math.round(q.right)]; }), vw: innerWidth, heroWork: getComputedStyle(document.querySelector(".cm-deck-hero .cm-deck-work")).display}; });
-    verdict("the phone's action bar fits the screen", !!bar && bar.buttons.every(([l, r]) => l >= 0 && r <= bar.vw), JSON.stringify(bar));
+    /* r3's phone bar (R3.5a, Sep 25): ONE ROW THAT SCROLLS SIDEWAYS, every button its whole label at its own width (squeezed
+       to equal shares, "Make the change" read "Ma…"). So: the bar fits the screen, its buttons sit in one row, none is
+       clipped, and scrolled to its end, the last button is on the screen. */
+    const bar = await page.evaluate(() => {
+      const b = document.querySelector(".cm-action-bar"); if (!b) return null;
+      const buttons = [...b.querySelectorAll(".v-button")], box = b.getBoundingClientRect();
+      const out = {bar: [Math.round(box.left), Math.round(box.right)], vw: innerWidth, rows: new Set(buttons.map((x) => Math.round(x.getBoundingClientRect().top))).size,
+        clipped: buttons.filter((x) => x.scrollWidth > x.clientWidth + 1).map((x) => x.textContent.trim()), heroWork: getComputedStyle(document.querySelector(".cm-deck-hero .cm-deck-work")).display};
+      b.scrollLeft = b.scrollWidth; const last = buttons.at(-1).getBoundingClientRect(); out.lastAtEnd = [Math.round(last.left), Math.round(last.right)]; b.scrollLeft = 0;
+      return out;
+    });
+    verdict("the phone's action bar fits the screen: one row, every label whole, scrolling sideways to its last button",
+      !!bar && bar.bar[0] >= 0 && bar.bar[1] <= bar.vw && bar.rows === 1 && bar.clipped.length === 0 && bar.lastAtEnd[0] >= 0 && bar.lastAtEnd[1] <= bar.vw, JSON.stringify(bar));
     verdict("and the hero does not repeat its three actions", bar && bar.heroWork === "none");
     verdict("no page errors on the phone walk", errors.length === 0, errors.slice(0, 3).join(" | "));
     await context.close();

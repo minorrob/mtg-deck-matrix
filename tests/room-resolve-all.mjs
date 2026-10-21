@@ -246,6 +246,9 @@ let queue = Promise.resolve();
 const serial = (fn) => (queue = queue.then(fn, fn));
 const callAt = (p, body) => serial(async () => (await table.fetch(new Request(`https://table.internal${p}`, {method: body === undefined ? "GET" : "POST", headers: {"content-type": "application/json", "x-crankmagic-email": ROB}, ...(body !== undefined ? {body: JSON.stringify(body)} : {})}))).json());
 await callAt("/table/create", {tableId: TABLE, hostName: "Rob", seats: [{kind: "ai", name: "Maya"}]});
+/* Rob's triggers asked about, as before ROB-102: with the stack passed for a player with no answer, a run of them would
+   resolve unasked and Resolve all would never be offered. The rule's own proof is tests/game-table.mjs. */
+await callAt("/table/rules", {passStack: false});
 await callAt("/table/deck", {seatId: 0, deck: {name: "Rob's deck", ...deck("Rob", ["Quest Field", "Goblin Den"])}});
 await callAt("/table/deck", {seatId: 1, deck: {name: "Maya's deck", ...deck("Maya", ["Forest"])}});
 await callAt("/table/ready", {ready: true});

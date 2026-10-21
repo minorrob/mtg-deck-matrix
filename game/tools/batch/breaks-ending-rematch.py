@@ -1,0 +1,40 @@
+# Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE.
+"""ROB-166 and ROB-167 on the board and in the lobby: how a game ended, said; Play again and Leave the table."""
+SUITES = ["tests/board-ending-rematch.mjs"]
+B = "crankmagic-board.js"
+T = "crankmagic-table.js"
+BREAKS = [
+    ("a person knocked out is told the game is over, not that they lost", B,
+     '? {head: "You lost", line: `${lossWords(end.reason, true)}. ${onlyAi}`}',
+     '? {head: "The game is over", line: `${lossWords(end.reason, true)}. ${onlyAi}`}'),
+    ("the loss reason not said", B,
+     '? {head: "You lost", line: `${lossWords(end.reason, true)}. ${onlyAi}`}',
+     '? {head: "You lost", line: onlyAi}'),
+    ("ending ignored: back to the old words", B,
+     'const r = v.result || {}, end = r.ending, me = v.seatId;',
+     'const r = v.result || {}, end = null, me = v.seatId;'),
+    ("a concession said as a loss by the rules", B,
+     '? {head: "You conceded", line: onlyAi}',
+     '? {head: "You lost", line: onlyAi}'),
+    ("no Play again on the banner", B,
+     'const again = rematchAsked === null',
+     'const again = false'),
+    ("Leave the table answers yes", B,
+     'actions["board-rematch"] = (el) => answerRematch(el.dataset.accept === "yes");',
+     'actions["board-rematch"] = (el) => answerRematch(true);'),
+    ("a game the table has not yet heard of refuses Play again", B,
+     'if (tries < 8 && /still being played/.test(',
+     'if (false && /still being played/.test('),
+    ("the lobby shows nobody's answer", T,
+     '      ${votes}<div class="cm-actions">${buttons}</div></section>`;',
+     '      <div class="cm-actions">${buttons}</div></section>`;'),
+    ("the lobby's closing time not in US time", T,
+     'const closes = new Date(r.deadline + (Date.now() - tableNow())).toLocaleTimeString("en-US", {hour: "numeric", minute: "2-digit"});',
+     'const closes = new Date(r.deadline + (Date.now() - tableNow())).toLocaleTimeString("en-GB", {hour: "2-digit", minute: "2-digit"});'),
+    ("the lobby's Play again sends nothing", T,
+     '    await api("POST", `${tableUrl(id)}/rematch`, {accept});',
+     '    void accept;'),
+    ("a closed table hides why", T,
+     '<p>${e(r.reason || "This table\'s games are over. Start a new table to play again.")}</p>',
+     '<p>The game is over.</p>'),
+]

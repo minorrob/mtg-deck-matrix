@@ -355,7 +355,7 @@ export async function playGame({decks, seed, cards, humans = [], levels = [], ma
      is one a person at the table has, not the AI seats playing a game out for nobody. */
   /* `levels`: an AI seat's setting (AI-2), "easy" or "normal", for L1; none, L0. And its AI seats take what an "up to" or a
      search is for (`pilotPicks`), unless `picks` is false: a table's games before they did. */
-  const pod = {...(picks ? {pilotPicks: true} : {}), passEmpty: true, endWhenNoPerson: true, resolveAll: true, passAfterCast: true, endAsks: true, untapMana: true, pooledTaps: true, yieldTurn: true, seats: decks.map((d, i) => ({seatId: `s${i}`, name: NAMES[i] || `Seat ${i + 1}`, pilot: humans.includes(i) ? "human" : "house",
+  const pod = {...(picks ? {pilotPicks: true} : {}), passEmpty: true, endWhenNoPerson: true, resolveAll: true, passAfterCast: true, endAsks: true, untapMana: true, pooledTaps: true, yieldTurn: true, drawBeat: true, passStack: true, seats: decks.map((d, i) => ({seatId: `s${i}`, name: NAMES[i] || `Seat ${i + 1}`, pilot: humans.includes(i) ? "human" : "house",
     ...(!humans.includes(i) && levels[i] ? {level: levels[i]} : {}), commander: d.commander, cards: d.cards}))};
   const people = Object.fromEntries(humans.map((i) => [`s${i}`, answerer(`person-${seed}-${i}`)]));
   const started = Date.now();
