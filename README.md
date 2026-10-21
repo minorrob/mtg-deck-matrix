@@ -943,7 +943,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 550 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 552 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1216,6 +1216,8 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `board-combat-display` — `tests/board-combat-display.mjs`
 - `board-direct-blocking` — `tests/board-direct-blocking.mjs`
 - `board-commander-hand` — `tests/board-commander-hand.mjs`
+- `board-attack-all` — `tests/board-attack-all.mjs` ("All at <player>" and None on Declare attackers: picks only, a swarm sent at one player in one press)
+- `board-callouts-place` — `tests/board-callouts-place.mjs` (callouts never over a question asked of you: below it, above it or out of sight, back in place once it is answered, and seen on the phone)
 - `board-ending-rematch` — `tests/board-ending-rematch.mjs`
 - `crankmagic-audio` — `tests/crankmagic-audio.mjs`
 - `advice-contract` — `tests/advice-contract.mjs` (preparation-only AI requests, evidence references and stale-result rejection)

@@ -66,6 +66,8 @@
 globalThis.CrankBoard = Object.seal({
   /** The callouts a new view earns against the last (crankmagic-board.js, calloutsFor); set once the board is loaded. */
   calloutsFor: null,
+  /** What waits to be called out once a view's callouts come (crankmagic-board.js, queueCallouts); set likewise. */
+  queueCallouts: null,
   turnsWentBy(was, next) {
     if (!was || !next || was.matchId !== next.matchId || !was.state || !next.state) return null;
     const from = was.state.turn, to = next.state.turn;
@@ -629,6 +631,9 @@ globalThis.CrankBoard = Object.seal({
   /* In your own end step it is End turn (Rob, 2026-10-11: "passing the turn to the next player should always require
      player confirmation"): the room always asks you there (game/room/room.mjs, `endsTurn`). */
   function passLabel() {
+    /* Once the game is over there is nothing to pass or resolve: the button, disabled, says so (it said "Resolve" and the
+       name of a spell left on the stack). */
+    if (view.status === "finished") return "Game over";
     const s = view.state, top = s.stack.length ? s.stack[s.stack.length - 1] : null;
     if (top) return top.name ? `Resolve ${top.name}` : "Let it resolve";
     const d = view.decision, pass = d && d.kind === "priority" ? d.options.find((o) => o.act === "pass") : null;
@@ -784,7 +789,7 @@ globalThis.CrankBoard = Object.seal({
         <span class="cm-board-tile-flag">${e(seatFlag(p))}</span>
         ${focusButton ? b("⤢ Focus", "board-focus", {seat: String(i)}, false, {cls: "compact"}) : ""}</header>`;
     const body = `<div class="cm-mat-grid cm-seatboard-body">
-        <div class="cm-mat-zone cm-board-field" data-zone="battlefield">${group("Creatures", creatures)}${group("Artifacts & enchantments", other)}${!field.length && !ghosts.length ? `<p class="cm-board-empty">No permanents yet.</p>` : ""}<i class="cm-mat-label">Battlefield</i></div>
+        <div class="cm-mat-zone cm-board-field" data-zone="battlefield">${group("Creatures", creatures)}${group("Artifacts & enchantments", other)}${!field.length && !ghosts.length ? `<p class="cm-board-empty">${p.health.status === "lost" || departed(i) ? "Out of the game." : "No permanents yet."}</p>` : ""}<i class="cm-mat-label">Battlefield</i></div>
         <div class="cm-mat-zone cm-board-lands" data-zone="lands">${cardSection(lands,`${i}:lands`,ghosts.filter(c => c.types.includes("Land")))}<i class="cm-mat-label">Lands · ${lands.length}</i></div>
         ${you ? `<span class="cm-board-chip">${mana} mana open · land drop ${p.landsPlayed ? "used" : "1 left"}</span>` : ""}
         ${pile("Command", z.Command, z.Command.cards[0])}${pile("Exile", z.Exile, z.Exile.cards.at(-1))}
@@ -1127,7 +1132,16 @@ globalThis.CrankBoard = Object.seal({
       foot = b("OK", "board-confirm", {}, true, {disabled: sending});
     }
     else if (d.mode === "many") {
-      body = d.options.map((o) => opt(o, ` aria-pressed="${picked.includes(o.index)}"`)).join("");
+      /* ATTACK ALL (Rob's one-person, three-AI table, Oct 21): a swarm sent at one player in one press -- "All at Maya" picks,
+         for every creature that may attack her, its option at her, keeping any other creature's pick; "None" clears them.
+         The engine offers one option per creature per player (rules/combat.mjs), so a Krenko swarm at three opponents was
+         a pick per goblin. Nothing is sent until Confirm, and the room checks the attack as ever. */
+      const atPlayers = String(d.id).startsWith("declare-attackers:")
+        ? [...new Set(d.options.filter((o) => o.defenderId !== undefined && o.planeswalkerId === undefined).map((o) => o.defenderId))] : [];
+      const allAt = atPlayers.length ? `<div class="cm-board-attack-all" role="group" aria-label="Attack with every creature that can">${atPlayers.map((id) =>
+        b(`All at ${players().find((p) => p.playerId === id)?.name ?? `Seat ${id + 1}`}`, "board-attack-all", {defender: String(id)}, false, {cls: "compact", disabled: sending})).join("")}${picked.length
+        ? b("None", "board-attack-none", {}, false, {cls: "compact", disabled: sending}) : ""}</div>` : "";
+      body = allAt + d.options.map((o) => opt(o, ` aria-pressed="${picked.includes(o.index)}"`)).join("");
       const ok = picked.length >= d.min && picked.length <= d.max;
       foot = `<span class="cm-muted">${picked.length} chosen · ${d.min === d.max ? d.min : `${d.min} to ${d.max}`}</span>${b("Confirm", "board-confirm", {}, true, {disabled: !ok || sending})}`;
     } else if (d.mode === "order") {
@@ -1613,7 +1627,7 @@ globalThis.CrankBoard = Object.seal({
     const pw = Object.fromEntries(was.state.players.map((p) => [p.playerId, p]));
     if (next.status === "finished" && was.status !== "finished") {
       const r = next.result || {};
-      out.push({tone: "value", glyph: "trophy", word: r.winner === next.seatId ? "VICTORY" : "GAME OVER", line: r.winner ? `${r.winner === next.seatId ? "You" : seatName(r.winner)} won` : "", big: true});
+      out.push({tone: "value", glyph: "trophy", word: r.winner === next.seatId ? "VICTORY" : "GAME OVER", line: r.winner ? `${r.winner === next.seatId ? "You" : seatName(r.winner)} won` : "", big: true, final: true});
       return out;
     }
     if (next.state.turnPlayerId === next.seat && was.state.turnPlayerId !== next.seat) out.push({tone: "value", glyph: "trophy", word: "YOUR TURN", line: `Turn ${next.state.turn}`});
@@ -1675,12 +1689,48 @@ globalThis.CrankBoard = Object.seal({
     {tone: "harm", glyph: "burst", word: "HIT", number: "-7", line: "You · 33"}, {tone: "answer", glyph: "slash", word: "COUNTERED", line: "Rhystic Study, by Counterspell"},
     {tone: "growth", glyph: "pips", word: "", number: "+2", line: "Ezuri, Renegade Leader"}, {tone: "value", glyph: "bloom", word: "TOKENS", number: "×4", line: "Krenko, Mob Boss"},
     {tone: "fade", glyph: "fade", word: "EXILED", line: "Sun Titan"}, {tone: "harm", glyph: "seal", word: "KO", line: "Maya · 0 life", big: true}];
+  /* NEVER BEHIND THE GAME (Rob's one-person, three-AI table, Oct 21). The AI seats' turns come in bursts, each view up to
+     six callouts, read one every ~0.6 s -- so over a game the queue fell turns behind: the solo run's last screen showed
+     "YOUR TURN · Turn 33" on turn 38, over the game-over panel and its buttons. So when a view's callouts come, those
+     still waiting from a view more than CALLOUT_STALE_MS before are passed over (a KO, a FATAL and the game's end never
+     are), and the game's end clears the queue and the layer: its word is the last. One batch alone -- Try the callouts
+     -- is read whole. */
+  const CALLOUT_STALE_MS = 2000;
+  function queueCallouts(queue, list, now) {
+    const stamped = list.map((c) => ({...c, at: now}));
+    if (list.some((c) => c.final)) return {queue: stamped, clear: true};
+    return {queue: [...queue.filter((c) => c.big || now - c.at <= CALLOUT_STALE_MS), ...stamped], clear: false};
+  }
+  globalThis.CrankBoard.queueCallouts = queueCallouts;
   let calloutQueue = [], calloutTimer = null;
   function callouts(list) {
     const level = overlay();
     if (!level || !list.length) return;
-    calloutQueue.push(...list);
+    const next = queueCallouts(calloutQueue, list, performance.now());
+    calloutQueue = next.queue;
+    if (next.clear) {
+      clearTimeout(calloutTimer); calloutTimer = null;
+      const layer = document.getElementById("cm-board-callouts");
+      if (layer) layer.replaceChildren();
+    }
     if (!calloutTimer) nextCallout();
+  }
+  /* NEVER OVER A QUESTION (the same run's screens: "LIFE -1" and "LIFE -3" over Discard 1 card's options, "YOUR TURN"
+     over the turns gone by). The callouts lie over the table, and a question asked of you is read first: with its panel
+     under the layer, the layer moves below it, or above it, whichever has room, and with room for neither it waits out
+     of sight. Placed as each callout comes and as the board is drawn (fit). */
+  function placeCallouts() {
+    const layer = document.getElementById("cm-board-callouts");
+    if (!layer) return;
+    layer.style.top = "";
+    layer.classList.remove("is-hidden");
+    const ask = document.querySelector("#cm-board-decision[data-choice-id], .cm-board-went");
+    if (!ask || !layer.children.length) return;
+    const a = ask.getBoundingClientRect(), l = layer.getBoundingClientRect(), gap = 8;
+    if (!a.width || l.bottom <= a.top || l.top >= a.bottom || l.right <= a.left || l.left >= a.right) return;
+    if (a.bottom + gap + l.height <= innerHeight - gap) layer.style.top = `${a.bottom + gap}px`;
+    else if (a.top - gap - l.height >= gap) layer.style.top = `${a.top - gap - l.height}px`;
+    else layer.classList.add("is-hidden");
   }
   function nextCallout() {
     calloutTimer = null;
@@ -1693,6 +1743,7 @@ globalThis.CrankBoard = Object.seal({
     el.innerHTML = `<span class="cm-callout-glyph">${GLYPH[c.glyph] || ""}</span><span class="cm-callout-word">${e(c.word)}${c.number ? `<b>${e(c.number)}</b>` : ""}</span>${c.line ? `<span class="cm-callout-line">${e(c.line)}</span>` : ""}`;
     while (layer.children.length >= 3) layer.firstElementChild.remove();
     layer.append(el);
+    placeCallouts();
     if (!still) el.animate([{opacity: 0, transform: "scale(.4) rotate(-6deg) translateY(12px)"}, {opacity: 1, transform: "scale(1.06) rotate(0deg) translateY(0)", offset: .7}, {opacity: 1, transform: "scale(1) rotate(0deg) translateY(0)"}], {duration: 300, easing: "cubic-bezier(.2,.8,.2,1)"});
     const hold = 900 + level * 10 + (c.line ? 400 : 0);
     setTimeout(() => {
@@ -1972,6 +2023,7 @@ globalThis.CrankBoard = Object.seal({
          than Table, so the room is measured, not assumed -- last, once everything above it has its size. */
       const ask = host.querySelector(".cm-board-main>.cm-board-ask, .cm-board-tabletop>.cm-board-ask");
       if (ask) ask.style.maxHeight = `${Math.max(160, Math.floor(innerHeight - ask.getBoundingClientRect().top - 12))}px`;
+      placeCallouts();
     } finally {fitting = false;}
   }
   /* The Coach docked in Full screen: over the lower half of the side column, which gives its log the upper half. */
@@ -2223,6 +2275,21 @@ globalThis.CrankBoard = Object.seal({
     if (opts.length > 1) zoom(id);
   };
   actions["board-choose"] = (el) => {alsoOpen = false; draw(); zoom(Number(el.dataset.card));};
+  /* All at one player, and None (the attack question's own shortcuts, above): picks only, as a press on each would be. */
+  actions["board-attack-all"] = (el) => {
+    const d = view && view.decision;
+    if (!d || d.mode !== "many" || !String(d.id).startsWith("declare-attackers:") || sending) return;
+    const at = d.options.filter((o) => o.defenderId === Number(el.dataset.defender) && o.planeswalkerId === undefined);
+    const creatures = new Set(at.map((o) => o.cardId));
+    picked = [...picked.filter((i) => !creatures.has(d.options[i].cardId)), ...at.map((o) => o.index)].slice(0, d.max);
+    draw();
+  };
+  actions["board-attack-none"] = () => {
+    const d = view && view.decision;
+    if (!d || !String(d.id).startsWith("declare-attackers:") || sending) return;
+    picked = [];
+    draw();
+  };
   actions["board-zoom-open"] = (el) => zoom(Number(el.dataset.card));
   actions["board-pass"] = () => {
     const d = view && view.decision;
