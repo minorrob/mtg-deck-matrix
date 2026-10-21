@@ -1,4 +1,4 @@
-# ROB-102, first half: the stack passed for a person with no answer, and the spell called out
+# ROB-102: the stack passed for a person with no answer, the spell called out; and Draw card
 
 October 21, 2026, by Claude, holding Codex · Play while Codex is away. Branch `claude/play-pass-stack`, stacked on
 #809 (ROB-168), which holds #808 (ROB-166, ROB-167).
@@ -29,9 +29,34 @@ October 21, 2026, by Claude, holding Codex · Play while Codex is away. Branch `
 - The G1 harness (`tools/fuzz-live.mjs`) launches its games with it, as the table does (`tests/game-leave.mjs`
   checks the two pods match).
 
-## Not in this half
+## The second half: Draw card
 
-**Draw card on** (`drawBeat`, the second half of ROB-102) waits on ROB-24, the board's draw step.
+On `claude/play-draw-card`, stacked on this branch's PR (#810).
+
+- **Your draw step waits for you.** Rob's Oct 15 playtest decisions reverse Oct 9's draw by itself: "label the pending
+  draw action Draw card". A table's new matches launch with `drawBeat` (the engine's held draw, ROB-73, CR 504.1).
+- **What you see in your draw step:**
+  - the button reads **Draw card**;
+  - your library is lit as the same button ("Draw card: your library, 92");
+  - your hand doesn't change until you click one of them;
+  - one click draws one card, and it flies from the library to your hand (the board's motion; none with Reduce motion);
+  - the turn goes on to the first thing there is to do.
+- **An AI seat draws for itself.** In a two-player game, the first player's first draw is still skipped unless the host
+  turns that off.
+- **Old matches:** one launched between Oct 9 and now drew by itself, and replays so.
+- **The G1 harness** launches with it too.
+- **ROB-24's other asks are still open:**
+  - actions in upkeep and after the draw, with why a card can't be played yet;
+  - the draw's motion as the other players see it.
+
+Proof:
+
+- `table-board` walks turn 2's draw step. The button reads Draw card, the other board has nothing to draw, and the
+  library says what a click does. A pointer reaches the library where it is drawn (hit-tested, not a Playwright click).
+  One click draws one card, and the room asks in the draw step and nowhere it shouldn't.
+- `game-table`: the pod carries `drawBeat`.
+- `game-leave`: the harness's pod matches the table's.
+- `game/tools/batch/breaks-draw-card-on.py`: 5 breaks.
 
 ## Suites
 

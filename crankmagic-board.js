@@ -9,7 +9,7 @@
  * THE GAME FILLS THE WINDOW (the handoff: "the play surface is 100% of the window"). The app's rail is under it and
  * comes back from ☰; the right panel (Panel ▸) and the Coach slide OVER the surface and never narrow it.
  *
- *   the strip     one 48px line: ☰ · Turn · the step as a brass chip · n / 7 ▾ · Next · the pass (Next step · Resolve … · Pass · Draw a card) · Skip to end ·
+ *   the strip     one 48px line: ☰ · Turn · the step as a brass chip · n / 7 ▾ · Next · the pass (Next step · Resolve … · Pass · Draw card) · Skip to end ·
  *                 Table | Focus | Full screen · History ▾ · Tools ▾ · Panel ▸
  *   the playmat   ONE component at four sizes (mat()): Battlefield over Lands on the left; Command over Library and
  *                 Exile over Graveyard as card-shaped frames on the right; in Focus the History band between the two
@@ -590,7 +590,8 @@ globalThis.CrankBoard = Object.seal({
   const canPass = () => {const d = view.decision; return !!d && d.kind === "priority" && !sending && view.status !== "finished";};
   /* ONE BUTTON THAT SAYS WHAT PASSING WILL DO (item 10): the same pass to the room, in the words for now -- Next
      step on your turn with the stack empty, Resolve and the spell's name with something on it, Pass on another
-     player's turn. In the draw step of your turn it is Draw a card, and the click draws (item 13). */
+     player's turn. In the draw step of your turn it is Draw card, and the click draws (item 13; the Oct 15 playtest's
+     confirmed decisions name it Draw card). */
   /* In your own end step it is End turn (Rob, 2026-10-11: "passing the turn to the next player should always require
      player confirmation"): the room always asks you there (game/room/room.mjs, `endsTurn`). */
   function passLabel() {
@@ -602,7 +603,7 @@ globalThis.CrankBoard = Object.seal({
   }
   function passButton() {
     const d = view.decision;
-    if (d && d.kind === "draw" && view.status !== "finished") return b("Draw a card", "board-draw", {}, true, {cls: "compact", disabled: sending});
+    if (d && d.kind === "draw" && view.status !== "finished") return b("Draw card", "board-draw", {}, true, {cls: "compact", disabled: sending});
     return b(passLabel(), "board-pass", {}, true, {cls: "compact", disabled: !canPass()});
   }
   /* RESOLVE ALL, beside the pass (Rob, 2026-10-09): a run of identical triggers on top of the stack -- a thousand
@@ -710,7 +711,7 @@ globalThis.CrankBoard = Object.seal({
        pile, so Kraum is there to see, inspect and cast beside Tymna rather than only under "You can also". */
     const many = label === "Command" && zone.cards.length > 1;
     const face = many ? `<span class="cm-board-partners">${zone.cards.map((c) => card(c)).join("")}</span>` : top ? card(top) : drawing
-      ? `<button type="button" class="cm-bcard is-back is-bright" data-action="board-draw" aria-label="Draw a card: your library, ${zone.count}"${sending ? " disabled" : ""}><b class="cm-bcard-count">${zone.count}</b></button>`
+      ? `<button type="button" class="cm-bcard is-back is-bright" data-action="board-draw" aria-label="Draw card: your library, ${zone.count}"${sending ? " disabled" : ""}><b class="cm-bcard-count">${zone.count}</b></button>`
       : `<div class="cm-bcard is-empty${back && zone.count ? " is-back" : ""}" aria-hidden="true">${back && zone.count ? `<b class="cm-bcard-count">${zone.count}</b>` : ""}</div>`;
     return `<figure class="cm-mat-zone cm-board-pile" data-zone="${e(label.toLowerCase())}" aria-label="${e(label)}, ${zone.count}" title="${e(label)}, ${zone.count}">${face}<figcaption><em>${e(label)}</em><b>${zone.count}</b></figcaption></figure>`;
   }
@@ -1686,7 +1687,7 @@ globalThis.CrankBoard = Object.seal({
     const d = view.decision;
     if (d && sending) return {key: saidKey, text: ""};   /* an answer on its way: nothing new to say until the table's */
     if (d) {
-      if (d.kind === "draw") return {key: `ask:${d.id}`, text: `${stepNow()}. Draw a card.`};
+      if (d.kind === "draw") return {key: `ask:${d.id}`, text: `${stepNow()}. Draw card.`};
       if (d.kind === "priority") {const w = waitingText(); return {key: `ask:${d.id}`, text: `${stepNow()}. ${w || "Your move"}: ${passLabel()}${alsoCount() ? ", or something else you can do" : ""}.`};}
       const opts = d.options || [], shown = opts.slice(0, 6).map((o) => o.label);
       return {key: `ask:${d.id}`, text: `${d.title}${shown.length ? ` Choices: ${shown.join(", ")}${opts.length > shown.length ? `, and ${opts.length - shown.length} more` : ""}.` : ""}`};
