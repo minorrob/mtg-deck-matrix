@@ -7,6 +7,8 @@
  *   node tools/build-live-load.mjs <workbook> --adjust plans.json          # replace per-deck options/planned lists
  *   node tools/build-live-load.mjs <workbook> --scryfall cache.json        # resolve names against a Scryfall dump too
  *   node tools/build-live-load.mjs <workbook> --decks decks.json --out f   # the decks' names and commanders by hand
+ *   node tools/build-live-load.mjs <workbook> --only "D1-T,D2-T,CJ1,..."   # a Master Table workbook: just these decks
+ *   node tools/build-live-load.mjs <workbook> --only "..." --watch-into "TB1:D1,TB2:D1,TB5:D7"   # designs folded into a deck as watched cards
  *
  * The Master sheet of Rob's workbook carries, per card, how many he owns (Own), how many are
  * still to buy (Buy Count), how many are on order (Ordered), the price ($ Each), the target
@@ -317,11 +319,235 @@ export async function importStarWorkbook(workbook,{prior=null,now=new Date(),loo
   return {doc,notes,built};
 }
 
-export async function importWorkbook(workbook,{prior=null,adjust=null,scryfall=null,decks:named=null,now=new Date()}={}){
+/* 2026-10-21 AND LATER: "MtG Master Table v1" (Rob's "Backup Load - CrankMagic - 10.21"). One wide Master sheet whose
+   title cell says so, a Card Prints sheet and a Deck Reference sheet. What is new in it:
+
+     - DECKS BEYOND THE LIVE SEVEN. D1-D7 still have a target (Dn-T) and a box (Dn-A). Every other deck is one column
+       named by its id (S1-D1, G0-D3, CJ4, HG2, TB5 ...) with no box: a design that draws on the same copies. Those are
+       loaded as DRAFTS (decks[].draft), so they hold their lists without reserving a copy or adding a need to the buy
+       list; locking one is the owner's act in the app. `only` names the decks to load (the user's list), in the
+       sheet's column order.
+     - EACH DECK COLUMN HAS A STATUS BESIDE IT (CDS-<deck>). In a live deck's target, "1S-<card>" marks a SUBSTITUTE:
+       the copy holds that seat until <card> comes in for it, and the incoming card's own row says "5B-<substitute>"
+       (Rob, 2026-10-21: "use the notes column to know which cards are currently substitutes, and what comes in for
+       them when they're upgraded"). The target hundred here is the deck as it will be: each substitute's seat is the
+       incoming card's, the substitute stays in the box holding it (an upgrade whose `replaces` is in the box), and
+       the incoming card is a need. Card Notes say the same thing in words ("holds the D7 seat for Blood Artist until
+       it arrives", "replace with BUY023 Talisman of Hierarchy only after purchase"); every pairing is checked against
+       them and a disagreement is reported. "1S-?" names no incoming card, so that card keeps its seat.
+     - THE BENCH HAS BOXES: Bench - Top Box, - Fillers, - Giveaway and - Sell, which add up to Own less the boxes. Each
+       bench row carries its box, and the Sell box's copies are offered for sale.
+     - THE PRINTS ARE THEIR OWN SHEET (Card Prints: Card ID, Quantity, Set, Collector #, Finish, Value Each, Artist).
+     - THE DECK REFERENCE NAMES EACH DECK'S COMMANDER(S) AND DESCRIBES IT (core mechanic, play style, engine, Game
+       Changers, mana, counts, deviations from the shell). That text is the deck's notes, which the deck page shows as
+       its summary (Rob, 2026-10-21: "load the deck reference text for each deck summary page"), and its bracket is the
+       deck's bracket. A deck it has no row for is described by the row that says it holds that deck's list (TB5 is
+       "D7 ... list = TB5").
+     - Ownership "Watch" rows are watched cards. Nothing is on order (the Ordered column is empty), and no $ Each is kept,
+       so what was paid is carried from the committed file for cards still owned.
+     - A DESIGN CAN BE FOLDED INTO THE DECK IT VARIES (`watchInto`, {TB1: 'D1', TB2: 'D1', TB5: 'D7'}). Rob, 2026-10-21: "If
+       TB1, TB2 and TB5 are essentially the same [as D1 and D7] instead of creating those three as decks let's include the
+       cards that are different ... as watched cards in those decks." Such a design is not loaded as a deck. Each card in
+       its list that the host's hundred lacks (basic lands aside, and a card already coming in for the host aside) is a
+       watched copy filed in the host's group, which the deck page lists among its working cards; its note names the
+       designs it came from and how many copies are owned. Its Upgrade column rows go to the host. */
+const TABLE_TITLE=/^MtG Master Table\b/i;
+function masterTable(workbook){const rows=sheet(workbook,'Master');return rows&&TABLE_TITLE.test(String(rows[0]?.[0]??'').trim())?rows:null;}
+/* "Teysa Karlov (Shadrix Silverquill in the 99)", "Tymna the Weaver, Kraum, Ludevic's Opus" or "Tymna the Weaver +
+   Kraum, Ludevic's Opus": one commander or two partners, each an exact catalog name. A comma can be part of a name, so
+   a split is kept only where both halves are cards. */
+export function commandersIn(text,lookup){
+  const t=String(text||'').replace(/\s*\([^)]*\)/g,'').trim();if(!t)return null;
+  if(lookup(t))return [lookup(t).name];
+  const plus=t.split(/\s+\+\s+/);if(plus.length===2&&plus.every(p=>lookup(p.trim())))return plus.map(p=>lookup(p.trim()).name);
+  const parts=t.split(', ');
+  for(let i=1;i<parts.length;i++){const a=parts.slice(0,i).join(', '),b=parts.slice(i).join(', ');if(lookup(a)&&lookup(b))return [lookup(a).name,lookup(b).name];}
+  return null;
+}
+/* A deck's short name: the commander before its epithet ("Roon of the Hidden Realm" -> Roon), partners joined. */
+const shortName=leads=>leads.map(n=>n.split(', ')[0].replace(/\s+(the|of)\s.*$/i,'')).join(' + ');
+export function referenceText(r){
+  const lead=[r.core,r.playStyle].filter(Boolean).map(s=>String(s).trim().replace(/\.$/,'')).join('. ');
+  return [lead?lead+'.':'',r.engine?`Engine and how it wins: ${r.engine}`:'',
+    [r.group,r.colors,r.bracket?`Bracket ${r.bracket}`:'',r.gameChangers?`Game Changers: ${r.gameChangers}`:''].filter(Boolean).join(' · '),
+    r.mana?`Lands / sources / P(3 by T3): ${r.mana}`:'',r.counts?`Ramp · interaction · draw · creatures · walkers: ${r.counts}`:'',
+    r.deviations?`Deviations from the shell: ${r.deviations}`:''].filter(Boolean).join('\n');
+}
+
+export async function importMasterTable(workbook,{rows,prior=null,now=new Date(),lookup,canon,notes,only=null,watchInto=null}){
+  const h=rows.findIndex(r=>String(r[0]??'').trim()==='Card ID');ensure(h>=0,'Master: no header row starting with "Card ID".');
+  const H=rows[h].map(x=>String(x??'').trim()),at=name=>H.indexOf(name),col=name=>{const i=at(name);ensure(i>=0,`Master: no "${name}" column.`);return i;};
+  const txt=v=>v===null||v===undefined?'':String(v).trim();
+  const num=v=>{const n=Number(v);return Number.isFinite(n)?Math.trunc(n):0;};
+
+  /* THE DECKS: Dn-T beside Dn-A is a live deck; any other header with a CDS-<header> status column is a design. */
+  const live=H.filter(x=>/^D\d+-T$/.test(x)&&H.includes(x.slice(0,-2)+'-A')).map(x=>x.slice(0,-2));
+  const designs=H.filter(x=>x&&!/^(CDS|RID|Total)-/.test(x)&&!/-[TA]$/.test(x)&&H.includes('CDS-'+x));
+  let ids=[...live,...designs];
+  if(only){
+    const want=only.map(x=>String(x).trim().replace(/^(D\d+)-T$/,'$1')).filter(Boolean);
+    const missing=want.filter(x=>!ids.includes(x));ensure(!missing.length,`The workbook has no deck column for ${missing.join(', ')}.`);
+    const left=ids.filter(x=>!want.includes(x));ids=ids.filter(x=>want.includes(x));
+    if(left.length)notes.push(`${left.length} deck column${left.length===1?' was':'s were'} not asked for and left out: ${left.join(', ')}.`);
+  }
+  const into=Object.entries(watchInto||{}).map(([src,host])=>[String(src).trim(),String(host).trim().replace(/^(D\d+)-T$/,'$1')]);
+  for(const [src,host] of into){ensure(designs.includes(src)||live.includes(src),`Folding ${src} into ${host}: the workbook has no deck column for ${src}.`);
+    ensure(ids.includes(host)&&host!==src,`Folding ${src} into ${host}: ${host} is not a deck being loaded.`);}
+  ids=ids.filter(x=>!into.some(([src])=>src===x));
+  const readIds=[...ids,...into.map(([src])=>src)];
+  const isLive=id=>live.includes(id),tCol=id=>isLive(id)?id+'-T':id,codeCol=id=>'CDS-'+tCol(id);
+  if(into.length)notes.push(`Folded into the deck each varies, as watched cards rather than decks: ${into.map(([s,h])=>`${s} into ${h}`).join(', ')}.`);
+  notes.push(`${ids.length} decks: ${ids.filter(isLive).length} live (target and box: ${ids.filter(isLive).join(', ')}) and ${ids.filter(x=>!isLive(x)).length} designs loaded as drafts (${ids.filter(x=>!isLive(x)).join(', ')}).`);
+
+  /* THE CARDS. Two rows that are one card (a flavor-name print beside the card) add up, as before. */
+  const C={id:col('Card ID'),name:col('Card'),own:col('Own'),buy:col('To Buy'),ordered:at('Ordered'),price:at('Cheapest Price'),
+    notes:at('Card Notes'),ownership:at('Ownership'),upgrade:at('Upgrade')};
+  const BOXES=['Top Box','Fillers','Giveaway','Sell'].filter(b=>at('Bench - '+b)>=0);
+  const card={},byKey=new Map(),list=[],merged=[];
+  for(const r of rows.slice(h+1)){
+    const id=txt(r[C.id]),raw=txt(r[C.name]);if(!id||!raw)continue;
+    const name=canon(raw),key=Live.fold(name);
+    const rec={id,raw,name,own:num(r[C.own]),buy:num(r[C.buy]),ordered:C.ordered>=0?num(r[C.ordered]):0,price:C.price>=0?cash(r[C.price]):null,
+      notes:C.notes>=0?txt(r[C.notes]):'',watch:C.ownership>=0&&txt(r[C.ownership])==='Watch',upgrade:C.upgrade>=0?txt(r[C.upgrade]):'',
+      t:{},a:{},code:{},box:Object.fromEntries(BOXES.map(b=>[b,num(r[at('Bench - '+b)])])),
+      meta:{color:r[at('Color')],type:r[at('Type')],bracket:r[at('Bracket')],mv:r[at('MV')],description:r[at('Description')],
+        purpose:r[at('Primary Purpose')],primary:r[at('Primary Mechanic')],secondary:r[at('Secondary Mechanic')],tertiary:r[at('Tertiary Mechanic')]}};
+    for(const d of readIds){rec.t[d]=num(r[col(tCol(d))]);rec.code[d]=txt(r[col(codeCol(d))]);if(isLive(d))rec.a[d]=num(r[col(d+'-A')]);}
+    rec.sumA=live.reduce((n,d)=>n+num(r[col(d+'-A')]),0);
+    card[id]=rec;
+    if(byKey.has(key)){const first=byKey.get(key);merged.push(`${raw} into ${first.raw}`);
+      first.own+=rec.own;first.buy+=rec.buy;first.ordered+=rec.ordered;first.sumA+=rec.sumA;first.price=first.price??rec.price;first.watch=first.watch&&rec.watch;
+      for(const d of readIds){first.t[d]+=rec.t[d];first.code[d]=first.code[d]||rec.code[d];if(isLive(d))first.a[d]+=rec.a[d];}
+      for(const b of BOXES)first.box[b]+=rec.box[b];first.notes=[first.notes,rec.notes].filter(Boolean).join(' | ');card[id]=first;continue;}
+    byKey.set(key,rec);list.push(rec);
+  }
+  if(merged.length)notes.push('Rows that are printings of one card were added together: '+merged.join('; '));
+  for(const c of list)ensure(c.sumA<=c.own,`${c.name}: ${c.sumA} copies are in deck boxes but only ${c.own} owned.`);
+  for(const d of ids){const total=list.reduce((n,c)=>n+c.t[d],0);ensure(total===100,`${d}: the ${tCol(d)} column sums to ${total}, not 100. Fix the workbook before building.`);}
+
+  /* THE DECK REFERENCE: each deck's commander(s) and its description. */
+  const refRows=sheet(workbook,'Deck Reference')||[],reference={};
+  {const rh=refRows.findIndex(r=>txt(r[0])==='Deck'&&/^Commander/.test(txt(r[2])));
+   if(rh>=0){const RH=refRows[rh].map(txt),f=p=>RH.findIndex(x=>x.startsWith(p));
+     const K={group:f('Group'),commanders:f('Commander'),colors:f('Colors'),bracket:f('Bracket'),core:f('Core mechanic'),playStyle:f('Play style'),
+       engine:f('Engine'),gameChangers:f('Game Changers'),mana:f('Lands'),counts:f('Ramp'),deviations:f('Deviations')};
+     for(const r of refRows.slice(rh+1)){const id=txt(r[0]);if(!id)continue;reference[id]=Object.fromEntries(Object.entries(K).map(([k,i])=>[k,i>=0?txt(r[i]):'']));}}}
+  ensure(Object.keys(reference).length,'The workbook has no Deck Reference table (a header row of Deck, Group, Commander(s) ...).');
+  const refFor=id=>{if(reference[id])return {ref:reference[id],via:null};
+    const holder=Object.entries(reference).find(([,r])=>new RegExp(`\\blist\\s*=\\s*${id}\\b`).test(r.group));
+    return holder?{ref:holder[1],via:holder[0]}:{ref:null,via:null};};
+
+  /* DECKS. A live deck's substitutes give their seats to the cards coming in for them. */
+  const bySub=new Map(list.map(c=>[Live.fold(c.raw),c]).concat(list.map(c=>[Live.fold(c.name),c])));
+  const decks=[],upgrades=[],swapIssues=[];
+  for(const id of ids){
+    const {ref,via}=refFor(id);ensure(ref,`${id}: the Deck Reference has no row for it, and no row says it holds its list.`);
+    const leads=commandersIn(ref.commanders,lookup);ensure(leads,`${id}: the Deck Reference's commander "${ref.commanders}" is not one card or two partners the catalog knows.`);
+    const target=new Map();for(const c of list)if(c.t[id])target.set(c.name,(target.get(c.name)||0)+c.t[id]);
+    if(isLive(id))for(const c of list){
+      const m=/^1S-(.*)$/.exec(c.code[id]||'');if(!m||!c.t[id])continue;
+      const want=m[1].trim();
+      if(!want||want==='?'){notes.push(`${id}: ${c.name} is marked a substitute with no card named to come in for it, so it keeps its seat.`);continue;}
+      const incoming=bySub.get(Live.fold(want)),inName=incoming?incoming.name:canon(want);
+      ensure(!target.has(inName),`${id}: ${inName} comes in for ${c.name} but is already in the ${id} target.`);
+      target.set(c.name,target.get(c.name)-1);if(!target.get(c.name))target.delete(c.name);target.set(inName,1);
+      /* The same pairing, three ways: the substitute's status, the incoming card's ("5B-<substitute>"), and the notes. */
+      if(!incoming)swapIssues.push(`${id}: ${inName} (in for ${c.name}) has no Master row`);
+      else if(Live.fold(incoming.code[id].replace(/^5B-/,''))!==Live.fold(c.raw))swapIssues.push(`${id}: ${inName}'s status is "${incoming.code[id]||'(blank)'}", not "5B-${c.raw}"`);
+      const segs=[...c.notes.split(' | ').map(s=>({s,names:inName})),...(incoming?incoming.notes.split(' | ').map(s=>({s,names:c.raw})):[])];
+      const said=segs.find(x=>Live.fold(x.s).includes(Live.fold(x.names)));
+      if(!said)swapIssues.push(`${id}: neither Card Note names the swap ${c.name} -> ${inName}`);
+      const why=said?said.s.replace(/^Strategy:\s*/,'').trim():'';
+      upgrades.push({deck:id,card:inName,replaces:c.name,tier:2,price:marketPriceOf(lookup,inName,incoming?.price)??0,origin:'workbook',why:why.length>400?why.slice(0,399)+'…':why});
+    }
+    const cards=[...target].sort(byName);
+    for(const lead of leads)ensure(target.get(lead)===1,`${id}: its commander ${lead} is not in its hundred once.`);
+    const bracket=Number(ref.bracket);
+    const recs=cards.map(([n])=>lookup(n)).filter(Boolean),mech=Catalog.deckMechanics(recs,lookup(leads[0]),4)||[];
+    const d={id,name:`${id} ${shortName(leads)}`,commander:leads.length===1?leads[0]:leads,
+      definition:{baseBracket:Number.isInteger(bracket)?bracket:3,bracketCeiling:Number.isInteger(bracket)?bracket:3,playStyle:'Balanced',mechanics:mech},
+      notes:(via?`${id} holds ${via}'s list: the Deck Reference describes it under ${via}.\n`:'')+referenceText(ref),
+      reference:{...ref,...(via?{describedUnder:via}:{})},cards};
+    if(!isLive(id))d.draft=true;
+    decks.push(d);
+  }
+  if(swapIssues.length)notes.push(`Substitute pairings the workbook does not state the same way everywhere (${swapIssues.length}): ${swapIssues.join('; ')}.`);
+  const subs=upgrades.length;notes.push(`${subs} substitute${subs===1?'':'s'} in the live decks hold seats for the cards coming in: ${ids.filter(isLive).map(id=>`${id} ${upgrades.filter(u=>u.deck===id).length}`).join(', ')}.`);
+  /* The Upgrade column ("TB5: in for Duty Beyond Death"): an owned card that comes in for one in that deck's list. */
+  for(const c of list){
+    const m=/^([A-Za-z0-9-]+):\s*in for\s+(.+)$/i.exec(c.upgrade);if(!m)continue;
+    const host=into.find(([src])=>src===m[1])?.[1],d=decks.find(x=>x.id===(host||m[1]));if(!d){notes.push(`Upgrade column: ${c.name} names ${m[1]}, which is not loaded.`);continue;}
+    const out=canon(m[2].trim());
+    if(!d.cards.some(([n])=>Live.fold(n)===Live.fold(out))){notes.push(`Upgrade column: ${c.name} comes in for ${out}, which is not in ${d.id}.`);continue;}
+    if(d.cards.some(([n])=>Live.fold(n)===Live.fold(c.name))){notes.push(`Upgrade column: ${c.name} is already in ${d.id}.`);continue;}
+    upgrades.push({deck:d.id,card:c.name,replaces:out,tier:3,price:marketPriceOf(lookup,c.name,c.price)??0,origin:'workbook',why:host?`${c.upgrade} (${m[1]} is folded into ${host})`:c.upgrade});
+  }
+
+  /* THE FOLDED DESIGNS' OTHER CARDS, as watched cards of the deck each varies. */
+  const BASIC=/^(Snow-Covered )?(Plains|Island|Swamp|Mountain|Forest|Wastes)$/,watchFor=new Map();
+  for(const [src,host] of into){
+    const d=decks.find(x=>x.id===host),inHost=new Set(d.cards.map(([n])=>Live.fold(n))),coming=new Set(upgrades.filter(u=>u.deck===host).map(u=>Live.fold(u.card)));
+    for(const c of list){const k=Live.fold(c.name);if(!c.t[src]||inHost.has(k)||coming.has(k)||BASIC.test(c.name))continue;
+      const w=watchFor.get(host+'|'+k)||{c,host,sources:[]};w.sources.push(src);watchFor.set(host+'|'+k,w);}
+  }
+  for(const [,host] of into.filter(([,h],i,a)=>a.findIndex(([,x])=>x===h)===i)){const ws=[...watchFor.values()].filter(w=>w.host===host);
+    notes.push(`${host}: ${ws.length} watched card${ws.length===1?'':'s'} from ${into.filter(([,h])=>h===host).map(([s])=>s).join(' and ')} (${ws.filter(w=>w.c.own>0).length} of them owned).`);}
+
+  /* COPIES. The boxes are the live decks' Dn-A; the bench is the rest, by its box. */
+  const inDeck={};for(const d of ids.filter(isLive))inDeck[d]=list.filter(c=>c.a[d]).map(c=>[c.name,c.a[d]]).sort(byName);
+  const bench=[],boxIssues=[];
+  for(const c of list){
+    const left=c.own-c.sumA;if(left<=0)continue;
+    const split=BOXES.map(b=>[b,c.box[b]]).filter(([,q])=>q>0),sum=split.reduce((n,[,q])=>n+q,0);
+    if(BOXES.length&&sum===left)for(const [b,q] of split)bench.push([c.name,q,null,b]);
+    else{bench.push([c.name,left]);if(BOXES.length)boxIssues.push(`${c.name} (${left} on the bench, ${sum} in its bench boxes)`);}
+  }
+  bench.sort(byName);
+  if(boxIssues.length)notes.push(`Bench copies whose boxes do not add up, left without a box: ${few(boxIssues)}.`);
+  const ordered=list.filter(c=>c.ordered>0).map(c=>[c.name,c.ordered]).sort(byName);
+  const buy=list.filter(c=>c.buy>0).map(c=>[c.name,c.buy,marketPriceOf(lookup,c.name,c.price)]).sort(byName);
+  const watchedFor=new Set([...watchFor.values()].map(w=>Live.fold(w.c.name)));
+  const watching=[...[...watchFor.values()].map(w=>[w.c.name,1,w.host,`${w.host}: watched from ${w.sources.join(' and ')}, folded into ${w.host}${w.c.own>0?`; ${w.c.own} owned`:''}.`]),
+    ...list.filter(c=>c.watch&&!c.own&&!watchedFor.has(Live.fold(c.name))).map(c=>[c.name,1])].sort(byName);
+  const metadata={};for(const c of list){const m=Object.fromEntries(Object.entries(c.meta).filter(([,v])=>v!==null&&v!==undefined&&v!==''&&v!=='None'));if(Object.keys(m).length)metadata[c.name]=m;}
+
+  /* WHAT WAS PAID: no $ Each in this workbook, so the committed file's figure for a card still owned is kept. */
+  const paid={};{const owned=new Set(list.filter(c=>c.own>0).map(c=>Live.fold(c.name)));
+    for(const [name,price] of Object.entries(prior?.paid||{})){const n=canon(name);if(owned.has(Live.fold(n))&&cash(price))paid[n]=cash(price);}
+    for(const [n,v] of Object.entries(paid).sort(byName)){delete paid[n];paid[n]=v;}
+    if(Object.keys(paid).length)notes.push(`${Object.keys(paid).length} paid figures carried from the committed file for cards still owned.`);}
+
+  /* PRINTS, from the Card Prints sheet: each print with how many copies, never more than are owned. */
+  const prints={};const P=sheet(workbook,'Card Prints');
+  if(P){const ph=P.findIndex(r=>txt(r[0])==='Print ID');
+    if(ph>=0){const PH=P[ph].map(txt),g=(r,n)=>r[PH.indexOf(n)],left=new Map();let skipped=0;
+      for(const r of P.slice(ph+1)){
+        const c=card[txt(g(r,'Card ID'))];if(!c||c.own<=0){if(txt(g(r,'Print ID')))skipped++;continue;}
+        const have=left.has(c.name)?left.get(c.name):c.own,q=Math.min(num(g(r,'Quantity')),have);if(q<=0)continue;left.set(c.name,have-q);
+        (prints[c.name]||=[]).push({series:txt(g(r,'Set')),collector:txt(g(r,'Collector #')),quantity:q,foil:/foil|etched/i.test(txt(g(r,'Finish')))&&!/^non/i.test(txt(g(r,'Finish'))),artist:txt(g(r,'Artist')),value:cash(g(r,'Value Each'))});
+      }
+      notes.push(`Prints read for ${Object.keys(prints).length} owned cards from the Card Prints sheet${skipped?` (${skipped} print rows for cards not owned or not on the Master skipped)`:''}.`);}}
+
+  const doc={schema:'live-load@1',format:Live.FORMAT,version:Live.VERSION,generator:'tools/build-live-load.mjs',
+    count:decks.length,savedAt:now.toISOString().replace(/\.\d{3}Z$/,'Z'),workbook:basename(workbook),
+    note:"Rob's collection, built by tools/build-live-load.mjs from the Master Table workbook (its Master, Card Prints and Deck Reference sheets). Card names are exact Scryfall names. decks[].cards is each deck's hundred as it will be: in a live deck (D1-D7) a substitute's seat is the card coming in for it, and the substitute stays in the box holding that seat (upgrades). decks[].draft marks a design deck, loaded as a draft that reserves no copy. decks[].notes is the deck's Deck Reference text, the deck page's summary. owned.inDeck is what is physically in each live deck's box; owned.bench is everything else owned, each row with its bench box; ordered is in flight; buy is the shopping list, priced from the catalog (Scryfall) with the workbook's cheapest price only where the catalog has none; watching is what is watched, a row with a deck id being a card a folded design (TB1, TB2 -> D1; TB5 -> D7) has that the deck lacks; paid is what was paid per copy, carried for cards still owned; prints are the owned copies' prints.",
+    decks,owned:{inDeck,bench},ordered,buy,watching,paid,metadata,upgrades,...(Object.keys(prints).length?{prints:Object.fromEntries(Object.entries(prints).sort(byName))}:{})};
+  Live.check(doc);
+  const built=Live.build(doc,{Model,lookup});
+  return {doc,notes,built};
+}
+
+export async function importWorkbook(workbook,{prior=null,adjust=null,scryfall=null,decks:named=null,only=null,watchInto=null,now=new Date()}={}){
   const notes=[];
   const lookup=await bundledLookup({scryfall});
   const unresolved=new Set();
   const canon=name=>{const c=lookup(name);if(!c){unresolved.add(name);return name;}return c.name;};
+  const table=masterTable(workbook);
+  if(table){
+    const out=await importMasterTable(workbook,{rows:table,prior,now,lookup,canon,notes,only,watchInto});
+    ensure(!unresolved.size,`${unresolved.size} name${unresolved.size===1?'':'s'} could not be resolved against the catalog: ${[...unresolved].join('; ')}.`);
+    return out;
+  }
   /* A workbook that carries master_main is read through its star schema: dynamic decks,
      no formula cells, and the metadata the app mirrors. */
   if(sheet(workbook,'master_main')||widestar(workbook)){
@@ -534,7 +760,7 @@ export function diff(prior,doc){
 
 if(process.argv[1]&&pathToFileURL(process.argv[1]).href===import.meta.url){
   const args=process.argv.slice(2),flag=name=>{const i=args.indexOf(name);return i>=0?args[i+1]:null;},check=args.includes('--check');
-  const positional=args.filter((a,i)=>!a.startsWith('--')&&!['--adjust','--scryfall','--out','--decks'].includes(args[i-1]));
+  const positional=args.filter((a,i)=>!a.startsWith('--')&&!['--adjust','--scryfall','--out','--decks','--only','--watch-into'].includes(args[i-1]));
   const out=flag('--out')?pathToFileURL(flag('--out')):SOURCE;
   try{
     const workbook=positional[0]||await newestWorkbook();
@@ -542,7 +768,9 @@ if(process.argv[1]&&pathToFileURL(process.argv[1]).href===import.meta.url){
     const adjust=flag('--adjust')?JSON.parse(await readFile(flag('--adjust'),'utf8')):null;
     const scryfall=flag('--scryfall')?JSON.parse(await readFile(flag('--scryfall'),'utf8')):null;
     const decks=flag('--decks')?JSON.parse(await readFile(flag('--decks'),'utf8')):null;
-    const {doc,notes,built}=await importWorkbook(workbook,{prior,adjust,scryfall,decks});
+    const only=flag('--only')?flag('--only').split(/[\s,]+/).filter(Boolean):null;
+    const watchInto=flag('--watch-into')?Object.fromEntries(flag('--watch-into').split(/[\s,]+/).filter(Boolean).map(p=>p.split(':'))):null;
+    const {doc,notes,built}=await importWorkbook(workbook,{prior,adjust,scryfall,decks,only,watchInto});
     console.log(`live-load from ${doc.workbook}: ${doc.decks.length} decks · ${doc.owned.bench.length} bench rows · ${doc.ordered.length} ordered rows · ${doc.buy.length} buy rows · ${doc.upgrades.length} upgrades · options ${doc.decks.reduce((n,d)=>n+(d.options||[]).length,0)} · planned ${doc.decks.reduce((n,d)=>n+(d.planned||[]).length,0)}`);
     for(const n of notes)console.log('  note: '+n);
     console.log(diff(prior,doc).join('\n'));

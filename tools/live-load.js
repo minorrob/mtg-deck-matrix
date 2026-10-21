@@ -72,6 +72,9 @@
       const total=d.cards.reduce((n,r)=>n+r[1],0);ensure(total===100,`${d.id}: target lists ${total} cards; Commander needs exactly 100 including the commander.`);
       for(const lead of leads)ensure(d.cards.some(r=>fold(r[0])===fold(lead)&&r[1]===1),`${d.id}: the commander must appear once in its own card list (${lead}).`);
       const seen=new Set();for(const [n] of d.cards){ensure(!seen.has(fold(n)),`${d.id}: ${n} is listed twice; merge the rows.`);seen.add(fold(n));}
+      /* A DRAFT is a design deck (Master Table, 2026-10-21): its list is held, no copy is reserved for it and nothing
+         it lacks is a need, so thirty designs over one library do not put the library on the buy list. */
+      ensure(d.draft===undefined||typeof d.draft==='boolean',`${d.id}: draft must be true or false.`);
       ensure(d.options===undefined||Array.isArray(d.options),`${d.id}: options must be an array.`);ensure(d.planned===undefined||Array.isArray(d.planned),`${d.id}: planned must be an array.`);
       for(const o of d.options||[]){const {card}=listed(o,d.id+'.options');ensure(seen.has(fold(card)),`${d.id}: option ${card} is not in the deck's hundred; an Option flag goes on a card that is in the list.`);}
       for(const p of d.planned||[]){const {card}=listed(p,d.id+'.planned');ensure(!seen.has(fold(card)),`${d.id}: planned card ${card} is already in the deck's hundred; a plan is for a card that is not yet in it.`);}
@@ -79,7 +82,11 @@
     ensure(doc.owned&&typeof doc.owned==='object','owned must be an object with inDeck and bench.');
     ensure(doc.owned.inDeck&&typeof doc.owned.inDeck==='object'&&!Array.isArray(doc.owned.inDeck),'owned.inDeck must map deck id to rows.');
     for(const [id,rows] of Object.entries(doc.owned.inDeck)){ensure(ids.has(id),`owned.inDeck names unknown deck ${id}.`);ensure(Array.isArray(rows),`owned.inDeck.${id} must be an array.`);for(const row of rows)pair(row,'owned.inDeck.'+id);}
-    ensure(Array.isArray(doc.owned.bench),'owned.bench must be an array.');for(const row of doc.owned.bench)forDeck(row,'owned.bench',ids);
+    /* A bench row is [name, quantity, deck id or null, box]: the box ("Top Box", "Sell" ...) is optional. */
+    ensure(Array.isArray(doc.owned.bench),'owned.bench must be an array.');for(const row of doc.owned.bench){forDeck(row,'owned.bench',ids);ensure(row[3]===undefined||typeof row[3]==='string',`owned.bench: ${row[0]} has a box that is not text.`);}
+    /* A watched row is [name, quantity, deck id or null, note]: a deck id files it in that deck's group, so the deck page
+       lists it among its working cards (a folded design's cards, 2026-10-21). */
+    ensure(doc.watching===undefined||Array.isArray(doc.watching),'watching must be an array.');for(const row of doc.watching||[]){forDeck(row,'watching',ids);ensure(row[3]===undefined||typeof row[3]==='string',`watching: ${row[0]} has a note that is not text.`);}
     ensure(Array.isArray(doc.ordered),'ordered must be an array.');for(const row of doc.ordered)forDeck(row,'ordered',ids);
     ensure(Array.isArray(doc.buy),'buy must be an array.');for(const row of doc.buy){pair(row,'buy');ensure(row[2]===undefined||row[2]===null||(Number.isFinite(row[2])&&row[2]>=0),`buy: ${row[0]} has an invalid price.`);}
     /* `metadata` is optional: the workbook's own reading of each card (purpose, mechanics,
@@ -110,7 +117,7 @@
     const out=[],seen=new Set(),add=n=>{const k=fold(n);if(k&&!seen.has(k)){seen.add(k);out.push(String(n).trim());}};
     for(const d of doc.decks){for(const lead of commandersOf(d))add(lead);for(const [n] of d.cards)add(n);for(const p of d.planned||[])add(listed(p,d.id).card);}
     for(const rows of Object.values(doc.owned.inDeck))for(const [n] of rows)add(n);
-    for(const [n] of doc.owned.bench)add(n);for(const [n] of doc.ordered)add(n);for(const [n] of doc.buy)add(n);
+    for(const [n] of doc.owned.bench)add(n);for(const [n] of doc.ordered)add(n);for(const [n] of doc.buy)add(n);for(const [n] of doc.watching||[])add(n);
     for(const n of Object.keys(doc.paid||{}))add(n);
     for(const u of doc.upgrades){add(u.card);if(u.replaces)add(u.replaces);}
     return out;
@@ -149,7 +156,7 @@
       run({type:'createGroup',groupId,name:d.name});
       run({type:'createDeck',deckId,name:d.name,commanders:commandersOf(d).map(idOf),slots,definition:d.definition||{},notes:d.notes||'',groupId});
       slotOf[d.id]=new Map(slots.map(r=>[r.cardId,r.id]));
-      try{run({type:'finalize',deckId});}catch(err){issues.push(`${d.name} stays a draft: ${err.message}`);}
+      if(!d.draft)try{run({type:'finalize',deckId});}catch(err){issues.push(`${d.name} stays a draft: ${err.message}`);}
       for(const o of d.options||[]){const {card,why}=listed(o,d.id+'.options');run({type:'flag',deckId,slotId:slotOf[d.id].get(idOf(card)),option:true,why});}
     }
     /* Upgrades (Rob, 2026-09-26: "A card is an upgrade if it is planned to replace a deck card").
@@ -202,7 +209,9 @@
         if(rest)lot(cardId,rest,'owned',{kind:'deck',deckId:deck.id,box:deck.name},`Substitute in ${d.id}: the list does not call for ${r?'this many':'it'}.`);
       }
     }
-    for(const [name,qty,forId] of doc.owned.bench)lot(idOf(name),qty,'owned',{kind:'bench',box:''},'',forId?groupOf[forId]:'');
+    /* The Sell box's copies are offered for sale, as Sell / Trade does (offer available, kind sell). */
+    for(const [name,qty,forId,box] of doc.owned.bench){const l=lot(idOf(name),qty,'owned',{kind:'bench',box:box||''},'',forId?groupOf[forId]:'');if(box==='Sell'){l.offer='available';l.offerKind='sell';}}
+    for(const [name,qty,forId,note] of doc.watching||[])lot(idOf(name),qty,'watching',null,note||'',forId?groupOf[forId]:'');
     for(const [name,qty,forId] of doc.ordered)lot(idOf(name),qty,'ordered',null,'',forId?groupOf[forId]:'');
     /* PRINTS (W1). Each owned copy wears the print it is. A card's copies are split by the prints the file records, the
        dearest print first into the deck boxes and the rest to the bench (Rob, 2026-09-30: "always assume the most

@@ -1,0 +1,454 @@
+{
+ "schema": "library-load-lane@1",
+ "lane": "L6-spells",
+ "theme": "spells",
+ "label": "Spells, draws and discards: instants and sorceries, card draw, cost changes, tutors, lands",
+ "source": {
+  "collection": "collection-2026-10-21.json",
+  "workbook": "Backup_Load_-_CrankMagic_-_2026-10-21.xlsx",
+  "decks": [
+   "D1",
+   "D2",
+   "D3",
+   "D4",
+   "D5",
+   "D6",
+   "D7",
+   "S1-D1",
+   "S1-D2",
+   "S1-D3",
+   "S1-D4",
+   "S1-D5",
+   "S1-D6",
+   "S2-D1",
+   "S2-D2",
+   "S2-D3",
+   "S2-D4",
+   "S2-D5",
+   "S2-D6",
+   "G0-D1",
+   "G0-D2",
+   "G0-D3",
+   "G0-D4",
+   "G1-D1",
+   "G1-D2",
+   "G1-D3",
+   "G1-D4",
+   "CJ1",
+   "CJ2",
+   "CJ3",
+   "CJ4",
+   "CJ5",
+   "HG1",
+   "HG2"
+  ],
+  "liveDecks": [
+   "D1",
+   "D2",
+   "D3",
+   "D4",
+   "D5",
+   "D6",
+   "D7"
+  ],
+  "candidates": {
+   "pool": 29551,
+   "candidate": 2643,
+   "refused": 0,
+   "blocked": 6,
+   "vetoed": 18,
+   "unknown": 25793,
+   "structure": 1091,
+   "oneSentenceShort": 12544
+  }
+ },
+ "cards": [
+  {
+   "name": "Veil of Summer",
+   "scope": "live",
+   "liveDecks": [
+    "D1"
+   ],
+   "decks": [
+    "D1"
+   ],
+   "owned": 1,
+   "rank": 854,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Draw a card if an opponent has cast a blue or black spell this turn.",
+    "Spells you control can't be countered this turn.",
+    "You and permanents you control gain hexproof from blue and from black until end of turn. (You and they can't be the targets of blue or black spells or abilities your opponents control.)"
+   ],
+   "needs": []
+  },
+  {
+   "name": "Eerie Interlude",
+   "scope": "live",
+   "liveDecks": [
+    "D2"
+   ],
+   "decks": [
+    "D2"
+   ],
+   "owned": 1,
+   "rank": 887,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Exile any number of target creatures you control.",
+    "Return those cards to the battlefield under their owner's control at the beginning of the next end step."
+   ],
+   "needs": [
+    "option:RememberChanged",
+    "option:RememberObjects"
+   ]
+  },
+  {
+   "name": "Flickering Hound",
+   "scope": "live",
+   "liveDecks": [
+    "D2"
+   ],
+   "decks": [
+    "D2"
+   ],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Dog",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever you cast a creature spell, exile up to one other target creature you control, then return that card to the battlefield under its owner's control."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Liliana's Standard Bearer",
+   "scope": "live",
+   "liveDecks": [
+    "D7"
+   ],
+   "decks": [
+    "D7"
+   ],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Zombie Knight",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature enters, draw X cards, where X is the number of creatures that died under your control this turn."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Queza, Augur of Agonies",
+   "scope": "live",
+   "liveDecks": [
+    "D7"
+   ],
+   "decks": [
+    "D7"
+   ],
+   "owned": 1,
+   "rank": null,
+   "type": "Legendary Creature — Octopus Advisor",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever you draw a card, target opponent loses 1 life and you gain 1 life."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Kynaios and Tiro of Meletis",
+   "scope": "deck",
+   "liveDecks": [],
+   "decks": [
+    "G0-D4"
+   ],
+   "owned": 0,
+   "rank": null,
+   "type": "Legendary Creature — Human Soldier",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "At the beginning of your end step, draw a card.",
+    "Each player may put a land card from their hand onto the battlefield, then each opponent who didn't draws a card."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Aquitect's Defenses",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Enchantment — Aura",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this Aura enters, enchanted creature gains hexproof until end of turn. (It can't be the target of spells or abilities your opponents control.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Clash of Elements",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Choose target nonland permanent.",
+    "Its owner may put it on top of their library.",
+    "If they do, Clash of Elements deals 2 damage to them.",
+    "If they didn't put the card on top of their library, they put it on the bottom."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Duelist of the Mind",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Human Advisor",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Duelist of the Mind's power is equal to the number of cards you've drawn this turn.",
+    "Whenever you commit a crime, you may draw a card.",
+    "If you do, discard a card.",
+    "This ability triggers only once each turn."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Eclipsed Boggart",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Goblin Scout",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature enters, look at the top four cards of your library.",
+    "You may reveal a Goblin, Swamp, or Mountain card from among them and put it into your hand.",
+    "Put the rest on the bottom of your library in a random order."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Eclipsed Flamekin",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Elemental Scout",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature enters, look at the top four cards of your library.",
+    "You may reveal an Elemental, Island, or Mountain card from among them and put it into your hand.",
+    "Put the rest on the bottom of your library in a random order."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Eriette's Lullaby",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Destroy target tapped creature."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Festering Gulch",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Land — Desert",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this land enters, it deals 1 damage to target opponent."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Flourishing Grapple",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Target creature or planeswalker an opponent controls that's red or white loses all abilities until end of turn.",
+    "Target creature you control deals damage equal to its power to that permanent."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Ichor Elixir",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "If you would roll one or more planar dice, instead roll that many planar dice plus one and ignore one."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Kulrath Mystic",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Elemental Wizard",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever you cast a spell with mana value 4 or greater, this creature gets +2/+0 and gains vigilance until end of turn."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Shepherding Spirits",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Spirit",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Plainscycling {2} ({2}, Discard this card: Search your library for a Plains card, reveal it, put it into your hand, then shuffle.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Splitskin Doll",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Artifact Creature — Toy",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Then discard a card unless you control another creature with power 2 or less."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Tanufel Rimespeaker",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Elemental Wizard",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever you cast a spell with mana value 4 or greater, draw a card."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Thoughtweft Charge",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "If a creature entered the battlefield under your control this turn, draw a card."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Tributary Vaulter",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 2,
+   "rank": null,
+   "type": "Creature — Merfolk Warrior",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever this creature becomes tapped, another target Merfolk you control gets +2/+0 until end of turn."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Unexpected Results",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Shuffle your library, then reveal the top card.",
+    "If it's a nonland card, you may cast it without paying its mana cost.",
+    "If it's a land card, you may put it onto the battlefield and return Unexpected Results to its owner's hand."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Vicious Clown",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Human Clown",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever another creature you control with power 2 or less enters, this creature gets +2/+0 until end of turn."
+   ],
+   "needs": null
+  }
+ ]
+}

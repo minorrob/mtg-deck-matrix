@@ -300,4 +300,67 @@ eq(L.PASSWORD,'treycmload1');
   const plains=lotsOf('Plains'),withPrint=plains.filter(l=>l.printing.series||l.printing.artist).reduce((n,l)=>n+l.quantity,0);
   ok(withPrint===2&&plains.reduce((n,l)=>n+l.quantity,0)===96);// two Plains recorded, ninety-four left blank
 }
+/* DRAFTS, BENCH BOXES AND WATCHED CARDS (the Master Table, 2026-10-21). A design deck is loaded as a draft: it holds its
+   list, reserves no copy and adds no need, so thirty designs over one library leave the buy list to the live decks. A bench
+   row may name its box, the Sell box's copies are offered for sale, and watched cards are watching copies. */
+{const d=doc();
+  d.decks.push({id:'S1-D1',name:'Design',commander:'Test Leader',draft:true,cards:[['Test Leader',1],...filler.map(c=>[c.name,1]),['Mountain',59]]});
+  d.owned.bench=[['Filler 1',1,null,'Top Box'],['Filler 1',1,null,'Sell'],['Mountain',30,null,'Fillers']];d.watching=[['Planned Piece',1],['Shiny Upgrade',1,'D1','D1: watched from a folded design.']];
+  const {state,issues}=L.build(d,{Model:M,lookup}),design=state.decks.find(x=>x.id==='deck:live:S1-D1');
+  eq(design.status,'draft');eq(state.decks.find(x=>x.id==='deck:live:D1').status,'final');
+  ok(!state.lots.some(l=>l.allocation&&l.allocation.deckId===design.id));// the design reserves nothing
+  ok(!issues.some(i=>/Design/.test(i)));// and needs nothing
+  const sell=state.lots.filter(l=>l.location&&l.location.box==='Sell');ok(sell.length===1&&sell[0].offer==='available'&&sell[0].offerKind==='sell');
+  ok(state.lots.some(l=>l.location&&l.location.box==='Top Box'&&l.offer==='none')&&state.lots.some(l=>l.location&&l.location.box==='Fillers'));
+  ok(state.lots.some(l=>l.source==='watching'&&state.cards[l.cardId].name==='Planned Piece'));
+  const forD1=state.lots.find(l=>l.source==='watching'&&state.cards[l.cardId].name==='Shiny Upgrade');// a watched card for a deck is filed in its group
+  ok(forD1.groupIds.includes('group:live:D1')&&forD1.notes==='D1: watched from a folded design.'&&!forD1.allocation);
+  M.validate(state);checks++;}
+{const bad=doc();bad.watching=[['Filler 1',1,'D9']];assert.throws(()=>L.check(bad),/unknown deck D9/);checks++;}
+{const bad=doc();bad.decks[0].draft='yes';assert.throws(()=>L.check(bad),/draft must be/);checks++;}
+{const bad=doc();bad.owned.bench.push(['Filler 1',1,null,7]);assert.throws(()=>L.check(bad),/box that is not text/);checks++;}
+{const bad=doc();bad.watching=[['Filler 1',0.5]];assert.throws(()=>L.check(bad),/quantity/);checks++;}
+
+/* THE MASTER TABLE: Rob's "Backup Load - CrankMagic - 10.21" (2026-10-21). D1-D7 are live (a target and a box); 27 are
+   designs; TB1, TB2 and TB5, which vary D1 and D7, are folded into them as watched cards rather than loaded (Rob: "include
+   the cards that are different to D1 and D7 as watched cards in those decks"). In a live deck's target a "1S-<card>" status marks a substitute
+   whose seat is <card>'s, so the hundred holds the card coming in and the substitute stays in the box holding that seat.
+   The workbook's own totals row says Own 2038, Total-A 699, To Buy 31; the Deck Reference names every commander and
+   describes every deck, and that text is the deck's notes. */
+{let python=true;try{execFileSync('python3',['-c','import openpyxl'],{stdio:'ignore'});}catch{python=false;}
+  if(!python)console.log('live-load: the Master Table workbook check is SKIPPED (no openpyxl)');
+  else{
+    const only='CJ1,CJ2,CJ3,CJ4,CJ5,D1-T,D2-T,D3-T,D4-T,D5-T,D6-T,D7-T,G0-D1,G0-D2,G0-D3,G0-D4,G1-D1,G1-D2,G1-D3,G1-D4,HG1,HG2,S1-D1,S1-D2,S1-D3,S1-D4,S1-D5,S1-D6,S2-D1,S2-D2,S2-D3,S2-D4,S2-D5,S2-D6'.split(',');
+    const {doc:table,notes,built}=await importWorkbook('data/source/Backup_Load_-_CrankMagic_-_2026-10-21.xlsx',{only,watchInto:{TB1:'D1',TB2:'D1',TB5:'D7'}});
+    const deck=id=>table.decks.find(d=>d.id===id),has=(d,n)=>d.cards.some(([x])=>x===n);
+    eq(table.decks.length,34);ok(!table.decks.some(d=>/^(S0-D\d|TB\d)$/.test(d.id)));
+    eq(table.decks.filter(d=>!d.draft).map(d=>d.id).join(','),'D1,D2,D3,D4,D5,D6,D7');
+    ok(table.decks.every(d=>d.cards.reduce((n,r)=>n+r[1],0)===100));
+    ok(has(deck('D7'),'Blood Artist')&&!has(deck('D7'),'Fblthp, the Lost')&&table.owned.inDeck.D7.some(([n])=>n==='Fblthp, the Lost'));// in for Fblthp
+    ok(has(deck('D2'),"Avacyn's Pilgrim")&&!has(deck('D2'),'Rescue Girl, First Responder'));
+    eq(table.upgrades.filter(u=>/^D\d$/.test(u.deck)&&u.tier===2).length,30);// every 1S status but Barrage's "1S-?"
+    ok(has(deck('D6'),'Barrage of Expendables')&&notes.some(n=>/Barrage of Expendables is marked a substitute with no card named/.test(n)));
+    eq(table.upgrades.filter(u=>u.deck==='D7'&&u.tier===3).length,3);// the Upgrade column's "TB5: in for Duty Beyond Death", now D7's
+    /* THE FOLD: TB1 is D1's list and adds nothing; TB2 adds the 27 cards D1 lacks, every one owned; TB5 is D7's hundred once
+       the substitutes give their seats, so it adds none. Each is watched for its deck, never a basic land, never in it. */
+    const watchedFor=id=>table.watching.filter(r=>r[2]===id);
+    eq(watchedFor('D1').length,27);eq(watchedFor('D7').length,0);eq(table.watching.filter(r=>!r[2]).length,7);
+    ok(watchedFor('D1').every(([n,q,,note])=>q===1&&!has(deck('D1'),n)&&!/^(Plains|Island|Swamp|Mountain|Forest|Wastes)$/.test(n)&&/^D1: watched from TB2, folded into D1; \d+ owned\.$/.test(note)));
+    ok(watchedFor('D1').some(([n])=>n==='Seedborn Muse'));
+    const s=built.state,c=M.counters(s);
+    eq(c.owned,2038);eq(c.inDeck,699);eq(c.toBuy,31);eq(c.watching,34);eq(c.sellTrade,11);
+    ok(s.lots.find(l=>l.source==='watching'&&s.cards[l.cardId].name==='Seedborn Muse').groupIds.includes('group:live:D1'));// on D1's page
+    eq(s.lots.filter(l=>l.standInFor).length,30);
+    ok(/holds the seat of Blood Artist/.test(s.lots.find(l=>l.standInFor&&s.cards[l.cardId].name==='Fblthp, the Lost').notes));
+    ok(!s.lots.some(l=>l.allocation&&s.decks.find(d=>d.id===l.allocation.deckId).status!=='final'));// designs reserve nothing
+    eq(s.decks.filter(d=>d.status==='final').length,7);eq(built.issues.length,0);
+    const boxes={};for(const l of s.lots)if(l.location&&l.location.kind==='bench')boxes[l.location.box]=(boxes[l.location.box]||0)+l.quantity;
+    eq(JSON.stringify(boxes,Object.keys(boxes).sort()),JSON.stringify({Fillers:952,Giveaway:159,Sell:11,'Top Box':217}));
+    eq(JSON.stringify(deck('CJ4').commander),JSON.stringify(['Tymna the Weaver',"Kraum, Ludevic's Opus"]));
+    eq(deck('D5').commander,'Teysa Karlov');eq(deck('D3').commander,'Ezuri, Claw of Progress');
+    eq(deck('CJ1').definition.baseBracket,4);eq(deck('S1-D2').definition.bracketCeiling,2);
+    ok(deck('D1').notes.startsWith('Planeswalker loyalty')&&/Game Changers: Farewell/.test(deck('D1').notes));
+    ok(table.decks.every(d=>d.notes.length>200));
+    ok(Object.keys(table.prints).length>1300);
+  }}
 console.log(`live-load: ${checks} checks passed; the hand-written file rebuilds a validated library, and the committed file loads clean.`);
