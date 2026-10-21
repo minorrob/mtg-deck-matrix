@@ -75,6 +75,12 @@ try{
     assert.equal(await strip.locator('[data-combat-attacker="70004"] [data-combat-role="Blocker"]').count(),2,`${where}: both confirmed blockers shown`);
     assert.doesNotMatch(await strip.innerText(),/SECRET FACE|Unblocked|damage will/,`${where}: no hidden identity or promised damage`);
     if(width<600) await point(page,'.cm-phone-center .cm-mat [data-card="70013"]');
+    /* The picture has its own room above the board (the shell's 188px combat row): the board starts below it, never under
+       it -- every control in the strip can be reached and still cover the top of the mat. */
+    if(width>=1024){
+      const board=await page.locator(mode==="full"?".cm-stage-region":mode==="table"?".cm-board-table":".cm-board-mat").first().boundingBox(),pic=await strip.boundingBox();
+      assert.ok(board.y>=pic.y+pic.height-1,`${where}: the board starts below the combat picture (${Math.round(board.y)} vs ${Math.round(pic.y+pic.height)})`);
+    }
     if(width>=1024){
       for(const id of [70004,70021,70011,70012]) await point(page,`.cm-combat [data-card="${id}"]`);
       const face=await point(page,'.cm-combat [data-card="70012"]');
