@@ -219,6 +219,39 @@ other lane answers in the last column.
 | 5 | Engine → Workshop | When a library or deck is saved, ask `POST /api/tables/known {decks: [[names], ...]}` for its cards, as the hub already does for readiness (Rob's decision 3) | Card load step 5: the answer records every card no table can play on the demand list (step 1), which the backstop loads first (`game/tools/engine-compile.mjs --demand`) and the waves review first (`game/tools/card-waves.mjs`). Nothing else changes for the player; the answer's `unknown` and `listed` are the readiness line's own. The save hook is in `cloud/library.mjs`, Workshop's file | |
 | 1 | Deck intelligence | A headless batch entry point that plays N seeded games with house pilots and returns facts as data: `playPod({pod, seeds, cards, turnLimit}) → [{seed, turns, winner, reason, refused, perSeat: {life, lossReason, commanderDamage, turnsTaken}, perTurn: [{turn, landsInPlay, manaProduced, cardsDrawn}]}]`, deterministic per seed, with a stated budget per game; the room already plays a whole all-house game in one call (`game/room/room.mjs` `startRoom`, as `tests/engine-room-games.mjs` does) | ROB-116's calibration harness: the same hundred played in the engine and in the simulator, the distributions compared (turn of first lethal attack, mana by turn, cards drawn); the audit `docs/engine/sim-model-audit.md` (ROB-84) found no such runner exists and the deck lane never edits `game/**`. Asked on ROB-11, 2026-10-18 | |
 
+## 2026-10-21: main a94be110 in production (Rob: "Release main a94be110 to production with tools/release-production.sh cloud-production, push release/pages, and read crankmagic.com back")
+
+Released by the Personal-HP Claude session holding Codex · Play. It was announced in ROB-11 before the push and recorded
+there after. Before it, every check passed on main: CI's `suites`, and the walks CI doesn't run, on main's own builds
+(#814).
+- **Production** (`cloud-production`, by `tools/release-production.sh`):
+  - `release/pages` d3138dcb, on 67fffbd1, pushed at 14:24 UTC;
+  - local walks: `release-acceptance` 22 and `production-play-e2e` 27;
+  - Workers Builds `crankmagic` succeeded, and deployed version **331672d4** is at 100% since 14:24:54 UTC;
+  - `version.json` reads a94be110, profile `cloud-production`;
+  - the live walk at `https://crankmagic.com`: 22 checks, with `UAT_LIVE_NETWORK=1`;
+  - **the rollback target** is **67fffbd1** (version 76f7206c, 5f6ea9cc, 2026-10-18).
+- **Staging** serves the same main: `release/cloud-staging` 526860bb, version cc415e1c, read back with
+  `tools/staging-check.mjs --expect a94be110`.
+- **It carries everything merged since 5f6ea9cc:**
+  - **Play:**
+    - an AI's "up to" picks (#792);
+    - Full view's long choices (#793);
+    - Yield turn, the combat picture and kept scroll (#797–#799, Codex);
+    - direct blocking (#804);
+    - the commander tax, partners and a looked-at hand (#807);
+    - how a game ended, and Play again (#805, #806, #808);
+    - same-named creatures numbered in combat (#809);
+    - no stop at every AI spell, with CAST, and Draw card (#810, #811);
+    - land spacing and the drawer edge (#812);
+    - the upright phone (#813);
+    - Focus's Lands caption (#814, ROB-174).
+  - **Engine:** card load steps 1 and 2 (#776/#784, #785).
+- **Production's D1 and secrets are unchanged** (0001 and 0002):
+  - card demand records nothing there until migration 0006, and answers as before (`card-demand` proves it);
+  - sharing is off in `cloud-production`;
+  - Claude seats wait on `ANTHROPIC_API_KEY` (ROB-95); Easy and Normal AIs play.
+
 ## 2026-10-20: Play ready for a 1-person, 3-AI play test; main a9bec38f on staging (a Claude session on Personal-HP)
 
 Rob, Oct 19: *"Evaluate how ready the Play capability is for me to play with all the features in a 1 human v 3 AIs …
