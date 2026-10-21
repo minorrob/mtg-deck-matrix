@@ -557,7 +557,8 @@ globalThis.CrankBoard = Object.seal({
     /* A FACE-DOWN CARD (CR 708.2a) is the back of a card, and says so: never its name, not even to the player allowed to
        look at it (CR 708.5) -- the board does not show it, so it does not say it. */
     const named = c.name || (c.faceDown ? `Face-down ${(c.types || []).includes("Creature") ? "creature" : "card"}` : "A hidden card");
-    const label = `${named}${state.length ? ", " + state.join(", ") : ""}${bright ? `: ${can.join(" or ")}${opts.length > can.length ? `, ${opts.length} ways` : ""}` : ""}`;
+    /* WHY NOT (ROB-24): a card of the person's own that nothing offered plays says why, from the room (`why`). */
+    const label = `${named}${state.length ? ", " + state.join(", ") : ""}${bright ? `: ${can.join(" or ")}${opts.length > can.length ? `, ${opts.length} ways` : ""}` : c.why ? `. ${c.why}` : ""}`;
     if (!c.name && !c.faceDown) return `<div class="cm-bcard is-back" role="img" aria-label="${e(label)}"></div>`;
     return `<button type="button" class="${cls}" data-action="${action}" data-card="${c.cardId}"${arrange ? ` draggable="true" data-arrange-card="true" title="Drag within this section to reorder; Alt + Left or Right works with a keyboard"` : ""} aria-label="${e(label)}">
       ${c.name ? `<span class="cm-bcard-name">${e(c.name)}</span>` : ""}${creature ? `<span class="cm-bcard-pt">${c.power}/${c.toughness}</span>` : ""}${tax !== null ? `<span class="cm-bcard-tax" title="Commander tax: {${tax}} more to cast it from the command zone">+${tax}</span>` : ""}
@@ -933,7 +934,7 @@ globalThis.CrankBoard = Object.seal({
   function pickPanel() {
     const id = hover ?? selected, pick = id === null ? null : findCard(id);
     if (!pick || !pick.name) return `<p class="cm-full-pick-empty cm-muted">Hover a card to read it here; click one to keep it.</p>`;
-    return `<section class="cm-full-pick" aria-label="${e(pick.name)}">${card(pick, {where: "pick", action: "board-zoom-open"})}<div class="cm-board-options">${optionsFor(pick.cardId).map((o) => `<button type="button" class="v-button compact primary" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}>${sayHtml(o)}</button>`).join("")}</div></section>`;
+    return `<section class="cm-full-pick" aria-label="${e(pick.name)}">${card(pick, {where: "pick", action: "board-zoom-open"})}<div class="cm-board-options">${optionsFor(pick.cardId).map((o) => `<button type="button" class="v-button compact primary" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}>${sayHtml(o)}</button>`).join("") || (pick.why ? `<p class="cm-muted cm-hand-why">${e(pick.why)}</p>` : "")}</div></section>`;
   }
   function drawPick() {const el = document.getElementById("cm-full-pick"); if (el && view) el.innerHTML = pickPanel();}
   /* TABLE VITALS (the handoff's 560px dialog): every seat's life and poison, and every commander's damage to
@@ -1215,7 +1216,7 @@ globalThis.CrankBoard = Object.seal({
       const acts = opts.map((o, i) => `<button type="button" class="v-button${i === 0 ? " primary" : ""}" data-action="board-hand-do" data-index="${o.index}"${sending ? " disabled" : ""}>${sayHtml(o)}${i === 0 ? " · Enter" : ""}</button>`).join("");
       return `<div class="cm-hand-show is-held" role="dialog" aria-modal="true" aria-label="${e(c.name)}, held">${close}
         <div class="cm-hand-held">${card(c, {where: "held", action: "board-hand-back"})}</div>
-        <div class="cm-actions cm-hand-acts">${acts || `<span class="cm-muted">Nothing to do with it now.</span>`}${b("Back to hand", "board-hand-back")}</div>
+        <div class="cm-actions cm-hand-acts">${acts || `<span class="cm-muted cm-hand-why">${e(c.why || "Nothing to do with it now.")}</span>`}${b("Back to hand", "board-hand-back")}</div>
         <div class="cm-hand-rest">${cards.filter((x) => x.cardId !== held).map((x) => card(x, {where: "rest", action: "board-hand-hold"})).join("")}</div></div>`;
     }
     const fanned = cards.map((c, k) => {const o = k - (n - 1) / 2; return `<div class="cm-hand-slot" style="--o:${o};--a:${Math.abs(o)}" data-key="${k + 1}">${card(c, {where: "fan", action: "board-hand-hold"})}<span class="cm-hand-key">${k + 1}</span></div>`;}).join("");
@@ -1243,7 +1244,7 @@ globalThis.CrankBoard = Object.seal({
     const acts = opts.map((o) => `<button type="button" class="v-button primary" data-action="board-zoom-do" data-index="${o.index}"${sending ? " disabled" : ""}>${sayHtml(o)}</button>`).join("");
     /* More than one way to use it: the ways listed to choose from, as many as there are, above Close. */
     if (opts.length > 1) return C.modal(c.name, `<div class="cm-board-zoom is-choosing">${card(c, {where: "zoom", action: "close"})}</div><p class="cm-board-choose-say">Choose one:</p><div class="cm-board-choices" role="group" aria-label="Ways to use ${e(c.name)}">${acts}</div><div class="cm-form-footer">${b("Close", "close")}</div>`);
-    C.modal(c.name, `<div class="cm-board-zoom">${card(c, {where: "zoom", action: "close"})}</div><div class="cm-form-footer">${acts}${b("Close", "close", {}, !acts)}</div>`);
+    C.modal(c.name, `<div class="cm-board-zoom">${card(c, {where: "zoom", action: "close"})}</div>${!acts && c.why ? `<p class="cm-muted cm-hand-why">${e(c.why)}</p>` : ""}<div class="cm-form-footer">${acts}${b("Close", "close", {}, !acts)}</div>`);
   }
   /* The peek follows the pointer: it is put away when the pointer leaves the card -- and, since a card redrawn or moved
      away from under a still pointer never says it was left (Rob, 2026-10-09: ending the game left a Plains shown large,
@@ -2160,11 +2161,19 @@ globalThis.CrankBoard = Object.seal({
       blockSelected = id; openModuleDrawer("actions"); draw(); return;
     }
     /* Full screen and the Panel show a card large at the side, with what can be done with it, before anything is done. */
-    if (mode === "full" && !phone()) {selected = id; hover = null; drawPick(); draw(); return;}
+    if (mode === "full" && !phone()) {
+      selected = id; hover = null; drawPick(); draw();
+      /* WHY NOT (ROB-24): a card of the person's own with nothing to do says why at once, whether or not Card Preview is open. */
+      const why = !optionsFor(id).length && findCard(id)?.why;
+      if (why) C.notice(why);
+      return;
+    }
     const previewSide=moduleSide("inspect");
     if ((previewSide === "left" && stageRail) || (previewSide === "right" && stageSide)) {selected = id; drawPick();}
     if (!view.decision || sending) return;
     const opts = optionsFor(id);
+    /* Nothing to do with it: why, when the room says (ROB-24). */
+    if (!opts.length && findCard(id)?.why) return C.notice(findCard(id).why);
     if (opts.length === 1) return option(opts[0].index);
     /* More than one way to use it -- aimed at this or that, paid with this or that -- is a pop-up to choose in. */
     if (opts.length > 1) zoom(id);
