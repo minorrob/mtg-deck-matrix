@@ -815,6 +815,10 @@ export function effectUntil(state, params, context) {
        players, read where a target is chosen (script/filter.mjs, playerHasHexproof). */
     ...(params.until === "their-next-turn" || (["protection", "life-cant-change", "no-maximum-hand-size", "damage-doubled", "look-at-top", "player-hexproof"].includes(params.rule)
       && !(params.rule === "protection" && (params.targets || params.selector))) ? {players: Array.isArray(params.who) ? [...params.who] : [context.controller]} : {}),
+    /* And "you ... gain hexproof from blue and from black until end of turn" (Veil of Summer; CR 702.11d): a hexproof from over
+       players (rules/protection.mjs, playerHexproofFrom) -- with no targets and no selector, where Skrelv's is over the
+       permanents it targets. */
+    ...(params.rule === "hexproof-from" && !params.targets && !params.selector ? {players: Array.isArray(params.who) ? [...params.who] : [context.controller]} : {}),
     /* "If a source would deal damage to that player or a permanent that player controls, it deals double that damage
        instead" (Lightning, Army of One; rules/replacement.mjs, rememberedReplacement): `who` the players it remembers, its
        name for the order's question (CR 616.1). "That creature enters with an additional +1/+1 counter on it" (Summon:

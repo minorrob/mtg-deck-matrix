@@ -36,7 +36,7 @@ import {usesThisTurn, valueCostOf} from "../state/index.mjs";
 import {typesOf, keywordsOf, controllerOf, characteristicsOf, colorsOf, everyCreatureTypeOf, subtypesOf, staticAbilities} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {hasSubtype, isCreatureType} from "../keywords/types.mjs";
-import {protectedFrom, hexproofFrom} from "../rules/protection.mjs";
+import {protectedFrom, hexproofFrom, playerHexproofFrom} from "../rules/protection.mjs";
 import {amountOf, amountProblems} from "./amount.mjs";
 import {NONE_CHOSEN} from "./chosen.mjs";
 
@@ -306,6 +306,9 @@ export function compileSelector(selector) {
       if (selector.target === true && id !== chooser && playerHasHexproof(state, id)) return false;
       /* "You ... have protection from" (CR 702.16j): no target of a spell or ability from a source with the quality. */
       if (selector.target === true && protectedFrom(state, {player: id}, context.source ?? null)) return false;
+      /* "You ... gain hexproof from blue and from black" (Veil of Summer; CR 702.11d): no target of an opponent's spell or
+         ability from a source of that color (rules/protection.mjs). */
+      if (selector.target === true && playerHexproofFrom(state, id, chooser, context.source ?? null)) return false;
       const who = selector.who ?? "any";
       if (who === "you") return id === chooser;
       if (who === "opponent") return id !== chooser;

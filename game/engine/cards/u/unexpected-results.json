@@ -1,0 +1,91 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Unexpected Results",
+    "oracleId": "048bdc4a-4d26-420c-88ed-23a073c30fff",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{G}{U}",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Shuffle your library, then reveal the top card. If it's a nonland card, you may cast it without paying its mana cost. If it's a land card, you may put it onto the battlefield and return Unexpected Results to its owner's hand.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Shuffle your library, then reveal the top card. If it's a nonland card, you may cast it without paying its mana cost. If it's a land card, you may put it onto the battlefield and return Unexpected Results to its owner's hand.",
+      "effects": [
+        {
+          "effect": "shuffle",
+          "who": "you"
+        },
+        {
+          "effect": "peekAndReveal",
+          "who": "you",
+          "count": 1,
+          "reveal": true,
+          "remember": true
+        },
+        {
+          "effect": "play",
+          "from": "targets",
+          "targets": "remembered",
+          "free": true,
+          "condition": {
+            "about": "remembered",
+            "is": {
+              "nonTypes": [
+                "Land"
+              ]
+            }
+          }
+        },
+        {
+          "effect": "modal",
+          "choose": 1,
+          "title": "You may put it onto the battlefield and return Unexpected Results to its owner's hand.",
+          "condition": {
+            "about": "remembered",
+            "is": {
+              "types": [
+                "Land"
+              ]
+            }
+          },
+          "modes": [
+            {
+              "text": "Put it onto the battlefield",
+              "effects": [
+                {
+                  "effect": "moveZone",
+                  "targets": "remembered",
+                  "to": "battlefield"
+                },
+                {
+                  "effect": "moveZone",
+                  "targets": "self",
+                  "to": "hand"
+                }
+              ]
+            },
+            {
+              "text": "Don't",
+              "effects": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
