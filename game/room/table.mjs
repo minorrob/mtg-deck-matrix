@@ -163,10 +163,12 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
   /* THE TABLE'S RULES (Rob, 2026-09-30): the starting life (CR 903.7's 40 unless the host says otherwise) and a bracket
      limit (none unless the host sets one). And whether the player who goes first in a two-player game skips their first
      draw step (CR 103.8a): on unless the host turns it off, a house rule (Rob, 2026-10-12: "this can be toggled off in game
-     setup by the lobby owner"). A game of three or more has no such skip (103.8c), whatever this says. */
+     setup by the lobby owner"). A game of three or more has no such skip (103.8c), whatever this says. And whether the stack
+     is passed for a person with no meaningful answer to what is on it (Linear ROB-102, `passStack`): on unless the host turns
+     it off, so a person at a table of AIs is not stopped at every spell they could not answer. */
   const rulesOf = () => {const r = (record.lifecycle && record.lifecycle.settings) || {};
     return {startingLife: Number.isInteger(r.startingLife) ? r.startingLife : 40, bracketLimit: Number.isInteger(r.bracketLimit) ? r.bracketLimit : null,
-      skipFirstDraw: r.skipFirstDraw !== false};};
+      skipFirstDraw: r.skipFirstDraw !== false, passStack: r.passStack !== false};};
   const seatNames = (list) => list.length === 1 ? list[0] : `${list.slice(0, -1).join(", ")} and ${list.at(-1)}`;
 
   /* A seat leaves the game (by choice, or when their time ran out), and the table follows the room. */
@@ -334,8 +336,10 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
       }
       const skip = b.skipFirstDraw === undefined ? now_.skipFirstDraw : b.skipFirstDraw;
       if (typeof skip !== "boolean") throw new TableError(400, "Whether the player who goes first skips their first draw is on or off: true or false.");
+      const pass = b.passStack === undefined ? now_.passStack : b.passStack;
+      if (typeof pass !== "boolean") throw new TableError(400, "Whether the stack is passed for a player with no answer to it is on or off: true or false.");
       void now;
-      record.lifecycle = {...t, settings: {...(t.settings || {}), startingLife: life, bracketLimit: limit, skipFirstDraw: skip}, revision: t.revision + 1};
+      record.lifecycle = {...t, settings: {...(t.settings || {}), startingLife: life, bracketLimit: limit, skipFirstDraw: skip, passStack: pass}, revision: t.revision + 1};
       await save();
       return api.view(email);
     },
@@ -436,10 +440,15 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
          match launched before keeps its choices and its replay (rules/actions.mjs, `pooledTaps`). */
       pooledTaps: true,
       /* A person may yield the rest of an opponent's turn (Linear ROB-13, the Oct 16 handoff): new matches only, so one
-         launched before is asked as it was (room.mjs, `yieldTurn`). Not yet `passStack`: an opponent passed for over a spell
-         never sees it on the stack -- it arrives between two views, and the board voices and draws a spell from the stack
-         (crankmagic-audio.js, momentsFor) -- so the table asks for it once the board shows such a spell (ROB-23). */
+         launched before is asked as it was (room.mjs, `yieldTurn`). */
       yieldTurn: true,
+      /* And the stack passed for a person with no meaningful answer to what is on it (Linear ROB-102; ROB-13's `passStack`):
+         an opponent's spell they could not answer resolves without a Pass for each one -- the most-felt stop at a table of
+         three AIs. They see it came and went: the board calls out a spell cast and resolved between two views from the
+         view's events (crankmagic-board.js, calloutsFor, "CAST"), and the history keeps it. A person who holds an answer is
+         still asked. On unless the host turned it off (the table's rules); new matches only, so one launched before is asked
+         as it was. */
+      ...(rulesOf().passStack ? {passStack: true} : {}),
       /* Its AI seats take what a choice they may answer with none is for -- the land Evolving Wilds finds, the counters
          proliferate adds -- where they took none (Linear ROB-164, 2026-10-19): new matches only, so one launched
          before replays as it was played (room.mjs, `pilotPicks`). */

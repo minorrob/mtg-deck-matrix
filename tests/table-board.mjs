@@ -177,6 +177,9 @@ const views = (email) => frames[email].map((f) => JSON.parse(f)).filter((f) => f
 try {
   /* THE TABLE, set up through the server as the lobby would: Rob hosts, Maya joins, both ready, it starts. */
   await call("/table/create", ROB, {tableId: TABLE, hostName: "Rob", seats: [{kind: "human", name: "Maya"}]});
+  /* Every spell asked about, as before ROB-102: this suite plays the respond-to-a-spell board (Resolve <spell>, the stack
+     box), which the stack passed for a player with no answer would skip. The rule's own proof is tests/game-table.mjs. */
+  await call("/table/rules", ROB, {passStack: false});
   await call("/table/join", MAYA, {code: (await call("/table/invite", ROB, {seatId: 1})).invite.code});
   await call("/table/deck", ROB, {seatId: 0, deck: deck("Rob", "Forest", ROB_DECK)});
   await call("/table/deck", MAYA, {seatId: 1, deck: deck("Maya", "Island", MAYA_DECK)});

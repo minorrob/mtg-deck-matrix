@@ -1,6 +1,6 @@
 {
   "workstream": "claude-engine",
-  "updated": "2026-10-20T06:00:00Z",
+  "updated": "2026-10-21T02:00:00Z",
   "updated_by": "Claude, the Play readiness session (Personal-HP): #792 and #793 merged and main a9bec38f released to staging for Rob's 1-person, 3-AI play test.",
   "branch": "claude/exciting-sagan-qe5yuf",
   "now": "The card loader is finished and on staging (main 27fba609): 2,668 labeled candidates at playtest tables (2,643 compiled with no model call), the gap-only backstop, the demand queue and the waves tool. Rob's next: the backstop's held-out sample (ROB-90) and the batch-or-Worker call (ROB-91).",
@@ -19,7 +19,7 @@
     {"id": "ROB-78", "outcome": "play-experience", "feature": "Which sources paid this step, and the card facts the board can show", "status": "backlog", "remaining_hours": 10},
     {"id": "ROB-79", "outcome": "play-experience", "feature": "A ready table starts on a cancelable ten-second countdown", "status": "backlog", "remaining_hours": 8},
     {"id": "ROB-80", "outcome": "play-experience", "feature": "A d20 roll at launch picks the first player, seen by every seat", "status": "backlog", "remaining_hours": 6},
-    {"id": "ROB-102", "outcome": "play-experience", "feature": "New matches launch with auto-pass and Draw card on", "status": "blocked", "remaining_hours": 4, "note": "Waits on the board (ROB-23, ROB-24) so players see what changes."},
+    {"id": "ROB-102", "outcome": "play-experience", "feature": "New matches launch with auto-pass and Draw card on", "status": "in_progress", "remaining_hours": 2, "note": "First half on claude/play-pass-stack (Claude, holding Codex · Play): new matches pass the stack for a person with no answer, a table rule on by default, and the board calls out each spell that came and went (CAST). Draw card on (drawBeat) waits on ROB-24."},
     {"id": "ROB-82", "outcome": "play-any-deck", "feature": "Commander rules audited: tax per cast, partners, countered casts, command-zone choices", "status": "backlog", "remaining_hours": 10},
     {"id": "ROB-83", "outcome": "play-any-deck", "feature": "The rules constructs that block popular cards (exert, retrace, dash, emblems and more)", "status": "backlog", "remaining_hours": 24},
     {"id": "ROB-93", "outcome": "play-any-deck", "feature": "The next waves of the most-played cards", "status": "backlog", "remaining_hours": 40, "note": "Rob decides whether waves wait on the card load program."},
@@ -46,7 +46,7 @@
   ],
   "blocked_on": [
     {"id": "ROB-86", "by": "ROB-159, the deck page line from listed", "owner": "codex-play"},
-    {"id": "ROB-102", "by": "ROB-23 and ROB-24 on the board", "owner": "codex-play"},
+    {"id": "ROB-102", "by": "ROB-24 on the board, for Draw card on", "owner": "codex-play"},
     {"id": "ROB-17", "by": "the playtest record or a table link from Rob", "owner": "rob"}
   ]
 }
