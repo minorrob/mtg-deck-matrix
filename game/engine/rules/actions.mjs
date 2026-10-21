@@ -195,9 +195,11 @@ const hasConvoke = (state, id) => keywordsOf(state, id).includes("Convoke");
 export const convokers = (state, player) => state.zones.battlefield.filter((id) => !state.objects[id].tapped
   && characteristicsOf(state, id).controller === player && characteristicsOf(state, id).types.includes("Creature"))
   .map((id) => ({id, colors: colorsOf(state, id)}));
-/* The total cost a convoked spell pays (CR 601.2f), its tax and reductions in, as castCost says it. */
+/* The total cost a convoked spell pays (CR 601.2f), its tax and reductions in, as castCost says it. Cast through Bolas's
+   Citadel (`lifeInstead`), life rather than its mana cost, as perform reckons it: no mana for a creature to pay, so none
+   is asked for (a question that asked for one could not be answered, and the game waited on it). */
 function convokeCost(state, player, action) {
-  const {cost, x} = castCost(state, player, action.objectId, action.tax ?? 0, false, null, action.extraMana ?? "", action.targets);
+  const {cost, x} = castCost(state, player, action.objectId, action.tax ?? 0, false, action.lifeInstead !== undefined ? "" : null, action.extraMana ?? "", action.targets);
   return {...cost, generic: cost.generic + x};
 }
 /* A cast's own question, or what it costs, weighed as the card is cast: as its Adventure, when it is cast as one (CR 715.3a). */
@@ -1452,7 +1454,7 @@ export function tapUnits(state, player, offered = manaOffers(state, player), bun
    nothing in the pool -- so the mana tapped is exactly the cost, and paying it is no further choice. */
 /* X paid in life (`payLifeX`, Toxic Deluge) is no X its sources' mana pays: it is tapped for as any other. */
 const tapCastable = (state, player, action) => ["hand", "command"].includes(action.from) && !action.free && !action.flashback
-  && action.escape === undefined && action.alternative === undefined && (action.x === undefined || action.payLifeX === true)
+  && action.escape === undefined && action.alternative === undefined && (action.x === undefined || action.payLifeX === true || xTaps(state))
   && (pooledTaps(state) || poolSize(poolFor(state, player, {spell: action.objectId})) === 0);
 
 /* FLOATING MANA AND A SOURCE'S WHOLE OUTPUT TOGETHER (`pooledTaps`, game/room/table.mjs): a cast tapped for tops up what is
@@ -1461,6 +1463,14 @@ const tapCastable = (state, player, action) => ["hand", "command"].includes(acti
    same choices, and so replays exactly as it did: without it, a cast is tapped for only from an empty pool, one mana a
    source. */
 const pooledTaps = (state) => state.pooledTaps === true;
+/* An {X} spell tapped for too (`xTaps`; Rob's six staging decks hold five -- Martial Coup, Grand Crescendo, Rally the Ancestors,
+   Purphoros's Intervention, Tempt with Vengeance): offered for each X the pool and its caster's untapped sources can pay
+   together, the sources tapped as it is cast. Before, only what was already floating was counted, so a person had to tap
+   each land by hand before the spell was offered at all. Only a match whose pod asks carries the key, so every game
+   launched before offers what it offered then. */
+const xTaps = (state) => state.xTaps === true && pooledTaps(state);
+/* A cost with its X counted into its generic mana (CR 107.3a): what the source planners, which take no {X}, are handed. */
+const xCounted = (cost, X) => ({...cost, symbols: cost.symbols.filter((s) => s.kind !== "variable"), variable: 0, generic: cost.generic + X * cost.variable});
 
 /** How many ways to tap for a cast are asked at most: the least flexible first (tapPlans), so the sensible ones. */
 const TAP_CHOICES = 24;
@@ -1489,7 +1499,9 @@ export function castTapPlans(state, player, action, limit = 2) {
   const tax = action.from === "command" ? commanderTax(state, player, action.objectId) : 0;
   /* An Adventure's cost, cast as one (CR 715.3a). */
   const {cost, x} = asCast(state, action, () => castCost(state, player, action.objectId, tax, false, null, action.extraMana ?? "", action.targets));
-  return fundingPlans(state, player, action.objectId, {...cost, generic: cost.generic + x}, limit);
+  /* Its X, in a match that taps for one (`xTaps`): counted in, as the offer priced it. */
+  const xs = xTaps(state) && cost.variable > 0 ? xCounted(cost, action.x ?? 0) : cost;
+  return fundingPlans(state, player, action.objectId, {...xs, generic: xs.generic + x}, limit);
 }
 
 /* AN ADVENTURER CARD WEIGHED AS ITS ADVENTURE (CR 715.3a): shown as one for the length of `fn` -- its cost, its timing, its
@@ -1633,7 +1645,17 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
      (lifeX): one per value that life can pay. */
   /* The pool, and mana that may be spent only on this spell (rules/restricted-mana.mjs). */
   const pool = poolFor(state, player, {spell: id});
-  for (const X of lifeX ? Array.from({length: lifeLeft + 1}, (_, i) => i) : xValues(pool, cost, x)) {
+  /* With `xTaps`, X also as high as the pool and the caster's untapped sources can pay together: tapped for as it is cast. */
+  const tapsForX = !lifeX && cost.variable > 0 && xTaps(state) && !freely && !back && !fled && !way && !tapsAny && !variant.escalateTap && ["hand", "command"].includes(from);
+  const xs = lifeX ? Array.from({length: lifeLeft + 1}, (_, i) => i) : xValues(pool, cost, x);
+  if (tapsForX) {
+    const sources = tappable();
+    for (let X = xs.length; X <= poolSize(pool) + sources.length; X += 1) {
+      if (!fundingPlans(state, player, id, {...xCounted(cost, X), generic: xCounted(cost, X).generic + x}, 1, sources).length) break;
+      xs.push(X);
+    }
+  }
+  for (const X of xs) {
     /* X in its mana cost: what the pool pays for it, and what decides whether its sources can be tapped for it instead. */
     const xMana = lifeX ? null : X;
     let payment = automaticPayment(pool, cost, {life: lifeLeft, x: x + (xMana ?? 0) * cost.variable});
@@ -1642,8 +1664,9 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
     let autoTap = false;
     /* Not with creatures tapped as an additional cost or for escalate: one tapped for mana as the cast taps its sources could
        not then be tapped for it (their mana is paid from the pool first). */
-    if (!payment && (pooledTaps(state) ? !canPay(pool, cost, {life: lifeLeft, x}) : poolSize(pool) === 0) && xMana === null && !freely && !back && !fled && !way && !tapsAny && !variant.escalateTap && ["hand", "command"].includes(from)) {
-      const [plan] = fundingPlans(state, player, id, {...cost, generic: cost.generic + x}, 1, tappable());
+    if (!payment && (pooledTaps(state) ? !canPay(pool, cost, {life: lifeLeft, x: x + (xMana ?? 0) * cost.variable}) : poolSize(pool) === 0) && (xMana === null || tapsForX) && !freely && !back && !fled && !way && !tapsAny && !variant.escalateTap && ["hand", "command"].includes(from)) {
+      const paying = xMana === null ? cost : xCounted(cost, xMana);
+      const [plan] = fundingPlans(state, player, id, {...paying, generic: paying.generic + x}, 1, tappable());
       if (plan) {
         autoTap = true;
         payment = plan.payment;
@@ -2083,6 +2106,52 @@ function idle(state, player, actions, stack = false) {
   /* And a card exiled face down that they may play, as the card it is (withFaceUp, CR 406.3a). */
   return !spells.some((id) => withFaceUp(state, id, () => castableNow(id)
     || (Boolean(state.objects[id]?.adventurer) && withAdventure(state, id, () => adventureFrom(state, player, id, state.objects[id].zone) && castableNow(id)))));
+}
+
+/**
+ * WHY A CARD CAN'T BE PLAYED NOW (Linear ROB-24: "show why another card is unavailable"): for a card in its player's hand or
+ * command zone that nothing offered plays, the first reason a person would give, read from the facts the offers are made
+ * from. A land: its player's own turn, their main phase with the stack empty, one a turn (CR 305.2, 505.6b). A spell that
+ * isn't an instant: the same time (CR 307.1). Its mana: what it costs now, the commander tax included (CR 903.8), against
+ * what the pool and the untapped sources could make, each at its most -- or a color none of them makes. Otherwise, no way
+ * to cast it now: its targets, or another of its costs. Words only, for a person to read: what can be done is still the
+ * offers' alone. Null for a card that is offered, or isn't this player's to play from there.
+ */
+export function whyNot(state, player, id, actions = legalActions(state, player)) {
+  const object = state.objects[id];
+  if (!object || !["hand", "command"].includes(object.zone) || (object.zone === "hand" ? object.owner : object.controller ?? object.owner) !== player) return null;
+  if (actions.some((a) => a.objectId === id && a.kind !== "activate-mana")) return null;
+  return deriving(state, () => {
+    const mine = player === state.activePlayer, mainNow = mine && MAIN_PHASES.includes(state.phase) && !state.stack.length;
+    if ((object.types ?? []).includes("Land")) {
+      if (object.zone !== "hand") return "It can't be played from there.";
+      if (!mine) return "Lands are played on your own turn.";
+      if (!mainNow) return "Play a land in your main phase, with nothing on the stack.";
+      if (landDropsLeft(state, player) <= 0) return "You've played your land for this turn.";
+      return "It can't be played now.";
+    }
+    if (sorcerySpeed(object) && !hasFlash(state, id) && !flashGranted(state, player, id) && !mainNow)
+      return mine ? "It isn't an instant: cast it in your main phase, with nothing on the stack." : "It isn't an instant: cast it on your own turn.";
+    if (!object.manaCost) return "It has no mana cost, so it can't be cast.";
+    /* Each source at the most it can add net of what it costs, as `idle` counts it; and every color any of them, or the
+       pool, could add. */
+    const best = new Map(), colors = new Set();
+    for (const a of actions.filter((x) => x.kind === "activate-mana")) {
+      const ability = abilitiesOf(state, a.objectId).find((x) => x.id === a.abilityId);
+      best.set(a.objectId, Math.max(best.get(a.objectId) ?? 0, total(a.mana) - (ability?.cost ? manaValue(parseManaCost(ability.cost)) : 0)));
+      for (const [color, n] of Object.entries(a.mana ?? {})) if (n > 0) colors.add(color);
+    }
+    const pool = state.players[player].manaPool ?? {};
+    for (const [color, n] of Object.entries(pool)) if (n > 0) colors.add(color);
+    const mana = poolSize(pool) + [...best.values()].reduce((n, v) => n + Math.max(0, v), 0);
+    const tax = object.zone === "command" ? commanderTax(state, player, id) : 0;
+    const {cost, x} = castCost(state, player, id, tax);
+    const need = cost.generic + cost.symbols.filter((s) => s.kind !== "generic" && s.kind !== "variable").length + x;
+    if (need > mana) return `It costs ${need} mana${tax ? `, the commander tax included` : ""}, and you can make ${mana} now.`;
+    const missing = [...new Set(cost.symbols.filter((s) => s.kind === "colored").map((s) => s.color))].find((color) => !colors.has(color));
+    if (missing) return `It needs {${missing}}, and nothing you have untapped makes it.`;
+    return "There's no way to cast it now: its targets, or another of its costs.";
+  });
 }
 
 /* Two actions are the same offer when they agree on everything that identifies them. Comparing by
