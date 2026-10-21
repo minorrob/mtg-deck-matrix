@@ -14,6 +14,7 @@
 import assert from "node:assert/strict";
 import {runScenario} from "../game/engine/cards/scenario.mjs";
 import {legalActions, applyAction} from "../game/engine/rules/actions.mjs";
+import {awaitingChoice, resolveAwaiting} from "../game/engine/rules/turn.mjs";
 import {abilitiesOf, keywordsOf} from "../game/engine/rules/layers.mjs";
 import {loadCardIndex} from "../game/tools/engine-cards.mjs";
 
@@ -34,6 +35,7 @@ const FIX = {Bear: {types: ["Creature"], subtypes: ["Bear"], manaCost: "{1}{G}",
     rule: "play-from", affects: {what: "player", who: "you"}, zone: "graveyard", spells: true}]},
   Gift: {types: ["Instant"], manaCost: "{1}", colors: [], spell: {id: "s", text: "You gain 1 life.", targets: [], effects: [{effect: "gainLife", amount: 1}]}},
   Vision: {types: ["Sorcery"], manaCost: "", colors: ["U"], spell: {id: "s", text: "Draw a card.", targets: [], effects: [{effect: "draw", count: 1}]}},
+  Scheme: {types: ["Instant"], manaCost: "{2}{B}{B}", colors: ["B"], keywords: ["Convoke"], spell: {id: "s", text: "Draw a card.", targets: [], effects: [{effect: "draw", count: 1}]}},
   Recall: {types: ["Instant"], manaCost: "{U}", colors: ["U"], spell: {id: "s", text: "Return target creature to its owner's hand.", targets: [{what: "permanent", types: ["Creature"]}],
     effects: [{effect: "moveZone", targets: {target: 0}, to: "hand"}]}}};
 const at = (seat, zone, ...list) => ({seat, zone, cards: list});
@@ -99,6 +101,19 @@ const granted = (s, id) => abilitiesOf(s, id).some((a) => a.kind === "triggered"
   eq(offers(s, "cast", "Vision").map((a) => [a.from, a.lifeInstead]), [["library", 0]], "the Vision on top, for 0 life; the one in hand, not at all");
   const t = play({library: ["Vision"], setup: [at(0, "battlefield", CIT)], steps: [{cast: "Vision"}, {resolve: true}]});
   eq([t.players[0].life, t.zones.hand[0].length, t.zones.graveyard[0].map((id) => t.objects[id].card)], [40, 1, ["Vision"]], "cast: no life paid, a card drawn");
+}
+
+/* ---- a convoke spell through the Citadel (Lethal Scheme, AI 3's Teysa deck; the stress run's seed 115, Oct 21): life rather
+   than its mana cost, so there is no mana for a creature to pay -- its convoke asks for none, and it is cast. It asked for one
+   creature against the whole {2}{B}{B}, which no pick could pay, and the game waited on the person forever. ---- */
+{
+  const s = play({library: ["Scheme"], setup: [at(0, "battlefield", CIT, "Bear")]});
+  eq(offers(s, "cast", "Scheme").map((a) => [a.convoke === true, a.lifeInstead]), [[false, 4], [true, 4]], "through the Citadel for 4 life: the plain cast, and the convoke offer beside it, as ever");
+  applyAction(s, 0, offers(s, "cast", "Scheme").find((a) => a.convoke === true));
+  const choice = awaitingChoice(s);
+  eq([choice.cost, choice.min, choice.max], ["convoke", 0, 0], "its convoke asks for no creature: life pays all of it");
+  resolveAwaiting(s, []);
+  eq([s.awaiting, s.stack.length, s.players[0].life, s.objects[named(s, "Bear")].tapped], [null, 1, 36, false], "answered with none, it is cast: 4 life paid, the Bear untapped");
 }
 
 console.log(`engine-play-permission: ${checks} checks passed -- each permission that does something different its own offer, its grant on the permanent while it is that object, the Citadel's life rather than mana.`);

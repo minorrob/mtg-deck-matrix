@@ -488,7 +488,12 @@ cast and resolved between two views (an opponent passed for, `passStack`) arrive
   - `owner`, `controller`, `tapped`, `damage`;
   - `counters: {kind: n}`, an open set (+1/+1, −1/−1, loyalty, lore, charge and more);
   - `types`, `power`, `toughness`, `keywords`;
-  - `commander`, and sometimes `commanderKey`, `level`, `monstrous` or `prepared`.
+  - `commander`, and sometimes `commanderKey`, `level`, `monstrous` or `prepared`;
+  - `why` (Linear ROB-24, Oct 21): on the viewing seat's own hand and command-zone cards, while that seat holds priority,
+    for each one no option plays. It's a short sentence saying why it can't be played now: its time, its mana and the
+    commander tax, a color nothing untapped makes, or no way to cast it (`rules/actions.mjs`, `whyNot`). It's words for
+    a person to read and never a rule: what can be done is still the decision's options. No other seat's view carries
+    it.
 - **Not in the view today** (ask in your handoff rather than faking one):
   - what an Aura or Equipment is attached to;
   - whether a permanent is a token;

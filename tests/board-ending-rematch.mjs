@@ -88,6 +88,21 @@ try {
     ok(!errors.length, `${name}: no page error (${errors.join(" | ")})`);
     await context.close();
   }
+  /* ---- at the end, nothing left to pass: the pass button says the game is over (it read "Resolve" and a spell left on the
+     stack), and a seat out of the game says so on its empty mat, not "No permanents yet" (the solo run, Oct 21) ---- */
+  for (const mode of ["focus", "full"]) {
+    const view = finished(ENDINGS[0][1]), me = view.state.players[view.seat];
+    me.health = {...me.health, life: 0, status: "lost", lossReason: "life"};
+    me.zones.Battlefield = {...me.zones.Battlefield, count: 0, cards: []};
+    view.state.stack = [{stackId: 1, cardId: 99001, name: "Massacre Girl", playerId: 1, kind: "spell"}];
+    const {page, context, errors} = await fixture(view, {mode});
+    const pass = await page.locator('[data-action="board-pass"]').evaluateAll((els) => els.map((el) => ({text: el.textContent.trim(), disabled: el.disabled})));
+    ok(pass.length > 0 && pass.every((x) => x.text === "Game over" && x.disabled), `${mode}: the pass button reads Game over, and does nothing (${JSON.stringify(pass)})`);
+    const empty = await page.locator(".cm-board-empty").allTextContents();
+    ok(empty.includes("Out of the game.") && !empty.includes("No permanents yet."), `${mode}: your empty mat says you are out of the game (${JSON.stringify(empty)})`);
+    ok(!errors.length, `${mode}: no page error (${errors.join(" | ")})`);
+    await context.close();
+  }
   /* ---- Play again and Leave on the banner, in three views ---- */
   for (const [width, height, mode] of [[1280, 720, "full"], [1280, 720, "focus"], [390, 844, "focus"]]) {
     const where = `${mode} ${width}x${height}`;

@@ -46,8 +46,30 @@ lane is free or its own.
 
 ## Play tabletop preview, October 14, 2026
 
+October 21, Claude (holding Codex · Play), for Rob's one-person, three-AI table: callouts that keep up with the game and keep off the question, on `claude/callouts-keep-up`, stacked on #822. Three solo-vs-AI games through the real board showed the problems. The callouts fell turns behind: "YOUR TURN · Turn 33" on turn 38, over the YOU LOST panel and its buttons, and "LIFE -3 · You · 20" at 5 life. They also lay over Discard 1 card's options and the turns-gone-by panel. Each view earns up to six callouts and they are read about one every 0.6 s, so the AI seats' bursts outran them.
+- When a view's callouts come, any still waiting from more than 2 s before are passed over (never a KO or a FATAL).
+- The game's end clears the queue and the screen, so GAME OVER or VICTORY is the last word. One batch alone, Try the callouts, is read whole.
+- With a question's panel on screen, the callout layer moves below it, or above it, or waits out of sight (`placeCallouts`).
+- On the phone the board's fixed layer (z-index 60) lay over the callouts', so none ever showed there. They now show, under the turn bar.
+- At the end, the pass button reads "Game over" (it read "Resolve Massacre Girl, Most Wanted"), and a seat out of the game says "Out of the game." on its empty mat.
+
+Proof: board-callouts 46, board-ending-rematch 68, the new board-callouts-place 24 (Full, Table, Focus, phone), table-board 287. `breaks-callouts-keep-up.py` catches all ten breaks.
+
+October 21, Claude (holding Codex · Play), for Rob's one-person, three-AI table: "All at <player>" on Declare attackers, on `claude/attack-all`, stacked on #821. The engine offers one option per creature per player, so a Krenko swarm at three opponents was a pick per goblin. Now one press picks, for every creature that may attack that player, its option at them, keeping any other creature's pick; "None" clears them. It never picks a planeswalker. Nothing is sent until Confirm, and the room checks the attack as ever. `tests/board-attack-all.mjs`, `breaks-attack-all.py` 6 of 6.
+
+October 21, Claude (holding Codex · Play and the engine halves Play waits on), for Rob's one-person, three-AI table: ROB-24's "show why another card is unavailable", on `claude/why-not-playable`. While Rob holds priority, each of his hand and command cards that nothing offered plays carries `why` from the room. The engine's `whyNot` gives the first reason a person would give:
+- a land played already, or not his turn or main phase;
+- a creature at the wrong time;
+- "It costs 5 mana, and you can make 1 now", with the commander tax counted in;
+- "It needs {R}, and nothing you have untapped makes it";
+- otherwise, no target or another cost.
+
+The board says it where the card's options would be: the hand's pop-up and Card zoom, a notice on a click, the Full card panel, and with the card's name for a screen reader. Only his own cards carry it, and no other seat's view. The contract line is in `docs/ui-lane/gameplay-anchor.md`.
+
 October 21, Claude (holding Codex · Play), for Rob's one-person, three-AI table: ROB-171's placement on `claude/play-control`. This is Codex's draft #800 (source ef071f2a), with today's main merged in and kept whole. A permanent whose control changed (Oko's exchange, Zealous Conscripts) now sits on its controller's board, framed and labeled "Owner: …", and its owner's board keeps a faded, inspection-only reference "With …". Before, it stayed on its owner's board while another player attacked with it. The Oracle return explanation and displaced-controller ghosts still wait on Engine ROB-172; until then the reference says the return condition is unavailable. Record: `docs/play-overhaul/ROB-171-CONTROL.md`.
+
 October 21, Claude (holding Codex · Play and the engine halves Play waits on), for Rob's one-person, three-AI table: `xTaps` on `claude/x-spells-tap`, ROB-74's slice that a person hits. A table's new matches offer an {X} spell for each X the pool and the caster's untapped sources pay together, tapping the sources as it is cast. Before, X counted only what was already floating, so a person had to tap every land by hand before Martial Coup, Grand Crescendo, Rally the Ancestors (D5 Teysa), Purphoros's Intervention or Tempt with Vengeance (D6 Krenko) was offered at all. It's a pod key, new matches only, so recorded games replay unchanged. The payment draft and Confirm cast are still ROB-74's.
+
 October 21, Claude (holding Codex · Play and the engine halves Play waits on), on Rob's "what else can you do to make the game as ready as possible": ROB-170 on `claude/solo-away-waits`. At a table where every other seat is an AI, a person whose connection drops is no longer conceded after five minutes. Nobody is waiting on them, so the game waits, as they left it, and their Leave or Concede still ends it. With another person at the table, the five minutes are as before. This was the issue's own proposal; the rule was marked Rob's call, and it is one line in `dropped` (game/room/table.mjs) to revert.
 
 October 21, Claude (holding Codex · Play, with the engine halves Play waits on): ROB-102's first half on `claude/play-pass-stack`, stacked on #809. A new match passes the stack for a person with no answer to it (the room's `passStack`), so Rob isn't stopped at every AI spell; the board calls out each spell that came and went on his next view (**CAST** · Maya · Cultivate · resolved). A person who holds an answer is still asked. It's a table rule, on unless the host turns it off (`/table/rules {passStack: false}`); the lobby switch comes with ROB-124. Record: `docs/play-overhaul/ROB-102-PASS-STACK.md`.

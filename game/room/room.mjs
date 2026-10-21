@@ -70,7 +70,7 @@
  */
 import {createState, addObject, shownName, shownFaceUp} from "../engine/state/index.mjs";
 import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../engine/rules/turn.mjs";
-import {legalActions, applyAction, nothingToDo, escapeWays, flashbackCost, tappersInWords, castTapPlans, tapWords} from "../engine/rules/actions.mjs";
+import {legalActions, applyAction, nothingToDo, whyNot, escapeWays, flashbackCost, tappersInWords, castTapPlans, tapWords} from "../engine/rules/actions.mjs";
 import {paymentWords} from "../engine/rules/mana.mjs";
 import {beforeTap, tapTaken, untappable, untapTaken} from "../engine/rules/untap-mana.mjs";
 import {passPriority} from "../engine/rules/priority.mjs";
@@ -780,6 +780,18 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     saved = 0; unsaved = [];
     tapeN = (await store.readTape()).length;
   }
+  /* WHY NOT (Linear ROB-24): while a seat holds priority, each card of its own hand and command zone that nothing offered
+     plays says why, in words (rules/actions.mjs, whyNot): the board shows it where it would show what the card can do. Its
+     own cards only, and only the reason -- nothing another seat could not already see. */
+  function whyNotFor(projected, seat, pending) {
+    if (!pending || pending.kind !== "priority" || state.priorityPlayer !== seat) return projected;
+    const actions = legalActions(state, seat), zones = projected.players[seat]?.zones ?? {};
+    for (const zone of [zones.Hand, zones.Command]) for (const card of zone?.cards ?? []) {
+      const why = whyNot(state, seat, card.cardId, actions);
+      if (why) card.why = why;
+    }
+    return projected;
+  }
   /* A person's input that failed part-way, undone (`restore`) and refused: the rules' refusal as they said it, and any other
      failure -- the engine's, in the play that followed -- as the room's, with what the person can still do. */
   async function undone(error) {
@@ -917,7 +929,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         seats: api.seats,
         waitingOn: pendingSeat === null ? null : seats[pendingSeat].seatId,
         decision: mine ? combatWords(state, structuredClone(controller.pending)) : null,
-        state: projectFor(state, seat),
+        state: whyNotFor(projectFor(state, seat), seat, mine ? controller.pending : null),
         history: history.slice(-HISTORY_VIEW).map(({turn, text, mark}) => ({turn, text, ...(mark ? {mark} : {})})),
         /* What happened, as this seat may know it (events.mjs): the change this view shows -- or, asked with `after` (the last
            event id the seat has), everything since; `eventsReset` when that is older than the room keeps. */
