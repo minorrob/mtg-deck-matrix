@@ -12,7 +12,7 @@ import {readFileSync, mkdtempSync, rmSync} from "node:fs";
 import {execFileSync} from "node:child_process";
 import os from "node:os";
 import path from "node:path";
-import {build, worktreeSource, verify, releaseBranch, refuseDropTables, commitRelease, transform, referencesOf, workerModules, PROFILES, NEVER, PAGES, FIRST_PUBLIC, RETIRED_PUBLIC, PLAY_WORKER, aiVars} from "../tools/release-pages.mjs";
+import {build, worktreeSource, verify, releaseBranch, refuseDropTables, commitRelease, transform, referencesOf, workerModules, PROFILES, NEVER, PAGES, FIRST_PUBLIC, RETIRED_PUBLIC, PLAY_WORKER, aiVars, RENDERERS, stageRenderers} from "../tools/release-pages.mjs";
 
 let checks = 0;
 const ok = (value, message) => {assert.ok(value, message); checks++;};
@@ -193,6 +193,35 @@ ok(sb.get(".assetsignore").toString("utf8").split("\n").includes("game/"), "and 
 eq([pw.durable_objects, pw.migrations, pw.vars.PLAYTEST_TABLES, built.has("crankmagic-table.js"), [...built.keys()].some((f) => f.startsWith("game/"))], [undefined, undefined, undefined, false, false], "production binds no table, has no playtest tables, and carries neither the lobby nor the engine: Play there waits on Rob's go");
 const without = (map, name) => new Map([...map].filter(([f]) => f !== name));
 const playConfig = (map, change) => new Map([...map, ["wrangler.jsonc", Buffer.from(JSON.stringify(change(JSON.parse(map.get("wrangler.jsonc").toString("utf8")))))]]);
+/* THE TABLETOP'S RENDERER (ROB-144): a Play release carries the renderer family the stage loads, and only that one.
+   Today's stage loads Pixi. Play's Babylon surface (#767) loads Babylon instead, so a fixture of it, today's stage with
+   its renderer swapped and four small stand-in files, must package with Babylon's files and none of Pixi's. */
+const stageText = sb.get("crankmagic-stage.js").toString("utf8");
+eq(stageRenderers(stageText), ["pixi"], "today's stage loads the Pixi renderer");
+ok(!RENDERERS.babylon.files.some((f) => sb.has(f)), "so staging carries none of Babylon's files");
+for (const f of RENDERERS.pixi.files) ok(verify(without(sb, f), stagingProfile).includes(`${f} is Play in the cloud, and is not in this release`), `a Pixi release without ${f} is refused`);
+eq([stageRenderers("/* vendor/babylon.min.js */ vendor/pixi.min.js"), stageRenderers("// vendor/pixi.min.js")], [["pixi"], []], "a renderer named only in a comment is not one the stage loads");
+ok(referencesOf("vendor/babylon.min.js", "", new Set(["vendor/BABYLON-LICENSE.txt"])).has("vendor/BABYLON-LICENSE.txt"), "Babylon's license travels with its engine, as Pixi's does");
+const overlay = (base, add) => ({...base, files: new Set([...base.files, ...Object.keys(add)]), read: (p) => p in add ? Buffer.from(add[p]) : base.read(p)});
+eq([stageText.split("vendor/pixi.min.js").length, stageText.split("vendor/pixi-csp.min.js").length], [2, 2], "the fixture's swap finds today's stage naming each Pixi file once");
+const babylonFiles = {
+  "crankmagic-stage.js": stageText.replace("vendor/pixi.min.js", "vendor/babylon.min.js").replace("vendor/pixi-csp.min.js", "crankmagic-stage-tables.js") + '\n;["crankmagic-stage-babylon.js?v=1"];\n',
+  "crankmagic-stage-babylon.js": "(function (root) {root.CrankStageBabylon = Object.freeze({license: 'vendor/BABYLON-LICENSE.txt'});})(globalThis);\n",
+  "crankmagic-stage-tables.js": "(function (root) {root.CrankTables = Object.freeze({});})(globalThis);\n",
+  "vendor/babylon.min.js": "var BABYLON = {};\n",
+  "vendor/BABYLON-LICENSE.txt": "Apache License 2.0 (a stand-in for tests/release-pages.mjs)\n",
+};
+const babylon = build({source: overlay(worktreeSource(), babylonFiles), profileName: "cloud-staging"});
+eq(babylon.problems, [], "a Babylon stage packages for staging");
+ok(RENDERERS.babylon.files.every((f) => babylon.built.has(f)) && !RENDERERS.pixi.files.some((f) => babylon.built.has(f)), "with Babylon's adapter, tables, engine and license, and none of Pixi's files, which nothing loads");
+for (const f of RENDERERS.babylon.files) ok(verify(without(babylon.built, f), stagingProfile).includes(`${f} is Play in the cloud, and is not in this release`), `a Babylon release without ${f} is refused`);
+ok(verify(new Map([...sb, ["crankmagic-stage.js", Buffer.from(stageText + '\n;["vendor/babylon.min.js"];\n')]]), stagingProfile).includes("crankmagic-stage.js loads pixi and babylon, and a release carries one renderer"), "a stage that loads both renderers is named");
+ok(verify(new Map([...sb, ["crankmagic-stage.js", Buffer.from(stageText.split("vendor/pixi.min.js").join("vendor/none.js"))]]), stagingProfile).some((p) => p.startsWith("crankmagic-stage.js loads no renderer")), "and one that loads none");
+for (const name of ["pages", "cloud-production-standby"]) {
+  ok([...RENDERERS.pixi.files, ...RENDERERS.babylon.files].every((f) => PROFILES[name].leaveOut.includes(f)), `${name}, where Play is off, leaves out both renderer families`);
+  const off = build({source: overlay(worktreeSource(), babylonFiles), profileName: name});
+  ok(off.problems.length === 0 && ![...RENDERERS.pixi.files, ...RENDERERS.babylon.files].some((f) => off.built.has(f)), `and a Babylon tree builds for ${name} with neither family in it`);
+}
 ok(verify(playConfig(sb, (c) => ({...c, durable_objects: undefined})), stagingProfile).some((p) => p.includes("does not bind TABLES")), "a Play release that binds no table is named");
 ok(verify(playConfig(sb, (c) => ({...c, migrations: []})), stagingProfile).some((p) => p.includes("no migration")), "and one with no migration to make the class");
 ok(verify(playConfig(sb, (c) => ({...c, main: "cloud/worker.mjs"})), stagingProfile).some((p) => p.includes(`does not run ${PLAY_WORKER}`)), "and one that runs the Worker without the table");

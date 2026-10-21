@@ -68,11 +68,25 @@ export const ROOTS = ["index.html", "crankmagic.html", "graph.html", "not-invite
    the two files stay in the repository for the tools that build them and are never served. */
 export const NEVER = /^(game|tools|tests|docs|design|prototype|graph|payload|payload_v3|schema|\.github|\.claude)\/|^data\/(engine|source|archive|game-logs)\/|^data\/live-(state|load)\.json$/;
 
-const PLAY = ["crankmagic-mats.css", "crankmagic-seat-art.js", "crankmagic-game.js", "crankmagic-lobby.js", "crankmagic-online.js", "crankmagic-online.css", "collection-lobby-draft.js", "crankmagic-table.js", "crankmagic-board.js", "crankmagic-audio.js", "crankmagic-stage.js", "crankmagic-stage.css", "vendor/pixi.min.js", "vendor/pixi-csp.min.js", "vendor/PIXI-LICENSE.txt"];
+/* THE TABLETOP'S RENDERER (ROB-144). The board's stage, crankmagic-stage.js, loads one renderer family: Pixi, or Babylon
+   for the 3D surface. A Play release carries the family whose engine the stage loads, with its license, and never the
+   other's (verify). Both families are Play, so a release without Play carries neither. */
+export const RENDERERS = {
+  pixi: {engine: "vendor/pixi.min.js", files: ["vendor/pixi.min.js", "vendor/pixi-csp.min.js", "vendor/PIXI-LICENSE.txt"]},
+  babylon: {engine: "vendor/babylon.min.js", files: ["crankmagic-stage-babylon.js", "crankmagic-stage-tables.js", "vendor/babylon.min.js", "vendor/BABYLON-LICENSE.txt"]},
+};
+const RENDERER_FILES = Object.values(RENDERERS).flatMap((r) => r.files);
+const PLAY = ["crankmagic-mats.css", "crankmagic-seat-art.js", "crankmagic-game.js", "crankmagic-lobby.js", "crankmagic-online.js", "crankmagic-online.css", "collection-lobby-draft.js", "crankmagic-table.js", "crankmagic-board.js", "crankmagic-audio.js", "crankmagic-stage.js", "crankmagic-stage.css", ...RENDERER_FILES];
 /* PLAY IN THE CLOUD (M5): the table's lobby, the seats it draws, Rob's artwork mats, the board, and its sound (B8: the pack
-   in assets/audio/, reached only from crankmagic-audio.js), over the Worker's /api/tables. The rest of PLAY is the
-   local game host's (a Node server on this machine or a tunnel), which no release carries. */
-const PLAY_CLOUD = ["crankmagic-mats.css", "crankmagic-seat-art.js", "crankmagic-table.js", "crankmagic-board.js", "crankmagic-audio.js", "crankmagic-stage.js", "crankmagic-stage.css", "vendor/pixi.min.js", "vendor/pixi-csp.min.js", "vendor/PIXI-LICENSE.txt"];
+   in assets/audio/, reached only from crankmagic-audio.js), over the Worker's /api/tables, and the stage's one renderer.
+   The rest of PLAY is the local game host's (a Node server on this machine or a tunnel), which no release carries. */
+const PLAY_CLOUD_BASE = ["crankmagic-mats.css", "crankmagic-seat-art.js", "crankmagic-table.js", "crankmagic-board.js", "crankmagic-audio.js", "crankmagic-stage.js", "crankmagic-stage.css"];
+const PLAY_CLOUD = [...PLAY_CLOUD_BASE, ...RENDERER_FILES];
+/* The renderer families the stage loads: those whose engine its code, not its comments, names. A release needs exactly one. */
+export function stageRenderers(text) {
+  const code = stripComments(String(text));
+  return Object.keys(RENDERERS).filter((name) => code.includes(RENDERERS[name].engine));
+}
 const LOCAL_PLAY = PLAY.filter((f) => !PLAY_CLOUD.includes(f));
 const ACCOUNTS = ["cloud-sync.js", "crankmagic-account.js", "crankmagic-sharing.js"];
 /* What every release shares: Play says Coming Soon, no game host, served by Cloudflare. */
@@ -303,8 +317,9 @@ export function referencesOf(file, text, files) {
       }
     }
   }
-  // Keep the pinned renderer's license with both distributed library files.
+  // Keep the pinned renderer's license with its distributed library files.
   if (/^vendor\/pixi(?:-csp)?\.min\.js$/.test(file)) add("PIXI-LICENSE.txt");
+  if (file === "vendor/babylon.min.js") add("BABYLON-LICENSE.txt");
   found.delete(file);
   return found;
 }
@@ -426,7 +441,12 @@ export function verify(built, profile) {
         problems.push(...engine.problems);
         for (const f of ["cloud/game-room.mjs", "game/room/table.mjs", "game/room/room.mjs"]) if (!engine.files.includes(f)) problems.push(`${f} is missing, so the table cannot be bundled`);
         if (!(built.get(".assetsignore")?.toString("utf8") || "").split("\n").includes("game/")) problems.push(".assetsignore would publish the engine's source as files");
-        for (const f of profile.play === "cloud" ? PLAY_CLOUD : []) if (!files.has(f)) problems.push(`${f} is Play in the cloud, and is not in this release`);
+        if (profile.play === "cloud") {
+          /* The renderer the stage loads, all of it, and only that one: a stage that loads none or both is named. */
+          const families = stageRenderers(built.get("crankmagic-stage.js") || "");
+          if (families.length !== 1) problems.push(families.length ? `crankmagic-stage.js loads ${families.join(" and ")}, and a release carries one renderer` : `crankmagic-stage.js loads no renderer (${Object.values(RENDERERS).map((r) => r.engine).join(" or ")})`);
+          for (const f of [...PLAY_CLOUD_BASE, ...(families.length === 1 ? RENDERERS[families[0]].files : [])]) if (!files.has(f)) problems.push(`${f} is Play in the cloud, and is not in this release`);
+        }
       } else if (config?.durable_objects || config?.migrations) problems.push("wrangler.jsonc binds a Durable Object in a release without Play");
       if ((config?.vars?.PLAYTEST_TABLES === "on") !== !!profile.tables?.playtest) problems.push(profile.tables?.playtest ? "the playtest tables are not switched on (PLAYTEST_TABLES)" : "PLAYTEST_TABLES is on in a release whose tables are not playtest tables: every finished game's full record would be downloadable");
       if (config?.assets?.binding !== "ASSETS" || JSON.stringify(config?.assets?.run_worker_first) !== JSON.stringify(["/api/*"])) problems.push("wrangler.jsonc must run the Worker for /api/* only, with the assets bound as ASSETS");
