@@ -20,6 +20,8 @@
 
 ## Play tabletop preview, October 14, 2026
 
+October 21, Claude (holding Codex · Play and the engine halves Play waits on), for Rob's one-person, three-AI table: `xTaps` on `claude/x-spells-tap`, ROB-74's slice that a person hits. A table's new matches offer an {X} spell for each X the pool and the caster's untapped sources pay together, tapping the sources as it is cast. Before, X counted only what was already floating, so a person had to tap every land by hand before Martial Coup, Grand Crescendo, Rally the Ancestors (D5 Teysa), Purphoros's Intervention or Tempt with Vengeance (D6 Krenko) was offered at all. It's a pod key, new matches only, so recorded games replay unchanged. The payment draft and Confirm cast are still ROB-74's.
+
 October 21, Claude (holding Codex · Play, with the engine halves Play waits on): ROB-102's first half on `claude/play-pass-stack`, stacked on #809. A new match passes the stack for a person with no answer to it (the room's `passStack`), so Rob isn't stopped at every AI spell; the board calls out each spell that came and went on his next view (**CAST** · Maya · Cultivate · resolved). A person who holds an answer is still asked. It's a table rule, on unless the host turns it off (`/table/rules {passStack: false}`); the lobby switch comes with ROB-124. Record: `docs/play-overhaul/ROB-102-PASS-STACK.md`.
 
 October 21, Claude (holding Codex · Play), on Rob's "make sure we aren't regressing anything": main checked beyond CI. The walks CI doesn't run passed on main's own build: release-acceptance, play-e2e, solo-vs-ai, real-deck-game, cloud-e2e, tour-walk, browser-geometry, sharing-runtime. Today's breaks files caught 133 of 134 on main. What still failed is brought up to date on `claude/stale-checks`:
