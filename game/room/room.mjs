@@ -89,6 +89,7 @@ import {scoredPilot, SETTINGS} from "../engine/pilots/scored-pilot.mjs";
 import {agentPilot} from "../engine/pilots/agent-pilot.mjs";
 import {addToHistory} from "./history.mjs";
 import {tableEvent, eventsFor, keep, EVENTS_SCHEMA} from "./events.mjs";
+import {endingOf} from "./ending.mjs";
 
 export const ROOM_PROTOCOL = 1;
 export const ROOM_SCHEMA = "CrankRoom@1";
@@ -355,6 +356,43 @@ export function offerDetails(state, seat, actions) {
   });
 }
 
+/* SAME NAME, TWO CREATURES (Linear ROB-168): a Krenko swarm's Declare blockers offered "Wall blocks Goblin" once per Goblin
+   token, and Declare attackers "Goblin → Maya", with nothing to tell them apart. Where a creature's words are another's in the
+   same choice, they say more -- its power and toughness, as a priority offer's do (offerDetails) -- and what is still alike is
+   numbered, each creature its own number in every option it is in, so "blocks Goblin #2" is the same Goblin whichever
+   blocker is picked; a block on an attack at a planeswalker says so. The words only: every option keeps its index and ids,
+   so answers and replays are the engine's own. A choice with no two alike is left word for word as it was. */
+export function combatWords(state, choice) {
+  const id = String(choice && choice.id || "");
+  const blocks = id.startsWith("declare-blockers:"), attacks = id.startsWith("declare-attackers:");
+  if (!blocks && !attacks) return choice;
+  const shape = (cardId) => {try {const c = characteristicsOf(state, cardId); return c.power === null || c.power === undefined ? "" : ` ${c.power}/${c.toughness}`;} catch {return "";}};
+  /* Every creature the choice names, in the order the options first name it. */
+  const ids = [];
+  for (const o of choice.options || []) for (const c of blocks ? [o.cardId, o.attackerId] : [o.cardId]) if (c !== undefined && !ids.includes(c)) ids.push(c);
+  const named = new Map(ids.map((c) => [c, shownName(state.objects[c])]));
+  const count = (map) => {const n = new Map(); for (const w of map.values()) n.set(w, (n.get(w) || 0) + 1); return n;};
+  let clash = count(named);
+  if (![...clash.values()].some((n) => n > 1)) return choice;
+  const words = new Map([...named].map(([c, w]) => [c, clash.get(w) > 1 ? `${w}${shape(c)}` : w]));
+  clash = count(words);
+  const seen = new Map();
+  for (const c of ids) {
+    const w = words.get(c);
+    if (clash.get(w) > 1) {const k = (seen.get(w) || 0) + 1; seen.set(w, k); words.set(c, `${w} #${k}`);}
+  }
+  const attackOn = new Map(((state.combat && state.combat.attacks) || []).map((a) => [a.attacker, a]));
+  const options = choice.options.map((o) => {
+    if (attacks) {
+      const at = String(o.label).indexOf(" → ");
+      return at < 0 ? o : {...o, label: `${words.get(o.cardId)}${String(o.label).slice(at)}`};
+    }
+    const on = attackOn.get(o.attackerId), pw = on && on.planeswalker !== undefined ? state.objects[on.planeswalker] : null;
+    return {...o, label: `${words.get(o.cardId)} blocks ${words.get(o.attackerId)}${pw ? ` (attacking ${shownName(pw)})` : ""}`};
+  });
+  return {...choice, options};
+}
+
 /* A priority decision, as a §12.1 choice: one of the seat's legal actions, passing included -- and Resolve all, when
    a run of identical triggers is on top of the stack (`triggerRun`). */
 function priorityChoice(id, actions, state = null, seat = null) {
@@ -436,6 +474,10 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
      five minutes ran out, which their record shows as not finished). `ended`: someone ended the game for
      everyone. */
   let leaving = [], departures = {}, ended = null;
+  /* THE SEATS OUT OF THE GAME, IN THE ORDER THEY WENT OUT (Linear ROB-166): seat ids, from the engine's own "lost" events as
+     they are written, so a game that ends once every person is out says how the last of them went (ending.mjs). Kept with
+     the room, so a game played in slices or woken in between says the same; empty in a room saved before it was kept. */
+  let outs = [];
   /* THE TABLE'S HISTORY (game/room/history.mjs): public lines only, the same for every seat, kept with the room. */
   let history = [];
   /* EVERY REFUSED PILOT ANSWER, COUNTED FOR THE WHOLE MATCH (the independent review of 2026-10-05, F-1). The history keeps
@@ -535,6 +577,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       addToHistory(history, e, names);
       const said = tableEvent(e, id);
       if (said) tableEvents.push(answering ? {...said, decisionId: answering} : said);
+      if (said && said.kind === "lost") outs = [...outs, seats[said.player].seatId];
     }
     eventsFloor = keep(tableEvents, eventsFloor);
   };
@@ -722,7 +765,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     passAfterCast = record.passAfterCast === true; castBy = record.castBy ?? null;
     passStack = record.passStack === true; heldBy = record.heldBy ?? null; yieldable = record.yieldTurn === true; yielding = record.yielding || {};
     tableEvents = record.events || []; eventsMark = record.eventsMark ?? 0; eventsFloor = record.eventsFloor ?? -1;
-    seats = record.seats; pendingSeat = record.pendingSeat; pendingActions = record.pendingActions; receipts = record.receipts || []; leaving = record.leaving || []; departures = record.departures || {}; ended = record.ended || null; history = record.history || [];
+    seats = record.seats; pendingSeat = record.pendingSeat; pendingActions = record.pendingActions; receipts = record.receipts || []; leaving = record.leaving || []; departures = record.departures || {}; ended = record.ended || null; outs = record.outs || []; history = record.history || [];
     refusals = record.refusals || {total: 0, since: point.sequence, first: []};
     continuing = record.continuing === true; driven = record.driven || 0; endWhenNoPerson = record.endWhenNoPerson === true;
     seated = record.candidates === true;
@@ -794,7 +837,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     const point = journal.checkpoint(state, rng.checkpoint());
     await store.saveCheckpoint(point);
     await store.pruneCheckpoints();
-    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, history, refusals, ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {}), ...(resolveAll ? {resolveAll, standing} : {}), ...(passAfterCast ? {passAfterCast, castBy} : {}), ...(endAsks ? {endAsks} : {}), ...(untapMana ? {untapMana, taken} : {}), ...(Object.keys(prefs).length ? {prefs} : {}), ...(turnsOf ? {turnsOf} : {}), ...(passStack ? {passStack, heldBy} : {}), ...(yieldable ? {yieldTurn: true, yielding} : {}), ...(tableEvents.length ? {events: tableEvents, eventsMark, eventsFloor} : {}), ...(seated ? {candidates: true} : {}), ...(pilotPicks ? {pilotPicks: true} : {})}));
+    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, ...(outs.length ? {outs} : {}), history, refusals, ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {}), ...(resolveAll ? {resolveAll, standing} : {}), ...(passAfterCast ? {passAfterCast, castBy} : {}), ...(endAsks ? {endAsks} : {}), ...(untapMana ? {untapMana, taken} : {}), ...(Object.keys(prefs).length ? {prefs} : {}), ...(turnsOf ? {turnsOf} : {}), ...(passStack ? {passStack, heldBy} : {}), ...(yieldable ? {yieldTurn: true, yielding} : {}), ...(tableEvents.length ? {events: tableEvents, eventsMark, eventsFloor} : {}), ...(seated ? {candidates: true} : {}), ...(pilotPicks ? {pilotPicks: true} : {})}));
   }
 
   const api = {
@@ -867,11 +910,13 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         schema: VIEW_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seatId, seat,
         revision: controller.revision,
         status: over ? "finished" : "playing",
-        result: over ? {winner: over.winner === null ? null : seats[over.winner].seatId, reason: over.reason, ...(ended ? {endedBy: ended.by} : {})} : null,
+        result: over ? {winner: over.winner === null ? null : seats[over.winner].seatId, reason: over.reason, ...(ended ? {endedBy: ended.by} : {}),
+          /* And how it ended, as data (ending.mjs; Linear ROB-166): who lost and why, beside the words, which stay as they were. */
+          ending: endingOf({over, ended, seats, players: state.players, departures, outs})} : null,
         departures: structuredClone(departures),
         seats: api.seats,
         waitingOn: pendingSeat === null ? null : seats[pendingSeat].seatId,
-        decision: mine ? structuredClone(controller.pending) : null,
+        decision: mine ? combatWords(state, structuredClone(controller.pending)) : null,
         state: projectFor(state, seat),
         history: history.slice(-HISTORY_VIEW).map(({turn, text, mark}) => ({turn, text, ...(mark ? {mark} : {})})),
         /* What happened, as this seat may know it (events.mjs): the change this view shows -- or, asked with `after` (the last

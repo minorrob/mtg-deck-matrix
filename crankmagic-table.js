@@ -251,9 +251,31 @@
     }
   };
   /* After the game: the board is put away and the lobby says so. (While it is on, the page is the board.) */
-  function gamePanel() {
-    return `<section class="v-panel cm-table-game" id="cm-table-game"><h2>The game is over</h2><p class="cm-muted">Its record is kept.</p></section>`;
+  /* PLAY AGAIN (ROB-167; the table's `rematch`, docs/ui-lane/gameplay-anchor.md "After the game: Play again"): the same
+     seats, decks and rules, each person's answer shown, Yes or Leave the table; the answers close two minutes after the
+     game's end (said in the reader's own time), and silence is leaving. The AI seats always stay. Closed, it says why,
+     with New table. */
+  function gamePanel(t) {
+    const r = t && t.rematch;
+    if (!r) return `<section class="v-panel cm-table-game" id="cm-table-game"><h2>The game is over</h2><p class="cm-muted">Its record is kept.</p></section>`;
+    if (r.outcome === "closed") return `<section class="v-panel cm-table-game" id="cm-table-game"><h2>The game is over</h2><p>${e(r.reason || "This table's games are over. Start a new table to play again.")}</p>
+      <div class="cm-actions">${b("New table", "table-new-after", {}, true)}</div></section>`;
+    const seatOf = (id) => t.seats[id] || {};
+    const said = {yes: "playing again", no: "leaving", pending: "deciding"};
+    const mine = (r.votes || []).find((v) => seatOf(v.seatId).you);
+    const closes = new Date(r.deadline + (Date.now() - tableNow())).toLocaleTimeString("en-US", {hour: "numeric", minute: "2-digit"});
+    const votes = `<ul class="cm-table-votes" aria-label="Who is playing again">${(r.votes || []).map((v) => `<li data-vote="${e(v.vote)}"><strong>${e(seatOf(v.seatId).you ? "You" : seatOf(v.seatId).name || `Seat ${v.seatId + 1}`)}</strong> · ${e(said[v.vote] || v.vote)}</li>`).join("")}</ul>`;
+    const buttons = mine ? `${mine.vote !== "yes" ? b("Play again", "table-rematch", {accept: "yes"}, true) : ""}${b("Leave the table", "table-rematch", {accept: "no"}, false)}` : "";
+    return `<section class="v-panel cm-table-game" id="cm-table-game"><h2>Play again?</h2>
+      <p class="cm-muted">The same seats, decks and rules; the last game's record is kept. ${mine && mine.vote === "yes" ? "You are staying. " : ""}Answers close at ${e(closes)}; no answer is leaving the table.</p>
+      ${votes}<div class="cm-actions">${buttons}</div></section>`;
   }
+  actions["table-rematch"] = async (el) => {
+    const id = current.tableId, accept = el.dataset.accept === "yes";
+    await api("POST", `${tableUrl(id)}/rematch`, {accept});
+    if (accept) await refresh(id); else C.go("table");
+  };
+  actions["table-new-after"] = () => C.go("table");
   function draw(t, asked) {
     current = t;
     applyRememberedMat(t);
@@ -276,7 +298,7 @@
     /* Drawn anew, the lobby keeps the focus on the control the keyboard was on (the accessibility pass). */
     C.keepFocus(C.main, () => {
       C.main.innerHTML = C.pageHead("Play", "", "table", `<p class="cm-muted">${t.youAreHost ? "Your table." : "You were invited to this table."} Four seats at most; it starts when everyone is ready.</p>`)
-        + (t.phase === "rematch" ? gamePanel() : "")
+        + (t.phase === "rematch" ? gamePanel(t) : "")
         + `<div class="cm-lobby-table cm-cloud-table" data-phase="${e(t.phase)}">${seats}${centerPanel(t)}</div>`;
     });
     art.startSeas();

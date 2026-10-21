@@ -210,6 +210,31 @@ globalThis.CrankBoard = Object.seal({
   const appearance = {background: stored("cm-stage-background") || "volcano", table: stored("cm-stage-table") || ""};
   /* The table design: a saved id, an older one (wooden, stone, obsidian) or none, resolved through the catalog (ROB-100). */
   const tableDesignId = (id) => (globalThis.CrankStage ? CrankStage.tableDesign(id).id : id);
+  let blockSelected = null, blockPending = null, blockResult = null, blockListOpen = false, blockEpoch = 0;
+  // One check in flight: checked echoes the choice ID, but not a draft/request ID.
+  const blocking = () => view?.status !== "finished" && view?.decision?.mode === "many" && Array.isArray(view.decision.legalBlocks);
+  const blockContext = () => blocking() ? JSON.stringify([view.matchId, view.revision, view.decision.id, view.decision.options, view.decision.legalBlocks]) : null;
+  const blockKey = () => JSON.stringify([blockContext(), picked]);
+  const blockValid = () => blocking() && blockResult?.key === blockKey() && blockResult.ok && blockResult.open && socket?.readyState === 1;
+  function checkBlocks() {
+    if (!blocking() || blockPending || blockResult?.key === blockKey() || socket?.readyState !== 1) return;
+    blockPending = {key: blockKey(), choiceId: view.decision.id};
+    socket.send(JSON.stringify({type: "check", choiceId: view.decision.id, indices: [...picked]}));
+  }
+  function checkedBlocks(frame) {
+    if (!blockPending || (frame.choiceId !== undefined && frame.choiceId !== blockPending.choiceId)) return;
+    const pending = blockPending; blockPending = null;
+    if (pending.key === blockKey()) blockResult = {key: pending.key, ok: frame.ok === true, open: frame.open === true,
+      reasons: frame.reasons || [frame.error || "The table could not check these blocks. Try again."]};
+    checkBlocks(); draw();
+  }
+  function draftBlock(index) {
+    if (!blocking() || sending) return;
+    const o = view.decision.options.find(o => o.index === index);
+    if (!o || !view.decision.legalBlocks.some(b => b.blocker === o.cardId && b.attackers.includes(o.attackerId))) return;
+    picked = picked.includes(index) ? picked.filter(i => i !== index) : [...picked, index];
+    blockResult = null; checkBlocks(); draw();
+  }
   let drag = null;          /* a bar being dragged: {kind: "rows"|"hand"|"pane"|"panel"|"side", x, y, from, per} */
   /* THE TABLE'S SOUND (B8; crankmagic-audio.js): one player for the page, armed by the first press on the board. */
   let audio = null;
@@ -222,6 +247,7 @@ globalThis.CrankBoard = Object.seal({
     const url = new URL(`/api/tables/${encodeURIComponent(tableId)}/connect`, location.href);
     url.protocol = location.protocol === "https:" ? "wss:" : "ws:";
     const s = new WebSocket(url);
+    blockPending = null; blockResult = null;
     socket = s; closedByUs = false; yieldReady = false; status = view ? "reconnecting" : "connecting"; draw();
     s.addEventListener("open", () => {if (socket !== s) return; retry = 0; status = "open"; draw();});
     s.addEventListener("message", (event) => {if (socket === s) receive(event.data);});
@@ -242,6 +268,7 @@ globalThis.CrankBoard = Object.seal({
     let frame;
     try {frame = JSON.parse(data);} catch {return;}
     if (frame.type === "view") adopt(frame.view);
+    else if (frame.type === "checked" || (frame.type === "refused" && frame.of === "check")) checkedBlocks(frame);
     else if (frame.type === "receipt") {sending = false; draw();}
     /* A way of playing the room did not take (the AI seats were playing on) is sent again once the game moves (prefer). */
     else if (frame.type === "refused" && frame.of === "prefer") {if (frame.view) adopt(frame.view, true);}
@@ -252,7 +279,7 @@ globalThis.CrankBoard = Object.seal({
      equal one is taken too, and a refusal's own view always is. */
   function adopt(next, force = false) {
     if (!force && view && next.revision < view.revision) return;
-    const before = view && view.decision && view.decision.id, was = view;
+    const before = view && view.decision && view.decision.id, was = view, priorBlocks = blockContext();
     view = next;
     yieldReady = true;
     if (yieldPending && (next.matchId !== yieldPending.matchId || next.state.turn !== yieldPending.turn ||
@@ -272,6 +299,8 @@ globalThis.CrankBoard = Object.seal({
     /* On a phone the board you are looking at is the only one on screen: when you are asked, it is yours. */
     if (phone() && view.decision && view.decision.id !== before) focus = view.seat;
     if ((view.decision && view.decision.id) !== before) {picked = []; amounts = []; sending = false; alsoOpen = false; if(view.decision) openModuleDrawer("actions");}
+    if (priorBlocks !== blockContext()) {blockEpoch++; picked = []; blockSelected = null; blockResult = null; blockListOpen = false;}
+    checkBlocks();
     if (selected !== null && !findCard(selected)) selected = null;
     skip();
     draw();
@@ -349,6 +378,13 @@ globalThis.CrankBoard = Object.seal({
     if (gone === "timed-out") return {outcome: "unfinished", reason: "ran out of time"};
     if (v.status !== "finished") return null;
     const r = v.result || {};
+    /* From the room's `ending` (ROB-166), this seat's own end: lost by the rules is a loss with its reason; a game ended
+       for everyone is unfinished; a draw is a draw. Conceded and timed-out were read above, from the departures. */
+    const mine = r.ending && (r.ending.seats || []).find((x) => x.seatId === v.seatId);
+    if (mine && mine.outcome === "won") return {outcome: "win", reason: r.reason || ""};
+    if (mine && mine.outcome === "lost") return {outcome: "loss", reason: mine.reason || "lost"};
+    if (r.ending && r.ending.kind === "ended") return {outcome: "unfinished", reason: "ended early"};
+    if (r.ending && r.ending.kind === "draw") return {outcome: "draw", reason: r.reason || ""};
     /* Ended because every person was out (Rob, 2026-10-06): a person still in it here had lost. */
     if (r.reason === NO_PERSON) return {outcome: "loss", reason: (((v.state && v.state.players || [])[v.seat] || {}).health || {}).lossReason || "lost"};
     if (r.endedBy !== undefined || r.reason === "ended early") return {outcome: "unfinished", reason: "ended early"};
@@ -507,11 +543,14 @@ globalThis.CrankBoard = Object.seal({
     const opts = optionsFor(c.cardId), mine = view.decision && !sending;
     const bright = mine && opts.length > 0, chosen = opts.some((o) => picked.includes(o.index));
     const creature = c.name && c.types.includes("Creature") && c.power !== null, upright = UPRIGHT.has(where), fight = combatOf(c);
-    const cls = ["cm-bcard", c.name ? "" : "is-back", c.tapped && !upright ? "is-tapped" : "", bright ? "is-bright" : "", chosen ? "is-picked" : "", coachShown.has(c.cardId) ? "is-coach-shown" : "", (where === "hand" || where === "fan") && mine && !bright ? "is-dim" : "", selected === c.cardId && where !== "pick" ? "is-selected" : ""].filter(Boolean).join(" ");
+    const cls = ["cm-bcard", c.name ? "" : "is-back", Number.isFinite(c.commanderTax) ? "has-tax" : "", c.tapped && !upright ? "is-tapped" : "", bright ? "is-bright" : "", chosen ? "is-picked" : "", coachShown.has(c.cardId) ? "is-coach-shown" : "", (where === "hand" || where === "fan") && mine && !bright ? "is-dim" : "", selected === c.cardId && where !== "pick" ? "is-selected" : ""].filter(Boolean).join(" ");
     const marks = [c.tapped && upright ? `<span class="cm-bcard-mark is-state">Tapped</span>` : "", ...fight.map((f) => `<span class="cm-bcard-mark is-combat">${f.mark}</span>`), c.damage ? `<span class="cm-bcard-mark">${c.damage} damage</span>` : "", ...Object.entries(c.counters || {}).map(([k, n]) => `<span class="cm-bcard-mark">${n} ${e(k)}</span>`)].join("");
     /* Its name first, then what is shown on it as a person looking at it would say it: tapped, its power and toughness,
        in combat, damage marked, counters, chosen or picked to read; then what it can do now (the accessibility pass). */
-    const state = [c.tapped ? "tapped" : "", creature ? `${c.power}/${c.toughness}` : "", ...fight.map((f) => f.said), c.damage ? `${c.damage} damage` : "", ...Object.entries(c.counters || {}).map(([k, n]) => `${n} ${k} counter${n === 1 ? "" : "s"}`),
+    /* THE COMMANDER TAX (ROB-29; CR 903.8): on a commander in the command zone, the generic it costs more for each time it
+       was cast from there (the room's `commanderTax`), at its top-right as Rob asked, and said with its name. */
+    const tax = Number.isFinite(c.commanderTax) ? c.commanderTax : null;
+    const state = [tax !== null ? `commander tax ${tax}` : "", c.tapped ? "tapped" : "", creature ? `${c.power}/${c.toughness}` : "", ...fight.map((f) => f.said), c.damage ? `${c.damage} damage` : "", ...Object.entries(c.counters || {}).map(([k, n]) => `${n} ${k} counter${n === 1 ? "" : "s"}`),
       chosen ? "chosen" : "", selected === c.cardId && where !== "pick" ? "selected" : ""].filter(Boolean);
     /* What it can do, each kind once ("Cast Zap, 4 ways"), not the card's name once per target. */
     const can = [...new Set(opts.map((o) => verbFor(o)))];
@@ -521,7 +560,7 @@ globalThis.CrankBoard = Object.seal({
     const label = `${named}${state.length ? ", " + state.join(", ") : ""}${bright ? `: ${can.join(" or ")}${opts.length > can.length ? `, ${opts.length} ways` : ""}` : ""}`;
     if (!c.name && !c.faceDown) return `<div class="cm-bcard is-back" role="img" aria-label="${e(label)}"></div>`;
     return `<button type="button" class="${cls}" data-action="${action}" data-card="${c.cardId}"${arrange ? ` draggable="true" data-arrange-card="true" title="Drag within this section to reorder; Alt + Left or Right works with a keyboard"` : ""} aria-label="${e(label)}">
-      ${c.name ? `<span class="cm-bcard-name">${e(c.name)}</span>` : ""}${creature ? `<span class="cm-bcard-pt">${c.power}/${c.toughness}</span>` : ""}
+      ${c.name ? `<span class="cm-bcard-name">${e(c.name)}</span>` : ""}${creature ? `<span class="cm-bcard-pt">${c.power}/${c.toughness}</span>` : ""}${tax !== null ? `<span class="cm-bcard-tax" title="Commander tax: {${tax}} more to cast it from the command zone">+${tax}</span>` : ""}
       ${c.name ? `<img src="${e(pictureOf(c.name))}" alt="" draggable="false" loading="lazy" referrerpolicy="no-referrer">` : ""}${marks ? `<span class="cm-bcard-marks">${marks}</span>` : ""}</button>`;
   }
 
@@ -667,7 +706,10 @@ globalThis.CrankBoard = Object.seal({
   function pile(label, zone, top, {back = false, draw: drawing = false} = {}) {
     /* Your library, while your draw waits for you (a game launched with the held draw): clicking it draws, as Draw a card
        does (Rob, 2026-10-09: "Clicking the library pile should Draw a Card also on a Draw turn"). */
-    const face = top ? card(top) : drawing
+    /* PARTNERS (ROB-29, Oct 20): the command zone draws every card in it, the second overlapping the first like a small
+       pile, so Kraum is there to see, inspect and cast beside Tymna rather than only under "You can also". */
+    const many = label === "Command" && zone.cards.length > 1;
+    const face = many ? `<span class="cm-board-partners">${zone.cards.map((c) => card(c)).join("")}</span>` : top ? card(top) : drawing
       ? `<button type="button" class="cm-bcard is-back is-bright" data-action="board-draw" aria-label="Draw a card: your library, ${zone.count}"${sending ? " disabled" : ""}><b class="cm-bcard-count">${zone.count}</b></button>`
       : `<div class="cm-bcard is-empty${back && zone.count ? " is-back" : ""}" aria-hidden="true">${back && zone.count ? `<b class="cm-bcard-count">${zone.count}</b>` : ""}</div>`;
     return `<figure class="cm-mat-zone cm-board-pile" data-zone="${e(label.toLowerCase())}" aria-label="${e(label)}, ${zone.count}" title="${e(label)}, ${zone.count}">${face}<figcaption><em>${e(label)}</em><b>${zone.count}</b></figcaption></figure>`;
@@ -992,6 +1034,24 @@ globalThis.CrankBoard = Object.seal({
   /* As HTML, an offer that helps an opponent or is aimed against your own marked where it says so (Rob, 2026-10-12: "some
      indicator ... distinguishing it from spells that are negative"; game/room/room.mjs, `leaning`). */
   const sayHtml = (o) => (o.lean ? e(sayFor(o)).replace(e(o.lean), `<span class="cm-lean${o.lean.startsWith("helps") ? " is-helps" : " is-against"}">⚠ ${e(o.lean)}</span>`) : e(sayFor(o)));
+  function blockDraft() {
+    const d = view.decision, label = id => {const c = combatCard(id); return `${c ? combatName(c) : "Object"} #${id}`;};
+    const tile = (id, action, selected, index) => {
+      const c = combatCard(id);
+      return `<button type="button" class="cm-block-tile" data-action="${action}" data-block-object="${id}"${index === undefined ? "" : ` data-index="${index}"`} aria-pressed="${selected}"${sending ? " disabled" : ""}>
+        ${c?.name && !c.faceDown ? `<img src="${e(pictureOf(c.name))}" alt="" loading="lazy">` : ""}<span>${e(label(id))}</span></button>`;
+    };
+    const options = d.options.filter(o => d.legalBlocks.some(b => b.blocker === o.cardId && b.attackers.includes(o.attackerId)));
+    const selected = options.filter(o => o.cardId === blockSelected);
+    const result = blockResult?.key === blockKey() ? blockResult : null;
+    return `<div class="cm-block-draft"><p>Choose a blocker, then its attackers. Draft stays private until confirmed.</p>
+      <div class="cm-block-tiles" data-block-key="${e(`${blockEpoch}:blockers`)}" aria-label="Choose a blocker">${d.legalBlocks.map(b => tile(b.blocker, "board-block-select", blockSelected === b.blocker)).join("") || "No legal blockers."}</div>
+      ${blockSelected !== null ? `<p>Attackers for ${e(label(blockSelected))} · select again to remove</p><div class="cm-block-tiles" data-block-key="${e(`${blockEpoch}:attackers:${blockSelected}`)}" aria-label="Legal attackers">${selected.map(o => tile(o.attackerId, "board-block-pair", picked.includes(o.index), o.index)).join("")}</div>${b("Clear this blocker", "board-block-clear", {}, false, {disabled:sending})}` : ""}
+      <ul class="cm-block-pairs" aria-label="Your private block draft">${options.filter(o => picked.includes(o.index)).map(o => `<li data-draft-blocker="${o.cardId}" data-draft-attacker="${o.attackerId}">${e(label(o.cardId))} → ${e(label(o.attackerId))} ${b("Remove", "board-block-pair", {index:o.index}, false, {disabled:sending})}</li>`).join("") || "<li>No blocks selected</li>"}</ul>
+      <div class="cm-block-status" role="status">${result ? result.ok && result.open ? "The table accepts this draft." : result.reasons.map(r => `<p>${e(r)}</p>`).join("") : "Checking blocks with the table…"}</div>
+      ${result && !result.open ? b("Check again", "board-block-retry") : ""}
+      <details class="cm-block-list"${blockListOpen ? " open" : ""}><summary>All block options</summary>${options.map(o => `<button type="button" class="v-button compact" data-action="board-option" data-index="${o.index}" aria-pressed="${picked.includes(o.index)}"${sending ? " disabled" : ""}>${e(o.label)} · #${o.cardId} → #${o.attackerId}</button>`).join("")}</details></div>`;
+  }
   function decision() {
     const d = view.decision;
     if (!d || view.status === "finished" || d.kind === "draw") return "";
@@ -1016,7 +1076,17 @@ globalThis.CrankBoard = Object.seal({
       return `<section class="cm-board-decision is-also" id="cm-board-decision" aria-label="What you can do"><h3>You can also</h3><div class="cm-board-options">${body}</div></section>`;
     }
     if (["one", "boolean", "index"].includes(d.mode)) body = d.options.map((o) => opt(o)).join("");
-    else if (d.mode === "ack") foot = b("OK", "board-confirm", {}, true, {disabled: sending});
+    else if (blocking()) {
+      body = blockDraft();
+      foot = `${b("No blocks", "board-block-none", {}, false, {disabled:sending})}${b(picked.length ? "Confirm blocks" : "Confirm no blocks", "board-confirm", {}, true, {disabled:!blockValid() || sending})}`;
+    }
+    /* WHAT YOU WERE SHOWN (ROB-169): an acknowledgment about cards ("Peek: you look at Maya's hand") draws them, each one
+       to read (Card zoom on a click); this seat alone is sent them, in its own decision. OK answers it. */
+    else if (d.mode === "ack") {
+      const shown = d.options.filter((o) => o.cardId !== undefined && o.label);
+      if (shown.length) body = `<div class="cm-board-shown">${shown.map((o) => card(shownCard(o.cardId), {where: "peek", action: "board-zoom-open"})).join("")}</div>`;
+      foot = b("OK", "board-confirm", {}, true, {disabled: sending});
+    }
     else if (d.mode === "many") {
       body = d.options.map((o) => opt(o, ` aria-pressed="${picked.includes(o.index)}"`)).join("");
       const ok = picked.length >= d.min && picked.length <= d.max;
@@ -1035,7 +1105,7 @@ globalThis.CrankBoard = Object.seal({
     /* Asked in a run you chose Resolve all for: this answer goes for the same question each time the run asks it (Rob,
        2026-10-09: "Yes to all"; game/room/room.mjs). */
     const forRun = d.forRun ? `<p class="cm-muted cm-board-for-run">Resolve all: your answer goes for this same question each time the run asks it.</p>` : "";
-    return `<section class="cm-board-decision" id="cm-board-decision" data-choice-id="${e(d.id)}" data-match-id="${e(view.matchId)}" aria-label="${e(d.title)}"><h3${sentence ? ' class="is-sentence"' : ""}>${e(d.title)}</h3>${forRun}
+    return `<section class="cm-board-decision${blocking() ? " is-blocking" : ""}" id="cm-board-decision" data-choice-id="${e(d.id)}" data-match-id="${e(view.matchId)}" aria-label="${e(d.title)}"><h3${sentence ? ' class="is-sentence"' : ""}>${e(d.title)}</h3>${forRun}
       <div class="cm-board-options">${body}</div>${foot ? `<div class="cm-board-decision-foot">${foot}</div>` : ""}</section>`;
   }
   /* What the room asks, and what is on the stack, floated over the surface under the strip. Priority is not
@@ -1159,8 +1229,14 @@ globalThis.CrankBoard = Object.seal({
     for (const p of players()) for (const c of visibleCards(p)) if (c.cardId === cardId) return c;
     return null;
   }
+  /* A card this seat was shown in its own decision (ROB-169: a look at another player's hand), which is not on any zone it
+     can see: read from the decision, by name. */
+  const shownCard = (cardId) => {
+    const o = view?.decision?.mode === "ack" ? view.decision.options.find((x) => x.cardId === cardId && x.label) : null;
+    return o ? {cardId: o.cardId, name: o.label, types: [], power: null, counters: {}} : null;
+  };
   function zoom(cardId) {
-    const c = findCard(cardId);
+    const c = findCard(cardId) || shownCard(cardId);
     if (!c || !c.name) return;
     const opts = optionsFor(c.cardId);
     const acts = opts.map((o) => `<button type="button" class="v-button primary" data-action="board-zoom-do" data-index="${o.index}"${sending ? " disabled" : ""}>${sayHtml(o)}</button>`).join("");
@@ -1319,18 +1395,71 @@ globalThis.CrankBoard = Object.seal({
   }
   function banner() {
     if (view.status === "finished") {
-      const r = view.result || {}, you = r.winner === view.seatId;
-      const head = r.endedBy !== undefined || r.reason === "ended early" ? "The game was ended early"
-        : you ? "You won" : r.winner ? `${seatName(r.winner)} won` : "The game is over";
-      const line = r.reason === "ended early" ? "Nobody lost. Its record is kept, as not finished." : r.reason ? `${r.reason[0].toUpperCase()}${r.reason.slice(1)}.` : "";
+      const {head, line} = endingWords(view);
+      /* PLAY AGAIN (ROB-167): the table's next game with the same seats, decks and rules, or Leave the table; Back to the
+         table shows the lobby, where everyone's answers are. */
+      const again = rematchAsked === null
+        ? `${b("Play again", "board-rematch", {accept: "yes"}, true, {disabled: rematchSending})}${b("Leave the table", "board-rematch", {accept: "no"}, false, {disabled: rematchSending})}`
+        : "";
       return `<div class="cm-board-over" role="dialog" aria-modal="false" aria-labelledby="cm-board-over-title"><div class="v-panel"><h2 id="cm-board-over-title">${e(head)}</h2><p class="cm-muted">${e(line)}</p>
-        <div class="cm-actions">${b("Back to the table", "board-leave", {}, true)}${recordButton()}</div></div></div>`;
+        ${rematchError ? `<p class="cm-note cm-warning" role="alert">${e(rematchError)}</p>` : ""}
+        <div class="cm-actions">${again}${b("Back to the table", "board-leave", {}, !again)}${recordButton()}</div></div></div>`;
     }
     const gone = departed(view.seat);
     if (gone) return `<p class="cm-board-banner">${LEFT}</p>`;
     return "";
   }
   const LEFT = "You have left this game; the others play on.";
+  /* HOW IT ENDED, IN WORDS (ROB-166): from the room's `ending` (game/room/ending.mjs), who lost and why -- a person knocked
+     out by three AI seats lost, and says so, rather than "the game was ended early". A view without `ending` (a room
+     before it) keeps the words it always had. */
+  const LOSS_WORDS = {life: ["Your life reached 0", "their life reached 0"], poison: ["Ten poison counters", "ten poison counters"],
+    "commander-damage": ["21 combat damage from one commander", "21 combat damage from one commander"],
+    "empty-library": ["You had to draw from an empty library", "they had to draw from an empty library"],
+    effect: ["A card's effect made you lose", "a card's effect made them lose"], conceded: ["You conceded", "they conceded"]};
+  const lossWords = (reason, mine) => {const w = LOSS_WORDS[reason]; return w ? w[mine ? 0 : 1] : mine ? "You lost" : "they lost";};
+  function endingWords(v) {
+    const r = v.result || {}, end = r.ending, me = v.seatId;
+    const name = (seatId) => ((v.seats || []).find((s) => s.seatId === seatId) || {}).name || "A player";
+    const onlyAi = "With only AI players left, the game ends here.";
+    if (end && end.kind === "eliminated") return end.seatId === me
+      ? {head: "You lost", line: `${lossWords(end.reason, true)}. ${onlyAi}`}
+      : {head: `${name(end.seatId)} lost`, line: `${name(end.seatId)} was the last person in it; ${lossWords(end.reason, false)}. ${onlyAi}`};
+    if (end && end.kind === "conceded") return end.seatId === me
+      ? {head: "You conceded", line: onlyAi}
+      : {head: `${name(end.seatId)} conceded`, line: onlyAi};
+    if (end && end.kind === "timed-out") return end.seatId === me
+      ? {head: "You ran out of time", line: `You were away too long. ${onlyAi} Its record is kept, as not finished.`}
+      : {head: `${name(end.seatId)} ran out of time`, line: `${onlyAi} Its record is kept, as not finished.`};
+    if (end && end.kind === "ended") return {head: "The game was ended early",
+      line: `${end.seatId === me ? "You" : name(end.seatId)} ended it for everyone. Nobody lost; its record is kept, as not finished.`};
+    if (end && end.kind === "draw") return {head: "A draw", line: "Everyone still in it lost at once."};
+    const you = r.winner === me;
+    const head = r.endedBy !== undefined || r.reason === "ended early" ? "The game was ended early"
+      : you ? "You won" : r.winner ? `${name(r.winner)} won` : "The game is over";
+    const line = r.reason === "ended early" ? "Nobody lost. Its record is kept, as not finished." : r.reason ? `${r.reason[0].toUpperCase()}${r.reason.slice(1)}.` : "";
+    return {head, line};
+  }
+  /* PLAY AGAIN (ROB-167; the table's `POST .../rematch {accept}`, game/room/table.mjs): answered once from the banner. A
+     game over in the room reaches the table a moment later (its alarm), so "still being played" is tried again for a few
+     seconds before it is said. Then the lobby, which shows every seat's answer and the countdown. */
+  let rematchAsked = null, rematchSending = false, rematchError = "";
+  async function answerRematch(accept) {
+    if (rematchSending || !tableId) return;
+    rematchSending = true; rematchError = ""; draw();
+    const id = tableId;
+    try {
+      for (let tries = 0; ; tries += 1) {
+        try {await tableApi().api("POST", `${tableApi().tableUrl(id)}/rematch`, {accept}); break;}
+        catch (error) {if (tries < 8 && /still being played/.test(String(error && error.message))) {await new Promise((r) => setTimeout(r, 750)); continue;} throw error;}
+      }
+      rematchAsked = accept;
+      C.board.close();
+      if (accept) await tableApi().refresh(id); else C.go("table");
+    } catch (error) {
+      rematchError = String((error && error.message) || error);
+    } finally {rematchSending = false; if (document.getElementById("cm-board")) draw();}
+  }
   /* ---- MOTION (Rob, 2026-10-12, from the Replit concept: "more fluid, better transitions") ----
      The board is drawn anew at every view, so nothing moves by itself. This is a FLIP pass around a paint caused by a
      new view of the same game: before it, where every card and pile is; after it, a card that changed zone -- played
@@ -1462,6 +1591,19 @@ globalThis.CrankBoard = Object.seal({
       if (p.health.poison >= 10 && w.health.poison < 10) out.push({tone: "harm", glyph: "seal", word: "FATAL", line: `${who(p.playerId)} · 10 poison`, big: true});
       const most = (h) => Math.max(0, ...Object.values(h.commanderDamage || {}));
       if (most(p.health) >= 21 && most(w.health) < 21) out.push({tone: "harm", glyph: "seal", word: "FATAL", line: `${who(p.playerId)} · 21 from a commander`, big: true});
+    }
+    /* A SPELL THAT CAME AND WENT (Linear ROB-102; events.v1, docs/ui-lane/gameplay-anchor.md): with the stack passed for a
+       person who had no answer to it (`passStack`), another player's spell can be cast and resolve between two of their
+       views, never seen on the stack. The view's events say so (`cast`, then `resolve`), and so does this: who cast what,
+       and that it resolved. Only for a view that moved on (a view sent again repeats its events), never the seat's own
+       cast, never a spell still on the stack (that is a RESPONSE, above), at most three; a face-down spell is not named. */
+    if (next.revision !== was.revision) {
+      const evs = next.events || [], onStack = new Set(next.state.stack.map((x) => x.stackId ?? x.id));
+      const resolved = new Set(evs.filter((x) => x.kind === "resolve").map((x) => x.stackId));
+      const countered = new Set(evs.filter((x) => x.kind === "countered").map((x) => x.stackId));
+      const came = evs.filter((x) => x.kind === "cast" && x.player !== next.seat && !onStack.has(x.stackId) && !countered.has(x.stackId)).slice(0, 3);
+      for (const x of came) out.push({tone: "answer", glyph: "shield", word: "CAST",
+        line: `${who(x.player)} · ${(x.card && x.card.name) || "a face-down spell"}${resolved.has(x.stackId) ? " · resolved" : ""}`});
     }
     /* the history's new lines: countered, proliferate, tokens */
     const seen = new Set((was.history || []).map((l) => `${l.turn}|${l.text}`));
@@ -1605,7 +1747,9 @@ globalThis.CrankBoard = Object.seal({
     const choiceScroll = choice && choice.dataset.choiceId === view?.decision?.id && choice.dataset.matchId === view?.matchId
       ? choice.querySelector(".cm-board-options")?.scrollTop : null;
     const fight = host.querySelector(".cm-combat-groups"), fightPosition = fight && {key: fight.dataset.combatKey, x: fight.scrollLeft, y: fight.scrollTop};
+    const blockPositions = new Map([...host.querySelectorAll("[data-block-key]")].map(el => [el.dataset.blockKey, el.scrollLeft]));
     C.keepFocus(host, () => paint(host));
+    for (const el of host.querySelectorAll("[data-block-key]")) el.scrollLeft = blockPositions.get(el.dataset.blockKey) || 0;
     const options = host.querySelector("#cm-board-decision .cm-board-options");
     if (choiceScroll !== null && options) options.scrollTop = choiceScroll;
     const nextFight = host.querySelector(".cm-combat-groups");
@@ -1773,6 +1917,12 @@ globalThis.CrankBoard = Object.seal({
       overlap(host);
       dock();
       if (tbl) sea(tbl); else stopSea();
+      /* THE QUESTION HELD TO THE WINDOW in Table and Focus (ROB-26's blocking, Oct 20): it floats into a board that
+         scrolls, so a long draft or an open "All block options" pushed No blocks and Confirm below the window. It is as
+         tall as the window leaves below its top, and its middle scrolls (crankmagic-stage.css). Focus starts it lower
+         than Table, so the room is measured, not assumed -- last, once everything above it has its size. */
+      const ask = host.querySelector(".cm-board-main>.cm-board-ask, .cm-board-tabletop>.cm-board-ask");
+      if (ask) ask.style.maxHeight = `${Math.max(160, Math.floor(innerHeight - ask.getBoundingClientRect().top - 12))}px`;
     } finally {fitting = false;}
   }
   /* The Coach docked in Full screen: over the lower half of the side column, which gives its log the upper half. */
@@ -1975,6 +2125,7 @@ globalThis.CrankBoard = Object.seal({
   /* ---- actions ---- */
   const tableApi = () => C.tableApi;
   function option(index) {
+    if (blocking()) return draftBlock(index);
     const d = view.decision;
     if (!d || sending) return;
     if (["one", "boolean", "index"].includes(d.mode)) return send({indices: [index]});
@@ -2000,6 +2151,9 @@ globalThis.CrankBoard = Object.seal({
   actions["board-card"] = (el) => {
     if (!view) return;
     const id = Number(el.dataset.card);
+    if (blocking() && !sending && view.decision.legalBlocks.some(b => b.blocker === id)) {
+      blockSelected = id; openModuleDrawer("actions"); draw(); return;
+    }
     /* Full screen and the Panel show a card large at the side, with what can be done with it, before anything is done. */
     if (mode === "full" && !phone()) {selected = id; hover = null; drawPick(); draw(); return;}
     const previewSide=moduleSide("inspect");
@@ -2041,9 +2195,24 @@ globalThis.CrankBoard = Object.seal({
     if (skipping !== null) skip();
     draw();
   };
+  actions["board-block-select"] = el => {if (!blocking() || sending) return; blockSelected = Number(el.dataset.blockObject); draw();};
+  actions["board-block-pair"] = el => draftBlock(Number(el.dataset.index));
+  actions["board-block-none"] = () => {if (!blocking() || sending) return; picked = []; blockResult = null; checkBlocks(); draw();};
+  actions["board-block-clear"] = () => {
+    if (!blocking() || sending) return;
+    picked = picked.filter(i => view.decision.options.find(o => o.index === i)?.cardId !== blockSelected);
+    blockResult = null; checkBlocks(); draw();
+  };
+  actions["board-block-retry"] = () => {blockResult = null; checkBlocks(); draw();};
+  document.addEventListener("toggle", event => {if (event.target.matches?.(".cm-block-list")) blockListOpen = event.target.open;}, true);
   actions["board-confirm"] = () => {
     const d = view.decision;
-    if (!d) return;
+    if (!d || sending) return;
+    if (blocking()) {
+      if (!blockValid()) return;
+      blockResult = null; // A receipt alone must not reopen this already submitted draft.
+      return send({indices: [...picked]});
+    }
     if (d.mode === "ack") return send({indices: []});
     if (d.mode === "damage" || d.mode === "amount") return send({amounts: d.options.map((_, i) => Number(amounts[i]) || 0)});
     send({indices: picked});
@@ -2382,6 +2551,7 @@ globalThis.CrankBoard = Object.seal({
   };
   actions["board-end-cancel"] = () => {confirmEnd = false; draw();};
   actions["board-concede"] = async () => {tools = false; await tableApi().api("POST", `${tableApi().tableUrl(tableId)}/concede`); draw();};
+  actions["board-rematch"] = (el) => answerRematch(el.dataset.accept === "yes");
   actions["board-leave"] = async () => {const id = tableId; C.board.close(); await tableApi().refresh(id);};
   /* Hold priority after I cast (Tools): kept on this device, and the Tools' words follow it. */
   document.addEventListener("change", (event) => {
@@ -2495,5 +2665,5 @@ globalThis.CrankBoard = Object.seal({
     else setScale("hand", scaleOf("hand") + up * 5);
   });
   /* A picture that does not come leaves the card's own frame, which already names it. */
-  document.addEventListener("error", (event) => {const t = event.target; if (t && t.matches && t.matches(".cm-bcard img, .cm-combat-card img")) t.remove();}, true);
+  document.addEventListener("error", (event) => {const t = event.target; if (t && t.matches && t.matches(".cm-bcard img, .cm-combat-card img, .cm-block-tile img")) t.remove();}, true);
 });
