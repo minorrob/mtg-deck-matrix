@@ -248,12 +248,18 @@ function policy(v) {
     const tap = mine && me.zones.Hand.cards.some((c) => c.name === spell) && d.options.find((o) => o.act === "activate-mana");
     return {indices: [(cast || land || tap || d.options.find((o) => o.act === "pass")).index]};
   }
+  /* Creatures chosen by the cards they are, not by an option's words: the room numbers same-named ones (ROB-168,
+     "Maya Bear 2/2 #1 blocks Brute"). */
+  const named = (cardId) => (v.state.players.flatMap((p) => p.zones.Battlefield.cards).find((c) => c.cardId === cardId) || {}).name;
   if (String(d.id).startsWith("declare-attackers:")) {
     const bears = v.state.players[1].zones.Battlefield.cards.filter((c) => c.name === "Maya Bear" && !c.tapped).length;
-    const brute = d.options.find((o) => o.label.startsWith("Brute → "));
+    const brute = d.options.find((o) => named(o.cardId) === "Brute" && o.defenderId !== undefined && o.planeswalkerId === undefined);
     return {indices: bears >= 2 && brute ? [brute.index] : []};
   }
-  if (String(d.id).startsWith("declare-blockers:")) return {indices: d.options.filter((o) => o.label === "Maya Bear blocks Brute").slice(0, 2).map((o) => o.index)};
+  if (String(d.id).startsWith("declare-blockers:")) {
+    const pairs = d.options.filter((o) => named(o.cardId) === "Maya Bear" && named(o.attackerId) === "Brute");
+    return {indices: pairs.filter((o, i) => pairs.findIndex((x) => x.cardId === o.cardId) === i).slice(0, 2).map((o) => o.index)};
+  }
   if (d.mode === "many") return {indices: d.options.slice(0, d.min).map((o) => o.index)};
   if (d.mode === "order") return {indices: d.options.map((o) => o.index)};
   if (d.mode === "ack") return {indices: []};
