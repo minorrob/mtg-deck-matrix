@@ -289,6 +289,15 @@
 #matrix-v2 .cm-stage-camera label,#matrix-v2 .cm-stage-camera output{color:#edf6ef}
 #matrix-v2 .cm-stage-camera .cm-board-views .v-button{height:38px;color:#edf6ef;background:#1c302e}
 #matrix-v2 .cm-stage-camera .cm-board-views .v-button.is-on{color:#0d120c;background:#87c6a1}
+/* ROB-171: real objects remain actionable; ownership ghosts are inspection references only. */
+#matrix-v2 .cm-board .cm-bcard.is-controlled{border:3px double #a8dcff}
+#matrix-v2 .cm-board .cm-control-label{position:absolute;left:0;right:0;top:23%;z-index:2;display:block;padding:3px 2px;background:#133c57;color:#fff;font:600 max(10px,calc(var(--bc) * .09))/1.2 system-ui;text-align:center;white-space:normal;overflow-wrap:anywhere}
+#matrix-v2 .cm-board .cm-control-ghost{border:2px dashed #a8dcff;background:#152a35;box-shadow:none;cursor:help}
+#matrix-v2 .cm-board .cm-control-ghost img{opacity:.28;filter:grayscale(1)}
+#matrix-v2 .cm-board .cm-control-ghost .cm-bcard-name{display:block;top:auto;bottom:4px;opacity:1;color:#fff;background:#10232f;font-size:max(10px,calc(var(--bc) * .09));line-height:1.15}
+#matrix-v2 .cm-board .cm-control-ghost:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.cm-control-peek{position:fixed;z-index:1100;box-sizing:border-box;width:300px;max-width:calc(100vw - 16px);max-height:calc(100vh - 16px);overflow:auto;padding:12px 16px;border:1px solid #a8dcff;border-radius:8px;background:#10232f;color:#fff;font:14px/1.45 system-ui;box-shadow:0 8px 30px #0009;pointer-events:none}
+.cm-control-peek p{margin:0 0 8px}.cm-control-peek p:last-child{margin-bottom:0}
 
 /* Confirmed combat gets its own header space; decisions keep the surface below it. */
 .cm-board[data-shell="shared"][data-combat]{grid-template-rows:188px minmax(0,1fr)}
