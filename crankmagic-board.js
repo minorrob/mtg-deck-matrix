@@ -1592,6 +1592,19 @@ globalThis.CrankBoard = Object.seal({
       const most = (h) => Math.max(0, ...Object.values(h.commanderDamage || {}));
       if (most(p.health) >= 21 && most(w.health) < 21) out.push({tone: "harm", glyph: "seal", word: "FATAL", line: `${who(p.playerId)} · 21 from a commander`, big: true});
     }
+    /* A SPELL THAT CAME AND WENT (Linear ROB-102; events.v1, docs/ui-lane/gameplay-anchor.md): with the stack passed for a
+       person who had no answer to it (`passStack`), another player's spell can be cast and resolve between two of their
+       views, never seen on the stack. The view's events say so (`cast`, then `resolve`), and so does this: who cast what,
+       and that it resolved. Only for a view that moved on (a view sent again repeats its events), never the seat's own
+       cast, never a spell still on the stack (that is a RESPONSE, above), at most three; a face-down spell is not named. */
+    if (next.revision !== was.revision) {
+      const evs = next.events || [], onStack = new Set(next.state.stack.map((x) => x.stackId ?? x.id));
+      const resolved = new Set(evs.filter((x) => x.kind === "resolve").map((x) => x.stackId));
+      const countered = new Set(evs.filter((x) => x.kind === "countered").map((x) => x.stackId));
+      const came = evs.filter((x) => x.kind === "cast" && x.player !== next.seat && !onStack.has(x.stackId) && !countered.has(x.stackId)).slice(0, 3);
+      for (const x of came) out.push({tone: "answer", glyph: "shield", word: "CAST",
+        line: `${who(x.player)} · ${(x.card && x.card.name) || "a face-down spell"}${resolved.has(x.stackId) ? " · resolved" : ""}`});
+    }
     /* the history's new lines: countered, proliferate, tokens */
     const seen = new Set((was.history || []).map((l) => `${l.turn}|${l.text}`));
     for (const l of (next.history || []).filter((l) => !seen.has(`${l.turn}|${l.text}`)).slice(0, 12)) {

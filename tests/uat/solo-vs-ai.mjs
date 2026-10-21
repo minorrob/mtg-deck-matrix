@@ -222,7 +222,8 @@ async function journey(n, rob, pod) {
   ok(end.kind === "ended" || !/ended early/i.test(banner), `table ${n}: a loss or a win never reads "ended early" (${banner})`);
   if (end.kind === "eliminated" && end.seatId === result.seatId) ok(/^You lost/i.test(banner) && /With only AI players left/i.test(banner), `table ${n}: the banner says you lost, and why the game ends (${banner})`);
   if (end.kind === "won") ok(/won/i.test(banner), `table ${n}: the banner names the winner (${banner})`);
-  if (process.env.PLAY_AGAIN !== "0") {
+  /* Only the run's last table plays again: a person still seated at a table is taken back to it, not to New table. */
+  if (process.env.PLAY_AGAIN !== "0" && n === PODS.length) {
     const before = result.matchId;
     /* The table learns of a game over in the room from its alarm, which a Durable Object runs by itself: run it here. */
     const settle = setInterval(() => serial(() => tableFor(id).alarm()), 200);

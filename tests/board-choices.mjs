@@ -143,6 +143,8 @@ async function socket(onFrame, at = object, email = ROB) {
 const deck = (who, basic, spell) => ({name: `${who}'s deck`, commander: [`${who} General`], cards: [...Array(40)].map((_, i) => (i % 2 ? basic : spell))});
 async function startTable(at, tableId, robSpell) {
   await callAt(at, "/table/create", {tableId, hostName: "Rob", seats: [{kind: "ai", name: "Maya"}]});
+  /* Every spell asked about, as the seeded games below were found before ROB-102 (the stack passed for a player with no answer). */
+  await callAt(at, "/table/rules", {passStack: false});
   await callAt(at, "/table/deck", {seatId: 0, deck: deck("Rob", "Mountain", robSpell)});
   await callAt(at, "/table/deck", {seatId: 1, deck: deck("Maya", "Forest", "Maya Bear")});
   await callAt(at, "/table/ready", {ready: true});
@@ -225,6 +227,7 @@ DEFS.set("Brute", {types: ["Creature"], power: 3, toughness: 3, manaCost: "{R}"}
 const damageAt = standUp(DAMAGE_TABLE);
 const callAs = (email, p, body) => serial(async () => (await damageAt.fetch(new Request(`https://table.internal${p}`, {method: body === undefined ? "GET" : "POST", headers: {"content-type": "application/json", "x-crankmagic-email": email}, ...(body !== undefined ? {body: JSON.stringify(body)} : {})}))).json());
 await callAs(ROB, "/table/create", {tableId: DAMAGE_TABLE, hostName: "Rob", seats: [{kind: "human", name: "Maya"}]});
+await callAs(ROB, "/table/rules", {passStack: false});
 await callAs(MAYA, "/table/join", {code: (await callAs(ROB, "/table/invite", {seatId: 1})).invite.code});
 await callAs(ROB, "/table/deck", {seatId: 0, deck: deck("Rob", "Mountain", "Brute")});
 await callAs(MAYA, "/table/deck", {seatId: 1, deck: deck("Maya", "Forest", "Maya Bear")});
