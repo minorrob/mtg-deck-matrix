@@ -351,11 +351,11 @@ export async function playGame({decks, seed, cards, humans = [], levels = [], ma
   /* The pod as the table launches it (game/room/table.mjs): a step with nothing to do passes itself, once every person is
      out the game ends there, a run of identical triggers may resolve at once, a person's cast passes for them, and their own
      end step is asked of them, and a land they tap may be untapped; floating mana and the sources left pay a cast
-     together, and they may yield a turn -- so a wait measured here
+     together, and they may yield a turn, and are not asked to declare blockers with none to declare -- so a wait measured here
      is one a person at the table has, not the AI seats playing a game out for nobody. */
   /* `levels`: an AI seat's setting (AI-2), "easy" or "normal", for L1; none, L0. And its AI seats take what an "up to" or a
      search is for (`pilotPicks`), unless `picks` is false: a table's games before they did. */
-  const pod = {...(picks ? {pilotPicks: true} : {}), passEmpty: true, endWhenNoPerson: true, resolveAll: true, passAfterCast: true, endAsks: true, untapMana: true, pooledTaps: true, xTaps: true, yieldTurn: true, drawBeat: true, passStack: true, seats: decks.map((d, i) => ({seatId: `s${i}`, name: NAMES[i] || `Seat ${i + 1}`, pilot: humans.includes(i) ? "human" : "house",
+  const pod = {...(picks ? {pilotPicks: true} : {}), passEmpty: true, endWhenNoPerson: true, resolveAll: true, passAfterCast: true, endAsks: true, untapMana: true, pooledTaps: true, xTaps: true, yieldTurn: true, drawBeat: true, passStack: true, blocksNone: true, seats: decks.map((d, i) => ({seatId: `s${i}`, name: NAMES[i] || `Seat ${i + 1}`, pilot: humans.includes(i) ? "human" : "house",
     ...(!humans.includes(i) && levels[i] ? {level: levels[i]} : {}), commander: d.commander, cards: d.cards}))};
   const people = Object.fromEntries(humans.map((i) => [`s${i}`, answerer(`person-${seed}-${i}`)]));
   const started = Date.now();
