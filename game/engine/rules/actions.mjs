@@ -2106,6 +2106,52 @@ function idle(state, player, actions, stack = false) {
     || (Boolean(state.objects[id]?.adventurer) && withAdventure(state, id, () => adventureFrom(state, player, id, state.objects[id].zone) && castableNow(id)))));
 }
 
+/**
+ * WHY A CARD CAN'T BE PLAYED NOW (Linear ROB-24: "show why another card is unavailable"): for a card in its player's hand or
+ * command zone that nothing offered plays, the first reason a person would give, read from the facts the offers are made
+ * from. A land: its player's own turn, their main phase with the stack empty, one a turn (CR 305.2, 505.6b). A spell that
+ * isn't an instant: the same time (CR 307.1). Its mana: what it costs now, the commander tax included (CR 903.8), against
+ * what the pool and the untapped sources could make, each at its most -- or a color none of them makes. Otherwise, no way
+ * to cast it now: its targets, or another of its costs. Words only, for a person to read: what can be done is still the
+ * offers' alone. Null for a card that is offered, or isn't this player's to play from there.
+ */
+export function whyNot(state, player, id, actions = legalActions(state, player)) {
+  const object = state.objects[id];
+  if (!object || !["hand", "command"].includes(object.zone) || (object.zone === "hand" ? object.owner : object.controller ?? object.owner) !== player) return null;
+  if (actions.some((a) => a.objectId === id && a.kind !== "activate-mana")) return null;
+  return deriving(state, () => {
+    const mine = player === state.activePlayer, mainNow = mine && MAIN_PHASES.includes(state.phase) && !state.stack.length;
+    if ((object.types ?? []).includes("Land")) {
+      if (object.zone !== "hand") return "It can't be played from there.";
+      if (!mine) return "Lands are played on your own turn.";
+      if (!mainNow) return "Play a land in your main phase, with nothing on the stack.";
+      if (landDropsLeft(state, player) <= 0) return "You've played your land for this turn.";
+      return "It can't be played now.";
+    }
+    if (sorcerySpeed(object) && !hasFlash(state, id) && !flashGranted(state, player, id) && !mainNow)
+      return mine ? "It isn't an instant: cast it in your main phase, with nothing on the stack." : "It isn't an instant: cast it on your own turn.";
+    if (!object.manaCost) return "It has no mana cost, so it can't be cast.";
+    /* Each source at the most it can add net of what it costs, as `idle` counts it; and every color any of them, or the
+       pool, could add. */
+    const best = new Map(), colors = new Set();
+    for (const a of actions.filter((x) => x.kind === "activate-mana")) {
+      const ability = abilitiesOf(state, a.objectId).find((x) => x.id === a.abilityId);
+      best.set(a.objectId, Math.max(best.get(a.objectId) ?? 0, total(a.mana) - (ability?.cost ? manaValue(parseManaCost(ability.cost)) : 0)));
+      for (const [color, n] of Object.entries(a.mana ?? {})) if (n > 0) colors.add(color);
+    }
+    const pool = state.players[player].manaPool ?? {};
+    for (const [color, n] of Object.entries(pool)) if (n > 0) colors.add(color);
+    const mana = poolSize(pool) + [...best.values()].reduce((n, v) => n + Math.max(0, v), 0);
+    const tax = object.zone === "command" ? commanderTax(state, player, id) : 0;
+    const {cost, x} = castCost(state, player, id, tax);
+    const need = cost.generic + cost.symbols.filter((s) => s.kind !== "generic" && s.kind !== "variable").length + x;
+    if (need > mana) return `It costs ${need} mana${tax ? `, the commander tax included` : ""}, and you can make ${mana} now.`;
+    const missing = [...new Set(cost.symbols.filter((s) => s.kind === "colored").map((s) => s.color))].find((color) => !colors.has(color));
+    if (missing) return `It needs {${missing}}, and nothing you have untapped makes it.`;
+    return "There's no way to cast it now: its targets, or another of its costs.";
+  });
+}
+
 /* Two actions are the same offer when they agree on everything that identifies them. Comparing by
    value rather than by reference is what lets an action survive a round trip through JSON — a pilot
    across a network boundary submits a copy, not the object it was handed. */
