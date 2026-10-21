@@ -3972,6 +3972,8 @@ button.cm-vitals{cursor:pointer}
    scales the size and the glow. The layer is beside the board, above it, and takes no pointer. */
 .cm-board-callouts{position:fixed;left:50%;top:72px;z-index:58;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;max-width:min(720px,90vw)}
 .cm-board[data-view="full"]~.cm-board-callouts{top:16%}
+.cm-board-callouts.is-hidden{visibility:hidden}
+.cm-board[data-phone]~.cm-board-callouts{z-index:61;top:30%}
 .cm-callout{display:grid;justify-items:center;gap:2px;--glow:var(--v-accent);--size:calc(38px + 26px * var(--level,.6));color:var(--tone);filter:drop-shadow(0 0 calc(6px + 10px * var(--level,.6)) var(--glow))}
 .cm-callout.is-big{--size:calc(52px + 36px * var(--level,.6))}
 .cm-callout.is-harm{--tone:var(--callout-harm);--glow:rgb(255 70 50 / .9)}

@@ -20,6 +20,15 @@
 
 ## Play tabletop preview, October 14, 2026
 
+October 21, Claude (holding Codex · Play), for Rob's one-person, three-AI table: callouts that keep up with the game and keep off the question, on `claude/callouts-keep-up`, stacked on #822. Three solo-vs-AI games through the real board showed the problems. The callouts fell turns behind: "YOUR TURN · Turn 33" on turn 38, over the YOU LOST panel and its buttons, and "LIFE -3 · You · 20" at 5 life. They also lay over Discard 1 card's options and the turns-gone-by panel. Each view earns up to six callouts and they are read about one every 0.6 s, so the AI seats' bursts outran them.
+- When a view's callouts come, any still waiting from more than 2 s before are passed over (never a KO or a FATAL).
+- The game's end clears the queue and the screen, so GAME OVER or VICTORY is the last word. One batch alone, Try the callouts, is read whole.
+- With a question's panel on screen, the callout layer moves below it, or above it, or waits out of sight (`placeCallouts`).
+- On the phone the board's fixed layer (z-index 60) lay over the callouts', so none ever showed there. They now show, under the turn bar.
+- At the end, the pass button reads "Game over" (it read "Resolve Massacre Girl, Most Wanted"), and a seat out of the game says "Out of the game." on its empty mat.
+
+Proof: board-callouts 46, board-ending-rematch 68, the new board-callouts-place 24 (Full, Table, Focus, phone), table-board 287. `breaks-callouts-keep-up.py` catches all ten breaks.
+
 October 21, Claude (holding Codex · Play), for Rob's one-person, three-AI table: "All at <player>" on Declare attackers, on `claude/attack-all`, stacked on #821. The engine offers one option per creature per player, so a Krenko swarm at three opponents was a pick per goblin. Now one press picks, for every creature that may attack that player, its option at them, keeping any other creature's pick; "None" clears them. It never picks a planeswalker. Nothing is sent until Confirm, and the room checks the attack as ever. `tests/board-attack-all.mjs`, `breaks-attack-all.py` 6 of 6.
 
 October 21, Claude (holding Codex · Play and the engine halves Play waits on), for Rob's one-person, three-AI table: ROB-24's "show why another card is unavailable", on `claude/why-not-playable`. While Rob holds priority, each of his hand and command cards that nothing offered plays carries `why` from the room. The engine's `whyNot` gives the first reason a person would give:
