@@ -1,0 +1,532 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Mob Rule",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{3}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 4,
+      "toughness": 4
+    },
+    "Elk": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elk"
+      ],
+      "manaCost": "{2}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Banner": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{2}",
+      "colors": [],
+      "abilities": [
+        {
+          "id": "a0",
+          "kind": "static",
+          "text": "Creatures you control get +1/+0.",
+          "layer": 7,
+          "sublayer": "c",
+          "affects": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "apply": {
+            "power": 1,
+            "toughness": 0
+          }
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Power 4 or greater: Rob gains Maya's Ogre, untapped and hasty -- it attacks her; her Bear and Elk stay hers; she has it back next turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Mob Rule"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre",
+            "Bear",
+            "Elk"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain",
+          "seat": 0
+        },
+        {
+          "tap": "Mountain",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "cast": "Mob Rule",
+          "modes": [
+            0
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "controls": [
+                "Mountain",
+                "Mountain",
+                "Ogre",
+                "Wastes",
+                "Wastes",
+                "Wastes",
+                "Wastes"
+              ]
+            },
+            {
+              "seat": 1,
+              "keywords": {
+                "card": "Ogre",
+                "has": [
+                  "Haste"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "attack": [
+            "Ogre"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 36
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Bear",
+            "Elk",
+            "Ogre"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Power 3 or less, in Rob's turn after Maya attacked with her Bear and Elk: tapped still, they become Rob's, untap and attack her; her Ogre stays hers",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Mob Rule"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre",
+            "Bear",
+            "Elk"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Bear",
+            "Elk"
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "life": 35
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "tapped": "Bear",
+              "is": true
+            },
+            {
+              "seat": 1,
+              "tapped": "Elk",
+              "is": true
+            }
+          ]
+        },
+        {
+          "tap": "Mountain",
+          "seat": 0
+        },
+        {
+          "tap": "Mountain",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "cast": "Mob Rule",
+          "modes": [
+            1
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "tapped": "Bear",
+              "is": false
+            },
+            {
+              "seat": 1,
+              "tapped": "Elk",
+              "is": false
+            },
+            {
+              "seat": 1,
+              "controls": [
+                "Ogre"
+              ]
+            },
+            {
+              "seat": 0,
+              "controls": [
+                "Bear",
+                "Elk",
+                "Mountain",
+                "Mountain",
+                "Wastes",
+                "Wastes",
+                "Wastes",
+                "Wastes"
+              ]
+            }
+          ]
+        },
+        {
+          "attack": [
+            "Bear",
+            "Elk"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 35
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 4,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Bear",
+            "Elk",
+            "Ogre"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Those creatures are the ones gained: Maya's Banner made her tapped Elk a 4/3; Rob's, it is a 3/3, and still it untaps and gains haste",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Mob Rule"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Elk",
+            "Banner"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Elk"
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "life": 36
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Mountain",
+          "seat": 0
+        },
+        {
+          "tap": "Mountain",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "cast": "Mob Rule",
+          "modes": [
+            0
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "controls": [
+                "Elk",
+                "Mountain",
+                "Mountain",
+                "Wastes",
+                "Wastes",
+                "Wastes",
+                "Wastes"
+              ]
+            },
+            {
+              "seat": 1,
+              "stats": {
+                "card": "Elk",
+                "power": 3,
+                "toughness": 3
+              }
+            },
+            {
+              "seat": 1,
+              "tapped": "Elk",
+              "is": false
+            },
+            {
+              "seat": 1,
+              "keywords": {
+                "card": "Elk",
+                "has": [
+                  "Haste"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Banner"
+          ]
+        }
+      ]
+    }
+  ]
+}

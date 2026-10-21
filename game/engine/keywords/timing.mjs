@@ -69,6 +69,8 @@ export const KEYWORD_FAMILIES = Object.freeze({
       keeps the damage), what each casts marked as cast for it (`paidFor`; rules/actions.mjs, rules/stack.mjs). */
   /** Tiered (CR 702.183a): one mode chosen as it is cast, and that mode's cost paid besides (cards/index.mjs puts the costs
       among the spell's additional costs; rules/actions.mjs makes each mode its own cast). */
+  /** Spree (CR 702.172a): one or more modes chosen as it is cast, each one's cost paid besides (cards/index.mjs puts the costs
+      among the spell's additional costs; rules/actions.mjs makes each set of modes its own cast). */
   /** Disguise (CR 702.168a): cast face down for {3}, a 2/2 with ward {2}, and turned face up for its disguise cost
       (rules/actions.mjs, state/index.mjs). Morph (CR 702.37a), the same as a 2/2 with no text (702.37c), turned face up for
       its morph cost (702.37e). */
@@ -79,7 +81,7 @@ export const KEYWORD_FAMILIES = Object.freeze({
   /** Delve (CR 702.66a; Treasure Cruise, wave 4c k2): each card its caster exiles from their graveyard while casting it pays
       for {1} of its generic mana -- offered beside the cast the pool pays, the cards picked once it is taken (rules/actions.mjs,
       rules/mana.mjs). */
-  pay: Object.freeze(["Convoke", "Evoke", "Prowl", "Escalate", "Overload", "Spectacle", "Surge", "Freerunning", "Tiered", "Disguise", "Morph", "Warp", "Sneak", "Delve"]),
+  pay: Object.freeze(["Convoke", "Evoke", "Prowl", "Escalate", "Overload", "Spectacle", "Surge", "Freerunning", "Tiered", "Spree", "Disguise", "Morph", "Warp", "Sneak", "Delve"]),
   /** How a permanent enters: Riot (CR 702.136a), with a +1/+1 counter or with haste, its controller's choice as it arrives --
       a replacement on its own entering (cards/index.mjs, rules/replacement.mjs), asked once it is there (rules/entering.mjs).
       Compleated (CR 702.150a): two fewer loyalty counters for each Phyrexian symbol of its cost its caster paid with life

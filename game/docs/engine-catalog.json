@@ -9,17 +9,17 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1540,
+  "defined": 1546,
   "provisional": 25,
-  "everyRule": 2814
+  "everyRule": 2820
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 77,
+    "built": 78,
     "partial": 0,
     "named": 6,
-    "missing": 111
+    "missing": 110
    },
    "entries": [
     {
@@ -446,13 +446,13 @@
      "kind": "keyword ability",
      "rule": "702.172",
      "name": "Spree",
-     "engine": null,
-     "status": "missing",
+     "engine": "Spree",
+     "status": "built",
      "forge": "Spree",
      "top": 6,
      "all": 21,
-     "blocks": 6,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -8950,7 +8950,7 @@
      "top": 123,
      "all": 1460,
      "blocks": 65,
-     "alone": 8
+     "alone": 9
     },
     {
      "kind": "option",
@@ -9991,8 +9991,8 @@
      "forge": "ValidAll",
      "top": 1,
      "all": 6,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",

@@ -671,6 +671,8 @@ export function compileScript(script) {
   let escalate = null;
   /* Tiered (CR 702.183a): each mode's own cost, put on the spell once its modes are known (below). */
   let tiered = false;
+  /* Spree (CR 702.172a): the same, each mode chosen its cost paid (below). */
+  let spree = false;
   /* Gift (CR 702.174a): its additional cost and what the chosen player gets, put on the spell once it is known (below). */
   let gift = null;
 
@@ -1130,6 +1132,14 @@ export function compileScript(script) {
     if (word === "tiered") {
       tiered = true;
       keywords.push("Tiered");
+      return;
+    }
+    /* SPREE (CR 702.172a; Explosive Derailment, library load L2): "choose one or more additional costs" -- each mode's cost written
+       on the mode (`cost`, its mana), kept for the spell among its additional costs (below; rules/actions.mjs,
+       additionalVariants): each choice of one or more modes its own cast, their costs added. */
+    if (word === "spree") {
+      spree = true;
+      keywords.push("Spree");
       return;
     }
     /* ESCALATE (CR 702.120a): "for each mode you choose beyond the first as you cast this spell, you pay an additional [cost]"
@@ -1889,6 +1899,10 @@ export function compileScript(script) {
   if (abilities.some((a) => a.kind === "static" && a.rule === "this-costs-less" && a.targeting !== undefined)
     && (!spell || !(spell.targets ?? []).length || spell.targets.some(countedTarget)))
     problems.push("a spell that costs less for what it targets has targets chosen as it is offered: none counted, and no modes");
+  /* "As though it had flash if it targets a commander" (Timely Ward; rules/actions.mjs, flashAims): the same -- its targets chosen
+     as it is offered, so none counted, and no modes. */
+  if (abilities.some((a) => a.kind === "static" && a.rule === "flash-if-targets") && (!spell || spell.modal || !(spell.targets ?? []).length || spell.targets.some(countedTarget)))
+    problems.push("a spell with flash for what it targets has targets chosen as it is offered: none counted, and no modes");
   /* Escalate's (CR 702.120a), on a spell whose modes are chosen as it is cast, "choose one or more": its cost once for each mode
      beyond the first, as many as the spell allows (rules/actions.mjs, additionalVariants and withModes). */
   const oneOrMore = Boolean(spell?.modal) && (spell.modal.choose ?? 1) === 1 && (spell.modal.upTo ?? 1) > 1;
@@ -1902,7 +1916,13 @@ export function compileScript(script) {
     problems.push("Tiered is on a spell whose one mode is chosen as it is cast");
   else if (tiered && !modeCosts.every(manaOnly)) problems.push("Tiered: each mode says its cost, mana (`cost`, \"{0}\" for none)");
   else if (tiered) spell = {...spell, additionalCost: [...(spell.additionalCost ?? []), {atom: "tiered", costs: modeCosts}]};
-  if (!tiered && modeCosts.some((cost) => cost !== undefined)) problems.push("a mode's own cost is tiered's: the spell says Tiered (CR 702.183a)");
+  /* Spree's (CR 702.172a), on a spell whose modes are chosen as it is cast, one or more of them and as many as it has: each
+     mode's cost, mana, in the modes' order. */
+  if (spree && !(oneOrMore && spell.modal.upTo === spell.modal.modes.length && spell.modal.more === undefined && !spell.modal.sameMode))
+    problems.push("Spree is on a spell whose modes are chosen as it is cast, one or more of them, any of its modes");
+  else if (spree && !modeCosts.every(manaOnly)) problems.push("Spree: each mode says its cost, mana (`cost`)");
+  else if (spree) spell = {...spell, additionalCost: [...(spell.additionalCost ?? []), {atom: "spree", costs: modeCosts}]};
+  if (!tiered && !spree && modeCosts.some((cost) => cost !== undefined)) problems.push("a mode's own cost is tiered's or spree's: the spell says which (CR 702.183a, 702.172a)");
   /* Multikicker's additional cost, on the spell -- a permanent's too, whose spell does nothing else (CR 608.3). */
   if (multikicker !== null) spell = {...(spell ?? {id: "multikicker", text: "Multikicker", targets: [], effects: []}), additionalCost: [...(spell?.additionalCost ?? []), {atom: "multikicker", cost: multikicker}]};
   /* Offspring's additional cost, on the spell -- a creature's, whose spell does nothing else (CR 608.3) -- and its trigger as

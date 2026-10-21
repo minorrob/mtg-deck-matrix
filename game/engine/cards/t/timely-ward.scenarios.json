@@ -1,0 +1,454 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Timely Ward",
+  "fixtures": {
+    "Captain": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Soldier"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Hero": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Warrior"
+      ],
+      "manaCost": "{1}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Smite": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "In Maya's turn, as though it had flash, aimed at a commander -- his Captain or her Hero -- never at his Bear; on the Captain, Maya's Smite can't destroy it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "command",
+          "cards": [
+            "Captain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Timely Ward"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Plains",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "command",
+          "cards": [
+            "Hero"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Smite"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes",
+            "Plains"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Captain"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Hero",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Plains",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Timely Ward",
+                "seat": 0
+              },
+              "count": 2,
+              "targets": [
+                [
+                  "Captain"
+                ],
+                [
+                  "Hero"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Timely Ward",
+          "seat": 0,
+          "targets": [
+            {
+              "card": "Captain"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Captain",
+                "has": [
+                  "Indestructible"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Plains",
+          "seat": 1
+        },
+        {
+          "cast": "Smite",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Captain"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Bear",
+            "Captain",
+            "Plains",
+            "Plains",
+            "Timely Ward",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Smite"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "At instant speed with no commander on the battlefield, it can't be cast at all -- not at the Bear",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Timely Ward"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Plains",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Timely Ward",
+                "seat": 0
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Timely Ward"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "In his own main phase it is an Aura like any other: the Bear or the Captain, and on the Bear, Smite does not destroy it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "command",
+          "cards": [
+            "Captain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Timely Ward",
+            "Smite"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Plains",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Captain"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Plains",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Timely Ward",
+                "seat": 0
+              },
+              "count": 2,
+              "targets": [
+                [
+                  "Bear"
+                ],
+                [
+                  "Captain"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Timely Ward",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Smite",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Bear",
+            "has": [
+              "Indestructible"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Smite"
+          ]
+        }
+      ]
+    }
+  ]
+}

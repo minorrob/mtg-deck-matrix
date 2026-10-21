@@ -1,0 +1,222 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Solarium Sentry",
+  "fixtures": {
+    "Tonic": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "You gain 1 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 1
+          }
+        ]
+      }
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{3}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 4,
+      "toughness": 4
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Maya's Tonic (1) and Bear (2) each gain Rob 2 life; her Ogre (4) and Rob's own Tonic nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Solarium Sentry",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Tonic"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Tonic",
+            "Bear",
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Forest",
+            "Wastes",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Tonic"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            },
+            {
+              "seat": 0,
+              "life": 41
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Tonic",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "life": 43
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Bear",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "life": 45
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Ogre",
+          "seat": 1
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 45
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Bear",
+            "Forest",
+            "Mountain",
+            "Ogre",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ]
+    }
+  ]
+}
