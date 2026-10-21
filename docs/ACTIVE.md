@@ -20,6 +20,8 @@
 
 ## Play tabletop preview, October 14, 2026
 
+October 21, Claude (holding Codex · Play), for Rob's one-person, three-AI table: "All at <player>" on Declare attackers, on `claude/attack-all`, stacked on #821. The engine offers one option per creature per player, so a Krenko swarm at three opponents was a pick per goblin. Now one press picks, for every creature that may attack that player, its option at them, keeping any other creature's pick; "None" clears them. It never picks a planeswalker. Nothing is sent until Confirm, and the room checks the attack as ever. `tests/board-attack-all.mjs`, `breaks-attack-all.py` 6 of 6.
+
 October 21, Claude (holding Codex · Play and the engine halves Play waits on), for Rob's one-person, three-AI table: ROB-24's "show why another card is unavailable", on `claude/why-not-playable`. While Rob holds priority, each of his hand and command cards that nothing offered plays carries `why` from the room. The engine's `whyNot` gives the first reason a person would give:
 - a land played already, or not his turn or main phase;
 - a creature at the wrong time;

@@ -1090,7 +1090,16 @@ globalThis.CrankBoard = Object.seal({
       foot = b("OK", "board-confirm", {}, true, {disabled: sending});
     }
     else if (d.mode === "many") {
-      body = d.options.map((o) => opt(o, ` aria-pressed="${picked.includes(o.index)}"`)).join("");
+      /* ATTACK ALL (Rob's one-person, three-AI table, Oct 21): a swarm sent at one player in one press -- "All at Maya" picks,
+         for every creature that may attack her, its option at her, keeping any other creature's pick; "None" clears them.
+         The engine offers one option per creature per player (rules/combat.mjs), so a Krenko swarm at three opponents was
+         a pick per goblin. Nothing is sent until Confirm, and the room checks the attack as ever. */
+      const atPlayers = String(d.id).startsWith("declare-attackers:")
+        ? [...new Set(d.options.filter((o) => o.defenderId !== undefined && o.planeswalkerId === undefined).map((o) => o.defenderId))] : [];
+      const allAt = atPlayers.length ? `<div class="cm-board-attack-all" role="group" aria-label="Attack with every creature that can">${atPlayers.map((id) =>
+        b(`All at ${players().find((p) => p.playerId === id)?.name ?? `Seat ${id + 1}`}`, "board-attack-all", {defender: String(id)}, false, {cls: "compact", disabled: sending})).join("")}${picked.length
+        ? b("None", "board-attack-none", {}, false, {cls: "compact", disabled: sending}) : ""}</div>` : "";
+      body = allAt + d.options.map((o) => opt(o, ` aria-pressed="${picked.includes(o.index)}"`)).join("");
       const ok = picked.length >= d.min && picked.length <= d.max;
       foot = `<span class="cm-muted">${picked.length} chosen · ${d.min === d.max ? d.min : `${d.min} to ${d.max}`}</span>${b("Confirm", "board-confirm", {}, true, {disabled: !ok || sending})}`;
     } else if (d.mode === "order") {
@@ -2179,6 +2188,21 @@ globalThis.CrankBoard = Object.seal({
     if (opts.length > 1) zoom(id);
   };
   actions["board-choose"] = (el) => {alsoOpen = false; draw(); zoom(Number(el.dataset.card));};
+  /* All at one player, and None (the attack question's own shortcuts, above): picks only, as a press on each would be. */
+  actions["board-attack-all"] = (el) => {
+    const d = view && view.decision;
+    if (!d || d.mode !== "many" || !String(d.id).startsWith("declare-attackers:") || sending) return;
+    const at = d.options.filter((o) => o.defenderId === Number(el.dataset.defender) && o.planeswalkerId === undefined);
+    const creatures = new Set(at.map((o) => o.cardId));
+    picked = [...picked.filter((i) => !creatures.has(d.options[i].cardId)), ...at.map((o) => o.index)].slice(0, d.max);
+    draw();
+  };
+  actions["board-attack-none"] = () => {
+    const d = view && view.decision;
+    if (!d || !String(d.id).startsWith("declare-attackers:") || sending) return;
+    picked = [];
+    draw();
+  };
   actions["board-zoom-open"] = (el) => zoom(Number(el.dataset.card));
   actions["board-pass"] = () => {
     const d = view && view.decision;
