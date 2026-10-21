@@ -1,0 +1,80 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kaalia of the Vast",
+    "oracleId": "cb8d80c9-ed58-4f2d-aa8c-c383370c7f1a",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Cleric"
+    ],
+    "manaCost": "{1}{R}{W}{B}",
+    "colors": [
+      "B",
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "R",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Flying\nWhenever Kaalia attacks an opponent, you may put an Angel, Demon, or Dragon creature card from your hand onto the battlefield tapped and attacking that opponent.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever Kaalia attacks an opponent, you may put an Angel, Demon, or Dragon creature card from your hand onto the battlefield tapped and attacking that opponent.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self",
+        "defender": "opponent"
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "hand",
+          "selector": {
+            "types": [
+              "Creature"
+            ],
+            "anyOf": [
+              {
+                "subtypes": [
+                  "Angel"
+                ]
+              },
+              {
+                "subtypes": [
+                  "Demon"
+                ]
+              },
+              {
+                "subtypes": [
+                  "Dragon"
+                ]
+              }
+            ]
+          },
+          "upTo": true,
+          "to": "battlefield",
+          "tapped": true,
+          "attacking": "that player"
+        }
+      ]
+    }
+  ]
+}

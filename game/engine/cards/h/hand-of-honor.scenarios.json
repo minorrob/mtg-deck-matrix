@@ -1,0 +1,374 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Hand of Honor",
+  "fixtures": {
+    "Sturdy Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 3
+    },
+    "Squirrel": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Squirrel"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Other Squirrel": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Squirrel"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Black Zombie": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Zombie"
+      ],
+      "manaCost": "{1}{B}",
+      "colors": [
+        "B"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Blocked by a 2/3: bushido makes it 3/3 -- the blocker dies, Hand of Honor survives",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hand of Honor"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Sturdy Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Hand of Honor"
+          ]
+        },
+        {
+          "block": [
+            [
+              "Sturdy Bear",
+              "Hand of Honor"
+            ]
+          ]
+        },
+        {
+          "settle": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Hand of Honor",
+                "power": 3,
+                "toughness": 3
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Sturdy Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Hand of Honor"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Hand of Honor",
+            "power": 3,
+            "toughness": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "It blocks Maya's 2/3: 3/3, and the attacker dies; back to 2/2 at end of turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hand of Honor"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Sturdy Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Sturdy Bear"
+          ],
+          "at": "Rob"
+        },
+        {
+          "block": [
+            [
+              "Hand of Honor",
+              "Sturdy Bear"
+            ]
+          ]
+        },
+        {
+          "settle": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Hand of Honor",
+                "power": 3,
+                "toughness": 3
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Sturdy Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Hand of Honor",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "life": 40
+        }
+      ]
+    },
+    {
+      "name": "Blocked by two Squirrels: it becomes blocked once -- one trigger, 3/3 (not 4/4); it takes 2 and survives",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hand of Honor"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Squirrel",
+            "Other Squirrel"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Hand of Honor"
+          ]
+        },
+        {
+          "block": [
+            [
+              "Squirrel",
+              "Hand of Honor"
+            ],
+            [
+              "Other Squirrel",
+              "Hand of Honor"
+            ]
+          ]
+        },
+        {
+          "settle": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Hand of Honor",
+                "power": 3,
+                "toughness": 3
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "settle": true
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Squirrel"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Hand of Honor"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Hand of Honor",
+            "power": 3,
+            "toughness": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "Protection from black: the black Zombie cannot block it; unblocked, no bushido -- 2 to Maya",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hand of Honor"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Black Zombie"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Hand of Honor"
+          ]
+        },
+        {
+          "block": [],
+          "blockers": []
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Hand of Honor",
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    }
+  ]
+}

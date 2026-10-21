@@ -48,7 +48,10 @@ export const KEYWORD_FAMILIES = Object.freeze({
     "Infect",
     /* Flanking (CR 702.25a): a triggered ability, as a creature without flanking blocks this one, the blocker -1/-1 until end
        of turn (cards/index.mjs; rules/trigger.mjs, `blockedBy`). */
-    "Flanking"]),
+    "Flanking",
+    /* Bushido (CR 702.45a; library load L4): a triggered ability, as it blocks or becomes blocked, +N/+N until end of turn
+       (cards/index.mjs; rules/trigger.mjs, `blocksOrBlocked`). */
+    "Bushido"]),
   /**
    * Keywords that stop something happening, enforced elsewhere in the engine but listed here so
    * that "which keywords actually do something" has one answer.
@@ -120,8 +123,14 @@ export function blockersAreLegal(state, attackerId, blockerIds) {
   if (blockers.length === 0) return true;
   /* CR 702.111b */
   if (has(state, attackerId, "Menace") && blockers.length < 2) return false;
+  /* "Can't be blocked by more than one creature" (Safewright Cavalry; CR 509.1b): a restriction on the set, as menace's is. */
+  if (blockers.length > 1 && ruleChanged(state, "blocked-by-one-at-most", attackerId)) return false;
   return blockers.every((id) => canBlockAttacker(state, id, attackerId));
 }
+
+/** The refusal of a second blocker on a creature that can't be blocked by more than one: what is wrong, then what to do. */
+export const oneBlockerWords = (state, attackerId) =>
+  `${state.objects[attackerId].card} can't be blocked by more than one creature. Choose one creature to block it.`;
 
 /** Why a set of blockers is illegal, for the refusal message. */
 export function whyBlockersAreIllegal(state, attackerId, blockerIds) {
@@ -129,6 +138,7 @@ export function whyBlockersAreIllegal(state, attackerId, blockerIds) {
   if (blockers.length === 0) return null;
   if (has(state, attackerId, "Menace") && blockers.length < 2)
     return `${state.objects[attackerId].card} has menace and can't be blocked except by two or more creatures`;
+  if (blockers.length > 1 && ruleChanged(state, "blocked-by-one-at-most", attackerId)) return oneBlockerWords(state, attackerId);
   const illegal = blockers.find((id) => !canBlockAttacker(state, id, attackerId));
   if (illegal !== undefined)
     return `${state.objects[illegal].card} can't block ${state.objects[attackerId].card}`;

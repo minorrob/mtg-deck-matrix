@@ -1959,8 +1959,12 @@ export const chooseCard = {
          remembered before -- each player's creature chosen in turn, "not chosen this way" all of them (The Eternal Wanderer). */
       ...(params.remember ? {remember: params.remember === "add" ? "add" : true} : {}),
       /* Sneak Attack: "That creature gains haste. Sacrifice the creature at the beginning of the next end step." */
-      ...(params.gains || params.gainsUntilEndOfTurn || params.atEndStep ? {then: {gains: params.gains, gainsUntilEndOfTurn: params.gainsUntilEndOfTurn, atEndStep: params.atEndStep},
-        source: context.source ?? null} : {}),
+      /* "Onto the battlefield tapped and attacking that opponent" (Kaalia of the Vast; library load L4): `attacking`, as a
+         token made attacking is (effects/permanents.mjs, enterAttacking) -- "that player" the one this ability is about,
+         kept with the question (`about`; CR 508.4). */
+      ...(params.gains || params.gainsUntilEndOfTurn || params.atEndStep || params.attacking ? {then: {gains: params.gains, gainsUntilEndOfTurn: params.gainsUntilEndOfTurn, atEndStep: params.atEndStep,
+        ...(params.attacking ? {attacking: params.attacking} : {})}, source: context.source ?? null,
+        ...(params.attacking && context.about ? {about: structuredClone(context.about)} : {})} : {}),
     };
     if (Array.isArray(params.searches) || params.sharing === "land type") {
       state.awaiting = {...awaiting, cards: pool, steps: {searches: params.searches ?? null, sharing: params.sharing ?? null, selector: params.selector ?? null, pool,
@@ -2075,7 +2079,7 @@ export const chooseCard = {
         arrivedHere.push(moved);
       }
     });
-    if (awaiting.then && arrivedHere.length) afterwards(state, arrivedHere, awaiting.then, {controller: player, source: awaiting.source ?? null});
+    if (awaiting.then && arrivedHere.length) afterwards(state, arrivedHere, awaiting.then, {controller: player, source: awaiting.source ?? null, ...(awaiting.about ? {about: awaiting.about} : {})});
     if (awaiting.shuffle) {
       if (!rng) throw new Error("A search that shuffles needs the game's random stream");
       const library = state.zones.library[player].filter((id) => !tops.includes(id));

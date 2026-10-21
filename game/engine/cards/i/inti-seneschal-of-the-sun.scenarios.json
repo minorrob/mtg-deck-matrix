@@ -1,0 +1,203 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Inti, Seneschal of the Sun",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Their Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Rob attacks and discards: the Bear gets a +1/+1 counter and trample; the top card is exiled, his to play",
+      "library": [
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Inti, Seneschal of the Sun",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        },
+        {
+          "choose": [
+            "Island"
+          ]
+        },
+        {
+          "settle": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Bear",
+                "counter": "+1/+1",
+                "count": 1
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Bear",
+                "has": [
+                  "Trample"
+                ],
+                "lacks": []
+              }
+            },
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Forest"
+              ]
+            },
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Island"
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "play": "Forest"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 37
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Inti, Seneschal of the Sun",
+            "Bear",
+            "Forest"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Declined: no discard, no counter, nothing exiled",
+      "library": [
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Inti, Seneschal of the Sun",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            1
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": []
+        },
+        {
+          "seat": 1,
+          "life": 38
+        }
+      ]
+    }
+  ]
+}

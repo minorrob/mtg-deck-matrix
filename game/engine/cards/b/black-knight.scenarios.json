@@ -1,0 +1,188 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Black Knight",
+  "fixtures": {
+    "White Soldier": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Soldier"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Black Zombie": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Zombie"
+      ],
+      "manaCost": "{1}{B}",
+      "colors": [
+        "B"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Smite": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Protection from white: the white Soldier cannot block it; the black Zombie can, and first strike kills it first",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Black Knight"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "White Soldier",
+            "Black Zombie"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Black Knight"
+          ]
+        },
+        {
+          "block": [
+            [
+              "Black Zombie",
+              "Black Knight"
+            ]
+          ],
+          "blockers": [
+            "Black Zombie"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Black Zombie"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Black Knight"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A white spell cannot target it: Maya's Smite is offered at the Zombie alone",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Black Knight"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Black Zombie",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Smite"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Plains",
+          "seat": 1
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Smite",
+                "seat": 1
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Black Zombie"
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Black Knight"
+          ]
+        }
+      ]
+    }
+  ]
+}

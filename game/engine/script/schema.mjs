@@ -519,17 +519,19 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
     /* A state trigger's state (CR 603.8): a condition, held to the condition grammar. */
     if (on === "state") for (const message of conditionProblems(ability.trigger.state ?? null)) errors.push({path: `${path}.trigger.state`, message});
     /* "When you cast this spell while you control a creature" (Social Snub): a condition asked as the spell is cast and never
-       again (rules/trigger.mjs) -- of a spell cast trigger, the only one that reads it, and held to the condition grammar. */
+       again (rules/trigger.mjs) -- of a spell cast trigger, and of an attack trigger ("whenever this creature attacks while
+       saddled", Bounding Felidar), the two that read it, and held to the condition grammar. */
     if (ability.trigger?.while !== undefined) {
-      if (on !== "spell cast") errors.push({path: `${path}.trigger.while`, message: "\"While\" a condition holds is read by a spell cast trigger alone"});
+      if (!["spell cast", "attacks"].includes(on)) errors.push({path: `${path}.trigger.while`, message: "\"While\" a condition holds is read by a spell cast trigger and an attack trigger alone"});
       for (const message of conditionProblems(ability.trigger.while ?? null)) errors.push({path: `${path}.trigger.while`, message});
     }
     /* "Attack one of your opponents or a planeswalker they control" (CR 506.3): planeswalkers: true, beside defender: "opponent".
-       "Deals combat damage to a player or planeswalker" (Grateful Apparition): planeswalkers: true, on a damage trigger
-       about a player. */
+       "Whenever a creature attacks you or a planeswalker you control" (Revenge of Ravens; library load L4): beside defender:
+       "you", as rules/trigger.mjs reads it. "Deals combat damage to a player or planeswalker" (Grateful Apparition):
+       planeswalkers: true, on a damage trigger about a player. */
     const damageToPlayer = ["damage dealt", "damage dealt once"].includes(on) && ["player", "opponent"].includes(ability.trigger?.to ?? "player");
-    if (ability.trigger?.planeswalkers !== undefined && (ability.trigger.planeswalkers !== true || !((on === "attacks" && ability.trigger.defender === "opponent") || damageToPlayer)))
-      errors.push({path: `${path}.trigger.planeswalkers`, message: "\"Or a planeswalker they control\" is planeswalkers: true, on an attack trigger with defender: \"opponent\"; \"or planeswalker\", on a damage trigger about a player"});
+    if (ability.trigger?.planeswalkers !== undefined && (ability.trigger.planeswalkers !== true || !((on === "attacks" && ["opponent", "you"].includes(ability.trigger.defender)) || damageToPlayer)))
+      errors.push({path: `${path}.trigger.planeswalkers`, message: "\"Or a planeswalker they control\" is planeswalkers: true, on an attack trigger with defender: \"opponent\" or \"you\"; \"or planeswalker\", on a damage trigger about a player"});
   }
 
   if (ability.kind === "keyword") {

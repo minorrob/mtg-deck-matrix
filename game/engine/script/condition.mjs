@@ -99,7 +99,7 @@ import {matchesSelector, compileSelector, matchesLastKnown} from "./filter.mjs";
 import {amountOf, amountProblems} from "./amount.mjs";
 import {characteristicsOf, subtypesOf, everyCreatureTypeOf} from "../rules/layers.mjs";
 import {isCreatureType} from "../keywords/types.mjs";
-import {hasCitysBlessing} from "../keywords/designations.mjs";
+import {hasCitysBlessing, isSaddled} from "../keywords/designations.mjs";
 
 const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn", "notYourTurn", "about", "is", "chosen", "selfCounters", "lifeAtLeast", "cast", "compare", "escaped", "evoked", "spent", "enduringStory", "loyaltyThisTurn", "impending",
   "uniqueCreatureName", "cameFrom", "sinceYourLastUpkeep", "level", "opponentPoisonAtLeast", "searched",
@@ -107,6 +107,8 @@ const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTu
   "evolves", "prowl", "prowled",
   /* Ascend's city's blessing (CR 702.131). */
   "citysBlessing",
+  /* A Mount's saddled designation (CR 702.171b). */
+  "saddled",
   /* Surge (CR 702.117a) and freerunning (CR 702.173a), and the cost a spell was cast for. */
   "surge", "freerunning", "paidFor",
   /* Breena, the Demagogue's "more life than another of your opponents" (CR 119.1). */
@@ -374,6 +376,8 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   /* "Unless you have the city's blessing" (Wayward Swordtooth; CR 702.131c): its controller's designation, or theirs this
      moment by a permanent's ascend (keywords/designations.mjs). */
   if (condition.citysBlessing !== undefined && hasCitysBlessing(state, controller) !== condition.citysBlessing) return false;
+  /* "While saddled" (Bounding Felidar; CR 702.171b): the source, a Mount, saddled now (keywords/designations.mjs). */
+  if (condition.saddled !== undefined && isSaddled(state, source) !== condition.saddled) return false;
   /* Prowl's cost may be paid (CR 702.76a): asked of the card as its cast is offered (rules/actions.mjs, alternativeCosts). */
   if (condition.prowl === true && !prowlable(state, controller, source)) return false;
   /* VOID (an ability word, CR 207.2c): "if a nonland permanent left the battlefield this turn" -- any player's, counted as it
@@ -473,6 +477,7 @@ export function conditionProblems(condition) {
   if ("yourTurn" in condition && condition.yourTurn !== true) problems.push("yourTurn is true");
   if ("enduringStory" in condition && typeof condition.enduringStory !== "boolean") problems.push("enduringStory is true or false");
   if ("citysBlessing" in condition && typeof condition.citysBlessing !== "boolean") problems.push("citysBlessing is true or false");
+  if ("saddled" in condition && typeof condition.saddled !== "boolean") problems.push("saddled is true or false");
   if ("lifeAboveAnotherOpponent" in condition && condition.lifeAboveAnotherOpponent !== "that player") problems.push("lifeAboveAnotherOpponent is \"that player\": the player the trigger is about");
   if ("spentFrom" in condition) {
     try { matchesLastKnown(condition.spentFrom ?? {}, {}, {}); } catch (error) { problems.push(`What spentFrom asks of the mana's source: ${error.message}`); }
