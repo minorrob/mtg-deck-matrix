@@ -310,6 +310,7 @@ for (const off of [false, true]) {
     ? "and lets a person yield an opponent's turn (`yieldTurn`); with the host's rule off, its pod has no `passStack`, and every spell is asked about as before"
     : "and lets a person yield an opponent's turn (`yieldTurn`, room.mjs), and passes the stack for a person with no answer to it (`passStack`, ROB-102; the board calls out a spell that came and went): its pod says so");
   eq(record.pod.pilotPicks, true, "and its AI seats take what an \"up to\" or a search is for (`pilotPicks`, room.mjs): its pod says so, and the record keeps it");
+  eq(record.pod.drawBeat, true, "and its draw step's draw waits for its player's Draw card (`drawBeat`, ROB-102 and ROB-24): its pod says so, and the record keeps it");
 }
 
 /* ONLY A CARD THAT CAN BE A COMMANDER IS ONE (CR 903.3; Rob, 2026-10-01): a legendary creature, or a card that says it

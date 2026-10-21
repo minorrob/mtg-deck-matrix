@@ -19,7 +19,7 @@
     {"id": "ROB-78", "outcome": "play-experience", "feature": "Which sources paid this step, and the card facts the board can show", "status": "backlog", "remaining_hours": 10},
     {"id": "ROB-79", "outcome": "play-experience", "feature": "A ready table starts on a cancelable ten-second countdown", "status": "backlog", "remaining_hours": 8},
     {"id": "ROB-80", "outcome": "play-experience", "feature": "A d20 roll at launch picks the first player, seen by every seat", "status": "backlog", "remaining_hours": 6},
-    {"id": "ROB-102", "outcome": "play-experience", "feature": "New matches launch with auto-pass and Draw card on", "status": "in_progress", "remaining_hours": 2, "note": "First half on claude/play-pass-stack (Claude, holding Codex · Play): new matches pass the stack for a person with no answer, a table rule on by default, and the board calls out each spell that came and went (CAST). Draw card on (drawBeat) waits on ROB-24."},
+    {"id": "ROB-102", "outcome": "play-experience", "feature": "New matches launch with auto-pass and Draw card on", "status": "review", "remaining_hours": 0, "evidence": [{"label": "PR #810 (auto-pass)", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/810"}], "note": "Both halves in review (Claude, holding Codex · Play): #810 passes the stack for a person with no answer (a table rule, on by default) and calls out each spell that came and went (CAST); claude/play-draw-card launches new matches with Draw card (drawBeat). CI and staging remain."},
     {"id": "ROB-82", "outcome": "play-any-deck", "feature": "Commander rules audited: tax per cast, partners, countered casts, command-zone choices", "status": "backlog", "remaining_hours": 10},
     {"id": "ROB-83", "outcome": "play-any-deck", "feature": "The rules constructs that block popular cards (exert, retrace, dash, emblems and more)", "status": "backlog", "remaining_hours": 24},
     {"id": "ROB-93", "outcome": "play-any-deck", "feature": "The next waves of the most-played cards", "status": "backlog", "remaining_hours": 40, "note": "Rob decides whether waves wait on the card load program."},
@@ -46,7 +46,6 @@
   ],
   "blocked_on": [
     {"id": "ROB-86", "by": "ROB-159, the deck page line from listed", "owner": "codex-play"},
-    {"id": "ROB-102", "by": "ROB-24 on the board, for Draw card on", "owner": "codex-play"},
     {"id": "ROB-17", "by": "the playtest record or a table link from Rob", "owner": "rob"}
   ]
 }

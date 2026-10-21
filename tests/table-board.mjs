@@ -792,25 +792,41 @@ try {
   resume();
   await waitText(active.page, ".cm-board-waiting", new RegExp(`Waiting on ${active === rob ? "Maya" : "Rob"}`), 10000);
   ok(true, "and the board passed priority for them, unasked");
-  /* THE DRAW, BY ITSELF (Rob, 2026-10-09: "Draw phase should be resolved automatically by drawing a card and progress to
-     the next screen"; it was its own beat, Draw a card, item 13). Turn 2's draw step draws the other player's card
-     unasked -- no button, no click -- and the turn goes on to the first thing there is to do. */
+  /* DRAW CARD (Linear ROB-102 and ROB-24): the Oct 15 playtest's confirmed decisions reverse Oct 9's draw by itself
+     ("label the pending draw action Draw card"). Turn 2's draw step waits for the other player: their button reads Draw
+     card, their library is lit as the same button, and their hand is unchanged until they say so. The library clicked
+     where a pointer reaches it draws one card, and the turn goes on to the first thing there is to do. */
   await waitText(other.page, ".cm-board-turn", /Turn 2/, 20000);
-  await other.page.locator(".cm-board-hand .cm-bcard.is-bright").first().waitFor({timeout: 20000});
+  const drawButton = other.page.locator(".cm-stage-top [data-action=board-draw]:not([disabled])");
+  await drawButton.waitFor({timeout: 20000});
   const otherViews = views(other === rob ? ROB : MAYA), otherSeat = otherViews.at(-1).seat;
-  const handIn = (turn) => {const v = otherViews.filter((x) => x.state.turn === turn).at(-1); return v ? v.state.players[otherSeat].zones.Hand.count : null;};
-  ok(!otherViews.some((v) => v.decision && v.decision.kind === "draw") && await other.page.locator("[data-action=board-draw]").count() === 0 && handIn(2) === handIn(1) + 1
-    && (await text(other.page, ".cm-board-step")).trim() === "Main 1",
-    `turn 2's draw happens by itself: nobody is asked Draw a card, the hand is one larger (${handIn(1)} → ${handIn(2)}), and the board is on to Main 1`);
-  await shot(other.page, "draw-by-itself-" + (other === rob ? "1400" : "1280"));
+  /* Read afresh each time: `views` is a copy of the frames so far. */
+  const handNow = () => views(other === rob ? ROB : MAYA).at(-1).state.players[otherSeat].zones.Hand.count, handBefore = handNow();
+  ok((await drawButton.innerText()).trim() === "Draw card" && otherViews.at(-1).decision && otherViews.at(-1).decision.kind === "draw"
+    && otherViews.at(-1).state.phase === "DRAW" && await active.page.locator("[data-action=board-draw]").count() === 0,
+    "turn 2's draw step waits for its player: their button reads Draw card, and the other board has nothing to draw");
+  await shot(other.page, "draw-card-" + (other === rob ? "1400" : "1280"));
+  const library = other.page.locator("button.cm-bcard[data-action=board-draw]");
+  ok(await library.count() === 1 && /^Draw card: your library, \d+$/.test(await library.getAttribute("aria-label")),
+    `and their library is the same button, lit ("${await library.getAttribute("aria-label")}")`);
+  const reach = await library.evaluate((el) => {const r = el.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+    const hit = document.elementFromPoint(x, y); return {x, y, reached: !!hit && el.contains(hit)};});
+  ok(reach.reached, `which a pointer reaches where it is drawn (${Math.round(reach.x)}, ${Math.round(reach.y)})`);
+  await other.page.mouse.click(reach.x, reach.y);
+  /* and the pointer taken off the board, or the hand fanned later opens with its last card under it, hovered upright */
+  await other.page.mouse.move(1, 1);
+  await waitText(other.page, ".cm-board-step", /^\s*Main 1\s*$/, 20000);
+  await other.page.waitForFunction(() => !document.querySelector("[data-action=board-draw]"), null, {timeout: 10000}).catch(() => {});
+  ok(handNow() === handBefore + 1 && await other.page.locator("[data-action=board-draw]").count() === 0,
+    `one click on the library draws one card (${handBefore} → ${handNow()}), and the board is on to Main 1`);
   ok(/^Turn 2 · You \(your 1st\)$/.test((await text(other.page, ".cm-board-turn")).trim()), `the game's turn 2 is the other player's first: "${(await text(other.page, ".cm-board-turn")).trim()}"`);
   ok(await heard(other === rob ? ROB : MAYA, "sfx/sfx_event_draw.mp3"), "and the draw is heard");
   /* Both boards follow into turn 2, and the room asked only where there was something to do (items 10 and 11). */
   await waitText(rob.page, ".cm-board-turn", /Turn 2/);
   await waitText(maya.page, ".cm-board-turn", /Turn 2/);
   const askedIn = new Set([...views(ROB), ...views(MAYA)].filter((v) => v.decision && v.state.turn >= 1 && v.state.turn <= 2).map((v) => v.state.phase));
-  ok(["MAIN1", "MAIN2", "END_OF_TURN"].every((p) => askedIn.has(p)) && [...askedIn].every((p) => ["MAIN1", "MAIN2", "END_OF_TURN"].includes(p)),
-    `Next step walks the steps into turn 2, on both boards, and the room asked someone only where there was something to do, and at the end of their own turn (${[...askedIn].join(", ")}); the rest passed by themselves`);
+  ok(["DRAW", "MAIN1", "MAIN2", "END_OF_TURN"].every((p) => askedIn.has(p)) && [...askedIn].every((p) => ["DRAW", "MAIN1", "MAIN2", "END_OF_TURN"].includes(p)),
+    `Next step walks the steps into turn 2, on both boards, and the room asked someone only where there was something to do, for Draw card, and at the end of their own turn (${[...askedIn].join(", ")}); the rest passed by themselves`);
   /* X8c, HOLD PRIORITY / YIELD: at the turn's end the switch puts itself away, and on the next player's turn the same
      switch is Yield this turn; Tools says what it does, and that until then you hold priority. */
   ok((await text(active.page, "[data-action=board-skip]")).trim() === "Yield this turn", "at the turn's end Skip to end puts itself away, and on the next player's turn it is Yield this turn");
@@ -1068,12 +1084,14 @@ try {
     "a way of playing the room refuses is sent once at that point of the game, and said nowhere");
   robRoom.prefer = robPrefer;
   /* HOLD PRIORITY AFTER I CAST (Tools): holding stays the caster's choice (CR 117.3c), kept on this device and sent with
-     the cast. Rob passes Maya's upkeep and draw step; in her main phase she turns it on and casts a creature: she is asked again first,
+     the cast. Rob passes Maya's upkeep, and she says Draw card in her draw step; in her main phase she turns it on and casts a creature: she is asked again first,
      Resolve and its name, and then Rob, who holds an instant, may respond. */
   const holdCast = maya.page.locator(".cm-board-hand .cm-bcard.is-bright[aria-label*='Cast']").first();
   for (let i = 0; i < 40 && !(await holdCast.count()); i += 1) {
     const robPass = rob.page.locator(".cm-stage-top [data-action=board-pass]:not([disabled])");
     if (await robPass.count()) await robPass.click();
+    const mayaDraw = maya.page.locator(".cm-stage-top [data-action=board-draw]:not([disabled])");
+    if (await mayaDraw.count()) await mayaDraw.click();
     await rob.page.waitForTimeout(250);
   }
   await holdCast.waitFor({timeout: 20000});
@@ -1632,7 +1650,7 @@ try {
 } finally {
   await close();
 }
-console.log(`table-board: ${checks} checks passed — a real game between two browsers over the table's socket: hidden hands, Keep, empty steps passing by themselves, a land tapped from the hand, Next step, the draw by itself, a cast that passes and one that holds, Resolve and Pass, a refusal in words, a dropped socket reopened, End game's second tap.`);
+console.log(`table-board: ${checks} checks passed — a real game between two browsers over the table's socket: hidden hands, Keep, empty steps passing by themselves, a land tapped from the hand, Next step, Draw card from the button or the library, a cast that passes and one that holds, Resolve and Pass, a refusal in words, a dropped socket reopened, End game's second tap.`);
 
 
 async function chooseView(page, view) {
