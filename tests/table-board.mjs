@@ -1581,6 +1581,11 @@ try {
   await rob.page.click("#cm-board-nav a[href='#decks']");
   await rob.page.getByRole("heading", {name: "Decks", level: 1}).waitFor({timeout: 30000});
   await rob.page.locator("#cm-game-on").waitFor({timeout: 10000});
+  /* NEVER BEHIND THE GAME: callouts still waiting when the game ends -- Try the callouts' eight, here -- are cleared with
+     the ones on screen, so nothing from before covers the game-over panel; the game's end is the last word. */
+  await utility(maya.page,"board-tools");
+  await maya.page.click("[data-action=board-callout-demo]");
+  await maya.page.locator(".cm-callout").first().waitFor({timeout: 3000});
   await utility(maya.page,"board-tools");
   await maya.page.click("#cm-board-tools [data-action=board-end]");
   eq((await text(maya.page, "#cm-board-tools [data-action=board-end][data-confirm='1']")).trim(), "End for everyone · keep the record", "End game in Tools asks a second tap first, naming what it does");
@@ -1591,6 +1596,11 @@ try {
   await rob.page.click("#cm-game-on");
   await waitText(rob.page, ".cm-board-over", /ended early/);
   await waitText(maya.page, ".cm-board-over", /ended early/);
+  const calledOut = () => maya.page.evaluate(() => [...document.querySelectorAll("#cm-board-callouts .cm-callout-word")].map((w) => w.textContent.trim()));
+  const atEnd = await calledOut();
+  await maya.page.waitForTimeout(1500);
+  const after = await calledOut();
+  ok([...atEnd, ...after].every((w) => w === "GAME OVER"), `at the game's end the callouts still waiting are cleared: only GAME OVER (${JSON.stringify(atEnd)}, then ${JSON.stringify(after)})`);
   ok(/record is kept/.test(await text(rob.page, ".cm-board-over")), "both boards say it was ended early, nobody lost, and the record is kept");
   await shot(rob.page, "board-over-1400");
 
