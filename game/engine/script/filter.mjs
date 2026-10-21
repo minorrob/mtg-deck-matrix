@@ -103,6 +103,8 @@ export const exiledWithSource = (state, source) => (source === null || source ==
 /* `colors` (Ricochet Trap: "if an opponent cast a blue spell this turn"): its colors as it was -- a spell as it was cast
    (rules/actions.mjs keeps them, CR 105.2), a permanent as it last existed or entered (rules/layers.mjs, rules/trigger.mjs). */
 const LAST_KNOWN_KEYS = ["what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "controller", "token", "another", "attachedBy", "anyOf", "self",
+  /* `nonKeywords` (Luminous Broodmoth: "whenever a creature you control without flying dies"): none of them as it last existed. */
+  "nonKeywords",
   "keywords", "counters", "colors"];
 export function matchesLastKnown(selector, lki, context = {}) {
   if (!lki) return false;
@@ -126,6 +128,7 @@ export function matchesLastKnown(selector, lki, context = {}) {
   /* "Equipped creature dies": the Equipment was attached to it as it died. */
   if (s.attachedBy === "self" && !(lki.attachments ?? []).includes(context.source)) return false;
   if (s.keywords && !s.keywords.every((word) => (lki.keywords ?? []).includes(word))) return false;
+  if (s.nonKeywords && s.nonKeywords.some((word) => (lki.keywords ?? []).includes(word))) return false;
   if (s.colors && !s.colors.every((color) => (lki.colors ?? []).includes(color))) return false;
   if (s.counters !== undefined && !(s.counters === "any" ? Object.values(lki.counters ?? {}).some((n) => n > 0) : (lki.counters?.[s.counters] ?? 0) > 0)) return false;
   return true;

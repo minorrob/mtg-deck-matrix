@@ -441,6 +441,9 @@ export const dig = {
       ...(params.random === true ? {random: true} : {}), ...(params.remember ? {remember: true} : {}),
       ...(Array.isArray(params.toByType) ? {toByType: structuredClone(params.toByType)} : {}),
       ...(params.faceDown === true && (params.to ?? "hand") === "exile" ? {faceDown: true} : {}),
+      /* Manifest dread (CR 701.62a, script/schema.mjs): the card taken put onto the battlefield face down, manifested (moveOne,
+         CR 701.40a) -- a 2/2 with no text, which its controller may look at (CR 708.5) and turn face up if it is a creature card. */
+      ...(params.manifest === true ? {faceDown: true, manifest: true} : {}),
       ...(params.link === true && context.source !== null && context.source !== undefined ? {link: context.source} : {}),
     };
     return true;
@@ -461,6 +464,7 @@ export const dig = {
       id: `dig:${awaiting.cards.join(",")}`,
       title: awaiting.toByType ? `Choose ${awaiting.min === 0 ? "up to " : ""}${awaiting.take} to reveal`
         : awaiting.to === "exile" ? `Choose ${awaiting.min === 0 ? "up to " : ""}${awaiting.take} to exile${awaiting.faceDown ? " face down" : ""}`
+        : awaiting.manifest ? "Manifest dread: choose 1 to manifest; the other goes into your graveyard"
         : `Choose ${awaiting.min === 0 ? "up to " : ""}${awaiting.take} to put into your ${awaiting.to}`,
       mode: awaiting.take === 1 && awaiting.min === 1 ? "one" : "many",
       min: awaiting.min ?? awaiting.take,
