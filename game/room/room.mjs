@@ -887,7 +887,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       passStack = beats.passStack === true; yieldable = beats.yieldTurn === true;
       /* And whether a cast tapped for tops up floating mana and taps a source for all it makes (`pooledTaps`, rules/actions.mjs):
          a match launched before it lacks the key, and so offers what it offered then. */
-      const pooled = pod && pod.pooledTaps === true ? {pooledTaps: true} : {};
+      const pooled = {...(pod && pod.pooledTaps === true ? {pooledTaps: true} : {}), ...(pod && pod.xTaps === true ? {xTaps: true} : {})};
       pilotPicks = beats.pilotPicks === true;
       try {state = createState({matchId, seed, players: seats.map((s) => ({name: s.name})), ...rules, ...(beats.drawBeat ? {drawBeat: true} : {}), ...pooled});}
       catch (error) {throw new RoomError(400, error.message);}
