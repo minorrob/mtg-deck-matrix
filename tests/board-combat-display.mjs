@@ -85,6 +85,7 @@ try{
     }
     const before=await strip.innerText();
     if(width>600){
+      await page.locator(".cm-block-list summary").click();
       const p=await point(page,'[data-action="board-option"][data-index="0"]');await page.mouse.click(p.x,p.y);
       assert.equal(await strip.innerText(),before,`${where}: an unfinished block draft stays out of the confirmed picture`);
       await point(page,'[data-action="board-confirm"]');
