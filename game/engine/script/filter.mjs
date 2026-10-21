@@ -80,6 +80,9 @@ export const SELECTOR_KEYS = Object.freeze([
   /* "Unless ... it's only the color its controller chose" (Selective Obliteration; CR 105.2): the one color its controller chose
      as this resolution did (effects/asking.mjs, chooseColor's `chooser`), and no other. */
   "onlyChosenColor",
+  /* "Counter target spell that targets a permanent you control" (Rebuff the Wicked; library load L2): a spell one of whose
+     targets is the permanent this describes (CR 115.1a). */
+  "targeting",
 ]);
 
 /** The card types (CR 205.2a). */
@@ -203,6 +206,15 @@ function assertGrammar(selector) {
   if (selector.fromBattlefieldThisTurn !== undefined && selector.fromBattlefieldThisTurn !== true) throw new Error("A selector's fromBattlefieldThisTurn is true: a graveyard card put there from the battlefield this turn");
   if (selector.xInManaCost !== undefined && selector.xInManaCost !== true) throw new Error("A selector's xInManaCost is true: {X} among the symbols of its mana cost");
   if (selector.onlyChosenColor !== undefined && typeof selector.onlyChosenColor !== "boolean") throw new Error("A selector's onlyChosenColor is true or false: only the color its controller chose");
+  /* What a spell targets (Rebuff the Wicked): a permanent, by a selector of its own -- only a spell's, the one thing that has
+     targets among what a selector can be about. */
+  if (selector.targeting !== undefined) {
+    if (selector.what !== "spell" || !selector.targeting || typeof selector.targeting !== "object" || ![undefined, "permanent"].includes(selector.targeting.what))
+      throw new Error("A selector's targeting is a spell's: a selector of the permanent one of its targets is");
+    compileSelector({...selector.targeting, what: "permanent"});
+  }
+  /* "Attacking you and/or planeswalkers you control" (Mangara, the Diplomat): `attacking` true, or "you". */
+  if (selector.attacking !== undefined && ![true, "you"].includes(selector.attacking)) throw new Error("A selector's attacking is true, or \"you\": attacking you or a planeswalker you control");
   const shared = selector.sharesCardTypeWith;
   if (shared !== undefined && shared !== "moved" && !(Array.isArray(shared) && shared.every((type) => CARD_TYPES.includes(type))))
     throw new Error("A selector's sharesCardTypeWith is \"moved\": a card type of what the effect before it moved, as it last existed");
@@ -410,6 +422,10 @@ export function compileSelector(selector) {
     /* "Target spell with a single target" (Misdirection): the spell on the stack, aimed at exactly one thing. */
     /* "With a single target": one object or player chosen in all -- a counted target's list counts each it holds. */
     if (selector.singleTarget === true && (state.stack.find((e) => e.objectId === id)?.targets ?? []).flat().filter(Boolean).length !== 1) return false;
+    /* "Target spell that targets a permanent you control" (Rebuff the Wicked; CR 115.1a): one of the spell's targets is that
+       permanent as it now is -- read as Rebuff is aimed, and again as it resolves (CR 608.2b), "you" the selector's own. */
+    if (selector.targeting && !(state.stack.find((e) => e.objectId === id)?.targets ?? []).flat()
+      .some((t) => t?.kind === "object" && state.objects[t.id] && matchesSelector({...selector.targeting, what: "permanent"}, state, t.id, context))) return false;
     /* "Target enchantment you control that doesn't have the same name as another permanent you control" (Yenna, batch
        70): no other permanent its controller controls has its name -- a copy's name is the one it copied (CR 707.2). */
     if (selector.uniqueName === true) {
@@ -504,6 +520,12 @@ export function compileSelector(selector) {
     if (selector.countersAtLeast && ((object.counters ?? {})[selector.countersAtLeast.counter] ?? 0) < selector.countersAtLeast.count) return false;
     /* "Target attacking creature" (Maze of Ith, CR 508.1k): declared as an attacker in this combat. */
     if (selector.attacking === true && !(state.combat?.attacks ?? []).some((attack) => attack.attacker === id)) return false;
+    /* "If two or more of those creatures are attacking you and/or planeswalkers you control" (Mangara, the Diplomat; CR 506.3,
+       508.1b): `attacking: "you"`, declared as an attacker of this combat at this selector's controller, or at a planeswalker
+       they control now -- one whose planeswalker has left the battlefield attacks nothing (CR 506.4c). */
+    if (selector.attacking === "you" && !(state.combat?.attacks ?? []).some((attack) => attack.attacker === id && (attack.planeswalker !== undefined
+      ? state.objects[attack.planeswalker]?.zone === "battlefield" && controllerOf(state, attack.planeswalker) === context.controller
+      : attack.defender === context.controller))) return false;
     /* "Target attacking or blocking creature" (Gideon's Memorial; CR 509.1g): declared as a blocker in this combat, and still
        one -- a blocking creature until it is removed from combat or combat ends (CR 506.4), whatever became of what it
        blocks. */

@@ -1,0 +1,58 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bilbo's Gambit",
+    "oracleId": "ef71ef07-8a35-41ec-a851-d95e9e3a221b",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Gift a Treasure (You may promise an opponent a gift as you cast this spell. If you do, they create a Treasure token before its other effects. It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")\nReturn target spell to its owner's hand. If the gift was promised, players can't cast spells this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Gift a Treasure",
+      "keyword": "gift",
+      "gift": "a Treasure"
+    },
+    {
+      "kind": "spell",
+      "text": "Return target spell to its owner's hand. If the gift was promised, players can't cast spells this turn.",
+      "targets": [
+        {
+          "what": "spell"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "hand"
+        },
+        {
+          "effect": "effectUntil",
+          "rule": "cant-cast",
+          "allSpells": true,
+          "who": "each",
+          "until": "end-of-turn",
+          "condition": {
+            "giftPromised": true
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -202,6 +202,8 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
   "embalm",
   /* Tiered (CR 702.183): each mode its own additional cost (keywords/timing.mjs). */
   "tiered",
+  /* Library load L2: spree (CR 702.172), each mode chosen its own additional cost (keywords/timing.mjs). */
+  "spree",
   /* Suspend (CR 702.62), from the hand (keywords/timing.mjs). */
   "suspend",
   /* Partner with [name] (CR 702.124j): a deck rule and a trigger as it enters (cards/index.mjs). */
