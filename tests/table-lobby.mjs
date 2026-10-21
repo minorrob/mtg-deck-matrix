@@ -525,8 +525,8 @@ try {
 
   /* AFTER: the game ended (by End game on the board, played in table-board), the lobby says it is over. */
   await tableFor(id).fetch(new Request("https://table.internal/table/end", {method: "POST", headers: {"content-type": "application/json", "x-crankmagic-email": "maya@example.com"}, body: "{}"}));
-  await waitText(maya.page, "#cm-table-game", /The game is over/);
-  await waitText(rob.page, "#cm-table-game", /The game is over/);
+  await waitText(maya.page, "#cm-table-game", /Play again\?|The game is over/);
+  await waitText(rob.page, "#cm-table-game", /Play again\?|The game is over/);
   ok(/record is kept/.test(await pageText(rob.page, "#cm-table-game")), "once it is over, the lobby says so, and that its record is kept");
   eq(await maya.page.evaluate(() => localStorage.getItem("crankmagic-play-seat")), null, "and her device forgets the seat: Play no longer leads back to a game that is over");
   await shot(maya.page, "over-390");

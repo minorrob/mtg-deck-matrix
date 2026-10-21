@@ -254,10 +254,10 @@ function objectCtx() {
   const storage = memoryStorage(), t = tableOn(storage, {cards, random});
   await t.create({tableId: "tablerules1", host: ROB, hostName: "Rob", seats: [{kind: "human", name: "Maya"}, {kind: "ai", name: "Shadrix"}], playtest: true});
   await t.join(MAYA, (await t.invite(ROB, 1, now)).code, now);
-  eq((await t.view(ROB)).rules, {startingLife: 40, bracketLimit: null, skipFirstDraw: true}, "a new table plays at 40 life (CR 903.7) with no bracket limit, and the first player of a two-player game skips their first draw step (CR 103.8a)");
+  eq((await t.view(ROB)).rules, {startingLife: 40, bracketLimit: null, skipFirstDraw: true, passStack: true}, "a new table plays at 40 life (CR 903.7) with no bracket limit, and the first player of a two-player game skips their first draw step (CR 103.8a)");
   await refuses(t.rules(MAYA, {startingLife: 30}, now), 403, /Only the host/, "only the host edits the rules");
-  eq((await t.rules(ROB, {startingLife: 30, bracketLimit: 3}, now)).rules, {startingLife: 30, bracketLimit: 3, skipFirstDraw: true}, "the host sets 30 life and bracket 3");
-  eq((await t.view(MAYA)).rules, {startingLife: 30, bracketLimit: 3, skipFirstDraw: true}, "and everyone at the table sees them");
+  eq((await t.rules(ROB, {startingLife: 30, bracketLimit: 3}, now)).rules, {startingLife: 30, bracketLimit: 3, skipFirstDraw: true, passStack: true}, "the host sets 30 life and bracket 3");
+  eq((await t.view(MAYA)).rules, {startingLife: 30, bracketLimit: 3, skipFirstDraw: true, passStack: true}, "and everyone at the table sees them");
   await refuses(t.rules(ROB, {startingLife: 0}, now), 400, /1 to 999/, "a starting life is a whole number from 1 to 999");
   await refuses(t.rules(ROB, {bracketLimit: 7}, now), 400, /1 to 5/, "a bracket limit is 1 to 5, or none");
   await refuses(t.deck(MAYA, 1, {...deckFor("maya"), bracket: 4}, now), 409, /^maya deck is bracket 4, above this table's limit of 3\. Choose a deck at bracket 3 or lower, or ask the host to raise the limit\.$/, "a deck above the limit is refused, saying what is wrong and what to do instead");
@@ -266,7 +266,7 @@ function objectCtx() {
   await t.ready(MAYA, true, now);
   await refuses(t.rules(ROB, {startingLife: 20}, now), 409, /^The rules can't change once a seat is ready, and Maya is\. Take back Ready/, "once a seat is ready the rules are refused, saying how to change them");
   await t.ready(MAYA, false, now);
-  eq((await t.rules(ROB, {bracketLimit: null}, now)).rules, {startingLife: 30, bracketLimit: null, skipFirstDraw: true}, "with nobody ready, the host takes the limit off again");
+  eq((await t.rules(ROB, {bracketLimit: null}, now)).rules, {startingLife: 30, bracketLimit: null, skipFirstDraw: true, passStack: true}, "with nobody ready, the host takes the limit off again");
   await t.deck(ROB, 0, deckFor("rob"), now); await t.deck(ROB, 2, deckFor("shadrix"), now);
   await refuses(t.rules(ROB, {startingLife: 25}, now), 409, /Shadrix is\. Take back Ready \(an AI seat is ready once its deck is chosen, so choose AI decks after the rules\)/, "an AI seat is ready once its deck is chosen, and the refusal says to set the rules first");
   await t.ready(ROB, true, now); await t.ready(MAYA, true, now);
@@ -290,8 +290,12 @@ for (const off of [false, true]) {
     await refuses(t.rules(MAYA, {skipFirstDraw: false}, now), 403, /Only the host/, "only the host turns the first draw's skip off");
     await refuses(t.rules(ROB, {skipFirstDraw: "off"}, now), 400, /^Whether the player who goes first skips their first draw is on or off: true or false\.$/,
       "the skip is on or off, and anything else is refused, saying so");
-    eq((await t.rules(ROB, {skipFirstDraw: false}, now)).rules, {startingLife: 40, bracketLimit: null, skipFirstDraw: false}, "the host turns it off, the other rules as they were");
+    eq((await t.rules(ROB, {skipFirstDraw: false}, now)).rules, {startingLife: 40, bracketLimit: null, skipFirstDraw: false, passStack: true}, "the host turns it off, the other rules as they were (the stack passed for a player with no answer on, ROB-102)");
     eq((await t.rules(ROB, {startingLife: 30}, now)).rules.skipFirstDraw, false, "and another rule changed leaves it off");
+    /* ROB-102: the stack passed for a player with no answer is a rule too, on unless the host turns it off. */
+    await refuses(t.rules(ROB, {passStack: "no"}, now), 400, /^Whether the stack is passed for a player with no answer to it is on or off: true or false\.$/,
+      "the stack passed for a player with no answer is on or off, and anything else is refused, saying so");
+    eq((await t.rules(ROB, {passStack: false}, now)).rules.passStack, false, "the host turns it off");
   }
   await t.deck(ROB, 0, deckFor("rob"), now); await t.deck(ROB, 1, deckFor("shadrix"), now);
   if (off) await refuses(t.rules(ROB, {skipFirstDraw: true}, now), 409, /^The rules can't change once a seat is ready, and Shadrix is\./, "once a seat is ready it is refused, as every rule is");
@@ -302,7 +306,11 @@ for (const off of [false, true]) {
   eq(record.pod.skipFirstDraw, off ? false : undefined, off ? "the pod the room was handed says the skip is off, and the record keeps it"
     : "a table that keeps CR 103.8a starts a match whose pod has no key for it, as every game before the house rule");
   eq(record.pod.pooledTaps, true, "and a table's new match tops floating mana up from its caster's sources (`pooledTaps`, rules/actions.mjs): its pod says so, and the record keeps it");
-  eq([record.pod.yieldTurn, Object.hasOwn(record.pod, "passStack")], [true, false], "and lets a person yield an opponent's turn (`yieldTurn`, room.mjs), its pod says so; the stack passed for them (`passStack`) waits on the board (ROB-23)");
+  eq([record.pod.yieldTurn, record.pod.passStack], [true, off ? undefined : true], off
+    ? "and lets a person yield an opponent's turn (`yieldTurn`); with the host's rule off, its pod has no `passStack`, and every spell is asked about as before"
+    : "and lets a person yield an opponent's turn (`yieldTurn`, room.mjs), and passes the stack for a person with no answer to it (`passStack`, ROB-102; the board calls out a spell that came and went): its pod says so");
+  eq(record.pod.pilotPicks, true, "and its AI seats take what an \"up to\" or a search is for (`pilotPicks`, room.mjs): its pod says so, and the record keeps it");
+  eq(record.pod.drawBeat, true, "and its draw step's draw waits for its player's Draw card (`drawBeat`, ROB-102 and ROB-24): its pod says so, and the record keeps it");
 }
 
 /* ONLY A CARD THAT CAN BE A COMMANDER IS ONE (CR 903.3; Rob, 2026-10-01): a legendary creature, or a card that says it

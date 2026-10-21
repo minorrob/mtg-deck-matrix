@@ -120,7 +120,8 @@ the real connection can replace the mock later without touching the rest.
   - a person ends it for everyone;
   - every person has left (AI seats never play on alone).
 
-  `view.result` is `{winner, reason, endedBy}`, and `state.gameOver` is set.
+  `view.result` is `{winner, reason, endedBy?, ending}`, and `state.gameOver` is set. The first three say it in words, as
+  they always have; `ending` says the same end as data: who lost and why (*How the game ended*, below).
 - **A player who leaves takes their cards with them.** Everything they own leaves every zone, effects that gave them
   control end, and whatever they still control is exiled.
 - **A dropped connection:** the seat is "away" for up to 5 minutes before it times out, and the other seats are told.
@@ -158,7 +159,67 @@ so a concept mocks this part.
 - **Afterward:**
   - A finished game's record can be downloaded.
   - The result is filed in each person's own library.
-  - A rematch is not built in the cloud.
+  - Every seat still in the game is asked to play again (below).
+
+## After the game: Play again
+
+When a game ends, however it ends (a player knocked out, End game, the last person leaving, a dropped player's time
+running out), the table's `phase` becomes `rematch` and every seat still in the game is asked to play again. These
+facts come from `game/room/table.mjs` (`rematch`, `decideRematch`) and its lifecycle (`game/contracts/table-lifecycle.mjs`).
+Requests row 12, Linear ROB-167.
+
+- **The answer:** each person sends `POST /api/tables/:id/rematch` with `{"accept": true}` for another game, or
+  `{"accept": false}`, which is leaving the table (the board's Leave). It answers 200 `{table}`, the table as that
+  person now sees it.
+  - An answer can change until every person has answered. The answer that completes them decides.
+  - Answering is being there: a seat whose socket closed before the game ended is connected again by its answer.
+  - The AI seats always say yes, by themselves.
+- **Two minutes:** a person who has not answered by `rematch.deadline` (the game's end plus two minutes,
+  `REMATCH_WINDOW`) has said no. The table's own alarm decides then, whether anyone is connected or not.
+- **The next game,** once every person has answered, when the host is staying and at least two seats are:
+  - A seat whose person said no, did not answer, or left the game before it ended is released: an empty chair that
+    never blocks the next start (U-09). Its person is no longer at the table, and their `GET` answers 403. The host may
+    invite someone else to the chair.
+  - Everyone staying keeps their seat, deck and mat, and is ready: the yes is the Ready. The table's rules stay the same.
+  - The ten-second countdown starts at once (`phase: "countdown"`). The host can cancel it, as any countdown.
+  - Then the game launches as the table's next match, with a new `matchId`: `<tableId>g2`, then `g3`. A socket still
+    open from the last game is sent the new game's views. A new `matchId` is a new game.
+- **No next game:** when the host says no, does not answer, or left the game before it ended, or when fewer than two
+  seats would play, the table's games are over. It stays in `rematch` with `rematch.outcome: "closed"`, and
+  `rematch.reason` says why and to start a new table. The host's no, or the host having left, decides this at once,
+  without waiting for the others.
+- **Refused, with what to do instead:**
+
+  | When | Status | The words |
+  |---|---|---|
+  | The game is still on | 409 | "The game is still being played, so there is no Play again to answer yet. Answer it once the game is over." |
+  | No game has been played | 409 | "No game has been played at this table yet, so there is no Play again to answer. Use Ready in the lobby instead." |
+  | The next game is being set up | 409 | "There is no Play again to answer: this table's next game is already being set up. Use Ready in the lobby instead." |
+  | The table's games are over | 409 | "Play again has been decided." and `rematch.reason` |
+  | The person left that game | 409 | "You left that game, so the next one is not yours to answer. Ask the host to invite you again." |
+  | No seat at this table | 403 | "You do not have a seat at this table." |
+  | `accept` is not true or false | 400 | "Answer Play again with accept: true for another game, or false to leave the table." |
+
+- **The table's view, `table.rematch`:** `null` in every phase but `rematch`. In it:
+  - `lastMatchId`: the game just over.
+  - `deadline`: when silence becomes a no, in milliseconds on the table's clock. `GET /api/tables/:id` answers
+    `{table, now}` with that clock's time, as it does for `countdownAt`.
+  - `outcome`: `"waiting"` while answers are open, `"closed"` once the table's games are over.
+  - `reason`: why the games are over, and what to do, or `null`.
+  - `votes: [{seatId, vote}]`: each seat still in the game when it ended, its `vote` `"yes"`, `"no"` or `"pending"`.
+- **An example, one person and three AI seats.** Rob's game ends. His table reads:
+
+  ```json
+  {"phase": "rematch", "yourSeat": 0, "rematch": {"lastMatchId": "7f3c…g1", "deadline": 1792526540000,
+    "outcome": "waiting", "reason": null, "votes": [{"seatId": 0, "vote": "pending"}, {"seatId": 1, "vote": "yes"},
+    {"seatId": 2, "vote": "yes"}, {"seatId": 3, "vote": "yes"}]}}
+  ```
+
+  He presses Play again: `POST /api/tables/7f3c…/rematch {"accept": true}` answers `{"table": {"phase": "countdown",
+  "countdownAt": …, "rematch": null, …}}`, every seat `ready: true` with its deck. Ten seconds on, the table reads
+  `"phase": "playing", "matchId": "7f3c…g2"`. Had he pressed Leave (`{"accept": false}`) or waited two minutes, it would
+  read `"outcome": "closed"` and `"reason": "The host is not staying for another game, so this table's games are over.
+  Start a new table to play again."`
 
 ## Zones, and who sees what
 
@@ -362,7 +423,7 @@ Titles vary, and the sample has 19 kinds. Among them:
 - **Reconnecting:** the connection can drop. The client reconnects (waiting 1 second, doubling up to 10) and is sent
   the current view.
 - **Table actions over HTTP:** these exist; you only need to know they do. Concede; end the game for everyone (any
-  person, confirmed twice); and, once the game is finished, download its record.
+  person, confirmed twice); and, once the game is finished, download its record and answer Play again (above).
 - **The Coach:** a person invited to AI features may ask the Coach (an AI) about their game. It answers in text.
 
 ### Events, `events.v1` (Linear ROB-77)
@@ -436,6 +497,80 @@ cast and resolved between two views (an opponent passed for, `passStack`) arrive
   - which face of a double-faced card is up.
 - **Not in the game at all:** the initiative.
 
+### How the game ended, `result.ending` (Linear ROB-166)
+
+`view.result` is null while the game goes on. Once `status` is `"finished"`, it is the same for every seat (nothing in it
+is any one seat's), and it is in the finished game's record too (`GET /table/record`, its `result`, whole):
+
+| Field | What it is |
+|---|---|
+| `winner` | The winner's seat id, or null. Unchanged. |
+| `reason` | The end in words: `"last player standing"`, `"won by an effect"`, `"all players lost"`, `"ended early"`, or `"every person had left the game, so it ended there"`. Unchanged. |
+| `endedBy` | Only when the room ended the game: the seat id of the person who ended it, or null when every person was out. Unchanged. |
+| `ending` | The same end as data: `{kind, seatId, reason, seats}`. Added on 2026-10-20; read this rather than the words. |
+
+The words could not tell a person knocked out by three AI seats from a person who walked away: both read "every person
+had left the game". `ending` can:
+
+| `ending.kind` | When | `seatId` | `reason` | `reason` in words, as before |
+|---|---|---|---|---|
+| `won` | A player won by the rules: the last player standing (CR 104.2a), or an effect (CR 104.2b) | the winner | null | `last player standing`, `won by an effect` |
+| `draw` | Every player still in the game lost at once (CR 104.4a) | null | null | `all players lost` |
+| `eliminated` | Every person was out, the last of them lost by the rules; the AI seats left did not play on | the last person out | their loss reason | `every person had left the game, so it ended there` |
+| `conceded` | Every person was out, the last of them conceded | the last person out | `conceded` | the same |
+| `timed-out` | Every person was out, the last of them ran out of time: away for five minutes, so the room conceded them | the last person out | `conceded` | the same |
+| `ended` | A person ended the game for everyone (any person at the table, the host or not) | who ended it | null | `ended early` |
+
+- **`seats`:** every seat, in seat order, as `{seatId, outcome, reason}`.
+  - `outcome` is `won`; `lost`, out by the rules; `conceded`; `timed-out`; or `playing`, still in the game when it ended (the
+    AI seats when every person was out, and everyone still in when a person ended it).
+  - `reason` is the engine's loss reason for a seat that is out, the same word as that player's `health.lossReason`, and
+    null for a seat that won or was still playing.
+- **The loss reasons:**
+  - `life`: 0 life or less (CR 704.5a), damage included;
+  - `poison`: 10 poison counters (CR 704.5c);
+  - `commander-damage`: 21 combat damage from one commander (CR 903.10a);
+  - `empty-library`: drew from an empty library (CR 704.5b);
+  - `effect`: an effect said they lose the game (CR 104.3e);
+  - `conceded`: they conceded (CR 104.3a), or ran out of time, which the room concedes for them.
+- **Leaving is conceding.** A person leaves a game in play only by conceding (the table's Concede, or the five minutes
+  running out), so a person who left is `conceded` or `timed-out`. A seat that had already lost by the rules and left
+  afterward keeps its loss: `lost`, with that reason.
+- **The last person out** is the one `kind` and `seatId` turn on when more than one person played, whatever their seat
+  order: the room keeps the order the seats went out in (a game played before `ending` kept none, and counts the last
+  person by seat order).
+- **The record.** The board files a person's own result in their library. As it files today (Rob, 2026-09-26): a
+  concession is a loss, and a timeout or a game ended early is unfinished; and by ROB-166, a person `eliminated` is a
+  loss. So, from the person's own entry in `seats`: `won` is a win; `lost` and `conceded` a loss; `timed-out` unfinished;
+  and `playing` (in a game a person `ended`) unfinished. In a `draw`, nobody won.
+- **One person and three AI seats, the person losing to damage.** Every seat's view says:
+
+```json
+"result": {
+  "winner": null,
+  "reason": "every person had left the game, so it ended there",
+  "endedBy": null,
+  "ending": {
+    "kind": "eliminated",
+    "seatId": "s0",
+    "reason": "life",
+    "seats": [
+      {"seatId": "s0", "outcome": "lost", "reason": "life"},
+      {"seatId": "s1", "outcome": "playing", "reason": null},
+      {"seatId": "s2", "outcome": "playing", "reason": null},
+      {"seatId": "s3", "outcome": "playing", "reason": null}
+    ]
+  }
+}
+```
+
+  So the banner can say "You lost: your life reached 0", and the record is a loss. Had the person conceded, `kind` and
+  `s0`'s `outcome` would be `conceded`; had their time run out, `timed-out`; had the host ended the game,
+  `{"kind": "ended", "seatId": "s0", "reason": null}` with every seat `playing`, and `endedBy: "s0"`.
+- `sample-views.json` was recorded before `ending`: its last view has the words alone.
+- Proved by `tests/room-ending.mjs`, every guard broken by `game/tools/batch/breaks-loss-reason.py`; the code is
+  `game/room/ending.mjs`.
+
 ## What players see of the AI
 
 - **Levels:** AI seats play at Easy, at Normal, or as an AI on Claude.
@@ -477,8 +612,10 @@ These are acceptance requirements, not design direction.
 - **Text size:** no text smaller than 10 px. A size the person can change is changed continuously, never in steps, and
   is remembered on that device.
 - **Language:** American English and US number and date formats. Card names keep their printed spelling.
-- **Never decide for the player.** A convenience that passes priority for them must be one they turned on. It stops
-  whenever anything is on the stack, or when any other question is asked.
+- **Never decide for the player.** A convenience that passes priority for them must be one they turned on. Their own
+  Skip to end stops when anything is on the stack or another question is asked. Explicit room-backed Yield turn
+  continues through spells and abilities for the rest of the opponent's turn (the Yield turn contract above).
+  Required questions always remain theirs to answer; yielding resumes afterward within that same turn.
 - **When something can't be done,** say what is wrong and what to do, naming the thing. Never a warning that can be
   clicked past.
 

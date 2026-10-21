@@ -10,6 +10,13 @@
  * crankmagic-version, and /api/me, which a release that seats the token (SERVICE_SEATS, cloud/access.mjs) answers as
  * the token's own test identity. With --expect <commit>, it fails unless staging serves that release.
  *
+ * ON PERSONAL-HP (Rob, 2026-10-20) the token is a second one, "crankmagic-staging-checks-hp", in the same "Session
+ * checks" policy, so either can be revoked alone. It is saved in the Windows user environment under the same two names,
+ * so a session the Claude app starts after it was saved receives them. A session started before then reads them from
+ * the User scope into its own process, without printing them (PowerShell):
+ *   $env:CF_ACCESS_CLIENT_ID = [Environment]::GetEnvironmentVariable('CF_ACCESS_CLIENT_ID','User')
+ *   $env:CF_ACCESS_CLIENT_SECRET = [Environment]::GetEnvironmentVariable('CF_ACCESS_CLIENT_SECRET','User')
+ *
  * THE AGENTS' ACCESS (M8, Part 7's G-C): with --agents it reads, instead, the four service tokens Rob made for the
  * agents that play staging (docs/playtest-harness.md), given as AGENT1_CF_ACCESS_CLIENT_ID and
  * AGENT1_CF_ACCESS_CLIENT_SECRET to AGENT4_..., and fails unless staging seats each as an identity of its own -- four
@@ -118,7 +125,7 @@ async function main(argv) {
   }
   const {id, secret} = credentials(process.env);
   if (!id || !secret) {
-    console.error("staging-check: CF_ACCESS_CLIENT_ID and CF_ACCESS_CLIENT_SECRET are not in this environment. Add them in the cloud environment's settings (docs/review-response-2026-10-05.md §6.2, A5); a new session receives them.");
+    console.error("staging-check: CF_ACCESS_CLIENT_ID and CF_ACCESS_CLIENT_SECRET are not in this environment. Add them in the cloud environment's settings (docs/review-response-2026-10-05.md §6.2, A5); a new session receives them. On Personal-HP they are in the Windows user environment: read them from the User scope into this process (this file's header).");
     return 2;
   }
   const result = await check({base: arg("base") ?? undefined, expect: arg("expect") ?? null, id, secret});

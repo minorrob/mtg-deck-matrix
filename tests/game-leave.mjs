@@ -159,7 +159,9 @@ async function stepRoom(room, n, people) {
   const by = room.waitingOn === "s0" ? "s1" : "s0";
   await room.end(by);
   const v = room.view("s0");
-  eq([v.status, v.result, v.waitingOn, v.decision], ["finished", {winner: null, reason: "ended early", endedBy: by}, null, null], "End game finishes the game for everyone, with no winner, recorded as ended early and by whom");
+  const {ending, ...words} = v.result;
+  eq([v.status, words, v.waitingOn, v.decision], ["finished", {winner: null, reason: "ended early", endedBy: by}, null, null], "End game finishes the game for everyone, with no winner, recorded as ended early and by whom");
+  eq([ending.kind, ending.seatId], ["ended", by], "and its `ending` says so too (tests/room-ending.mjs)");
   await refuses(room.act("s0", {actionId: randomUUID(), revision: v.revision, kind: "answer", choiceId: "x", indices: [0]}), 409, /over/, "nothing more is played");
   await refuses(room.end("s1"), 409, /over/, "and it ends once");
   eq((await openRoom({storage: s3, matchId: "end", cards})).view("s1").result.reason, "ended early", "a woken room still says it ended early");
@@ -274,7 +276,9 @@ async function playingTable(storage = memoryStorage()) {
   const room = await openRoom({storage, matchId: "nobody", cards});  /* woken first: the rule is kept with the room */
   await room.leave("s0", "conceded");
   const v = room.view("s0");
-  eq([v.status, v.result, v.departures], ["finished", {winner: null, reason: NO_PERSON_REASON, endedBy: null}, {s0: "conceded"}], "the only person concedes: the game ends there, with two AI seats still in it, and says why");
+  eq([v.status, v.result, v.departures], ["finished", {winner: null, reason: NO_PERSON_REASON, endedBy: null, ending: {kind: "conceded", seatId: "s0", reason: "conceded",
+    seats: [{seatId: "s0", outcome: "conceded", reason: "conceded"}, {seatId: "s1", outcome: "playing", reason: null}, {seatId: "s2", outcome: "playing", reason: null}]}}, {s0: "conceded"}],
+  "the only person concedes: the game ends there, with two AI seats still in it, and says why -- in words, and as data: conceded (tests/room-ending.mjs)");
   eq(room.history.at(-1).text, "Every person is out of the game, so it ends here · not finished", "the history says so too");
   await refuses(room.end("s0"), 409, /over/, "nothing more is played, or ended");
   const meta = await createMatchStore(storage, "nobody").loadMatch();
@@ -293,6 +297,7 @@ async function playingTable(storage = memoryStorage()) {
     const w = r.view("s0"), active = w.state.players.filter((p) => p.health.status === "active").length;
     if (w.result.reason === NO_PERSON_REASON) {
       ok(w.state.players[0].health.status === "lost" && !w.departures.s0 && active >= 2, `game ko${n}: Rob is knocked out with ${active} AI seats still in, and the game ends there`);
+      eq([w.result.ending.kind, w.result.ending.seatId, w.result.ending.reason], ["eliminated", "s0", w.state.players[0].health.lossReason], `and its \`ending\` says Rob was eliminated, and why (${w.result.ending.reason}), not that he left`);
       knocked = w;
     } else ok(w.result.reason === "last player standing", `game ko${n}: it ended naturally first (${w.result.winner} won)`);
   }

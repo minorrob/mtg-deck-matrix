@@ -20,6 +20,34 @@
 
 ## Play tabletop preview, October 14, 2026
 
+October 21, Claude (holding Codex · Play, with the engine halves Play waits on): ROB-102's first half on `claude/play-pass-stack`, stacked on #809. A new match passes the stack for a person with no answer to it (the room's `passStack`), so Rob isn't stopped at every AI spell; the board calls out each spell that came and went on his next view (**CAST** · Maya · Cultivate · resolved). A person who holds an answer is still asked. It's a table rule, on unless the host turns it off (`/table/rules {passStack: false}`); the lobby switch comes with ROB-124. Record: `docs/play-overhaul/ROB-102-PASS-STACK.md`.
+
+October 21, Claude (holding Codex · Play): ROB-18 on `claude/play-phone-upright`, stacked on #812. The phone board is upright, as Rob approved on Oct 18 (Codex's design from its prototype, #766). From the top: the rail with Camera, the seats in a row, the turn, the battlefield and its lands at full width scrolling in their own frame, then what is asked. Sideways, the seats are a column at the right. The hand is a drawer from the bottom, and nothing is drawn turned a quarter any more. Still open: tap-to-inspect on the battlefield, one utility at a time, keyboard clearance, a real phone. Record: `docs/play-overhaul/ROB-18-PHONE-UPRIGHT.md`.
+
+October 21, Claude (holding Codex · Play): ROB-98 on `claude/play-land-spacing`, stacked on #811. Rob's approved 48px foot on the Full-view front mat keeps every land's upper half reachable with any hand card hovered (two land points blocked at 1280x720 without it), and the right drawer's resize line sits on its edge rather than 17px inside it. Both are Codex's Oct 18 fixes from its named stash, read and not dropped. Record: `docs/play-overhaul/ROB-98-LAND-SPACING.md`, "Shipped". ROB-18, the upright phone layout Rob approved the same day, is next.
+
+October 21, Claude (holding Codex · Play): ROB-102's second half on `claude/play-draw-card`, stacked on #810. A table's new matches wait in the draw step for their player's **Draw card** (`drawBeat`), as Rob's Oct 15 playtest decisions ask; the library is the same button, and an AI seat draws for itself. ROB-24's upkeep and post-draw actions (with why a card can't be played yet) and the draw's motion for the other players are still open. Same record.
+
+October 21, Claude (holding Codex · Play, with the engine halves Play waits on): ROB-168 on `claude/engine-combat-labels`, stacked on #808. In a person's view of Declare attackers and Declare blockers, same-named creatures say their power and toughness, then are numbered, each the same number in every option ("Wall 0/4 #1 blocks Goblin 1/1 #2"). A block on an attack at a planeswalker says so. These are the words only (`combatWords` in `game/room/room.mjs`): indices and ids stay the engine's, so answers and replays are unchanged, and a choice with no two alike is untouched. Proof: `tests/room-combat-words.mjs` (22, including a room game where every Brute is named Brute) and `breaks-combat-words.py` (5 of 5).
+
+October 21, Claude (holding Codex · Play): ROB-166 and ROB-167 on the board, on `claude/play-ending-rematch`, stacked on #806 (the rematch route), which holds #805 (`result.ending`), #807 (ROB-29, ROB-169) and #804 (ROB-26). The banner reads `ending`: a person knocked out at a table of AIs reads "You lost. Your life reached 0. With only AI players left, the game ends here.", and every other ending says what it was. Play again and Leave the table are on the banner, and the lobby shows every seat's answer, the closing time and the buttons. Proof: `tests/board-ending-rematch.mjs` (62), `breaks-ending-rematch.py` (11 of 11), and `tests/uat/solo-vs-ai.mjs`, which plays a whole 1-vs-3 game, says "You lost", presses Play again and gets the next match `…g2` on the board. Notes: `docs/play-overhaul/ROB-166-167-ENDING-REMATCH.md`. Pins board 62, table 30, service worker 503, app 520.
+
+October 20, 23:18 UTC onward, **Claude holds Codex · Play** (Rob: *"Open AI is done for the next few days. Pick up from where we're at."*). #801 (ROB-26 direct blocking, Codex's head `d6f5e554`) failed its exact-head run 39468706080: in Focus at 1280x720 the No blocks button ran below the window under CI's taller fonts. Continued on `claude/play-direct-blocking` from Codex's head, which stays untouched: Table and Focus now hold the question to the window (`fit()` measures its room; its middle scrolls, as #793 did for Full), proved by new tall-text cases in `tests/board-direct-blocking.mjs` and two caught breaks. ROB-173's wheel loop in `tests/table-tabletop.mjs` now scrolls to the list's end. Pins board 60, stage CSS 26, service worker 501, app 518. Proof: `docs/play-overhaul/ROB-26-DIRECT-BLOCKING.md` (its Oct 20 later section). In parallel: the room's structured ending (Requests row 10, ROB-166) and the rematch route (row 12, ROB-167) on `claude/engine-` branches. Next: #802 (ROB-23, ROB-24, ROB-29, ROB-169), then Play's halves of ROB-166 and ROB-167. #800 stays parked for row 11 (ROB-172).
+
+October 20, Codex Play: ROB-26 direct blocking is complete locally on `codex/play-direct-blocking`, source `4a6551b1`, PR #801, with main `27fba609` merged. Private drafts use authoritative legal pairs and serialized room checks; explicit Confirm is guarded across stale replies, reconnect and receipt-before-view. All 16 deliberate regressions caught; required board/accessibility/Settings/tabletop suites and six-layout pointer proof pass. Three full solo games pass 42 checks, 78 combat comparisons and 585 privacy checks over 598 frames, identical replay, no AI refusals; ROB-166 still reproduces. Pins board 59, CSS 25, worker 500, app 517; 125 asset hashes pass. Proof and stable-ID screenshots: `docs/play-overhaul/ROB-26-DIRECT-BLOCKING.md`. Exact-head CI and Engine-owned staging acceptance remain. Next are ROB-23/24/29/169; ROB-167 requires the rematch route in Requests row 12. #800 stays parked for ROB-172; #795/#796 remain with the other harness. Production held.
+
+October 20, Codex Play: #799 confirmed combat display merged with a merge commit as main `27fba609`, exact head `e36d138e` green in full CI run `39459768526`; main was unchanged at `17a1218c` and mergeability rechecked. Local proof remains in `docs/play-overhaul/ROB-26-COMBAT-DISPLAY.md`: required browser suites, twelve caught regressions, three full solo games with 78 combat-view comparisons and 585 privacy checks. Staging acceptance requested from Engine in ROB-11; production held. Direct blocking remains in draft #801, with #800 parked for ROB-172. Feed and ROB-26 updated at this merge.
+
+October 20, Codex Play: continuing ROB-26 direct blocking on `codex/play-direct-blocking`, from main `17a1218c` with the pending #799 combat-display dependency merged. Drafts use `decision.legalBlocks` and the private socket `check`/`checked` contract, with explicit confirmation. ROB-171 remains parked in draft #800 for Engine ROB-172. Rob assigned #795 and #796 to another harness; this lane leaves their review and merge there. Remaining play-test fixes follow this slice.
+
+October 20, 16:39 UTC, Codex Play merge: PR #798 merged with a merge commit as main `17a1218cc93da8e00c31cdfc5ffeeea44a4f11ae`, landing ROB-28 and ROB-165 together. Exact head `740a2fca` passed Actions run `39453407024`; main was rechecked unchanged at `d7eadfe1`, the PR mergeable, and the merge tree is the tested head's. #797's Yield commits are preserved and GitHub marks it merged too (its own head passed run `39450693232`). The reconciled feed is updated; Linear proof and the Engine-owned staging request are in ROB-11. Production remains held. The combat-display branch #799 has this main merged before readiness; its local proof and next direct-blocking slice are below. ROB-166 still waits on the structured room reason.
+
+October 20, Codex Play: ROB-26's first slice is implemented on `codex/play-combat-display`, PR #799, source commit `e5d04d44`, with #798 integrated. The confirmed combat strip groups defenders and preserves public object IDs, planeswalker targets, blocker inspection, private drafts and removal behavior across Full/Table/Focus/phone. Review caught phone overlap; space is now reserved and a deliberate regression proves the defending creature's tap target. Eleven focused breaks plus the whole-game missing-display break are caught. Board 281, accessibility 298, Settings 68, shared-shell and tabletop pass. Three full solo games (42 checks) finish at turns 38/34/41, compare 78 actual combat views, replay identically, pass 585 privacy checks over 598 frames, and have zero AI refusals. Pins board 57, stage CSS 23, service worker 498, app 515; proof and labeled shots: `docs/play-overhaul/ROB-26-COMBAT-DISPLAY.md`. Feed updated. Exact-head CI and Engine-owned staging remain; physical phones and hardware WebGL remain unproven. Next is direct blocking from `legalBlocks` with serialized draft validation and the list fallback, then ROB-23/24/29. ROB-166's terminal reason remains requested; production is held.
+
+October 20, Codex Play: ROB-165 is implemented on `codex/play-choice-scroll`, PR #798, with #797's Yield branch integrated. A long choice keeps its position across selection and deselection only within the same decision and match. Real pointer and five-point hit tests cover 60/150 options at 1024x768, 1280x720 and 1400x900; fresh decision and match frames reset to the top. All three deliberate regressions were caught. Board 278, accessibility 298 and Settings 68 pass before the conflict-free Yield integration; the combined tabletop and focused Yield checks pass. One camera-reload setup run stopped at an open dialog; the unchanged repeat passed, recorded without weakening assertions. Pins board 56, service worker 497, app 514, stage CSS 22 unchanged; screenshots and commands are in `docs/play-overhaul/ROB-165-CHOICE-SCROLL.md`. Feed updated; staging acceptance remains Engine-owned. #798 carries #797's commits for a combined merge on its exact-head CI. Next: ROB-26's shared combat display before direct blocking. ROB-166's structured terminal reason remains requested in row 10 and ROB-11; production is held.
+
+October 20, Codex Play resumed on `codex/play-room-yield`, PR #797, from main `d7eadfe1`, following the newer handoff while #796 is open. ROB-28 now sends the room's Yield policy and reads acknowledged state, preserving required decisions and reconnect behavior. Proof: board 281, accessibility 298, Settings 68, shared-shell, tabletop, focused Yield browser checks with pointer hits at 1024/1280/1400 and phone, room Yield 43, and all six deliberate regressions caught. The adopted solo harness from #796 now checks private-zone identities against the replay oracle rather than exempting any first library card; its deliberate regression is caught. Three whole browser games finish in 38/34/41 turns, replay identically, pass 585 privacy checks over 598 browser frames, and refuse no AI answers. Pins board 55, stage CSS 22, service worker 496, app 513; proof and labeled screenshots: `docs/play-overhaul/ROB-28-ROOM-YIELD.md`. Feed reconciled with the handoff and validated. CI, merge and engine-owned staging remain; physical phone and hardware WebGL are unproven. ROB-166 is requested in row 10 and ROB-11; the banner reproduced, while current main already has a loss branch in `outcomeOf`, so the library claim needs separate proof. Next: ROB-165 choice scroll. Paused ROB-98 and drawer work remain in the named Oct20 stash; both visual approvals stand.
+
 October 18, 08:03 UTC: ROB-99 slice 1 / ROB-19 merged in PR #754 as `73f55b353c3174ef735ec22ef2e733112c86a13d`, a merge commit, on exact-head `b538be8e` green Actions run `39107631823`. The merging session rechecked main unchanged at `41997462`, mergeability and the exact green head; local browser proof, 23 deliberate regressions and 223 release-package checks pass. Settings' Play implementation is now its own file; Workshop owns general Settings. Linear ROB-99, ROB-19 and ROB-11 carry the merge proof and staging request; the feed records ROB-19 in review with one hour remaining and ROB-99's remaining slices at 20 hours. `node tests/readout-feeds.mjs` validates the updated feed. The next PR #765 has main merged via `37f40e3e`, with no source changes from its proven `3e87d903` tree. ROB-98 and ROB-18 await Rob's visual choices; staging, physical phones and hardware WebGL remain unproven.
 
 October 18 follow-up on `codex/play-table-camera`, draft PR #765, from `origin/main` with the pending #754 shared shell merged as its dependency. ROB-97 removes the duplicate Table slider and keeps Camera reachable when the enlarged hand makes Table scroll. Proof with `GEOMETRY_REQUIRED=1`: board 277, accessibility 298, Settings 63, tabletop/shared-shell/Camera-layout suites, and all four deliberate regressions caught (`missed: []`); static reviews found no actionable regressions. Pins board 54, stage CSS 18, service worker 484, app 500; details and labeled 1280 x 720 / 390 x 844 screenshots are in `docs/play-overhaul/ROB-97-CAMERA-SLIDER.md`. ROB-98's separate before/after proposal recommends 48px inside the front mat; the tested land targets clear at 1024/1280/1400 while the 1280 baseline fails. Its screenshot choice is pending in Linear and the feed; no production land spacing is changed. #754 remains in its single full CI run. Staging, physical phones and hardware WebGL remain unproven.
@@ -108,9 +136,9 @@ Volcano uses Rob's supplied video; other environments and the table artwork stil
 
 | Lane | Held by | Branch | Doing |
 | --- | --- | --- | --- |
-| **Claude · Engine** (engine, rooms, Worker routing, migrations, card loads, releases) | A Claude cloud session, since October 19 (Fable held it October 16 to 18; a fresh session built card load step 1 in #776) | `claude/exciting-sagan-qe5yuf` (the session's assigned branch), then `claude/engine-<topic>` | Engine, simulation, card loads. Linear: ROB-71 and its children (ROB-12, ROB-13, ROB-73 to ROB-95, ROB-149). On staging (main 62900176, read back by `tools/staging-check.mjs` on Oct 19): ROB-12 (#739), ROB-81 (#742), ROB-13 (#745), ROB-73 (#746), ROB-77 (#747), ROB-76 (#748), ROB-75 and the room's socket frames (#778). Card load step 1 (ROB-86, #776) is carried to `main` by this branch, its main merge resolved; step 2 (ROB-87) next. Migrations: 0006 ROB-86 (`card_demand`), 0007 ROB-127, 0008 ROB-88, next free 0009. Blocked on Rob: ROB-157 (the Cloudflare API credential, so no D1 write and no deployed-bytes check). See "2026-10-19: the engine lane" below. Brief: `docs/program/workstreams/claude-engine.md`. |
+| **Claude · Engine** (engine, rooms, Worker routing, migrations, card loads, releases) | A Claude cloud session, since October 19 (Fable held it October 16 to 18; a fresh session built card load step 1 in #776) | `claude/exciting-sagan-qe5yuf` (the session's assigned branch), then `claude/engine-<topic>` | Engine, simulation, card loads. Linear: ROB-71 and its children (ROB-12, ROB-13, ROB-73 to ROB-95, ROB-149). On staging (main 78dc2a47, `release/cloud-staging` 704a7ca7, version db1962ce byte-identical): ROB-12 (#739), ROB-81 (#742), ROB-13 (#745), ROB-73 (#746), ROB-77 (#747), ROB-76 (#748), ROB-75 and the room's socket frames (#778), and card load step 1 (#784). Card load steps 1 to 3 are on `main`: ROB-86 as 78dc2a47 (#784, carrying #776), ROB-87 as 40d14519 (#785), ROB-88 as bdc64567 (#789), step 5's first part (ROB-91, candidates at playtest tables) as c42416e5 (#790), and the rest of the loader (ROB-90, ROB-91, ROB-92) as d7eadfe1 (#791). Migrations: 0006 ROB-86 (`card_demand`), 0007 ROB-127, 0008 ROB-88, next free 0009. Staging serves main 27fba609 (`release/cloud-staging` 8636fef0, version f42fa2af byte-identical to its dry run), which carries the whole loader and Play's #797 to #799; migration 0006 is on staging D1. See "2026-10-19: the engine lane" below. Brief: `docs/program/workstreams/claude-engine.md`. |
 | **Claude · Deck intelligence** (the models and data under the screens; the program readout) | The second Claude session (a cloud container), since October 18 | `claude/deck-<topic>`; ten PRs merged October 18: `deck-composition` (#749), `deck-synergies` (#750), `deck-resolve` (#752), `deck-legality` (#753), `deck-buyplan` (#758), `deck-compliance` (#759), `deck-criteria` (#757), `deck-swaps` (#760), `deck-reasonableness` (#761), `deck-sim-audit` (#762), `deck-sim-variance` (#764); the program itself merged (#740) | Done: ROB-138, 114, 115, 131, 104, 119, 111, 109, 117, 112, 84. In progress: ROB-116 (steps 1 and 3 on main; step 2 waits on the engine lane's `playPod`, Requests row 1). Waiting on Rob: the popularity dial (ROB-109), ROB-95 before ROB-128/130/129/132, the Settings card for ROB-123, his call on ROB-121. Keeps `docs/readout/` (feed `feeds/claude-deck.json` at every merge). Session closed 2026-10-18 evening; handoff `docs/handoff-deck-intelligence-2026-10-18.md`. |
-| **Codex · Play** (the Play boards and the player's interaction) | Codex Astra, session 1, from October 18 (handed back: `docs/HANDOFF-TO-CODEX-2026-10-18.md`) | `codex/play-<topic>`; the broad draft `codex/ui-playtest-plan-oct15` (PR #735) stays a quarry | Settings' Play card to its own file, then ROB-99 slice 1, ROB-98, ROB-97, ROB-18, ROB-52 with ROB-100's renderer step. Brief: `docs/program/workstreams/codex-play.md`. |
+| **Codex · Play** (the Play boards and the player's interaction) | **Held by Claude (the Play readiness session, Personal-HP) from Oct 20, 23:18 UTC, while Codex is away for a few days** (Rob: *"Open AI is done for the next few days. Pick up from where we're at."*; ROB-11), with the engine halves Play waits on (Requests rows 10, 11, 12). Codex Astra, session 1, before that. **Handed back again Oct 20, reconciled: `docs/HANDOFF-TO-CODEX-2026-10-20.md`** (newer than `docs/HANDOFF-TO-CODEX-2026-10-18.md`, and wins where they differ) | `codex/play-<topic>`; open drafts #770 (ROB-98, approved 48px), #766 (ROB-18, approved upright phone), #767 (ROB-52, conflicts with main); #735 stays a quarry | Since Codex's last commit (Oct 18, 12:20 UTC), Claude sessions changed this lane's files at Rob's go: #743 and #751 (ROB-162 and ROB-161, Done) and #793 (ROB-163, Done: in Full a long choice scrolls between its title and Confirm). All are on staging (main a9bec38f). Codex resumed the same day: ROB-28 (#797, Yield wired to the room) and ROB-165 (#798, a long choice keeps its scroll) are on main 17a1218c, not yet on staging. Next, from the handoff: ROB-166 (a loss to the AIs reads "ended early"), ROB-26, ROB-23, ROB-24, ROB-29, ROB-169, ROB-167; then the Requests waiting on Play; then ROB-98, ROB-18, ROB-99 slices 2 and 3, ROB-52. Brief: `docs/program/workstreams/codex-play.md`. |
 | **Codex · Workshop** (every screen outside the boards; `cloud/library`, `sharing`, `access-invites`, `mail`) | Codex Astra, session 2, from October 18. **Later on October 18, Rob handed Codex's UX/UI work to a Claude cloud session** ("You are picking up the work of GPT on the UX/UI and Play") | `codex/workshop-<topic>`; Claude: `claude/wizardly-einstein-9ibb4j` | ROB-36, ROB-37 to finish; ROB-122, ROB-125, ROB-106, ROB-105. Brief: `docs/program/workstreams/codex-workshop.md`. **Claude, October 18, closed out (handoff: `docs/HANDOFF-WORKSHOP-2026-10-18.md`):** PR #777 merged to `main` as `71155f15` (merge commit, green Actions `suites` on `13174970`), not released (the engine lane releases staging; notes on ROB-11). It carries the card status model Rob approved with Upgrade (`docs/card-states.md`; Linear ROB-150, Done; ROB-107 In Progress for the per-row sentence, bulk moves and the usability pass) and budgets (`docs/budgets.md`; ROB-151, Done; Rob kept all three defaults). Proof: `tests/card-states.mjs` (140), `tests/card-status-flows.mjs` (40), `tests/budgets.mjs` (29), `tests/uat/crankmagic-journeys.mjs` (505), breaks 8 of 8 and 6 of 6. Open: ROB-152, Rob's dashboard switch for the Workers Builds checks that fail on every PR. The Workshop lane is free for the next session Rob names; its queue is ROB-36, ROB-37, then ROB-122 and ROB-125. |
 | **Grok** (bounded tasks under a coordinator) | Grok Bot workers, when Rob relays the prompt | `grok/<task>-<topic>` | G3 (ROB-27), G4 (ROB-61), G6 (ROB-136) from `docs/grok/WORK-PACKAGE-2026-10-17.md`. Brief: `docs/program/workstreams/grok.md`. |
 
@@ -135,17 +163,18 @@ The session that built step 1 on `claude/practical-shannon-ga8i5j` has stopped. 
   - `python3 game/tools/batch/breaks.py game/tools/batch/breaks-card-demand.py` (17 of 17);
   - staging: `release-acceptance` 22, `play-e2e` 42 before the push, and `tools/staging-check.mjs --expect 78dc2a47`
     passed.
+- **Proven since, by the Oct 19 engine session once ROB-157 was fixed:** the deployed version is db1962ce, and its
+  `play-worker.js` is byte-identical to `wrangler deploy --dry-run` of `release/cloud-staging` 704a7ca7 (4,160,870 bytes,
+  sha256 `32d2dd6f663c5081…`); its 27 bindings are unchanged from b6f37e78. Migration 0006 is on staging D1 (17:20:10
+  UTC; bookmark before the write `000000d6-00000000-00005109-32543247fde961f32cebcc7da1aeee01`; ROB-158 Done).
 - **Not proven, and why:**
-  - **The deployed version id and the byte check:** the Cloudflare API refuses this container's credential (ROB-157).
   - **`known` on staging:** Access sends the service token's POST to its sign-in page; the token reads only
     staging-check's GETs.
 - **Outstanding:**
-  - **ROB-158:** apply 0006 to staging D1. Rob approved it for that file, staging only. It is blocked by ROB-157, and the
-    steps are on ROB-86. Until then staging records nothing and answers as before.
   - **ROB-159 (Codex · Play):** the deck page's "on the list for the next wave" line from `listed`, and the hub asking
     `{decks}` (Requests row 3).
   - **Production:** D1 has 0001–0002. 0006 there, and turning step 1 on, are a production release on Rob's go.
-- **Next for the engine lane:** card load step 2 (ROB-87), already started by the Oct 19 session.
+- **Next for the engine lane:** card load step 3 (ROB-88); step 2 is main 40d14519 (#785).
 
 ### Requests between the lanes
 
@@ -161,6 +190,9 @@ other lane answers in the last column.
 
 | # | From | Asks for | What for | Answer |
 | --- | --- | --- | --- | --- |
+| 11 | Codex · Play → Engine | ROB-172 for ROB-171: project public control provenance, displaced controller(s), source object identity/name and exact Oracle effect text/duration; define chained steals, return destinations, entering under another controller and face-down sources | Rob requests the actual card on its controller's board and a ghost where control was lost, with who took it and how it returns. Current owner/controller fields cannot establish prior control or a return condition. Document and merge the additive contract before Play consumes it | Requested Oct 20 in ROB-11; Play builds existing-contract placement and ownership marker meanwhile |
+| 12 | Codex · Play → Engine | ROB-167: expose `POST /api/tables/:id/rematch {accept}` and public votes/deadline; launch the next round with retained seats/decks using the existing lifecycle | Board/lobby Play again, visible votes and Leave need a deployed route and documented table state. Prove one person/three AIs, a declined human seat, deadline expiry, and a fresh match ID | Requested Oct 20 on ROB-167 and ROB-11; Engine half must merge before Play consumes it **Built:** `POST /api/tables/:id/rematch {accept}` (#806): votes, deadline (2 minutes, `REMATCH_WINDOW`) and the next round with the same seats, decks and rules as `<tableId>g<n>`; the view's `table.rematch` `{lastMatchId, deadline, outcome, reason, votes}`; the host must stay for a next game; documented in `docs/ui-lane/gameplay-anchor.md` ("After the game: Play again"). Play wires the buttons next. |
+| 10 | Codex · Play → Engine | ROB-166: project a structured terminal reason identifying the eliminated human seat and its loss reason when the remaining seats are AIs; distinguish elimination from voluntary end and disconnect timeout | The banner must say who lost and why, and the person's game record must be a loss. Please document the additive view/result contract and merge it before Play consumes it | Requested Oct 20; Play will retain existing result handling until the authoritative contract is on main. **Built:** `result.ending` (`game/room/ending.mjs`, #805): `{kind, seatId, reason, seats: [{seatId, outcome, reason}]}`, kind `won`, `draw`, `eliminated`, `conceded`, `timed-out` or `ended`; `reason`/`endedBy` unchanged; documented in `docs/ui-lane/gameplay-anchor.md` ("How the game ended"). Play consumes it next (ROB-166's banner and record). |
 | 8 | Codex · Play → Workshop | Settings' Play card is extracted to `crankmagic-settings-play.js` in PR #754; general Settings calls its registration | Separate ownership while preserving the existing page and preferences | On main `73f55b35`; Workshop keeps `crankmagic-settings.js` |
 | 9 | Codex · Play → Engine | Release ROB-99 slice 1 from main `73f55b35` after Rob's look | Shared desktop header, Camera and drawers; proof and labeled screenshots in `docs/play-overhaul/ROB-99-SLICE-1.md` | On staging since main 5f6ea9cc (`release/cloud-staging` b99e2199, Oct 18) and in every staging release since; on production with 5f6ea9cc (Rob's go, Oct 18) |
 | 2 | UI | The lobby's countdown to start by itself once every seat is connected, has a deck and is ready, with no Start press; the host's Cancel stays, and a seat's Not ready stops it | The brief's lobby ("No Launch button: when every human is ready, a 10-second countdown starts, cancelable by the host"). Today the lobby reads "Launches when all are ready · n to go" and the host presses Start | `game/room/table.mjs`, where `ready` is taken: begin the countdown when nothing blocks. The lobby already follows `phase: countdown` | |
@@ -172,7 +204,64 @@ other lane answers in the last column.
 | 1 | Engine | The board to show the monarch (CR 725): the view's `state.players[i]` now carries `monarch: true` for the monarch, public to every seat, and no key for anyone else; the history says "Maya became the monarch" | Ginger, Queen of Sweets and Tamiyo, Upriser Crowned make their controller the monarch; the monarch draws a card at their end step, and a creature's combat damage to them makes its controller the monarch -- a player should see who holds it | The engine lane built it (Train E, the `monarch` branch); `docs/ui-lane/gameplay-anchor.md` lists the field. For the UI lane to show |
 | 2 | Engine | A switch in the host's Table rules (`crankmagic-table.js`): *The player who goes first skips their first draw*, on unless the host turns it off. The table's view carries `rules.skipFirstDraw` (`true` by default); the host sends it with the other rules, `POST .../rules {skipFirstDraw: false}`, refused once a seat is ready like the others. It matters only at a two-seat table: in a game of three or four nobody skips (CR 103.8c), so the switch can be shown only there | Rob, 2026-10-12: "this can be toggled off in game setup by the lobby owner". CR 103.8a as a house rule: with it off, the first player of a two-player game has a draw step on turn 1 | The engine lane built the rule, the table's field and the room's pod (`claude/first-draw-step`; `docs/ui-lane/gameplay-anchor.md`). For the UI lane to show: Linear ROB-148 |
 | 3 | Engine → Play | The deck page's readiness line (`crankmagic-table.js`, `readinessText`) to say which of a deck's cards "are on the list for the next wave" (Rob's decision 5 of 2026-10-14): `POST /api/tables/known` now answers `{unknown, listed}`, `listed` being the names just counted (absent when nothing could be recorded, so say nothing then). And the hub to ask `{decks: [[names], ...]}`, each deck its own list, instead of one merged `{names}`, so each deck is counted once; the answer's `unknown` is the same union as before | Card load step 1 (Linear ROB-86, PR #776): which cards players want, ranked for the next wave. Until the hub sends `decks`, its questions count as asked and in no deck; a seat's deck refused at a table counts as a deck already. Filed for Play as Linear ROB-159 | `crankmagic-table.js`, `unknownOf` and `readinessText` | |
+| 4 | Engine → Play | The board to label a candidate and offer "report a wrong card" (Rob's decision 2): a card in the view with `candidate: true` (`state.players[i].zones.<Zone>.cards[j]`, said only where the seat can name the card) shows a "Candidate" mark, and its link sends `POST /api/tables/:id/report {cardId, note}` (201 `{report}`; 404 when the card is not a candidate the seat can see; 409 at a table that is not a playtest table, or past its 200 reports) | Card load step 5: playtest tables seat the card compiler's candidates, which no wave has reviewed yet, so a player knows which cards may play wrong and can say so. Reports reach the triage loop in the game's record (`cardReports`) | |
+| 5 | Engine → Workshop | When a library or deck is saved, ask `POST /api/tables/known {decks: [[names], ...]}` for its cards, as the hub already does for readiness (Rob's decision 3) | Card load step 5: the answer records every card no table can play on the demand list (step 1), which the backstop loads first (`game/tools/engine-compile.mjs --demand`) and the waves review first (`game/tools/card-waves.mjs`). Nothing else changes for the player; the answer's `unknown` and `listed` are the readiness line's own. The save hook is in `cloud/library.mjs`, Workshop's file | |
 | 1 | Deck intelligence | A headless batch entry point that plays N seeded games with house pilots and returns facts as data: `playPod({pod, seeds, cards, turnLimit}) → [{seed, turns, winner, reason, refused, perSeat: {life, lossReason, commanderDamage, turnsTaken}, perTurn: [{turn, landsInPlay, manaProduced, cardsDrawn}]}]`, deterministic per seed, with a stated budget per game; the room already plays a whole all-house game in one call (`game/room/room.mjs` `startRoom`, as `tests/engine-room-games.mjs` does) | ROB-116's calibration harness: the same hundred played in the engine and in the simulator, the distributions compared (turn of first lethal attack, mana by turn, cards drawn); the audit `docs/engine/sim-model-audit.md` (ROB-84) found no such runner exists and the deck lane never edits `game/**`. Asked on ROB-11, 2026-10-18 | |
+
+## 2026-10-20: Play ready for a 1-person, 3-AI play test; main a9bec38f on staging (a Claude session on Personal-HP)
+
+Rob, Oct 19: *"Evaluate how ready the Play capability is for me to play with all the features in a 1 human v 3 AIs …
+not the refinements, just fully functional"*, then *"merge when green"* and *"keep working through the other needed fixes
+to give me a green light to play test"*. This session read, measured and released. Two sessions it proposed made the
+fixes.
+
+- **Branch and commits:**
+  - main 0cb93288 (#792, ROB-164, the AI seats' optional picks) and main a9bec38f (#793, ROB-163, Full view's long
+    choices). Each was a merge commit on a green `suites` run of its exact head, with the base unmoved: runs 39334837399
+    and 39372898353.
+  - Staging: `release/cloud-staging` e504f220 → ccbaa386 (main 0cb93288) → 027c3e67 (main a9bec38f), each by
+    `tools/release-staging.sh` from a detached `origin/main` checkout. Production is unchanged at 5f6ea9cc.
+- **Proven, and the command for each:**
+  - **Every card of the six staging decks is defined,** and all 904 of their scenarios pass. The checks were scratch
+    scripts over `tests/fixtures/shared-staging-decks.json` and `tableCards`.
+  - **Headless games:** 25 games of the six decks with Normal AI seats finished, with 0 refused AI answers. Replays were
+    identical and no seat was sent another's cards (`tools/fuzz-live.mjs --replay --leaks`).
+  - **Through the real board in Chromium,** with the GameTable carried in-process as `tests/uat/real-deck-game.mjs`
+    carries it, on main 0cb93288:
+    - three games of one person against three Normal AIs, each seat's deck chosen from the lobby's Shared decks, played
+      to the end through the board's own controls (38, 34 and 41 turns);
+    - a reload mid-game returned the same revision and the same pending question;
+    - 172–226 frames per game sent none of the AIs' cards;
+    - the AIs ended with 7–11 lands;
+    - `real-deck-game.mjs` itself passed 13 checks, a natural end at turn 36.
+  - **Cards that draw beside another effect, in the six decks:** 27 engine-level probes, all correct, so ROB-17 isn't
+    reproduced by any of these cards. Four scenarios don't assert one of their card's effects: Protege's Awakening's
+    draw, Steady Progress's and Tezzeret's Gambit's proliferate, and Freyalise's −6. That's ROB-94's to add.
+  - **Before each staging push:** release-acceptance 22 and play-e2e 42. Workers Builds `crankmagic-staging` succeeded
+    on ccbaa386 and on 027c3e67.
+  - **Read back, Oct 20:** `node tools/staging-check.mjs --expect a9bec38f` exits 0. `version.json` and both pages say
+    a9bec38f (cloud-staging, 2026-10-20), and `/api/me` answers as the token's own `service:e07b4fed5ab9`.
+    `wrangler deployments status --name crankmagic-staging` shows version 30409bec at 100% since 06:13:41 UTC.
+  - **Personal-HP can read staging now.** Rob made a second Access service token, `crankmagic-staging-checks-hp`, in
+    staging's Session checks policy, and saved it in the Windows user environment as `CF_ACCESS_CLIENT_ID` and
+    `CF_ACCESS_CLIENT_SECRET`. How a session started before then reads them is in `tools/staging-check.mjs`'s header.
+    Wrangler here is signed in to Rob's account (OAuth) for the deployment reads.
+- **Not proven:**
+  - The deployed bytes against the dry run.
+  - A game with Rob at the table.
+- **Outstanding for the play test** (none blocks it; Rob plays on desktop, at a table started after 027c3e67, because
+  `pilotPicks` is a new match's pod key):
+  - **Claude seats in production** need `ANTHROPIC_API_KEY` on the production Worker (ROB-95; Rob's step). Easy and
+    Normal work everywhere, and staging offers Claude.
+  - **Rough, and known:**
+    - a priority stop on every AI spell and trigger (ROB-28, ROB-102);
+    - same-named attackers unnumbered in Declare blockers (a Krenko swarm);
+    - an X spell offered only once its lands are tapped for mana (ROB-74);
+    - the loss banner reads "ended early: every person had left the game";
+    - no rematch;
+    - away more than five minutes concedes;
+    - a long pick list scrolls back to its top after each pick (ROB-163's note);
+    - the phone in portrait is drawn sideways (ROB-18, #766).
 
 ## 2026-10-19: the engine lane, reconciled with Linear (a Claude cloud session; Linear ROB-71)
 
@@ -185,19 +274,120 @@ other lane answers in the last column.
     corrected it at 16:39 that day and ROB-86 records Rob's approval of 0006 as `card_demand`: **0006 ROB-86, 0007
     ROB-127, 0008 ROB-88, next free 0009.** The lanes table and the section below now say so.
   - **#776 (ROB-86)** was green on its head d2502ac8 (Actions run 39177742030) but conflicted with `main` in this file
-    after #781 and #783. This branch merges it with `main`; its PR supersedes #776 and carries its commits unchanged.
+    after #781 and #783. #784 merged it with `main` and carried its commits unchanged: **step 1 is main 78dc2a47**
+    (Oct 19, merge commit, green `suites` run 39213237634 of the exact head; GitHub shows #776 merged with it).
   - **Staging** serves main 62900176: `node tools/staging-check.mjs --expect 62900176` passed on Oct 19 with the
     staging Access service token. ROB-157 is narrower than filed: the Cloudflare API refuses this container ("Missing
     Authorization header"), so no D1 write and no check of deployed bytes, but the Access read-back works.
   - **Unreleased on `main`:** #775, #777 (card status, budgets), #779, #781, #783, and #741, #743, #751, which Rob merged
     on Oct 19 between 01:52 and 03:41 UTC (Play lane files changed at his request by the Personal-HP session; ROB-156,
     ROB-161, ROB-162, each noted). The next staging release carries them with step 1.
-  - **Migration 0006 on staging D1:** approved by Rob for the file whose sha256 begins `a4bba8a0e313adde` (ROB-86),
-    not applied; ROB-158 waits on ROB-157.
+  - **Migration 0006 on staging D1:** approved by Rob for the file whose sha256 begins `a4bba8a0e313adde` (ROB-86);
+    applied later the same day (below).
   - **Other lanes' close-out PRs still open:** #780 (ready) and #782 (draft, the UI lane's handoff). Both edit this file;
     they are their lanes' to merge.
-- **The engine queue, in order:** land step 1; step 2 (ROB-87, the sentence library and calibration) as this lane's
-  next PR; ROB-144 (the release verifier for the Babylon renderer, which holds Play's #767); Requests row 1 (`playPod`,
+- **Step 2 (ROB-87), merged as main 40d14519 (#785), Done; nothing served, so no staging release:** `game/engine/cards/sentences.mjs` (the library: 5,650 templates
+  from 2,407 cards) and `game/tools/sentence-library.mjs` (the calibration). Each card held out: 520 of 2,470 translated
+  from the others' templates alone, 519 passed their own scenarios (99.8%, lower bound 98.9%); minimum count 1. Report
+  `docs/engine/sentence-calibration-2026-10-19.md`; plan `docs/engine/plan-card-load-program.md`, "Step 2, measured".
+  Proof: `tests/sentence-library.mjs` (63), `breaks-sentence-library.py` (21 of 21).
+- **Staging and D1, later on Oct 19.** The step 1 session released main 78dc2a47 to staging at 07:57 UTC on Rob's go
+  (`release/cloud-staging` 704a7ca7). Rob fixed ROB-157 at about 17:05 UTC: the environment's `*.cloudflare.com` secret
+  had the header name `ACCESS_INVITE_TOKEN`, so Cloudflare never got an `Authorization` header. This session then proved
+  the deployed bytes (version db1962ce byte-identical to the dry run of 704a7ca7; 27 bindings unchanged) and applied
+  migration 0006 to staging D1 (ROB-158; bookmark before the write
+  `000000d6-00000000-00005109-32543247fde961f32cebcc7da1aeee01`). From a cloud session, `curl` and wrangler reach the
+  API through the proxy, which adds the credential; Node's own `fetch` needs `NODE_USE_ENV_PROXY=1` and
+  `NODE_EXTRA_CA_CERTS=/root/.ccr/ca-bundle.crt`.
+- **The next session starts here.** This one stopped after #785, per the card load plan's "Running a lane". Step 3
+  (ROB-88: the compiler, the scored index, `card_candidates` as migration 0008) starts from its kickoff prompt in
+  `docs/engine/plan-card-load-program.md`, on `createLibrary`/`translate` (game/engine/cards/sentences.mjs) and the
+  minimum count (game/tools/sentence-library.mjs).
+- **Step 3 (ROB-88), on Rob's "keep adding cards to the engine":** `game/tools/card-compiler.mjs` runs the sentence
+  library on every undefined Commander card. **2,429 candidates** (`data/engine/candidates.json`): each translated whole
+  from calibrated templates, compiled, its oracle text, and its smoke game played. 12,320 more cards are one sentence
+  short; `docs/engine/card-compiler-2026-10-19.md` ranks the sentences that would complete them. Candidates are stored in
+  the repository, not D1 (0008 stays for step 5's save-time compiles); no table seats them until the next PR. Proof:
+  `tests/card-compiler.mjs` (29), `breaks-card-compiler.py` (10 of 10).
+- **Step 3 merged** as main bdc64567 (#789; green `suites` run 39311878672 of the exact head 640b2664, base unmoved).
+- **Step 5, first part (ROB-91), on Rob's "the loader capability … once finished with your current series":** playtest
+  tables seat the 2,429 candidates, labeled (Rob's decision 2). Their definitions reach the Worker as
+  `game/engine/cards/candidates.mjs`, generated by `game/tools/engine-candidates.mjs`. A playtest table's new matches
+  say `candidates` in their pod; every other table refuses a candidate by name. Each object made from one says
+  `candidate: true`, which a seat's view shows only where the seat can name the card. `POST /api/tables/:id/report
+  {cardId, note}` takes "report a wrong card" and hands the reports over in the game's record (`cardReports`). The board's
+  label and link are Play's: Requests, Engine → Play 4. Proof: `tests/table-candidates.mjs` (41),
+  `breaks-table-candidates.py` (24 of 24). **Merged** as main c42416e5 (#790; green `suites` run 39322411012 of the exact
+  head bbc76e81, base unmoved). Its first run had failed on three suites: four other-lane breaks anchored on lines it
+  changed (re-anchored, each caught again), the generated module's printed card names against the spelling rule
+  (exempt, as `definitions.mjs` is), and `table-tabletop`, which timed out once waiting on a board module in the browser and passed on the next commit's run,
+  which changed nothing the board reads.
+- **The loader, finished (ROB-88, ROB-90, ROB-91, ROB-92), on Rob's word that this body of work finishes now.** **Merged**
+  as main d7eadfe1 (#791; green `suites` run 39437504326 of the exact head 6f66c15d, base 7e32df0a unmoved, main merged
+  in first). The plan's "The loader, finished" says what each path costs and what makes it right. In short:
+  - **Spell composition:** 2,643 zero-token candidates (was 2,429), calibration still 545 of 546.
+  - **Step 4:** the gap-only backstop (`engine-compile.mjs`). It writes only the sentences the library lacks, and runs a
+    held-out sample with `--held-out 200`. Built, not run: it needs Rob's key and `--yes`.
+  - **Step 5's second part:** the demand list is the queue (`--demand`), and the backstop's 25 provisional cards seat at
+    playtest tables. Workshop's save asks `known` (Requests, Engine → Workshop 5). This departs from the plan's
+    Worker-side backstop and D1 store; Rob decides on migration 0008.
+  - **Step 6:** the waves tool (`card-waves.mjs`): review sheets demand first, drafted scenarios, promotion.
+- **ROB-164, the AI seats take what an "up to" or a search is for** (#792, `claude/engine-pilot-picks`; a Personal-HP session
+  started by the Play readiness evaluation, Oct 19, inside the engine lane's files). Every AI seat (L0, L1 at Easy and
+  Normal, the LLM seat's L1) answered a choice whose least answer is none with none: Evolving Wilds found no land,
+  Cultivate nothing, proliferate nothing. The house pilot now has a rule for each (`picks`,
+  `game/engine/pilots/house-pilot.mjs`):
+  - a library search takes as many as it may. A land search takes the lands of the colors its hand and commanders need
+    and it lacks (a nonbasic by the mana it makes); any other search takes the costliest card it could cast by its next
+    turn, or a land when it has none to play. Diabolic Tutor and Gamble no longer take the first card offered.
+  - a "may" from its hand or graveyard is answered the same way (Chulane's land); Brainstorm's put-back is answered as
+    before.
+  - proliferate takes its own counters that help it and another's that hurt them, never an opponent's +1/+1 or loyalty.
+  - any other "any number" takes the permanents and players on its side (Peregrine Drake untaps its own lands).
+  - **Replays.** This changes no rules. The room tapes no AI answer, so the change rides on a pod key, `pilotPicks`. The
+    table asks for it on new matches, and the room keeps it with the match and hands it to every AI seat's pilot. A match
+    launched before replays as it was played. The room's facts now carry a card's `colors` and the mana it `makes`.
+  - **Measured** with `tools/fuzz-live.mjs`, which gained `--lands <n>`, `--no-picks` and the shared decks file (80
+    seeded all-AI games at Normal, the six staging decks in two sets of four, seeds 1-10, every game clean). Lands in
+    play after a seat's sixth turn went from 4.81 to 5.08: D1-D4 4.79 to 5.28, D3-D6 4.83 to 4.88. The gain is in the
+    ramp decks (Kiora +0.5 and +0.4, Chulane +0.5).
+  - **Proof:** `tests/engine-pilot-picks.mjs` (116) and `breaks-pilot-picks.py` (58 of 58). The touched suites pass:
+    `engine-room-games` (58), `room-seat-pilots` (15), `game-table` (172), `engine-house-pilot` (19) and the anchors.
+  - **Not done:** a tutor doesn't choose by the commander's plan, and surveil, scry and explore still keep everything on
+    top. On staging since main 0cb93288 (`release/cloud-staging` ccbaa386), and in a9bec38f after it, for tables launched since.
+- **Staging releases by this session, Oct 20** (each by `tools/release-staging.sh` from a detached `origin/main`, with
+  release-acceptance 22 and play-e2e 42 before the push, `tools/staging-check.mjs --expect <commit>` after, and the
+  deployed `play-worker.js` compared byte for byte with `wrangler deploy --dry-run` of the release commit):
+
+  | main | `release/cloud-staging` | Deployed version | `play-worker.js` |
+  | --- | --- | --- | --- |
+  | a9bec38f (released from Personal-HP) | 027c3e67 | 30409bec | 5,355,003 bytes, sha256 `188243476918c43d…`, identical |
+  | d7eadfe1 (#791) | e973fcc8 | f0cedf20 | 5,488,087 bytes, sha256 `80645034c2c8a1a4…`, identical |
+  | 17a1218c (Play's #797, #798) | e884320e | 5a74e443 | the same bytes as d7eadfe1's: those PRs change only the board's static files |
+  | 27fba609 (Play's #799) | 8636fef0 | f42fa2af | the same bytes again: #799 changes only the board's static files |
+
+  Each is announced in ROB-11. Production is unchanged at 5f6ea9cc.
+- **The handoff (AGENTS.md, four things).** This session stops here, at Rob's word that this body of work finishes now.
+  - **Branch and commits:** `claude/exciting-sagan-qe5yuf`. On main: #789 bdc64567, #790 c42416e5, #791 d7eadfe1; staging
+    as in the table above.
+  - **Proven, and the command for each:**
+    - `node tests/sentence-library.mjs` (77), `tests/card-compiler.mjs` (29), `tests/table-candidates.mjs` (43),
+      `tests/card-waves.mjs` (22) and `tests/engine-compile.mjs` (76).
+    - The breaks files `breaks-sentence-library.py` (29), `breaks-card-compiler.py` (10), `breaks-table-candidates.py`
+      (27), `breaks-card-backstop.py` (12) and `breaks-card-waves.py` (13), every break caught.
+    - Calibration: `node game/tools/sentence-library.mjs` gives 545 of 546 held-out cards passing.
+    - Candidates: `node game/tools/card-compiler.mjs` gives 2,643.
+  - **Assumed, not proven:**
+    - the backstop's pass rate and cost per card, until Rob runs
+      `node game/tools/engine-compile.mjs --yes --held-out 200 --max-cost 5`;
+    - how a candidate plays in a person's game, until a playtest reports one (the "report a wrong card" route is live,
+      and Play's visible label is not).
+  - **Outstanding, with the reason:**
+    - **ROB-90:** Rob's held-out sample (his key).
+    - **ROB-91:** Rob's call on a batch backstop instead of the Worker (migration 0008 then free to reassign); Workshop's save
+      asking `known` (Requests, Engine → Workshop 5); Play's label and report link (Engine → Play 4).
+    - **ROB-92:** the first wave, from staging's demand list once decks have fed it.
+- **The engine queue, in order** (for the next engine session): a small wave on the top missing sentences (Swampwalk and the rest, each completing 13 to 23 cards); then ROB-144 (the release verifier for the Babylon renderer, which holds Play's #767); Requests row 1 (`playPod`,
   for ROB-116); the ROB-134 routes; ROB-94's remaining steps; ROB-74, ROB-78, ROB-149.
 
 ## 2026-10-18: main 5f6ea9cc on staging and in production (Rob: "release it to staging", then "release it to production")

@@ -23,8 +23,9 @@
  *   Coach     the chat panel over the right edge (the shell): prompts, a stub reply that says so, Shift+Enter,
  *             a draft kept through a view, Clear chat, ⋯ kept open and focused through the reply, Escape; from the
  *             pane, Tools and Full screen's rail.
- *   Phones    Focus only: the 52px rail, the 112px seat strip, the pill; a seat tapped and ‹ ›; snapping back when
- *             asked; ✋ at a readable size; held upright, the surface turned a quarter; back at a desk, the desk board.
+ *   Phones    Focus only, native either way up (ROB-18): the 52px rail, the seats (a 110px column sideways), the pill;
+ *             a seat tapped and Camera's ◀ ▶; snapping back when asked; ✋ a drawer from the bottom, at a readable size;
+ *             held upright, never turned; back at a desk, the desk board.
  *   Refused   an answer the room refuses is said in words, and the board takes the room's view.
  *   Dropped   a socket that closes is reopened; the other player is told who dropped, and it clears when
  *             they are back.
@@ -177,6 +178,9 @@ const views = (email) => frames[email].map((f) => JSON.parse(f)).filter((f) => f
 try {
   /* THE TABLE, set up through the server as the lobby would: Rob hosts, Maya joins, both ready, it starts. */
   await call("/table/create", ROB, {tableId: TABLE, hostName: "Rob", seats: [{kind: "human", name: "Maya"}]});
+  /* Every spell asked about, as before ROB-102: this suite plays the respond-to-a-spell board (Resolve <spell>, the stack
+     box), which the stack passed for a player with no answer would skip. The rule's own proof is tests/game-table.mjs. */
+  await call("/table/rules", ROB, {passStack: false});
   await call("/table/join", MAYA, {code: (await call("/table/invite", ROB, {seatId: 1})).invite.code});
   await call("/table/deck", ROB, {seatId: 0, deck: deck("Rob", "Forest", ROB_DECK)});
   await call("/table/deck", MAYA, {seatId: 1, deck: deck("Maya", "Island", MAYA_DECK)});
@@ -789,34 +793,61 @@ try {
   resume();
   await waitText(active.page, ".cm-board-waiting", new RegExp(`Waiting on ${active === rob ? "Maya" : "Rob"}`), 10000);
   ok(true, "and the board passed priority for them, unasked");
-  /* THE DRAW, BY ITSELF (Rob, 2026-10-09: "Draw phase should be resolved automatically by drawing a card and progress to
-     the next screen"; it was its own beat, Draw a card, item 13). Turn 2's draw step draws the other player's card
-     unasked -- no button, no click -- and the turn goes on to the first thing there is to do. */
+  /* DRAW CARD (Linear ROB-102 and ROB-24): the Oct 15 playtest's confirmed decisions reverse Oct 9's draw by itself
+     ("label the pending draw action Draw card"). Turn 2's draw step waits for the other player: their button reads Draw
+     card, their library is lit as the same button, and their hand is unchanged until they say so. The library clicked
+     where a pointer reaches it draws one card, and the turn goes on to the first thing there is to do. */
   await waitText(other.page, ".cm-board-turn", /Turn 2/, 20000);
-  await other.page.locator(".cm-board-hand .cm-bcard.is-bright").first().waitFor({timeout: 20000});
+  const drawButton = other.page.locator(".cm-stage-top [data-action=board-draw]:not([disabled])");
+  await drawButton.waitFor({timeout: 20000});
   const otherViews = views(other === rob ? ROB : MAYA), otherSeat = otherViews.at(-1).seat;
-  const handIn = (turn) => {const v = otherViews.filter((x) => x.state.turn === turn).at(-1); return v ? v.state.players[otherSeat].zones.Hand.count : null;};
-  ok(!otherViews.some((v) => v.decision && v.decision.kind === "draw") && await other.page.locator("[data-action=board-draw]").count() === 0 && handIn(2) === handIn(1) + 1
-    && (await text(other.page, ".cm-board-step")).trim() === "Main 1",
-    `turn 2's draw happens by itself: nobody is asked Draw a card, the hand is one larger (${handIn(1)} → ${handIn(2)}), and the board is on to Main 1`);
-  await shot(other.page, "draw-by-itself-" + (other === rob ? "1400" : "1280"));
+  /* Read afresh each time: `views` is a copy of the frames so far. */
+  const handNow = () => views(other === rob ? ROB : MAYA).at(-1).state.players[otherSeat].zones.Hand.count, handBefore = handNow();
+  ok((await drawButton.innerText()).trim() === "Draw card" && otherViews.at(-1).decision && otherViews.at(-1).decision.kind === "draw"
+    && otherViews.at(-1).state.phase === "DRAW" && await active.page.locator("[data-action=board-draw]").count() === 0,
+    "turn 2's draw step waits for its player: their button reads Draw card, and the other board has nothing to draw");
+  await shot(other.page, "draw-card-" + (other === rob ? "1400" : "1280"));
+  const library = other.page.locator("button.cm-bcard[data-action=board-draw]");
+  ok(await library.count() === 1 && /^Draw card: your library, \d+$/.test(await library.getAttribute("aria-label")),
+    `and their library is the same button, lit ("${await library.getAttribute("aria-label")}")`);
+  const reach = await library.evaluate((el) => {const r = el.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+    const hit = document.elementFromPoint(x, y); return {x, y, reached: !!hit && el.contains(hit)};});
+  ok(reach.reached, `which a pointer reaches where it is drawn (${Math.round(reach.x)}, ${Math.round(reach.y)})`);
+  await other.page.mouse.click(reach.x, reach.y);
+  /* and the pointer taken off the board, or the hand fanned later opens with its last card under it, hovered upright */
+  await other.page.mouse.move(1, 1);
+  await waitText(other.page, ".cm-board-step", /^\s*Main 1\s*$/, 20000);
+  await other.page.waitForFunction(() => !document.querySelector("[data-action=board-draw]"), null, {timeout: 10000}).catch(() => {});
+  ok(handNow() === handBefore + 1 && await other.page.locator("[data-action=board-draw]").count() === 0,
+    `one click on the library draws one card (${handBefore} → ${handNow()}), and the board is on to Main 1`);
   ok(/^Turn 2 · You \(your 1st\)$/.test((await text(other.page, ".cm-board-turn")).trim()), `the game's turn 2 is the other player's first: "${(await text(other.page, ".cm-board-turn")).trim()}"`);
   ok(await heard(other === rob ? ROB : MAYA, "sfx/sfx_event_draw.mp3"), "and the draw is heard");
   /* Both boards follow into turn 2, and the room asked only where there was something to do (items 10 and 11). */
   await waitText(rob.page, ".cm-board-turn", /Turn 2/);
   await waitText(maya.page, ".cm-board-turn", /Turn 2/);
   const askedIn = new Set([...views(ROB), ...views(MAYA)].filter((v) => v.decision && v.state.turn >= 1 && v.state.turn <= 2).map((v) => v.state.phase));
-  ok(["MAIN1", "MAIN2", "END_OF_TURN"].every((p) => askedIn.has(p)) && [...askedIn].every((p) => ["MAIN1", "MAIN2", "END_OF_TURN"].includes(p)),
-    `Next step walks the steps into turn 2, on both boards, and the room asked someone only where there was something to do, and at the end of their own turn (${[...askedIn].join(", ")}); the rest passed by themselves`);
+  ok(["DRAW", "MAIN1", "MAIN2", "END_OF_TURN"].every((p) => askedIn.has(p)) && [...askedIn].every((p) => ["DRAW", "MAIN1", "MAIN2", "END_OF_TURN"].includes(p)),
+    `Next step walks the steps into turn 2, on both boards, and the room asked someone only where there was something to do, for Draw card, and at the end of their own turn (${[...askedIn].join(", ")}); the rest passed by themselves`);
   /* X8c, HOLD PRIORITY / YIELD: at the turn's end the switch puts itself away, and on the next player's turn the same
      switch is Yield this turn; Tools says what it does, and that until then you hold priority. */
   ok((await text(active.page, "[data-action=board-skip]")).trim() === "Yield this turn", "at the turn's end Skip to end puts itself away, and on the next player's turn it is Yield this turn");
   ok((await text(other.page, "[data-action=board-skip]")).trim() === "Skip to end", "while on that player's own board it is still Skip to end");
   await utility(active.page,"board-tools");
   const yieldHelp = await text(active.page, "#cm-board-tools .cm-board-yield-help");
-  ok(new RegExp(`Yield this turn passes your priority for you through the rest of ${active === rob ? "Maya" : "Rob"}'s turn`).test(yieldHelp) && /you hold priority/.test(yieldHelp),
-    `Tools says what yielding does, and that until then you hold priority ("${yieldHelp.trim().slice(0, 90)}…")`);
+  ok(new RegExp(`Yield this turn passes all your priority for the rest of ${active === rob ? "Maya" : "Rob"}'s turn`).test(yieldHelp) && /required decisions/.test(yieldHelp) && /after the room acknowledges/.test(yieldHelp),
+    `Tools explains room Yield, required decisions, and acknowledged cancellation ("${yieldHelp.trim().slice(0, 90)}…")`);
   await utility(active.page,"board-tools");
+  /* ROB-28: cross the real GameTable socket seam, not only the controlled
+     acknowledgment fixture. The other person still owns this main-phase choice. */
+  const yieldingEmail = active === rob ? ROB : MAYA, peerEmail = other === rob ? ROB : MAYA;
+  await active.page.locator(".cm-stage-top [data-action=board-skip]").click();
+  await waitText(active.page, ".cm-stage-top [data-action=board-skip]", /Stop yielding/, 10000);
+  eq(views(yieldingEmail).at(-1).yielding, true, "the real room acknowledges Yield from the board");
+  ok(!views(peerEmail).at(-1).yielding, "the other person's view does not disclose the yield policy");
+  await active.page.locator(".cm-stage-top [data-action=board-skip]").click();
+  await waitText(active.page, ".cm-stage-top [data-action=board-skip]", /Yield this turn/, 10000);
+  eq(sent[yieldingEmail].map(f => JSON.parse(f)).filter(f => f.type === "yield"), [{type:"yield",on:true},{type:"yield",on:false}],
+    "Start and Stop reach the real room as explicit policy frames");
   eq(await rob.page.locator(".cm-stage-top .cm-board-ribbon li.is-now").count() + await maya.page.locator(".cm-stage-top .cm-board-ribbon li.is-now").count(), 2, "the step ribbon in each strip lights exactly one step, on every turn");
 
   /* CARD SIZE: the app's slider, in Tools; ⌘/Ctrl − steps it. */
@@ -1054,12 +1085,14 @@ try {
     "a way of playing the room refuses is sent once at that point of the game, and said nowhere");
   robRoom.prefer = robPrefer;
   /* HOLD PRIORITY AFTER I CAST (Tools): holding stays the caster's choice (CR 117.3c), kept on this device and sent with
-     the cast. Rob passes Maya's upkeep and draw step; in her main phase she turns it on and casts a creature: she is asked again first,
+     the cast. Rob passes Maya's upkeep, and she says Draw card in her draw step; in her main phase she turns it on and casts a creature: she is asked again first,
      Resolve and its name, and then Rob, who holds an instant, may respond. */
   const holdCast = maya.page.locator(".cm-board-hand .cm-bcard.is-bright[aria-label*='Cast']").first();
   for (let i = 0; i < 40 && !(await holdCast.count()); i += 1) {
     const robPass = rob.page.locator(".cm-stage-top [data-action=board-pass]:not([disabled])");
     if (await robPass.count()) await robPass.click();
+    const mayaDraw = maya.page.locator(".cm-stage-top [data-action=board-draw]:not([disabled])");
+    if (await mayaDraw.count()) await mayaDraw.click();
     await rob.page.waitForTimeout(250);
   }
   await holdCast.waitFor({timeout: 20000});
@@ -1445,17 +1478,34 @@ try {
   await maya.page.waitForFunction(() => !/Dropped/.test(document.querySelector(".cm-board-tile[data-seat='0'] .cm-board-tile-flag")?.innerText || ""), null, {timeout: 20000});
   ok(true, "and once he is back, Maya's board stops saying so");
 
-  /* PHONES: Maya's screen becomes a phone held sideways. Focus only: the rail, her board, the seat strip, the pill. */
+  /* PHONES (Linear ROB-18; Rob, Oct 18: "the upright Focused phone layout"): Maya's screen becomes a phone held sideways.
+     Focus only: the rail along the top, the seats a column at the right, the pill, her battlefield, what she is asked. */
   await chooseView(maya.page,"table");   /* her desk's view, which the phone must leave be */
   await maya.page.setViewportSize({width: 844, height: 390});
   await maya.page.locator("#cm-board[data-phone=landscape] .cm-phone-rail").waitFor({timeout: 10000});
   const phoneGeo = await maya.page.evaluate(() => {
     const w = (q) => Math.round(document.querySelector(q).getBoundingClientRect().width), board = document.getElementById("cm-board").getBoundingClientRect();
-    return {rail: w(".cm-phone-rail"), seats: w(".cm-phone-seats"), board: [Math.round(board.width), Math.round(board.height)], views: document.querySelectorAll("#cm-board [data-action=board-view]").length,
+    const h = (q) => Math.round(document.querySelector(q).getBoundingClientRect().height);
+    return {rail: h(".cm-phone-rail"), seats: w(".cm-phone-seats"), board: [Math.round(board.width), Math.round(board.height)], views: document.querySelectorAll("#cm-board [data-action=board-view]").length,
       sideways: document.documentElement.scrollWidth - document.documentElement.clientWidth, seatCount: document.querySelectorAll(".cm-phone-seat").length};
   });
-  ok(phoneGeo.rail === 52 && phoneGeo.seats === 112 && phoneGeo.board[0] === 844 && phoneGeo.board[1] === 390 && phoneGeo.sideways === 0, `on a phone held sideways: the 52px rail, the 112px seat strip, the board the whole screen (${phoneGeo.board.join("×")})`);
+  ok(phoneGeo.rail === 52 && phoneGeo.seats === 110 && phoneGeo.board[0] === 844 && phoneGeo.board[1] === 390 && phoneGeo.sideways === 0, `on a phone held sideways: the 52px rail along the top, the seats a 110px column, the board the whole screen (${phoneGeo.board.join("×")})`);
   ok(phoneGeo.views === 0 && phoneGeo.seatCount === 2, "Focus is the only view, and the strip holds every seat");
+  /* The battlefield and its lands at full width, scrolling within their own frame down to the piles, the pill and what
+     she is asked staying where they are. */
+  /* scrolled as a person scrolls it, by the wheel over it: a script's scrollTop moves even a frame that can't scroll */
+  const fieldBox = await maya.page.locator(".cm-phone-battlefield").boundingBox(), pillTop = (await maya.page.locator(".cm-phone-pill").boundingBox()).y;
+  await maya.page.mouse.move(fieldBox.x + fieldBox.width / 2, fieldBox.y + fieldBox.height / 2);
+  for (let i = 0; i < 6; i += 1) {await maya.page.mouse.wheel(0, 400); await maya.page.waitForTimeout(80);}
+  const scrolled = await maya.page.evaluate((pill) => {
+    const field = document.querySelector(".cm-phone-battlefield"), lib = field.querySelector(".cm-board-pile[data-zone=library]").getBoundingClientRect(), box = field.getBoundingClientRect();
+    const hit = document.elementFromPoint(lib.left + lib.width / 2, Math.min(lib.top + lib.height / 2, box.bottom - 4));
+    return {scrolls: field.scrollTop > 0, reached: !!hit && !!hit.closest(".cm-board-pile[data-zone=library]"),
+      still: Math.round(document.querySelector(".cm-phone-pill").getBoundingClientRect().top) === Math.round(pill)};
+  }, pillTop);
+  await maya.page.evaluate(() => {document.querySelector(".cm-phone-battlefield").scrollTop = 0;});
+  await maya.page.mouse.move(1, 1);
+  ok(scrolled.scrolls && scrolled.reached && scrolled.still, `her battlefield scrolls under the wheel within its frame, down to her library, the pill staying put (${JSON.stringify(scrolled)})`);
   const badge = Number(await text(maya.page, ".cm-phone-badge"));
   const mayaHand = views(MAYA).at(-1).state.players[1].zones.Hand.count;
   eq(badge, mayaHand, `✋ carries the hand's count (${badge})`);
@@ -1464,12 +1514,15 @@ try {
   ok(await maya.page.locator(".cm-phone-center .cm-seatboard[data-seat='0']").count() === 1, "a seat tapped puts that board on the screen, and the pill says whose");
   await maya.page.click(".cm-phone-pill [data-action=board-focus]");
   await maya.page.locator(".cm-phone-center .cm-seatboard.is-you").waitFor();
-  await maya.page.click("[data-action=board-rotate][data-by='1']");
+  await maya.page.click(".cm-stage-camera [data-action=board-camera]");
+  ok(await maya.page.locator(".cm-stage-camera [data-action=board-view], .cm-stage-camera [data-stage-camera=tilt]").count() === 0, "Camera on a phone has no view switch and no Tilt");
+  await maya.page.click(".cm-stage-camera [data-action=board-rotate][data-by='1']");
   await maya.page.locator(".cm-phone-center .cm-seatboard[data-seat='0']").waitFor();
-  ok(true, "My board goes back to hers, and › goes round to the next seat");
-  await maya.page.click("[data-action=board-rotate][data-by='-1']");
+  ok(true, "My board goes back to hers, and Camera's ▶ goes round to the next seat");
+  await maya.page.click(".cm-stage-camera [data-action=board-rotate][data-by='-1']");
+  await maya.page.click(".cm-stage-camera [data-action=board-camera]");
   const askShare = await maya.page.evaluate(() => {const a = document.querySelector(".cm-phone-ask"); return a && a.children.length ? a.getBoundingClientRect().height / innerHeight : 0;});
-  ok(askShare > 0 && askShare < 0.35, `what she is asked sits over the board's foot without covering most of it (${Math.round(askShare * 100)}% of the height)`);
+  ok(askShare > 0 && askShare < 0.35, `what she is asked sits under her battlefield, in view, without taking most of the screen (${Math.round(askShare * 100)}% of the height)`);
   /* However much it holds -- a main phase with ten ways to play covered 46% -- it stops at a third and scrolls within. */
   const capped = await maya.page.evaluate(() => {
     const a = document.querySelector(".cm-phone-ask"), filler = Object.assign(document.createElement("div"), {style: "flex:none;height:600px"});
@@ -1498,21 +1551,24 @@ try {
   /* ✋: the hand at a readable size; a card tapped is held up with what it can do; Back to hand. */
   await maya.page.click(".cm-phone-icon[aria-label='Your hand']");
   await maya.page.locator("#cm-board .cm-hand-show .cm-hand-fan").waitFor();
-  const phoneCard = await maya.page.evaluate(() => Math.round(document.querySelector(".cm-hand-slot .cm-bcard").getBoundingClientRect().width));
-  ok(phoneCard === 110, `✋ opens the hand over the board, its cards 110px (${phoneCard})`);
+  const phoneHand = await maya.page.evaluate(() => {const drawer = document.querySelector(".cm-hand-show").getBoundingClientRect(), pill = document.querySelector(".cm-phone-pill").getBoundingClientRect();
+    return {card: Math.round(document.querySelector(".cm-hand-slot .cm-bcard").getBoundingClientRect().width), bottom: Math.round(drawer.bottom), top: Math.round(drawer.top), pill: Math.round(pill.bottom)};});
+  ok(phoneHand.card === 110 && phoneHand.bottom === 390 && phoneHand.top >= phoneHand.pill, `✋ opens the hand as a drawer from the bottom, below the pill, its cards 110px (${phoneHand.card}; ${phoneHand.top}-${phoneHand.bottom}, the pill to ${phoneHand.pill})`);
   await maya.page.locator(".cm-hand-slot .cm-bcard").first().click();
   await maya.page.locator(".cm-hand-show.is-held").waitFor();
   await shot(maya.page, "phone-hand");
   await maya.page.click(".cm-hand-acts [data-action=board-hand-back]");
   await maya.page.click("[data-action=board-hand-close]");
-  /* Held upright, the game surface is turned a quarter: landscape still, no screen asking to turn the phone. */
+  /* Held upright, the board is upright too (ROB-18): never turned, the seats a row beneath the rail. */
   await maya.page.setViewportSize({width: 390, height: 844});
   await maya.page.locator("#cm-board[data-phone=portrait]").waitFor({timeout: 10000});
   const upright = await maya.page.evaluate(() => {
     const r = document.getElementById("cm-board").getBoundingClientRect(), m = new DOMMatrix(getComputedStyle(document.getElementById("cm-board")).transform);
-    return {box: [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)], turn: Math.round(Math.atan2(m.b, m.a) * 180 / Math.PI), sideways: document.documentElement.scrollWidth - document.documentElement.clientWidth};
+    const seats = document.querySelector(".cm-phone-seats").getBoundingClientRect(), rail = document.querySelector(".cm-phone-rail").getBoundingClientRect();
+    return {box: [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)], turn: Math.round(Math.atan2(m.b, m.a) * 180 / Math.PI), sideways: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      row: seats.top >= rail.bottom - 1 && Math.round(seats.width) >= 370};
   });
-  ok(upright.turn === 90 && upright.box.join() === "0,0,390,844" && upright.sideways === 0, `held upright, the surface is turned 90° and still fills the screen (${upright.box.join(",")})`);
+  ok(upright.turn === 0 && upright.box.join() === "0,0,390,844" && upright.sideways === 0 && upright.row, `held upright, the board is upright and fills the screen, the seats a row beneath the rail (${upright.box.join(",")}, turned ${upright.turn}°)`);
   await shot(maya.page, "phone-upright");
   await maya.page.setViewportSize({width: 1280, height: 800});
   await maya.page.locator("#cm-board:not([data-phone]) .cm-stage-top").waitFor({timeout: 10000});
@@ -1585,7 +1641,7 @@ try {
   eq(outcomes, ["win", "loss", "draw", "loss", "unfinished", "unfinished", null, null],
     "what the board files: a win, a loss, a draw; a concession is a loss; running out of time or an early end is unfinished; someone else leaving, or the game going on, files nothing yet");
   await rob.page.click("[data-action=board-leave]");
-  await waitText(rob.page, "#cm-table-game", /The game is over/);
+  await waitText(rob.page, "#cm-table-game", /Play again\?|The game is over/);
   ok(!(await rob.page.locator("#cm-board").count()), "Back to the table puts the board away, and the lobby says the game is over");
 
   /* THE RECORD READS IT BACK, on the deck's page: one game, unfinished, marked as played at a table. */
@@ -1618,7 +1674,7 @@ try {
 } finally {
   await close();
 }
-console.log(`table-board: ${checks} checks passed — a real game between two browsers over the table's socket: hidden hands, Keep, empty steps passing by themselves, a land tapped from the hand, Next step, the draw by itself, a cast that passes and one that holds, Resolve and Pass, a refusal in words, a dropped socket reopened, End game's second tap.`);
+console.log(`table-board: ${checks} checks passed — a real game between two browsers over the table's socket: hidden hands, Keep, empty steps passing by themselves, a land tapped from the hand, Next step, Draw card from the button or the library, a cast that passes and one that holds, Resolve and Pass, a refusal in words, a dropped socket reopened, End game's second tap.`);
 
 
 async function chooseView(page, view) {
