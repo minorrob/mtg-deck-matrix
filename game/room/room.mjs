@@ -55,6 +55,10 @@
  *                a "may", blockers, discards, trigger order, payments -- and the yield holds on after their answer. It ends
  *                with that turn (the game's turn number: an extra turn is a new one), when that turn's player leaves the
  *                game, or when they stop it; it never carries into their own turn or another match.
+ * And one of Rob's one-person, three-AI table (Oct 21), kept the same way:
+ *   `blocksNone` a person attacked with no creature that could block any attacker on them is not asked to declare
+ *                blockers: the declaration is empty (CR 509.1a), so there is no choice to make, and the room makes it, the
+ *                history saying why. A person with a block they could make is asked as ever, yielding or not.
  *
  * WHAT IT PLAYS. Only cards the `cards` resolver can define. A pod with any other card is refused before
  * anything is written, naming every card it cannot play (docs/decisions-2026-09-25.md, M4: "refused by name;
@@ -70,7 +74,7 @@
  */
 import {createState, addObject, shownName, shownFaceUp} from "../engine/state/index.mjs";
 import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../engine/rules/turn.mjs";
-import {legalActions, applyAction, nothingToDo, escapeWays, flashbackCost, tappersInWords, castTapPlans, tapWords} from "../engine/rules/actions.mjs";
+import {legalActions, applyAction, nothingToDo, whyNot, escapeWays, flashbackCost, tappersInWords, castTapPlans, tapWords} from "../engine/rules/actions.mjs";
 import {paymentWords} from "../engine/rules/mana.mjs";
 import {beforeTap, tapTaken, untappable, untapTaken} from "../engine/rules/untap-mana.mjs";
 import {passPriority} from "../engine/rules/priority.mjs";
@@ -524,6 +528,8 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
   /* ROB-13: the stack passed for a person with no response (`passStack`), and the seat that cast holding priority, asked when
      it comes back to them (`heldBy`); the yields (`yieldTurn`), by seat id: the turn yielded and whose it is. */
   let passStack = false, heldBy = null, yieldable = false, yielding = {};
+  /* Oct 21: Declare blockers made for a person with no creature that could block (`blocksNone`). */
+  let blocksNone = false;
   /* A yield holds for the turn it was made in (the game's turn number: an extra turn is a new one), while that turn's player
      is in the game. One left over from a turn gone holds nothing, and the next yield of that seat replaces it. */
   const holds = (seatId) => {
@@ -629,6 +635,16 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
           const a = pilotFor(seat).answer(seen, choice);
           step.acted = true;
           write(answerForPilot(seat, choice, a));
+          continue;
+        }
+        /* NO CREATURE THAT COULD BLOCK (`blocksNone`): Declare blockers with no block on offer has one answer, none, and it
+           is no choice (CR 509.1a) -- against three AI seats, a press of No blocks for most of their attacks. The room
+           gives it, as `passEmpty` passes a pass with nothing else to do, and the history says why. Not taped: a replay
+           on the same pod gives it again. */
+        if (blocksNone && choice.id.startsWith("declare-blockers:") && choice.options.length === 0) {
+          note(`${seats[seat].name} has no creature that can block: no blockers`);
+          write(resolveAwaiting(state, [], undefined, rng, {indices: []}));
+          step.acted = true;
           continue;
         }
         /* In a run they let resolve: the same question as one already answered in it is answered the same way; the
@@ -764,6 +780,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     untapMana = record.untapMana === true; taken = record.taken ?? null;
     passAfterCast = record.passAfterCast === true; castBy = record.castBy ?? null;
     passStack = record.passStack === true; heldBy = record.heldBy ?? null; yieldable = record.yieldTurn === true; yielding = record.yielding || {};
+    blocksNone = record.blocksNone === true;
     tableEvents = record.events || []; eventsMark = record.eventsMark ?? 0; eventsFloor = record.eventsFloor ?? -1;
     seats = record.seats; pendingSeat = record.pendingSeat; pendingActions = record.pendingActions; receipts = record.receipts || []; leaving = record.leaving || []; departures = record.departures || {}; ended = record.ended || null; outs = record.outs || []; history = record.history || [];
     refusals = record.refusals || {total: 0, since: point.sequence, first: []};
@@ -779,6 +796,18 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     pilots = seats.map((s, seat) => (s.pilot === "house" ? pilotMade(seat) : null));
     saved = 0; unsaved = [];
     tapeN = (await store.readTape()).length;
+  }
+  /* WHY NOT (Linear ROB-24): while a seat holds priority, each card of its own hand and command zone that nothing offered
+     plays says why, in words (rules/actions.mjs, whyNot): the board shows it where it would show what the card can do. Its
+     own cards only, and only the reason -- nothing another seat could not already see. */
+  function whyNotFor(projected, seat, pending) {
+    if (!pending || pending.kind !== "priority" || state.priorityPlayer !== seat) return projected;
+    const actions = legalActions(state, seat), zones = projected.players[seat]?.zones ?? {};
+    for (const zone of [zones.Hand, zones.Command]) for (const card of zone?.cards ?? []) {
+      const why = whyNot(state, seat, card.cardId, actions);
+      if (why) card.why = why;
+    }
+    return projected;
   }
   /* A person's input that failed part-way, undone (`restore`) and refused: the rules' refusal as they said it, and any other
      failure -- the engine's, in the play that followed -- as the room's, with what the person can still do. */
@@ -837,7 +866,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     const point = journal.checkpoint(state, rng.checkpoint());
     await store.saveCheckpoint(point);
     await store.pruneCheckpoints();
-    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, ...(outs.length ? {outs} : {}), history, refusals, ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {}), ...(resolveAll ? {resolveAll, standing} : {}), ...(passAfterCast ? {passAfterCast, castBy} : {}), ...(endAsks ? {endAsks} : {}), ...(untapMana ? {untapMana, taken} : {}), ...(Object.keys(prefs).length ? {prefs} : {}), ...(turnsOf ? {turnsOf} : {}), ...(passStack ? {passStack, heldBy} : {}), ...(yieldable ? {yieldTurn: true, yielding} : {}), ...(tableEvents.length ? {events: tableEvents, eventsMark, eventsFloor} : {}), ...(seated ? {candidates: true} : {}), ...(pilotPicks ? {pilotPicks: true} : {})}));
+    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, ...(outs.length ? {outs} : {}), history, refusals, ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {}), ...(resolveAll ? {resolveAll, standing} : {}), ...(passAfterCast ? {passAfterCast, castBy} : {}), ...(endAsks ? {endAsks} : {}), ...(untapMana ? {untapMana, taken} : {}), ...(Object.keys(prefs).length ? {prefs} : {}), ...(turnsOf ? {turnsOf} : {}), ...(passStack ? {passStack, heldBy} : {}), ...(blocksNone ? {blocksNone} : {}), ...(yieldable ? {yieldTurn: true, yielding} : {}), ...(tableEvents.length ? {events: tableEvents, eventsMark, eventsFloor} : {}), ...(seated ? {candidates: true} : {}), ...(pilotPicks ? {pilotPicks: true} : {})}));
   }
 
   const api = {
@@ -870,12 +899,13 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         ...(pod && pod.untapMana === true ? {untapMana: true} : {}),
         /* And whether its AI seats take what a choice they may answer with none is for (`pilotPicks`), kept the same way. */
         ...(pod && pod.pilotPicks === true ? {pilotPicks: true} : {}),
-        ...(pod && pod.passStack === true ? {passStack: true} : {}), ...(pod && pod.yieldTurn === true ? {yieldTurn: true} : {})};
+        ...(pod && pod.passStack === true ? {passStack: true} : {}), ...(pod && pod.yieldTurn === true ? {yieldTurn: true} : {}),
+        ...(pod && pod.blocksNone === true ? {blocksNone: true} : {})};
       passEmpty = beats.passEmpty === true; endWhenNoPerson = beats.endWhenNoPerson === true; resolveAll = beats.resolveAll === true; passAfterCast = beats.passAfterCast === true; endAsks = beats.endAsks === true; untapMana = beats.untapMana === true;
-      passStack = beats.passStack === true; yieldable = beats.yieldTurn === true;
+      passStack = beats.passStack === true; yieldable = beats.yieldTurn === true; blocksNone = beats.blocksNone === true;
       /* And whether a cast tapped for tops up floating mana and taps a source for all it makes (`pooledTaps`, rules/actions.mjs):
          a match launched before it lacks the key, and so offers what it offered then. */
-      const pooled = pod && pod.pooledTaps === true ? {pooledTaps: true} : {};
+      const pooled = {...(pod && pod.pooledTaps === true ? {pooledTaps: true} : {}), ...(pod && pod.xTaps === true ? {xTaps: true} : {})};
       pilotPicks = beats.pilotPicks === true;
       try {state = createState({matchId, seed, players: seats.map((s) => ({name: s.name})), ...rules, ...(beats.drawBeat ? {drawBeat: true} : {}), ...pooled});}
       catch (error) {throw new RoomError(400, error.message);}
@@ -917,7 +947,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         seats: api.seats,
         waitingOn: pendingSeat === null ? null : seats[pendingSeat].seatId,
         decision: mine ? combatWords(state, structuredClone(controller.pending)) : null,
-        state: projectFor(state, seat),
+        state: whyNotFor(projectFor(state, seat), seat, mine ? controller.pending : null),
         history: history.slice(-HISTORY_VIEW).map(({turn, text, mark}) => ({turn, text, ...(mark ? {mark} : {})})),
         /* What happened, as this seat may know it (events.mjs): the change this view shows -- or, asked with `after` (the last
            event id the seat has), everything since; `eventsReset` when that is older than the room keeps. */
