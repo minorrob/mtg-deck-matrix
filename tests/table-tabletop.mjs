@@ -110,6 +110,32 @@ try {
   await page.getByRole('button',{name:'Next hand card',exact:true}).click();
   assert.deepEqual(await fanIndices(),[0,1,2,3,4,5,6],'next wraps back through the start');
   assert.equal(await page.locator('.cm-stage-rear').count(),3,"all other seats sit across the back");
+  /* ROB-98 (Rob, Oct 18: "Go with the 48px land spacing"): every land on the front mat is reached by a pointer at its upper
+     half -- 10%, 25% and 45% down its middle -- at rest and with each card of the fan hovered, at 1400x900, 1024x768 and
+     1280x720. Without the mat's 48px foot, two hovered hand cards cover a land at 1280x720. A hand card is hovered at a
+     point that hit-tests to it, never by Playwright's scroll into a clipped fan. */
+  await page.emulateMedia({reducedMotion:'reduce'});
+  const away=async()=>{await page.mouse.move(3,65);await page.evaluate(()=>{window.scrollTo(0,0);document.querySelector('#cm-board').scrollTop=0;});await page.waitForTimeout(100);};
+  const landsBlocked=()=>page.evaluate(()=>[...document.querySelectorAll('.cm-stage-front .cm-board-lands .cm-bcard')].flatMap(card=>{
+    const r=card.getBoundingClientRect();
+    return [.1,.25,.45].filter(f=>{const hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height*f);return !(hit===card||card.contains(hit));})
+      .map(f=>`${(card.getAttribute('aria-label')||'a land').split(/[,:]/)[0]} at ${f*100}%`);
+  }));
+  for(const [width,height] of [[1400,900],[1024,768],[1280,720]]) {
+    await page.setViewportSize({width,height});await page.waitForTimeout(200);await away();
+    assert.ok(await page.locator('.cm-stage-front .cm-board-lands .cm-bcard').count()>=5,`${width}x${height}: the front mat shows its lands`);
+    assert.deepEqual(await landsBlocked(),[],`${width}x${height}: every land's upper half is reached at rest`);
+    for(const hand of await page.locator('.cm-stage-fan-slot .cm-bcard').all()) {
+      await away();
+      const name=(await hand.getAttribute('aria-label')||'a hand card').split(/[,:]/)[0];
+      const point=await hand.evaluate(el=>{const r=el.getBoundingClientRect();for(const fy of [.15,.3,.5,.7])for(const fx of [.15,.3,.5,.7]){const x=r.x+r.width*fx,y=r.y+r.height*fy;if(y>=innerHeight-5)continue;const hit=document.elementFromPoint(x,y);if(hit===el||el.contains(hit))return{x,y};}return null;});
+      assert.ok(point,`${width}x${height}: ${name} in the fan has a point a pointer reaches`);
+      await page.mouse.move(point.x,point.y);await page.waitForTimeout(50);
+      assert.deepEqual(await landsBlocked(),[],`${width}x${height}: with ${name} hovered, every land's upper half is still reached`);
+    }
+  }
+  await away();await page.emulateMedia({reducedMotion:null});
+  await page.setViewportSize({width:1400,height:900});await page.waitForTimeout(200);
   await page.evaluate(()=>{globalThis.__canvas = document.querySelector('.cm-stage-canvas');});
   const before = await page.locator('.cm-stage-region').boundingBox();
   await page.getByRole('button',{name:'Toggle table panel',exact:true}).click();
