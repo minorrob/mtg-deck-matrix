@@ -354,6 +354,7 @@
           "cards": [
             "Forest",
             "Wastes",
+            "Mountain",
             "Mountain"
           ]
         },
@@ -409,6 +410,10 @@
             "turn": 2,
             "phase": "COMBAT_BEGIN"
           }
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
         }
       ],
       "expect": [
@@ -422,9 +427,16 @@
         },
         {
           "seat": 1,
+          "pool": {
+            "R": 1
+          }
+        },
+        {
+          "seat": 1,
           "controls": [
             "Forest",
             "Wastes",
+            "Mountain",
             "Mountain",
             "Bear"
           ]

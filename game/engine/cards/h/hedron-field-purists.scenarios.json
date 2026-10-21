@@ -541,6 +541,146 @@
       ]
     },
     {
+      "name": "Asked, the order waits on Rob: the game as it stands then is one a room can save",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hedron-Field Purists",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Ajani Steadfast"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Lightning Bolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Hedron-Field Purists",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Ajani Steadfast",
+          "ability": "a0",
+          "targets": [
+            []
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Ajani Steadfast",
+          "ability": "a0",
+          "targets": [
+            []
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Ajani Steadfast",
+          "ability": "a0",
+          "targets": [
+            []
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 7,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Ajani Steadfast",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 8,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "cast": "Lightning Bolt",
+          "seat": 1,
+          "targets": [
+            {
+              "player": 0
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "asks": {
+            "seat": 0,
+            "options": [
+              "Hedron-Field Purists first: 1 damage",
+              "Ajani Steadfast emblem first: 0 damage"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "life": 40
+        }
+      ]
+    },
+    {
       "name": "The other order is Rob's to choose too: the Purists' 1 first, then all but 1 of the 2 -- he takes 1",
       "setup": [
         {

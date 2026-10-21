@@ -17,6 +17,7 @@ import {runScenario} from "../game/engine/cards/scenario.mjs";
 import {projectFor} from "../game/engine/projection.mjs";
 import {whyNot} from "../game/engine/rules/actions.mjs";
 import {castForbidden} from "../game/engine/rules/statics.mjs";
+import {applyReplacements} from "../game/engine/rules/replacement.mjs";
 
 let checks = 0;
 const check = (fn) => { fn(); checks += 1; };
@@ -114,6 +115,19 @@ check(() => {
   assert.deepEqual(bolts.map((id, seat) => castForbidden(state, seat, id)), [false, true, true, true]);
 });
 
+/* ---- two preventions where nobody can be asked: the order that leaves the least (CR 616.1; rules/replacement.mjs) ---- */
+check(() => {
+  /* Hedron-Field Purists at level 1 ("prevent 1") and Ajani Steadfast's emblem ("prevent all but 1"): 3 damage to Rob, the
+     emblem first leaves 1 and the Purists then none -- the other way round would leave 1. */
+  const {state} = play({name: "two preventions, unasked", setup: [{seat: 0, zone: "battlefield", cards: ["Hedron-Field Purists", "Plains", "Wastes", "Wastes", "Ajani Steadfast"]}],
+    steps: [{tap: "Plains"}, {tap: "Wastes"}, {tap: "Wastes"}, {activate: "Hedron-Field Purists", ability: "a0"}, {resolve: true},
+      ...[1, 3, 5].flatMap((turn) => [{to: {turn, phase: "MAIN1"}}, {activate: "Ajani Steadfast", ability: "a0", targets: [[]]}, {resolve: true}]),
+      {to: {turn: 7, phase: "MAIN1"}}, {activate: "Ajani Steadfast", ability: "a2"}, {resolve: true}]});
+  const {proposal} = applyReplacements(state, {event: "damage", toPlayer: 0, amount: 3, sourceId: null, combat: false}, {dry: true});
+  assert.equal(proposal.amount, 0);
+  assert.equal(applyReplacements(state, {event: "damage", toPlayer: 0, amount: 1, sourceId: null, combat: false}, {dry: true}).proposal.amount, 0);
+});
+
 /* ---- a commander in the command zone is no emblem: its abilities do not work there (CR 113.6, 114.4) ---- */
 check(() => {
   /* The Mindskinner as Rob's commander, in the command zone: his Lightning Bolt deals Maya all 3, none of it prevented. */
@@ -128,4 +142,4 @@ check(() => {
   assert.equal(state.awaiting?.player, 0, "the discard to hand size is asked of Rob");
 });
 
-console.log(`engine-libload-l1: ${checks} checks passed -- emblems' abilities compiled and refused, a static everywhere but the battlefield, a process repeated again, prevention and exchanges in the schema, an emblem as the board shows it and a commander that is none, and Teferi, Time Raveler's hold and its words.`);
+console.log(`engine-libload-l1: ${checks} checks passed -- emblems' abilities compiled and refused, a static everywhere but the battlefield, a process repeated again, prevention and exchanges in the schema, an emblem as the board shows it and a commander that is none, two preventions ordered where nobody is asked, and Teferi, Time Raveler's hold and its words.`);
