@@ -70,6 +70,13 @@ export function boardPerson({page, seat, cards, current, timeout = 15000}) {
           await field.fill(String(picked.amounts[i]));
           await field.press("Tab");
         }
+      } else if (d.mode === "many" && Array.isArray(d.legalBlocks)) {
+        for (const i of picked.indices ?? []) {
+          const o = d.options.find(o => o.index === i);
+          await click(page, `[data-action=board-block-select][data-block-object="${o.cardId}"]`);
+          await click(page, `[data-action=board-block-pair][data-index="${i}"]`);
+        }
+        await page.locator("[data-action=board-confirm]:not([disabled])").waitFor({timeout});
       } else for (const i of picked.indices ?? []) await click(page, `[data-action=board-option][data-index="${i}"]`);
       if (["many", "order", "ack", "damage", "amount"].includes(d.mode)) await click(page, "[data-action=board-confirm]:not([disabled])");
     }
