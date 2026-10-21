@@ -428,9 +428,7 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
       /* The table's beats (game/room/room.mjs): a step with nothing to do passes itself (item 11); once every person is
          out, the game ends there (Rob, 2026-10-06); a run of identical triggers may be let resolve with one decision (Rob,
          2026-10-09: "resolve all"); and a person's cast passes for them (Rob, 2026-10-09: "I don't want to have to click a
-         pop-up to resolve it"). The draw no longer waits for a click (Rob, 2026-10-09: "Draw phase should be resolved
-         automatically by drawing a card and progress to the next screen"): a game launched before that keeps its
-         `drawBeat` with its match and replays as it was played. And a person's turn ends only when they say so (Rob,
+         pop-up to resolve it"). And a person's turn ends only when they say so (Rob,
          2026-10-11: "passing the turn to the next player should always require player confirmation"): their end step is
          always asked; and a land tapped for mana may be untapped while its mana is unspent ("I should also be able to
          click the card to untap it again"). */
@@ -442,6 +440,10 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
       /* A person may yield the rest of an opponent's turn (Linear ROB-13, the Oct 16 handoff): new matches only, so one
          launched before is asked as it was (room.mjs, `yieldTurn`). */
       yieldTurn: true,
+      /* The draw step's draw waits for its player's Draw card (Linear ROB-102 and ROB-24; `drawBeat`, CR 504.1): the Oct 15
+         playtest's confirmed decisions reverse Oct 9's automatic draw ("label the pending draw action Draw card"). An AI
+         seat draws for itself. New matches only: a match launched between Oct 9 and now drew by itself and replays so. */
+      drawBeat: true,
       /* And the stack passed for a person with no meaningful answer to what is on it (Linear ROB-102; ROB-13's `passStack`):
          an opponent's spell they could not answer resolves without a Pass for each one -- the most-felt stop at a table of
          three AIs. They see it came and went: the board calls out a spell cast and resolved between two views from the
