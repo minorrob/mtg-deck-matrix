@@ -642,7 +642,7 @@ The engine lane fixed the meter in c629f8c1 (#723). This branch fixes the one ot
 - **The suites no longer depend on the real date:** advisor, ai-door, coach, cloud-worker and agent-seat-table pass with
   the machine's clock moved 30 days back, 2 back, 30 on and 400 on (a preload that moves `Date.now()` and a bare
   `new Date()`; the PR has it). With the meter's old code, advisor passes 2 days back and fails 30 days on.
-- Waiting: the PR's one green Actions run, then a merge. Nothing else is open.
+- **Merged #727** (main f293e327, 2026-10-12) on one green `suites` run of its head 245985ad. Nothing is open.
 
 ## 2026-10-12, later: Train E, Rob's library, in waves; the plan to 90%
 
