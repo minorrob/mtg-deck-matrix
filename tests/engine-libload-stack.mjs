@@ -61,7 +61,7 @@ eq(index.definition("Timely Ward").abilities.filter((a) => a.rule === "flash-if-
 /* THE SELECTOR GRAMMAR. */
 throws(() => compileSelector({what: "permanent", targeting: {controller: "you"}}), /targeting is a spell's/, "targeting on a permanent: refused");
 throws(() => compileSelector({what: "spell", targeting: {what: "player"}}), /targeting is a spell's/, "targeting a player: refused (a permanent's selector)");
-throws(() => compileSelector({what: "permanent", attacking: "them"}), /attacking is true, or "you"/, "attacking anyone but you: refused");
+throws(() => compileSelector({what: "permanent", attacking: "them"}), /attacking: true, or attacking: "you"/, "attacking anyone but you: refused");
 ok(typeof compileSelector({what: "spell", targeting: {what: "permanent", controller: "you"}}) === "function" && typeof compileSelector({what: "permanent", attacking: "you"}) === "function",
   "a spell that targets a permanent you control, and a creature attacking you: both said");
 

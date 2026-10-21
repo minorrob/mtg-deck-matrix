@@ -2111,8 +2111,7 @@ function idle(state, player, actions, stack = false) {
     const timelyHere = !sorcerySpeed(object) || hasFlash(state, id) || flashGranted(state, player, id) || mainNow;
     if (alternativeCosts(state, player, id).some((way) => ((way.paidFor === "warp" && object.zone === "hand" && timelyHere) || way.sneak === true)
       && manaValue(parseManaCost(way.mana)) <= mana)) return true;
-    /* Timely Ward's flash for a commander's sake (flashIfTargets): a doubtful case, so asked rather than passed for them. */
-    if (!object.manaCost || (sorcerySpeed(object) && !hasFlash(state, id) && !flashGranted(state, player, id) && !flashIfTargets(object) && !mainNow)) return false;
+    if (!object.manaCost || (sorcerySpeed(object) && !hasFlash(state, id) && !flashGranted(state, player, id) && !mainNow)) return false;
     const tax = object.zone === "command" ? commanderTax(state, player, id) : 0;
     /* What it costs now, reductions included: a spell made castable by a Medallion is something to do. */
     /* manaValue reads the printed symbols; the reduction lowered the generic count, so take off what it took. */

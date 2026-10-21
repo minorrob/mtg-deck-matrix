@@ -89,7 +89,7 @@ BREAKS = [
     ('sneak: the creature returned with the cast', ACTIONS, ' || a.atom === "sacrifice" || a.atom === "returnToHand"), evoke', ' || a.atom === "sacrifice"), evoke'),
     ('sneak: each creature its own offer', ACTIONS,
      'options = state.zones.battlefield.filter((id) => matches(state, id, {controller: player})).map((id) => ({returnToHand: id}));', 'options = [];'),
-    ('sneak: at an instant\'s timing', ACTIONS, '  if (!timely && !sneaking) return actions;', '  if (!timely) return actions;'),
+    ('sneak: at an instant\'s timing', ACTIONS, '  if (!timely && !sneaking && !flashIf) return actions;', '  if (!timely && !flashIf) return actions;'),
     ('sneak: its sneak cost alone then', ACTIONS, '  if (sneaking && !way?.sneak) continue;\n', ''),
     ('sneak: no additional cost', ACTIONS, 'extraPaid.some(([kind]) => kind !== "returnToHand")', 'extraPaid.length'),
     ('sneak: to its owner\'s hand', ACTIONS, '        moveOne(state, id, "hand", events);\n        continue;\n', ''),

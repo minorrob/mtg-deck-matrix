@@ -77,12 +77,12 @@ export const SELECTOR_KEYS = Object.freeze([
   /* "A permanent of their choice that shares a card type with it" (Braids, Arisen Nightmare; CR 205.2a): with what an effect
      before it moved, as it last existed. */
   "sharesCardTypeWith",
-  /* "Unless ... it's only the color its controller chose" (Selective Obliteration; CR 105.2): the one color its controller chose
-     as this resolution did (effects/asking.mjs, chooseColor's `chooser`), and no other. */
-  "onlyChosenColor",
   /* "Counter target spell that targets a permanent you control" (Rebuff the Wicked; library load L2): a spell one of whose
      targets is the permanent this describes (CR 115.1a). */
   "targeting",
+  /* "Unless ... it's only the color its controller chose" (Selective Obliteration; CR 105.2): the one color its controller chose
+     as this resolution did (effects/asking.mjs, chooseColor's `chooser`), and no other. */
+  "onlyChosenColor",
 ]);
 
 /** The card types (CR 205.2a). */
@@ -214,7 +214,7 @@ function assertGrammar(selector) {
     compileSelector({...selector.targeting, what: "permanent"});
   }
   /* "Attacking you and/or planeswalkers you control" (Mangara, the Diplomat): `attacking` true, or "you". */
-  if (selector.attacking !== undefined && ![true, "you"].includes(selector.attacking)) throw new Error("A selector's attacking is true, or \"you\": attacking you or a planeswalker you control");
+  if (selector.attacking !== undefined && ![true, "you"].includes(selector.attacking)) throw new Error("A selector says attacking: true, or attacking: \"you\" -- attacking you or a planeswalker you control");
   const shared = selector.sharesCardTypeWith;
   if (shared !== undefined && shared !== "moved" && !(Array.isArray(shared) && shared.every((type) => CARD_TYPES.includes(type))))
     throw new Error("A selector's sharesCardTypeWith is \"moved\": a card type of what the effect before it moved, as it last existed");
