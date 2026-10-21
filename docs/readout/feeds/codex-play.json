@@ -1,6 +1,6 @@
 {
   "workstream": "codex-play",
-  "updated": "2026-10-21T00:30:00Z",
+  "updated": "2026-10-21T01:00:00Z",
   "updated_by": "Claude (the Play readiness session, Personal-HP), holding Codex · Play while Codex is away",
   "branch": "codex/play-direct-blocking",
   "now": "ROB-26 combat display merged as 27fba609; direct blocking source 4a6551b1 in #801 has six-layout pointer proof, 16 caught regressions and three complete solo games (42 checks, 585 privacy checks). Full CI and Engine staging acceptance remain. ROB-171/#800 waits on Engine ROB-172; ROB-166 and ROB-167 need Engine contracts. Next: ROB-23/24/29/169.",
@@ -26,7 +26,7 @@
     {"id": "ROB-26", "outcome": "play-experience", "feature": "Shared combat picture and direct blocker selection", "status": "review", "remaining_hours": 1, "note": "Combat display merged as 27fba609. Direct blocking: Codex's #801 failed exact-head CI on No blocks below the window in Focus at 1280x720 (CI fonts); continued on claude/play-direct-blocking with the question held to the window in Table and Focus, tall-text proof and two caught breaks. CI and staging remain.", "evidence": [{"label": "Combat display #799", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/799"}, {"label": "Direct blocking draft #801", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/801"}]},
     {"id": "ROB-173", "outcome": "play-experience", "feature": "The long-choice wheel check scrolls to the list's end under CI load", "status": "review", "remaining_hours": 0, "note": "In the direct-blocking PR: scroll until at the end, each wheel turn waited for."},
     {"id": "ROB-28", "outcome": "play-experience", "feature": "Yield turn and Stop yielding during opponents' turns", "status": "review", "remaining_hours": 1, "note": "Merged through #798 as 17a1218c on exact-head CI: room-backed controls, browser and real-room proof, six caught regressions, and three complete solo games. Engine-owned staging acceptance remains.", "evidence": [{"label": "PR #798", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/798"}]},
-    {"id": "ROB-29", "outcome": "play-experience", "feature": "Castable commanders highlighted, with a small tax badge", "status": "backlog", "remaining_hours": 8},
+    {"id": "ROB-29", "outcome": "play-experience", "feature": "Castable commanders highlighted, with a small tax badge", "status": "review", "remaining_hours": 0, "evidence": [{"label": "PR #807", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/807"}], "note": "The tax badge at the commander's top-right and both partners in the command zone, lit and castable. CI and staging remain."},
     {"id": "ROB-49", "outcome": "play-experience", "feature": "Resources and Table Vitals from authoritative public facts", "status": "blocked", "remaining_hours": 12, "note": "Waits on ROB-78."},
     {"id": "ROB-50", "outcome": "play-experience", "feature": "Presentation events that never replay twice; acting-seat and unseen-card cues", "status": "backlog", "remaining_hours": 12, "note": "Engine contract merged and on staging; the Play implementation is unblocked."},
     {"id": "ROB-53", "outcome": "play-experience", "feature": "Round and Turn labels from the engine, correct across extra and skipped turns", "status": "backlog", "remaining_hours": 4, "note": "Engine contract merged and on staging; the Play implementation is unblocked."},
@@ -54,9 +54,9 @@
     {"id": "ROB-162", "outcome": "play-experience", "feature": "Drawn mats retain their patterns in Full", "status": "done", "remaining_hours": 0, "evidence": [{"label": "PR #743", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/743"}]},
     {"id": "ROB-163", "outcome": "play-experience", "feature": "Long choices keep their heading and Confirm reachable", "status": "done", "remaining_hours": 0, "evidence": [{"label": "PR #793", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/793"}]},
     {"id": "ROB-165", "outcome": "play-experience", "feature": "Keep a long choice at its scroll position after a pick", "status": "review", "remaining_hours": 1, "note": "Merged through #798 as 17a1218c on exact-head CI: real pointer selection/deselection preserves the list at 1024/1280/1400; new decisions and matches reset it. Three regressions caught. Staging acceptance remains.", "evidence": [{"label": "PR #798", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/798"}]},
-    {"id": "ROB-166", "outcome": "play-experience", "feature": "Explain a loss to AI opponents and file it as a loss", "status": "blocked", "remaining_hours": 2},
-    {"id": "ROB-169", "outcome": "play-experience", "feature": "Show the cards when an effect lets me look at a hand", "status": "backlog", "remaining_hours": 2},
-    {"id": "ROB-167", "outcome": "play-experience", "feature": "Play again from the result and lobby", "status": "blocked", "remaining_hours": 6},
+    {"id": "ROB-166", "outcome": "play-experience", "feature": "Explain a loss to AI opponents and file it as a loss", "status": "review", "remaining_hours": 0, "evidence": [{"label": "PR #805 (room)", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/805"}], "note": "The room's result.ending (#805); the banner says You lost and why (claude/play-ending-rematch). CI and staging remain."},
+    {"id": "ROB-169", "outcome": "play-experience", "feature": "Show the cards when an effect lets me look at a hand", "status": "review", "remaining_hours": 0, "evidence": [{"label": "PR #807", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/807"}]},
+    {"id": "ROB-167", "outcome": "play-experience", "feature": "Play again from the result and lobby", "status": "review", "remaining_hours": 0, "evidence": [{"label": "PR #806 (route)", "url": "https://github.com/minorrob/mtg-deck-matrix/pull/806"}], "note": "The route (#806) and Play again on the banner and in the lobby (claude/play-ending-rematch); a whole 1-vs-3 game then Play again proven in the browser. CI and staging remain."},
     {"id": "ROB-159", "outcome": "play-experience", "feature": "Tell players which cards are listed for the next wave", "status": "backlog", "remaining_hours": 3},
     {"id": "ROB-148", "outcome": "play-experience", "feature": "Let a two-seat host choose whether the first draw is skipped", "status": "backlog", "remaining_hours": 2}
   ],
@@ -68,8 +68,6 @@
     {"id": "ROB-25", "by": "ROB-74 payment contract", "owner": "claude-engine"},
     {"id": "ROB-49", "by": "ROB-78 card facts", "owner": "claude-engine"},
     {"id": "ROB-54", "by": "the chat contract (ACTIVE.md Requests)", "owner": "claude-engine"},
-    {"id": "ROB-139", "by": "Rob's choice of the game's name", "owner": "rob"},
-    {"id": "ROB-166", "by": "Structured terminal loss reason requested in ACTIVE row 10 and ROB-11", "owner": "claude-engine"},
-    {"id": "ROB-167", "by": "Worker rematch voting route", "owner": "claude-engine"}
+    {"id": "ROB-139", "by": "Rob's choice of the game's name", "owner": "rob"}
   ]
 }
