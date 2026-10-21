@@ -317,9 +317,11 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   if (condition.selfCounters !== undefined && (source === null ? 0 : state.objects[source]?.counters?.[condition.selfCounters.counter] ?? 0) < condition.selfCounters.atLeast) return false;
   if (condition.about === "moved") {
     let fits = false;
-    try { fits = (movedWas ?? []).some((was) => matchesLastKnown(condition.is ?? {}, was, {controller, source})); } catch { fits = false; }
+    try { fits = (movedWas ?? []).some((was) => matchesLastKnown(condition.is ?? {}, was, {controller, source, lastKnown})); } catch { fits = false; }
     if (!fits) return false;
-  } else if (condition.about !== undefined && !namedIs(state, namedObject(condition.about, {remembered, targets, about}), condition.is ?? {}, {controller, source},
+  /* With its source and, gone, the source as it last existed (CR 113.7a, 608.2h): "each other creature you control" of a
+     trigger whose creature left before it resolved (Canopy Gargantuan) is other than that creature as it last was. */
+  } else if (condition.about !== undefined && !namedIs(state, namedObject(condition.about, {remembered, targets, about}), condition.is ?? {}, {controller, source, lastKnown},
     condition.about === "that card" ? about?.was ?? null : null)) return false;
   if (condition.notTheirTurn === true && (about?.player === undefined || about.player === state.activePlayer)) return false;
   if (condition.handEmpty === true && cardsIn(state, "hand", controller).length > 0) return false;

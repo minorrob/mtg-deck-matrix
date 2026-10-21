@@ -84,7 +84,8 @@ export function runScenario(scenario, cards, fixtures = {}) {
   /* `pooledTaps: true`: a cast tapped for tops up floating mana and taps a source for all it makes (rules/actions.mjs), as a
      table's new matches do. */
   const state = createState({matchId: "scenario", seed: scenario.name, players: names.map((name) => ({name})),
-    ...(scenario.skipFirstDraw === false ? {skipFirstDraw: false} : {}), ...(scenario.pooledTaps === true ? {pooledTaps: true} : {})});
+    ...(scenario.skipFirstDraw === false ? {skipFirstDraw: false} : {}), ...(scenario.pooledTaps === true ? {pooledTaps: true} : {}),
+    ...(scenario.xTaps === true ? {xTaps: true} : {})});
   const rng = createRng(scenario.name);
   const record = (list) => { events.push(...(list ?? [])); return list; };
 
