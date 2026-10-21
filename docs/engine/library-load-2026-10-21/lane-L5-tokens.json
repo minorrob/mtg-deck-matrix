@@ -1,0 +1,337 @@
+{
+ "schema": "library-load-lane@1",
+ "lane": "L5-tokens",
+ "theme": "tokens",
+ "label": "Tokens, counters and sacrifice: create, +1/+1 and other counters, sacrifice outlets, lifegain payoffs",
+ "source": {
+  "collection": "collection-2026-10-21.json",
+  "workbook": "Backup_Load_-_CrankMagic_-_2026-10-21.xlsx",
+  "decks": [
+   "D1",
+   "D2",
+   "D3",
+   "D4",
+   "D5",
+   "D6",
+   "D7",
+   "S1-D1",
+   "S1-D2",
+   "S1-D3",
+   "S1-D4",
+   "S1-D5",
+   "S1-D6",
+   "S2-D1",
+   "S2-D2",
+   "S2-D3",
+   "S2-D4",
+   "S2-D5",
+   "S2-D6",
+   "G0-D1",
+   "G0-D2",
+   "G0-D3",
+   "G0-D4",
+   "G1-D1",
+   "G1-D2",
+   "G1-D3",
+   "G1-D4",
+   "CJ1",
+   "CJ2",
+   "CJ3",
+   "CJ4",
+   "CJ5",
+   "HG1",
+   "HG2",
+   "TB1",
+   "TB2",
+   "TB5"
+  ],
+  "liveDecks": [
+   "D1",
+   "D2",
+   "D3",
+   "D4",
+   "D5",
+   "D6",
+   "D7"
+  ],
+  "candidates": {
+   "pool": 29551,
+   "candidate": 2643,
+   "refused": 0,
+   "blocked": 6,
+   "vetoed": 18,
+   "unknown": 25793,
+   "structure": 1091,
+   "oneSentenceShort": 12544
+  }
+ },
+ "cards": [
+  {
+   "name": "Plumb the Forbidden",
+   "scope": "live",
+   "liveDecks": [
+    "D5"
+   ],
+   "decks": [
+    "D5"
+   ],
+   "owned": 0,
+   "rank": 1145,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "As an additional cost to cast this spell, you may sacrifice one or more creatures.",
+    "When you do, copy this spell for each creature sacrificed this way.",
+    "You draw a card and lose 1 life."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Dark-Dweller Oracle",
+   "scope": "live",
+   "liveDecks": [
+    "D6"
+   ],
+   "decks": [
+    "D6"
+   ],
+   "owned": 0,
+   "rank": null,
+   "type": "Creature — Goblin Shaman",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{1}, Sacrifice a creature: Exile the top card of your library.",
+    "You may play that card this turn. (You still pay its costs. You can play a land this way only if you have an available land play remaining.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Ruthless Lawbringer",
+   "scope": "live",
+   "liveDecks": [
+    "D5"
+   ],
+   "decks": [
+    "D5"
+   ],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Vampire Assassin",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature enters, you may sacrifice another creature.",
+    "When you do, destroy target nonland permanent."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Wall of Shards",
+   "scope": "live",
+   "liveDecks": [
+    "D4"
+   ],
+   "decks": [
+    "D4"
+   ],
+   "owned": 0,
+   "rank": null,
+   "type": "Snow Creature — Wall",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Cumulative upkeep—An opponent gains 1 life. (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Acrobatic Cheerleader",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Human Survivor",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Survival — At the beginning of your second main phase, if this creature is tapped, put a flying counter on it.",
+    "This ability triggers only once."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Bear Trap",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{3}, {T}, Sacrifice this artifact: It deals 3 damage to target creature."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Blacksnag Buzzard",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Bird",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "This creature enters with a +1/+1 counter on it if a creature died this turn.",
+    "Plot {1}{B} (You may pay {1}{B} and exile this card from your hand. Cast it as a sorcery on a later turn without paying its mana cost. Plot only as a sorcery.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Boilerbilges Ripper",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Human Assassin",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature enters, you may sacrifice another creature or enchantment.",
+    "When you do, this creature deals 2 damage to any target."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Fear of Immobility",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Enchantment Creature — Nightmare",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature enters, tap up to one target creature.",
+    "If an opponent controls that creature, put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Gold Rush",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Until end of turn, up to one target creature gets +2/+2 for each Treasure you control."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Hovel Hurler",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Giant Warrior",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{R/W}{R/W}, Remove a counter from this creature: Another target creature you control gets +1/+0 and gains flying until end of turn.",
+    "Activate only as a sorcery."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Ruric Thar, Biomagus",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Legendary Creature — Ogre Crab Wizard",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever Ruric Thar becomes the target of a spell or ability an opponent controls, draw a card."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Sunbond",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Enchantment — Aura",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Enchanted creature has \"Whenever you gain life, put that many +1/+1 counters on this creature.\""
+   ],
+   "needs": null
+  },
+  {
+   "name": "Tenured Tethermage",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Human Artificer",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature enters, you may sacrifice a land.",
+    "If you do, create two tapped Heartwood tokens. (They're red and green artifacts with \"{T}: Add {R} or {G}.\")",
+    "Tap two untapped artifacts you control: Put two +1/+1 counters on this creature."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Verdant Kraken",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Plant Kraken",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "At the beginning of each player's upkeep, you create a 3/3 green Forest Tentacle land creature token. (It has \"{T}: Add {G}.\" It's affected by summoning sickness until your next turn.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Zimone, All-Questioning",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Legendary Creature — Human Wizard",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "At the beginning of your end step, if a land entered the battlefield under your control this turn and you control a prime number of lands, create Primo, the Indivisible, a legendary 0/0 green and blue Fractal creature token, then put that many +1/+1 counters on it. (2, 3, 5, 7, 11, 13, 17, 19, 23, 29, and 31 are prime numbers.)"
+   ],
+   "needs": null
+  }
+ ]
+}

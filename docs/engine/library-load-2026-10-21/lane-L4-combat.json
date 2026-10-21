@@ -1,0 +1,405 @@
+{
+ "schema": "library-load-lane@1",
+ "lane": "L4-combat",
+ "theme": "combat",
+ "label": "Combat and equipment: attack and block triggers and requirements, evasion, protection, equip, saddle, bushido",
+ "source": {
+  "collection": "collection-2026-10-21.json",
+  "workbook": "Backup_Load_-_CrankMagic_-_2026-10-21.xlsx",
+  "decks": [
+   "D1",
+   "D2",
+   "D3",
+   "D4",
+   "D5",
+   "D6",
+   "D7",
+   "S1-D1",
+   "S1-D2",
+   "S1-D3",
+   "S1-D4",
+   "S1-D5",
+   "S1-D6",
+   "S2-D1",
+   "S2-D2",
+   "S2-D3",
+   "S2-D4",
+   "S2-D5",
+   "S2-D6",
+   "G0-D1",
+   "G0-D2",
+   "G0-D3",
+   "G0-D4",
+   "G1-D1",
+   "G1-D2",
+   "G1-D3",
+   "G1-D4",
+   "CJ1",
+   "CJ2",
+   "CJ3",
+   "CJ4",
+   "CJ5",
+   "HG1",
+   "HG2",
+   "TB1",
+   "TB2",
+   "TB5"
+  ],
+  "liveDecks": [
+   "D1",
+   "D2",
+   "D3",
+   "D4",
+   "D5",
+   "D6",
+   "D7"
+  ],
+  "candidates": {
+   "pool": 29551,
+   "candidate": 2643,
+   "refused": 0,
+   "blocked": 6,
+   "vetoed": 18,
+   "unknown": 25793,
+   "structure": 1091,
+   "oneSentenceShort": 12544
+  }
+ },
+ "cards": [
+  {
+   "name": "Teysa, Envoy of Ghosts",
+   "scope": "live",
+   "liveDecks": [
+    "D7"
+   ],
+   "decks": [
+    "D7",
+    "TB5"
+   ],
+   "owned": 1,
+   "rank": null,
+   "type": "Legendary Creature — Human Advisor",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "protection from creatures",
+    "Whenever a creature deals combat damage to you, destroy that creature.",
+    "Create a 1/1 white and black Spirit creature token with flying."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Leyline Axe",
+   "scope": "live",
+   "liveDecks": [
+    "D3"
+   ],
+   "decks": [
+    "D3"
+   ],
+   "owned": 1,
+   "rank": 1521,
+   "type": "Artifact — Equipment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "If this card is in your opening hand, you may begin the game with it on the battlefield."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Umbral Mantle",
+   "scope": "live",
+   "liveDecks": [
+    "D4"
+   ],
+   "decks": [
+    "D4"
+   ],
+   "owned": 1,
+   "rank": 2223,
+   "type": "Artifact — Equipment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Equipped creature has \"{3}, {Q}: This creature gets +2/+2 until end of turn.\" ({Q} is the untap symbol.)"
+   ],
+   "needs": []
+  },
+  {
+   "name": "Cartel Aristocrat",
+   "scope": "live",
+   "liveDecks": [
+    "D5"
+   ],
+   "decks": [
+    "D5"
+   ],
+   "owned": 0,
+   "rank": null,
+   "type": "Creature — Human Advisor",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Sacrifice another creature: This creature gains protection from the color of your choice until end of turn."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Kaalia of the Vast",
+   "scope": "deck",
+   "liveDecks": [],
+   "decks": [
+    "G0-D2"
+   ],
+   "owned": 0,
+   "rank": 2524,
+   "type": "Legendary Creature — Human Cleric",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever Kaalia attacks an opponent, you may put an Angel, Demon, or Dragon creature card from your hand onto the battlefield tapped and attacking that opponent."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Atarka, World Render",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": 938,
+   "type": "Legendary Creature — Dragon",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever a Dragon you control attacks, it gains double strike until end of turn."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Inti, Seneschal of the Sun",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": 1859,
+   "type": "Legendary Creature — Human Knight",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever you attack, you may discard a card.",
+    "When you do, put a +1/+1 counter on target attacking creature.",
+    "It gains trample until end of turn.",
+    "Whenever you discard one or more cards, exile the top card of your library.",
+    "You may play that card until your next end step."
+   ],
+   "needs": [
+    "option:MayPlay",
+    "option:RememberChanged",
+    "option:RememberObjects"
+   ]
+  },
+  {
+   "name": "Bark of Doran",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Artifact — Equipment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "As long as equipped creature's toughness is greater than its power, it assigns combat damage equal to its toughness rather than its power."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Baseball Bat",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Artifact — Equipment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this Equipment enters, attach it to target creature you control.",
+    "Whenever equipped creature attacks, tap up to one target creature."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Black Knight",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Human Knight",
+   "layout": "normal",
+   "compiler": "vetoed",
+   "why": [
+    "2:protection from COLOR: failed 1 of 1 in calibration"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Bludgeon Brawl",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Each noncreature, non-Equipment artifact is an Equipment with equip {X} and \"Equipped creature gets +X/+0,\" where X is that artifact's mana value."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Bounding Felidar",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Cat Beast Mount",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever this creature attacks while saddled, put a +1/+1 counter on each other creature you control.",
+    "You gain 1 life for each of those creatures.",
+    "Saddle 2 (Tap any number of other creatures you control with total power 2 or more: This Mount becomes saddled until end of turn. Saddle only as a sorcery.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Bristlepack Sentry",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Plant Wolf",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "As long as you control a creature with power 4 or greater, this creature can attack as though it didn't have defender."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Danitha, Spear of Agony",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Legendary Creature — Human Knight",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever you cast a spell that targets an opponent or a creature an opponent controls, put a +1/+1 counter on Danitha."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Fear of Failed Tests",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Enchantment Creature — Nightmare",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever this creature deals combat damage to a player, draw that many cards."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Hand of Honor",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Human Samurai",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Bushido 1 (Whenever this creature blocks or becomes blocked, it gets +1/+1 until end of turn.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Safewright Cavalry",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Elf Warrior",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "This creature can't be blocked by more than one creature.",
+    "{5}: Target Elf you control gets +2/+2 until end of turn."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Spring Splasher",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Frog Beast",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever this creature attacks, target creature defending player controls gets -3/-0 until end of turn."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Vinebred Brawler",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Elf Berserker",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "This creature must be blocked if able.",
+    "Whenever this creature attacks, another target Elf you control gets +2/+1 until end of turn."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Warren Torchmaster",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Goblin Warrior",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "At the beginning of combat on your turn, you may blight 1.",
+    "When you do, target creature gains haste until end of turn. (To blight 1, put a -1/-1 counter on a creature you control.)"
+   ],
+   "needs": null
+  }
+ ]
+}

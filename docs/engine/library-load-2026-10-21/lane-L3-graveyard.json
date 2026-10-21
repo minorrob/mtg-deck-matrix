@@ -1,0 +1,333 @@
+{
+ "schema": "library-load-lane@1",
+ "lane": "L3-graveyard",
+ "theme": "graveyard",
+ "label": "The graveyard: recursion, death and leave-the-battlefield triggers, mill, manifest, shuffling cards away",
+ "source": {
+  "collection": "collection-2026-10-21.json",
+  "workbook": "Backup_Load_-_CrankMagic_-_2026-10-21.xlsx",
+  "decks": [
+   "D1",
+   "D2",
+   "D3",
+   "D4",
+   "D5",
+   "D6",
+   "D7",
+   "S1-D1",
+   "S1-D2",
+   "S1-D3",
+   "S1-D4",
+   "S1-D5",
+   "S1-D6",
+   "S2-D1",
+   "S2-D2",
+   "S2-D3",
+   "S2-D4",
+   "S2-D5",
+   "S2-D6",
+   "G0-D1",
+   "G0-D2",
+   "G0-D3",
+   "G0-D4",
+   "G1-D1",
+   "G1-D2",
+   "G1-D3",
+   "G1-D4",
+   "CJ1",
+   "CJ2",
+   "CJ3",
+   "CJ4",
+   "CJ5",
+   "HG1",
+   "HG2",
+   "TB1",
+   "TB2",
+   "TB5"
+  ],
+  "liveDecks": [
+   "D1",
+   "D2",
+   "D3",
+   "D4",
+   "D5",
+   "D6",
+   "D7"
+  ],
+  "candidates": {
+   "pool": 29551,
+   "candidate": 2643,
+   "refused": 0,
+   "blocked": 6,
+   "vetoed": 18,
+   "unknown": 25793,
+   "structure": 1091,
+   "oneSentenceShort": 12544
+  }
+ },
+ "cards": [
+  {
+   "name": "Reveillark",
+   "scope": "live",
+   "liveDecks": [
+    "D5",
+    "D7"
+   ],
+   "decks": [
+    "D5",
+    "D7",
+    "TB5"
+   ],
+   "owned": 0,
+   "rank": null,
+   "type": "Creature — Elemental",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature leaves the battlefield, return up to two target creature cards with power 2 or less from your graveyard to the battlefield.",
+    "Evoke {5}{W} (You may cast this spell for its evoke cost. If you do, it's sacrificed when it enters.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Luminous Broodmoth",
+   "scope": "live",
+   "liveDecks": [
+    "D7"
+   ],
+   "decks": [
+    "D7",
+    "TB5"
+   ],
+   "owned": 0,
+   "rank": 1214,
+   "type": "Creature — Insect",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever a creature you control without flying dies, return it to the battlefield under its owner's control with a flying counter on it."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Hostage Taker",
+   "scope": "live",
+   "liveDecks": [
+    "D7"
+   ],
+   "decks": [
+    "D7",
+    "TB5"
+   ],
+   "owned": 1,
+   "rank": 1539,
+   "type": "Creature — Human Pirate",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature enters, exile another target creature or artifact until this creature leaves the battlefield.",
+    "You may cast that card for as long as it remains exiled, and mana of any type can be spent to cast that spell."
+   ],
+   "needs": [
+    "option:MayPlay",
+    "option:RememberChanged",
+    "option:RememberObjects"
+   ]
+  },
+  {
+   "name": "Happily Ever After",
+   "scope": "live",
+   "liveDecks": [
+    "D1"
+   ],
+   "decks": [
+    "D1",
+    "TB1"
+   ],
+   "owned": 1,
+   "rank": null,
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this enchantment enters, each player gains 5 life and draws a card.",
+    "At the beginning of your upkeep, if there are five colors among permanents you control, there are six or more card types among permanents you control and/or cards in your graveyard, and your life total is greater than or equal to your starting life total, you win the game."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Goblin Engineer",
+   "scope": "live",
+   "liveDecks": [
+    "D6"
+   ],
+   "decks": [
+    "D6"
+   ],
+   "owned": 0,
+   "rank": 1385,
+   "type": "Creature — Goblin Artificer",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature enters, you may search your library for an artifact card, put it into your graveyard, then shuffle.",
+    "{R}, {T}, Sacrifice an artifact: Return target artifact card with mana value 3 or less from your graveyard to the battlefield."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Amphin Mutineer",
+   "scope": "live",
+   "liveDecks": [
+    "D3"
+   ],
+   "decks": [
+    "D3"
+   ],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Salamander Pirate",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature enters, exile up to one target non-Salamander creature.",
+    "That creature's controller creates a 4/3 blue Salamander Warrior creature token.",
+    "Encore {4}{U}{U} ({4}{U}{U}, Exile this card from your graveyard: For each opponent, create a token copy that attacks that opponent this turn if able. They gain haste. Sacrifice them at the beginning of the next end step. Activate only as a sorcery.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Boggart Shenanigans",
+   "scope": "live",
+   "liveDecks": [
+    "D6"
+   ],
+   "decks": [
+    "D6"
+   ],
+   "owned": 1,
+   "rank": null,
+   "type": "Kindred Enchantment — Goblin",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever another Goblin you control is put into a graveyard from the battlefield, you may have this enchantment deal 1 damage to target player or planeswalker."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Regrowth",
+   "scope": "live",
+   "liveDecks": [
+    "D2"
+   ],
+   "decks": [
+    "D2"
+   ],
+   "owned": 0,
+   "rank": null,
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Return target card from your graveyard to your hand."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Annie Flash, the Veteran",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Legendary Creature — Human Rogue",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When Annie Flash enters, if you cast it, return target permanent card with mana value 3 or less from your graveyard to the battlefield tapped.",
+    "Whenever Annie Flash becomes tapped, exile the top two cards of your library.",
+    "You may play those cards this turn."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Cathartic Parting",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "The owner of target artifact or enchantment an opponent controls shuffles it into their library.",
+    "You may shuffle up to four target cards from your graveyard into your library."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Endless Detour",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "The owner of target spell, nonland permanent, or card in a graveyard puts it on their choice of the top or bottom of their library."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Innocuous Rat",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Rat",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature dies, manifest dread. (Look at the top two cards of your library. Put one onto the battlefield face down as a 2/2 creature and the other into your graveyard. Turn it face up any time for its mana cost if it's a creature card.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Nether Spirit",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Spirit",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "At the beginning of your upkeep, if this card is the only creature card in your graveyard, you may return this card to the battlefield."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Proctor of Potential",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Human Cleric",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever this creature or another creature you control enters, surveil 1. (Look at the top card of your library. You may put it into your graveyard.)",
+    "{W}{U}: Return this card from your graveyard to the battlefield with a finality counter on it.",
+    "Activate only if you've scried or surveilled this turn. (If a creature with a finality counter on it would die, exile it instead.)"
+   ],
+   "needs": null
+  }
+ ]
+}

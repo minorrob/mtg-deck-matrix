@@ -1,0 +1,408 @@
+{
+ "schema": "library-load-lane@1",
+ "lane": "L2-stack",
+ "theme": "stack",
+ "label": "The stack and control: counterspells, \"can't cast\", timing restrictions, flash grants, phasing, morph, surge, spree, gaining control, cards from outside the game",
+ "source": {
+  "collection": "collection-2026-10-21.json",
+  "workbook": "Backup_Load_-_CrankMagic_-_2026-10-21.xlsx",
+  "decks": [
+   "D1",
+   "D2",
+   "D3",
+   "D4",
+   "D5",
+   "D6",
+   "D7",
+   "S1-D1",
+   "S1-D2",
+   "S1-D3",
+   "S1-D4",
+   "S1-D5",
+   "S1-D6",
+   "S2-D1",
+   "S2-D2",
+   "S2-D3",
+   "S2-D4",
+   "S2-D5",
+   "S2-D6",
+   "G0-D1",
+   "G0-D2",
+   "G0-D3",
+   "G0-D4",
+   "G1-D1",
+   "G1-D2",
+   "G1-D3",
+   "G1-D4",
+   "CJ1",
+   "CJ2",
+   "CJ3",
+   "CJ4",
+   "CJ5",
+   "HG1",
+   "HG2",
+   "TB1",
+   "TB2",
+   "TB5"
+  ],
+  "liveDecks": [
+   "D1",
+   "D2",
+   "D3",
+   "D4",
+   "D5",
+   "D6",
+   "D7"
+  ],
+  "candidates": {
+   "pool": 29551,
+   "candidate": 2643,
+   "refused": 0,
+   "blocked": 6,
+   "vetoed": 18,
+   "unknown": 25793,
+   "structure": 1091,
+   "oneSentenceShort": 12544
+  }
+ },
+ "cards": [
+  {
+   "name": "Silence",
+   "scope": "live",
+   "liveDecks": [
+    "D7"
+   ],
+   "decks": [
+    "D7",
+    "TB5"
+   ],
+   "owned": 0,
+   "rank": 606,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Your opponents can't cast spells this turn."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Clever Concealment",
+   "scope": "live",
+   "liveDecks": [
+    "D7"
+   ],
+   "decks": [
+    "D7",
+    "TB5"
+   ],
+   "owned": 0,
+   "rank": 813,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Any number of target nonland permanents you control phase out. (Treat them and anything attached to them as though they don't exist until your next turn.)"
+   ],
+   "needs": []
+  },
+  {
+   "name": "Boromir, Warden of the Tower",
+   "scope": "live",
+   "liveDecks": [
+    "D7"
+   ],
+   "decks": [
+    "D7",
+    "TB5"
+   ],
+   "owned": 1,
+   "rank": 945,
+   "type": "Legendary Creature — Human Soldier",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever an opponent casts a spell, if no mana was spent to cast it, counter that spell.",
+    "Sacrifice Boromir: Creatures you control gain indestructible until end of turn.",
+    "The Ring tempts you."
+   ],
+   "needs": [
+    "api:RingTemptsYou"
+   ]
+  },
+  {
+   "name": "Grim Haruspex",
+   "scope": "live",
+   "liveDecks": [
+    "D7"
+   ],
+   "decks": [
+    "D7",
+    "TB5"
+   ],
+   "owned": 1,
+   "rank": 1088,
+   "type": "Creature — Human Wizard",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Morph {B} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)",
+    "Whenever another nontoken creature you control dies, draw a card."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Rebuff the Wicked",
+   "scope": "live",
+   "liveDecks": [
+    "D7"
+   ],
+   "decks": [
+    "D7",
+    "TB5"
+   ],
+   "owned": 1,
+   "rank": 1837,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Counter target spell that targets a permanent you control."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Bilbo's Gambit",
+   "scope": "live",
+   "liveDecks": [
+    "D7"
+   ],
+   "decks": [
+    "D7",
+    "TB5"
+   ],
+   "owned": 1,
+   "rank": null,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Gift a Treasure (You may promise an opponent a gift as you cast this spell. If you do, they create a Treasure token before its other effects. It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")",
+    "Return target spell to its owner's hand.",
+    "If the gift was promised, players can't cast spells this turn."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Overwhelming Denial",
+   "scope": "live",
+   "liveDecks": [
+    "D7"
+   ],
+   "decks": [
+    "D7",
+    "TB5"
+   ],
+   "owned": 1,
+   "rank": null,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Surge {U}{U} (You may cast this spell for its surge cost if you or a teammate has cast another spell this turn.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Render Silent",
+   "scope": "live",
+   "liveDecks": [
+    "D7"
+   ],
+   "decks": [
+    "D7",
+    "TB5"
+   ],
+   "owned": 1,
+   "rank": null,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Its controller can't cast spells this turn."
+   ],
+   "needs": [
+    "option:RememberObjects"
+   ]
+  },
+  {
+   "name": "Refute",
+   "scope": "live",
+   "liveDecks": [
+    "D3"
+   ],
+   "decks": [
+    "D3"
+   ],
+   "owned": 1,
+   "rank": null,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Draw a card, then discard a card."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Timely Ward",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": 1542,
+   "type": "Enchantment — Aura",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "You may cast this spell as though it had flash if it targets a commander.",
+    "Enchanted creature has indestructible."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Cunning Wish",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "You may reveal an instant card you own from outside the game and put it into your hand."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Explosive Derailment",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Spree (Choose one or more additional costs.)",
+    "+ {2} — Explosive Derailment deals 4 damage to target creature.",
+    "+ {2} — Destroy target artifact."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Extrapolate the Impossible",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "You may reveal exactly two cards you own with different names from outside the game.",
+    "An opponent chooses one of them.",
+    "You put that card into your hand."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Mob Rule",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Choose one —",
+    "• Gain control of all creatures with power 4 or greater until end of turn.",
+    "Untap those creatures.",
+    "They gain haste until end of turn.",
+    "• Gain control of all creatures with power 3 or less until end of turn.",
+    "Untap those creatures.",
+    "They gain haste until end of turn."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Pumpkin Bombs",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{T}, Discard two cards: Draw three cards, then put a fuse counter on this artifact.",
+    "It deals damage equal to the number of fuse counters on it to target opponent.",
+    "They gain control of this artifact."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Solarium Sentry",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Cat Soldier",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever an opponent casts a spell with mana value 2 or less, you gain 2 life."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Teferi, Mage of Zhalfir",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Legendary Creature — Human Wizard",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Creature cards you own that aren't on the battlefield have flash.",
+    "Each opponent can cast spells only any time they could cast a sorcery."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Word of Seizing",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Untap target permanent and gain control of it until end of turn.",
+    "It gains haste until end of turn."
+   ],
+   "needs": null
+  }
+ ]
+}
