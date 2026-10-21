@@ -724,6 +724,10 @@ export function collectTriggers(state, events) {
           /* "This ability triggers only once each turn": once it has, this turn, it does not again. */
           if (ability.limit && usesThisTurn(state, id, `trigger:${ability.id}`) >= ability.limit) continue;
           if (ability.limit) recordUse(state, id, `trigger:${ability.id}`);
+          /* "THIS ABILITY TRIGGERS ONLY ONCE" (Acrobatic Cheerleader, library load L5): once it has, never again -- for as long as
+             its permanent is the object it is; one that leaves and returns is a new object, its ability new (CR 400.7). */
+          if (ability.onlyOnce && (object.triggeredOnce ?? []).includes(ability.id)) continue;
+          if (ability.onlyOnce) object.triggeredOnce = [...(object.triggeredOnce ?? []), ability.id];
           state.pendingTriggers.push({
             abilityId: ability.id,
             text: ability.text ?? ability.id,

@@ -144,7 +144,10 @@ const CAME_FROM = ["library"];
 /* The mana a condition may ask was spent to cast its object: the five colors and colorless (CR 106.1). */
 const SPENT_KEYS = ["W", "U", "B", "R", "G", "C"];
 /* A counted comparison's keys: what is counted, and against what. */
-const COMPARE_KEYS = ["count", "atLeast", "atMost", "moreThan", "fewerThan"];
+const COMPARE_KEYS = ["count", "atLeast", "atMost", "moreThan", "fewerThan", "prime"];
+/* "IF ... YOU CONTROL A PRIME NUMBER OF LANDS" (Zimone, All-Questioning, library load L5): `prime: true`, the count a prime number
+   -- 2, 3, 5, 7 and on; 0 and 1 are not. */
+const isPrime = (n) => Number.isInteger(n) && n >= 2 && Array.from({length: Math.floor(Math.sqrt(n)) - 1}, (_, i) => i + 2).every((d) => n % d !== 0);
 /* A NAMED OBJECT (Forge's ConditionDefined): "if it was a creature card" (Scavenging Ooze: what was exiled), "if it's
    blue" (Pyroblast: the target), "if it's a planeswalker" (Forge of Heroes): `about` which -- "remembered", "that card"
    (a trigger's subject), "target" (the first) -- and `is` what it must be, read where it now is. None there, and it is
@@ -362,11 +365,17 @@ export function conditionHolds(state, condition, {controller, source = null, abo
       /* How the spell resolving was cast: "if you've cast another instant or sorcery spell this turn" leaves its own cast out
          (Burrog Barrage; script/amount.mjs, spellsCastThisTurn's `another`). */
       ...(cast !== undefined ? {cast} : {})};
-    const n = amountOf(state, condition.compare.count, counted), than = (v) => amountOf(state, v, counted);
-    if (condition.compare.atLeast !== undefined && n < than(condition.compare.atLeast)) return false;
-    if (condition.compare.atMost !== undefined && n > than(condition.compare.atMost)) return false;
-    if (condition.compare.moreThan !== undefined && !(n > than(condition.compare.moreThan))) return false;
-    if (condition.compare.fewerThan !== undefined && !(n < than(condition.compare.fewerThan))) return false;
+    const than = (v) => amountOf(state, v, counted);
+    /* "If a land entered the battlefield under your control this turn and you control a prime number of lands" (Zimone): a
+       list of comparisons, every one of them holding. */
+    for (const compare of [].concat(condition.compare)) {
+      const n = amountOf(state, compare.count, counted);
+      if (compare.atLeast !== undefined && n < than(compare.atLeast)) return false;
+      if (compare.atMost !== undefined && n > than(compare.atMost)) return false;
+      if (compare.moreThan !== undefined && !(n > than(compare.moreThan))) return false;
+      if (compare.fewerThan !== undefined && !(n < than(compare.fewerThan))) return false;
+      if (compare.prime === true && !isPrime(n)) return false;
+    }
   }
   /* "As long as you have an enduring story" (Storied, CR 702.195b), or "unless you have one": the player's designation
      (keywords/designations.mjs). */
@@ -515,14 +524,15 @@ export function conditionProblems(condition) {
       || !Object.entries(spent).every(([key, n]) => SPENT_KEYS.includes(key) && Number.isInteger(n) && n >= 1))
       problems.push(`spent is mana by color, ${SPENT_KEYS.join(", ")}, each a whole number 1 or more: {G: 2} is "if {G}{G} was spent to cast it"`);
   }
-  if ("compare" in condition) {
-    const compare = condition.compare;
-    if (!compare || typeof compare !== "object" || Array.isArray(compare)) problems.push("compare is {count, atLeast | atMost | moreThan | fewerThan}");
+  /* One comparison, or a list of them that must all hold (Zimone). */
+  if ("compare" in condition) for (const compare of Array.isArray(condition.compare) && condition.compare.length ? condition.compare : [condition.compare]) {
+    if (!compare || typeof compare !== "object" || Array.isArray(compare)) problems.push("compare is {count, atLeast | atMost | moreThan | fewerThan | prime}, or a list of them");
     else {
       for (const key of Object.keys(compare)) if (!COMPARE_KEYS.includes(key)) problems.push(`compare has no key ${JSON.stringify(key)}; it has ${COMPARE_KEYS.join(", ")}`);
       if (!("count" in compare)) problems.push("compare counts something: {count: an amount}");
-      if (!COMPARE_KEYS.slice(1).some((key) => key in compare)) problems.push("compare says against what: atLeast, atMost, moreThan or fewerThan");
-      for (const key of COMPARE_KEYS) if (key in compare) problems.push(...amountProblems(compare[key]).map((p) => `compare's ${key}: ${p}`));
+      if (!COMPARE_KEYS.slice(1).some((key) => key in compare)) problems.push("compare says against what: atLeast, atMost, moreThan, fewerThan or prime");
+      if ("prime" in compare && compare.prime !== true) problems.push("compare's prime is true: the count a prime number");
+      for (const key of COMPARE_KEYS.slice(0, -1)) if (key in compare) problems.push(...amountProblems(compare[key]).map((p) => `compare's ${key}: ${p}`));
     }
   }
   if ("level" in condition) {

@@ -35,7 +35,7 @@ import {payGeneric, canPayGeneric, parseManaCost, manaValue, paymentUnits, payme
 import {typesOf, characteristicsOf, everyCreatureTypeOf, controllerOf, lastKnown, staticAbilities} from "../../rules/layers.mjs";
 import {isLandType} from "../../keywords/types.mjs";
 import {pushCopy, becameTarget, specsOf} from "../../rules/stack.mjs";
-import {loseLife, DAMAGING, damageQuestion, addMana} from "./resources.mjs";
+import {loseLife, gainLife, DAMAGING, damageQuestion, addMana} from "./resources.mjs";
 import {damageOrderChoice} from "../../rules/replacement.mjs";
 import {targetCandidates, targetName} from "../bind.mjs";
 import {commanderTax} from "../../rules/commander.mjs";
@@ -1149,6 +1149,7 @@ const exileWords = (state, awaiting) => {
 };
 function costWords(awaiting, state) {
   if (awaiting.exileFromGraveyard) return exileWords(state, awaiting);
+  if (awaiting.opponentGainsLife) return gainsWords(awaiting.opponentGainsLife);
   if (awaiting.amountX) return "pay {X}";
   if (awaiting.timesAny) return `pay ${awaiting.mana} any number of times`;
   const paid = [awaiting.mana ?? null, awaiting.amount > 0 ? `{${awaiting.amount}}` : null, lifeAsked(awaiting) ? `${awaiting.life} life` : null].filter(Boolean);
@@ -1157,6 +1158,13 @@ function costWords(awaiting, state) {
     : awaiting.tap ? `tap ${otherNoun(awaiting.tap).replace(/^(a|another) /, "$1 untapped ").replace(/^a untapped/, "an untapped")} you control` : null;
   return [other, paid.length ? `pay ${paid.join(" and ")}` : null].filter(Boolean).join(" and ") || `pay {${awaiting.amount}}`;
 }
+/* "CUMULATIVE UPKEEP -- AN OPPONENT GAINS 1 LIFE" (Wall of Shards, library load L5; CR 702.24a, 118.12): `opponentGainsLife`, that
+   much life for an opponent of the payer's, `times` over -- one for each age counter, counted as it is asked. Paid, which
+   opponent gains each is the payer's choice, the same one or a different one each time (its ruling), asked in turn when there
+   is more than one opponent still in the game; each one chosen gains what it was chosen for at once, as one life gain from
+   the one cost (CR 119.10). */
+const opponentsOf = (state, player) => state.players.filter((p) => p.id !== player && !p.lost).map((p) => p.id);
+const gainsWords = ({amount, times}) => `have an opponent gain ${amount} life${times > 1 ? `, ${times} times` : ""}`;
 /* "YOU MAY PAY {X}" (Halo Forager; `amountX`, CR 107.3f): X is the payer's to choose as it resolves -- each amount their pool
    and plain mana sources could pay, from {0}, its own option -- and what follows knows it (`paidX`, script/resolution.mjs). */
 function xOptions(state, player) {
@@ -1177,6 +1185,12 @@ function timesOptions(state, awaiting) {
 function payOptions(state, awaiting) {
   if (awaiting.amountX && awaiting.amount === undefined) return xOptions(state, awaiting.player);
   if (awaiting.timesAny && awaiting.paidTimes === undefined) return timesOptions(state, awaiting);
+  /* Having said they pay, which opponent gains the next of it; else, to pay it at all, an opponent to gain it. */
+  if (awaiting.gaining) return opponentsOf(state, awaiting.player).map((id) => ({label: state.players[id].name, gainer: id}));
+  if (awaiting.opponentGainsLife) {
+    const words = gainsWords(awaiting.opponentGainsLife);
+    return [{label: `${words[0].toUpperCase()}${words.slice(1)}`, pay: true, opponentsGain: true}];
+  }
   const {player} = awaiting, amount = awaiting.amount ?? 0, life = awaiting.life ?? 0;
   if (amount > 0 && !canPayGeneric(state, player, amount)) return [];
   if (awaiting.mana && !unlessPlans(state, player, awaiting.mana, 1).plans.length) return [];
@@ -1244,6 +1258,7 @@ export const unlessPays = {
       ...(params.sacrificeCount ? {sacrificeCount: params.sacrificeCount} : {}),
       ...(params.returnToHand ? {returnToHand: structuredClone(params.returnToHand)} : {}),
       ...(params.tap ? {tap: structuredClone(params.tap)} : {}),
+      ...(params.opponentGainsLife ? {opponentGainsLife: {amount: params.opponentGainsLife.amount, times: Math.max(0, amountOf(state, params.opponentGainsLife.times ?? 1, context))}} : {}),
       ...(params.amountX === true ? {amountX: true} : {}),
       ...(params.timesAny === true ? {timesAny: true} : {}),
       ...(params.exileFromGraveyard ? {exileFromGraveyard: structuredClone(params.exileFromGraveyard), ...(params.exileSelf === true ? {exileSelf: true} : {})} : {}),
@@ -1268,6 +1283,12 @@ export const unlessPays = {
     /* Having said they exile that many, with more there: which ones. */
     if (awaiting.exiling) return {id: `unless-exile:${awaiting.player}:${state.turn}`, title: `Choose ${NUMBER_WORDS[awaiting.exileFromGraveyard.count]} cards to exile`,
       mode: "many", min: awaiting.exileFromGraveyard.count, max: awaiting.exileFromGraveyard.count, options: payOptions(state, awaiting).map((option, index) => ({index, ...option}))};
+    /* Having said they pay, with more than one opponent: who gains the next of it. */
+    if (awaiting.gaining) {
+      const {amount, times} = awaiting.opponentGainsLife;
+      return {id: `unless-gain:${awaiting.player}:${state.turn}:${awaiting.gaining.chosen.length}`, title: `Which opponent gains ${amount} life (${awaiting.gaining.chosen.length + 1} of ${times})?`,
+        mode: "one", min: 1, max: 1, options: payOptions(state, awaiting).map((option, index) => ({index, ...option}))};
+    }
     /* Having said they sacrifice that many: which ones. */
     if (awaiting.sacrificing) return {id: `unless-sacrifice:${awaiting.player}:${state.turn}`, title: `Choose ${awaiting.sacrificeCount} permanents to sacrifice`, mode: "many",
       min: awaiting.sacrificeCount, max: awaiting.sacrificeCount, options: payOptions(state, awaiting).map((option, index) => ({index, ...option}))};
@@ -1297,6 +1318,17 @@ export const unlessPays = {
       const {exiling, ...rest} = awaiting;
       return unlessPaid(state, rest, {...exiling.option, exile: chosen}, []);
     }
+    /* The opponent for the next of it: asked again until each has one. */
+    if (awaiting.gaining) {
+      const gainer = payOptions(state, awaiting)[(indices ?? [])[0]]?.gainer;
+      if (gainer === undefined || (indices ?? []).length !== 1) throw new Error("Invalid selection");
+      const {gaining, ...rest} = awaiting, chosen = [...gaining.chosen, gainer];
+      if (chosen.length < awaiting.opponentGainsLife.times) {
+        state.awaiting = {...awaiting, gaining: {...gaining, chosen}};
+        return {events: [], again: true};
+      }
+      return unlessPaid(state, rest, {...gaining.option, gainers: chosen}, []);
+    }
     if (awaiting.sacrificing) {
       const ids = payOptions(state, awaiting).map((o) => o.cardId);
       const chosen = [...new Set(indices ?? [])].map((i) => ids[i]);
@@ -1318,6 +1350,13 @@ export const unlessPays = {
       return {events: [], again: true};
     }
     if (!option.pay) return unpaid(awaiting);
+    /* An opponent to gain it: with one there, that one each time -- no choice -- and with more, asked in turn. */
+    if (option.opponentsGain) {
+      const opponents = opponentsOf(state, awaiting.player);
+      if (opponents.length === 1) return unlessPaid(state, awaiting, {...option, gainers: Array(awaiting.opponentGainsLife.times).fill(opponents[0])}, []);
+      state.awaiting = {...awaiting, gaining: {option, chosen: []}};
+      return {events: [], again: true};
+    }
     /* The X chosen is the amount paid. */
     if (option.x !== undefined) return unlessPays.paid(state, {...awaiting, amount: option.x}, option);
     /* So many times: the cost that many times over, paid as one (CR 601.2h). */
@@ -1355,6 +1394,9 @@ export const unlessPays = {
 };
 /* What paying an "unless" cost is besides its mana -- life, a discard, a sacrifice -- and what follows it. */
 function unlessPaid(state, awaiting, option, events) {
+  /* Life an opponent gains as the cost is paid: each one chosen, all they were chosen for, at once (CR 119.10). */
+  for (const gainer of new Set(option.gainers ?? [])) events.push(...gainLife(state, {amount: awaiting.opponentGainsLife.amount * option.gainers.filter((id) => id === gainer).length, who: [gainer]},
+    {controller: awaiting.player, source: awaiting.source}));
   /* Paying life is losing it (CR 119.4, 119.3). */
   if ((awaiting.life ?? 0) > 0) events.push(...loseLife(state, {amount: awaiting.life, who: [awaiting.player]}, {controller: awaiting.player, source: awaiting.source}));
   /* A discard: the card it became, remembered -- "when you discard a card this way, ... the mana value of the discarded card"

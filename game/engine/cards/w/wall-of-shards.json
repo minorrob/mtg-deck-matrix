@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wall of Shards",
+    "oracleId": "8fab68ad-169d-46d3-93c4-5bdee4eea2ce",
+    "supertypes": [
+      "Snow"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Wall"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 8
+  },
+  "oracleText": "Defender, flying\nCumulative upkeep—An opponent gains 1 life. (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Defender",
+      "keyword": "defender"
+    },
+    {
+      "kind": "keyword",
+      "text": "flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "Cumulative upkeep—An opponent gains 1 life. (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)",
+      "keyword": "cumulative upkeep",
+      "cost": [
+        {
+          "atom": "opponentGainsLife",
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

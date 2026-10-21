@@ -1,0 +1,67 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sunbond",
+    "oracleId": "163ece8a-0479-4bb2-b559-581985d1898b",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant creature\nEnchanted creature has \"Whenever you gain life, put that many +1/+1 counters on this creature.\"",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Enchant creature",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Enchanted creature has \"Whenever you gain life, put that many +1/+1 counters on this creature.\"",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "addAbilities": [
+          {
+            "kind": "triggered",
+            "text": "Whenever you gain life, put that many +1/+1 counters on this creature.",
+            "trigger": {
+              "on": "life gained"
+            },
+            "effects": [
+              {
+                "effect": "putCounter",
+                "targets": "self",
+                "counter": "+1/+1",
+                "count": {
+                  "lifeGained": true
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

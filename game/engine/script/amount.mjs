@@ -47,6 +47,9 @@
  *   {lesserOf: [amount, amount]}         the least of them: "greater than this creature's power or toughness" (increment)
  *   {tappedThisWay: true}                how many creatures this spell's additional cost tapped as it was cast -- "three times
  *                                        the number of creatures tapped this way" (Burn at the Stake; rules/actions.mjs)
+ *   {sacrificedThisWay: true}            how many permanents a spell's additional cost sacrificed, for the reflexive trigger of
+ *                                        that payment -- "copy this spell for each creature sacrificed this way" (Plumb the
+ *                                        Forbidden; rules/actions.mjs, sacrificeAnyAtom)
  *   {creaturesDiedThisTurn: who}         the creatures that died this turn under that player's control, or anyone's ("any")
  *   {cardsDrawnThisTurn: who}            the cards that player drew this turn
  *   {scriedOrSurveilledThisTurn: who}    the times that player scried or surveilled this turn
@@ -110,7 +113,7 @@ import {commanderIdentity, hasCommander} from "../rules/commander.mjs";
 export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "toughnessOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness", "countersAmong", "lifeGained", "damagePrevented", "lifeLost", "rememberedCount",
   "lifeGainedThisTurn", "tokensCreatedThisTurn", "mostAmongOpponents", "permanentsLeftThisTurn", "playersDealtCombatDamage", "cardTypesAmong", "manaSpent",
   "permanentsEnteredThisTurn", "excessDamage", "lesserOf", "kicked", "differentPowers", "commanderCasts", "cardsLeftGraveyardThisTurn",
-  "countersRemovedThisWay", "movedCount", "tappedThisWay", "cardsDiscardedThisTurn",
+  "countersRemovedThisWay", "movedCount", "tappedThisWay", "sacrificedThisWay", "cardsDiscardedThisTurn",
   /* What happened this turn, and this game (Train C): the records state/index.mjs, rules/combat.mjs and the effects keep. */
   "creaturesDiedThisTurn", "cardsDrawnThisTurn", "playersDealtNoncombatDamage", "scriedOrSurveilledThisTurn", "spellsCastThisTurn", "spellsCastThisGame",
   "commanderColors", "playersWhoDid", "votes", "totalManaValue",
@@ -190,6 +193,7 @@ export function amountProblems(value) {
   if ("countersOn" in value && typeof value.countersOn === "string" && !["self", "that card", "remembered", "you"].includes(value.countersOn))
     problems.push('countersOn is "self", "that card", "remembered", "you" or a target');
   if ("tappedThisWay" in value && value.tappedThisWay !== true) problems.push("tappedThisWay is true");
+  if ("sacrificedThisWay" in value && value.sacrificedThisWay !== true) problems.push("sacrificedThisWay is true");
   if ("commanderColors" in value && value.commanderColors !== "you") problems.push('commanderColors is "you"');
   if ("graveyardsWithAtLeast" in value && !(Number.isInteger(value.graveyardsWithAtLeast) && value.graveyardsWithAtLeast >= 1)) problems.push("graveyardsWithAtLeast is a whole number of cards, 1 or more");
   if ("controlledBy" in value && !("rememberedCount" in value && ["that player", "most"].includes(value.controlledBy))) problems.push('controlledBy is "that player" or "most", of a rememberedCount');
@@ -325,6 +329,9 @@ export function amountOf(state, value, context = {}) {
   /* The creatures its additional cost tapped, as the spell was cast (CR 601.2h): what the cast recorded; a copy was not cast
      (CR 707.10) and tapped none. */
   else if ("tappedThisWay" in value) n = context.cast?.tapped ?? 0;
+  /* The permanents a spell's additional cost sacrificed (CR 601.2h), as the reflexive trigger of that payment is about them
+     (rules/actions.mjs, `about.sacrificed`; CR 603.12). */
+  else if ("sacrificedThisWay" in value) n = context.about?.sacrificed ?? 0;
   /* "The number of colors in your commanders' color identity" (War Room; CR 903.4): the union of their identities. */
   else if ("commanderColors" in value) n = commanderIdentity(state, context.controller).length;
   /* CONVERGE (Sundering Archaic): "the number of colors of mana spent to cast this creature" -- the colors among the mana
