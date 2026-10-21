@@ -128,8 +128,9 @@ const SLICE = 25;
   ok(rang >= 1 && !(await object.load()).continuing && (await object.load()).waitingOn === "s0", `the alarm played on (${rang} slice${rang === 1 ? "" : "s"}) until Rob was asked again`);
   ok(alarms.at(-1) === null, "and with nothing left to play on and no clock running, the alarm is cleared");
   ok(rob.frames.filter((f) => f.type === "view").length >= 2, "Rob's socket was sent the views as the AI seats played");
-  /* His connection drops while the AI seats play on, and stays down past his five minutes: the alarm that rings then
-     plays on first, and his time running out waits until they stop, rather than failing the alarm. */
+  /* His connection drops while the AI seats play on, and stays down well past five minutes. Alone with AI seats, nobody is
+     waiting on him (Linear ROB-170), so he is on no clock: the alarm plays on, fails nothing, and once the AI seats stop,
+     the game waits for him as he left it. */
   room = await object.load();
   for (let guard = 0; guard < 500 && !room.continuing && room.waitingOn === "s0"; guard += 1) {
     const v = room.view("s0");
@@ -139,15 +140,21 @@ const SLICE = 25;
   await object.webSocketClose(rob, 1001);
   clock += 5 * 60 * 1000;
   await object.table.tick(clock);
-  ok((await object.load()).continuing && (await object.load()).view("s0").departures.s0 === undefined, "his time ran out mid-slice: the table's clock waits for the AI seats, and fails nothing");
-  /* Once they stop, his time running out concedes him; he was the only person at the table, so the game ends there
-     (Rob, 2026-10-06): the AI seats do not play it out for nobody. */
+  ok((await object.load()).continuing && (await object.load()).view("s0").departures.s0 === undefined, "five minutes on, mid-slice, the table's tick fails nothing and concedes nobody");
   let waited = 0;
-  while (room.view("s0").departures.s0 === undefined && waited < 2000) {clock += 1; await object.alarm(); waited += 1;}
+  while ((await object.load()).continuing && waited < 2000) {clock += 1; await object.alarm(); waited += 1;}
+  clock += 60 * 60 * 1000; await object.alarm();
+  room = await object.load();
+  const waiting = room.view("s0");
+  eq([waiting.departures.s0, waiting.status, room.waitingOn, (await call("/table")).table.phase], [undefined, "playing", "s0", "playing"],
+    `once the AI seats stopped (${waited} more alarm${waited === 1 ? "" : "s"}), and an hour on, the game waits for him: not conceded, still on, his question pending`);
+  ok(alarms.at(-1) === null, "and with no clock running and nothing to play on, the alarm is cleared");
+  /* He concedes: he was the only person at the table, so the game ends there (Rob, 2026-10-06); the AI seats do not play
+     it out for nobody. */
+  await call("/table/concede", {});
   const last = room.view("s0");
-  eq([last.departures.s0, last.status, last.result.winner, last.result.reason], ["timed-out", "finished", null, NO_PERSON_REASON],
-    `once the AI seats stopped, his time ran out (${waited} more alarm${waited === 1 ? "" : "s"}), and with no person left the game ended there`);
-  eq([last.result.ending.kind, last.result.ending.seatId], ["timed-out", "s0"], "and its `ending` says he timed out, played in slices as in one go (tests/room-ending.mjs)");
+  eq([last.departures.s0, last.status, last.result.winner, last.result.reason], ["conceded", "finished", null, NO_PERSON_REASON], "his Concede still ends it: with no person left, the game ends there");
+  eq([last.result.ending.kind, last.result.ending.seatId], ["conceded", "s0"], "and its `ending` says he conceded, played in slices as in one go (tests/room-ending.mjs)");
   ok(room.history.at(-1).text === "Every person is out of the game, so it ends here · not finished" && !room.continuing, "the history says so, and nothing plays on");
   ok((await call("/table")).table.phase !== "playing" && alarms.at(-1) === null, "the table moves on, and the alarm is cleared");
 }

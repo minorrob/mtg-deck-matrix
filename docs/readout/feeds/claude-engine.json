@@ -5,6 +5,7 @@
   "branch": "claude/exciting-sagan-qe5yuf",
   "now": "The card loader is finished and on staging (main 27fba609): 2,668 labeled candidates at playtest tables (2,643 compiled with no model call), the gap-only backstop, the demand queue and the waves tool. Rob's next: the backstop's held-out sample (ROB-90) and the batch-or-Worker call (ROB-91).",
   "items": [
+    {"id": "ROB-170", "outcome": "play-experience", "feature": "A solo game against AIs waits for its person instead of ending after five minutes away", "status": "review", "remaining_hours": 0, "note": "claude/solo-away-waits: a person alone with AI seats is on no clock when they drop; with another person, five minutes as before. game-leave, room-ending and room-slices prove it; breaks-solo-away.py 3 of 3."},
     {"id": "ROB-12", "outcome": "play-experience", "feature": "Cast with floating mana and several mana sources; the commander tax projected", "status": "done", "remaining_hours": 0},
     {"id": "ROB-13", "outcome": "play-experience", "feature": "Auto-pass when a player has no meaningful response; an explicit Yield turn", "status": "done", "remaining_hours": 0},
     {"id": "ROB-73", "outcome": "play-experience", "feature": "Draw card: the normal draw waits for one acknowledgment on new tables", "status": "done", "remaining_hours": 0},

@@ -20,6 +20,8 @@
 
 ## Play tabletop preview, October 14, 2026
 
+October 21, Claude (holding Codex · Play and the engine halves Play waits on), on Rob's "what else can you do to make the game as ready as possible": ROB-170 on `claude/solo-away-waits`. At a table where every other seat is an AI, a person whose connection drops is no longer conceded after five minutes. Nobody is waiting on them, so the game waits, as they left it, and their Leave or Concede still ends it. With another person at the table, the five minutes are as before. This was the issue's own proposal; the rule was marked Rob's call, and it is one line in `dropped` (game/room/table.mjs) to revert.
+
 October 21, Claude (holding Codex · Play, with the engine halves Play waits on): ROB-102's first half on `claude/play-pass-stack`, stacked on #809. A new match passes the stack for a person with no answer to it (the room's `passStack`), so Rob isn't stopped at every AI spell; the board calls out each spell that came and went on his next view (**CAST** · Maya · Cultivate · resolved). A person who holds an answer is still asked. It's a table rule, on unless the host turns it off (`/table/rules {passStack: false}`); the lobby switch comes with ROB-124. Record: `docs/play-overhaul/ROB-102-PASS-STACK.md`.
 
 October 21, Claude (holding Codex · Play), on Rob's "make sure we aren't regressing anything": main checked beyond CI. The walks CI doesn't run passed on main's own build: release-acceptance, play-e2e, solo-vs-ai, real-deck-game, cloud-e2e, tour-walk, browser-geometry, sharing-runtime. Today's breaks files caught 133 of 134 on main. What still failed is brought up to date on `claude/stale-checks`:
