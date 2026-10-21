@@ -3886,7 +3886,7 @@ button.cm-vitals{cursor:pointer}
 .cm-board[data-phone] .cm-hand-key{display:none}
 .cm-board[data-phone] .cm-hand-held .cm-bcard{--bc:calc(130px * var(--card-scale,1))}
 /* The hand: a drawer from the bottom, the turn still in view above it. */
-.cm-board[data-phone] .cm-hand-show{position:fixed;inset:auto 0 0;gap:10px;max-height:min(65dvh,calc(100dvh - 116px));overflow:auto;justify-content:flex-start;background:#112526fa;border-top:2px solid #87c6a1;padding:14px 12px max(14px,env(safe-area-inset-bottom))}
+.cm-board[data-phone] .cm-hand-show{position:fixed;inset:auto 0 0;gap:10px;max-height:min(65dvh,calc(100dvh - 116px));overflow:auto;justify-content:flex-start;background:var(--mat-felt-edge);border-top:2px solid var(--v-accent);padding:14px 12px max(14px,env(safe-area-inset-bottom))}
 .cm-board[data-phone] .cm-hand-show header{width:100%;padding-right:48px;text-align:left}
 .cm-board[data-phone] .cm-hand-show h2{font-size:18px}
 .cm-board[data-phone] .cm-hand-show header p{font-size:12px}
