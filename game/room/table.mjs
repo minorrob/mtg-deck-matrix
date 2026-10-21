@@ -45,7 +45,8 @@ export const ART_MATS = Object.freeze(["cloud-wolf", "sand-lion", "ember-serpent
   "star-tome", "dragon-pact", "moon-wolf", "falls-tree", "star-whale", "grove-arch", "molten-sword", "sky-tree", "void-ring", "desert-portal",
   "night-citadel", "white-sanctum", "grave-king", "tree-portal", "ringed-world", "mirror-gates", "orrery-bridge"]);
 export const MATS = Object.freeze([...DRAWN_MATS, ...ART_MATS]);
-/* A dropped player has this long to come back before they concede (Rob, 2026-09-26: five minutes). */
+/* A dropped player has this long to come back before they concede (Rob, 2026-09-26: five minutes), when another person is
+   at the table to wait on them (`dropped`). */
 export const AWAY_LIMIT = 5 * 60 * 1000;
 /* How long a finished game's players have to answer Play again (Requests row 12, Linear ROB-167), from the moment it ended.
    The lifecycle counts from `rematchAt` and names no length (game/contracts/table-lifecycle.mjs, `rematch-deadline`), so
@@ -525,7 +526,10 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
       if (!s || !s.occupied || s.kind !== "human" || !s.connected) return;
       step({type: "disconnect", seatId: seat}, now);
       record.away = record.away || {};
-      if (record.lifecycle.phase === "playing") record.away[seat] = now + AWAY_LIMIT;
+      /* The five minutes are for the people waiting on them. A person whose only company is AI seats holds nobody up
+         (Linear ROB-170), so their game waits for them, with no clock, as it was: their Leave or Concede still ends it. */
+      const waitedOn = record.lifecycle.seats.some((x, i) => i !== seat && x.occupied && x.kind === "human");
+      if (record.lifecycle.phase === "playing" && waitedOn) record.away[seat] = now + AWAY_LIMIT;
       await save();
     },
     /** They came back in time: their seat is as they left it. */
