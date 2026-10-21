@@ -1211,6 +1211,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `coach` — `tests/coach.mjs`
 - `board-choices` — `tests/board-choices.mjs`
 - `board-yield` — `tests/board-yield.mjs`
+- `board-control` — `tests/board-control.mjs`
 - `board-combat-display` — `tests/board-combat-display.mjs`
 - `board-direct-blocking` — `tests/board-direct-blocking.mjs`
 - `board-commander-hand` — `tests/board-commander-hand.mjs`
