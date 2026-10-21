@@ -214,6 +214,32 @@ async function journey(n, rob, pod) {
   try { lands = room.view(room.seats[0].seatId).state.players.map((p) => (p.zones.Battlefield?.cards ?? []).filter((c) => (tableCards(c.name)?.types ?? []).includes("Land")).length); } catch {}
   console.log(JSON.stringify({table: n, actions, turns: result.state.turn, result: result.result, banner, landsAtEnd: lands, refusals: room.refusals, seconds: Math.round((Date.now() - started) / 1000)}));
   eq(room.refusals.total, 0, `table ${n}: no AI answer was refused during the whole match`);
+  /* HOW IT ENDED, SAID (ROB-166), AND PLAY AGAIN (ROB-167): the room says it as data (`result.ending`), the banner says who
+     lost and why -- never "ended early" for a loss -- and Play again on it starts the table's next match: the same seats
+     and decks, a new match id, through the lobby's countdown. PLAY_AGAIN=0 stops at the banner. */
+  const end = result.result?.ending;
+  ok(end && ["won", "draw", "eliminated", "conceded", "timed-out", "ended"].includes(end.kind), `table ${n}: the room says how it ended (${JSON.stringify(end)})`);
+  ok(end.kind === "ended" || !/ended early/i.test(banner), `table ${n}: a loss or a win never reads "ended early" (${banner})`);
+  if (end.kind === "eliminated" && end.seatId === result.seatId) ok(/^You lost/i.test(banner) && /With only AI players left/i.test(banner), `table ${n}: the banner says you lost, and why the game ends (${banner})`);
+  if (end.kind === "won") ok(/won/i.test(banner), `table ${n}: the banner names the winner (${banner})`);
+  if (process.env.PLAY_AGAIN !== "0") {
+    const before = result.matchId;
+    /* The table learns of a game over in the room from its alarm, which a Durable Object runs by itself: run it here. */
+    const settle = setInterval(() => serial(() => tableFor(id).alarm()), 200);
+    alarms.push(settle);
+    const again = await rob.page.locator('.cm-board-over [data-action="board-rematch"][data-accept="yes"]').evaluate((el) => {const r = el.getBoundingClientRect(), x = r.x + r.width / 2, y = r.y + r.height / 2; return {x, y, reached: el.contains(document.elementFromPoint(x, y))};});
+    ok(again.reached, `table ${n}: Play again is on the banner and takes the pointer`);
+    await rob.page.mouse.click(again.x, again.y);
+    await rob.page.locator("#cm-table-seconds").waitFor({timeout: 20000});
+    ok(true, `table ${n}: Play again answered; the lobby counts down to the next game`);
+    clock += 10000;
+    await serial(() => tableFor(id).alarm());
+    await rob.page.locator("#cm-board").waitFor({timeout: 30000});
+    await rob.page.waitForFunction(() => !document.querySelector(".cm-board-over"), null, {timeout: 30000});
+    const next = viewsAt(rob.email, id).at(-1);
+    ok(next && next.matchId !== before && /g2$/.test(next.matchId) && next.status === "playing", `table ${n}: the next match is on the board (${before} -> ${next && next.matchId}, ${next && next.status})`);
+    clearInterval(settle);
+  }
   clearInterval(alarm);
 }
 try {

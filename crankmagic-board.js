@@ -378,6 +378,13 @@ globalThis.CrankBoard = Object.seal({
     if (gone === "timed-out") return {outcome: "unfinished", reason: "ran out of time"};
     if (v.status !== "finished") return null;
     const r = v.result || {};
+    /* From the room's `ending` (ROB-166), this seat's own end: lost by the rules is a loss with its reason; a game ended
+       for everyone is unfinished; a draw is a draw. Conceded and timed-out were read above, from the departures. */
+    const mine = r.ending && (r.ending.seats || []).find((x) => x.seatId === v.seatId);
+    if (mine && mine.outcome === "won") return {outcome: "win", reason: r.reason || ""};
+    if (mine && mine.outcome === "lost") return {outcome: "loss", reason: mine.reason || "lost"};
+    if (r.ending && r.ending.kind === "ended") return {outcome: "unfinished", reason: "ended early"};
+    if (r.ending && r.ending.kind === "draw") return {outcome: "draw", reason: r.reason || ""};
     /* Ended because every person was out (Rob, 2026-10-06): a person still in it here had lost. */
     if (r.reason === NO_PERSON) return {outcome: "loss", reason: (((v.state && v.state.players || [])[v.seat] || {}).health || {}).lossReason || "lost"};
     if (r.endedBy !== undefined || r.reason === "ended early") return {outcome: "unfinished", reason: "ended early"};
@@ -1388,18 +1395,71 @@ globalThis.CrankBoard = Object.seal({
   }
   function banner() {
     if (view.status === "finished") {
-      const r = view.result || {}, you = r.winner === view.seatId;
-      const head = r.endedBy !== undefined || r.reason === "ended early" ? "The game was ended early"
-        : you ? "You won" : r.winner ? `${seatName(r.winner)} won` : "The game is over";
-      const line = r.reason === "ended early" ? "Nobody lost. Its record is kept, as not finished." : r.reason ? `${r.reason[0].toUpperCase()}${r.reason.slice(1)}.` : "";
+      const {head, line} = endingWords(view);
+      /* PLAY AGAIN (ROB-167): the table's next game with the same seats, decks and rules, or Leave the table; Back to the
+         table shows the lobby, where everyone's answers are. */
+      const again = rematchAsked === null
+        ? `${b("Play again", "board-rematch", {accept: "yes"}, true, {disabled: rematchSending})}${b("Leave the table", "board-rematch", {accept: "no"}, false, {disabled: rematchSending})}`
+        : "";
       return `<div class="cm-board-over" role="dialog" aria-modal="false" aria-labelledby="cm-board-over-title"><div class="v-panel"><h2 id="cm-board-over-title">${e(head)}</h2><p class="cm-muted">${e(line)}</p>
-        <div class="cm-actions">${b("Back to the table", "board-leave", {}, true)}${recordButton()}</div></div></div>`;
+        ${rematchError ? `<p class="cm-note cm-warning" role="alert">${e(rematchError)}</p>` : ""}
+        <div class="cm-actions">${again}${b("Back to the table", "board-leave", {}, !again)}${recordButton()}</div></div></div>`;
     }
     const gone = departed(view.seat);
     if (gone) return `<p class="cm-board-banner">${LEFT}</p>`;
     return "";
   }
   const LEFT = "You have left this game; the others play on.";
+  /* HOW IT ENDED, IN WORDS (ROB-166): from the room's `ending` (game/room/ending.mjs), who lost and why -- a person knocked
+     out by three AI seats lost, and says so, rather than "the game was ended early". A view without `ending` (a room
+     before it) keeps the words it always had. */
+  const LOSS_WORDS = {life: ["Your life reached 0", "their life reached 0"], poison: ["Ten poison counters", "ten poison counters"],
+    "commander-damage": ["21 combat damage from one commander", "21 combat damage from one commander"],
+    "empty-library": ["You had to draw from an empty library", "they had to draw from an empty library"],
+    effect: ["A card's effect made you lose", "a card's effect made them lose"], conceded: ["You conceded", "they conceded"]};
+  const lossWords = (reason, mine) => {const w = LOSS_WORDS[reason]; return w ? w[mine ? 0 : 1] : mine ? "You lost" : "they lost";};
+  function endingWords(v) {
+    const r = v.result || {}, end = r.ending, me = v.seatId;
+    const name = (seatId) => ((v.seats || []).find((s) => s.seatId === seatId) || {}).name || "A player";
+    const onlyAi = "With only AI players left, the game ends here.";
+    if (end && end.kind === "eliminated") return end.seatId === me
+      ? {head: "You lost", line: `${lossWords(end.reason, true)}. ${onlyAi}`}
+      : {head: `${name(end.seatId)} lost`, line: `${name(end.seatId)} was the last person in it; ${lossWords(end.reason, false)}. ${onlyAi}`};
+    if (end && end.kind === "conceded") return end.seatId === me
+      ? {head: "You conceded", line: onlyAi}
+      : {head: `${name(end.seatId)} conceded`, line: onlyAi};
+    if (end && end.kind === "timed-out") return end.seatId === me
+      ? {head: "You ran out of time", line: `You were away too long. ${onlyAi} Its record is kept, as not finished.`}
+      : {head: `${name(end.seatId)} ran out of time`, line: `${onlyAi} Its record is kept, as not finished.`};
+    if (end && end.kind === "ended") return {head: "The game was ended early",
+      line: `${end.seatId === me ? "You" : name(end.seatId)} ended it for everyone. Nobody lost; its record is kept, as not finished.`};
+    if (end && end.kind === "draw") return {head: "A draw", line: "Everyone still in it lost at once."};
+    const you = r.winner === me;
+    const head = r.endedBy !== undefined || r.reason === "ended early" ? "The game was ended early"
+      : you ? "You won" : r.winner ? `${name(r.winner)} won` : "The game is over";
+    const line = r.reason === "ended early" ? "Nobody lost. Its record is kept, as not finished." : r.reason ? `${r.reason[0].toUpperCase()}${r.reason.slice(1)}.` : "";
+    return {head, line};
+  }
+  /* PLAY AGAIN (ROB-167; the table's `POST .../rematch {accept}`, game/room/table.mjs): answered once from the banner. A
+     game over in the room reaches the table a moment later (its alarm), so "still being played" is tried again for a few
+     seconds before it is said. Then the lobby, which shows every seat's answer and the countdown. */
+  let rematchAsked = null, rematchSending = false, rematchError = "";
+  async function answerRematch(accept) {
+    if (rematchSending || !tableId) return;
+    rematchSending = true; rematchError = ""; draw();
+    const id = tableId;
+    try {
+      for (let tries = 0; ; tries += 1) {
+        try {await tableApi().api("POST", `${tableApi().tableUrl(id)}/rematch`, {accept}); break;}
+        catch (error) {if (tries < 8 && /still being played/.test(String(error && error.message))) {await new Promise((r) => setTimeout(r, 750)); continue;} throw error;}
+      }
+      rematchAsked = accept;
+      C.board.close();
+      if (accept) await tableApi().refresh(id); else C.go("table");
+    } catch (error) {
+      rematchError = String((error && error.message) || error);
+    } finally {rematchSending = false; if (document.getElementById("cm-board")) draw();}
+  }
   /* ---- MOTION (Rob, 2026-10-12, from the Replit concept: "more fluid, better transitions") ----
      The board is drawn anew at every view, so nothing moves by itself. This is a FLIP pass around a paint caused by a
      new view of the same game: before it, where every card and pile is; after it, a card that changed zone -- played
@@ -2478,6 +2538,7 @@ globalThis.CrankBoard = Object.seal({
   };
   actions["board-end-cancel"] = () => {confirmEnd = false; draw();};
   actions["board-concede"] = async () => {tools = false; await tableApi().api("POST", `${tableApi().tableUrl(tableId)}/concede`); draw();};
+  actions["board-rematch"] = (el) => answerRematch(el.dataset.accept === "yes");
   actions["board-leave"] = async () => {const id = tableId; C.board.close(); await tableApi().refresh(id);};
   /* Hold priority after I cast (Tools): kept on this device, and the Tools' words follow it. */
   document.addEventListener("change", (event) => {

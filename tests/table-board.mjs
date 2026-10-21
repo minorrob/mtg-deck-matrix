@@ -1596,7 +1596,7 @@ try {
   eq(outcomes, ["win", "loss", "draw", "loss", "unfinished", "unfinished", null, null],
     "what the board files: a win, a loss, a draw; a concession is a loss; running out of time or an early end is unfinished; someone else leaving, or the game going on, files nothing yet");
   await rob.page.click("[data-action=board-leave]");
-  await waitText(rob.page, "#cm-table-game", /The game is over/);
+  await waitText(rob.page, "#cm-table-game", /Play again\?|The game is over/);
   ok(!(await rob.page.locator("#cm-board").count()), "Back to the table puts the board away, and the lobby says the game is over");
 
   /* THE RECORD READS IT BACK, on the deck's page: one game, unfinished, marked as played at a table. */
