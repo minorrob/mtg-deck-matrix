@@ -195,9 +195,11 @@ const hasConvoke = (state, id) => keywordsOf(state, id).includes("Convoke");
 export const convokers = (state, player) => state.zones.battlefield.filter((id) => !state.objects[id].tapped
   && characteristicsOf(state, id).controller === player && characteristicsOf(state, id).types.includes("Creature"))
   .map((id) => ({id, colors: colorsOf(state, id)}));
-/* The total cost a convoked spell pays (CR 601.2f), its tax and reductions in, as castCost says it. */
+/* The total cost a convoked spell pays (CR 601.2f), its tax and reductions in, as castCost says it. Cast through Bolas's
+   Citadel (`lifeInstead`), life rather than its mana cost, as perform reckons it: no mana for a creature to pay, so none
+   is asked for (a question that asked for one could not be answered, and the game waited on it). */
 function convokeCost(state, player, action) {
-  const {cost, x} = castCost(state, player, action.objectId, action.tax ?? 0, false, null, action.extraMana ?? "", action.targets);
+  const {cost, x} = castCost(state, player, action.objectId, action.tax ?? 0, false, action.lifeInstead !== undefined ? "" : null, action.extraMana ?? "", action.targets);
   return {...cost, generic: cost.generic + x};
 }
 /* A cast's own question, or what it costs, weighed as the card is cast: as its Adventure, when it is cast as one (CR 715.3a). */
