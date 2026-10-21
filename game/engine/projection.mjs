@@ -108,6 +108,9 @@ function cardFor(state, id, canSeeFace, viewer = null) {
     /* Solved (CR 719.3b): a Case's designation, which anyone can see. */
     ...(object.solved === true ? {solved: true} : {}),
     commander: object.commander === true,
+    /* A candidate (card load step 5, Rob's decision 2): written by the card compiler, not yet reviewed, so the board labels
+       it and offers "report a wrong card". Said only of a card this seat can name, as its name is. */
+    ...(named && object.candidate === true ? {candidate: true} : {}),
     /* Which commander (state/index.mjs, commanderKeyOf): the key its damage is kept under in every player's
        `health.commanderDamage`, the same in every zone, so the board can say whose commander dealt it. */
     ...(object.commander === true ? {commanderKey: commanderKeyOf(object)} : {}),
@@ -230,6 +233,12 @@ function project(state, viewer) {
     schema: PROJECTION_SCHEMA,
     viewerSeatId: viewer,
     turn: state.turn,
+    /* Where the turn is in the game, for the table's labels (Linear ROB-76; rules/turn.mjs, nextRound): `turn` counts
+       every turn taken, an extra one too. `round` and `turnInRound` are null for a game saved before rounds were kept. */
+    round: Number.isInteger(state.round) ? state.round : null,
+    turnInRound: Number.isInteger(state.turnInRound) ? state.turnInRound : null,
+    turnId: state.turn > 0 ? `turn:${state.turn}` : null,
+    extraTurn: state.extraTurn === true,
     turnPlayerId: state.activePlayer,
     priorityPlayerId: state.priorityPlayer,
     phase: state.phase,

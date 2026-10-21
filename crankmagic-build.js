@@ -5,7 +5,7 @@
  * one all open it. Its Review ends in either of the two things starting from a commander has ever meant:
  *
  *   Create draft                 the deck with just its commander, the 99 to come (what Create always did)
- *   Draft the 99 in the Lab      the Lab takes the commander, the strategies, the cap and what to include or avoid, and
+ *   Draft the 99 in the Lab      the Lab takes the commander, the strategies, the budget and what to include or avoid, and
  *                                drafts a preview (C.labStart); nothing is saved until Save this deck, as ever
  *
  * THE STRATEGY STEP IS DATA, NOT A LIST (the design's "Lab strategy"). Its chips are read off the commander:
@@ -20,9 +20,10 @@
   let strategyData = null;  // data/commander-strategies.json, once fetched
 
   const head = (n) => `<ol class="cm-build-steps" aria-label="Step ${n + 1} of ${STEPS.length}">${STEPS.map((t, i) => `<li${i === n ? ' aria-current="step"' : ""}${i < n ? ' class="is-done"' : ""}>${i + 1} · ${e(t)}</li>`).join("")}</ol>`;
-  /* The cap a new deck takes: the reader's own default from Settings, or the house rule's. */
-  const defaultCap = () => { const own = Number(C.state.preferences && C.state.preferences.defaultBudgetCap); const rule = globalThis.CrankRules ? Number(CrankRules.RULES.deckCap) : NaN; return own > 0 ? own : rule > 0 ? rule : null; };
-  const money = (n) => (Number.isFinite(n) && n > 0 ? "$" + n.toLocaleString("en-US", {maximumFractionDigits: 2}) : "No cap");
+  /* The budget the wizard offers first: the pod's rule, in the box where the player sees it and can change or clear it.
+     A deck's budget is its own (Rob, 2026-10-18; docs/budgets.md): it never takes the account's, which is a total. */
+  const defaultCap = () => { const rule = globalThis.CrankRules ? Number(CrankRules.RULES.deckCap) : NaN; return rule > 0 ? rule : null; };
+  const money = (n) => (Number.isFinite(n) && n > 0 ? "$" + n.toLocaleString("en-US", {maximumFractionDigits: 2}) : "No budget");
 
   async function strategyEntry(card) {
     if (!strategyData) {
@@ -62,10 +63,10 @@
     box.innerHTML = options.map((o) => `<button type="button" class="cm-build-chip" data-action="build-toggle" data-strategy="${e(o.id)}" aria-pressed="${w.strategies.has(o.id)}" title="${e(o.why)} · from ${e(o.source)}"><span>${e(o.label)}</span><small>${e(o.fit)}</small></button>`).join("") || '<p class="cm-muted">Nothing to read off this commander yet. The Lab drafts from its colors and roles.</p>';
     box.setAttribute("aria-busy", "false");
   }
-  /* 3. Budget: the price cap, prefilled with the reader's default. */
+  /* 3. Budget: the deck's own, prefilled with the pod's rule. */
   function budget() {
-    modal("Build a deck", `${head(2)}<div class="cm-form-grid"><label class="cm-full">Total price cap ($)<input name="budget" type="number" min="0" step="1" inputmode="decimal" value="${w.budget ?? ""}" placeholder="No cap"></label></div>
-      ${note(`A cap is planned, not merely obeyed: basics do the cheap work and no single card takes more than a few times an even share of it. ${defaultCap() ? `Your default is ${money(defaultCap())} (Settings › Prices).` : ""} Leave it empty for no cap.`)}
+    modal("Build a deck", `${head(2)}<div class="cm-form-grid"><label class="cm-full">Budget ($)<input name="budget" type="number" min="0" step="1" inputmode="decimal" value="${w.budget ?? ""}" placeholder="None"></label></div>
+      ${note(`The Lab drafts to the budget: basics do the cheap work and no single card takes more than a few times an even share of it. ${defaultCap() ? `The pod's rule is ${money(defaultCap())}.` : ""} Leave it empty for no budget. It only informs: nothing is refused for it.`)}
       <div class="cm-form-footer">${b("Back", "build-step", {to: "strategy"})}${b("Next: Review", "build-step", {to: "review"}, true)}</div>`);
   }
   /* 4. Review: what was chosen, and the two ways on. */
@@ -89,7 +90,7 @@
   function keep() {
     const d = document.getElementById("cm-dialog"), field = (n) => d && d.querySelector(`[name=${n}]`);
     if (field("restrictions")) w.restrictions = field("restrictions").value.trim();
-    if (field("budget")) { const v = field("budget").value.trim(), n = Number(v); if (v && !(n >= 0)) throw Error("The cap is a dollar amount, or empty for no cap."); w.budget = v === "" || n === 0 ? null : n; }
+    if (field("budget")) { const v = field("budget").value.trim(), n = Number(v); if (v && !(n >= 0)) throw Error("The budget is a dollar amount, or empty for none."); w.budget = v === "" || n === 0 ? null : n; }
     if (field("name")) w.name = field("name").value.trim();
   }
   actions["build-step"] = (el) => { if (!w || !w.commander && el.dataset.to !== "commander") return start(); keep(); return STEP[el.dataset.to](); };

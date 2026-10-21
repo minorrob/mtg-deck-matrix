@@ -378,6 +378,10 @@ export function addObject(state, object, zone, player = null) {
     token: object.token === true,
     /* A copy of a spell (CR 707.10): a spell on the stack that is no card. Anywhere else it ceases to exist (CR 704.5e). */
     ...(object.copy === true ? {copy: true} : {}),
+    /* A candidate (card load step 5, Rob's decision 2): a card the card compiler wrote and no wave has reviewed yet, seated
+       at a playtest table only (game/room/room.mjs, `candidates`). No rule reads it; the board labels it. A fact of the
+       card, not of the object, so it survives every zone change (moveObject). */
+    ...(object.candidate === true ? {candidate: true} : {}),
     /* CR 903.3: a card designated as a commander stays one wherever it goes, so this survives every
        zone change along with the card's own characteristics. Three modules read it — the tax, the
        command-zone replacement and the 21-damage tally — and for a while none of them could,
@@ -526,7 +530,7 @@ export function moveObject(state, id, zone, player = null, {faceDown = false, tr
      owner does (CR 108.3): a card goes to its OWNER's graveyard however long someone else
      controlled it. Counters, damage, attachments and control do not — that is CR 400.7. */
   const kept = {owner: from.owner, controller: from.owner, token: from.token, copy: from.copy, commander: from.commander,
-    commanderKey: from.commander === true ? commanderKeyOf(from) : undefined, colorIdentity: from.colorIdentity};
+    commanderKey: from.commander === true ? commanderKeyOf(from) : undefined, colorIdentity: from.colorIdentity, candidate: from.candidate};
   /* PUT ONTO THE BATTLEFIELD FACE DOWN (manifest, CR 701.40a): turned face down before it enters (708.3), so it arrives
      with the face-down characteristics and nothing of its own -- the card it is kept beside them, as it was where it came
      from: a double-faced card's front face (712.8a, 712.15). */

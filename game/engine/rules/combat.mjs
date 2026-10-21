@@ -471,6 +471,10 @@ export const blockers = {
         });
       }
     }
+    /* The same pairs by blocker, for a board drafting its blocks a creature at a time (Linear ROB-75): which attackers
+       each may block. Nothing in it that the options do not say. */
+    const by = new Map();
+    for (const o of options) by.set(o.cardId, [...(by.get(o.cardId) ?? []), o.attackerId]);
     return {
       id: `declare-blockers:${state.turn}:${awaiting.player}`,
       title: "Declare blockers",
@@ -480,6 +484,7 @@ export const blockers = {
       /* One option per blocker per attacker, so the same rule applies (CR 509.1a). */
       exclusiveBy: "cardId",
       options,
+      legalBlocks: [...by].map(([blocker, attackers]) => ({blocker, attackers})),
     };
   },
 
@@ -507,17 +512,24 @@ export const blockers = {
     return events;
   },
 
-  /* The answer read against the question, the set of blocks checked: only reads. */
+  /* The answer read against the question, the set of blocks checked: only reads. Refused for the first thing wrong with
+     it (`check`). */
   declared(state, awaiting, indices) {
-    const choice = blockers.choice(state, awaiting);
-    const picked = indices.map((index) => {
-      const option = choice.options[index];
-      if (!option) throw new Error("Invalid selection");
-      return option;
-    });
+    const {picked, reasons} = blockers.check(state, awaiting, indices);
+    if (reasons.length) throw new Error(reasons[0]);
+    return picked;
+  },
+
+  /* EVERYTHING WRONG WITH A DRAFT OF BLOCKS, AND NOTHING CHANGED (Linear ROB-75): what a board asks before Confirm, and
+     what `declared` refuses an answer for, so the two cannot differ. Each reason says what is wrong, then what to do. */
+  check(state, awaiting, indices) {
+    const choice = blockers.choice(state, awaiting), reasons = [];
+    if (!Array.isArray(indices) || indices.some((index) => !choice.options[index]) || new Set(indices).size !== indices.length)
+      return {picked: [], reasons: ["Invalid selection"]};
+    const picked = indices.map((index) => choice.options[index]);
     /* CR 509.1a: one creature blocks one attacker, unless an effect says otherwise. */
-    if (new Set(picked.map((o) => o.cardId)).size !== picked.length)
-      throw new Error("A creature can block only one attacker; the same blocker was declared twice");
+    const twice = new Set(picked.filter((o, i) => picked.findIndex((p) => p.cardId === o.cardId) !== i).map((o) => o.cardId));
+    for (const id of twice) reasons.push(`${shownName(state.objects[id])} can block only one attacker. Choose one attacker for it to block.`);
 
     /* MENACE IS A RULE ABOUT THE SET (CR 702.111b), so it can only be checked once the whole
        declaration is in. Every individual blocker was legal or it would not have been offered. */
@@ -528,9 +540,9 @@ export const blockers = {
     }
     for (const [attackerId, ids] of bySeat) {
       if (blockersAreLegal(state, attackerId, ids)) continue;
-      throw new Error(whyBlockersAreIllegal(state, attackerId, ids));
+      reasons.push(whyBlockersAreIllegal(state, attackerId, ids));
     }
-    return picked;
+    return {picked, reasons};
   },
 };
 

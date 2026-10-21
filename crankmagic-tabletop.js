@@ -36,13 +36,14 @@
      row the library has never seen: no copy, no lot, no deck asking for it. It is a ghost like
      every other not-held row, and it says where it came from rather than pretending to a status. */
   const SENT = "Sent from Discover";
-  /* The card states' words (docs/card-states.md) join the old labels, which the table still reads when a caller
-     passes them: Watching and To buy are not held, and "To add" is an owned target waiting outside its box. */
-  const GHOST = new Set(["Ordered", "Watched", "Wanted", "To buy", "Draft list", "Suggestion", "Planned", "Watching", SENT]);
+  /* The card status's place words (docs/card-states.md, placeLabel) join the old labels, which the table still reads
+     when a caller passes them: Watch, To buy and Ordered are not held, and Loading is an owned copy of a deck's own
+     card waiting outside its box. */
+  const GHOST = new Set(["Ordered", "Watched", "Wanted", "To buy", "Draft list", "Suggestion", "Planned", "Watching", "Watch", SENT]);
   /* The status piles a card can be dropped on — accepts() below has a case for each. The rest
      (Draft list, Suggestion, Planned, Unassigned) are readings of a deck's plan, not places a
      card can be put; the mat shows those as chips to lay out, not as piles (Rob, 14 September). */
-  const TARGET = new Set(["Physical deck", "Substitute", "Reserved", "Ordered", "Watched", "Wanted", "To buy", "Target", "To add", "Watching"]);
+  const TARGET = new Set(["Physical deck", "Substitute", "Reserved", "Ordered", "Watched", "Wanted", "To buy", "Target", "To add", "Watching", "Final", "Loading", "Watch"]);
   /* The Card type piles are the eight primary types, a reader's order: an Artifact Creature
      is on the Creature pile, a Legendary Land on the Land pile. The list groups by the whole
      type line (thirty bands on the live library); a table has room for eight piles. */
@@ -452,6 +453,7 @@
     if (pile.kind === "status") {
       if (cats.length) return no(NOT_HELD);
       switch (pile.label) {
+        case "Final":
         case "Target":
         case "Physical deck":
           if (others || plans.length || lots.some((r) => r.source !== "owned")) return no("Only an owned copy goes into a physical deck; drop it on the Bench first to record it as owned.");
@@ -459,6 +461,7 @@
         case "Substitute":
           if (others || plans.length || lots.some((r) => r.source !== "owned")) return no("Only an owned copy can stand in for another card.");
           return yes("standin", "Put in a physical deck as a substitute", "Asks which deck; goes in without a reservation, and Ready to add asks for it back when the real card is ready.");
+        case "Loading":
         case "To add":
         case "Reserved":
           if (others || plans.length || lots.some((r) => r.source === "watching")) return no("Only an owned or ordered copy can be reserved for a deck.");
@@ -466,6 +469,7 @@
         case "Ordered":
           if (others) return no(NOT_COPY);
           return yes("source:ordered", "Mark as Ordered", lots.some((r) => r.source === "owned" && (r.allocation || inBox(r))) ? "An owned copy in a box or reserved loses that; asks first." : "A To buy requirement or a draft-list row becomes an ordered copy filed with its deck.");
+        case "Watch":
         case "Watching":
         case "Watched":
           if (others) return no(NOT_COPY);
