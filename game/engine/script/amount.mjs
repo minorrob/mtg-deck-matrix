@@ -441,7 +441,8 @@ export function amountOf(state, value, context = {}) {
   else if ("if" in value) n = amountOf(state, conditionHolds(state, value.if, {controller: context.controller, source: context.source}) ? value.then ?? 0 : value.else ?? 0, context);
   /* "Half that player's life total, rounded down" (Heartless Hidetsugu): a player's life now; `half` halves it, down. */
   else if ("lifeTotal" in value) {
-    const player = playerOf(value.lifeTotal, context);
+    /* And a target player's: "Target player's life total becomes 1" (Vraska, Relic Seeker; CR 119.5, they lose the rest). */
+    const player = playerOf(value.lifeTotal, context) ?? targetPlayer(value.lifeTotal, context);
     n = player !== null ? state.players[player]?.life ?? 0 : 0;
   }
   /* "Equal to the life they lost this turn" (Wound Reflection; resources.mjs keeps it, turn.mjs clears it). */

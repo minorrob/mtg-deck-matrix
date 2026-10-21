@@ -466,6 +466,23 @@ export function incubate(state, params, context) {
   return createToken(state, {count: 1, token: {predefined: "Incubator"}, entersWithCounters: {"+1/+1": params.count ?? 0}}, context);
 }
 
+/**
+ * `emblem` -- "you get an emblem with ..." (CR 114; the library load's L1: Ajani Steadfast, Teferi, Hero of Dominaria,
+ * Mordenkainen). An object put into its player's command zone (114.1, 114.2), owned and controlled by that player, with the
+ * abilities the effect gives it (`abilities`, compiled as a card's are, cards/index.mjs) and no other characteristic: no
+ * types, no mana cost, no color (114.3). It is neither a card nor a permanent (114.5); `card` is only what the board calls
+ * it, after what made it. Its abilities function in the command zone (114.4): its triggered abilities (rules/trigger.mjs),
+ * its replacement effects (rules/replacement.mjs) and the rules it changes for players (rules/statics.mjs,
+ * playerRuleChanged). Nothing removes it.
+ */
+export function emblem(state, params, context) {
+  const player = context.controller;
+  const named = state.objects[context.source]?.card ?? context.lastKnown?.name ?? null;
+  const id = addObject(state, {card: named ? `${named} emblem` : "Emblem", emblem: true, owner: player, controller: player,
+    abilities: params.abilities ?? []}, "command", player);
+  return [event("GameEventEmblemCreated", state, {player: {playerId: player, name: state.players[player].name}, card: cardRef(state, id)})];
+}
+
 /* A face of a double-faced token (an Incubator, CR 111.10i), as a double-faced card's face is kept (cards/index.mjs,
    faceOfDefinition): what transformObject turns over (state/index.mjs). */
 const tokenFace = (spec) => ({card: spec.name ?? "Token", types: [...(spec.types ?? [])], subtypes: [...(spec.subtypes ?? [])], supertypes: [...(spec.supertypes ?? [])],
@@ -822,6 +839,11 @@ export function effectUntil(state, params, context) {
     ...(params.rule === "damage-doubled" ? {name: state.objects[context.source]?.card ?? context.lastKnown?.name ?? "An effect"} : {}),
     ...(params.rule === "enters-with-counters" ? {counters: {counter: params.counter, count: params.count ?? 1}} : {}),
     ...(params.rule === "protection" ? {from: params.from ?? "everything"} : {}),
+    /* "You may cast sorcery spells as though they had flash" until your next turn (Teferi, Time Raveler's +1): for its
+       controller (`players`), and which spells, a card selector, or every spell (`true`) -- read where a cast's timing is
+       (rules/statics.mjs, flashGranted). */
+    ...(params.rule === "cast-as-though-flash" ? {players: Array.isArray(params.who) ? [...params.who] : [context.controller],
+      spells: params.spells === true ? true : structuredClone(params.spells ?? {})} : {}),
     /* "Creatures your opponents control attack this turn if able" (Bident of Thassa; rules/statics.mjs, attacksEachCombat):
        named by its source when a declaration breaks it, as it was then, gone or not (rules/combat.mjs). */
     ...(params.rule === "attacks-each-combat" ? {sourceId: context.source ?? null, sourceName: state.objects[context.source]?.card ?? context.lastKnown?.name ?? null} : {}),

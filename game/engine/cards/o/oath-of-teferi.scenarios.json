@@ -1,0 +1,388 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Oath of Teferi",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Elspeth activates twice this turn: +1 and +1, six Soldiers and 6 loyalty; no third time",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Oath of Teferi",
+            "Elspeth, Sun's Champion"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Elspeth, Sun's Champion",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Elspeth, Sun's Champion",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Elspeth, Sun's Champion",
+            "counter": "loyalty",
+            "count": 6
+          }
+        },
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Elspeth, Sun's Champion"
+          },
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Oath of Teferi",
+            "Elspeth, Sun's Champion",
+            "Soldier",
+            "Soldier",
+            "Soldier",
+            "Soldier",
+            "Soldier",
+            "Soldier"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Maya's Elspeth, without an Oath of her own, still activates once",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Oath of Teferi"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Elspeth, Sun's Champion"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Elspeth, Sun's Champion",
+          "ability": "a0",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Elspeth, Sun's Champion",
+            "seat": 1
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Cast, it exiles Rob's Elspeth, which returns at the end step with fresh loyalty (4) and activates twice the next turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Elspeth, Sun's Champion"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Oath of Teferi"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Elspeth, Sun's Champion",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Oath of Teferi"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            5
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Elspeth, Sun's Champion"
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "END_OF_TURN"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Elspeth, Sun's Champion",
+                "counter": "loyalty",
+                "count": 4
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Elspeth, Sun's Champion",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Elspeth, Sun's Champion",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Elspeth, Sun's Champion",
+            "counter": "loyalty",
+            "count": 6
+          }
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Plains",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Oath of Teferi",
+            "Elspeth, Sun's Champion",
+            "Soldier",
+            "Soldier",
+            "Soldier",
+            "Soldier",
+            "Soldier",
+            "Soldier",
+            "Soldier",
+            "Soldier",
+            "Soldier"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A Soldier token exiled by its trigger doesn't come back (CR 111.8); Maya's Bear is no target",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Elspeth, Sun's Champion"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Oath of Teferi"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Elspeth, Sun's Champion",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Oath of Teferi"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Plains",
+                  "Island",
+                  "Wastes",
+                  "Wastes",
+                  "Wastes",
+                  "Elspeth, Sun's Champion",
+                  "Soldier",
+                  "Soldier",
+                  "Soldier"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "answer": [
+            6
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Plains",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Oath of Teferi",
+            "Elspeth, Sun's Champion",
+            "Soldier",
+            "Soldier"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Bear"
+          ]
+        }
+      ]
+    }
+  ]
+}

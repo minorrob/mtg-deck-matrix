@@ -1,0 +1,532 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Teferi, Time Raveler",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [],
+      "manaCost": "{2}",
+      "colors": [],
+      "power": null,
+      "toughness": null
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Maya can't cast her Lightning Bolt on Rob's turn, with mana and priority; in her own main phase with the stack empty she can",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Teferi, Time Raveler"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Lightning Bolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Lightning Bolt",
+                "seat": 1
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "cast": "Lightning Bolt",
+          "seat": 1,
+          "targets": [
+            {
+              "player": 0
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Lightning Bolt"
+          ]
+        },
+        {
+          "seat": 0,
+          "life": 37
+        }
+      ]
+    },
+    {
+      "name": "Rob's own Lightning Bolt is his to cast on Maya's turn: Teferi holds only his opponents",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Teferi, Time Raveler",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Lightning Bolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "pass": 1,
+          "seat": 1
+        },
+        {
+          "tap": "Mountain",
+          "seat": 0
+        },
+        {
+          "cast": "Lightning Bolt",
+          "seat": 0,
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Lightning Bolt"
+          ]
+        },
+        {
+          "seat": 1,
+          "life": 37
+        }
+      ]
+    },
+    {
+      "name": "+1: until Rob's next turn he may cast Night's Whisper on Maya's turn; the turn after, he may not",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Teferi, Time Raveler",
+            "Swamp",
+            "Swamp",
+            "Swamp",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Night's Whisper",
+            "Night's Whisper"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Teferi, Time Raveler",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "pass": 1,
+          "seat": 1
+        },
+        {
+          "tap": "Swamp",
+          "seat": 0
+        },
+        {
+          "tap": "Swamp",
+          "seat": 0
+        },
+        {
+          "cast": "Night's Whisper",
+          "seat": 0
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Night's Whisper"
+              ]
+            },
+            {
+              "seat": 0,
+              "life": 38
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 4,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "pass": 1,
+          "seat": 1
+        },
+        {
+          "tap": "Swamp",
+          "seat": 0
+        },
+        {
+          "tap": "Swamp",
+          "seat": 0
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Night's Whisper",
+            "seat": 0
+          },
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Teferi, Time Raveler",
+            "counter": "loyalty",
+            "count": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "+1 gives sorceries flash, nothing else: Rob's Bear waits for his own turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Teferi, Time Raveler",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Teferi, Time Raveler",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "pass": 1,
+          "seat": 1
+        },
+        {
+          "tap": "Forest",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Bear",
+            "seat": 0
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "On her own turn Maya can't answer her own spell: the stack isn't empty; nor at the beginning of combat",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Teferi, Time Raveler"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bear",
+            "Lightning Bolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Bear",
+          "seat": 1
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Lightning Bolt",
+                "seat": 1
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "COMBAT_BEGIN"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Lightning Bolt",
+            "seat": 1
+          },
+          "count": 0
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Forest",
+            "Wastes",
+            "Mountain",
+            "Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "-3: Maya's Bear back to her hand, and Rob draws a card",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Teferi, Time Raveler"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Teferi, Time Raveler",
+          "ability": "a2",
+          "targets": [
+            [
+              {
+                "card": "Bear",
+                "seat": 1
+              }
+            ]
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Teferi, Time Raveler",
+            "counter": "loyalty",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "-3 with no target (up to one): Rob still draws",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Teferi, Time Raveler"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Teferi, Time Raveler",
+          "ability": "a2",
+          "targets": [
+            []
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Teferi, Time Raveler",
+            "counter": "loyalty",
+            "count": 1
+          }
+        }
+      ]
+    }
+  ]
+}

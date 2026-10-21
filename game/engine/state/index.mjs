@@ -385,6 +385,9 @@ export function addObject(state, object, zone, player = null) {
        at a playtest table only (game/room/room.mjs, `candidates`). No rule reads it; the board labels it. A fact of the
        card, not of the object, so it survives every zone change (moveObject). */
     ...(object.candidate === true ? {candidate: true} : {}),
+    /* An emblem (CR 114; script/effects/permanents.mjs, emblem): an object in the command zone, neither a card nor a
+       permanent (114.5), whose abilities function there (114.4). */
+    ...(object.emblem === true ? {emblem: true} : {}),
     /* CR 903.3: a card designated as a commander stays one wherever it goes, so this survives every
        zone change along with the card's own characteristics. Three modules read it — the tax, the
        command-zone replacement and the 21-damage tally — and for a while none of them could,

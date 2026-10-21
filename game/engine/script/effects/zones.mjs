@@ -596,11 +596,16 @@ export function moveZoneAll(state, params, context, rng = null) {
   /* "Put all creature cards from all graveyards onto the battlefield under your control" (Rise of the Dark Realms): each enters
      under this effect's controller's control, not its owner's (CR 110.2a) -- as it enters, before what it enters with. */
   const under = params.to === "battlefield" && params.controller === "you" ? context.controller : null;
+  /* "Exchange your hand and library, then shuffle" (Mordenkainen; CR 701.12d, 701.12f): `exchange`, the cards of its player's
+     zone `to` names, taken before anything moves, go to the zone the selector names -- the two zones' cards exchanged, one
+     of them empty or not. Its player is this effect's controller, whose zones they are. */
+  const exchanged = params.exchange === true ? [...(state.zones[params.to]?.[context.controller] ?? [])] : [];
   for (const id of [...matched]) {
     const controller = state.objects[id]?.zone === "battlefield" ? controllerOf(state, id) : null;
     const moved = moveOne(state, id, params.to ?? "graveyard", events, {tapped: params.tapped === true, controller: under});
     if (moved !== null) { arrivedAll.push(moved); if (controller !== null) was[moved] = controller; }
   }
+  for (const id of exchanged) moveOne(state, id, params.selector.zone, events);
   /* "Each player shuffles the cards from their hand into their library" (Winds of Change, batch 80, `shuffle`): each library
      a card was put into, shuffled after. */
   if (params.shuffle === true) for (const owner of new Set(arrivedAll.filter((id) => state.objects[id]?.zone === "library").map((id) => state.objects[id].owner))) shuffleLibrary(state, owner, rng, events);

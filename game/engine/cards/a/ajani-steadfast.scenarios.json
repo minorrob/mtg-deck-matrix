@@ -1,0 +1,474 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Ajani Steadfast",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Giant": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{4}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 4,
+      "toughness": 4
+    }
+  },
+  "scenarios": [
+    {
+      "name": "+1: the Bear gets +1/+1 and first strike, vigilance and lifelink until end of turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ajani Steadfast",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Ajani Steadfast",
+          "ability": "a0",
+          "targets": [
+            [
+              {
+                "card": "Bear"
+              }
+            ]
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Bear",
+                "power": 3,
+                "toughness": 3
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Bear",
+                "has": [
+                  "First strike",
+                  "Vigilance",
+                  "Lifelink"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Bear",
+            "lacks": [
+              "First strike",
+              "Lifelink"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Ajani Steadfast",
+            "counter": "loyalty",
+            "count": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "+1 with no target at all (up to one): Ajani still gets his loyalty counter",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ajani Steadfast"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Ajani Steadfast",
+          "ability": "a0",
+          "targets": [
+            []
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Ajani Steadfast",
+            "counter": "loyalty",
+            "count": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "-2: Rob's Bear gets a +1/+1 counter, his Elspeth a loyalty counter; Maya's Bear nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ajani Steadfast",
+            "Bear",
+            "Elspeth, Sun's Champion"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Ajani Steadfast",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 3,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Bear",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Elspeth, Sun's Champion",
+            "counter": "loyalty",
+            "count": 5
+          }
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Ajani Steadfast",
+            "counter": "loyalty",
+            "count": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "-7: the emblem; Rob's own Bolt deals Maya all 3, Maya's deals Rob 1, and her Giant deals his Elspeth 1; Ajani gone to the graveyard",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ajani Steadfast",
+            "Elspeth, Sun's Champion",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Lightning Bolt"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Giant",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Lightning Bolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Ajani Steadfast",
+          "ability": "a0",
+          "targets": [
+            []
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Ajani Steadfast",
+          "ability": "a0",
+          "targets": [
+            []
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Ajani Steadfast",
+          "ability": "a0",
+          "targets": [
+            []
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 7,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Ajani Steadfast",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Mountain",
+          "seat": 0
+        },
+        {
+          "cast": "Lightning Bolt",
+          "seat": 0,
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 37
+            }
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Ajani Steadfast",
+                "Lightning Bolt"
+              ]
+            },
+            {
+              "seat": 0,
+              "zone": "command",
+              "cards": [
+                "Ajani Steadfast emblem"
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 8,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "cast": "Lightning Bolt",
+          "seat": 1,
+          "targets": [
+            {
+              "player": 0
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "life": 39
+            }
+          ]
+        },
+        {
+          "attack": [
+            "Giant"
+          ],
+          "at": "Elspeth, Sun's Champion (Rob)",
+          "seat": 1
+        },
+        {
+          "to": {
+            "turn": 8,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Elspeth, Sun's Champion",
+            "counter": "loyalty",
+            "count": 3
+          }
+        },
+        {
+          "seat": 0,
+          "life": 39
+        }
+      ]
+    },
+    {
+      "name": "Without the emblem Maya's Lightning Bolt deals Rob all 3",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ajani Steadfast"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Lightning Bolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "cast": "Lightning Bolt",
+          "seat": 1,
+          "targets": [
+            {
+              "player": 0
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 37
+        },
+        {
+          "seat": 0,
+          "zone": "command",
+          "cards": []
+        }
+      ]
+    }
+  ]
+}

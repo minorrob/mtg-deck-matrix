@@ -1,0 +1,206 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Vraska, Relic Seeker",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [],
+      "manaCost": "{2}",
+      "colors": [],
+      "power": null,
+      "toughness": null
+    }
+  },
+  "scenarios": [
+    {
+      "name": "+2: a 2/2 black Pirate with menace; Vraska at 8",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Vraska, Relic Seeker"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Vraska, Relic Seeker",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Vraska, Relic Seeker",
+            "Pirate"
+          ]
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Pirate",
+            "has": [
+              "Menace"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Vraska, Relic Seeker",
+            "counter": "loyalty",
+            "count": 8
+          }
+        }
+      ]
+    },
+    {
+      "name": "-3: Maya's Rock destroyed, and Rob creates a Treasure",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Vraska, Relic Seeker"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Rock",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Vraska, Relic Seeker",
+          "ability": "a1",
+          "targets": [
+            {
+              "card": "Rock",
+              "seat": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Vraska, Relic Seeker",
+            "Treasure"
+          ]
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Vraska, Relic Seeker",
+            "counter": "loyalty",
+            "count": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "-10 after two +2s: Maya's life total becomes 1 (she loses 39)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Vraska, Relic Seeker"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Vraska, Relic Seeker",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Vraska, Relic Seeker",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Vraska, Relic Seeker",
+          "ability": "a2",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 1
+        },
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Vraska, Relic Seeker"
+          ]
+        }
+      ]
+    }
+  ]
+}

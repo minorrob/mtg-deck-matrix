@@ -244,6 +244,8 @@ function checkEffect(effect, path, errors) {
   /* "If you control a Wizard" (Flameshape): a permission's condition, closed as an effect's own is -- an unknown key refused
      here rather than read as true. */
   if (name === "mayPlay") for (const message of conditionProblems(effect.onlyIf)) errors.push({path: `${path}.onlyIf`, message});
+  /* "Repeat this process" (Grist, the Hunger Tide; effects/index.mjs repeatFor): the condition asked after each pass. */
+  if (name === "repeatFor" && effect.again !== undefined) for (const message of conditionProblems(effect.again)) errors.push({path: `${path}.again`, message});
   /* A zone's cards for a while (Chainer, Nightmare Adept; Gwenom, Remorseless): its graveyard or the top of its library, in
      place of named cards -- what may be played (`spells`, a selector), "pay life equal to its mana value" (`payLife`), and
      how many cards before it is spent (`count`). */
@@ -292,6 +294,11 @@ function checkEffect(effect, path, errors) {
     errors.push({path: `${path}.controller`, message: "What a move of all puts onto the battlefield under its controller's control is `controller: \"you\"` with `to: \"battlefield\"`"});
   if (name === "moveZoneAll" && effect.link !== undefined && !(effect.link === true && effect.to === "exile"))
     errors.push({path: `${path}.link`, message: "What a move of all exiles, kept for its source's linked ability, is `link: true` with `to: \"exile\"`"});
+  /* "Exchange your hand and library" (Mordenkainen; effects/zones.mjs moveZoneAll): your cards of one hidden zone, exchanged
+     with your cards of another. */
+  if (name === "moveZoneAll" && effect.exchange !== undefined && !(effect.exchange === true && effect.selector?.controller === "you"
+    && ["hand", "library", "graveyard"].includes(effect.selector?.zone) && ["hand", "library", "graveyard"].includes(effect.to) && effect.selector.zone !== effect.to))
+    errors.push({path: `${path}.exchange`, message: "An exchange of two zones is `exchange: true`, your cards of one of hand, library or graveyard (`selector`) with your cards of another (`to`)"});
   if (name === "chooseCard" && effect.attach !== undefined && !(effect.attach === "remembered" && effect.to === "stay" && effect.zone === "battlefield"))
     errors.push({path: `${path}.attach`, message: "Attaching what the effect before it put onto the battlefield to a permanent chosen is `attach: \"remembered\"`, with `zone: \"battlefield\"` and `to: \"stay\"`"});
   /* "It loses 'enchant creature card in a graveyard' and gains 'enchant creature put onto the battlefield with this Aura.' ...
@@ -693,6 +700,12 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
     if (Array.isArray(then)) then.forEach((effect, index) => checkEffect(effect, `${path}.change.then[${index}]`, errors));
     if (ability.change?.redirect !== undefined && ability.change.redirect !== "enchanted")
       errors.push({path: `${path}.change.redirect`, message: "Damage is redirected to \"enchanted\": what the holder enchants"});
+    /* "Prevent 1 of that damage" (Hedron-Field Purists; CR 615.10): all of it (true), or that much of each damage event. */
+    if (ability.change?.prevent !== undefined && !(ability.change.prevent === true || (Number.isInteger(ability.change.prevent) && ability.change.prevent >= 1)))
+      errors.push({path: `${path}.change.prevent`, message: "A prevention prevents all the damage (true), or that much of it, a whole number, 1 or more"});
+    /* "Prevent all but 1 of that damage" (Ajani Steadfast's emblem; rules/replacement.mjs): what is left, 1 or more. */
+    if (ability.change?.preventAllBut !== undefined && !(Number.isInteger(ability.change.preventAllBut) && ability.change.preventAllBut >= 1))
+      errors.push({path: `${path}.change.preventAllBut`, message: "\"Prevent all but N\" leaves N, a whole number, 1 or more"});
   }
 }
 

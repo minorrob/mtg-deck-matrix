@@ -1,0 +1,154 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "The Wandering Emperor",
+    "oracleId": "0c7f18d5-36cb-4bc6-a358-443b97666215",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Planeswalker"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null,
+    "loyalty": 3
+  },
+  "oracleText": "Flash\nAs long as The Wandering Emperor entered this turn, you may activate her loyalty abilities any time you could cast an instant.\n+1: Put a +1/+1 counter on up to one target creature. It gains first strike until end of turn.\n−1: Create a 2/2 white Samurai creature token with vigilance.\n−2: Exile target tapped creature. You gain 2 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flash",
+      "keyword": "flash"
+    },
+    {
+      "kind": "static",
+      "text": "As long as The Wandering Emperor entered this turn, you may activate her loyalty abilities any time you could cast an instant.",
+      "rule": "loyalty-at-instant-speed",
+      "affects": {
+        "self": true
+      },
+      "condition": {
+        "present": {
+          "self": true,
+          "enteredThisTurn": true
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "+1: Put a +1/+1 counter on up to one target creature. It gains first strike until end of turn.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": 1
+        }
+      ],
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "counter": "+1/+1",
+          "count": 1
+        },
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "keywords": [
+            "First strike"
+          ],
+          "until": "end-of-turn"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "count": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "−1: Create a 2/2 white Samurai creature token with vigilance.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": -1
+        }
+      ],
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Samurai",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Samurai"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 2,
+            "toughness": 2,
+            "keywords": [
+              "Vigilance"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "−2: Exile target tapped creature. You gain 2 life.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": -2
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile"
+        },
+        {
+          "effect": "gainLife",
+          "amount": 2
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "tapped": true
+        }
+      ]
+    }
+  ]
+}
