@@ -618,49 +618,21 @@ try{
    eq(await page.locator('.cm-tt-play, .cm-tt-tray').count(),0,'with no play space or trays left to calibrate it');}
   await page.locator('select[name=tabletopGroupBy]').waitFor();}
 
- /* THE LOBBY (game G0; docs/crankmagic-game-plan.md §5.1). Pick your deck and the table's bracket
-    judges the seat; nothing a table does writes to the library. The web copy no longer draws the lobby:
-    its Play page says games run on the local host and links there, and the lobby is the local copy's,
-    four seats round a table of rules. So the journey reads the pointer here, then walks the lobby on
-    the local copy -- the same server at its loopback name, a library of its own, seeded with this one
-    as a backup would bring it. The seed that fixed the turn order has no field any more, and a pasted
-    list that is not a hundred is no longer refused by number: it is made into a planned hundred, a
-    draft deck in the library, so that is what is walked in its place. */
- {await nav('Play');await page.getByRole('heading',{name:'Games run on your local host'}).waitFor({timeout:30000});
-  ok(/^http:\/\/127\.0\.0\.1:8768\//.test(await page.locator('.cm-pointer-host').getAttribute('href')),'the web copy points at the local host to play');
-  const lobbyState=await state(),lp=await context.newPage();lp.on('pageerror',error=>errors.push(error.message));await stubNetwork(lp,[]);
-  const LOCAL=BASE.replace('crankmagic.localhost','localhost')+'/'+ENTRY;
-  const revision=()=>lp.evaluate(async()=>{const r=await CrankRepository.open();try{return (await r.getState()).revision;}finally{r.close();}});
-  await lp.goto(LOCAL+'#decks');await lp.waitForFunction(()=>typeof CrankRepository!=='undefined',null,{timeout:60000});
-  await lp.evaluate(async s=>{const r=await CrankRepository.open();try{const c=await r.getState();await r.replace({state:s},c.revision);}finally{r.close();}},lobbyState);
-  await lp.goto(LOCAL+'#game');await lp.reload();await lp.locator('[data-action=lobby-host-deck]').first().waitFor({timeout:60000});
-  const seat=()=>lp.locator('.cm-lobby-seat.is-you'),main=()=>lp.locator('#cm-main').innerText();
-  ok(/No one is seated yet/.test(await main()),'the lobby opens with nobody seated');
-  ok(/Table rules[\s\S]*Bracket\s+3\b/.test(await main()),'and at bracket 3, the upgraded table');
-  const before=await revision();
-  await lp.locator('[data-action=lobby-host-deck]').first().click();await lp.locator('#cm-dialog[open]').waitFor();
-  await lp.locator('#cm-dialog [name=deckId]').selectOption({label:'Journey Goblins'});await lp.getByRole('button',{name:'Seat it',exact:true}).click();await lp.locator('#cm-dialog[open]').waitFor({state:'hidden'});
-  /* The seat's audit (cards, Game Changers, the verdict) is drawn folded, so it is read as text rather than as seen. */
-  await seat().locator('.cm-lobby-figs').waitFor({state:'attached',timeout:15000});
-  {const figs=await seat().locator('.cm-lobby-figs').textContent();
-   ok(/100 of 100/.test(figs),'a real deck seats as a hundred');
-   ok(/0 of 3/.test(figs),'and carries no Game Changers against the bracket\'s three');
-   ok(/Deck fits the table/.test(await seat().textContent()),'so it can sit');}
-  ok(/Launches when every seat is ready · 1 to go/.test(await main()),'and the table waits for the seat to say Ready');
-  eq(await revision(),before,'seating a deck from the library never touched the library');
-  await lp.reload();await seat().locator('.cm-lobby-figs').waitFor({state:'attached',timeout:60000});
-  ok(/Journey Goblins|Krenko, Mob Boss/.test(await seat().innerText()),'the table survives a reload');
-  /* A pasted list: the names are read, and six cards become a planned hundred. */
-  await seat().getByRole('button',{name:'Change deck',exact:true}).click();await lp.locator('#cm-dialog[open]').waitFor();
-  await lp.locator('#cm-dialog [name=from]').selectOption('paste');await lp.locator('#cm-dialog [name=paste]').fill('1 Krenko, Mob Boss\n\n1 Sol Ring\n4 Mountain');
-  await lp.getByRole('button',{name:'Seat it',exact:true}).click();await lp.locator('#cm-dialog[open]').waitFor({state:'hidden'});await lp.waitForTimeout(1500);
-  {const s=await lp.evaluate(async()=>{const r=await CrankRepository.open();try{return await r.getState();}finally{r.close();}}),pasted=s.decks.find(d=>d.name==='Pasted deck');
-   ok(pasted&&pasted.status==='draft','the pasted list is kept as a draft deck in the library');
-   eq(pasted.slots.reduce((n,r)=>n+r.quantity,0),100,'planned to a hundred');
-   ok(/100 of 100/.test(await seat().locator('.cm-lobby-figs').textContent()),'and seats as one');}
-  await lp.locator('[data-action=lobby-host-tools]').click();await lp.locator('.cm-menu:popover-open [data-action=lobby-clear]').click();await lp.waitForTimeout(800);
-  ok(/No one is seated yet/.test(await main()),'Clear the table empties it');
-  await lp.close();}
+ /* PLAY IS A TABLE (the cloud table; the local host's lobby this used to walk was retired with that direction,
+    2026-09-24's program). The web copy's Play is New table: you in seat 1 as its host, each other seat a person you
+    invite, an AI at Normal or Easy, or nobody; two to four seats. Reading it writes nothing to the library. The table
+    itself -- its lobby, its invitations and its game -- needs the Worker, which a static copy doesn't have: those are
+    walked against the real Worker by tests/table-lobby.mjs, tests/uat/play-e2e.mjs and tests/uat/solo-vs-ai.mjs. */
+ {const before=JSON.stringify(await state());
+  await nav('Play');await page.getByRole('heading',{name:'New table'}).waitFor({timeout:30000});
+  ok(/You sit in seat 1 as the host/.test(await page.locator('#cm-main').innerText()),'Play is a new table, with you in seat 1 as its host');
+  ok(await page.getByLabel('Your name at the table').count()===1,'it asks your name at the table');
+  for(const n of [2,3,4]){
+    const kinds=await page.getByLabel(`Seat ${n}`,{exact:true}).locator('option').allInnerTexts();
+    eq(kinds,['A person I will invite','An AI · Normal','An AI · Easy','Nobody'],`seat ${n} is a person you invite, an AI at Normal or Easy, or nobody`);
+  }
+  ok(await page.getByRole('button',{name:'Create the table',exact:true}).count()===1,'and Create the table');
+  eq(JSON.stringify(await state()),before,'reading Play wrote nothing to the library');}
 
  /* PUBLISH THE TO TRADE LIST (backlog #200): a copy filed in the To Trade group and one offered for Sell / Trade
     become a link; the page the link opens shows both with a way to ask; a visitor with an empty library sees

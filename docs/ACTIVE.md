@@ -22,6 +22,17 @@
 
 October 21, Claude (holding Codex · Play, with the engine halves Play waits on): ROB-102's first half on `claude/play-pass-stack`, stacked on #809. A new match passes the stack for a person with no answer to it (the room's `passStack`), so Rob isn't stopped at every AI spell; the board calls out each spell that came and went on his next view (**CAST** · Maya · Cultivate · resolved). A person who holds an answer is still asked. It's a table rule, on unless the host turns it off (`/table/rules {passStack: false}`); the lobby switch comes with ROB-124. Record: `docs/play-overhaul/ROB-102-PASS-STACK.md`.
 
+October 21, Claude (holding Codex · Play), on Rob's "make sure we aren't regressing anything": main checked beyond CI. The walks CI doesn't run passed on main's own build: release-acceptance, play-e2e, solo-vs-ai, real-deck-game, cloud-e2e, tour-walk, browser-geometry, sharing-runtime. Today's breaks files caught 133 of 134 on main. What still failed is brought up to date on `claude/stale-checks`:
+- **first-look:** r3's wording, "Restore backup…", and r3's one-row phone bar that scrolls sideways.
+- **crankmagic-journeys:** Play is New table now. The local host's lobby it walked is gone.
+- **play-journeys:**
+  - ROB-174, Focus's Lands caption under a land at 1280x720, fixed in crankmagic.css as the Table view's was;
+  - Full is the 3D table, and the walk now counts its fan;
+  - #813 moved the phone's Settings into the profile menu, and the walk reaches it there. That one was a real miss of mine.
+- **board-combat-display:** now checks the board starts below the combat picture, so `breaks-combat-display.py`'s header break is caught.
+
+All of those fail the same way on production's commit 5f6ea9cc, except the Settings move.
+
 October 21, Claude (holding Codex · Play): ROB-18 on `claude/play-phone-upright`, stacked on #812. The phone board is upright, as Rob approved on Oct 18 (Codex's design from its prototype, #766). From the top: the rail with Camera, the seats in a row, the turn, the battlefield and its lands at full width scrolling in their own frame, then what is asked. Sideways, the seats are a column at the right. The hand is a drawer from the bottom, and nothing is drawn turned a quarter any more. Still open: tap-to-inspect on the battlefield, one utility at a time, keyboard clearance, a real phone. Record: `docs/play-overhaul/ROB-18-PHONE-UPRIGHT.md`.
 
 October 21, Claude (holding Codex · Play): ROB-98 on `claude/play-land-spacing`, stacked on #811. Rob's approved 48px foot on the Full-view front mat keeps every land's upper half reachable with any hand card hovered (two land points blocked at 1280x720 without it), and the right drawer's resize line sits on its edge rather than 17px inside it. Both are Codex's Oct 18 fixes from its named stash, read and not dropped. Record: `docs/play-overhaul/ROB-98-LAND-SPACING.md`, "Shipped". ROB-18, the upright phone layout Rob approved the same day, is next.
