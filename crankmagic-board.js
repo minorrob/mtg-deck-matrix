@@ -158,6 +158,11 @@ globalThis.CrankBoard = Object.seal({
      `passAfterCast`), so it resolves unless someone responds; holding priority instead stays your choice (CR 117.3c),
      from Tools, remembered on this device, and sent with each cast as `hold`. */
   const HOLD_KEY = "cm-board-hold";
+  /* SKIP MY PRIORITY IF NO RESPONSE POSSIBLE (Rob, 2026-10-21), beside it: on unless turned off, kept on this device and
+     told to the room as the way of playing `askStack` (game/room/room.mjs) -- off, you are asked whenever anything is on
+     the stack, a response in hand or not. */
+  const SKIP_KEY = "cm-board-skip-empty";
+  const skipEmpty = () => stored(SKIP_KEY) !== "off";
   const ROWS_KEY = "cm-board-rows", ROWS = [0.3, 0.7], SCALE_KEY = {board: "cm-board-scale:board", hand: "cm-board-scale:hand"};
   const stored = (k) => {try {return localStorage.getItem(k);} catch {return null;}};
   const keep = (k, v) => {try {localStorage.setItem(k, String(v));} catch {/* applied, not remembered */}};
@@ -204,7 +209,10 @@ globalThis.CrankBoard = Object.seal({
     } catch (error) {C.notice(`Drawer layout was not saved: ${error.message}`, true);return false;}
     finally {paneSaving = false; draw();}
   }
-  const camera = {cards: Math.max(70, Math.min(150, Number(stored("cm-stage-card-size-v2")) || 100)), tilt: stored("cm-board-tilt-v2") === null ? 40 : Math.max(0, Math.min(60, Number(stored("cm-board-tilt-v2")) || 0)), zoom: Math.max(60, Math.min(120, Number(stored("cm-board-zoom-v2")) || 100))};
+  /* The tabletop's cards and zoom go to 200% (Rob, 2026-10-21: "I should be able to increase card size more. It's ok if
+     there's overlap. Increase the zoom to 200%"): past the fit, cards overlap and the table runs past the window's edges. */
+  const CAMERA_MAX = 200;
+  const camera = {cards: Math.max(70, Math.min(CAMERA_MAX, Number(stored("cm-stage-card-size-v2")) || 100)), tilt: stored("cm-board-tilt-v2") === null ? 40 : Math.max(0, Math.min(60, Number(stored("cm-board-tilt-v2")) || 0)), zoom: Math.max(60, Math.min(CAMERA_MAX, Number(stored("cm-board-zoom-v2")) || 100))};
   const stageEnabled = () => mode === "full" && !phone();
   const moduleSide = id => !phone() ? ["left","right"].find(side => paneModules(side).includes(id)) : undefined;
   const openModuleDrawer = id => {const side=moduleSide(id); if(side === "left") stageRail=true; if(side === "right") stageSide=true;};
@@ -297,6 +305,7 @@ globalThis.CrankBoard = Object.seal({
     motionFor = was && was.matchId === next.matchId && next.revision > was.revision ? next.revision : null;
     if (was && was.matchId === next.matchId && was.state.turnPlayerId !== next.state.turnPlayerId) turnLit = performance.now();
     if (motionFor !== null && attached) callouts(calloutsFor(was, next));
+    plays(was, next);
     if (focus === null) focus = view.seat;
     /* On a phone the board you are looking at is the only one on screen: when you are asked, it is yours. */
     if (phone() && view.decision && view.decision.id !== before) focus = view.seat;
@@ -314,12 +323,12 @@ globalThis.CrankBoard = Object.seal({
      wish's view has the revision it was sent at, so it is sent again only when the game moves on. */
   function prefer() {
     if (!view || view.status === "finished" || view.continuing || !socket || socket.readyState !== 1) return;
-    const want = (((C.state.preferences || {}).play || {}).stepByStep) === true;
-    if (want === (view.stepByStep === true)) return;
-    const key = `${view.matchId}:${want}`;
+    const want = (((C.state.preferences || {}).play || {}).stepByStep) === true, ask = !skipEmpty();
+    if (want === (view.stepByStep === true) && ask === (view.askStack === true)) return;
+    const key = `${view.matchId}:${want}:${ask}`;
     if (preferSaid && preferSaid.key === key && preferSaid.revision >= view.revision) return;
     preferSaid = {key, revision: view.revision};
-    socket.send(JSON.stringify({type: "prefer", stepByStep: want}));
+    socket.send(JSON.stringify({type: "prefer", stepByStep: want, askStack: ask}));
   }
   /* What a view sounds like (B8): the moments between it and the last, then the bed for where the game is. Only while
      the board is on the page and the player has pressed it once; the first view of a game is history. */
@@ -343,9 +352,9 @@ globalThis.CrankBoard = Object.seal({
     return short ? "Stop skipping" : "Skipping · stop";
   };
   const yieldHelp = () => `Yield this turn passes all your priority for the rest of ${nameOf(view.state.turnPlayerId)}'s turn, including new spells and abilities. You still choose targets, blockers, payments and other required decisions. Stop yielding affects future passes after the room acknowledges it; it cannot undo a pass.`;
-  function skipControl(short = false) {
+  function skipControl(short = false, size = "compact") {
     if (view.state.turnPlayerId === view.seat) return b(skipWords(short), "board-skip", {}, false,
-      {cls: `compact${skipping === null ? "" : " is-on"}`, disabled: view.status === "finished"});
+      {cls: `${size}${skipping === null ? "" : " is-on"}`, disabled: view.status === "finished"});
     if (view.status === "finished" || (!view.mayYield && !view.yielding)) return "";
     const active = view.yielding === true, waiting = yieldPending !== null;
     const label = waiting ? (yieldPending.on ? "Requesting yield…" : "Stopping yield…") : active ? "Stop yielding" : "Yield this turn";
@@ -353,7 +362,7 @@ globalThis.CrankBoard = Object.seal({
       ? `${nameOf(view.state.turnPlayerId)} · turn ${view.state.turn}; still choose`
       : "Pass all priority; still choose";
     return `<span class="cm-board-yield-control" data-yield-control title="${e(yieldHelp())}">
-      <button type="button" class="v-button compact${active ? " is-on" : ""}" data-action="board-skip" aria-pressed="${active}" aria-description="${e(yieldHelp())}"${waiting || !yieldReady || status !== "open" || sending || view.continuing ? " disabled" : ""}>${e(label)}</button>
+      <button type="button" class="v-button ${size}${active ? " is-on" : ""}" data-action="board-skip" aria-pressed="${active}" aria-description="${e(yieldHelp())}"${waiting || !yieldReady || status !== "open" || sending || view.continuing ? " disabled" : ""}>${e(label)}</button>
       <small>${e(detail)}</small></span>`;
   }
   function skip() {
@@ -640,19 +649,19 @@ globalThis.CrankBoard = Object.seal({
     if (pass && pass.endsTurn) return "End turn";
     return s.turnPlayerId === view.seat ? "Next step" : "Pass";
   }
-  function passButton() {
+  function passButton(cls = "compact") {
     const d = view.decision;
-    if (d && d.kind === "draw" && view.status !== "finished") return b("Draw card", "board-draw", {}, true, {cls: "compact", disabled: sending});
-    return b(passLabel(), "board-pass", {}, true, {cls: "compact", disabled: !canPass()});
+    if (d && d.kind === "draw" && view.status !== "finished") return b("Draw card", "board-draw", {}, true, {cls, disabled: sending});
+    return b(passLabel(), "board-pass", {}, true, {cls, disabled: !canPass()});
   }
   /* RESOLVE ALL, beside the pass (Rob, 2026-10-09): a run of identical triggers on top of the stack -- a thousand
      Intruder Alarm triggers -- let resolve with one click rather than one each. The room offers it (game/room/room.mjs,
      `triggerRun`) and passes for you through that run only; anything else on top, and you are asked again. */
   const resolveAllOption = () => {const d = view.decision; return d && d.kind === "priority" ? d.options.find((o) => o.act === "resolve-all") || null : null;};
-  function resolveAllButton() {
+  function resolveAllButton(cls = "compact") {
     const o = resolveAllOption();
     if (!o || view.status === "finished") return "";
-    return b(`Resolve all ${Number(o.count).toLocaleString("en-US")}`, "board-resolve-all", {}, false, {cls: "compact", disabled: sending});
+    return b(`Resolve all ${Number(o.count).toLocaleString("en-US")}`, "board-resolve-all", {}, false, {cls, disabled: sending});
   }
   /* THE TURN'S SEVEN STEPS, ALWAYS IN VIEW (Rob, 2026-10-12: "I want to see all 7 phases listed out during each turn,
      which phases are complete and which is active and which are yet to come, but very concise yet readable"). One
@@ -693,8 +702,8 @@ globalThis.CrankBoard = Object.seal({
     /* Hold remains a separate cast preference; explicit Yield belongs to the room (ROB-28). */
     const yours = view.state.turnPlayerId === view.seat;
     const priority = `<div class="cm-actions">${skipControl()}</div>
-      <label class="cm-board-hold"><input type="checkbox" data-board-hold${stored(HOLD_KEY) === "on" ? " checked" : ""}> Hold priority after I cast</label>
-      <p class="cm-muted cm-board-hold-help">When you cast a spell or activate an ability, it resolves unless someone responds${stored(HOLD_KEY) === "on" ? "; with Hold priority on, you are asked first, to respond to it yourself" : ""}.</p>
+      <label class="cm-board-hold"><input type="checkbox" data-board-hold${stored(HOLD_KEY) === "on" ? " checked" : ""}><span>Hold priority after I cast</span></label>
+      <label class="cm-board-hold"><input type="checkbox" data-board-skip-empty${skipEmpty() ? " checked" : ""}><span>Skip my priority if no response possible</span></label>
       <p class="cm-muted cm-board-yield-help">${yours ? "Skip to end passes your priority for you through the rest of your turn. It stops when anything is on the stack or you are asked anything else." : e(yieldHelp())}</p>`;
     return `<div class="cm-board-menu" role="group" aria-label="Settings" id="cm-board-tools">
       <div class="cm-actions cm-board-menu-row">${b("Set Side Drawer Modules", "board-modules-settings")}</div>
@@ -891,15 +900,28 @@ globalThis.CrankBoard = Object.seal({
       <div class="cm-full-mine cm-stage-region" aria-label="Tabletop">
         <div class="cm-stage-caption"><span>TURN ${view.state.turn}</span><div class="cm-stage-life-list" role="group" aria-label="Player life totals">${others.map(p=>`<span class="cm-stage-life">${e(p.name)} · <b>${p.health.life}</b></span>`).join("")}</div></div>
         ${rear}<div class="cm-stage-front">${mat(big, {size: "full", head: "none"})}${corner}</div>
+        ${actionBar()}
         ${cameraMenu()}
         <span class="cm-stage-error" role="status">${e(stageError)}</span>${ask()}
       </div>
       ${stageHand(big)}
       ${boardDrawers()}`;
   }
+  /* THE TURN'S ACTIONS, LARGE, OVER THE TABLE (Rob, 2026-10-21: "End Turn, Skip to End, and Draw Cards should all be done
+     as larger action buttons that pop up above the table ... so that it's much more clearly prominent"): in Full screen
+     the pass in its words for now (Draw card, Next step, Resolve ..., End turn, Pass), Resolve all, and Skip to end -- or
+     Yield this turn -- stand at the top of the table, where the callouts are, rather than in the strip. They rise in as a
+     question comes to you (`barSeen`: once a question, not at every redraw) and stand back, dimmed, while it is not yours. */
+  let barSeen = null;
+  function actionBar() {
+    const live = !!view.decision && view.status !== "finished", key = live ? `${view.matchId}:${view.decision.id}` : null;
+    const fresh = key !== null && key !== barSeen;
+    barSeen = key;
+    return `<div class="cm-stage-actions${live ? " is-live" : ""}${fresh && !reduced() ? " is-rising" : ""}" role="group" aria-label="Your actions">${passButton("")}${resolveAllButton("")}${skipControl(false, "")}</div>`;
+  }
   function boardHeader() {
     const me=players()[view.seat],s=view.state,turnName=s.turnPlayerId===null ? "" : nameOf(s.turnPlayerId);
-    const pill=`<div class="cm-full-pill">${passButton()}${resolveAllButton()}${skipControl(true)}</div>`;
+    const pill=`<div class="cm-full-pill">${stageEnabled() ? "" : `${passButton()}${resolveAllButton()}${skipControl(true)}`}</div>`;
     const conn=status === "open" ? "" : `<span class="cm-board-conn">${status === "reconnecting" ? "Reconnecting…" : "Connecting…"}</span>`;
     return `<header class="cm-stage-top"><span class="cm-stage-self">${vitals(me)}<b>${e(me.name)}</b></span><span class="cm-board-tools cm-board-turnsteps">${turnRibbon()}${stepsOpen ? stepsMenu() : ""}</span>
       <span class="cm-stage-priority"><span class="cm-board-turn"${view.yourTurn ? ` title="Turn ${s.turn} of the game, counting every player's; your ${ordinal(view.yourTurn)} turn"` : ""}>${s.turn ? `Turn ${s.turn} · ${e(turnName)}${view.yourTurn ? ` (your ${ordinal(view.yourTurn)})` : ""}` : "Before turn 1"}</span><br>Priority: ${e(nameOf(view.state.priorityPlayerId))}<span class="cm-board-waiting" title="${e(waitingText())}">${e(waitingText())}</span>${conn}</span>${alsoButton()}${pill}${stageProfile(me)}${combatStrip()}</header>`;
@@ -910,8 +932,8 @@ globalThis.CrankBoard = Object.seal({
       ${ib(stageSide ? "▸" : "◂", "board-stage-side", "Toggle table panel", {}, {cls: "cm-stage-handle cm-stage-right", pressed: stageSide})}`; }
   function cameraMenu() { return `<div class="cm-stage-camera"><button type="button" data-action="board-camera" aria-expanded="${cameraOpen}">Camera ▾</button>${cameraOpen ? `<div>${phone() ? "" : switcher()}<span>View seats</span>${ib("◀", "board-rotate", "Previous seat", {by: "-1"})}${ib("▶", "board-rotate", "Next seat", {by: "1"})}
         ${stageEnabled() ? `<label>Tilt <input type="range" min="0" max="60" value="${camera.tilt}" data-stage-camera="tilt" aria-label="Table tilt"><output>${camera.tilt}°</output></label>` : ""}
-        ${stageEnabled() ? `<label>Zoom <input type="range" min="60" max="120" value="${camera.zoom}" data-stage-camera="zoom" aria-label="Table zoom"><output>${camera.zoom}%</output></label>
-        <label>Cards <input type="range" min="70" max="150" value="${camera.cards}" data-stage-camera="cards" aria-label="Tabletop card size"><output>${camera.cards}%</output></label>` : `${scaleSlider("board", "Board cards")}${scaleSlider("hand", "Hand cards")}`}
+        ${stageEnabled() ? `<label>Zoom <input type="range" min="60" max="${CAMERA_MAX}" value="${camera.zoom}" data-stage-camera="zoom" aria-label="Table zoom"><output>${camera.zoom}%</output></label>
+        <label>Cards <input type="range" min="70" max="${CAMERA_MAX}" value="${camera.cards}" data-stage-camera="cards" aria-label="Tabletop card size"><output>${camera.cards}%</output></label>` : `${scaleSlider("board", "Board cards")}${scaleSlider("hand", "Hand cards")}`}
         ${stageEnabled() ? `<p class="cm-stage-style-note">Appearance preview · this device</p>
         <label class="cm-stage-style">Background <select data-stage-style="background" aria-label="Background">${(CrankStage.appearances.backgrounds).map(x=>`<option value="${x.id}"${appearance.background===x.id?" selected":""}>${x.name}</option>`).join("")}</select></label>
         <label class="cm-stage-style">Table <select data-stage-style="table" aria-label="Table design">${(CrankStage.appearances.tables).map(x=>`<option value="${x.id}"${tableDesignId(appearance.table)===x.id?" selected":""}>${x.name}</option>`).join("")}</select></label>` : ""}</div>` : ""}</div>`; }
@@ -1106,7 +1128,8 @@ globalThis.CrankBoard = Object.seal({
          times over being one "Play Forest" (tapping a card in the hand plays that very one). */
       const seen = new Map();
       for (const o of d.options) {
-        if (o.act === "pass" || o.act === "resolve-all") continue;
+        /* A land just played goes back to the hand as one would take it back at a table, by its double-click: no button. */
+        if (o.act === "pass" || o.act === "resolve-all" || o.act === "undo-land") continue;
         const key = `${o.act}|${o.label}`;
         if (seen.has(key)) seen.get(key).n += 1; else seen.set(key, {o, n: 1});
       }
@@ -1183,7 +1206,7 @@ globalThis.CrankBoard = Object.seal({
     const d = view.decision, inner = `${went()}${moduleSide("stack") ? "" : stack()}${!moduleSide("actions") && d && d.kind !== "priority" && d.kind !== "draw" ? decision() : ""}`;
     return inner ? `<div class="cm-board-ask">${inner}</div>` : "";
   }
-  const alsoCount = () => {const d = view.decision; return d && d.kind === "priority" ? new Set(d.options.filter((o) => o.act !== "pass" && o.act !== "resolve-all").map((o) => `${o.act}|${o.label}`)).size : 0;};
+  const alsoCount = () => {const d = view.decision; return d && d.kind === "priority" ? new Set(d.options.filter((o) => o.act !== "pass" && o.act !== "resolve-all" && o.act !== "undo-land").map((o) => `${o.act}|${o.label}`)).size : 0;};
   function alsoButton() {
     if(moduleSide("actions")) return "";
     const d = view.decision;
@@ -1756,6 +1779,46 @@ globalThis.CrankBoard = Object.seal({
   }
   actions["board-callout-demo"] = () => {tools = false; draw(); callouts(SAMPLE_CALLOUTS);};
 
+  /* WHAT THE OTHER PLAYERS PLAY, HELD UP TO SEE (Rob, 2026-10-21: "AI player's plays should pause and show each card it
+     plays as a pop-up on my screen that fades after 10 seconds or I click close on it"). Each spell cast and land played by
+     another seat -- from the view's events (events.v1), so one cast and resolved between two of your views is shown too --
+     is its card, large, under its player's name, at the side of the table: it fades after PLAY_MS, waits while the pointer
+     is on it, and goes at its ✕; a click on the card shows it larger. The newest PLAYS_SHOWN at once. Never a face-down
+     card, never your own, and never an event seen before (a view sent again repeats its events; a new game's ids start
+     over, so the match is in the key). A view of a game you had not seen before shows nothing: that is history. */
+  const PLAY_MS = 10000, PLAYS_SHOWN = 3, playsSeen = new Set();
+  const playKey = (matchId, x) => `${matchId}:${x.eventId}`;
+  function playsFor(was, next) {
+    const all = (next.events || []).filter((x) => (x.kind === "cast" || x.kind === "land") && x.player !== next.seat && x.card && x.card.name);
+    const fresh = all.filter((x) => !playsSeen.has(playKey(next.matchId, x)));
+    for (const x of fresh) playsSeen.add(playKey(next.matchId, x));
+    return was && was.matchId === next.matchId && next.status !== "finished" ? fresh : [];
+  }
+  globalThis.CrankBoard.playsFor = playsFor;
+  function plays(was, next) {
+    const list = playsFor(was, next), layer = document.getElementById("cm-board-plays");
+    if (!attached || !layer || !list.length) return;
+    for (const x of list.slice(-PLAYS_SHOWN)) {
+      const name = x.card.name, who = nameOf(x.player);
+      const el = document.createElement("section");
+      el.className = "cm-play-pop";
+      el.style.setProperty("--seat", seatColor(x.player));
+      el.setAttribute("aria-label", `${who} ${x.kind === "land" ? "played" : "cast"} ${name}`);
+      el.innerHTML = `<header><b>${e(who)}</b><button type="button" class="cm-play-close" aria-label="Close ${e(name)}">✕</button></header>
+        <button type="button" class="cm-play-card" aria-label="${e(name)}"><img src="${e(pictureOf(name))}" alt="" draggable="false" referrerpolicy="no-referrer"></button>`;
+      let left = PLAY_MS, since = performance.now(), timer = null;
+      const gone = () => {clearTimeout(timer); if (!el.isConnected) return; el.classList.add("is-leaving"); setTimeout(() => el.remove(), reduced() ? 0 : 600);};
+      const run = () => {since = performance.now(); timer = setTimeout(gone, left);};
+      el.addEventListener("mouseenter", () => {clearTimeout(timer); left = Math.max(1500, left - (performance.now() - since));});
+      el.addEventListener("mouseleave", run);
+      el.querySelector(".cm-play-close").addEventListener("click", () => {clearTimeout(timer); el.remove();});
+      el.querySelector(".cm-play-card").addEventListener("click", () => C.modal(name, `<div class="cm-board-zoom">${card({cardId: -1, name, types: [], counters: {}, power: null}, {where: "zoom", action: "close"})}</div><div class="cm-form-footer">${b("Close", "close", {}, true)}</div>`));
+      layer.prepend(el);
+      while (layer.children.length > PLAYS_SHOWN) layer.lastElementChild.remove();
+      run();
+    }
+  }
+
   /* THE BOARD'S ONE STATUS REGION (WCAG 4.1.3): a polite live region beside the board, not in it, so the board drawn
      again with every view never makes it anew -- a region made anew with its words already in it is heard twice, or
      not at all. What it says is what has just happened to you: the question the table asks, the turns that went by, the
@@ -2181,7 +2244,7 @@ globalThis.CrankBoard = Object.seal({
       for (const [seat, w] of awaySaid) if (w.at > asked) heard(seat, w.until);
       if (!document.getElementById("cm-board")) {
         records = null; saidKey = null;
-        C.main.innerHTML = `<div class="cm-board" id="cm-board" data-view="${mode}"></div><div class="cm-board-callouts" id="cm-board-callouts" aria-hidden="true"></div><aside class="cm-board-coach" id="cm-board-coach" aria-label="CrankMagic Coach" hidden></aside><p class="cm-sr-only" id="cm-board-said" role="status" aria-live="polite" aria-atomic="true"></p>`;
+        C.main.innerHTML = `<div class="cm-board" id="cm-board" data-view="${mode}"></div><div class="cm-board-callouts" id="cm-board-callouts" aria-hidden="true"></div><div class="cm-board-plays" id="cm-board-plays" role="region" aria-label="Cards the other players played"></div><aside class="cm-board-coach" id="cm-board-coach" aria-label="CrankMagic Coach" hidden></aside><p class="cm-sr-only" id="cm-board-said" role="status" aria-live="polite" aria-atomic="true"></p>`;
         draw();
         watch();
       } else if (said() !== before) draw();
@@ -2250,29 +2313,44 @@ globalThis.CrankBoard = Object.seal({
     C.modal(combatName(c), `<p>Object #${c.cardId}${c.power !== null && c.power !== undefined ? ` · ${e(c.power)}/${e(c.toughness)}` : ""}</p>
       <div class="cm-board-zoom">${card(shown, {where: "zoom", action: "close"})}</div><div class="cm-form-footer">${b("Close", "close", {}, true)}</div>`);
   };
-  actions["board-card"] = (el) => {
-    if (!view) return;
-    const id = Number(el.dataset.card);
-    if (blocking() && !sending && view.decision.legalBlocks.some(b => b.blocker === id)) {
-      blockSelected = id; openModuleDrawer("actions"); draw(); return;
-    }
-    /* Full screen and the Panel show a card large at the side, with what can be done with it, before anything is done. */
-    if (mode === "full" && !phone()) {
-      selected = id; hover = null; drawPick(); draw();
-      /* WHY NOT (ROB-24): a card of the person's own with nothing to do says why at once, whether or not Card Preview is open. */
-      const why = !optionsFor(id).length && findCard(id)?.why;
-      if (why) C.notice(why);
-      return;
-    }
-    const previewSide=moduleSide("inspect");
-    if ((previewSide === "left" && stageRail) || (previewSide === "right" && stageSide)) {selected = id; drawPick();}
-    if (!view.decision || sending) return;
-    const opts = optionsFor(id);
+  /* A CARD IS PLAYED BY CLICKING IT, as one is put down at a table, in every view (Rob, 2026-10-21: "I should be able to
+     click on the card or double-click a card to play it"); Full screen shows it large at the side too. The second click of
+     a double-click does nothing more -- the first played it -- except on a land just played: there the double-click picks
+     it back up into the hand ("Oh wait, no, I didn't mean to lay that land down"; the room's `takeBackLand`), as a hand
+     reaches over at a table, so its single click (a tap for mana) waits out the double-click before it is done. */
+  const DOUBLE_MS = 300;
+  let clickLater = null;
+  const takeBackOf = (id) => optionsFor(id).find((o) => o.act === "undo-land") || null;
+  function useCard(id) {
+    if (!view || !view.decision || sending) return;
+    const opts = optionsFor(id).filter((o) => o.act !== "undo-land");
     /* Nothing to do with it: why, when the room says (ROB-24). */
     if (!opts.length && findCard(id)?.why) return C.notice(findCard(id).why);
     if (opts.length === 1) return option(opts[0].index);
     /* More than one way to use it -- aimed at this or that, paid with this or that -- is a pop-up to choose in. */
     if (opts.length > 1) zoom(id);
+  }
+  actions["board-card"] = (el, event) => {
+    if (!view) return;
+    const id = Number(el.dataset.card);
+    if (event && event.detail >= 2) {
+      clearTimeout(clickLater); clickLater = null;
+      const back = takeBackOf(id);
+      if (back && view.decision && !sending) send({indices: [back.index]});
+      return;
+    }
+    if (blocking() && !sending && view.decision.legalBlocks.some(b => b.blocker === id)) {
+      blockSelected = id; openModuleDrawer("actions"); draw(); return;
+    }
+    /* Full screen and the Panel show the card large at the side. */
+    if (mode === "full" && !phone()) {selected = id; hover = null; drawPick(); draw();}
+    else {
+      const previewSide=moduleSide("inspect");
+      if ((previewSide === "left" && stageRail) || (previewSide === "right" && stageSide)) {selected = id; drawPick();}
+    }
+    clearTimeout(clickLater); clickLater = null;
+    if (takeBackOf(id) && event && event.detail === 1) {clickLater = setTimeout(() => {clickLater = null; useCard(id);}, DOUBLE_MS); return;}
+    useCard(id);
   };
   actions["board-choose"] = (el) => {alsoOpen = false; draw(); zoom(Number(el.dataset.card));};
   /* All at one player, and None (the attack question's own shortcuts, above): picks only, as a press on each would be. */
@@ -2703,6 +2781,13 @@ globalThis.CrankBoard = Object.seal({
   document.addEventListener("change", (event) => {
     if (!event.target || !event.target.matches || !event.target.matches("#cm-board [data-board-hold]")) return;
     keep(HOLD_KEY, event.target.checked ? "on" : "off");
+    draw();
+  });
+  /* Skip my priority if no response possible: kept on this device, and told to the room at once (prefer). */
+  document.addEventListener("change", (event) => {
+    if (!event.target || !event.target.matches || !event.target.matches("#cm-board [data-board-skip-empty]")) return;
+    keep(SKIP_KEY, event.target.checked ? "on" : "off");
+    prefer();
     draw();
   });
   /* The filter hides and shows the rows where they are, so typing keeps its place. */

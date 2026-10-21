@@ -147,10 +147,12 @@ export function person(seed) {
     if (now !== turn) {turn = now; taken = new Map();}
     const all = decision.kind === "priority" ? decision.options.find((o) => o.act === "resolve-all") : null;
     if (all) {answer.resolvedAll += 1; return {kind: "answer", choiceId: decision.id, indices: [all.index]};}
-    /* Untap, its mana unspent (game/room/room.mjs, `untapMana`), is a person's second thought, not a move: it is never
-       taken here, and is not among what the coin is tossed over -- so a game picks as it did before it was offered. */
-    const untaps = decision.kind === "priority" ? decision.options.filter((o) => o.act === "undo-mana").length : 0;
-    let a = pilot.answer(untaps ? {...decision, options: decision.options.filter((o) => o.act !== "undo-mana")} : decision);
+    /* Untap, its mana unspent (game/room/room.mjs, `untapMana`), and a land taken back (`takeBackLand`) are a person's second
+       thoughts, not moves: never taken here, and not among what the coin is tossed over -- so a game picks as it did before
+       they were offered. Both come last among the offers, so the rest keep their indices. */
+    const second = (o) => o.act === "undo-mana" || o.act === "undo-land";
+    const untaps = decision.kind === "priority" ? decision.options.filter(second).length : 0;
+    let a = pilot.answer(untaps ? {...decision, options: decision.options.filter((o) => !second(o))} : decision);
     const [one] = a.indices ?? [], option = decision.kind === "priority" && a.indices?.length === 1 ? decision.options?.[one] : null;
     if (option?.act === "activate") {
       const key = `${option.cardId}:${option.label}`, pass = decision.options.find((o) => o.act === "pass");
@@ -351,11 +353,12 @@ export async function playGame({decks, seed, cards, humans = [], levels = [], ma
   /* The pod as the table launches it (game/room/table.mjs): a step with nothing to do passes itself, once every person is
      out the game ends there, a run of identical triggers may resolve at once, a person's cast passes for them, and their own
      end step is asked of them, and a land they tap may be untapped; floating mana and the sources left pay a cast
-     together, and they may yield a turn, and are not asked to declare blockers with none to declare -- so a wait measured here
+     together, and they may yield a turn, and are not asked to declare blockers with none to declare, and play a land in any step
+     of their own turn, may take one back, and are asked about what is aimed at them -- so a wait measured here
      is one a person at the table has, not the AI seats playing a game out for nobody. */
   /* `levels`: an AI seat's setting (AI-2), "easy" or "normal", for L1; none, L0. And its AI seats take what an "up to" or a
      search is for (`pilotPicks`), unless `picks` is false: a table's games before they did. */
-  const pod = {...(picks ? {pilotPicks: true} : {}), passEmpty: true, endWhenNoPerson: true, resolveAll: true, passAfterCast: true, endAsks: true, untapMana: true, pooledTaps: true, xTaps: true, yieldTurn: true, drawBeat: true, passStack: true, blocksNone: true, seats: decks.map((d, i) => ({seatId: `s${i}`, name: NAMES[i] || `Seat ${i + 1}`, pilot: humans.includes(i) ? "human" : "house",
+  const pod = {...(picks ? {pilotPicks: true} : {}), passEmpty: true, endWhenNoPerson: true, resolveAll: true, passAfterCast: true, endAsks: true, untapMana: true, pooledTaps: true, xTaps: true, yieldTurn: true, drawBeat: true, passStack: true, blocksNone: true, landAnyStep: true, takeBackLand: true, askAimed: true, seats: decks.map((d, i) => ({seatId: `s${i}`, name: NAMES[i] || `Seat ${i + 1}`, pilot: humans.includes(i) ? "human" : "house",
     ...(!humans.includes(i) && levels[i] ? {level: levels[i]} : {}), commander: d.commander, cards: d.cards}))};
   const people = Object.fromEntries(humans.map((i) => [`s${i}`, answerer(`person-${seed}-${i}`)]));
   const started = Date.now();
