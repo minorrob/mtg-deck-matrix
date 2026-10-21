@@ -15,7 +15,8 @@
  *   4. The person concedes: "conceded".
  *   5. Two people, one conceding and then the other running out of time: "timed-out", the second's seat -- the order kept
  *      with the room, so a woken room says the same.
- *   6. At the table, the person's five minutes run out: "timed-out", in the finished game's record too.
+ *   6. At the table, two people drop and their five minutes run out, the second's last: "timed-out", in the finished
+ *      game's record too. (A person alone with AI seats has no clock: their game waits for them, ROB-170.)
  *   7. At the table, the host ends the game: "ended", by the host, every seat still playing; in the record too.
  *   8. One person and one AI seat, the person decked: the rules end it, "won", the AI seat; the person's own loss in `seats`.
  * And through all of it `winner`, `reason` and `endedBy` are what they were.
@@ -191,14 +192,25 @@ async function soloTable(tag) {
   return {t, matchId};
 }
 {
-  const {t, matchId} = await soloTable("away");
-  await t.dropped(0, now + 20000);
+  /* Rob, Maya and two AI seats: Maya drops, then Rob a minute later, each on the clock while the other is at the table. */
+  const MAYA = "maya@example.com", storage = memoryStorage(), t = tableOn(storage, {cards, random});
+  await t.create({tableId: "endingaway", host: ROB, hostName: "Rob", seats: [{kind: "human", name: "Maya"}, {kind: "ai", name: "Bot 2"}, {kind: "ai", name: "Bot 3"}]});
+  await t.join(MAYA, (await t.invite(ROB, 1, now)).code, now);
+  await t.deck(ROB, 0, deck("away0"), now); await t.deck(MAYA, 1, deck("away1"), now); await t.deck(ROB, 2, deck("away2"), now); await t.deck(ROB, 3, deck("away3"), now);
+  await t.ready(ROB, true, now); await t.ready(MAYA, true, now);
+  await t.start(ROB, now);
+  const matchId = await t.tick(now + 10000);
+  await t.dropped(1, now + 20000);
+  await t.dropped(0, now + 80000);
   await t.tick(now + 20000 + AWAY_LIMIT);
-  eq((await t.view(ROB)).phase, "rematch", "6. at the table, Rob's five minutes run out: he is conceded, every person is out, and the table moves on");
+  eq((await t.view(ROB)).phase, "playing", "6. Maya's five minutes run out first: she is conceded, and Rob's own clock still runs");
+  await t.tick(now + 80000 + AWAY_LIMIT);
+  eq((await t.view(ROB)).phase, "rematch", "then Rob's: he is conceded, every person is out, and the table moves on");
   const rec = await t.record(ROB, matchId);
-  eq([rec.result.winner, rec.result.reason, rec.result.endedBy, rec.departures], [null, NO_PERSON_REASON, null, {s0: "timed-out"}], "the finished game's record has its words as before");
-  eq(saw(rec.result.ending), {kind: "timed-out", seatId: "s0", reason: "conceded", seats: [{seatId: "s0", outcome: "timed-out", reason: "conceded"}, ...["s1", "s2", "s3"].map((seatId) => ({seatId, outcome: "playing", reason: null}))]},
-    "and `ending`: timed out, not eliminated and not conceded by choice");
+  eq([rec.result.winner, rec.result.reason, rec.result.endedBy, rec.departures], [null, NO_PERSON_REASON, null, {s1: "timed-out", s0: "timed-out"}], "the finished game's record has its words as before");
+  eq(saw(rec.result.ending), {kind: "timed-out", seatId: "s0", reason: "conceded", seats: [{seatId: "s0", outcome: "timed-out", reason: "conceded"}, {seatId: "s1", outcome: "timed-out", reason: "conceded"},
+    ...["s2", "s3"].map((seatId) => ({seatId, outcome: "playing", reason: null}))]},
+    "and `ending`: timed out, the last person out's seat, not eliminated and not conceded by choice");
 }
 {
   const {t, matchId} = await soloTable("end");
