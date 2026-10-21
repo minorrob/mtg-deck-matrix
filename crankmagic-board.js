@@ -536,11 +536,14 @@ globalThis.CrankBoard = Object.seal({
     const opts = optionsFor(c.cardId), mine = view.decision && !sending;
     const bright = mine && opts.length > 0, chosen = opts.some((o) => picked.includes(o.index));
     const creature = c.name && c.types.includes("Creature") && c.power !== null, upright = UPRIGHT.has(where), fight = combatOf(c);
-    const cls = ["cm-bcard", c.name ? "" : "is-back", c.tapped && !upright ? "is-tapped" : "", bright ? "is-bright" : "", chosen ? "is-picked" : "", coachShown.has(c.cardId) ? "is-coach-shown" : "", (where === "hand" || where === "fan") && mine && !bright ? "is-dim" : "", selected === c.cardId && where !== "pick" ? "is-selected" : ""].filter(Boolean).join(" ");
+    const cls = ["cm-bcard", c.name ? "" : "is-back", Number.isFinite(c.commanderTax) ? "has-tax" : "", c.tapped && !upright ? "is-tapped" : "", bright ? "is-bright" : "", chosen ? "is-picked" : "", coachShown.has(c.cardId) ? "is-coach-shown" : "", (where === "hand" || where === "fan") && mine && !bright ? "is-dim" : "", selected === c.cardId && where !== "pick" ? "is-selected" : ""].filter(Boolean).join(" ");
     const marks = [c.tapped && upright ? `<span class="cm-bcard-mark is-state">Tapped</span>` : "", ...fight.map((f) => `<span class="cm-bcard-mark is-combat">${f.mark}</span>`), c.damage ? `<span class="cm-bcard-mark">${c.damage} damage</span>` : "", ...Object.entries(c.counters || {}).map(([k, n]) => `<span class="cm-bcard-mark">${n} ${e(k)}</span>`)].join("");
     /* Its name first, then what is shown on it as a person looking at it would say it: tapped, its power and toughness,
        in combat, damage marked, counters, chosen or picked to read; then what it can do now (the accessibility pass). */
-    const state = [c.tapped ? "tapped" : "", creature ? `${c.power}/${c.toughness}` : "", ...fight.map((f) => f.said), c.damage ? `${c.damage} damage` : "", ...Object.entries(c.counters || {}).map(([k, n]) => `${n} ${k} counter${n === 1 ? "" : "s"}`),
+    /* THE COMMANDER TAX (ROB-29; CR 903.8): on a commander in the command zone, the generic it costs more for each time it
+       was cast from there (the room's `commanderTax`), at its top-right as Rob asked, and said with its name. */
+    const tax = Number.isFinite(c.commanderTax) ? c.commanderTax : null;
+    const state = [tax !== null ? `commander tax ${tax}` : "", c.tapped ? "tapped" : "", creature ? `${c.power}/${c.toughness}` : "", ...fight.map((f) => f.said), c.damage ? `${c.damage} damage` : "", ...Object.entries(c.counters || {}).map(([k, n]) => `${n} ${k} counter${n === 1 ? "" : "s"}`),
       chosen ? "chosen" : "", selected === c.cardId && where !== "pick" ? "selected" : ""].filter(Boolean);
     /* What it can do, each kind once ("Cast Zap, 4 ways"), not the card's name once per target. */
     const can = [...new Set(opts.map((o) => verbFor(o)))];
@@ -550,7 +553,7 @@ globalThis.CrankBoard = Object.seal({
     const label = `${named}${state.length ? ", " + state.join(", ") : ""}${bright ? `: ${can.join(" or ")}${opts.length > can.length ? `, ${opts.length} ways` : ""}` : ""}`;
     if (!c.name && !c.faceDown) return `<div class="cm-bcard is-back" role="img" aria-label="${e(label)}"></div>`;
     return `<button type="button" class="${cls}" data-action="${action}" data-card="${c.cardId}"${arrange ? ` draggable="true" data-arrange-card="true" title="Drag within this section to reorder; Alt + Left or Right works with a keyboard"` : ""} aria-label="${e(label)}">
-      ${c.name ? `<span class="cm-bcard-name">${e(c.name)}</span>` : ""}${creature ? `<span class="cm-bcard-pt">${c.power}/${c.toughness}</span>` : ""}
+      ${c.name ? `<span class="cm-bcard-name">${e(c.name)}</span>` : ""}${creature ? `<span class="cm-bcard-pt">${c.power}/${c.toughness}</span>` : ""}${tax !== null ? `<span class="cm-bcard-tax" title="Commander tax: {${tax}} more to cast it from the command zone">+${tax}</span>` : ""}
       ${c.name ? `<img src="${e(pictureOf(c.name))}" alt="" draggable="false" loading="lazy" referrerpolicy="no-referrer">` : ""}${marks ? `<span class="cm-bcard-marks">${marks}</span>` : ""}</button>`;
   }
 
@@ -696,7 +699,10 @@ globalThis.CrankBoard = Object.seal({
   function pile(label, zone, top, {back = false, draw: drawing = false} = {}) {
     /* Your library, while your draw waits for you (a game launched with the held draw): clicking it draws, as Draw a card
        does (Rob, 2026-10-09: "Clicking the library pile should Draw a Card also on a Draw turn"). */
-    const face = top ? card(top) : drawing
+    /* PARTNERS (ROB-29, Oct 20): the command zone draws every card in it, the second overlapping the first like a small
+       pile, so Kraum is there to see, inspect and cast beside Tymna rather than only under "You can also". */
+    const many = label === "Command" && zone.cards.length > 1;
+    const face = many ? `<span class="cm-board-partners">${zone.cards.map((c) => card(c)).join("")}</span>` : top ? card(top) : drawing
       ? `<button type="button" class="cm-bcard is-back is-bright" data-action="board-draw" aria-label="Draw a card: your library, ${zone.count}"${sending ? " disabled" : ""}><b class="cm-bcard-count">${zone.count}</b></button>`
       : `<div class="cm-bcard is-empty${back && zone.count ? " is-back" : ""}" aria-hidden="true">${back && zone.count ? `<b class="cm-bcard-count">${zone.count}</b>` : ""}</div>`;
     return `<figure class="cm-mat-zone cm-board-pile" data-zone="${e(label.toLowerCase())}" aria-label="${e(label)}, ${zone.count}" title="${e(label)}, ${zone.count}">${face}<figcaption><em>${e(label)}</em><b>${zone.count}</b></figcaption></figure>`;
@@ -1067,7 +1073,13 @@ globalThis.CrankBoard = Object.seal({
       body = blockDraft();
       foot = `${b("No blocks", "board-block-none", {}, false, {disabled:sending})}${b(picked.length ? "Confirm blocks" : "Confirm no blocks", "board-confirm", {}, true, {disabled:!blockValid() || sending})}`;
     }
-    else if (d.mode === "ack") foot = b("OK", "board-confirm", {}, true, {disabled: sending});
+    /* WHAT YOU WERE SHOWN (ROB-169): an acknowledgment about cards ("Peek: you look at Maya's hand") draws them, each one
+       to read (Card zoom on a click); this seat alone is sent them, in its own decision. OK answers it. */
+    else if (d.mode === "ack") {
+      const shown = d.options.filter((o) => o.cardId !== undefined && o.label);
+      if (shown.length) body = `<div class="cm-board-shown">${shown.map((o) => card(shownCard(o.cardId), {where: "peek", action: "board-zoom-open"})).join("")}</div>`;
+      foot = b("OK", "board-confirm", {}, true, {disabled: sending});
+    }
     else if (d.mode === "many") {
       body = d.options.map((o) => opt(o, ` aria-pressed="${picked.includes(o.index)}"`)).join("");
       const ok = picked.length >= d.min && picked.length <= d.max;
@@ -1210,8 +1222,14 @@ globalThis.CrankBoard = Object.seal({
     for (const p of players()) for (const c of visibleCards(p)) if (c.cardId === cardId) return c;
     return null;
   }
+  /* A card this seat was shown in its own decision (ROB-169: a look at another player's hand), which is not on any zone it
+     can see: read from the decision, by name. */
+  const shownCard = (cardId) => {
+    const o = view?.decision?.mode === "ack" ? view.decision.options.find((x) => x.cardId === cardId && x.label) : null;
+    return o ? {cardId: o.cardId, name: o.label, types: [], power: null, counters: {}} : null;
+  };
   function zoom(cardId) {
-    const c = findCard(cardId);
+    const c = findCard(cardId) || shownCard(cardId);
     if (!c || !c.name) return;
     const opts = optionsFor(c.cardId);
     const acts = opts.map((o) => `<button type="button" class="v-button primary" data-action="board-zoom-do" data-index="${o.index}"${sending ? " disabled" : ""}>${sayHtml(o)}</button>`).join("");

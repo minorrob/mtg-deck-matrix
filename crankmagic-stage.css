@@ -57,7 +57,7 @@
 .cm-stage-mini .cm-mat-grid{height:100%;gap:3px;grid-template-rows:1fr 1fr;padding:1px;grid-template-columns:1fr 33px 33px}
 .cm-stage-mini .cm-board-field{grid-row:1}.cm-stage-mini .cm-board-lands{grid-row:2;padding:0}.cm-stage-mini .cm-board-chip{display:none}
 .cm-stage-mini .cm-board-pile[data-zone="library"],.cm-stage-mini .cm-board-pile[data-zone="graveyard"]{grid-row:2}
-.cm-stage-mini .cm-bcard-name,.cm-stage-mini .cm-bcard-pt,.cm-stage-mini .cm-bcard-marks{display:none}
+.cm-stage-mini .cm-bcard-name,.cm-stage-mini .cm-bcard-pt,.cm-stage-mini .cm-bcard-marks,.cm-stage-mini .cm-bcard-tax{display:none}
 .cm-stage-mini .cm-board-pile figcaption{font-size:10px}
 .cm-stage-camera{position:absolute;right:18px;top:10px;z-index:9;min-width:90px;background:#0b2023eb;border:1px solid #5e8a77;border-radius:8px;color:#eaf2e9;box-shadow:0 6px 24px #0005}
 .cm-stage-camera>button{width:100%;padding:7px 14px;color:inherit;background:none;border:0;cursor:pointer;font-size:12px}
@@ -335,3 +335,16 @@
 .cm-phone-ask .is-blocking h3{display:none}
 
 #matrix-v2 .cm-phone-ask .is-blocking>.cm-board-decision-foot .v-button{min-height:32px;height:32px;padding:0 10px}
+/* THE COMMANDER TAX (ROB-29): at the commander's top-right in the command zone, as Rob asked; never under 10px, light on dark
+   in either theme (the theme's ink turns light in dark, a11y-board). The name
+   leaves it room (a badge over the name made its letters unreadable, a11y-board), wrapping sooner instead. */
+.cm-bcard.has-tax .cm-bcard-name{right:calc(5% + max(10px,calc(var(--bc,72px) * .13)) * 1.7 + 10px)}
+.cm-bcard-tax{position:absolute;right:4%;top:4%;z-index:2;padding:1px 5px;border-radius:5px;background:#0b1d1f;color:#f3fff7;font-size:max(10px,calc(var(--bc,72px) * .13));font-weight:800;line-height:1.2;pointer-events:none}
+/* PARTNERS (ROB-29): both commanders in the command zone, the second over the first like a small pile, each its own button. */
+.cm-board-pile>.cm-board-partners{position:relative;justify-self:start;display:block;z-index:1}
+.cm-mat:not(.is-bare) .cm-board-pile>.cm-board-partners{margin:-3px 0 0 -3px}
+/* each card its own layer, so the first one's labels (z-index 1 inside it) never paint over the second */
+.cm-board-partners>.cm-bcard{z-index:1}
+.cm-board-partners>.cm-bcard+.cm-bcard{position:absolute;z-index:2;left:22%;top:30%;box-shadow:0 2px 8px rgb(0 0 0 / .55)}
+/* WHAT YOU WERE SHOWN (ROB-169): the cards an acknowledgment is about, large enough to read. */
+.cm-board-shown{display:flex;flex-wrap:wrap;gap:8px;--bc:96px}
