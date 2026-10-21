@@ -42,6 +42,8 @@ const play = (name, setup, steps = []) => runScenario({name, setup, steps}, inde
 /* A match that tops floating mana up from its untapped sources and taps a source for all it makes (`pooledTaps`), as a table's
    new matches do; `play` is a match launched before, which offers what it offered then. */
 const pooledPlay = (name, setup, steps = []) => runScenario({name, setup, steps, pooledTaps: true}, index.definition, FIX).state;
+/* And one that taps for an {X} spell too (`xTaps`), as a table's new matches do since Oct 21. */
+const xPlay = (name, setup, steps = []) => runScenario({name, setup, steps, pooledTaps: true, xTaps: true}, index.definition, FIX).state;
 const named = (s, card) => s.zones.battlefield.filter((id) => s.objects[id].card === card);
 const tapped = (s) => s.zones.battlefield.filter((id) => s.objects[id].tapped).map((id) => s.objects[id].card).sort();
 const casts = (s, card) => legalActions(s, 0).filter((a) => a.kind === "cast" && (card === undefined || a.label === card));
@@ -148,6 +150,21 @@ const viewTax = (s, seat, id) => projectFor(s, seat).players[s.objects[id].owner
   eq([casts(play("x", [at(0, "battlefield", "Forest", "Forest"), at(0, "hand", "Hydra")]), "Hydra").length,
     casts(play("phyrexian", [at(0, "battlefield", "Forest"), at(0, "hand", "Mite")]), "Mite").map((a) => [a.autoTap ?? false, a.payment.life])], [0, [[false, 2]]],
     "{X}{G}: tapped by hand; {G/P}: only for 2 life from the empty pool, the Forest tapped by hand for the other way");
+  /* {X} TAPPED FOR (`xTaps`): each X the pool and the untapped sources pay together, offered, the sources tapped as it is cast. */
+  const xOffers = (s) => casts(s, "Hydra").map((a) => [a.x, a.autoTap === true]);
+  const three = [at(0, "battlefield", "Forest", "Forest", "Forest"), at(0, "hand", "Hydra")];
+  eq([xOffers(pooledPlay("x before", three)), xOffers(pooledPlay("x before, one floating", three, [{tap: "Forest"}]))], [[], [[0, false]]],
+    "a match launched before: three untapped Forests offer no {X}{G}, and with one tapped by hand, X is what floats");
+  eq(xOffers(xPlay("x taps", three)), [[0, true], [1, true], [2, true]], "with `xTaps`: three untapped Forests offer {X}{G} at X = 0, 1 and 2, each tapped for as it is cast");
+  eq(xOffers(xPlay("x tops up", three, [{tap: "Forest"}])), [[0, false], [1, true], [2, true]], "with {G} floating: X = 0 from the pool, and 1 and 2 topped up from the Forests left");
+  for (const steps of [[], [{tap: "Forest"}]]) {
+    const s = xPlay("x cast", three, steps), top = casts(s, "Hydra").at(-1);
+    applyAction(s, 0, top);
+    if (s.awaiting) resolveAwaiting(s, [0]);
+    eq([s.stack.map((e) => [s.objects[e.objectId].card, e.x]), tapped(s).length, poolSize(s.players[0].manaPool)], [[["Hydra", 2]], 3, 0],
+      `cast at X = 2${steps.length ? ", the {G} floating spent" : ""}: the Forests tapped for it, X on the stack, nothing left floating`);
+  }
+  eq(xOffers(xPlay("x short", [at(0, "battlefield", "Forest"), at(0, "hand", "Hydra")])), [[0, true]], "one Forest: X = 0 only -- never an X its sources can't pay");
   eq(casts(play("painland", [at(0, "battlefield", "Forest", "Ache"), at(0, "hand", "Bear")]), "Bear").length, 0, "a land that deals damage as it taps is not tapped for you");
   eq(casts(play("two mana", [at(0, "battlefield", "Forest", "Vault"), at(0, "hand", "Ox")]), "Ox").length, 0, "nor one that makes two mana");
   const sick = runScenario({name: "sick", setup: [at(0, "battlefield", "Forest"), at(0, "hand", "Bear"), {seat: 0, zone: "battlefield", cards: ["Elf"], sick: true}], steps: []}, index.definition, FIX).state;

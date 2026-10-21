@@ -1454,7 +1454,7 @@ export function tapUnits(state, player, offered = manaOffers(state, player), bun
    nothing in the pool -- so the mana tapped is exactly the cost, and paying it is no further choice. */
 /* X paid in life (`payLifeX`, Toxic Deluge) is no X its sources' mana pays: it is tapped for as any other. */
 const tapCastable = (state, player, action) => ["hand", "command"].includes(action.from) && !action.free && !action.flashback
-  && action.escape === undefined && action.alternative === undefined && (action.x === undefined || action.payLifeX === true)
+  && action.escape === undefined && action.alternative === undefined && (action.x === undefined || action.payLifeX === true || xTaps(state))
   && (pooledTaps(state) || poolSize(poolFor(state, player, {spell: action.objectId})) === 0);
 
 /* FLOATING MANA AND A SOURCE'S WHOLE OUTPUT TOGETHER (`pooledTaps`, game/room/table.mjs): a cast tapped for tops up what is
@@ -1463,6 +1463,14 @@ const tapCastable = (state, player, action) => ["hand", "command"].includes(acti
    same choices, and so replays exactly as it did: without it, a cast is tapped for only from an empty pool, one mana a
    source. */
 const pooledTaps = (state) => state.pooledTaps === true;
+/* An {X} spell tapped for too (`xTaps`; Rob's six staging decks hold five -- Martial Coup, Grand Crescendo, Rally the Ancestors,
+   Purphoros's Intervention, Tempt with Vengeance): offered for each X the pool and its caster's untapped sources can pay
+   together, the sources tapped as it is cast. Before, only what was already floating was counted, so a person had to tap
+   each land by hand before the spell was offered at all. Only a match whose pod asks carries the key, so every game
+   launched before offers what it offered then. */
+const xTaps = (state) => state.xTaps === true && pooledTaps(state);
+/* A cost with its X counted into its generic mana (CR 107.3a): what the source planners, which take no {X}, are handed. */
+const xCounted = (cost, X) => ({...cost, symbols: cost.symbols.filter((s) => s.kind !== "variable"), variable: 0, generic: cost.generic + X * cost.variable});
 
 /** How many ways to tap for a cast are asked at most: the least flexible first (tapPlans), so the sensible ones. */
 const TAP_CHOICES = 24;
@@ -1491,7 +1499,9 @@ export function castTapPlans(state, player, action, limit = 2) {
   const tax = action.from === "command" ? commanderTax(state, player, action.objectId) : 0;
   /* An Adventure's cost, cast as one (CR 715.3a). */
   const {cost, x} = asCast(state, action, () => castCost(state, player, action.objectId, tax, false, null, action.extraMana ?? "", action.targets));
-  return fundingPlans(state, player, action.objectId, {...cost, generic: cost.generic + x}, limit);
+  /* Its X, in a match that taps for one (`xTaps`): counted in, as the offer priced it. */
+  const xs = xTaps(state) && cost.variable > 0 ? xCounted(cost, action.x ?? 0) : cost;
+  return fundingPlans(state, player, action.objectId, {...xs, generic: xs.generic + x}, limit);
 }
 
 /* AN ADVENTURER CARD WEIGHED AS ITS ADVENTURE (CR 715.3a): shown as one for the length of `fn` -- its cost, its timing, its
@@ -1635,7 +1645,17 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
      (lifeX): one per value that life can pay. */
   /* The pool, and mana that may be spent only on this spell (rules/restricted-mana.mjs). */
   const pool = poolFor(state, player, {spell: id});
-  for (const X of lifeX ? Array.from({length: lifeLeft + 1}, (_, i) => i) : xValues(pool, cost, x)) {
+  /* With `xTaps`, X also as high as the pool and the caster's untapped sources can pay together: tapped for as it is cast. */
+  const tapsForX = !lifeX && cost.variable > 0 && xTaps(state) && !freely && !back && !fled && !way && !tapsAny && !variant.escalateTap && ["hand", "command"].includes(from);
+  const xs = lifeX ? Array.from({length: lifeLeft + 1}, (_, i) => i) : xValues(pool, cost, x);
+  if (tapsForX) {
+    const sources = tappable();
+    for (let X = xs.length; X <= poolSize(pool) + sources.length; X += 1) {
+      if (!fundingPlans(state, player, id, {...xCounted(cost, X), generic: xCounted(cost, X).generic + x}, 1, sources).length) break;
+      xs.push(X);
+    }
+  }
+  for (const X of xs) {
     /* X in its mana cost: what the pool pays for it, and what decides whether its sources can be tapped for it instead. */
     const xMana = lifeX ? null : X;
     let payment = automaticPayment(pool, cost, {life: lifeLeft, x: x + (xMana ?? 0) * cost.variable});
@@ -1644,8 +1664,9 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
     let autoTap = false;
     /* Not with creatures tapped as an additional cost or for escalate: one tapped for mana as the cast taps its sources could
        not then be tapped for it (their mana is paid from the pool first). */
-    if (!payment && (pooledTaps(state) ? !canPay(pool, cost, {life: lifeLeft, x}) : poolSize(pool) === 0) && xMana === null && !freely && !back && !fled && !way && !tapsAny && !variant.escalateTap && ["hand", "command"].includes(from)) {
-      const [plan] = fundingPlans(state, player, id, {...cost, generic: cost.generic + x}, 1, tappable());
+    if (!payment && (pooledTaps(state) ? !canPay(pool, cost, {life: lifeLeft, x: x + (xMana ?? 0) * cost.variable}) : poolSize(pool) === 0) && (xMana === null || tapsForX) && !freely && !back && !fled && !way && !tapsAny && !variant.escalateTap && ["hand", "command"].includes(from)) {
+      const paying = xMana === null ? cost : xCounted(cost, xMana);
+      const [plan] = fundingPlans(state, player, id, {...paying, generic: paying.generic + x}, 1, tappable());
       if (plan) {
         autoTap = true;
         payment = plan.payment;
