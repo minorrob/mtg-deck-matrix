@@ -356,6 +356,43 @@ export function offerDetails(state, seat, actions) {
   });
 }
 
+/* SAME NAME, TWO CREATURES (Linear ROB-168): a Krenko swarm's Declare blockers offered "Wall blocks Goblin" once per Goblin
+   token, and Declare attackers "Goblin → Maya", with nothing to tell them apart. Where a creature's words are another's in the
+   same choice, they say more -- its power and toughness, as a priority offer's do (offerDetails) -- and what is still alike is
+   numbered, each creature its own number in every option it is in, so "blocks Goblin #2" is the same Goblin whichever
+   blocker is picked; a block on an attack at a planeswalker says so. The words only: every option keeps its index and ids,
+   so answers and replays are the engine's own. A choice with no two alike is left word for word as it was. */
+export function combatWords(state, choice) {
+  const id = String(choice && choice.id || "");
+  const blocks = id.startsWith("declare-blockers:"), attacks = id.startsWith("declare-attackers:");
+  if (!blocks && !attacks) return choice;
+  const shape = (cardId) => {try {const c = characteristicsOf(state, cardId); return c.power === null || c.power === undefined ? "" : ` ${c.power}/${c.toughness}`;} catch {return "";}};
+  /* Every creature the choice names, in the order the options first name it. */
+  const ids = [];
+  for (const o of choice.options || []) for (const c of blocks ? [o.cardId, o.attackerId] : [o.cardId]) if (c !== undefined && !ids.includes(c)) ids.push(c);
+  const named = new Map(ids.map((c) => [c, shownName(state.objects[c])]));
+  const count = (map) => {const n = new Map(); for (const w of map.values()) n.set(w, (n.get(w) || 0) + 1); return n;};
+  let clash = count(named);
+  if (![...clash.values()].some((n) => n > 1)) return choice;
+  const words = new Map([...named].map(([c, w]) => [c, clash.get(w) > 1 ? `${w}${shape(c)}` : w]));
+  clash = count(words);
+  const seen = new Map();
+  for (const c of ids) {
+    const w = words.get(c);
+    if (clash.get(w) > 1) {const k = (seen.get(w) || 0) + 1; seen.set(w, k); words.set(c, `${w} #${k}`);}
+  }
+  const attackOn = new Map(((state.combat && state.combat.attacks) || []).map((a) => [a.attacker, a]));
+  const options = choice.options.map((o) => {
+    if (attacks) {
+      const at = String(o.label).indexOf(" → ");
+      return at < 0 ? o : {...o, label: `${words.get(o.cardId)}${String(o.label).slice(at)}`};
+    }
+    const on = attackOn.get(o.attackerId), pw = on && on.planeswalker !== undefined ? state.objects[on.planeswalker] : null;
+    return {...o, label: `${words.get(o.cardId)} blocks ${words.get(o.attackerId)}${pw ? ` (attacking ${shownName(pw)})` : ""}`};
+  });
+  return {...choice, options};
+}
+
 /* A priority decision, as a §12.1 choice: one of the seat's legal actions, passing included -- and Resolve all, when
    a run of identical triggers is on top of the stack (`triggerRun`). */
 function priorityChoice(id, actions, state = null, seat = null) {
@@ -879,7 +916,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         departures: structuredClone(departures),
         seats: api.seats,
         waitingOn: pendingSeat === null ? null : seats[pendingSeat].seatId,
-        decision: mine ? structuredClone(controller.pending) : null,
+        decision: mine ? combatWords(state, structuredClone(controller.pending)) : null,
         state: projectFor(state, seat),
         history: history.slice(-HISTORY_VIEW).map(({turn, text, mark}) => ({turn, text, ...(mark ? {mark} : {})})),
         /* What happened, as this seat may know it (events.mjs): the change this view shows -- or, asked with `after` (the last
