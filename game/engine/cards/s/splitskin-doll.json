@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Splitskin Doll",
+    "oracleId": "934e2634-4b1c-4d92-b4d6-9241620f3770",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Toy"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "When this creature enters, draw a card. Then discard a card unless you control another creature with power 2 or less.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, draw a card. Then discard a card unless you control another creature with power 2 or less.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        },
+        {
+          "effect": "discard",
+          "count": 1,
+          "condition": {
+            "present": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you",
+              "another": true,
+              "power": {
+                "max": 2
+              }
+            },
+            "atMost": 0
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Queza, Augur of Agonies",
+    "oracleId": "c983338d-ae6b-4a15-9931-daa20fca8269",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Octopus",
+      "Advisor"
+    ],
+    "manaCost": "{1}{W}{U}{B}",
+    "colors": [
+      "B",
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "U",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "Whenever you draw a card, target opponent loses 1 life and you gain 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever you draw a card, target opponent loses 1 life and you gain 1 life.",
+      "trigger": {
+        "on": "drawn",
+        "drawer": "you"
+      },
+      "effects": [
+        {
+          "effect": "loseLife",
+          "amount": 1,
+          "who": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "gainLife",
+          "amount": 1
+        }
+      ],
+      "targets": [
+        {
+          "what": "player",
+          "who": "opponent"
+        }
+      ]
+    }
+  ]
+}
