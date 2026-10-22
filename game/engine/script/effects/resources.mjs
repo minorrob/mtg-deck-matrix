@@ -361,7 +361,11 @@ export function damageQuestion(state, effect, context, answers = {}) {
     if (amount <= 0) continue;
     for (const hit of hits) {
       const key = hitKey(source, hit.toPlayer, hit.toCard);
-      const {question} = applyReplacements(state, {event: "damage", toPlayer: hit.toPlayer, toCard: hit.toCard, amount, sourceId: source, combat: false},
+      /* Only what the hit is dealt to: the question it asks is kept in the state, which a room saves as JSON (game/engine/
+         storage.mjs, lostIn) -- damage to a player has no `toCard` at all, never an undefined one (Ajani Steadfast's emblem
+         and Hedron-Field Purists, ordered for a Lightning Bolt at their controller). */
+      const {question} = applyReplacements(state, {event: "damage", ...(hit.toPlayer !== undefined ? {toPlayer: hit.toPlayer} : {}),
+        ...(hit.toCard !== undefined ? {toCard: hit.toCard} : {}), amount, sourceId: source, combat: false},
         {orders: answers[key] ?? [], askable: true, dry: true});
       if (question) return {...question, key};
     }

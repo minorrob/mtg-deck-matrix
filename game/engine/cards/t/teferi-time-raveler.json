@@ -1,0 +1,114 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Teferi, Time Raveler",
+    "oracleId": "ae7604bb-4818-45a3-960c-cf3d83f15964",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Planeswalker"
+    ],
+    "subtypes": [
+      "Teferi"
+    ],
+    "manaCost": "{1}{W}{U}",
+    "colors": [
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "power": null,
+    "toughness": null,
+    "loyalty": 4
+  },
+  "oracleText": "Each opponent can cast spells only any time they could cast a sorcery.\n+1: Until your next turn, you may cast sorcery spells as though they had flash.\n−3: Return up to one target artifact, creature, or enchantment to its owner's hand. Draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Each opponent can cast spells only any time they could cast a sorcery.",
+      "rule": "cast-as-sorcery",
+      "affects": {
+        "what": "player",
+        "who": "opponent"
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "+1: Until your next turn, you may cast sorcery spells as though they had flash.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": 1
+        }
+      ],
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "rule": "cast-as-though-flash",
+          "spells": {
+            "types": [
+              "Sorcery"
+            ]
+          },
+          "until": "your-next-turn"
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "−3: Return up to one target artifact, creature, or enchantment to its owner's hand. Draw a card.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": -3
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "hand"
+        },
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Artifact"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Enchantment"
+              ]
+            }
+          ],
+          "count": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    }
+  ]
+}

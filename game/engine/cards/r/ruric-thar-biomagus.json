@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ruric Thar, Biomagus",
+    "oracleId": "873fa095-5662-407a-bd24-9a1c4712a428",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Ogre",
+      "Crab",
+      "Wizard"
+    ],
+    "manaCost": "{4}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 4,
+    "toughness": 6
+  },
+  "oracleText": "Flying\nProwess, prowess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn twice.)\nWhenever Ruric Thar becomes the target of a spell or ability an opponent controls, draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "Prowess",
+      "keyword": "prowess"
+    },
+    {
+      "kind": "keyword",
+      "text": "prowess",
+      "keyword": "prowess"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever Ruric Thar becomes the target of a spell or ability an opponent controls, draw a card.",
+      "trigger": {
+        "on": "becomes target",
+        "who": "self",
+        "by": "opponent"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

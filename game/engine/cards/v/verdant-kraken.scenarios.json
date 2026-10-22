@@ -1,0 +1,154 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Verdant Kraken",
+  "scenarios": [
+    {
+      "name": "Maya's upkeep makes Rob a Forest Tentacle, and his own another: the first taps for {G}, the new one is summoning sick",
+      "library": [
+        "Wastes",
+        "Wastes",
+        "Wastes"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Verdant Kraken"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "controls": [
+                "Verdant Kraken",
+                "Forest Tentacle"
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Verdant Kraken",
+            "Forest Tentacle",
+            "Forest Tentacle"
+          ]
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Forest Tentacle"
+          },
+          "count": 1,
+          "mana": [
+            {
+              "G": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Four players: one Tentacle each upkeep, all of them Rob's",
+      "seats": 4,
+      "library": [
+        "Wastes",
+        "Wastes",
+        "Wastes"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Verdant Kraken"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 4,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Verdant Kraken",
+            "Forest Tentacle",
+            "Forest Tentacle",
+            "Forest Tentacle"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": []
+        },
+        {
+          "seat": 2,
+          "controls": []
+        },
+        {
+          "seat": 3,
+          "controls": []
+        }
+      ]
+    }
+  ]
+}

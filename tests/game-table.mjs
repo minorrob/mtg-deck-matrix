@@ -313,6 +313,7 @@ for (const off of [false, true]) {
   eq(record.pod.pilotPicks, true, "and its AI seats take what an \"up to\" or a search is for (`pilotPicks`, room.mjs): its pod says so, and the record keeps it");
   eq(record.pod.drawBeat, true, "and its draw step's draw waits for its player's Draw card (`drawBeat`, ROB-102 and ROB-24): its pod says so, and the record keeps it");
   eq(record.pod.blocksNone, true, "and a person with no creature that could block is not asked to declare blockers (`blocksNone`, room.mjs): its pod says so, and the record keeps it");
+  eq([record.pod.landAnyStep, record.pod.takeBackLand, record.pod.askAimed], [true, true, true], "and a person plays a land in any step of their own turn, may take one back, and is asked about what is aimed at them (`landAnyStep`, `takeBackLand`, `askAimed`, room.mjs): its pod says so, and the record keeps it");
 }
 
 /* ONLY A CARD THAT CAN BE A COMMANDER IS ONE (CR 903.3; Rob, 2026-10-01): a legendary creature, or a card that says it

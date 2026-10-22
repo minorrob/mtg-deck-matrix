@@ -128,6 +128,10 @@ export function createState(pod) {
     /* And an {X} spell tapped for too, for each X the pool and the untapped sources pay together (rules/actions.mjs, `xTaps`;
        Oct 21). Only a pod that asks carries the key, as above. */
     ...(pod?.xTaps === true ? {xTaps: true} : {}),
+    /* And the players who may play their land in any step of their own turn, not only a main phase (rules/actions.mjs,
+       `landAnyStep`; Rob, 2026-10-21: "When I am on any step of my turn, I should be able to play a land"): a house rule,
+       for the people at a table, never its AI seats. Only a pod that names them carries the key, as above. */
+    ...(Array.isArray(pod?.landAnyStep) && pod.landAnyStep.length ? {landAnyStep: [...pod.landAnyStep]} : {}),
     /* A starting life other than 40, for "your starting life total" (startingLifeOf, above). */
     ...(life !== STARTING_LIFE ? {startingLife: life} : {}),
     players: seats.map((seat, id) => ({
@@ -392,6 +396,9 @@ export function addObject(state, object, zone, player = null) {
        at a playtest table only (game/room/room.mjs, `candidates`). No rule reads it; the board labels it. A fact of the
        card, not of the object, so it survives every zone change (moveObject). */
     ...(object.candidate === true ? {candidate: true} : {}),
+    /* An emblem (CR 114; script/effects/permanents.mjs, emblem): an object in the command zone, neither a card nor a
+       permanent (114.5), whose abilities function there (114.4). */
+    ...(object.emblem === true ? {emblem: true} : {}),
     /* CR 903.3: a card designated as a commander stays one wherever it goes, so this survives every
        zone change along with the card's own characteristics. Three modules read it — the tax, the
        command-zone replacement and the 21-damage tally — and for a while none of them could,

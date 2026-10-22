@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Acrobatic Cheerleader",
+    "oracleId": "d8ce3f18-26fe-47e8-be8b-0d89d7de7038",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Survivor"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Survival — At the beginning of your second main phase, if this creature is tapped, put a flying counter on it. This ability triggers only once.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Survival — At the beginning of your second main phase, if this creature is tapped, put a flying counter on it. This ability triggers only once.",
+      "trigger": {
+        "on": "step",
+        "step": "MAIN2"
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "flying",
+          "count": 1
+        }
+      ],
+      "condition": {
+        "present": {
+          "self": true,
+          "tapped": true
+        }
+      },
+      "onlyOnce": true
+    }
+  ]
+}

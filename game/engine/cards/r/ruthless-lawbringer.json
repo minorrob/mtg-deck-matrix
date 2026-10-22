@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ruthless Lawbringer",
+    "oracleId": "82b6a283-9897-4ce1-8de3-e7579cc9b75b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Vampire",
+      "Assassin"
+    ],
+    "manaCost": "{1}{W}{B}",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "When this creature enters, you may sacrifice another creature. When you do, destroy target nonland permanent.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, you may sacrifice another creature. When you do, destroy target nonland permanent.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "count": 1,
+          "optional": true,
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "another": true
+          },
+          "remember": true
+        },
+        {
+          "effect": "immediateTrigger",
+          "text": "When you do, destroy target nonland permanent.",
+          "about": "remembered",
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          },
+          "targets": [
+            {
+              "what": "permanent",
+              "nonTypes": [
+                "Land"
+              ]
+            }
+          ],
+          "effects": [
+            {
+              "effect": "destroy",
+              "targets": {
+                "target": 0
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

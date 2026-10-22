@@ -50,6 +50,7 @@ import {amountOf, isCounted} from "../script/amount.mjs";
 import {chosenFor, namesChosen} from "../script/chosen.mjs";
 import {protectedFrom} from "./protection.mjs";
 import {controllerOf, staticAbilities} from "./layers.mjs";
+import {conditionHolds} from "../script/condition.mjs";
 
 /* "This land enters tapped unless you control a Forest or a Plains" (a check land), "... unless you control two or
    fewer other lands" (a fast land): the arrival's `unless`, read as the land is about to enter -- so the land itself,
@@ -118,6 +119,9 @@ const appliedKey = (holderId, ability) => `${holderId ?? "self"}:${ability.id}`;
 /* Whether this effect applies to this proposal, given what has already applied to it. */
 function applies(state, ability, holder, proposal) {
   if (ability.kind !== "replacement") return false;
+  /* A permanent's replacement effect while its condition holds: "LEVEL 1-4 ... If a source would deal damage to you or a
+     creature you control, prevent 1 of that damage" (Hedron-Field Purists; CR 711.2a), as many level counters as it says. */
+  if (ability.condition !== undefined && holder && !conditionHolds(state, ability.condition, {controller: holder.controller, source: holder.id})) return false;
   /* CR 614.5: once per event, whatever else is true. */
   if ((proposal.appliedBy ?? []).includes(appliedKey(holder?.id ?? null, ability))) return false;
   const watches = ability.watches ?? {};
@@ -180,6 +184,12 @@ function applies(state, ability, holder, proposal) {
    - `combat` true or false: combat damage only, or noncombat only. */
 function damageWatched(state, watches, holder, proposal) {
   if (!holder) return false;
+  /* "To you or a planeswalker you control" (Ajani Steadfast's emblem): `anyOf`, any one of these, each read with the rest
+     of what the effect watches. */
+  if (Array.isArray(watches.anyOf)) {
+    const {anyOf, ...rest} = watches;
+    return anyOf.some((one) => damageWatched(state, {...rest, ...one}, holder, proposal));
+  }
   const you = holder.controller, context = {controller: you, source: holder.id};
   if (watches.combat === true && proposal.combat !== true) return false;
   if (watches.combat === false && proposal.combat === true) return false;
@@ -205,6 +215,8 @@ function damageAfter(ability, amount) {
   if (Number.isInteger(ability.prevent)) return Math.max(0, amount - ability.prevent);
   const change = ability.change ?? {};
   if (change.prevent === true) return 0;
+  if (Number.isInteger(change.preventAllBut)) return Math.min(amount, change.preventAllBut);
+  if (Number.isInteger(change.prevent)) return Math.max(0, amount - change.prevent);
   if (Number.isInteger(change.multiply)) return amount * change.multiply;
   if (Number.isInteger(change.add)) return amount + change.add;
   return amount;
@@ -263,6 +275,13 @@ function applicable(state, proposal) {
         if (applies(state, ability, holder, proposal)) found.push({holderId: id, ability});
       }
     }
+  }
+  /* And an emblem's, from the command zone, where its abilities function (CR 114.4): "if a source would deal damage to you
+     or a planeswalker you control, prevent all but 1 of that damage" (Ajani Steadfast's), "you" the player who got it. */
+  for (const id of (state.zones.command ?? []).flat()) {
+    const holder = state.objects[id];
+    if (holder?.emblem !== true) continue;
+    for (const ability of holder.abilities ?? []) if (applies(state, ability, holder, proposal)) found.push({holderId: id, ability});
   }
   /* And the prevention effects with a duration, once a shield with more to it is among them (preventionsFor, below): each a
      candidate like any, so the player dealt the damage orders them with the rest (CR 616.1). */
@@ -412,6 +431,12 @@ function applyOne(state, {holderId, ability, effect = null}, proposal, dry = fal
     /* "The next time ...": used up once it has prevented damage (CR 615.8) -- never by an order tried dry. */
     if (effect?.next === true && next.amount > 0 && !dry) state.effects = state.effects.filter((e) => e !== effect);
     if (ability.change.prevent === true) next.amount = 0;
+    /* "Prevent all but 1 of that damage" (Ajani Steadfast's emblem; CR 615.1a): a prevention effect that leaves that much of
+       each damage event it applies to, and prevents the rest. */
+    if (Number.isInteger(ability.change.preventAllBut) && next.amount > ability.change.preventAllBut) next.amount = ability.change.preventAllBut;
+    /* "Prevent 1 of that damage" (Hedron-Field Purists; CR 615.10): a static's prevention of that much of each damage event it
+       applies to, never used up -- not a shield (`prevent` on the ability, below). */
+    if (Number.isInteger(ability.change.prevent)) next.amount = Math.max(0, next.amount - ability.change.prevent);
     /* REDIRECTION (CR 614.9): "all damage that would be dealt to you is dealt to enchanted creature instead" (Pariah) -- the
        same damage, to the permanent its holder enchants, while it enchants one; the rest of the replacements then look
        at the damage as it now is. */

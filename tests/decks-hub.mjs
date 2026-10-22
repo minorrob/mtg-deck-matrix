@@ -3,7 +3,9 @@
  * In a real page with the committed library restored:
  *
  *   1. The head is the design's: Compare, then New deck as the primary; Compare waits for two ticks.
- *   2. Play status chips (All · To load · Loading · Playable · Complete; Rob, 2026-10-18), read from the model's deckStatus;
+ *   2. Play status chips (All · To load · Loading · Boxed Decks · Complete; Rob, 2026-10-18, and Boxed for the physically
+ *      playable, 2026-10-22 -- Playable, what the app's Play can play, shows only where Play is in the cloud, which this page
+ *      is not: tests/table-lobby.mjs proves it), read from the model's deckStatus;
  *      Loading shows only while a deck is loading, so the head fits the 390px budget,
  *      filter the tiles to that stage, and say so when none match.
  *   3. The sort is "Closest to finished" by default -- the fewest copies to buy, on order or standing in
@@ -61,7 +63,7 @@ try {
   /* 2 and 3. The default: every live deck, closest to finished first. */
   const all = await facts(page);
   const loadingNow = all.some((d) => d.stage === "loading");
-  eq(await page.$$eval(".cm-decks-stages a", (as) => as.map((a) => a.textContent)), ["All", "To load", ...(loadingNow ? ["Loading"] : []), "Playable", "Complete"],
+  eq(await page.$$eval(".cm-decks-stages a", (as) => as.map((a) => a.textContent)), ["All", "To load", ...(loadingNow ? ["Loading"] : []), "Boxed Decks", "Complete"],
     `the chips are the Play status (Rob, 2026-10-18), and Complete; Loading only while a deck is loading (${loadingNow ? "one is" : "none is"})`);
   eq(await page.$eval(".cm-decks-stages [aria-current=true]", (a) => a.textContent), "All", "All is the chip in force");
   eq(await page.$eval("#cm-decks-sort", (s) => s.value), "closest", "and the sort is Closest to finished");
@@ -69,13 +71,13 @@ try {
   eq(await tiles(page), closest, `closest to finished first, by copies to buy, on order or standing in: ${[...all].sort((a, b) => a.left - b.left || byName(a, b)).map((d) => `${d.name} ${d.left}`).join(", ")}`);
   ok(new Set(all.map((d) => d.left)).size > 1, "and the decks really differ in what is left, so the order proves something");
 
-  /* The Playable chip. */
-  await go(page, () => page.locator(".cm-decks-stages a", {hasText: "Playable"}).click());
-  ok(/stage=playable/.test(page.url()), "the chip is in the address");
+  /* The Boxed Decks chip: the physically playable decks, the model's "playable". */
+  await go(page, () => page.locator(".cm-decks-stages a", {hasText: "Boxed Decks"}).click());
+  ok(/stage=boxed/.test(page.url()), "the chip is in the address");
   const playable = all.filter((d) => d.stage === "playable");
-  eq((await tiles(page)).sort(), playable.map((d) => d.id).sort(), `Playable shows exactly the ${playable.length} playable decks`);
+  eq((await tiles(page)).sort(), playable.map((d) => d.id).sort(), `Boxed Decks shows exactly the ${playable.length} decks whose box holds a whole hundred`);
   ok(playable.length > 0, "and there are some");
-  ok(await page.$$eval(".cm-deck-tile .cm-pill", (ps) => ps.every((p) => /Playable/.test(p.textContent))), "each wears the Playable badge");
+  ok(await page.$$eval(".cm-deck-tile .cm-pill", (ps) => ps.every((p) => /Boxed/.test(p.textContent))), "each wears the Boxed badge");
 
   /* Back undoes it: the choice is in the address. */
   await go(page, () => page.goBack());

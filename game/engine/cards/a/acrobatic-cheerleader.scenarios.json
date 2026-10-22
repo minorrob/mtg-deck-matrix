@@ -1,0 +1,326 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Acrobatic Cheerleader",
+  "fixtures": {
+    "Unwind": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Untap target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "untap",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Untapped in response, it is untapped as the ability resolves: no counter (CR 603.4) -- and it has triggered, so never again",
+      "library": [
+        "Wastes",
+        "Wastes"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Acrobatic Cheerleader",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Unwind"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Acrobatic Cheerleader"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Unwind",
+          "targets": [
+            {
+              "card": "Acrobatic Cheerleader"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Acrobatic Cheerleader",
+                "counter": "flying",
+                "count": 0
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Acrobatic Cheerleader"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Acrobatic Cheerleader",
+            "counter": "flying",
+            "count": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "It attacked, so it is tapped at Rob's second main phase: a flying counter, and it flies",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Acrobatic Cheerleader"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Acrobatic Cheerleader"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Acrobatic Cheerleader",
+            "counter": "flying",
+            "count": 1
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Acrobatic Cheerleader",
+            "has": [
+              "Flying"
+            ]
+          }
+        },
+        {
+          "seat": 1,
+          "life": 38
+        }
+      ]
+    },
+    {
+      "name": "Untapped at the second main phase it does not trigger -- and so has not yet triggered: tapped the next time, it does",
+      "library": [
+        "Wastes",
+        "Wastes"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Acrobatic Cheerleader"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            },
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Acrobatic Cheerleader",
+                "counter": "flying",
+                "count": 0
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Acrobatic Cheerleader"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Acrobatic Cheerleader",
+            "counter": "flying",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Only once: attacking again on his next turn, no second counter",
+      "library": [
+        "Wastes",
+        "Wastes"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Acrobatic Cheerleader"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Acrobatic Cheerleader"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Acrobatic Cheerleader"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Acrobatic Cheerleader",
+            "counter": "flying",
+            "count": 1
+          }
+        },
+        {
+          "seat": 1,
+          "life": 36
+        }
+      ]
+    }
+  ]
+}
