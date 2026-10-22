@@ -911,7 +911,7 @@ globalThis.CrankBoard = Object.seal({
      as larger action buttons that pop up above the table ... so that it's much more clearly prominent"): in Full screen
      the pass in its words for now (Draw card, Next step, Resolve ..., End turn, Pass), Resolve all, and Skip to end -- or
      Yield this turn -- stand at the top of the table, where the callouts are, rather than in the strip. They rise in as a
-     question comes to you (`barSeen`: once a question, not at every redraw) and stand back, dimmed, while it is not yours. */
+     question comes to you (`barSeen`: once a question, not at every redraw); while it is not yours, the pass is off. */
   let barSeen = null;
   function actionBar() {
     const live = !!view.decision && view.status !== "finished", key = live ? `${view.matchId}:${view.decision.id}` : null;

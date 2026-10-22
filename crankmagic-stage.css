@@ -369,12 +369,14 @@
 .cm-board-shown{display:flex;flex-wrap:wrap;gap:8px;--bc:96px}
 
 /* ROB'S FULLSCREEN NOTES (Oct 21). */
-/* A card you can use now: its outline brighter, with a glow (Rob: "make the green outlines around cards more prominent"). */
-#matrix-v2 #cm-board .cm-bcard.is-bright{box-shadow:0 0 0 4px var(--v-accent),0 0 14px 3px color-mix(in srgb,var(--v-accent) 60%,transparent),0 6px 14px -6px rgb(0 0 0 / .85)}
-#matrix-v2 #cm-board .cm-bcard.is-bright:focus-visible{box-shadow:0 0 0 2px var(--focus-halo),0 0 0 7px var(--v-accent),0 0 16px 4px color-mix(in srgb,var(--v-accent) 60%,transparent)}
+/* A card you can use now: its outline brighter, with a glow (Rob: "make the green outlines around cards more prominent"); a
+   card already chosen keeps its own glow (.is-picked). */
+#matrix-v2 .cm-board .cm-bcard.is-bright:not(.is-picked){box-shadow:0 0 0 4px var(--v-accent),0 0 14px 3px color-mix(in srgb,var(--v-accent) 60%,transparent),0 6px 14px -6px rgb(0 0 0 / .85)}
+#matrix-v2 .cm-board .cm-bcard.is-bright:not(.is-picked):focus-visible{box-shadow:0 0 0 2px var(--focus-halo),0 0 0 7px var(--v-accent),0 0 16px 4px color-mix(in srgb,var(--v-accent) 60%,transparent)}
 /* THE TURN'S ACTIONS over the table in Full screen, large, at the top where the callouts are; dimmed while not yours. */
-.cm-stage-actions{position:absolute;left:50%;top:12px;z-index:12;display:flex;align-items:center;gap:14px;padding:10px 14px;border-radius:18px;background:rgb(6 20 22 / .74);border:1px solid rgb(255 255 255 / .18);box-shadow:0 16px 36px -14px rgb(0 0 0 / .9);transform:translateX(-50%);transition:opacity .2s;white-space:nowrap}
-.cm-stage-actions:not(.is-live){opacity:.62}
+/* Solid behind its words, whatever the scene under it (a11y-board reads every word's contrast over every mat); while the
+   question is not yours, its buttons are off, and the pass reads as off by itself. */
+.cm-stage-actions{position:absolute;left:50%;top:12px;z-index:12;display:flex;align-items:center;gap:14px;padding:10px 14px;border-radius:18px;background:#06161a;border:1px solid #3d5c55;box-shadow:0 16px 36px -14px rgb(0 0 0 / .9);transform:translateX(-50%);white-space:nowrap}
 #matrix-v2 .cm-stage-actions .v-button{min-height:56px;height:auto;padding:0 28px;border-radius:14px;font-size:19px;font-weight:800;letter-spacing:.01em;color:#f3fff7;background:#1c3432;border-color:#6f9c88}
 #matrix-v2 .cm-stage-actions .v-button.primary{color:var(--color-on-accent,#0d120c);background:var(--v-accent);border-color:var(--v-accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--v-accent) 35%,transparent),0 10px 24px -10px var(--v-accent)}
 #matrix-v2 .cm-stage-actions .v-button.is-on{background:#87c6a1;color:#0d120c}
