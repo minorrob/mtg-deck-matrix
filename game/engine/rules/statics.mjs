@@ -1007,6 +1007,10 @@ export function cantBeCountered(state, spellId) {
   for (const ability of spell.abilities ?? []) {
     if (ability.kind === "static" && ability.rule === "cant-be-countered" && ability.affects?.self === true) return true;
   }
+  /* "Spells you control can't be countered this turn" (Veil of Summer): an effect for a while (effectUntil's `rule:
+     "cant-be-countered"`) over the spells its `affects` describes, "you" its controller -- a rule changed, not a
+     characteristic, so a spell cast after it resolves is reached too (CR 611.2c is about characteristics). */
+  if ((state.effects ?? []).some((e) => e.rule === "cant-be-countered" && matchesSelector(e.affects, state, spellId, {controller: e.sourceController}))) return true;
   const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];

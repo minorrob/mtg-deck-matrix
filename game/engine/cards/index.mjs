@@ -1403,6 +1403,10 @@ export function compileScript(script) {
          turning a permanent face up or face down as an effect, are not built. */
       if (effect.effect === "setState" && (Number.isInteger(effect.level) && effect.level >= 1) === (effect.transform === true))
         problems.push("setState: a Class's level (`level`, 1 or more) or `transform: true`, one of them -- flipping and turning face up or down are not built");
+      /* "Each player may put a land card ..., then each opponent who didn't" (Kynaios and Tiro of Meletis): a chooseCard's
+         `did` is reported beside what it remembers (effects/asking.mjs), so it says `remember` too. */
+      if (effect.effect === "chooseCard" && effect.did !== undefined && !(effect.did === true && effect.remember))
+        problems.push("chooseCard: `did` is true, beside `remember` -- who chose a card is reported with what was chosen");
       /* An added phase is a combat, a main or a beginning phase (effects/permanents.mjs). */
       if (effect.effect === "addPhase" && !(effect.phases ?? ["combat"]).every((kind) => ADDED_PHASES.includes(kind))) problems.push(`addPhase: a phase of ${ADDED_PHASES.join(", ")}`);
       /* What follows a prevention shield's prevention is done at once, inside the damage event (CR 615.5): nothing in it may
