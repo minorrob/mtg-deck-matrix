@@ -1,0 +1,89 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Endless Detour",
+    "oracleId": "d65728cf-e9ce-46d8-a890-e1295b18cfbe",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{G}{W}{U}",
+    "colors": [
+      "G",
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "U",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "The owner of target spell, nonland permanent, or card in a graveyard puts it on their choice of the top or bottom of their library.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "The owner of target spell, nonland permanent, or card in a graveyard puts it on their choice of the top or bottom of their library.",
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "spell"
+            },
+            {
+              "what": "permanent",
+              "nonTypes": [
+                "Land"
+              ]
+            },
+            {
+              "what": "card",
+              "zone": "graveyard"
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "modal",
+          "chooser": {
+            "ownerOf": {
+              "target": 0
+            }
+          },
+          "choose": 1,
+          "modes": [
+            {
+              "text": "On the top",
+              "effects": [
+                {
+                  "effect": "moveZone",
+                  "targets": {
+                    "target": 0
+                  },
+                  "to": "library",
+                  "top": true
+                }
+              ]
+            },
+            {
+              "text": "On the bottom",
+              "effects": [
+                {
+                  "effect": "moveZone",
+                  "targets": {
+                    "target": 0
+                  },
+                  "to": "library"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

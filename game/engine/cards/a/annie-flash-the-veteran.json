@@ -1,0 +1,95 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Annie Flash, the Veteran",
+    "oracleId": "858067f9-eb1f-4569-9831-30441cba5f90",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Rogue"
+    ],
+    "manaCost": "{3}{R}{G}{W}",
+    "colors": [
+      "G",
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "R",
+      "W"
+    ],
+    "power": 4,
+    "toughness": 5
+  },
+  "oracleText": "Flash\nWhen Annie Flash enters, if you cast it, return target permanent card with mana value 3 or less from your graveyard to the battlefield tapped.\nWhenever Annie Flash becomes tapped, exile the top two cards of your library. You may play those cards this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flash",
+      "keyword": "flash"
+    },
+    {
+      "kind": "triggered",
+      "text": "When Annie Flash enters, if you cast it, return target permanent card with mana value 3 or less from your graveyard to the battlefield tapped.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "battlefield",
+          "tapped": true
+        }
+      ],
+      "condition": {
+        "castByYou": true
+      },
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "controller": "you",
+          "nonTypes": [
+            "Instant",
+            "Sorcery"
+          ],
+          "manaValue": {
+            "max": 3
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever Annie Flash becomes tapped, exile the top two cards of your library. You may play those cards this turn.",
+      "trigger": {
+        "on": "becomes tapped",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "fromTop": 2,
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "mayPlay",
+          "targets": "remembered",
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

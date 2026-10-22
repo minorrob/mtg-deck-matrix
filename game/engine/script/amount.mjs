@@ -31,7 +31,11 @@
  *   {lifeLostThisWay: true}              the life the effects before it in this resolution took ("You gain life equal to
  *                                        the life lost this way")
  *   {cardTypesAmong: "remembered"}       how many card types there are among what the effect before it remembered -- "a
- *                                        Spirit for each card type among cards discarded this way" (Occult Epiphany)
+ *                                        Spirit for each card type among cards discarded this way" (Occult Epiphany); or
+ *                                        among what a selector matches now, a choice of zones too -- "six or more card types
+ *                                        among permanents you control and/or cards in your graveyard" (Happily Ever After)
+ *   {startingLife: "you"}                the game's starting life total (CR 103.4, 119.1; 40 in Commander, CR 903.7, or the
+ *                                        table's house rule; state/index.mjs, startingLifeOf)
  *   {rememberedCount: true}              how many things the effect before it remembered -- "each player shuffles the cards
  *                                        from their hand into their library, then draws that many cards" (batch 80); with
  *                                        `controlledBy: "most"`, the most any one player had among them -- "the greatest
@@ -106,7 +110,7 @@ import {selectMatching, compileSelector, matchesLastKnown, matchesSelector} from
 import {powerOf, toughnessOf, characteristicsOf, controllerOf, subtypesOf} from "../rules/layers.mjs";
 import {isPlaneswalkerType} from "../keywords/types.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
-import {valueCostOf, commanderKeyOf, xOnStack} from "../state/index.mjs";
+import {valueCostOf, commanderKeyOf, xOnStack, startingLifeOf} from "../state/index.mjs";
 import {commanderIdentity, hasCommander} from "../rules/commander.mjs";
 
 /** The keys an amount may carry; one of the first, with `times` and `plus` beside it. */
@@ -131,6 +135,8 @@ export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf"
   "greatestManaValue",
   /* Wave 4b: "if you attacked with two or more creatures this turn" (Minas Tirith). */
   "creaturesAttackedWithThisTurn",
+  /* The library load of 2026-10-21: "your starting life total" (Happily Ever After). */
+  "startingLife",
   /* Wave 4c: "equal to the result" of a die rolled (CR 706.2; Ancient Copper Dragon). */
   "dieRolled"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "per", "filter", "controlledBy", "named", "another", "signed"];
@@ -178,7 +184,9 @@ export function amountProblems(value) {
   /* What was moved, as it last was: a filter of what a last known snapshot answers (script/filter.mjs, matchesLastKnown). */
   if ("movedCount" in value) try { matchesLastKnown(value.movedCount ?? {}, {}, {}); } catch (error) { problems.push(`What movedCount counts: ${error.message}`); }
   if ("playersDealtCombatDamage" in value && !["opponent", "any"].includes(value.playersDealtCombatDamage)) problems.push('playersDealtCombatDamage is "opponent" or "any"');
-  if ("cardTypesAmong" in value && value.cardTypesAmong !== "remembered") problems.push('cardTypesAmong is "remembered"');
+  if ("cardTypesAmong" in value && value.cardTypesAmong !== "remembered" && !(value.cardTypesAmong && typeof value.cardTypesAmong === "object" && !Array.isArray(value.cardTypesAmong)))
+    problems.push('cardTypesAmong is "remembered", or a selector of what it counts');
+  if ("startingLife" in value && value.startingLife !== "you") problems.push('startingLife is "you": the starting life total of the game');
   if ("manaSpent" in value && !["that card", "self"].includes(value.manaSpent)) problems.push('manaSpent is "that card" or "self"');
   if ("commanderCasts" in value && !["that card", "you"].includes(value.commanderCasts)) problems.push('commanderCasts is "that card" or "you"');
   if ("colorsSpent" in value && value.colorsSpent !== "self") problems.push('colorsSpent is "self": the colors of mana spent to cast its own object');
@@ -211,8 +219,8 @@ export function amountProblems(value) {
     for (const key of ["then", "else"]) if (key in value) problems.push(...amountProblems(value[key]));
   }
   /* What it counts is a selector, held to the selector grammar (script/filter.mjs), a choice of them included. */
-  for (const key of ["count", "greatestPower", "totalPower", "mostAmongOpponents", "differentPowers", "differentNames", "planeswalkerTypesAmong", "fewestAmongPlayers", "greatestManaValue"]) {
-    if (!(key in value)) continue;
+  for (const key of ["cardTypesAmong", "count", "greatestPower", "totalPower", "mostAmongOpponents", "differentPowers", "differentNames", "planeswalkerTypesAmong", "fewestAmongPlayers", "greatestManaValue"]) {
+    if (!(key in value) || value[key] === "remembered") continue;
     const {anyOf, ...shared} = value[key] ?? {};
     try { for (const one of Array.isArray(anyOf) ? anyOf.map((a) => ({...shared, ...a})) : [value[key]]) compileSelector(one); }
     catch (error) { problems.push(`What ${key} counts: ${error.message}`); }
@@ -428,7 +436,13 @@ export function amountOf(state, value, context = {}) {
   else if ("dieRolled" in value) n = context.rolled ?? 0;
   /* "For each card type among cards discarded this way" (Occult Epiphany): the card types (CR 205.2a) the remembered
      cards have between them, as they are now -- an artifact creature is two. */
-  else if ("cardTypesAmong" in value) n = new Set((context.remembered ?? []).flatMap((id) => state.objects[id]?.types ?? [])).size;
+  else if ("cardTypesAmong" in value && value.cardTypesAmong === "remembered") n = new Set((context.remembered ?? []).flatMap((id) => state.objects[id]?.types ?? [])).size;
+  /* "Six or more card types among permanents you control and/or cards in your graveyard" (Happily Ever After; CR 205.2a): what
+     the selector matches now, each once -- a permanent's types through the layers, a card's as it is printed. */
+  else if ("cardTypesAmong" in value)
+    n = new Set(matching(state, value.cardTypesAmong, who).flatMap((id) => (state.objects[id].zone === "battlefield" ? characteristicsOf(state, id).types : state.objects[id].types) ?? [])).size;
+  /* "Your starting life total" (Happily Ever After): the game's (state/index.mjs). */
+  else if ("startingLife" in value) n = startingLifeOf(state);
   /* "Draw that many cards", "search for up to that many": how many a "one or more" trigger is about (rules/trigger.mjs). */
   else if ("thoseCards" in value) n = (context.about?.cards ?? []).length;
   /* "That many", after damage: how much the trigger's damage was (rules/trigger.mjs). */
