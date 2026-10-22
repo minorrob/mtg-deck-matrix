@@ -361,7 +361,11 @@ export function damageQuestion(state, effect, context, answers = {}) {
     if (amount <= 0) continue;
     for (const hit of hits) {
       const key = hitKey(source, hit.toPlayer, hit.toCard);
-      const {question} = applyReplacements(state, {event: "damage", toPlayer: hit.toPlayer, toCard: hit.toCard, amount, sourceId: source, combat: false},
+      /* Only what the hit is dealt to: the question it asks is kept in the state, which a room saves as JSON (game/engine/
+         storage.mjs, lostIn) -- damage to a player has no `toCard` at all, never an undefined one (Ajani Steadfast's emblem
+         and Hedron-Field Purists, ordered for a Lightning Bolt at their controller). */
+      const {question} = applyReplacements(state, {event: "damage", ...(hit.toPlayer !== undefined ? {toPlayer: hit.toPlayer} : {}),
+        ...(hit.toCard !== undefined ? {toCard: hit.toCard} : {}), amount, sourceId: source, combat: false},
         {orders: answers[key] ?? [], askable: true, dry: true});
       if (question) return {...question, key};
     }
@@ -425,6 +429,12 @@ export function loseGame(state, params, context) {
  * said to everyone. Nothing yet modifies a roll or watches for one ("whenever you roll a die", CR 706.2's results changed).
  */
 export function rollDie(state, params, context, rng = null) {
+  /* "Roll the planar die" (Fractured Powerstone; `planar: true`, a six-sided die, CR 901.3a): in a game that isn't a
+     Planechase game it has no effect (the card's ruling of 2012-06-01) -- there is no plane to planeswalk to (CR 701.31a,
+     901.8) and no chaos ability (311.7), and only in Planechase does it count as rolling dice (706.7). The engine plays no
+     Planechase, so nothing is rolled, nothing triggers, and "if you would roll one or more planar dice" (Ichor Elixir) has
+     nothing to replace. */
+  if (params.planar === true) return [];
   if (!rng) throw new Error("A die roll needs the game's random stream");
   /* A die of no number of sides is no die: nothing rolled (the schema refuses a script that says one, script/schema.mjs). */
   if (!(Number.isInteger(params.sides) && params.sides >= 2)) return [];
