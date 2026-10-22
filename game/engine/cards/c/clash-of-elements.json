@@ -1,0 +1,85 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Clash of Elements",
+    "oracleId": "78304a06-4c9a-4cdf-b67f-067d88762381",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{U}{R}",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose target nonland permanent. Its owner may put it on top of their library. If they do, Clash of Elements deals 2 damage to them. If they didn't put the card on top of their library, they put it on the bottom.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose target nonland permanent. Its owner may put it on top of their library. If they do, Clash of Elements deals 2 damage to them. If they didn't put the card on top of their library, they put it on the bottom.",
+      "targets": [
+        {
+          "what": "permanent",
+          "nonTypes": [
+            "Land"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "modal",
+          "chooser": {
+            "ownerOf": {
+              "target": 0
+            }
+          },
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Put it on top of your library",
+              "effects": [
+                {
+                  "effect": "moveZone",
+                  "targets": {
+                    "target": 0
+                  },
+                  "to": "library",
+                  "top": true
+                },
+                {
+                  "effect": "dealDamage",
+                  "amount": 2,
+                  "who": {
+                    "ownerOf": {
+                      "target": 0
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Put it on the bottom of your library",
+              "effects": [
+                {
+                  "effect": "moveZone",
+                  "targets": {
+                    "target": 0
+                  },
+                  "to": "library"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

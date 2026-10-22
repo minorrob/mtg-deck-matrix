@@ -1,0 +1,68 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Eclipsed Flamekin",
+    "oracleId": "48c641df-d511-4e35-b623-9d1fdb5240da",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental",
+      "Scout"
+    ],
+    "manaCost": "{1}{U/R}{U/R}",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "power": 1,
+    "toughness": 4
+  },
+  "oracleText": "When this creature enters, look at the top four cards of your library. You may reveal an Elemental, Island, or Mountain card from among them and put it into your hand. Put the rest on the bottom of your library in a random order.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, look at the top four cards of your library. You may reveal an Elemental, Island, or Mountain card from among them and put it into your hand. Put the rest on the bottom of your library in a random order.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "dig",
+          "count": 4,
+          "take": 1,
+          "selector": {
+            "anyOf": [
+              {
+                "subtypes": [
+                  "Elemental"
+                ]
+              },
+              {
+                "subtypes": [
+                  "Island"
+                ]
+              },
+              {
+                "subtypes": [
+                  "Mountain"
+                ]
+              }
+            ]
+          },
+          "upTo": true,
+          "to": "hand",
+          "reveal": "taken",
+          "rest": "bottom",
+          "random": true
+        }
+      ]
+    }
+  ]
+}
