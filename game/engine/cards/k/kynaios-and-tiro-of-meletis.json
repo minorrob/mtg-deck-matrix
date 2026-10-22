@@ -1,0 +1,79 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kynaios and Tiro of Meletis",
+    "oracleId": "53ee4254-fef7-49ec-aafc-0320987764e6",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Soldier"
+    ],
+    "manaCost": "{R}{G}{W}{U}",
+    "colors": [
+      "G",
+      "R",
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "R",
+      "U",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 8
+  },
+  "oracleText": "At the beginning of your end step, draw a card. Each player may put a land card from their hand onto the battlefield, then each opponent who didn't draws a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your end step, draw a card. Each player may put a land card from their hand onto the battlefield, then each opponent who didn't draws a card.",
+      "trigger": {
+        "on": "end step"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        },
+        {
+          "effect": "repeatFor",
+          "each": "player",
+          "effects": [
+            {
+              "effect": "chooseCard",
+              "who": "that player",
+              "zone": "hand",
+              "selector": {
+                "types": [
+                  "Land"
+                ]
+              },
+              "upTo": true,
+              "to": "stay",
+              "remember": "add",
+              "did": true
+            }
+          ]
+        },
+        {
+          "effect": "moveZone",
+          "targets": "remembered",
+          "to": "battlefield"
+        },
+        {
+          "effect": "draw",
+          "who": "each opponent who didn't",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

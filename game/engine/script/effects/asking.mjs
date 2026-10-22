@@ -1958,6 +1958,9 @@ export const chooseCard = {
       /* "Untap that land" (Fabled Passage): what it found, for the effects after it (resolution.mjs). "Add": beside what was
          remembered before -- each player's creature chosen in turn, "not chosen this way" all of them (The Eternal Wanderer). */
       ...(params.remember ? {remember: params.remember === "add" ? "add" : true} : {}),
+      /* "Each player may put a land card from their hand onto the battlefield, then each opponent who didn't draws a card"
+         (Kynaios and Tiro of Meletis): `did`, a player who chooses a card has done it (apply, below). */
+      ...(params.did === true ? {did: true} : {}),
       /* Sneak Attack: "That creature gains haste. Sacrifice the creature at the beginning of the next end step." */
       ...(params.gains || params.gainsUntilEndOfTurn || params.atEndStep ? {then: {gains: params.gains, gainsUntilEndOfTurn: params.gainsUntilEndOfTurn, atEndStep: params.atEndStep},
         source: context.source ?? null} : {}),
@@ -2097,8 +2100,11 @@ export const chooseCard = {
     const adds = awaiting.remember === "add" ? {rememberAdd: true} : {};
     /* A library searched (CR 701.23), found or not: "if you search your library this way, shuffle" (Claim Jumper). */
     const searched = awaiting.zone === "library" ? {searched: true} : {};
+    /* A player who chose a card has done what was offered (`did`, beside what it remembers): kept for "each opponent who
+       didn't" (script/resolution.mjs, `whoDid`; script/bind.mjs). One who chose none has not. */
+    const did = awaiting.did === true && chosen.length > 0 ? {did: player} : {};
     if (splice.length) return {events, splice, ...searched, ...(awaiting.remember ? {remembered: [...found, ...tops], ...adds} : {})};
-    return awaiting.remember || awaiting.zone === "library" ? {events, ...searched, ...(awaiting.remember ? {remembered: [...found, ...tops], ...adds} : {})} : events;
+    return awaiting.remember || awaiting.zone === "library" ? {events, ...searched, ...did, ...(awaiting.remember ? {remembered: [...found, ...tops], ...adds} : {})} : events;
   },
 
   /* The chooser has left the game. Their own cards went with them (CR 800.4a) -- a search of their library, a choice from
