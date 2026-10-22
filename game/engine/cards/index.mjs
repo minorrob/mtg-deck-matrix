@@ -1431,7 +1431,7 @@ export function compileScript(script) {
       /* "You may play that card" until a time (effects/zones.mjs): this turn, or the end of its controller's next turn. */
       if (effect.effect === "mayPlay") {
         if (!MAY_PLAY_UNTIL.includes(effect.until ?? "end-of-turn")) problems.push(`mayPlay: until ${MAY_PLAY_UNTIL.join(" or ")}`);
-        for (const key of ["free", "graveyardToLibraryBottom"]) if (effect[key] !== undefined && effect[key] !== true) problems.push(`mayPlay: ${key} is true`);
+        for (const key of ["free", "graveyardToLibraryBottom", "anyMana"]) if (effect[key] !== undefined && effect[key] !== true) problems.push(`mayPlay: ${key} is true`);
         /* "You may play them if you control a Wizard" (Flameshape): a condition asked as each card would be played, on a
            permission that names cards (`targets`) -- the effect's own `condition` is asked once, as it resolves. */
         if (effect.onlyIf !== undefined && effect.targets === undefined) problems.push("mayPlay: onlyIf is a condition on the cards it names (`targets`)");
