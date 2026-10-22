@@ -31,7 +31,9 @@ export function definitionsModule(index = committed()) {
     .filter((name) => index.resolve(name)?.playable === true)
     .map((name) => {
       const {status} = index.resolve(name);
-      return `  ${JSON.stringify(foldName(name))}: ${JSON.stringify({name, status, definition: index.definition(name)})},`;
+      /* A card's words that read as Node's own -- "repeat this process." (Grist, the Hunger Tide) -- written with the period
+         escaped, the same string, so the engine's scan for Node (tests/engine-storage.mjs) does not take them for code. */
+      return `  ${JSON.stringify(foldName(name))}: ${JSON.stringify({name, status, definition: index.definition(name)}).replace(/\bprocess\./g, "process\\u002e")},`;
     });
   return `/* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE. */
 

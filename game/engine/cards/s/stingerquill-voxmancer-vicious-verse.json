@@ -1,0 +1,87 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Stingerquill Voxmancer // Vicious Verse",
+    "oracleId": "e8f755f7-ec93-4d2e-bffc-c719984fa13d",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin",
+      "Sorcerer"
+    ],
+    "manaCost": "{B/R}",
+    "colors": [
+      "B",
+      "R"
+    ],
+    "colorIdentity": [
+      "B",
+      "R"
+    ],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "At the beginning of your upkeep, if this creature isn't prepared, it becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your upkeep, if this creature isn't prepared, it becomes prepared.",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "alterAttribute",
+          "targets": "self",
+          "attribute": "prepared"
+        }
+      ],
+      "condition": {
+        "present": {
+          "self": true,
+          "prepared": false
+        }
+      }
+    }
+  ],
+  "prepare": {
+    "identity": {
+      "name": "Vicious Verse",
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "manaCost": "{B/R}",
+      "colors": [
+        "B",
+        "R"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Vicious Verse deals 1 damage to target opponent.",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Vicious Verse deals 1 damage to target opponent.",
+        "targets": [
+          {
+            "what": "player",
+            "who": "opponent"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "who": {
+              "target": 0
+            },
+            "amount": 1
+          }
+        ]
+      }
+    ]
+  }
+}

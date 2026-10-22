@@ -304,6 +304,15 @@ export const STATIC_RULES = Object.freeze({
       control on any player's turn any time you could cast an instant" (Jace's Machinations): `affects` the planeswalkers,
       "you" its controller. Only the timing: one loyalty ability of a permanent each turn still holds (606.3). rules/actions.mjs. */
   "loyalty-at-instant-speed": "rules/actions.mjs",
+  /** CR 606.3 changed: "You may activate the loyalty abilities of planeswalkers you control twice each turn rather than only
+      once" (Oath of Teferi): `affects` the planeswalkers, "you" its controller. Twice, however many say so. rules/actions.mjs. */
+  "loyalty-twice": "rules/actions.mjs",
+  /** CR 606.4's cost modified: "Planeswalkers' loyalty abilities you activate cost an additional [+1] to activate" (Carth the
+      Lion): `affects` the players, "you" its controller, `amount` the loyalty counters added. loyaltyCostIncrease, below. */
+  "loyalty-costs-more": "rules/actions.mjs",
+  /** CR 307.5 imposed: "Each opponent can cast spells only any time they could cast a sorcery" (Teferi, Time Raveler):
+      `affects` the players, a player selector, "you" its controller. castForbidden, below. */
+  "cast-as-sorcery": "rules/statics.mjs",
   /** A requirement on attacking (CR 508.1d): "Other Goblin creatures you control attack each combat if able" (Goblin
       Rabblemaster): `affects` the creatures, "you" its controller. Required of each that can attack someone with no cost to
       pay; a declaration leaving out one it could have is refused, saying which (attacksEachCombat, below; rules/combat.mjs). */
@@ -352,6 +361,8 @@ export function freeCast(state, player, cardId) {
 export function castForbidden(state, player, cardId) {
   const object = state.objects[cardId];
   if (!object) return false;
+  /* "Each opponent can cast spells only any time they could cast a sorcery" (Teferi, Time Raveler; sorceryTimeOnly). */
+  if (sorceryTimeOnly(state, player) !== null && !sorceryTimeFor(state, player)) return true;
   /* THE CARD'S OWN (cant-cast-self): "you can't cast this spell unless there are seven or more cards in your graveyard". */
   for (const own of object.abilities ?? [])
     if (own.kind === "static" && own.rule === "cant-cast-self" && !conditionHolds(state, own.unless, {controller: player, source: cardId})) return true;
@@ -387,6 +398,31 @@ export function castForbidden(state, player, cardId) {
 }
 
 /* THE COMBAT PHASE (CR 506.1): its steps, from the beginning of combat to the end of combat (rules/turn.mjs). */
+/* CR 307.5: "any time they could cast a sorcery" -- with priority, in a main phase of their own turn, the stack empty. Never
+   as an effect resolves, the resolving spell or ability still on the stack (CR 608.2n). */
+const sorceryTimeFor = (state, player) => player === state.activePlayer && ["MAIN1", "MAIN2"].includes(state.phase) && state.stack.length === 0;
+
+/**
+ * WHAT HOLDS A PLAYER TO CASTING SPELLS ONLY AS A SORCERY (`cast-as-sorcery`, no condition read: cards/index.mjs refuses one): "Each opponent can cast spells only any time
+ * they could cast a sorcery" (Teferi, Time Raveler; CR 307.5) -- `affects`, a player selector, "you" its controller. A spell
+ * with flash, a permission to cast as though it had flash, and an effect's "you may cast it" as it resolves (a cascade's)
+ * are all refused outside that time (castForbidden). The name of the first permanent that says so, for the refusal's words
+ * (rules/actions.mjs, whyNot), or null.
+ */
+export function sorceryTimeOnly(state, player) {
+  const held = staticAbilities(state);
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of held(holderId)) {
+      if (ability.kind !== "static" || ability.rule !== "cast-as-sorcery") continue;
+      const context = {controller: holder.controller, source: holderId};
+      if (!compileSelector({what: "player", ...(ability.affects ?? {})})(state, player, context)) continue;
+      return holder.card;
+    }
+  }
+  return null;
+}
+
 const duringCombat = (state) => typeof state.phase === "string" && state.phase.startsWith("COMBAT_");
 
 /**
@@ -1088,6 +1124,11 @@ export function untapsDuringOthers(state, id) {
 export function flashGranted(state, player, id) {
   const object = state.objects[id];
   if (!object) return false;
+  /* Or an effect with a duration, for the players it names: "Until your next turn, you may cast sorcery spells as though they
+     had flash" (Teferi, Time Raveler's +1; effects/permanents.mjs, effectUntil's `players`). */
+  if ((state.effects ?? []).some((effect) => effect.rule === "cast-as-though-flash" && (effect.players ?? []).includes(player)
+    && (effect.spells === true || (effect.spells && typeof effect.spells === "object" && matchesSelector({...effect.spells, what: "card", zone: object.zone}, state, id, {controller: player})))))
+    return true;
   return playerStatics(state, "cast-as-though-flash", player).some(({ability, source}) => ability.spells === true
     || (ability.spells && typeof ability.spells === "object" && matchesSelector({...ability.spells, what: "card", zone: object.zone}, state, id, {controller: player, source})));
 }
@@ -1268,6 +1309,27 @@ export function proliferateTimes(state, player) {
  * they're mana abilities" (Tithe Taker): generic mana, summed. Mana abilities never ask (rules/actions.mjs reads this for
  * the others only), so "unless they're mana abilities" needs no word of its own.
  */
+/**
+ * HOW MUCH A LOYALTY ABILITY'S COST GOES UP (CR 606.4): every `loyalty-costs-more` static on the battlefield whose `affects`
+ * -- a player selector, "you" its controller -- takes in the player activating it. "Planeswalkers'
+ * loyalty abilities you activate cost an additional [+1] to activate" (Carth the Lion): loyalty counters put on, summed
+ * (`amount`, 1 unless it says). No condition is read (cards/index.mjs refuses one). rules/actions.mjs, costOf.
+ */
+export function loyaltyCostIncrease(state, player) {
+  let total = 0;
+  const held = staticAbilities(state);
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of held(holderId)) {
+      if (ability.kind !== "static" || ability.rule !== "loyalty-costs-more") continue;
+      const context = {controller: holder.controller, source: holderId};
+      if (!compileSelector({what: "player", ...(ability.affects ?? {})})(state, player, context)) continue;
+      total += amountOf(state, ability.amount ?? 1, context);
+    }
+  }
+  return total;
+}
+
 export function abilityCostIncrease(state, player) {
   let total = 0;
   const held = staticAbilities(state);
@@ -1295,6 +1357,16 @@ export function playerRuleChanged(state, rule, player) {
     for (const ability of held(holderId)) {
       if (ability.kind !== "static" || ability.rule !== rule || ability.affects?.what !== "player") continue;
       if (compileSelector(ability.affects)(state, player, {controller: holder.controller, source: holderId})) return true;
+    }
+  }
+  /* Or an emblem's, from the command zone, where its abilities function (CR 114.4): "you have no maximum hand size"
+     (Mordenkainen's), "you" the player who got it. */
+  for (const id of (state.zones.command ?? []).flat()) {
+    const holder = state.objects[id];
+    if (holder?.emblem !== true) continue;
+    for (const ability of holder.abilities ?? []) {
+      if (ability.kind !== "static" || ability.rule !== rule || ability.affects?.what !== "player") continue;
+      if (compileSelector(ability.affects)(state, player, {controller: holder.controller, source: id})) return true;
     }
   }
   /* Or an effect a spell made, for the players it names, for as long as it lasts: "you have no maximum hand size for the

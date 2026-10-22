@@ -9,9 +9,9 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1558,
+  "defined": 1561,
   "provisional": 25,
-  "everyRule": 2823
+  "everyRule": 2825
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -4039,7 +4039,7 @@
      "forge": "Repeat",
      "top": 8,
      "all": 58,
-     "blocks": 8,
+     "blocks": 7,
      "alone": 1
     },
     {
@@ -7599,7 +7599,7 @@
      "forge": "NumLoyaltyAct",
      "top": 1,
      "all": 2,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -8925,7 +8925,7 @@
      "forge": "RememberChanged",
      "top": 124,
      "all": 1168,
-     "blocks": 58,
+     "blocks": 57,
      "alone": 4
     },
     {
@@ -8949,7 +8949,7 @@
      "forge": "RememberObjects",
      "top": 123,
      "all": 1460,
-     "blocks": 62,
+     "blocks": 61,
      "alone": 9
     },
     {
@@ -9249,7 +9249,7 @@
      "forge": "UnlessCostSac",
      "top": 7,
      "all": 89,
-     "blocks": 6,
+     "blocks": 5,
      "alone": 4
     },
     {

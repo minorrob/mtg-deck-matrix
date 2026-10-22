@@ -1,0 +1,98 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Carth the Lion",
+    "oracleId": "e0709843-0a91-4a21-9512-d7481707f3c9",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Warrior"
+    ],
+    "manaCost": "{2}{B}{G}",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "colorIdentity": [
+      "B",
+      "G"
+    ],
+    "power": 3,
+    "toughness": 5
+  },
+  "oracleText": "Whenever Carth enters or a planeswalker you control dies, look at the top seven cards of your library. You may reveal a planeswalker card from among them and put it into your hand. Put the rest on the bottom of your library in a random order.\nPlaneswalkers' loyalty abilities you activate cost an additional [+1] to activate.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever Carth enters or a planeswalker you control dies, look at the top seven cards of your library. You may reveal a planeswalker card from among them and put it into your hand. Put the rest on the bottom of your library in a random order.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "dig",
+          "count": 7,
+          "take": 1,
+          "selector": {
+            "types": [
+              "Planeswalker"
+            ]
+          },
+          "upTo": true,
+          "to": "hand",
+          "reveal": "taken",
+          "rest": "bottom",
+          "random": true
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever Carth enters or a planeswalker you control dies, look at the top seven cards of your library. You may reveal a planeswalker card from among them and put it into your hand. Put the rest on the bottom of your library in a random order.",
+      "trigger": {
+        "on": "dies",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Planeswalker"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "dig",
+          "count": 7,
+          "take": 1,
+          "selector": {
+            "types": [
+              "Planeswalker"
+            ]
+          },
+          "upTo": true,
+          "to": "hand",
+          "reveal": "taken",
+          "rest": "bottom",
+          "random": true
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "Planeswalkers' loyalty abilities you activate cost an additional [+1] to activate.",
+      "rule": "loyalty-costs-more",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "amount": 1
+    }
+  ]
+}

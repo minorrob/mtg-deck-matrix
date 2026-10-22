@@ -1,0 +1,150 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mordenkainen",
+    "oracleId": "6be0bf15-fdcb-4425-9bd8-3c39039cab7d",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Planeswalker"
+    ],
+    "subtypes": [
+      "Mordenkainen"
+    ],
+    "manaCost": "{4}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null,
+    "loyalty": 5
+  },
+  "oracleText": "+2: Draw two cards, then put a card from your hand on the bottom of your library.\n−2: Create a blue Dog Illusion creature token with \"This token's power and toughness are each equal to twice the number of cards in your hand.\"\n−10: Exchange your hand and library, then shuffle. You get an emblem with \"You have no maximum hand size.\"",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "+2: Draw two cards, then put a card from your hand on the bottom of your library.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": 2
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 2
+        },
+        {
+          "effect": "chooseCard",
+          "zone": "hand",
+          "count": 1,
+          "to": "library"
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "−2: Create a blue Dog Illusion creature token with \"This token's power and toughness are each equal to twice the number of cards in your hand.\"",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": -2
+        }
+      ],
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Dog Illusion",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Dog",
+              "Illusion"
+            ],
+            "colors": [
+              "U"
+            ],
+            "power": 0,
+            "toughness": 0,
+            "abilities": [
+              {
+                "id": "dog-pt",
+                "kind": "static",
+                "text": "This token's power and toughness are each equal to twice the number of cards in your hand.",
+                "layer": 7,
+                "sublayer": "a",
+                "affects": {
+                  "self": true
+                },
+                "apply": {
+                  "setPower": {
+                    "count": {
+                      "what": "card",
+                      "zone": "hand",
+                      "controller": "you"
+                    },
+                    "times": 2
+                  },
+                  "setToughness": {
+                    "count": {
+                      "what": "card",
+                      "zone": "hand",
+                      "controller": "you"
+                    },
+                    "times": 2
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "−10: Exchange your hand and library, then shuffle. You get an emblem with \"You have no maximum hand size.\"",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": -10
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZoneAll",
+          "selector": {
+            "what": "card",
+            "zone": "hand",
+            "controller": "you"
+          },
+          "to": "library",
+          "exchange": true,
+          "shuffle": true
+        },
+        {
+          "effect": "emblem",
+          "abilities": [
+            {
+              "kind": "static",
+              "text": "You have no maximum hand size.",
+              "rule": "no-maximum-hand-size",
+              "affects": {
+                "what": "player",
+                "who": "you"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

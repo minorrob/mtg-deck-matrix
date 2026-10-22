@@ -943,7 +943,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 559 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 560 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1369,6 +1369,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-card-choice-memory` - `tests/engine-card-choice-memory.mjs`
 - `engine-enter-transformed` - `tests/engine-enter-transformed.mjs`
 - `engine-power-comparison` - `tests/engine-power-comparison.mjs`
+- `engine-libload-l1` - `tests/engine-libload-l1.mjs`: the library load's L1 (2026-10-21) -- what the compiler and schema refuse of an emblem's abilities (CR 114.4), a static that works everywhere but the battlefield (CR 113.6c), a process repeated again, "prevent all but N" and "prevent N" (CR 615.10) and an exchange of zones (CR 701.12d); an emblem as the board shows it; and Teferi, Time Raveler's hold on each opponent (CR 307.5), with its words
 - `engine-x11-permissions` - `tests/engine-x11-permissions.mjs`
 - `engine-x11-leave` - `tests/engine-x11-leave.mjs`
 - `engine-x11-leave-questions` - `tests/engine-x11-leave-questions.mjs`

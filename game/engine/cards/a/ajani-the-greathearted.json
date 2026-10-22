@@ -1,0 +1,102 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ajani, the Greathearted",
+    "oracleId": "f5d9be71-91d0-4166-ba58-cbbf5d490c40",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Planeswalker"
+    ],
+    "subtypes": [
+      "Ajani"
+    ],
+    "manaCost": "{2}{G}{W}",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": null,
+    "toughness": null,
+    "loyalty": 5
+  },
+  "oracleText": "Creatures you control have vigilance.\n+1: You gain 3 life.\n−2: Put a +1/+1 counter on each creature you control and a loyalty counter on each other planeswalker you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Creatures you control have vigilance.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "addKeywords": [
+          "Vigilance"
+        ]
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "+1: You gain 3 life.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": 1
+        }
+      ],
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "−2: Put a +1/+1 counter on each creature you control and a loyalty counter on each other planeswalker you control.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": -2
+        }
+      ],
+      "effects": [
+        {
+          "effect": "putCounterAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "counter": "+1/+1",
+          "count": 1
+        },
+        {
+          "effect": "putCounterAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Planeswalker"
+            ],
+            "controller": "you",
+            "another": true
+          },
+          "counter": "loyalty",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

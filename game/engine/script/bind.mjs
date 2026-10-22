@@ -570,10 +570,16 @@ function walkEffects(effects, one) {
   return (effects ?? []).map(walk);
 }
 export function rememberNow(effects, context, {keepThat = false, state = null} = {}) {
+  /* What the delayed trigger's own effects remember as it resolves is its own: "At the beginning of the next end step, untap up
+     to two lands" (Teferi, Hero of Dominaria) -- the lands chosen then (CR 603.7), not what this resolution remembered. An
+     effect after one of its own that remembers keeps "remembered" for that resolution. */
+  let own = false;
   return walkEffects(effects, (effect) => {
     const kept = {};
     if (keepThat) for (const key of ["targets", "spells", "who", "toPlayer", "chooser"])
       if (["that card", "that player", "that card's controller"].includes(effect[key])) kept[key] = effect[key];
+    if (own && effect.targets === "remembered") kept.targets = "remembered";
+    if (effect.remember === true) own = true;
     return thisWayNow({...bindEffect(effect, context), ...kept}, context, state);
   });
 }
@@ -623,6 +629,8 @@ export function targetRefs(effects) {
     if (fact) { found.push(value[fact].target); return; }
     /* A reflexive trigger's targets are its own, chosen as it goes on the stack (CR 603.12; schema.mjs checks them). */
     if (value.effect === "immediateTrigger") return;
+    /* Nor an emblem's abilities' (CR 114.4: they are its own, compiled and checked as a card's are, cards/index.mjs). */
+    if (value.effect === "emblem") return;
     Object.values(value).forEach(walk);
   };
   walk(effects);

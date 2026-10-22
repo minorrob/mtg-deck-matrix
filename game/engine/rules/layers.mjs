@@ -303,8 +303,8 @@ function gatherEffects(state) {
     const holder = state.objects[id];
     for (const ability of holder.abilities ?? []) {
       if (ability.kind !== "static") continue;
-      /* One that works from a graveyard does not work here (CR 113.6). */
-      if (ability.worksFrom === "graveyard") continue;
+      /* One that works from a graveyard does not work here (CR 113.6), nor one that works everywhere else (113.6c). */
+      if (ability.worksFrom === "graveyard" || ability.worksFrom === "elsewhere") continue;
       if (!holdsNow(state, ability.condition, {controller: holder.controller, source: id})) continue;
       const given = ability.apply?.topCardAbilities !== undefined ? topCardGrant(state, holder, ability)
         : ability.apply?.graveyardAbilities !== undefined ? graveyardGrant(state, holder, ability) : ability;
@@ -633,10 +633,22 @@ function intrinsicMana(state, id, current) {
   }
 }
 
+/* AN ABILITY THAT FUNCTIONS EVERYWHERE BUT THE BATTLEFIELD (CR 113.6c): "As long as Grist isn't on the battlefield, it's a 1/1
+   Insect creature in addition to its other types" (Grist, the Hunger Tide) -- `worksFrom: "elsewhere"`, a static of the
+   object's own about itself (cards/index.mjs), applied in its layers while it is in any other zone: a hand, a library, a
+   graveyard, exile, the stack. A creature card there, a creature spell there; on the battlefield it does nothing. */
+function awayEffects(state, id) {
+  const object = state.objects[id];
+  if (object.zone === "battlefield") return [];
+  return (object.abilities ?? []).filter((ability) => ability.kind === "static" && ability.worksFrom === "elsewhere")
+    .map((ability) => ({...ability, affects: {...ability.affects, zone: object.zone}, sourceId: id, sourceController: object.owner, timestamp: ability.timestamp ?? object.timestamp}));
+}
+
 function derive(state, id, counts = true, through = 7) {
   derivations += 1;
   let current = printed(state, id);
-  const effects = allEffects(state);
+  const away = awayEffects(state, id);
+  const effects = away.length ? [...allEffects(state), ...away] : allEffects(state);
   const sourceOf = (effect) => effect.sourceController;
   const losers = losersAmong(state, effects);
   /* The abilities whose effects have begun to apply to this object (CR 613.6, lostEffect), and those that took its own
