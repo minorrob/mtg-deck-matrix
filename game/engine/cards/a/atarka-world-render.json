@@ -1,0 +1,66 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Atarka, World Render",
+    "oracleId": "c0b3bbce-977c-42a9-afcb-dabdfc717c97",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dragon"
+    ],
+    "manaCost": "{5}{R}{G}",
+    "colors": [
+      "G",
+      "R"
+    ],
+    "colorIdentity": [
+      "G",
+      "R"
+    ],
+    "power": 6,
+    "toughness": 4
+  },
+  "oracleText": "Flying, trample\nWhenever a Dragon you control attacks, it gains double strike until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a Dragon you control attacks, it gains double strike until end of turn.",
+      "trigger": {
+        "on": "attacks",
+        "who": "any",
+        "filter": {
+          "subtypes": [
+            "Dragon"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "that card",
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Double Strike"
+          ]
+        }
+      ]
+    }
+  ]
+}

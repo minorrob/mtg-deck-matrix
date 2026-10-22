@@ -58,7 +58,8 @@ const STEP_LIMIT = 2000;
 function routine(state) {
   const kind = state.awaiting?.kind;
   if (kind === "declare-attackers") return resolveAwaiting(state, meetRequirements(awaitingChoice(state), []));
-  if (kind === "declare-blockers") return resolveAwaiting(state, []);
+  /* Nobody blocks, unless the rules make it: "must be blocked if able" (CR 509.1c), met as the house pilot meets it. */
+  if (kind === "declare-blockers") return resolveAwaiting(state, meetRequirements(awaitingChoice(state), []));
   if (kind === "order-triggers") return resolveAwaiting(state, awaitingChoice(state).options.map((o) => o.index));
   if (kind === "legend-rule") return resolveAwaiting(state, [0]);
   return null;

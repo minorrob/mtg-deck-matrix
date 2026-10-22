@@ -1,0 +1,60 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Cartel Aristocrat",
+    "oracleId": "9603e553-f72d-40bf-94ab-596afb7d6db3",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Advisor"
+    ],
+    "manaCost": "{W}{B}",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Sacrifice another creature: This creature gains protection from the color of your choice until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "Sacrifice another creature: This creature gains protection from the color of your choice until end of turn.",
+      "cost": [
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "types": [
+              "Creature"
+            ],
+            "another": true
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "chooseColor"
+        },
+        {
+          "effect": "effectUntil",
+          "rule": "protection",
+          "targets": "self",
+          "from": {
+            "colors": [
+              "$chosenColor"
+            ]
+          },
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

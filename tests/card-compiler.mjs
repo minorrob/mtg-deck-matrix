@@ -117,9 +117,10 @@ const recordLike = (name, text, extra = {}) => ({id: `test-${name}`, name, mana:
   const guarded = compileAll({oracle: {...oracle, cards: [recordLike(bannedName, "Trample"), recordLike("Test Token", "Trample", {type: "Token Creature — Bear"}),
     recordLike("Test Bear", "Trample")]}, banned: [...banned], scripts, index, calibration});
   eq(guarded.results.map((r) => [r.name, r.status]), [["Test Bear", "candidate"]], `a card banned in Commander (${bannedName}) and a token stay out of the pool`);
-  const veteran = compileAll({oracle: {...oracle, cards: [byName.get("Black Knight")]}, banned: [...banned], scripts, index, calibration});
-  ok(veteran.results[0].status === "vetoed" && /failed \d+ of \d+ in calibration/.test(veteran.results[0].why[0]),
-    "a template that failed in calibration (Goblin Piledriver's \"protection from COLOR\") vetoes Black Knight");
+  /* Black Knight was the example until the library load's combat lane defined it (2026-10-21): an undefined card it is not. */
+  const veteran = compileAll({oracle: {...oracle, cards: [byName.get("Vodalian Zombie")]}, banned: [...banned], scripts, index, calibration});
+  ok(veteran.results[0]?.status === "vetoed" && /failed \d+ of \d+ in calibration/.test(veteran.results[0].why[0]),
+    "a template that failed in calibration (Goblin Piledriver's \"protection from COLOR\") vetoes Vodalian Zombie");
 }
 
 /* ---- 5. the next sentences ---- */

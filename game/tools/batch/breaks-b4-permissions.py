@@ -30,7 +30,7 @@ BREAKS = [
      'if (new Set(picked.map((o) => o.cardId).filter((id) => need.values.includes(id))).size < need.least) throw new Error(need.why);',
      'if (false) throw new Error(need.why);'),
     ('controller accepts missing required attacker', 'game/engine/controller.mjs',
-     'if (met.size < (need.least ?? 0)) throw new Error(need.why ?? "Invalid selection");',
+     'if (met.length < (need.least ?? 0)) throw new Error(need.why ?? "Invalid selection");',
      'if (false) throw new Error(need.why ?? "Invalid selection");'),
     ('attack requirement ignores condition', 'game/engine/rules/statics.mjs',
      'if (conditionHolds(state, ability.condition, context) && matchesSelector(chosenFor(ability, holder).affects, state, id, context)) sources.push(holderId);',

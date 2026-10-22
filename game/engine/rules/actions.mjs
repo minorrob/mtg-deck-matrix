@@ -813,7 +813,8 @@ function withTargets(state, base, ability, context, aim = null) {
 /* A mana cost of generic mana only, at least one: what waterbend is paid in (CR 701.67a). */
 const genericOnly = (text) => { try { const parsed = parseManaCost(text ?? ""); return parsed.generic >= 1 && parsed.symbols.every((s) => s.kind === "generic"); } catch { return false; } };
 /* The cost atoms 2.4 can pay. `costPayment` says whether all of an ability's can be paid now, and how. */
-const COST_ATOMS_BUILT = ["{T}", "mana", "payLife", "sacrifice"];
+/* "{Q}", the untap symbol (CR 107.6): Umbral Mantle's "{3}, {Q}: This creature gets +2/+2" (library load L4). */
+const COST_ATOMS_BUILT = ["{T}", "{Q}", "mana", "payLife", "sacrifice"];
 export const costAtomBuilt = (atom) => (COST_ATOMS_BUILT.includes(atom?.atom) && (atom.atom !== "sacrifice" || atom.self === true || (atom.selector && typeof atom.selector === "object"))
   /* Life: a number, or counted as the cost is paid (War Room; script/amount.mjs). */
   && (atom.atom !== "payLife" || (Number.isInteger(atom.amount) && atom.amount >= 0) || (isCounted(atom.amount) && !amountProblems(atom.amount).length)))
@@ -865,17 +866,19 @@ export const costAtomBuilt = (atom) => (COST_ATOMS_BUILT.includes(atom?.atom) &&
    such set, so no offer taps a creature it does not need; ids ascending, and no more than CREW_OFFERS_MAX of them. A
    summoning-sick creature may crew. "This token crews Vehicles as though its power were 2 greater" (`crews-with-more`). */
 const CREW_OFFERS_MAX = 64;
-const crewPower = (state, id) => Math.max(0, characteristicsOf(state, id).power ?? 0)
+/* SADDLE (CR 702.171a; Bounding Felidar) is paid the same way, and a creature that crews as though its power were greater does
+   not saddle so: `saddle`, its power alone. */
+const crewPower = (state, id, saddle = false) => Math.max(0, characteristicsOf(state, id).power ?? 0)
   /* Of its abilities as they are after layer 6 (CR 613.1f). */
-  + staticAbilities(state)(id).filter((a) => a.kind === "static" && a.rule === "crews-with-more").reduce((n, a) => n + (a.amount ?? 0), 0);
-function crewChoices(state, player, vehicle, power) {
+  + staticAbilities(state)(id).filter((a) => a.kind === "static" && a.rule === "crews-with-more" && !saddle).reduce((n, a) => n + (a.amount ?? 0), 0);
+function crewChoices(state, player, vehicle, power, saddle = false) {
   const crew = state.zones.battlefield.filter((id) => id !== vehicle && state.objects[id].controller === player && !state.objects[id].tapped
     && characteristicsOf(state, id).types.includes("Creature")).sort((a, b) => a - b);
   const sets = [];
   const walk = (from, chosen, total) => {
     if (sets.length >= CREW_OFFERS_MAX) return;
     if (total >= power) { sets.push(chosen); return; }
-    for (let i = from; i < crew.length; i += 1) walk(i + 1, [...chosen, crew[i]], total + crewPower(state, crew[i]));
+    for (let i = from; i < crew.length; i += 1) walk(i + 1, [...chosen, crew[i]], total + crewPower(state, crew[i], saddle));
   };
   walk(0, [], 0);
   /* Smallest: no set that has another set in it -- a creature it could leave untapped. */
@@ -1041,6 +1044,9 @@ function costPayment(state, player, id, cost, x = 0, less = 0, key = undefined, 
          activated as though it had haste (Thousand-Year Elixir, CR 702.10c). */
       if (sickForAbilities(state, id)) return null;
     }
+    /* {Q}, untap this permanent (CR 107.6): only a tapped one can pay it (CR 118.3), and a creature's waits as a {T}
+       ability does (CR 302.6). */
+    if (atom.atom === "{Q}" && (!object.tapped || sickForAbilities(state, id))) return null;
     if (atom.atom === "mana" || atom.atom === "waterbend") {
       if (printedMana) return null;
       printedMana = true;
@@ -1971,7 +1977,7 @@ function abilityOffers(state, player, id, ability) {
       /* "Discard a creature card" (Fauna Shaman): only a card its selector describes. */
       : toss ? discardSets(cardsIn(state, "hand", player).filter((c) => c !== id && (!toss.selector || compileSelector({...toss.selector, what: "card", zone: "hand"})(state, c, {controller: player, source: id}))),
         toss.count ?? 1).map((d) => ({discard: d}))
-      : crew ? crewChoices(state, player, id, crew.power).map((set) => ({crew: set}))
+      : crew ? crewChoices(state, player, id, crew.power, crew.saddle === true).map((set) => ({crew: set}))
       : tapper ? ((tapper.count ?? 1) > 1 ? tapSets(state, player, id, tapper.selector, tapper.count, (ability.cost ?? []).some((a) => a?.atom === "{T}")).map((set) => ({tapAll: set}))
         : tapChoices(state, player, id, tapper.selector).map((t) => ({tap: t})))
       : untapper ? untapChoices(state, player, untapper.count).map((set) => ({untap: set}))
@@ -2885,6 +2891,11 @@ function performOffered(state, player, action, during) {
       if (atom.atom === "{T}") {
         object.tapped = true;
         events.push(event("GameEventCardTapped", state, {card: cardRef(state, action.objectId), tapped: true}));
+      }
+      /* {Q} (CR 107.6): the permanent untapped. */
+      if (atom.atom === "{Q}") {
+        object.tapped = false;
+        events.push(event("GameEventCardTapped", state, {card: cardRef(state, action.objectId), tapped: false}));
       }
       if (atom.atom === "mana") payMana();
       /* Waterbend (CR 701.67a): the pool's part, and each permanent picked tapped -- a cost paid, not tapped for mana. */
