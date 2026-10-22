@@ -2,9 +2,11 @@
 
 /* THE LIBRARY CARD LOAD OF 2026-10-21, LANE L6: SPELLS, DRAWS AND DISCARDS.
  *
- * The lane's twenty-two cards play through their scenarios (here first, so a break is found fast, and again in
- * tests/engine-cards.mjs); the twenty-third, Ichor Elixir, is stopped on (planar dice, CR 901.9) and plays at no table.
- * Beside them, what the scenarios cannot reach, each against the rule it follows:
+ * The lane's twenty-three cards play through their scenarios (here first, so a break is found fast, and again in
+ * tests/engine-cards.mjs), with Fractured Powerstone beside Ichor Elixir (ROB-187, option A). Beside them, what the
+ * scenarios cannot reach, each against the rule it follows:
+ *   - "roll the planar die" (CR 901.3a) outside a Planechase game: no effect (Fractured Powerstone's ruling) -- nothing
+ *     rolled, nothing said, nothing for Ichor Elixir to replace -- and a die that isn't planar still rolled;
  *   - a player's hexproof from a color (Veil of Summer; CR 702.11d): only targets are stopped -- a player chosen without
  *     targeting is not -- and only an opponent's, from a source of the color;
  *   - an effect's hexproof from over players only when it names no permanents: Skrelv's targets and a selector's
@@ -30,18 +32,17 @@ const index = loadCardIndex();
 const LANE = ["Queza, Augur of Agonies", "Liliana's Standard Bearer", "Veil of Summer", "Eerie Interlude", "Flickering Hound", "Kynaios and Tiro of Meletis",
   "Aquitect's Defenses", "Clash of Elements", "Duelist of the Mind", "Eclipsed Boggart", "Eclipsed Flamekin", "Eriette's Lullaby", "Festering Gulch",
   "Flourishing Grapple", "Kulrath Mystic", "Shepherding Spirits", "Splitskin Doll", "Tanufel Rimespeaker", "Thoughtweft Charge", "Tributary Vaulter",
-  "Unexpected Results", "Vicious Clown"];
+  "Unexpected Results", "Vicious Clown", "Ichor Elixir", "Fractured Powerstone"];
 
 /* ---- the lane's cards: playable at a table, and every scenario of theirs ---- */
 for (const name of LANE) ok(tableCards(name) !== null, `${name} plays at a table`);
-ok(tableCards("Ichor Elixir") === null, "Ichor Elixir, stopped on (planar dice), plays at no table");
 {
   let runs = 0;
   for (const {scenarios: file} of loadCardScenarios()) {
     if (!LANE.includes(file.card)) continue;
     for (const scenario of file.scenarios) { runScenario(scenario, index.definition, file.fixtures ?? {}); runs += 1; }
   }
-  ok(runs >= 54, `the lane's ${runs} scenarios each pass`);
+  ok(runs >= 59, `the lane's ${runs} scenarios each pass`);
 }
 
 /* A spell of each color in Maya's hand, the sources asked about. */
@@ -76,6 +77,21 @@ const inHand = (s, seat, name) => cardsIn(s, "hand", seat).find((id) => s.object
     "Skrelv's targets and a selector's permanents give no player hexproof; with neither, its controller has it");
 }
 
+/* ---- "roll the planar die" outside Planechase (Fractured Powerstone, Ichor Elixir; CR 901.3a, 706.7, 701.31a) ---- */
+{
+  const s = table([]);
+  const context = {controller: 0, source: null};
+  eq(runEffects(s, [{effect: "rollDie", planar: true, sides: 6}], context), [], "a planar die rolled outside Planechase: no event, and no random stream asked for");
+  ok(context.rolled === undefined, "and no result for what follows to read");
+  const d20 = {controller: 0, source: null};
+  const rolled = runEffects(s, [{effect: "rollDie", sides: 20}], d20, {int: () => 6});
+  ok(rolled.length === 1 && rolled[0].kind === "GameEventDieRolled" && d20.rolled === 7, "a d20 is still rolled, from the game's random stream");
+  const {events} = runScenario({name: "powerstone", setup: [{seat: 0, zone: "battlefield", cards: ["Ichor Elixir", "Fractured Powerstone"]}],
+    steps: [{activate: "Fractured Powerstone"}, {resolve: true}]}, index.definition, {});
+  ok(events.some((e) => e.kind === "GameEventSpellResolved" || e.kind === "GameEventCardTapped"), "Fractured Powerstone's roll was activated and resolved");
+  ok(!events.some((e) => e.kind === "GameEventDieRolled"), "and no die was rolled, beside Ichor Elixir too");
+}
+
 /* ---- "each opponent who didn't" (Kynaios and Tiro of Meletis) ---- */
 {
   const s = table([], 4);
@@ -93,4 +109,4 @@ const inHand = (s, seat, name) => cardsIn(s, "hand", seat).find((id) => s.object
   eq(problems({...land, did: true, remember: "add"}), "", "with remember, it compiles");
 }
 
-console.log(`engine-libload-l6: ${checks} checks passed -- the lane's twenty-two cards, a player's hexproof from a color, its players, and "each opponent who didn't".`);
+console.log(`engine-libload-l6: ${checks} checks passed -- the lane's twenty-three cards and Fractured Powerstone, a planar die outside Planechase, a player's hexproof from a color, its players, and "each opponent who didn't".`);
