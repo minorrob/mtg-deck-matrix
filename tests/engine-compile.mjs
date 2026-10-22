@@ -277,6 +277,23 @@ const trust = trustOf(library, calibrate({scripts, library, scenarios, definitio
   const assist = assistOf(strix, {library, trust: (id) => (/enters/.test(id) ? {ok: false} : trust(id)), except: "Baleful Strix"});
   eq([assist.known.map((a) => a.text), assist.write.map((w) => w.text)], [["Flying", "deathtouch"], ["When this creature enters, draw a card."]],
     "assisted: the library's trusted sentences written, the distrusted one left for the writer");
+  /* A keyword line's words are each an ability (CR 702.1c): deathtouch distrusted leaves Flying written. */
+  const keywords = assistOf(strix, {library, trust: (id) => (/deathtouch/.test(id) ? {ok: false} : trust(id)), except: "Baleful Strix"});
+  eq([keywords.known.map((a) => a.text), keywords.write.map((w) => w.text)], [["Flying", "When this creature enters, draw a card."], ["deathtouch"]],
+    "a keyword line known in part: the known word written, the other asked alone");
+  const neither = assistOf(strix, {library, trust: (id) => (/flying|deathtouch/.test(id) ? {ok: false} : trust(id)), except: "Baleful Strix"});
+  eq(neither.write.map((w) => w.text), ["Flying", "deathtouch"], "a keyword line known in none of it: each word asked alone, never one piece");
+  /* A paragraph is one ability (CR 113.2c): Gemstone Caverns held out, the library knows "{T}: Add {C}." but not the luck
+     counter's "instead" that completes it -- the whole paragraph is asked of the writer, as one piece, nothing of it written. */
+  const caverns = assistOf(ORACLE.get("Gemstone Caverns"), {library, trust, except: "Gemstone Caverns"});
+  eq([caverns.known.map((a) => a.text), caverns.write.map((w) => w.text)], [[], ORACLE.get("Gemstone Caverns").text.split("\n")],
+    "a paragraph known in part is written whole: no {C} ability without its \"instead\"");
+  /* And a spell is never half written: its paragraph known whole, but its flashback not, the writer writes the spell too
+     (Strike It Rich held out, its Flashback distrusted; trusted, the library knows both). */
+  const rich = (t) => assistOf(ORACLE.get("Strike It Rich"), {library, trust: t, except: "Strike It Rich"});
+  const noFlashback = rich((id) => (/flashback/.test(id) ? {ok: false} : trust(id)));
+  eq([rich(trust), noFlashback.known.length, noFlashback.write.map((w) => w.text)], [null, 0, ORACLE.get("Strike It Rich").text.split("\n")],
+    "a spell with a part of the card left: the spell written by the writer too");
   const req = JSON.parse(writerRequest(strix, null, assist));
   eq([req.alreadyWritten.length, req.writeOnly], [2, ["When this creature enters, draw a card."]], "the request carries both, and asks for the one sentence");
   const trigger = own.filter((a) => a.kind === "triggered");
