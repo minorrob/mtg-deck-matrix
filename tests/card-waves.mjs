@@ -86,7 +86,8 @@ const entries = waveEntries(rankCandidates([flier, lifer], [{name: lifer.name, d
   const root = mkdtempSync(path.join(tmpdir(), "waves-"));
   try {
     const files = promote(entries, {root});
-    eq(files.map((f) => path.relative(root, f)).sort(), entries.flatMap((e) => [`${slugOf(e.name)[0].match(/[a-z]/) ? slugOf(e.name).match(/[a-z]/)[0] : "z"}/${slugOf(e.name)}.json`,
+    /* Where each file landed, in "/" whatever the system's own separator (Windows reports "\"). */
+    eq(files.map((f) => path.relative(root, f).split(path.sep).join("/")).sort(), entries.flatMap((e) => [`${slugOf(e.name)[0].match(/[a-z]/) ? slugOf(e.name).match(/[a-z]/)[0] : "z"}/${slugOf(e.name)}.json`,
       `${slugOf(e.name).match(/[a-z]/)[0]}/${slugOf(e.name)}.scenarios.json`]).sort(), "each card and its scenarios, under its letter");
     const scripts = loadCardScripts(root), index = createCardIndex(scripts);
     eq(scripts.map((s) => s.script.source), ["hand", "hand"], "written as hand-authored, now that a reviewer has read them");
