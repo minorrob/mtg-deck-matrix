@@ -150,6 +150,16 @@
         el.hidden = false;
       }
     },
+    /* The decks hub's summary: how many of `decks` the table can play every card of -- each tile's "Playable at the table",
+       counted, a deck with no commander or archived never one -- or null when the table could not be asked. */
+    async count(decks) {
+      if (!cloudPlay()) return null;
+      const can = decks.filter(playable);
+      try {await unknownOf(can.flatMap((d) => {const r = deckForTable(d); return [...r.commander, ...r.cards];}));} catch {return null;}
+      let n = 0;
+      for (const d of can) if (!(await readiness(d)).count) n += 1;
+      return n;
+    },
     /* The deck page: the readiness line, and Play this deck when the table can play every card. */
     async deck(d) {
       const el = document.getElementById("cm-deck-play");
@@ -502,6 +512,49 @@
   ]);
   const sharedReady = new Set();
   let availableSharedDecks = SHARED_DECKS;
+  /* A DECK'S ROW IN THE CHOOSER (Rob, 2026-10-22: "show the mana colors and description of each commander on its row"):
+     its commanders' colors, from their records (none drawn where no record knows them -- never guessed), and what it does:
+     the deck's own notes, else its commanders' rules text, cut to a line or two. */
+  const colorsOf = (names) => {
+    const known = names.map(recordByName).filter(Boolean);
+    return known.length ? C.colors(WUBRG.filter((x) => known.some((r) => (r.colorIdentity || []).includes(x)))) : "";
+  };
+  /* A library's own record may carry no rules text; the records the app ships may. Failing both, the line waits for the card
+     catalog to fetch the text (`fillAbout`). */
+  const shipped = (n) => (C.catalog && C.catalog.exact ? C.catalog.exact(n) : null) || {};
+  const commanderRules = (n) => (recordByName(n) || {}).oracleText || shipped(n).oracleText || "";
+  const cut = (text) => {const t = String(text || "").replace(/\s+/g, " ").trim(); return t.length > 180 ? `${t.slice(0, 177).replace(/\s+\S*$/, "")}…` : t;};
+  const aboutOf = (notes, names) => cut(String(notes || "").trim() || names.map(commanderRules).filter(Boolean).join(" · "));
+  const deckLines = (name, commanders, notes) => {
+    const about = aboutOf(notes, commanders), waiting = !about && commanders.length;
+    return `<strong>${e(name)}</strong><span class="cm-table-deck-cmdr">${colorsOf(commanders)}<span class="cm-muted">${e(commanders.join(" + "))}</span></span><span class="cm-table-deck-about"${waiting ? ` data-about-for="${e(JSON.stringify(commanders))}"` : ""}>${e(about)}</span>`;
+  };
+  /* The rules text no record here holds, fetched once a commander through the card catalog (Scryfall, cached), into each row
+     still waiting on it. Nothing is said where it cannot be had. */
+  async function fillAbout() {
+    if (!C.catalog || !C.catalog.details) return;
+    for (const el of document.querySelectorAll("[data-about-for]")) {
+      let names;
+      try {names = JSON.parse(el.dataset.aboutFor);} catch {continue;}
+      const texts = [];
+      for (const n of names) {
+        const known = commanderRules(n);
+        if (known) {texts.push(known); continue;}
+        try {const c = await C.catalog.details(recordByName(n) || shipped(n).name ? {...(recordByName(n) || shipped(n))} : {name: n}, {cheapest: false}); if (c && c.oracleText) texts.push(c.oracleText);} catch {/* the type line stays */}
+      }
+      if (texts.length && el.isConnected) {el.textContent = cut(texts.join(" · ")); el.removeAttribute("data-about-for");}
+    }
+  }
+  /* PLAYABLE ONLY (Rob: "include a toggle check box to filter for Playable"): the decks the table can play every card of,
+     the rest put away once it has said so -- off until it is ticked, and then remembered on this device. */
+  const ONLY_KEY = "cm-table-deck-playable";
+  const onlyPlayable = () => {try {return localStorage.getItem(ONLY_KEY) === "on";} catch {return false;}};
+  document.addEventListener("change", (event) => {
+    const el = event.target.closest?.("[data-table-deck-playable]");
+    if (!el) return;
+    try {localStorage.setItem(ONLY_KEY, el.checked ? "on" : "off");} catch {/* applied, not remembered */}
+    el.closest(".cm-table-deck-choose")?.classList.toggle("is-playable-only", el.checked);
+  });
   actions["table-deck"] = async (el) => {
     await C.sharingReady;
     if (C.sharingAvailable?.() && C.sharedDecks) availableSharedDecks = await C.sharedDecks();
@@ -511,16 +564,18 @@
       ? `<li><button type="button" class="cm-table-deck" data-action="table-use-test-deck" data-seat="${seatId}"><strong>${e(TEST_DECK.name)}</strong><span class="cm-muted">Wastes and 99 basic lands · for trying a game through quickly on this playtest table</span></button></li>`
       : "";
     const list = decks.length || test
-      ? `<ul class="cm-table-decks">${test}${decks.map((d) => `<li><button type="button" class="cm-table-deck" data-action="table-use-deck" data-seat="${seatId}" data-deck="${e(d.id)}"><strong>${e(d.name)}</strong><span class="cm-muted">${e((d.commanders || []).map((c) => (C.card(c) || {}).name).filter(Boolean).join(" + "))}</span><span class="cm-muted cm-table-deck-known" data-known-for="${e(d.id)}"></span></button></li>`).join("")}</ul>`
+      ? `<ul class="cm-table-decks">${test}${decks.map((d) => `<li><button type="button" class="cm-table-deck" data-action="table-use-deck" data-seat="${seatId}" data-deck="${e(d.id)}">${deckLines(d.name, (d.commanders || []).map((c) => (C.card(c) || {}).name).filter(Boolean), d.notes)}<span class="cm-muted cm-table-deck-known" data-known-for="${e(d.id)}"></span></button></li>`).join("")}</ul>`
       : "";
     /* AN EMPTY LIBRARY says how to fill it (the readiness checks of 2026-10-04: a friend new to CrankMagic, invited
        before restoring the host's backup, saw only the test deck). A restore keeps this page, so the seat is still
        theirs when it is done. */
     const empty = decks.length ? "" : `<div class="cm-table-deck-empty"><p>You can play with Rob's decks above without adding anything to your library.</p><p class="cm-muted">To use your own deck later, build or import one in Decks.</p></div>`;
-    const shared = `<section aria-label="Rob's shared decks"><h3>Shared decks</h3><p>Choose a deck and play. No import or library setup needed.</p><ul class="cm-table-decks">${availableSharedDecks.map(d => `<li><button type="button" class="cm-table-deck" data-action="table-use-shared-deck" data-shared-deck="${d.id}" data-seat="${seatId}" disabled><strong>${e(d.name)}</strong><span class="cm-muted">${e(d.commander.join(" + "))}</span><span class="cm-muted" data-shared-status="${d.id}">Checking this server…</span></button></li>`).join("")}</ul></section>`;
-    C.modal(`Choose a deck · Seat ${seatId + 1}`, `${shared}${decks.length ? '<h3>Your library decks</h3>' : ''}${list}${empty}<div id="cm-table-deck-error" class="cm-note cm-warning" hidden></div><div class="cm-form-footer">${b("Cancel", "close")}</div>`);
+    const shared = `<section aria-label="Rob's shared decks"><h3>Shared decks</h3><p>Choose a deck and play. No import or library setup needed.</p><ul class="cm-table-decks">${availableSharedDecks.map(d => `<li><button type="button" class="cm-table-deck" data-action="table-use-shared-deck" data-shared-deck="${d.id}" data-seat="${seatId}" disabled>${deckLines(d.name, d.commander, d.notes)}<span class="cm-muted" data-shared-status="${d.id}">Checking this server…</span></button></li>`).join("")}</ul></section>`;
+    const only = `<label class="cm-checkbox cm-table-deck-only"><input type="checkbox" data-table-deck-playable${onlyPlayable() ? " checked" : ""}>Playable</label>`;
+    C.modal(`Choose a deck · Seat ${seatId + 1}`, `<div class="cm-table-deck-choose${onlyPlayable() ? " is-playable-only" : ""}">${only}${shared}${decks.length ? '<h3>Your library decks</h3>' : ''}${list}${empty}</div><div id="cm-table-deck-error" class="cm-note cm-warning" hidden></div><div class="cm-form-footer">${b("Cancel", "close")}</div>`);
     knownCounts(decks);
     checkSharedDecks(current.tableId);
+    fillAbout();
   };
   async function checkSharedDecks(tableId) {
     sharedReady.clear();

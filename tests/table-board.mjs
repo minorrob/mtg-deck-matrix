@@ -1013,7 +1013,8 @@ try {
   await shot(firstBoard.page, "resolve-" + (firstBoard === rob ? "1400" : "1280"));
   await chooseView(firstBoard.page,"full");
   await firstBoard.page.locator('.cm-stage-region[data-renderer="webgl"]').waitFor();
-  await firstBoard.page.click('.cm-stage-top [data-action=board-pass]');
+  /* In Full screen the pass stands large over the table, not in the strip (Rob's fullscreen notes, Oct 21). */
+  await firstBoard.page.click('.cm-stage-actions [data-action=board-pass]');
   await waitText(second.page, ".cm-board-mat .cm-board-field", new RegExp(castName));
   ok(true, "the tabletop resolves a spell through the real room and the other browser receives its permanent");
   await fullTools(firstBoard.page);
@@ -1099,8 +1100,10 @@ try {
   const heldName = (await holdCast.getAttribute("aria-label")).split(/[,:]/)[0];
   await utility(maya.page,"board-tools");
   await maya.page.check("#cm-board-tools [data-board-hold]");
-  await waitText(maya.page, "#cm-board-tools", /you are asked first/, 5000);
-  eq(await maya.page.evaluate(() => localStorage.getItem("cm-board-hold")), "on", "Tools' Hold priority after I cast is kept on the device, and Tools says what it does");
+  /* The choice says itself, with no paragraph explaining it (Rob, Oct 21: "We don't want to directly state everything as
+     written out instruction to end users"). */
+  await maya.page.locator("#cm-board-tools [data-board-hold]:checked").waitFor({timeout: 5000});
+  eq(await maya.page.evaluate(() => localStorage.getItem("cm-board-hold")), "on", "Tools' Hold priority after I cast is kept on the device, and stays checked");
   await maya.page.keyboard.press("Escape");
   const sentBefore = sent[MAYA].length;
   await maya.page.locator(".cm-board-hand .cm-bcard.is-bright[aria-label*='Cast']").first().click();

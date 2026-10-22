@@ -459,6 +459,10 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
          `blocksNone`; Rob's one-person, three-AI table, Oct 21) -- most of the AI seats' attacks asked a No blocks of him.
          New matches only, so one launched before is asked as it was. */
       blocksNone: true,
+      /* And Rob's fullscreen notes (Oct 21; room.mjs): a person's land in any step of their own turn (`landAnyStep`), a land
+         just played put back in the hand while nothing has happened since (`takeBackLand`), and a spell or ability aimed at
+         a person asked of them before it resolves (`askAimed`). New matches only, so one launched before plays as it did. */
+      landAnyStep: true, takeBackLand: true, askAimed: true,
       /* Its AI seats take what a choice they may answer with none is for -- the land Evolving Wilds finds, the counters
          proliferate adds -- where they took none (Linear ROB-164, 2026-10-19): new matches only, so one launched
          before replays as it was played (room.mjs, `pilotPicks`). */

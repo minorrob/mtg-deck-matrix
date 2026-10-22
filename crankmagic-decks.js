@@ -184,18 +184,21 @@ const fan=fanSrc.length?`<div class="cm-cardfan" aria-hidden="true">${fanSrc.map
    fresh library gets, and the only place the slogan is spoken. */
 const anyDecks=C.state.decks.length>0,howLink=`<a class="cm-how-link" href="#how">How a deck comes together</a>`,compare=`<button type="button" class="v-button" data-action="compare-decks"${picks.length<2?' disabled':''} title="${picks.length<2?'Tick at least two decks to compare them':'Compare the ticked decks'}">Compare${picks.length?` (${picks.length})`:''}</button>`;
 /* THE SUMMARY LINE REPLACES THE TOOLBAR (the guide's step 3). One sentence under the heading
-   with the two figures that matter, read from the same readiness the tiles draw -- how many
-   decks are playable, how many substitutes are still standing in, and what finishing them all
-   costs. Each figure is said once, here, and not repeated in the tiles. */
+   with the figures that matter -- how many decks are playable and how many substitutes are still standing in. Each
+   figure is said once, here, and not repeated in the tiles. PLAYABLE MEANS PLAYABLE ON PLAY (Rob, 2026-10-22: "For
+   'Playable' here, we mean playable on 'Play' in the app"): the decks the table can play every card of, the same reading
+   as each tile's "Playable at the table" (crankmagic-table.js, C.play.count), filled in once the table has answered;
+   where Play is not in the cloud, no count. And no cost to finish them all (Rob: "remove the $ amount to finish them all
+   statement"). */
 const live=decks.filter(d=>!d.archived),ready=live.map(d=>M.readiness(C.state,d));
-const playable=ready.filter(x=>x.playable||x.complete).length;
-const subs=ready.reduce((n,x)=>n+(x.standIns||0),0),toFinish=ready.reduce((n,x)=>n+(x.costToFinish||0),0);
+const subs=ready.reduce((n,x)=>n+(x.standIns||0),0);
 const words=['no','one','two','three','four','five','six','seven','eight','nine','ten'];
 const count=n=>n<=10?words[n]:String(n);
 /* The class is cm-decks-summary, not cm-deck-summary: the singular is already the deck page's
    Progress and Cost section, and tools/render-routes.mjs waits on it to know a deck page has
    drawn. Two things named alike is how a wait turns into a false pass. */
-const summary=live.length?`<p class="cm-decks-summary">${e(count(live.length).replace(/^./,c=>c.toUpperCase()))} deck${live.length===1?'':'s'}, ${playable===live.length?(live.length===1?'ready to play':'all playable'):playable===0?(live.length===1?'not playable yet':'none playable yet'):`${e(count(playable))} playable`}.${subs?` <b>${subs} substitute${subs===1?'':'s'}</b> still standing in${toFinish?',':'.'}`:''}${toFinish?` <b>$${e(String(Math.round(toFinish)))}</b> to finish them all.`:''}</p>`:'';
+const playWords=n=>n===live.length?(live.length===1?', ready to play':', all playable'):n===0?(live.length===1?', not playable yet':', none playable yet'):`, ${count(n)} playable`;
+const summary=live.length?`<p class="cm-decks-summary">${e(count(live.length).replace(/^./,c=>c.toUpperCase()))} deck${live.length===1?'':'s'}<span id="cm-decks-playable"></span>.${subs?` <b>${subs} substitute${subs===1?'':'s'}</b> still standing in.`:''}</p>`:'';
 /* The two switches and the explainer link fall to a footer row under the grid. */
 /* THE ACCOUNT'S BUDGET (Rob, 2026-10-18; docs/budgets.md), under the tiles where it does not crowd the head: what the
    live decks plan to spend -- each at its budget, or at its cost when that is more -- against the budget set in
@@ -212,8 +215,13 @@ const footLinks=anyDecks?`<div class="cm-deck-footlinks">${howLink}${lobbyHidden
 /* PLAY STATUS (Rob, 2026-10-18): the system's reading, from the model's deckStatus -- the same one The hundred and the
    Library scoped to a deck use -- with Complete beside it for a box of nothing but the list's own cards. */
 const playOf=new Map(decks.map(d=>[d.id,M.deckStatus(C.state,d)]));
-const stageOf=d=>{const x=playOf.get(d.id);return d.archived?'archived':x.complete?'complete':x.play;};
-const STAGES=[['all','All'],['toload','To load'],['loading','Loading'],['playable','Playable'],['complete','Complete']];
+/* PLAYABLE AND BOXED (Rob, 2026-10-22: "'Playable' which is playable in the app and 'Boxed Decks' which are the physically
+   playable decks"). A box that holds a whole hundred, its own cards or substitutes, is Boxed; Playable is the table's
+   reading -- every card one Play can play (crankmagic-table.js, C.play), known only once the table has answered, so its
+   chip draws every deck and puts away those the table cannot play. Where Play is not in the cloud there is no Playable. */
+const stageOf=d=>{const x=playOf.get(d.id);return d.archived?'archived':x.complete?'complete':x.play==='playable'?'boxed':x.play;};
+const atTable=!!C.play?.open();
+const STAGES=[['all','All'],['toload','To load'],['loading','Loading'],...(atTable?[['playable','Playable']]:[]),['boxed','Boxed Decks'],['complete','Complete']];
 /* Loading is a passing stage, so its chip shows only while a deck is in it (or it is the chip in force), as Defining
    did: the Decks head at 390px holds nine controls before the tiles (tests/page-budget.mjs). */
 const chips=STAGES.filter(([k])=>k!=='loading'||params.get('stage')==='loading'||decks.some(d=>stageOf(d)==='loading'));
@@ -223,12 +231,12 @@ const changed=new Map();if(sort==='recent')for(const row of await C.repo.history
 const leftToDo=d=>{const r=M.readiness(C.state,d);return (r.toBuy||0)+(r.ordered||0)+(r.standIns||0);};
 const byName=(a,b)=>a.name.localeCompare(b.name,'en-US',{numeric:true});
 const order={closest:(a,b)=>leftToDo(a)-leftToDo(b)||byName(a,b),name:byName,recent:(a,b)=>String(changed.get(b.id)||b.createdAt||'').localeCompare(String(changed.get(a.id)||a.createdAt||''))||byName(a,b)}[sort];
-const shown=decks.filter(d=>stage==='all'||stageOf(d)===stage).sort((a,b)=>(a.archived-b.archived)||order(a,b));
+const shown=decks.filter(d=>stage==='all'||(stage==='playable'?!d.archived&&(d.commanders||[]).length>0:stageOf(d)===stage)).sort((a,b)=>(a.archived-b.archived)||order(a,b));
 const hashFor=(k,v)=>{const q=new URLSearchParams({stage,sort});q.set(k,v);if(q.get('stage')==='all')q.delete('stage');if(q.get('sort')==='closest')q.delete('sort');return '#decks'+(q.size?'?'+q:'');};
 const bar=`<div class="cm-decks-bar"><nav class="cm-decks-stages" aria-label="Show decks">${chips.map(([k,label])=>`<a class="v-button cm-chip-toggle" href="${e(hashFor('stage',k))}"${k===stage?' aria-current="true"':''}>${e(label)}</a>`).join('')}</nav>`
   +`<div class="cm-decks-order"><label class="cm-decks-sort">Sort<select id="cm-decks-sort" aria-label="Sort decks">${SORTS.map(([k,label])=>`<option value="${k}"${k===sort?' selected':''}>${e(label)}</option>`).join('')}</select></label>`
   +`<label class="cm-checkbox cm-show-archived"><input id="cm-show-archived" type="checkbox" ${showArchived?'checked':''}>Show archived</label></div></div>`;
-const noneHere=`<p class="cm-muted cm-decks-none">No ${e((STAGES.find(([k])=>k===stage)||[,''])[1].toLowerCase())} decks right now. <a href="#decks${sort==='closest'?'':'?sort='+e(sort)}">Show all</a></p>`;
+const noneHere=`<p class="cm-muted cm-decks-none">No ${e((STAGES.find(([k])=>k===stage)||[,''])[1].toLowerCase().replace(/ decks$/,''))} decks right now. <a href="#decks${sort==='closest'?'':'?sort='+e(sort)}">Show all</a></p>`;
 /* NO DECKS YET (r3 wireframe, decks-hub-empty): the page is still Decks, and the panel says the three honest ways
    in -- a commander, a list, a backup file you saved. The welcome and its slogan are the landing page's now (R3.8). */
 /* NEW FROM WIZARDS (Rob, 2026-09-30): the newest release's precons, one click each, under the head. The slot is drawn
@@ -242,7 +250,7 @@ C.main.innerHTML=(anyDecks?C.pageHead('Decks',compare+b('New deck','new-deck',{}
    used to wrap around them. */
 const picked=picks.includes(d.id);
 /* THE PLAY STATUS, ONE WORD AND A COLOR: To load, Loading, Playable, and Complete for a box of the list's own cards. */
-const badge=d.archived?['draft','Archived']:{complete:['inbox','Complete'],playable:['standin','Playable'],loading:['pull','Loading'],toload:['buy','To load']}[stageOf(d)];
+const badge=d.archived?['draft','Archived']:{complete:['inbox','Complete'],boxed:['standin','Boxed'],loading:['pull','Loading'],toload:['buy','To load']}[stageOf(d)];
 /* ONE CAPTION, EACH FIGURE ONCE: what is still to buy, ordered, ready to add or standing in,
    then the record. The bar is the hundred; a deck with nothing left to do says only how many
    are in the physical deck. */
@@ -255,9 +263,19 @@ const stage=stageOf(d);
 const ci=(C.card(d.commanders[0])?.colorIdentity)||[],tint=/^[WUBRG]$/.test(ci[0]||'')?`--tint:var(--mana-${ci[0]});`:'';
 /* The bracket sits on the poster rather than in a footer row, and the menu joins the compare
    tick in the top-left corner, both quiet until the tile is hovered. */
-return `<article class="cm-deck-tile${picked?' is-picked':''}" style="${tint}">${art(d)?`<img class="cm-deck-art" src="${e(art(d))}" alt="" loading="lazy">`:initials(d)}<span class="cm-tile-tools"><label class="cm-tile-pick" title="Tick to compare this deck"><input type="checkbox" data-action="compare-pick" data-deck="${e(d.id)}"${picked?' checked':''} aria-label="Compare ${e(d.name)}"></label><button type="button" class="cm-icon-button cm-tile-menu-btn" data-action="deck-menu" data-deck="${e(d.id)}" aria-haspopup="menu" aria-label="Deck options for ${e(d.name)}">⋯</button></span>${C.pill(e(badge[1]),badge[0])}<span class="cm-tile-mana">${C.colors(ci)}</span><button data-action="deck" data-deck="${e(d.id)}"><small>${e(d.name)}</small><h3>${e(commander(d)||'Choose a commander')}</h3>${(()=>{const m=mechanicsOf(d);return m.list.length?`<p${m.derived?' class="cm-tile-derived" title="Read from the list. Name your own in Deck Definition."':''}>${e(m.list.join(' · '))}</p>`:'';})()}<span class="cm-tile-ready">${C.readinessBar(r)}<span class="cm-tile-caption"><span>${e(caption.join(' · '))}</span><b>B${d.definition.baseBracket}${scoreOf(latestReport(d))?` · ${e(scoreOf(latestReport(d)))} pts`:''}${d.locked?' · Locked':''}</b></span></span><span class="cm-tile-play" data-play-for="${e(d.id)}" hidden></span></button>${M.isLobbyDeck(d)?`<div class="cm-tile-lobby">${C.pill('Lobby deck','draft')}${b('Save to Decks','promote-lobby-deck',{deck:d.id},false,{cls:'compact'})}</div>`:''}</article>`;}).join('')}<a class="cm-deck-new" href="#new" data-action="new-deck"><span aria-hidden="true">+</span>New deck</a></div>${budgetLine}${footLinks}`:anyDecks?(decks.length?noneHere:'<p class="cm-muted">Every deck here is archived. Tick Show archived to see them.</p>')+footLinks:'');$('#cm-show-archived')?.addEventListener('change',ev=>{showArchived=ev.target.checked;C.render();});$('#cm-decks-sort')?.addEventListener('change',ev=>{location.hash=hashFor('sort',ev.target.value);});$('#cm-show-lobby')?.addEventListener('change',ev=>{C.showLobbyDecks=ev.target.checked;C.render();});
-  /* AI-5: each tile says whether the table can play its deck, where Play is in the cloud (crankmagic-table.js, C.play). */
-  if(C.play?.open())C.play.tiles();};
+return `<article class="cm-deck-tile${picked?' is-picked':''}" data-deck-tile="${e(d.id)}" style="${tint}">${art(d)?`<img class="cm-deck-art" src="${e(art(d))}" alt="" loading="lazy">`:initials(d)}<span class="cm-tile-tools"><label class="cm-tile-pick" title="Tick to compare this deck"><input type="checkbox" data-action="compare-pick" data-deck="${e(d.id)}"${picked?' checked':''} aria-label="Compare ${e(d.name)}"></label><button type="button" class="cm-icon-button cm-tile-menu-btn" data-action="deck-menu" data-deck="${e(d.id)}" aria-haspopup="menu" aria-label="Deck options for ${e(d.name)}">⋯</button></span>${C.pill(e(badge[1]),badge[0])}<span class="cm-tile-mana">${C.colors(ci)}</span><button data-action="deck" data-deck="${e(d.id)}"><small>${e(d.name)}</small><h3>${e(commander(d)||'Choose a commander')}</h3>${(()=>{const m=mechanicsOf(d);return m.list.length?`<p${m.derived?' class="cm-tile-derived" title="Read from the list. Name your own in Deck Definition."':''}>${e(m.list.join(' · '))}</p>`:'';})()}<span class="cm-tile-ready">${C.readinessBar(r)}<span class="cm-tile-caption"><span>${e(caption.join(' · '))}</span><b>B${d.definition.baseBracket}${scoreOf(latestReport(d))?` · ${e(scoreOf(latestReport(d)))} pts`:''}${d.locked?' · Locked':''}</b></span></span><span class="cm-tile-play" data-play-for="${e(d.id)}" hidden></span></button>${M.isLobbyDeck(d)?`<div class="cm-tile-lobby">${C.pill('Lobby deck','draft')}${b('Save to Decks','promote-lobby-deck',{deck:d.id},false,{cls:'compact'})}</div>`:''}</article>`;}).join('')}<a class="cm-deck-new" href="#new" data-action="new-deck"><span aria-hidden="true">+</span>New deck</a></div>${budgetLine}${footLinks}`:anyDecks?(decks.length?noneHere:'<p class="cm-muted">Every deck here is archived. Tick Show archived to see them.</p>')+footLinks:'');$('#cm-show-archived')?.addEventListener('change',ev=>{showArchived=ev.target.checked;C.render();});$('#cm-decks-sort')?.addEventListener('change',ev=>{location.hash=hashFor('sort',ev.target.value);});$('#cm-show-lobby')?.addEventListener('change',ev=>{C.showLobbyDecks=ev.target.checked;C.render();});
+  /* AI-5: each tile says whether the table can play its deck, where Play is in the cloud (crankmagic-table.js, C.play);
+     and the summary, how many of them it can -- once the tiles have asked, so no name is asked twice (the table counts
+     what it is asked for, card demand). */
+  if(C.play?.open())C.play.tiles().then(()=>{
+    /* Playable: the tiles the table cannot play every card of are put away, once it has said so. */
+    if(stage==='playable'){
+      const tiles=[...document.querySelectorAll('[data-deck-tile]')];
+      for(const t of tiles)t.hidden=!t.querySelector('[data-play-for].is-playable');
+      if(tiles.length&&tiles.every(t=>t.hidden))document.querySelector('.cm-deck-grid')?.insertAdjacentHTML('beforebegin',noneHere);
+    }
+    return C.play.count(live);
+  }).then(n=>{const el=document.getElementById('cm-decks-playable');if(el&&n!==null&&n!==undefined)el.textContent=playWords(n);});};
 /* A card's roles: the ones the catalog already carries, or the classifier read fresh from
    the rules text -- the same vocabulary the graph joins cards on, so "ramp" here is the
    ramp the Discover page means. */
@@ -484,7 +502,8 @@ function cardsTab(d,cards,curve,max,types){
   const composition=compositionHTML(cards,curve,max,types);
   /* PLAY, AND WHY (Rob, 2026-10-18): Playable when the box holds the list -- Final and Substitute together -- Loading
      when owned cards cover the rest and only have to be put in, To load when a seat waits on a card not in hand. */
-  const n=v=>v.toLocaleString('en-US'),word=k=>({playable:'Playable',loading:'Loading',toload:'To load'})[k];
+  /* A box that holds a whole hundred is Boxed (Rob, 2026-10-22); Playable is what Play can play (the line above it). */
+  const n=v=>v.toLocaleString('en-US'),word=k=>({playable:'Boxed',loading:'Loading',toload:'To load'})[k];
   const why=ds.play==='playable'?`the box holds ${n(ds.deckTotal)}: Final ${n(ds.final)} + Substitute ${n(ds.substitute)}`
     :precon&&ds.reserved.buy?`buy the precon for the ${n(ds.reserved.buy)} card${ds.reserved.buy===1?'':'s'} you do not own`
     :!ds.locked?'the list is not locked yet'

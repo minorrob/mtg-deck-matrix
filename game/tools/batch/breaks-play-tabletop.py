@@ -37,6 +37,6 @@ BREAKS = [
      'if (el) keep(el.dataset.stageCamera === "tilt"',
      'if (el) String(el.dataset.stageCamera === "tilt"'),
     ('the kept Camera not read back', 'crankmagic-board.js',
-     'const camera = {cards: Math.max(70, Math.min(150, Number(stored("cm-stage-card-size-v2")) || 100)), tilt: stored("cm-board-tilt-v2") === null ? 40 : Math.max(0, Math.min(60, Number(stored("cm-board-tilt-v2")) || 0)), zoom: Math.max(60, Math.min(120, Number(stored("cm-board-zoom-v2")) || 100))};',
+     'const camera = {cards: Math.max(70, Math.min(CAMERA_MAX, Number(stored("cm-stage-card-size-v2")) || 100)), tilt: stored("cm-board-tilt-v2") === null ? 40 : Math.max(0, Math.min(60, Number(stored("cm-board-tilt-v2")) || 0)), zoom: Math.max(60, Math.min(CAMERA_MAX, Number(stored("cm-board-zoom-v2")) || 100))};',
      'const camera = {cards: 100, tilt: 40, zoom: 100};'),
 ]
