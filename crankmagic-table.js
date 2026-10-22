@@ -519,11 +519,32 @@
     const known = names.map(recordByName).filter(Boolean);
     return known.length ? C.colors(WUBRG.filter((x) => known.some((r) => (r.colorIdentity || []).includes(x)))) : "";
   };
-  const aboutOf = (notes, names) => {
-    const text = (String(notes || "").trim() || names.map((n) => (recordByName(n) || {}).oracleText || "").filter(Boolean).join(" · ")).replace(/\s+/g, " ");
-    return text.length > 180 ? `${text.slice(0, 177).replace(/\s+\S*$/, "")}…` : text;
+  /* A library's own record may carry no rules text; the records the app ships may. Failing both, the line waits for the card
+     catalog to fetch the text (`fillAbout`). */
+  const shipped = (n) => (C.catalog && C.catalog.exact ? C.catalog.exact(n) : null) || {};
+  const commanderRules = (n) => (recordByName(n) || {}).oracleText || shipped(n).oracleText || "";
+  const cut = (text) => {const t = String(text || "").replace(/\s+/g, " ").trim(); return t.length > 180 ? `${t.slice(0, 177).replace(/\s+\S*$/, "")}…` : t;};
+  const aboutOf = (notes, names) => cut(String(notes || "").trim() || names.map(commanderRules).filter(Boolean).join(" · "));
+  const deckLines = (name, commanders, notes) => {
+    const about = aboutOf(notes, commanders), waiting = !about && commanders.length;
+    return `<strong>${e(name)}</strong><span class="cm-table-deck-cmdr">${colorsOf(commanders)}<span class="cm-muted">${e(commanders.join(" + "))}</span></span><span class="cm-table-deck-about"${waiting ? ` data-about-for="${e(JSON.stringify(commanders))}"` : ""}>${e(about)}</span>`;
   };
-  const deckLines = (name, commanders, notes) => {const about = aboutOf(notes, commanders); return `<strong>${e(name)}</strong><span class="cm-table-deck-cmdr">${colorsOf(commanders)}<span class="cm-muted">${e(commanders.join(" + "))}</span></span>${about ? `<span class="cm-table-deck-about">${e(about)}</span>` : ""}`;};
+  /* The rules text no record here holds, fetched once a commander through the card catalog (Scryfall, cached), into each row
+     still waiting on it. Nothing is said where it cannot be had. */
+  async function fillAbout() {
+    if (!C.catalog || !C.catalog.details) return;
+    for (const el of document.querySelectorAll("[data-about-for]")) {
+      let names;
+      try {names = JSON.parse(el.dataset.aboutFor);} catch {continue;}
+      const texts = [];
+      for (const n of names) {
+        const known = commanderRules(n);
+        if (known) {texts.push(known); continue;}
+        try {const c = await C.catalog.details(recordByName(n) || shipped(n).name ? {...(recordByName(n) || shipped(n))} : {name: n}, {cheapest: false}); if (c && c.oracleText) texts.push(c.oracleText);} catch {/* the type line stays */}
+      }
+      if (texts.length && el.isConnected) {el.textContent = cut(texts.join(" · ")); el.removeAttribute("data-about-for");}
+    }
+  }
   /* PLAYABLE ONLY (Rob: "include a toggle check box to filter for Playable"): the decks the table can play every card of,
      the rest put away once it has said so -- off until it is ticked, and then remembered on this device. */
   const ONLY_KEY = "cm-table-deck-playable";
@@ -554,6 +575,7 @@
     C.modal(`Choose a deck · Seat ${seatId + 1}`, `<div class="cm-table-deck-choose${onlyPlayable() ? " is-playable-only" : ""}">${only}${shared}${decks.length ? '<h3>Your library decks</h3>' : ''}${list}${empty}</div><div id="cm-table-deck-error" class="cm-note cm-warning" hidden></div><div class="cm-form-footer">${b("Cancel", "close")}</div>`);
     knownCounts(decks);
     checkSharedDecks(current.tableId);
+    fillAbout();
   };
   async function checkSharedDecks(tableId) {
     sharedReady.clear();

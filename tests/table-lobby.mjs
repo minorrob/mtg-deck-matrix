@@ -298,7 +298,14 @@ try {
      decks the table cannot play every card of, remembered on the device. */
   const rows = await rob.page.$$eval("[data-action=table-use-deck]", (bs) => bs.map((b) => ({pips: b.querySelectorAll(".cm-table-deck-cmdr .cm-pip, .cm-table-deck-cmdr .cm-color").length, about: (b.querySelector(".cm-table-deck-about")?.textContent || "").trim()})));
   ok(rows.every((r) => r.pips > 0 && r.about.length > 20), `each library deck's row shows its commanders' colors and a line on what it does (${rows.length} rows; "${rows[0] && rows[0].about.slice(0, 60)}…")`);
-  ok(await rob.page.$$eval("[data-action=table-use-shared-deck]", (bs) => bs.every((b) => b.querySelector(".cm-table-deck-cmdr .cm-pip") && (b.querySelector(".cm-table-deck-about")?.textContent || "").length > 20)), "and each shared deck's too");
+  const sharedRows = await rob.page.$$eval("[data-action=table-use-shared-deck]", (bs) => bs.map((b) => ({name: b.querySelector("strong").textContent, pips: b.querySelectorAll(".cm-table-deck-cmdr .cm-pip, .cm-table-deck-cmdr .cm-color").length, about: (b.querySelector(".cm-table-deck-about")?.textContent || "").trim()})));
+  /* A shared deck's line is its commanders' rules text: the records the app ships hold most; the rest the card catalog
+     fetches from Scryfall, which this sandbox answers only for the shipped records (scryfall-stub.mjs), so those wait. */
+  const shippedText = new Set(JSON.parse(readFileSync(path.join(ROOT, "data", "cards.json"), "utf8")).cards.filter((c) => c.oracleText).map((c) => c.name));
+  const sharedDecks = JSON.parse(readFileSync(path.join(ROOT, "tests", "fixtures", "shared-staging-decks.json"), "utf8")).decks;
+  const told = sharedRows.filter((r) => sharedDecks.find((d) => d.name === r.name)?.commander.every((c) => shippedText.has(c)));
+  ok(sharedRows.every((r) => r.pips > 0) && told.length >= 3 && told.every((r) => r.about.length > 20),
+    `and each shared deck's colors, and what its commander does wherever its text is to be had (${told.map((r) => r.name).join(", ")}; waiting: ${sharedRows.filter((r) => !r.about).map((r) => r.name).join(", ")})`);
   const visible = () => rob.page.$$eval(".cm-table-deck", (bs) => bs.filter((b) => b.offsetParent !== null).length);
   const allRows = await visible();
   ok(!(await rob.page.isChecked("[data-table-deck-playable]")), "Playable is off until it is ticked");

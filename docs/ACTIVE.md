@@ -21,12 +21,20 @@ needed."* So the take-back is a gesture with no button or instructions.
     table in Full screen; each card another seat casts or plays is held up at the left for ten seconds (or its ✕); the two
     priority checkboxes at their own size, words bold; brighter outline on what you can use; the tabletop's Cards and Zoom
     to 200%; the commander tax moved below the title bar.
+- **And Rob's Oct 22 notes, same PR:** on Decks, "Playable" means playable on Play (the summary counts the decks the table
+  plays every card of, `C.play.count`, with no "$ to finish them all"), and the chips are Playable (in the app, where Play
+  is in the cloud) and Boxed Decks (the physically playable stage; its badge and deck-page word are now Boxed). The lobby's
+  deck chooser shows each row's commander colors and what the deck does (its notes, else its commanders' rules text,
+  fetched through the card catalog when no record here holds it), and a Playable checkbox, off until ticked, remembered.
 - **Proven here (cloud container):** `tests/room-lands-and-aims.mjs` 39 checks, `breaks-lands-and-aims.py` 15 of 15;
-  `tests/board-fullscreen-notes.mjs` 31 checks (Chromium), `breaks-board-fullscreen-notes.py` 14 of 14; the room and engine
-  suites (`room-*`, `game-table`, `game-room`, `game-replay`, `engine-play`, `engine-room-games`, `card-demand`),
-  `feature-wiring`, `data-integrity`, `asset-versions`.
+  `tests/board-fullscreen-notes.mjs` 31 checks (Chromium), `breaks-board-fullscreen-notes.py` 14 of 14; every board
+  browser suite green after its updates (`table-board`, `a11y-board`, `table-tabletop`, `table-camera-layout`,
+  `table-shared-shell`, the `board-*` suites); `table-lobby` 131 checks, `decks-hub`, `card-states-screens`; the room and
+  engine suites, `feature-wiring`, `data-integrity`, `asset-versions`. Three suites need
+  `NODE_PATH=/opt/node-tools/node_modules` in this container (`tools/play-tabletop-preview.mjs` requires
+  `playwright-core`).
 - **Not proven:** a game with Rob at the table on staging; Forge (none of this touches it).
-- **Outstanding:** the board's other browser suites and CI on the PR; then main and staging (`tools/release-staging.sh`).
+- **Outstanding:** CI on the PR; then main and staging (`tools/release-staging.sh`).
 
 ## Library card load, 2026-10-21 (a Claude cloud session, for Rob; PR #816, `claude/focused-feynman-tt20o3`)
 
