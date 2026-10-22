@@ -342,6 +342,9 @@ const TRIGGERS = {
     ...(t.defender ? {defender: t.defender} : {}), ...(t.planeswalkers === true ? {planeswalkers: true} : {}), ...(t.atLeast ? {atLeast: t.atLeast} : {}),
     /* "Whenever Aurelia attacks for the first time each turn" (rules/trigger.mjs). */
     ...(t.firstTime ? {firstTime: true} : {}),
+    /* "Whenever this creature attacks while saddled" (Bounding Felidar; CR 702.171b): `while`, a condition asked as it
+       attacks and never again -- a trigger condition, not an intervening "if" (CR 603.4; rules/trigger.mjs). */
+    ...(t.while !== undefined ? {while: t.while} : {}),
     /* "Whenever a creature you control attacks alone" (Thoughtweft Imbuer; CR 506.5): the only creature declared. */
     ...(t.alone === true ? {alone: true} : {})} : null),
   /* "Whenever this Vehicle attacks or blocks" (Smuggler's Copter; CR 509.3a): "whenever [a creature] blocks" -- once each
@@ -732,6 +735,18 @@ export function compileScript(script) {
       keywords.push("Crew");
       return;
     }
+    /* SADDLE N (CR 702.171a; Bounding Felidar, library load L4): "Tap any number of other untapped creatures you control with
+       total power N or greater: This permanent becomes saddled until end of turn. Saddle only as a sorcery" -- crew's cost
+       (rules/actions.mjs, crewChoices: other creatures, a summoning-sick one among them; `saddle`, never "crews Vehicles as
+       though"), and the designation an effect on this object until end of turn (keywords/designations.mjs, isSaddled). */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "saddle") {
+      if (!(Number.isInteger(ability.amount) && ability.amount >= 0)) problems.push(`${ability.text}: saddle needs its number`);
+      if (!(identity.subtypes ?? []).includes("Mount")) problems.push(`${ability.text}: saddle on a card that is not a Mount`);
+      abilities.push({id, kind: "activated", text: ability.text, cost: [{atom: "crew", power: ability.amount ?? 0, saddle: true}], timing: "sorcery",
+        effects: [{effect: "effectUntil", rule: "saddled", targets: "self", until: "end-of-turn"}]});
+      keywords.push("Saddle");
+      return;
+    }
     /* A SAGA'S REMINDER LINE (CR 714.3a): "As this Saga enters and after your draw step, add a lore counter" -- the lore
        counter it enters with; the one after the draw step is rules/turn.mjs's, and "sacrifice after III" rules/sba.mjs's. */
     if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "saga") {
@@ -974,6 +989,17 @@ export function compileScript(script) {
       abilities.push({id, kind: "triggered", text: ability.text, trigger: {on: "GameEventBlockersDeclared", blockedBy: true, who: "self", filter: {types: ["Creature"], nonKeywords: ["Flanking"]}},
         effects: [{effect: "pump", targets: "that card", power: -1, toughness: -1}]});
       keywords.push("Flanking");
+      return;
+    }
+    /* BUSHIDO N (CR 702.45a; Hand of Honor, library load L4): "Whenever this creature blocks or becomes blocked, it gets +N/+N
+       until end of turn" -- the keyword IS that triggered ability, once as it is declared a blocker (CR 509.3a) or once as it
+       becomes blocked, however many block it (509.3c; rules/trigger.mjs, `blocksOrBlocked`). Each instance triggers
+       separately (702.45b). */
+    if (word === "bushido") {
+      if (!(Number.isInteger(ability.amount) && ability.amount >= 1)) problems.push(`${ability.text}: bushido needs its number, 1 or more`);
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: {on: "GameEventBlockersDeclared", blocksOrBlocked: true, who: "self"},
+        effects: [{effect: "pump", targets: "self", power: ability.amount ?? 0, toughness: ability.amount ?? 0}]});
+      keywords.push("Bushido");
       return;
     }
     /* RIOT (CR 702.136a; Ghor-Clan Wrecker): "You may have this permanent enter with an additional +1/+1 counter on it. If you

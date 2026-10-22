@@ -1,0 +1,264 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Teysa, Envoy of Ghosts",
+  "fixtures": {
+    "Their Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Their Beast": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Beast"
+      ],
+      "manaCost": "{4}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Maya's Bear deals Rob 2 combat damage: it is destroyed, and Rob makes a 1/1 white and black flying Spirit",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Teysa, Envoy of Ghosts"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Their Bear"
+          ],
+          "at": "Rob"
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 38
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Their Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Teysa, Envoy of Ghosts",
+            "Spirit"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Protection from creatures: no creature blocks it, and attacking does not tap it (vigilance)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Teysa, Envoy of Ghosts"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Teysa, Envoy of Ghosts"
+          ]
+        },
+        {
+          "block": [],
+          "blockers": []
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Teysa, Envoy of Ghosts",
+              "is": false
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 36
+        }
+      ]
+    },
+    {
+      "name": "It blocks a 5/5: the Beast's damage is prevented, Teysa survives; damage to Rob's creature triggers nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Teysa, Envoy of Ghosts"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Beast"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Their Beast"
+          ],
+          "at": "Rob"
+        },
+        {
+          "block": [
+            [
+              "Teysa, Envoy of Ghosts",
+              "Their Beast"
+            ]
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Teysa, Envoy of Ghosts"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Their Beast"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Rob's own Bear dealing combat damage to Maya triggers nothing (only damage to you)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Teysa, Envoy of Ghosts",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Bear"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Teysa, Envoy of Ghosts",
+            "Bear"
+          ]
+        }
+      ]
+    }
+  ]
+}

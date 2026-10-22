@@ -242,6 +242,10 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
   /* Wave 4c, k2: delve (CR 702.66a; Treasure Cruise, Dig Through Time), cards of the graveyard exiled to pay generic mana as a
      spell is cast (rules/actions.mjs). */
   "delve",
+  /* Library load L4: bushido (CR 702.45; Hand of Honor), a triggered ability as it blocks or becomes blocked (cards/index.mjs); and
+     saddle (CR 702.171; Bounding Felidar), crew's cost making a Mount saddled until end of turn (cards/index.mjs). */
+  "bushido",
+  "saddle",
   /* And dredge (CR 702.52a; Life from the Loam), a draw replaced from the graveyard, its player's choice (script/effects/zones.mjs). */
   "dredge"];
 

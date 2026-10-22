@@ -1,0 +1,194 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Atarka, World Render",
+  "fixtures": {
+    "Whelp": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Dragon"
+      ],
+      "manaCost": "{1}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Their Whelp": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Dragon"
+      ],
+      "manaCost": "{1}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Atarka, a Dragon and a Bear attack: both Dragons gain double strike, the Bear does not -- 12 + 4 + 2",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Atarka, World Render",
+            "Whelp",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Atarka, World Render",
+            "Whelp",
+            "Bear"
+          ]
+        },
+        {
+          "settle": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Atarka, World Render",
+                "has": [
+                  "Double Strike"
+                ],
+                "lacks": []
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Whelp",
+                "has": [
+                  "Double Strike"
+                ],
+                "lacks": []
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Bear",
+                "has": [],
+                "lacks": [
+                  "Double Strike"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 22
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Atarka, World Render",
+            "has": [
+              "Double Strike"
+            ],
+            "lacks": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Until end of turn, and only Rob's Dragons: Maya's Dragon attacking gains nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Atarka, World Render"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Whelp"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Atarka, World Render",
+                "has": [],
+                "lacks": [
+                  "Double Strike"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "attack": [
+            "Their Whelp"
+          ],
+          "at": "Rob"
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 38
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

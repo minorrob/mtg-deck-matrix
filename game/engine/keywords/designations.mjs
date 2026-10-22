@@ -20,14 +20,19 @@
  * have the city's blessing" is the condition `citysBlessing` (script/condition.mjs). Its holder carries `citysBlessing:
  * true`, and no one else the key. Continuous effects are applied again after it is gained (702.131d): the layers here
  * derive every characteristic as it is asked, and the check that records it derives afresh after.
+ *
+ * SADDLE (CR 702.171; Bounding Felidar, library load L4) gives a permanent a designation, not a player: its activated ability
+ * (cards/index.mjs; crew's cost, other creatures tapped) makes the Mount saddled until end of turn -- an effect on that object
+ * (`rule: "saddled"`), so it ends at cleanup (CR 514.2) and stays behind as the permanent leaves the battlefield (702.171b,
+ * 400.7). "Whenever this creature attacks while saddled" asks it as it attacks (the condition `saddled`, script/condition.mjs).
  */
-import {keywordsOf, controllerOf, deriving} from "../rules/layers.mjs";
+import {keywordsOf, controllerOf, deriving, staticAffects} from "../rules/layers.mjs";
 import {matchesSelector} from "../script/filter.mjs";
 
 /** The family of §3.1, so `engine-coverage` counts these as behavior and not as words. */
 export const KEYWORD_FAMILIES = Object.freeze({
   /** What a player comes to have: Storied's enduring story (CR 702.195), ascend's city's blessing (CR 702.131). */
-  designations: Object.freeze(["Storied", "Ascend"]),
+  designations: Object.freeze(["Storied", "Ascend", "Saddle"]),
 });
 
 /* An artifact, a Saga or a legendary permanent, as it is now (layers 4 and its supertypes). */
@@ -57,6 +62,9 @@ export function enduringStories(state) {
     return events;
   });
 }
+
+/** Whether a permanent is saddled now (CR 702.171b): its saddle ability's effect, on this object, has not ended. */
+export const isSaddled = (state, id) => (state.effects ?? []).some((effect) => effect.rule === "saddled" && staticAffects(state, effect, id, effect.sourceController));
 
 /* ---- the city's blessing (CR 702.131) ---- */
 

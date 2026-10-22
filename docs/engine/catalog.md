@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,554 defined and playable today; 2,824 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,560 defined and playable today; 2,825 with every
 mechanic built, so only their definitions are left to write; 25 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 78 | 0 | 6 | 110 |
+| Keyword abilities (CR 702) | 194 | 80 | 0 | 6 | 108 |
 | Keyword actions (CR 701) | 70 | 22 | 5 | 1 | 42 |
 | Effects | 192 | 78 | 2 | 1 | 111 |
 | Triggers | 138 | 26 | 4 | 1 | 107 |
@@ -36,7 +36,7 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 9 | 62 |
+| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 9 | 61 |
 | count | What entered or died this turn | — | missing | 9 | 9 |
 | effect | RingTemptsYou | — | missing | 8 | 11 |
 | effect | ChoosePlayer | — | missing | 6 | 8 |
@@ -46,7 +46,7 @@ The things that alone hold back the most of the most-played cards.
 | count | Times this resolved this turn | — | missing | 5 | 7 |
 | keyword ability | Cascade | — | missing | 5 | 5 |
 | trigger | AbilityCast | — | missing | 5 | 5 |
-| option | Remembering what an effect moved | — | missing | 4 | 58 |
+| option | Remembering what an effect moved | — | missing | 4 | 57 |
 | count | Your life total | — | missing | 4 | 10 |
 | count | Amount | — | missing | 4 | 8 |
 | option | Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 4 | 7 |
@@ -172,12 +172,12 @@ The things that alone hold back the most of the most-played cards.
 | 702.176 | Impending | — | named | 1 | 6 | 1 | 1 |
 | 702.192 | Paradigm | Paradigm | built | 1 | 5 | 0 | 0 |
 | 702.168 | Disguise | Disguise | built | 0 | 47 | 0 | 0 |
-| 702.45 | Bushido | — | missing | 0 | 37 | 0 | 0 |
+| 702.45 | Bushido | Bushido | built | 0 | 37 | 0 | 0 |
 | 702.18 | Shroud | Shroud | built | 0 | 37 | 0 | 0 |
 | 702.140 | Mutate | — | missing | 0 | 34 | 0 | 0 |
 | 702.146 | Disturb | — | missing | 0 | 32 | 0 | 0 |
 | 702.42 | Entwine | — | missing | 0 | 32 | 0 | 0 |
-| 702.171 | Saddle | — | missing | 0 | 32 | 0 | 0 |
+| 702.171 | Saddle | Saddle | built | 0 | 32 | 0 | 0 |
 | 702.25 | Flanking | Flanking | built | 0 | 30 | 0 | 0 |
 | 702.31 | Horsemanship | — | missing | 0 | 29 | 0 | 0 |
 | 702.190 | Sneak | Sneak | built | 0 | 27 | 0 | 0 |
@@ -826,14 +826,14 @@ The things that alone hold back the most of the most-played cards.
 | You may, decided by a named player | modal (Yes / No) | partial | 176 | 1499 | 0 | 0 |
 | An effect's condition: if a permanent is present | an effect's condition {present ...} | built | 142 | 1292 | 0 | 0 |
 | Fewer targets than the most ("up to", "any number of") | a target's count {min, max} (script/bind.mjs), picked as a pick-several | built | 126 | 1672 | 0 | 0 |
-| Remembering what an effect moved | — | missing | 124 | 1168 | 58 | 4 |
+| Remembering what an effect moved | — | missing | 124 | 1168 | 57 | 4 |
 | More than one target of a kind ("up to N") | a target's count {min, max} (script/bind.mjs); a count that is X is not built | partial | 123 | 1664 | 0 | 0 |
-| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 62 | 9 |
+| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 61 | 9 |
 | An intervening "if" or "activate only if": a permanent present | condition {present: selector} | built | 114 | 1200 | 0 | 0 |
 | How long an effect lasts (until end of turn is built; others not) | — | partial | 111 | 1658 | 0 | 0 |
 | An effect's condition: a comparison | a count compared: an arrival's unless {min, max}; a condition's {atLeast, atMost} | built | 104 | 684 | 0 | 0 |
 | You may (an optional effect, CR 603.5) | modal (Yes / No) | built | 101 | 1094 | 0 | 0 |
-| You may play or cast a card from another zone | — | missing | 99 | 625 | 43 | 1 |
+| You may play or cast a card from another zone | — | missing | 99 | 625 | 42 | 1 |
 | An intervening "if" or "activate only if": a counted value | condition {compare} | built | 79 | 974 | 0 | 0 |
 | An effect's condition: a counted value | condition {compare: {count, atLeast / atMost / moreThan / fewerThan}} | built | 75 | 603 | 0 | 0 |
 | Unless a player pays | unlessPays, by kind | partial | 66 | 677 | 0 | 0 |
