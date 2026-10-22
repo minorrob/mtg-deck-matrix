@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,546 defined and playable today; 2,820 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,547 defined and playable today; 2,820 with every
 mechanic built, so only their definitions are left to write; 25 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 78 | 0 | 6 | 110 |
+| Keyword abilities (CR 702) | 194 | 78 | 0 | 7 | 109 |
 | Keyword actions (CR 701) | 70 | 22 | 5 | 1 | 42 |
 | Effects | 192 | 78 | 2 | 1 | 111 |
 | Triggers | 138 | 26 | 4 | 1 | 107 |
@@ -141,7 +141,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.24 | Cumulative Upkeep | — | named | 1 | 80 | 0 | 0 |
 | 702.27 | Buyback | — | missing | 1 | 40 | 1 | 0 |
 | 702.36 | Fear | Fear | built | 1 | 40 | 0 | 0 |
-| 702.170 | Plot | — | missing | 1 | 33 | 1 | 1 |
+| 702.170 | Plot | — | named | 1 | 33 | 1 | 1 |
 | 702.47 | Splice | — | missing | 1 | 30 | 1 | 1 |
 | 702.127 | Aftermath | — | missing | 1 | 27 | 1 | 1 |
 | 702.80 | Wither | — | missing | 1 | 27 | 1 | 1 |
