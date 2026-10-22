@@ -9,17 +9,17 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1552,
+  "defined": 1558,
   "provisional": 25,
-  "everyRule": 2822
+  "everyRule": 2823
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 78,
+    "built": 80,
     "partial": 0,
     "named": 7,
-    "missing": 109
+    "missing": 107
    },
    "entries": [
     {
@@ -1418,8 +1418,8 @@
      "kind": "keyword ability",
      "rule": "702.45",
      "name": "Bushido",
-     "engine": null,
-     "status": "missing",
+     "engine": "Bushido",
+     "status": "built",
      "forge": "Bushido",
      "top": 0,
      "all": 37,
@@ -1478,8 +1478,8 @@
      "kind": "keyword ability",
      "rule": "702.171",
      "name": "Saddle",
-     "engine": null,
-     "status": "missing",
+     "engine": "Saddle",
+     "status": "built",
      "forge": "Saddle",
      "top": 0,
      "all": 32,
@@ -8925,7 +8925,7 @@
      "forge": "RememberChanged",
      "top": 124,
      "all": 1168,
-     "blocks": 59,
+     "blocks": 58,
      "alone": 4
     },
     {
@@ -8949,7 +8949,7 @@
      "forge": "RememberObjects",
      "top": 123,
      "all": 1460,
-     "blocks": 63,
+     "blocks": 62,
      "alone": 9
     },
     {
@@ -9009,7 +9009,7 @@
      "forge": "MayPlay",
      "top": 99,
      "all": 625,
-     "blocks": 43,
+     "blocks": 42,
      "alone": 1
     },
     {

@@ -186,7 +186,11 @@ export async function heldOutSample(job) {
   const pool = scripts.filter((s) => isSimple(s) && scenarios.get(s.identity.name)?.scenarios?.length && oracle.has(s.identity.name))
     .map((s) => ({script: s, record: oracle.get(s.identity.name)}))
     .map((x) => ({...x, assist: assistOf(x.record, {library, trust, except: x.script.identity.name})}))
-    .filter((x) => x.assist)
+    /* A card the library writes half an ability of -- a sentence it knows that is no whole ability of the card (Gemstone
+       Caverns' "{T}: Add {C}.", whose ability goes on "If ..., instead add one mana of any color") -- asks the writer for
+       the rest as an ability of its own, which no answer makes faithful: it measures the library's sentences, not the
+       writer, and is not sampled (found by the library load's L4 lane, 2026-10-21). */
+    .filter((x) => x.assist && x.assist.known.every((k) => x.script.abilities.some((a) => a.text === k.text)))
     .sort((a, b) => (a.script.identity.name < b.script.identity.name ? -1 : 1));
   const step = Math.max(1, Math.floor(pool.length / Math.max(1, n)));
   const chosen = pool.filter((_, i) => i % step === 0).slice(0, n);

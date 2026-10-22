@@ -16,21 +16,6 @@
       "power": 2,
       "toughness": 2
     },
-    "Black Knight": {
-      "types": [
-        "Creature"
-      ],
-      "subtypes": [
-        "Human",
-        "Knight"
-      ],
-      "manaCost": "{B}{B}",
-      "colors": [
-        "B"
-      ],
-      "power": 2,
-      "toughness": 2
-    },
     "Rock": {
       "types": [
         "Artifact"
