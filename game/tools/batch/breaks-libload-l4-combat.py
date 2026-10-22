@@ -1,6 +1,6 @@
 # Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE.
 # The library load's combat lane (L4, 2026-10-21): one break per engine change. python3 game/tools/batch/breaks.py <this file>
-SUITES = ['tests/engine-libload-l4-combat.mjs', 'tests/engine-cards.mjs', 'tests/engine-vocabulary.mjs']
+SUITES = ['tests/engine-libload-l4-combat.mjs', 'tests/engine-cards.mjs', 'tests/engine-vocabulary.mjs', 'tests/engine-compile.mjs']
 
 COMBAT = 'game/engine/rules/combat.mjs'
 KEYWORDS = 'game/engine/keywords/combat.mjs'
@@ -84,4 +84,8 @@ BREAKS = [
     ('saddle as a sorcery', INDEX, 'cost: [{atom: "crew", power: ability.amount ?? 0, saddle: true}], timing: "sorcery",', 'cost: [{atom: "crew", power: ability.amount ?? 0, saddle: true}],'),
     ('saddle not crewing as though', ACTIONS, 'a.rule === "crews-with-more" && !saddle)', 'a.rule === "crews-with-more")'),
     ('saddle a keyword', 'game/engine/vocabulary.mjs', '  "saddle",\n', ''),
+
+    # The writer's held-out sample: no card the library writes half an ability of (Gemstone Caverns)
+    ('sample: whole abilities known', 'game/tools/engine-compile.mjs',
+     '.filter((x) => x.assist && x.assist.known.every((k) => x.script.abilities.some((a) => a.text === k.text)))', '.filter((x) => x.assist)'),
 ]
