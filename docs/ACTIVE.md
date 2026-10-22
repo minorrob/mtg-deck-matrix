@@ -42,6 +42,10 @@ needed."* So the take-back is a gesture with no button or instructions.
   node process runs out of memory in this container, on main too -- CI runs it), so of the 9 breaks re-anchored on this PR's
   lines, 8 were caught here and the ninth, "the kept Camera not read back" (`breaks-play-tabletop.py`, which only that
   suite catches), was not re-run.
+- **CI after the merge (#835):** the first Actions run of the suites on main's code failed one check of
+  `tests/board-fullscreen-notes.mjs`, "its single click waits out the double-click": it looked for the tap a round trip
+  after the click, and a busy runner's round trip passed the board's 300 ms. The check now times the click to its act
+  inside the page (still caught by its break); `table-tabletop` was green there.
 - **Outstanding:** play-e2e's sixth step (Rob concedes as the game begins) failed once in the first release walk, `/concede`
   answering without a table, and passed on two re-runs of the same commit: a race between a concede and the alarm's launch,
   not yet chased.

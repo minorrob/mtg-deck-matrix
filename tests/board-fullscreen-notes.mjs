@@ -87,12 +87,16 @@ try {
     eq(acts(), [[2]], `${mode}: a double-click on the Island just played sends its take-back, and nothing else`);
     await show(played());
     sent.length = 0;
-    /* One click, as the browser counts it (detail 1), and a look 80 ms later, inside the double-click's time. */
-    await page.evaluate((id) => new Promise((done) => {document.querySelector(`#cm-board .cm-bcard[data-card='${id}'][data-action=board-card]`).dispatchEvent(new MouseEvent("click", {bubbles: true, cancelable: true, detail: 1})); setTimeout(done, 80);}), PLAYED);
-    await page.waitForTimeout(20);
-    const soon = acts().length;
-    await page.waitForTimeout(600);
-    eq(soon, 0, `${mode}: its single click waits out the double-click`);
+    /* One click, as the browser counts it (detail 1), timed in the page from the click to its act leaving the socket: a
+       look from here, a round trip later, read a busy CI runner's latency as the board's (Actions, 2026-10-22). */
+    const after = await page.evaluate((id) => new Promise((done) => {
+      const send = WebSocket.prototype.send, t0 = performance.now(), stop = (ms) => {WebSocket.prototype.send = send; done(ms);};
+      WebSocket.prototype.send = function (data) {if (JSON.parse(data).type === "act") stop(Math.round(performance.now() - t0)); return send.call(this, data);};
+      document.querySelector(`#cm-board .cm-bcard[data-card='${id}'][data-action=board-card]`).dispatchEvent(new MouseEvent("click", {bubbles: true, cancelable: true, detail: 1}));
+      setTimeout(() => stop(null), 3000);
+    }), PLAYED);
+    ok(after !== null && after >= 280, `${mode}: its single click waits out the double-click (its act sent ${after} ms after it)`);
+    for (let i = 0; i < 125 && !acts().length; i += 1) await page.waitForTimeout(20);
     eq(acts(), [[1]], `${mode}: and then taps it for mana`);
     if (mode === "full") {
       /* ---- 3. the actions, large, over the table ---- */
