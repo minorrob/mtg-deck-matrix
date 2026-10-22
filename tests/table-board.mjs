@@ -1013,7 +1013,8 @@ try {
   await shot(firstBoard.page, "resolve-" + (firstBoard === rob ? "1400" : "1280"));
   await chooseView(firstBoard.page,"full");
   await firstBoard.page.locator('.cm-stage-region[data-renderer="webgl"]').waitFor();
-  await firstBoard.page.click('.cm-stage-top [data-action=board-pass]');
+  /* In Full screen the pass stands large over the table, not in the strip (Rob's fullscreen notes, Oct 21). */
+  await firstBoard.page.click('.cm-stage-actions [data-action=board-pass]');
   await waitText(second.page, ".cm-board-mat .cm-board-field", new RegExp(castName));
   ok(true, "the tabletop resolves a spell through the real room and the other browser receives its permanent");
   await fullTools(firstBoard.page);
