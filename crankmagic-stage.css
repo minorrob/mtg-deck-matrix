@@ -406,3 +406,12 @@
 /* The two choices in Settings: a checkbox of its own size, the words as the Card size label is set, bold and light. */
 .cm-board-hold{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:12px;font-weight:700;color:var(--v-ink);cursor:pointer}
 #matrix-v2 .cm-board-hold input[type=checkbox]{flex:none;width:16px;height:16px;min-width:0;min-height:0;margin:0;padding:0;accent-color:var(--v-accent)}
+/* THE LOBBY'S DECK CHOOSER (Rob, 2026-10-22): each row its commanders' colors and what the deck does; and Playable, which
+   puts away the decks the table cannot play every card of -- a library deck with cards to learn, a shared deck not
+   available on this server -- once it has said so. */
+.cm-table-deck-cmdr{display:flex;align-items:center;gap:6px;min-width:0}
+.cm-table-deck-cmdr .cm-pip{width:16px;height:16px}
+.cm-table-deck-about{font-size:12px;line-height:1.35;color:var(--v-muted)}
+.cm-table-deck-only{margin:0 0 10px}
+.cm-table-deck-choose.is-playable-only li:has(>.cm-table-deck.is-unknown),
+.cm-table-deck-choose.is-playable-only li:has(>.cm-table-deck[data-shared-deck]:disabled){display:none}

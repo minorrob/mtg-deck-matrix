@@ -294,6 +294,21 @@ try {
   ok(counts.some((t) => /^\d+ of \d+ known · \d+ to learn$/.test(t)) && counts.some((t) => /^All \d+ cards known$/.test(t)),
     `each deck says how much of it the table can play: "${counts.find((t) => /to learn/.test(t))}", "${counts.find((t) => /^All/.test(t))}"`);
   eq(await rob.page.locator("[data-action=table-use-test-deck]").count(), 0, "this table is not a playtest table, so the basic lands test deck is not offered (staging's are: tests/uat/play-e2e.mjs)");
+  /* Each row its commanders' colors and what the deck does (Rob, 2026-10-22), and Playable, off until ticked, puts away the
+     decks the table cannot play every card of, remembered on the device. */
+  const rows = await rob.page.$$eval("[data-action=table-use-deck]", (bs) => bs.map((b) => ({pips: b.querySelectorAll(".cm-table-deck-cmdr .cm-pip, .cm-table-deck-cmdr .cm-color").length, about: (b.querySelector(".cm-table-deck-about")?.textContent || "").trim()})));
+  ok(rows.every((r) => r.pips > 0 && r.about.length > 20), `each library deck's row shows its commanders' colors and a line on what it does (${rows.length} rows; "${rows[0] && rows[0].about.slice(0, 60)}…")`);
+  ok(await rob.page.$$eval("[data-action=table-use-shared-deck]", (bs) => bs.every((b) => b.querySelector(".cm-table-deck-cmdr .cm-pip") && (b.querySelector(".cm-table-deck-about")?.textContent || "").length > 20)), "and each shared deck's too");
+  const visible = () => rob.page.$$eval(".cm-table-deck", (bs) => bs.filter((b) => b.offsetParent !== null).length);
+  const allRows = await visible();
+  ok(!(await rob.page.isChecked("[data-table-deck-playable]")), "Playable is off until it is ticked");
+  await rob.page.check("[data-table-deck-playable]");
+  const playableRows = await visible(), unplayable = await rob.page.locator(".cm-table-deck.is-unknown, .cm-table-deck[data-shared-deck]:disabled").count();
+  ok(unplayable > 0 && playableRows === allRows - unplayable && await rob.page.$$eval(".cm-table-deck.is-unknown, .cm-table-deck[data-shared-deck]:disabled", (bs) => bs.every((b) => b.offsetParent === null)),
+    `ticked, Playable puts away the ${unplayable} decks the table cannot play every card of (${playableRows} of ${allRows} left)`);
+  eq(await rob.page.evaluate(() => localStorage.getItem("cm-table-deck-playable")), "on", "and it is remembered on the device");
+  await rob.page.uncheck("[data-table-deck-playable]");
+  eq(await visible(), allRows, "unticked, every deck is back");
   /* Find a deck with the refused card by trying them in turn until one is refused, then one that is not. */
   let refusedSeen = false, chosen = null;
   for (let i = 0; i < deckCount && (!refusedSeen || !chosen); i += 1) {
@@ -595,7 +610,21 @@ try {
     eq(tiles.map(([id, text, good]) => [id, text, good]).sort(),
       listed.map((d) => {const n = refused.get(d.id); return [d.id, n ? `${n} card${n === 1 ? "" : "s"} to learn for the table` : "Playable at the table", !n];}).sort(),
       "each deck's tile says whether the table can play it: Playable at the table, or how many of its cards are still to learn");
+    /* The summary under Decks counts the same: playable means playable on Play (Rob, 2026-10-22), and it names no cost to
+       finish them all. */
+    await olu.page.waitForFunction(() => document.getElementById("cm-decks-playable")?.textContent, null, {timeout: 10000});
+    const summary = (await olu.page.textContent(".cm-decks-summary")).replace(/\s+/g, " ").trim(), n = playableIds.length;
+    const nWord = n <= 10 ? ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"][n] : String(n);
+    ok(summary.includes(`, ${nWord} playable.`) && !/\$|to finish/.test(summary), `the summary under Decks counts the decks the table plays whole, ${nWord}, and no cost to finish them all ("${summary}")`);
     eq(asked, ["POST"], "and the hub asked the table once, for every deck at once (POST /api/tables/known)");
+    /* The Playable chip, beside Boxed Decks: the decks the table plays whole, the rest put away once it has answered. */
+    eq(await olu.page.$$eval(".cm-decks-stages a", (as) => as.map((a) => a.textContent)).then((t) => t.filter((x) => /Playable|Boxed/.test(x))), ["Playable", "Boxed Decks"],
+      "the hub offers Playable (in the app) and Boxed Decks (the box), side by side");
+    await olu.page.locator(".cm-decks-stages a", {hasText: "Playable"}).click();
+    await olu.page.waitForFunction((n) => document.querySelectorAll("[data-deck-tile]:not([hidden])").length === n && [...document.querySelectorAll("[data-deck-tile]")].some((t) => t.hidden), playableIds.length, {timeout: 15000});
+    eq((await olu.page.$$eval("[data-deck-tile]:not([hidden])", (ts) => ts.map((t) => t.dataset.deckTile))).sort(), [...playableIds].sort(),
+      `Playable shows exactly the ${playableIds.length} decks the table plays every card of`);
+    await olu.page.goto(`${base}/index.html#decks`);
     await shot(olu.page, "decks-playable-1400");
     /* The deck page: the line, and Play this deck only where the table plays every card. */
     const deckLine = async (id) => {
