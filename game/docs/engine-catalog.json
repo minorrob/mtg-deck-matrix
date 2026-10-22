@@ -9,7 +9,7 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1560,
+  "defined": 1561,
   "provisional": 25,
   "everyRule": 2825
  },
@@ -18,8 +18,8 @@
    "tally": {
     "built": 80,
     "partial": 0,
-    "named": 6,
-    "missing": 108
+    "named": 7,
+    "missing": 107
    },
    "entries": [
     {
@@ -1047,7 +1047,7 @@
      "rule": "702.170",
      "name": "Plot",
      "engine": null,
-     "status": "missing",
+     "status": "named",
      "forge": "Plot",
      "top": 1,
      "all": 33,

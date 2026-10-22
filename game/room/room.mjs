@@ -302,6 +302,12 @@ export function offerDetails(state, seat, actions) {
     if (a.kind === "cast" && a.disguise) parts.push(faceDownWay(state.objects[a.objectId]?.abilities)?.rule === "morph" ? "face down for {3}, a 2/2 with no text" : "face down for {3}, a 2/2 with ward {2}");
     /* Suspended from the hand (CR 702.62a): its words ("Suspend 5--{W}"), and the mana that pays, when that is a choice. */
     if (a.kind === "suspend") parts.push(a.payWith !== undefined ? `${a.text ?? "suspend"}, paying ${paymentWords(a.payment)}` : a.text ?? "suspend");
+    /* Plotted from the hand (CR 702.170a): its words without their reminder ("Plot {1}{B}"), and the mana that pays, when that is
+       a choice. */
+    if (a.kind === "plot") {
+      const words = (a.text ?? "Plot").replace(/\s*\([^)]*\)\s*$/, "");
+      parts.push(a.payWith !== undefined ? `${words}, paying ${paymentWords(a.payment)}` : words);
+    }
     /* A counted target (script/bind.mjs): what is still to be picked ("up to two targets"), or the ones picked. */
     const aimed = (t) => (!t ? "" : Array.isArray(t) ? (t.length ? t.map(aimed).join(" and ") : "no target") : t.kind === "choose" ? countWords(t)
       : t.kind === "player" ? player(t.id) : t.kind === "ability" ? targetName(state, t) : object(t.id, plain));

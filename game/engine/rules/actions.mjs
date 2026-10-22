@@ -393,6 +393,13 @@ function costChoice(state, awaiting) {
     return {id: `choose-cost:${action.objectId}`, title: `${name}: tap any number of untapped creatures you control`, mode: "many", min: 0, max: able.length,
       cost: "tapAny", options: numbered(able.map((cardId, index) => ({index, label: state.objects[cardId].card, cardId})))};
   }
+  /* "You may sacrifice one or more creatures" (Plumb the Forbidden): which, from none up to all of them. */
+  if (action.sacrificeAny === true && !Array.isArray(action.sacrificeChosen)) {
+    const atom = sacrificeAnyAtom(state.objects[action.objectId]?.spell?.additionalCost), able = sacrificeAnyChoices(state, player, atom);
+    const kind = (atom?.selector?.types ?? [])[0]?.toLowerCase() ?? "permanent";
+    return {id: `choose-cost:${action.objectId}`, title: `${name}: sacrifice any number of ${kind}s, or none`, mode: "many", min: 0, max: able.length,
+      cost: "sacrificeAny", options: numbered(able.map((cardId, index) => ({index, label: state.objects[cardId].card, cardId})))};
+  }
   /* Behold (CR 701.4a): which permanents of theirs to choose and cards in their hand to reveal, exactly that many. */
   if (action.behold > 0 && !Array.isArray(action.beheld)) {
     const atom = beholdOf(state, player, action), n = atom?.count ?? 1, kind = (atom?.selector?.subtypes ?? [])[0] ?? "card";
@@ -485,7 +492,7 @@ export function resolveCastCost(state, awaiting, indices) {
   const choice = castCostChoice(state, awaiting);
   const picked = [...new Set(indices ?? [])].sort((a, b) => a - b);
   /* Convoke's and "tap any number"'s, any number from its least to its most; the others, exactly as many as they take. */
-  const counted = ["convoke", "tapAny", "waterbend", "delve"].includes(choice.cost) ? picked.length >= choice.min && picked.length <= choice.max : picked.length === choice.min;
+  const counted = ["convoke", "tapAny", "waterbend", "delve"].includes(choice.cost) || choice.cost === "sacrificeAny" ? picked.length >= choice.min && picked.length <= choice.max : picked.length === choice.min;
   if (picked.length !== (indices ?? []).length || !counted || picked.some((i) => !choice.options[i]))
     throw new Error("Invalid selection");
   const ids = picked.map((i) => choice.options[i].cardId);
@@ -494,7 +501,7 @@ export function resolveCastCost(state, awaiting, indices) {
      as paying it, which would leave no way to tap. */
   const way = choice.cost === "mana" ? asCast(state, awaiting.action, () => castTapPlans(state, awaiting.player, awaiting.action, TAP_CHOICES))[picked[0]] : null;
   const action = {...structuredClone(awaiting.action), ...(choice.cost === "pool" ? {payWith: choice.options[picked[0]].key, ...(choice.options[picked[0]].riders ? {payRiders: choice.options[picked[0]].riders} : {})} : way ? {tapPlan: way.key} : choice.cost === "tap" ? {flashbackTap: ids}
-    : choice.cost === "flashbackSacrifice" ? {flashbackSacrifice: ids} : choice.cost === "delve" ? {delveExile: ids} : choice.cost === "convoke" ? {convokeTap: ids} : choice.cost === "waterbend" ? {waterbendTap: ids} : choice.cost === "tapAny" ? {tapChosen: ids} : choice.cost === "behold" ? {beheld: ids} : choice.cost === "exileOthers" ? {othersExiled: ids} : choice.cost === "sacrifice" ? {sacrificeSet: ids} : choice.cost === "escalate" ? {escalateTapped: ids}
+    : choice.cost === "flashbackSacrifice" ? {flashbackSacrifice: ids} : choice.cost === "delve" ? {delveExile: ids} : choice.cost === "convoke" ? {convokeTap: ids} : choice.cost === "waterbend" ? {waterbendTap: ids} : choice.cost === "tapAny" ? {tapChosen: ids} : choice.cost === "sacrificeAny" ? {sacrificeChosen: ids} : choice.cost === "behold" ? {beheld: ids} : choice.cost === "exileOthers" ? {othersExiled: ids} : choice.cost === "sacrifice" ? {sacrificeSet: ids} : choice.cost === "escalate" ? {escalateTapped: ids}
     : choice.cost === "counters" ? {counterSet: picked.map((i) => ({id: choice.options[i].cardId, counter: choice.options[i].counter}))} : {escapeExile: ids})};
   state.awaiting = null;
   state.priorityPlayer = awaiting.player;
@@ -710,6 +717,25 @@ function tapAnyPicked(state, player, action) {
   const list = action.tapChosen;
   if (!Array.isArray(list) || new Set(list).size !== list.length || !list.every((id) => able.includes(id)))
     throw new Error(`Those are not untapped creatures you control: pick the creatures to tap for ${name} again`);
+  return [...list];
+}
+/* "AS AN ADDITIONAL COST TO CAST THIS SPELL, YOU MAY SACRIFICE ONE OR MORE CREATURES" (Plumb the Forbidden, library load L5;
+   CR 601.2b, 601.2h): `sacrifice` with `count: "any"` -- none, which is not paying it, up to every permanent of the caster's
+   the selector describes, so the cast is one offer and which ones are asked once it is taken (choose-cost, "sacrificeAny"),
+   as "tap any number" is (tapAnyAtom). Never one that can't be sacrificed (rules/statics.mjs). Its `whenYouDo` is the
+   reflexive trigger of a payment (CR 603.12): "when you do, copy this spell for each creature sacrificed this way". */
+const sacrificeAnyAtom = (costs) => (costs ?? []).find((a) => a?.atom === "sacrifice" && a.count === "any");
+const sacrificeAnyChoices = (state, player, atom) => {
+  const fits = compileSelector({...(atom?.selector ?? {}), what: "permanent", controller: "you"});
+  return state.zones.battlefield.filter((id) => fits(state, id, {controller: player}) && !cantBeSacrificed(state, id));
+};
+/* The permanents its caster picked: none twice, each still one the cost may sacrifice. Refused before anything is paid. */
+function sacrificeAnyPicked(state, player, action) {
+  const name = state.objects[action.objectId]?.card ?? "That spell";
+  const able = sacrificeAnyChoices(state, player, sacrificeAnyAtom(state.objects[action.objectId]?.spell?.additionalCost));
+  const list = action.sacrificeChosen;
+  if (!Array.isArray(list) || new Set(list).size !== list.length || !list.every((id) => able.includes(id)))
+    throw new Error(`Those are not permanents ${name}'s cost can sacrifice: pick the ones to sacrifice again`);
   return [...list];
 }
 
@@ -1301,6 +1327,8 @@ const allPlayPermissions = (state, player) => onceAQuestion(state, `play-permiss
       ...(Number.isInteger(e.count) ? {count: e.count} : {})}
       : {id: e.id, ids: e.affects.ids, spells: true, lands: !e.spellsOnly, free: e.free === true, notAdventure: e.notAdventure === true,
       ...(e.graveyardToLibraryBottom ? {graveyardToLibraryBottom: true} : {}), ...(e.onlyIf !== undefined ? {condition: e.onlyIf} : {}),
+      /* "Cast it as a sorcery" (a plotted card, CR 702.170d). */
+      ...(e.sorcery === true ? {sorcery: true} : {}),
       /* "Mana of any type can be spent to cast that spell" (Hostage Taker; anyTypeCost below). */
       ...(e.anyMana === true ? {anyMana: true} : {}),
       ...(Number.isInteger(e.afterTurn) ? {afterTurn: e.afterTurn} : {})}}))];
@@ -1630,7 +1658,9 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
   if (lifeCost !== null && lifeCost > state.players[player].life) return actions;
   /* "Can't cast" (castForbidden): from a graveyard, during its controller's turn, more than one each turn. */
   if (castForbidden(state, player, id)) return actions;
-  const timely = !sorcerySpeed(object) || hasFlash(state, id) || flashGranted(state, player, id) || (player === state.activePlayer && MAIN_PHASES.includes(state.phase) && state.stack.length === 0);
+  /* Cast through a permission "as a sorcery" (a plotted card, CR 702.170d): at a sorcery's timing whatever its own, flash or none. */
+  const timely = (!permit?.ability.sorcery && (!sorcerySpeed(object) || hasFlash(state, id) || flashGranted(state, player, id)))
+    || (player === state.activePlayer && MAIN_PHASES.includes(state.phase) && state.stack.length === 0);
   /* SNEAK (CR 702.190a): "any time you could cast an instant during your declare blockers step" -- a card that could not be
      cast now otherwise is offered for its sneak cost alone (`sneaking`), its condition saying when (alternativeCosts). */
   const sneaking = !timely && (object.abilities ?? []).some((a) => a.kind === "static" && a.rule === "alternative-cost" && a.sneak === true);
@@ -1666,12 +1696,14 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
   /* Creatures tapped as an additional cost (tapAnyAtom): asked once the cast is taken, and paid from the pool -- never tapped
      for, which taps creatures too (a mana creature), the two questions about the same creatures. */
   const tapsAny = tapAnyAtom(variant.atoms);
+  /* And permanents sacrificed as one (sacrificeAnyAtom): which, asked once it is taken. */
+  const sacrificesAny = sacrificeAnyAtom(variant.atoms);
   /* What it beholds (CR 701.4a): that many there to behold, or not this way; which ones, asked once it is taken. */
   const beholds = beholdAtom(variant.atoms);
   if (beholds && beholdChoices(state, player, id, beholds).length < (beholds.count ?? 1)) continue;
   /* An additional cost of X life (lifeXAtom): X its own offer each, below -- not a cost to pick. */
   const lifeX = lifeXAtom(variant.atoms);
-  const offeredAtoms = variant.atoms.filter((a) => a !== tapsAny && a !== beholds && a !== lifeX);
+  const offeredAtoms = variant.atoms.filter((a) => a !== tapsAny && a !== sacrificesAny && a !== beholds && a !== lifeX);
   /* Escalate's creatures to tap (CR 702.120a): that many there to tap now, or not that many modes. */
   if (variant.escalateTap && flashbackTappers(state, player, variant.escalateTap).length < variant.escalateTap.count) continue;
   /* Its targets first, when its cost reads them (aimsFor): each way to choose them costed, and offered, on its own. */
@@ -1756,7 +1788,7 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
         ...(payWays && !convoke ? {payWays: true} : {}),
         ...(convoke === true ? {convoke: true} : {}), ...(convoke === "delve" ? {delve: true} : {}), ...(variant.mana ? {extraMana: variant.mana} : {}), ...(extraLife ? {extraLife} : {}), ...(variant.kicked ? {kicked: variant.kicked} : {}),
         ...(variant.replicated ? {replicated: variant.replicated} : {}), ...(gift !== undefined ? {gift} : {}), ...(variant.offspring ? {offspring: true} : {}),
-        ...(tapsAny ? {tapAny: true} : {}), ...(beholds ? {behold: beholds.count ?? 1} : {}),
+        ...(tapsAny ? {tapAny: true} : {}), ...(sacrificesAny ? {sacrificeAny: true} : {}), ...(beholds ? {behold: beholds.count ?? 1} : {}),
         /* Escalated (CR 702.120a): how many modes beyond the first, and how many creatures that taps. */
         ...(variant.escalate ? {escalate: variant.escalate} : {}), ...(variant.escalateTap ? {escalateTap: variant.escalateTap.count} : {}),
         /* A set of cards ("discard two cards") names each one. */
@@ -1814,6 +1846,20 @@ function faceUpOffers(state, player) {
    removes a time counter at each of its owner's upkeeps and offers the free cast as the last goes. */
 const suspendOf = (object) => (object?.abilities ?? []).find((a) => a.kind === "static" && a.rule === "suspend") ?? null;
 const suspendCost = (suspend) => parseManaCost((suspend.cost ?? []).find((a) => a.atom === "mana")?.cost ?? "");
+/* PLOT [COST] FROM THE HAND (CR 702.170a; Blacksnag Buzzard): "any time you have priority during your main phase while the stack
+   is empty, you may exile this card from your hand and pay [cost]" -- a special action (CR 116.2k), plotting no cast, so
+   offered whatever the card's own timing and whether or not it could be cast. Its cost is paid from the pool, each way it
+   pays its own offer (`payWith`), as suspend's is. */
+const plotOf = (object) => (object?.abilities ?? []).find((a) => a.kind === "static" && a.rule === "plot") ?? null;
+const plotCost = (plot) => parseManaCost((plot.cost ?? []).find((a) => a.atom === "mana")?.cost ?? "");
+function plotOffers(state, player) {
+  if (!(player === state.activePlayer && MAIN_PHASES.includes(state.phase) && state.stack.length === 0)) return [];
+  return cardsIn(state, "hand", player).flatMap((id) => {
+    const plot = plotOf(state.objects[id]);
+    const ways = plot ? paymentOptions(state.players[player].manaPool, plotCost(plot), {life: state.players[player].life}, PAY_CHOICES) : [];
+    return ways.map((way) => ({kind: "plot", objectId: id, label: state.objects[id].card, text: plot.text, payment: way, ...(ways.length > 1 ? {payWith: paymentKey(way)} : {})}));
+  });
+}
 function suspendOffers(state, player) {
   const offers = [];
   const sorceryTime = player === state.activePlayer && MAIN_PHASES.includes(state.phase) && state.stack.length === 0;
@@ -1896,7 +1942,7 @@ function offers(state, player) {
       .flatMap((via) => castOffers(state, player, {id, from, via, disguise: true}, tappable))));
   }
   /* Suspend, from the hand (CR 702.62a): a special action, where its card could be cast. */
-  actions.push(...suspendOffers(state, player));
+  actions.push(...suspendOffers(state, player), ...plotOffers(state, player));
   /* CR 715.3a: a permission weighs the Adventure's own characteristics. Its main face may
      exceed Maralen's limit even when the Adventure is eligible, or the converse. */
   const adventurers = new Set([...castable.filter(e => !e.flashback && !e.escape).map(e => e.id),
@@ -2453,6 +2499,16 @@ function performOffered(state, player, action, during) {
         return [];
       }
     }
+    /* PERMANENTS SACRIFICED AS AN ADDITIONAL COST, any number of them (Plumb the Forbidden): which, asked before anything is
+       paid -- with none to sacrifice, none, and nothing is asked. */
+    if (action.kind === "cast" && action.sacrificeAny === true && !Array.isArray(action.sacrificeChosen)) {
+      if (!sacrificeAnyChoices(state, player, sacrificeAnyAtom(state.objects[action.objectId]?.spell?.additionalCost)).length)
+        action = {...structuredClone(action), sacrificeChosen: []};
+      else {
+        state.awaiting = {kind: "choose-cost", player, action: structuredClone(action)};
+        return [];
+      }
+    }
     /* BEHOLD (CR 701.4a, 601.2h): which to choose or reveal, asked before anything is paid. */
     if (action.kind === "cast" && action.behold > 0 && !Array.isArray(action.beheld)) {
       state.awaiting = {kind: "choose-cost", player, action: structuredClone(action)};
@@ -2622,6 +2678,8 @@ function performOffered(state, player, action, during) {
     const sacrificing = back?.sacrifice && !during ? flashbackSacrificed(state, player, action, back.sacrifice) : [];
     /* And "tap any number of untapped creatures you control", as its caster picked them (tapAnyPicked). */
     const tappedAny = action.tapAny === true && !during ? tapAnyPicked(state, player, action) : [];
+    /* And "you may sacrifice one or more creatures", as its caster picked them (sacrificeAnyPicked). */
+    const sacrificedAny = action.sacrificeAny === true ? sacrificeAnyPicked(state, player, action) : [];
     /* And what it beholds, as its caster picked it (beheldPicked). */
     const beholding = action.behold > 0 && !during ? beheldPicked(state, player, action) : [];
     /* And escalate's, as its caster picked them (CR 702.120a). */
@@ -2828,6 +2886,8 @@ function performOffered(state, player, action, during) {
     }
     /* And a flashback cost's sacrifices, with the rest of the cost (CR 601.2h): "whenever you sacrifice" sees each. */
     for (const id of sacrificing) if (state.objects[id]?.zone === "battlefield") sacrificeOne(state, id, events);
+    /* And "you may sacrifice one or more creatures"'s, as its caster picked them. */
+    for (const id of sacrificedAny) if (state.objects[id]?.zone === "battlefield") sacrificeOne(state, id, events);
     /* What it is aimed at becomes its target (ward, CR 702.21a); and aimed at an opponent or what is theirs, a crime (CR 700.13). */
     events.push(...becameTarget(state, entry), ...crimeCommitted(state, entry));
     /* STORM (CR 702.40a): "when you cast this spell, copy it for each spell cast before it this turn. You may choose new
@@ -2848,6 +2908,17 @@ function performOffered(state, player, action, during) {
         source: {cardId: entry.objectId, name: object.card}, cause: null, optional: false,
         about: {card: entry.objectId, player, stackId: entry.stackId},
         script: {targets: [], effects: [{effect: "copySpell", spells: "that card", count: action.replicated, newTargets: true}]}});
+    }
+    /* "WHEN YOU DO, COPY THIS SPELL FOR EACH CREATURE SACRIFICED THIS WAY" (Plumb the Forbidden; CR 603.12): the reflexive
+       trigger of its additional cost (sacrificeAnyAtom), triggering as the cost is paid (CR 601.2h) and waiting with the rest,
+       above the spell -- none when nothing was sacrificed. About the spell, and how many it sacrificed (script/amount.mjs,
+       `sacrificedThisWay`). */
+    const whenYouDo = sacrificeAnyAtom(object.spell?.additionalCost)?.whenYouDo;
+    if (whenYouDo && sacrificedAny.length) {
+      (state.pendingTriggers ??= []).push({abilityId: "when-you-do", text: whenYouDo.text, controller: player,
+        source: {cardId: entry.objectId, name: object.card}, cause: null, optional: false,
+        about: {card: entry.objectId, player, stackId: entry.stackId, sacrificed: sacrificedAny.length},
+        script: {targets: [], effects: structuredClone(whenYouDo.effects)}});
     }
     events.push(event("GameEventSpellAbilityCast", state, {
       card,
@@ -3053,6 +3124,25 @@ function performOffered(state, player, action, during) {
     if (exiled !== null && state.objects[exiled]?.zone === "exile") {
       state.objects[exiled].counters.time = (state.objects[exiled].counters.time ?? 0) + suspend.count;
       state.objects[exiled].suspended = true;
+    }
+    return events;
+  }
+
+  /* PLOTTED (CR 702.170a-b): its cost paid from the pool, the way its player chose, and the card exiled face up -- plotted. Its
+     owner may cast it from there on a later turn without paying its mana cost, as a sorcery, for as long as it stays exiled
+     (702.170d): a permission of theirs (may-play, `afterTurn` and `sorcery`), naming the card in exile, so one that leaves and
+     returns is a new object (CR 400.7) and not plotted. A special action: nothing goes on the stack (CR 116.3). */
+  if (action.kind === "plot") {
+    const events = [];
+    const object = state.objects[action.objectId];
+    const payment = chosenPayment(state.players[player].manaPool, plotCost(plotOf(object)), {life: state.players[player].life}, action.payWith);
+    if (!payment) throw new Error(`${object.card} cannot be plotted with that mana now: choose one of the ways your pool pays its plot cost`);
+    spend(state.players[player].manaPool, payment.mana);
+    if (payment.life > 0) changeLife(state, player, -payment.life, events);
+    const exiled = moveOne(state, action.objectId, "exile", events, {owner: object.owner});
+    if (exiled !== null && state.objects[exiled]?.zone === "exile") {
+      (state.effects ??= []).push({id: `plot:${exiled}`, rule: "may-play", affects: {ids: [exiled]}, player: object.owner, name: object.card,
+        spellsOnly: true, free: true, sorcery: true, until: "ever", afterTurn: state.turn, madeOnTurn: state.turn, sourceController: object.owner});
     }
     return events;
   }

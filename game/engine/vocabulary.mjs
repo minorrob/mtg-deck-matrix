@@ -208,6 +208,8 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
   "spree",
   /* Suspend (CR 702.62), from the hand (keywords/timing.mjs). */
   "suspend",
+  /* Plot (CR 702.170), from the hand, and the cast on a later turn it allows (library load L5; rules/actions.mjs). */
+  "plot",
   /* Partner with [name] (CR 702.124j): a deck rule and a trigger as it enters (cards/index.mjs). */
   "partner with",
   /* Firebending N (CR 702.189): an attack trigger, its mana kept until end of combat (cards/index.mjs, rules/turn.mjs). */

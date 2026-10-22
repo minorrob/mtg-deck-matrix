@@ -1086,14 +1086,24 @@ export function compileScript(script) {
        keyword IS that triggered ability: its intervening "if" (CR 603.4), an age counter, and "unless you pay" asked of its
        controller (effects/asking.mjs, unlessPays) with the cost counted as it is asked, every age counter on it then
        (702.24b), all of it or none. Generic mana is paid as any generic amount is; a cost with colored symbols, that cost once
-       for each counter. A mana cost only, yet. */
+       for each counter. A mana cost, or "an opponent gains 1 life" (Wall of Shards, library load L5): `opponentGainsLife`, that
+       much life once for each counter, an opponent of the payer's chosen each time (effects/asking.mjs, unlessPays). */
     if (word === "cumulative upkeep") {
       const cost = Array.isArray(ability.cost) ? ability.cost : [];
+      const ages = {countersOn: "self", counter: "age"};
+      const gains = cost.length === 1 && cost[0]?.atom === "opponentGainsLife" ? cost[0] : null;
+      if (gains) {
+        if (!(Number.isInteger(gains.amount) && gains.amount >= 1)) problems.push(`${ability.text}: the life an opponent gains is a whole number, 1 or more`);
+        abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.upkeep({}), condition: {present: {self: true}},
+          effects: [{effect: "putCounter", targets: "self", counter: "age", count: 1},
+            {effect: "unlessPays", opponentGainsLife: {amount: gains.amount, times: ages}, effects: [{effect: "moveZone", targets: "self", sacrifice: true}]}]});
+        keywords.push("Cumulative upkeep");
+        return;
+      }
       let parsed = null;
       try { parsed = cost.length === 1 && cost[0]?.atom === "mana" ? parseManaCost(cost[0].cost ?? "") : null; } catch { /* refused below */ }
       if (!parsed || !parsed.symbols.length || parsed.variable > 0) problems.push(`${ability.text}: a cumulative upkeep cost of mana, once`);
       const generic = Boolean(parsed) && parsed.symbols.every((s) => s.kind === "generic");
-      const ages = {countersOn: "self", counter: "age"};
       abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.upkeep({}), condition: {present: {self: true}},
         effects: [{effect: "putCounter", targets: "self", counter: "age", count: 1},
           {effect: "unlessPays", ...(generic ? {amount: {...ages, times: parsed.generic}} : {mana: String(cost[0]?.cost ?? ""), manaTimes: ages}),
@@ -1287,6 +1297,20 @@ export function compileScript(script) {
       if ((identity.types ?? []).includes("Land")) problems.push(`${ability.text}: suspend on a land, which is never cast`);
       abilities.push({id, kind: "static", rule: "suspend", text: ability.text, count: ability.amount ?? 0, cost: structuredClone(cost), affects: {what: "card", self: true}});
       keywords.push("Suspend");
+      return;
+    }
+    /* PLOT [COST] (CR 702.170a; Blacksnag Buzzard, library load L5): "any time you have priority during your main phase while
+       the stack is empty, you may exile this card from your hand and pay [cost]. It becomes a plotted card" -- a special action
+       (CR 116.2k), kept as a static the card carries in its owner's hand (rules/actions.mjs offers it there); and the cast it
+       allows, "on a later turn without paying its mana cost", as a sorcery (702.170d), its owner's permission for as long as it
+       stays exiled. A mana cost. */
+    if (word === "plot") {
+      const cost = Array.isArray(ability.cost) ? ability.cost : [];
+      let parsed = null;
+      try { parsed = cost.length === 1 && cost[0]?.atom === "mana" ? parseManaCost(cost[0].cost ?? "") : null; } catch { /* refused below */ }
+      if (!parsed || !parsed.symbols.length || parsed.variable > 0) problems.push(`${ability.text}: plot is a mana cost`);
+      abilities.push({id, kind: "static", rule: "plot", text: ability.text, cost: structuredClone(cost), affects: {what: "card", self: true}});
+      keywords.push("Plot");
       return;
     }
     /* ENCORE (CR 702.141a): an activated ability of the card in its owner's graveyard, at sorcery speed (rules/actions.mjs
@@ -1632,6 +1656,18 @@ export function compileScript(script) {
           try { if (fits) compileSelector({...atom.selector, what: "permanent"}); } catch { fits = false; }
           if (!fits) problems.push("tapCreature: an additional cost taps any number of creatures (`count: \"any\"`), a selector saying which");
         }
+        /* "As an additional cost to cast this spell, you may sacrifice one or more creatures" (Plumb the Forbidden): `count: "any"`
+           and a selector saying what it may sacrifice (rules/actions.mjs, sacrificeAnyAtom); `whenYouDo`, the reflexive trigger of
+           that payment (CR 603.12), its text and its effects, with no targets. A fixed number is one permanent, yet. */
+        if (atom?.atom === "sacrifice" && (atom.count !== undefined || atom.whenYouDo !== undefined)) {
+          let fits = atom.count === "any" && Boolean(atom.selector) && typeof atom.selector === "object";
+          try { if (fits) compileSelector({...atom.selector, what: "permanent"}); } catch { fits = false; }
+          if (!fits) problems.push("sacrifice: an additional cost sacrifices any number of permanents (`count: \"any\"`), a selector saying which");
+          const when = atom.whenYouDo;
+          if (when !== undefined && (!when || typeof when.text !== "string" || !Array.isArray(when.effects) || !when.effects.length || when.targets !== undefined))
+            problems.push("sacrifice: its whenYouDo is {text, effects}, a reflexive trigger with no targets");
+          else if (when !== undefined) for (const inner of effectsIn(when.effects)) if (!isBuilt(inner.effect)) problems.push(`${inner.effect}: declared, not built`);
+        }
         /* "As an additional cost to cast this spell, blight 1" (CR 701.68a): a whole number of -1/-1 counters, 1 or more. */
         if (atom?.atom === "blight" && !(Number.isInteger(atom.count ?? 1) && (atom.count ?? 1) >= 1)) problems.push("blight: an additional cost of 1 or more -1/-1 counters");
         /* "You may blight 1" (Cinder Strike): an optional additional cost, read by "if this spell's additional cost was paid"
@@ -1833,6 +1869,9 @@ export function compileScript(script) {
         ...(ability.condition ? {condition: ability.condition} : {}), ...(ability.optional ? {optional: true} : {}),
         /* "This ability triggers only once each turn". */
         ...(ability.limit ? {limit: ability.limit} : {}),
+        /* "This ability triggers only once" (Acrobatic Cheerleader's survival, library load L5): ever, for its object
+           (rules/trigger.mjs). */
+        ...(ability.onlyOnce === true ? {onlyOnce: true} : {}),
         /* Had only at that Class level or greater (CR 716.2a; classLevel, above). */
         ...(Number.isInteger(ability.level) ? {level: ability.level} : {}),
         /* "At the beginning of your upkeep, you may return this card from your graveyard to your hand" (Squee, Goblin Nabob):
