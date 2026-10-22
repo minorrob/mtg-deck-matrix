@@ -83,6 +83,17 @@ export function hexproofFrom(state, id, chooser, sourceId) {
 }
 
 /**
+ * A PLAYER'S HEXPROOF FROM [QUALITY] (CR 702.11d, 702.11c; Veil of Summer): "you ... gain hexproof from blue and from black
+ * until end of turn" -- the same effect over the players it names (effectUntil's `players`): `player` can't be the target of a
+ * spell of `chooser`'s, an opponent of theirs, or an ability from a source of theirs, of one of those colors as it now is.
+ */
+export function playerHexproofFrom(state, player, chooser, sourceId) {
+  if (!state.objects[sourceId] || player === chooser) return false;
+  const colors = state.objects[sourceId].zone === "battlefield" ? colorsOf(state, sourceId) : (state.objects[sourceId].colors ?? []);
+  return (state.effects ?? []).some((e) => e.rule === "hexproof-from" && (e.players ?? []).includes(player) && (e.colors ?? []).some((c) => colors.includes(c)));
+}
+
+/**
  * Whether this permanent (`card`) or this player (`player`) has protection from this source.
  * @param {object} state
  * @param {{card?: number, player?: number}} who
