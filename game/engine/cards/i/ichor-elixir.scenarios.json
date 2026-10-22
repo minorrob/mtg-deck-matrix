@@ -1,0 +1,84 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Ichor Elixir",
+  "scenarios": [
+    {
+      "name": "{T}: Add {C}{C}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ichor Elixir"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Ichor Elixir"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 2
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Ichor Elixir"
+        }
+      ]
+    },
+    {
+      "name": "Beside Fractured Powerstone: no planar die is rolled outside Planechase, so there is nothing to replace and nobody is asked which die to ignore",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ichor Elixir",
+            "Fractured Powerstone"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Fractured Powerstone"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            },
+            {
+              "seat": 0,
+              "tapped": "Fractured Powerstone"
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Ichor Elixir",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "life": 40
+        }
+      ]
+    }
+  ]
+}
