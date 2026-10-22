@@ -1,0 +1,230 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Cartel Aristocrat",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Red Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Green Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A Bear sacrificed, red chosen: the red Bear cannot block it, the green one can",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Cartel Aristocrat",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Red Bear",
+            "Green Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Cartel Aristocrat"
+              },
+              "count": 1,
+              "costs": [
+                [
+                  "Bear"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Cartel Aristocrat",
+          "sacrifice": "Bear"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Red"
+          ]
+        },
+        {
+          "attack": [
+            "Cartel Aristocrat"
+          ]
+        },
+        {
+          "block": [],
+          "blockers": [
+            "Green Bear"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "No other creature to sacrifice: not offered -- never itself",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Cartel Aristocrat"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Cartel Aristocrat"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Cartel Aristocrat"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Until end of turn: next turn the red Bear blocks it again",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Cartel Aristocrat",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Red Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Cartel Aristocrat",
+          "sacrifice": "Bear"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Red"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Cartel Aristocrat"
+          ]
+        },
+        {
+          "block": [
+            [
+              "Red Bear",
+              "Cartel Aristocrat"
+            ]
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Red Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Cartel Aristocrat"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -180,10 +180,13 @@ function subjects(state, event, condition, sourceId, controller) {
        again as it resolves -- a trigger condition, not an intervening "if" (CR 603.4). */
     if (!conditionHolds(state, condition.while, {controller, source: sourceId})) return [];
     /* "An instant or sorcery spell that targets a creature" (Rehearsed Debater): one of what it targets, chosen as it was
-       cast (CR 601.2c) and so before it became cast (601.2i), fits `targets`. A player it targets fits no such selector. */
+       cast (CR 601.2c) and so before it became cast (601.2i), fits `targets`. A player it targets fits a player selector
+       alone: "a spell that targets an opponent" (Danitha, Spear of Agony; library load L4), `what: "player"`. */
     const aimed = () => (state.stack.find((e) => e.stackId === fields.sa?.stackId)?.targets ?? []).flat();
+    const aimedAt = (t, selector) => (selector.what === "player" ? t?.kind === "player" : t?.kind === "object" && Boolean(state.objects[t.id]))
+      && matchesSelector(selector, state, t.id, {controller, source: sourceId});
     const fitsCast = (one) => (!one.filter || (state.objects[spell] && matchesSelector({...one.filter, what: "spell"}, state, spell, {controller, source: sourceId})))
-      && (!one.targets || aimed().some((t) => t?.kind === "object" && state.objects[t.id] && matchesSelector(one.targets, state, t.id, {controller, source: sourceId})));
+      && (!one.targets || aimed().some((t) => aimedAt(t, one.targets)));
     if (!fitsCast(condition)) return [];
     /* "Whenever you cast an Equipment spell or a spell that targets a creature you control" (Danitha, Sword of Hope): one of
        these, each a filter of the spell or of what it targets, or both. */
@@ -208,6 +211,13 @@ function subjects(state, event, condition, sourceId, controller) {
     return (fields.blockers ?? []).filter((b) => fits(state, b.blocking?.cardId, {who: condition.who}, sourceId, controller)
       && (!condition.filter || (state.objects[b.card?.cardId] && matchesSelector({what: "permanent", ...condition.filter}, state, b.card.cardId, {controller, source: sourceId}))))
       .map((b) => ({card: b.card.cardId}));
+  }
+  /* BUSHIDO'S "WHENEVER THIS CREATURE BLOCKS OR BECOMES BLOCKED" (CR 702.45a; Hand of Honor): once as it is declared a
+     blocker, however many it blocks (509.3a), or once as it becomes blocked, however many block it (509.3c) -- one
+     declaration names it one way or the other, never both. About it. */
+  if (condition.on === "GameEventBlockersDeclared" && condition.blocksOrBlocked) {
+    const named = new Set((fields.blockers ?? []).flatMap((b) => [b.card?.cardId, b.blocking?.cardId]));
+    return [...named].filter((id) => fits(state, id, {who: condition.who}, sourceId, controller)).map((card) => ({card}));
   }
   /* "Whenever a +1/+1 counter is put on this creature" (Fathom Mage): once for EACH counter put on it (`each`), counters it
      enters with too (CR 122.6; rules/entering.mjs, enteredWith) -- not once however many, as "one or more" is. */
@@ -243,6 +253,9 @@ function subjects(state, event, condition, sourceId, controller) {
     /* "Whenever a creature you control attacks alone" (Thoughtweft Imbuer; CR 506.5): it is the only creature declared as an
        attacker -- the event names every one declared, and one put onto the battlefield attacking never was (CR 508.4). */
     if (condition.alone && (fields.attackers ?? []).length !== 1) return [];
+    /* "Whenever this creature attacks while saddled" (Bounding Felidar; CR 702.171b): asked as it attacks, and not again as
+       it resolves -- a trigger condition, not an intervening "if" (CR 603.4). */
+    if (condition.while !== undefined && !conditionHolds(state, condition.while, {controller, source: sourceId})) return [];
     const matched = (fields.attackers ?? []).filter((a) => fits(state, a.card?.cardId, condition, sourceId, controller))
       /* "Attacks for the first time each turn": its first attack this turn is this one (rules/combat.mjs counts them). */
       .filter((a) => !condition.firstTime || usesThisTurn(state, a.card?.cardId, "attacked") === 1)

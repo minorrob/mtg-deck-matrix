@@ -92,6 +92,16 @@ export const STATIC_RULES = Object.freeze({
   /** CR 509.1b: "Target creature can't be blocked this turn" (Rogue's Passage), "creatures with power 2 or less can't be
       blocked". keywords/combat.mjs, as each blocker is checked. */
   "cant-be-blocked": "keywords/combat.mjs",
+  /** CR 509.1b, a restriction on the whole declaration, as menace's is: "This creature can't be blocked by more than one
+      creature" (Safewright Cavalry): `affects` the attacker. keywords/combat.mjs, blockersAreLegal; rules/combat.mjs says it
+      in the blockers record (`capped`). */
+  "blocked-by-one-at-most": "keywords/combat.mjs",
+  /** CR 509.1c, a requirement: "This creature must be blocked if able" (Vinebred Brawler): `affects` the attacker. Its
+      defending player blocks as many such attackers as can be blocked at once. rules/combat.mjs, blockRequirements. */
+  "must-be-blocked": "rules/combat.mjs",
+  /** CR 702.171b: a Mount saddled until end of turn (Bounding Felidar's saddle) -- an effect on it, never a printed static.
+      keywords/designations.mjs, isSaddled. */
+  "saddled": "keywords/designations.mjs",
   /** "You may play lands from your graveyard" (Crucible of Worlds), "you may cast Dragon spells from the top of your
       library" (Korlessa): `zone` "graveyard" or "library-top"; "once during each of your turns" (Kess) `yourTurn` and
       `limit`; "if a spell cast this way would be put into your graveyard, exile it instead" `graveyardToExile`; `lands`

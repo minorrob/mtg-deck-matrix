@@ -1,0 +1,73 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bounding Felidar",
+    "oracleId": "b00f316d-7c82-40e6-80e5-9f36434590a3",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Cat",
+      "Beast",
+      "Mount"
+    ],
+    "manaCost": "{5}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 4,
+    "toughness": 7
+  },
+  "oracleText": "Whenever this creature attacks while saddled, put a +1/+1 counter on each other creature you control. You gain 1 life for each of those creatures.\nSaddle 2 (Tap any number of other creatures you control with total power 2 or more: This Mount becomes saddled until end of turn. Saddle only as a sorcery.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature attacks while saddled, put a +1/+1 counter on each other creature you control. You gain 1 life for each of those creatures.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self",
+        "while": {
+          "saddled": true
+        }
+      },
+      "effects": [
+        {
+          "effect": "putCounterAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you",
+            "another": true
+          },
+          "counter": "+1/+1",
+          "count": 1
+        },
+        {
+          "effect": "gainLife",
+          "amount": {
+            "count": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you",
+              "another": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Saddle 2",
+      "keyword": "saddle",
+      "amount": 2
+    }
+  ]
+}

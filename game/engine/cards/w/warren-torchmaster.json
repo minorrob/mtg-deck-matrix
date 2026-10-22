@@ -1,0 +1,85 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Warren Torchmaster",
+    "oracleId": "20c3c8ab-e996-462e-a1f6-87421fc3ee55",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin",
+      "Warrior"
+    ],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "At the beginning of combat on your turn, you may blight 1. When you do, target creature gains haste until end of turn. (To blight 1, put a -1/-1 counter on a creature you control.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of combat on your turn, you may blight 1. When you do, target creature gains haste until end of turn. (To blight 1, put a -1/-1 counter on a creature you control.)",
+      "trigger": {
+        "on": "step",
+        "step": "COMBAT_BEGIN"
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "battlefield",
+          "selector": {
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "to": "stay",
+          "remember": true
+        },
+        {
+          "effect": "putCounter",
+          "targets": "remembered",
+          "counter": "-1/-1",
+          "count": 1
+        },
+        {
+          "effect": "immediateTrigger",
+          "text": "When you do, target creature gains haste until end of turn.",
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          },
+          "targets": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            }
+          ],
+          "effects": [
+            {
+              "effect": "pump",
+              "targets": {
+                "target": 0
+              },
+              "power": 0,
+              "toughness": 0,
+              "keywords": [
+                "Haste"
+              ]
+            }
+          ]
+        }
+      ],
+      "optional": true
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Vinebred Brawler",
+    "oracleId": "5fffd840-1e6e-4f5d-b847-802f9a25eb5c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Berserker"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 2
+  },
+  "oracleText": "This creature must be blocked if able.\nWhenever this creature attacks, another target Elf you control gets +2/+1 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This creature must be blocked if able.",
+      "rule": "must-be-blocked",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature attacks, another target Elf you control gets +2/+1 until end of turn.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 2,
+          "toughness": 1
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "subtypes": [
+            "Elf"
+          ],
+          "controller": "you",
+          "another": true
+        }
+      ]
+    }
+  ]
+}
