@@ -1,0 +1,70 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Boggart Shenanigans",
+    "oracleId": "997d2f38-5a50-451e-bd48-e36dcb24d967",
+    "types": [
+      "Kindred",
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Goblin"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever another Goblin you control is put into a graveyard from the battlefield, you may have this enchantment deal 1 damage to target player or planeswalker.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever another Goblin you control is put into a graveyard from the battlefield, you may have this enchantment deal 1 damage to target player or planeswalker.",
+      "trigger": {
+        "on": "leaves",
+        "to": "graveyard",
+        "who": "another",
+        "filter": {
+          "subtypes": [
+            "Goblin"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 1,
+          "targets": {
+            "target": 0
+          },
+          "who": {
+            "target": 0
+          }
+        }
+      ],
+      "optional": true,
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "player"
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
