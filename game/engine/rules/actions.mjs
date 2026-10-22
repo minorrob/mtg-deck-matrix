@@ -1278,6 +1278,8 @@ const allPlayPermissions = (state, player) => onceAQuestion(state, `play-permiss
       ...(Number.isInteger(e.count) ? {count: e.count} : {})}
       : {id: e.id, ids: e.affects.ids, spells: true, lands: !e.spellsOnly, free: e.free === true, notAdventure: e.notAdventure === true,
       ...(e.graveyardToLibraryBottom ? {graveyardToLibraryBottom: true} : {}), ...(e.onlyIf !== undefined ? {condition: e.onlyIf} : {}),
+      /* "Mana of any type can be spent to cast that spell" (Hostage Taker; anyTypeCost below). */
+      ...(e.anyMana === true ? {anyMana: true} : {}),
       ...(Number.isInteger(e.afterTurn) ? {afterTurn: e.afterTurn} : {})}}))];
 });
 /* A CARD PLAYED THROUGH A PERMISSION (CR 601.2a, 305.1): what it uses up -- a limited one's use this turn ("once during each

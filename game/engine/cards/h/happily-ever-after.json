@@ -1,0 +1,101 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Happily Ever After",
+    "oracleId": "7a4cc57b-9f85-446c-9ca0-98c72b9bb732",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "When this enchantment enters, each player gains 5 life and draws a card.\nAt the beginning of your upkeep, if there are five colors among permanents you control, there are six or more card types among permanents you control and/or cards in your graveyard, and your life total is greater than or equal to your starting life total, you win the game.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this enchantment enters, each player gains 5 life and draws a card.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 5,
+          "who": "each"
+        },
+        {
+          "effect": "draw",
+          "count": 1,
+          "who": "each"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your upkeep, if there are five colors among permanents you control, there are six or more card types among permanents you control and/or cards in your graveyard, and your life total is greater than or equal to your starting life total, you win the game.",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "winGame"
+        }
+      ],
+      "condition": {
+        "allOf": [
+          {
+            "compare": {
+              "count": {
+                "colorsAmong": {
+                  "what": "permanent",
+                  "controller": "you"
+                }
+              },
+              "atLeast": 5
+            }
+          },
+          {
+            "compare": {
+              "count": {
+                "cardTypesAmong": {
+                  "anyOf": [
+                    {
+                      "what": "permanent",
+                      "controller": "you"
+                    },
+                    {
+                      "what": "card",
+                      "zone": "graveyard",
+                      "controller": "you"
+                    }
+                  ]
+                }
+              },
+              "atLeast": 6
+            }
+          },
+          {
+            "compare": {
+              "count": {
+                "lifeTotal": "you"
+              },
+              "atLeast": {
+                "startingLife": "you"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

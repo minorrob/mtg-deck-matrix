@@ -1,0 +1,75 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hostage Taker",
+    "oracleId": "c5c2d209-e3ef-4b0d-85f5-e7402dcf09eb",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Pirate"
+    ],
+    "manaCost": "{2}{U}{B}",
+    "colors": [
+      "B",
+      "U"
+    ],
+    "colorIdentity": [
+      "B",
+      "U"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "When this creature enters, exile another target creature or artifact until this creature leaves the battlefield. You may cast that card for as long as it remains exiled, and mana of any type can be spent to cast that spell.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, exile another target creature or artifact until this creature leaves the battlefield. You may cast that card for as long as it remains exiled, and mana of any type can be spent to cast that spell.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "exileUntil",
+          "targets": {
+            "target": 0
+          },
+          "until": "this leaves",
+          "remember": true
+        },
+        {
+          "effect": "mayPlay",
+          "targets": "remembered",
+          "zone": "exile",
+          "until": "ever",
+          "spellsOnly": true,
+          "anyMana": true
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "another": true
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Artifact"
+              ],
+              "another": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

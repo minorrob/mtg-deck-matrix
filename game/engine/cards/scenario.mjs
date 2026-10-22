@@ -83,9 +83,10 @@ export function runScenario(scenario, cards, fixtures = {}) {
      after all (CR 103.8a; game/room/table.mjs). */
   /* `pooledTaps: true`: a cast tapped for tops up floating mana and taps a source for all it makes (rules/actions.mjs), as a
      table's new matches do. */
+  /* `startingLife`: a table's house-rule starting life (game/room/table.mjs) -- "your starting life total" (Happily Ever After). */
   const state = createState({matchId: "scenario", seed: scenario.name, players: names.map((name) => ({name})),
     ...(scenario.skipFirstDraw === false ? {skipFirstDraw: false} : {}), ...(scenario.pooledTaps === true ? {pooledTaps: true} : {}),
-    ...(scenario.xTaps === true ? {xTaps: true} : {})});
+    ...(scenario.xTaps === true ? {xTaps: true} : {}), ...(Number.isInteger(scenario.startingLife) ? {startingLife: scenario.startingLife} : {})});
   const rng = createRng(scenario.name);
   const record = (list) => { events.push(...(list ?? [])); return list; };
 

@@ -1,0 +1,583 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Hostage Taker",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Elf": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Trinket": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{3}",
+      "colors": []
+    },
+    "Murder": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{1}{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters: Maya's Bear exiled; he casts it with two Wastes -- mana of any type -- and it is his",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Hostage Taker"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Hostage Taker"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "controls": []
+            },
+            {
+              "seat": 0,
+              "zone": "exile",
+              "of": 1,
+              "cards": [
+                "Bear"
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Bear"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Island",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Hostage Taker",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "name": "Cast, the Bear is a new object: Hostage Taker killed later, it stays his",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Swamp",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Hostage Taker",
+            "Murder"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Hostage Taker"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Bear"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Murder",
+          "targets": [
+            {
+              "card": "Hostage Taker"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Island",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Swamp",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": []
+        }
+      ]
+    },
+    {
+      "name": "Hostage Taker leaves first: the Bear, still exiled, returns to Maya, and is no longer his to cast",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Hostage Taker",
+            "Murder"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Hostage Taker"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Murder",
+          "targets": [
+            {
+              "card": "Hostage Taker"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Bear"
+          ]
+        },
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Bear"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Gone before its trigger resolves (CR 610.3b): nothing is exiled",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Swamp",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Hostage Taker",
+            "Murder"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Hostage Taker"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Murder",
+          "targets": [
+            {
+              "card": "Hostage Taker"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Hostage Taker",
+            "Murder"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Another target creature or artifact: her Bear and Trinket and his own Elf; never itself, nor her land",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elf",
+            "Island",
+            "Swamp",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Hostage Taker"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Trinket",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Hostage Taker"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Bear",
+                  "Elf",
+                  "Trinket"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Trinket"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Bear",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": [
+            "Trinket"
+          ]
+        }
+      ]
+    }
+  ]
+}

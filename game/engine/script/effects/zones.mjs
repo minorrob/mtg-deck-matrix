@@ -200,6 +200,9 @@ export function moveOne(state, id, to, events, {owner = null, controller = null,
  * `sameName`, a selector of the others. They are not targets -- one with hexproof goes too -- and are read as the exile
  * happens: every other permanent the target's controller then controls that has the target's name (CR 201.2a), exiled
  * with it and returned with it.
+ *
+ * "You may cast that card for as long as it remains exiled" (Hostage Taker): `remember`, what it exiled, as the cards they
+ * became in exile (CR 400.7), for the effect after it.
  */
 export function exileUntil(state, params, context) {
   const events = [];
@@ -214,11 +217,13 @@ export function exileUntil(state, params, context) {
     for (const id of state.zones.battlefield)
       if (!exiling.includes(id) && state.objects[id].card === name && controllerOf(state, id) === holder && others(state, id, {controller: context.controller, source})) exiling.push(id);
   }
+  const exiled = [];
   for (const id of exiling) {
     if (!state.objects[id]) continue;
     const moved = moveOne(state, id, "exile", events);
-    if (moved !== null && state.objects[moved]?.zone === "exile") (state.exiledUntil ??= []).push({source, exiled: moved});
+    if (moved !== null && state.objects[moved]?.zone === "exile") { (state.exiledUntil ??= []).push({source, exiled: moved}); exiled.push(moved); }
   }
+  if (params.remember) context.remembered = exiled;
   return events;
 }
 
@@ -583,6 +588,9 @@ export function mayPlay(state, params, context) {
     ...(params.free === true ? {free: true} : {}),
     ...(params.graveyardToLibraryBottom === true ? {graveyardToLibraryBottom: true} : {}),
     ...(params.spellsOnly === true ? {spellsOnly: true} : {}), ...(params.onlyIf !== undefined ? {onlyIf: structuredClone(params.onlyIf)} : {}),
+    /* "And mana of any type can be spent to cast that spell" (Hostage Taker; CR 609.4b): how it may be paid for
+       (rules/actions.mjs, anyTypeCost), as a permanent's play-from says it. */
+    ...(params.anyMana === true ? {anyMana: true} : {}),
     until: params.until ?? "end-of-turn", madeOnTurn: state.turn, sourceController: player});
   return [];
 }
