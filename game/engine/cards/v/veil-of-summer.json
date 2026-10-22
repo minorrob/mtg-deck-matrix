@@ -1,0 +1,88 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Veil of Summer",
+    "oracleId": "002965be-a36f-4a09-9ce0-c6535bca1703",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Draw a card if an opponent has cast a blue or black spell this turn. Spells you control can't be countered this turn. You and permanents you control gain hexproof from blue and from black until end of turn. (You and they can't be the targets of blue or black spells or abilities your opponents control.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Draw a card if an opponent has cast a blue or black spell this turn. Spells you control can't be countered this turn. You and permanents you control gain hexproof from blue and from black until end of turn. (You and they can't be the targets of blue or black spells or abilities your opponents control.)",
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1,
+          "condition": {
+            "compare": {
+              "count": {
+                "spellsCastThisTurn": "an opponent",
+                "filter": {
+                  "anyOf": [
+                    {
+                      "colors": [
+                        "U"
+                      ]
+                    },
+                    {
+                      "colors": [
+                        "B"
+                      ]
+                    }
+                  ]
+                }
+              },
+              "atLeast": 1
+            }
+          }
+        },
+        {
+          "effect": "effectUntil",
+          "rule": "cant-be-countered",
+          "affects": {
+            "what": "spell",
+            "controller": "you"
+          },
+          "until": "end-of-turn"
+        },
+        {
+          "effect": "effectUntil",
+          "rule": "hexproof-from",
+          "colors": [
+            "U",
+            "B"
+          ],
+          "who": "you",
+          "until": "end-of-turn"
+        },
+        {
+          "effect": "effectUntil",
+          "rule": "hexproof-from",
+          "colors": [
+            "U",
+            "B"
+          ],
+          "selector": {
+            "what": "permanent",
+            "controller": "you"
+          },
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

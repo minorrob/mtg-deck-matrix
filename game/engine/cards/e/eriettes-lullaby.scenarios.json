@@ -1,0 +1,203 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Eriette's Lullaby",
+  "fixtures": {
+    "Tapper": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3,
+      "abilities": [
+        {
+          "id": "t",
+          "kind": "activated",
+          "text": "{T}: You gain 1 life.",
+          "cost": [
+            {
+              "atom": "{T}"
+            }
+          ],
+          "effects": [
+            {
+              "effect": "gainLife",
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Maya's Tapper is tapped: destroyed, and Rob gains 2; her untapped Bear is no legal target",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Eriette's Lullaby"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Tapper",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Tapper",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Eriette's Lullaby"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Tapper"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Eriette's Lullaby",
+          "targets": [
+            {
+              "card": "Tapper"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Tapper"
+          ]
+        },
+        {
+          "seat": 0,
+          "life": 42
+        },
+        {
+          "seat": 1,
+          "life": 41
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "No tapped creature: it cannot be cast",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Eriette's Lullaby"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Eriette's Lullaby"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

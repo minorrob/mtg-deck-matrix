@@ -1,0 +1,68 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Eclipsed Boggart",
+    "oracleId": "9cc3b91b-ad70-4b01-b718-fda3819f84d0",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin",
+      "Scout"
+    ],
+    "manaCost": "{B/R}{B/R}{B/R}",
+    "colors": [
+      "B",
+      "R"
+    ],
+    "colorIdentity": [
+      "B",
+      "R"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "When this creature enters, look at the top four cards of your library. You may reveal a Goblin, Swamp, or Mountain card from among them and put it into your hand. Put the rest on the bottom of your library in a random order.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, look at the top four cards of your library. You may reveal a Goblin, Swamp, or Mountain card from among them and put it into your hand. Put the rest on the bottom of your library in a random order.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "dig",
+          "count": 4,
+          "take": 1,
+          "selector": {
+            "anyOf": [
+              {
+                "subtypes": [
+                  "Goblin"
+                ]
+              },
+              {
+                "subtypes": [
+                  "Swamp"
+                ]
+              },
+              {
+                "subtypes": [
+                  "Mountain"
+                ]
+              }
+            ]
+          },
+          "upTo": true,
+          "to": "hand",
+          "reveal": "taken",
+          "rest": "bottom",
+          "random": true
+        }
+      ]
+    }
+  ]
+}
