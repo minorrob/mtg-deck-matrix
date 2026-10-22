@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Grim Haruspex",
+    "oracleId": "72aef1d8-11df-4bc2-af83-907b05df73a8",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Wizard"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "Morph {B} (You may cast this card face down as a 2/2 creature for {3}. Turn it face up any time for its morph cost.)\nWhenever another nontoken creature you control dies, draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Morph {B}",
+      "keyword": "morph",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{B}"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever another nontoken creature you control dies, draw a card.",
+      "trigger": {
+        "on": "dies",
+        "who": "another",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "token": false
+        }
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

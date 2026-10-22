@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mangara, the Diplomat",
+    "oracleId": "cbcb6d9a-6ae5-4bcd-8013-2b657553764a",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Cleric"
+    ],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "Lifelink\nWhenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, draw a card.\nWhenever an opponent casts their second spell each turn, draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Lifelink",
+      "keyword": "lifelink"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, draw a card.",
+      "trigger": {
+        "on": "attackers declared",
+        "attacker": "opponent"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ],
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "attacking": "you"
+        },
+        "atLeast": 2
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever an opponent casts their second spell each turn, draw a card.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "opponent",
+        "nthThisTurn": 2
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

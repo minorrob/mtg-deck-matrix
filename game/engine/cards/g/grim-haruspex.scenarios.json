@@ -1,0 +1,371 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Grim Haruspex",
+  "fixtures": {
+    "Smite": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{3}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 4,
+      "toughness": 4
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Rob's Bear dies and he draws a card; Maya's Ogre dying draws him nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Smite",
+            "Smite"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Grim Haruspex",
+            "Bear",
+            "Plains",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Smite",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "hand",
+              "cards": [
+                "Smite",
+                "Wastes"
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Smite",
+          "targets": [
+            {
+              "card": "Ogre"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Not for itself: the Haruspex dying draws nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Smite"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Grim Haruspex",
+            "Plains"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Smite",
+          "targets": [
+            {
+              "card": "Grim Haruspex"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Grim Haruspex",
+            "Smite"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Morph: cast face down for {3}, a 2/2 with no abilities -- a Bear dying draws nothing; turned face up for {B}, the next one draws",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Grim Haruspex",
+            "Smite",
+            "Smite"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Plains",
+            "Plains",
+            "Swamp",
+            "Bear",
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Grim Haruspex",
+          "disguise": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "battlefield",
+              "faceDown": [
+                "Grim Haruspex"
+              ]
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Grim Haruspex",
+                "power": 2,
+                "toughness": 2
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Smite",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            },
+            {
+              "seat": 0,
+              "zone": "hand",
+              "cards": [
+                "Smite"
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "turnFaceUp": "Grim Haruspex",
+          "disguise": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Grim Haruspex",
+                "power": 3,
+                "toughness": 2
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Smite",
+          "targets": [
+            {
+              "card": "Ogre"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Ogre",
+            "Smite",
+            "Smite"
+          ]
+        }
+      ]
+    }
+  ]
+}

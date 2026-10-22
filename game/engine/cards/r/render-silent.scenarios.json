@@ -1,0 +1,361 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Render Silent",
+  "fixtures": {
+    "Tonic": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "You gain 1 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 1
+          }
+        ]
+      }
+    },
+    "Stubborn": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "colors": [],
+      "abilities": [
+        {
+          "id": "a0",
+          "kind": "static",
+          "text": "This spell can't be countered.",
+          "rule": "cant-be-countered",
+          "affects": {
+            "what": "spell",
+            "self": true
+          }
+        }
+      ],
+      "spell": {
+        "id": "s",
+        "text": "This spell can't be countered. You gain 3 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 3
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Maya's Tonic is countered, and she can cast no spell this turn; Trey, who controlled nothing countered, still casts his",
+      "seats": 3,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Render Silent"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Island",
+            "Island"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Tonic",
+            "Tonic"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 2,
+          "zone": "hand",
+          "cards": [
+            "Tonic"
+          ]
+        },
+        {
+          "seat": 2,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Tonic",
+          "seat": 1
+        },
+        {
+          "pass": 2
+        },
+        {
+          "tap": "Plains",
+          "seat": 0
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "cast": "Render Silent",
+          "seat": 0,
+          "targets": [
+            {
+              "card": "Tonic"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            },
+            {
+              "seat": 1,
+              "zone": "graveyard",
+              "cards": [
+                "Tonic"
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Tonic",
+                "seat": 1
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 2
+        },
+        {
+          "cast": "Tonic",
+          "seat": 2
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 40
+        },
+        {
+          "seat": 2,
+          "life": 41
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Tonic",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A spell that can't be countered resolves, and its controller still can't cast another spell this turn -- but may on Rob's turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Render Silent"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Island",
+            "Island"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Stubborn",
+            "Tonic"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Stubborn",
+          "seat": 1
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Plains",
+          "seat": 0
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "cast": "Render Silent",
+          "seat": 0,
+          "targets": [
+            {
+              "card": "Stubborn"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 43
+            }
+          ]
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Tonic",
+                "seat": 1
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Tonic",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 44
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Render Silent"
+          ]
+        }
+      ]
+    }
+  ]
+}
