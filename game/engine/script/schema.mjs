@@ -312,6 +312,12 @@ function checkEffect(effect, path, errors) {
      in the library and lifted to its top -- never several, whose order on top nothing asks. */
   if (name === "dig" && effect.to === "top" && !((effect.take ?? 1) === 1 && effect.all === undefined && effect.toByType === undefined))
     errors.push({path: `${path}.to`, message: "A card a dig puts on top of the library is one card: `to: \"top\"` with `take: 1`, never `all` or `toByType`"});
+  /* MANIFEST DREAD (CR 701.62a; Innocuous Rat): "look at the top two cards of your library. Manifest one of them, then put the
+     cards you looked at that were not manifested this way into your graveyard" -- a dig of two, one taken onto the battlefield
+     face down as a manifest is (CR 701.40a), the rest into the graveyard. `manifest: true` is that, and nothing else. */
+  if (name === "dig" && effect.manifest !== undefined && !(effect.manifest === true && effect.to === "battlefield" && (effect.take ?? 1) === 1 && effect.rest === "graveyard"
+    && effect.upTo === undefined && effect.all === undefined && effect.selector === undefined && effect.reveal === undefined))
+    errors.push({path: `${path}.manifest`, message: "Manifest dread is `manifest: true` with `to: \"battlefield\"`, `take: 1` and `rest: \"graveyard\"`: one card, chosen from all of them, none revealed"});
   /* Counters moved (moveCounters, CR 122.5; script/effects/resources.mjs): from one object onto another, of a kind named --
      or "chosen", its controller's choice among the kinds there (effects/asking.mjs, counterKind). */
   if (name === "moveCounters") {

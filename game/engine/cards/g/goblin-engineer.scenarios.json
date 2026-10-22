@@ -1,0 +1,266 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Goblin Engineer",
+  "fixtures": {
+    "Trinket": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{3}",
+      "colors": []
+    },
+    "Big Relic": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{4}",
+      "colors": []
+    },
+    "Bauble": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{0}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters: he searches for the Trinket, puts it into his graveyard, and shuffles",
+      "library": [
+        "Wastes",
+        "Wastes",
+        "Trinket"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Goblin Engineer"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Goblin Engineer"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Yes"
+          ]
+        },
+        {
+          "choose": [
+            "Trinket"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Trinket"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 19
+        },
+        {
+          "event": "GameEventShuffle",
+          "where": {
+            "player": {
+              "playerId": 0,
+              "name": "Rob"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "He may not search: the Trinket stays in his library",
+      "library": [
+        "Trinket"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Goblin Engineer"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Goblin Engineer"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "No"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": []
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 20
+        }
+      ]
+    },
+    {
+      "name": "{R}, {T}, the Bauble sacrificed: the Trinket (mana value 3) returns; the Big Relic (4) is no target",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Goblin Engineer",
+            "Mountain",
+            "Bauble"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Trinket",
+            "Big Relic"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Goblin Engineer"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Trinket"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Goblin Engineer",
+          "targets": [
+            {
+              "card": "Trinket"
+            }
+          ],
+          "sacrifice": "Bauble"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Goblin Engineer",
+            "Mountain",
+            "Trinket"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bauble",
+            "Big Relic"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Goblin Engineer"
+        }
+      ]
+    },
+    {
+      "name": "The artifact it would sacrifice is on the battlefield as the target is chosen (CR 601.2c): with none in the graveyard, not offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Goblin Engineer",
+            "Mountain",
+            "Bauble"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Goblin Engineer"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

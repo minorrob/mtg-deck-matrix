@@ -1,0 +1,57 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Nether Spirit",
+    "oracleId": "194e2563-c0bf-4151-bbb0-0d626130b055",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spirit"
+    ],
+    "manaCost": "{1}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "At the beginning of your upkeep, if this card is the only creature card in your graveyard, you may return this card to the battlefield.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your upkeep, if this card is the only creature card in your graveyard, you may return this card to the battlefield.",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "to": "battlefield"
+        }
+      ],
+      "optional": true,
+      "zone": "graveyard",
+      "condition": {
+        "compare": {
+          "count": {
+            "count": {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you",
+              "types": [
+                "Creature"
+              ]
+            }
+          },
+          "atMost": 1
+        }
+      }
+    }
+  ]
+}

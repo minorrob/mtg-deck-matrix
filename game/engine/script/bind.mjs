@@ -455,6 +455,10 @@ export function bindEffect(effect, context, state = null) {
     if (!factRef(value) || (key === "chooser" && factRef(value) === "ownerOf")) continue;
     const fact = factValue(value, context, state);
     if (key === "who") bound.who = fact === undefined ? [] : [fact];
+    /* "Exile up to one target non-Salamander creature. That creature's controller creates a 4/3 ... token" (Amphin Mutineer):
+       none chosen, or that target gone (CR 608.2b), there is no such player -- nobody creates it, never this ability's
+       controller in their place (effects/permanents.mjs, createToken). */
+    else if (fact === undefined && key === "controller") bound.controller = -1;
     else if (fact === undefined) delete bound[key];
     else bound[key] = fact;
   }

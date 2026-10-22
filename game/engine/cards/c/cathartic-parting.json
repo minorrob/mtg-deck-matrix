@@ -1,0 +1,100 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Cathartic Parting",
+    "oracleId": "0ea80bd9-ab7e-4a8f-85b0-167fe7fae43a",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "The owner of target artifact or enchantment an opponent controls shuffles it into their library. You may shuffle up to four target cards from your graveyard into your library.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "The owner of target artifact or enchantment an opponent controls shuffles it into their library. You may shuffle up to four target cards from your graveyard into your library.",
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Artifact"
+              ],
+              "controller": "opponent"
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Enchantment"
+              ],
+              "controller": "opponent"
+            }
+          ]
+        },
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "controller": "you",
+          "count": {
+            "min": 0,
+            "max": 4
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "library"
+        },
+        {
+          "effect": "shuffle",
+          "who": {
+            "ownerOf": {
+              "target": 0
+            }
+          }
+        },
+        {
+          "effect": "modal",
+          "title": "You may shuffle up to four target cards from your graveyard into your library.",
+          "modes": [
+            {
+              "text": "Yes",
+              "effects": [
+                {
+                  "effect": "moveZone",
+                  "targets": {
+                    "target": 1
+                  },
+                  "to": "library"
+                },
+                {
+                  "effect": "shuffle",
+                  "who": "you"
+                }
+              ]
+            },
+            {
+              "text": "No",
+              "effects": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

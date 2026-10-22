@@ -89,6 +89,7 @@
  *                                      permanent the spell became (rules/stack.mjs)
  *   {offspringPaid: true|false}        its own permanent was cast with its offspring cost paid, or was not (CR 702.175a;
  *                                      Coruscation Mage) -- asked again as the trigger resolves, as it triggered
+ *   {allOf: [condition, ...]}          every one of them holds: Happily Ever After's three, two of them counted comparisons
  *
  * The keys are closed, like every other grammar here: an unknown one is refused at the schema rather than read as true.
  */
@@ -129,6 +130,8 @@ const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTu
   "castFromYourHand", "castByYou",
   /* A Case's solved designation (CR 719.3b), and Evendo Brushrazer's "as long as you've sacrificed a nontoken permanent this turn". */
   "solved", "sacrificedNontokenThisTurn",
+  /* Every one of several conditions (Happily Ever After). */
+  "allOf",
   /* Gift's "if the gift was promised" (CR 702.174b). */
   "giftPromised",
   /* Offspring's "if its offspring cost was paid" (CR 702.175a; wave 4c). */
@@ -224,6 +227,11 @@ function castHolds(rule, cast) {
 export function conditionHolds(state, condition, {controller, source = null, about = undefined, remembered = undefined, targets = undefined, cast = undefined, x = undefined, spent = undefined, excessDamage = undefined, rememberedControllers = undefined,
   movedWas = undefined, searched = undefined, lastKnown = undefined, paidFor = undefined, resolvedBefore = undefined, gift = undefined, offspring = undefined} = {}) {
   if (!condition) return true;
+  /* "IF there are five colors among permanents you control, there are six or more card types among ..., AND your life total is
+     greater than or equal to your starting life total" (Happily Ever After): every one of them, each a condition of its own --
+     two counted comparisons cannot share one `compare`. Asked with what this one is asked with. */
+  if (Array.isArray(condition.allOf) && !condition.allOf.every((one) => conditionHolds(state, one, {controller, source, about, remembered, targets, cast, x, spent,
+    excessDamage, rememberedControllers, movedWas, searched, lastKnown, paidFor, resolvedBefore, gift, offspring}))) return false;
   /* "IF ITS OFFSPRING COST WAS PAID" (CR 702.175a; Coruscation Mage, wave 4c): its own permanent was cast with it paid -- or,
      asked again as its trigger resolves (CR 603.4), its source as it triggered, which may be gone: the token is made all the
      same (the card's ruling; rules/trigger.mjs keeps it, `offspring`). */
@@ -464,6 +472,10 @@ export function conditionProblems(condition) {
   if (!condition || typeof condition !== "object" || Array.isArray(condition)) return ["A condition is an object: {present: selector} or {handEmpty: true}"];
   const problems = [];
   for (const key of Object.keys(condition)) if (!CONDITION_KEYS.includes(key)) problems.push(`A condition has no key ${JSON.stringify(key)}; it has ${CONDITION_KEYS.join(", ")}`);
+  if ("allOf" in condition) {
+    if (!(Array.isArray(condition.allOf) && condition.allOf.length >= 2)) problems.push("allOf is a list of two or more conditions, every one of which must hold");
+    else condition.allOf.forEach((one, n) => problems.push(...conditionProblems(one).map((p) => `allOf[${n}]: ${p}`)));
+  }
   if ("atLeast" in condition && !(Number.isInteger(condition.atLeast) && condition.atLeast >= 1)) problems.push("A condition's atLeast is a whole number, 1 or more");
   if ("atMost" in condition && !(Number.isInteger(condition.atMost) && condition.atMost >= 0)) problems.push("A condition's atMost is a whole number, 0 or more");
   if (("atLeast" in condition || "atMost" in condition) && !("present" in condition)) problems.push("atLeast and atMost count what `present` describes");
