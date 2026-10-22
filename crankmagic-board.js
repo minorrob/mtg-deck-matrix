@@ -1804,8 +1804,8 @@ globalThis.CrankBoard = Object.seal({
       el.className = "cm-play-pop";
       el.style.setProperty("--seat", seatColor(x.player));
       el.setAttribute("aria-label", `${who} ${x.kind === "land" ? "played" : "cast"} ${name}`);
-      el.innerHTML = `<header><b>${e(who)}</b><button type="button" class="cm-play-close" aria-label="Close ${e(name)}">✕</button></header>
-        <button type="button" class="cm-play-card" aria-label="${e(name)}"><img src="${e(pictureOf(name))}" alt="" draggable="false" referrerpolicy="no-referrer"></button>`;
+      el.innerHTML = `<header><b>${e(who)}</b><button type="button" class="cm-play-close" tabindex="-1" aria-label="Close ${e(name)}">✕</button></header>
+        <button type="button" class="cm-play-card" tabindex="-1" aria-label="${e(name)}"><img src="${e(pictureOf(name))}" alt="" draggable="false" referrerpolicy="no-referrer"></button>`;
       let left = PLAY_MS, since = performance.now(), timer = null;
       const gone = () => {clearTimeout(timer); if (!el.isConnected) return; el.classList.add("is-leaving"); setTimeout(() => el.remove(), reduced() ? 0 : 600);};
       const run = () => {since = performance.now(); timer = setTimeout(gone, left);};
@@ -1818,6 +1818,18 @@ globalThis.CrankBoard = Object.seal({
       run();
     }
   }
+  /* For the eye and the pointer: the keyboard's way round the table is the board's own, and what was played is in the History.
+     So the pop-ups take no focus and are not read out (as the callouts are not), and one over whatever the keyboard brings
+     the focus to is put away at once, never covering it (a11y-board). */
+  document.addEventListener("focusin", (event) => {
+    const t = event.target;
+    if (!t || !t.closest || !t.closest("#cm-board")) return;
+    const r = t.getBoundingClientRect();
+    for (const pop of document.querySelectorAll("#cm-board-plays .cm-play-pop")) {
+      const p = pop.getBoundingClientRect();
+      if (p.left < r.right && p.right > r.left && p.top < r.bottom && p.bottom > r.top) pop.remove();
+    }
+  });
 
   /* THE BOARD'S ONE STATUS REGION (WCAG 4.1.3): a polite live region beside the board, not in it, so the board drawn
      again with every view never makes it anew -- a region made anew with its words already in it is heard twice, or
@@ -2244,7 +2256,7 @@ globalThis.CrankBoard = Object.seal({
       for (const [seat, w] of awaySaid) if (w.at > asked) heard(seat, w.until);
       if (!document.getElementById("cm-board")) {
         records = null; saidKey = null;
-        C.main.innerHTML = `<div class="cm-board" id="cm-board" data-view="${mode}"></div><div class="cm-board-callouts" id="cm-board-callouts" aria-hidden="true"></div><div class="cm-board-plays" id="cm-board-plays" role="region" aria-label="Cards the other players played"></div><aside class="cm-board-coach" id="cm-board-coach" aria-label="CrankMagic Coach" hidden></aside><p class="cm-sr-only" id="cm-board-said" role="status" aria-live="polite" aria-atomic="true"></p>`;
+        C.main.innerHTML = `<div class="cm-board" id="cm-board" data-view="${mode}"></div><div class="cm-board-callouts" id="cm-board-callouts" aria-hidden="true"></div><div class="cm-board-plays" id="cm-board-plays" aria-hidden="true"></div><aside class="cm-board-coach" id="cm-board-coach" aria-label="CrankMagic Coach" hidden></aside><p class="cm-sr-only" id="cm-board-said" role="status" aria-live="polite" aria-atomic="true"></p>`;
         draw();
         watch();
       } else if (said() !== before) draw();
