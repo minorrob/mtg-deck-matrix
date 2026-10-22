@@ -8,7 +8,7 @@
   // One pinhole-camera homography for the physical table, mats and DOM cards.
   function geometry(width, height, {tilt = 40, zoom = 100, seats = 3} = {}) {
     const w = Math.max(1, width), h = Math.max(1, height), angle = clamp(tilt, 0, 60) * Math.PI / 180;
-    const planeHeight = h * .88, cosine = Math.cos(angle), sx = .902 * clamp(zoom,60,120) / 100, sy = sx * cosine;
+    const planeHeight = h * .88, cosine = Math.cos(angle), sx = .902 * clamp(zoom,60,200) / 100, sy = sx * cosine;
     const cx=w/2, cy=planeHeight/2, screenY=h*.43, depth=-Math.sin(angle)/(Math.max(w,h)*2.5);
     const project=(x,y)=>{const d=1+depth*(y-cy);return [cx+sx*(x-cx)/d,screenY+sy*(y-cy)/d];};
     function surface(r) {
@@ -109,7 +109,7 @@
     const g = geometry(box.width, box.height, {tilt: opts.tilt, zoom: opts.zoom, seats: (opts.mats || []).length - 1});
     for (const [i, el] of [...current.host.querySelectorAll(".cm-stage-rear")].entries()) {position(el, g.rear[i]); el.style.setProperty("--rear-card", `${Math.max(18, (g.rear[i].height-28)/4.8)}px`);}
     position(current.host.querySelector(".cm-stage-front"), g.front);
-    current.host.style.setProperty("--stage-card", `${Math.floor(clamp((g.front.height - 64) / 5.5, 24, 112) * 1.3 * (1 + .8 * (clamp(opts.cards ?? 100, 70, 150) - 100) / 100))}px`);
+    current.host.style.setProperty("--stage-card", `${Math.floor(clamp((g.front.height - 64) / 5.5, 24, 112) * 1.3 * (1 + .8 * (clamp(opts.cards ?? 100, 70, 200) - 100) / 100))}px`);
     if (current.app) {current.host.prepend(current.app.canvas); paint(current);}
     return g;
   }

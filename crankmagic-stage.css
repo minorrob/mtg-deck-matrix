@@ -353,11 +353,12 @@
 .cm-phone-ask .cm-block-tile{flex:1 1 104px;min-width:0}
 
 #matrix-v2 .cm-phone-ask .is-blocking>.cm-board-decision-foot .v-button{min-height:32px;height:32px;padding:0 10px}
-/* THE COMMANDER TAX (ROB-29): at the commander's top-right in the command zone, as Rob asked; never under 10px, light on dark
+/* THE COMMANDER TAX (ROB-29): at the commander's right in the command zone, as Rob asked -- just under the title bar, so the
+   card's own mana cost stays in sight (Rob, 2026-10-21: "covering the card's mana value"); never under 10px, light on dark
    in either theme (the theme's ink turns light in dark, a11y-board). The name
    leaves it room (a badge over the name made its letters unreadable, a11y-board), wrapping sooner instead. */
 .cm-bcard.has-tax .cm-bcard-name{right:calc(5% + max(10px,calc(var(--bc,72px) * .13)) * 1.7 + 10px)}
-.cm-bcard-tax{position:absolute;right:4%;top:4%;z-index:2;padding:1px 5px;border-radius:5px;background:#0b1d1f;color:#f3fff7;font-size:max(10px,calc(var(--bc,72px) * .13));font-weight:800;line-height:1.2;pointer-events:none}
+.cm-bcard-tax{position:absolute;right:4%;top:13%;z-index:2;padding:1px 5px;border-radius:5px;background:#0b1d1f;color:#f3fff7;font-size:max(10px,calc(var(--bc,72px) * .13));font-weight:800;line-height:1.2;pointer-events:none}
 /* PARTNERS (ROB-29): both commanders in the command zone, the second over the first like a small pile, each its own button. */
 .cm-board-pile>.cm-board-partners{position:relative;justify-self:start;display:block;z-index:1}
 .cm-mat:not(.is-bare) .cm-board-pile>.cm-board-partners{margin:-3px 0 0 -3px}
@@ -366,3 +367,51 @@
 .cm-board-partners>.cm-bcard+.cm-bcard{position:absolute;z-index:2;left:22%;top:30%;box-shadow:0 2px 8px rgb(0 0 0 / .55)}
 /* WHAT YOU WERE SHOWN (ROB-169): the cards an acknowledgment is about, large enough to read. */
 .cm-board-shown{display:flex;flex-wrap:wrap;gap:8px;--bc:96px}
+
+/* ROB'S FULLSCREEN NOTES (Oct 21). */
+/* A card you can use now: its outline brighter, with a glow (Rob: "make the green outlines around cards more prominent"); a
+   card already chosen keeps its own glow (.is-picked). */
+#matrix-v2 .cm-board .cm-bcard.is-bright:not(.is-picked){box-shadow:0 0 0 4px var(--v-accent),0 0 14px 3px color-mix(in srgb,var(--v-accent) 60%,transparent),0 6px 14px -6px rgb(0 0 0 / .85)}
+#matrix-v2 .cm-board .cm-bcard.is-bright:not(.is-picked):focus-visible{box-shadow:0 0 0 2px var(--focus-halo),0 0 0 7px var(--v-accent),0 0 16px 4px color-mix(in srgb,var(--v-accent) 60%,transparent)}
+/* THE TURN'S ACTIONS over the table in Full screen, large, at the top where the callouts are; dimmed while not yours. */
+/* Solid behind its words, whatever the scene under it (a11y-board reads every word's contrast over every mat); while the
+   question is not yours, its buttons are off, and the pass reads as off by itself. */
+.cm-stage-actions{position:absolute;left:50%;top:12px;z-index:12;display:flex;align-items:center;gap:14px;padding:10px 14px;border-radius:18px;background:#06161a;border:1px solid #3d5c55;box-shadow:0 16px 36px -14px rgb(0 0 0 / .9);transform:translateX(-50%);white-space:nowrap}
+#matrix-v2 .cm-stage-actions .v-button{min-height:56px;height:auto;padding:0 28px;border-radius:14px;font-size:19px;font-weight:800;letter-spacing:.01em;color:#f3fff7;background:#1c3432;border-color:#6f9c88}
+#matrix-v2 .cm-stage-actions .v-button.primary{color:var(--color-on-accent,#0d120c);background:var(--v-accent);border-color:var(--v-accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--v-accent) 35%,transparent),0 10px 24px -10px var(--v-accent)}
+#matrix-v2 .cm-stage-actions .v-button.is-on{background:#87c6a1;color:#0d120c}
+#matrix-v2 .cm-stage-actions .v-button:disabled{box-shadow:none}
+.cm-stage-actions .cm-board-yield-control{max-width:260px}
+.cm-stage-actions .cm-board-yield-control small{color:#d7e8dd}
+.cm-stage-actions.is-rising{animation:cm-actions-rise .34s cubic-bezier(.2,.8,.2,1)}
+@keyframes cm-actions-rise{from{opacity:0;transform:translate(-50%,-14px) scale(.9)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
+/* the callouts below the actions, never over them */
+.cm-board[data-stage="on"]~.cm-board-callouts{top:calc(16% + 64px)}
+@media(max-width:1100px){#matrix-v2 .cm-stage-actions .v-button{min-height:46px;padding:0 18px;font-size:16px}.cm-stage-actions{gap:10px;padding:8px 10px}}
+/* WHAT THE OTHER PLAYERS PLAY: each card held up at the table's left, under the life list, its player's name over it, for
+   ten seconds. */
+.cm-board-plays{position:fixed;left:56px;top:176px;z-index:57;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+/* three at most, each as large as a third of the window below the caption leaves: a header and a 5:7 card */
+.cm-play-pop{--pw:max(96px,min(13vw,210px,calc(((100vh - 196px) / 3 - 46px) * 5 / 7)));width:var(--pw);padding:6px;border-radius:12px;background:rgb(6 20 22 / .9);border:2px solid var(--seat,#6f9c88);box-shadow:0 18px 40px -16px #000;color:#f3fff7;pointer-events:auto;animation:cm-play-in .3s cubic-bezier(.2,.8,.2,1);transition:opacity .6s,transform .6s}
+.cm-play-pop.is-leaving{opacity:0;transform:translateX(-24px)}
+.cm-play-pop header{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:0 2px 5px;font-size:13px}
+.cm-play-pop header b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#matrix-v2 .cm-play-close{flex:none;width:26px;height:26px;padding:0;border:1px solid rgb(255 255 255 / .25);border-radius:7px;background:#1c3432;color:#f3fff7;font-size:13px;line-height:1}
+#matrix-v2 .cm-play-card{display:block;width:100%;padding:0;border:0;background:none;aspect-ratio:5/7;border-radius:8px;overflow:hidden}
+.cm-play-card img{display:block;width:100%;height:100%;object-fit:cover}
+@keyframes cm-play-in{from{opacity:0;transform:translateX(-30px) scale(.94)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.cm-stage-actions.is-rising,.cm-play-pop{animation:none}.cm-play-pop{transition:none}}
+.cm-board[data-phone]~.cm-board-plays{left:8px;top:64px}
+.cm-board[data-phone]~.cm-board-plays .cm-play-pop{--pw:110px}
+/* The two choices in Settings: a checkbox of its own size, the words as the Card size label is set, bold and light. */
+.cm-board-hold{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:12px;font-weight:700;color:var(--v-ink);cursor:pointer}
+#matrix-v2 .cm-board-hold input[type=checkbox]{flex:none;width:16px;height:16px;min-width:0;min-height:0;margin:0;padding:0;accent-color:var(--v-accent)}
+/* THE LOBBY'S DECK CHOOSER (Rob, 2026-10-22): each row its commanders' colors and what the deck does; and Playable, which
+   puts away the decks the table cannot play every card of -- a library deck with cards to learn, a shared deck not
+   available on this server -- once it has said so. */
+.cm-table-deck-cmdr{display:flex;align-items:center;gap:6px;min-width:0}
+.cm-table-deck-cmdr .cm-pip{width:16px;height:16px}
+.cm-table-deck-about{font-size:12px;line-height:1.35;color:var(--v-muted)}
+.cm-table-deck-only{margin:0 0 10px}
+.cm-table-deck-choose.is-playable-only li:has(>.cm-table-deck.is-unknown),
+.cm-table-deck-choose.is-playable-only li:has(>.cm-table-deck[data-shared-deck]:disabled){display:none}

@@ -148,9 +148,10 @@ export class GameRoom {
       try {return send({type: "checked", choiceId: frame.choiceId ?? null, ...room.check(seatId, {choiceId: frame.choiceId, indices: frame.indices})});}
       catch (error) {if (!(error instanceof RoomError)) throw error; return send({type: "refused", of: "check", status: error.status, error: error.message});}
     }
-    /* A person's way of playing (game/room/room.mjs, prefer): Settings' "stop at every step of my turn". */
+    /* A person's way of playing (game/room/room.mjs, prefer): Settings' "stop at every step of my turn", and the board's
+       "Skip my priority if no response possible" (`askStack`, sent only by a board that has it). */
     if (frame && frame.type === "prefer") {
-      try {await room.prefer(seatId, {stepByStep: frame.stepByStep === true});}
+      try {await room.prefer(seatId, {stepByStep: frame.stepByStep === true, ...(typeof frame.askStack === "boolean" ? {askStack: frame.askStack} : {})});}
       catch (error) {if (!(error instanceof RoomError)) throw error; return send({type: "refused", of: "prefer", status: error.status, error: error.message, view: room.view(seatId)});}
       return send({type: "view", view: room.view(seatId)});
     }
