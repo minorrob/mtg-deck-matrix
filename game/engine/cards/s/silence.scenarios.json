@@ -1,0 +1,290 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Silence",
+  "fixtures": {
+    "Tonic": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "You gain 1 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 1
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Neither of Rob's opponents may cast a spell this turn, though both hold mana; Rob still casts his own, and next turn Maya casts hers",
+      "seats": 3,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Silence",
+            "Tonic"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Tonic"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 2,
+          "zone": "hand",
+          "cards": [
+            "Tonic"
+          ]
+        },
+        {
+          "seat": 2,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Silence"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Tonic",
+                "seat": 0
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "cast": "Tonic"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "life": 41
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Tonic",
+                "seat": 1
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 2
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Tonic",
+                "seat": 2
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Tonic",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 41
+        },
+        {
+          "seat": 2,
+          "zone": "hand",
+          "cards": [
+            "Tonic"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A spell cast in answer to Silence, before it resolves, is cast and resolves; once Silence resolves, Maya casts no other",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Silence"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Tonic",
+            "Tonic"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Silence"
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Tonic",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 41
+            },
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Tonic",
+                "seat": 1
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Tonic"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Silence"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,185 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Pumpkin Bombs",
+  "fixtures": {
+    "Spare": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Rob discards two and draws three, a fuse counter goes on, 1 damage to Maya, and she gains control of it; on her turn she does the same: 2 damage to Rob, and it is his again",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Spare",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Pumpkin Bombs"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Spare",
+            "Island"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Pumpkin Bombs",
+          "targets": [
+            {
+              "player": 1
+            }
+          ],
+          "discard": [
+            "Spare",
+            "Island"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "hand",
+              "count": 3
+            },
+            {
+              "seat": 1,
+              "life": 39
+            },
+            {
+              "seat": 1,
+              "controls": [
+                "Pumpkin Bombs"
+              ]
+            },
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Pumpkin Bombs",
+                "counter": "fuse",
+                "count": 1
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Pumpkin Bombs",
+          "seat": 1,
+          "targets": [
+            {
+              "player": 0
+            }
+          ],
+          "discard": [
+            "Spare",
+            "Island"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Pumpkin Bombs"
+          ]
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Pumpkin Bombs",
+            "counter": "fuse",
+            "count": 2
+          }
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Island",
+            "Spare"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "One card in hand is not two to discard: it cannot be activated",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Spare"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Pumpkin Bombs"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Pumpkin Bombs"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Spare"
+          ]
+        }
+      ]
+    }
+  ]
+}

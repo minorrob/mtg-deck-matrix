@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Clever Concealment",
+    "oracleId": "42bb7ea9-f6e4-4551-8d93-3b1eae84b865",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.)\nAny number of target nonland permanents you control phase out. (Treat them and anything attached to them as though they don't exist until your next turn.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Convoke",
+      "keyword": "convoke"
+    },
+    {
+      "kind": "spell",
+      "text": "Any number of target nonland permanents you control phase out. (Treat them and anything attached to them as though they don't exist until your next turn.)",
+      "targets": [
+        {
+          "what": "permanent",
+          "nonTypes": [
+            "Land"
+          ],
+          "controller": "you",
+          "count": {
+            "min": 0
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "phaseOut",
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -202,6 +202,8 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
   "embalm",
   /* Tiered (CR 702.183): each mode its own additional cost (keywords/timing.mjs). */
   "tiered",
+  /* Library load L2: spree (CR 702.172), each mode chosen its own additional cost (keywords/timing.mjs). */
+  "spree",
   /* Suspend (CR 702.62), from the hand (keywords/timing.mjs). */
   "suspend",
   /* Plot (CR 702.170), from the hand, and the cast on a later turn it allows (library load L5; rules/actions.mjs). */

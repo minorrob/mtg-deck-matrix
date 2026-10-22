@@ -178,7 +178,7 @@ BREAKS = [
     # "You can't cast additional spells this turn" (Conduit of Worlds).
     ("can't cast: every spell", PERMANENTS, CANT_CAST_ALL, 'spells: {named: params.named},'),
     ("can't cast: allowed", PERMANENTS, CANT_CAST_OK, CANT_CAST_OK.replace(' || params.allSpells === true', '')),
-    ("can't cast: you", PERMANENTS, '    const who = params.who === "you" ? [context.controller] : params.who;', '    const who = params.who;'),
+    ("can't cast: you", PERMANENTS, '    const who = typeof params.who === "string" ? playersFor(state, params.who, context.controller) : params.who;', '    const who = params.who;'),
 
     # Rule statics that read their condition now.
     ('condition read: play-from', INDEX, READS, '  "cast-self-from",\n'),
