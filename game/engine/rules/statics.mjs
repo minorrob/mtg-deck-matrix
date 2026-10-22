@@ -114,6 +114,9 @@ export const STATIC_RULES = Object.freeze({
       Equipment spells" (Sigarda's Aid): `spells` true or a selector of the spell, for the static's controller (CR 702.8a
       by permission). rules/actions.mjs, flashGranted. */
   "cast-as-though-flash": "rules/actions.mjs",
+  /** "You may cast this spell as though it had flash if it targets a commander" (Timely Ward; library load L2): the card's own,
+      `targeting` what one of its targets must be, its targets then chosen as it is offered. rules/actions.mjs, flashAims. */
+  "flash-if-targets": "rules/actions.mjs",
   /** "This token crews Vehicles as though its power were 2 greater" (Shorikai's Pilot): `amount` added as it crews.
       rules/actions.mjs, crewChoices. */
   "crews-with-more": "rules/actions.mjs",

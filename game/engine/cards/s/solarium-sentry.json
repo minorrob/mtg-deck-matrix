@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Solarium Sentry",
+    "oracleId": "afddba56-f9a0-4917-8167-c9fd17ca9954",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Cat",
+      "Soldier"
+    ],
+    "manaCost": "{G}{W}",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Whenever an opponent casts a spell with mana value 2 or less, you gain 2 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever an opponent casts a spell with mana value 2 or less, you gain 2 life.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "opponent",
+        "filter": {
+          "manaValue": {
+            "max": 2
+          }
+        }
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 2
+        }
+      ]
+    }
+  ]
+}

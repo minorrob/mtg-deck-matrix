@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rebuff the Wicked",
+    "oracleId": "f5822e53-ddec-4c77-bcf4-091e35c1e731",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Counter target spell that targets a permanent you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Counter target spell that targets a permanent you control.",
+      "targets": [
+        {
+          "what": "spell",
+          "targeting": {
+            "what": "permanent",
+            "controller": "you"
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "counterSpell",
+          "spells": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

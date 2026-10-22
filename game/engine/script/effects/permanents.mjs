@@ -21,7 +21,7 @@ import {addObject, transformObject, rememberExileLooker, COPY_KEYS} from "../../
 import {selectMatching, compileSelector} from "../filter.mjs";
 import {bindEffect, rememberNow, countThisWay} from "../bind.mjs";
 import {amountOf} from "../amount.mjs";
-import {event, cardRef, moveOne} from "./zones.mjs";
+import {event, cardRef, moveOne, playersFor} from "./zones.mjs";
 import {typesOf, controllerOf, staticAbilities} from "../../rules/layers.mjs";
 import {protectedFrom} from "../../rules/protection.mjs";
 import {manaValue, parseManaCost} from "../../rules/mana.mjs";
@@ -769,9 +769,11 @@ export function effectUntil(state, params, context) {
      cast is offered (rules/statics.mjs, castForbidden). Lands are played, not cast, and stay playable (the card's ruling). A
      name that could not be read (the creature gone) forbids nothing. */
   /* "If you do, you can't cast additional spells this turn" (Conduit of Worlds): every spell (`allSpells`), its controller's
-     ("you"). */
+     ("you"). "Your opponents can't cast spells this turn" (Silence; library load L2): each opponent still in the game as it
+     resolves ("opponent"); "players can't cast spells this turn" (Bilbo's Gambit): each player ("each") -- named now, as
+     the rule is changed for players and not objects (CR 611.2c is about characteristics). */
   if (params.rule === "cant-cast") {
-    const who = params.who === "you" ? [context.controller] : params.who;
+    const who = typeof params.who === "string" ? playersFor(state, params.who, context.controller) : params.who;
     if (!(typeof params.named === "string" || params.allSpells === true) || !Array.isArray(who) || !who.length) return [];
     pushEffect(state, {id: params.id ?? `effect:${context.source ?? "effect"}`, rule: "cant-cast", players: [...who], spells: params.allSpells === true ? {} : {named: params.named},
       affects: {what: "player"}, apply: {}, until: params.until ?? "end-of-turn", sourceController: context.controller});
@@ -885,6 +887,10 @@ export function gainControl(state, params, context) {
   const source = context.source ?? null;
   if (params.until === "this leaves" && (source === null || state.objects[source]?.zone !== "battlefield")) return [];
   const ids = (params.selector ? selectMatching(state, params.selector, context) : params.targets ?? []).filter((id) => state.objects[id]?.zone === "battlefield");
+  /* "Gain control of all creatures with power 4 or greater until end of turn. Untap those creatures" (Mob Rule; library load
+     L2): what it named as it resolved, for the effects after it to name as "remembered" -- not the selector read again, which
+     a creature's power changed by the control change itself (an anthem left behind) would no longer fit. */
+  if (params.remember) context.remembered = ids.slice();
   for (const id of ids) {
     const object = state.objects[id];
     /* Kept even for good, and even when it changes nothing: a later change outlasts the earlier ones in layer 2 (CR 613.7),

@@ -669,6 +669,14 @@ function additionalVariants(costs) {
       variants = variants.flatMap((v) => (atom.costs ?? []).map((cost, tier) => ({...v, mana: v.mana + cost, tier})));
       continue;
     }
+    /* SPREE (CR 702.172a; Explosive Derailment, library load L2): one or more modes, and each one's cost -- each set of modes its
+       own variant, those modes alone (withModes), their costs added. */
+    if (atom?.atom === "spree") {
+      const costs = atom.costs ?? [], sets = [];
+      for (let mask = 1; mask < 1 << costs.length; mask += 1) sets.push(costs.map((_, i) => i).filter((i) => mask & (1 << i)));
+      variants = variants.flatMap((v) => sets.map((modes) => ({...v, mana: v.mana + modes.map((i) => costs[i]).join(""), spree: modes})));
+      continue;
+    }
     const options = atom?.atom === "oneOf" ? atom.options ?? [] : [[atom]];
     /* "As an additional cost to cast this spell, pay 5 life or pay {2}" (Redirect Lightning; CR 601.2b, 119.4): a choice's
        life, a fixed amount, paid with the rest of the cost (`life`, the offer's `extraLife`) -- not a cost to pick. */
@@ -735,7 +743,8 @@ function additionalChoices(state, player, spellId, costs) {
    when its condition holds now ("if you control a commander as you cast this spell, you may choose both instead") --
    and per way to choose the chosen modes' targets (601.2c), in the order of the modes. A mode is chosen once (700.2d). */
 /* `exactly`: so many modes and no other number (escalate's variant, additionalVariants; the compiler holds it to what the spell
-   allows, cards/index.mjs). `only`: that one mode and no other (tiered's variant, CR 702.183a: its cost is that mode's). */
+   allows, cards/index.mjs). `only`: that one mode and no other (tiered's variant, CR 702.183a: its cost is that mode's) -- or
+   those modes and no others (spree's, CR 702.172a: its costs are theirs). */
 /* "CHOOSE UP TO FOUR. YOU MAY CHOOSE THE SAME MODE MORE THAN ONCE" (Moment of Reckoning; CR 700.2d): `choose: 0`, none chosen a
    choice too ("up to"), and `sameMode`, as many as it says whatever the number of modes -- each mode again after itself, so
    each choice is offered once, its modes in the order they are written, which is the order they are followed in; the
@@ -752,6 +761,7 @@ function withModes(state, base, modal, context, exactly = null, only = null) {
     for (let i = from; i < modal.modes.length; i += 1) pick(modal.sameMode ? i : i + 1, [...chosen, i]);
   };
   if (Number.isInteger(only)) picks.push([only]);
+  else if (Array.isArray(only)) picks.push([...only]);
   else pick(0, []);
   return picks.flatMap((modes) => {
     const {targets: specs, effects} = modalScript(modal, modes);
@@ -774,6 +784,13 @@ const withModesOrTargets = (state, base, ability, context, aim = null) => (abili
    creature cost an additional 3 life to cast", Terror of the Peaks; rules/statics.mjs, costsReadTargets). */
 const aimsFor = (state, object, spell, context) => ((object.abilities ?? []).some((a) => a.kind === "static" && a.rule === "this-costs-less" && a.targeting)
   || costsReadTargets(state) ? targetChoices(state, spell?.targets ?? [], context) : [null]);
+/* "YOU MAY CAST THIS SPELL AS THOUGH IT HAD FLASH IF IT TARGETS A COMMANDER" (Timely Ward; library load L2; CR 601.3, 601.2c):
+   the card's own permission (`rule: "flash-if-targets"`), what it must target its `targeting` -- null when it has none. At a
+   time only that permission allows, it is cast with targets chosen as it is offered, one of them what `targeting` describes
+   (flashAims): aimed at nothing that fits, no cast then is legal, so none is offered. */
+const flashIfTargets = (object) => (object?.abilities ?? []).find((a) => a.kind === "static" && a.rule === "flash-if-targets")?.targeting ?? null;
+const flashAims = (state, spell, context, targeting) => targetChoices(state, spell?.targets ?? [], context)
+  .filter((aim) => aim.flat().some((t) => t?.kind === "object" && matchesSelector({...targeting, what: "permanent"}, state, t.id, context)));
 /* "AS AN ADDITIONAL COST TO CAST THIS SPELL, PAY X LIFE" (Toxic Deluge, wave 4b; CR 601.2b, 107.3a): X announced as it is
    cast -- one offer for each value its caster's life can pay, from none up (CR 119.4: no more life than they have; 119.4b: 0
    always) -- and the X its effects read (`x`), whether or not its mana cost is paid (the card's ruling: it has no {X} in its
@@ -1594,7 +1611,9 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
   /* SNEAK (CR 702.190a): "any time you could cast an instant during your declare blockers step" -- a card that could not be
      cast now otherwise is offered for its sneak cost alone (`sneaking`), its condition saying when (alternativeCosts). */
   const sneaking = !timely && (object.abilities ?? []).some((a) => a.kind === "static" && a.rule === "alternative-cost" && a.sneak === true);
-  if (!timely && !sneaking) return actions;
+  /* Or as though it had flash only for what it targets (Timely Ward; flashIfTargets): its aims, below, those alone. */
+  const flashIf = timely ? null : flashIfTargets(object);
+  if (!timely && !sneaking && !flashIf) return actions;
   const tax = from === "command" ? commanderTax(state, player, id) : 0;
   /* Derive free-cast grants only after timing rejects spells that cannot be cast now. */
   const free = flashback || escape || lifeCost !== null ? null : permit?.ability.free ? {source: permit.source, limited: false} : freeCast(state, player, id);
@@ -1633,7 +1652,9 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
   /* Escalate's creatures to tap (CR 702.120a): that many there to tap now, or not that many modes. */
   if (variant.escalateTap && flashbackTappers(state, player, variant.escalateTap).length < variant.escalateTap.count) continue;
   /* Its targets first, when its cost reads them (aimsFor): each way to choose them costed, and offered, on its own. */
-  for (const freely of way ? [false] : free ? (free.limited ? [false, true] : [true]) : [false]) for (const aim of aimsFor(state, object, way?.overload ?? object.spell, {controller: player, source: id, cast})) {
+  for (const freely of way ? [false] : free ? (free.limited ? [false, true] : [true]) : [false]) for (const aim of flashIf
+    ? flashAims(state, way?.overload ?? object.spell, {controller: player, source: id, cast}, flashIf)
+    : aimsFor(state, object, way?.overload ?? object.spell, {controller: player, source: id, cast})) {
   /* The life it costs: the Citadel's, or -- cast without paying its mana cost by a cost of life (freeLife) -- that. */
   const paidLife = freely ? freeLife(object, free) : lifeCost;
   if (paidLife !== null && paidLife > state.players[player].life) continue;
@@ -1724,7 +1745,7 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
       /* A way to aim it that costs more life than there is -- a mode's target, chosen here, at Terror of the Peaks -- is no way
          to cast it (CR 119.4). */
       const affordable = (offer) => lifeIncrease(state, player, id, offer.targets) <= lifeLeft + aimLife;
-      actions.push(...(object.spell?.modal && !way?.overload ? withModes(state, base, object.spell.modal, {controller: player, source: id}, variant.escalate !== undefined ? variant.escalate + 1 : null, variant.tier ?? null)
+      actions.push(...(object.spell?.modal && !way?.overload ? withModes(state, base, object.spell.modal, {controller: player, source: id}, variant.escalate !== undefined ? variant.escalate + 1 : null, variant.spree ?? variant.tier ?? null)
         : withTargets(state, base, way?.overload ?? object.spell, {controller: player, source: id, cast}, aim)).filter(affordable));
     }
   }

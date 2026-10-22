@@ -1,0 +1,72 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Pumpkin Bombs",
+    "oracleId": "b0695221-a61a-41e4-8195-3eeaaab2d969",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}, Discard two cards: Draw three cards, then put a fuse counter on this artifact. It deals damage equal to the number of fuse counters on it to target opponent. They gain control of this artifact.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}, Discard two cards: Draw three cards, then put a fuse counter on this artifact. It deals damage equal to the number of fuse counters on it to target opponent. They gain control of this artifact.",
+      "cost": [
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "discard",
+          "count": 2
+        }
+      ],
+      "targets": [
+        {
+          "what": "player",
+          "who": "opponent"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 3
+        },
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "fuse",
+          "count": 1
+        },
+        {
+          "effect": "dealDamage",
+          "amount": {
+            "countersOn": "self",
+            "counter": "fuse"
+          },
+          "who": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "gainControl",
+          "targets": "self",
+          "toPlayer": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -9,17 +9,17 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1540,
+  "defined": 1552,
   "provisional": 25,
-  "everyRule": 2814
+  "everyRule": 2821
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 77,
+    "built": 80,
     "partial": 0,
     "named": 6,
-    "missing": 111
+    "missing": 108
    },
    "entries": [
     {
@@ -446,13 +446,13 @@
      "kind": "keyword ability",
      "rule": "702.172",
      "name": "Spree",
-     "engine": null,
-     "status": "missing",
+     "engine": "Spree",
+     "status": "built",
      "forge": "Spree",
      "top": 6,
      "all": 21,
-     "blocks": 6,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -1418,8 +1418,8 @@
      "kind": "keyword ability",
      "rule": "702.45",
      "name": "Bushido",
-     "engine": null,
-     "status": "missing",
+     "engine": "Bushido",
+     "status": "built",
      "forge": "Bushido",
      "top": 0,
      "all": 37,
@@ -1478,8 +1478,8 @@
      "kind": "keyword ability",
      "rule": "702.171",
      "name": "Saddle",
-     "engine": null,
-     "status": "missing",
+     "engine": "Saddle",
+     "status": "built",
      "forge": "Saddle",
      "top": 0,
      "all": 32,
@@ -8925,7 +8925,7 @@
      "forge": "RememberChanged",
      "top": 124,
      "all": 1168,
-     "blocks": 61,
+     "blocks": 60,
      "alone": 4
     },
     {
@@ -8949,8 +8949,8 @@
      "forge": "RememberObjects",
      "top": 123,
      "all": 1460,
-     "blocks": 65,
-     "alone": 8
+     "blocks": 64,
+     "alone": 9
     },
     {
      "kind": "option",
@@ -9009,7 +9009,7 @@
      "forge": "MayPlay",
      "top": 99,
      "all": 625,
-     "blocks": 44,
+     "blocks": 43,
      "alone": 1
     },
     {
@@ -9991,8 +9991,8 @@
      "forge": "ValidAll",
      "top": 1,
      "all": 6,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",

@@ -665,6 +665,11 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
     }
     /* What a chosen target must be for the spell to cost less (CR 601.2f): "if it targets an attacking creature" (Run Behind). */
     if (ability.rule === "this-costs-less" && ability.targeting !== undefined) checkSelector(ability.targeting, `${path}.targeting`, errors);
+    /* "As though it had flash if it targets a commander" (Timely Ward): what it must target, a permanent, said. */
+    if (ability.rule === "flash-if-targets") {
+      if (!ability.targeting || typeof ability.targeting !== "object") errors.push({path: `${path}.targeting`, message: "Flash if it targets something says what (`targeting`, a selector of a permanent)"});
+      else checkSelector({...ability.targeting, what: "permanent"}, `${path}.targeting`, errors);
+    }
     /* "Spells your opponents cast that target this creature cost an additional 3 life to cast" (Terror of the Peaks, wave 4b;
        rules/statics.mjs, increasesOn): what one of a spell's chosen targets must be, and the increase in life (`life`, a whole
        number, 1 or more) in place of mana -- never beside an amount of mana. */

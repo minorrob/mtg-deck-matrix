@@ -1,0 +1,314 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Overwhelming Denial",
+  "fixtures": {
+    "Tonic": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "You gain 1 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 1
+          }
+        ]
+      }
+    },
+    "Counter": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{U}{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Counter target spell.",
+        "targets": [
+          {
+            "what": "spell"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "counterSpell",
+            "spells": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Surge: Rob cast his Tonic first this turn, so {U}{U} casts it; Maya's Counter can't counter it, and her Tonic is countered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Overwhelming Denial",
+            "Tonic"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Tonic",
+            "Counter"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Island",
+            "Island"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Tonic",
+          "seat": 1
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "cast": "Tonic",
+          "seat": 0
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "cast": "Overwhelming Denial",
+          "seat": 0,
+          "alternative": 0,
+          "targets": [
+            {
+              "card": "Tonic",
+              "seat": 1
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 1
+        },
+        {
+          "cast": "Counter",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Overwhelming Denial"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 3
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 1,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "life": 41
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Counter",
+            "Tonic"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Overwhelming Denial",
+            "Tonic"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "No other spell of his this turn: no surge -- {U}{U} casts nothing, and four mana casts it for its mana cost",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Overwhelming Denial"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Tonic"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Tonic",
+          "seat": 1
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Overwhelming Denial",
+                "seat": 0
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "cast": "Overwhelming Denial",
+          "seat": 0,
+          "alternative": false,
+          "targets": [
+            {
+              "card": "Tonic"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 1,
+          "life": 40
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Tonic"
+          ]
+        }
+      ]
+    }
+  ]
+}
