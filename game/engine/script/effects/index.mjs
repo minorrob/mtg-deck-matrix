@@ -37,7 +37,7 @@ import {
 } from "./resources.mjs";
 import {
   createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup, attach, copyPermanent, regenerate, addPhase, gainControl,
-  becomeCopy, earthbend, goad, immediateTrigger, investigate, phaseOut, setState, exchangeControl, incubate,
+  becomeCopy, earthbend, goad, immediateTrigger, investigate, phaseOut, setState, exchangeControl, incubate, emblem,
 } from "./permanents.mjs";
 import {alterAttribute} from "./attributes.mjs";
 import {addTurn} from "./turns.mjs";
@@ -100,6 +100,8 @@ export function eachOf(state, each, context) {
   if (each === "creature") return state.zones.battlefield.filter((id) => typesOf(state, id).includes("Creature")).map((card) => ({card, player: controllerOf(state, card)}));
   return [];
 }
+/* The most passes a process repeated "again" makes: more than any library holds, so only a library run out ends it. */
+const REPEAT_LIMIT = 1000;
 /** What `repeatFor` may range over. */
 export const REPEAT_EACH = Object.freeze(["player", "opponent", "creature"]);
 
@@ -111,6 +113,16 @@ export const REPEAT_EACH = Object.freeze(["player", "opponent", "creature"]);
  */
 function repeatFor(state, params, context, rng = null) {
   const events = [];
+  /* "Create a 1/1 ... Insect creature token, then mill a card. If an Insect card was milled this way, put a loyalty counter on
+     Grist and repeat this process" (Grist, the Hunger Tide): `again`, a condition asked after each pass, the effects done once
+     more while it holds -- no `each`. A pass that mills an empty library mills nothing, and the process ends there. */
+  if (params.again !== undefined) {
+    for (let pass = 0; pass < REPEAT_LIMIT; pass += 1) {
+      for (const effect of params.effects ?? []) events.push(...runEffect(state, countEffect(state, bindEffect(effect, context), context), context, rng));
+      if (!conditionHolds(state, params.again, {controller: context.controller, source: context.source ?? null, remembered: context.remembered, targets: context.targets})) break;
+    }
+    return events;
+  }
   for (const about of eachOf(state, params.each, context)) {
     const each = {...context, about: {...(context.about ?? {}), ...about}};
     for (const effect of params.effects ?? []) events.push(...runEffect(state, countEffect(state, bindEffect(effect, each), each), each, rng));
@@ -186,6 +198,8 @@ export const EFFECTS = Object.freeze({
   moveCounters, addTurn,
   /* "Loses all abilities" (Train D): control of two permanents exchanged (CR 701.12b; Oko, Thief of Crowns). */
   exchangeControl,
+  /* The library load's L1: "you get an emblem with ..." (CR 114; Teferi, Hero of Dominaria). */
+  emblem,
   /* Train E: incubate (CR 701.53a; Sunfall), an Incubator token entering with +1/+1 counters. */
   incubate,
   /* Train E: "you become the monarch" (CR 725; Ginger, Queen of Sweets), and the monarch's own trigger (rules/trigger.mjs). */

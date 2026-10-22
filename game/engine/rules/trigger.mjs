@@ -695,6 +695,9 @@ export function collectTriggers(state, events) {
   /* The cards in graveyards with a triggered ability that works there (WATCHING_ZONES): found once, as the first event is read. */
   let fromGraveyards = null;
   const inGraveyards = () => (fromGraveyards ??= state.zones.graveyard.flat().filter((id) => (state.objects[id]?.abilities ?? []).some((a) => a.kind === "triggered" && a.zone === "graveyard")));
+  /* And the emblems in the command zone, whose abilities function there (CR 114.4; "whenever you draw a card, exile target
+     permanent an opponent controls", Teferi, Hero of Dominaria's): its controller the player who got it (114.2). */
+  const emblems = (state.zones.command ?? []).flat().filter((id) => state.objects[id]?.emblem === true);
   for (const event of events ?? []) {
     /* An arrival waiting to be told what it is a copy of triggers once it is (rules/entering.mjs). */
     if (event.data?.fields?.awaitingCopy === true) continue;
@@ -709,8 +712,9 @@ export function collectTriggers(state, events) {
     /* And a spell just cast, on the stack: its own "when you cast this spell" alone (CR 603.2). */
     const castSpell = event.kind === "GameEventSpellAbilityCast" && event.data?.fields?.sa?.isSpell ? state.stack.find((e) => e.stackId === event.data.fields.sa.stackId)?.objectId : undefined;
     const justCast = castSpell !== undefined && state.objects[castSpell] ? [castSpell] : [];
-    for (const zone of [...WATCHING_ZONES, "graveyard", "cycled", "discarded", "cast"]) {
-      for (const id of zone === "cycled" ? wentTo : zone === "discarded" ? discardedTo : zone === "cast" ? justCast : zone === "graveyard" ? inGraveyards() : state.zones[zone]) {
+    for (const zone of [...WATCHING_ZONES, "graveyard", "cycled", "discarded", "cast", "emblem"]) {
+      for (const id of zone === "cycled" ? wentTo : zone === "discarded" ? discardedTo : zone === "cast" ? justCast : zone === "graveyard" ? inGraveyards()
+        : zone === "emblem" ? emblems : state.zones[zone]) {
         const object = state.objects[id];
         /* A permanent's abilities now, the ones given it included (layers.mjs); a card's elsewhere. */
         for (const own of abilitiesNow(id)) {

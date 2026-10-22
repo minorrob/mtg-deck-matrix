@@ -66,7 +66,7 @@ import {runEffects} from "../script/effects/index.mjs";
 import {changeLife} from "../script/effects/resources.mjs";
 import {unprepare, preparedCopyStays} from "../script/effects/attributes.mjs";
 import {checkStateBasedActions, gameOver} from "./sba.mjs";
-import {costReduction, costIncrease, lifeIncrease, costsReadTargets, abilityCostIncrease, equipCostReduction, playerStatics, freeCast, flashGranted, castForbidden, placeCounters, activationForbidden, permanentActivationForbidden, cantBeSacrificed, ruleChanged} from "./statics.mjs";
+import {costReduction, costIncrease, lifeIncrease, costsReadTargets, abilityCostIncrease, equipCostReduction, playerStatics, freeCast, flashGranted, castForbidden, placeCounters, activationForbidden, permanentActivationForbidden, cantBeSacrificed, ruleChanged, sorceryTimeOnly, loyaltyCostIncrease} from "./statics.mjs";
 import {countMana, amountOf, countEffect, isCounted, amountProblems, commanderless} from "../script/amount.mjs";
 import {bindEffect} from "../script/bind.mjs";
 import {conditionHolds} from "../script/condition.mjs";
@@ -362,7 +362,7 @@ function lifeOwed(state, player, action) {
 function abilityPayments(state, player, action) {
   const object = state.objects[action.objectId];
   const ability = chosenFor(abilitiesOf(state, action.objectId).find((candidate) => candidate.id === action.abilityId), object);
-  const found = ability ? costPayment(state, player, action.objectId, ability.cost, action.x ?? 0, abilityLess(state, player, action.objectId, ability, action.targets), undefined, bentFor(action)) : null;
+  const found = ability ? costPayment(state, player, action.objectId, costOf(state, player, ability, action.x ?? 0), action.x ?? 0, abilityLess(state, player, action.objectId, ability, action.targets), undefined, bentFor(action)) : null;
   return found?.owed ? paymentOptions(poolFor(state, player, {ability: action.objectId}), found.owed.cost, found.owed.options, PAY_CHOICES) : [];
 }
 
@@ -1152,7 +1152,9 @@ export function manaAlternatives(state, player, given, source = null) {
   if (ability.anyColor === "identity") return commanderIdentity(state, player).map((color) => ({[color]: count}));
   /* "Two mana in any combination of colors" (Great Hall of the Citadel): each way to make it, an offer each. */
   /* "In any combination of {U} and/or {R}" (Vivi Ornitier): of those colors only. */
-  if (ability.anyCombination) return combinations(count, 0, Array.isArray(ability.anyCombination) ? COLORS.filter((c) => ability.anyCombination.includes(c)) : COLORS);
+  if (ability.anyCombination) return combinations(count, 0, Array.isArray(ability.anyCombination) ? COLORS.filter((c) => ability.anyCombination.includes(c)) : COLORS)
+    /* "Two mana of different colors" (Interplanar Beacon): each way with no color twice. */
+    .filter((m) => ability.distinct !== true || Object.values(m).every((n) => n <= 1));
   /* "Any color that a land an opponent controls could produce" (Exotic Orchard), "any type ... a land you control"
      (Reflecting Pool, `anyType`, colorless too): what those lands' own mana abilities could add, now -- never another
      such ability's (CR 106.7), so two Reflecting Pools do not feed each other. Their mana abilities as they are after layer
@@ -1203,9 +1205,24 @@ function xValues(pool, cost, extra = 0) {
    of its player's takes off for those targets (Dwarven Mauler; rules/statics.mjs, equipCostReduction). */
 const abilityLess = (state, player, id, ability, targets = null) => (ability.costLess === undefined ? 0 : amountOf(state, ability.costLess, {controller: player, source: id, targets: targets ?? []}))
   + (ability.equip === true ? equipCostReduction(state, player, targets) : 0);
+/* AN ABILITY'S TOTAL COST (CR 602.2b, 601.2f), as far as it is not mana: its printed cost, with a loyalty cost changed by
+   what an effect adds to it -- "Planeswalkers' loyalty abilities you activate cost an additional [+1] to activate" (Carth
+   the Lion; rules/statics.mjs, loyaltyCostIncrease). The cost to activate a loyalty ability may be modified (CR 606.4), and
+   the costs to put on and remove loyalty counters are combined into one (606.5): a [−2] becomes [−1], a [0] becomes [+1],
+   a [−X] for X of 3 becomes [−2]. Any other ability's cost is its own. */
+function costOf(state, player, ability, x = 0) {
+  if (ability.loyalty === undefined) return ability.cost ?? [];
+  const more = loyaltyCostIncrease(state, player);
+  if (!more) return ability.cost ?? [];
+  const total = (ability.loyalty === "-X" ? -x : ability.loyalty) + more;
+  const loyal = (atom) => ["addCounters", "removeCounters"].includes(atom?.atom) && atom.self === true && atom.counter === "loyalty";
+  return [...(ability.cost ?? []).filter((atom) => !loyal(atom)),
+    ...(total > 0 ? [{atom: "addCounters", self: true, counter: "loyalty", count: total}] : total < 0 ? [{atom: "removeCounters", self: true, counter: "loyalty", count: -total}] : [])];
+}
 function abilityXValues(state, player, ability, id) {
-  /* "−X:" (CR 606.4): any X from none to the loyalty it has. */
-  if (ability.loyalty === "-X") return Array.from({length: (state.objects[id]?.counters?.loyalty ?? 0) + 1}, (_, n) => n);
+  /* "−X:" (CR 606.4): any X from none to the loyalty it has -- and past it by what an effect adds to the cost (Carth the
+     Lion's [+1]: X of 3 from two loyalty is a total cost of [−2], CR 606.6; costOf). */
+  if (ability.loyalty === "-X") return Array.from({length: (state.objects[id]?.counters?.loyalty ?? 0) + loyaltyCostIncrease(state, player) + 1}, (_, n) => n);
   const atom = (ability.cost ?? []).find((a) => a?.atom === "mana");
   return atom ? xValues(poolFor(state, player, {ability: id}), parseManaCost(atom.cost)) : [null];
 }
@@ -1911,8 +1928,10 @@ function offers(state, player) {
       if (ability.timing === "sorcery" && !sorceryTime && !(ability.loyalty !== undefined && ruleChanged(state, "loyalty-at-instant-speed", id))) continue;
       if (!conditionHolds(state, ability.condition, {controller: player, source: id})) continue;
       if (!withinLimit(state, id, ability)) continue;
-      /* A loyalty ability: only if none of this permanent's has been activated this turn (CR 606.3). */
-      if (ability.loyalty !== undefined && usesThisTurn(state, id, "loyalty") > 0) continue;
+      /* A loyalty ability: only if none of this permanent's has been activated this turn (CR 606.3) -- or, while an effect lets
+         its controller activate them twice each turn rather than only once (Oath of Teferi; rules/statics.mjs
+         `loyalty-twice`), only one. Two such effects still make it twice. */
+      if (ability.loyalty !== undefined && usesThisTurn(state, id, "loyalty") >= (ruleChanged(state, "loyalty-twice", id) ? 2 : 1)) continue;
       actions.push(...abilityOffers(state, player, id, ability));
     }
   }
@@ -1962,7 +1981,7 @@ function abilityOffers(state, player, id, ability) {
   const actions = [];
   /* Its targets first, when its cost reads them (abilityAims): each way to choose them costed, and offered, on its own. */
   for (const X of abilityXValues(state, player, ability, id)) for (const aim of abilityAims(state, ability, {controller: player, source: id, ...(X !== null ? {x: X} : {})})) {
-    const plain = costPayment(state, player, id, ability.cost, X ?? 0, abilityLess(state, player, id, ability, aim));
+    const plain = costPayment(state, player, id, costOf(state, player, ability, X ?? 0), X ?? 0, abilityLess(state, player, id, ability, aim));
     /* Waterbend (CR 701.67a): beside the pool's payment, one offer that taps artifacts and creatures for part of it, when
        some may be -- which ones, and the mana for the rest, asked once it is taken. */
     const bends = (waterbendRange(state, player, id, ability, X ?? 0, abilityLess(state, player, id, ability, aim))?.most ?? 0) > 0;
@@ -2167,6 +2186,9 @@ export function whyNot(state, player, id, actions = legalActions(state, player))
       if (landDropsLeft(state, player) <= 0) return "You've played your land for this turn.";
       return "It can't be played now.";
     }
+    /* Held to sorcery time by an opponent's permanent (Teferi, Time Raveler; rules/statics.mjs, sorceryTimeOnly). */
+    const holder = mainNow ? null : sorceryTimeOnly(state, player);
+    if (holder !== null) return `${holder} lets you cast spells only in your own main phase, with nothing on the stack.`;
     if (sorcerySpeed(object) && !hasFlash(state, id) && !flashGranted(state, player, id) && !mainNow)
       return mine ? "It isn't an instant: cast it in your main phase, with nothing on the stack." : "It isn't an instant: cast it on your own turn.";
     if (!object.manaCost) return "It has no mana cost, so it can't be cast.";
@@ -2850,7 +2872,7 @@ function performOffered(state, player, action, during) {
     const ability = chosenFor(abilitiesOf(state, action.objectId).find((candidate) => candidate.id === action.abilityId), object);
     /* Recomputed, as a cast's payment is: the pool may have moved since the offer. */
     /* With the way its player chose (`payWith`, X8b), when the pool pays it more than one way. */
-    const payment = costPayment(state, player, action.objectId, ability.cost, action.x ?? 0, abilityLess(state, player, action.objectId, ability, action.targets), action.payWith, bentFor(action));
+    const payment = costPayment(state, player, action.objectId, costOf(state, player, ability, action.x ?? 0), action.x ?? 0, abilityLess(state, player, action.objectId, ability, action.targets), action.payWith, bentFor(action));
     if (!payment || payment.payWays || !withinLimit(state, action.objectId, ability)) throw new Error(`${object.card}'s ability cannot be paid for now`);
     /* The artifacts and creatures its waterbend cost taps, as its player picked them (waterbendPicked). */
     const bent = action.waterbend === true ? waterbendPicked(state, player, action) : [];
@@ -2895,7 +2917,8 @@ function performOffered(state, player, action, during) {
       if (payment.mana.life > 0) changeLife(state, player, -payment.mana.life, events);
     };
     if (payment.mana && !(ability.cost ?? []).some((a) => a.atom === "mana" || a.atom === "waterbend")) payMana();
-    for (const atom of ability.cost ?? []) {
+    /* Its total cost (costOf): a loyalty cost Carth the Lion adds to, paid as one (CR 606.5). */
+    for (const atom of costOf(state, player, ability, action.x ?? 0)) {
       if (atom.atom === "{T}") {
         object.tapped = true;
         events.push(event("GameEventCardTapped", state, {card: cardRef(state, action.objectId), tapped: true}));
