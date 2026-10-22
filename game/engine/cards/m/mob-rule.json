@@ -1,0 +1,102 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mob Rule",
+    "oracleId": "acca2128-6ebb-48a5-a6a2-1bc5e4aa86ce",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one —\n• Gain control of all creatures with power 4 or greater until end of turn. Untap those creatures. They gain haste until end of turn.\n• Gain control of all creatures with power 3 or less until end of turn. Untap those creatures. They gain haste until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one —\n• Gain control of all creatures with power 4 or greater until end of turn. Untap those creatures. They gain haste until end of turn.\n• Gain control of all creatures with power 3 or less until end of turn. Untap those creatures. They gain haste until end of turn.",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Gain control of all creatures with power 4 or greater until end of turn. Untap those creatures. They gain haste until end of turn.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "gainControl",
+                  "selector": {
+                    "what": "permanent",
+                    "types": [
+                      "Creature"
+                    ],
+                    "power": {
+                      "min": 4
+                    }
+                  },
+                  "until": "end-of-turn",
+                  "remember": true
+                },
+                {
+                  "effect": "untap",
+                  "targets": "remembered"
+                },
+                {
+                  "effect": "pump",
+                  "targets": "remembered",
+                  "power": 0,
+                  "toughness": 0,
+                  "keywords": [
+                    "Haste"
+                  ]
+                }
+              ]
+            },
+            {
+              "text": "Gain control of all creatures with power 3 or less until end of turn. Untap those creatures. They gain haste until end of turn.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "gainControl",
+                  "selector": {
+                    "what": "permanent",
+                    "types": [
+                      "Creature"
+                    ],
+                    "power": {
+                      "max": 3
+                    }
+                  },
+                  "until": "end-of-turn",
+                  "remember": true
+                },
+                {
+                  "effect": "untap",
+                  "targets": "remembered"
+                },
+                {
+                  "effect": "pump",
+                  "targets": "remembered",
+                  "power": 0,
+                  "toughness": 0,
+                  "keywords": [
+                    "Haste"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

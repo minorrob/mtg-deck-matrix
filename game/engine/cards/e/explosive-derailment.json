@@ -1,0 +1,83 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Explosive Derailment",
+    "oracleId": "b23dc81d-01bb-4bf0-9932-5d32a6b22cf7",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Spree (Choose one or more additional costs.)\n+ {2} — Explosive Derailment deals 4 damage to target creature.\n+ {2} — Destroy target artifact.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Spree",
+      "keyword": "spree"
+    },
+    {
+      "kind": "spell",
+      "text": "+ {2} — Explosive Derailment deals 4 damage to target creature.\n+ {2} — Destroy target artifact.",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "chooseUpTo": 2,
+          "modes": [
+            {
+              "text": "+ {2} — Explosive Derailment deals 4 damage to target creature.",
+              "cost": "{2}",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "dealDamage",
+                  "amount": 4,
+                  "targets": {
+                    "target": 0
+                  }
+                }
+              ]
+            },
+            {
+              "text": "+ {2} — Destroy target artifact.",
+              "cost": "{2}",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Artifact"
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "destroy",
+                  "targets": {
+                    "target": 0
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

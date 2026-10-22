@@ -1,0 +1,37 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Silence",
+    "oracleId": "8aed54cb-d1bb-45ad-adbe-38e55d84ff31",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Your opponents can't cast spells this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Your opponents can't cast spells this turn.",
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "rule": "cant-cast",
+          "allSpells": true,
+          "who": "opponent",
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

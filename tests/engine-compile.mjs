@@ -56,12 +56,13 @@ const handOf = (name) => scripts.find((s) => s.identity.name === name);
   /* The few a smoke game cannot cast, each for want of what its only target must be: an attacking creature (Condemn), a
      creature dealt damage this turn (Mirrodin Avenged), a white or black spell to counter (Precise Redaction), a tapped
      creature for the modes its mana pays (Cloud's Limit Break) or at all (Eriette's Lullaby), a red or white creature or
-     planeswalker of an opponent's (Flourishing Grapple) -- or for want of seven cards in its player's graveyard,
-     without which it can't be cast at all (Proft, Sinister Mastermind). Named, so a card that stops being played in its
-     smoke game is found, not counted. */
+     planeswalker of an opponent's (Flourishing Grapple), a spell that targets a permanent its caster controls (Rebuff the
+     Wicked), the {2} a mode adds to its mana cost, which spree's one or more modes always do (Explosive Derailment;
+     CR 702.172a) -- or for want of seven cards in its player's graveyard, without which it can't be cast at all (Proft,
+     Sinister Mastermind). Named, so a card that stops being played in its smoke game is found, not counted. */
   const unplayed = smoked.filter((r) => !r.played).map((r) => r.name).sort();
-  eq(unplayed, ["Cloud's Limit Break", "Condemn", "Eriette's Lullaby", "Flourishing Grapple", "Mirrodin Avenged", "Precise Redaction", "Proft, Sinister Mastermind"],
-    `and the other ${scripts.length - unplayed.length} of ${scripts.length} were actually played or cast in it`);
+  eq(unplayed, ["Cloud's Limit Break", "Condemn", "Eriette's Lullaby", "Explosive Derailment", "Flourishing Grapple", "Mirrodin Avenged", "Precise Redaction",
+    "Proft, Sinister Mastermind", "Rebuff the Wicked"], `and the other ${scripts.length - unplayed.length} of ${scripts.length} were actually played or cast in it`);
   /* Batch 30: a card aimed at its controller's own creature spell answers the Smoke Whelp its player casts first. */
   ok(smoked.find((r) => r.name === "Double Major")?.played === true, "Double Major (\"copy target creature spell you control\") is cast in its smoke game, at its player's own creature spell");
   /* A creature whose ACTIVATED ability copies its controller's spells is cast as any creature is: no spell of its own put on
