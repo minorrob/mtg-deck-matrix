@@ -1,6 +1,6 @@
 # Who holds the work
 
-## Rob's fullscreen notes, 2026-10-21 (a Claude cloud session, for Rob; `claude/wizardly-galileo-ol2d4s`)
+## Rob's fullscreen notes, 2026-10-21 (a Claude cloud session, for Rob; PR #832, `claude/wizardly-galileo-ol2d4s`): merged, on staging
 
 Rob, in Full screen: *"Make these changes now so that I can restart my game with them applied in staging."* At his word this
 session changed files of two lanes -- the room and the engine's land offer (Claude · Engine) and the board (Codex · Play,
@@ -33,8 +33,22 @@ needed."* So the take-back is a gesture with no button or instructions.
   engine suites, `feature-wiring`, `data-integrity`, `asset-versions`. Three suites need
   `NODE_PATH=/opt/node-tools/node_modules` in this container (`tools/play-tabletop-preview.mjs` requires
   `playwright-core`).
-- **Not proven:** a game with Rob at the table on staging; Forge (none of this touches it).
-- **Outstanding:** CI on the PR; then main and staging (`tools/release-staging.sh`).
+- **Merged and on staging, 2026-10-22:** #832 merged to main as `159a4057` on Rob's go without its Actions suites run
+  ("Suites will fail due to timeout. Skip them."); base 1d38505 unmoved, the touched suites, the 262 CrankMagic Online
+  tests and `tools/local-ci.sh HEAD 0` green here. `tools/release-staging.sh` pushed release/cloud-staging `ff5a7994`
+  (release-acceptance 22, play-e2e 42); `staging-check --expect 159a4057` read both pages and /api/me back. Staging also
+  carries #826, #828 and #830; production is still 1fcfc3d7. The record is in Linear ROB-11.
+- **Not proven:** a game with Rob at the table on staging; Forge (none of this touches it); `table-tabletop` here (its
+  node process runs out of memory in this container, on main too -- CI runs it), so of the 9 breaks re-anchored on this PR's
+  lines, 8 were caught here and the ninth, "the kept Camera not read back" (`breaks-play-tabletop.py`, which only that
+  suite catches), was not re-run.
+- **CI after the merge (#835):** the first Actions run of the suites on main's code failed one check of
+  `tests/board-fullscreen-notes.mjs`, "its single click waits out the double-click": it looked for the tap a round trip
+  after the click, and a busy runner's round trip passed the board's 300 ms. The check now times the click to its act
+  inside the page (still caught by its break); `table-tabletop` was green there.
+- **Outstanding:** play-e2e's sixth step (Rob concedes as the game begins) failed once in the first release walk, `/concede`
+  answering without a table, and passed on two re-runs of the same commit: a race between a concede and the alarm's launch,
+  not yet chased.
 
 ## Library card load, 2026-10-21 (a Claude cloud session, for Rob; PR #816, `claude/focused-feynman-tt20o3`)
 
