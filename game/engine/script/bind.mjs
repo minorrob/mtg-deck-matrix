@@ -427,6 +427,11 @@ function playersOf(value, context, state = null) {
     const was = context.about?.lastKnown?.controller;
     return Number.isInteger(was) ? [was] : [];
   }
+  /* "Then each opponent who didn't draws a card" (Kynaios and Tiro of Meletis): its controller's opponents who did not do what
+     this resolution offered them (effects/asking.mjs, chooseCard's `did`) -- one who has left the game does nothing
+     (CR 800.4a; effects/zones.mjs, playersFor). */
+  if (value === "each opponent who didn't")
+    return (state?.players ?? []).filter((p) => p.id !== context.controller && !(context.whoDid ?? []).includes(p.id)).map((p) => p.id);
   if (!isRef(value)) return value;
   const chosen = (context.targets ?? [])[value.target];
   if (Array.isArray(chosen)) return chosen.filter((t) => t?.kind === "player").map((t) => t.id);
@@ -450,6 +455,10 @@ export function bindEffect(effect, context, state = null) {
     if (!factRef(value) || (key === "chooser" && factRef(value) === "ownerOf")) continue;
     const fact = factValue(value, context, state);
     if (key === "who") bound.who = fact === undefined ? [] : [fact];
+    /* "Exile up to one target non-Salamander creature. That creature's controller creates a 4/3 ... token" (Amphin Mutineer):
+       none chosen, or that target gone (CR 608.2b), there is no such player -- nobody creates it, never this ability's
+       controller in their place (effects/permanents.mjs, createToken). */
+    else if (fact === undefined && key === "controller") bound.controller = -1;
     else if (fact === undefined) delete bound[key];
     else bound[key] = fact;
   }

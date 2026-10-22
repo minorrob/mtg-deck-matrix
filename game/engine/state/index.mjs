@@ -33,6 +33,11 @@ export const ZONES = [...PER_PLAYER, ...SHARED];
 
 const STARTING_LIFE = 40;
 
+/** The game's starting life total (CR 103.4, 119.1; 40 in Commander, CR 903.7, or the table's house rule): "your life total
+    is greater than or equal to your starting life total" (Happily Ever After). Kept on the state only when it is not 40
+    (createState), so every game at 40 hashes, checkpoints and replays as it did. */
+export const startingLifeOf = (state) => state.startingLife ?? STARTING_LIFE;
+
 /** A successful draw's ordinal this turn (CR 121.2): each card of a multi-card draw is separate.
  * Stored on the event as well as the player so later draws in one resolution cannot change it. */
 export function recordDraw(state, player) {
@@ -123,6 +128,12 @@ export function createState(pod) {
     /* And an {X} spell tapped for too, for each X the pool and the untapped sources pay together (rules/actions.mjs, `xTaps`;
        Oct 21). Only a pod that asks carries the key, as above. */
     ...(pod?.xTaps === true ? {xTaps: true} : {}),
+    /* And the players who may play their land in any step of their own turn, not only a main phase (rules/actions.mjs,
+       `landAnyStep`; Rob, 2026-10-21: "When I am on any step of my turn, I should be able to play a land"): a house rule,
+       for the people at a table, never its AI seats. Only a pod that names them carries the key, as above. */
+    ...(Array.isArray(pod?.landAnyStep) && pod.landAnyStep.length ? {landAnyStep: [...pod.landAnyStep]} : {}),
+    /* A starting life other than 40, for "your starting life total" (startingLifeOf, above). */
+    ...(life !== STARTING_LIFE ? {startingLife: life} : {}),
     players: seats.map((seat, id) => ({
       id,
       name: seat.name ?? `Seat ${id + 1}`,

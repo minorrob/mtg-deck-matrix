@@ -441,6 +441,9 @@ export const dig = {
       ...(params.random === true ? {random: true} : {}), ...(params.remember ? {remember: true} : {}),
       ...(Array.isArray(params.toByType) ? {toByType: structuredClone(params.toByType)} : {}),
       ...(params.faceDown === true && (params.to ?? "hand") === "exile" ? {faceDown: true} : {}),
+      /* Manifest dread (CR 701.62a, script/schema.mjs): the card taken put onto the battlefield face down, manifested (moveOne,
+         CR 701.40a) -- a 2/2 with no text, which its controller may look at (CR 708.5) and turn face up if it is a creature card. */
+      ...(params.manifest === true ? {faceDown: true, manifest: true} : {}),
       ...(params.link === true && context.source !== null && context.source !== undefined ? {link: context.source} : {}),
     };
     return true;
@@ -461,6 +464,7 @@ export const dig = {
       id: `dig:${awaiting.cards.join(",")}`,
       title: awaiting.toByType ? `Choose ${awaiting.min === 0 ? "up to " : ""}${awaiting.take} to reveal`
         : awaiting.to === "exile" ? `Choose ${awaiting.min === 0 ? "up to " : ""}${awaiting.take} to exile${awaiting.faceDown ? " face down" : ""}`
+        : awaiting.manifest ? "Manifest dread: choose 1 to manifest; the other goes into your graveyard"
         : `Choose ${awaiting.min === 0 ? "up to " : ""}${awaiting.take} to put into your ${awaiting.to}`,
       mode: awaiting.take === 1 && awaiting.min === 1 ? "one" : "many",
       min: awaiting.min ?? awaiting.take,
@@ -1958,9 +1962,16 @@ export const chooseCard = {
       /* "Untap that land" (Fabled Passage): what it found, for the effects after it (resolution.mjs). "Add": beside what was
          remembered before -- each player's creature chosen in turn, "not chosen this way" all of them (The Eternal Wanderer). */
       ...(params.remember ? {remember: params.remember === "add" ? "add" : true} : {}),
+      /* "Each player may put a land card from their hand onto the battlefield, then each opponent who didn't draws a card"
+         (Kynaios and Tiro of Meletis): `did`, a player who chooses a card has done it (apply, below). */
+      ...(params.did === true ? {did: true} : {}),
       /* Sneak Attack: "That creature gains haste. Sacrifice the creature at the beginning of the next end step." */
-      ...(params.gains || params.gainsUntilEndOfTurn || params.atEndStep ? {then: {gains: params.gains, gainsUntilEndOfTurn: params.gainsUntilEndOfTurn, atEndStep: params.atEndStep},
-        source: context.source ?? null} : {}),
+      /* "Onto the battlefield tapped and attacking that opponent" (Kaalia of the Vast; library load L4): `attacking`, as a
+         token made attacking is (effects/permanents.mjs, enterAttacking) -- "that player" the one this ability is about,
+         kept with the question (`about`; CR 508.4). */
+      ...(params.gains || params.gainsUntilEndOfTurn || params.atEndStep || params.attacking ? {then: {gains: params.gains, gainsUntilEndOfTurn: params.gainsUntilEndOfTurn, atEndStep: params.atEndStep,
+        ...(params.attacking ? {attacking: params.attacking} : {})}, source: context.source ?? null,
+        ...(params.attacking && context.about ? {about: structuredClone(context.about)} : {})} : {}),
     };
     if (Array.isArray(params.searches) || params.sharing === "land type") {
       state.awaiting = {...awaiting, cards: pool, steps: {searches: params.searches ?? null, sharing: params.sharing ?? null, selector: params.selector ?? null, pool,
@@ -2075,7 +2086,7 @@ export const chooseCard = {
         arrivedHere.push(moved);
       }
     });
-    if (awaiting.then && arrivedHere.length) afterwards(state, arrivedHere, awaiting.then, {controller: player, source: awaiting.source ?? null});
+    if (awaiting.then && arrivedHere.length) afterwards(state, arrivedHere, awaiting.then, {controller: player, source: awaiting.source ?? null, ...(awaiting.about ? {about: awaiting.about} : {})});
     if (awaiting.shuffle) {
       if (!rng) throw new Error("A search that shuffles needs the game's random stream");
       const library = state.zones.library[player].filter((id) => !tops.includes(id));
@@ -2097,8 +2108,11 @@ export const chooseCard = {
     const adds = awaiting.remember === "add" ? {rememberAdd: true} : {};
     /* A library searched (CR 701.23), found or not: "if you search your library this way, shuffle" (Claim Jumper). */
     const searched = awaiting.zone === "library" ? {searched: true} : {};
+    /* A player who chose a card has done what was offered (`did`, beside what it remembers): kept for "each opponent who
+       didn't" (script/resolution.mjs, `whoDid`; script/bind.mjs). One who chose none has not. */
+    const did = awaiting.did === true && chosen.length > 0 ? {did: player} : {};
     if (splice.length) return {events, splice, ...searched, ...(awaiting.remember ? {remembered: [...found, ...tops], ...adds} : {})};
-    return awaiting.remember || awaiting.zone === "library" ? {events, ...searched, ...(awaiting.remember ? {remembered: [...found, ...tops], ...adds} : {})} : events;
+    return awaiting.remember || awaiting.zone === "library" ? {events, ...searched, ...did, ...(awaiting.remember ? {remembered: [...found, ...tops], ...adds} : {})} : events;
   },
 
   /* The chooser has left the game. Their own cards went with them (CR 800.4a) -- a search of their library, a choice from

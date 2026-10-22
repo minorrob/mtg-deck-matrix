@@ -77,6 +77,10 @@ import {askEntering} from "./entering.mjs";
 import {collectTriggers, openTriggers, manaTriggered} from "./trigger.mjs";
 
 const MAIN_PHASES = ["MAIN1", "MAIN2"];
+/* A LAND IN ANY STEP OF YOUR OWN TURN (`landAnyStep`; Rob, 2026-10-21): a house rule, not CR 305.1's main phase -- the
+   player named by the match plays their land drop in whichever step of their own turn they hold priority, the stack
+   empty, as one at a kitchen table is let to. One land a turn still (CR 305.2), and only on their own turn. */
+const landAnyStep = (state, player) => Array.isArray(state.landAnyStep) && state.landAnyStep.includes(player);
 /* CR 307.1 and 308.1: these are the card types that can only be cast at sorcery speed. */
 const SORCERY_SPEED = ["Sorcery", "Creature", "Artifact", "Enchantment", "Planeswalker", "Battle"];
 
@@ -669,6 +673,14 @@ function additionalVariants(costs) {
       variants = variants.flatMap((v) => (atom.costs ?? []).map((cost, tier) => ({...v, mana: v.mana + cost, tier})));
       continue;
     }
+    /* SPREE (CR 702.172a; Explosive Derailment, library load L2): one or more modes, and each one's cost -- each set of modes its
+       own variant, those modes alone (withModes), their costs added. */
+    if (atom?.atom === "spree") {
+      const costs = atom.costs ?? [], sets = [];
+      for (let mask = 1; mask < 1 << costs.length; mask += 1) sets.push(costs.map((_, i) => i).filter((i) => mask & (1 << i)));
+      variants = variants.flatMap((v) => sets.map((modes) => ({...v, mana: v.mana + modes.map((i) => costs[i]).join(""), spree: modes})));
+      continue;
+    }
     const options = atom?.atom === "oneOf" ? atom.options ?? [] : [[atom]];
     /* "As an additional cost to cast this spell, pay 5 life or pay {2}" (Redirect Lightning; CR 601.2b, 119.4): a choice's
        life, a fixed amount, paid with the rest of the cost (`life`, the offer's `extraLife`) -- not a cost to pick. */
@@ -735,7 +747,8 @@ function additionalChoices(state, player, spellId, costs) {
    when its condition holds now ("if you control a commander as you cast this spell, you may choose both instead") --
    and per way to choose the chosen modes' targets (601.2c), in the order of the modes. A mode is chosen once (700.2d). */
 /* `exactly`: so many modes and no other number (escalate's variant, additionalVariants; the compiler holds it to what the spell
-   allows, cards/index.mjs). `only`: that one mode and no other (tiered's variant, CR 702.183a: its cost is that mode's). */
+   allows, cards/index.mjs). `only`: that one mode and no other (tiered's variant, CR 702.183a: its cost is that mode's) -- or
+   those modes and no others (spree's, CR 702.172a: its costs are theirs). */
 /* "CHOOSE UP TO FOUR. YOU MAY CHOOSE THE SAME MODE MORE THAN ONCE" (Moment of Reckoning; CR 700.2d): `choose: 0`, none chosen a
    choice too ("up to"), and `sameMode`, as many as it says whatever the number of modes -- each mode again after itself, so
    each choice is offered once, its modes in the order they are written, which is the order they are followed in; the
@@ -752,6 +765,7 @@ function withModes(state, base, modal, context, exactly = null, only = null) {
     for (let i = from; i < modal.modes.length; i += 1) pick(modal.sameMode ? i : i + 1, [...chosen, i]);
   };
   if (Number.isInteger(only)) picks.push([only]);
+  else if (Array.isArray(only)) picks.push([...only]);
   else pick(0, []);
   return picks.flatMap((modes) => {
     const {targets: specs, effects} = modalScript(modal, modes);
@@ -774,6 +788,13 @@ const withModesOrTargets = (state, base, ability, context, aim = null) => (abili
    creature cost an additional 3 life to cast", Terror of the Peaks; rules/statics.mjs, costsReadTargets). */
 const aimsFor = (state, object, spell, context) => ((object.abilities ?? []).some((a) => a.kind === "static" && a.rule === "this-costs-less" && a.targeting)
   || costsReadTargets(state) ? targetChoices(state, spell?.targets ?? [], context) : [null]);
+/* "YOU MAY CAST THIS SPELL AS THOUGH IT HAD FLASH IF IT TARGETS A COMMANDER" (Timely Ward; library load L2; CR 601.3, 601.2c):
+   the card's own permission (`rule: "flash-if-targets"`), what it must target its `targeting` -- null when it has none. At a
+   time only that permission allows, it is cast with targets chosen as it is offered, one of them what `targeting` describes
+   (flashAims): aimed at nothing that fits, no cast then is legal, so none is offered. */
+const flashIfTargets = (object) => (object?.abilities ?? []).find((a) => a.kind === "static" && a.rule === "flash-if-targets")?.targeting ?? null;
+const flashAims = (state, spell, context, targeting) => targetChoices(state, spell?.targets ?? [], context)
+  .filter((aim) => aim.flat().some((t) => t?.kind === "object" && matchesSelector({...targeting, what: "permanent"}, state, t.id, context)));
 /* "AS AN ADDITIONAL COST TO CAST THIS SPELL, PAY X LIFE" (Toxic Deluge, wave 4b; CR 601.2b, 107.3a): X announced as it is
    cast -- one offer for each value its caster's life can pay, from none up (CR 119.4: no more life than they have; 119.4b: 0
    always) -- and the X its effects read (`x`), whether or not its mana cost is paid (the card's ruling: it has no {X} in its
@@ -796,7 +817,8 @@ function withTargets(state, base, ability, context, aim = null) {
 /* A mana cost of generic mana only, at least one: what waterbend is paid in (CR 701.67a). */
 const genericOnly = (text) => { try { const parsed = parseManaCost(text ?? ""); return parsed.generic >= 1 && parsed.symbols.every((s) => s.kind === "generic"); } catch { return false; } };
 /* The cost atoms 2.4 can pay. `costPayment` says whether all of an ability's can be paid now, and how. */
-const COST_ATOMS_BUILT = ["{T}", "mana", "payLife", "sacrifice"];
+/* "{Q}", the untap symbol (CR 107.6): Umbral Mantle's "{3}, {Q}: This creature gets +2/+2" (library load L4). */
+const COST_ATOMS_BUILT = ["{T}", "{Q}", "mana", "payLife", "sacrifice"];
 export const costAtomBuilt = (atom) => (COST_ATOMS_BUILT.includes(atom?.atom) && (atom.atom !== "sacrifice" || atom.self === true || (atom.selector && typeof atom.selector === "object"))
   /* Life: a number, or counted as the cost is paid (War Room; script/amount.mjs). */
   && (atom.atom !== "payLife" || (Number.isInteger(atom.amount) && atom.amount >= 0) || (isCounted(atom.amount) && !amountProblems(atom.amount).length)))
@@ -848,17 +870,19 @@ export const costAtomBuilt = (atom) => (COST_ATOMS_BUILT.includes(atom?.atom) &&
    such set, so no offer taps a creature it does not need; ids ascending, and no more than CREW_OFFERS_MAX of them. A
    summoning-sick creature may crew. "This token crews Vehicles as though its power were 2 greater" (`crews-with-more`). */
 const CREW_OFFERS_MAX = 64;
-const crewPower = (state, id) => Math.max(0, characteristicsOf(state, id).power ?? 0)
+/* SADDLE (CR 702.171a; Bounding Felidar) is paid the same way, and a creature that crews as though its power were greater does
+   not saddle so: `saddle`, its power alone. */
+const crewPower = (state, id, saddle = false) => Math.max(0, characteristicsOf(state, id).power ?? 0)
   /* Of its abilities as they are after layer 6 (CR 613.1f). */
-  + staticAbilities(state)(id).filter((a) => a.kind === "static" && a.rule === "crews-with-more").reduce((n, a) => n + (a.amount ?? 0), 0);
-function crewChoices(state, player, vehicle, power) {
+  + staticAbilities(state)(id).filter((a) => a.kind === "static" && a.rule === "crews-with-more" && !saddle).reduce((n, a) => n + (a.amount ?? 0), 0);
+function crewChoices(state, player, vehicle, power, saddle = false) {
   const crew = state.zones.battlefield.filter((id) => id !== vehicle && state.objects[id].controller === player && !state.objects[id].tapped
     && characteristicsOf(state, id).types.includes("Creature")).sort((a, b) => a - b);
   const sets = [];
   const walk = (from, chosen, total) => {
     if (sets.length >= CREW_OFFERS_MAX) return;
     if (total >= power) { sets.push(chosen); return; }
-    for (let i = from; i < crew.length; i += 1) walk(i + 1, [...chosen, crew[i]], total + crewPower(state, crew[i]));
+    for (let i = from; i < crew.length; i += 1) walk(i + 1, [...chosen, crew[i]], total + crewPower(state, crew[i], saddle));
   };
   walk(0, [], 0);
   /* Smallest: no set that has another set in it -- a creature it could leave untapped. */
@@ -1024,6 +1048,9 @@ function costPayment(state, player, id, cost, x = 0, less = 0, key = undefined, 
          activated as though it had haste (Thousand-Year Elixir, CR 702.10c). */
       if (sickForAbilities(state, id)) return null;
     }
+    /* {Q}, untap this permanent (CR 107.6): only a tapped one can pay it (CR 118.3), and a creature's waits as a {T}
+       ability does (CR 302.6). */
+    if (atom.atom === "{Q}" && (!object.tapped || sickForAbilities(state, id))) return null;
     if (atom.atom === "mana" || atom.atom === "waterbend") {
       if (printedMana) return null;
       printedMana = true;
@@ -1257,6 +1284,8 @@ const allPlayPermissions = (state, player) => onceAQuestion(state, `play-permiss
       ...(Number.isInteger(e.count) ? {count: e.count} : {})}
       : {id: e.id, ids: e.affects.ids, spells: true, lands: !e.spellsOnly, free: e.free === true, notAdventure: e.notAdventure === true,
       ...(e.graveyardToLibraryBottom ? {graveyardToLibraryBottom: true} : {}), ...(e.onlyIf !== undefined ? {condition: e.onlyIf} : {}),
+      /* "Mana of any type can be spent to cast that spell" (Hostage Taker; anyTypeCost below). */
+      ...(e.anyMana === true ? {anyMana: true} : {}),
       ...(Number.isInteger(e.afterTurn) ? {afterTurn: e.afterTurn} : {})}}))];
 });
 /* A CARD PLAYED THROUGH A PERMISSION (CR 601.2a, 305.1): what it uses up -- a limited one's use this turn ("once during each
@@ -1588,7 +1617,9 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
   /* SNEAK (CR 702.190a): "any time you could cast an instant during your declare blockers step" -- a card that could not be
      cast now otherwise is offered for its sneak cost alone (`sneaking`), its condition saying when (alternativeCosts). */
   const sneaking = !timely && (object.abilities ?? []).some((a) => a.kind === "static" && a.rule === "alternative-cost" && a.sneak === true);
-  if (!timely && !sneaking) return actions;
+  /* Or as though it had flash only for what it targets (Timely Ward; flashIfTargets): its aims, below, those alone. */
+  const flashIf = timely ? null : flashIfTargets(object);
+  if (!timely && !sneaking && !flashIf) return actions;
   const tax = from === "command" ? commanderTax(state, player, id) : 0;
   /* Derive free-cast grants only after timing rejects spells that cannot be cast now. */
   const free = flashback || escape || lifeCost !== null ? null : permit?.ability.free ? {source: permit.source, limited: false} : freeCast(state, player, id);
@@ -1627,7 +1658,9 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
   /* Escalate's creatures to tap (CR 702.120a): that many there to tap now, or not that many modes. */
   if (variant.escalateTap && flashbackTappers(state, player, variant.escalateTap).length < variant.escalateTap.count) continue;
   /* Its targets first, when its cost reads them (aimsFor): each way to choose them costed, and offered, on its own. */
-  for (const freely of way ? [false] : free ? (free.limited ? [false, true] : [true]) : [false]) for (const aim of aimsFor(state, object, way?.overload ?? object.spell, {controller: player, source: id, cast})) {
+  for (const freely of way ? [false] : free ? (free.limited ? [false, true] : [true]) : [false]) for (const aim of flashIf
+    ? flashAims(state, way?.overload ?? object.spell, {controller: player, source: id, cast}, flashIf)
+    : aimsFor(state, object, way?.overload ?? object.spell, {controller: player, source: id, cast})) {
   /* The life it costs: the Citadel's, or -- cast without paying its mana cost by a cost of life (freeLife) -- that. */
   const paidLife = freely ? freeLife(object, free) : lifeCost;
   if (paidLife !== null && paidLife > state.players[player].life) continue;
@@ -1718,7 +1751,7 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
       /* A way to aim it that costs more life than there is -- a mode's target, chosen here, at Terror of the Peaks -- is no way
          to cast it (CR 119.4). */
       const affordable = (offer) => lifeIncrease(state, player, id, offer.targets) <= lifeLeft + aimLife;
-      actions.push(...(object.spell?.modal && !way?.overload ? withModes(state, base, object.spell.modal, {controller: player, source: id}, variant.escalate !== undefined ? variant.escalate + 1 : null, variant.tier ?? null)
+      actions.push(...(object.spell?.modal && !way?.overload ? withModes(state, base, object.spell.modal, {controller: player, source: id}, variant.escalate !== undefined ? variant.escalate + 1 : null, variant.spree ?? variant.tier ?? null)
         : withTargets(state, base, way?.overload ?? object.spell, {controller: player, source: id, cast}, aim)).filter(affordable));
     }
   }
@@ -1788,7 +1821,7 @@ function offers(state, player) {
 
   /* CR 116.2a and 305.1. All four conditions, each of which is a real way to be wrong. */
   if (player === state.activePlayer
-      && MAIN_PHASES.includes(state.phase)
+      && (MAIN_PHASES.includes(state.phase) || landAnyStep(state, player))
       && state.stack.length === 0
       && landDropsLeft(state, player) > 0) {
     for (const id of cardsIn(state, "hand", player)) {
@@ -1948,7 +1981,7 @@ function abilityOffers(state, player, id, ability) {
       /* "Discard a creature card" (Fauna Shaman): only a card its selector describes. */
       : toss ? discardSets(cardsIn(state, "hand", player).filter((c) => c !== id && (!toss.selector || compileSelector({...toss.selector, what: "card", zone: "hand"})(state, c, {controller: player, source: id}))),
         toss.count ?? 1).map((d) => ({discard: d}))
-      : crew ? crewChoices(state, player, id, crew.power).map((set) => ({crew: set}))
+      : crew ? crewChoices(state, player, id, crew.power, crew.saddle === true).map((set) => ({crew: set}))
       : tapper ? ((tapper.count ?? 1) > 1 ? tapSets(state, player, id, tapper.selector, tapper.count, (ability.cost ?? []).some((a) => a?.atom === "{T}")).map((set) => ({tapAll: set}))
         : tapChoices(state, player, id, tapper.selector).map((t) => ({tap: t})))
       : untapper ? untapChoices(state, player, untapper.count).map((set) => ({untap: set}))
@@ -2054,7 +2087,10 @@ export const plainMana = (ability) => Boolean(ability) && !MANA_COSTS.some((key)
   && (ability.then ?? []).every(selfHurt);
 function idle(state, player, actions, stack = false) {
   if (state.priorityPlayer !== player || (state.stack.length && !stack)) return false;
-  if (actions.some((a) => a.kind !== "pass" && a.kind !== "activate-mana")) return false;
+  /* A land offered outside a main phase (`landAnyStep`) is no reason to stop a step that has nothing else: the steps of a
+     turn still pass by themselves, and the land waits for a step the player is asked in, or their main phase. */
+  const outsideMain = !MAIN_PHASES.includes(state.phase);
+  if (actions.some((a) => a.kind !== "pass" && a.kind !== "activate-mana" && !(a.kind === "play-land" && outsideMain))) return false;
   if (state.stack.length && actions.some((a) => a.kind === "activate-mana" && !plainMana(abilitiesOf(state, a.objectId).find((x) => x.id === a.abilityId)))) return false;
   /* Each source counted once, at the most it can add net of what it costs -- a Sol Ring is two, a Signet one, and a
      dual land one however many colors it offers. */
@@ -2126,7 +2162,8 @@ export function whyNot(state, player, id, actions = legalActions(state, player))
     if ((object.types ?? []).includes("Land")) {
       if (object.zone !== "hand") return "It can't be played from there.";
       if (!mine) return "Lands are played on your own turn.";
-      if (!mainNow) return "Play a land in your main phase, with nothing on the stack.";
+      if (landAnyStep(state, player) && state.stack.length) return "Play a land with nothing on the stack.";
+      if (!mainNow && !landAnyStep(state, player)) return "Play a land in your main phase, with nothing on the stack.";
       if (landDropsLeft(state, player) <= 0) return "You've played your land for this turn.";
       return "It can't be played now.";
     }
@@ -2862,6 +2899,11 @@ function performOffered(state, player, action, during) {
       if (atom.atom === "{T}") {
         object.tapped = true;
         events.push(event("GameEventCardTapped", state, {card: cardRef(state, action.objectId), tapped: true}));
+      }
+      /* {Q} (CR 107.6): the permanent untapped. */
+      if (atom.atom === "{Q}") {
+        object.tapped = false;
+        events.push(event("GameEventCardTapped", state, {card: cardRef(state, action.objectId), tapped: false}));
       }
       if (atom.atom === "mana") payMana();
       /* Waterbend (CR 701.67a): the pool's part, and each permanent picked tapped -- a cost paid, not tapped for mana. */
