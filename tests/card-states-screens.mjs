@@ -53,7 +53,7 @@ try {
   const readD = M.stateReader(st, DECK), name = (id) => st.cards[id]?.name || id, deckName = (id) => (st.decks.find((d) => d.id === id)?.name.match(/^(D\d+)\b/) || [])[1] || "";
   const notes = tally(ds.rows.map(({st: x}) => M.stateNote(x, name, deckName)).filter(Boolean));
   eq(tally(lines.map((l) => l.note).filter(Boolean)), notes, "and each line's note is the model's, word for word");
-  ok(/^Playable: the box holds 100: Final \d+ \+ Substitute \d+/.test(await page.locator(".cm-deck-playable").innerText()), `the hundred says why the deck plays: "${await page.locator(".cm-deck-playable").innerText()}"`);
+  ok(/^Boxed: the box holds 100: Final \d+ \+ Substitute \d+/.test(await page.locator(".cm-deck-playable").innerText()), `the hundred says why the deck plays: "${await page.locator(".cm-deck-playable").innerText()}"`);
   /* And a deck with Upgrades lists them in their own part, each naming what it would replace or asking. */
   {
     const UP = [...st.decks].filter((d) => !d.archived).sort((a, b) => M.deckStatus(st, b).upgrade - M.deckStatus(st, a).upgrade)[0], up = M.deckStatus(st, UP);

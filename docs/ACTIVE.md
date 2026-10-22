@@ -1,5 +1,41 @@
 # Who holds the work
 
+## Rob's fullscreen notes, 2026-10-21 (a Claude cloud session, for Rob; `claude/wizardly-galileo-ol2d4s`)
+
+Rob, in Full screen: *"Make these changes now so that I can restart my game with them applied in staging."* At his word this
+session changed files of two lanes -- the room and the engine's land offer (Claude · Engine) and the board (Codex · Play,
+held by the Personal-HP Claude session) -- in one PR, as #743, #751 and #793 did. Rob, mid-task: *"We want functionality to
+be implied where there are parallels ... I can reach over, pick up a card I put down and put it back into my hand. No info
+needed."* So the take-back is a gesture with no button or instructions.
+- **What changed (new matches only; a match launched before plays as it did):**
+  - `landAnyStep` (room key, engine `state.landAnyStep`): a person plays their land drop in any step of their own turn they
+    hold priority in, the stack empty -- a house rule over CR 305.1, the AI seats by the book. A land is no reason to stop
+    a step that has nothing else, so steps still pass by themselves (`idle`).
+  - `takeBackLand`: a land just played, nothing since, goes back to the hand -- the game restored from a copy taken as it
+    was played (`landBack`, under its own storage key), checked by hash -- and the person is asked while it may. On the
+    board, its double-click; a single click (a tap) waits 300 ms for it; no "You can also" button.
+  - `askAimed`: another player's spell or ability on top of the stack aimed at a person, their permanent, spell or
+    graveyard card asks them before it resolves. And the way of playing `askStack` (the board's "Skip my priority if no
+    response possible", on by default, `prefer` frame) asks them whenever anything is on the stack.
+  - The board: a card plays on its click in Full screen too; the pass, Resolve all and Skip to end stand large over the
+    table in Full screen; each card another seat casts or plays is held up at the left for ten seconds (or its ✕); the two
+    priority checkboxes at their own size, words bold; brighter outline on what you can use; the tabletop's Cards and Zoom
+    to 200%; the commander tax moved below the title bar.
+- **And Rob's Oct 22 notes, same PR:** on Decks, "Playable" means playable on Play (the summary counts the decks the table
+  plays every card of, `C.play.count`, with no "$ to finish them all"), and the chips are Playable (in the app, where Play
+  is in the cloud) and Boxed Decks (the physically playable stage; its badge and deck-page word are now Boxed). The lobby's
+  deck chooser shows each row's commander colors and what the deck does (its notes, else its commanders' rules text,
+  fetched through the card catalog when no record here holds it), and a Playable checkbox, off until ticked, remembered.
+- **Proven here (cloud container):** `tests/room-lands-and-aims.mjs` 39 checks, `breaks-lands-and-aims.py` 15 of 15;
+  `tests/board-fullscreen-notes.mjs` 31 checks (Chromium), `breaks-board-fullscreen-notes.py` 14 of 14; every board
+  browser suite green after its updates (`table-board`, `a11y-board`, `table-tabletop`, `table-camera-layout`,
+  `table-shared-shell`, the `board-*` suites); `table-lobby` 131 checks, `decks-hub`, `card-states-screens`; the room and
+  engine suites, `feature-wiring`, `data-integrity`, `asset-versions`. Three suites need
+  `NODE_PATH=/opt/node-tools/node_modules` in this container (`tools/play-tabletop-preview.mjs` requires
+  `playwright-core`).
+- **Not proven:** a game with Rob at the table on staging; Forge (none of this touches it).
+- **Outstanding:** CI on the PR; then main and staging (`tools/release-staging.sh`).
+
 ## Library card load, 2026-10-21 (a Claude cloud session, for Rob; PR #816, `claude/focused-feynman-tt20o3`)
 
 Rob's updated library and decks workbook is `data/source/Backup_Load_-_CrankMagic_-_2026-10-21.xlsx` (Master Table v1).

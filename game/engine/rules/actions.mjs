@@ -77,6 +77,10 @@ import {askEntering} from "./entering.mjs";
 import {collectTriggers, openTriggers, manaTriggered} from "./trigger.mjs";
 
 const MAIN_PHASES = ["MAIN1", "MAIN2"];
+/* A LAND IN ANY STEP OF YOUR OWN TURN (`landAnyStep`; Rob, 2026-10-21): a house rule, not CR 305.1's main phase -- the
+   player named by the match plays their land drop in whichever step of their own turn they hold priority, the stack
+   empty, as one at a kitchen table is let to. One land a turn still (CR 305.2), and only on their own turn. */
+const landAnyStep = (state, player) => Array.isArray(state.landAnyStep) && state.landAnyStep.includes(player);
 /* CR 307.1 and 308.1: these are the card types that can only be cast at sorcery speed. */
 const SORCERY_SPEED = ["Sorcery", "Creature", "Artifact", "Enchantment", "Planeswalker", "Battle"];
 
@@ -1817,7 +1821,7 @@ function offers(state, player) {
 
   /* CR 116.2a and 305.1. All four conditions, each of which is a real way to be wrong. */
   if (player === state.activePlayer
-      && MAIN_PHASES.includes(state.phase)
+      && (MAIN_PHASES.includes(state.phase) || landAnyStep(state, player))
       && state.stack.length === 0
       && landDropsLeft(state, player) > 0) {
     for (const id of cardsIn(state, "hand", player)) {
@@ -2083,7 +2087,10 @@ export const plainMana = (ability) => Boolean(ability) && !MANA_COSTS.some((key)
   && (ability.then ?? []).every(selfHurt);
 function idle(state, player, actions, stack = false) {
   if (state.priorityPlayer !== player || (state.stack.length && !stack)) return false;
-  if (actions.some((a) => a.kind !== "pass" && a.kind !== "activate-mana")) return false;
+  /* A land offered outside a main phase (`landAnyStep`) is no reason to stop a step that has nothing else: the steps of a
+     turn still pass by themselves, and the land waits for a step the player is asked in, or their main phase. */
+  const outsideMain = !MAIN_PHASES.includes(state.phase);
+  if (actions.some((a) => a.kind !== "pass" && a.kind !== "activate-mana" && !(a.kind === "play-land" && outsideMain))) return false;
   if (state.stack.length && actions.some((a) => a.kind === "activate-mana" && !plainMana(abilitiesOf(state, a.objectId).find((x) => x.id === a.abilityId)))) return false;
   /* Each source counted once, at the most it can add net of what it costs -- a Sol Ring is two, a Signet one, and a
      dual land one however many colors it offers. */
@@ -2155,7 +2162,8 @@ export function whyNot(state, player, id, actions = legalActions(state, player))
     if ((object.types ?? []).includes("Land")) {
       if (object.zone !== "hand") return "It can't be played from there.";
       if (!mine) return "Lands are played on your own turn.";
-      if (!mainNow) return "Play a land in your main phase, with nothing on the stack.";
+      if (landAnyStep(state, player) && state.stack.length) return "Play a land with nothing on the stack.";
+      if (!mainNow && !landAnyStep(state, player)) return "Play a land in your main phase, with nothing on the stack.";
       if (landDropsLeft(state, player) <= 0) return "You've played your land for this turn.";
       return "It can't be played now.";
     }

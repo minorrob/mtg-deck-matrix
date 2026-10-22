@@ -247,8 +247,9 @@ try {
   await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
   assert.equal(await page.locator('.cm-module-add, [data-action=board-module-add], [data-action=board-module-reset]').count(),0,'drawer configuration uses Settings without taking module space');
   assert.equal(await page.locator('.cm-stage-rail [data-action="board-tools"]').count(),0,'Settings is no longer in the left drawer');
-  const profile=await page.getByRole('button',{name:'Profile menu',exact:true}).boundingBox(), skip=await page.locator('.cm-stage-top [data-action="board-skip"]').boundingBox();
-  assert.ok(profile.x>skip.x && profile.y<58,'profile control sits at the right of the top strip beside Skip to end');
+  /* Skip to end stands over the table in Full screen (Rob's fullscreen notes, Oct 21), the profile at the strip's right. */
+  const profile=await page.getByRole('button',{name:'Profile menu',exact:true}).boundingBox(), skip=await page.locator('.cm-stage-actions [data-action="board-skip"]').boundingBox();
+  assert.ok(profile.x>skip.x && profile.y<58 && skip.y>=58,'profile control sits at the right of the top strip, Skip to end over the table below it');
   await openDrawerSettings();
   await page.getByRole('radio',{name:'History: Left',exact:true}).check();
   await page.getByRole('button',{name:'Cancel',exact:true}).click();
