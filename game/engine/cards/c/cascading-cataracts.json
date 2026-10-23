@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Cascading Cataracts",
+    "oracleId": "d98b4250-3492-4864-9c4c-42db09b3ccd4",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Indestructible\n{T}: Add {C}.\n{5}, {T}: Add five mana in any combination of colors.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Indestructible",
+      "keyword": "indestructible"
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {C}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{5}, {T}: Add five mana in any combination of colors.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "mana",
+          "cost": "{5}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyCombination": true,
+          "count": 5
+        }
+      ]
+    }
+  ]
+}

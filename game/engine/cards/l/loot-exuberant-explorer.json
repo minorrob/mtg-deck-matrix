@@ -1,0 +1,80 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Loot, Exuberant Explorer",
+    "oracleId": "f6476884-f73f-465f-8e7f-ea312a5b306d",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Beast",
+      "Noble"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 4
+  },
+  "oracleText": "You may play an additional land on each of your turns.\n{4}{G}{G}, {T}: Look at the top six cards of your library. You may reveal a creature card with mana value less than or equal to the number of lands you control from among them and put it onto the battlefield. Put the rest on the bottom in a random order.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "You may play an additional land on each of your turns.",
+      "rule": "extra-land-drop",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{4}{G}{G}, {T}: Look at the top six cards of your library. You may reveal a creature card with mana value less than or equal to the number of lands you control from among them and put it onto the battlefield. Put the rest on the bottom in a random order.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{4}{G}{G}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dig",
+          "count": 6,
+          "take": 1,
+          "upTo": true,
+          "reveal": "taken",
+          "rest": "bottom",
+          "random": true,
+          "selector": {
+            "types": [
+              "Creature"
+            ],
+            "manaValue": {
+              "max": {
+                "count": {
+                  "what": "permanent",
+                  "types": [
+                    "Land"
+                  ],
+                  "controller": "you"
+                }
+              }
+            }
+          },
+          "to": "battlefield"
+        }
+      ]
+    }
+  ]
+}

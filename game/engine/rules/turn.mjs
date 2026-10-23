@@ -183,6 +183,9 @@ function untap(state, events) {
   if ((state.phasedOut ?? []).length) phaseIn(state, state.activePlayer);
   for (const id of state.zones.battlefield) {
     const o = state.objects[id];
+    /* Exerted (Arena of Glory; CR 701.43a): it doesn't untap during its exerting player's next untap step -- this one, used up
+       whether or not it is tapped. */
+    if (o.exerted === state.activePlayer) { delete o.exerted; continue; }
     /* The active player's permanents (CR 502.3), and another player's that a static of theirs untaps now (Seedborn Muse). */
     if (!o.tapped || (o.controller !== state.activePlayer && !untapsDuringOthers(state, id))) continue;
     /* "Doesn't untap during your untap step" (Mana Vault, Meekstone). */
@@ -848,6 +851,8 @@ export function advance(state) {
       if (player.enteredThisTurn) player.enteredThisTurn = [];
       /* And whether each was dealt combat damage (rules/combat.mjs). */
       if (player.combatDamagedThisTurn) player.combatDamagedThisTurn = false;
+      /* And how much damage each was dealt (rules/combat.mjs, effects/resources.mjs). */
+      if (player.damagedThisTurn) player.damagedThisTurn = 0;
       /* And the sources each controlled that dealt combat damage to a player, with their creature types (prowl, CR 702.76a). */
       if (player.combatDamageSources) delete player.combatDamageSources;
       /* And the creatures that died under each one's control (state/index.mjs, morbid), whether each was dealt noncombat

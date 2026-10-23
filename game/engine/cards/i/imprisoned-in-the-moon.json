@@ -1,0 +1,112 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Imprisoned in the Moon",
+    "oracleId": "339a7418-9a29-4eae-a3c2-ea590d175936",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant creature, land, or planeswalker\nEnchanted permanent is a colorless land with \"{T}: Add {C}\" and loses all other card types and abilities.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Enchant creature, land, or planeswalker",
+      "keyword": "enchant",
+      "target": {
+        "anyOf": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          },
+          {
+            "what": "permanent",
+            "types": [
+              "Land"
+            ]
+          },
+          {
+            "what": "permanent",
+            "types": [
+              "Planeswalker"
+            ]
+          }
+        ]
+      },
+      "hostile": true
+    },
+    {
+      "kind": "static",
+      "text": "Enchanted permanent is a colorless land with \"{T}: Add {C}\" and loses all other card types and abilities.",
+      "layer": 4,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "setTypes": [
+          "Land"
+        ],
+        "correspondingSubtypes": true
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Enchanted permanent is a colorless land with \"{T}: Add {C}\" and loses all other card types and abilities.",
+      "layer": 5,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "setColors": []
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Enchanted permanent is a colorless land with \"{T}: Add {C}\" and loses all other card types and abilities.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "removeAllAbilities": true,
+        "addAbilities": [
+          {
+            "kind": "activated",
+            "text": "{T}: Add {C}.",
+            "cost": [
+              {
+                "atom": "{T}"
+              }
+            ],
+            "effects": [
+              {
+                "effect": "addMana",
+                "mana": {
+                  "C": 1
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

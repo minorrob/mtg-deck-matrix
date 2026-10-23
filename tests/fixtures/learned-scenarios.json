@@ -348,59 +348,6 @@
    ]
   },
   {
-   "card": "Shivan Gorge",
-   "kind": "legendary land: mana ability and a damage ability",
-   "scenarios": [
-    {
-     "name": "Shivan Gorge: 1 damage to each opponent, in three seats",
-     "seats": 3,
-     "setup": [
-      {
-       "seat": 0,
-       "zone": "battlefield",
-       "cards": [
-        "Shivan Gorge",
-        "Mountain",
-        "Wastes",
-        "Wastes"
-       ]
-      }
-     ],
-     "steps": [
-      {
-       "tap": "Mountain"
-      },
-      {
-       "tap": "Wastes"
-      },
-      {
-       "tap": "Wastes"
-      },
-      {
-       "activate": "Shivan Gorge"
-      },
-      {
-       "resolve": true
-      }
-     ],
-     "expect": [
-      {
-       "seat": 1,
-       "life": 39
-      },
-      {
-       "seat": 2,
-       "life": 39
-      },
-      {
-       "seat": 0,
-       "life": 40
-      }
-     ]
-    }
-   ]
-  },
-  {
    "card": "Deeproot Waters",
    "kind": "spell-cast trigger with a subtype filter",
    "scenarios": [
@@ -503,77 +450,6 @@
         "card": "Squirrel",
         "power": 1,
         "toughness": 1
-       }
-      }
-     ]
-    }
-   ]
-  },
-  {
-   "card": "Prosperous Innkeeper",
-   "kind": "enters trigger (Treasure); another creature enters (life)",
-   "scenarios": [
-    {
-     "name": "Innkeeper: a Treasure as it enters, then 1 life for the Bear",
-     "setup": [
-      {
-       "seat": 0,
-       "zone": "battlefield",
-       "cards": [
-        "Forest",
-        "Wastes",
-        "Forest",
-        "Wastes"
-       ]
-      },
-      {
-       "seat": 0,
-       "zone": "hand",
-       "cards": [
-        "Prosperous Innkeeper",
-        "Bear"
-       ]
-      }
-     ],
-     "steps": [
-      {
-       "tap": "Forest"
-      },
-      {
-       "tap": "Wastes"
-      },
-      {
-       "cast": "Prosperous Innkeeper"
-      },
-      {
-       "settle": true
-      },
-      {
-       "tap": "Forest"
-      },
-      {
-       "tap": "Wastes"
-      },
-      {
-       "cast": "Bear"
-      },
-      {
-       "settle": true
-      }
-     ],
-     "expect": [
-      {
-       "seat": 0,
-       "life": 41
-      }
-     ],
-     "post": [
-      {
-       "count": {
-        "seat": 0,
-        "card": "Treasure",
-        "zone": "battlefield",
-        "n": 1
        }
       }
      ]
@@ -720,37 +596,6 @@
        "seat": 0,
        "tapped": "Bear",
        "is": false
-      }
-     ]
-    }
-   ]
-  },
-  {
-   "card": "Palladium Myr",
-   "kind": "mana ability",
-   "scenarios": [
-    {
-     "name": "Palladium Myr: {C}{C}",
-     "setup": [
-      {
-       "seat": 0,
-       "zone": "battlefield",
-       "cards": [
-        "Palladium Myr"
-       ]
-      }
-     ],
-     "steps": [
-      {
-       "tap": "Palladium Myr"
-      }
-     ],
-     "expect": [
-      {
-       "seat": 0,
-       "pool": {
-        "C": 2
-       }
       }
      ]
     }

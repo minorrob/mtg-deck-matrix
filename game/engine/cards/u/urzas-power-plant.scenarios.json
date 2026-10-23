@@ -1,0 +1,65 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Urza's Power Plant",
+  "scenarios": [
+    {
+      "name": "With a Mine and a Tower: {C}{C}; all three make seven",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Urza's Tower",
+            "Urza's Mine",
+            "Urza's Power Plant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Urza's Power Plant"
+        },
+        {
+          "tap": "Urza's Mine"
+        },
+        {
+          "tap": "Urza's Tower"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 7
+          }
+        }
+      ]
+    },
+    {
+      "name": "With a Tower only: {C}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Urza's Power Plant",
+            "Urza's Tower"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Urza's Power Plant"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 1
+          }
+        }
+      ]
+    }
+  ]
+}

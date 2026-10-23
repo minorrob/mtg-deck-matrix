@@ -1,0 +1,79 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Dryad Arbor",
+  "scenarios": [
+    {
+      "name": "Played as the land drop, and summoning sick: no mana this turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Dryad Arbor"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Dryad Arbor"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Dryad Arbor"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Dryad Arbor"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "Under its controller since the turn began: {G}, and a 1/1",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Dryad Arbor"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Dryad Arbor"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Dryad Arbor",
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    }
+  ]
+}

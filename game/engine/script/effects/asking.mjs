@@ -39,7 +39,7 @@ import {loseLife, gainLife, DAMAGING, damageQuestion, addMana} from "./resources
 import {damageOrderChoice, graveyardBound, placeReplacedCounters} from "../../rules/replacement.mjs";
 import {targetCandidates, targetName} from "../bind.mjs";
 import {commanderTax} from "../../rules/commander.mjs";
-import {cantBeCountered, counterOrderChoice, cantBeSacrificed, tokenOrderChoice, drawForbidden} from "../../rules/statics.mjs";
+import {cantBeCountered, counterOrderChoice, cantBeSacrificed, tokenOrderChoice, drawForbidden, searchController} from "../../rules/statics.mjs";
 import {amountOf} from "../amount.mjs";
 import {castNow, castChoicesNow, landChoicesNow, withFaceUp} from "../../rules/actions.mjs";
 
@@ -2040,6 +2040,12 @@ export const chooseCard = {
         ...(params.attacking ? {attacking: params.attacking} : {})}, source: context.source ?? null,
         ...(params.attacking && context.about ? {about: structuredClone(context.about)} : {})} : {}),
     };
+    /* "You control your opponents while they're searching their libraries. While an opponent is searching their library, they
+       exile each card they find" (Opposition Agent; CR 722.1, 701.23): the search of this player's library is put to that
+       permanent's controller, who chooses what it finds -- the searcher's still (`searcher`), from their library, shuffled
+       after -- and what is found there goes to exile, playable by them (apply, below). */
+    const agent = zone === "library" || zones?.includes("library") ? searchController(state, player) : null;
+    if (agent !== null) Object.assign(awaiting, {searcher: player, player: state.objects[agent].controller, opposition: state.objects[agent].card});
     if (Array.isArray(params.searches) || params.sharing === "land type") {
       state.awaiting = {...awaiting, cards: pool, steps: {searches: params.searches ?? null, sharing: params.sharing ?? null, selector: params.selector ?? null, pool,
         step: 0, total: params.searches ? params.searches.length : count, found: [], source: context.source ?? null}};
@@ -2113,13 +2119,16 @@ export const chooseCard = {
     const chosen = (indices ?? []).map((index) => awaiting.cards[index]);
     if (chosen.length < awaiting.min || chosen.length > awaiting.max || chosen.some((id) => id === undefined) || new Set(chosen).size !== chosen.length)
       throw new Error("Invalid selection");
-    const player = awaiting.player;
+    const player = awaiting.searcher ?? awaiting.player;
     const tops = [], arrivedHere = [], found = [];
+    /* A card found in the library of a player another controls as they search it (Opposition Agent): exiled, wherever the
+       search would have put it. */
+    const exiling = chosen.map((id) => awaiting.opposition !== undefined && state.objects[id]?.zone === "library");
     /* A commander chosen for its owner's hand or library may go to the command zone instead (CR 903.9b): Dream Stalker's
        "return a permanent you control to its owner's hand", Brainstorm's put-back. Its move is left to moveZone, after this
        answer, and its owner is asked first (script/resolution.mjs). One bound for the top takes every card chosen for the
        top with it, so the order chosen holds. */
-    const whereOf = (i) => awaiting.destinations[Math.min(i, awaiting.destinations.length - 1)];
+    const whereOf = (i) => (exiling[i] ? {to: "exile"} : awaiting.destinations[Math.min(i, awaiting.destinations.length - 1)]);
     const goingHome = (id, i) => {
       const to = whereOf(i).to, object = state.objects[id];
       if (object?.commander !== true) return false;
@@ -2149,6 +2158,12 @@ export const chooseCard = {
       }
       const moved = moveOne(state, id, where.to, events, {owner: state.objects[id].owner, controller: awaiting.controller, tapped: where.tapped === true});
       if (moved !== null && state.objects[moved]) found.push(moved);
+      /* "You may play those cards for as long as they remain exiled, and you may spend mana as though it were mana of any color
+         to cast them" (Opposition Agent; CR 609.4b): the player who controlled the search may, the card's own effect for as
+         long as it is that object (CR 400.7) -- read as Hostage Taker's is (rules/actions.mjs, anyTypeCost). */
+      if (exiling[i] && moved !== null && state.objects[moved]?.zone === "exile")
+        (state.effects ??= []).push({id: `opposition:${moved}`, rule: "may-play", affects: {ids: [moved]}, player: awaiting.player, name: awaiting.opposition,
+          anyMana: true, until: "ever", madeOnTurn: state.turn, sourceController: awaiting.player});
       if (moved !== null && state.objects[moved] && where.to === "battlefield") {
         arrivedHere.push(moved);
       }

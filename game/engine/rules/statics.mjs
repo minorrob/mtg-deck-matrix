@@ -137,6 +137,10 @@ export const STATIC_RULES = Object.freeze({
   "look-at-top": "projection.mjs",
   /** "Play with the top card of your library revealed": everyone sees it (projection.mjs). */
   "top-revealed": "projection.mjs",
+  /** "You control your opponents while they're searching their libraries. While an opponent is searching their library, they
+      exile each card they find" (Opposition Agent; CR 722.1): `affects` the players, from its controller's side.
+      searchController, read as a search of a library is put to its searcher (script/effects/asking.mjs, chooseCard). */
+  "controls-searches": "script/effects/asking.mjs",
   /** "You may play an additional land on each of your turns" (CR 305.2): one more land drop. rules/actions.mjs. */
   "extra-land-drop": "rules/actions.mjs",
   /** "Your opponents can't gain life" (Archfiend of Despair), "players can't gain life" (Rampaging Ferocidon; CR 119.7):
@@ -1147,6 +1151,23 @@ export function flashGranted(state, player, id) {
 }
 
 /** The "play-from" and similar static abilities a player's permanents give them: each such ability, with its source. */
+/** "You control your opponents while they're searching their libraries" (Opposition Agent; CR 722.1): the permanent whose
+    controller makes this player's choices while they search their library -- of several, the latest (CR 613.7) -- or null.
+    Never the player's own: the static names its controller's opponents. */
+export function searchController(state, player) {
+  const held = staticAbilities(state);
+  let found = null;
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of held(holderId)) {
+      if (ability.kind !== "static" || ability.rule !== "controls-searches") continue;
+      if (!compileSelector(ability.affects)(state, player, {controller: holder.controller, source: holderId})) continue;
+      if (found === null || holder.timestamp > state.objects[found].timestamp) found = holderId;
+    }
+  }
+  return found;
+}
+
 export function playerStatics(state, rule, player) {
   const found = [];
   const held = staticAbilities(state);

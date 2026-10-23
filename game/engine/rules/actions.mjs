@@ -1467,7 +1467,7 @@ function manaOffers(state, player) {
     if (activationsForbidden(state, id) || permanentActivationForbidden(state, id)) continue;
     /* Its abilities now: its own and any given it (layers.mjs). */
     for (const ability of abilitiesOf(state, id)) {
-      if (ability.kind !== "mana") continue;
+      if (ability.kind !== "mana" || ability.zone === "hand") continue;
       if (ability.tapSelf && object.tapped) continue;
       /* CR 302.6: a creature's {T} ability waits until it has been yours since your turn began, unless it has haste.
          A land is never sick; a land animated this turn is a creature, and is. */
@@ -1491,6 +1491,17 @@ function manaOffers(state, player) {
         ...(alternatives.length > 1 || Array.isArray(ability.produces) || ability.anyColor || ability.reflect || ability.among ? {produce} : {}),
         ...(costChoice ? {costChoice, costNames: [state.objects[costChoice.sacrifice ?? costChoice.tap ?? costChoice.exile].card]} : {}),
       }));
+    }
+  }
+  /* "Exile this card from your hand: Add {R}" (Simian Spirit Guide; CR 605.1a, 113.6b): a mana ability of a card in its owner's
+     hand, offered whenever they have priority, as a permanent's is. */
+  for (const id of cardsIn(state, "hand", player)) {
+    const object = state.objects[id];
+    for (const ability of object.abilities ?? []) {
+      if (ability.kind !== "mana" || ability.zone !== "hand" || !manaAbilityPayment(state, player, ability)) continue;
+      const alternatives = manaAlternatives(state, player, ability, id);
+      alternatives.forEach((mana, produce) => actions.push({kind: "activate-mana", objectId: id, abilityId: ability.id, label: object.card, mana,
+        ...(alternatives.length > 1 || Array.isArray(ability.produces) || ability.anyColor ? {produce} : {})}));
     }
   }
   return actions;
@@ -2177,7 +2188,7 @@ export function nothingToDo(state, player, actions = legalActions(state, player)
    (Jaspera Sentinel), pays life (Mana Confluence), removes counters (Ramos), mills (Millikin) or exiles (Rubble Rouser), or
    does something else as it resolves (The Great Henge's life, Strixhaven Stadium's counter), changes the board: in response
    to a spell, that is a play, not nothing. */
-const MANA_COSTS = ["sacrifice", "sacrificeSelf", "tapCreature", "payLife", "counterCost", "millCost", "exileFromGraveyard"];
+const MANA_COSTS = ["sacrifice", "sacrificeSelf", "tapCreature", "payLife", "counterCost", "millCost", "exileFromGraveyard", "exertSelf", "exileSelf"];
 const selfHurt = (effect) => effect?.effect === "dealDamage" && effect.who === "you";
 export const plainMana = (ability) => Boolean(ability) && !MANA_COSTS.some((key) => ability[key] !== undefined && ability[key] !== false)
   && (ability.then ?? []).every(selfHurt);
@@ -2637,6 +2648,8 @@ function performOffered(state, player, action, during) {
        like any other, which "whenever a card is put into your graveyard" sees (CR 701.17, 605.3a). */
     if (ability.millCost) events.push(...mill(state, {who: [player], count: ability.millCost}, {controller: player, source: action.objectId}));
     if (ability.limit) recordUse(state, action.objectId, ability.id);
+    /* "Exert this land" (Arena of Glory; CR 701.43a): it won't untap during this player's next untap step (rules/turn.mjs). */
+    if (ability.exertSelf) object.exerted = player;
     if (ability.tapSelf) {
       object.tapped = true;
       events.push(event("GameEventCardTapped", state, {card: cardRef(state, action.objectId), tapped: true}));
@@ -2680,6 +2693,8 @@ function performOffered(state, player, action, during) {
     /* "{T}, Sacrifice this artifact: Add one mana of any color" (a Treasure, Lotus Petal): the sacrifice is part of the
        cost of a mana ability, paid as it is activated (CR 605.3a, 701.21a). */
     if (ability.sacrificeSelf && state.objects[action.objectId]) sacrificeOne(state, action.objectId, events);
+    /* "Exile this card from your hand" (Simian Spirit Guide): its cost, the card moved from its owner's hand to exile. */
+    if (ability.exileSelf && state.objects[action.objectId]?.zone === "hand") moveOne(state, action.objectId, "exile", events, {owner: object.owner});
     if (ability.sacrifice && action.costChoice?.sacrifice !== undefined) sacrificeOne(state, action.costChoice.sacrifice, events);
     /* NOTHING GOES ON THE STACK. CR 605.3a — the whole point of a mana ability. */
     return events;
@@ -2850,6 +2865,9 @@ function performOffered(state, player, action, during) {
        the stack once the cast is done, above the spell (CR 603.3). About the spell as it now is, and which commander it is
        ("the number of times it's been cast from the command zone", Study Hall). */
     for (const rider of paid.triggered ?? []) {
+      /* "If any of that mana is spent on a creature spell, it gains haste until end of turn" (Arena of Glory; CR 106.6): no
+         trigger, what the permanent it becomes gains (castGains, rules/stack.mjs) -- once, however much of that mana paid. */
+      if (rider.whenSpent.gains) { for (const keyword of rider.whenSpent.gains) if (!gains.includes(keyword)) gains.push(keyword); continue; }
       const spellObject = state.objects[entry.objectId];
       (state.pendingTriggers ??= []).push({abilityId: "mana-spent", text: rider.whenSpent.text, controller: player,
         source: {cardId: rider.source, name: state.objects[rider.source]?.card ?? null}, cause: null, optional: false,

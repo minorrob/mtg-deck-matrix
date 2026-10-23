@@ -140,7 +140,9 @@ export const AMOUNT_KINDS = Object.freeze(["x", "attacksThisTurn", "count", "cou
   /* The library load of 2026-10-21: "your starting life total" (Happily Ever After). */
   "startingLife",
   /* Wave 4c: "equal to the result" of a die rolled (CR 706.2; Ancient Copper Dragon). */
-  "dieRolled"]);
+  "dieRolled",
+  /* Wave 4d: "if an opponent was dealt 7 or more damage this turn" (Spinerock Knoll). */
+  "damageTakenThisTurn"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "per", "filter", "controlledBy", "named", "another", "signed"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -168,6 +170,7 @@ export function amountProblems(value) {
   if ("another" in value && !(value.another === true && value.spellsCastThisTurn === "you")) problems.push('another is true, beside spellsCastThisTurn: "you"');
   /* The life lost this turn: a player's, or every opponent's together ("if an opponent lost life this turn", spectacle). */
   if ("lifeLostThisTurn" in value && !["you", "that player", "opponents"].includes(value.lifeLostThisTurn)) problems.push('lifeLostThisTurn is "you", "that player" or "opponents"');
+  if ("damageTakenThisTurn" in value && !["you", "that player", "an opponent"].includes(value.damageTakenThisTurn)) problems.push('damageTakenThisTurn is "you", "that player" or "an opponent"');
   if ("creaturesDiedThisTurn" in value && !["you", "that player", "any"].includes(value.creaturesDiedThisTurn)) problems.push('creaturesDiedThisTurn is "you", "that player" or "any"');
   if ("playersDealtNoncombatDamage" in value && !["opponent", "any"].includes(value.playersDealtNoncombatDamage)) problems.push('playersDealtNoncombatDamage is "opponent" or "any"');
   /* Spells cast this game are kept by name, and counted by it ("another spell named Approach of the Second Sun"). */
@@ -492,6 +495,15 @@ export function amountOf(state, value, context = {}) {
     else {
       const player = playerOf(value.lifeLostThisTurn, context);
       n = player !== null ? state.players[player]?.lostThisTurn ?? 0 : 0;
+    }
+  }
+  /* The damage a player was dealt this turn, combat and noncombat (CR 120.3; rules/combat.mjs, effects/resources.mjs) -- or the
+     most any one opponent still in the game was dealt: "if an opponent was dealt 7 or more damage this turn" (Spinerock Knoll). */
+  else if ("damageTakenThisTurn" in value) {
+    if (value.damageTakenThisTurn === "an opponent") n = Math.max(0, ...state.players.filter((p) => p.id !== context.controller && !p.lost).map((p) => p.damagedThisTurn ?? 0));
+    else {
+      const player = playerOf(value.damageTakenThisTurn, context);
+      n = player !== null ? state.players[player]?.damagedThisTurn ?? 0 : 0;
     }
   }
   /* MORBID (Dreaded Bat-Cloud, Essenceknit Scholar): the creatures that died this turn (CR 700.4) under that player's

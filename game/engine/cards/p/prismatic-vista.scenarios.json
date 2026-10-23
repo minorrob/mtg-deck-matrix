@@ -1,0 +1,92 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Prismatic Vista",
+  "scenarios": [
+    {
+      "name": "A basic land, untapped, for 1 life",
+      "library": [
+        "Mountain"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Prismatic Vista"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Prismatic Vista"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Mountain",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Prismatic Vista"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "No basic land: nothing found, still sacrificed",
+      "library": [
+        "Shivan Gorge"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Prismatic Vista"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Prismatic Vista"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": []
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": []
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Prismatic Vista"
+          ]
+        }
+      ]
+    }
+  ]
+}
