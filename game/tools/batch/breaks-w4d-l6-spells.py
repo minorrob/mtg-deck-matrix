@@ -5,7 +5,7 @@ Run from the repository root, with nothing else editing the worktree:
 
     python3 game/tools/batch/breaks.py game/tools/batch/breaks-w4d-l6-spells.py
 """
-SUITES = ['tests/engine-spells-w4d.mjs', 'tests/engine-convoke.mjs', 'tests/engine-delayed-mana.mjs', 'tests/engine-cards.mjs']
+SUITES = ['tests/engine-spells-w4d.mjs', 'tests/engine-unless-times.mjs', 'tests/engine-convoke.mjs', 'tests/engine-delayed-mana.mjs', 'tests/engine-cards.mjs']
 STATE = 'game/engine/state/index.mjs'
 TURN = 'game/engine/rules/turn.mjs'
 ZONES = 'game/engine/script/effects/zones.mjs'
@@ -96,7 +96,9 @@ BREAKS = [
      '  "more-life-loss": "script/effects/resources.mjs",\n', ''),
     # Crackle with Power.
     ('up to X targets is refused on a spell', SCHEMA,
-     '!countValid(count, {x: ability.kind === "spell"})', '!countValid(count)'),
+     '!countValid(count, {x: ability.kind === "spell" && manaX})', '!countValid(count)'),
+    ('up to X targets on a spell with no {X}', SCHEMA,
+     'const manaX = /\\{X\\}/.test(String(script.identity?.manaCost ?? ""));', 'const manaX = true;'),
     ('a counted target\'s question has no X', ACTIONS,
      'chosenTargets: action.targets ?? [], ...(Number.isInteger(action.x) ? {x: action.x} : {})};', 'chosenTargets: action.targets ?? []};'),
     ('the counted targets are checked without X', ACTIONS,
