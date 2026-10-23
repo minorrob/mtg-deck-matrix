@@ -568,6 +568,9 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
     if (!ability.affects) errors.push({path: `${path}.affects`, message: "A static ability says what it affects"});
     /* A rule is read through the whole selector grammar (rules/statics.mjs), a choice of selectors included: "creatures you
        control with power or toughness 1 or less". A layer's `affects` is the layers' narrower matcher, and is not. */
+    /* "The same objects as this ability's earlier part" (`continued`, CR 613.6; Bludgeon Brawl, rules/layers.mjs): no selector,
+       on a layer static alone. */
+    else if (ability.affects.continued === true && ability.rule === undefined && Object.keys(ability.affects).length === 1) { /* the earlier part's objects */ }
     else checkSelector(ability.affects, `${path}.affects`, errors, {choice: ability.rule !== undefined});
     /* "By paying life equal to its mana value rather than paying its mana cost" (Demon of Fate's Design): a free cast's cost of
        life, its mana value. */

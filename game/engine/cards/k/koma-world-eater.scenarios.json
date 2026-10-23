@@ -1,0 +1,150 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Koma, World-Eater",
+  "fixtures": {
+    "Kill": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Koma connects: 8 damage and four 3/3 blue Koma's Coil",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Koma, World-Eater"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Koma, World-Eater"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 32
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Koma, World-Eater",
+            "Koma's Coil",
+            "Koma's Coil",
+            "Koma's Coil",
+            "Koma's Coil"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Koma's Coil",
+            "power": 3,
+            "toughness": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "Koma's ward: an opponent's removal is countered unless they pay {4}, which they cannot",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Koma, World-Eater"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Kill"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Kill",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Koma, World-Eater"
+            }
+          ]
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Koma, World-Eater"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Kill"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1113,6 +1113,17 @@ export function goad(state, params, context) {
   return [];
 }
 
+
+/**
+ * `removeFromCombat` -- CR 506.4: "remove target attacking creature you control from combat" (Reconnaissance; wave 4d L3). It
+ * stops being an attacking, blocking or blocked creature (rules/combat.mjs); a creature not in combat is unchanged. What
+ * follows it on the card ("and untap it") is the next effect's.
+ */
+export function leaveCombat(state, params, context) {
+  for (const id of params.targets ?? []) if (state.objects[id]?.zone === "battlefield") removeFromCombat(state, id);
+  void context;
+  return [];
+}
 /**
  * `regenerate` -- CR 701.19a: a regeneration shield on each target (or each permanent `selector` describes, fixed as it
  * resolves: "regenerate each creature you control"), until end of turn. rules/replacement.mjs `regenerated` uses one up.
@@ -1145,8 +1156,13 @@ const endOfPhase = (step) => (["UNTAP", "UPKEEP", "DRAW"].includes(step) ? "DRAW
  */
 export function addPhase(state, params, context) {
   const steps = (params.phases ?? ["combat"]).flatMap((kind) => ADDED_STEPS[kind] ?? []);
-  if (steps.length) (state.extraPhases ??= []).push({turn: state.turn, after: endOfPhase(state.phase), steps});
-  void context;
+  if (!steps.length) return [];
+  /* "At the beginning of that combat, untap all creatures you control" (Moraug, Fury of Akoum; wave 4d L3, CR 603.7): a
+     delayed trigger of that added combat's beginning, and no other's -- `atBeginning`, tagged with it; rules/turn.mjs numbers
+     the combat as the phase is put in the turn, and rules/trigger.mjs fires it there. */
+  const tag = steps.includes("COMBAT_BEGIN") && params.atBeginning ? `combat:${state.turn}:${(state.extraPhases ?? []).length}:${(state.delayedTriggers ?? []).length}` : undefined;
+  (state.extraPhases ??= []).push({turn: state.turn, after: endOfPhase(state.phase), steps, ...(tag ? {tag} : {})});
+  if (tag) delayedTrigger(state, {at: "that combat", tag, text: params.atBeginning.text, effects: params.atBeginning.effects}, context);
   return [];
 }
 
@@ -1207,7 +1223,9 @@ export function delayedTrigger(state, params, context) {
          "At the beginning of that player's next end step" (The Eternal Wanderer): a moment of that player's turn only (`player`). */
       : {at: params.at ?? "end step", ...(params.yours === true ? {yours: true} : {}), ...(Number.isInteger(params.player) ? {player: params.player} : {}),
         /* "On your next turn" (Meandering Towershell): a turn after this one (rules/trigger.mjs). */
-        ...(params.at === "your next declare attackers" ? {madeOnTurn: state.turn} : {})}),
+        ...(params.at === "your next declare attackers" ? {madeOnTurn: state.turn} : {}),
+        /* "At the beginning of that combat" (addPhase's `atBeginning`): the added combat it names. */
+        ...(params.at === "that combat" ? {tag: params.tag} : {})}),
     controller: context.controller,
     source: context.source ?? null,
     /* A double-faced source's transforms as this is made: "transform it" from a delayed trigger is ignored once it has

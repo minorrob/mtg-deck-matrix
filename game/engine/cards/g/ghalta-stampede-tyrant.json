@@ -1,0 +1,57 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ghalta, Stampede Tyrant",
+    "oracleId": "b8f16311-be5a-4648-b024-849a61dff0bc",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elder",
+      "Dinosaur"
+    ],
+    "manaCost": "{5}{G}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 12,
+    "toughness": 12
+  },
+  "oracleText": "Trample\nWhen Ghalta enters, put any number of creature cards from your hand onto the battlefield.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "triggered",
+      "text": "When Ghalta enters, put any number of creature cards from your hand onto the battlefield.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "hand",
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          },
+          "count": 99,
+          "upTo": true,
+          "to": "battlefield"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Stoneforge Mystic",
+    "oracleId": "358789f9-7d87-411d-919e-d597da665cbd",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Kor",
+      "Artificer"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "When this creature enters, you may search your library for an Equipment card, reveal it, put it into your hand, then shuffle.\n{1}{W}, {T}: You may put an Equipment card from your hand onto the battlefield.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, you may search your library for an Equipment card, reveal it, put it into your hand, then shuffle.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "subtypes": [
+              "Equipment"
+            ]
+          },
+          "to": "hand",
+          "reveal": true,
+          "shuffle": true
+        }
+      ],
+      "optional": true
+    },
+    {
+      "kind": "activated",
+      "text": "{1}{W}, {T}: You may put an Equipment card from your hand onto the battlefield.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{W}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "hand",
+          "selector": {
+            "subtypes": [
+              "Equipment"
+            ]
+          },
+          "to": "battlefield",
+          "upTo": true
+        }
+      ]
+    }
+  ]
+}

@@ -320,6 +320,9 @@ function preventionsFor(state, proposal) {
     const how = effect.apply ?? {};
     if (how.combat === true && proposal.combat !== true) return false;
     if (Array.isArray(effect.sources) && !effect.sources.includes(proposal.sourceId)) return false;
+    /* "Prevent all combat damage that would be dealt this turn" (Fog; wave 4d L3, CR 615.1a): `apply.all`, to any player or
+       permanent, by any source. */
+    if (how.all === true) return true;
     if (Array.isArray(effect.players)) return proposal.toPlayer !== undefined && proposal.toPlayer !== null && effect.players.includes(proposal.toPlayer);
     return (how.to !== false && proposal.toCard !== undefined && proposal.toCard !== null && among(proposal.toCard))
       || (how.by === true && proposal.sourceId !== undefined && proposal.sourceId !== null && among(proposal.sourceId));
@@ -455,6 +458,9 @@ function applyOne(state, {holderId, ability, effect = null}, proposal, dry = fal
     /* "Prevent 1 of that damage" (Hedron-Field Purists; CR 615.10): a static's prevention of that much of each damage event it
        applies to, never used up -- not a shield (`prevent` on the ability, below). */
     if (Number.isInteger(ability.change.prevent)) next.amount = Math.max(0, next.amount - ability.change.prevent);
+    /* "Prevent half that damage, rounded up" (Gisela, Blade of Goldnight; wave 4d L3, CR 615.1a): of each damage event it
+       applies to, as it now is, the greater half is prevented and the rest dealt. */
+    if (ability.change.preventHalf === true) next.amount = Math.floor(next.amount / 2);
     /* REDIRECTION (CR 614.9): "all damage that would be dealt to you is dealt to enchanted creature instead" (Pariah) -- the
        same damage, to the permanent its holder enchants, while it enchants one; the rest of the replacements then look
        at the damage as it now is. */

@@ -37,7 +37,7 @@ import {
 } from "./resources.mjs";
 import {
   createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup, attach, copyPermanent, regenerate, addPhase, gainControl,
-  becomeCopy, earthbend, goad, immediateTrigger, investigate, phaseOut, setState, exchangeControl, incubate, emblem,
+  becomeCopy, earthbend, goad, immediateTrigger, investigate, phaseOut, setState, exchangeControl, incubate, emblem, leaveCombat,
 } from "./permanents.mjs";
 import {alterAttribute} from "./attributes.mjs";
 import {addTurn} from "./turns.mjs";
@@ -158,6 +158,8 @@ export const EFFECTS = Object.freeze({
   /* Batch 24: damage to each creature and each opponent. Batch 28: a regeneration shield. Batch 33: extra phases.
      Batch 36: the same for each player, opponent or creature. */
   damageAll, regenerate, addPhase, repeatFor,
+  /* Wave 4d L3: "remove target attacking creature you control from combat" (Reconnaissance; CR 506.4). */
+  removeFromCombat: leaveCombat,
   /* Batch 52: two creatures fight (CR 701.14). */
   fight,
   /* Batch 40: a change of control, for a turn or for good. Batch 49: every permanent a selector fits, sacrificed. */

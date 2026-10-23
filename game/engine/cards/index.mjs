@@ -975,15 +975,16 @@ export function compileScript(script) {
     }
     /* PROTECTION FROM [QUALITY] (CR 702.16a), printed: "protection from black" (Karmic Guide) -- the keyword with its quality
        in `from` ({colors}, {types}, {multicolored: true} -- "protection from multicolored", Argentum Masticore -- or
-       "everything"), compiled to the static `protection` on this permanent; what protection does (DEBT, CR 702.16b-f) is
+       "everything", or {subtypes} -- "protection from Humans", Yawgmoth, Thran Physician), compiled to the static `protection`
+       on this permanent; what protection does (DEBT, CR 702.16b-f) is
        read where each thing happens (rules/protection.mjs). */
     if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "protection") {
       const from = ability.from;
       const valid = from === "everything" || (from && typeof from === "object" && !Array.isArray(from) && Object.keys(from).length > 0
-        && Object.keys(from).every((k) => ["colors", "types", "multicolored"].includes(k)) && [undefined, true].includes(from.multicolored)
-        && (from.colors ?? []).every((c) => ["W", "U", "B", "R", "G"].includes(c)) && (from.types ?? []).every((t) => typeof t === "string" && t.length > 0)
-        && ([...(from.colors ?? []), ...(from.types ?? [])].length > 0 || from.multicolored === true));
-      if (!valid) problems.push(`${ability.text}: protection says from what: \`from\`, {colors: [...]}, {types: [...]}, {multicolored: true} or "everything"`);
+        && Object.keys(from).every((k) => ["colors", "types", "subtypes", "multicolored"].includes(k)) && [undefined, true].includes(from.multicolored)
+        && (from.colors ?? []).every((c) => ["W", "U", "B", "R", "G"].includes(c)) && [...(from.types ?? []), ...(from.subtypes ?? [])].every((t) => typeof t === "string" && t.length > 0)
+        && ([...(from.colors ?? []), ...(from.types ?? []), ...(from.subtypes ?? [])].length > 0 || from.multicolored === true));
+      if (!valid) problems.push(`${ability.text}: protection says from what: \`from\`, {colors: [...]}, {types: [...]}, {subtypes: [...]}, {multicolored: true} or "everything"`);
       abilities.push({id, kind: "static", rule: "protection", text: ability.text, affects: {self: true}, from: valid ? structuredClone(from) : {}});
       keywords.push("Protection");
       return;
@@ -1166,6 +1167,20 @@ export function compileScript(script) {
       if (!parsed || !parsed.symbols.length) problems.push(`${ability.text}: a ${word} cost of mana, once`);
       abilities.push({id, kind: "static", rule: "alternative-cost", paidFor: word, condition: {[word]: true}, text: ability.text, cost: structuredClone(cost), affects: {what: "card", self: true}});
       keywords.push(word === "surge" ? "Surge" : "Freerunning");
+      return;
+    }
+    /* DASH [COST] (CR 702.109a; Ragavan, Nimble Pilferer, wave 4d L3): "You may cast this card by paying [cost] rather than its
+       mana cost" -- an alternative cost (CR 118.9) from wherever the card may be cast, marked as cast for it (`paidFor`) --
+       and, if it was, the permanent it becomes has haste and returns to its owner's hand at the beginning of the next end step
+       (rules/stack.mjs). A mana cost. */
+    if (word === "dash") {
+      const cost = Array.isArray(ability.cost) ? ability.cost : [];
+      let parsed = null;
+      try { parsed = cost.length === 1 && cost[0]?.atom === "mana" ? parseManaCost(cost[0].cost ?? "") : null; } catch { /* refused below */ }
+      if (!parsed || !parsed.symbols.length || parsed.variable > 0) problems.push(`${ability.text}: a dash cost of mana, once, without X`);
+      if (!(identity.types ?? []).includes("Creature")) problems.push(`${ability.text}: dash on a card that is no creature`);
+      abilities.push({id, kind: "static", rule: "alternative-cost", paidFor: "dash", text: ability.text, cost: structuredClone(cost), affects: {what: "card", self: true}});
+      keywords.push("Dash");
       return;
     }
     /* WARP [COST] (CR 702.185a; All-Fates Stalker, Pinnacle Emissary): "You may cast this card from your hand by paying [cost]

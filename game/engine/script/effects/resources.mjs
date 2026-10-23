@@ -190,12 +190,23 @@ export function dealDamage(state, params, context) {
   if (params.remember) context.remembered = dealt;
   const {source, amount, hits} = damageHits(state, params, context);
   if (amount <= 0) return events;
+  /* "If the creature you control has trample, excess damage is dealt to that creature's controller instead" (Ram Through;
+     wave 4d L3, CR 120.4a, 702.19b): `trampleExcess` -- from a source with trample as this resolves, a creature is dealt
+     lethal damage (its damage marked counted, 1 from deathtouch) and the rest is dealt to its controller, at once. */
+  if (params.trampleExcess === true && source !== null && keywordsOf(state, source).includes("Trample"))
+    for (const hit of [...hits]) {
+      if (hit.toCard === undefined || !state.objects[hit.toCard] || !typesOf(state, hit.toCard).includes("Creature")) continue;
+      const excess = excessOf(state, hit.toCard, amount, source);
+      if (excess <= 0) continue;
+      hit.amount = amount - excess;
+      hits.push({toPlayer: controllerOf(state, hit.toCard), amount: excess});
+    }
 
   for (const hit of hits) {
     /* CR 616.1: the order of the effects that change it, as the player dealt it chose (effects/asking.mjs, orderDamage);
        the order that leaves the least where nobody was asked (rules/replacement.mjs). */
     const {proposal} = applyReplacements(state, {
-      event: "damage", toPlayer: hit.toPlayer, toCard: hit.toCard, amount, sourceId: source, combat: false,
+      event: "damage", toPlayer: hit.toPlayer, toCard: hit.toCard, amount: hit.amount ?? amount, sourceId: source, combat: false,
     }, {orders: params.damageOrders?.[hitKey(source, hit.toPlayer, hit.toCard)] ?? []});
     /* What follows a prevention -- "each opponent mills that many cards" -- immediately afterward (CR 615.5). */
     if (proposal.prevented === true || proposal.amount <= 0) { events.push(...runFollowUps(state, proposal)); continue; }
@@ -558,14 +569,18 @@ export function counterQuestion(state, effect, context, answers = {}) {
  * `multiplyCounters` -- "double the number of each kind of counter on any number of target permanents" (Deepglow Skate;
  * Forge's MultiplyCounter): on each target, as many more of each kind as it has now, put on as counters are (CR 122.1 --
  * doubling is putting that many on, which "if counters would be put on" sees); `who`, the players whose own counters
- * double ("each kind of counter you have": poison, CR 122.1c). `times` 2 unless it says.
+ * double ("each kind of counter you have": poison, CR 122.1c). `times` 2 unless it says. "Double the number of +1/+1
+ * counters on this creature" (Mossborn Hydra; wave 4d L3): `counter`, that kind alone; "on each creature you control"
+ * (Kalonian Hydra): `selector`, every permanent it matches as the effect resolves, in place of targets.
  */
 export function multiplyCounters(state, params, context) {
   const events = [], more = Math.max(1, params.times ?? 2) - 1;
-  for (const id of params.targets ?? []) {
+  const ids = params.selector !== undefined ? selectMatching(state, params.selector, context) : params.targets ?? [];
+  for (const id of ids) {
     const object = state.objects[id];
     if (!object || object.zone !== "battlefield") continue;
-    for (const [kind, n] of Object.entries({...object.counters})) if (n > 0) addCounters(state, id, kind, n * more, events, context.controller);
+    for (const [kind, n] of Object.entries({...object.counters}))
+      if (n > 0 && (params.counter === undefined || kind === params.counter)) addCounters(state, id, kind, n * more, events, context.controller);
   }
   for (const player of params.who !== undefined ? playersFor(state, params.who, context.controller) : [])
     if ((state.players[player].poison ?? 0) > 0) events.push(...givePoison(state, player, state.players[player].poison * more, context.controller));
