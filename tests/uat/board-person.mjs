@@ -33,11 +33,12 @@ async function priority(page, d, chosen) {
     if (also) await also.click();
   }
   const exact = await visible(page, `[data-action=board-option][data-index="${chosen.index}"]`);
-  if (exact) return exact.click();
+  if (exact) {await exact.click();return click(page,"[data-action=board-confirm]:not([disabled])");}
   const chooser = await visible(page, `[data-action=board-choose][data-card="${chosen.cardId}"]`);
-  if (chooser) {await chooser.click(); return click(page, `[data-action=board-zoom-do][data-index="${chosen.index}"]`);}
+  if (chooser) {await chooser.click(); await click(page, `#cm-board-decision [data-action=board-option][data-index="${chosen.index}"]`);return click(page,"[data-action=board-confirm]:not([disabled])");}
   const grouped = d.options.find((o) => o.act === chosen.act && o.label === chosen.label);
-  return click(page, `[data-action=board-option][data-index="${grouped.index}"]`);
+  await click(page, `[data-action=board-option][data-index="${grouped.index}"]`);
+  return click(page,"[data-action=board-confirm]:not([disabled])");
 }
 
 export function boardPerson({page, seat, cards, current, timeout = 15000}) {
@@ -78,7 +79,7 @@ export function boardPerson({page, seat, cards, current, timeout = 15000}) {
         }
         await page.locator("[data-action=board-confirm]:not([disabled])").waitFor({timeout});
       } else for (const i of picked.indices ?? []) await click(page, `[data-action=board-option][data-index="${i}"]`);
-      if (["many", "order", "ack", "damage", "amount"].includes(d.mode)) await click(page, "[data-action=board-confirm]:not([disabled])");
+      if (["one", "boolean", "index", "many", "order", "ack", "damage", "amount"].includes(d.mode)) await click(page, "[data-action=board-confirm]:not([disabled])");
     }
     while (current()?.revision === v.revision && Date.now() - at < timeout) await page.waitForTimeout(20);
     assert.notEqual(current()?.revision, v.revision, `action advances ${d.title}`);

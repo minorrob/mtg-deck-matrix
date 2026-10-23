@@ -89,15 +89,42 @@ try{
  await page.locator('#cm-card-inspector').waitFor();
  await page.locator(`.cm-board-hand .cm-bcard[data-card="${id}"]`).dispatchEvent('click',{detail:1});await page.waitForTimeout(100);
  eq(sent.filter(x=>x.type==='act').length,0,'long-press follow-up click cannot play a card');
+ eq(await page.locator('.cm-action-review').count(),0,'long-press follow-up click cannot select an action either');
  await page.keyboard.press('Escape');
- // Existing card-action dialogs cannot submit stale choices after a new projection.
+ // Selection is private until an explicit confirmation, in every view.
  const ways=structuredClone(sample);ways.revision=++revision;
- ways.decision={id:'r2-ways',kind:'priority',mode:'one',title:'Your priority',options:[{index:0,act:'cast',label:'Cast first way',cardId:id},{index:1,act:'activate',label:'Activate second way',cardId:id}]};
- await show(ways);await page.locator(`.cm-board-hand .cm-bcard[data-card="${id}"]`).click();
- await page.locator('#cm-dialog[open] [data-action="board-zoom-do"]').first().waitFor();
- const moved=structuredClone(ways);moved.revision=++revision;moved.decision.id='r2-new-ways';await show(moved);
- await page.locator('#cm-dialog[open] [data-action="board-zoom-do"]').first().click();await page.waitForTimeout(100);
- eq(sent.filter(x=>x.type==='act').length,0,'stale action dialog cannot submit a choice against a new question');
+ ways.decision={id:'r2-ways',kind:'priority',mode:'one',title:'Your priority',options:[{index:0,act:'cast',label:'Cast first way',cardId:id,detail:'→ Maya · tapping Forest'},{index:1,act:'cast',label:'Cast second way',cardId:id,detail:'→ Rook · tapping Island'}]};
+ for(const mode of ['table','focus','full']) {
+  ways.revision=++revision;ways.decision.id='r2-ways-'+mode;await show(structuredClone(ways));await change(page,mode);
+  const before=sent.filter(x=>x.type==='act').length;
+  await page.locator(`.cm-board-hand .cm-bcard[data-card="${id}"], .cm-stage-fan .cm-bcard[data-card="${id}"]`).first().click();
+  eq(await page.locator('#cm-dialog[open]').count(),0,'card action choices do not cover the board');
+  await page.locator('#cm-board-decision [data-index="1"]').click();
+  eq(sent.filter(x=>x.type==='act').length,before,'selecting a target/payment offer sends nothing');
+  ok((await page.locator('.cm-action-summary').innerText()).includes('Rook · tapping Island'),'review names the exact target and payment offer');
+  ok(await page.locator('#cm-card-inspector img').count()===1,'full source card remains visible during review');
+  await page.locator('[data-action="board-reset"]').click();
+  eq(sent.filter(x=>x.type==='act').length,before,'clearing draft sends nothing');
+  await page.locator('#cm-board-decision [data-index="0"]').click();
+  await page.locator('#cm-board-decision [data-action="board-confirm"]').click();
+  eq(sent.filter(x=>x.type==='act').at(-1).indices,[0],'confirmation submits only selected authoritative index');
+  await show({...structuredClone(ways),revision:++revision,decision:{...ways.decision,id:'r2-reset-'+mode}});
+  eq(await page.locator('#cm-card-inspector').count(),0,'automatic action inspection releases space after the game advances');
+ }
+ const payment=structuredClone(sample);payment.revision=++revision;payment.decision={id:`choose-cost:${id}`,kind:'choice',mode:'one',title:'Choose what to tap',options:[{index:0,label:'Forest and Island'},{index:1,label:'Forest and Sol Ring'}]};
+ await show(payment);
+ const beforePay=sent.filter(x=>x.type==='act').length;
+ await page.locator('#cm-board-decision [data-index="1"]').click();
+ eq(sent.filter(x=>x.type==='act').length,beforePay,'payment is not sent on selection');
+ ok((await page.locator('.cm-action-summary').innerText()).includes('Forest and Sol Ring'),'payment sources shown for review');
+ await page.locator('[data-action=board-profile]').click();
+ await page.locator('[data-action=board-tools]').click();await page.keyboard.press('Escape');
+ eq(await page.locator('#cm-board-tools').count(),0,'Escape closes the foremost Settings menu');
+ eq(await page.locator('#cm-card-inspector').count(),1,'closing Settings preserves the card being reviewed');
+ await page.keyboard.press('Escape');
+ const moved=structuredClone(payment);moved.revision=++revision;await show(moved);
+ eq(await page.locator('#cm-board-decision [data-action="board-confirm"]').count(),0,'a revision invalidates the old payment selection even with the same question ID');
+ eq(sent.filter(x=>x.type==='act').length,beforePay,'new revision cannot commit the old payment');
  // An inspection must stop exposing an expired private reveal.
  const privateView=structuredClone(sample);privateView.revision=++revision;privateView.decision={id:'r2-reveal',kind:'choice',mode:'ack',title:'Look at this card',options:[{index:0,cardId:999999,label:'Forest'}]};
  await show(privateView);await page.locator('#cm-board-decision [data-action="board-zoom-open"]').click();
@@ -106,6 +133,7 @@ try{
  eq(await page.locator('#cm-card-inspector img').count(),0,'expired private reveal cannot remain in inspector');
  await page.locator('[data-action="board-inspect-close"]').click();
  // Face-down identity comes only from the seat projection, as for ordinary card rendering.
+ await change(page,"table");
  const known=structuredClone(sample);known.revision=++revision;
  const knownCard=known.state.players[known.seat].zones.Hand.cards.find(c=>c.cardId===id);knownCard.faceDown=true;
  await show(known);await page.locator(`.cm-board-hand .cm-bcard[data-card="${id}"]`).click({button:'right'});
@@ -123,7 +151,7 @@ try{
  await page.keyboard.press('Escape');
  await page.locator('[data-action="board-inspect"][data-kind="event"]').click();
  ok((await page.locator('#cm-card-inspector').innerText()).includes('Forest'),'structured history card uses the shared inspector');
- eq(sent.filter(x=>x.type==='act').length,0,'browsing public references does not send a game action');
+ eq(sent.filter(x=>x.type==='act').length,beforePay,'browsing public references does not send a game action');
  await page.keyboard.press('Escape');await page.locator('.cm-stage-right').click();
  await change(page,'full');await page.reload();await page.locator('.cm-stage-region').waitFor();
  eq(await page.locator('#cm-board').getAttribute('data-view'),'full','saved 3D preference survives reload');

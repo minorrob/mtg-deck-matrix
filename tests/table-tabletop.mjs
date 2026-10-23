@@ -437,6 +437,7 @@ try {
   assert.ok(await page.evaluate(()=>__backgroundVideo===document.querySelector('.cm-stage-environment video')),'redrawing drawers preserves the video element');
   await page.emulateMedia({reducedMotion:'reduce'});
   await page.waitForFunction(()=>document.querySelector('.cm-stage-environment video')?.paused);
+  console.log('table-tabletop: camera, drawers, arrangement and video passed');
   // An actual recorded two-entry stack: newest resolves first, every entry gets a readable image.
   for(let i=0;i<20;i++) await page.request.post(`${address}/preview/frame`,{data:'1'});
   await openDrawerSettings();
@@ -468,6 +469,7 @@ try {
   await page.emulateMedia({reducedMotion:'reduce'});
   await page.locator('.cm-stack-summary').nth(1).focus();await page.locator('.cm-stack-summary').nth(1).press('Enter');
   assert.equal(await page.locator('.cm-stack-pile').evaluate(el=>el.getAnimations({subtree:true}).length),0,'reduced motion changes the shown card without animation');
+  console.log('table-tabletop: stack geometry and focus passed');
   // Prove the size check rejects the former small stack thumbnails, then restore.
   const brokenSize=await page.addStyleTag({content:'.cm-stage-module .cm-stack-card{--bc:96px!important}'});
   const mismatched=await page.evaluate(()=>Math.abs(document.querySelector('.cm-stack-card').getBoundingClientRect().width-document.querySelector('.cm-full-pick .cm-bcard').getBoundingClientRect().width));
@@ -510,6 +512,7 @@ try {
         new Promise((_,reject)=>{const t=setTimeout(()=>reject(new Error("preview startup timed out")),10000);t.unref();})
       ]);
       for(const [width,height] of [[1024,768],[1280,720],[1400,900]]) {
+        console.log(`table-tabletop: checking ${count} options at ${width}x${height}`);
         const p=await browser.newPage({viewport:{width,height}}), sent=[], where=`${count} options at ${width}x${height}`;
         let roomSocket, latestView;
         await p.routeWebSocket(/\/api\/tables\//,ws=>{

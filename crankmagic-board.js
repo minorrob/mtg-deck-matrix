@@ -123,6 +123,7 @@ globalThis.CrankBoard = Object.seal({
   const VIEW_KEY = "cm-board-view";
   let mode = (() => {try {const v = localStorage.getItem(VIEW_KEY); return VIEWS.some(([k]) => k === v) ? v : "full";} catch {return "full";}})();
   let inspection = null, inspectionFrom = null, actionsShut = false;
+  let actionCard = null, draftRevision = null;
   let stackSelected = null;
   let selected = null, hover = null;   /* Full screen: the card shown large in the side column (picked, and under the pointer) */
   let showing = null, held = null;     /* Show hand: null, "fan" or "held"; the card held up */
@@ -292,6 +293,8 @@ globalThis.CrankBoard = Object.seal({
     if (!force && view && next.revision < view.revision) return;
     const before = view && view.decision && view.decision.id, was = view, priorBlocks = blockContext();
     view = next;
+    if (was?.revision !== next.revision || was?.matchId !== next.matchId || was?.seat !== next.seat) {picked = []; amounts = []; draftRevision = null; actionCard = null;}
+    if (inspection?.automatic && was?.revision !== next.revision) inspection = null;
     if (inspection && (was?.matchId !== next.matchId || was?.seat !== next.seat)) inspection = null;
     yieldReady = true;
     if (yieldPending && (next.matchId !== yieldPending.matchId || next.state.turn !== yieldPending.turn ||
@@ -313,6 +316,8 @@ globalThis.CrankBoard = Object.seal({
     if (phone() && view.decision && view.decision.id !== before) focus = view.seat;
     if ((view.decision && view.decision.id) !== before) {picked = []; amounts = []; sending = false; alsoOpen = false; if(view.decision && view.decision.kind !== "priority") {actionsShut = false; openModuleDrawer("actions");}}
     if (priorBlocks !== blockContext()) {blockEpoch++; picked = []; blockSelected = null; blockResult = null; blockListOpen = false;}
+    const source = /^choose-(?:cost|targets?):(\d+)/.exec(view.decision?.id || "");
+    if (!phone() && source && findCard(Number(source[1]))?.name && view.decision?.id !== before) inspection = {id:source[1],kind:"card",matchId:view.matchId,automatic:true};
     checkBlocks();
     if (selected !== null && !findCard(selected)) selected = null;
     skip();
@@ -1118,6 +1123,18 @@ globalThis.CrankBoard = Object.seal({
       ${result && !result.open ? b("Check again", "board-block-retry") : ""}
       <details class="cm-block-list"${blockListOpen ? " open" : ""}><summary>All block options</summary>${options.map(o => `<button type="button" class="v-button compact" data-action="board-option" data-index="${o.index}" aria-pressed="${picked.includes(o.index)}"${sending ? " disabled" : ""}>${e(o.label)} · #${o.cardId} → #${o.attackerId}</button>`).join("")}</details></div>`;
   }
+  // Review uses only the current seat's offered words. No target, payment or outcome is inferred.
+  function selectionSummary(d) {
+    const choices = picked.map(i => d.options.find(o => o.index === i)).filter(Boolean);
+    return `<div class="cm-action-summary" aria-live="polite"><strong>Your selection</strong><ul>${choices.map(o => `<li>${e(d.kind === "priority" ? sayFor(o) : o.label)}</li>`).join("")}</ul></div>`;
+  }
+  function commitReview(d) {
+    if (!picked.length) return `<p class="cm-action-hint">Select an option to review it. Nothing is submitted until you confirm.</p>`;
+    const o = d.options.find(o => o.index === picked[0]);
+    if (!o) return "";
+    const cast = d.kind === "priority" && ["cast","activate"].includes(o.act);
+    return `<div class="cm-action-review">${selectionSummary(d)}<p>${cast ? "This submits the selected action. If the game asks for targets or payment next, you will review those choices here before submitting them. Casting does not guarantee resolution." : "Confirm submits this choice to the game. Review the card and selected option before continuing."}</p><div class="cm-actions">${b(d.kind === "priority" ? "Confirm action" : "Confirm choice", "board-confirm", {}, true, {disabled:sending || draftRevision !== view.revision})}${b("Clear selection", "board-reset", {}, false, {disabled:sending})}</div></div>`;
+  }
   function decision() {
     const d = view.decision;
     if (!d || view.status === "finished" || d.kind === "draw") return "";
@@ -1125,24 +1142,24 @@ globalThis.CrankBoard = Object.seal({
     let body = "", foot = "";
     if (d.kind === "priority") {
       /* Pass is the strip's; this is what else you can do, one button per kind of thing, the same land four
-         times over being one "Play Forest" (tapping a card in the hand plays that very one). */
+         times over being one "Play Forest" (clicking a card in the hand selects that very one). */
       const seen = new Map();
-      for (const o of d.options) {
+      for (const o of d.options.filter(o => actionCard === null || o.cardId === actionCard)) {
         /* A land just played goes back to the hand as one would take it back at a table, by its double-click: no button. */
         if (o.act === "pass" || o.act === "resolve-all" || o.act === "undo-land") continue;
-        const key = `${o.act}|${o.label}`;
+        const key = actionCard === null ? `${o.act}|${o.label}` : String(o.index);
         if (seen.has(key)) seen.get(key).n += 1; else seen.set(key, {o, n: 1});
       }
       if (!seen.size) return "";
       /* A card that can be used more than one way -- a spell's targets, a cost's sacrifice, a land's colors -- asks which
-         in its pop-up rather than doing the first (Rob, 2026-10-01). */
+         in Actions rather than doing the first (Rob, 2026-10-01). */
       const ways = (o) => new Set(d.options.filter((x) => x.act === o.act && x.label === o.label && x.detail).map((x) => x.detail)).size;
-      body = [...seen.values()].map(({o, n}) => ways(o) > 1
+      body = [...seen.values()].map(({o, n}) => actionCard === null && ways(o) > 1
         ? `<button type="button" class="v-button compact" data-action="board-choose" data-card="${o.cardId}"${sending ? " disabled" : ""}>${e(verbFor(o))} <span class="cm-muted">· ${ways(o)} ways</span></button>`
-        : `<button type="button" class="v-button compact" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}>${sayHtml(o)}${n > 1 ? ` <span class="cm-muted">×${n}</span>` : ""}</button>`).join("");
-      return `<section class="cm-board-decision is-also" id="cm-board-decision" aria-label="What you can do"><h3>You can also</h3><div class="cm-board-options">${body}</div></section>`;
+        : `<button type="button" class="v-button compact" data-action="board-option" data-index="${o.index}" aria-pressed="${picked.includes(o.index)}"${sending ? " disabled" : ""}>${sayHtml(o)}${n > 1 ? ` <span class="cm-muted">×${n}</span>` : ""}</button>`).join("");
+      return `<section class="cm-board-decision is-also" id="cm-board-decision" aria-label="What you can do"><h3>${actionCard === null ? "Choose an action" : e(findCard(actionCard)?.name || "Choose an action")}</h3>${actionCard === null ? "" : b("All actions", "board-action-all", {}, false, {cls:"compact"})}<div class="cm-board-options">${body}</div>${commitReview(d)}</section>`;
     }
-    if (["one", "boolean", "index"].includes(d.mode)) body = d.options.map((o) => opt(o)).join("");
+    if (["one", "boolean", "index"].includes(d.mode)) {body = d.options.map((o) => opt(o, ` aria-pressed="${picked.includes(o.index)}"`)).join(""); foot = commitReview(d);}
     else if (blocking()) {
       body = blockDraft();
       foot = `${b("No blocks", "board-block-none", {}, false, {disabled:sending})}${b(picked.length ? "Confirm blocks" : "Confirm no blocks", "board-confirm", {}, true, {disabled:!blockValid() || sending})}`;
@@ -1315,9 +1332,9 @@ globalThis.CrankBoard = Object.seal({
     else c = findCard(Number(inspection.id)) || shownCard(Number(inspection.id));
     return c?.name ? {cardId: -1, types: [], counters: {}, power: null, ...c} : null;
   }
-  function inspect(id, kind = "card") {
+  function inspect(id, kind = "card", automatic = false) {
     if (!view) return;
-    inspection = {id:String(id), kind, matchId:view.matchId};
+    inspection = {id:String(id), kind, matchId:view.matchId, automatic};
     if (!inspectedCard()) {inspection = null; return;}
     inspectionFrom = C.focusKey(document.activeElement);
     showing = null; held = null;
@@ -1342,12 +1359,10 @@ globalThis.CrankBoard = Object.seal({
   };
   function zoom(cardId) {
     const c = findCard(cardId) || shownCard(cardId);
-    if (!c || !c.name) return;
-    const opts = optionsFor(c.cardId);
-    const acts = opts.map((o) => `<button type="button" class="v-button primary" data-action="board-zoom-do" data-index="${o.index}" data-revision="${view.revision}" data-match="${e(view.matchId)}" data-choice="${e(view.decision.id)}"${sending ? " disabled" : ""}>${sayHtml(o)}</button>`).join("");
-    /* More than one way to use it: the ways listed to choose from, as many as there are, above Close. */
-    if (opts.length > 1) return C.modal(c.name, `<div class="cm-board-zoom is-choosing">${card(c, {where: "zoom", action: "close"})}</div><p class="cm-board-choose-say">Choose one:</p><div class="cm-board-choices" role="group" aria-label="Ways to use ${e(c.name)}">${acts}</div><div class="cm-form-footer">${b("Close", "close")}</div>`);
-    C.modal(c.name, `<div class="cm-board-zoom">${card(c, {where: "zoom", action: "close"})}</div>${!acts && c.why ? `<p class="cm-muted cm-hand-why">${e(c.why)}</p>` : ""}<div class="cm-form-footer">${acts}${b("Close", "close", {}, !acts)}</div>`);
+    if (!c?.name) return;
+    actionCard = cardId; picked = []; draftRevision = view.revision;
+    actionsShut = false; openModuleDrawer("actions"); alsoOpen = false;
+    if (phone()) {showing = null; held = null; draw();} else inspect(cardId, "card", true);
   }
   /* The peek follows the pointer: it is put away when the pointer leaves the card -- and, since a card redrawn or moved
      away from under a still pointer never says it was left (Rob, 2026-10-09: ending the game left a Plains shown large,
@@ -1968,7 +1983,11 @@ globalThis.CrankBoard = Object.seal({
       ? choice.querySelector(".cm-board-options")?.scrollTop : null;
     const fight = host.querySelector(".cm-combat-groups"), fightPosition = fight && {key: fight.dataset.combatKey, x: fight.scrollLeft, y: fight.scrollTop};
     const blockPositions = new Map([...host.querySelectorAll("[data-block-key]")].map(el => [el.dataset.blockKey, el.scrollLeft]));
+    const rowKey = `${view?.matchId}:${view?.seat}`;
+    const rowPositions = new Map(host.dataset.rowScrollMatch === rowKey ? [...host.querySelectorAll('.cm-stage-front [data-card-section]')].map(el => [el.dataset.cardSection, [el.parentElement.scrollLeft, el.parentElement.scrollTop]]) : []);
     C.keepFocus(host, () => paint(host));
+    host.dataset.rowScrollMatch = rowKey;
+    for (const el of host.querySelectorAll('.cm-stage-front [data-card-section]')) {const pos = rowPositions.get(el.dataset.cardSection); if (pos) {el.parentElement.scrollLeft = pos[0]; el.parentElement.scrollTop = pos[1];}}
     for (const el of host.querySelectorAll("[data-block-key]")) el.scrollLeft = blockPositions.get(el.dataset.blockKey) || 0;
     const options = host.querySelector("#cm-board-decision .cm-board-options");
     if (choiceScroll !== null && options) options.scrollTop = choiceScroll;
@@ -2354,7 +2373,16 @@ globalThis.CrankBoard = Object.seal({
     if (blocking()) return draftBlock(index);
     const d = view.decision;
     if (!d || sending) return;
-    if (["one", "boolean", "index"].includes(d.mode)) return send({indices: [index]});
+    if (!d.options.some(o => o.index === index)) return;
+    draftRevision = view.revision;
+    actionsShut = false; openModuleDrawer("actions"); alsoOpen = false;
+    if (["one", "boolean", "index"].includes(d.mode)) {
+      picked = [index];
+      const o = d.options.find(o => o.index === index);
+      if (d.kind === "priority") actionCard = o.cardId ?? null;
+      if (!phone() && o.cardId !== undefined && findCard(o.cardId)?.name) inspection = {id:String(o.cardId),kind:"card",matchId:view.matchId,automatic:true};
+      showing = null; held = null; peek(null); draw(); return;
+    }
     if (d.mode === "many") {
       if (picked.includes(index)) picked = picked.filter((i) => i !== index);
       else {
@@ -2374,11 +2402,9 @@ globalThis.CrankBoard = Object.seal({
     C.modal(combatName(c), `<p>Object #${c.cardId}${c.power !== null && c.power !== undefined ? ` · ${e(c.power)}/${e(c.toughness)}` : ""}</p>
       <div class="cm-board-zoom">${card(shown, {where: "zoom", action: "close"})}</div><div class="cm-form-footer">${b("Close", "close", {}, true)}</div>`);
   };
-  /* A CARD IS PLAYED BY CLICKING IT, as one is put down at a table, in every view (Rob, 2026-10-21: "I should be able to
-     click on the card or double-click a card to play it"); Full screen shows it large at the side too. The second click of
-     a double-click does nothing more -- the first played it -- except on a land just played: there the double-click picks
-     it back up into the hand ("Oh wait, no, I didn't mean to lay that land down"; the room's `takeBackLand`), as a hand
-     reaches over at a table, so its single click (a tap for mana) waits out the double-click before it is done. */
+  /* A card click opens its legal choices for review in Actions. Confirmation submits the selected
+     choice. A land's existing double-click take-back remains a separate, explicit gesture; delay
+     its single-click mana selection so that a double-click does not stage the wrong action. */
   const DOUBLE_MS = 300;
   let clickLater = null;
   const takeBackOf = (id) => optionsFor(id).find((o) => o.act === "undo-land") || null;
@@ -2388,7 +2414,7 @@ globalThis.CrankBoard = Object.seal({
     /* Nothing to do with it: why, when the room says (ROB-24). */
     if (!opts.length && findCard(id)?.why) return C.notice(findCard(id).why);
     if (opts.length === 1) return option(opts[0].index);
-    /* More than one way to use it -- aimed at this or that, paid with this or that -- is a pop-up to choose in. */
+    /* More than one legal use: choose in the shared Actions pane. */
     if (opts.length > 1) zoom(id);
   }
   actions["board-card"] = (el, event) => {
@@ -2476,6 +2502,10 @@ globalThis.CrankBoard = Object.seal({
   actions["board-confirm"] = () => {
     const d = view.decision;
     if (!d || sending) return;
+    if (["one","boolean","index"].includes(d.mode)) {
+      if (draftRevision !== view.revision || picked.length !== 1 || !d.options.some(o => o.index === picked[0])) return;
+      return send({indices:[...picked]});
+    }
     if (blocking()) {
       if (!blockValid()) return;
       blockResult = null; // A receipt alone must not reopen this already submitted draft.
@@ -2485,7 +2515,8 @@ globalThis.CrankBoard = Object.seal({
     if (d.mode === "damage" || d.mode === "amount") return send({amounts: d.options.map((_, i) => Number(amounts[i]) || 0)});
     send({indices: picked});
   };
-  actions["board-reset"] = () => {picked = []; draw();};
+  actions["board-reset"] = () => {picked = []; draftRevision = null; draw();};
+  actions["board-action-all"] = () => {actionCard = null; picked = []; draftRevision = null; draw();};
   actions["board-focus"] = (el) => {focus = Number(el.dataset.seat); if (mode === "table" && !phone()) setMode("focus"); else draw();};
   actions["board-rotate"] = (el) => {
     const n = players().length;
@@ -2548,6 +2579,14 @@ globalThis.CrankBoard = Object.seal({
   };
   actions["board-module-remove"] = el => savePaneModules(paneModules(el.dataset.side).filter(id => id !== el.dataset.module),el.dataset.side);
   let arranging=null;
+  document.addEventListener('wheel', event => {
+    const row = event.target.closest?.('.cm-stage-front .cm-board-group, .cm-stage-front .cm-board-lands');
+    if (!row || event.ctrlKey || event.metaKey || row.scrollWidth <= row.clientWidth + 1) return;
+    event.preventDefault();
+    const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? row.clientWidth : 1;
+    row.scrollLeft += (event.deltaX || event.deltaY) * unit;
+    peek(null);
+  }, {passive:false});
   const clearCardDrop=()=>document.querySelectorAll('.cm-card-drop').forEach(el=>el.classList.remove('cm-card-drop'));
   document.addEventListener('dragstart',event=>{
     const card=event.target.closest?.('[data-arrange-card]'),section=card?.closest('[data-card-section]');if(!section)return;
@@ -2658,7 +2697,6 @@ globalThis.CrankBoard = Object.seal({
   actions["board-hand-back"] = () => {held = null; showing = "fan"; draw();};
   actions["board-hand-do"] = (el) => {const index = Number(el.dataset.index); showing = null; held = null; option(index);};
   actions["board-zoom-do"] = (el) => {
-    actions.close();
     if (el.dataset.match !== view?.matchId || el.dataset.choice !== view?.decision?.id || Number(el.dataset.revision) !== view?.revision) {
       C.notice("The game changed. Review the current choices in Actions."); openModuleDrawer("actions"); draw(); return;
     }
@@ -2765,7 +2803,6 @@ globalThis.CrankBoard = Object.seal({
      Space would press has the focus), 1–9 (hold that card), Enter (do the held card's first thing), Escape
      (back a step: held, fanned, a menu, the panel, full screen), ⌘/Ctrl + and − (card size). */
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && inspection && !document.querySelector("#cm-dialog[open]")) {event.preventDefault(); actions["board-inspect-close"](); return;}
     if (event.key === "Escape" && peekId !== null && !showing) {peek(null); return;}
     if (event.key === "Escape" && stackShown !== null) stackPeek(null);
     if (!document.getElementById("cm-board") || !view || document.querySelector("#cm-dialog[open]")) return;
@@ -2785,6 +2822,7 @@ globalThis.CrankBoard = Object.seal({
       return;
     }
     if (event.key === "Escape" && cameraOpen) {cameraOpen=false; draw(); document.querySelector("[data-action=board-camera]")?.focus(); return;}
+    if (event.key === "Escape" && inspection) {event.preventDefault(); actions["board-inspect-close"](); return;}
     if (coach.open && event.target && event.target.matches && event.target.matches(".cm-coach-input") && event.key === "Enter" && !event.shiftKey) {
       event.preventDefault(); event.target.form.requestSubmit(); return;
     }

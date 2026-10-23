@@ -819,7 +819,7 @@ try {
     ok(handlers >= 2 && bound.size >= 15, `the board's key handlers are read (${handlers} handlers, ${bound.size} keys: ${[...bound].join(" ")})`);
     ok(!undocumented.length, `every key the board binds is in Help (${undocumented.join(", ") || "all"} missing)`);
     ok(!unbound.length, `and every key Help names is bound, or is the browser's Tab (${unbound.join(", ") || "none"} unbound)`);
-    for (const [phrase, why] of [[/Space.{0,80}(fans|shows) your hand/i, "Space fans the hand"], [/1.{0,3}9.{0,60}holds/i, "1-9 hold a card up"], [/Enter.{0,60}(first|does)/i, "Enter does the held card's first thing"],
+    for (const [phrase, why] of [[/Space.{0,80}(fans|shows) your hand/i, "Space fans the hand"], [/1.{0,3}9.{0,60}holds/i, "1-9 hold a card up"], [/Enter.{0,80}selects.{0,60}review/i, "Enter selects the held card action for review"],
       [/Escape/i, "Escape steps back"], [/You can also/i, "Escape closes You can also"], [/Coach/i, "Escape and Enter in the Coach"], [/Shift.{0,4}Enter/i, "Shift+Enter in the Coach"], [/10%/, "the size step"], [/two boards side by side|side by side/i, "the side-by-side bar's ← →"]]) ok(phrase.test(helpText), `Help says it: ${why}`);
     /* and each does what Help says */
     await view(page, "focus");

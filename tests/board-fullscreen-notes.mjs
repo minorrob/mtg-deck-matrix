@@ -2,8 +2,7 @@
 
    ROB'S FULLSCREEN NOTES ON THE BOARD (Oct 21, 2026; crankmagic-board.js, crankmagic-stage.css).
 
-     1. A card is played by clicking it, in Full screen too (it had only been shown at the side); the second click of a
-        double-click plays nothing more.
+     1. Clicking or double-clicking a card stages its action in every view; confirmation plays it once.
      2. A land just played (the room's `undo-land`) goes back to the hand on its double-click -- no button for it under
         "You can also" -- and its single click, a tap for mana, waits out the double-click before it is sent.
      3. In Full screen the pass, Resolve all and Skip to end stand large over the table, at its top, not in the strip.
@@ -70,10 +69,13 @@ try {
   for (const mode of ["full", "focus"]) {
     const {page, context, errors, sent, acts, show} = await board(mode);
     const hand = mode === "full" ? `.cm-stage-fan .cm-bcard[data-card='${ISLAND}']` : `.cm-board-hand .cm-bcard[data-card='${ISLAND}']`;
-    /* ---- 1. a click plays it; a double-click plays it once ---- */
+    /* ---- 1. a double-click stages one action; only confirmation plays it ---- */
     await page.locator(hand).dblclick();
     await page.waitForTimeout(500);
-    eq(acts(), [[1]], `${mode}: a double-click on the Island in hand plays it, once (its one offer, Island)`);
+    eq(acts(), [], `${mode}: a double-click stages the land without playing it`);
+    await page.locator("#cm-board-decision [data-action=board-confirm]").click();
+    await page.waitForTimeout(100);
+    eq(acts(), [[1]], `${mode}: confirming plays the staged Island once`);
     /* ---- 2. the land just played: a double-click takes it back; no button for it ---- */
     await show(played());
     await page.locator(".cm-stage-top [data-action=board-actions-open]").click();
@@ -82,6 +84,12 @@ try {
     ok(also.some((t) => /Island/.test(t)) && !also.some((t) => /Return Island/.test(t)), `${mode}: You can also offers the tap, and no button says Return Island: the land goes back by its double-click (${JSON.stringify(also)})`);
     await page.locator(".cm-stage-top [data-action=board-actions-open]").click();
     sent.length = 0;
+    if (mode === 'full') {
+      await page.locator('.cm-stage-hand .cm-bcard').last().click({button:'right'});
+      const row = page.locator('.cm-stage-front .cm-board-lands');
+      await row.hover();await page.mouse.wheel(0,900);await page.waitForTimeout(150);
+      ok(await row.evaluate(el=>el.scrollLeft>0), 'the narrowed land row scrolls instead of spilling under graveyard');
+    }
     await page.locator(`#cm-board .cm-bcard[data-card='${PLAYED}'][data-action=board-card]`).dblclick();
     await page.waitForTimeout(600);
     eq(acts(), [[2]], `${mode}: a double-click on the Island just played sends its take-back, and nothing else`);
@@ -89,15 +97,17 @@ try {
     sent.length = 0;
     /* One click, as the browser counts it (detail 1), timed in the page from the click to its act leaving the socket: a
        look from here, a round trip later, read a busy CI runner's latency as the board's (Actions, 2026-10-22). */
-    const after = await page.evaluate((id) => new Promise((done) => {
-      const send = WebSocket.prototype.send, t0 = performance.now(), stop = (ms) => {WebSocket.prototype.send = send; done(ms);};
-      WebSocket.prototype.send = function (data) {if (JSON.parse(data).type === "act") stop(Math.round(performance.now() - t0)); return send.call(this, data);};
-      document.querySelector(`#cm-board .cm-bcard[data-card='${id}'][data-action=board-card]`).dispatchEvent(new MouseEvent("click", {bubbles: true, cancelable: true, detail: 1}));
-      setTimeout(() => stop(null), 3000);
-    }), PLAYED);
-    ok(after !== null && after >= 280, `${mode}: its single click waits out the double-click (its act sent ${after} ms after it)`);
-    for (let i = 0; i < 125 && !acts().length; i += 1) await page.waitForTimeout(20);
-    eq(acts(), [[1]], `${mode}: and then taps it for mana`);
+    const after = await page.evaluate((id) => new Promise(done => {
+      const start=performance.now();
+      const timer=setInterval(()=>{if(document.querySelector('#cm-board-decision [data-action=board-confirm]')){clearInterval(timer);done(performance.now()-start);}},10);
+      document.querySelector(`#cm-board .cm-bcard[data-card='${id}'][data-action=board-card]`).dispatchEvent(new MouseEvent('click',{bubbles:true,detail:1}));
+      setTimeout(()=>{clearInterval(timer);done(null);},3000);
+    }),PLAYED);
+    ok(after !== null && after >= 280, `${mode}: single click waits for possible land take-back before staging mana (${after}ms)`);
+    eq(acts(),[],`${mode}: staging mana does not tap the land`);
+    await page.locator('#cm-board-decision [data-action=board-confirm]').click();
+    for(let i=0;i<125&&!acts().length;i++)await page.waitForTimeout(20);
+    eq(acts(),[[1]],`${mode}: confirming taps it for mana`);
     if (mode === "full") {
       /* ---- 3. the actions, large, over the table ---- */
       const bar = await page.evaluate(() => {
@@ -216,4 +226,4 @@ try {
 } finally {
   await close();
 }
-console.log(`board-fullscreen-notes: ${checks} checks passed -- a card played by its click in every view, a land just played taken back by its double-click, the actions large over the table in Full screen, the others' plays held up for ten seconds, the two priority choices, the tabletop to 200%, the commander tax below the title bar.`);
+console.log(`board-fullscreen-notes: ${checks} checks passed -- card actions reviewed and confirmed in every view, a land just played taken back by its double-click, the actions large over the table in Full screen, the others' plays held up for ten seconds, the two priority choices, the tabletop to 200%, the commander tax below the title bar.`);

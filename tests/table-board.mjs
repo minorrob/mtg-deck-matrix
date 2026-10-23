@@ -220,7 +220,7 @@ try {
     let kept = false;
     for (const who of [rob, maya]) {
       const keep = who.page.locator("#cm-board-decision [data-action=board-option]", {hasText: "Keep"});
-      if (await keep.count()) {await keep.click(); kept = true; await who.page.waitForTimeout(300);}
+      if (await keep.count()) {await keep.click(); await who.page.locator("#cm-board-decision [data-action=board-confirm]").click(); if(await who.page.locator("[data-action=board-inspect-close]").count()) await who.page.locator("[data-action=board-inspect-close]").click(); kept = true; await who.page.waitForTimeout(300);}
     }
     if (!kept && !(await rob.page.locator("#cm-board-decision", {hasText: "Keep this hand"}).count()) && !(await maya.page.locator("#cm-board-decision", {hasText: "Keep this hand"}).count())) break;
   }
@@ -292,7 +292,7 @@ try {
   const ink = await active.page.evaluate(() => {const el = document.querySelector(".cm-board-hand .cm-bcard .cm-bcard-name"); return getComputedStyle(el).color;});
   eq(ink, "rgb(31, 28, 24)", "a card's name is printed in the card's own dark ink, not the mat's light one");
   await shot(active.page, "board-priority-" + (active === rob ? "1400" : "1280"));
-  await brightLand.click();
+  await brightLand.click(); await active.page.locator("#cm-board-decision [data-action=board-confirm]").click(); if(await active.page.locator("[data-action=board-inspect-close]").count()) await active.page.locator("[data-action=board-inspect-close]").click();
   await waitText(active.page, ".cm-board-lands", /Lands · 1/);
   ok(/land drop used/i.test(await text(active.page, ".cm-board-mat .cm-board-chip")), "tapping it plays it: Lands · 1, the land drop used (the reminder under the Lands says so)");
   ok(await heard(active === rob ? ROB : MAYA, "sfx/sfx_play_land.mp3"), "and it sounds as a land played (the pack's land voice)");
@@ -307,12 +307,12 @@ try {
      click the card to untap it again"): a click on the land taps it; the room offers it back (game/room/room.mjs,
      `untapMana`), so it stays lit, says Untap, and a second click puts it upright, its mana gone from the pool. */
   const matLand = active.page.locator(".cm-board-lands .cm-bcard", {hasText: land}).first();
-  await matLand.click();
+  await matLand.click(); await active.page.locator("#cm-board-decision [data-action=board-confirm]").click(); if(await active.page.locator("[data-action=board-inspect-close]").count()) await active.page.locator("[data-action=board-inspect-close]").click();
   await active.page.locator(".cm-board-lands .cm-bcard.is-tapped.is-bright").first().waitFor({timeout: 10000});
   const tappedView = views(active === rob ? ROB : MAYA).at(-1), untap = tappedView.decision.options.find((o) => o.act === "undo-mana");
   ok(untap && untap.label === `Untap ${land}` && (tappedView.state.players[activeSeat].mana || []).length === 1 && /Untap/.test(await matLand.getAttribute("aria-label")),
     `a click on the land taps it for mana, and it stays lit, offered back: "${untap?.label}", its mana in the pool`);
-  await matLand.click();
+  await matLand.click(); await active.page.locator("#cm-board-decision [data-action=board-confirm]").click(); if(await active.page.locator("[data-action=board-inspect-close]").count()) await active.page.locator("[data-action=board-inspect-close]").click();
   await active.page.waitForFunction(() => !document.querySelector(".cm-board-lands .cm-bcard.is-tapped"), null, {timeout: 10000});
   const untapped = views(active === rob ? ROB : MAYA).at(-1);
   ok((untapped.state.players[activeSeat].mana || []).length === 0 && !untapped.decision.options.some((o) => o.act === "undo-mana") && untapped.state.phase === "MAIN1",
@@ -969,6 +969,7 @@ try {
   await second.page.keyboard.press(key);
   await second.page.keyboard.press("Enter");
   await second.page.locator(".cm-hand-show").waitFor({state: "detached"});
+  await second.page.locator("#cm-board-decision [data-action=board-confirm]").click(); if(await second.page.locator("[data-action=board-inspect-close]").count()) await second.page.locator("[data-action=board-inspect-close]").click();
   await second.page.click(`.cm-board-tile[data-seat='${secondSeat}'] [data-action=board-focus]`);
   await waitText(second.page, ".cm-board-lands", /Lands · 1/);
   ok((await text(second.page, ".cm-board-lands")).includes(secondLand), "Enter plays it: the hand is put away and the land is down");
@@ -976,6 +977,7 @@ try {
   /* B1, item 17: the Panel reads a tapped card upright, with a small Tapped mark, and no "Card" heading over it. */
   await second.page.click("[data-action=board-actions-open]");
   await second.page.locator(".cm-stage-rail [data-action=board-option]", {hasText: "Tap for mana"}).first().click();
+  await second.page.locator("#cm-board-decision [data-action=board-confirm]").click(); if(await second.page.locator("[data-action=board-inspect-close]").count()) await second.page.locator("[data-action=board-inspect-close]").click();
   await second.page.locator(".cm-board-mat .cm-board-lands .cm-bcard.is-tapped").first().waitFor({timeout: 10000});
   /* The accessibility pass: a tapped card says so. */
   const tappedSaid = await second.page.locator(".cm-board-mat .cm-board-lands .cm-bcard.is-tapped").first().getAttribute("aria-label");
@@ -992,7 +994,7 @@ try {
      what passing will do, Resolve and the spell's name, its strip saying whose step it is and that they may respond. */
   const toCast = second.page.locator(".cm-board-hand .cm-bcard.is-bright").first(), castName = (await toCast.getAttribute("aria-label")).split(/[,:]/)[0];
   const secondEmail = second === rob ? ROB : MAYA, casterSeen = views(secondEmail).length;
-  await toCast.click();
+  await toCast.click(); await second.page.locator("#cm-board-decision [data-action=board-confirm]").click(); if(await second.page.locator("[data-action=board-inspect-close]").count()) await second.page.locator("[data-action=board-inspect-close]").click();
   const firstBoard = second === rob ? maya : rob;
   await waitText(firstBoard.page, ".cm-stage-top [data-action=board-pass]", new RegExp(`Resolve ${castName}`));
   const secondName = second === rob ? "Rob" : "Maya", firstName_ = second === rob ? "Maya" : "Rob";
@@ -1063,7 +1065,7 @@ try {
       const draw = who.page.locator(".cm-stage-top [data-action=board-draw]:not([disabled])");
       if (await draw.count()) {await draw.click(); await who.page.waitForTimeout(250); acted = true; continue;}
       const forest = who.page.locator(".cm-board-hand .cm-bcard.is-bright", {hasText: "Forest"}).first();
-      if (who === rob && await forest.count()) {await forest.click(); await who.page.waitForTimeout(250); acted = true; continue;}
+      if (who === rob && await forest.count()) {await forest.click(); await who.page.locator("#cm-board-decision [data-action=board-confirm]").click(); if(await who.page.locator("[data-action=board-inspect-close]").count()) await who.page.locator("[data-action=board-inspect-close]").click(); await who.page.waitForTimeout(250); acted = true; continue;}
       const pass = who.page.locator(".cm-stage-top [data-action=board-pass]:not([disabled])");
       if (await pass.count()) {await pass.click(); await who.page.waitForTimeout(200); acted = true;}
     }
@@ -1112,7 +1114,7 @@ try {
   eq(await maya.page.evaluate(() => localStorage.getItem("cm-board-hold")), "on", "Tools' Hold priority after I cast is kept on the device, and stays checked");
   await maya.page.keyboard.press("Escape");
   const sentBefore = sent[MAYA].length;
-  await maya.page.locator(".cm-board-hand .cm-bcard.is-bright[aria-label*='Cast']").first().click();
+  await maya.page.locator(".cm-board-hand .cm-bcard.is-bright[aria-label*='Cast']").first().click(); await maya.page.locator("#cm-board-decision [data-action=board-confirm]").click(); if(await maya.page.locator("[data-action=board-inspect-close]").count()) await maya.page.locator("[data-action=board-inspect-close]").click();
   await waitText(maya.page, ".cm-stage-top [data-action=board-pass]", new RegExp(`Resolve ${heldName}`));
   const castFrame = sent[MAYA].slice(sentBefore).map((m) => JSON.parse(m)).find((f) => f.type === "act");
   ok(castFrame && castFrame.hold === true, `with it on, Maya's cast of ${heldName} says hold, and she is asked again before anyone: Resolve ${heldName}`);

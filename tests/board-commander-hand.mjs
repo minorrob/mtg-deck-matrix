@@ -113,6 +113,8 @@ try {
         await page.mouse.click(at.x, at.y);
         await page.waitForTimeout(300);
       }
+      await page.locator("#cm-board-decision [data-action=board-confirm]").click();
+      await page.waitForTimeout(100);
       ok(acts(frames).some((f) => f.choiceId === "priority:25:3:900" && JSON.stringify(f.indices) === "[1]"), `${where}: the click casts Kraum from the command zone (${JSON.stringify(acts(frames))})`);
       ok(!errors.length, `${where}: no page error (${errors.join(" | ")})`);
       await context.close();
