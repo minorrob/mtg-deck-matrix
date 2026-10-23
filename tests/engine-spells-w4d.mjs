@@ -23,7 +23,8 @@ const eq = (a, b, m) => { assert.deepEqual(a, b, m); checks += 1; };
 
 const index = loadCardIndex();
 const at = (seat, zone, ...cards) => ({seat, zone, cards});
-const FIX = {Rock: {types: ["Artifact"], manaCost: "{1}", colors: []}};
+const FIX = {Rock: {types: ["Artifact"], manaCost: "{1}", colors: []}, Bear: {types: ["Creature"], manaCost: "{1}{G}", colors: ["G"], power: 2, toughness: 2},
+  Wolf: {types: ["Creature"], manaCost: "{1}{G}", colors: ["G"], power: 2, toughness: 2}};
 const play = (name, setup, steps = [], seats = 2) => runScenario({name, seats, setup, steps}, index.definition, FIX).state;
 const castOf = (s, card) => legalActions(s, s.priorityPlayer ?? 0).filter((a) => a.kind === "cast" && s.objects[a.objectId]?.card === card);
 
@@ -57,6 +58,14 @@ const script = (abilities, more = {}) => ({schema: "CrankCardScript@1", identity
   eq([choice.title, choice.options.map((o) => o.label).sort()], ["Organic Extinction: tap artifacts to improvise it", ["Ornithopter", "Rock"]], "the artifacts are asked for, in words");
 }
 
+/* ---- convoke with {X}: the creatures it asks for are what X=2 leaves the pool short of (Chord of Calling) ---- */
+{
+  const s = play("chord", [at(0, "battlefield", "Forest", "Forest", "Forest", "Bear", "Wolf"), at(0, "hand", "Chord of Calling")], ["Forest", "Forest", "Forest"].map((tap) => ({tap})));
+  applyAction(s, 0, castOf(s, "Chord of Calling").find((a) => a.convoke === true && a.x === 2));
+  const choice = awaitingChoice(s);
+  eq([choice.min, choice.max], [1, 2], "X=2 with {G}{G}{G} in the pool: one creature at least -- the pool cannot pay it alone -- two at most");
+}
+
 /* ---- Cut a Deal: an opponent who draws nothing is not counted (CR 121.4) ---- */
 {
   const s = play("cut a deal", [at(0, "battlefield", "Plains", "Wastes", "Wastes"), at(0, "hand", "Cut a Deal")], ["Plains", "Wastes", "Wastes"].map((tap) => ({tap})), 4);
@@ -77,4 +86,4 @@ const script = (abilities, more = {}) => ({schema: "CrankCardScript@1", identity
   eq([s.players[1].life, s.players[0].life], [36, 38], "on Rob's turn Maya's 2 is 4; his own is 2");
 }
 
-console.log(`engine-spells-w4d: ${checks} checks passed -- the card load of 2026-10-23's lane L6: more-life-loss twice or more, kicker's script and its cost, repeatFor over the remembered, improvise's question, an opponent who draws nothing, life paid under Bloodletter.`);
+console.log(`engine-spells-w4d: ${checks} checks passed -- the card load of 2026-10-23's lane L6: more-life-loss twice or more, kicker's script and its cost, repeatFor over the remembered, improvise's question, convoke's with X, an opponent who draws nothing, life paid under Bloodletter.`);

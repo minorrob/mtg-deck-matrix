@@ -130,9 +130,35 @@
           "convoke": true
         },
         {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Bear",
+                  "Wolf"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "choose": [
             "Bear",
             "Wolf"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "pool": {
+                "G": 0
+              }
+            },
+            {
+              "stack": 1
+            }
           ]
         },
         {

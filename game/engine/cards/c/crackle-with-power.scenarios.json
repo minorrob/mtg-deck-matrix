@@ -57,6 +57,26 @@
           "tap": "Wastes"
         },
         {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Crackle with Power",
+                "seat": 0
+              },
+              "count": 2,
+              "targets": [
+                [
+                  "up to no targets"
+                ],
+                [
+                  "up to one target"
+                ]
+              ]
+            }
+          ]
+        },
+        {
           "cast": "Crackle with Power",
           "x": 1,
           "targets": [
