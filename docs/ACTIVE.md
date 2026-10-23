@@ -282,6 +282,20 @@ Counterintelligence. The current preview milestone is deployed to staging. Side-
 The module registry now includes Screen View, History, AI Coach, Counter-Intel, Resources, On the Stack, Card Preview, Table Vitals, Recommended Actions, Chat, and Actions. AI Coach embeds its existing conversation and preserves drafts through moves; Recommended Actions uses that service. Chat is explicitly unavailable pending the contract below. Actions routes to its assigned drawer in Full screen, with ordinary popups retained elsewhere.
 Volcano uses Rob's supplied video; other environments and the table artwork still need final assets. Crowded-mat layout and text readability need further polish.
 
+## Decks screen and New deck flow, October 23, 2026 (a Claude cloud session, for Rob; `claude/vibrant-turing-50yl3r`): plan waiting for Rob's go
+
+Rob named this session for the lanes the Decks requirements name (§19): **Codex · Workshop** for the screens and the
+collection model, **Claude · Deck intelligence** for `tools/build-live-load.mjs`, the write-ups data, recommendations and
+Auto-create's engine. Both were free above. It reads `crankmagic-table.js` and edits no Play or Engine file. Six other
+sessions work the engine and card loads at the same time; a separate merge session merges this branch with theirs, so
+this session does not merge.
+- **Committed:** the requirements, `docs/design/2026-10-23-decks-screen/crankmagic-decks-requirements.md`; the write-ups,
+  `data/deck-writeups-2026-10-23.json` (byte-for-byte its Appendix B; 34 decks, every one found by id and name in a backup
+  built from the 10-21 workbook, every `named` card in its deck's list); and the plan, `PLAN.md` in the same folder.
+- **Proved:** `node tests/feature-wiring.mjs` (124) and `node tests/data-integrity.mjs` pass with both files in.
+- **Outstanding:** everything in the plan (Part C, then A, then B), waiting for Rob's go; §17 left out until he picks;
+  Q1's new card state needs his approval of the wording.
+
 ## The lanes (AGENTS.md, *Lanes*), since 2026-10-12; five lanes since 2026-10-18
 
 | Lane | Held by | Branch | Doing |
