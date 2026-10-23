@@ -127,7 +127,7 @@ try {
           await page.setViewportSize({width, height:900});
           await page.waitForTimeout(100);
           const gap = await page.evaluate(() => {
-            const drawer=document.querySelector('.cm-stage-rail.is-open').getBoundingClientRect(),mat=document.querySelector('.cm-board-stage .cm-board-mat').getBoundingClientRect(),pop=document.querySelector('.cm-play-pop').getBoundingClientRect();
+            const drawer={right:Math.max(...[...document.querySelectorAll('.cm-board-pane, .cm-stage-rail.is-open')].map(e=>e.getBoundingClientRect().right))},mat=document.querySelector('.cm-board-stage .cm-board-mat').getBoundingClientRect(),pop=document.querySelector('.cm-play-pop').getBoundingClientRect();
             return {drawer:drawer.right,mat:mat.left,left:pop.left,right:pop.right,width:pop.width};
           });
           ok(gap.right <= gap.mat-10,`focus ${width}: preview keeps the play area clear (${JSON.stringify(gap)})`);
@@ -138,12 +138,12 @@ try {
         let low=1280,high=2240,edge;
         for(let n=0;n<11;n++){
           const width=Math.round((low+high)/2);await page.setViewportSize({width,height:900});
-          edge=await page.evaluate(()=>{dispatchEvent(new Event('resize'));const d=document.querySelector('.cm-stage-rail.is-open').getBoundingClientRect(),m=document.querySelector('.cm-board-stage .cm-board-mat').getBoundingClientRect(),p=document.querySelector('.cm-play-pop').getBoundingClientRect();return {space:m.left-d.right-p.width,left:p.left,drawer:d.right};});
+          edge=await page.evaluate(()=>{dispatchEvent(new Event('resize'));const d={right:Math.max(...[...document.querySelectorAll('.cm-board-pane, .cm-stage-rail.is-open')].map(e=>e.getBoundingClientRect().right))},m=document.querySelector('.cm-board-stage .cm-board-mat').getBoundingClientRect(),p=document.querySelector('.cm-play-pop').getBoundingClientRect();return {space:m.left-d.right-p.width,left:p.left,drawer:d.right};});
           if(edge.space>=4&&edge.space<=12)break;
           if(edge.space<4)low=width+1;else high=width-1;
         }
         ok(edge.space>=0&&edge.space<24&&edge.left>=edge.drawer,'focus: a card that fits without the preferred margin still clears the drawer');
-        await page.locator('[data-action=board-stage-rail]').evaluate(el=>el.click());
+        await page.locator('[data-action=board-pane]').evaluate(el=>el.click());
         const collapsed=await page.evaluate(()=>{const p=document.querySelector('.cm-play-pop').getBoundingClientRect(),m=document.querySelector('.cm-board-stage .cm-board-mat').getBoundingClientRect();return p.left>=8&&p.right<m.left;});
         ok(collapsed,'focus: collapsing the drawer recomputes the preview position');
         await page.setViewportSize({width:1440,height:900});
