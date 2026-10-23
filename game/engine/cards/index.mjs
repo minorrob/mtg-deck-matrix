@@ -1445,6 +1445,15 @@ export function compileScript(script) {
     }
     for (const effect of effectsIn(ability.effects)) {
       if (!isBuilt(effect.effect)) problems.push(`${effect.effect}: declared, not built`);
+      /* A total divided among targets (The Earth Crystal; CR 601.2d, script/amount.mjs dividedAmong): only where the division
+         is no choice -- every number of targets that may be chosen is one, or the total -- since dividing it otherwise is
+         its controller's choice as it is put on the stack, which is not built. */
+      const divided = effect.count?.dividedAmong;
+      if (divided) {
+        const spec = (ability.targets ?? [])[divided.target], min = spec?.count?.min ?? 1, max = spec?.count?.max ?? 1;
+        if (!spec || Array.from({length: max - min + 1}, (_, i) => min + i).some((k) => k !== 1 && k !== divided.total))
+          problems.push(`${ability.text}: a total divided among targets where the division would be a choice`);
+      }
       /* counterSpell's `targets` are stack ids, which no script can know; a script names the spell it counters by
          `spells: {target: n}` (script/bind.mjs). */
       if (effect.effect === "counterSpell" && effect.targets !== undefined) problems.push("counterSpell: a script names the spell by `spells: {target: n}`, not by stack id");
@@ -1456,6 +1465,10 @@ export function compileScript(script) {
         /* What repeats may ask (a search for each player, Winds of Abandon): in a resolution it is spliced in for each
            (script/resolution.mjs). */
         for (const inner of effect.effects ?? []) if (!EFFECTS[inner?.effect] && !NEEDS_A_DECISION.includes(inner?.effect)) problems.push(`repeatFor: ${inner?.effect} is not something that repeats`);
+        /* "Repeat the following process X times" (Torment of Hailfire): `times`, a round repeated, is counted where a round is
+           spliced in -- one whose effects ask (script/resolution.mjs) -- and nowhere else. */
+        if (effect.times !== undefined && (effect.again !== undefined || !(effect.effects ?? []).some((inner) => NEEDS_A_DECISION.includes(inner?.effect) || inner?.effect === "connive")))
+          problems.push("repeatFor: `times` repeats a round of effects that ask, for each of what it ranges over");
       }
       /* A permanent's state (effects/permanents.mjs, setState): a Class's level, or transforming -- one of them. Flipping, and
          turning a permanent face up or face down as an effect, are not built. */

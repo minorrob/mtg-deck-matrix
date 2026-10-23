@@ -104,7 +104,9 @@ export function countOf(spec, context = {}) {
   /* "For each opponent, up to one target" (`forEach`): none at least, and no most but the one of each opponent's (oneOfEach). */
   if (forEachOpponent(spec)) return {min: 0, max: null};
   const count = spec && typeof spec === "object" ? spec.count : undefined;
-  return count && typeof count === "object" ? {min: count.min ?? 0, max: count.max === "X" ? Math.max(0, context?.x ?? 0) : count.max ?? null} : null;
+  /* "Exile X target creatures" (Curse of the Swine; CR 601.2c, X chosen before the targets, 601.2b): `min` "X" too, exactly X. */
+  const x = Math.max(0, context?.x ?? 0);
+  return count && typeof count === "object" ? {min: count.min === "X" ? x : count.min ?? 0, max: count.max === "X" ? x : count.max ?? null} : null;
 }
 /** The placeholder a counted target holds in an offer until its controller picks (rules/turn.mjs, "choose-targets"), and
     how many there are to pick from (`of`): "up to two" with none to pick does nothing, for a pilot weighing the offer. */

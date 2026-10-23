@@ -1161,7 +1161,8 @@ function costWords(awaiting, state) {
   if (awaiting.amountX) return "pay {X}";
   if (awaiting.timesAny) return `pay ${awaiting.mana} any number of times`;
   const paid = [awaiting.mana ?? null, awaiting.amount > 0 ? `{${awaiting.amount}}` : null, lifeAsked(awaiting) ? `${awaiting.life} life` : null].filter(Boolean);
-  const other = awaiting.discard ? `discard ${discardNoun(awaiting.discard)}` : awaiting.sacrificeCount ? `sacrifice ${awaiting.sacrificeCount} permanents` : awaiting.sacrifice ? `sacrifice ${noun(awaiting.sacrifice)}`
+  const other = awaiting.discard && awaiting.sacrifice ? `sacrifice ${awaiting.sacrifice.nonTypes?.includes("Land") ? "a nonland permanent" : noun(awaiting.sacrifice)} or discard ${discardNoun(awaiting.discard)}`
+    : awaiting.discard ? `discard ${discardNoun(awaiting.discard)}` : awaiting.sacrificeCount ? `sacrifice ${awaiting.sacrificeCount} permanents` : awaiting.sacrifice ? `sacrifice ${noun(awaiting.sacrifice)}`
     : awaiting.returnToHand ? `return ${otherNoun(awaiting.returnToHand)} you control to its owner's hand`
     : awaiting.tap ? `tap ${otherNoun(awaiting.tap).replace(/^(a|another) /, "$1 untapped ").replace(/^a untapped/, "an untapped")} you control` : null;
   return [other, paid.length ? `pay ${paid.join(" and ")}` : null].filter(Boolean).join(" and ") || `pay {${awaiting.amount}}`;
@@ -1215,7 +1216,13 @@ function payOptions(state, awaiting) {
       return awaiting.sacrificing ? mine.map((id) => ({label: state.objects[id].card, cardId: id}))
         : mine.length >= awaiting.sacrificeCount ? [{label: `Sacrifice ${awaiting.sacrificeCount} permanents${also}`, pay: true, sacrificeMany: true}] : [];
     }
-    return mine.map((id) => ({label: `Sacrifice ${state.objects[id].card}${also}`, pay: true, sacrifice: id, cardId: id}));
+    const sacrifices = mine.map((id) => ({label: `Sacrifice ${state.objects[id].card}${also}`, pay: true, sacrifice: id, cardId: id}));
+    /* "UNLESS THAT PLAYER SACRIFICES A NONLAND PERMANENT OF THEIR CHOICE OR DISCARDS A CARD" (Torment of Hailfire; CR 118.12a):
+       `sacrifice` and `discard` both, either one paying it -- each permanent and each card in hand its own option, which one
+       the payer's choice. */
+    if (!awaiting.discard) return sacrifices;
+    return [...sacrifices, ...cardsIn(state, "hand", player).filter((id) => discardFits(state, awaiting.discard, id, player))
+      .map((id) => ({label: `Discard ${state.objects[id].card}${also}`, pay: true, discard: id, cardId: id}))];
   }
   if (awaiting.discard) return cardsIn(state, "hand", player).filter((id) => discardFits(state, awaiting.discard, id, player))
     .map((id) => ({label: `Discard ${state.objects[id].card}${also}`, pay: true, discard: id, cardId: id}));

@@ -552,10 +552,12 @@ export function counterQuestion(state, effect, context, answers = {}) {
  */
 export function multiplyCounters(state, params, context) {
   const events = [], more = Math.max(1, params.times ?? 2) - 1;
-  for (const id of params.targets ?? []) {
+  /* "Double the number of +1/+1 counters on each creature you control" (Bristly Bill, Spine Sower): `selector`, every
+     permanent it matches in place of targets, and `counter`, that kind alone. */
+  for (const id of params.selector ? selectMatching(state, params.selector, context) : params.targets ?? []) {
     const object = state.objects[id];
     if (!object || object.zone !== "battlefield") continue;
-    for (const [kind, n] of Object.entries({...object.counters})) if (n > 0) addCounters(state, id, kind, n * more, events, context.controller);
+    for (const [kind, n] of Object.entries({...object.counters})) if (n > 0 && (params.counter === undefined || kind === params.counter)) addCounters(state, id, kind, n * more, events, context.controller);
   }
   for (const player of params.who !== undefined ? playersFor(state, params.who, context.controller) : [])
     if ((state.players[player].poison ?? 0) > 0) events.push(...givePoison(state, player, state.players[player].poison * more, context.controller));

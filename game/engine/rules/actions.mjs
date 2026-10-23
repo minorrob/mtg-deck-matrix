@@ -2323,7 +2323,8 @@ export function offerSpecs(state, player, action) {
   const object = state.objects[action.objectId];
   if (!object) return {specs: [], context: {controller: player, source: action.objectId}};
   /* With what the offer has chosen so far: "a second target", "up to one other target" (script/bind.mjs, distinctFrom). */
-  const context = {controller: player, source: action.objectId, chosenTargets: action.targets ?? []};
+  /* And the X it names (Curse of the Swine, "exile X target creatures"; CR 601.2b, X chosen before the targets, 601.2c). */
+  const context = {controller: player, source: action.objectId, chosenTargets: action.targets ?? [], ...(Number.isInteger(action.x) ? {x: action.x} : {})};
   if (action.kind === "cast") return {specs: object.spell?.modal && Array.isArray(action.modes) ? modalScript(object.spell.modal, action.modes).targets : object.spell?.targets ?? [], context};
   const ability = chosenFor(abilitiesOf(state, action.objectId).find((candidate) => candidate.id === action.abilityId), object);
   return {specs: ability?.modal && Array.isArray(action.modes) ? modalScript(ability.modal, action.modes).targets : ability?.targets ?? [], context};
@@ -2384,7 +2385,7 @@ export function resolveChooseTargets(state, awaiting, indices) {
 function countedProblem(state, player, action) {
   const {specs, context} = offerSpecs(state, player, action);
   for (const [index, spec] of specs.entries()) {
-    const count = countOf(spec), chosen = (action.targets ?? [])[index];
+    const count = countOf(spec, context), chosen = (action.targets ?? [])[index];
     if (!count) continue;
     if (!Array.isArray(chosen)) throw new Error("Choose those targets first");
     const legal = targetCandidates(state, spec, context);
