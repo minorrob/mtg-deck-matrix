@@ -468,7 +468,7 @@ column names the near-misses that have caused errors before.
 | Panel ▸, Screen View module | Camera (for views); the drawers | Retired |
 | validated, invalid, payload, or any developer word on screen | plain words (*"a deck the table can play"*) | The newcomer's first two minutes (UAT, 2026-09-22) |
 | Coming Soon (on a Play build) | (nothing) | Production has served cloud Play since 2026-10-12 |
-| colour, centre, grey, cancelled, and other UK spellings | color, center, gray, canceled | `AGENTS.md`, *The United States, always* |
+| UK spellings of any word | American spellings (color, center, gray, canceled) | `AGENTS.md`, *The United States, always* |
 
 ### 2.2 The map of Play: stages and screen regions
 
