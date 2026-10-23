@@ -46,7 +46,7 @@
 
 import {moveObject, removeObject, PER_PLAYER, PUBLIC_ZONES, eventCard, rememberExileLooker, recordDeath} from "../state/index.mjs";
 import {applyReplacements} from "./replacement.mjs";
-import {lastKnown, characteristicsOf, toughnessOf, typesOf, keywordsOf, controllerOf, deriving, staticAbilities} from "./layers.mjs";
+import {lastKnown, supertypesOf, toughnessOf, typesOf, keywordsOf, controllerOf, deriving, staticAbilities} from "./layers.mjs";
 import {matchesSelector} from "../script/filter.mjs";
 import {commanderToAsk, resolveCommanderChoice, recordCommanderDamage} from "./commander.mjs";
 import {sacrificeOne, moveOne, returnExiledUntil, leavingRef, destructionReplaced, destructionAsks} from "../script/effects/zones.mjs";
@@ -585,7 +585,7 @@ function legendToAsk(state) {
     const byName = new Map();
     for (const id of state.zones.battlefield) {
       const object = state.objects[id];
-      if (object.faceDown === true || !(characteristicsOf(state, id).supertypes ?? []).includes("Legendary") || controllerOf(state, id) !== player) continue;
+      if (object.faceDown === true || !supertypesOf(state, id).includes("Legendary") || controllerOf(state, id) !== player) continue;
       byName.set(object.card, [...(byName.get(object.card) ?? []), id]);
     }
     for (const [name, objectIds] of byName) if (objectIds.length > 1) return {kind: "legend-rule", player, name, objectIds};

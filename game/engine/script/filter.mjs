@@ -33,7 +33,7 @@
  */
 
 import {usesThisTurn, valueCostOf} from "../state/index.mjs";
-import {typesOf, keywordsOf, controllerOf, characteristicsOf, colorsOf, everyCreatureTypeOf, subtypesOf, staticAbilities} from "../rules/layers.mjs";
+import {typesOf, keywordsOf, controllerOf, characteristicsOf, colorsOf, everyCreatureTypeOf, subtypesOf, supertypesOf, staticAbilities} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {hasSubtype, isCreatureType} from "../keywords/types.mjs";
 import {protectedFrom, hexproofFrom, playerHexproofFrom} from "../rules/protection.mjs";
@@ -379,9 +379,9 @@ export function compileSelector(selector) {
     }
 
     /* Supertypes (CR 205.4): "a basic land card" is a land with the supertype Basic. */
-    if (selector.supertypes && !selector.supertypes.every((st) => (characteristicsOf(state, id).supertypes ?? []).includes(st))) return false;
+    if (selector.supertypes && !selector.supertypes.every((st) => supertypesOf(state, id).includes(st))) return false;
     /* "Nonlegendary creature": none of these supertypes. */
-    if (selector.nonSupertypes && selector.nonSupertypes.some((st) => (characteristicsOf(state, id).supertypes ?? []).includes(st))) return false;
+    if (selector.nonSupertypes && selector.nonSupertypes.some((st) => supertypesOf(state, id).includes(st))) return false;
 
     /* "Nonartifact creature", "non-Elf creature", "noncreature spell": none of these -- and an artifact creature is an
        artifact (CR 205.2b), so "nonartifact" excludes it. */

@@ -730,6 +730,8 @@ export const keywordsOf = (state, id) => [...derived(state, id, false).keywords]
 export const colorsOf = (state, id) => [...(derived(state, id, false).colors ?? [])];
 /** Its subtypes, after layer 4. */
 export const subtypesOf = (state, id) => [...derived(state, id, false).subtypes];
+/** Current supertypes do not need counted power and toughness. */
+export const supertypesOf = (state, id) => [...derived(state, id, false).supertypes];
 /** Whether it is every creature type (a changeling, CR 702.73a, or an effect's, layer 4). */
 export const everyCreatureTypeOf = (state, id) => derived(state, id, false).everyCreatureType === true;
 

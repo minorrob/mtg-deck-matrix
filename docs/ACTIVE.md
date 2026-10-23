@@ -12,6 +12,10 @@ This task owns the engine additions required by those two cards. The separate Pl
   `node tests/engine-cards.mjs` (2,602 definitions and 6,250 scenarios), the affected state, stack, target, copy, commander,
   combat, layer, schema, controller, projection and pilot suites, plus the table scenarios and save/resume storage suite.
   `python game/tools/batch/breaks.py game/tools/batch/breaks-mutate.py` and `breaks-ring.py` prove the new paths can fail.
+- **CI follow-up:** the first run caught unnecessary counted-power derivations in the legend check and an import before
+  the turn module's copyright header. Both are fixed; `engine-derive-once` (17 checks), `engine-headers` (4), the affected
+  Ring, mutate, filter, state-based action and turn suites, and both moved Ring breaks pass locally. The corrected head
+  must pass CI before the merge.
 - **Release gate:** the PR head must pass the secret scan and GitHub CI; staging uses the existing cloud-staging builder
   and both acceptance walks after the merge. Production is outside this request. No Forge behavior is claimed by this load.
 

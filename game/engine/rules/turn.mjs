@@ -1,4 +1,3 @@
-import {mergedOrderChoice, finishMergedOrder} from "../state/index.mjs";
 /* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE. */
 
 /* THE TURN: CR 500 TO 514.
@@ -36,7 +35,7 @@ import {mergedOrderChoice, finishMergedOrder} from "../state/index.mjs";
  *   CR 500.4: mana pools empty at the end of every step and phase, not at end of turn.
  */
 
-import {cardsIn, moveObject, eventCard, recordDraw, recordDrawStepDraw, recordDiscard} from "../state/index.mjs";
+import {cardsIn, moveObject, eventCard, recordDraw, recordDrawStepDraw, recordDiscard, mergedOrderChoice, finishMergedOrder} from "../state/index.mjs";
 import {attackers, blockers, combatDamage, endCombat} from "./combat.mjs";
 import {combatNeedsFirstStrike} from "../keywords/combat.mjs";
 import {checkStateBasedActions, gameOver, finishCommanderReplacement, legendChoice, finishLegendRule, finishDestructionChoice} from "./sba.mjs";
