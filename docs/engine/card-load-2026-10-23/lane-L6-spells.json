@@ -1,0 +1,871 @@
+{
+ "schema": "library-load-lane@1",
+ "lane": "L6-spells",
+ "theme": "spells",
+ "label": "Spells, draws and discards: instants and sorceries, card draw, cost changes, tutors, lands",
+ "source": {
+  "collection": "collection-2026-10-21.json",
+  "workbook": "Backup_Load_-_CrankMagic_-_2026-10-21.xlsx",
+  "decks": [
+   "D1",
+   "D2",
+   "D3",
+   "D4",
+   "D5",
+   "D6",
+   "D7",
+   "S1-D1",
+   "S1-D2",
+   "S1-D3",
+   "S1-D4",
+   "S1-D5",
+   "S1-D6",
+   "S2-D1",
+   "S2-D2",
+   "S2-D3",
+   "S2-D4",
+   "S2-D5",
+   "S2-D6",
+   "G0-D1",
+   "G0-D2",
+   "G0-D3",
+   "G0-D4",
+   "G1-D1",
+   "G1-D2",
+   "G1-D3",
+   "G1-D4",
+   "CJ1",
+   "CJ2",
+   "CJ3",
+   "CJ4",
+   "CJ5",
+   "HG1",
+   "HG2"
+  ],
+  "liveDecks": [
+   "D1",
+   "D2",
+   "D3",
+   "D4",
+   "D5",
+   "D6",
+   "D7"
+  ],
+  "top": 185,
+  "candidates": {
+   "pool": 29551,
+   "candidate": 2643,
+   "refused": 0,
+   "blocked": 6,
+   "vetoed": 18,
+   "unknown": 25793,
+   "structure": 1091,
+   "oneSentenceShort": 12544
+  }
+ },
+ "cards": [
+  {
+   "name": "Sylvan Library",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 313,
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "At the beginning of your draw step, you may draw two additional cards.",
+    "If you do, choose two cards in your hand drawn this turn.",
+    "For each of those cards, pay 4 life or put the card on top of your library."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Temur Ascendancy",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 614,
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever a creature you control with power 4 or greater enters, you may draw a card."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Eidolon of Blossoms",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 619,
+   "type": "Enchantment Creature — Spirit",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Constellation — Whenever this creature or another enchantment you control enters, draw a card."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Padeem, Consul of Innovation",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 626,
+   "type": "Legendary Creature — Vedalken Artificer",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "At the beginning of your upkeep, if you control the artifact with the greatest mana value or tied for the greatest mana value, draw a card."
+   ],
+   "needs": []
+  },
+  {
+   "name": "High Tide",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 632,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Until end of turn, whenever a player taps an Island for mana, that player adds an additional {U}."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Arbor Elf",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 654,
+   "type": "Creature — Elf Druid",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{T}: Untap target Forest."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Expressive Iteration",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 692,
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Look at the top three cards of your library.",
+    "Put one of them into your hand, put one of them on the bottom of your library, and exile one of them.",
+    "You may play the exiled card this turn."
+   ],
+   "needs": [
+    "option:MayPlay",
+    "option:RememberChanged",
+    "option:RememberObjects"
+   ]
+  },
+  {
+   "name": "Tear Asunder",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 730,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Kicker {1}{B} (You may pay an additional {1}{B} as you cast this spell.)",
+    "If this spell was kicked, exile target nonland permanent instead."
+   ],
+   "needs": [
+    "count:Kicked",
+    "keyword:Kicker"
+   ]
+  },
+  {
+   "name": "Dramatic Reversal",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 734,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Untap all nonland permanents you control."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Chord of Calling",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 737,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Search your library for a creature card with mana value X or less, put it onto the battlefield, then shuffle."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Ashaya, Soul of the Wild",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 750,
+   "type": "Legendary Creature — Elemental",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Nontoken creatures you control are Forest lands in addition to their other types. (They're still affected by summoning sickness.)"
+   ],
+   "needs": []
+  },
+  {
+   "name": "Cyberdrive Awakener",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 754,
+   "type": "Artifact Creature — Construct",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature enters, each noncreature artifact you control becomes a 4/4 artifact creature until end of turn."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Soul's Attendant",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 777,
+   "type": "Creature — Human Cleric",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever another creature enters, you may gain 1 life."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Archmage of Runes",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 778,
+   "type": "Creature — Giant Wizard",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever you cast an instant or sorcery spell, draw a card."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Bloodletter of Aclazotz",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 785,
+   "type": "Creature — Vampire Demon",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "If an opponent would lose life during your turn, they lose twice that much life instead. (Damage causes loss of life.)"
+   ],
+   "needs": [
+    "replacement:LifeReduced",
+    "count:Amount"
+   ]
+  },
+  {
+   "name": "Meteor Golem",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 788,
+   "type": "Artifact Creature — Golem",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature enters, destroy target nonland permanent an opponent controls."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Avacyn, Angel of Hope",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 789,
+   "type": "Legendary Creature — Angel",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Other permanents you control have indestructible."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Kenrith's Transformation",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 791,
+   "type": "Enchantment — Aura",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Enchanted creature loses all abilities and is a green Elk creature with base power and toughness 3/3. (It loses all other card types and creature types.)"
+   ],
+   "needs": []
+  },
+  {
+   "name": "Jhoira, Weatherlight Captain",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 794,
+   "type": "Legendary Creature — Human Artificer",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever you cast a historic spell, draw a card. (Artifacts, legendaries, and Sagas are historic.)"
+   ],
+   "needs": []
+  },
+  {
+   "name": "The Wind Crystal",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 831,
+   "type": "Legendary Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{4}{W}{W}, {T}: Creatures you control gain flying and lifelink until end of turn."
+   ],
+   "needs": [
+    "replacement:GainLife",
+    "count:LifeGained"
+   ]
+  },
+  {
+   "name": "Throne of Eldraine",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 835,
+   "type": "Legendary Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "As Throne of Eldraine enters, choose a color.",
+    "Spend this mana only to cast monocolored spells of that color.",
+    "{3}, {T}: Draw two cards.",
+    "Spend only mana of the chosen color to activate this ability."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Hour of Reckoning",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 842,
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Destroy all nontoken creatures."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Fiery Inscription",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 865,
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this enchantment enters, the Ring tempts you."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Tragic Slip",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 894,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Morbid — That creature gets -13/-13 until end of turn instead if a creature died this turn."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Chimil, the Inner Sun",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 911,
+   "type": "Legendary Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "At the beginning of your end step, discover 5. (Exile cards from the top of your library until you exile a nonland card with mana value 5 or less. Cast it without paying its mana cost or put it into your hand. Put the rest on the bottom in a random order.)"
+   ],
+   "needs": [
+    "api:discover"
+   ]
+  },
+  {
+   "name": "Organic Extinction",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 913,
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Improvise (Your artifacts can help cast this spell. Each artifact you tap after you're done activating mana abilities pays for {1}.)",
+    "Destroy all nonartifact creatures."
+   ],
+   "needs": [
+    "keyword:Improvise"
+   ]
+  },
+  {
+   "name": "City on Fire",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 919,
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "If a source you control would deal damage to a permanent or player, it deals triple that damage instead."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Aura Shards",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 925,
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever a creature you control enters, you may destroy target artifact or enchantment."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Marvin, Murderous Mimic",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 937,
+   "type": "Legendary Artifact Creature — Toy",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Marvin has all activated abilities of creatures you control that don't have the same name as this creature."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Isochron Scepter",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 957,
+   "type": "Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Imprint — When this artifact enters, you may exile an instant card with mana value 2 or less from your hand.",
+    "{2}, {T}: You may copy the exiled card.",
+    "If you do, you may cast the copy without paying its mana cost."
+   ],
+   "needs": [
+    "option:Imprint"
+   ]
+  },
+  {
+   "name": "Cut a Deal",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 960,
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Each opponent draws a card, then you draw a card for each opponent who drew a card this way."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Apex Devastator",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 961,
+   "type": "Creature — Chimera Hydra",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Cascade",
+    "cascade",
+    "cascade",
+    "cascade (When you cast this spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its mana cost. Put the exiled cards on the bottom in a random order. Multiple instances of cascade each trigger separately.)"
+   ],
+   "needs": [
+    "keyword:Cascade"
+   ]
+  },
+  {
+   "name": "Syphon Mind",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 985,
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Each other player discards a card.",
+    "You draw a card for each card discarded this way."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Borne Upon a Wind",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 986,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "You may cast spells this turn as though they had flash."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Angel of the Ruins",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 995,
+   "type": "Artifact Creature — Angel",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature enters, exile up to two target artifacts and/or enchantments."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Wheel of Fortune",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 998,
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Each player discards their hand, then draws seven cards."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Inspiring Statuary",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1008,
+   "type": "Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Nonartifact spells you cast have improvise. (Your artifacts can help cast those spells. Each artifact you tap after you're done activating mana abilities pays for {1}.)"
+   ],
+   "needs": []
+  },
+  {
+   "name": "Crackle with Power",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1011,
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Crackle with Power deals five times X damage to each of up to X targets."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Leyline of Anticipation",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1023,
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "candidate",
+   "needs": []
+  },
+  {
+   "name": "Collective Resistance",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1031,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Escalate {G} (Pay this cost for each mode chosen beyond the first.)",
+    "Choose one or more —",
+    "• Destroy target artifact.",
+    "• Destroy target enchantment.",
+    "• Target creature gains hexproof and indestructible until end of turn."
+   ],
+   "needs": []
+  }
+ ],
+ "review": [
+  {
+   "name": "Blossoming Defense",
+   "scope": "live",
+   "liveDecks": [
+    "D3"
+   ],
+   "decks": [
+    "D3"
+   ],
+   "owned": 1,
+   "rank": 2981,
+   "type": "Instant",
+   "layout": "normal"
+  },
+  {
+   "name": "Ankle Biter",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Snake",
+   "layout": "normal"
+  },
+  {
+   "name": "Pyroclasm",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Sorcery",
+   "layout": "normal"
+  },
+  {
+   "name": "Ornithopter",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 684,
+   "type": "Artifact Creature — Thopter",
+   "layout": "normal"
+  },
+  {
+   "name": "Thoughtcast",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 713,
+   "type": "Sorcery",
+   "layout": "normal"
+  },
+  {
+   "name": "Serum Visions",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 822,
+   "type": "Sorcery",
+   "layout": "normal"
+  },
+  {
+   "name": "Jukai Naturalist",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 874,
+   "type": "Enchantment Creature — Human Monk",
+   "layout": "normal"
+  },
+  {
+   "name": "Dragonspeaker Shaman",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 951,
+   "type": "Creature — Human Barbarian Shaman",
+   "layout": "normal"
+  },
+  {
+   "name": "Enthusiastic Mechanaut",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 976,
+   "type": "Artifact Creature — Goblin Artificer",
+   "layout": "normal"
+  },
+  {
+   "name": "Dragonlord's Servant",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 984,
+   "type": "Creature — Goblin Shaman",
+   "layout": "normal"
+  },
+  {
+   "name": "Alhammarret's Archive",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1030,
+   "type": "Legendary Artifact",
+   "layout": "normal"
+  },
+  {
+   "name": "Imperial Seal",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1061,
+   "type": "Sorcery",
+   "layout": "normal"
+  },
+  {
+   "name": "Idyllic Tutor",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1116,
+   "type": "Sorcery",
+   "layout": "normal"
+  },
+  {
+   "name": "Wrath of God",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1171,
+   "type": "Sorcery",
+   "layout": "normal"
+  },
+  {
+   "name": "Boltwave",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1174,
+   "type": "Sorcery",
+   "layout": "normal"
+  },
+  {
+   "name": "Fate Unraveler",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1301,
+   "type": "Enchantment Creature — Hag",
+   "layout": "normal"
+  }
+ ]
+}

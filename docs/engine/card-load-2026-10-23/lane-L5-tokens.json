@@ -1,0 +1,847 @@
+{
+ "schema": "library-load-lane@1",
+ "lane": "L5-tokens",
+ "theme": "tokens",
+ "label": "Tokens, counters and sacrifice: create, +1/+1 and other counters, sacrifice outlets, lifegain payoffs",
+ "source": {
+  "collection": "collection-2026-10-21.json",
+  "workbook": "Backup_Load_-_CrankMagic_-_2026-10-21.xlsx",
+  "decks": [
+   "D1",
+   "D2",
+   "D3",
+   "D4",
+   "D5",
+   "D6",
+   "D7",
+   "S1-D1",
+   "S1-D2",
+   "S1-D3",
+   "S1-D4",
+   "S1-D5",
+   "S1-D6",
+   "S2-D1",
+   "S2-D2",
+   "S2-D3",
+   "S2-D4",
+   "S2-D5",
+   "S2-D6",
+   "G0-D1",
+   "G0-D2",
+   "G0-D3",
+   "G0-D4",
+   "G1-D1",
+   "G1-D2",
+   "G1-D3",
+   "G1-D4",
+   "CJ1",
+   "CJ2",
+   "CJ3",
+   "CJ4",
+   "CJ5",
+   "HG1",
+   "HG2"
+  ],
+  "liveDecks": [
+   "D1",
+   "D2",
+   "D3",
+   "D4",
+   "D5",
+   "D6",
+   "D7"
+  ],
+  "top": 185,
+  "candidates": {
+   "pool": 29551,
+   "candidate": 2643,
+   "refused": 0,
+   "blocked": 6,
+   "vetoed": 18,
+   "unknown": 25793,
+   "structure": 1091,
+   "oneSentenceShort": 12544
+  }
+ },
+ "cards": [
+  {
+   "name": "The Earth Crystal",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 615,
+   "type": "Legendary Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{4}{G}{G}, {T}: Distribute two +1/+1 counters among one or two target creatures you control."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Torment of Hailfire",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 651,
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Repeat the following process X times.",
+    "Each opponent loses 3 life unless that player sacrifices a nonland permanent of their choice or discards a card."
+   ],
+   "needs": [
+    "api:Repeat",
+    "option:UnlessCostSac"
+   ]
+  },
+  {
+   "name": "Greater Good",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 669,
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Sacrifice a creature: Draw cards equal to the sacrificed creature's power, then discard three cards."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Zuran Orb",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 709,
+   "type": "Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Sacrifice a land: You gain 2 life."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Springheart Nantuko",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 716,
+   "type": "Enchantment Creature — Insect Monk",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Bestow {1}{G}",
+    "Landfall — Whenever a land you control enters, you may pay {1}{G} if this permanent is attached to a creature you control.",
+    "If you do, create a token that's a copy of that creature.",
+    "If you didn't create a token this way, create a 1/1 green Insect creature token."
+   ],
+   "needs": [
+    "keyword:Bestow"
+   ]
+  },
+  {
+   "name": "Ayara, First of Locthwain",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 721,
+   "type": "Legendary Creature — Elf Noble",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever Ayara or another black creature you control enters, each opponent loses 1 life and you gain 1 life.",
+    "{T}, Sacrifice another black creature: Draw a card."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Monument to Endurance",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 724,
+   "type": "Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever you discard a card",
+    "choose one that hasn't been chosen this turn —",
+    "• Draw a card.",
+    "• Create a Treasure token.",
+    "• Each opponent loses 3 life."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Sylvan Safekeeper",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 725,
+   "type": "Creature — Human Wizard",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Sacrifice a land: Target creature you control gains shroud until end of turn. (It can't be the target of spells or abilities.)"
+   ],
+   "needs": []
+  },
+  {
+   "name": "Essence Flux",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 775,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "If it's a Spirit, put a +1/+1 counter on it."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Lathliss, Dragon Queen",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 817,
+   "type": "Legendary Creature — Dragon",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever another nontoken Dragon you control enters, create a 5/5 red Dragon creature token with flying.",
+    "{1}{R}: Dragons you control get +1/+0 until end of turn."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Archon of Sun's Grace",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 821,
+   "type": "Creature — Archon",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Pegasus creatures you control have lifelink.",
+    "Constellation — Whenever an enchantment you control enters, create a 2/2 white Pegasus creature token with flying."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Rising of the Day",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 824,
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Legendary creatures you control get +1/+0."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Mechanized Production",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 826,
+   "type": "Enchantment — Aura",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "At the beginning of your upkeep, create a token that's a copy of enchanted artifact.",
+    "Then if you control eight or more artifacts with the same name as one another, you win the game."
+   ],
+   "needs": [
+    "count:MostCardName"
+   ]
+  },
+  {
+   "name": "Curse of the Swine",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 829,
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Exile X target creatures.",
+    "For each creature exiled this way, its controller creates a 2/2 green Boar creature token."
+   ],
+   "needs": []
+  },
+  {
+   "name": "K'rrik, Son of Yawgmoth",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 840,
+   "type": "Legendary Creature — Phyrexian Horror Minion",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "({B/P} can be paid with either {B} or 2 life.)",
+    "For each {B} in a cost, you may pay 2 life rather than pay that mana.",
+    "Whenever you cast a black spell, put a +1/+1 counter on K'rrik."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Oketra's Monument",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 851,
+   "type": "Legendary Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever you cast a creature spell, create a 1/1 white Warrior creature token with vigilance."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Marwyn, the Nurturer",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 861,
+   "type": "Legendary Creature — Elf Druid",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever another Elf you control enters, put a +1/+1 counter on Marwyn.",
+    "{T}: Add an amount of {G} equal to Marwyn's power."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Wishclaw Talisman",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 875,
+   "type": "Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "This artifact enters with three wish counters on it.",
+    "{1}, {T}, Remove a wish counter from this artifact: Search your library for a card, put it into your hand, then shuffle.",
+    "An opponent gains control of this artifact.",
+    "Activate only during your turn."
+   ],
+   "needs": [
+    "api:ChoosePlayer"
+   ]
+  },
+  {
+   "name": "Flowering of the White Tree",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 878,
+   "type": "Legendary Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Legendary creatures you control get +2/+1 and have ward {1}.",
+    "Nonlegendary creatures you control get +1/+1."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Charismatic Conqueror",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 879,
+   "type": "Creature — Vampire Soldier",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever an artifact or creature an opponent controls enters untapped, they may tap that permanent.",
+    "If they don't, you create a 1/1 white Vampire creature token with lifelink."
+   ],
+   "needs": [
+    "option:UnlessCostOther"
+   ]
+  },
+  {
+   "name": "Descent into Avernus",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 891,
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "At the beginning of your upkeep, put two descent counters on this enchantment.",
+    "Then each player creates X Treasure tokens and this enchantment deals X damage to each player, where X is the number of descent counters on this enchantment."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Prismari Command",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 902,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Choose two —",
+    "• Prismari Command deals 2 damage to any target.",
+    "• Target player draws two cards, then discards two cards.",
+    "• Target player creates a Treasure token.",
+    "• Destroy target artifact."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Roiling Regrowth",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 903,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Sacrifice a land."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Bastion Protector",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 906,
+   "type": "Creature — Human Soldier",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Commander creatures you control get +2/+2 and have indestructible."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Sterling Grove",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 920,
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Other enchantments you control have shroud. (They can't be the targets of spells or abilities.)",
+    "{1}, Sacrifice this enchantment: Search your library for an enchantment card, reveal it, then shuffle and put that card on top."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Damning Verdict",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 943,
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Destroy all creatures with no counters on them."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Bristly Bill, Spine Sower",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 946,
+   "type": "Legendary Creature — Plant Druid",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Landfall — Whenever a land you control enters, put a +1/+1 counter on target creature.",
+    "{3}{G}{G}: Double the number of +1/+1 counters on each creature you control."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Elesh Norn, Grand Cenobite",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 979,
+   "type": "Legendary Creature — Phyrexian Praetor",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Creatures your opponents control get -2/-2."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Well of Lost Dreams",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 980,
+   "type": "Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever you gain life, you may pay {X}, where X is less than or equal to the amount of life you gained.",
+    "If you do, draw X cards."
+   ],
+   "needs": [
+    "api:ChooseNumber",
+    "count:ChosenNumber"
+   ]
+  },
+  {
+   "name": "Caged Sun",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 993,
+   "type": "Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Creatures you control of the chosen color get +1/+1.",
+    "Whenever a land's ability causes you to add one or more mana of the chosen color, add an additional one mana of that color."
+   ],
+   "needs": [
+    "trigger:ManaAdded"
+   ]
+  },
+  {
+   "name": "Liberator, Urza's Battlethopter",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 994,
+   "type": "Legendary Artifact Creature — Thopter",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "You may cast colorless spells and artifact spells as though they had flash.",
+    "Whenever you cast a spell, if the amount of mana spent to cast that spell is greater than Liberator's power, put a +1/+1 counter on Liberator."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Ledger Shredder",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1002,
+   "type": "Creature — Bird Advisor",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever a player casts their second spell each turn, this creature connives. (Draw a card, then discard a card. If you discarded a nonland card, put a +1/+1 counter on this creature.)"
+   ],
+   "needs": []
+  },
+  {
+   "name": "Scapeshift",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1020,
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Sacrifice any number of lands.",
+    "Search your library for up to that many land cards, put them onto the battlefield tapped, then shuffle."
+   ],
+   "needs": []
+  }
+ ],
+ "review": [
+  {
+   "name": "Goblin Sledder",
+   "scope": "live",
+   "liveDecks": [
+    "D6"
+   ],
+   "decks": [
+    "D6"
+   ],
+   "owned": 0,
+   "rank": null,
+   "type": "Creature — Goblin",
+   "layout": "normal"
+  },
+  {
+   "name": "Voracious Varmint",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Varmint",
+   "layout": "normal"
+  },
+  {
+   "name": "Experimental Augury",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1160,
+   "type": "Instant",
+   "layout": "normal"
+  },
+  {
+   "name": "Cryptbreaker",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1483,
+   "type": "Creature — Zombie",
+   "layout": "normal"
+  },
+  {
+   "name": "Atomize",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1624,
+   "type": "Instant",
+   "layout": "normal"
+  },
+  {
+   "name": "Shore Up",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1810,
+   "type": "Instant",
+   "layout": "normal"
+  },
+  {
+   "name": "Drown in Ichor",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1812,
+   "type": "Sorcery",
+   "layout": "normal"
+  },
+  {
+   "name": "Efficient Construction",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2154,
+   "type": "Enchantment",
+   "layout": "normal"
+  },
+  {
+   "name": "Platinum Angel",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2172,
+   "type": "Artifact Creature — Angel",
+   "layout": "normal"
+  },
+  {
+   "name": "Voyager Quickwelder",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2255,
+   "type": "Artifact Creature — Robot Artificer",
+   "layout": "normal"
+  },
+  {
+   "name": "Empyrean Eagle",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2259,
+   "type": "Creature — Bird Spirit",
+   "layout": "normal"
+  },
+  {
+   "name": "Favorable Winds",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2354,
+   "type": "Enchantment",
+   "layout": "normal"
+  },
+  {
+   "name": "Drossforge Bridge",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2408,
+   "type": "Artifact Land",
+   "layout": "normal"
+  },
+  {
+   "name": "March of the Multitudes",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2416,
+   "type": "Instant",
+   "layout": "normal"
+  },
+  {
+   "name": "Chief of the Foundry",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2622,
+   "type": "Artifact Creature — Construct",
+   "layout": "normal"
+  },
+  {
+   "name": "Thrashing Brontodon",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2680,
+   "type": "Creature — Dinosaur",
+   "layout": "normal"
+  },
+  {
+   "name": "Vibrant Cityscape",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2783,
+   "type": "Land",
+   "layout": "normal"
+  },
+  {
+   "name": "Vedalken Archmage",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2855,
+   "type": "Creature — Vedalken Wizard",
+   "layout": "normal"
+  },
+  {
+   "name": "Squirrel Sovereign",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2880,
+   "type": "Creature — Squirrel Noble",
+   "layout": "normal"
+  },
+  {
+   "name": "Deeproot Waters",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2988,
+   "type": "Enchantment",
+   "layout": "normal"
+  },
+  {
+   "name": "Chocobo Racetrack",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 3018,
+   "type": "Artifact",
+   "layout": "normal"
+  },
+  {
+   "name": "Seal of Primordium",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 3039,
+   "type": "Enchantment",
+   "layout": "normal"
+  },
+  {
+   "name": "Whisper of the Dross",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 3123,
+   "type": "Instant",
+   "layout": "normal"
+  }
+ ]
+}
