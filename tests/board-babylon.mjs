@@ -5,7 +5,7 @@ import {mkdirSync} from 'node:fs';
 import path from 'node:path';
 import {openBrowser} from './uat/browser-runner.mjs';
 const {browser,close}=await openBrowser({name:'board-babylon',flag:'GEOMETRY_REQUIRED'});
-const server=spawn(process.execPath,['tools/play-tabletop-preview.mjs'],{env:{...process.env,PREVIEW_PORT:'0'},stdio:['ignore','pipe','pipe']});
+const server=spawn(process.execPath,['tools/play-tabletop-preview.mjs'],{env:{...process.env,PREVIEW_PORT:'0',PREVIEW_FRAME:'0'},stdio:['ignore','pipe','pipe']});
 let checks=0;
 const ok=(test,message)=>{assert.ok(test,message);checks++;};
 try{
@@ -20,6 +20,11 @@ try{
     ok(Math.max(...d.quad.map((n,i)=>Math.abs(n-d.domQuad[i])))<.03,`${label}: Babylon surface and DOM hit areas agree to .03px: ${JSON.stringify(d)}`);
     return d;
   };
+  await align('opening hands, before a phase exists');
+  ok((await page.locator('#cm-notice').textContent()||'').indexOf('startsWith')<0,'opening hands do not report a phase error');
+  // Return to the established populated-board fixture for the interaction checks below.
+  for(let n=0;n<13;n++)await page.request.post(`${base}/preview/frame`,{data:'1'});
+  await page.reload();await page.locator('[data-engine=babylon]').waitFor();
   await align('initial');
   ok(await page.locator('.cm-stage-canvas').getAttribute('tabindex')==='-1','decorative canvas is not an extra keyboard stop');
   const hand=await page.locator('.cm-stage-fan-slot .cm-bcard').evaluateAll(els=>els.map(el=>{const r=el.getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,h:innerHeight,w:innerWidth,card:getComputedStyle(el).width,tray:el.closest('.cm-stage-hand').style.cssText};}));
