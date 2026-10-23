@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wrath of God",
+    "oracleId": "34515b16-c9a4-4f98-8c77-416a7a523407",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Destroy all creatures. They can't be regenerated.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "destroyAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          },
+          "noRegenerate": true
+        }
+      ],
+      "text": "Destroy all creatures. They can't be regenerated."
+    }
+  ]
+}

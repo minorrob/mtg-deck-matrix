@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dragonspeaker Shaman",
+    "oracleId": "6a29f36b-7911-4d84-a3ae-546b131d5159",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Barbarian",
+      "Shaman"
+    ],
+    "manaCost": "{1}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Dragon spells you cast cost {2} less to cast.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "spells-cost-less",
+      "affects": {
+        "what": "spell",
+        "subtypes": [
+          "Dragon"
+        ]
+      },
+      "amount": 2,
+      "text": "Dragon spells you cast cost {2} less to cast."
+    }
+  ]
+}

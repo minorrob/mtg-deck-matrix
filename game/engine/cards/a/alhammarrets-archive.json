@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Alhammarret's Archive",
+    "oracleId": "d5c4d36c-54b3-4149-906b-a57a670260fc",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{5}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "If you would gain life, you gain twice that much life instead.\nIf you would draw a card except the first one you draw in each of your draw steps, draw two cards instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "more-life",
+      "affects": {
+        "who": "you"
+      },
+      "times": 2,
+      "text": "If you would gain life, you gain twice that much life instead."
+    },
+    {
+      "kind": "static",
+      "rule": "draws-more",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "count": 2,
+      "exceptFirstInDrawStep": true,
+      "text": "If you would draw a card except the first one you draw in each of your draw steps, draw two cards instead."
+    }
+  ]
+}
