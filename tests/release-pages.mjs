@@ -31,7 +31,7 @@ for (const f of ["data/live-state.json", "data/live-load.json"]) ok(NEVER.test(f
 ok(!/load-live|live-state\.json|treycmload/.test(built.get("crankmagic-exchange-ui.js").toString("utf8")), "and nothing in the release offers to fetch it");
 eq(files.filter((f) => /^(AGENTS|CLAUDE|BACKLOG|README|HOTFIX-SUMMARY)\.md$|\.(ps1|sh)$/.test(f)), [], "and none of the repository's own working files");
 for (const f of profile.leaveOut) ok(!built.has(f), `${f} is Play, and is not in the release`);
-ok(mentions.every((m) => / names (tools|data\/archive)\/| names data\/live-(state|load)\.json$/.test(m)), `the names it declined to follow are tools, the archive and the owner's collection, named as provenance: ${mentions.join("; ")}`);
+ok(mentions.every((m) => / names (tools|data\/archive|data\/source)\/| names data\/live-(state|load)\.json$/.test(m)), `the names it declined to follow are tools, the archive, the source workbooks and the owner's collection, named as provenance: ${mentions.join("; ")}`);
 
 /* Play says Coming Soon, and nothing left can reach a game host. */
 for (const p of PAGES) {

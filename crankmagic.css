@@ -400,8 +400,22 @@ width:min(100%,max(900px,calc(var(--cm-table-h,68vh) * 1.9)));aspect-ratio:19/10
 /* The tick and the deck menu are quiet until the tile is hovered or one of them is focused,
    so seven tiles read as seven pictures rather than fourteen controls. A ticked tile keeps
    its tick showing, or there would be no way to see what is being compared. */
-.cm-deck-tile .cm-tile-tools{position:absolute;top:14px;left:14px;z-index:3;display:flex;gap:6px;opacity:0;transition:opacity .2s ease}
-.cm-deck-tile:hover .cm-tile-tools,.cm-deck-tile:focus-within .cm-tile-tools,.cm-deck-tile.is-picked .cm-tile-tools{opacity:1}
+/* The tools fade in on hover, one by one, so a favorite's filled star can stay without the rest (FAV-3). */
+.cm-deck-tile .cm-tile-tools{position:absolute;top:14px;left:14px;z-index:3;display:flex;gap:6px}
+.cm-deck-tile .cm-tile-tools>*{opacity:0;transition:opacity .2s ease}
+.cm-deck-tile:hover .cm-tile-tools>*,.cm-deck-tile:focus-within .cm-tile-tools>*,.cm-deck-tile.is-picked .cm-tile-tools>*,.cm-deck-tile .cm-tile-tools>.cm-tile-star.is-on{opacity:1}
+#matrix-v2 .cm-deck-tile .cm-tile-star{width:32px;height:32px;min-height:32px;font-size:17px;line-height:1;border-radius:var(--v-radius);background:color-mix(in srgb,var(--poster-ground) 55%,transparent);backdrop-filter:blur(6px);border:1px solid color-mix(in srgb,var(--poster-ink) 28%,transparent);color:var(--poster-ink)}
+#matrix-v2 .cm-deck-tile .cm-tile-star.is-on{color:var(--v-accent);border-color:var(--v-accent)}
+.cm-deck-tile .cm-tile-sets{display:flex;flex-wrap:wrap;gap:4px;padding:0 16px 12px}
+.cm-deck-shared .cm-deck-shared-link{display:grid;gap:6px;padding:56px 16px 16px;color:inherit;text-decoration:none}
+.cm-box-choices{display:grid;gap:10px;border:0;padding:0;margin:0}
+.cm-box-choices legend{font-weight:600;margin-bottom:6px}
+.cm-box-choice{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;padding:10px 12px;border:1px solid var(--v-line);border-radius:var(--v-radius)}
+.cm-box-choice.is-empty{opacity:.55}
+.cm-box-choice ul{margin:4px 0 0;padding-left:18px;font-size:13px}
+.cm-box-donors,.cm-box-waiting{color:var(--v-muted)}
+.cm-writeup-list{margin:4px 0 12px;padding-left:18px;max-height:220px;overflow:auto}
+.cm-how-to-play ol{margin:0;padding-left:22px;display:grid;gap:6px}
 .cm-deck-tile .cm-tile-pick{display:grid;place-items:center;width:32px;height:32px;border-radius:var(--v-radius);background:color-mix(in srgb,var(--poster-ground) 55%,transparent);backdrop-filter:blur(6px);border:1px solid color-mix(in srgb,var(--poster-ink) 28%,transparent);cursor:pointer}
 .cm-deck-tile .cm-tile-pick:hover{border-color:var(--v-accent)}
 /* The stage pill steps aside when the tools appear, so the two never share the corner. */
@@ -4056,3 +4070,57 @@ button.cm-vitals{cursor:pointer}
 #matrix-v2 .cm-settings-budgets thead th{font-weight:600;color:var(--v-muted,inherit)}
 #matrix-v2 .cm-settings-budgets tr.cm-over td:nth-child(3),#matrix-v2 .cm-settings-budget-sum .cm-over,#matrix-v2 .cm-decks-budget .cm-over{color:var(--st-remove)}
 #matrix-v2 .cm-decks-budget{margin:14px 0 0}
+/* THE NEW DECK FLOW'S FRAME (the Decks requirements' DLG-1 to DLG-3, 2026-10-23): about 720px at most on a desktop, a nav
+   on the left and the canvas on the right, one primary button bottom right; on a phone, full screen with the nav as a row
+   across the top. The review is the larger screen (RVW-5). */
+#cm-dialog.cm-flow-dialog{width:min(720px,calc(100vw - 32px));max-width:720px}
+#cm-dialog.cm-flow-dialog-review{width:min(1100px,calc(100vw - 32px));max-width:1100px}
+.cm-flow{display:grid;gap:14px;min-width:0}
+.cm-flow-name{max-width:360px}
+.cm-flow-body{display:grid;grid-template-columns:170px minmax(0,1fr);gap:16px;min-height:340px}
+.cm-flow-nav{display:flex;flex-direction:column;gap:4px;border-right:1px solid var(--v-line);padding-right:12px}
+.cm-flow-nav button{text-align:left;padding:9px 10px;border-radius:var(--v-radius);border:0;background:transparent;color:var(--v-ink);min-height:40px}
+.cm-flow-nav button[aria-pressed=true]{background:var(--v-raised);font-weight:600}
+.cm-flow-mark{color:var(--v-accent)}
+.cm-flow-canvas{display:grid;gap:12px;align-content:start;min-width:0}
+.cm-flow-canvas h3{margin:6px 0 0}
+.cm-flow-field{display:grid;gap:6px}
+.cm-flow-field.is-missing select{outline:2px solid var(--v-accent)}
+.cm-flow-row{display:flex;flex-wrap:wrap;gap:10px}
+.cm-flow-row .cm-flow-field{min-width:120px}
+.cm-flow-chips,.cm-flow-colors{display:flex;flex-wrap:wrap;gap:6px}
+.cm-flow-chips .is-thin small{color:var(--v-accent)}
+.cm-flow-colors .v-button{min-width:44px;min-height:44px;font-weight:700}
+.cm-flow-results{list-style:none;margin:0;padding:0;display:grid;gap:4px;max-height:300px;overflow:auto}
+.cm-flow-results button{display:flex;gap:8px;align-items:center;width:100%;text-align:left;padding:8px 10px;border-radius:var(--v-radius);border:1px solid var(--v-line);background:var(--v-panel);color:var(--v-ink);min-height:40px}
+.cm-flow-results button[aria-selected=true]{border-color:var(--v-accent);background:var(--v-raised)}
+.cm-flow-results small{margin-left:auto}
+.cm-flow-chosen{display:flex;gap:8px;align-items:center;margin:0}
+.cm-flow-modes{display:flex;flex-wrap:wrap;gap:8px}
+.cm-flow-mode{display:flex;gap:8px;align-items:center;padding:10px 12px;border:1px solid var(--v-line);border-radius:var(--v-radius);color:var(--v-ink);font-size:14px}
+.cm-flow-missing{margin:0;padding-left:18px;color:var(--v-accent)}
+.cm-flow-foot{display:flex;justify-content:space-between;gap:10px;border-top:1px solid var(--v-line);padding-top:12px}
+.cm-review-bar{display:flex;flex-wrap:wrap;gap:6px 18px;padding:10px 12px;border-radius:var(--v-radius);background:var(--v-raised);font-size:13px}
+.cm-review-flag{color:var(--v-accent)}
+.cm-review-tools{display:flex;justify-content:flex-end}
+.cm-review-body{display:grid;gap:12px;max-height:60vh;overflow:auto;min-width:0}
+.cm-review-group h3{margin:0 0 6px;font-size:14px}
+.cm-review-group ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.cm-review-card{position:relative;display:grid;gap:3px;font-size:11px}
+.cm-review-card.is-empty{border:1px dashed var(--v-line);border-radius:var(--v-radius);padding:8px;min-height:120px;align-content:center;text-align:center;color:var(--v-muted)}
+.cm-review-tick{position:absolute;top:4px;left:4px;z-index:2}
+.cm-review-thumb{padding:0;border:0;background:none;border-radius:6px;overflow:hidden;transition:transform .15s ease}
+.cm-review-thumb img{display:block;width:100%;aspect-ratio:var(--card-ratio);object-fit:cover}
+.cm-review-thumb span{display:grid;place-items:center;aspect-ratio:var(--card-ratio);padding:6px;background:var(--v-panel);font-size:11px}
+.cm-review-thumb:hover,.cm-review-thumb:focus-visible{transform:scale(1.6);z-index:3;position:relative}
+.cm-review-card.is-open .cm-review-thumb{outline:2px solid var(--v-accent)}
+.cm-review-alts{border:1px solid var(--v-line);border-radius:var(--v-radius);padding:10px 12px}
+.cm-review-alts ul{list-style:none;margin:0 0 8px;padding:0;display:grid;gap:4px}
+@media(prefers-reduced-motion:reduce){.cm-review-thumb{transition:none}}
+@media(max-width:600px){
+  #cm-dialog.cm-flow-dialog,#cm-dialog.cm-flow-dialog-review{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;border-radius:0}
+  .cm-flow-body{grid-template-columns:minmax(0,1fr);min-height:0}
+  .cm-flow-nav{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--v-line);padding:0 0 8px}
+  .cm-flow-nav button{white-space:nowrap}
+  .cm-review-thumb:hover,.cm-review-thumb:focus-visible{transform:none}
+}

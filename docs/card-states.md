@@ -40,13 +40,15 @@ There is no Canceled. A card you no longer want is deleted.
 | --- | --- | --- |
 | **Final** | The list's own card, in the deck's box. | Yes |
 | **Substitute** | In the box, holding the seat of a Reserved card until that card is in. | Yes |
+| **Substitute · Loading** | An owned stand-in chosen for a Reserved card's seat, not in the box yet. Box deck (choice 2) or Ready to add puts it in, and it is a Substitute from then on (Rob, 2026-10-23, the Decks requirements' Q1). | Not yet |
 | **Reserved** | Committed to take a seat. It is to buy, ordered, or sitting in another deck's box. It replaces the substitute holding its seat, or an empty seat. | No |
 | **Upgrade** | Being considered to improve the deck. It names the card it would replace and changes nothing until it is reserved. | No |
 | **Bench** | Owned, for no deck. | — |
 | **Sell**, **Trade** | Offered. The same fact as the ownership To sell or Trade, shown on both questions. | — |
 | **Unowned** | Not owned and for no deck: watched, on the To Buy list, or ordered. | — |
 
-Only **Final** and **Substitute** put a card in the deck, and only they count toward its hundred.
+Only **Final** and **Substitute** put a card in the deck, and only they count toward its hundred. A Substitute · Loading
+counts once it is in the box, as Final · Loading does.
 
 Rob's two rules for a card that replaces another (2026-10-18):
 
@@ -76,8 +78,8 @@ rung, locked, and offers only Watch, Ordered and Own to choose.
 
 - **For a card:**
   - **Playable**: in the box.
-  - **Loading**: owned, the deck's own card, and not in the box yet. This was "To add", and it is what
-    Ready to add lists.
+  - **Loading**: owned, the deck's own card (or a stand-in chosen for one of its seats), and not in the box yet.
+    This was "To add", and it is what Ready to add lists.
   - **To load**: still to get.
 - **For a deck:**
   - **Playable**: the box holds the list (Final + Substitute).
@@ -85,6 +87,21 @@ rung, locked, and offers only Watch, Ordered and Own to choose.
   - **To load**: a seat waits on a card you don't have yet, or the list is not locked.
   - **Complete**, shown beside Play: every card in the box is the list's own. Nothing is Reserved,
     loading or substituting.
+
+## A deck's stage (Rob, 2026-10-23)
+
+The Decks screen reads a deck by its stage, which `deckStatus` works out (`stage`, `boxed`) and every screen reads.
+The seats are the ones Play reads: the commander(s) plus the main list.
+
+| Stage | Test |
+| --- | --- |
+| **Building** | Fewer than 100 seats on the list. Ownership doesn't matter. |
+| **Defined** | All 100 seats on the list. To buy and Ordered cards count. Lock list isn't needed. |
+| **Boxed** | Defined, and the box holds the hundred: Final + Substitute = 100. |
+| **Playable** | Defined, and Play knows every one of the 100 (the table's own check). |
+
+Every deck is Building or Defined. Boxed and Playable are both kinds of Defined, and a deck can be both. The deck's
+Play reading above (Playable, Loading, To load) and Complete stay in the model; the screens show the stage.
 
 ## A deck's two hundreds
 
@@ -112,6 +129,7 @@ view keeps them, because its ledge is where you pull a card from.
   - "To buy · replaces Swampsnare Trap"
   - "in D2 · replaces Great Fierce Bee"
   - "holds the seat for Spellstutter Sprite"
+  - "Loading · stands in for Blood Artist" (a Substitute · Loading)
   - "Watch · would replace Quill"
 - **The place** (`placeLabel`): where a card is, for the Table view's piles. The piles are Final, Loading,
   Substitute, Bench, Ordered, To buy and Watch.
@@ -120,7 +138,10 @@ view keeps them, because its ledge is where you pull a card from.
 
 ## What changed in the stored data
 
-Two things changed in the stored data:
+On 2026-10-23 a copy chosen to stand in for a seat before it is boxed records `chosenFor` (`{deckId, slotId}`) on the
+copy, set by `standIn` and cleared by `clearStandIn`. Putting it in the deck's box turns it into `standInFor`, as before.
+
+Before that, two things changed in the stored data:
 
 1. `swap` and `acceptOption` take `substitute`. It keeps the replaced copy in the box as the Substitute
    holding the seat (`standInFor`).

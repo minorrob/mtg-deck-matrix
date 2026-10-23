@@ -118,6 +118,8 @@ const CHECKABLE = [
   ["tools/data-manifest.mjs", ["--check"]],
   ["tools/playtest-decks.mjs", ["--check"]],
   ["tools/commander-strategies.mjs", ["--check"]],
+  /* Start from's commander index (the Decks requirements' Part B, 2026-10-23): play styles, mechanics and pairs per commander. */
+  ["tools/build-commander-index.mjs", ["--check"]],
   ["tools/build-precons.mjs", ["--check"]],
   /* The deck advisor's card facts for the Worker, slimmed from data/cards.json (AI-4). */
   ["tools/build-advise-cards.mjs", ["--check"]],

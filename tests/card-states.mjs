@@ -184,7 +184,7 @@ ok(claimed.every((r) => { const st = M.stateReader(live, r.allocation.deckId)(r)
   let s = M.empty(), n = 0;
   const run = (type, a) => { s = M.apply(s, {type, id: "r" + (++n), at: "2026-10-18T00:00:00Z", confirmed: true, ...a}).state; };
   const card = (id, name) => ({id, name, typeLine: "Creature", manaCost: "{1}", manaValue: 1, colorIdentity: [], oracleText: "", mechanics: [], keywords: [], verified: true, legalities: {commander: "legal"}});
-  run("createDeck", {deckId: "d1", name: "D1 Rules", slots: [{cardId: "Y", quantity: 1}, {cardId: "Q", quantity: 1}], cards: [card("Y", "Yarrow"), card("Q", "Quill")]});
+  run("createDeck", {deckId: "d1", name: "D1 Rules", commanders: ["Y"], slots: [{cardId: "Y", quantity: 1}, {cardId: "Q", quantity: 1}], cards: [card("Y", "Yarrow"), card("Q", "Quill")]});
   const seatOf = (cid) => s.decks[0].slots.find((r) => r.cardId === cid && r.purpose === "main").id;
   for (const cid of ["Y", "Q"]) { run("acquire", {lot: {id: "l" + cid, cardId: cid, quantity: 1}}); run("place", {lotId: "l" + cid, deckId: "d1", quantity: 1}); }
   const now = () => { const read = M.stateReader(s), recs = M.records(s); return (pred) => recs.filter(pred).map(read); };

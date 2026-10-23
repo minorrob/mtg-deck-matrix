@@ -1005,6 +1005,11 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `script-encoding` — `tests/script-encoding.mjs`
 - `wireframe-conformance` — `tests/wireframe-conformance.mjs`
 - `deck-sources` — `tests/deck-sources.mjs`
+- `deck-autocreate` — `tests/deck-autocreate.mjs`
+- `deck-stages` — `tests/deck-stages.mjs`
+- `new-deck-flow` — `tests/new-deck-flow.mjs`
+- `deck-writeups` — `tests/deck-writeups.mjs`
+- `deck-writeups-screens` — `tests/deck-writeups-screens.mjs`
 - `docx-writer` — `tests/docx-writer.mjs`
 - `edhrec-client` — `tests/edhrec-client.mjs`
 - `engine-actions` — `tests/engine-actions.mjs`
