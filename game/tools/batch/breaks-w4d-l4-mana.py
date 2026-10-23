@@ -25,7 +25,7 @@ BREAKS = [
  # Simian Spirit Guide: a mana ability of a card in hand.
  ('exile from the hand is a mana cost', CARDS, '    || (a?.atom === "exile" && a.self === true && ability.zone === "hand"))) return "unbuilt";', '    || false)) return "unbuilt";'),
  ('hand mana compiled', CARDS, '...(cost.some((a) => a.atom === "exile" && a.self === true) ? {zone: "hand", exileSelf: true} : {}),', ''),
- ('hand mana offered', ACTIONS, 'for (const id of cardsIn(state, "hand", player)) {', 'for (const id of []) {'),
+ ('hand mana offered', ACTIONS, 'for (const id of cardsIn(state, "hand", player)) {\n    const object = state.objects[id];\n    for (const ability of object.abilities ?? []) {', 'for (const id of []) {\n    const object = state.objects[id];\n    for (const ability of object.abilities ?? []) {'),
  ('not from the battlefield', ACTIONS, 'if (ability.kind !== "mana" || ability.zone === "hand") continue;', 'if (ability.kind !== "mana") continue;'),
  ('the card is exiled', ACTIONS, 'if (ability.exileSelf && state.objects[action.objectId]?.zone === "hand") moveOne(', 'if (false) moveOne('),
  ('hand mana is a play', ACTIONS, '"exileFromGraveyard", "exertSelf", "exileSelf"];', '"exileFromGraveyard", "exertSelf"];'),
@@ -40,7 +40,6 @@ BREAKS = [
  # Heraldic Banner: the chosen color in a layer static.
  ('the chosen color read as its symbol', LAYERS, 'includes(CHOSEN_COLOR_LETTER[color] ?? color)', 'includes(color)'),
  # Opposition Agent: control of a search (CR 722.1), its finds exiled and playable.
- ('a static rule', CARDS, '  "controls-searches"];', '  ];'),
  ('a rule a static may change', STATICS, '  "controls-searches": "script/effects/asking.mjs",\n', ''),
  ('the Agent found', STATICS, 'if (ability.kind !== "static" || ability.rule !== "controls-searches") continue;', 'if (true) continue;'),
  ('opponents only', STATICS, '      if (!compileSelector(ability.affects)(state, player, {controller: holder.controller, source: holderId})) continue;\n', ''),

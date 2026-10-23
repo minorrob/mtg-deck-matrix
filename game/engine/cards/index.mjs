@@ -90,10 +90,7 @@ const RULES_READING_A_CONDITION = ["alternative-cost", "spells-cost-less", "trig
   "extra-land-drop",
   /* "Solved -- You may look at the top card of your library any time" (Case of the Locked Hothouse; CR 719.3c): asked as the
      library is shown (projection.mjs, topSeenBy). */
-  "look-at-top",
-  /* "You control your opponents while they're searching their libraries" (Opposition Agent; CR 722.1): asked as a search of a
-     library is put to its searcher (script/effects/asking.mjs, chooseCard). */
-  "controls-searches"];
+  "look-at-top"];
 
 /* A target picked after the offer is taken ("up to two target creatures", script/bind.mjs): not chosen with it. */
 const countedTarget = (spec) => Boolean(spec) && typeof spec === "object" && spec.count !== undefined;
