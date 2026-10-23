@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Meteor Golem",
+    "oracleId": "d9f11aa1-9219-42a8-85a9-a8f204160706",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Golem"
+    ],
+    "manaCost": "{7}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "When this creature enters, destroy target nonland permanent an opponent controls.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, destroy target nonland permanent an opponent controls.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "nonTypes": [
+            "Land"
+          ],
+          "controller": "opponent"
+        }
+      ]
+    }
+  ]
+}

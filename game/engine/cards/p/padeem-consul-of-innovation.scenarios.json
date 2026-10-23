@@ -1,0 +1,142 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Padeem, Consul of Innovation",
+  "fixtures": {
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Monolith": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{3}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Tied for the greatest (two 3s): a card in his upkeep; his Monolith has hexproof, Maya's does not",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Padeem, Consul of Innovation",
+            "Monolith"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Monolith"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 2
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Monolith",
+            "has": [
+              "Hexproof"
+            ],
+            "lacks": []
+          }
+        },
+        {
+          "seat": 1,
+          "keywords": {
+            "card": "Monolith",
+            "has": [],
+            "lacks": [
+              "Hexproof"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Maya's 3 beats his 1: no card",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Padeem, Consul of Innovation",
+            "Rock"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Monolith"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "No artifact anywhere: no card",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Padeem, Consul of Innovation"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

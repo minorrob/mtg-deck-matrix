@@ -1,0 +1,35 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Boltwave",
+    "oracleId": "bb8cccc8-e56f-42fa-a0d7-fc889b5e1c7b",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Boltwave deals 3 damage to each opponent.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 3,
+          "who": "opponent"
+        }
+      ],
+      "text": "Boltwave deals 3 damage to each opponent."
+    }
+  ]
+}

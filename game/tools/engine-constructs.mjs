@@ -229,14 +229,21 @@ export const DECK_RULE_KEYWORDS = {Partner: "room/table.mjs", "Choose a Backgrou
 /* Affinity (CR 702.41a; Thought Monitor, wave 4c) -- "this spell costs {1} less to cast for each [text] you control": the
      spell's own `this-costs-less` (cards/index.mjs), read as it is cast (rules/statics.mjs, costReduction) -- for artifacts,
      tokens, or anything a selector says. */
+/* Kicker (CR 702.33a; Tear Asunder, wave 4d L6) -- "you may pay an additional [cost] as you cast this spell": the cast without it
+     and with it (rules/actions.mjs, additionalVariants), the spell kicked, and what it does then when its card says it differs
+     -- other targets and effects, its spell ability's `kicked` script (cards/index.mjs, rules/stack.mjs). Named, not built: a
+     kicker cost that is not mana, and a spell with two kicker costs. */
 export const CAST_RULE_KEYWORDS = {AlternateAdditionalCost: "rules/actions.mjs", ETBReplacement: "rules/replacement.mjs", Overload: "rules/actions.mjs", Mutate: "keywords/mutate.mjs",
-  Affinity: "rules/statics.mjs",
+  Affinity: "rules/statics.mjs", Kicker: "rules/actions.mjs",
   Gift: "rules/actions.mjs", MayEffectFromOpeningHand: "rules/mulligan.mjs"};
 
 export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: "chooseCard", Enchant: "attach",
   /* Hideaway (Train B, CR 702.75a): dig links a face-down exile, shuffles the rest to the bottom,
      and preserves each entitled controller's permission to look (CR 406.3). */
   Hideaway: "dig",
+  /* Cascade (CR 702.85a; Apex Devastator, wave 4d L6): a cast trigger -- cards exiled from the top until a nonland card of lesser
+     mana value, that card cast free or not, and every card exiled to the bottom in a random order (cards/index.mjs). */
+  Cascade: "digUntil",
   /* Ninjutsu (batch 54): an ability of the card in hand, returning an unblocked attacker, the Ninja put onto the battlefield
      tapped and attacking (cards/index.mjs). */
   Ninjutsu: "moveZone",

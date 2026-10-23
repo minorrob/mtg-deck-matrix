@@ -258,7 +258,16 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
   /* And dredge (CR 702.52a; Life from the Loam), a draw replaced from the graveyard, its player's choice (script/effects/zones.mjs). */
   "dredge",
   /* Card load w4d L1: mobilize (CR 702.181; Voice of Victory), a triggered ability as it attacks (cards/index.mjs). */
-  "mobilize"];
+  "mobilize",
+  /* Wave 4d, L6: kicker (CR 702.33a; Tear Asunder), an optional additional cost paid once at most, and what the spell does then
+     (cards/index.mjs, rules/actions.mjs, rules/stack.mjs). */
+  "kicker",
+  /* And improvise (CR 702.126a; Organic Extinction), artifacts tapped to pay a spell's generic mana, as convoke's creatures
+     are (rules/actions.mjs). */
+  "improvise",
+  /* And cascade (CR 702.85a; Apex Devastator), a cast trigger: cards exiled until a nonland one that costs less, cast free
+     (cards/index.mjs). */
+  "cascade"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

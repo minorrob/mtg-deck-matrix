@@ -98,12 +98,15 @@ export function eachOf(state, each, context) {
   if (each === "player") return players.map((player) => ({player}));
   if (each === "opponent") return players.filter((player) => player !== context.controller).map((player) => ({player}));
   if (each === "creature") return state.zones.battlefield.filter((id) => typesOf(state, id).includes("Creature")).map((card) => ({card, player: controllerOf(state, card)}));
+  /* "For each of those cards, pay 4 life or put the card on top of your library" (Sylvan Library): each card an earlier effect
+     remembered, still there, in the order it was chosen, as "that card" -- its owner "that player". */
+  if (each === "remembered") return (context.remembered ?? []).filter((id) => state.objects[id]).map((card) => ({card, player: state.objects[card].owner}));
   return [];
 }
 /* The most passes a process repeated "again" makes: more than any library holds, so only a library run out ends it. */
 const REPEAT_LIMIT = 1000;
 /** What `repeatFor` may range over. */
-export const REPEAT_EACH = Object.freeze(["player", "opponent", "creature"]);
+export const REPEAT_EACH = Object.freeze(["player", "opponent", "creature", "remembered"]);
 
 /**
  * `repeatFor` — Forge's RepeatEach: "deals damage to each player equal to twice the number of nonbasic lands that

@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ashaya, Soul of the Wild",
+    "oracleId": "162572f2-1757-42e9-bd97-e6bd9a762c0e",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental"
+    ],
+    "manaCost": "{3}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Ashaya's power and toughness are each equal to the number of lands you control.\nNontoken creatures you control are Forest lands in addition to their other types. (They're still affected by summoning sickness.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Ashaya's power and toughness are each equal to the number of lands you control.",
+      "layer": 7,
+      "sublayer": "a",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "setPower": {
+          "count": {
+            "controller": "you",
+            "types": [
+              "Land"
+            ]
+          }
+        },
+        "setToughness": {
+          "count": {
+            "controller": "you",
+            "types": [
+              "Land"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Nontoken creatures you control are Forest lands in addition to their other types. (They're still affected by summoning sickness.)",
+      "layer": 4,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "token": false
+      },
+      "apply": {
+        "addTypes": [
+          "Land"
+        ],
+        "addSubtypes": [
+          "Forest"
+        ]
+      }
+    }
+  ]
+}

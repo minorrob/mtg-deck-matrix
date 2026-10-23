@@ -120,7 +120,7 @@ BREAKS = [
     ('delve: picked from a range', ACTIONS, '["convoke", "tapAny", "waterbend", "delve"].includes(choice.cost)', '["convoke", "tapAny", "waterbend"].includes(choice.cost)'),
     ('delve: the picks carried', ACTIONS, ': choice.cost === "delve" ? {delveExile: ids} :', ':'),
     ('delve: the total cost\'s generic', MANA, '  return {...cost, generic: cost.generic + extra - n};', '  return {...cost, generic: cost.generic - n};'),
-    ('delve: built', TIMING, '"Warp", "Sneak", "Delve"]),', '"Warp", "Sneak"]),'),
+    ('delve: built', TIMING, '"Warp", "Sneak", "Delve", "Improvise"]),', '"Warp", "Sneak", "Improvise"]),'),
     ('delve: declared', VOCAB, '  "delve",\n', ''),
     ('delve: the scenario step', SCENARIO, '    found = found.filter((a) => (a.delve ?? false) === (step.delve ?? false));\n', ''),
     ('delve: said to the player', ROOM, '    if (a.delve) parts.push("delving, exiling cards you choose from your graveyard");\n', ''),

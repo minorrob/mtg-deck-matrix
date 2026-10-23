@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Syphon Mind",
+    "oracleId": "abc37d6c-6300-47b5-a679-9db5b83eb54f",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each other player discards a card. You draw a card for each card discarded this way.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Each other player discards a card. You draw a card for each card discarded this way.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "discard",
+          "who": "opponent",
+          "count": 1,
+          "remember": "all"
+        },
+        {
+          "effect": "draw",
+          "count": {
+            "rememberedCount": true
+          }
+        }
+      ]
+    }
+  ]
+}

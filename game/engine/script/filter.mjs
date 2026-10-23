@@ -68,6 +68,8 @@ export const SELECTOR_KEYS = Object.freeze([
   "equipped",
   /* "Each with power greater than its base power" (Kutzil, Malamet Exemplar; CR 208.4b). */
   "powerAboveBase",
+  /* "Cards in your hand drawn this turn" (Sylvan Library; CR 121.1). */
+  "drawnThisTurn",
   /* "If this creature isn't prepared" (Paradox Shaper // Omit Variables; CR 722.3): the prepared designation. */
   "prepared",
   /* "Target attacking or blocking creature" (Gideon's Memorial): declared as a blocker in this combat (CR 509.1g). */
@@ -505,6 +507,8 @@ export function compileSelector(selector) {
     if (selector.modified !== undefined && isModified(state, id, object.counters, controllerOf(state, id)) !== selector.modified) return false;
     /* "Creatures that entered this turn" (Force of Despair): on the battlefield since this turn. */
     if (selector.enteredThisTurn === true && !(object.zone === "battlefield" && object.arrivedTurn === state.turn)) return false;
+    /* "Cards in your hand drawn this turn" (Sylvan Library): drawn (state/index.mjs, recordDraw) into the hand this turn. */
+    if (selector.drawnThisTurn === true && !(object.zone === "hand" && object.drawn === true && object.arrivedTurn === state.turn)) return false;
     /* Gilt-Leaf Winnower: either direction of inequality, through current layers. */
     if (selector.unequalPowerToughness === true) {
       const c = characteristicsOf(state, id);

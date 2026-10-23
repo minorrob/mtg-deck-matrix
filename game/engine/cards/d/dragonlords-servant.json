@@ -1,0 +1,39 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dragonlord's Servant",
+    "oracleId": "faf81ae0-0b35-45ef-a50d-6cecf0c0eeeb",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin",
+      "Shaman"
+    ],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "Dragon spells you cast cost {1} less to cast.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "spells-cost-less",
+      "affects": {
+        "what": "spell",
+        "subtypes": [
+          "Dragon"
+        ]
+      },
+      "amount": 1,
+      "text": "Dragon spells you cast cost {1} less to cast."
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Padeem, Consul of Innovation",
+    "oracleId": "0c7ba712-6a99-4d2f-9242-a2163a11f69c",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Vedalken",
+      "Artificer"
+    ],
+    "manaCost": "{3}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 4
+  },
+  "oracleText": "Artifacts you control have hexproof. (They can't be the targets of spells or abilities your opponents control.)\nAt the beginning of your upkeep, if you control the artifact with the greatest mana value or tied for the greatest mana value, draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Artifacts you control have hexproof. (They can't be the targets of spells or abilities your opponents control.)",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Artifact"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "addKeywords": [
+          "Hexproof"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your upkeep, if you control the artifact with the greatest mana value or tied for the greatest mana value, draw a card.",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ],
+      "condition": {
+        "present": {
+          "types": [
+            "Artifact"
+          ],
+          "controller": "you"
+        },
+        "compare": {
+          "count": {
+            "greatestManaValue": {
+              "what": "permanent",
+              "types": [
+                "Artifact"
+              ],
+              "controller": "you"
+            }
+          },
+          "atLeast": {
+            "greatestManaValue": {
+              "what": "permanent",
+              "types": [
+                "Artifact"
+              ]
+            }
+          }
+        }
+      }
+    }
+  ]
+}

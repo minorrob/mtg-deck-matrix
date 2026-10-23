@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Crackle with Power",
+    "oracleId": "273f5483-b67e-4dd6-bba8-c0a047fa34d7",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{X}{X}{X}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Crackle with Power deals five times X damage to each of up to X targets.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Crackle with Power deals five times X damage to each of up to X targets.",
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Battle"
+              ]
+            },
+            {
+              "what": "player"
+            }
+          ],
+          "count": {
+            "min": 0,
+            "max": "X"
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": {
+            "x": true,
+            "times": 5
+          },
+          "targets": {
+            "target": 0
+          },
+          "who": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

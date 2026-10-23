@@ -1,0 +1,157 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Eidolon of Blossoms",
+  "fixtures": {
+    "Charm Ward": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ]
+    },
+    "Their Ward": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters: a card; then Rob's enchantment: another",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Eidolon of Blossoms",
+            "Charm Ward"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Eidolon of Blossoms"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "hand",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Charm Ward"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "name": "Maya's enchantment does not draw Rob a card",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Eidolon of Blossoms"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Their Ward"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "cast": "Their Ward",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

@@ -330,6 +330,9 @@ function digRest(state, player, cards, {rest, random}, rng, events) {
   const left = cards.filter((id) => state.objects[id]);
   if (random && !rng) throw new Error("A random order needs the game's random stream");
   const order = random ? rng.shuffle(left) : left;
+  /* "Put one of them into your hand, put one of them on the bottom of your library, and exile one of them" (Expressive
+     Iteration): the rest left where they are, on top, for the next of the card's choices to look at again. */
+  if (rest === "stay") return;
   if (rest !== "bottom") { for (const id of order) moveOne(state, id, rest, events, {owner: player}); return; }
   const library = state.zones.library[player];
   for (const id of order) {
@@ -595,6 +598,9 @@ export const discard = {
       ...(counts === null ? {count: params.count ?? 1} : {counts}), ...(params.who !== undefined ? {who: params.who} : {}),
       controller: Number.isInteger(params.rememberOf) ? params.rememberOf : Array.isArray(params.who) && params.who.length === 1 ? params.who[0] : context.controller,
       ...(params.remember ? {remembering: []} : {}),
+      /* Or every discarder's (`remember: "all"`): "each other player discards a card. You draw a card for each card discarded
+         this way" (Syphon Mind). */
+      ...(params.remember === "all" ? {rememberAll: true} : {}),
       /* "You may discard UP TO two cards. If you do, draw that many cards" (Fable of the Mirror-Breaker, chapter II): how many,
          from none to that many, is the discarder's to say (CR 701.9a, 701.9b); "that many" counts what they discarded
          (`remember`, then `rememberedCount`). "Discards ANY NUMBER of cards" (Steal the Show, `anyNumber`): from none to
@@ -654,7 +660,7 @@ function discardDecided(state, awaiting, decided, events) {
   let remembering = awaiting.remembering;
   for (const {player, ids} of decided.filter((d) => !state.players[d.player].lost)) {
     const gone = ids.map((id) => discardOne(state, id, player, events));
-    if (remembering && player === awaiting.controller) remembering = [...remembering, ...gone];
+    if (remembering && (player === awaiting.controller || awaiting.rememberAll === true)) remembering = [...remembering, ...gone];
   }
   return remembering ? {events, remembered: remembering} : events;
 }
@@ -2282,7 +2288,10 @@ export const play = {
        707.12): each card it names copied in the zone it is in -- its copiable values (CR 707.2), the copy its caster's -- and
        the copies are what may be cast, each chosen for itself (707.12a; with `anyNumber`, one after another in the order
        its caster chooses, CR 608.2g). A copy not cast ceases to exist (CR 707.10a, 704.5e; rules/sba.mjs). */
-    const copies = params.copies === true ? (params.targets ?? []).filter((id) => state.objects[id] && !["battlefield", "stack"].includes(state.objects[id].zone))
+    /* Or the cards a selector finds now (`from: "selector"`): "you may copy the exiled card" (Isochron Scepter), the card exiled
+       with this artifact (CR 607.2a). */
+    const copying = from === "selector" ? selectMatching(state, {what: "card", ...(params.selector ?? {})}, context) : params.targets ?? [];
+    const copies = params.copies === true ? copying.filter((id) => state.objects[id] && !["battlefield", "stack"].includes(state.objects[id].zone))
       .map((id) => {
         const card = state.objects[id];
         const values = Object.fromEntries(COPY_KEYS.filter((key) => card[key] !== undefined).map((key) => [key, structuredClone(card[key])]));
