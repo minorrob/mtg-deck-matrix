@@ -6,7 +6,7 @@ BREAKS = [
     ('Focus loses Camera', 'crankmagic-board.js',
      '${focusView()}${cameraMenu()}${boardDrawers()}', '${focusView()}${boardDrawers()}'),
     ('Tilt leaks outside Full', 'crankmagic-board.js',
-     '${stageEnabled() ? `<label>Rotation ', '${true ? `<label>Rotation '),
+     '${stageEnabled() ? `<label>Tilt ', '${true ? `<label>Tilt '),
     ('closed drawers lose focus isolation on redraw', 'crankmagic-board.js',
      '!!fan || (el.matches(".cm-stage-rail, .cm-stage-side") && !el.classList.contains("is-open"))', '!!fan'),
     ('drawer width is forgotten', 'crankmagic-board.js',

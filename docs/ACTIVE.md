@@ -20,7 +20,7 @@ This task owns the engine additions required by those two cards. The separate Pl
 - **Rules review:** CR 702.140c gives the over/under choice to the mutating spell's controller, including when an opponent
   controls the owned target. The regression first failed with the choice given to the creature's controller, then passed
   with the correction; the creature keeps its controller. A deliberate break holds this case.
-- **Merge gate:** main 35018161 (the Play update) is merged into this branch, with README suite count reconciled.
+- **Merge gate:** main 13faf30b (the latest Play updates) is merged into this branch, with README suite count reconciled.
   The integrated PR head must pass the secret scan and GitHub CI before merge. Staging deployment remains on hold.
   Production is outside this request. No Forge behavior is claimed by this load.
 
@@ -120,6 +120,10 @@ lane is free or its own.
 **Agreed with the engine lane (ROB-11, Oct 17):** no concurrent staging deploys, the slot is handed over in ROB-11 comments; migration 0006 is reserved for `card_demand` (ROB-86), this lane's next is 0007; `commanderTax` is an accepted additive `CrankRoomView@1` field, read by the UI under ROB-29 only after ROB-12 merges; ROB-15/ROB-16 stay in this lane.
 
 ## Play tabletop preview, October 14, 2026
+
+**October 23 screenshot refinements, Codex · Play:** Rob's two screenshots requested opponent-play previews in Focus's spare gap, roughly 10–15% smaller Full-screen actions, and tilt without rotation. Branch `codex/play-preview-placement`, from main `02c51b2a`, measures the drawer/mat gap on arrival, redraw and resize; overlaps the drawer only when a preview cannot fit there; reduces desktop action height from 56px to 49px; and removes both rotation UI and horizontal drag rotation while ignoring older saved yaw. The first-final plan now carries the Decision Desk/Table Companion visual direction with a feature-preservation crosswalk. Targeted checks and final release evidence belong to the branch's PR record. This is a refinement of the existing controls, not completion of the remaining first-final features.
+
+**October 23 staging verification, Codex · Play:** PR #836 merged as `35018161` on Rob's explicit "Skip suites and merge"; the pending full suite was not claimed green. On Rob's staging request, release `bc28e208` was pushed to `release/cloud-staging` and read back through Access, including both entry pages and `/api/me`. Chrome verified the Commander lounge and its explicit New table action. Live Full-screen verification then found a real opening-hand bug: the room's phase is null before turn one, and `fitStage` called `startsWith` on it before mounting Babylon. Follow-up branch `codex/play-release-verification` guards that phase, checks the pre-turn scene in the Babylon and Worker walks, updates the release walks for the lounge, and preserves the caller's Chrome override in the release script. Its test/release outcome is recorded in `docs/play-overhaul/BABYLON-LOUNGE-INTEGRATION-2026-10-22.md`. No further first-final features are included.
 
 **October 23 merge handoff, PR #836:** Rob authorized checking final CI, fixing failures, and merging when all checks pass. Branch `codex/play-engine-lounge`; code/asset fix `baae9ef0`, based on `20e30f27`. The first full run passed 596 suites and failed only asset hashes recorded from CRLF working bytes; the canonical LF correction passes all 125 hashes against Git's index, feature wiring, release packaging (223), and the pre-push scan. Cloudflare's automatic preview builds are now disabled through the saved dashboard switches for both Workers; deleting generated triggers alone had not stopped their recreation. Release branches and deployments are unchanged. The PR records the final head, green gate and merge result when complete. First-final scope and limitations remain in the plan and proof below; a merge is not a deployment.
 

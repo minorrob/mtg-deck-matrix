@@ -38,6 +38,16 @@ Cloudflare's separate checks failed before deployment: their feature-branch trig
 
 For the merge handoff, `baae9ef0` contains the canonical asset-record correction. All 125 manifest hashes match Git's index blobs, `tests/asset-versions.mjs` and `tests/feature-wiring.mjs` pass, `tests/release-pages.mjs` passes 223 checks, and its exact-head pre-push scan is clean. Rob authorized merging PR #836 once all checks pass. The final head's CI and merge result are recorded on the PR; this document does not claim a pending run passed.
 
+## October 23 staging verification
+
+PR #836 merged as `35018161ea062810e113796a1b5230247b204c24` under Rob's explicit instruction to skip the pending suites and merge. Release artifact `bc28e2084a92c6a6c29ba9d6b6acd5b811b1379f` was then pushed on Rob's instruction to publish staging. `tools/staging-check.mjs --expect 35018161` verified the source/profile, both entry pages and the service identity. Authenticated live reads matched the app, cloud table, stage, geometry and Babylon engine against the artifact's SHA-256 bytes. Chrome rendered the new Commander lounge and opened New table from it. The local-host `crankmagic-lobby.js` is intentionally omitted from the cloud profile; its lounge lives in `crankmagic-table.js`.
+
+The original acceptance failure was a stale expectation of New table directly at `#game`. The updated walk proves the lounge followed by its explicit New table action and passes all 23 checks against this artifact. The staging script now honors an installed Chrome path instead of clearing the caller's browser override.
+
+A separate live game under the service test identity exposed a real integration defect before turn one: opening hands carry `state.phase: null`, so the unguarded combat-prefix check stopped Full screen before mounting Babylon. The follow-up handles a missing phase as noncombat. The Babylon fixture now begins on a recorded opening-hand frame before its populated-board interactions; the release Worker walk also enters Full screen before turn one. This correction does not change rules or player decisions.
+
+Follow-up validation: `node tests/board-babylon.mjs` passes 93 checks; restoring the old unguarded expression makes its opening-hand case fail. `node tests/uat/play-e2e.mjs` passes 44 checks, including the real local Worker, opening-hand Babylon scene, shared-deck invitation, multiplayer reload, full-record replay and solo concession. `node tests/uat/release-acceptance.mjs` passes 23 checks against the published artifact. Feature wiring (124), asset versions (125), JavaScript syntax and whitespace checks pass. The follow-up PR records its source/merge and final staging release; full CI suites are skipped under Rob's instruction for this Play release, not claimed passed.
+
 ## Preserved work
 
 The original dirty priority-card checkout was preserved, including untracked files, in the named Git stash `codex-preserve-priority-cards-before-play-engine-oct22` on `codex/play-priority-cards`. It has not been applied over newer main or deleted. The new branch contains only this integration and its plan/tests.

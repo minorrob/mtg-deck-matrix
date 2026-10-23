@@ -6,7 +6,7 @@
  * does), and put on every request -- the table's WebSocket included -- by a small proxy in front of the Worker, as
  * Access does at the edge: a page cannot set a header on a WebSocket. Then, as Rob:
  *
- *   1. the Play tab is the table's page, not Coming Soon, and the local game host's modules are not in the page
+ *   1. the Play tab opens the lounge and explicit table setup; the local game host's modules are not in the page
  *   2. a table with an AI seat: it is a playtest table (staging's PLAYTEST_TABLES); decks the engine can play
  *      today (basic lands: every other card waits on M4's definitions, and is refused by name); ready; start
  *   3. the countdown ends on the object's alarm and the game is on; the board opens over the table's WebSocket
@@ -135,12 +135,15 @@ try {
 
   /* 1. The Play tab. */
   await page.goto(`${BASE}/index.html#game`);
-  await page.locator("#cm-main").getByText(/table/i).first().waitFor({timeout: 60000});
+  await page.locator("#cm-play-home").waitFor({timeout: 60000});
   const text = await page.locator("#cm-main").evaluate((el) => el.textContent);
   ok(!/Coming Soon/.test(text), "the Play tab is not Coming Soon on staging");
-  ok(await page.locator(".cm-cloud-table, [data-action^=table-]").count() > 0, `it is the table's page: ${text.replace(/\s+/g, " ").trim().slice(0, 90)}…`);
+  ok(await page.getByRole("heading", {name: "A place at the table"}).count() === 1 && await page.locator("#cm-table-new").count() === 0, `it is the Commander lounge: ${text.replace(/\s+/g, " ").trim().slice(0, 90)}…`);
   eq(await page.evaluate(() => [...document.scripts].map((s) => s.src).filter((s) => /crankmagic-(game|lobby|online)\.js|collection-lobby-draft/.test(s))), [], "and the local game host's modules are not in the page");
   await shot(page, "tab-1400");
+  await page.getByRole("button", {name: "New table", exact: true}).click();
+  await page.locator("#cm-table-new").waitFor();
+  ok(await page.getByRole("heading", {name: "New table", exact: true}).count() === 1, "New table explicitly opens table setup");
 
   /* 2. A table, an AI seat, decks the engine can play today. */
   const made = await api("POST", "/api/tables", {hostName: "Rob", seats: [{kind: "ai", name: "Bot"}]});
@@ -186,6 +189,14 @@ try {
     throw error;
   });
   ok(true, "the board opens over the table's WebSocket, through the Worker to the object");
+  /* Opening hands have no phase yet. The live renderer must mount before turn one as well. */
+  await page.locator("[data-action=board-camera]").click();
+  await page.locator('[data-action=board-view][data-view=full]').click();
+  await page.locator('[data-engine=babylon][data-renderer=webgl]').waitFor({timeout: 30000});
+  const scene = await page.evaluate(() => CrankStage.diagnostics());
+  ok(scene.renderer === "babylon" && ["top", "side", "leg"].every((part) => scene.parts.includes(part)), "Full screen mounts the Babylon table during opening hands, before turn one");
+  await page.locator("[data-action=board-camera]").click();
+  await page.locator('[data-action=board-view][data-view=focus]').click();
   const whale = await page.evaluate(async () => {
     const mat = document.querySelector('.cm-board-mat[data-mat="star-whale"]'), bg = mat && getComputedStyle(mat).backgroundImage;
     const src = bg && (/url\("?([^")]+star-whale\.webp)"?\)/.exec(bg) || [])[1];

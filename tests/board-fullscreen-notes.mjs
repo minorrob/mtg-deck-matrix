@@ -17,7 +17,7 @@
      node tests/board-fullscreen-notes.mjs
 */
 import assert from "node:assert/strict";
-import {readFileSync} from "node:fs";
+import {readFileSync, mkdirSync} from "node:fs";
 import path from "node:path";
 import {openBrowser, ROOT} from "./uat/browser-runner.mjs";
 
@@ -107,9 +107,11 @@ try {
           strip: document.querySelectorAll(".cm-stage-top [data-action=board-pass], .cm-stage-top .cm-full-pill [data-action=board-skip]").length};
       });
       ok(bar.inRegion && bar.words.includes("Next step") && bar.words.includes("Skip to end"), `full: Next step and Skip to end stand over the table (${bar.words.join(", ")})`);
-      ok(bar.tall >= 44 && bar.font >= 16, `full: large (${Math.round(bar.tall)}px tall, ${bar.font}px words)`);
+      ok(bar.tall >= 48 && bar.tall <= 50 && bar.font === 17, `full: actions reduced about 12% while retaining readable targets (${Math.round(bar.tall)}px tall, ${bar.font}px words)`);
       ok(bar.center < 4 && bar.top < 40, `full: at the top of the table, centered (${Math.round(bar.center)}px off center, ${Math.round(bar.top)}px down)`);
       eq(bar.strip, 0, "full: and not in the strip as well");
+    }
+    {
       /* ---- 4. what the other seats play, held up ---- */
       const plays = structuredClone(played()); plays.revision = ++rev; plays.decision = null;
       plays.events = [{eventId: "event:9001", kind: "cast", player: 1, card: {cardId: 9001, name: "Lightning Bolt"}, stackId: 1},
@@ -117,6 +119,27 @@ try {
         {eventId: "event:9003", kind: "cast", player: 0, card: {cardId: 9003, name: "Rime Chill"}, stackId: 2},
         {eventId: "event:9004", kind: "cast", player: 3, card: {cardId: 9004, name: null}, stackId: 3}];
       await show(plays);
+      if (mode === "focus") {
+        // Hold previews while collecting screenshots; expiration is exercised below with the next event batch.
+        for(const pop of await page.locator('.cm-play-pop').all())await pop.dispatchEvent('mouseenter');
+        if (!await page.locator('.cm-stage-rail.is-open').count()) await page.locator('[data-action=board-stage-rail]').evaluate(el=>el.click());
+        for (const width of [2240, 1280]) {
+          await page.setViewportSize({width, height:900});
+          await page.waitForTimeout(100);
+          const gap = await page.evaluate(() => {
+            const drawer=document.querySelector('.cm-stage-rail.is-open').getBoundingClientRect(),mat=document.querySelector('.cm-board-stage .cm-board-mat').getBoundingClientRect(),pop=document.querySelector('.cm-play-pop').getBoundingClientRect();
+            return {drawer:drawer.right,mat:mat.left,left:pop.left,right:pop.right,width:pop.width};
+          });
+          ok(gap.right <= gap.mat-10,`focus ${width}: preview keeps the play area clear (${JSON.stringify(gap)})`);
+          if(width===2240)ok(gap.left>=gap.drawer+10,'focus: a wide gap holds the previews without covering the open drawer');
+          else ok(gap.mat-gap.drawer<gap.width+24&&gap.left<gap.drawer,'focus: only a gap narrower than the preview makes it overlap the drawer');
+          if(process.env.UAT_SHOTS){mkdirSync(process.env.UAT_SHOTS,{recursive:true});await page.screenshot({path:path.join(process.env.UAT_SHOTS,`played-card-gap-${width}.png`)});}
+        }
+        await page.locator('[data-action=board-stage-rail]').evaluate(el=>el.click());
+        const collapsed=await page.evaluate(()=>{const p=document.querySelector('.cm-play-pop').getBoundingClientRect(),m=document.querySelector('.cm-board-stage .cm-board-mat').getBoundingClientRect();return p.left>=8&&p.right<m.left;});
+        ok(collapsed,'focus: collapsing the drawer recomputes the preview position');
+        await page.setViewportSize({width:1440,height:900});
+      }
       const shown = () => page.evaluate(() => [...document.querySelectorAll("#cm-board-plays .cm-play-pop")].map((el) => el.getAttribute("aria-label")));
       const first = await shown();
       eq(first.sort(), ["AI 2 played Mountain", "Friend cast Lightning Bolt"], `full: the cards the others cast and played are held up, with who; never your own, never a face-down one (${JSON.stringify(first)})`);
@@ -133,6 +156,8 @@ try {
       await page.mouse.move(720, 450);
       await page.waitForTimeout(10800);
       eq((await shown()).length, 0, "full: and after ten seconds they are gone by themselves");
+    }
+    if (mode === "full") {
       /* ---- 6. the tabletop's sizes ---- */
       await page.locator("[data-action=board-camera]").click();
       const ranges = await page.evaluate(() => ["cards", "zoom"].map((k) => document.querySelector(`[data-stage-camera="${k}"]`)?.max));
