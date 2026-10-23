@@ -95,8 +95,10 @@ try {
   await go(page, () => page.selectOption("#cm-decks-sort", "name"));
   ok(/sort=name/.test(page.url()), "the sort is in the address");
   eq(await tiles(page), [...all].sort(byName).map((d) => d.id), "Name sorts by the deck's name");
-  const target = [...all].sort(byName).at(-1);
+  const target = [...all].sort(byName).at(-1), before = await revision(page);
   await page.evaluate(async (id) => { const r = await CrankRepository.open(); try { const s = await r.getState(); await r.commit({id: crypto.randomUUID(), type: "editDeck", deckId: id, notes: "Changed by the decks-hub suite."}, s.revision); } finally { r.close(); } }, target.id);
+  /* The page hears of the change and draws again; wait for that, so a late draw in Name order cannot land last. */
+  await committed(page, before);
   await hash(page, "#decks?sort=recent");
   eq((await tiles(page))[0], target.id, `Recently changed puts the deck just changed (${target.name}) first`);
   eq(await page.$eval(".cm-decks-stages [aria-current=true]", (a) => a.getAttribute("href")), "#decks?sort=recent", "a chip keeps the sort in force");

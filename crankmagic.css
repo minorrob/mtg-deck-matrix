@@ -4110,8 +4110,8 @@ button.cm-vitals{cursor:pointer}
 .cm-review-card.is-empty{border:1px dashed var(--v-line);border-radius:var(--v-radius);padding:8px;min-height:120px;align-content:center;text-align:center;color:var(--v-muted)}
 .cm-review-tick{position:absolute;top:4px;left:4px;z-index:2}
 .cm-review-thumb{padding:0;border:0;background:none;border-radius:6px;overflow:hidden;transition:transform .15s ease}
-.cm-review-thumb img{display:block;width:100%;aspect-ratio:63/88;object-fit:cover}
-.cm-review-thumb span{display:grid;place-items:center;aspect-ratio:63/88;padding:6px;background:var(--v-panel);font-size:11px}
+.cm-review-thumb img{display:block;width:100%;aspect-ratio:var(--card-ratio);object-fit:cover}
+.cm-review-thumb span{display:grid;place-items:center;aspect-ratio:var(--card-ratio);padding:6px;background:var(--v-panel);font-size:11px}
 .cm-review-thumb:hover,.cm-review-thumb:focus-visible{transform:scale(1.6);z-index:3;position:relative}
 .cm-review-card.is-open .cm-review-thumb{outline:2px solid var(--v-accent)}
 .cm-review-alts{border:1px solid var(--v-line);border-radius:var(--v-radius);padding:10px 12px}
