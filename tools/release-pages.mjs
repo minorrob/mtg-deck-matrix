@@ -68,11 +68,11 @@ export const ROOTS = ["index.html", "crankmagic.html", "graph.html", "not-invite
    the two files stay in the repository for the tools that build them and are never served. */
 export const NEVER = /^(game|tools|tests|docs|design|prototype|graph|payload|payload_v3|schema|\.github|\.claude)\/|^data\/(engine|source|archive|game-logs)\/|^data\/live-(state|load)\.json$/;
 
-const PLAY = ["crankmagic-mats.css", "crankmagic-seat-art.js", "crankmagic-game.js", "crankmagic-lobby.js", "crankmagic-online.js", "crankmagic-online.css", "collection-lobby-draft.js", "crankmagic-table.js", "crankmagic-board.js", "crankmagic-audio.js", "crankmagic-stage.js", "crankmagic-stage.css", "vendor/pixi.min.js", "vendor/pixi-csp.min.js", "vendor/PIXI-LICENSE.txt"];
+const PLAY = ["crankmagic-mats.css", "crankmagic-seat-art.js", "crankmagic-game.js", "crankmagic-lobby.js", "crankmagic-online.js", "crankmagic-online.css", "collection-lobby-draft.js", "crankmagic-table.js", "crankmagic-board.js", "crankmagic-audio.js", "crankmagic-stage.js", "crankmagic-stage.css", "crankmagic-stage-tables.js", "vendor/babylon.js", "vendor/BABYLON-LICENSE.txt"];
 /* PLAY IN THE CLOUD (M5): the table's lobby, the seats it draws, Rob's artwork mats, the board, and its sound (B8: the pack
    in assets/audio/, reached only from crankmagic-audio.js), over the Worker's /api/tables. The rest of PLAY is the
    local game host's (a Node server on this machine or a tunnel), which no release carries. */
-const PLAY_CLOUD = ["crankmagic-mats.css", "crankmagic-seat-art.js", "crankmagic-table.js", "crankmagic-board.js", "crankmagic-audio.js", "crankmagic-stage.js", "crankmagic-stage.css", "vendor/pixi.min.js", "vendor/pixi-csp.min.js", "vendor/PIXI-LICENSE.txt"];
+const PLAY_CLOUD = ["crankmagic-mats.css", "crankmagic-seat-art.js", "crankmagic-table.js", "crankmagic-board.js", "crankmagic-audio.js", "crankmagic-stage.js", "crankmagic-stage.css", "crankmagic-stage-tables.js", "vendor/babylon.js", "vendor/BABYLON-LICENSE.txt"];
 const LOCAL_PLAY = PLAY.filter((f) => !PLAY_CLOUD.includes(f));
 const ACCOUNTS = ["cloud-sync.js", "crankmagic-account.js", "crankmagic-sharing.js"];
 /* What every release shares: Play says Coming Soon, no game host, served by Cloudflare. */
@@ -305,6 +305,7 @@ export function referencesOf(file, text, files) {
   }
   // Keep the pinned renderer's license with both distributed library files.
   if (/^vendor\/pixi(?:-csp)?\.min\.js$/.test(file)) add("PIXI-LICENSE.txt");
+  if (file === "vendor/babylon.js") add("BABYLON-LICENSE.txt");
   found.delete(file);
   return found;
 }
@@ -397,7 +398,10 @@ export function verify(built, profile) {
   for (const [f, body] of built) {
     if (!TEXT.test(f)) continue;
     const text = body.toString("utf8");
-    for (const f2 of profile.leaveOut) if (stripComments(text).includes(f2) && /\.(html|js)$/.test(f) && (PAGES.includes(f) || f === "crankmagic-sw.js")) problems.push(`${f} still names ${f2}`);
+    if (/\.(html|js)$/.test(f) && (PAGES.includes(f) || f === "crankmagic-sw.js")) {
+      const references = stripComments(text);
+      for (const f2 of profile.leaveOut) if (references.includes(f2)) problems.push(`${f} still names ${f2}`);
+    }
   }
   for (const p of PAGES) {
     const text = built.get(p)?.toString("utf8") || "";
