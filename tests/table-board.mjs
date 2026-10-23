@@ -34,7 +34,7 @@
  *             view and the history, with no seed and nothing of Maya's hand.
  *   Shape     one 58px shared header; 5:7 cards sized by width, hand larger than the mat's; no sideways scroll.
  *   B1        Rob's board walk of 2026-09-30 (docs/plan-to-done-2026-09-30.md, PR B1): Full screen asks for the whole
- *             document, so Table vitals and the Coach are seen in it, the Coach docked under the log; the Tools menu's
+ *             document, so Table vitals and the Coach are seen in it, with space reserved for Coach beside the board; the Tools menu's
  *             buttons whole in Full screen; the clock opens the history everywhere and the Coach is its own glyph;
  *             History closes on a press outside it; the Panel reads a tapped card upright; the hand's cards whole in
  *             Table, Focus, Full screen and Full screen after the browser's is left, at 1400 and at 1280; a card no
@@ -735,11 +735,10 @@ try {
   await fullCoach(rob.page);
   await rob.page.locator("#cm-board-coach:not([hidden]) .cm-coach-input").waitFor();
   const docked = await rob.page.evaluate(() => {
-    const c = document.getElementById("cm-board-coach").getBoundingClientRect(), side = document.querySelector(".cm-full-side").getBoundingClientRect(), band = document.querySelector(".cm-full-side .cm-board-band").getBoundingClientRect(), host = document.getElementById("cm-board").getBoundingClientRect();
-    /* the log as the side column shows it: the column scrolls (the accessibility pass), so the log may run on below it */
-    return {col: Math.abs(c.left - side.left) < 1 && Math.abs(c.width - side.width) < 1, under: c.top >= Math.min(band.bottom, side.bottom) - 0.5 && c.top >= side.bottom, lower: c.top > host.top + host.height * 0.45 && c.bottom <= host.bottom + 0.5, width: Math.round(c.width)};
+    const c = document.getElementById("cm-board-coach").getBoundingClientRect(), board = document.querySelector(".cm-stage-region").getBoundingClientRect(), header = document.querySelector(".cm-stage-top").getBoundingClientRect(), host = document.getElementById("cm-board").getBoundingClientRect();
+    return {reserved: board.right <= c.left + 1, aligned: Math.abs(c.right - host.right) < 1 && Math.abs(c.top - header.bottom) < 1, contained: c.width >= 240 && c.bottom <= host.bottom + 0.5, width: Math.round(c.width)};
   });
-  ok(await seenAt(rob.page, "#cm-board-coach") && docked.col && docked.under && docked.lower, `and the Coach is seen, in the side column's lower half under the log (${docked.width}px), not a slide-over`);
+  ok(await seenAt(rob.page, "#cm-board-coach") && docked.reserved && docked.aligned && docked.contained, `the Coach is visible in its reserved ${docked.width}px column beside the board and below the header`);
   await shot(rob.page, "coach-full-1400");
   await rob.page.click("#cm-board-coach [aria-label='Close the Coach']");
   /* B1, item 23: the rail squares its own buttons, not the ones in the menus it opens. */
@@ -1374,13 +1373,13 @@ try {
   await chooseView(rob.page,"focus");
   await rob.page.locator(".cm-board-mat").waitFor();
 
-  /* THE COACH: a chat panel over the right edge; the shell, with a stub reply that says so. */
+  /* THE COACH: a reserved column beside the board; the shell, with a stub reply that says so. */
   const matWidth = () => rob.page.evaluate(() => Math.round(document.querySelector(".cm-board-mat").getBoundingClientRect().width));
   const matBefore = await matWidth();
   await rob.page.click(".cm-board-coach-open");
   await rob.page.locator("#cm-board-coach:not([hidden]) .cm-coach-input").waitFor();
-  const coachBox = await rob.page.evaluate(() => {const r = document.getElementById("cm-board-coach").getBoundingClientRect(); return [Math.round(r.width), Math.round(r.right), innerWidth];});
-  ok(coachBox[0] === 400 && coachBox[1] === coachBox[2] && await matWidth() === matBefore, `the Coach slides over the right edge, 400px, and the mat keeps its width (${matBefore}px)`);
+  const coachBox = await rob.page.evaluate(() => {const r = document.getElementById("cm-board-coach").getBoundingClientRect(), mat = document.querySelector(".cm-board-mat").getBoundingClientRect(); return {width:r.width,right:r.right,edge:innerWidth,clear:mat.right<=r.left+1,visible:r.bottom<=innerHeight+1};});
+  ok(coachBox.width >= 240 && coachBox.right === coachBox.edge && coachBox.clear && coachBox.visible && await matWidth() <= matBefore, `the Coach reserves ${Math.round(coachBox.width)}px at the right edge while the full mat fits beside it`);
   ok(/Sees your board, hand and the table · turn \d+/.test(await text(rob.page, "#cm-coach-context")), "it says what it sees, and the turn");
   await rob.page.click("[data-action=board-coach-ask][data-q=\"What's my best play?\"]");
   ok(await rob.page.locator(".cm-coach-msg.is-typing").count() === 1, "a suggested prompt is asked, and the Coach shows it is typing");
@@ -1448,6 +1447,7 @@ try {
   await rob.page.keyboard.press("Escape");
   await rob.page.locator("#cm-board-coach[hidden]").waitFor({state: "attached"});
   ok(true, "Escape closes the Coach");
+  eq(await matWidth(), matBefore, "closing Coach restores the mat's available width");
   await utility(rob.page,"board-tools");
   await rob.page.click("#cm-board-tools [data-action=board-coach]");
   await rob.page.locator("#cm-board-coach:not([hidden])").waitFor();
