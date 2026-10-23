@@ -102,7 +102,9 @@ CrankMagic is not affiliated with any of them.
 
 ## Runtime dependencies
 
-**PixiJS 8.11.0** (MIT), vendored at `vendor/pixi.min.js` with its `vendor/pixi-csp.min.js` compatibility module, renders the optional cloud tabletop ground. Source: https://github.com/pixijs/pixijs/tree/v8.11.0. The upstream license is in `vendor/PIXI-LICENSE.txt`. The application otherwise remains plain JavaScript, CSS and HTML. Playwright is installed in CI for the browser
+**Babylon.js 9.30.0** (Apache-2.0) is self-hosted at `vendor/babylon.js` for the live Full-screen table. The pinned prototype package supplies the engine; its license is `vendor/BABYLON-LICENSE.txt`. Procedural table geometry is ported from the existing prototype. Source: https://github.com/BabylonJS/Babylon.js.
+
+**PixiJS 8.11.0** (MIT), vendored at `vendor/pixi.min.js` with its `vendor/pixi-csp.min.js` compatibility module, is retained for historical prototypes; the live table now uses Babylon. Source: https://github.com/pixijs/pixijs/tree/v8.11.0. The upstream license is in `vendor/PIXI-LICENSE.txt`. The application otherwise remains plain JavaScript, CSS and HTML. Playwright is installed in CI for the browser
 suites and is not part of the application.
 
 ---

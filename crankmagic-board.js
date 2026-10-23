@@ -213,6 +213,7 @@ globalThis.CrankBoard = Object.seal({
      there's overlap. Increase the zoom to 200%"): past the fit, cards overlap and the table runs past the window's edges. */
   const CAMERA_MAX = 200;
   const camera = {cards: Math.max(70, Math.min(CAMERA_MAX, Number(stored("cm-stage-card-size-v2")) || 100)), tilt: stored("cm-board-tilt-v2") === null ? 40 : Math.max(0, Math.min(60, Number(stored("cm-board-tilt-v2")) || 0)), zoom: Math.max(60, Math.min(CAMERA_MAX, Number(stored("cm-board-zoom-v2")) || 100))};
+  camera.rotation = Math.max(-180, Math.min(180, Number(stored("cm-stage-rotation")) || 0));
   const stageEnabled = () => mode === "full" && !phone();
   const moduleSide = id => !phone() ? ["left","right"].find(side => paneModules(side).includes(id)) : undefined;
   const openModuleDrawer = id => {const side=moduleSide(id); if(side === "left") stageRail=true; if(side === "right") stageSide=true;};
@@ -931,7 +932,7 @@ globalThis.CrankBoard = Object.seal({
         ${stageModules()}</aside>
       ${ib(stageSide ? "▸" : "◂", "board-stage-side", "Toggle table panel", {}, {cls: "cm-stage-handle cm-stage-right", pressed: stageSide})}`; }
   function cameraMenu() { return `<div class="cm-stage-camera"><button type="button" data-action="board-camera" aria-expanded="${cameraOpen}">Camera ▾</button>${cameraOpen ? `<div>${phone() ? "" : switcher()}<span>View seats</span>${ib("◀", "board-rotate", "Previous seat", {by: "-1"})}${ib("▶", "board-rotate", "Next seat", {by: "1"})}
-        ${stageEnabled() ? `<label>Tilt <input type="range" min="0" max="60" value="${camera.tilt}" data-stage-camera="tilt" aria-label="Table tilt"><output>${camera.tilt}°</output></label>` : ""}
+        ${stageEnabled() ? `<label>Rotation <input type="range" min="-180" max="180" value="${camera.rotation}" data-stage-camera="rotation" aria-label="Table rotation"><output>${camera.rotation}°</output></label><label>Tilt <input type="range" min="0" max="60" value="${camera.tilt}" data-stage-camera="tilt" aria-label="Table tilt"><output>${camera.tilt}°</output></label>` : ""}
         ${stageEnabled() ? `<label>Zoom <input type="range" min="60" max="${CAMERA_MAX}" value="${camera.zoom}" data-stage-camera="zoom" aria-label="Table zoom"><output>${camera.zoom}%</output></label>
         <label>Cards <input type="range" min="70" max="${CAMERA_MAX}" value="${camera.cards}" data-stage-camera="cards" aria-label="Tabletop card size"><output>${camera.cards}%</output></label>` : `${scaleSlider("board", "Board cards")}${scaleSlider("hand", "Hand cards")}`}
         ${stageEnabled() ? `<p class="cm-stage-style-note">Appearance preview · this device</p>
@@ -986,10 +987,11 @@ globalThis.CrankBoard = Object.seal({
     const region = host.querySelector(".cm-stage-region");
     if (!region || !globalThis.CrankStage) {globalThis.CrankStage?.unmount(); return;}
     const big = players()[focus] || players()[view.seat];
-    const opts = {tilt: camera.tilt, zoom: camera.zoom, cards: camera.cards, reduced: globalThis.CrankMotion?.reduced() ?? false,
+    const opts = {tilt: camera.tilt, zoom: camera.zoom, rotation: camera.rotation, cards: camera.cards, reduced: globalThis.CrankMotion?.reduced() ?? false,
       background: table?.appearance?.background || appearance.background, table: tableDesignId(table?.appearance?.table || appearance.table),
       mats: [big, ...players().filter((p) => p.playerId !== big.playerId)].map((p) => matOf(p.playerId)),
       combat: view.state.phase.startsWith("COMBAT_"), instant: view.state.stack.some((s) => /Instant/i.test(typeLineOf(s))),
+      onReady() {stageError = ""; const el = document.querySelector(".cm-stage-error"); if (el) el.textContent = "";},
       onError(message) {stageError = message; const el = document.querySelector(".cm-stage-error"); if (el) el.textContent = `${message} Use Focus view in Camera if graphics are unavailable.`;}};
     CrankStage.mount(region, opts); CrankStage.layout(region.getBoundingClientRect(), opts);
     const tray = host.querySelector(".cm-stage-hand");
@@ -2539,14 +2541,34 @@ globalThis.CrankBoard = Object.seal({
   });
   actions["board-stage-rail"] = () => {stageRail = !stageRail; draw();};
   actions["board-camera"] = () => {cameraOpen = !cameraOpen; draw();};
+  /* Only empty table ground rotates the scene. Card, hand, module and scroll gestures keep their own handlers. */
+  document.addEventListener('pointerdown',event=>{
+    if(event.button!==0||!event.target.matches?.('.cm-stage-canvas, .cm-stage-region'))return;
+    const region=event.target.closest('.cm-stage-region'),host=region.closest('.cm-board');
+    const start={x:event.clientX,y:event.clientY,rotation:camera.rotation,tilt:camera.tilt};
+    region.setPointerCapture(event.pointerId);
+    const move=next=>{
+      if(next.pointerId!==event.pointerId)return;
+      camera.rotation=Math.max(-180,Math.min(180,start.rotation+(next.clientX-start.x)*.3));
+      camera.tilt=Math.max(0,Math.min(60,start.tilt+(next.clientY-start.y)*.2));
+      fitStage(host);
+      for(const key of ['rotation','tilt']){const slider=host.querySelector(`[data-stage-camera="${key}"]`);if(slider){slider.value=camera[key];slider.nextElementSibling.textContent=`${Math.round(camera[key])}°`;}}
+    };
+    const end=next=>{
+      if(next.pointerId!==event.pointerId)return;
+      region.removeEventListener('pointermove',move);region.removeEventListener('pointerup',end);region.removeEventListener('pointercancel',end);
+      keep('cm-stage-rotation',String(camera.rotation));keep('cm-board-tilt-v2',String(camera.tilt));
+    };
+    region.addEventListener('pointermove',move);region.addEventListener('pointerup',end);region.addEventListener('pointercancel',end);
+  });
   document.addEventListener("input", (event) => {
     const el = event.target.closest?.("[data-stage-camera]"); if (!el) return;
     const key = el.dataset.stageCamera; camera[key] = Number(el.value);
-    el.parentElement.querySelector("output").textContent = `${el.value}${key === "tilt" ? "°" : "%"}`;
+    el.parentElement.querySelector("output").textContent = `${el.value}${["tilt","rotation"].includes(key) ? "°" : "%"}`;
     fit();
   });
   document.addEventListener("change", (event) => {
-    const el = event.target.closest?.("[data-stage-camera]"); if (el) keep(el.dataset.stageCamera === "tilt" ? "cm-board-tilt-v2" : el.dataset.stageCamera === "cards" ? "cm-stage-card-size-v2" : "cm-board-zoom-v2", el.value);
+    const el = event.target.closest?.("[data-stage-camera]"); if (el) keep(el.dataset.stageCamera === "rotation" ? "cm-stage-rotation" : el.dataset.stageCamera === "tilt" ? "cm-board-tilt-v2" : el.dataset.stageCamera === "cards" ? "cm-stage-card-size-v2" : "cm-board-zoom-v2", el.value);
   });
   document.addEventListener("visibilitychange", () => {if (attached && view && !document.hidden) fit();});
   actions["board-pane"] = () => {paneShut = !paneShut; draw();};

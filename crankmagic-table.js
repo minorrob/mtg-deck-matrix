@@ -338,7 +338,7 @@
     }
     const id = params.get("id"), code = params.get("code");
     /* Play, with a game of yours on (item 19): straight back to it, in place of this page in the history. */
-    const live = !id && C.board && C.board.live && C.board.live();
+    const live = !id && !params.has('new') && C.board && C.board.live && C.board.live();
     if (live) {location.replace(`#table?id=${encodeURIComponent(live.tableId)}`); return;}
     if (!id) return newTable(params.get("deck"));
     let stop = false, timer = null;
@@ -371,6 +371,53 @@
       <p>${e(error.message)}</p>${listed}<div class="cm-actions">${signIn}${b("Go to your decks", "home")}</div></section>`;
     void id;
   }
+
+  /* Play home is distinct from a table's preparation lobby. Reading it never claims or releases a seat. */
+  views.playHome = () => {
+    if(!cloudPlay())return views.table(new URLSearchParams());
+    let active=true;
+    C.main.innerHTML=C.pageHead('Play','','table')+`<div class="cm-play-home" id="cm-play-home">
+      <section class="v-panel cm-play-welcome"><p class="cm-play-eyebrow">THE COMMANDER LOUNGE</p><h2>A place at the table</h2>
+      <p>Bring a deck. Invite your friends. Make the next game yours.</p>
+      <div id="cm-play-resume" aria-live="polite"></div>
+      <div class="cm-actions">${b('New table','play-new-table',{},true)}<a class="v-button" href="#decks">Choose a deck</a></div></section>
+      <section class="v-panel cm-play-join"><h2>Join a table</h2><p>Have an invitation? Paste its full link to take your invited seat.</p>
+      <form id="cm-play-join"><label for="cm-play-invite">Invitation link<input id="cm-play-invite" name="invitation" type="text" autocomplete="off" spellcheck="false" placeholder="Paste your table invitation"></label>
+      <div class="cm-actions">${b('Open invitation','play-join')}</div><p id="cm-play-join-error" role="status"></p></form>
+      <p class="cm-muted">Waiting for an invite? Keep this page open, then open the link your host sends. Seats are claimed only when you join.</p></section>
+      <section class="v-panel cm-play-social"><h2>Around the tables</h2><p>Games currently use direct invitations. Public game discovery and lounge chat are not connected yet.</p><p class="cm-muted">Your existing table remains available while you browse. No seat is left by opening Play.</p></section>
+      <section class="v-panel cm-play-records" id="cm-play-records"><h2>Recent games</h2><p class="cm-muted">Your completed games will appear here.</p></section></div>`;
+    document.getElementById('cm-play-join').addEventListener('submit',event=>{event.preventDefault();actions['play-join']();});
+    document.getElementById('cm-play-invite').addEventListener('input',()=>{document.getElementById('cm-play-join-error').textContent='';});
+    const games=[...(C.state.games||[])].sort((a,b)=>String(b.playedAt||b.at||'').localeCompare(String(a.playedAt||a.at||''))).slice(0,5);
+    if(games.length){const word={win:'Won',loss:'Lost',draw:'Drew',unfinished:'Unfinished'};
+      document.getElementById('cm-play-records').innerHTML=`<h2>Recent games</h2><ol class="cm-table-recent-list">${games.map(g=>{
+        const deck=(C.state.decks||[]).find(d=>d.id===g.deckId);
+        return `<li class="cm-table-recent-row"><b>${e(word[g.outcome]||'Played')}</b><span>${deck?`<a href="#decks?deck=${encodeURIComponent(deck.id)}">${e(deck.name)}</a>`:'Shared or archived deck'}</span><span>${g.playedAt||g.at?e(C.usDate(g.playedAt||g.at)):''}</span></li>`;
+      }).join('')}</ol>`;}
+    const id=C.board?.live?.()?.tableId||seatKept();
+    if(id){const slot=document.getElementById('cm-play-resume');slot.textContent='Checking your seat…';
+      api('GET',tableUrl(id)).then(({table:t})=>{
+        if(!active||!slot.isConnected)return;
+        if(!t.seats.some(s=>s?.you)){slot.textContent='Your previous seat is no longer held.';return;}
+        const phase=t.phase==='playing'?'Game in progress':t.phase==='rematch'?'Play again':t.phase==='countdown'?'Starting soon':'Preparing the table';
+        slot.innerHTML=`<div class="cm-play-return"><strong>${e(phase)}</strong><span>${e(t.seats.filter(Boolean).map(s=>s.name).join(' · '))}</span>${b('Resume your table','table-back',{table:t.tableId},true)}</div>`;
+      }).catch(()=>{if(active&&slot.isConnected)slot.innerHTML=`<p>Your table could not be checked. ${b('Try your table','table-back',{table:id})}</p>`;});}
+    return ()=>{active=false;};
+  };
+  actions['play-new-table']=()=>C.go('table?new=1');
+  actions['play-join']=()=>{
+    const input=document.getElementById('cm-play-invite'),error=document.getElementById('cm-play-join-error');
+    try{
+      const link=new URL(input.value.trim(),location.origin);
+      const allowed=link.origin===location.origin||['https://crankmagic.com','https://www.crankmagic.com','https://staging.crankmagic.com'].includes(link.origin);
+      const path=link.hash.startsWith('#table/')?link.hash.slice(1):link.pathname.replace(/^\//,'');
+      const match=path.match(/^(?:api\/join|table)\/([A-Za-z0-9_-]+)\/([A-Za-z0-9_-]+)$/);
+      if(!allowed||!match)throw Error('Paste the complete CrankMagic invitation link from your host.');
+      if(link.origin!==location.origin)location.assign(`${link.origin}/index.html#table/${match[1]}/${match[2]}`);
+      else C.go(`table/${match[1]}/${match[2]}`);
+    }catch(err){error.textContent=err.message;input.focus();}
+  };
 
   /* ---- a new table ---- */
   function newTable(deckId = null) {
