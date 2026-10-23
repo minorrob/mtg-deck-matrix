@@ -1,8 +1,10 @@
 """Prove the live Babylon/lobby assertions fail when their behavior is broken. Run at repo root."""
 SUITES = ['tests/board-babylon.mjs']
 BREAKS = [
-    ('rotation diverges from card hit areas', 'crankmagic-stage.js',
-     's.table.root.rotation.y=g.yaw;', 's.table.root.rotation.y=0;'),
+    ('old saved rotation returns', 'crankmagic-board.js',
+     'rotation: 0, cards: camera.cards,', 'rotation: Number(stored("cm-stage-rotation")) || 0, cards: camera.cards,'),
+    ('table surface diverges from card hit areas', 'crankmagic-stage.js',
+     's.table.root.rotation.y=g.yaw;', 's.table.root.rotation.y=.3;'),
     ('Play bypasses its lounge', 'crankmagic-app.js',
      'views.game=views.online=()=>views.playHome()', 'views.game=views.online=()=>views.table(new URLSearchParams())'),
     ('obsolete table materials leak', 'crankmagic-stage-tables.js',

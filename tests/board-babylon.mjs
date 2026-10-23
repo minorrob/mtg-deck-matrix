@@ -11,6 +11,7 @@ const ok=(test,message)=>{assert.ok(test,message);checks++;};
 try{
   const base=await new Promise((resolve,reject)=>{server.stdout.on('data',d=>{const m=String(d).match(/localhost:(\d+)/);if(m)resolve(`http://127.0.0.1:${m[1]}`);});server.stderr.on('data',d=>reject(Error(String(d))));server.on('error',reject);});
   const page=await browser.newPage({viewport:{width:1280,height:720}}),errors=[];
+  await page.addInitScript(()=>localStorage.setItem('cm-stage-rotation','75'));
   page.on('pageerror',e=>errors.push(e.message));
   await page.goto(`${base}/index.html#table?id=tablepreview01`);
   await page.locator('[data-engine=babylon]').waitFor();
@@ -35,17 +36,22 @@ try{
       if(document.elementFromPoint(x,y)?.matches('.cm-stage-canvas, .cm-stage-region'))return {x,y};
   });
   ok(ground,'empty ground can be reached without touching a card');
-  await page.mouse.move(ground.x,ground.y);await page.mouse.down();await page.mouse.move(ground.x+80,ground.y+20,{steps:5});await page.mouse.up();
-  ok(Number(await page.evaluate(()=>localStorage.getItem('cm-stage-rotation')))===24,'dragging empty ground rotates and saves the camera');
+  const beforeDrag=await page.evaluate(()=>CrankStage.diagnostics());
+  await page.mouse.move(ground.x,ground.y);await page.mouse.down();await page.mouse.move(ground.x+80,ground.y,{steps:5});await page.mouse.up();
+  const afterHorizontal=await page.evaluate(()=>CrankStage.diagnostics());
+  ok(afterHorizontal.quad.every((v,i)=>Math.abs(v-beforeDrag.quad[i])<.03),'horizontal ground dragging does not rotate the table');
+  await page.mouse.move(ground.x,ground.y);await page.mouse.down();await page.mouse.move(ground.x,ground.y+20,{steps:5});await page.mouse.up();
+  ok(Number(await page.evaluate(()=>localStorage.getItem('cm-board-tilt-v2')))===44,'vertical ground dragging adjusts and saves tilt');
   await align('ground drag');
   ok(await page.locator('.cm-stage-canvas').getAttribute('tabindex')==='-1','pointer movement does not reintroduce a canvas tab stop');
   await page.getByRole('button',{name:'Camera',exact:false}).click();
   const slide=async(name,value)=>{await page.getByRole('slider',{name,exact:true}).evaluate((el,v)=>{el.value=v;el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));},value);};
-  for(const rotation of [-180,-90,0,35,180]){
-    await slide('Table rotation',rotation);
-    for(const tilt of [0,40,60]){await slide('Table tilt',tilt);await align(`rotation ${rotation}, tilt ${tilt}`);}
-  }
-  await slide('Table rotation',0);await slide('Table tilt',40);
+  ok(await page.getByRole('slider',{name:'Table rotation',exact:true}).count()===0,'camera has tilt without a rotation control');
+  for(const tilt of [0,20,40,60]){await slide('Table tilt',tilt);await align(`tilt ${tilt}`);}
+  await slide('Table tilt',0);
+  const flat=await page.evaluate(()=>CrankStage.diagnostics());
+  ok(Math.abs(flat.quad[1]-flat.quad[3])<.03&&Math.abs(flat.quad[5]-flat.quad[7])<.03,'a stored rotation from an older session cannot cant the table');
+  await slide('Table tilt',40);
   const initial=await align('reset');
   for(let n=0;n<4;n++)for(const design of ['obsidian-glass','medieval-banded']){
     await page.getByLabel('Table design',{exact:true}).selectOption(design);
