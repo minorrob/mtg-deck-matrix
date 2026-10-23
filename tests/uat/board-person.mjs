@@ -29,7 +29,7 @@ export async function click(page, selector) {
 async function priority(page, d, chosen) {
   if (chosen.act === "pass") return click(page, "[data-action=board-pass]:not([disabled])");
   if (!await visible(page, `#cm-board-decision [data-action=board-option][data-index="${chosen.index}"]`)) {
-    const also = await visible(page, "[data-action=board-also]");
+    const also = await visible(page, "[data-action=board-actions-open], [data-action=board-also]");
     if (also) await also.click();
   }
   const exact = await visible(page, `[data-action=board-option][data-index="${chosen.index}"]`);

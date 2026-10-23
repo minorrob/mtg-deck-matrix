@@ -76,11 +76,11 @@ try {
     eq(acts(), [[1]], `${mode}: a double-click on the Island in hand plays it, once (its one offer, Island)`);
     /* ---- 2. the land just played: a double-click takes it back; no button for it ---- */
     await show(played());
-    await page.locator(".cm-stage-top [data-action=board-also]").click();
-    await page.locator(".cm-board-also [data-action=board-option]").first().waitFor({timeout: 5000});
-    const also = await page.evaluate(() => [...document.querySelectorAll(".cm-board-also [data-action=board-option]")].map((b) => b.textContent.trim()));
+    await page.locator(".cm-stage-top [data-action=board-actions-open]").click();
+    await page.locator(".cm-stage-rail [data-action=board-option]").first().waitFor({timeout: 5000});
+    const also = await page.evaluate(() => [...document.querySelectorAll(".cm-stage-rail [data-action=board-option]")].map((b) => b.textContent.trim()));
     ok(also.some((t) => /Island/.test(t)) && !also.some((t) => /Return Island/.test(t)), `${mode}: You can also offers the tap, and no button says Return Island: the land goes back by its double-click (${JSON.stringify(also)})`);
-    await page.locator(".cm-stage-top [data-action=board-also]").click();
+    await page.locator(".cm-stage-top [data-action=board-actions-open]").click();
     sent.length = 0;
     await page.locator(`#cm-board .cm-bcard[data-card='${PLAYED}'][data-action=board-card]`).dblclick();
     await page.waitForTimeout(600);

@@ -306,6 +306,7 @@ function carry(ws) {
 try {
   const context = await browser.newContext({viewport: {width: 1400, height: 900}, serviceWorkers: "block"});
   const page = await context.newPage();
+  await page.addInitScript(() => {if (!localStorage.getItem("cm-board-view")) localStorage.setItem("cm-board-view", "focus");});
   if (stub) await stub(page);
   await page.route(`${base}/index.html*`, (r) => r.fulfill({contentType: "text/html; charset=utf-8", body: html}));
   await page.route(`${base}/api/me`, (r) => r.fulfill({json: {email: ROB}}));
@@ -315,15 +316,15 @@ try {
   await page.goto("about:blank");
   await page.goto(`${base}/index.html#table?id=${TABLE}`);
   await page.locator("#cm-board .cm-stage-top").waitFor({timeout: 60000});
-  await page.locator("[data-action=board-also]").waitFor({timeout: 20000});
+  await page.locator("[data-action=board-actions-open]").waitFor({timeout: 20000});
 
   const zapCard = page.locator(".cm-board-hand .cm-bcard[aria-label^='Zap']").first();
   const label = await zapCard.getAttribute("aria-label");
   ok(/^Zap: Cast Zap, \d+ ways$/.test(label), `the card in the hand says what it can do once, and how many ways: "${label}"`);
 
-  await page.click("[data-action=board-also]");
-  const choose = page.locator(".cm-board-also [data-action=board-choose]", {hasText: "Cast Zap"});
-  ok(await choose.count() === 1, "You can also ▾ lists Zap once");
+  await page.click("[data-action=board-actions-open]");
+  const choose = page.locator(".cm-stage-rail [data-action=board-choose]", {hasText: "Cast Zap"});
+  ok(await choose.count() === 1, "Actions lists Zap once");
   ok(new RegExp(`Cast Zap · ${castOptions.length} ways`).test((await choose.innerText()).replace(/\s+/g, " ")), `saying how many ways (${(await choose.innerText()).replace(/\s+/g, " ").trim()})`);
   await choose.click();
   const dialog = page.locator("#cm-dialog[open]");

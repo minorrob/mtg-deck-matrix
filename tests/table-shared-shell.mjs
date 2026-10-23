@@ -1,5 +1,5 @@
 /* ROB-99: exercise the shared desktop shell through the recorded public fixture.
- * A missing Camera, duplicate header, unreachable control, or a drawer that moves
+ * A missing Camera, duplicate header, unreachable control, or an Actions drawer that obscures
  * its board must fail. Phone is recorded as the unchanged baseline for ROB-18.
  * GEOMETRY_REQUIRED=1 makes missing Chromium a failure; no live account is used.
  */
@@ -33,12 +33,16 @@ try {
     assert.equal(await page.locator('[data-stage-camera=tilt]').count(),view==='full'?1:0,'Tilt only in Full');
     if(width===1280) await screenshot(page,view+'-camera');
     await page.locator('[data-action=board-camera]').click();
+    if(await page.locator('.cm-stage-rail').isVisible()) await page.locator('.cm-stage-left').click();
     const surface=page.locator(view==='full'?'.cm-stage-region':view==='table'?'.cm-board-table':'.cm-board-stage');
     const before=await surface.boundingBox();assert.ok(before.width>0&&before.height>0,'board has visible area');
     for(const [control,drawer] of [['.cm-stage-left','.cm-stage-rail'],['.cm-stage-right','.cm-stage-side']]) {
       await page.locator(control).click();
       assert.ok(await page.locator(drawer).isVisible(),'drawer opens');
-      assert.deepEqual(await surface.boundingBox(),before,'drawers never change the board geometry');
+      if(drawer==='.cm-stage-rail') {
+        const after=await surface.boundingBox(),rail=await page.locator(drawer).boundingBox();
+        assert.ok(after.width<=before.width+1&&after.x>=rail.x+rail.width-1,'Actions reserves space beside the board');
+      } else assert.deepEqual(await surface.boundingBox(),before,'optional right drawer keeps board geometry');
       if(width===1280) await screenshot(page,`${view}-${drawer==='.cm-stage-side'?'right':'left'}-drawer`);
       if(drawer==='.cm-stage-side' && view!=='full') {
         const grip=page.locator('.cm-stage-side [data-drag=panelw]'),old=await page.locator(drawer).boundingBox();
