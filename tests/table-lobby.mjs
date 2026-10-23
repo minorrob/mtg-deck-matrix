@@ -202,8 +202,11 @@ try {
 
   /* THE PLAY TAB, marked for Play in the cloud: the table's page, not the local game host's (staging's Play release). */
   await rob.page.goto(`${base}/index.html#game`);
+  await rob.page.locator("#cm-play-home").waitFor({timeout: 30000});
+  ok(await rob.page.locator("#cm-table-new").count() === 0, "Play opens the lounge without creating a table");
+  await rob.page.getByRole('button',{name:'New table',exact:true}).click();
   await rob.page.locator("#cm-table-new").waitFor({timeout: 30000});
-  ok(!/Coming Soon/.test(await pageText(rob.page, "#cm-main")), "with the cloud-Play mark, the Play tab opens a new table");
+  ok(!/Coming Soon/.test(await pageText(rob.page, "#cm-main")), "New table is an explicit action from the lounge");
 
   /* HOST: a new table. */
   /* The AI door not open to Rob (GET /api/ai-seat says so): no AI on Claude is offered. */

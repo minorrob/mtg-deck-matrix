@@ -23,7 +23,6 @@ BREAKS = [
     ('the pile captions without their plate over the art', 'crankmagic-stage.css',
      '.cm-stage-region .cm-mat .cm-board-pile figcaption{background:#091b1de6;padding:2px 4px;border-radius:5px}',
      ''),
-    ('the renderer destroyed on leaving Full screen', 'crankmagic-stage.js',
-     '    if (s.app) {for (const child of s.app.stage.removeChildren()) child.destroy({children: true}); s.app.canvas.remove();}',
-     '    if (s.app) {s.app.destroy(true, {children: true}); kept = null;}'),
+    # Babylon has no Pixi accessibility listener bug. Renderer disposal/re-entry is now
+    # checked by breaks-play-adoption.py against the live Babylon engine instance list.
 ]

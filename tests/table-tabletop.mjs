@@ -367,7 +367,7 @@ try {
     const cards=[...document.querySelectorAll('.cm-stage-hand .cm-bcard')].map(e=>e.getBoundingClientRect());
     return {bottoms:cards.map(r=>r.bottom),top:Math.min(...cards.map(r=>r.top)),board:document.querySelector('.cm-stage-front').getBoundingClientRect().bottom,h:innerHeight};
   });
-  assert.ok(handEdges.bottoms.every(y=>y>=handEdges.h-.5 && y<handEdges.h+40),`hand bottoms meet or slightly cross the screen edge: ${JSON.stringify(handEdges)}`);
+  assert.ok(handEdges.bottoms.every(y=>y>=handEdges.h-32 && y<=handEdges.h),`the full hand remains near the screen edge without cropping card bottoms: ${JSON.stringify(handEdges)}`);
   assert.ok(handEdges.top<handEdges.board,'the hand overlaps the table front at the default camera');
   await openDrawerSettings();
   const titles=await page.locator('#cm-drawer-settings tbody th').allTextContents();
