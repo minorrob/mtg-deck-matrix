@@ -43,12 +43,13 @@ check(() => {
 });
 check(() => {
   const {problems} = compiled([loyalty([{effect: "emblem", abilities: [{kind: "activated", text: "{T}: Draw a card.", cost: [{atom: "{T}"}], effects: [{effect: "draw", count: 1}]}]}])]);
-  assert.match(problems.join(" | "), /an emblem's activated ability -- only triggered and replacement abilities, and a rule changed for players, work from the command zone yet/);
+  assert.match(problems.join(" | "), /an emblem's activated ability -- only triggered and replacement abilities, a rule changed for players and a static in a layer work from the command zone yet/);
 });
 check(() => {
   const {problems} = compiled([loyalty([{effect: "emblem", abilities: [{kind: "static", text: "Creatures you control get +1/+1.", layer: 7, sublayer: "c",
     affects: {what: "permanent", types: ["Creature"], controller: "you"}, apply: {power: 1, toughness: 1}}]}])]);
-  assert.match(problems.join(" | "), /an emblem's static ability/, "a layer static from an emblem is not gathered yet, and is refused rather than doing nothing");
+  /* Gathered since the card load of 2026-10-23 (rules/layers.mjs; Liliana of the Dark Realms' emblem plays it). */
+  assert.deepEqual(problems, [], "a layer static from an emblem compiles: the layers gather it from the command zone");
 });
 check(() => {
   const {problems} = compiled([loyalty([{effect: "emblem", abilities: [{kind: "static", text: "You have no maximum hand size.", rule: "no-maximum-hand-size", affects: {what: "player", who: "you"}}]}])]);

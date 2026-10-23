@@ -44,6 +44,13 @@ export function addMana(state, params, context) {
     const kept = (state.players[context.controller].combatMana ??= {});
     for (const [color, n] of Object.entries(mana)) kept[color] = (kept[color] ?? 0) + n;
   }
+  /* "Until end of turn, you don't lose this mana as steps and phases end" (Birgi, God of Storytelling; CR 106.4, 500.4; card
+     load w4d L1): how much of the pool its player keeps as this turn's steps end (`turnMana`, rules/turn.mjs). */
+  if (params.untilEndOfTurn === true) {
+    const player = state.players[context.controller];
+    if (player.turnMana?.turn !== state.turn) player.turnMana = {turn: state.turn, mana: {}};
+    for (const [color, n] of Object.entries(mana)) player.turnMana.mana[color] = (player.turnMana.mana[color] ?? 0) + n;
+  }
   return [event("GameEventManaPool", state, {
     player: {playerId: context.controller, name: state.players[context.controller].name},
     produced: {...mana},
@@ -440,6 +447,9 @@ export function rollDie(state, params, context, rng = null) {
   if (!(Number.isInteger(params.sides) && params.sides >= 2)) return [];
   const result = rng.int(params.sides) + 1;
   context.rolled = result;
+  /* "Choose 1, 2, or 3 at random" (Tibalt's Trickery; card load w4d L1): `atRandom`, a number chosen at random -- no die is
+     rolled (CR 706.1), so nothing that watches a roll sees it -- read after it as a die's result is ({dieRolled: true}). */
+  if (params.atRandom === true) return [event("GameEventNumberChosen", state, {player: {playerId: context.controller, name: state.players[context.controller]?.name}, of: params.sides, result})];
   return [event("GameEventDieRolled", state, {player: {playerId: context.controller, name: state.players[context.controller]?.name}, sides: params.sides, result})];
 }
 

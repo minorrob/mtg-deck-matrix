@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Cruel Celebrant",
   "fixtures": {
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -62,7 +62,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -78,7 +78,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Grizzly Bears"
@@ -118,7 +118,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -134,7 +134,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Their Bear"

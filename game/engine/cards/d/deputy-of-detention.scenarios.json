@@ -30,7 +30,7 @@
       "power": 5,
       "toughness": 5
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -95,7 +95,7 @@
           "zone": "hand",
           "cards": [
             "Deputy of Detention",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -157,7 +157,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Deputy of Detention"
@@ -206,7 +206,7 @@
           "zone": "hand",
           "cards": [
             "Deputy of Detention",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -260,7 +260,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Deputy of Detention"
@@ -304,7 +304,7 @@
           "zone": "hand",
           "cards": [
             "Deputy of Detention",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -344,7 +344,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Deputy of Detention"

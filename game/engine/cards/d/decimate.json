@@ -1,0 +1,82 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Decimate",
+    "oracleId": "a4e5693f-12a0-451e-818d-d6efc7b4ed25",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}{G}",
+    "colors": [
+      "G",
+      "R"
+    ],
+    "colorIdentity": [
+      "G",
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Destroy target artifact, target creature, target enchantment, and target land. (You can't cast this spell unless you have legal choices for all its targets.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Destroy target artifact, target creature, target enchantment, and target land. (You can't cast this spell unless you have legal choices for all its targets.)",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Artifact"
+          ]
+        },
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        },
+        {
+          "what": "permanent",
+          "types": [
+            "Enchantment"
+          ]
+        },
+        {
+          "what": "permanent",
+          "types": [
+            "Land"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 1
+          }
+        },
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 2
+          }
+        },
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 3
+          }
+        }
+      ]
+    }
+  ]
+}

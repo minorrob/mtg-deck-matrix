@@ -1,0 +1,128 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Liliana, Dreadhorde General",
+    "oracleId": "5e958212-6a5b-4288-8d31-f1572619d7dc",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Planeswalker"
+    ],
+    "subtypes": [
+      "Liliana"
+    ],
+    "manaCost": "{4}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null,
+    "loyalty": 6
+  },
+  "oracleText": "Whenever a creature you control dies, draw a card.\n+1: Create a 2/2 black Zombie creature token.\n−4: Each player sacrifices two creatures of their choice.\n−9: Each opponent chooses a permanent they control of each permanent type and sacrifices the rest.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever a creature you control dies, draw a card.",
+      "trigger": {
+        "on": "dies",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "+1: Create a 2/2 black Zombie creature token.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": 1
+        }
+      ],
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Zombie",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Zombie"
+            ],
+            "colors": [
+              "B"
+            ],
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "−4: Each player sacrifices two creatures of their choice.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": -4
+        }
+      ],
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "who": "each",
+          "count": 2,
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "−9: Each opponent chooses a permanent they control of each permanent type and sacrifices the rest.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": -9
+        }
+      ],
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "who": "opponent",
+          "selector": {},
+          "keepTypes": [
+            "Artifact",
+            "Battle",
+            "Creature",
+            "Enchantment",
+            "Land",
+            "Planeswalker"
+          ],
+          "keptByEach": true
+        }
+      ]
+    }
+  ]
+}

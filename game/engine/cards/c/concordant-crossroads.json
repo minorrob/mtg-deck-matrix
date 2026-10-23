@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Concordant Crossroads",
+    "oracleId": "ff01b408-6d17-40a3-9efd-a1b341ec1307",
+    "supertypes": [
+      "World"
+    ],
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "All creatures have haste.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      },
+      "apply": {
+        "addKeywords": [
+          "Haste"
+        ]
+      },
+      "text": "All creatures have haste."
+    }
+  ]
+}

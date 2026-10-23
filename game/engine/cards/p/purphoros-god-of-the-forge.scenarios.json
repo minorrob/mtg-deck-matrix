@@ -74,7 +74,7 @@
         ]
       }
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -212,8 +212,8 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Murder",
-            "Murder",
+            "Smoke Murder",
+            "Smoke Murder",
             "Zap"
           ]
         }
@@ -239,7 +239,7 @@
             {
               "offers": {
                 "kind": "cast",
-                "card": "Murder"
+                "card": "Smoke Murder"
               },
               "count": 6,
               "targets": [
@@ -266,7 +266,7 @@
           ]
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Purphoros, God of the Forge"
@@ -295,7 +295,7 @@
           "tap": "Swamp"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Ogre"

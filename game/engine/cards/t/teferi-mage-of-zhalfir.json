@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Teferi, Mage of Zhalfir",
+    "oracleId": "2b6cbd55-5adc-4a34-ac45-8531705a7ee1",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Wizard"
+    ],
+    "manaCost": "{2}{U}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "Flash\nCreature cards you own that aren't on the battlefield have flash.\nEach opponent can cast spells only any time they could cast a sorcery.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flash",
+      "keyword": "flash"
+    },
+    {
+      "kind": "static",
+      "text": "Creature cards you own that aren't on the battlefield have flash.",
+      "layer": 6,
+      "affects": {
+        "what": "card",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "zone": "elsewhere"
+      },
+      "apply": {
+        "addKeywords": [
+          "Flash"
+        ]
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Each opponent can cast spells only any time they could cast a sorcery.",
+      "rule": "cast-as-sorcery",
+      "affects": {
+        "what": "player",
+        "who": "opponent"
+      }
+    }
+  ]
+}

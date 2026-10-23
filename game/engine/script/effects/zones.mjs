@@ -939,6 +939,7 @@ export function digUntil(state, params, context, rng = null) {
   const fits = params.selector ? compileSelector({...params.selector, what: "card", zone: params.exile ? "exile" : "library", ...(below !== null ? {manaValue: {max: below - 1}} : {})}) : null;
   const valueOf = (id) => (state.objects[id]?.manaCost ? manaValue(parseManaCost(state.objects[id].manaCost)) : 0);
   const wanted = params.count ?? 1;
+  const dug = [];
   for (const player of playersFor(state, params.who, context.controller)) {
     const taken = [], hits = [];
     let total = 0;
@@ -946,7 +947,10 @@ export function digUntil(state, params, context, rng = null) {
       const id = params.exile ? moveOne(state, top, "exile", events, {owner: player}) : top;
       if (id === null) break;
       if (!params.exile) events.push(event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: player}}));
-      if (fits && fits(state, id, {controller: context.controller, source: context.source})) hits.push(id);
+      /* "Until they exile a nonland card with a different name than that spell" (Tibalt's Trickery; card load w4d L1):
+         `differentName`, the name it must not have -- bound as the resolution began (script/bind.mjs, nameOf). */
+      if (fits && fits(state, id, {controller: context.controller, source: context.source})
+        && (params.differentName === undefined || state.objects[id]?.card !== params.differentName)) hits.push(id);
       else { taken.push(id); total += valueOf(id); }
       if (hits.length >= wanted) break;
       if (params.totalManaValue !== undefined && total >= params.totalManaValue) break;
@@ -957,6 +961,7 @@ export function digUntil(state, params, context, rng = null) {
         ...(params.found?.controller === "you" ? {controller: context.controller} : {})}) : hit;
       if (landed !== null) found.push(landed);
     }
+    if (params.exile && params.rest === undefined) dug.push(...taken);
     if (params.rest === "graveyard" || (params.rest === "exile" && !params.exile)) for (const id of taken) moveOne(state, id, params.rest, events, {owner: player});
     if (params.rest === "bottom") for (const id of inRandomOrder(taken, rng)) {
       if (params.exile) { moveOne(state, id, "library", events, {owner: player}); continue; }
@@ -967,6 +972,9 @@ export function digUntil(state, params, context, rng = null) {
     if (params.rest === "shuffle" && (taken.length || hits.length)) shuffleLibrary(state, player, rng, events);
   }
   if (params.remember) context.remembered = found.filter((id) => state.objects[id]);
+  /* "Then they put the exiled cards on the bottom of their library in a random order" (Tibalt's Trickery): `rememberAll`,
+     every card this exiled -- the one found too -- for the effect that names them "the exiled cards" (script/bind.mjs). */
+  if (params.rememberAll === true) context.exiledThisWay = [...dug, ...found].filter((id) => state.objects[id]);
   return events;
 }
 

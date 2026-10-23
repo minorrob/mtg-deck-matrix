@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Harmonized Crescendo",
+    "oracleId": "b93cd38a-1d0c-40e6-aaf1-621a2c88bf46",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.)\nChoose a creature type. Draw a card for each permanent you control of that type.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "convoke",
+      "text": "Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.)"
+    },
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "chooseType"
+        },
+        {
+          "effect": "draw",
+          "count": {
+            "count": {
+              "what": "permanent",
+              "controller": "you",
+              "subtypes": [
+                "$chosen"
+              ]
+            }
+          }
+        }
+      ],
+      "text": "Choose a creature type. Draw a card for each permanent you control of that type."
+    }
+  ]
+}

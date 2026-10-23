@@ -47,7 +47,7 @@ const BLOCKERS_DECLARED = ["COMBAT_DECLARE_BLOCKERS", "COMBAT_FIRST_STRIKE_DAMAG
 export const SELECTOR_KEYS = Object.freeze([
   "what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "zone", "controller", "who", "another", "target", "token", "manaValue", "named",
   "attachedBy", "colors", "tapped", "counters", "power", "self", "keywords", "nonSupertypes", "colorless", "attacking", "toughness", "countersAtLeast", "attackedThisTurn", "commander", "nonColors", "owner", "enteredThisTurn", "toughnessOverPower",
-  "unblocked", "singleTarget", "goaded", "uniqueName", "sharesCreatureType", "multicolored", "sharesColor",
+  "unblocked", "singleTarget", "abilityKind", "goaded", "uniqueName", "sharesCreatureType", "multicolored", "sharesColor",
   "sharesCreatureTypeWithCommander",
   /* "A card exiled with this artifact" (CR 607.2a, 406.6): what this source's linked ability exiled, still in exile. */
   "exiledWith", "exiledThisTurn", "unequalPowerToughness",
@@ -155,7 +155,9 @@ const WHAT = ["permanent", "card", "player", "spell", "ability"];
    entry, `id` the entry's stack id -- an activated or triggered ability's, never a spell's. What may be asked of it: who
    controls it (`controller`), and "with a single target" (`singleTarget`, CR 115.9a: one object or player chosen in all).
    Nothing gives an ability hexproof or protection, so being a target asks nothing more (`target`). */
-const ABILITY_KEYS = ["what", "controller", "singleTarget", "target"];
+/* `abilityKind`: "triggered" -- "copy target triggered ability you control" (Strionic Resonator; CR 113.3c, card load w4d
+   L1). */
+const ABILITY_KEYS = ["what", "controller", "singleTarget", "target", "abilityKind"];
 const abilityMatcher = (selector) => {
   const extra = Object.keys(selector).filter((key) => !ABILITY_KEYS.includes(key));
   if (extra.length) throw new Error(`An ability on the stack is chosen by ${ABILITY_KEYS.join(", ")}, not ${extra.join(", ")}`);
@@ -165,6 +167,7 @@ const abilityMatcher = (selector) => {
     if (selector.controller === "you" && entry.playerId !== context.controller) return false;
     if (selector.controller === "opponent" && entry.playerId === context.controller) return false;
     if (selector.singleTarget === true && (entry.targets ?? []).flat().filter(Boolean).length !== 1) return false;
+    if (selector.abilityKind === "triggered" && entry.kind !== "trigger") return false;
     return true;
   };
 };

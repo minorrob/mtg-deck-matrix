@@ -15,7 +15,7 @@
   },
   "92301066-8904-41bc-84bd-4aa286cbab9c": {
    "name": "Liliana of the Dark Realms",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "3ff6ba4bdde0fe18",
    "attempts": 1,
    "model": "x10-session",
@@ -26,7 +26,10 @@
    "at": "2026-10-06T16:16:05.954Z",
    "crFlags": [
     "CR 613.4c: the -3's +X/+X or -X/-X is a layer 7c change, X counted once as it resolves (CR 608.2h)"
-   ]
+   ],
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/l/liliana-of-the-dark-realms.json"
   },
   "1b3fb20a-e090-4286-9c03-6b71c27c45be": {
    "name": "Mortuary Mire",
@@ -174,7 +177,7 @@
   },
   "d5b9d250-92f5-40d8-b962-4ae4adb466c8": {
    "name": "Flicker of Fate",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "694e11031775da11",
    "attempts": 1,
    "model": "x10-session",
@@ -182,7 +185,10 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.243Z"
+   "at": "2026-10-06T16:16:06.243Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/f/flicker-of-fate.json"
   },
   "0c26ab0d-80f6-4e5b-9d0e-af17c1519583": {
    "name": "March of the Multitudes",
@@ -246,7 +252,7 @@
   },
   "cc6a83c7-e645-4a53-9550-be79b42cd851": {
    "name": "Loyal Warhound",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "120a63c4b4050d1f",
    "attempts": 1,
    "model": "x10-session",
@@ -254,7 +260,10 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.392Z"
+   "at": "2026-10-06T16:16:06.392Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/l/loyal-warhound.json"
   },
   "16629f59-bae8-4c19-bf50-443eb0ed6856": {
    "name": "Felidar Retreat",

@@ -34,7 +34,7 @@ import {makeCopies, afterwards, joinAttack, attackPlaces, attachTo, createToken,
 import {payGeneric, canPayGeneric, parseManaCost, manaValue, paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits, unlessPlans, planWords, payPlan} from "../../rules/mana.mjs";
 import {typesOf, characteristicsOf, everyCreatureTypeOf, controllerOf, lastKnown, staticAbilities} from "../../rules/layers.mjs";
 import {isLandType} from "../../keywords/types.mjs";
-import {pushCopy, becameTarget, specsOf} from "../../rules/stack.mjs";
+import {pushCopy, pushAbilityCopy, becameTarget, specsOf} from "../../rules/stack.mjs";
 import {loseLife, gainLife, DAMAGING, damageQuestion, addMana} from "./resources.mjs";
 import {damageOrderChoice} from "../../rules/replacement.mjs";
 import {targetCandidates, targetName} from "../bind.mjs";
@@ -786,9 +786,11 @@ export const proliferate = {
       ...state.zones.battlefield.filter((id) => hasCounters(state.objects[id].counters)).map((id) => ({id})),
       ...state.players.filter((p) => !p.lost && hasCounters(playerCounters(p))).map((p) => ({player: p.id})),
     ];
+    /* "Choose any number of permanents you control that had a counter put on them this way" (Ripples of Potential; card
+       load w4d L1): `remember`, the permanents given counters (apply). */
     /* Nothing with a counter: nothing to choose, and nobody is asked -- but the player has proliferated. */
     if (candidates.length === 0) return {events: [proliferated(state, context.controller)]};
-    state.awaiting = {kind: "effect-choice", effect: "proliferate", player: context.controller, candidates};
+    state.awaiting = {kind: "effect-choice", effect: "proliferate", player: context.controller, candidates, ...(params.remember === true ? {remember: true} : {})};
     return true;
   },
 
@@ -810,7 +812,9 @@ export const proliferate = {
 
   apply(state, awaiting, indices) {
     const chosen = (indices ?? []).map((i) => awaiting.candidates[i]).filter(Boolean).map((c) => (c.player !== undefined ? {player: c.player} : c.id));
-    return [...giveEachAnother(state, {chosen}, {controller: awaiting.player}), proliferated(state, awaiting.player)];
+    const events = [...giveEachAnother(state, {chosen}, {controller: awaiting.player}), proliferated(state, awaiting.player)];
+    /* The permanents a counter was put on (`remember`): each chosen one still there. */
+    return awaiting.remember ? {events, remembered: chosen.filter((id) => typeof id !== "object" && state.objects[id]?.zone === "battlefield")} : events;
   },
 };
 
@@ -878,7 +882,9 @@ function nextKeepType(state, awaiting) {
     if (candidates.length > 1) break;
     if (candidates.length === 1) kept[player] = [...new Set([...(kept[player] ?? []), candidates[0]])];
   }
-  return {...awaiting, kept, at};
+  /* "EACH OPPONENT CHOOSES A PERMANENT THEY CONTROL OF EACH PERMANENT TYPE AND SACRIFICES THE REST" (Liliana, Dreadhorde
+     General; `keptByEach`): each player makes their own choices (CR 608.2d), in the same order. */
+  return {...awaiting, kept, at, ...(awaiting.keptByEach && at < awaiting.steps.length ? {player: awaiting.steps[at].player} : {})};
 }
 function sacrificeUnkept(state, awaiting) {
   const events = [];
@@ -912,7 +918,7 @@ export const sacrifice = {
     /* The effect's controller chooses what each player keeps, by type (Tragic Arrogance). */
     if (Array.isArray(params.keepTypes)) {
       const begun = nextKeepType(state, {kind: "effect-choice", effect: "sacrifice", player: context.controller, selector: asked.selector, source: asked.source,
-        keepTypes: [...params.keepTypes], everyone, steps: everyone.flatMap((player) => params.keepTypes.map((type) => ({player, type}))), at: 0, kept: {}});
+        ...(params.keptByEach === true ? {keptByEach: true} : {}), keepTypes: [...params.keepTypes], everyone, steps: everyone.flatMap((player) => params.keepTypes.map((type) => ({player, type}))), at: 0, kept: {}});
       if (begun.at >= begun.steps.length) return {events: sacrificeUnkept(state, begun)};
       state.awaiting = begun;
       return true;
@@ -1595,10 +1601,20 @@ function retargetOptions(state, question, {withOthers = false} = {}) {
 }
 export const copySpell = {
   open(state, params, context) {
-    const originals = (params.spells ?? []).map((id) => state.stack.find((e) => e.objectId === id)).filter(Boolean);
+    /* Or a spell or ability by its stack entry (`stack`: "copy target triggered ability you control", Strionic Resonator;
+       "target instant spell, sorcery spell, activated ability, or triggered ability", Return the Favor): an ability's copy is
+       an ability (rules/stack.mjs, pushAbilityCopy), a spell's a spell. */
+    const originals = [...(params.spells ?? []).map((id) => state.stack.find((e) => e.objectId === id)),
+      ...(Array.isArray(params.stack) ? params.stack.map((id) => state.stack.find((e) => e.stackId === id)) : [])].filter(Boolean);
     const count = Math.max(0, params.count ?? 1);
     const events = [], questions = [];
     for (const original of originals) for (let n = 0; n < count; n += 1) {
+      if (original.kind !== "spell") {
+        const copy = pushAbilityCopy(state, original, {controller: context.controller});
+        events.push(event("GameEventAbilityCopied", state, {name: original.name, playerId: context.controller, stackId: copy.stackId, original: original.stackId}));
+        if (params.newTargets === true) copy.targets.forEach((t, index) => { if (!Array.isArray(t)) questions.push({stackId: copy.stackId, index}); });
+        continue;
+      }
       const copy = pushCopy(state, original, {controller: context.controller, nonLegendary: params.except?.nonLegendary === true});
       events.push(event("GameEventSpellCopied", state, {card: cardRef(state, copy.objectId), original: cardRef(state, original.objectId),
         playerId: context.controller, stackId: copy.stackId}));
@@ -2216,7 +2232,9 @@ const playable = (state, player, pool, {most, free, anyMana, payMana = false, la
 };
 export const play = {
   open(state, params, context) {
-    const player = context.controller;
+    /* "They may cast that card without paying its mana cost" (Tibalt's Trickery; card load w4d L1): `who`, the player who
+       may -- bound, its controller as the resolution began (script/bind.mjs) -- nobody when there is none. */
+    const player = Array.isArray(params.who) ? params.who[0] : context.controller;
     if (!state.players[player]) return false;
     const most = params.manaValueAtMost === undefined ? Infinity : amountOf(state, params.manaValueAtMost, context);
     const from = params.from ?? "hand";

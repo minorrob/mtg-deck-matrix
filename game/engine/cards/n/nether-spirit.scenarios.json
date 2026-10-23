@@ -16,7 +16,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -104,7 +104,7 @@
           "zone": "graveyard",
           "cards": [
             "Forest",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -144,7 +144,7 @@
           "zone": "graveyard",
           "cards": [
             "Forest",
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ]
@@ -248,7 +248,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -281,7 +281,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Bear"
@@ -304,7 +304,7 @@
           "zone": "graveyard",
           "cards": [
             "Bear",
-            "Murder",
+            "Smoke Murder",
             "Nether Spirit"
           ]
         }

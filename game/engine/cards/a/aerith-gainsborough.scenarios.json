@@ -19,7 +19,7 @@
         ]
       }
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -93,7 +93,7 @@
           "cards": [
             "Salve",
             "Salve",
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ],
@@ -126,7 +126,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Aerith Gainsborough"

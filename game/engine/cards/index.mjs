@@ -648,13 +648,15 @@ function compileGivenIn(effects, text, problems) {
       if (given) effect.except = {...effect.except, addAbilities: given.abilities, ...(given.keywords.length ? {addKeywords: [...(effect.except.addKeywords ?? []), ...given.keywords]} : {})};
     }
     /* "You get an emblem with '...'" (CR 114.2; effects/permanents.mjs, emblem): its abilities compiled as a card's are, in
-       place. What works from the command zone is built (114.4): a triggered ability, a replacement effect, and a rule
-       changed for players (rules/statics.mjs, playerRuleChanged) -- no other static yet. */
+       place. What works from the command zone is built (114.4): a triggered ability, a replacement effect, a rule
+       changed for players (rules/statics.mjs, playerRuleChanged), and a static ability in a layer (rules/layers.mjs,
+       gatherEffects: Liliana of the Dark Realms' "Swamps you control have ..."). */
     if (effect.effect === "emblem") {
       const list = effect.abilities;
       if (!Array.isArray(list) || !list.length) { problems.push(`${text}: an emblem's abilities are a list, with at least one`); continue; }
-      for (const ability of list) if (!(["triggered", "replacement"].includes(ability?.kind) || (ability?.kind === "static" && typeof ability.rule === "string" && ability.affects?.what === "player")))
-        problems.push(`${text}: an emblem's ${ability?.kind ?? "nameless"} ability -- only triggered and replacement abilities, and a rule changed for players, work from the command zone yet`);
+      for (const ability of list) if (!(["triggered", "replacement"].includes(ability?.kind) || (ability?.kind === "static" && typeof ability.rule === "string" && ability.affects?.what === "player")
+        || (ability?.kind === "static" && ability.rule === undefined && Number.isInteger(ability.layer))))
+        problems.push(`${text}: an emblem's ${ability?.kind ?? "nameless"} ability -- only triggered and replacement abilities, a rule changed for players and a static in a layer work from the command zone yet`);
       const {definition, problems: inner} = compileScript({schema: SCRIPT_SCHEMA, identity: EMBLEM_IDENTITY, oracleText: "", abilities: list});
       problems.push(...inner.map((problem) => `${text}: ${problem}`));
       if (definition) effect.abilities = definition.abilities;
@@ -871,6 +873,18 @@ export function compileScript(script) {
     /* FIREBENDING N (CR 702.189a; Fire Nation Cadets, Train C phase 2): the keyword IS a triggered ability -- "Whenever this
        creature attacks, add N {R}" -- mana its controller does not lose as combat's steps end, until the combat phase does
        (addMana's `untilEndOfCombat`, script/effects/resources.mjs; rules/turn.mjs). Each instance triggers. */
+    /* MOBILIZE N (CR 702.181a; Voice of Victory, card load w4d L1): the keyword IS a triggered ability -- "Whenever this
+       creature attacks, create N tapped and attacking 1/1 red Warrior creature tokens. Sacrifice them at the beginning of
+       the next end step." Whom each attacks is its controller's choice (CR 508.4; effects/permanents.mjs, enterAttacking).
+       Each instance triggers. */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "mobilize") {
+      if (!(Number.isInteger(ability.amount) && ability.amount >= 1)) problems.push(`${ability.text}: mobilize needs its number, 1 or more`);
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.attacks({who: "self"}),
+        effects: [{effect: "createToken", count: ability.amount ?? 1, tapped: true, attacking: true, atEndStep: "sacrifice",
+          token: {name: "Warrior", types: ["Creature"], subtypes: ["Warrior"], colors: ["R"], power: 1, toughness: 1}}]});
+      keywords.push("Mobilize");
+      return;
+    }
     if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "firebending") {
       if (!(Number.isInteger(ability.amount) && ability.amount >= 1)) problems.push(`${ability.text}: firebending needs its number, 1 or more`);
       abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.attacks({who: "self"}),
@@ -1786,7 +1800,13 @@ export function compileScript(script) {
         /* "This ability costs {1} less to activate for each legendary creature you control" (CR 602.2b, 601.2f). */
         ...(ability.costLess !== undefined ? {costLess: ability.costLess} : {}), ...(ability.condition ? {condition: ability.condition} : {}),
         /* "Activate only once each turn" (CR 602.5b): how many times each turn. */
-        ...(ability.limit ? {limit: ability.limit} : {})});
+        ...(ability.limit ? {limit: ability.limit} : {}),
+        /* BOAST (CR 702.142a; card load w4d L1): "activate only if this creature attacked this turn and only once each turn"
+           -- twice during its controller's turns where a rule says so (Birgi, God of Storytelling; rules/actions.mjs,
+           withinLimit). */
+        ...(ability.boast === true ? {boast: true, limit: 1, condition: ability.condition
+          ? {allOf: [ability.condition, {present: {what: "permanent", self: true, attackedThisTurn: true}}]}
+          : {present: {what: "permanent", self: true, attackedThisTurn: true}}} : {})});
       return;
     }
     if (ability.kind === "triggered") {

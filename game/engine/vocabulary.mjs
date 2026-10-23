@@ -248,7 +248,9 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
   "bushido",
   "saddle",
   /* And dredge (CR 702.52a; Life from the Loam), a draw replaced from the graveyard, its player's choice (script/effects/zones.mjs). */
-  "dredge"];
+  "dredge",
+  /* Card load w4d L1: mobilize (CR 702.181; Voice of Victory), a triggered ability as it attacks (cards/index.mjs). */
+  "mobilize"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

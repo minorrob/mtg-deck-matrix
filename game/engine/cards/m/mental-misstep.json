@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mental Misstep",
+    "oracleId": "1a0770e6-b093-4439-baff-6889a50ba12e",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{U/P}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "({U/P} can be paid with either {U} or 2 life.)\nCounter target spell with mana value 1.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Counter target spell with mana value 1.",
+      "targets": [
+        {
+          "what": "spell",
+          "manaValue": {
+            "min": 1,
+            "max": 1
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "counterSpell",
+          "spells": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

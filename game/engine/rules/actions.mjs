@@ -66,7 +66,7 @@ import {runEffects} from "../script/effects/index.mjs";
 import {changeLife} from "../script/effects/resources.mjs";
 import {unprepare, preparedCopyStays} from "../script/effects/attributes.mjs";
 import {checkStateBasedActions, gameOver} from "./sba.mjs";
-import {costReduction, costIncrease, lifeIncrease, costsReadTargets, abilityCostIncrease, equipCostReduction, playerStatics, freeCast, flashGranted, castForbidden, placeCounters, activationForbidden, permanentActivationForbidden, cantBeSacrificed, ruleChanged, sorceryTimeOnly, loyaltyCostIncrease} from "./statics.mjs";
+import {costReduction, costIncrease, lifeIncrease, costsReadTargets, abilityCostIncrease, equipCostReduction, playerStatics, freeCast, flashGranted, castForbidden, placeCounters, activationForbidden, permanentActivationForbidden, cantBeSacrificed, ruleChanged, sorceryTimeOnly, playerRuleChanged, loyaltyCostIncrease} from "./statics.mjs";
 import {countMana, amountOf, countEffect, isCounted, amountProblems, commanderless} from "../script/amount.mjs";
 import {bindEffect} from "../script/bind.mjs";
 import {conditionHolds} from "../script/condition.mjs";
@@ -209,7 +209,9 @@ function convokeCost(state, player, action) {
 /* A cast's own question, or what it costs, weighed as the card is cast: as its Adventure, when it is cast as one (CR 715.3a). */
 /* And face down, when it is cast with disguise (CR 702.168b). */
 /* And face up, a card exiled face down that is being played (CR 406.3a; withFaceUp) -- as an Adventure too, then. */
+/* And as its back face, a modal double-faced card cast so (CR 712.11a). */
 const asCast = (state, action, fn) => withFaceUp(state, action?.objectId, () => (action?.adventure === true ? withAdventure(state, action.objectId, fn)
+  : action?.kind === "cast" && action?.face === "back" ? withBackFace(state, action.objectId, fn)
   : action?.disguise === true ? withFaceDown(state, action.objectId, fn) : fn()));
 /* The ways the pool pays the rest once the creatures a convoke picked have paid their part (rules/mana.mjs,
    convokePayments): each untapped and the caster's, none twice -- refused otherwise, before anything is tapped, saying what
@@ -959,9 +961,13 @@ function tapSets(state, player, sourceId, selector, count, ownTap = false) {
   return sets;
 }
 
+/* "Creatures you control can boast twice during each of your turns rather than once" (Birgi, God of Storytelling; CR
+   702.142a): a boast ability's limit, during its controller's own turn under that rule. */
+const boastLimit = (state, id, ability) => (ability.boast === true && state.objects[id]?.controller === state.activePlayer
+  && playerRuleChanged(state, "boast-twice", state.objects[id].controller) ? 2 : ability.limit);
 /* Whether an ability is within its limit this turn ("activate only once each turn", CR 602.5b), and an exhaust ability
    not yet activated by this object (CR 702.177a). */
-const withinLimit = (state, id, ability) => (!ability.limit || usesThisTurn(state, id, ability.id) < ability.limit)
+const withinLimit = (state, id, ability) => (!ability.limit || usesThisTurn(state, id, ability.id) < boastLimit(state, id, ability))
   && !(ability.exhaust && (state.objects[id]?.exhausted ?? []).includes(ability.id));
 /* Whether a mana ability's "mill N cards" can be paid: that many cards in its controller's library (CR 118.3, 701.17). */
 const millPayable = (state, player, ability) => !ability.millCost || cardsIn(state, "library", player).length >= ability.millCost;
@@ -1593,6 +1599,19 @@ function withAdventure(state, id, fn) {
   finally { if (state.objects[id]?.face === "adventure") showAdventure(state, id, false); }
 }
 
+/* A MODAL DOUBLE-FACED CARD WEIGHED AS ITS BACK FACE (CR 712.11a; Birgi, God of Storytelling's Harnfel, Horn of Bounty; card
+   load w4d L1): a nonland back face may be cast -- shown face up for the length of `fn`, its cost, its timing, its targets
+   the back face's, with its derivations made afresh, and its front again after unless `fn` cast it: it is then a new
+   object on the stack, its back face up there (CR 712.8c; state/index.mjs, moveCard), and on the battlefield as it
+   resolves. A land back face is played, not cast (backLand). */
+const backSpell = (object) => object?.mdfc !== undefined && object.mdfc.transforming !== true && object.face !== "back" && !(object.mdfc.back.types ?? []).includes("Land");
+function withBackFace(state, id, fn) {
+  if (!backSpell(state.objects[id])) return fn();
+  showFace(state, id, "back");
+  try { return derivingAfresh(state, fn); }
+  finally { if (state.objects[id]?.face === "back") showFace(state, id, "front"); }
+}
+
 /* DISGUISE (CR 702.168a-b): "You may cast this card as a 2/2 face-down creature with ward {2}, no name, no subtypes, and no
    mana cost by paying {3} rather than paying its mana cost" -- an alternative cost (CR 118.9), from any zone it could be cast
    from. The card is weighed as that face-down spell for the length of `fn` (state/index.mjs, shownFaceDown): its cost, its
@@ -1646,7 +1665,7 @@ function adventureFrom(state, player, id, from) {
    never its mana cost, which nothing lets it be cast for from there. */
 /* `disguise`: cast face down for {3} (CR 702.168a), the card shown face down by the caller (withFaceDown) -- that cost
    alone, never with another alternative cost (CR 118.9a): a free cast, or the Citadel's life. */
-function castOffers(state, player, {id, from, flashback, escape, via = null, asType = null, adventure = false, graveyardCost = false, disguise = false}, tappable) {
+function castOffers(state, player, {id, from, flashback, escape, via = null, asType = null, adventure = false, graveyardCost = false, disguise = false, face = null}, tappable) {
   const actions = [];
   const object = state.objects[id];
   /* A free alternative cost can make a costless spell castable, never a land (CR 305.9). */
@@ -1799,7 +1818,9 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
         ...(freely ? {free: true} : {}), ...(back ? {flashback: true} : {}), ...(fled ? {escape: fled.kind} : {}), ...(way?.disguise ? {disguise: true} : way ? {alternative: way.index} : {}),
         ...viaOf(state, via), ...(asType ? {asType} : {}), ...(paidLife !== null ? {lifeInstead: paidLife} : {}), ...ridersOffer(state, riders),
         /* Cast as its Adventure (CR 715.3): another action than the card cast as itself. */
-        ...(adventure ? {adventure: true} : {})};
+        ...(adventure ? {adventure: true} : {}),
+        /* Cast as its back face (CR 712.11a; withBackFace). */
+        ...(face === "back" ? {face: "back"} : {})};
       /* A way to aim it that costs more life than there is -- a mode's target, chosen here, at Terror of the Peaks -- is no way
          to cast it (CR 119.4). */
       const affordable = (offer) => lifeIncrease(state, player, id, offer.targets) <= lifeLeft + aimLife;
@@ -1934,6 +1955,9 @@ function offers(state, player) {
   ];
   /* A card exiled face down, by its own cost, timing and targets (withFaceUp, CR 406.3a, 601.2). */
   for (const entry of castable) actions.push(...withFaceUp(state, entry.id, () => castOffers(state, player, entry, tappable)));
+  /* A modal double-faced card's nonland back face, from its owner's hand or the command zone (CR 712.11a; withBackFace). */
+  for (const entry of castable) if (["hand", "command"].includes(entry.from) && backSpell(state.objects[entry.id]))
+    actions.push(...withBackFace(state, entry.id, () => castOffers(state, player, {...entry, face: "back"}, tappable)));
   /* Disguise (CR 702.168a): face down for {3}, from wherever the card could be cast as that face-down spell -- its owner's
      hand, the command zone (a commander), or a zone a permission opens to it, the permission weighed face down too: Mystic
      Forge's "colorless spells" takes it in, Thundermane Dragon's "power 4 or greater" does not (702.168b). Never for

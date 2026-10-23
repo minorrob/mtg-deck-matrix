@@ -1,0 +1,85 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Blightstep Pathway // Searstep Pathway",
+  "scenarios": [
+    {
+      "name": "Played as Blightstep Pathway: {B}; a land face is played, never cast",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Blightstep Pathway // Searstep Pathway"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Searstep Pathway"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "play": "Blightstep Pathway"
+        },
+        {
+          "tap": "Blightstep Pathway"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Blightstep Pathway"
+          ]
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "B": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Played as Searstep Pathway: {R}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Blightstep Pathway // Searstep Pathway"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Searstep Pathway"
+        },
+        {
+          "tap": "Searstep Pathway"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Searstep Pathway"
+          ]
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "R": 1
+          }
+        }
+      ]
+    }
+  ]
+}
