@@ -42,6 +42,7 @@
 import {readdir, readFile, writeFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
 import {createRequire} from 'node:module';
+import {createHash} from 'node:crypto';
 import {basename} from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
 import {bundledLookup, describe, SOURCE} from './build-live-state.mjs';
@@ -339,9 +340,10 @@ export async function importStarWorkbook(workbook,{prior=null,now=new Date(),loo
        bench row carries its box, and the Sell box's copies are offered for sale.
      - THE PRINTS ARE THEIR OWN SHEET (Card Prints: Card ID, Quantity, Set, Collector #, Finish, Value Each, Artist).
      - THE DECK REFERENCE NAMES EACH DECK'S COMMANDER(S) AND DESCRIBES IT (core mechanic, play style, engine, Game
-       Changers, mana, counts, deviations from the shell). That text is the deck's notes, which the deck page shows as
-       its summary (Rob, 2026-10-21: "load the deck reference text for each deck summary page"), and its bracket is the
-       deck's bracket. A deck it has no row for is described by the row that says it holds that deck's list (TB5 is
+       Changers, mana, counts, deviations from the shell). Its bracket is the deck's bracket, and the row is kept as the
+       deck's `reference`. Until 2026-10-23 its text was also the deck's notes; now the deck page shows the deck's
+       description and How to play from the write-ups file instead (Rob, 2026-10-23: "replace the text carried in from
+       Excel ... with a short description and a step-by-step play guide"), and notes are the owner's own. A deck it has no row for is described by the row that says it holds that deck's list (TB5 is
        "D7 ... list = TB5").
      - Ownership "Watch" rows are watched cards. Nothing is on order (the Ordered column is empty), and no $ Each is kept,
        so what was paid is carried from the committed file for cards still owned.
@@ -374,7 +376,18 @@ export function referenceText(r){
     r.deviations?`Deviations from the shell: ${r.deviations}`:''].filter(Boolean).join('\n');
 }
 
-export async function importMasterTable(workbook,{rows,prior=null,now=new Date(),lookup,canon,notes,only=null,watchInto=null}){
+/* THE NOTES THE 10-21 BACKUP WROTE. Until 2026-10-23 a deck's Deck Reference row was its notes; the app's Apply deck
+   write-ups (Settings › Data) clears notes only where they still equal this text, so the owner's own words survive.
+   data/deck-reference-2026-10-21.json holds a SHA-256 of it per deck, and tests/live-load.mjs holds the two equal. */
+export const referenceNotes=(id,ref,via)=>(via?`${id} holds ${via}'s list: the Deck Reference describes it under ${via}.\n`:'')+referenceText(ref);
+/* THE WRITE-UPS (requirements DPG-7): a deck's description and How to play come from data/deck-writeups-<date>.json,
+   keyed by the backup's deck id. The Deck Reference row stays in `reference` as data and no longer becomes notes. */
+export function referenceHashes(doc){const sha=t=>createHash('sha256').update(t,'utf8').digest('hex');
+  return {schema:'deck-reference-hashes@1',source:`SHA-256 of each deck's notes as the backup built from ${doc.workbook} wrote them (its Deck Reference row), for Apply deck write-ups to clear only notes nobody has edited.`,
+    decks:Object.fromEntries(doc.decks.filter(d=>d.reference).map(d=>{const {describedUnder,...ref}=d.reference;return [d.id,sha(referenceNotes(d.id,ref,describedUnder))];}))};}
+export const WRITEUPS=new URL('../data/deck-writeups-2026-10-23.json',import.meta.url);
+export async function importMasterTable(workbook,{rows,prior=null,now=new Date(),lookup,canon,notes,only=null,watchInto=null,writeups=null}){
+  const written=(writeups||JSON.parse(await readFile(WRITEUPS,'utf8'))).decks||{};
   const h=rows.findIndex(r=>String(r[0]??'').trim()==='Card ID');ensure(h>=0,'Master: no header row starting with "Card ID".');
   const H=rows[h].map(x=>String(x??'').trim()),at=name=>H.indexOf(name),col=name=>{const i=at(name);ensure(i>=0,`Master: no "${name}" column.`);return i;};
   const txt=v=>v===null||v===undefined?'':String(v).trim();
@@ -466,7 +479,7 @@ export async function importMasterTable(workbook,{rows,prior=null,now=new Date()
     const recs=cards.map(([n])=>lookup(n)).filter(Boolean),mech=Catalog.deckMechanics(recs,lookup(leads[0]),4)||[];
     const d={id,name:`${id} ${shortName(leads)}`,commander:leads.length===1?leads[0]:leads,
       definition:{baseBracket:Number.isInteger(bracket)?bracket:3,bracketCeiling:Number.isInteger(bracket)?bracket:3,playStyle:'Balanced',mechanics:mech},
-      notes:(via?`${id} holds ${via}'s list: the Deck Reference describes it under ${via}.\n`:'')+referenceText(ref),
+      notes:'',...(written[id]?{description:written[id].description,howToPlay:[...written[id].howToPlay]}:{}),
       reference:{...ref,...(via?{describedUnder:via}:{})},cards};
     if(!isLive(id))d.draft=true;
     decks.push(d);
@@ -760,7 +773,7 @@ export function diff(prior,doc){
 
 if(process.argv[1]&&pathToFileURL(process.argv[1]).href===import.meta.url){
   const args=process.argv.slice(2),flag=name=>{const i=args.indexOf(name);return i>=0?args[i+1]:null;},check=args.includes('--check');
-  const positional=args.filter((a,i)=>!a.startsWith('--')&&!['--adjust','--scryfall','--out','--decks','--only','--watch-into'].includes(args[i-1]));
+  const positional=args.filter((a,i)=>!a.startsWith('--')&&!['--adjust','--scryfall','--out','--decks','--only','--watch-into','--reference-hashes'].includes(args[i-1]));
   const out=flag('--out')?pathToFileURL(flag('--out')):SOURCE;
   try{
     const workbook=positional[0]||await newestWorkbook();
@@ -775,6 +788,7 @@ if(process.argv[1]&&pathToFileURL(process.argv[1]).href===import.meta.url){
     for(const n of notes)console.log('  note: '+n);
     console.log(diff(prior,doc).join('\n'));
     console.log(describe(built));
+    if(flag('--reference-hashes')){await writeFile(flag('--reference-hashes'),JSON.stringify(referenceHashes(doc),null,1)+'\n');console.log(`Wrote ${flag('--reference-hashes')}`);}
     if(!check){await writeFile(out,JSON.stringify(doc,null,1)+'\n');console.log(`Wrote ${fileURLToPath(out)}`);}
     else if(prior&&same(prior,doc))console.log(`${fileURLToPath(out)} is up to date with ${doc.workbook}.`);
     else{console.error(`live-load: ${fileURLToPath(out)} is ${prior?'stale against':'missing for'} ${doc.workbook}; run without --check to rebuild it.`);process.exit(1);}
