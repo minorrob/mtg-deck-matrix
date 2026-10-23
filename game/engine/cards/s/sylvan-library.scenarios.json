@@ -190,7 +190,7 @@
       ]
     },
     {
-      "name": "Both put back, Charlie then Alpha, none paid for: Alpha on top, drawn next",
+      "name": "Both put back, Charlie then Alpha: Alpha on top, drawn next turn -- when Bravo, drawn on turn 3, is not one to choose",
       "library": [
         "Alpha",
         "Bravo",
@@ -268,7 +268,37 @@
         },
         {
           "choose": [
-            "No"
+            "Yes"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Alpha",
+                  "Charlie",
+                  "Wastes"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Alpha",
+            "Charlie"
+          ]
+        },
+        {
+          "choose": [
+            "Pay 4 life"
+          ]
+        },
+        {
+          "choose": [
+            "Pay 4 life"
           ]
         }
       ],
@@ -278,8 +308,14 @@
           "zone": "hand",
           "cards": [
             "Bravo",
-            "Alpha"
+            "Alpha",
+            "Charlie",
+            "Wastes"
           ]
+        },
+        {
+          "seat": 0,
+          "life": 32
         }
       ]
     },

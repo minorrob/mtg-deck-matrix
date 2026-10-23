@@ -17,8 +17,8 @@ table until a played game or Rob confirms it. They are not counted as defined.
 | Scope | Cards | Defined | Provisional | Every rule | Share |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Rob's seven decks | 477 | 477 | 0 | 477 | 100.0% |
-| the card library | 2365 | 1347 | 6 | 2114 | 89.4% |
-| the most-played 80% of Commander cards | 3238 | 1614 | 25 | 2843 | 87.8% |
+| the card library | 2365 | 1347 | 6 | 2117 | 89.5% |
+| the most-played 80% of Commander cards | 3238 | 1614 | 25 | 2848 | 88.0% |
 
 ## What blocks the rest — Rob's seven decks
 
@@ -43,12 +43,12 @@ table until a played game or Rob confirms it. They are not counted as defined.
 | `RollDice` | api | 4 | unmapped |
 | `RaiseCost` | static | 4 | no engine support yet |
 | `ThisTurnEntered` | count | 3 | not built |
-| `Kicker` | keyword | 3 | declared, no behavior |
 | `Fog` | api | 3 | unmapped |
 | `ValidExile` | count | 3 | not built |
 | `DamageResolve` | api | 3 | unmapped |
 | `ManifestDread` | api | 3 | unmapped |
 | `Buyback` | keyword | 3 | not declared |
+| `ReplaceMana` | api | 3 | unmapped |
 
 ## What blocks the rest — the most-played 80% of Commander cards
 

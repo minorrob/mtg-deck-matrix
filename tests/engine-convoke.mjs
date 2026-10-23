@@ -10,7 +10,8 @@
  * what to do instead, and nothing is tapped or moved. Picks that leave the pool more than one way to pay the rest are
  * followed by the payment question (the plan's X8b, CR 601.2g-h): which mana stays in the pool is the caster's to decide,
  * never the engine's -- at a four-player table too, as the live fuzz found it with Lethal Scheme -- and the house and
- * random-legal pilots answer it. A spell with {X} is not convoked (named).
+ * random-legal pilots answer it. A spell with {X} is convoked too, X as high as the pool and the creatures pay together
+ * (Chord of Calling, the card load of 2026-10-23).
  */
 import assert from "node:assert/strict";
 import {awaitingChoice, resolveAwaiting} from "../game/engine/rules/turn.mjs";

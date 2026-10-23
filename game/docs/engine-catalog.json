@@ -9,17 +9,17 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1562,
+  "defined": 1614,
   "provisional": 25,
-  "everyRule": 2833
+  "everyRule": 2848
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 81,
+    "built": 84,
     "partial": 0,
     "named": 7,
-    "missing": 106
+    "missing": 103
    },
    "entries": [
     {
@@ -458,13 +458,13 @@
      "kind": "keyword ability",
      "rule": "702.33",
      "name": "Kicker",
-     "engine": null,
-     "status": "missing",
+     "engine": "Kicker",
+     "status": "built",
      "forge": "Kicker",
      "top": 5,
      "all": 239,
-     "blocks": 5,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -506,13 +506,13 @@
      "kind": "keyword ability",
      "rule": "702.85",
      "name": "Cascade",
-     "engine": null,
-     "status": "missing",
+     "engine": "Cascade",
+     "status": "built",
      "forge": "Cascade",
      "top": 5,
      "all": 37,
-     "blocks": 5,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -674,13 +674,13 @@
      "kind": "keyword ability",
      "rule": "702.126",
      "name": "Improvise",
-     "engine": null,
-     "status": "missing",
+     "engine": "Improvise",
+     "status": "built",
      "forge": "Improvise",
      "top": 3,
      "all": 24,
-     "blocks": 3,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -2634,8 +2634,8 @@
      "forge": "Discover",
      "top": 6,
      "all": 35,
-     "blocks": 6,
-     "alone": 6
+     "blocks": 5,
+     "alone": 5
     },
     {
      "kind": "keyword action",
@@ -4111,8 +4111,8 @@
      "forge": "Discover",
      "top": 6,
      "all": 35,
-     "blocks": 6,
-     "alone": 6
+     "blocks": 5,
+     "alone": 5
     },
     {
      "kind": "effect",
@@ -8197,7 +8197,7 @@
      "forge": "Draw",
      "top": 7,
      "all": 37,
-     "blocks": 5,
+     "blocks": 4,
      "alone": 3
     },
     {
@@ -8209,7 +8209,7 @@
      "forge": "GainLife",
      "top": 6,
      "all": 21,
-     "blocks": 5,
+     "blocks": 3,
      "alone": 1
     },
     {
@@ -8281,7 +8281,7 @@
      "forge": "LifeReduced",
      "top": 1,
      "all": 8,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -8925,7 +8925,7 @@
      "forge": "RememberChanged",
      "top": 124,
      "all": 1168,
-     "blocks": 57,
+     "blocks": 56,
      "alone": 4
     },
     {
@@ -8949,8 +8949,8 @@
      "forge": "RememberObjects",
      "top": 123,
      "all": 1460,
-     "blocks": 61,
-     "alone": 9
+     "blocks": 60,
+     "alone": 10
     },
     {
      "kind": "option",
@@ -9009,7 +9009,7 @@
      "forge": "MayPlay",
      "top": 99,
      "all": 625,
-     "blocks": 42,
+     "blocks": 41,
      "alone": 1
     },
     {
@@ -9201,8 +9201,8 @@
      "forge": "Imprint",
      "top": 10,
      "all": 97,
-     "blocks": 7,
-     "alone": 5
+     "blocks": 6,
+     "alone": 4
     },
     {
      "kind": "option",
@@ -9523,7 +9523,7 @@
      "forge": "Amount",
      "top": 10,
      "all": 43,
-     "blocks": 8,
+     "blocks": 7,
      "alone": 4
     },
     {
@@ -9631,7 +9631,7 @@
      "forge": "LifeGained",
      "top": 5,
      "all": 20,
-     "blocks": 4,
+     "blocks": 2,
      "alone": 0
     },
     {
@@ -9643,8 +9643,8 @@
      "forge": "Kicked",
      "top": 3,
      "all": 92,
-     "blocks": 3,
-     "alone": 0
+     "blocks": 2,
+     "alone": 2
     },
     {
      "kind": "count",
@@ -9656,7 +9656,7 @@
      "top": 3,
      "all": 30,
      "blocks": 2,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "count",

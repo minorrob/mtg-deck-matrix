@@ -2357,9 +2357,7 @@ export function offerSpecs(state, player, action) {
   /* With what the offer has chosen so far: "a second target", "up to one other target" (script/bind.mjs, distinctFrom). */
   /* And the X announced (CR 601.2b, before 601.2c): "each of up to X targets" (Crackle with Power). */
   const context = {controller: player, source: action.objectId, chosenTargets: action.targets ?? [], ...(Number.isInteger(action.x) ? {x: action.x} : {})};
-  /* Kicked, the targets it has so (rules/stack.mjs, scriptOf). */
-  const spell = action.kicked && object.spell?.kicked ? object.spell.kicked : object.spell;
-  if (action.kind === "cast") return {specs: spell?.modal && Array.isArray(action.modes) ? modalScript(spell.modal, action.modes).targets : spell?.targets ?? [], context};
+  if (action.kind === "cast") return {specs: object.spell?.modal && Array.isArray(action.modes) ? modalScript(object.spell.modal, action.modes).targets : object.spell?.targets ?? [], context};
   const ability = chosenFor(abilitiesOf(state, action.objectId).find((candidate) => candidate.id === action.abilityId), object);
   return {specs: ability?.modal && Array.isArray(action.modes) ? modalScript(ability.modal, action.modes).targets : ability?.targets ?? [], context};
 }

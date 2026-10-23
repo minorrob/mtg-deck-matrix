@@ -22,6 +22,20 @@
       ],
       "power": 2,
       "toughness": 2
+    },
+    "Wolf": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
     }
   },
   "scenarios": [
@@ -173,6 +187,107 @@
           "zone": "battlefield",
           "cards": [
             "Forest"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A copy of it kicked is kicked (CR 707.10): Dualcaster Mage's copy exiles her Wolf, no artifact",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Mountain",
+            "Mountain",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Tear Asunder",
+            "Dualcaster Mage"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Wolf"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Tear Asunder",
+          "extraMana": "{1}{B}",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Dualcaster Mage"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Tear Asunder"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Wolf"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": [
+            "Wolf",
+            "Bear"
           ]
         }
       ]
