@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Snow-Covered Plains",
+    "oracleId": "ac8cc74d-e43b-4118-bba0-dfa8b9c04d45",
+    "supertypes": [
+      "Basic",
+      "Snow"
+    ],
+    "types": [
+      "Land"
+    ],
+    "subtypes": [
+      "Plains"
+    ],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "({T}: Add {W}.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "W": 1
+          }
+        }
+      ],
+      "text": "({T}: Add {W}.)"
+    }
+  ]
+}

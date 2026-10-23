@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Blood Seeker",
+    "oracleId": "41087db6-34c4-4e2b-9f54-5e4488ca9c0b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Vampire",
+      "Shaman"
+    ],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Whenever a creature an opponent controls enters, you may have that player lose 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "opponent"
+        }
+      },
+      "effects": [
+        {
+          "effect": "loseLife",
+          "who": "that player",
+          "amount": 1
+        }
+      ],
+      "optional": true,
+      "text": "Whenever a creature an opponent controls enters, you may have that player lose 1 life."
+    }
+  ]
+}

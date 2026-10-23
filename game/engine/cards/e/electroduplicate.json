@@ -1,0 +1,78 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Electroduplicate",
+    "oracleId": "112f2b3f-32e7-40b1-b80e-0b99184a840c",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Create a token that's a copy of target creature you control, except it has haste and \"At the beginning of the end step, sacrifice this token.\"\nFlashback {2}{R}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "copyPermanent",
+          "targets": {
+            "target": 0
+          },
+          "except": {
+            "addKeywords": [
+              "Haste"
+            ],
+            "addAbilities": [
+              {
+                "kind": "triggered",
+                "text": "At the beginning of the end step, sacrifice this token.",
+                "trigger": {
+                  "on": "end step",
+                  "yours": false
+                },
+                "effects": [
+                  {
+                    "effect": "moveZone",
+                    "targets": "self",
+                    "sacrifice": true
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "text": "Create a token that's a copy of target creature you control, except it has haste and \"At the beginning of the end step, sacrifice this token.\""
+    },
+    {
+      "kind": "keyword",
+      "keyword": "flashback",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{R}{R}"
+        }
+      ],
+      "text": "Flashback {2}{R}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.)"
+    }
+  ]
+}

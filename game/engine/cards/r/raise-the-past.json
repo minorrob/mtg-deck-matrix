@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Raise the Past",
+    "oracleId": "a69a24d0-ca58-4a44-8af1-a3bd1608d2f9",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Return all creature cards with mana value 2 or less from your graveyard to the battlefield.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Return all creature cards with mana value 2 or less from your graveyard to the battlefield.",
+      "effects": [
+        {
+          "effect": "moveZoneAll",
+          "selector": {
+            "what": "card",
+            "zone": "graveyard",
+            "controller": "you",
+            "types": [
+              "Creature"
+            ],
+            "manaValue": {
+              "max": 2
+            }
+          },
+          "to": "battlefield"
+        }
+      ]
+    }
+  ]
+}
