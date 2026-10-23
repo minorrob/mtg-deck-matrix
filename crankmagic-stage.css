@@ -12,7 +12,8 @@
 .cm-stage-top .cm-full-pill>.cm-board-step,.cm-stage-top .cm-full-pill>.cm-board-next{display:none}
 .cm-stage-top .cm-full-pill>.cm-board-waiting{position:absolute;top:62px;left:50%;transform:translateX(-50%);font-size:11px;background:#0a1d20ed;border-radius:14px;padding:3px 14px;max-width:60vw;overflow:hidden;text-overflow:ellipsis}
 .cm-stage-region{display:block;position:relative;overflow:hidden;min-height:0;min-width:0;background:radial-gradient(ellipse at 50% 10%,#315847,#071719 70%)}
-.cm-stage-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.cm-stage-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:auto;touch-action:none;z-index:0;cursor:grab}
+.cm-stage-canvas:active{cursor:grabbing}
 .cm-stage-caption{position:absolute;left:18px;top:12px;z-index:2;display:flex;flex-direction:column;gap:4px;font-size:10px;letter-spacing:.13em;color:#b9d1bc;pointer-events:none}
 .cm-stage-caption small{font-size:10px;letter-spacing:0;color:#93aaa0}
 /* The words over the tabletop read at 4.5:1 on any mat and in any theme (tests/a11y-board.mjs): the turn's caption on a dark plate, a fanned card's name on a title plate. */
@@ -131,7 +132,7 @@
 /* The fan's shadow falls right and down, under the next card, never left over the previous card's name (tests/a11y-board.mjs reads a name against the ground its glyphs lie on). */
 .cm-stage-fan-slot .cm-bcard{--bc:var(--hc,140px);width:var(--bc);cursor:pointer;transform-origin:50% 100%;box-shadow:10px 10px 16px -8px #000b;transition:transform .16s}
 .cm-stage-fan-slot:hover,.cm-stage-fan-slot:focus-within{z-index:20!important}
-.cm-stage-fan-slot .cm-bcard:hover,.cm-stage-fan-slot .cm-bcard:focus-visible{transform:translateY(-22px)}
+.cm-stage-fan-slot .cm-bcard:hover,.cm-stage-fan-slot .cm-bcard:focus-visible{transform:translateY(0)}
 .cm-stage-fan-slot .cm-bcard.is-dim{filter:brightness(.85) saturate(.85)}
 .cm-stage-hand-label{position:absolute;top:0;left:50%;transform:translateX(-50%);color:#fff2d2;background:#181714cc;clip-path:polygon(8% 0,92% 0,100% 100%,0 100%);padding:5px 23px;font-size:11px;white-space:nowrap}
 .cm-stage-hand-empty{display:block;text-align:center;padding-top:50px;color:#e3d8c7;font-size:13px}
@@ -212,7 +213,7 @@
 @media(max-width:1100px){.cm-stage-priority{display:block;max-width:180px}.cm-stage-top{gap:6px}}
 
 /* The fan is held at the screen edge; its lower corners disappear just below it. */
-.cm-board[data-stage="on"]>.cm-stage-hand{bottom:-12px;height:clamp(220px,34vh,330px)}
+.cm-board[data-stage="on"]>.cm-stage-hand{bottom:20px;height:clamp(220px,34vh,330px)}
 .cm-stage-fan-cards{inset:auto 0 0;height:calc(var(--hc,140px)*1.4)}
 .cm-stage-fan-slot{top:auto;bottom:0;transform:translateX(calc(-50% + var(--fan-x)*var(--fan-step))) rotate(var(--fan-angle));transform-origin:50% 100%}
 .cm-stage-hand-label{top:auto;bottom:calc(var(--hc,140px)*1.4 + 2px)}
@@ -415,3 +416,17 @@
 .cm-table-deck-only{margin:0 0 10px}
 .cm-table-deck-choose.is-playable-only li:has(>.cm-table-deck.is-unknown),
 .cm-table-deck-choose.is-playable-only li:has(>.cm-table-deck[data-shared-deck]:disabled){display:none}
+.cm-play-home{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(280px,1fr);gap:18px;max-width:1400px;margin:auto}
+.cm-play-home .v-panel{margin:0;padding:clamp(20px,3vw,38px)}
+.cm-play-home h2{font-family:CrankOxanium,Satoshi,sans-serif;line-height:1.2}
+.cm-play-welcome{background:radial-gradient(ellipse at 90% 0,#376b4933,transparent 65%),var(--panel);min-height:260px}
+.cm-play-eyebrow{font-size:12px;letter-spacing:.16em;font-weight:700;color:var(--accent)}
+.cm-play-welcome h2{font-size:clamp(28px,3.2vw,46px);margin:12px 0}
+.cm-play-home p{max-width:65ch;line-height:1.65}
+.cm-play-home input{width:100%;min-width:0;margin-top:8px}
+.cm-play-home .cm-actions{flex-wrap:wrap;margin-top:20px}
+.cm-play-return{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:16px 0}
+.cm-play-return span{flex:1 1 180px}
+.cm-play-records{grid-column:1/-1}
+.cm-stage-region[data-renderer=fallback]{background:radial-gradient(ellipse at center,#294238,#101b18)}
+@media(max-width:700px){.cm-play-home{grid-template-columns:minmax(0,1fr)}.cm-play-welcome{min-height:0}.cm-play-home .v-panel{padding:20px}.cm-play-records{grid-column:auto}}
