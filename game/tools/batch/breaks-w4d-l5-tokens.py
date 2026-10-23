@@ -62,7 +62,7 @@ BREAKS = [
      ', ...(Number.isInteger(action.x) ? {x: action.x} : {})};', '};'),
     # Bristly Bill
     ('multiplyCounters by selector doubling nothing', RS,
-     'params.selector ? selectMatching(state, params.selector, context) : params.targets ?? []', 'params.targets ?? []'),
+     'params.selector !== undefined ? selectMatching(state, params.selector, context) : params.targets ?? []', 'params.targets ?? []'),
     ('multiplyCounters doubling every kind', RS,
      'if (n > 0 && (params.counter === undefined || kind === params.counter))', 'if (n > 0)'),
     # Flowering of the White Tree, Bastion Protector
@@ -71,7 +71,7 @@ BREAKS = [
     ('a commander anthem on every creature', LA,
      '  if (rule.commander === true && state.objects[current.id]?.commander !== true) return false;\n', ''),
     ('nonSupertypes and commander no layer affects keys', LA,
-     '"attacking", "zone", "nonSupertypes", "commander"]);', '"attacking", "zone"]);'),
+     '"continued", "nonSupertypes", "commander"]);', '"continued"]);'),
     # Monument to Endurance
     ('unchosen "turn" refused', IX,
      '!((effect.unchosen === true || effect.unchosen === "turn") && ability.kind', '!((effect.unchosen === true) && ability.kind'),

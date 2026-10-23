@@ -36,7 +36,7 @@ BREAKS = [
     ('mobilize makes one Warrior', INDEX,
      'effects: [{effect: "createToken", count: ability.amount ?? 1, tapped: true, attacking: true, atEndStep: "sacrifice",',
      'effects: [{effect: "createToken", count: 1, tapped: true, attacking: true, atEndStep: "sacrifice",'),
-    ('mobilize no keyword the engine accepts', 'game/engine/vocabulary.mjs', '  "mobilize"];', '  ];'),
+    ('mobilize no keyword the engine accepts', 'game/engine/vocabulary.mjs', '  "mobilize",\n', ''),
     # Liliana, Dreadhorde General
     ("the effect's controller chooses what each opponent keeps", ASKING,
      '...(awaiting.keptByEach && at < awaiting.steps.length ? {player: awaiting.steps[at].player} : {})', '...({})'),

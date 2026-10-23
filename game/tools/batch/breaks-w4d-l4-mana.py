@@ -33,7 +33,7 @@ BREAKS = [
  ('noncombat damage counted', RESOURCES, '      state.players[toPlayer].damagedThisTurn = (state.players[toPlayer].damagedThisTurn ?? 0) + proposal.amount;\n', ''),
  ('combat damage counted', COMBAT, '        state.players[hit.toPlayer].damagedThisTurn = (state.players[hit.toPlayer].damagedThisTurn ?? 0) + hit.amount;\n', ''),
  ('counted for this turn only', TURN, 'if (player.damagedThisTurn) player.damagedThisTurn = 0;', 'if (false) player.damagedThisTurn = 0;'),
- ('an amount kind', AMOUNT, '  "damageTakenThisTurn"]);', '  ]);'),
+ ('an amount kind', AMOUNT, '  "damageTakenThisTurn",\n', ''),
  ('names a player', AMOUNT, '  if ("damageTakenThisTurn" in value && !["you", "that player", "an opponent"].includes(value.damageTakenThisTurn)) problems.push(\'damageTakenThisTurn is "you", "that player" or "an opponent"\');\n', ''),
  ('the most one opponent was dealt, not all together', AMOUNT, 'Math.max(0, ...state.players.filter((p) => p.id !== context.controller && !p.lost).map((p) => p.damagedThisTurn ?? 0))', 'state.players.filter((p) => p.id !== context.controller && !p.lost).reduce((n, p) => n + (p.damagedThisTurn ?? 0), 0)'),
  ("a player's own", AMOUNT, '      n = player !== null ? state.players[player]?.damagedThisTurn ?? 0 : 0;', '      n = 0;'),
