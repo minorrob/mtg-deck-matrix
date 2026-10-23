@@ -1831,7 +1831,7 @@ globalThis.CrankBoard = Object.seal({
     const drawer = host.querySelector(".cm-stage-rail.is-open");
     const start = drawer ? drawer.getBoundingClientRect().right : host.getBoundingClientRect().left;
     const gap = edge - start;
-    const left = gap >= width + 24 ? start + (gap - width) / 2 : edge - width - 12;
+    const left = gap >= width ? start + (gap - width) / 2 : edge - width - 12;
     layer.style.setProperty("--plays-left", `${Math.max(8, Math.round(left))}px`);
   }
   /* For the eye and the pointer: the keyboard's way round the table is the board's own, and what was played is in the History.
