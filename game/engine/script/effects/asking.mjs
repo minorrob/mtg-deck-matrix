@@ -1277,7 +1277,7 @@ export const unlessPays = {
       ...(params.life !== undefined ? {life: params.life} : {}), ...(params.discard ? {discard: params.discard} : {}), ...(params.sacrifice ? {sacrifice: structuredClone(params.sacrifice)} : {}),
       ...(params.sacrificeCount ? {sacrificeCount: params.sacrificeCount} : {}),
       ...(params.returnToHand ? {returnToHand: structuredClone(params.returnToHand)} : {}),
-      ...(params.tap && params.tap !== "that card" ? {tap: structuredClone(params.tap)} : {}),
+      ...(params.tap ? {tap: structuredClone(params.tap)} : {}),
       ...(params.opponentGainsLife ? {opponentGainsLife: {amount: params.opponentGainsLife.amount, times: Math.max(0, amountOf(state, params.opponentGainsLife.times ?? 1, context))}} : {}),
       ...(params.amountX === true ? {amountX: true} : {}),
       ...(params.amountX === true && params.atMost !== undefined ? {mostX: Math.max(0, amountOf(state, params.atMost, context))} : {}),
