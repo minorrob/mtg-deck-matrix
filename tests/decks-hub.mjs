@@ -106,10 +106,12 @@ try {
   /* 4. The nav. */
   await page.reload();await settle(page);
   eq(await page.$$eval("[data-nav=decks] ~ .cm-subnav a, .cm-subnav a", (as) => [...new Set(as.map((a) => a.textContent.trim()))]), ["My Decks", "Favorites", "Create", "Shared", "About Deck Building"], "the Decks nav is five entries, no deck names");
-  await go(page, () => page.locator(`.cm-deck-grid [data-deck-tile="${all[0].id}"] button[data-action=deck]`).click()).catch(() => {});
+  /* A Boxed deck, so a deck page that drops Boxed from its badge shows. */
+  const opened = all.find((d) => d.boxed);
+  await go(page, () => page.locator(`.cm-deck-grid [data-deck-tile="${opened.id}"] button[data-action=deck]`).click()).catch(() => {});
   await page.locator(".cm-deck-hero h1").waitFor({timeout: 30000});
   ok(!(await page.$$eval(".cm-subnav a", (as) => as.some((a) => a.getAttribute("aria-current")))), "opening a deck marks no entry");
-  eq(await page.$eval(".cm-deck-hero [data-stage]", (x) => x.textContent), all[0].word, "and the deck page's badge is the same stage word as its tile");
+  eq(await page.$eval(".cm-deck-hero [data-stage]", (x) => x.textContent), opened.word, "and the deck page's badge is the same stage word as its tile");
   await hash(page, "#decks");
 
   /* 5. Favorites. */
