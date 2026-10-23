@@ -243,7 +243,7 @@ C.sharedTile=x=>{const key='share:'+x.id,c=x.content,name=c.name;return `<articl
 const sharedGrid=`<div class="cm-deck-grid" id="cm-shared-grid" aria-busy="true"><p class="cm-muted" role="status">Loading the decks shared with you…</p></div>`;
 const grid=stage==='shared'?sharedGrid:shown.length?`<div class="cm-deck-grid">${anyDecks&&!fav&&stage==='all'?latestTile:''}${shown.map(tile).join('')}<a class="cm-deck-new" href="#new" data-action="new-deck"><span aria-hidden="true">+</span>New deck</a></div>`:'';
 C.main.innerHTML=(anyDecks||stage==='shared'?C.pageHead(title,bulk+b('New deck','new-deck',{},true),'decks',summary)+bar
-  :C.pageHead(title,b('New deck','new-deck',{},true),'decks')+`<section class="v-panel cm-decks-empty">${fan}<h2>No decks yet</h2><p class="cm-muted">Start from a commander, bring a list, or restore a backup you saved.</p><div class="cm-actions">${b('Start from a commander','new-deck',{},true)}${b('Bring a list','wizard-import')}${b('Restore backup…','restore')}</div><p>${howLink}</p></section>`+latestSlot)
+  :C.pageHead(title,b('New deck','new-deck',{},true),'decks')+`<section class="v-panel cm-decks-empty">${fan}<h2>No decks yet</h2><p class="cm-muted">Start from a commander, bring a list, or restore a backup you saved.</p><div class="cm-actions">${b('Start from a commander','start-from',{},true)}${b('Bring a list','wizard-import')}${b('Restore backup…','restore')}</div><p>${howLink}</p></section>`+latestSlot)
   +(grid?grid+(stage==='shared'?'':budgetLine+footLinks):anyDecks?(decks.length?noneHere:'<p class="cm-muted">Every deck here is archived. Tick Show archived to see them.</p>')+footLinks:'');
 $('#cm-show-archived')?.addEventListener('change',ev=>{showArchived=ev.target.checked;C.render();});$('#cm-decks-sort')?.addEventListener('change',ev=>{location.hash=hashFor('sort',ev.target.value);});$('#cm-show-lobby')?.addEventListener('change',ev=>{C.showLobbyDecks=ev.target.checked;C.render();});
 /* INCLUDE PUBLIC DECKS (FLT-6, Q8): off by default, private shares only; the choice is remembered with the person. */
@@ -330,7 +330,10 @@ const heroCard=leaders[0]&&leaders[0].image?`<div class="cm-deck-hero-card"><img
 const heroTint=/^[WUBRG]$/.test((C.card(d.commanders[0])?.colorIdentity||[])[0]||'')?`--tint:var(--mana-${(C.card(d.commanders[0]).colorIdentity)[0]});`:'';
 const body={
   overview:()=>{
-    if(!cards.length)return `<section class="v-panel" id="cm-sec-overview-empty"><h2>Overview</h2><p class="cm-muted">This deck has no cards yet. Start building your hundred or import a list.</p><div class="cm-actions">${b('Edit card list','edit-list',{deck:d.id},true)}${b('Import a list','wizard-import')}${b('Auto-build in Lab','wizard-lab')}</div><p class="cm-muted">Or lock this deck’s list and add cards from The hundred tab.</p></section>`;
+    /* A SHELL (SHL-2, SHL-4): with no commander, one click reopens Start from; with only its commander, Define the Deck.
+       The Lab stays for testing decks; it is no longer how one starts (RVW-7). */
+    if(!d.commanders.length)return `<section class="v-panel" id="cm-sec-overview-empty"><h2>Overview</h2><p class="cm-muted">Choose a commander first.</p><div class="cm-actions">${b('Start from','start-from',{deck:d.id},true)}</div></section>`;
+    if(cards.length<=d.commanders.length)return howToPlayHTML(d)+`<section class="v-panel" id="cm-sec-overview-empty"><h2>Overview</h2><p class="cm-muted">Only the commander so far.</p><div class="cm-actions">${b('Define the Deck','define-deck',{deck:d.id},true)}${b('Import a list','wizard-import')}</div></section>`;
     /* THE BENTO (Track V.4b). The Progress and Cost panel and The hundred at a glance were two
        full-width stacks; they are one six-column grid of cards now, in the guide's spans. Every
        figure is the same figure -- readiness, the rules module, the classifier -- so the cards
@@ -574,15 +577,9 @@ function guideHTML(written,d,leaders,cards){
 function commanderUse(c){const o=c.oracleText||'';if(/create/i.test(o)&&/goblin/i.test(o)&&/number of goblins/i.test(o))return 'Establish a Goblin board before tapping Krenko. More Goblins increase the number created by each activation; account for summoning sickness and protect the engine.';if(/token/i.test(o))return 'Set up the resources and timing this commander’s abilities require. Use the resulting tokens to support your deck’s plan, and leave the mana needed for its activated abilities.';if(/draw/i.test(o))return 'Sequence the plays that satisfy this commander’s draw ability, then use the extra cards to keep your plan moving. Keep interaction available when committing the commander.';return 'Build around the abilities shown here. Meet their trigger conditions or activation costs, time the commander around your available mana, and protect it when your next plays depend on it.';}
 function structural(d,cards){const count=re=>cards.filter(x=>re.test(x.c.oracleText||'')).reduce((n,x)=>n+x.q,0),draw=count(/draw .*card/i),interaction=count(/destroy|exile target|counter target/i),lands=cards.filter(x=>/Land/.test(x.c.typeLine)).reduce((n,x)=>n+x.q,0);return {Strengths:`${draw} cards mention drawing cards; ${interaction} mention removal or countering. These are text matches, not modeled availability.`,Weaknesses:`${lands} lands in the list. Check opening-hand reliability and access to every commander color.`,Opportunities:`Explore ${mechanicsOf(d).list.join(', ')||'your commander’s core mechanics'} and compare role-compatible options while preserving the deck’s definition.`,Threats:'Opposing disruption, resource denial and faster win conditions need four-player testing. No matchup probability is asserted here.'};}
 actions.deck=el=>go('decks',{deck:el.dataset.deck});actions['deck-cards']=el=>go('cards',{deck:el.dataset.deck});actions['deck-group']=el=>go('cards',{group:el.dataset.group});actions['open-lab']=()=>go('lab');
-/* TWO WAYS TO START A DECK, because there are two ways people start one. From scratch you
-   pick a commander and the ninety-nine come later. From what you already have, the group is
-   the deck: it names its own commander -- the one Commander-legal card in it -- and the deck
-   is created attached to that group, so the thing it draws from is set from the first day. */
-function commanderDeck(groupId,query=''){
-  return C.cardPicker('Choose your commander',c=>form('Name your new deck',f('Deck name','name',c.name+' deck','required maxlength="160"')+f('Core mechanic','mechanic',c.mechanics[0]||c.keywords[0]||''),async data=>{const id='deck:'+C.uid();await commit({type:'createDeck',deckId:id,name:data.name,commanders:[c.id],cards:[c],slots:[{cardId:c.id,quantity:1}],definition:{mechanics:data.mechanic?[data.mechanic]:[]},...(groupId?{groupId}:{})});go('decks',{deck:id});},'Create draft'),{commander:true,back:()=>actions['new-deck'](),query});
-}
+/* A DECK FROM A GROUP'S CARDS, after an import: the group names its own commander -- the one Commander-legal card in
+   it -- and the deck is created attached to that group. Starting from a commander is Start from (crankmagic-newdeck.js). */
 const groupRows=g=>g.entries.length?g.entries.map(r=>({cardId:r.cardId,quantity:r.quantity,printing:r.printing})):C.state.lots.filter(l=>l.groupIds.includes(g.id)).map(l=>({cardId:l.cardId,quantity:l.quantity,printing:l.printing}));
-const filledGroups=()=>C.state.groups.filter(g=>groupRows(g).length);
 C.groupDeck=gid=>groupDeck(gid);
 function groupDeck(groupId){
   const g=C.state.groups.find(x=>x.id===groupId);
@@ -622,9 +619,9 @@ actions['promote-lobby-deck']=async el=>{const d=M.deck(C.state,el.dataset.deck)
 actions['new-deck']=()=>{
   modal('New deck',`<div class="cm-new-deck-wizard"><p class="cm-muted">Choose how you want to start your deck:</p>
     <div class="cm-wizard-paths">
-      <button type="button" class="cm-wizard-path" data-action="wizard-create">
+      <button type="button" class="cm-wizard-path" data-action="start-from">
         <strong>Create</strong>
-        <span>Pick a commander and build the 99 from there</span>
+        <span>Start from a commander, then define the deck</span>
       </button>
       <button type="button" class="cm-wizard-path" data-action="wizard-import">
         <strong>Import</strong>
@@ -724,7 +721,7 @@ actions['wizard-load']=()=>{
   if(!mine.length)return modal('Load a deck',`<div class="cm-new-deck-wizard">
     ${note('This browser has no decks to start from. A library lives in the browser that made it, and the local host and the cloud copy are different browsers as far as storage is concerned — decks built in one are not in the other.',true)}
     <p class="cm-muted">Export them from the browser that has them, then bring the file here.</p>
-    <div class="cm-actions">${b('Import a deck file','import-decks',{},true)}${b('Create one instead','wizard-create')}</div></div>`,()=>actions['new-deck']());
+    <div class="cm-actions">${b('Import a deck file','import-decks',{},true)}${b('Create one instead','start-from')}</div></div>`,()=>actions['new-deck']());
   const d0=modal('Load a deck',`<div class="cm-load-wizard">
     <div class="cm-load-list" role="listbox" aria-label="Your decks">${mine.map((d,i)=>
       `<button type="button" class="cm-load-item${i?'':' is-on'}" role="option" aria-selected="${i?'false':'true'}" data-action="load-pick" data-deck="${e(d.id)}">${e(loadLabel(d))}</button>`).join('')}</div>
@@ -792,36 +789,8 @@ actions['load-choose']=async el=>{
 };
 
 /* CREATE PATH: commander picker and manual building */
-actions['wizard-create']=()=>{
-  actions.close();   /* the dialog handle lives in crankmagic-app.js; close through the shared action (D1) */
-  const sources=filledGroups();
-  /* From a commander is the Build wizard (R3.11): Commander → Strategy → Budget → Review. */
-  if(!sources.length)return C.build.start();
-  const road=(how,groupId)=>{
-    const g=groupId?C.state.groups.find(x=>x.id===groupId):null;
-    if(how!=='group')return g?`Continue opens the commander picker. The deck is filed in ${g.name} and draws from it.`
-      :'Continue opens the commander picker. A collection group is made with the deck and named after it.';
-    if(!g)return 'Continue opens the import: upload a CSV, TSV, TXT or XLSX file, or paste a list. The cards land in a new collection group and the deck is built from them.';
-    const rows=groupRows(g),copies=rows.reduce((n,r)=>n+r.quantity,0);
-    return rows.length?`Continue makes a draft deck whose list is the ${copies} card${copies===1?'':'s'} in ${g.name}, linked to that group. The next step offers to put the copies you own in its box.`
-      :`${g.name} holds no cards yet. Choose a group that does, ask for a new one and import a list into it, or start from a commander.`;
-  };
-  const wiz=form('Create a deck from a commander',
-    `<div class="cm-full">${s('Start from','how',[['commander','A commander — build the 99 from there'],['group','The cards in a collection group']],'commander')}</div>`
-    +`<div class="cm-full">${s('Collection group','groupId',[['','Create a new collection group'],...C.state.groups.filter(g=>M.deckMayTake(C.state,g,'')).map(g=>[g.id,C.groupLabel(g)])],'')}</div>`
-    +`<div class="cm-full" id="cm-new-deck-road">${note(road('commander',''))}</div>`,
-    v=>{
-      if(v.how!=='group')return v.groupId?commanderDeck(v.groupId):C.build.start();
-      if(v.groupId)return groupDeck(v.groupId);
-      if(!C.importList)throw Error('The import module is not loaded, so a list cannot be read in. Start from a commander, or reload the page.');
-      return C.importList({name:'New deck list',after:gid=>groupDeck(gid)});
-    },'Continue');
-  wiz.addEventListener('change',()=>{
-    const v=Object.fromEntries(new FormData(wiz)),box=wiz.querySelector('#cm-new-deck-road');
-    if(box)box.innerHTML=note(road(v.how,v.groupId));
-  });
-  return wiz;
-};
+/* THE OLD CREATE POP-UP IS GONE (the Decks requirements' NEW-2, 2026-10-23): Create opens Start from (crankmagic-newdeck.js),
+   and its road from a collection group's cards is Define the Deck's Merge in a Group (NEW-3, CRD-3). */
 /* After a list is imported for a new deck: the deck, when the list names a commander to lead it. */
 function deckFromImport(gid){
   const g=C.state.groups.find(x=>x.id===gid);

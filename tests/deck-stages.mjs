@@ -100,6 +100,21 @@ const example=()=>{let s=M.empty();
   eq(s.preferences.favoriteDecks,['y','share:abc'],'a deleted deck drops out of favorites; a shared deck\'s stays');
   const badPref=M.clone(s);badPref.preferences.favoriteDecks=[1];refuses(()=>M.validate(badPref),/Invalid saved view preference/);
 }
+/* 6. The shell and Choose a commander first (the Decks requirements' SHL-2, FMT-1 to FMT-3, CRD-8). */
+{let s=M.empty();s=run(s,{type:'createDeck',deckId:'shell',name:'New deck',commanders:[],slots:[]});
+  const shell=M.deck(s,'shell');eq([shell.commanders,shell.slots,st(s,'shell').stage,M.formatOf(shell).id],[[],[],'building','commander'],'a shell is a valid deck: no commander, no cards, Building, Commander');
+  s=own(s,['Lead','Other']);
+  refuses(()=>run(s,{type:'target',deckId:'shell',cardId:'card:Other',quantity:1}),/Choose a commander first\.$/);
+  refuses(()=>run(s,{type:'editDeck',deckId:'shell',slots:[{cardId:'card:Other',quantity:1}]}),/Choose a commander first\.$/);
+  refuses(()=>run(s,{type:'assign',deckId:'shell',cardId:'card:Other',lotId:lotOf(s,'Other').id}),/Choose a commander first\.$/);
+  refuses(()=>run(s,{type:'createDeck',name:'No lead',cards:[card('Third')],slots:[{cardId:'card:Third',quantity:1}]}),/Choose a commander first\.$/);
+  refuses(()=>run(s,{type:'createDeck',name:'Odd',format:'modern'}),/Choose a format this app knows/);
+  s=run(s,{type:'editDeck',deckId:'shell',commanders:['card:Lead'],slots:[{cardId:'card:Lead',quantity:1}]});
+  eq(M.deck(s,'shell').slots.length,1,'the commander alone is accepted');
+  s=run(s,{type:'target',deckId:'shell',cardId:'card:Other',quantity:1});eq(M.deck(s,'shell').slots.length,2,'and then other cards are');
+  s=run(s,{type:'editDeck',deckId:'shell',slots:[{cardId:'card:Lead',quantity:1},{cardId:'card:Other',quantity:1,seat:{role:'ramp',label:'ramp, 1-3 mana',mv:[1,3]}}]});
+  eq(M.deck(s,'shell').slots.find(r=>r.cardId==='card:Other').seat,{role:'ramp',label:'ramp, 1-3 mana',mv:[1,3]},'a seat keeps its slot definition');
+}
 /* The vocabulary About Deck Building reads. */
 eq(M.STAGES.map(x=>x.label),['Building','Defined','Boxed','Playable']);
 eq(M.LADDER.map(x=>x.label),['Watch','To buy','Ordered','Own','Upgrade','Reserved','Loading','Substitute','Final']);

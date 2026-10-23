@@ -1,7 +1,8 @@
 # Decks screen and New deck flow: the plan
 
-**Status:** waiting for Rob's go. Nothing is built yet. Written at kickoff, 2026-10-23, from
-`crankmagic-decks-requirements.md` (this folder), read against main `a031003`.
+**Status:** built (Rob's go, 2026-10-23: "Go ahead with the Q1 default, run C, A, B straight through"), on
+`claude/vibrant-turing-50yl3r`, PR #844, for the merge session. Written at kickoff, 2026-10-23, from
+`crankmagic-decks-requirements.md` (this folder), read against main `a031003`; the handoff is in `docs/ACTIVE.md`.
 **Order:** Part C, then Part A, then Part B (§0 of the requirements).
 **Left out:** §17 (PRO-1 to PRO-10), until Rob says which to keep. The other **Proposed** lines (GEN-7, GEN-8, GEN-9) are
 left out under the same rule (§0: "build only if he keeps it").
