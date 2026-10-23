@@ -259,8 +259,10 @@ const TRIGGERS = {
      graveyard (a card goes to its owner's, CR 400.3), `filter` what the card must be. "One or more" is `batch`. */
   /* "A creature card is put into a graveyard from anywhere other than the battlefield" (Syr Konrad, the Grim, wave 4b):
      `notFrom: "battlefield"`. */
-  "put into graveyard": (t) => (["you", "opponent", "any"].includes(t.owner ?? "you") && [undefined, "battlefield"].includes(t.notFrom)
+  /* "Put into your graveyard FROM YOUR LIBRARY" (Hedge Shredder): `from: "library"`, the zone it came from (rules/trigger.mjs). */
+  "put into graveyard": (t) => (["you", "opponent", "any"].includes(t.owner ?? "you") && [undefined, "battlefield"].includes(t.notFrom) && [undefined, "library"].includes(t.from)
     ? {on: "GameEventCardChangeZone", to: "Graveyard", intoGraveyard: true, owner: t.owner ?? "you", ...(t.filter ? {filter: t.filter} : {}),
+      ...(t.from === "library" ? {from: "Library"} : {}),
       ...(t.notFrom === "battlefield" ? {notFrom: "Battlefield"} : {})} : null),
   /* "Whenever one or more cards leave your graveyard" (Garrison Excavator): to any zone, a card cast from it included. "A
      creature card leaves your graveyard" (Syr Konrad, the Grim, wave 4b): `filter`, the card as it was there (rules/trigger.mjs). */
@@ -396,6 +398,8 @@ const TRIGGERS = {
   /* "Whenever this creature becomes tapped" (Silvergill Peddler; CR 701.26a): `who` and `filter` what was tapped -- by
      attacking, a cost or an effect; one that enters tapped never became tapped. */
   "becomes tapped": (t) => (ARRIVALS.includes(t.who ?? "self") ? {on: "GameEventCardTapped", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {})} : null),
+  /* "Whenever a permanent becomes untapped" (Mesmeric Orb; CR 701.26b): the same, untapped (rules/trigger.mjs). */
+  "becomes untapped": (t) => (ARRIVALS.includes(t.who ?? "self") ? {on: "GameEventCardTapped", untapped: true, who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {})} : null),
   /* "Whenever you discard a card", "whenever an opponent discards a land card" (CR 701.9): `discarder` you, opponent or
      any; `filter` the card discarded. "When you discard this card" (Titanbones, Towering Heart; `who: "self"`): this card,
      from where it went (rules/trigger.mjs). "Whenever a player discards one or more cards" (`batch`): once for each player. */

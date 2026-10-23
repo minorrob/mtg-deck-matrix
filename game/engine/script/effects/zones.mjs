@@ -25,7 +25,7 @@ import {objectsAfterMove, moveObject, cardsIn, PUBLIC_ZONES, removeObject, event
 import {lastKnown} from "../../rules/layers.mjs";
 import {keywordsOf, controllerOf, abilitiesOf} from "../../rules/layers.mjs";
 import {selectMatching, compileSelector, matchesSelector, shareCreatureType} from "../filter.mjs";
-import {applyReplacements, enteringModifications, regenerated} from "../../rules/replacement.mjs";
+import {applyReplacements, enteringModifications, placeReplacedCounters, regenerated} from "../../rules/replacement.mjs";
 import {cantBeCountered, entersUntapped, enteringCountersPlaced, drawsInstead, cantBeSacrificed, drawForbidden, emptyDrawWins, drawsMore} from "../../rules/statics.mjs";
 import {winGame} from "./resources.mjs";
 import {amountOf} from "../amount.mjs";
@@ -166,6 +166,8 @@ export function moveOne(state, id, to, events, {owner = null, controller = null,
      that changes how many are put on one reads them (CR 122.6). */
   if (destination === "exile" && counters && state.objects[moved])
     for (const [counter, count] of Object.entries(counters)) state.objects[moved].counters[counter] = (state.objects[moved].counters[counter] ?? 0) + count;
+  /* And the counters an exile replacement gave it ("exile it with a void counter on it", Dauthi Voidwalker). */
+  if (destination === proposal.to) placeReplacedCounters(state, moved, proposal);
   events.push(event("GameEventCardChangeZone", state, {
     card,
     ...(leftBehind ? {leftBehind} : {}),

@@ -33,7 +33,7 @@
   },
   "1b3fb20a-e090-4286-9c03-6b71c27c45be": {
    "name": "Mortuary Mire",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "c3d9154afab920f1",
    "attempts": 1,
    "model": "x10-session",
@@ -41,7 +41,10 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:05.980Z"
+   "at": "2026-10-06T16:16:05.980Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/m/mortuary-mire.json"
   },
   "80686908-abb5-4728-a5f6-71baca27f467": {
    "name": "Curious Altisaur",
@@ -57,7 +60,7 @@
   },
   "f7907327-4df3-4bb2-a274-03d9e266af2f": {
    "name": "Venser's Journal",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "3797b81dc1d4c31b",
    "attempts": 1,
    "model": "x10-session",
@@ -65,7 +68,10 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.073Z"
+   "at": "2026-10-06T16:16:06.073Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/v/vensers-journal.json"
   },
   "8e7b31eb-7a91-4992-b24a-d81173e1dbc8": {
    "name": "Deeproot Waters",
@@ -93,7 +99,7 @@
   },
   "be094704-5232-4b10-beeb-aa9bbfae063d": {
    "name": "Feldon of the Third Path",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "550b125b6c667edb",
    "attempts": 1,
    "model": "x10-session",
@@ -101,7 +107,10 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.133Z"
+   "at": "2026-10-06T16:16:06.133Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/f/feldon-of-the-third-path.json"
   },
   "3bba3b36-f8d7-4fd6-892a-797226210b6e": {
    "name": "Malcolm, Alluring Scoundrel",
@@ -117,7 +126,7 @@
   },
   "777b8ec4-a783-4297-96b7-4f200d0eb734": {
    "name": "Return to Nature",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "7938d69954ae353a",
    "attempts": 1,
    "model": "x10-session",
@@ -125,7 +134,10 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.170Z"
+   "at": "2026-10-06T16:16:06.170Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/r/return-to-nature.json"
   },
   "e90a1381-c9c1-4f57-928c-5d19dc065274": {
    "name": "Shivan Gorge",
@@ -141,7 +153,7 @@
   },
   "556dd333-4066-41f7-98f6-41794754de71": {
    "name": "Vile Entomber",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "ef63c1efa753339f",
    "attempts": 1,
    "model": "x10-session",
@@ -149,7 +161,10 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.184Z"
+   "at": "2026-10-06T16:16:06.184Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/v/vile-entomber.json"
   },
   "7522f7fd-6fda-4ed3-9131-21bf91616a73": {
    "name": "Chocobo Racetrack",
@@ -297,7 +312,7 @@
   },
   "c22cc70a-9533-4bfc-b3ce-b2d43a73f0c1": {
    "name": "Bladewing the Risen",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "0a637e00fa8acfe8",
    "attempts": 1,
    "model": "x10-session",
@@ -305,11 +320,14 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.437Z"
+   "at": "2026-10-06T16:16:06.437Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/b/bladewing-the-risen.json"
   },
   "a69a24d0-ca58-4a44-8af1-a3bd1608d2f9": {
    "name": "Raise the Past",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "9fde702e9cc75f19",
    "attempts": 1,
    "model": "x10-session",
@@ -317,7 +335,10 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.444Z"
+   "at": "2026-10-06T16:16:06.444Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/r/raise-the-past.json"
   },
   "da785227-cf8a-4d44-9e7c-fc909ea868f2": {
    "name": "Prosperous Innkeeper",

@@ -38,7 +38,7 @@ import {holdArrival, enteredWith} from "./entering.mjs";
 import {ascendAsItResolves} from "../keywords/designations.mjs";
 import {conditionHolds, asksFirstResolution} from "../script/condition.mjs";
 import {moveObject, addObject, removeObject, eventCard} from "../state/index.mjs";
-import {enteringModifications} from "./replacement.mjs";
+import {enteringModifications, graveyardBound, placeReplacedCounters} from "./replacement.mjs";
 import {enteringCountersPlaced} from "./statics.mjs";
 import {beginResolution, resolutionPending} from "../script/resolution.mjs";
 import {delayedTrigger, enterAttacking} from "../script/effects/permanents.mjs";
@@ -422,7 +422,11 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
        graveyard -- one that did not resolve goes where any spell would. */
     const adventured = entry.adventure === true && !fizzled;
     /* "Exile this spell" (paradigm, CR 702.192a): it resolved, and is exiled as the last of it. */
-    const to = entry.permanent && !fizzled ? "battlefield" : entry.flashback || entry.graveyardToExile || rebound || adventured || exiles ? "exile" : entry.graveyardToLibraryBottom ? "library" : "graveyard";
+    const planned = entry.permanent && !fizzled ? "battlefield" : entry.flashback || entry.graveyardToExile || rebound || adventured || exiles ? "exile" : entry.graveyardToLibraryBottom ? "library" : "graveyard";
+    /* Into its owner's graveyard, as the replacement effects have it (CR 608.2n, 614.1a): "if a card would be put into an
+       opponent's graveyard from anywhere, instead exile it" (Dauthi Voidwalker). */
+    const replaced = planned === "graveyard" ? graveyardBound(state, entry.objectId) : null;
+    const to = replaced ? replaced.to : planned;
     /* CR 614.12, asked before the move: a permanent coming off the stack enters tapped or with
        counters as ONE event, and the abilities that say so are on the spell, not on anything that
        is on the battlefield yet. */
@@ -445,7 +449,8 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
       : null;
     /* A face-down spell becomes a face-down permanent, the same characteristics (CR 702.168b). */
     const down = object.disguised === true ? {faceDown: true, disguised: true} : {};
-    const arrived = moveObject(state, entry.objectId, to, ["graveyard", "library"].includes(to) ? owner : null, down);
+    const arrived = moveObject(state, entry.objectId, to, ["graveyard", "library", "hand"].includes(to) ? owner : null, down);
+    placeReplacedCounters(state, arrived, replaced);
     /* WHAT ITS COST EXILED (CR 607.2q; rules/actions.mjs, "behold a Goblin and exile it"): the permanent it becomes has it, for
        its ability that names the exiled card. Such a spell always becomes one as it resolves: a permanent card's spell ability
        has no targets to fail (cards/index.mjs), and an Aura has no additional cost. One countered leaves the cards exiled under

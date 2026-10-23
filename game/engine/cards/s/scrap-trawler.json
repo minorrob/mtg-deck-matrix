@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Scrap Trawler",
+    "oracleId": "164f3f85-21fc-40b7-9871-4f303ba98428",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Construct"
+    ],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "Whenever this creature dies or another artifact you control is put into a graveyard from the battlefield, return to your hand target artifact card in your graveyard with lesser mana value.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature dies or another artifact you control is put into a graveyard from the battlefield, return to your hand target artifact card in your graveyard with lesser mana value.",
+      "trigger": {
+        "on": "leaves",
+        "to": "graveyard",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Artifact"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "hand"
+        }
+      ],
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "controller": "you",
+          "types": [
+            "Artifact"
+          ],
+          "manaValue": {
+            "max": {
+              "manaValueOf": "that card",
+              "plus": -1
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

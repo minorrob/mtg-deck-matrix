@@ -36,7 +36,7 @@ import {typesOf, characteristicsOf, everyCreatureTypeOf, controllerOf, lastKnown
 import {isLandType} from "../../keywords/types.mjs";
 import {pushCopy, pushAbilityCopy, becameTarget, specsOf} from "../../rules/stack.mjs";
 import {loseLife, gainLife, DAMAGING, damageQuestion, addMana} from "./resources.mjs";
-import {damageOrderChoice} from "../../rules/replacement.mjs";
+import {damageOrderChoice, graveyardBound, placeReplacedCounters} from "../../rules/replacement.mjs";
 import {targetCandidates, targetName} from "../bind.mjs";
 import {commanderTax} from "../../rules/commander.mjs";
 import {cantBeCountered, counterOrderChoice, cantBeSacrificed, tokenOrderChoice, drawForbidden} from "../../rules/statics.mjs";
@@ -520,16 +520,19 @@ const countsFor = (state, params, players, context) => (params.perPlayer === tru
   ? Object.fromEntries(players.map((player) => [player, amountOf(state, params.count, {...context, about: {...context.about, player}})])) : null);
 
 /* One card from a hand to its owner's graveyard, said as a discard (CR 701.9a) -- what "whenever you discard" reads. */
-function discardOne(state, id, player, events) {
+export function discardOne(state, id, player, events) {
   const card = cardRef(state, id);
   const owner = state.objects[id].owner;
-  const discarded = moveObject(state, id, "graveyard", owner);
+  /* Still a discard where a replacement sends it instead (CR 701.9a, 614.1a; Dauthi Voidwalker). */
+  const bound = graveyardBound(state, id);
+  const discarded = moveObject(state, id, bound.to, ["graveyard", "library", "hand"].includes(bound.to) ? owner : null);
+  placeReplacedCounters(state, discarded, bound);
   recordDiscard(state, player);
   events.push(event("GameEventCardChangeZone", state, {
     card,
     becomes: discarded,
     from: {zoneType: "Hand", player: {playerId: player}},
-    to: {zoneType: "Graveyard", player: {playerId: owner}},
+    to: {zoneType: bound.to[0].toUpperCase() + bound.to.slice(1), player: {playerId: owner}},
     discarded: true,
   }));
   return discarded;
@@ -2007,7 +2010,9 @@ export const chooseCard = {
     /* Exile is face up (CR 406.3): what fits there is seen, so there is no failing to find it either. */
     /* So is the command zone (CR 400.2): "put your commander into your hand from the command zone" (Command Beacon, wave 4b)
        takes the one there, and with none there nobody is asked. */
-    const faceUp = among || onField || zone === "exile" || zone === "command";
+    /* And a graveyard (CR 404.2): public, so "choose a creature or planeswalker card in that player's graveyard" (Breach the
+       Multiverse) takes one that fits -- only a hidden zone's search may fail to find (CR 701.23b). */
+    const faceUp = among || onField || zone === "exile" || zone === "command" || (zone === "graveyard" && !zones);
     if (faceUp && cards.length === 0) return false;
     /* "IF AN EQUIPMENT IS PUT ONTO THE BATTLEFIELD THIS WAY, YOU MAY ATTACH IT TO A CREATURE YOU CONTROL" (Armored Skyhunter;
        `attach: "remembered"`, beside `to: "stay"`): "it" is what the effect before it put there (CR 701.3a) -- the permanent

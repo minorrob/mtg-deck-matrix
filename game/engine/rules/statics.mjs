@@ -65,6 +65,9 @@ export const STATIC_RULES = Object.freeze({
       702.142a; card load w4d L1): for the static's controller, a boast ability's limit 2 in their own turns.
       rules/actions.mjs, boastLimit. */
   "boast-twice": "rules/actions.mjs",
+  /** CR 614.10, 614.1b: "Skip your draw step" (Necropotence): `affects` the players whose draw steps don't happen. turn.mjs,
+      CONDITIONS.drawStep. */
+  "skip-draw-step": "rules/turn.mjs",
   /** CR 500.4 replaced (CR 614.1a, 106.4): "If you would lose unspent mana, that mana becomes colorless instead" (Omnath, Locus
       of the Void): `affects` the players whose pools it keeps (a player selector, "you" its controller). turn.mjs, as each
       step and phase ends (emptyManaPools). */

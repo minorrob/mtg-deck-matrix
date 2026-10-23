@@ -18,6 +18,8 @@ assert.equal(s.awaiting, null);
 assert.equal(result.events.length > 0, true);
 assert.deepEqual(picks.map((cards) => cards.length), [2, 1], "random choices are without replacement");
 assert.equal(ctx.remembered.length, 2);
+/* A card there to choose: a graveyard with none asks nobody (CR 404.2; card load w4d, L2). */
+put(s, creature("Leftover"), "graveyard", 0);
 assert.throws(() => chooseCard.open(s, {zone: "graveyard", random: true}, ctx), /random stream/);
 const exiledOther = put(s, creature("Opponent's card"), "exile", 1);
 chooseCard.open(s, {zone: "exile", to: "hand"}, ctx);
