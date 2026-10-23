@@ -56,7 +56,7 @@ async function point(page,selector){
       return x>=0&&y>=0&&x<innerWidth&&y<innerHeight&&el.contains(document.elementFromPoint(x,y));
     });
   });
-  if(!reached){await page.screenshot({path:path.join(ROOT,"work/blocking-failure.png")});console.log(selector,await el.evaluate(el=>{const r=el.getBoundingClientRect();return {rect:r.toJSON(),hit:document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.outerHTML.slice(0,600)}}));}
+  if(!reached){await page.screenshot({path:path.join(ROOT,"work/blocking-failure.png")});console.log(selector,await el.evaluate(el=>{const r=el.getBoundingClientRect(),parents=[];for(let p=el.parentElement;p&&parents.length<10;p=p.parentElement){const s=getComputedStyle(p);parents.push({node:p.className,y:p.getBoundingClientRect().top,h:p.getBoundingClientRect().height,scroll:p.scrollTop,overflow:s.overflow,position:s.position,top:s.top});}return {rect:r.toJSON(),hit:document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.outerHTML.slice(0,600),parents}}));}
   assert.ok(reached,`${selector} receives the pointer without scrolling hidden overflow`);
   const r=await el.boundingBox();
   return {x:r.x+r.width/2,y:r.y+r.height/2};
@@ -80,12 +80,12 @@ async function press(page,sel){
   const el=page.locator(sel).first();
   if(await el.evaluate(el=>!!el.closest('.cm-board-options'))){
     const box=page.locator('#cm-board-decision .cm-board-options');
-    for(let n=0;n<16;n++){
+    for(let n=0;n<64;n++){
       const hit=await el.evaluate(el=>{const r=el.getBoundingClientRect();return [[.5,.5],[.2,.2],[.8,.8]].every(([x,y])=>el.contains(document.elementFromPoint(r.x+r.width*x,r.y+r.height*y)));});
       if(hit) break;
       const r=await box.boundingBox();await page.mouse.move(r.x+r.width/2,r.y+r.height/2);
       const dir=await el.evaluate(el=>{const r=el.getBoundingClientRect(),b=el.closest('.cm-board-options').getBoundingClientRect();return document.querySelector('.cm-board[data-phone]')?(r.x+r.width*.2<b.x?1:-1):(r.y+r.height*.2<b.y?-1:1);});
-      await page.mouse.wheel(0,dir*20);await pause(page);
+      await page.mouse.wheel(0,dir*60);await pause(page);
     }
   }
   const p=await point(page,sel);await page.mouse.click(p.x,p.y);await pause(page);}
@@ -181,19 +181,18 @@ try {
       v.decision.legalBlocks=blockers.map(blocker=>({blocker,attackers}));
       v.decision.options=blockers.flatMap((cardId,b)=>attackers.map((attackerId,a)=>({index:b*14+a,cardId,attackerId,label:`#${cardId} blocks #${attackerId}`})));
     });await enabled(page);
-    const blockerRow=page.locator('.cm-block-tiles[aria-label="Choose a blocker"]');
-    async function across(row,delta){const r=await row.boundingBox();await page.mouse.move(r.x+r.width/2,r.y+r.height/2);await page.mouse.wheel(delta,0);await pause(page);}
-    await across(blockerRow,10000);const bx=await blockerRow.evaluate(el=>el.scrollLeft);assert.ok(bx>0,'crowded blockers really scroll');
+    const choices=page.locator('#cm-board-decision .cm-board-options');
     await press(page,select(74013));
-    assert.equal(await blockerRow.evaluate(el=>el.scrollLeft),bx,'selecting a later blocker preserves its row position');
-    const attackerRow=page.locator('.cm-block-tiles[aria-label="Legal attackers"]');
-    await across(attackerRow,10000);const ax=await attackerRow.evaluate(el=>el.scrollLeft);assert.ok(ax>0,'crowded attackers really scroll');
+    assert.ok(await choices.evaluate(el=>el.scrollTop)>0,'crowded blockers are reached by scrolling the Actions choices');
+    assert.equal(await page.locator(select(74013)).getAttribute('aria-pressed'),'true','the last blocker remains selected after scrolling');
     await press(page,pair(195));await enabled(page);
-    assert.equal(await attackerRow.evaluate(el=>el.scrollLeft),ax,'selection and asynchronous validation preserve attacker row position');
-    await across(blockerRow,-10000);await press(page,select(74000));
-    assert.equal(await attackerRow.evaluate(el=>el.scrollLeft),0,'different blocker starts its attacker row at the beginning');
+    assert.ok(await choices.evaluate(el=>el.scrollTop)>0,'crowded attackers are reached through the same vertical scroll');
+    await point(page,pair(195));
+    assert.equal(await page.locator('.cm-block-tiles '+pair(195)).getAttribute('aria-pressed'),'true','selection and asynchronous validation preserve the last attacker and its visibility');
+    await press(page,select(74000));
+    assert.equal(await page.locator(pair(0)).count(),1,'a different blocker displays its own legal attacker choices');
     await publish(v=>{v.matchId+='-fresh';});await enabled(page);
-    assert.equal(await blockerRow.evaluate(el=>el.scrollLeft),0,'new match does not inherit crowded row position');
+    assert.equal(await choices.evaluate(el=>el.scrollTop),0,'new match does not inherit the crowded choice scroll position');
   }
   await context.close();
  }

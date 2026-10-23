@@ -1336,6 +1336,7 @@ globalThis.CrankBoard = Object.seal({
     if (!view) return;
     inspection = {id:String(id), kind, matchId:view.matchId, automatic};
     if (!inspectedCard()) {inspection = null; return;}
+    if (coach.open && !moduleSide("coach")) {coach.open = false; drawCoach();}
     inspectionFrom = C.focusKey(document.activeElement);
     showing = null; held = null;
     peek(null); stackPeek(null); draw();
@@ -1449,8 +1450,7 @@ globalThis.CrankBoard = Object.seal({
     const panelEl = document.getElementById("cm-board-coach");
     if (!panelEl) return;
     panelEl.hidden = !coach.open;
-    /* In Full screen the Coach is not a slide-over: it takes the side column's lower half, under the log (item 22). */
-    panelEl.classList.toggle("is-docked", mode === "full" && !phone() && !moduleSide("coach"));
+    /* Desktop reserves space beside the board; a configured Coach module stays in its drawer. */
     if (!coach.open) {panelEl.innerHTML = ""; return;}
     dock();
     /* A redraw keeps what the reader has in hand: the draft, its focus, and ⋯ if it is open (a rebuilt <details> is
@@ -2169,14 +2169,23 @@ globalThis.CrankBoard = Object.seal({
       placePlays();
     } finally {fitting = false;}
   }
-  /* The Coach docked in Full screen: over the lower half of the side column, which gives its log the upper half. */
+  /* The optional Coach uses the shared inspection space unless assigned to a drawer module. */
   function dock() {
     const el = document.getElementById("cm-board-coach"), side = document.querySelector("#cm-board .cm-full-side"), host = document.getElementById("cm-board");
     if (!el) return;
     const slot=host?.querySelector(".cm-module-coach-host");
     el.classList.toggle("is-module", !!slot && coach.open);
-    el.classList.toggle("is-docked", stageEnabled() && !slot && coach.open);
+    el.classList.toggle("is-docked", !!host?.dataset.shell && !slot && coach.open);
     if(slot && coach.open) {slot.append(el); for(const k of ["--dock-x","--dock-y","--dock-w","--dock-h"]) el.style.removeProperty(k); return;}
+    if (host?.dataset.shell === "shared" && el.classList.contains("is-docked")) {
+      const h = host.getBoundingClientRect(), top = host.querySelector(".cm-stage-top").getBoundingClientRect().bottom;
+      const width = Math.min(320, Math.max(240, innerWidth * .24));
+      el.style.setProperty("--dock-x", `${h.right - width}px`);
+      el.style.setProperty("--dock-y", `${top}px`);
+      el.style.setProperty("--dock-w", `${width}px`);
+      el.style.setProperty("--dock-h", `${Math.max(120, h.bottom - top)}px`);
+      return;
+    }
     if (!side || !host || !el.classList.contains("is-docked")) {for (const k of ["--dock-x", "--dock-y", "--dock-w", "--dock-h"]) el.style.removeProperty(k); return;}
     const s = side.getBoundingClientRect(), h = host.getBoundingClientRect(), top = Math.round(s.bottom + 6);
     el.style.setProperty("--dock-x", `${Math.round(s.left)}px`);
@@ -2860,8 +2869,8 @@ globalThis.CrankBoard = Object.seal({
     }
   });
   actions["board-tools"] = (el) => { tools = !tools; confirmEnd = false; historyOpen = false; menuOpen = false; stepsOpen = false; opened(el, tools); draw();};
-  actions["board-coach"] = () => {profileOpen=false; coach.open = !coach.open; tools = false; historyOpen = false; if (coach.open) {panelOpen = false;openModuleDrawer("coach");} draw(); drawCoach(); if (coach.open) document.querySelector("#cm-board-coach .cm-coach-input")?.focus();};
-  actions["board-recommend"] = () => {coach.open=true;openModuleDrawer("coach");draw();drawCoach();ask_("What are my best actions right now?");};
+  actions["board-coach"] = () => {profileOpen=false; coach.open = !coach.open; tools = false; historyOpen = false; if (coach.open) {if (!moduleSide("coach")) inspection = null; panelOpen = false;openModuleDrawer("coach");} draw(); drawCoach(); if (coach.open) document.querySelector("#cm-board-coach .cm-coach-input")?.focus();};
+  actions["board-recommend"] = () => {coach.open=true;if (!moduleSide("coach")) inspection = null;openModuleDrawer("coach");draw();drawCoach();ask_("What are my best actions right now?");};
   actions["board-coach-ask"] = (el) => ask_(el.dataset.q);
   /* Show me: the cards an answer names, lit on the board for four seconds. Why?: each play's reason, one sentence. */
   actions["board-coach-show"] = (el) => {
