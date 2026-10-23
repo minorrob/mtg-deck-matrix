@@ -79,6 +79,7 @@
  *   {totalManaValue: "remembered"}       the mana values of what the effect before it remembered, added together ("the total
  *                                        mana value of cards milled this way"); or of what a selector matches ("the total
  *                                        mana value of historic permanents you control", Excalibur, Sword of Eden)
+ *   {attacksThisTurn: "it"}             the times the object a layer-7 amount is counted for attacked this turn (Moraug)
  *   {colorsSpent: "self"}                converge: the colors of mana spent to cast its own object (Sundering Archaic)
  *   {planeswalkerTypesAmong: selector}   the different planeswalker types among what the selector matches (Tam, the
  *                                        Possibility; CR 205.3j)
@@ -111,11 +112,11 @@ import {selectMatching, compileSelector, matchesLastKnown, matchesSelector} from
 import {powerOf, toughnessOf, characteristicsOf, controllerOf, subtypesOf} from "../rules/layers.mjs";
 import {isPlaneswalkerType} from "../keywords/types.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
-import {valueCostOf, commanderKeyOf, xOnStack, startingLifeOf} from "../state/index.mjs";
+import {valueCostOf, commanderKeyOf, xOnStack, startingLifeOf, usesThisTurn} from "../state/index.mjs";
 import {commanderIdentity, hasCommander} from "../rules/commander.mjs";
 
 /** The keys an amount may carry; one of the first, with `times` and `plus` beside it. */
-export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf", "toughnessOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness", "countersAmong", "lifeGained", "damagePrevented", "lifeLost", "rememberedCount",
+export const AMOUNT_KINDS = Object.freeze(["x", "attacksThisTurn", "count", "countersOn", "powerOf", "toughnessOf", "greatestPower", "totalPower", "devotion", "lifeLostThisWay", "colorsOf", "thoseCards", "damageDealt", "castBefore", "manaValueOf", "if", "lifeTotal", "lifeLostThisTurn", "colorsAmong", "greatestToughness", "countersAmong", "lifeGained", "damagePrevented", "lifeLost", "rememberedCount",
   "lifeGainedThisTurn", "tokensCreatedThisTurn", "mostAmongOpponents", "permanentsLeftThisTurn", "playersDealtCombatDamage", "cardTypesAmong", "manaSpent",
   "permanentsEnteredThisTurn", "excessDamage", "lesserOf", "kicked", "differentPowers", "commanderCasts", "cardsLeftGraveyardThisTurn",
   "countersRemovedThisWay", "movedCount", "tappedThisWay", "sacrificedThisWay", "cardsDiscardedThisTurn",
@@ -213,6 +214,7 @@ export function amountProblems(value) {
   if ("devotion" in value && !(Array.isArray(value.devotion) && value.devotion.length && value.devotion.every((c) => COLORS.includes(c)))) problems.push("Devotion is to one or more colors: {devotion: [\"B\"]}");
   for (const key of ["times", "plus", "atMost"]) if (key in value && !Number.isInteger(value[key]) && !(key === "times" && value[key] === "X")) problems.push(`An amount's ${key} is a whole number${key === "times" ? ', or "X"' : ""}`);
   if ("playersWhoDid" in value && value.playersWhoDid !== true) problems.push("playersWhoDid is true");
+  if ("attacksThisTurn" in value && value.attacksThisTurn !== "it") problems.push('attacksThisTurn is "it"');
   if ("votes" in value && !(typeof value.votes === "string" && value.votes.length)) problems.push("votes names the choice voted for");
   if ("totalManaValue" in value && value.totalManaValue !== "remembered" && !(value.totalManaValue && typeof value.totalManaValue === "object")) problems.push('totalManaValue is "remembered", or a selector');
   if ("if" in value) {
@@ -321,7 +323,9 @@ export function amountOf(state, value, context = {}) {
     /* The source as it last was (CR 113.7a), for "cards exiled with this enchantment" once it has gone (script/filter.mjs). */
     ...(context.lastKnown ? {lastKnown: context.lastKnown} : {}),
     /* Its targets, for a selector counted on a target player's zone (toTarget, above). */
-    ...(context.targets ? {targets: context.targets} : {})};
+    ...(context.targets ? {targets: context.targets} : {}),
+    /* What a layer-7 amount is counted for (rules/layers.mjs, counted): "attached to it" (script/filter.mjs). */
+    ...(context.affected !== undefined && context.affected !== null ? {affected: context.affected} : {})};
   let n = 0;
   if ("x" in value) n = Math.max(0, context.x ?? 0);
   /* "For each opponent who does" (Tempt with Vengeance): the players who did what this resolution offered (CR 207.2c). */
@@ -339,6 +343,9 @@ export function amountOf(state, value, context = {}) {
   }, 0);
   /* "A charge counter on it for each time it was kicked" (Everflowing Chalice; multikicker, CR 702.33c). */
   else if ("kicked" in value) n = context.kicked ?? 0;
+  /* "For each time it has attacked this turn" (Moraug, Fury of Akoum; wave 4d L3): the times the object a layer-7 amount is
+     counted for (rules/layers.mjs, counted's `affected`) was declared an attacker this turn, each combat (rules/combat.mjs). */
+  else if ("attacksThisTurn" in value) n = context.affected !== undefined && context.affected !== null ? usesThisTurn(state, context.affected, "attacked") : 0;
   /* The creatures its additional cost tapped, as the spell was cast (CR 601.2h): what the cast recorded; a copy was not cast
      (CR 707.10) and tapped none. */
   else if ("tappedThisWay" in value) n = context.cast?.tapped ?? 0;

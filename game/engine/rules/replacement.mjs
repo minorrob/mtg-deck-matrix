@@ -217,6 +217,7 @@ function damageAfter(ability, amount) {
   if (change.prevent === true) return 0;
   if (Number.isInteger(change.preventAllBut)) return Math.min(amount, change.preventAllBut);
   if (Number.isInteger(change.prevent)) return Math.max(0, amount - change.prevent);
+  if (change.preventHalf === true) return Math.floor(amount / 2);
   if (Number.isInteger(change.multiply)) return amount * change.multiply;
   if (Number.isInteger(change.add)) return amount + change.add;
   return amount;
@@ -440,6 +441,9 @@ function applyOne(state, {holderId, ability, effect = null}, proposal, dry = fal
     /* "Prevent 1 of that damage" (Hedron-Field Purists; CR 615.10): a static's prevention of that much of each damage event it
        applies to, never used up -- not a shield (`prevent` on the ability, below). */
     if (Number.isInteger(ability.change.prevent)) next.amount = Math.max(0, next.amount - ability.change.prevent);
+    /* "Prevent half that damage, rounded up" (Gisela, Blade of Goldnight; wave 4d L3, CR 615.1a): of each damage event it
+       applies to, as it now is, the greater half is prevented and the rest dealt. */
+    if (ability.change.preventHalf === true) next.amount = Math.floor(next.amount / 2);
     /* REDIRECTION (CR 614.9): "all damage that would be dealt to you is dealt to enchanted creature instead" (Pariah) -- the
        same damage, to the permanent its holder enchants, while it enchants one; the rest of the replacements then look
        at the damage as it now is. */

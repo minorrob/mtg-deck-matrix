@@ -1,0 +1,101 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Xenagos, God of Revels",
+    "oracleId": "cb15a8dd-57fe-466f-847e-66476b690a1f",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Enchantment",
+      "Creature"
+    ],
+    "subtypes": [
+      "God"
+    ],
+    "manaCost": "{3}{R}{G}",
+    "colors": [
+      "G",
+      "R"
+    ],
+    "colorIdentity": [
+      "G",
+      "R"
+    ],
+    "power": 6,
+    "toughness": 5
+  },
+  "oracleText": "Indestructible\nAs long as your devotion to red and green is less than seven, Xenagos isn't a creature.\nAt the beginning of combat on your turn, another target creature you control gains haste and gets +X/+X until end of turn, where X is that creature's power.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Indestructible",
+      "keyword": "indestructible"
+    },
+    {
+      "kind": "static",
+      "text": "As long as your devotion to red and green is less than seven, Xenagos isn't a creature.",
+      "layer": 4,
+      "affects": {
+        "self": true
+      },
+      "condition": {
+        "compare": {
+          "count": {
+            "devotion": [
+              "R",
+              "G"
+            ]
+          },
+          "fewerThan": 7
+        }
+      },
+      "apply": {
+        "removeTypes": [
+          "Creature"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of combat on your turn, another target creature you control gains haste and gets +X/+X until end of turn, where X is that creature's power.",
+      "trigger": {
+        "on": "step",
+        "step": "COMBAT_BEGIN",
+        "yours": true
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": {
+            "powerOf": {
+              "target": 0
+            }
+          },
+          "toughness": {
+            "powerOf": {
+              "target": 0
+            }
+          },
+          "keywords": [
+            "Haste"
+          ]
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "another": true
+        }
+      ]
+    }
+  ]
+}

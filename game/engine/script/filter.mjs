@@ -33,7 +33,7 @@
  */
 
 import {usesThisTurn, valueCostOf} from "../state/index.mjs";
-import {typesOf, keywordsOf, controllerOf, characteristicsOf, colorsOf, everyCreatureTypeOf, subtypesOf, supertypesOf, staticAbilities, isModified} from "../rules/layers.mjs";
+import {typesOf, keywordsOf, controllerOf, characteristicsOf, colorsOf, everyCreatureTypeOf, subtypesOf, supertypesOf, staticAbilities, isModified, partsApplied} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {hasSubtype, isCreatureType} from "../keywords/types.mjs";
 import {protectedFrom, hexproofFrom, playerHexproofFrom} from "../rules/protection.mjs";
@@ -50,6 +50,10 @@ export const SELECTOR_KEYS = Object.freeze([
   "unblocked", "singleTarget", "goaded", "uniqueName", "sharesCreatureType", "multicolored", "sharesColor",
   /* "Whenever a modified creature you control deals combat damage" (Kodama of the West Tree; CR 700.15, rules/layers.mjs). */
   "modified",
+  /* Bludgeon Brawl (wave 4d L3): "attached to it", the object a layer-7 amount is counted for (rules/layers.mjs, counted's
+     `affected`); "made so by this ability" (CR 613.6: an ability of the source's whose effect applies to it, rules/layers.mjs
+     partsApplied). */
+  "attachedTo", "affectedBy",
   "sharesCreatureTypeWithCommander",
   /* "A card exiled with this artifact" (CR 607.2a, 406.6): what this source's linked ability exiled, still in exile. */
   "exiledWith", "exiledThisTurn", "unequalPowerToughness",
@@ -408,6 +412,12 @@ export function compileSelector(selector) {
       if (Number.isInteger(selector.controller) && holder !== selector.controller) return false;
     }
 
+    /* "Equipped creature gets +X/+0, where X is that artifact's mana value" (Bludgeon Brawl): attached to "it", the creature
+       the amount is counted for -- none, and nothing is. */
+    if (selector.attachedTo === "it" && (context.affected === undefined || context.affected === null || state.objects[id]?.attachedTo !== context.affected)) return false;
+    /* An ability of the source's applies to it now (CR 613.6): "each noncreature, non-Equipment artifact is an Equipment"
+       (Bludgeon Brawl) -- the artifacts it made so, not those printed Equipment. */
+    if (selector.affectedBy === "self" && !partsApplied(state, id).some((part) => part.startsWith(`${context.source}|`))) return false;
     /* "Equipped creature": the permanent the source is attached to (CR 301.5, 701.3). */
     if (selector.attachedBy === "self") {
       if (context.source === undefined || context.source === null) throw new Error("A selector using `attachedBy` needs the source attached to it");

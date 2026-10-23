@@ -737,6 +737,17 @@ export function advance(state) {
   const due = (state.extraPhases ?? []).filter((added) => added.turn === state.turn && added.after === state.phase);
   if (due.length) {
     state.extraPhases = state.extraPhases.filter((added) => !due.includes(added));
+    /* An added combat a delayed trigger waits on ("at the beginning of that combat", Moraug; script/effects/permanents.mjs,
+       addPhase): numbered among this turn's combats as it is put in the turn, the most recently added first. */
+    let combats = state.combatsThisTurn ?? 0;
+    for (const added of [...due].reverse()) {
+      if (!added.steps.includes("COMBAT_BEGIN")) continue;
+      combats += 1;
+      for (const waiting of (state.delayedTriggers ?? []).filter((d) => d.at === "that combat" && d.tag !== undefined && d.tag === added.tag)) {
+        waiting.combat = combats;
+        waiting.turn = state.turn;
+      }
+    }
     state.stepQueue = [...due.reverse().flatMap((added) => added.steps.map((name) => PHASE_NAMES.indexOf(name))), ...(state.stepQueue ?? [])];
     if (!Number.isInteger(state.resumeAfter)) state.resumeAfter = state.stepIndex;
   }
@@ -797,6 +808,8 @@ export function advance(state) {
     for (const player of state.players) if (player.castThisTurn) player.castThisTurn = [];
     /* Phases added to the turn that ended went with it; the combats of this one are counted from none. */
     state.extraPhases = [];
+    /* And a delayed trigger of an added combat that never came goes with them. */
+    if ((state.delayedTriggers ?? []).some((d) => d.at === "that combat")) state.delayedTriggers = state.delayedTriggers.filter((d) => d.at !== "that combat");
     state.stepQueue = [];
     state.resumeAfter = null;
     state.combatsThisTurn = 0;
