@@ -535,6 +535,12 @@ export function createToken(state, params, context) {
   if (params.attachedTo !== undefined) for (const id of made) if (state.objects[id].enchant) attachTo(state, id, host);
   /* "They gain haste until end of turn" (Ovika), and the rest a made permanent may gain (afterwards). */
   afterwards(state, made, {...params, controller}, context);
+  /* "Exile the top card of your library face down ... Create a 2/2 colorless Spirit creature token. When that token leaves the
+     battlefield, put the exiled card into your hand" (Ugin, the Ineffable; CR 607.2a; card load w4d L1): `linkRemembered`,
+     what an earlier effect of this resolution remembered, linked to each token made, for its own ability (`linked`,
+     effects/zones.mjs) -- "the exiled card", still that card in exile (CR 400.7). */
+  if (params.linkRemembered === true) for (const id of made) if (state.objects[id])
+    (state.links ??= {})[id] = (context.remembered ?? []).filter((card) => state.objects[card]?.zone === "exile");
   /* "Create X 1/1 white Soldier creature tokens. If X is 5 or more, destroy all OTHER creatures" (Martial Coup): the
      tokens this made, for the effects after it -- the ones a replacement added among them (CR 614.6). */
   if (params.remember) context.remembered = made;

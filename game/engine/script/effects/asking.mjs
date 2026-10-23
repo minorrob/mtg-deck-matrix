@@ -786,9 +786,12 @@ export const proliferate = {
       ...state.zones.battlefield.filter((id) => hasCounters(state.objects[id].counters)).map((id) => ({id})),
       ...state.players.filter((p) => !p.lost && hasCounters(playerCounters(p))).map((p) => ({player: p.id})),
     ];
+    /* "Choose any number of permanents you control that had a counter put on them this way" (Ripples of Potential; card
+       load w4d L1): `remember`, the permanents given counters -- none, until some are. */
+    if (params.remember === true) context.remembered = [];
     /* Nothing with a counter: nothing to choose, and nobody is asked -- but the player has proliferated. */
     if (candidates.length === 0) return {events: [proliferated(state, context.controller)]};
-    state.awaiting = {kind: "effect-choice", effect: "proliferate", player: context.controller, candidates};
+    state.awaiting = {kind: "effect-choice", effect: "proliferate", player: context.controller, candidates, ...(params.remember === true ? {remember: true} : {})};
     return true;
   },
 
@@ -810,7 +813,9 @@ export const proliferate = {
 
   apply(state, awaiting, indices) {
     const chosen = (indices ?? []).map((i) => awaiting.candidates[i]).filter(Boolean).map((c) => (c.player !== undefined ? {player: c.player} : c.id));
-    return [...giveEachAnother(state, {chosen}, {controller: awaiting.player}), proliferated(state, awaiting.player)];
+    const events = [...giveEachAnother(state, {chosen}, {controller: awaiting.player}), proliferated(state, awaiting.player)];
+    /* The permanents a counter was put on (`remember`): each chosen one still there. */
+    return awaiting.remember ? {events, remembered: chosen.filter((id) => typeof id !== "object" && state.objects[id]?.zone === "battlefield")} : events;
   },
 };
 
