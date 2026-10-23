@@ -106,13 +106,15 @@ try {
         });
         let at = await visibleOption();
         if (!at) {
-          const also = await reach(page, '[data-action="board-also"]');
+          const also = await reach(page, '[data-action="board-actions-open"]');
           if (also.ok) {await page.mouse.click(also.x, also.y); await page.waitForTimeout(300); at = await visibleOption();}
         }
         ok(!!at, `${where}: Kraum's cast is offered where a person can press it`);
         await page.mouse.click(at.x, at.y);
         await page.waitForTimeout(300);
       }
+      await page.locator("#cm-board-decision [data-action=board-confirm]").click();
+      await page.waitForTimeout(100);
       ok(acts(frames).some((f) => f.choiceId === "priority:25:3:900" && JSON.stringify(f.indices) === "[1]"), `${where}: the click casts Kraum from the command zone (${JSON.stringify(acts(frames))})`);
       ok(!errors.length, `${where}: no page error (${errors.join(" | ")})`);
       await context.close();
@@ -138,10 +140,10 @@ try {
       ok((await reach(page, `${shown} [data-card="91002"]`)).ok, `${where}: a shown card takes the pointer`);
       const zoomAt = await reach(page, `${shown} [data-card="91001"]`);
       await page.mouse.click(zoomAt.x, zoomAt.y);
-      await page.locator("#cm-dialog[open]").waitFor({timeout: 5000});
-      ok(/Lightning Bolt/.test(await page.locator("#cm-dialog[open]").innerText()), `${where}: a shown card opens Card zoom`);
+      await page.locator("#cm-card-inspector").waitFor({timeout: 5000});
+      ok(/Lightning Bolt/.test(await page.locator("#cm-card-inspector").innerText()), `${where}: a shown card opens read-only inspection`);
       await page.keyboard.press("Escape");
-      await page.waitForFunction(() => !document.querySelector("#cm-dialog[open]"), null, {timeout: 5000});
+      await page.waitForFunction(() => !document.querySelector("#cm-card-inspector"), null, {timeout: 5000});
       const okAt = await reach(page, '#cm-board-decision [data-action="board-confirm"]');
       ok(okAt.ok, `${where}: OK takes the pointer`);
       await page.mouse.click(okAt.x, okAt.y);

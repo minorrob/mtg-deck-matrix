@@ -89,6 +89,7 @@ try {
   assert.equal(await button(page).getAttribute("aria-pressed"),"true","stack and required choice preserve yield");
   assert.equal(incoming.filter(x=>x.type==="act").length,0,"no choice answered for the player");
   await page.locator('[data-action=board-option][data-index="1"]').click();
+  await page.locator('[data-action=board-confirm]').click();
   await tick(page);
   assert.deepEqual(incoming.filter(x=>x.type==="act").at(-1).indices,[1],"the player's optional choice is sent");
   publish({decision:null});

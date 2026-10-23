@@ -79,7 +79,7 @@ try {
     const {page, context, frames, errors} = await fixture(view, width, height, mode);
     /* In Full the question may sit in a drawer: open it where the board says it is asked. */
     if (!(await page.locator('[data-action="board-attack-all"]').count())) {
-      const open = page.locator('[data-action="board-decision-open"], [data-module-open="actions"], [data-action="board-also"]').first();
+      const open = page.locator('[data-action="board-decision-open"], [data-module-open="actions"], [data-action="board-actions-open"]').first();
       if (await open.count()) {await open.click(); await page.waitForTimeout(200);}
     }
     const buttons = await page.locator('[data-action="board-attack-all"]').allInnerTexts();

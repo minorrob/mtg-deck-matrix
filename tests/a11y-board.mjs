@@ -109,6 +109,8 @@ const {browser, base, stub, close} = await openBrowser({name: "a11y-board", flag
 async function person(email, viewport) {
   const context = await browser.newContext({viewport, serviceWorkers: "block"});
   const page = await context.newPage();
+  // This suite exercises a returning Focus player; R2 separately verifies new-device 3D.
+  await page.addInitScript(() => {if (!localStorage.getItem("cm-board-view")) localStorage.setItem("cm-board-view", "focus");});
   /* The browser's own full screen is not asked for (it moves the window under a measurement); Full screen the view
      fills the window by itself, as it does where a browser will not (tests/table-board.mjs walks the other). */
   await page.addInitScript(() => Object.defineProperty(Document.prototype, "fullscreenEnabled", {get: () => false}));
@@ -413,6 +415,7 @@ function regionOf() {
     if (!el.closest("#cm-board")) return `outside:${el.tagName.toLowerCase()}${el.id ? "#" + el.id : ""}.${String(el.className || "").split(" ")[0]}`;
     const slot = el.closest(".cm-board-slot");
     if (slot) return `board-${slot.dataset.area}`;
+    if (el.closest(".cm-stage-rail, .cm-board-panegrip, .cm-stage-left")) return "actions-and-boards";
     for (const [q, name] of [[".cm-hand-show", "fan"], [".cm-stage-top", "strip"], [".cm-full-rail", "rail"], [".cm-board-pane", "seats"], [".cm-board-panegrip", "seats"], [".cm-full-pill", "pill"], [".cm-full-others", "others"], [".cm-stage-rear", "others"],
       [".cm-board-ask", "ask"], [".cm-board-hand", "hand"], [".cm-stage-hand", "hand"], [".cm-board-rowbar", "rowbar"], [".cm-board-pie", "counter"], [".cm-full-side", "side"], [".cm-stage-rail", "side"], [".cm-stage-handle", "side"], [".cm-full-mine", "board"], [".cm-stage-camera", "camera"], [".cm-board-stage", "board"], [".cm-board-panel", "panel"]]) if (el.closest(q)) return name;
     return `board:${el.className}`;
@@ -602,12 +605,12 @@ try {
   /* ---- 2. FOCUS ORDER ---- */
   const EXPECT = {
     /* Focus: the strip, the seats, the board, what the room asks, the hand */
-    focus: ["strip", "seats", "board", "ask", "hand", "camera", "side"],
+    focus: ["strip", "board", "ask", "hand", "camera", "actions-and-boards", "side"],
     /* Table: the strip, the boards as they sit (top row left to right, then the bottom), the bar, the life counter, the hand */
-    table: ["strip", "board-a", "board-b", "board-c", "board-d", "rowbar", "counter", "ask", "hand", "camera", "side"],
+    table: ["strip", "board-a", "board-b", "board-c", "board-d", "rowbar", "counter", "ask", "hand", "camera", "actions-and-boards", "side"],
     /* Full screen (the tabletop): the top strip with the pill and the profile, the other seats across the back, your board
        with its corner and the camera, what the room asks, your hand, then the two drawers' handles */
-    full: ["strip", "others", "board", "ask", "hand", "side"],
+    full: ["strip", "others", "board", "ask", "hand", "actions-and-boards", "side"],
   };
   for (const who of [rob, maya]) {
     const page = who.page, w = page.viewportSize().width;
@@ -816,7 +819,7 @@ try {
     ok(handlers >= 2 && bound.size >= 15, `the board's key handlers are read (${handlers} handlers, ${bound.size} keys: ${[...bound].join(" ")})`);
     ok(!undocumented.length, `every key the board binds is in Help (${undocumented.join(", ") || "all"} missing)`);
     ok(!unbound.length, `and every key Help names is bound, or is the browser's Tab (${unbound.join(", ") || "none"} unbound)`);
-    for (const [phrase, why] of [[/Space.{0,80}(fans|shows) your hand/i, "Space fans the hand"], [/1.{0,3}9.{0,60}holds/i, "1-9 hold a card up"], [/Enter.{0,60}(first|does)/i, "Enter does the held card's first thing"],
+    for (const [phrase, why] of [[/Space.{0,80}(fans|shows) your hand/i, "Space fans the hand"], [/1.{0,3}9.{0,60}holds/i, "1-9 hold a card up"], [/Enter.{0,80}selects.{0,60}review/i, "Enter selects the held card action for review"],
       [/Escape/i, "Escape steps back"], [/You can also/i, "Escape closes You can also"], [/Coach/i, "Escape and Enter in the Coach"], [/Shift.{0,4}Enter/i, "Shift+Enter in the Coach"], [/10%/, "the size step"], [/two boards side by side|side by side/i, "the side-by-side bar's ← →"]]) ok(phrase.test(helpText), `Help says it: ${why}`);
     /* and each does what Help says */
     await view(page, "focus");
@@ -845,15 +848,15 @@ try {
       asked.view.decision = {id: "a11y:priority", kind: "priority", mode: "one", title: "Your priority", options: [{index: 0, act: "pass", label: "Pass priority"}, {index: 1, act: "cast", label: castable.name, cardId: castable.cardId}]};
       asked.view.waitingOn = asked.view.seatId;
       hand(ROB, asked);
-      await page.locator(".cm-stage-top [data-action=board-also]").waitFor({timeout: 5000});
+      await page.locator(".cm-stage-top [data-action=board-actions-open]").waitFor({timeout: 5000});
       await page.keyboard.press("Shift");
-      await page.locator(".cm-stage-top [data-action=board-also]").focus();
+      await page.locator(".cm-stage-top [data-action=board-actions-open]").focus();
       await page.keyboard.press("Enter");
-      await page.locator(".cm-board-also").waitFor();
-      const said = await page.locator(".cm-stage-top [data-action=board-also]").getAttribute("aria-expanded");
+      await page.locator(".cm-stage-rail.is-open #cm-board-decision").waitFor();
+      const said = await page.locator(".cm-stage-top [data-action=board-actions-open]").getAttribute("aria-expanded");
       await page.keyboard.press("Escape");
-      const closed = await page.locator(".cm-board-also").count() === 0, back = await page.evaluate(() => document.activeElement.matches("[data-action=board-also]"));
-      ok(said === "true" && closed && back, `You can also ▾ says it is open (aria-expanded ${said}); Escape closes it (${closed}) with the focus back on it (${back})`);
+      const closed = await page.locator(".cm-stage-rail.is-open").count() === 0, back = await page.evaluate(() => document.activeElement.matches("[data-action=board-stage-rail]"));
+      ok(said === "true" && closed && back, `Actions says it is open (aria-expanded ${said}); Escape closes it (${closed}) with the focus back on it (${back})`);
       /* the card that can be cast keeps its bright ring inside the focus ring */
       await page.keyboard.press("Shift");
       await page.locator(`.cm-board-hand .cm-bcard.is-bright[data-card="${castable.cardId}"]`).focus();
@@ -879,12 +882,14 @@ try {
     await view(page, "full");
     await page.evaluate(() => {const a = document.activeElement; if (a && a !== document.body) a.blur();});
     await page.keyboard.press("Escape");
-    ok(await page.locator(".cm-board-mat").count() === 1, "Escape leaves Full screen for Focus");
+    ok(await page.locator("#cm-board").getAttribute("data-view") === "full", "Escape preserves the 3D view preference");
+    await view(page, "focus");
     const grip = page.locator("[data-drag=hand]"), was = Number(await grip.getAttribute("aria-valuenow"));
     await grip.focus();
     await page.keyboard.press("ArrowUp");
     ok(Number(await page.locator("[data-drag=hand]").getAttribute("aria-valuenow")) === was + 5, "↑ on the hand's divider grows the hand");
     await page.keyboard.press("ArrowDown");
+    await page.click("[data-action=board-actions-open]");
     const pane = page.locator("[data-drag=pane]"), paneWas = Number(await pane.getAttribute("aria-valuenow"));
     await pane.focus();
     await page.keyboard.press("ArrowRight");
