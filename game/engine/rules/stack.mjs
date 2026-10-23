@@ -215,6 +215,20 @@ export function pushCopy(state, original, {controller, nonLegendary = false} = {
   return entry;
 }
 
+/**
+ * Copy an activated or triggered ability on the stack (CR 707.10; Strionic Resonator, Return the Favor; card load w4d L1):
+ * a new ability with the original's text, source and every choice made for it -- its modes, targets, X, what it is about --
+ * controlled by whoever copied it (CR 707.10, 113.7a). It is put on the stack, not activated, and it did not trigger
+ * (CR 707.10c), so nothing that says "whenever you activate" or "triggers" sees it.
+ */
+export function pushAbilityCopy(state, original, {controller} = {}) {
+  if (!original || original.kind === "spell") throw new Error("There is no ability there to copy");
+  const entry = {...structuredClone(original), stackId: state.nextStackId, playerId: controller, stage: "waiting", copy: true};
+  state.nextStackId += 1;
+  state.stack.push(entry);
+  return entry;
+}
+
 /* What an entry does: a spell's spell ability off its card, or the script its ability carried onto the stack. */
 function scriptOf(state, entry) {
   if (entry.kind === "spell") {

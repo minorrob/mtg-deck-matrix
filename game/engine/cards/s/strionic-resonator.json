@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Strionic Resonator",
+    "oracleId": "cf751552-156f-4f81-ac94-9814dce099f9",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{2}, {T}: Copy target triggered ability you control. You may choose new targets for the copy. (A triggered ability uses the words \"when,\" \"whenever,\" or \"at.\")",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{2}, {T}: Copy target triggered ability you control. You may choose new targets for the copy.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "copySpell",
+          "stack": {
+            "target": 0
+          },
+          "newTargets": true
+        }
+      ],
+      "targets": [
+        {
+          "what": "ability",
+          "abilityKind": "triggered",
+          "controller": "you"
+        }
+      ]
+    }
+  ]
+}

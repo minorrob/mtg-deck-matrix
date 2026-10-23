@@ -34,7 +34,7 @@ import {makeCopies, afterwards, joinAttack, attackPlaces, attachTo, createToken,
 import {payGeneric, canPayGeneric, parseManaCost, manaValue, paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits, unlessPlans, planWords, payPlan} from "../../rules/mana.mjs";
 import {typesOf, characteristicsOf, everyCreatureTypeOf, controllerOf, lastKnown, staticAbilities} from "../../rules/layers.mjs";
 import {isLandType} from "../../keywords/types.mjs";
-import {pushCopy, becameTarget, specsOf} from "../../rules/stack.mjs";
+import {pushCopy, pushAbilityCopy, becameTarget, specsOf} from "../../rules/stack.mjs";
 import {loseLife, gainLife, DAMAGING, damageQuestion, addMana} from "./resources.mjs";
 import {damageOrderChoice} from "../../rules/replacement.mjs";
 import {targetCandidates, targetName} from "../bind.mjs";
@@ -1597,10 +1597,20 @@ function retargetOptions(state, question, {withOthers = false} = {}) {
 }
 export const copySpell = {
   open(state, params, context) {
-    const originals = (params.spells ?? []).map((id) => state.stack.find((e) => e.objectId === id)).filter(Boolean);
+    /* Or a spell or ability by its stack entry (`stack`: "copy target triggered ability you control", Strionic Resonator;
+       "target instant spell, sorcery spell, activated ability, or triggered ability", Return the Favor): an ability's copy is
+       an ability (rules/stack.mjs, pushAbilityCopy), a spell's a spell. */
+    const originals = [...(params.spells ?? []).map((id) => state.stack.find((e) => e.objectId === id)),
+      ...(Array.isArray(params.stack) ? params.stack.map((id) => state.stack.find((e) => e.stackId === id)) : [])].filter(Boolean);
     const count = Math.max(0, params.count ?? 1);
     const events = [], questions = [];
     for (const original of originals) for (let n = 0; n < count; n += 1) {
+      if (original.kind !== "spell") {
+        const copy = pushAbilityCopy(state, original, {controller: context.controller});
+        events.push(event("GameEventAbilityCopied", state, {name: original.name, playerId: context.controller, stackId: copy.stackId, original: original.stackId}));
+        if (params.newTargets === true) copy.targets.forEach((t, index) => { if (!Array.isArray(t)) questions.push({stackId: copy.stackId, index}); });
+        continue;
+      }
       const copy = pushCopy(state, original, {controller: context.controller, nonLegendary: params.except?.nonLegendary === true});
       events.push(event("GameEventSpellCopied", state, {card: cardRef(state, copy.objectId), original: cardRef(state, original.objectId),
         playerId: context.controller, stackId: copy.stackId}));

@@ -37,6 +37,9 @@ export function historyLines(event, names = []) {
       return f.sa && f.sa.isSpell ? line(`${who(f.si.actor.playerId)} cast ${cardName(f.card)}`) : [];
     case "GameEventSpellCopied":
       return line(`${who(f.playerId)} copied ${cardName(f.card)}`);
+    /* An ability copied on the stack (CR 707.10; Strionic Resonator): named by its source. */
+    case "GameEventAbilityCopied":
+      return line(`${who(f.playerId)} copied ${f.name ? `${f.name}'s ability` : "an ability"}`);
     case "GameEventSpellResolved":
       return f.card ? line(`${cardName(f.card)} resolved`) : [];
     case "GameEventCardChangeZone": {
