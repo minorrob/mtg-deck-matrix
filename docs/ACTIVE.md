@@ -20,7 +20,7 @@ This task owns the engine additions required by those two cards. The separate Pl
 - **Rules review:** CR 702.140c gives the over/under choice to the mutating spell's controller, including when an opponent
   controls the owned target. The regression first failed with the choice given to the creature's controller, then passed
   with the correction; the creature keeps its controller. A deliberate break holds this case.
-- **Merge gate:** main 430c7eb2 (the latest Play updates) is merged into this branch, with README suite count reconciled.
+- **Merge gate:** main d7589c5f (the latest Play updates) is merged into this branch, with README suite count reconciled.
   The integrated PR head must pass the secret scan and GitHub CI before merge. Staging deployment remains on hold.
   Production is outside this request. No Forge behavior is claimed by this load.
 
@@ -120,6 +120,8 @@ lane is free or its own.
 **Agreed with the engine lane (ROB-11, Oct 17):** no concurrent staging deploys, the slot is handed over in ROB-11 comments; migration 0006 is reserved for `card_demand` (ROB-86), this lane's next is 0007; `commanderTax` is an accepted additive `CrankRoomView@1` field, read by the UI under ROB-29 only after ROB-12 merges; ROB-15/ROB-16 stay in this lane.
 
 ## Play tabletop preview, October 14, 2026
+
+**October 23 final pane-bound follow-up:** `codex/play-preview-pane-bounds` measures both Focus's existing Boards pane and any open tools drawer. The live screenshot made their separate bounds visible; a preview must use the outermost of them when calculating the spare gap. The shared drawer/legacy pane consolidation remains in the first-final plan. The 43-check fullscreen suite covers the visible surfaces, narrow/exact-fit gaps and collapse; its deliberate omission of the Boards bound is caught. Final staging evidence is on the follow-up PR.
 
 **October 23 screenshot refinements, Codex · Play:** Rob's two screenshots requested opponent-play previews in Focus's spare gap, roughly 10–15% smaller Full-screen actions, and tilt without rotation. `codex/play-preview-placement` merged in PR #839 as `13faf30b`, staging artifact `6d39278f`: measured drawer/mat gap on arrival, redraw and resize; desktop actions reduced from 56px to 49px; no rotation UI or horizontal drag rotation, and older saved yaw ignored. Its 298 accessibility checks required dark primary-action ink after shrinking the text. Follow-up `codex/play-preview-gap-edge` removes the extra margin from the fit threshold: a preview which fits the gap must not cover the drawer even when the preferred spacing cannot fit. The first-final plan now carries the Decision Desk/Table Companion visual direction with a feature-preservation crosswalk. Targeted checks and final release evidence belong to the PR records. This is a refinement of the existing controls, not completion of the remaining first-final features.
 

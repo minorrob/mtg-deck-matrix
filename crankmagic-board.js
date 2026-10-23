@@ -1828,8 +1828,8 @@ globalThis.CrankBoard = Object.seal({
     const mat = host.querySelector(".cm-board-stage .cm-board-mat"), pop = layer.querySelector(".cm-play-pop");
     if (phone() || !mat || !pop) return;
     const edge = mat.getBoundingClientRect().left, width = pop.getBoundingClientRect().width;
-    const drawer = host.querySelector(".cm-stage-rail.is-open");
-    const start = drawer ? drawer.getBoundingClientRect().right : host.getBoundingClientRect().left;
+    const leftPanes = [...host.querySelectorAll(".cm-board-pane, .cm-stage-rail.is-open")];
+    const start = Math.max(host.getBoundingClientRect().left, ...leftPanes.map(pane => pane.getBoundingClientRect().right));
     const gap = edge - start;
     const left = gap >= width ? start + (gap - width) / 2 : edge - width - 12;
     layer.style.setProperty("--plays-left", `${Math.max(8, Math.round(left))}px`);
