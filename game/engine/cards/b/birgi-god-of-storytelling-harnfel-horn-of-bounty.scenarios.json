@@ -179,7 +179,9 @@
       "expect": [
         {
           "seat": 0,
-          "pool": {}
+          "pool": {
+            "R": 0
+          }
         },
         {
           "seat": 0,

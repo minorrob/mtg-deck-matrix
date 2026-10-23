@@ -21,6 +21,20 @@
           }
         ]
       }
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
     }
   },
   "scenarios": [
@@ -126,6 +140,37 @@
           "cards": [
             "Insight"
           ]
+        }
+      ]
+    },
+    {
+      "name": "A transforming card is cast only as its front: with Omnipresence, not its back face for nothing (CR 712.11)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Etali, Primal Conqueror // Etali, Primal Sickness"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Omnipresence",
+            "Bear",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Etali, Primal Sickness"
+          },
+          "count": 0
         }
       ]
     },

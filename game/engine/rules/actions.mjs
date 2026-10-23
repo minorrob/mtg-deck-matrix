@@ -964,7 +964,7 @@ function tapSets(state, player, sourceId, selector, count, ownTap = false) {
 /* "Creatures you control can boast twice during each of your turns rather than once" (Birgi, God of Storytelling; CR
    702.142a): a boast ability's limit, during its controller's own turn under that rule. */
 const boastLimit = (state, id, ability) => (ability.boast === true && state.objects[id]?.controller === state.activePlayer
-  && playerRuleChanged(state, "boast-twice", state.activePlayer) ? 2 : ability.limit);
+  && playerRuleChanged(state, "boast-twice", state.objects[id].controller) ? 2 : ability.limit);
 /* Whether an ability is within its limit this turn ("activate only once each turn", CR 602.5b), and an exhaust ability
    not yet activated by this object (CR 702.177a). */
 const withinLimit = (state, id, ability) => (!ability.limit || usesThisTurn(state, id, ability.id) < boastLimit(state, id, ability))

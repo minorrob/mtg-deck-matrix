@@ -45,8 +45,10 @@
   },
   "scenarios": [
     {
-      "name": "Her Ember countered; past the Embers, her Lesson -- cast free -- and the Embers exiled go to the bottom",
+      "name": "Her Ember countered (she drew one Ember, milled one to three); past the other Embers, her Lesson -- cast free -- and the Embers exiled go to the bottom",
       "library": [
+        "Ember",
+        "Ember",
         "Ember",
         "Ember",
         "Ember",
@@ -145,7 +147,7 @@
           "life": 41
         },
         {
-          "seat": 0,
+          "seat": 1,
           "zone": "exile",
           "cards": []
         },
@@ -157,6 +159,8 @@
     {
       "name": "She declines: the Lesson goes to the bottom with the rest",
       "library": [
+        "Ember",
+        "Ember",
         "Ember",
         "Ember",
         "Ember",
@@ -242,7 +246,7 @@
           "life": 40
         },
         {
-          "seat": 0,
+          "seat": 1,
           "zone": "exile",
           "cards": []
         },

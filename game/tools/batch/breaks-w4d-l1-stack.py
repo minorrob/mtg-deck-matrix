@@ -48,7 +48,7 @@ BREAKS = [
     ('boast with no "attacked this turn"', INDEX,
      '          : {present: {what: "permanent", self: true, attackedThisTurn: true}}} : {})});', '          : {}} : {})});'),
     ('boast twice never', ACTIONS,
-     '  && playerRuleChanged(state, "boast-twice", state.activePlayer) ? 2 : ability.limit);', '  && false ? 2 : ability.limit);'),
+     '  && playerRuleChanged(state, "boast-twice", state.objects[id].controller) ? 2 : ability.limit);', '  && false ? 2 : ability.limit);'),
     ("boast twice in another player's turn", ACTIONS,
      'ability.boast === true && state.objects[id]?.controller === state.activePlayer\n', 'ability.boast === true\n'),
     ('boast-twice no rule', 'game/engine/rules/statics.mjs', '  "boast-twice": "rules/actions.mjs",\n', ''),
