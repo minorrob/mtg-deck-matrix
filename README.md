@@ -943,7 +943,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 563 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 564 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1505,6 +1505,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-libload-graveyard` - `tests/engine-libload-graveyard.mjs`: the graveyard (the library card load of 2026-10-21, lane L3) -- the lane's fourteen cards defined and playable; manifest dread (CR 701.62a) as a dig of two, one manifested and the rest into the graveyard, its question and its refusals; exile-until remembering what it exiled and a permission cast with mana of any type (Hostage Taker, CR 609.4b); several conditions together (`allOf`, Happily Ever After); card types among permanents and graveyard cards (CR 205.2a), through the layers; the starting life total (CR 103.4), kept off a game at 40
 - `engine-libload-l6` - `tests/engine-libload-l6.mjs`: spells, draws and discards (the library card load of 2026-10-21, lane L6) -- the lane's twenty-three cards and Fractured Powerstone at a table and through their scenarios; "roll the planar die" with no effect outside a Planechase game (CR 901.3a, 706.7; the card's ruling), nothing rolled for Ichor Elixir to replace; a player's hexproof from a color (Veil of Summer; CR 702.11d) stopping only an opponent's targets from a source of that color, never a player chosen without targeting; an effect's hexproof from over players only when it names no permanents; "each opponent who didn't" (Kynaios and Tiro of Meletis) and a chooseCard's `did` said beside `remember`
 - `engine-ring` - `tests/engine-ring.mjs`: Boromir, the Ring emblem, all four abilities, bearer choices, control changes, legend rule, and save/resume.
+- `engine-w4d-combat` - `tests/engine-w4d-combat.mjs`: the card load of 2026-10-23, lane L3 (combat and equipment): its cards through their scenarios, two added combats (Moraug), deathtouch over Ram Through, two Bludgeon Brawls in a dependency loop, modified, one kind of counter doubled, Gisela both ways, and the refusals.
 - `engine-mutate` - `tests/engine-mutate.mjs`: Nethroi, mutate costs and targets, merged cards, commander choices, copying, flickering, ordering, and the total power limit.
 - `engine-libload-stack` - `tests/engine-libload-stack.mjs`: the stack and control (library load L2, 2026-10-21) -- spree (CR 702.172a), each set of modes its own cast with their costs added; "as though it had flash if it targets a commander" (Timely Ward) and its guards; a spell that targets a permanent you control (Rebuff the Wicked) and creatures attacking you (Mangara, the Diplomat) in the selector grammar; Silence at a table of four
 

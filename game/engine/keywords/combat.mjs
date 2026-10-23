@@ -100,9 +100,9 @@ export function canBlockAttacker(state, blockerId, attackerId) {
   /* Nonbasic landwalk (CR 702.14a, c; Trailblazer's Boots): the defending player controls a land without the supertype
      basic, its supertypes as they are now (CR 205.4a). */
   if (has(state, attackerId, "Nonbasic Landwalk")) {
-    const defender = state.combat?.attacks?.find(a => a.attacker === attackerId)?.defender ?? controllerOf(state, blockerId);
-    if (state.zones.battlefield.some(id => controllerOf(state, id) === defender
-        && typesOf(state, id).includes("Land") && !(characteristicsOf(state, id).supertypes ?? []).includes("Basic"))) return false;
+    const defending = state.combat?.attacks?.find((attack) => attack.attacker === attackerId)?.defender ?? controllerOf(state, blockerId);
+    const nonbasic = (id) => typesOf(state, id).includes("Land") && !(characteristicsOf(state, id).supertypes ?? []).includes("Basic");
+    if (state.zones.battlefield.some((id) => controllerOf(state, id) === defending && nonbasic(id))) return false;
   }
   /* Protection (CR 702.16f): not blocked by a creature with the quality. */
   if (protectedFrom(state, {card: attackerId}, blockerId)) return false;

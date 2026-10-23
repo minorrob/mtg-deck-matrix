@@ -196,7 +196,6 @@ export function dealDamage(state, params, context) {
     }
 
   for (const hit of hits) {
-    if (hit.amount === 0) continue;
     /* CR 616.1: the order of the effects that change it, as the player dealt it chose (effects/asking.mjs, orderDamage);
        the order that leaves the least where nobody was asked (rules/replacement.mjs). */
     const {proposal} = applyReplacements(state, {
