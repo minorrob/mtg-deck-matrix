@@ -46,11 +46,13 @@
 
 import {moveObject, removeObject, PER_PLAYER, PUBLIC_ZONES, eventCard, rememberExileLooker, recordDeath} from "../state/index.mjs";
 import {applyReplacements} from "./replacement.mjs";
-import {lastKnown, toughnessOf, typesOf, keywordsOf, controllerOf, deriving, staticAbilities} from "./layers.mjs";
+import {lastKnown, supertypesOf, toughnessOf, typesOf, keywordsOf, controllerOf, deriving, staticAbilities} from "./layers.mjs";
 import {matchesSelector} from "../script/filter.mjs";
 import {commanderToAsk, resolveCommanderChoice, recordCommanderDamage} from "./commander.mjs";
 import {sacrificeOne, moveOne, returnExiledUntil, leavingRef, destructionReplaced, destructionAsks} from "../script/effects/zones.mjs";
 import {changeLife, crown} from "../script/effects/resources.mjs";
+import {mergedOrderToAsk} from "../state/index.mjs";
+import {checkRingBearers} from "../keywords/ring.mjs";
 import {enduringStories, citysBlessings} from "../keywords/designations.mjs";
 import {preparedCopyStays} from "../script/effects/attributes.mjs";
 import {endControlChange, nextRecord, endCounterDurations, controlByAuras} from "../script/effects/permanents.mjs";
@@ -227,6 +229,7 @@ function auraToGraveyard(state, id, events) {
 }
 
 export function checkStateBasedActions(state) {
+  checkRingBearers(state);
   /* "For as long as that land has a blight counter on it" (CR 611.2b): over, for an object with none (effects/permanents.mjs). */
   endCounterDurations(state);
   /* Continuous control changes also confer hideaway's look permission (CR 406.3, 702.75a). Record it before a state-based
@@ -473,7 +476,7 @@ export function checkStateBasedActions(state) {
          who lost is not asked, and a game that is over asks nobody anything. */
       if (!state.awaiting && !gameOver(state)) {
         /* Only read: every object derived once (rules/layers.mjs, deriving). */
-        const ask = deriving(state, () => legendToAsk(state) ?? commanderToAsk(state));
+        const ask = deriving(state, () => mergedOrderToAsk(state) ?? legendToAsk(state) ?? commanderToAsk(state));
         if (ask) state.awaiting = ask;
       }
       break;
@@ -582,7 +585,7 @@ function legendToAsk(state) {
     const byName = new Map();
     for (const id of state.zones.battlefield) {
       const object = state.objects[id];
-      if (object.faceDown === true || !(object.supertypes ?? []).includes("Legendary") || controllerOf(state, id) !== player) continue;
+      if (object.faceDown === true || !supertypesOf(state, id).includes("Legendary") || controllerOf(state, id) !== player) continue;
       byName.set(object.card, [...(byName.get(object.card) ?? []), id]);
     }
     for (const [name, objectIds] of byName) if (objectIds.length > 1) return {kind: "legend-rule", player, name, objectIds};

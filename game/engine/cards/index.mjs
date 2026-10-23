@@ -269,6 +269,7 @@ const TRIGGERS = {
   upkeep: (t) => ({on: "GameEventTurnPhase", phase: "UPKEEP", ...(t.yours === false ? {} : {yourTurn: true})}),
   /* "Whenever you cast a noncreature spell", "whenever an opponent casts a spell": `caster` you, opponent or any;
      `filter` the spell (CR 601.2i). */
+  "mutates": (t) => ({on: "GameEventMutates", who: t.who ?? "self"}),
   "spell cast": (t) => ({on: "GameEventSpellAbilityCast", caster: t.caster ?? "you", ...(t.filter ? {filter: t.filter} : {}), ...(t.firstThisTurn ? {firstThisTurn: true} : {}),
     /* "Their second spell each turn" (Monologue Tax): the caster's Nth this turn the filter fits. */
     ...(Number.isInteger(t.nthThisTurn) && t.nthThisTurn >= 2 ? {nthThisTurn: t.nthThisTurn} : {}),
@@ -1398,6 +1399,14 @@ export function compileScript(script) {
     /* OVERLOAD (CR 702.96a-b): an alternative cost; cast for it, the spell's text has "each" where it had "target" -- written
        out as the effects it then has (`effects`, no targets), which the spell carries onto the stack in place of its own
        (rules/actions.mjs, rules/stack.mjs). */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "mutate") {
+      const cost = ability.cost ?? [];
+      if (!cost.length || !cost.every((atom) => atom?.atom === "mana")) problems.push(`${ability.text}: mutate is a mana cost`);
+      keywords.push("Mutate");
+      abilities.push({id, kind: "static", rule: "alternative-cost", mutate: true, text: ability.text,
+        cost: structuredClone(cost), affects: {what: "card", self: true}});
+      return;
+    }
     if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "overload") {
       const cost = Array.isArray(ability.cost) ? ability.cost : [];
       if (!cost.length || !cost.every((atom) => atom?.atom === "mana")) problems.push(`${ability.text}: overload is a mana cost`);

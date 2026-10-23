@@ -21,7 +21,7 @@ import {holdArrival, enteredWith} from "../../rules/entering.mjs";
 import {prepare} from "./attributes.mjs";
 import {afterwards, delayedTrigger, enchantable, enchantOnArrival, controlSourceLeft, endWhileSourceRemains} from "./permanents.mjs";
 import {typesOf} from "../../rules/layers.mjs";
-import {moveObject, cardsIn, PUBLIC_ZONES, removeObject, eventCard, rememberExileLooker, recordDraw, recordDrawStepDraw, recordDeath} from "../../state/index.mjs";
+import {objectsAfterMove, moveObject, cardsIn, PUBLIC_ZONES, removeObject, eventCard, rememberExileLooker, recordDraw, recordDrawStepDraw, recordDeath} from "../../state/index.mjs";
 import {lastKnown} from "../../rules/layers.mjs";
 import {keywordsOf, controllerOf, abilitiesOf} from "../../rules/layers.mjs";
 import {selectMatching, compileSelector, matchesSelector, shareCreatureType} from "../filter.mjs";
@@ -73,7 +73,7 @@ const PERMANENT_TYPES = ["Artifact", "Battle", "Creature", "Enchantment", "Land"
 /* `notOnto`: permanents entering the battlefield at the same time as this one (effects/zones.mjs, moveZone's `together`) --
    an Aura among them enchants none of them (CR 303.4f: what it will enchant is chosen as it enters, and they are not yet
    there to be chosen). */
-export function moveOne(state, id, to, events, {owner = null, controller = null, tapped = false, faceDown = false, lookers = null, exiledBy = null, transformed = false, counters = null, notOnto = null} = {}) {
+export function moveOne(state, id, to, events, {owner = null, controller = null, tapped = false, faceDown = false, lookers = null, exiledBy = null, transformed = false, counters = null, notOnto = null, nonCommanderTo = null, commanderKeys = [], orderingPlayer = null} = {}) {
   const object = state.objects[id];
   if (!object) return null;
   /* A TOKEN THAT HAS LEFT THE BATTLEFIELD STAYS WHERE IT IS (CR 111.8): it can't move to another zone or come back onto the
@@ -131,7 +131,9 @@ export function moveOne(state, id, to, events, {owner = null, controller = null,
      just as hideaway replaced with another destination is. The public move names a card that was not hidden. */
   const hidden = faceDown === true && to === "exile" && destination === "exile";
   if (faceDown === true && !asDown && !hidden) card = leavingRef(state, id);
-  const moved = moveObject(state, id, destination, PER_PLAYER.includes(destination) ? holder : null, {faceDown: asDown || hidden, transformed: backUp});
+  const moved = moveObject(state, id, destination, PER_PLAYER.includes(destination) ? holder : null, {faceDown: asDown || hidden, transformed: backUp, nonCommanderTo, commanderKeys});
+  if (destination === "exile" && orderingPlayer !== null && object.merged && state.mergedOrders?.length)
+    state.mergedOrders[state.mergedOrders.length - 1].player = orderingPlayer;
   /* A creature put into a graveyard from the battlefield died (CR 700.4): destroyed, sacrificed, put there -- what left
      another zone has no last known information, and did not (state/index.mjs). */
   recordDeath(state, leftBehind, destination);
@@ -427,10 +429,11 @@ export function moveZone(state, params, context, rng = null) {
        with no characteristics there, named to nobody as they move (CR 406.3a) -- and, looked at first (`look`), seen by this
        effect's controller for as long as they remain exiled (CR 406.3: "if a player is instructed to look at a card and then
        exile it face down ... that player may continue to look at that card"; projection.mjs, `lookers`). */
-    const moved = params.sacrifice === true ? sacrificeOne(state, id, events) : moveOne(state, id, to, events, {tapped: params.tapped === true, transformed: params.transformed === true,
+    const firstMoved = params.sacrifice === true ? sacrificeOne(state, id, events) : moveOne(state, id, to, events, {orderingPlayer: context.controller, commanderKeys: params.commanderKeys ?? [], nonCommanderTo: params.to, tapped: params.tapped === true, transformed: params.transformed === true,
       ...(params.withCounters ? {counters: params.withCounters} : {}), ...(to === "battlefield" && together.length ? {notOnto: together} : {}),
       ...(params.faceDown === true ? {faceDown: true, lookers: params.look === true ? [context.controller] : []} : {})});
-    if (before && moved !== null && state.objects[moved]?.zone === (params.sacrifice === true ? "graveyard" : to)) movedWas.push(before);
+    for (const moved of objectsAfterMove(state, firstMoved)) {
+    if (before && moved === firstMoved && moved !== null && state.objects[moved]?.zone === (params.sacrifice === true ? "graveyard" : to)) movedWas.push(before);
     /* What it is now, for `remember`: what it became -- or, exiled and returned at once, the permanent that came back
        ("if that creature is a Bird", Splash Portal, batch 79), set below. */
     let landed = moved;
@@ -474,6 +477,7 @@ export function moveZone(state, params, context, rng = null) {
       else { returning.push({id, back}); continue; }
     }
     if (landed !== null) { became.push(landed); if (leftBy.has(id)) was[landed] = leftBy.get(id); }
+    }
   }
   /* "EXILE TWO TARGET ARTIFACTS, CREATURES, AND/OR LANDS YOU CONTROL, THEN RETURN THOSE CARDS TO THE BATTLEFIELD" (Ghostly
      Flicker; Brago, King Eternal's "any number"): the instructions in order (CR 608.2c) -- every one exiled, then those cards

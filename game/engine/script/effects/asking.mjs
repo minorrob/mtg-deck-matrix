@@ -43,6 +43,10 @@ import {cantBeCountered, counterOrderChoice, cantBeSacrificed, tokenOrderChoice,
 import {amountOf} from "../amount.mjs";
 import {castNow, castChoicesNow, landChoicesNow, withFaceUp} from "../../rules/actions.mjs";
 
+import {mergedOrderToAsk, mergedOrderChoice, finishMergedOrder} from "../../state/index.mjs";
+import {mergePermanent} from "../../keywords/mutate.mjs";
+import {ringTempts} from "../../keywords/ring.mjs";
+
 const cardOptions = (state, ids) => ids.map((id, index) => ({index, label: state.objects[id].card, cardId: id}));
 
 /* ---- scry ---- */
@@ -2325,6 +2329,9 @@ export const play = {
    yes going to the command zone instead (effects/zones.mjs, `commanderHome`). Moved as a whole, so nothing moves before
    every owner has answered. A move other than moveZone (a cost that returns a permanent to its owner's hand) is named,
    not built. */
+// A merged commander is asked about by physical card (CR 903.9c), independently of its other components.
+const commanderPiece = (state, ref) => typeof ref === "string" && ref.startsWith("merged:")
+  ? state.objects[ref.split(":")[1]]?.merged?.[Number(ref.split(":")[2])]?.physical : state.objects[ref];
 export function commandersGoingHome(state, params) {
   if (params.commandersAsked) return [];
   /* "Counter target spell. If that spell is countered this way, put it on top of its owner's library instead" (Memory
@@ -2342,30 +2349,31 @@ export function commandersGoingHome(state, params) {
   return (params.targets ?? []).filter((id) => {
     const bottom = params.to === "graveyard" && state.stack.some(e => e.objectId === id && e.graveyardToLibraryBottom && !e.flashback && !e.graveyardToExile);
     return (["hand", "library"].includes(params.to) || bottom) && state.objects[id]?.commander === true && state.objects[id].zone !== params.to;
-  });
+  }).flatMap(id => state.objects[id].merged ? state.objects[id].merged.flatMap((part, i) => part.physical.commander === true ? [`merged:${id}:${i}`] : []) : [id]);
 }
 export const commanderHome = {
   open(state, params) {
-    const seats = state.players.length, apnap = (id) => (state.objects[id].owner - (state.activePlayer ?? 0) + seats) % seats;
+    const seats = state.players.length, apnap = (id) => (commanderPiece(state, id).owner - (state.activePlayer ?? 0) + seats) % seats;
     const queue = [...params.commanders].sort((a, b) => apnap(a) - apnap(b));
-    state.awaiting = {kind: "effect-choice", effect: "commanderHome", player: state.objects[queue[0]].owner, objectId: queue[0], remaining: queue.slice(1),
+    state.awaiting = {kind: "effect-choice", effect: "commanderHome", player: commanderPiece(state, queue[0]).owner, objectId: queue[0], remaining: queue.slice(1),
       home: [], move: params.move};
     return true;
   },
   choice(state, awaiting) {
-    return {id: `commander-home:${state.turn}:${awaiting.objectId}`, title: `Put ${state.objects[awaiting.objectId]?.card ?? "your commander"} into the command zone instead?`,
+    return {id: `commander-home:${state.turn}:${awaiting.objectId}`, title: `Put ${commanderPiece(state, awaiting.objectId)?.card ?? "your commander"} into the command zone instead?`,
       mode: "boolean", min: 1, max: 1,
       options: [{index: 0, label: "Put it into the command zone"}, {index: 1, label: `Let it go to your ${awaiting.move.to === "top" || ([undefined, "graveyard"].includes(awaiting.move.to) && state.stack.some(e => e.objectId === awaiting.objectId && e.graveyardToLibraryBottom)) ? "library" : awaiting.move.to}`}]};
   },
   apply(state, awaiting, indices) {
     if (!Array.isArray(indices) || indices.length !== 1 || ![0, 1].includes(indices[0])) throw new Error("Answer yes or no");
     const home = indices[0] === 0 ? [...awaiting.home, awaiting.objectId] : awaiting.home;
-    const [next, ...rest] = (awaiting.remaining ?? []).filter((id) => state.objects[id]);
+    const [next, ...rest] = (awaiting.remaining ?? []).filter((id) => commanderPiece(state, id));
     if (next !== undefined) {
-      state.awaiting = {...awaiting, player: state.objects[next].owner, objectId: next, remaining: rest, home};
+      state.awaiting = {...awaiting, player: commanderPiece(state, next).owner, objectId: next, remaining: rest, home};
       return {events: [], again: true};
     }
-    return {events: [], splice: [{...awaiting.move, commandersAsked: true, ...(home.length ? {commanderHome: home} : {})}]};
+    return {events: [], splice: [{...awaiting.move, commandersAsked: true, ...(home.length ? {commanderHome: home.filter(id => typeof id !== "string" || !id.startsWith("merged:")),
+      commanderKeys: home.filter(id => typeof id === "string" && id.startsWith("merged:")).map(id => commanderPiece(state, id).commanderKey)} : {})}]};
   },
   /* Its owner has left the game, and the commander with them (CR 800.4a): it goes nowhere, and the next owner is asked. */
   left(state, awaiting) {
@@ -2812,7 +2820,13 @@ export const chooseInstead = {
   },
 };
 
-export const ASKING = Object.freeze({twoPiles, scry, rearrangeTop, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, chooseColor, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage, orderCounters, orderTokens, orderDraws, explore,
+export const ASKING = Object.freeze({
+  orderMerged: {
+    open(state) { const ask = mergedOrderToAsk(state); if (!ask) return false; state.awaiting = {...ask, kind: "effect-choice", effect: "orderMerged"}; return true; },
+    choice: mergedOrderChoice, apply: finishMergedOrder,
+    left(state, awaiting) { return finishMergedOrder(state, awaiting, awaiting.cards.map((_, i) => i)); },
+  },
+  mergePermanent, ringTempts, twoPiles, scry, rearrangeTop, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, chooseColor, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage, orderCounters, orderTokens, orderDraws, explore,
   conniveWhich, manaColors, counterKind, countersToRemove, countersOnto, orderDestruction, chooseInstead, chooseSource, vote,
   /* Wave 4c: a hand looked at (Gitaxian Probe). */
   handLook,

@@ -9,17 +9,17 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1561,
+  "defined": 1562,
   "provisional": 25,
-  "everyRule": 2825
+  "everyRule": 2833
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 80,
+    "built": 81,
     "partial": 0,
     "named": 7,
-    "missing": 107
+    "missing": 106
    },
    "entries": [
     {
@@ -1442,8 +1442,8 @@
      "kind": "keyword ability",
      "rule": "702.140",
      "name": "Mutate",
-     "engine": null,
-     "status": "missing",
+     "engine": "Mutate",
+     "status": "built",
      "forge": "Mutate",
      "top": 0,
      "all": 34,
@@ -3208,10 +3208,10 @@
   },
   "Effects": {
    "tally": {
-    "built": 78,
+    "built": 79,
     "partial": 2,
     "named": 1,
-    "missing": 111
+    "missing": 110
    },
    "entries": [
     {
@@ -3926,13 +3926,13 @@
      "kind": "effect",
      "rule": null,
      "name": "RingTemptsYou",
-     "engine": null,
-     "status": "missing",
+     "engine": "ringTempts",
+     "status": "built",
      "forge": "RingTemptsYou",
      "top": 11,
      "all": 49,
-     "blocks": 11,
-     "alone": 8
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -5874,7 +5874,7 @@
      "top": 3,
      "all": 9,
      "blocks": 3,
-     "alone": 0
+     "alone": 2
     },
     {
      "kind": "trigger",

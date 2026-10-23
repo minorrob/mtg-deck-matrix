@@ -82,7 +82,7 @@ export const PRIMITIVES = Object.freeze({
     "createToken", "copyPermanent", "becomeCopy", "earthbend", "populate", "unlessPays", "animate", "animateAll", "attach", "gainControl", "setState",
     "phaseOut", "exchangeControl", "incubate",
     /* The library load's L1: "you get an emblem with ..." (CR 114), an object in the command zone, not a permanent (114.5). */
-    "emblem",
+    "emblem", "mergePermanent", "ringTempts",
   ]),
   modifiers: Object.freeze([
     "pump", "pumpAll", "alterAttribute", "effectUntil", "grantKeyword", "regenerate",
@@ -108,7 +108,7 @@ export const TRIGGER_EVENTS = Object.freeze([
   "enters", "dies", "leaves", "exiled",
   "phase", "step", "upkeep", "end step",
   "attacks", "attackers declared", "blocks",
-  "spell cast", "damage dealt", "damage dealt once",
+  "mutates", "spell cast", "damage dealt", "damage dealt once",
   "discarded", "drawn", "land played", "becomes target", "sacrificed", "tapped for mana", "becomes tapped", "cycled",
   "put into graveyard", "left graveyard",
   "counter added", "counter added once", "life gained", "life lost", "token created",
@@ -136,11 +136,10 @@ export const COST_ATOMS = Object.freeze([
   "tapUntapped", "reveal", "payLife", "removeAnyCounter", "mill", "draw", "returnToHand",
 ]);
 
-/* §12.2 lists fifty-two named things under a heading that says fifty-three. The list is the part
-   that matters, and not all of it is keywords — see TIER0_CONSTRUCTS. */
+/* §12.2 lists fifty-three named things, including mutate. Not all of them are keywords — see TIER0_CONSTRUCTS. */
 const TIER0_ALL = [
   "flying", "defender", "flash", "vigilance", "lifelink", "equip", "haste", "flashback",
-  "first strike", "trample", "enters with counters", "overload", "reach", "enchant", "deathtouch",
+  "mutate", "first strike", "trample", "enters with counters", "overload", "reach", "enchant", "deathtouch",
   "indestructible", "enters-the-battlefield replacements", "alternate additional cost", "menace",
   "changeling", "class", "cycling", "echo", "crew", "hexproof", "partner", "double strike",
   "escape", "protection", "unearth", "rebound", "evoke", "hideaway", "landwalk", "living weapon",

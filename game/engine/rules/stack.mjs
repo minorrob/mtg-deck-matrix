@@ -174,7 +174,7 @@ export function pushAbility(state, {sourceId = null, controller, abilityId, kind
   /* "Transform Venat" (CR 701.27f): how many times a double-faced source had transformed as its ability was put on the
      stack -- or, a delayed trigger's, as it was made (effects/permanents.mjs) -- for an instruction to transform it to be
      ignored once it has since. */
-  const transforms = sourceTransforms ?? (source?.mdfc && source.zone === "battlefield" ? source.transforms ?? 0 : undefined);
+  const transforms = sourceTransforms ?? ((source?.mdfc || source?.merged?.some(p => p.physical.mdfc)) && source.zone === "battlefield" ? source.transforms ?? 0 : undefined);
   if (transforms !== undefined) entry.sourceTransforms = transforms;
   state.stack.push(entry);
   return entry;
@@ -201,6 +201,11 @@ export function pushCopy(state, original, {controller, nonLegendary = false} = {
     abilityId: original.abilityId, targets: structuredClone(original.targets ?? [])});
   entry.permanent = original.permanent === true;
   entry.copy = true;
+  if (original.overload) entry.overload = structuredClone(original.overload);
+  if (original.mutating) {
+    entry.mutating = true;
+    entry.overload.targets[0].owner = controller;
+  }
   if (original.x !== undefined) entry.x = original.x;
   /* And its modes (CR 707.10): a copy of a modal spell has the modes the original has. */
   if (Array.isArray(original.modes)) entry.modes = [...original.modes];
@@ -296,7 +301,8 @@ export function resolveTop(state, effect = null, rng = null) {
      source as it last existed, which no target can now be (CR 608.2b, 113.7a). */
   const {targets, fizzles} = recheckTargets(state, script.targets, entry.targets, source === null && (entry.cardId ?? entry.lastKnown?.cardId ?? null) !== null
     ? {...context, source: entry.cardId ?? entry.lastKnown.cardId} : context);
-  if (fizzles) return finishTop(state, entry, events, true);
+  /* An illegal mutate target makes this resolve as a creature spell (CR 702.140b). */
+  if (fizzles) return finishTop(state, entry, events, entry.mutating !== true);
   /* ASCEND ON AN INSTANT OR SORCERY (CR 702.131a): its spell ability, first as it is printed first -- the city's blessing for
      its controller if they control ten or more permanents now (keywords/designations.mjs). An ability on the stack has no
      object of its own (pushAbility), and a permanent spell with ascend has no script and was finished above -- its ascend

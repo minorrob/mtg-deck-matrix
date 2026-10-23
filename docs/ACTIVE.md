@@ -1,5 +1,30 @@
 # Who holds the work
 
+## Rob's two-card engine load, October 23, 2026 (Codex, `codex/cards-nethroi-boromir`)
+
+Rob requested Nethroi, Apex of Death (D4) and Boromir, Warden of the Tower (D7). After putting the release on hold,
+he authorized continuing through merge on October 23. Staging deployment remains on hold.
+This task owns the engine additions required by those two cards. The separate Play checkout and its changes are preserved.
+
+- **Implemented:** mutate casting and over/under choice, merged physical cards and zone changes, commander components,
+  copying, flickering, ordering and Nethroi's total-power target limit; the Ring emblem, bearer designation and all four
+  abilities, plus Boromir's vigilance, zero-mana counter trigger and protection ability. Both definitions have card scenarios.
+- **Local proof:** `node tests/engine-mutate.mjs` (20 checks), `node tests/engine-ring.mjs` (15 checks),
+  `node tests/engine-cards.mjs` (2,602 definitions and 6,250 scenarios), the affected state, stack, target, copy, commander,
+  combat, layer, schema, controller, projection and pilot suites, plus the table scenarios and save/resume storage suite.
+  `python game/tools/batch/breaks.py game/tools/batch/breaks-mutate.py` and `breaks-ring.py` prove the new paths can fail.
+- **CI follow-up:** the first run caught unnecessary counted-power derivations in the legend check and an import before
+  the turn module's copyright header. Both are fixed; `engine-derive-once` (17 checks), `engine-headers` (4), the affected
+  Ring, mutate, filter, state-based action and turn suites, and both moved Ring breaks pass locally. The corrected head
+  must pass CI before the merge.
+- **Rules review:** CR 702.140c gives the over/under choice to the mutating spell's controller, including when an opponent
+  controls the owned target. The regression first failed with the choice given to the creature's controller, then passed
+  with the correction; the creature keeps its controller. A deliberate break holds this case.
+- **Merge gate:** main d7589c5f (the latest Play updates) is merged into this branch, with README suite count reconciled.
+  The integrated PR head must pass the secret scan and GitHub CI before merge. Staging deployment remains on hold.
+  Production is outside this request. No Forge behavior is claimed by this load.
+
+
 ## Rob's fullscreen notes, 2026-10-21 (a Claude cloud session, for Rob; PR #832, `claude/wizardly-galileo-ol2d4s`): merged, on staging
 
 Rob, in Full screen: *"Make these changes now so that I can restart my game with them applied in staging."* At his word this

@@ -35,7 +35,7 @@
  *   CR 500.4: mana pools empty at the end of every step and phase, not at end of turn.
  */
 
-import {cardsIn, moveObject, eventCard, recordDraw, recordDrawStepDraw, recordDiscard} from "../state/index.mjs";
+import {cardsIn, moveObject, eventCard, recordDraw, recordDrawStepDraw, recordDiscard, mergedOrderChoice, finishMergedOrder} from "../state/index.mjs";
 import {attackers, blockers, combatDamage, endCombat} from "./combat.mjs";
 import {combatNeedsFirstStrike} from "../keywords/combat.mjs";
 import {checkStateBasedActions, gameOver, finishCommanderReplacement, legendChoice, finishLegendRule, finishDestructionChoice} from "./sba.mjs";
@@ -321,6 +321,7 @@ function choiceFor(state) {
   if (awaiting.kind === "mulligan-decision" || awaiting.kind === "mulligan-bottom" || awaiting.kind === "opening-hand")
     return mulliganChoice(state, awaiting);
   if (awaiting.kind === "effect-choice") return resolutionChoice(state, awaiting);
+  if (awaiting.kind === "merged-order") return mergedOrderChoice(state, awaiting);
   if (awaiting.kind === "commander-replacement") return commanderChoice(state, awaiting);
   if (awaiting.kind === "legend-rule") return legendChoice(state, awaiting);
   /* CR 616.1: which effect replaces a creature's destruction by lethal damage, when several would (rules/sba.mjs). */
@@ -424,6 +425,11 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
      scry's `toBottom`, for instance -- and the choice record says which fields it expects. */
   if (awaiting.kind === "effect-choice") return resolutionAnswered(state, answerResolution(state, indices, extra, rng));
 
+  if (awaiting.kind === "merged-order") {
+    const events = finishMergedOrder(state, awaiting, indices);
+    grantStepPriority(state, events);
+    return events;
+  }
   if (awaiting.kind === "commander-replacement") {
     const events = finishCommanderReplacement(state, awaiting, indices);
     grantStepPriority(state, events);
