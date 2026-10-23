@@ -474,7 +474,9 @@ export function compileSelector(selector) {
        603.4): whether it has the prepared designation now -- a permanent's alone (script/effects/attributes.mjs). */
     if (selector.prepared !== undefined && (object.prepared === true) !== selector.prepared) return false;
     /* "With a +1/+1 counter on it", or `"any"`: "permanents you control with counters on them" (Mutational Advantage). */
+    /* Or `"none"`: "destroy all creatures with no counters on them" (Damning Verdict). */
     if (selector.counters !== undefined && !(selector.counters === "any" ? Object.values(object.counters ?? {}).some((n) => n > 0)
+      : selector.counters === "none" ? !Object.values(object.counters ?? {}).some((n) => n > 0)
       : (object.counters?.[selector.counters] ?? 0) > 0)) return false;
     /* "Creatures that entered this turn" (Force of Despair): on the battlefield since this turn. */
     if (selector.enteredThisTurn === true && !(object.zone === "battlefield" && object.arrivedTurn === state.turn)) return false;

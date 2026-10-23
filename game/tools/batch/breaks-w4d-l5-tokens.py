@@ -9,7 +9,8 @@
 - Exactly X targets (Curse of the Swine): script/bind.mjs countOf, script/schema.mjs, rules/actions.mjs offerSpecs.
 - multiplyCounters by selector and kind (Bristly Bill), layer affects nonSupertypes and commander (Flowering of the White
   Tree, Bastion Protector), "not chosen this turn" (Monument to Endurance), mostSharingName (Mechanized Production),
-  unlessPays `atMost` (Well of Lost Dreams) and tapping "that card" (Charismatic Conqueror).
+  unlessPays `atMost` (Well of Lost Dreams), tapping "that card" (Charismatic Conqueror), and a selector's counters "none"
+  (Damning Verdict).
 
 Run from the repository root, with nothing else editing the worktree:
 
@@ -27,6 +28,7 @@ AC = 'game/engine/rules/actions.mjs'
 LA = 'game/engine/rules/layers.mjs'
 RS = 'game/engine/script/effects/resources.mjs'
 TR = 'game/engine/rules/trigger.mjs'
+FI = 'game/engine/script/filter.mjs'
 BREAKS = [
     # The Earth Crystal: the division
     ('a division counted as the whole total for each target', AM,
@@ -96,4 +98,7 @@ BREAKS = [
      '    : awaiting.tapIds ? `tap ${awaiting.tapIds.map((id) => state.objects[id]?.card ?? "that permanent").join(", ") || "that permanent"}`\n', ''),
     ('"that card" read as a selector by the schema', SC,
      '    if (effect.tap !== "that card") checkSelector(effect.tap, `${path}.tap`, errors);', '    checkSelector(effect.tap, `${path}.tap`, errors);'),
+    # Damning Verdict
+    ('counters "none" read as a kind nothing has', FI,
+     '      : selector.counters === "none" ? !Object.values(object.counters ?? {}).some((n) => n > 0)\n', ''),
 ]

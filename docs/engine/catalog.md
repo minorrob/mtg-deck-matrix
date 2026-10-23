@@ -7,8 +7,8 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,562 defined and playable today; 2,833 with every
-mechanic built, so only their definitions are left to write; 25 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
+**The most-played 80% of Commander cards:** 3,238 cards; 1,613 defined and playable today; 2,839 with every
+mechanic built, so only their definitions are left to write; 19 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
 yet named. **Top** is how many of the most-played cards use it, **All** how many of every card. **Holds back** is how
@@ -38,9 +38,9 @@ The things that alone hold back the most of the most-played cards.
 | --- | --- | --- | --- | ---: | ---: |
 | option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 9 | 61 |
 | count | What entered or died this turn | — | missing | 9 | 9 |
-| effect | ChoosePlayer | — | missing | 6 | 8 |
 | effect | Discover | discover | named | 6 | 6 |
 | count | How many things an effect remembered | — | missing | 5 | 8 |
+| effect | ChoosePlayer | — | missing | 5 | 7 |
 | option | Imprint (a card exiled with this) | — | missing | 5 | 7 |
 | count | Times this resolved this turn | — | missing | 5 | 7 |
 | keyword ability | Cascade | — | missing | 5 | 5 |
@@ -397,8 +397,8 @@ The things that alone hold back the most of the most-played cards.
 | Earthbend | earthbend | built | 10 | 36 | 0 | 0 |
 | Phases | phaseOut | built | 9 | 56 | 0 | 0 |
 | RemoveCounter | removeCounter | built | 8 | 198 | 0 | 0 |
-| ChoosePlayer | — | missing | 8 | 120 | 8 | 6 |
-| Repeat | — | missing | 8 | 58 | 7 | 1 |
+| ChoosePlayer | — | missing | 8 | 120 | 7 | 5 |
+| Repeat | — | missing | 8 | 58 | 6 | 1 |
 | RollDice | — | missing | 7 | 131 | 6 | 2 |
 | Amass | amass | built | 7 | 72 | 0 | 0 |
 | StoreSVar | — | missing | 6 | 68 | 5 | 1 |
@@ -406,7 +406,7 @@ The things that alone hold back the most of the most-played cards.
 | LosesGame | loseGame | built | 6 | 45 | 0 | 0 |
 | Discover | discover | named | 6 | 35 | 6 | 6 |
 | AlterAttribute | alterAttribute | built | 5 | 115 | 0 | 0 |
-| ChooseNumber | — | missing | 5 | 57 | 4 | 1 |
+| ChooseNumber | — | missing | 5 | 57 | 3 | 1 |
 | Protection | effectUntil | built | 5 | 53 | 0 | 0 |
 | MoveCounter | moveCounters | built | 5 | 32 | 0 | 0 |
 | Fog | — | missing | 4 | 34 | 4 | 3 |
@@ -763,11 +763,11 @@ The things that alone hold back the most of the most-played cards.
 | ProduceMana | — | missing | 2 | 11 | 2 | 0 |
 | Mill | — | missing | 2 | 2 | 2 | 0 |
 | BeginPhase | — | missing | 1 | 21 | 1 | 0 |
-| GameLoss | — | missing | 1 | 18 | 1 | 0 |
+| GameLoss | — | missing | 1 | 18 | 0 | 0 |
 | LifeReduced | — | missing | 1 | 8 | 1 | 0 |
 | TurnFaceUp | — | missing | 1 | 8 | 1 | 1 |
 | BeginTurn | — | missing | 1 | 5 | 1 | 1 |
-| GameWin | — | missing | 1 | 5 | 1 | 0 |
+| GameWin | — | missing | 1 | 5 | 0 | 0 |
 | LoseMana | — | missing | 1 | 4 | 1 | 0 |
 | RollDice | — | missing | 1 | 4 | 1 | 0 |
 | Transform | — | missing | 1 | 4 | 1 | 0 |
@@ -853,10 +853,10 @@ The things that alone hold back the most of the most-played cards.
 | Except it isn't legendary (a copy) | except.nonLegendary | built | 10 | 43 | 0 | 0 |
 | Unless a player reveals a card ("reveal an Island or Swamp card") | unlessReveal, as it enters | built | 10 | 22 | 0 | 0 |
 | Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 9 | 160 | 7 | 4 |
-| Unless a player sacrifices a permanent | — | missing | 7 | 89 | 5 | 4 |
+| Unless a player sacrifices a permanent | — | missing | 7 | 89 | 4 | 4 |
 | Unless a player discards a card | unlessPays's discard: each card in the payer's hand an option; the discarded card remembered ("this way") | built | 5 | 83 | 0 | 0 |
 | Populate (copy a creature token you control) | populate | built | 5 | 27 | 0 | 0 |
-| Unless a player pays some other cost (taps, exiles, ...) | — | missing | 3 | 162 | 2 | 2 |
+| Unless a player pays some other cost (taps, exiles, ...) | — | missing | 3 | 162 | 1 | 1 |
 | Grants a triggered ability ("has 'whenever ...'") | a static's apply.addAbilities; a pump's abilities (rules/layers.mjs, abilitiesOf) | built | 3 | 15 | 0 | 0 |
 | Activate only during a step or phase | — | missing | 1 | 150 | 1 | 1 |
 
@@ -885,7 +885,7 @@ The things that alone hold back the most of the most-played cards.
 | — | Times this resolved this turn | — | missing | 7 | 31 | 7 | 5 |
 | — | The monarch | condition {monarch: "you"} (script/condition.mjs); "while you're the monarch", a damage trigger's monarch: "you" | built | 7 | 15 | 0 | 0 |
 | 700.5 | Devotion to two colors (CR 700.5) | {devotion: [color, color]} | built | 6 | 13 | 0 | 0 |
-| — | A number a player chose | — | missing | 5 | 77 | 4 | 0 |
+| — | A number a player chose | — | missing | 5 | 77 | 3 | 0 |
 | — | Attackers declared | amount {creaturesAttackedWithThisTurn: "you" / "that player"} (rules/combat.mjs keeps them) | built | 5 | 62 | 0 | 0 |
 | — | Cards in exile | — | missing | 5 | 42 | 4 | 3 |
 | — | Your starting life total | — | missing | 5 | 23 | 5 | 0 |
@@ -903,7 +903,7 @@ The things that alone hold back the most of the most-played cards.
 | — | A number an effect remembered | — | missing | 2 | 38 | 2 | 2 |
 | — | Cards you drew this turn | amount {cardsDrawnThisTurn: "you" / "that player"} (state/index.mjs recordDraw, rules/turn.mjs clears it) | built | 2 | 30 | 0 | 0 |
 | — | This card's mana value | — | missing | 2 | 12 | 2 | 2 |
-| — | MostCardName | — | missing | 2 | 4 | 2 | 2 |
+| — | MostCardName | — | missing | 2 | 4 | 1 | 1 |
 | — | ValidStack | — | missing | 2 | 4 | 1 | 1 |
 | — | wasCastFromExile | — | missing | 2 | 4 | 2 | 0 |
 | — | CastTotalManaSpent | — | missing | 1 | 32 | 1 | 1 |

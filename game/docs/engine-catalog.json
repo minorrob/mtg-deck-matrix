@@ -9,9 +9,9 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1562,
-  "provisional": 25,
-  "everyRule": 2833
+  "defined": 1613,
+  "provisional": 19,
+  "everyRule": 2839
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -4027,8 +4027,8 @@
      "forge": "ChoosePlayer",
      "top": 8,
      "all": 120,
-     "blocks": 8,
-     "alone": 6
+     "blocks": 7,
+     "alone": 5
     },
     {
      "kind": "effect",
@@ -4039,7 +4039,7 @@
      "forge": "Repeat",
      "top": 8,
      "all": 58,
-     "blocks": 7,
+     "blocks": 6,
      "alone": 1
     },
     {
@@ -4135,7 +4135,7 @@
      "forge": "ChooseNumber",
      "top": 5,
      "all": 57,
-     "blocks": 4,
+     "blocks": 3,
      "alone": 1
     },
     {
@@ -8269,7 +8269,7 @@
      "forge": "GameLoss",
      "top": 1,
      "all": 18,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -8317,7 +8317,7 @@
      "forge": "GameWin",
      "top": 1,
      "all": 5,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -9249,7 +9249,7 @@
      "forge": "UnlessCostSac",
      "top": 7,
      "all": 89,
-     "blocks": 5,
+     "blocks": 4,
      "alone": 4
     },
     {
@@ -9285,8 +9285,8 @@
      "forge": "UnlessCostOther",
      "top": 3,
      "all": 162,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 1,
+     "alone": 1
     },
     {
      "kind": "option",
@@ -9583,7 +9583,7 @@
      "forge": "ChosenNumber",
      "top": 5,
      "all": 77,
-     "blocks": 4,
+     "blocks": 3,
      "alone": 0
     },
     {
@@ -9799,8 +9799,8 @@
      "forge": "MostCardName",
      "top": 2,
      "all": 4,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 1,
+     "alone": 1
     },
     {
      "kind": "count",
