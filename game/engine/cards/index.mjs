@@ -850,6 +850,18 @@ export function compileScript(script) {
     /* EXALTED (CR 702.83a; Ignoble Hierarch, wave 4b): "Whenever a creature you control attacks alone, that creature gets +1/+1
        until end of turn" -- the keyword IS that triggered ability, "alone" the only creature declared as an attacker (702.83b,
        506.5; rules/trigger.mjs). Each instance triggers, on any permanent that has it. */
+    /* CASCADE (CR 702.85a; Apex Devastator): "When you cast this spell, exile cards from the top of your library until you
+       exile a nonland card that costs less. You may cast it without paying its mana cost. Put the exiled cards on the bottom
+       in a random order" -- the keyword IS that triggered ability, of the spell on the stack; "costs less", a lesser mana
+       value than the spell's (702.85a), so only the card found may be cast; each instance triggers (702.85c). */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "cascade") {
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS["spell cast"]({who: "self"}),
+        effects: [{effect: "digUntil", exile: true, selector: {nonTypes: ["Land"]}, manaValueBelow: {manaValueOf: "that card"}, count: 1, remember: "all"},
+          {effect: "play", from: "targets", targets: "remembered", free: true, manaValueAtMost: {manaValueOf: "that card", plus: -1}},
+          {effect: "moveZone", targets: "remembered", to: "library", random: true}]});
+      keywords.push("Cascade");
+      return;
+    }
     if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "exalted") {
       abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.attacks({who: "any", alone: true, filter: {types: ["Creature"], controller: "you"}}),
         effects: [{effect: "pump", targets: "that card", power: 1, toughness: 1}]});

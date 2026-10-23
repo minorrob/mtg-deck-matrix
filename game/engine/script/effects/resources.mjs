@@ -22,7 +22,7 @@ import {selectMatching} from "../filter.mjs";
 import {event, cardRef, playersFor} from "./zones.mjs";
 import {markDeathtouch, lifelinkFrom} from "../../keywords/combat.mjs";
 import {typesOf, powerOf, toughnessOf, keywordsOf, isKeywordCounter, controllerOf} from "../../rules/layers.mjs";
-import {cantGainLife, lifeGained, countersPlaced, playerCountersPlaced, placeCounters} from "../../rules/statics.mjs";
+import {cantGainLife, lifeGained, lifeLost, countersPlaced, playerCountersPlaced, placeCounters} from "../../rules/statics.mjs";
 import {playerRuled, leaveGame, monarchLeft} from "../../rules/sba.mjs";
 import {amountOf} from "../amount.mjs";
 import {recordUse} from "../../state/index.mjs";
@@ -112,6 +112,9 @@ export function changeLife(state, player, delta, events) {
   /* "If you would gain life, you gain twice that much life instead" (Rhox Faithmender; rules/statics.mjs, lifeGained): an
      exchange of life totals and a life total set higher are gains too (CR 701.12b, 119.5). */
   if (delta > 0) delta = lifeGained(state, player, delta);
+  /* "They lose twice that much life instead" (Bloodletter of Aclazotz; rules/statics.mjs, lifeLost): damage's loss and life
+     paid alike -- whether the life could be paid was asked of the amount before (CR 119.4; its rulings). */
+  if (delta < 0) delta = -lifeLost(state, player, -delta);
   const before = state.players[player].life;
   state.players[player].life += delta;
   /* The life each player has lost this turn (Wound Reflection; script/amount.mjs), cleared as a turn begins (turn.mjs). */

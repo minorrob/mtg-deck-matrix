@@ -413,7 +413,8 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
     const {totalPowerAtMost, count, distinctFrom, onlyIf, differentControllers, share, forEach, ownedByControllerOf, ...selector} = spec && typeof spec === "object" ? spec : {};
     if (totalPowerAtMost !== undefined && !(Number.isInteger(totalPowerAtMost) && totalPowerAtMost >= 0 && count !== undefined))
       errors.push({path: `${path}.targets[${index}].totalPowerAtMost`, message: "A total power limit is a nonnegative integer on a counted target"});
-    if (count !== undefined && !countValid(count))
+    /* "Each of up to X targets" (Crackle with Power): a spell's X is announced before its targets are chosen (CR 601.2b-c). */
+    if (count !== undefined && !countValid(count, {x: ability.kind === "spell"}))
       errors.push({path: `${path}.targets[${index}].count`, message: "A target's count is `{min, max}`: whole numbers, max at least 1 and at least min, or no max for \"any number\""});
     /* "Target artifact a player controls and target artifact card in that player's graveyard" (Goblin Welder; script/bind.mjs,
        `ownedByControllerOf`): an earlier, single target of the same ability, a permanent -- this one a card, uncounted. */
@@ -671,7 +672,7 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
       if (ability.exceptFirstInDrawStep !== undefined && ability.exceptFirstInDrawStep !== true) errors.push({path: `${path}.exceptFirstInDrawStep`, message: "exceptFirstInDrawStep is true"});
     }
     /* "Twice that much life instead" (rules/statics.mjs, lifeGained): how many times, 2 or more. */
-    if (ability.rule === "more-life" && !(Number.isInteger(ability.times) && ability.times >= 2))
+    if (["more-life", "more-life-loss"].includes(ability.rule) && !(Number.isInteger(ability.times) && ability.times >= 2))
       errors.push({path: `${path}.times`, message: "More life instead says how many times as much: a whole number, 2 or more"});
     /* A card's own restriction on casting it (Proft, Sinister Mastermind): what lets it be cast, a condition, said. */
     if (ability.rule === "cant-cast-self") {

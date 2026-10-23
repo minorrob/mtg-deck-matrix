@@ -114,6 +114,9 @@ export const STATIC_RULES = Object.freeze({
       Equipment spells" (Sigarda's Aid): `spells` true or a selector of the spell, for the static's controller (CR 702.8a
       by permission). rules/actions.mjs, flashGranted. */
   "cast-as-though-flash": "rules/actions.mjs",
+  /** "Nonartifact spells you cast have improvise" (Inspiring Statuary; CR 702.126a): `spells`, a selector of the spell, for the
+      static's controller. rules/actions.mjs, hasImprovise. */
+  "spells-have-improvise": "rules/actions.mjs",
   /** "You may cast this spell as though it had flash if it targets a commander" (Timely Ward; library load L2): the card's own,
       `targeting` what one of its targets must be, its targets then chosen as it is offered. rules/actions.mjs, flashAims. */
   "flash-if-targets": "rules/actions.mjs",
@@ -140,6 +143,10 @@ export const STATIC_RULES = Object.freeze({
       from its controller's side, `times`. lifeGained, read wherever life is gained: changeLife (script/effects/resources.mjs)
       and lifelink in combat (rules/combat.mjs). */
   "more-life": "script/effects/resources.mjs",
+  /** "If an opponent would lose life during your turn, they lose twice that much life instead" (Bloodletter of Aclazotz; CR
+      614.1a): `affects` the players, from its controller's side, `times`, and `duringYourTurn`. lifeLost, read in changeLife
+      (script/effects/resources.mjs) -- every loss, life paid too (its rulings), never the damage dealt. */
+  "more-life-loss": "script/effects/resources.mjs",
   /** "If an effect would create one or more tokens under your control, it creates twice that many of those tokens instead"
       (Anointed Procession; CR 614.1a): `affects` the player whose tokens they are -- "you", or anyone's (Primal Vigor) --
       `times`. tokensCreated, read where tokens are made (script/effects/permanents.mjs). */
@@ -741,6 +748,22 @@ export function lifeGained(state, player, amount) {
     const holder = state.objects[holderId];
     for (const ability of held(holderId)) {
       if (ability.kind !== "static" || ability.rule !== "more-life") continue;
+      if (compileSelector({what: "player", ...ability.affects})(state, player, {controller: holder.controller, source: holderId})) n *= ability.times;
+    }
+  }
+  return n;
+}
+
+/** How much life a player loses (`more-life-loss`; CR 614.1a): each static that affects them, during its controller's turn
+    when it says so, multiplies it. */
+export function lifeLost(state, player, amount) {
+  let n = amount;
+  const held = staticAbilities(state);
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of held(holderId)) {
+      if (ability.kind !== "static" || ability.rule !== "more-life-loss") continue;
+      if (ability.duringYourTurn === true && state.activePlayer !== holder.controller) continue;
       if (compileSelector({what: "player", ...ability.affects})(state, player, {controller: holder.controller, source: holderId})) n *= ability.times;
     }
   }

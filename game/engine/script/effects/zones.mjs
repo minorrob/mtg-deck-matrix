@@ -657,6 +657,10 @@ export function draw(state, params, context) {
     }
     for (let i = 0; i < count; i += 1) drawOne(state, player, events);
   }
+  /* "Each opponent draws a card, then you draw a card for each opponent who drew a card this way" (Cut a Deal): the cards drawn,
+     each the object it is in its drawer's hand, for what follows to count -- one who drew none (an empty library, CR 121.4) is
+     not among them. */
+  if (params.remember) context.remembered = events.map((e) => e.data?.fields).filter((f) => f?.drawn === true && state.objects[f.drewAs]).map((f) => f.drewAs);
   return events;
 }
 /* One card off the top of a player's library into their hand, said to be drawn; from an empty library, the mark that loses (CR 704.5b). */
@@ -935,6 +939,10 @@ export function destroyAll(state, params, context) {
 export function digUntil(state, params, context, rng = null) {
   const events = [];
   const found = [];
+  /* "Exile cards from the top of your library until you exile a nonland card that costs less ... Put the exiled cards on the
+     bottom in a random order" (cascade, CR 702.85a): `remember: "all"`, every card exiled, the one found among them, left
+     in exile for what follows (cards/index.mjs, cascade). */
+  const all = [];
   const below = params.manaValueBelow !== undefined ? amountOf(state, params.manaValueBelow, context) : null;
   const fits = params.selector ? compileSelector({...params.selector, what: "card", zone: params.exile ? "exile" : "library", ...(below !== null ? {manaValue: {max: below - 1}} : {})}) : null;
   const valueOf = (id) => (state.objects[id]?.manaCost ? manaValue(parseManaCost(state.objects[id].manaCost)) : 0);
@@ -957,6 +965,7 @@ export function digUntil(state, params, context, rng = null) {
         ...(params.found?.controller === "you" ? {controller: context.controller} : {})}) : hit;
       if (landed !== null) found.push(landed);
     }
+    all.push(...taken, ...found);
     if (params.rest === "graveyard" || (params.rest === "exile" && !params.exile)) for (const id of taken) moveOne(state, id, params.rest, events, {owner: player});
     if (params.rest === "bottom") for (const id of inRandomOrder(taken, rng)) {
       if (params.exile) { moveOne(state, id, "library", events, {owner: player}); continue; }
@@ -966,7 +975,7 @@ export function digUntil(state, params, context, rng = null) {
     }
     if (params.rest === "shuffle" && (taken.length || hits.length)) shuffleLibrary(state, player, rng, events);
   }
-  if (params.remember) context.remembered = found.filter((id) => state.objects[id]);
+  if (params.remember) context.remembered = (params.remember === "all" ? all : found).filter((id) => state.objects[id]);
   return events;
 }
 
