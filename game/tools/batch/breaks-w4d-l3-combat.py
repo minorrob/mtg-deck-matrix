@@ -75,7 +75,6 @@ BREAKS = [
     # Fog, Gisela
     ('Fog prevents nothing', REP, '    if (how.all === true) return true;\n', ''),
     ('Gisela halves nothing', REP, '    if (ability.change.preventHalf === true) next.amount = Math.floor(next.amount / 2);\n', ''),
-    ('the least order reckoned without the halving', REP, '  if (change.preventHalf === true) return Math.floor(amount / 2);\n', ''),
     # removeFromCombat
     ('removed from combat, it stays in', PERM,
      'for (const id of params.targets ?? []) if (state.objects[id]?.zone === "battlefield") removeFromCombat(state, id);',

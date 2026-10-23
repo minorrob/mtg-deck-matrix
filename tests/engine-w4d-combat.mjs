@@ -78,6 +78,24 @@ play({name: "A 4/4 deathtouch trampler deals 1 to Maya's 5/5 and 3 to Maya",
 {Viper: {...bear, power: 4, toughness: 4, keywords: ["Deathtouch", "Trample"]}, "Their Giant": {...bear, power: 5, toughness: 5}});
 count += 1;
 
+/* And with lifelink, the two parts are each dealt: 2 to the Bear and 4 to Maya, 6 life in all -- not 6 to the Bear and 4 more. */
+play({name: "A 6/6 lifelink trampler: 2 to Maya's Bear, 4 to Maya, and Rob gains 6",
+  setup: [at(0, "battlefield", "Linker", "Forest", "Wastes"), at(0, "hand", "Ram Through"), at(1, "battlefield", "Their Bear")],
+  steps: [{tap: "Forest"}, {tap: "Wastes"}, {cast: "Ram Through", targets: [{card: "Linker"}, {card: "Their Bear"}]}, {resolve: true}],
+  expect: [{seat: 1, life: 36}, {seat: 0, life: 46}]},
+{Linker: {...bear, power: 6, toughness: 6, keywords: ["Lifelink", "Trample"]}, "Their Bear": bear});
+count += 1;
+
+/* ---- Bludgeon Brawl makes an artifact an Equipment as it enters, so Hammer of Nazahn sees "another Equipment" enter -- the
+   Rock, never an artifact creature ---- */
+play({name: "With Brawl, the Rock entering is an Equipment Hammer of Nazahn may attach; the artifact Bear entering is not",
+  setup: [at(0, "battlefield", "Bludgeon Brawl", "Hammer of Nazahn", "Bear", "Wastes", "Wastes", "Wastes"), at(0, "hand", "Artifact Bear", "Rock")],
+  steps: [{tap: "Wastes"}, {tap: "Wastes"}, {cast: "Artifact Bear"}, {resolve: true}, {expect: [{stack: 0}]},
+    {tap: "Wastes"}, {cast: "Rock"}, {resolve: true}, {choose: ["Bear"]}, {resolve: true}, {choose: ["Yes"]}],
+  expect: [{seat: 0, stats: {card: "Bear", power: 3, toughness: 2}}]},
+{Bear: bear, Rock: {types: ["Artifact"], manaCost: "{1}"}, "Artifact Bear": {...bear, types: ["Artifact", "Creature"], manaCost: "{2}", colors: []}});
+count += 1;
+
 /* ---- Bludgeon Brawl: two of them depend on each other (each changes what the other applies to, a loop, CR 613.8b), so they
    apply in timestamp order -- the first makes the Rock an Equipment, and the second no longer finds it a non-Equipment
    artifact: one equip {3} and +3/+0, not two. A printed Equipment gets neither. ---- */
@@ -136,6 +154,7 @@ count += 1;
   ok(/protection says from what/.test(problems(card("Odd Wall", ["Creature"], [{kind: "keyword", text: "Protection from", keyword: "protection", from: {subtypes: []}}]))),
     "protection from no subtype is refused");
   ok(amountProblems({attacksThisTurn: "them"}).length > 0, "attacksThisTurn counts \"it\" alone");
+  ok(amountProblems({totalManaValue: {what: "permanent", hue: ["R"]}}).length > 0, "what totalManaValue counts is held to the selector grammar");
   ok(conditionProblems({yourMainPhase: false}).length > 0, "yourMainPhase is true or absent");
 }
 
