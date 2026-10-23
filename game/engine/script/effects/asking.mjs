@@ -878,7 +878,9 @@ function nextKeepType(state, awaiting) {
     if (candidates.length > 1) break;
     if (candidates.length === 1) kept[player] = [...new Set([...(kept[player] ?? []), candidates[0]])];
   }
-  return {...awaiting, kept, at};
+  /* "EACH OPPONENT CHOOSES A PERMANENT THEY CONTROL OF EACH PERMANENT TYPE AND SACRIFICES THE REST" (Liliana, Dreadhorde
+     General; `keptByEach`): each player makes their own choices (CR 608.2d), in the same order. */
+  return {...awaiting, kept, at, ...(awaiting.keptByEach && at < awaiting.steps.length ? {player: awaiting.steps[at].player} : {})};
 }
 function sacrificeUnkept(state, awaiting) {
   const events = [];
@@ -912,7 +914,7 @@ export const sacrifice = {
     /* The effect's controller chooses what each player keeps, by type (Tragic Arrogance). */
     if (Array.isArray(params.keepTypes)) {
       const begun = nextKeepType(state, {kind: "effect-choice", effect: "sacrifice", player: context.controller, selector: asked.selector, source: asked.source,
-        keepTypes: [...params.keepTypes], everyone, steps: everyone.flatMap((player) => params.keepTypes.map((type) => ({player, type}))), at: 0, kept: {}});
+        ...(params.keptByEach === true ? {keptByEach: true} : {}), keepTypes: [...params.keepTypes], everyone, steps: everyone.flatMap((player) => params.keepTypes.map((type) => ({player, type}))), at: 0, kept: {}});
       if (begun.at >= begun.steps.length) return {events: sacrificeUnkept(state, begun)};
       state.awaiting = begun;
       return true;
@@ -950,7 +952,7 @@ export const sacrifice = {
       const {player, type} = awaiting.steps[awaiting.at];
       const source = awaiting.source !== null ? state.objects[awaiting.source]?.card : null;
       const noun = `${["Artifact", "Enchantment"].includes(type) ? "an" : "a"} ${type.toLowerCase()}`;
-      return {id: `sacrifice-keep-type:${player}:${type}:${state.turn}`, title: `${source ? `${source}: ` : ""}choose ${noun} ${state.players[player].name} keeps`, mode: "one", min: 1, max: 1,
+      return {id: `sacrifice-keep-type:${player}:${type}:${state.turn}`, title: `${source ? `${source}: ` : ""}choose ${noun} ${awaiting.keptByEach ? "you keep" : `${state.players[player].name} keeps`}`, mode: "one", min: 1, max: 1,
         options: keepCandidates(state, player, type).map((id, index) => ({index, label: state.objects[id].card, cardId: id, keeper: player}))};
     }
     const mine = offeredToSacrifice(state, awaiting.player, awaiting);

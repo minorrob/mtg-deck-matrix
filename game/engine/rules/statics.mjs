@@ -61,6 +61,10 @@ export const STATIC_RULES = Object.freeze({
   "negative-power-as-positive": "rules/combat.mjs",
   /** CR 402.2's exception: "You have no maximum hand size" (Reliquary Tower, Thought Vessel). turn.mjs, at cleanup. */
   "no-maximum-hand-size": "rules/turn.mjs",
+  /** "Creatures you control can boast twice during each of your turns rather than once" (Birgi, God of Storytelling; CR
+      702.142a; card load w4d L1): for the static's controller, a boast ability's limit 2 in their own turns.
+      rules/actions.mjs, boastLimit. */
+  "boast-twice": "rules/actions.mjs",
   /** CR 500.4 replaced (CR 614.1a, 106.4): "If you would lose unspent mana, that mana becomes colorless instead" (Omnath, Locus
       of the Void): `affects` the players whose pools it keeps (a player selector, "you" its controller). turn.mjs, as each
       step and phase ends (emptyManaPools). */

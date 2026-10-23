@@ -1,0 +1,98 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Birgi, God of Storytelling // Harnfel, Horn of Bounty",
+    "oracleId": "fb81e4d3-1d8c-4779-be62-87cf49277e51",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "God"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Whenever you cast a spell, add {R}. Until end of turn, you don't lose this mana as steps and phases end.\nCreatures you control can boast twice during each of your turns rather than once.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a spell, add {R}. Until end of turn, you don't lose this mana as steps and phases end.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you"
+      },
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "R": 1
+          },
+          "untilEndOfTurn": true
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "Creatures you control can boast twice during each of your turns rather than once.",
+      "rule": "boast-twice",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      }
+    }
+  ],
+  "back": {
+    "identity": {
+      "name": "Harnfel, Horn of Bounty",
+      "supertypes": [
+        "Legendary"
+      ],
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [],
+      "manaCost": "{4}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Discard a card: Exile the top two cards of your library. You may play those cards this turn.",
+    "abilities": [
+      {
+        "kind": "activated",
+        "text": "Discard a card: Exile the top two cards of your library. You may play those cards this turn.",
+        "cost": [
+          {
+            "atom": "discard"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "moveZone",
+            "fromTop": 2,
+            "to": "exile",
+            "remember": true
+          },
+          {
+            "effect": "mayPlay",
+            "targets": "remembered",
+            "until": "end-of-turn"
+          }
+        ]
+      }
+    ]
+  }
+}

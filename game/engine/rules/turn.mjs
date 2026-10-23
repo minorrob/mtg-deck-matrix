@@ -239,9 +239,17 @@ function emptyManaPools(state, events) {
      spends plain mana before rider mana. */
   const combatGoesOn = state.phase.startsWith("COMBAT_") && state.phase !== "COMBAT_END";
   for (const player of state.players) {
-    const kept = combatGoesOn ? Object.fromEntries(Object.entries(player.combatMana ?? {}).map(([color, n]) => [color, Math.min(n, player.manaPool[color])]).filter(([, n]) => n > 0)) : {};
-    if (Object.keys(kept).length) player.combatMana = kept;
+    const combatKept = combatGoesOn ? Object.fromEntries(Object.entries(player.combatMana ?? {}).map(([color, n]) => [color, Math.min(n, player.manaPool[color])]).filter(([, n]) => n > 0)) : {};
+    if (Object.keys(combatKept).length) player.combatMana = combatKept;
     else delete player.combatMana;
+    /* And mana its player does not lose until end of turn (Birgi, God of Storytelling; script/effects/resources.mjs): kept as
+       each step of the turn it was made in ends but the cleanup step (CR 514.2), of what the pool holds beyond the combat's. */
+    const turnKept = state.phase !== "CLEANUP" && player.turnMana?.turn === state.turn
+      ? Object.fromEntries(Object.entries(player.turnMana.mana).map(([color, n]) => [color, Math.min(n, player.manaPool[color] - (combatKept[color] ?? 0))]).filter(([, n]) => n > 0)) : {};
+    if (Object.keys(turnKept).length) player.turnMana = {turn: state.turn, mana: turnKept};
+    else delete player.turnMana;
+    const kept = {...combatKept};
+    for (const [color, n] of Object.entries(turnKept)) kept[color] = (kept[color] ?? 0) + n;
     /* "IF YOU WOULD LOSE UNSPENT MANA, THAT MANA BECOMES COLORLESS INSTEAD" (Omnath, Locus of the Void; CR 614.1a): none of
        it is lost -- what would have been becomes {C}, the mana kept beside the pool too, its restrictions and riders with it
        (rules/restricted-mana.mjs) -- and nothing is emptied, so nothing is said. Mana not lost now (firebending's, kept)

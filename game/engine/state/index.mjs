@@ -647,7 +647,9 @@ function moveCard(state, from, zone, player, {faceDown, transformed, disguised})
   const arrived = addObject(state, {
     /* A double-faced card keeps the face that was up only onto the battlefield, where it was put that way; anywhere else
        it is its front (CR 712.8a). */
-    ...(from.mdfc ? {mdfc: from.mdfc, face: zone === "battlefield" && (from.face === "back" || transformed === true) ? "back" : undefined} : {}),
+    ...(from.mdfc ? {mdfc: from.mdfc, face: (zone === "battlefield" && (from.face === "back" || transformed === true))
+      /* And onto the stack, a modal double-faced card cast as its back face (CR 712.11a; rules/actions.mjs, withBackFace). */
+      || (zone === "stack" && from.face === "back" && from.mdfc.transforming !== true) ? "back" : undefined} : {}),
     /* An adventurer card goes to the stack as its Adventure when it was shown as one to be cast (CR 715.3b), and leaves it --
        countered, resolved, wherever it goes -- as itself (715.4). */
     ...(from.adventurer ? {adventurer: from.adventurer, face: zone === "stack" && from.face === "adventure" ? "adventure" : undefined} : {}),

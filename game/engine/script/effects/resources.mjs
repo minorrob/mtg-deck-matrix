@@ -44,6 +44,13 @@ export function addMana(state, params, context) {
     const kept = (state.players[context.controller].combatMana ??= {});
     for (const [color, n] of Object.entries(mana)) kept[color] = (kept[color] ?? 0) + n;
   }
+  /* "Until end of turn, you don't lose this mana as steps and phases end" (Birgi, God of Storytelling; CR 106.4, 500.4; card
+     load w4d L1): how much of the pool its player keeps as this turn's steps end (`turnMana`, rules/turn.mjs). */
+  if (params.untilEndOfTurn === true) {
+    const player = state.players[context.controller];
+    if (player.turnMana?.turn !== state.turn) player.turnMana = {turn: state.turn, mana: {}};
+    for (const [color, n] of Object.entries(mana)) player.turnMana.mana[color] = (player.turnMana.mana[color] ?? 0) + n;
+  }
   return [event("GameEventManaPool", state, {
     player: {playerId: context.controller, name: state.players[context.controller].name},
     produced: {...mana},

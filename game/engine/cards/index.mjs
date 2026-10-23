@@ -873,6 +873,18 @@ export function compileScript(script) {
     /* FIREBENDING N (CR 702.189a; Fire Nation Cadets, Train C phase 2): the keyword IS a triggered ability -- "Whenever this
        creature attacks, add N {R}" -- mana its controller does not lose as combat's steps end, until the combat phase does
        (addMana's `untilEndOfCombat`, script/effects/resources.mjs; rules/turn.mjs). Each instance triggers. */
+    /* MOBILIZE N (CR 702.181a; Voice of Victory, card load w4d L1): the keyword IS a triggered ability -- "Whenever this
+       creature attacks, create N tapped and attacking 1/1 red Warrior creature tokens. Sacrifice them at the beginning of
+       the next end step." Whom each attacks is its controller's choice (CR 508.4; effects/permanents.mjs, enterAttacking).
+       Each instance triggers. */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "mobilize") {
+      if (!(Number.isInteger(ability.amount) && ability.amount >= 1)) problems.push(`${ability.text}: mobilize needs its number, 1 or more`);
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.attacks({who: "self"}),
+        effects: [{effect: "createToken", count: ability.amount ?? 1, tapped: true, attacking: true, atEndStep: "sacrifice",
+          token: {name: "Warrior", types: ["Creature"], subtypes: ["Warrior"], colors: ["R"], power: 1, toughness: 1}}]});
+      keywords.push("Mobilize");
+      return;
+    }
     if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "firebending") {
       if (!(Number.isInteger(ability.amount) && ability.amount >= 1)) problems.push(`${ability.text}: firebending needs its number, 1 or more`);
       abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.attacks({who: "self"}),
@@ -1596,6 +1608,9 @@ export function compileScript(script) {
       /* Mana kept until end of combat (firebending): plain mana; restricted mana kept so is not built. */
       if (effect.effect === "addMana" && effect.untilEndOfCombat !== undefined && (effect.untilEndOfCombat !== true || effect.spendOnly !== undefined))
         problems.push("addMana: untilEndOfCombat is true, on mana that is not restricted");
+      /* Mana kept until end of turn (Birgi, God of Storytelling): plain mana too. */
+      if (effect.effect === "addMana" && effect.untilEndOfTurn !== undefined && (effect.untilEndOfTurn !== true || effect.spendOnly !== undefined))
+        problems.push("addMana: untilEndOfTurn is true, on mana that is not restricted");
       /* "Add two mana of any one color" as an ability resolves (Ashling, Rimebound; script/resolution.mjs): of any color,
          more than one of it, one color for all. */
       if (effect.effect === "addMana" && effect.oneColor !== undefined && !(effect.oneColor === true && effect.anyColor === true && effect.mana === undefined && effect.count >= 2))
@@ -1788,7 +1803,13 @@ export function compileScript(script) {
         /* "This ability costs {1} less to activate for each legendary creature you control" (CR 602.2b, 601.2f). */
         ...(ability.costLess !== undefined ? {costLess: ability.costLess} : {}), ...(ability.condition ? {condition: ability.condition} : {}),
         /* "Activate only once each turn" (CR 602.5b): how many times each turn. */
-        ...(ability.limit ? {limit: ability.limit} : {})});
+        ...(ability.limit ? {limit: ability.limit} : {}),
+        /* BOAST (CR 702.142a; card load w4d L1): "activate only if this creature attacked this turn and only once each turn"
+           -- twice during its controller's turns where a rule says so (Birgi, God of Storytelling; rules/actions.mjs,
+           withinLimit). */
+        ...(ability.boast === true ? {boast: true, limit: 1, condition: ability.condition
+          ? {allOf: [ability.condition, {present: {what: "permanent", self: true, attackedThisTurn: true}}]}
+          : {present: {what: "permanent", self: true, attackedThisTurn: true}}} : {})});
       return;
     }
     if (ability.kind === "triggered") {
