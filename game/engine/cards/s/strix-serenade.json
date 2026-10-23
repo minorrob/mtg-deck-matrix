@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Strix Serenade",
+    "oracleId": "7ca3aa03-e62d-464a-9111-e754abe17f76",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Counter target artifact, creature, or planeswalker spell. Its controller creates a 2/2 blue Bird creature token with flying.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "spell",
+              "types": [
+                "Artifact"
+              ]
+            },
+            {
+              "what": "spell",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "spell",
+              "types": [
+                "Planeswalker"
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "counterSpell",
+          "spells": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "createToken",
+          "count": 1,
+          "controller": {
+            "controllerOf": {
+              "target": 0
+            }
+          },
+          "token": {
+            "name": "Bird",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Bird"
+            ],
+            "colors": [
+              "U"
+            ],
+            "power": 2,
+            "toughness": 2,
+            "keywords": [
+              "Flying"
+            ]
+          }
+        }
+      ],
+      "text": "Counter target artifact, creature, or planeswalker spell. Its controller creates a 2/2 blue Bird creature token with flying."
+    }
+  ]
+}

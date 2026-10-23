@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Clearwater Pathway // Murkwater Pathway",
+  "scenarios": [
+    {
+      "name": "Played as Clearwater Pathway: {U}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Clearwater Pathway // Murkwater Pathway"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Clearwater Pathway"
+        },
+        {
+          "tap": "Clearwater Pathway"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Clearwater Pathway"
+          ]
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "U": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Played as Murkwater Pathway: {B}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Clearwater Pathway // Murkwater Pathway"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Murkwater Pathway"
+        },
+        {
+          "tap": "Murkwater Pathway"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Murkwater Pathway"
+          ]
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "B": 1
+          }
+        }
+      ]
+    }
+  ]
+}

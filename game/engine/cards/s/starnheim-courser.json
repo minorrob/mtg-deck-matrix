@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Starnheim Courser",
+    "oracleId": "01317d6c-8c11-40e1-8f7b-d36050973ada",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Pegasus"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Flying\nArtifact and enchantment spells you cast cost {1} less to cast.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "static",
+      "rule": "spells-cost-less",
+      "affects": {
+        "what": "spell",
+        "anyOf": [
+          {
+            "types": [
+              "Artifact"
+            ]
+          },
+          {
+            "types": [
+              "Enchantment"
+            ]
+          }
+        ]
+      },
+      "amount": 1,
+      "text": "Artifact and enchantment spells you cast cost {1} less to cast."
+    }
+  ]
+}

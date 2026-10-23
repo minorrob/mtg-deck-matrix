@@ -1,0 +1,75 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Clearwater Pathway // Murkwater Pathway",
+    "oracleId": "144119bc-7fd1-45c5-9e29-f742e7c255ac",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": null,
+    "colors": [],
+    "colorIdentity": [
+      "B",
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {U}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {U}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "U": 1
+          }
+        }
+      ]
+    }
+  ],
+  "back": {
+    "identity": {
+      "name": "Murkwater Pathway",
+      "types": [
+        "Land"
+      ],
+      "subtypes": [],
+      "manaCost": null,
+      "colors": [],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "{T}: Add {B}.",
+    "abilities": [
+      {
+        "kind": "activated",
+        "text": "{T}: Add {B}.",
+        "mana": true,
+        "cost": [
+          {
+            "atom": "{T}"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "addMana",
+            "mana": {
+              "B": 1
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
