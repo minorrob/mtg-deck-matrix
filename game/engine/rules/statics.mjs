@@ -576,11 +576,14 @@ const describes = (affects, token) => matchesLastKnown(affects ?? {}, token);
 const kindOf = (ability, token) => (ability.each ?? []).find((kind) => (kind.subtypes ?? []).some((t) => (token.subtypes ?? []).includes(t)));
 /* Which of them apply to the event as it now stands (CR 616.1f): a doubler to any tokens; the rest while a token they
    describe is made. */
-const applying = (rest, event) => rest.filter(({ability}) => live(event).some((g) => (ability.rule === "more-tokens" ? true
+/* "If one or more creature tokens would be created under your control, three times that many of those tokens are created
+   instead" (Ojer Taq, Deepest Foundation; card load w4d L1): a doubler's `tokens`, the tokens it multiplies -- any, unsaid. */
+const multiplies = (ability, token) => !ability.tokens || describes(ability.tokens, token);
+const applying = (rest, event) => rest.filter(({ability}) => live(event).some((g) => (ability.rule === "more-tokens" ? multiplies(ability, g.token)
   : ability.rule === "tokens-each" ? Boolean(kindOf(ability, g.token)) : describes(ability.affects, g.token))));
 /* What one of them makes of the event. */
 function tokenChange(ability, event) {
-  if (ability.rule === "more-tokens") return event.map((g) => ({...g, count: g.count * ability.times}));
+  if (ability.rule === "more-tokens") return event.map((g) => (multiplies(ability, g.token) ? {...g, count: g.count * ability.times} : g));
   /* Made as its token instead: no longer the effect's own (a copy is not made a copy). */
   if (ability.rule === "tokens-instead") return event.map((g) => (g.count > 0 && describes(ability.affects, g.token) ? {token: ability.token, count: g.count} : g));
   if (ability.rule === "tokens-each") return event.flatMap((g) => {
