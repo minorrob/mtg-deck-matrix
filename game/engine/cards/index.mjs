@@ -90,7 +90,10 @@ const RULES_READING_A_CONDITION = ["alternative-cost", "spells-cost-less", "trig
   "extra-land-drop",
   /* "Solved -- You may look at the top card of your library any time" (Case of the Locked Hothouse; CR 719.3c): asked as the
      library is shown (projection.mjs, topSeenBy). */
-  "look-at-top"];
+  "look-at-top",
+  /* "You control your opponents while they're searching their libraries" (Opposition Agent; CR 722.1): asked as a search of a
+     library is put to its searcher (script/effects/asking.mjs, chooseCard). */
+  "controls-searches"];
 
 /* A target picked after the offer is taken ("up to two target creatures", script/bind.mjs): not chosen with it. */
 const countedTarget = (spec) => Boolean(spec) && typeof spec === "object" && spec.count !== undefined;
@@ -480,8 +483,6 @@ function manaAbility(ability, id) {
     /* "Exile this card from your hand: Add {R}" (Simian Spirit Guide; CR 605.1a, 602.2): the card itself, from its owner's hand,
        the ability's own zone. */
     || (a?.atom === "exile" && a.self === true && ability.zone === "hand"))) return "unbuilt";
-  /* A mana ability from the hand is one whose cost exiles the card from there (CR 113.6b); from anywhere else, not built. */
-  if (ability.zone !== undefined && !(ability.zone === "hand" && cost.some((a) => a?.atom === "exile" && a.self === true))) return "unbuilt";
   /* "Put a -0/-1 counter on this creature: Add {G}" (Wall of Roots), "Remove five +1/+1 counters from Ramos: Add ...". */
   const counterCost = cost.filter((a) => ["addCounters", "removeCounters"].includes(a.atom)).map((a) => ({counter: a.counter, count: a.count ?? 1, put: a.atom === "addCounters"}));
   if (then.some((e) => !isBuilt(e?.effect) || NEEDS_A_DECISION.includes(e?.effect))) return "unbuilt";
@@ -522,7 +523,7 @@ function manaAbility(ability, id) {
     ...(cost.some((a) => a.atom === "sacrifice" && a.self === true) ? {sacrificeSelf: true} : {}),
     /* Exert this permanent (Arena of Glory; CR 701.43a), exile this card from the hand (Simian Spirit Guide). */
     ...(cost.some((a) => a.atom === "exert" && a.self === true) ? {exertSelf: true} : {}),
-    ...(ability.zone === "hand" ? {zone: "hand", exileSelf: true} : {}),
+    ...(cost.some((a) => a.atom === "exile" && a.self === true) ? {zone: "hand", exileSelf: true} : {}),
     /* "Mill a card" as part of the cost (Millikin): how many. */
     ...(cost.some((a) => a.atom === "mill") ? {millCost: cost.filter((a) => a.atom === "mill").reduce((n, a) => n + (a.count ?? 1), 0)} : {}),
     /* "Tap an untapped creature you control" (Jaspera Sentinel): which creature is the player's choice, one offer each. */
