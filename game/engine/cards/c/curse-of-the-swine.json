@@ -1,0 +1,78 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Curse of the Swine",
+    "oracleId": "5669ea7c-c4fc-494c-896b-4bce9b494817",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{X}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Exile X target creatures. For each creature exiled this way, its controller creates a 2/2 green Boar creature token.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Exile X target creatures. For each creature exiled this way, its controller creates a 2/2 green Boar creature token.",
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "repeatFor",
+          "each": "player",
+          "effects": [
+            {
+              "effect": "createToken",
+              "controller": "that player",
+              "count": {
+                "rememberedCount": true,
+                "controlledBy": "that player"
+              },
+              "token": {
+                "name": "Boar",
+                "types": [
+                  "Creature"
+                ],
+                "subtypes": [
+                  "Boar"
+                ],
+                "colors": [
+                  "G"
+                ],
+                "power": 2,
+                "toughness": 2
+              }
+            }
+          ]
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "count": {
+            "min": "X",
+            "max": "X"
+          }
+        }
+      ]
+    }
+  ]
+}

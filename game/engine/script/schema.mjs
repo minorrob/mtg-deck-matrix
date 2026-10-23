@@ -208,7 +208,8 @@ function checkEffect(effect, path, errors) {
   /* "You may tap another untapped Merfolk you control" (Meanders Guide): a selector of the payer's permanents, the cost's only
      part beside mana or life. */
   if (name === "unlessPays" && effect.tap !== undefined) {
-    checkSelector(effect.tap, `${path}.tap`, errors);
+    /* Or "that card", the permanent the trigger is about (Charismatic Conqueror: "they may tap that permanent"). */
+    if (effect.tap !== "that card") checkSelector(effect.tap, `${path}.tap`, errors);
     if (effect.sacrifice !== undefined || effect.discard !== undefined || effect.returnToHand !== undefined)
       errors.push({path: `${path}.tap`, message: "An \"unless\" cost taps a permanent, returns one, sacrifices one or discards a card: one of them"});
   }
@@ -390,8 +391,9 @@ function checkSelector(selector, path, errors, {choice = false} = {}) {
 /* `x`: "up to that many" -- a reflexive trigger's `max: "X"`, the X it was made with (Bloodthirsty Adversary). */
 const countValid = (count, {x = false} = {}) => Boolean(count) && typeof count === "object" && !Array.isArray(count)
   && Object.keys(count).every((k) => k === "min" || k === "max")
-  && (count.min === undefined || (Number.isInteger(count.min) && count.min >= 0))
-  && (count.max === undefined || (x && count.max === "X" && (count.min ?? 0) === 0) || (Number.isInteger(count.max) && count.max >= 1 && count.max >= (count.min ?? 0)));
+  /* "Exile X target creatures" (Curse of the Swine; script/bind.mjs countOf): exactly X, `{min: "X", max: "X"}`. */
+  && (count.min === undefined || (Number.isInteger(count.min) && count.min >= 0) || (count.min === "X" && count.max === "X"))
+  && (count.max === undefined || (x && count.max === "X" && (count.min ?? 0) === 0) || (count.min === "X" && count.max === "X") || (Number.isInteger(count.max) && count.max >= 1 && count.max >= (count.min ?? 0)));
 
 /* `permanent`: the card is a permanent card, whose spell ability may say only its additional cost (below). */
 function checkAbility(ability, path, errors, {permanent = false} = {}) {

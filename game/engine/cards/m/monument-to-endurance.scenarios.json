@@ -1,0 +1,227 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Monument to Endurance",
+  "fixtures": {
+    "Rummage": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{C}",
+      "spell": {
+        "id": "s",
+        "text": "Discard a card.",
+        "effects": [
+          {
+            "effect": "discard",
+            "count": 1
+          }
+        ]
+      }
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Monument to Endurance: each discard chooses a mode not chosen this turn; the next turn all three again",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Monument to Endurance",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rummage",
+            "Rummage",
+            "Rummage",
+            "Rummage",
+            "Bear",
+            "Bear",
+            "Bear",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Rummage"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Draw a card.",
+                  "Create a Treasure token.",
+                  "Each opponent loses 3 life."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Draw a card."
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Rummage"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Create a Treasure token.",
+                  "Each opponent loses 3 life."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Each opponent loses 3 life."
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Rummage"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Create a Treasure token."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Create a Treasure token."
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 37
+            },
+            {
+              "seat": 0,
+              "zone": "battlefield",
+              "cards": [
+                "Monument to Endurance",
+                "Wastes",
+                "Wastes",
+                "Wastes",
+                "Wastes",
+                "Treasure"
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Rummage"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "asks": {
+            "seat": 0,
+            "options": [
+              "Draw a card.",
+              "Create a Treasure token.",
+              "Each opponent loses 3 life."
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Squirrel Sovereign",
+    "oracleId": "f43d1ea5-8127-4b64-a87b-ee5cc9b9e9fa",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Squirrel",
+      "Noble"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Other Squirrels you control get +1/+1.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Other Squirrels you control get +1/+1.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "subtypes": [
+          "Squirrel"
+        ],
+        "controller": "you",
+        "another": true
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 1
+      }
+    }
+  ]
+}

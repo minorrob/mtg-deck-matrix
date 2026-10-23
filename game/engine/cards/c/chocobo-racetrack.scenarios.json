@@ -1,0 +1,122 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Chocobo Racetrack",
+  "scenarios": [
+    {
+      "name": "Chocobo Racetrack: a land makes a 2/2 green Bird; the next land makes another, and the first Bird gets +1/+0",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Chocobo Racetrack"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Forest"
+        },
+        {
+          "settle": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Bird",
+                "power": 2,
+                "toughness": 2
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "play": "Forest"
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Chocobo Racetrack",
+            "Forest",
+            "Forest",
+            "Bird",
+            "Bird"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bird",
+            "power": 3,
+            "toughness": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "Chocobo Racetrack: an opponent's land makes no Bird",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Chocobo Racetrack"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "play": "Forest",
+          "seat": 1
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Chocobo Racetrack"
+          ]
+        }
+      ]
+    }
+  ]
+}

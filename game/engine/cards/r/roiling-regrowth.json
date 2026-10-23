@@ -1,0 +1,60 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Roiling Regrowth",
+    "oracleId": "65d63518-3261-40b5-87b8-19c152b29ee3",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Sacrifice a land. Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Sacrifice a land. Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle.",
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "count": 1,
+          "selector": {
+            "types": [
+              "Land"
+            ]
+          }
+        },
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Land"
+            ],
+            "supertypes": [
+              "Basic"
+            ]
+          },
+          "count": 2,
+          "upTo": true,
+          "destinations": [
+            {
+              "to": "battlefield",
+              "tapped": true
+            }
+          ],
+          "shuffle": true
+        }
+      ]
+    }
+  ]
+}

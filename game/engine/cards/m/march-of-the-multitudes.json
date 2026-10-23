@@ -1,0 +1,58 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "March of the Multitudes",
+    "oracleId": "0c26ab0d-80f6-4e5b-9d0e-af17c1519583",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{X}{G}{W}{W}",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.)\nCreate X 1/1 white Soldier creature tokens with lifelink.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Convoke",
+      "keyword": "convoke"
+    },
+    {
+      "kind": "spell",
+      "text": "Create X 1/1 white Soldier creature tokens with lifelink.",
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": "X",
+          "token": {
+            "name": "Soldier",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Soldier"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 1,
+            "toughness": 1,
+            "keywords": [
+              "Lifelink"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

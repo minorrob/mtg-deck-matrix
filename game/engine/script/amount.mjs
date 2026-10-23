@@ -142,7 +142,11 @@ export const AMOUNT_KINDS = Object.freeze(["x", "attacksThisTurn", "count", "cou
   /* Wave 4c: "equal to the result" of a die rolled (CR 706.2; Ancient Copper Dragon). */
   "dieRolled",
   /* Wave 4d: "if an opponent was dealt 7 or more damage this turn" (Spinerock Knoll). */
-  "damageTakenThisTurn"]);
+  "damageTakenThisTurn",
+  /* Wave 4d: "distribute two +1/+1 counters among one or two target creatures you control" (The Earth Crystal; CR 601.2d). */
+  "dividedAmong",
+  /* Wave 4d: "eight or more artifacts with the same name as one another" (Mechanized Production). */
+  "mostSharingName"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "per", "filter", "controlledBy", "named", "another", "signed"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -199,6 +203,8 @@ export function amountProblems(value) {
   if ("per" in value && !(Number.isInteger(value.per) && value.per > 1)) problems.push("An amount's per is a whole number above 1: \"for every seven\" is per 7");
   if ("countersRemovedThisWay" in value && value.countersRemovedThisWay !== true) problems.push("countersRemovedThisWay is true");
   if ("dieRolled" in value && value.dieRolled !== true) problems.push("dieRolled is true: the result of the die rolled before it");
+  if ("dividedAmong" in value && !(Number.isInteger(value.dividedAmong?.total) && value.dividedAmong.total > 0 && Number.isInteger(value.dividedAmong?.target) && value.dividedAmong.target >= 0))
+    problems.push("dividedAmong is {total, target}: a whole amount above 0, divided among the objects chosen for that target");
   if ("countersPut" in value && value.countersPut !== true) problems.push("countersPut is true");
   if ("manaInPool" in value && value.manaInPool !== "you") problems.push('manaInPool is "you": the mana in your pool');
   /* A player's own counters are "you" ("the number of experience counters you have", Ezuri, Claw of Progress) or a target
@@ -426,6 +432,13 @@ export function amountOf(state, value, context = {}) {
   /* "This spell costs {X} less to cast, where X is the number of differently named lands you control" (Fungal Colossus;
      CR 201.2): the distinct names among what the selector matches now -- a copy's the name it copied (CR 707.2), and a
      face-down permanent, which has no name (CR 708.2a), none to count. */
+  /* "IF YOU CONTROL EIGHT OR MORE ARTIFACTS WITH THE SAME NAME AS ONE ANOTHER" (Mechanized Production; CR 201.2): of those the
+     selector matches, the most that share one name -- a token copy has its original's (CR 707.2). */
+  else if ("mostSharingName" in value) {
+    const byName = new Map();
+    for (const id of matching(state, value.mostSharingName, who)) { const name = state.objects[id].card; if (typeof name === "string" && name) byName.set(name, (byName.get(name) ?? 0) + 1); }
+    n = Math.max(0, ...byName.values());
+  }
   else if ("differentNames" in value) n = new Set(matching(state, value.differentNames, who).map((id) => state.objects[id].card).filter((name) => typeof name === "string" && name)).size;
   else if ("devotion" in value) n = devotion(state, context.controller, value.devotion);
   else if ("lifeLostThisWay" in value) n = context.lifeLost ?? 0;
@@ -455,6 +468,16 @@ export function amountOf(state, value, context = {}) {
   else if ("countersRemovedThisWay" in value) n = context.countersRemoved ?? 0;
   /* "Equal to the result" (Ancient Copper Dragon): what the rollDie before it rolled (effects/resources.mjs) -- none rolled, 0. */
   else if ("dieRolled" in value) n = context.rolled ?? 0;
+  /* "DISTRIBUTE TWO +1/+1 COUNTERS AMONG ONE OR TWO TARGET CREATURES YOU CONTROL" (The Earth Crystal): the total divided as the
+     ability was put on the stack, each target chosen then getting at least one (CR 601.2d) -- with one chosen, all of it; with
+     as many chosen as the total, one each. That leaves no division to choose (cards/index.mjs refuses one that would), so
+     it is counted from the targets chosen then, not those still legal: what an illegal one was given goes to no other
+     (CR 608.2b). */
+  else if ("dividedAmong" in value) {
+    const chosen = (context.targetsChosen ?? [])[value.dividedAmong.target];
+    const among = Array.isArray(chosen) ? chosen.length : chosen ? 1 : 0;
+    n = among > 0 ? Math.floor(value.dividedAmong.total / among) : 0;
+  }
   /* "For each card type among cards discarded this way" (Occult Epiphany): the card types (CR 205.2a) the remembered
      cards have between them, as they are now -- an artifact creature is two. */
   else if ("cardTypesAmong" in value && value.cardTypesAmong === "remembered") n = new Set((context.remembered ?? []).flatMap((id) => state.objects[id]?.types ?? [])).size;

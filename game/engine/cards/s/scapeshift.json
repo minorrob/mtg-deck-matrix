@@ -1,0 +1,69 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Scapeshift",
+    "oracleId": "c235015e-a7a9-4f8d-bf4a-cf68b3847f83",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Sacrifice any number of lands. Search your library for up to that many land cards, put them onto the battlefield tapped, then shuffle.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Sacrifice any number of lands. Search your library for up to that many land cards, put them onto the battlefield tapped, then shuffle.",
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "optional": true,
+          "count": {
+            "count": {
+              "what": "permanent",
+              "types": [
+                "Land"
+              ],
+              "controller": "you"
+            }
+          },
+          "selector": {
+            "types": [
+              "Land"
+            ]
+          },
+          "remember": true
+        },
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Land"
+            ]
+          },
+          "count": {
+            "rememberedCount": true
+          },
+          "upTo": true,
+          "destinations": [
+            {
+              "to": "battlefield",
+              "tapped": true
+            }
+          ],
+          "shuffle": true
+        }
+      ]
+    }
+  ]
+}

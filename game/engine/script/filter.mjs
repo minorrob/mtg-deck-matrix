@@ -497,7 +497,9 @@ export function compileSelector(selector) {
        603.4): whether it has the prepared designation now -- a permanent's alone (script/effects/attributes.mjs). */
     if (selector.prepared !== undefined && (object.prepared === true) !== selector.prepared) return false;
     /* "With a +1/+1 counter on it", or `"any"`: "permanents you control with counters on them" (Mutational Advantage). */
+    /* Or `"none"`: "destroy all creatures with no counters on them" (Damning Verdict). */
     if (selector.counters !== undefined && !(selector.counters === "any" ? Object.values(object.counters ?? {}).some((n) => n > 0)
+      : selector.counters === "none" ? !Object.values(object.counters ?? {}).some((n) => n > 0)
       : (object.counters?.[selector.counters] ?? 0) > 0)) return false;
     /* Modified (CR 700.15): a counter on it, equipped, or enchanted by an Aura its controller controls (rules/layers.mjs). */
     if (selector.modified !== undefined && isModified(state, id, object.counters, controllerOf(state, id)) !== selector.modified) return false;

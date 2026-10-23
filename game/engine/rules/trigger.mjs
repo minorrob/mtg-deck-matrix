@@ -1109,7 +1109,13 @@ function modalWaysOf(state, modal, context, taken, n) {
 function modesTaken(state, entry) {
   if (!entry.script?.modal?.unchosen) return [];
   const source = entry.cardId === null ? undefined : state.objects[entry.cardId];
-  return source ? source.modesChosen?.[entry.abilityId] ?? [] : entry.modesChosenWas ?? [];
+  return source ? modesChosenBy(state, source, entry.abilityId, entry.script.modal.unchosen) : entry.modesChosenWas ?? [];
+}
+/* "Choose one that hasn't been chosen THIS TURN" (Monument to Endurance; `unchosen: "turn"`): only the modes chosen in this
+   turn (`modesChosenOn`, the turn they were chosen in) -- in a turn after, none has been. */
+function modesChosenBy(state, object, abilityId, unchosen) {
+  if (unchosen === "turn" && object.modesChosenOn?.[abilityId] !== state.turn) return [];
+  return object.modesChosen?.[abilityId] ?? [];
 }
 
 /** The choice (§12.1): each legal way to aim the trigger, with what it is aimed at. */
@@ -1163,7 +1169,10 @@ export function resolveTriggerTargets(state, awaiting, indices) {
     /* The modes chosen, remembered on the permanent for its next time (modesTaken) -- once chosen, chosen, whatever then
        becomes of this trigger. */
     const source = modal.unchosen && entry.cardId !== null ? state.objects[entry.cardId] : undefined;
-    if (source) source.modesChosen = {...(source.modesChosen ?? {}), [entry.abilityId]: [...(source.modesChosen?.[entry.abilityId] ?? []), ...option.modes]};
+    if (source) {
+      source.modesChosen = {...(source.modesChosen ?? {}), [entry.abilityId]: [...modesChosenBy(state, source, entry.abilityId, modal.unchosen), ...option.modes]};
+      if (modal.unchosen === "turn") source.modesChosenOn = {...(source.modesChosenOn ?? {}), [entry.abilityId]: state.turn};
+    }
     entry.script = {...rest, ...modalScript(modal, option.modes)};
     entry.modes = [...option.modes];
   }

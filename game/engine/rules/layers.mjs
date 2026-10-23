@@ -105,7 +105,7 @@ function printed(state, id) {
    cannot ask what they are still deriving. Anything else would be ignored, and a static would affect more than it says:
    the card compiler refuses it (cards/index.mjs). */
 export const LAYER_AFFECTS_KEYS = Object.freeze(["anyOf", "what", "ids", "types", "subtypes", "supertypes", "controller", "token", "another", "self", "attachedBy", "colors", "colorless", "countersAtLeast", "tapped", "counters",
-  "keywords", "hasDealtDamage", "hasDealtCombatDamage", "attacking", "zone", "modified", "nonTypes", "nonSubtypes", "continued"]);
+  "keywords", "hasDealtDamage", "hasDealtCombatDamage", "attacking", "zone", "modified", "nonTypes", "nonSubtypes", "continued", "nonSupertypes", "commander"]);
 /* MODIFIED (CR 700.15; Kodama of the West Tree, wave 4d L3): a permanent with a counter on it, one that is equipped, or one
    enchanted by an Aura its controller controls. Its attachments read as printed (an Equipment or an Aura subtype, its
    controller) -- what the layers are deriving is the permanent, not them -- so the layer matcher and the selector grammar
@@ -152,6 +152,11 @@ function affects(state, effect, current, sourceController) {
   if (rule.subtypes && !rule.subtypes.every((t) => current.types.includes(t) || hasSubtype(current.subtypes, current.everyCreatureType, t))) return false;
   /* "Legendary Humans you control have indestructible" (General's Enforcer): supertypes after layer 4, including the Ring-bearer designation. */
   if (rule.supertypes && !rule.supertypes.every((t) => (current.supertypes ?? []).includes(t))) return false;
+  /* "Nonlegendary creatures you control get +1/+1" (Flowering of the White Tree): none of these supertypes, after layer 4. */
+  if (rule.nonSupertypes && rule.nonSupertypes.some((t) => (current.supertypes ?? []).includes(t))) return false;
+  /* "Commander creatures you control get +2/+2" (Bastion Protector; CR 903.3): a commander, whoever owns it -- a designation
+     of the card, which no layer changes. */
+  if (rule.commander === true && state.objects[current.id]?.commander !== true) return false;
   if (rule.another === true && current.id === effect.sourceId) return false;
   /* "This creature's power and toughness are each equal to ...": the source itself. */
   if (rule.self === true && current.id !== effect.sourceId) return false;

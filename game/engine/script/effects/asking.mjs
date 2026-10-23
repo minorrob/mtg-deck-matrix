@@ -1170,8 +1170,10 @@ function costWords(awaiting, state) {
   if (awaiting.amountX) return "pay {X}";
   if (awaiting.timesAny) return `pay ${awaiting.mana} any number of times`;
   const paid = [awaiting.mana ?? null, awaiting.amount > 0 ? `{${awaiting.amount}}` : null, lifeAsked(awaiting) ? `${awaiting.life} life` : null].filter(Boolean);
-  const other = awaiting.discard ? `discard ${discardNoun(awaiting.discard)}` : awaiting.sacrificeCount ? `sacrifice ${awaiting.sacrificeCount} permanents` : awaiting.sacrifice ? `sacrifice ${noun(awaiting.sacrifice)}`
+  const other = awaiting.discard && awaiting.sacrifice ? `sacrifice ${awaiting.sacrifice.nonTypes?.includes("Land") ? "a nonland permanent" : noun(awaiting.sacrifice)} or discard ${discardNoun(awaiting.discard)}`
+    : awaiting.discard ? `discard ${discardNoun(awaiting.discard)}` : awaiting.sacrificeCount ? `sacrifice ${awaiting.sacrificeCount} permanents` : awaiting.sacrifice ? `sacrifice ${noun(awaiting.sacrifice)}`
     : awaiting.returnToHand ? `return ${otherNoun(awaiting.returnToHand)} you control to its owner's hand`
+    : awaiting.tapIds ? `tap ${awaiting.tapIds.map((id) => state.objects[id]?.card ?? "that permanent").join(", ") || "that permanent"}`
     : awaiting.tap ? `tap ${otherNoun(awaiting.tap).replace(/^(a|another) /, "$1 untapped ").replace(/^a untapped/, "an untapped")} you control` : null;
   return [other, paid.length ? `pay ${paid.join(" and ")}` : null].filter(Boolean).join(" and ") || `pay {${awaiting.amount}}`;
 }
@@ -1184,9 +1186,11 @@ const opponentsOf = (state, player) => state.players.filter((p) => p.id !== play
 const gainsWords = ({amount, times}) => `have an opponent gain ${amount} life${times > 1 ? `, ${times} times` : ""}`;
 /* "YOU MAY PAY {X}" (Halo Forager; `amountX`, CR 107.3f): X is the payer's to choose as it resolves -- each amount their pool
    and plain mana sources could pay, from {0}, its own option -- and what follows knows it (`paidX`, script/resolution.mjs). */
-function xOptions(state, player) {
+/* "You may pay {X}, where X is less than or equal to the amount of life you gained" (Well of Lost Dreams): `atMost`, the most X
+   may be, counted as it is asked (`mostX`). */
+function xOptions(state, player, most = Infinity) {
   const options = [];
-  for (let x = 0; canPayGeneric(state, player, x); x += 1) options.push({label: `Pay {${x}}`, pay: true, x});
+  for (let x = 0; x <= most && canPayGeneric(state, player, x); x += 1) options.push({label: `Pay {${x}}`, pay: true, x});
   return options;
 }
 /* "YOU MAY PAY {2}{R} ANY NUMBER OF TIMES" (Bloodthirsty Adversary; `timesAny`, CR 118.12a, 601.2g-h's payment repeated):
@@ -1200,7 +1204,7 @@ function timesOptions(state, awaiting) {
   return options;
 }
 function payOptions(state, awaiting) {
-  if (awaiting.amountX && awaiting.amount === undefined) return xOptions(state, awaiting.player);
+  if (awaiting.amountX && awaiting.amount === undefined) return xOptions(state, awaiting.player, awaiting.mostX ?? Infinity);
   if (awaiting.timesAny && awaiting.paidTimes === undefined) return timesOptions(state, awaiting);
   /* Having said they pay, which opponent gains the next of it; else, to pay it at all, an opponent to gain it. */
   if (awaiting.gaining) return opponentsOf(state, awaiting.player).map((id) => ({label: state.players[id].name, gainer: id}));
@@ -1224,7 +1228,13 @@ function payOptions(state, awaiting) {
       return awaiting.sacrificing ? mine.map((id) => ({label: state.objects[id].card, cardId: id}))
         : mine.length >= awaiting.sacrificeCount ? [{label: `Sacrifice ${awaiting.sacrificeCount} permanents${also}`, pay: true, sacrificeMany: true}] : [];
     }
-    return mine.map((id) => ({label: `Sacrifice ${state.objects[id].card}${also}`, pay: true, sacrifice: id, cardId: id}));
+    const sacrifices = mine.map((id) => ({label: `Sacrifice ${state.objects[id].card}${also}`, pay: true, sacrifice: id, cardId: id}));
+    /* "UNLESS THAT PLAYER SACRIFICES A NONLAND PERMANENT OF THEIR CHOICE OR DISCARDS A CARD" (Torment of Hailfire; CR 118.12a):
+       `sacrifice` and `discard` both, either one paying it -- each permanent and each card in hand its own option, which one
+       the payer's choice. */
+    if (!awaiting.discard) return sacrifices;
+    return [...sacrifices, ...cardsIn(state, "hand", player).filter((id) => discardFits(state, awaiting.discard, id, player))
+      .map((id) => ({label: `Discard ${state.objects[id].card}${also}`, pay: true, discard: id, cardId: id}))];
   }
   if (awaiting.discard) return cardsIn(state, "hand", player).filter((id) => discardFits(state, awaiting.discard, id, player))
     .map((id) => ({label: `Discard ${state.objects[id].card}${also}`, pay: true, discard: id, cardId: id}));
@@ -1239,6 +1249,8 @@ function payOptions(state, awaiting) {
   /* "YOU MAY TAP ANOTHER UNTAPPED MERFOLK YOU CONTROL. WHEN YOU DO, ..." (Meanders Guide; CR 118.12a, 603.12): each untapped
      permanent of the payer's the selector describes its own option -- `another` not the ability's source -- and not paying.
      Which one is the payer's choice. */
+  if (awaiting.tapIds) return awaiting.tapIds.filter((id) => state.objects[id]?.zone === "battlefield" && !state.objects[id].tapped && controllerOf(state, id) === player)
+    .map((id) => ({label: `Tap ${state.objects[id].card}${also}`, pay: true, tap: id, cardId: id}));
   if (awaiting.tap) {
     const fits = compileSelector({...awaiting.tap, what: "permanent", controller: "you"});
     return state.zones.battlefield.filter((id) => !state.objects[id].tapped && fits(state, id, {controller: player, source: awaiting.source}))
@@ -1277,6 +1289,10 @@ export const unlessPays = {
       ...(params.tap ? {tap: structuredClone(params.tap)} : {}),
       ...(params.opponentGainsLife ? {opponentGainsLife: {amount: params.opponentGainsLife.amount, times: Math.max(0, amountOf(state, params.opponentGainsLife.times ?? 1, context))}} : {}),
       ...(params.amountX === true ? {amountX: true} : {}),
+      ...(params.amountX === true && params.atMost !== undefined ? {mostX: Math.max(0, amountOf(state, params.atMost, context))} : {}),
+      /* "They may tap that permanent. If they don't, ..." (Charismatic Conqueror; CR 118.12a): the permanent the trigger is
+         about, tapped to pay -- while it is still that player's and untapped. */
+      ...(params.tap === "that card" ? {tapIds: context.about?.card !== undefined && context.about.card !== null ? [context.about.card] : []} : {}),
       ...(params.timesAny === true ? {timesAny: true} : {}),
       ...(params.exileFromGraveyard ? {exileFromGraveyard: structuredClone(params.exileFromGraveyard), ...(params.exileSelf === true ? {exileSelf: true} : {})} : {}),
       effects: structuredClone(params.effects ?? []), source: context.source ?? null,

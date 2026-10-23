@@ -306,6 +306,9 @@ export function resolveTop(state, effect = null, rng = null) {
     ...(entry.sourceTransforms !== undefined ? {sourceTransforms: entry.sourceTransforms} : {}),
     /* What its cost sacrificed, as each last existed: "the sacrificed creature's toughness" (rules/actions.mjs). */
     ...(entry.sacrificed ? {sacrificed: entry.sacrificed} : {}),
+    /* Its targets as they were chosen, before any is checked again: what a division among them was (CR 601.2d; script/amount.mjs,
+       dividedAmong). */
+    ...(entry.targets ? {targetsChosen: entry.targets} : {}),
     /* The mana spent to cast its source, as its trigger remembered it: converge's count, its source gone, for its targets
        asked again (CR 608.2b; script/amount.mjs, colorsSpent). */
     ...(entry.spent ? {spent: entry.spent} : {}),
