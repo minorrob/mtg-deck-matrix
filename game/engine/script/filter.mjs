@@ -33,7 +33,7 @@
  */
 
 import {usesThisTurn, valueCostOf} from "../state/index.mjs";
-import {typesOf, keywordsOf, controllerOf, characteristicsOf, colorsOf, everyCreatureTypeOf, subtypesOf, staticAbilities} from "../rules/layers.mjs";
+import {typesOf, keywordsOf, controllerOf, characteristicsOf, colorsOf, everyCreatureTypeOf, subtypesOf, supertypesOf, staticAbilities} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {hasSubtype, isCreatureType} from "../keywords/types.mjs";
 import {protectedFrom, hexproofFrom, playerHexproofFrom} from "../rules/protection.mjs";
@@ -379,9 +379,9 @@ export function compileSelector(selector) {
     }
 
     /* Supertypes (CR 205.4): "a basic land card" is a land with the supertype Basic. */
-    if (selector.supertypes && !selector.supertypes.every((st) => (object.supertypes ?? []).includes(st))) return false;
+    if (selector.supertypes && !selector.supertypes.every((st) => supertypesOf(state, id).includes(st))) return false;
     /* "Nonlegendary creature": none of these supertypes. */
-    if (selector.nonSupertypes && selector.nonSupertypes.some((st) => (object.supertypes ?? []).includes(st))) return false;
+    if (selector.nonSupertypes && selector.nonSupertypes.some((st) => supertypesOf(state, id).includes(st))) return false;
 
     /* "Nonartifact creature", "non-Elf creature", "noncreature spell": none of these -- and an artifact creature is an
        artifact (CR 205.2b), so "nonartifact" excludes it. */
@@ -496,6 +496,7 @@ export function compileSelector(selector) {
        one that has left the battlefield is a new object, the old one gone (CR 400.7). */
     if (selector.equipped === true && !(object.attachments ?? []).some((other) => state.objects[other] && subtypesOf(state, other).includes("Equipment"))) return false;
     /* "Permanents you don't own" (Agent of Treachery): whose it is, not who controls it (CR 108.3). */
+    if (Number.isInteger(selector.owner) && object.owner !== selector.owner) return false;
     if (selector.owner === "you" && object.owner !== chooser) return false;
     if (selector.owner === "opponent" && object.owner === chooser) return false;
     /* "If you control a commander" (CR 903.3): a card designated a commander. */

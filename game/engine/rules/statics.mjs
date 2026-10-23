@@ -1074,6 +1074,9 @@ export function cantBeCountered(state, spellId) {
  * less power than the ability's source. "You" is the ability's controller throughout.
  */
 export function cantBeBlockedBy(state, attackerId, blockerId) {
+  /* The Ring's first ability belongs to its emblem (CR 701.54c), even if the bearer loses its abilities. */
+  if (state.players.some((p) => p.ring?.bearer === attackerId && controllerOf(state, attackerId) === p.id)
+    && powerOf(state, blockerId) > powerOf(state, attackerId)) return true;
   const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];

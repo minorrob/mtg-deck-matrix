@@ -613,6 +613,9 @@ export function alternativeCosts(state, player, id) {
       ...(Number.isInteger(ability.impending) ? {impending: ability.impending} : {}),
       /* Overload (CR 702.96b): what the spell does cast this way, "each" in place of "target". */
       ...(ability.overload ? {overload: ability.overload} : {}),
+      /* Mutate targets a non-Human creature with the spell's owner, even under another player's control (CR 702.140a). */
+      ...(ability.mutate ? {mutate: true, overload: {targets: [{what: "permanent", types: ["Creature"], nonSubtypes: ["Human"], owner: object.owner}],
+        effects: [{effect: "mergePermanent", targets: {target: 0}}]}} : {}),
       ...(ability.zone === "graveyard" ? {fromGraveyard: true, exileOthers: others} : {}),
       /* Prowl (CR 702.76a): the permanent it becomes was cast for it (rules/stack.mjs). */
       ...(ability.prowl === true ? {prowl: true} : {}),
@@ -1819,6 +1822,7 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
    priority -- `disguise`, that cost paid. One cast face down with disguise is turned face up that way alone; a manifested one
    either way (CR 701.40b). */
 function faceUpCost(state, player, id, disguise = false) {
+  if (state.objects[id].merged?.some(p => p.faceDown && (p.physical.types ?? []).some(t => t === "Instant" || t === "Sorcery"))) return null;
   const real = state.objects[id].faceDownCard;
   const cost = disguise ? disguiseOf(real)?.cost.find((a) => a.atom === "mana")?.cost ?? null
     : state.objects[id].disguised !== true && (real.types ?? []).includes("Creature") ? real.manaCost : null;
@@ -2808,6 +2812,7 @@ function performOffered(state, player, action, during) {
     /* Cast for its impending cost (CR 702.176a): the permanent it becomes is marked so, and enters with that many time counters. */
     if (way?.impending) entry.impending = way.impending;
     /* Overloaded (CR 702.96b): the spell's effects as they then are, carried on the stack. */
+    if (way?.mutate) entry.mutating = true;
     if (way?.overload) entry.overload = structuredClone(way.overload);
     /* Cast for its prowl cost (CR 702.76a): "if its prowl cost was paid" asks the permanent it becomes (rules/stack.mjs). */
     if (way?.prowl) entry.prowled = true;

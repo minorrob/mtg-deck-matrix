@@ -82,7 +82,7 @@ export const TARGET_CHOICES_MAX = 4096;
  *                               chosen for target n, as it is chosen and again as the ability resolves (CR 608.2b): that
  *                               permanent gone, or another player's now, and this target is illegal too (relatedLegal)
  * None is part of what a target may be (the selector), so each is set aside beside `count`. */
-export const SPEC_KEYS = Object.freeze(["count", "distinctFrom", "onlyIf", "differentControllers", "share", "forEach", "ownedByControllerOf"]);
+export const SPEC_KEYS = Object.freeze(["totalPowerAtMost", "count", "distinctFrom", "onlyIf", "differentControllers", "share", "forEach", "ownedByControllerOf"]);
 /** What a counted target's choices may share (`share`). */
 export const SHARES = Object.freeze(["graveyard", "creature type"]);
 const selectorOf = (spec) => Object.fromEntries(Object.entries(spec && typeof spec === "object" ? spec : {}).filter(([key]) => !SPEC_KEYS.includes(key)));
@@ -186,6 +186,8 @@ function groupCandidates(state, spec, context, placeholder) {
 }
 /** Why a counted target's choices do not hold together as its `share` says, in words, or null (CR 601.2c). */
 export function shareProblem(state, spec, chosen, name) {
+  if (Number.isFinite(spec?.totalPowerAtMost) && (chosen ?? []).reduce((n, t) => n + (t?.kind === "object" && state.objects[t.id] ? powerOf(state, t.id) : 0), 0) > spec.totalPowerAtMost)
+    return `${name}'s targets exceed total power ${spec.totalPowerAtMost}: choose creature cards with total power ${spec.totalPowerAtMost} or less.`;
   const objects = (chosen ?? []).filter((t) => t?.kind === "object" && state.objects[t.id]).map((t) => t.id);
   if (spec?.share === "graveyard" && new Set(objects.map((id) => state.objects[id].owner)).size > 1)
     return `${name}'s targets must be in a single graveyard: choose them all from one player's graveyard.`;
@@ -254,7 +256,7 @@ export function countedChoice(state, spec, context, {id, name, hostile = false, 
     const whose = c.kind === "object" && state.objects[c.id] && controllerOf(state, c.id) !== context.controller ? ` (${state.players[controllerOf(state, c.id)]?.name}'s)` : "";
     /* "For each opponent ... that player controls" (`forEach`): the opponent each is chosen for, kept with it (stillLegal). */
     const target = forEachOpponent(spec) ? {...c, forPlayer: controllerOf(state, c.id)} : c;
-    return {index, label: `${targetName(state, c)}${whose}`, ...(c.kind === "object" ? {cardId: c.id} : {playerId: c.id}), targets: [target], hostile,
+    return {index, ...(Number.isFinite(spec.totalPowerAtMost) ? {power: powerOf(state, c.id)} : {}), label: `${targetName(state, c)}${whose}`, ...(c.kind === "object" ? {cardId: c.id} : {playerId: c.id}), targets: [target], hostile,
       ...(oneOfEach(spec) && c.kind === "object" && state.objects[c.id] ? {controllerId: controllerOf(state, c.id)} : {})};
   });
   for (const option of options) {
@@ -267,7 +269,9 @@ export function countedChoice(state, spec, context, {id, name, hostile = false, 
   const words = forEachOpponent(spec) ? "for each opponent, choose up to one target that player controls"
     : `choose ${countWords(count)}${placeholder?.groupLabel ? ` ${placeholder.groupLabel}` : ""}${capped ? ", each controlled by a different player" : ""}`;
   return {id, title: `${name}: ${words}`, mode: "many", min: Math.min(count.min, options.length),
-    max: count.max === null ? options.length : Math.min(count.max, options.length), options, ...(capped ? {capped} : {})};
+    max: count.max === null ? options.length : Math.min(count.max, options.length), options,
+    ...(Number.isFinite(spec.totalPowerAtMost) ? {budget: {by: "power", most: spec.totalPowerAtMost,
+      why: `Choose creature cards with total power ${spec.totalPowerAtMost} or less.`}} : {}), ...(capped ? {capped} : {})};
 }
 
 /* "Controlled by different players" as a cap: no more than one option of each controller's, and the words that say so --
@@ -385,6 +389,7 @@ function factValue(value, context, state = null) {
 function objectsOf(value, context) {
   if (value === "self") return context.source !== null && context.source !== undefined ? [context.source] : [];
   /* "That spell", "that creature": what the trigger is about (trigger.mjs), while it is still there. */
+  if (value === "that card" && context.about?.cards) return [...context.about.cards];
   if (value === "that card") return context.about?.card !== undefined && context.about.card !== null ? [context.about.card] : [];
   /* "Tap enchanted creature", "untap equipped creature": what the source is attached to as it resolves (stack.mjs). */
   if (value === "enchanted" || value === "equipped") return context.attached !== undefined && context.attached !== null ? [context.attached] : [];

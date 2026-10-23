@@ -26,6 +26,7 @@ import {typesOf, controllerOf, staticAbilities} from "../../rules/layers.mjs";
 import {protectedFrom} from "../../rules/protection.mjs";
 import {manaValue, parseManaCost} from "../../rules/mana.mjs";
 import {countersPlaced, enteringCountersPlaced, tokensCreated} from "../../rules/statics.mjs";
+import {clearRingBearer} from "../../keywords/ring.mjs";
 import {removeFromCombat} from "../../rules/combat.mjs";
 import {enteringModifications} from "../../rules/replacement.mjs";
 
@@ -925,6 +926,7 @@ export function gainControl(state, params, context) {
       apply: {controller: object.controller}, to, ...(params.until ? {until: params.until} : {}), ...(params.until === "this leaves" ? {source} : {}), sourceController: context.controller});
     rememberExileLooker(state, id, controllerOf(state, id));
     if (object.controller !== to) {
+      clearRingBearer(state, id);
       object.controlledSinceTurn = state.turn;
       removeFromCombat(state, id);
     }
@@ -1204,7 +1206,7 @@ export function delayedTrigger(state, params, context) {
     source: context.source ?? null,
     /* A double-faced source's transforms as this is made: "transform it" from a delayed trigger is ignored once it has
        transformed since (CR 701.27f; setState). */
-    ...(state.objects[context.source]?.mdfc && state.objects[context.source].zone === "battlefield" ? {sourceTransforms: state.objects[context.source].transforms ?? 0} : {}),
+    ...((state.objects[context.source]?.mdfc || state.objects[context.source]?.merged?.some(p => p.physical.mdfc)) && state.objects[context.source].zone === "battlefield" ? {sourceTransforms: state.objects[context.source].transforms ?? 0} : {}),
     effects: rememberNow(params.effects ?? [], context, {keepThat: waits, state}),
     text: params.text ?? null,
   });

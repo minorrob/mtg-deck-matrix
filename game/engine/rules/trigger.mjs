@@ -52,12 +52,12 @@
 
 import {conditionHolds} from "../script/condition.mjs";
 import {pushAbility, becameTarget, crimeCommitted} from "./stack.mjs";
-import {cardsIn, usesThisTurn, recordUse} from "../state/index.mjs";
+import {objectsAfterMove, cardsIn, usesThisTurn, recordUse} from "../state/index.mjs";
 import {playerStatics} from "./statics.mjs";
 import {matchesSelector, matchesLastKnown} from "../script/filter.mjs";
 import {abilitiesOf, abilitiesReader, characteristicsOf} from "./layers.mjs";
 import {chosenFor, CHOSEN_COLOR_LETTER} from "../script/chosen.mjs";
-import {targetChoices, targetName, isHostile, isChoosing, targetCandidates, countedChoice, modalScript, differentControllersProblem} from "../script/bind.mjs";
+import {targetChoices, targetName, isHostile, isChoosing, targetCandidates, countedChoice, modalScript, differentControllersProblem, shareProblem} from "../script/bind.mjs";
 
 /* An ability lives where its card is (CR 113.6). A triggered ability of a permanent watches the
    game only while that permanent is on the battlefield, so an ability on a card in a graveyard is
@@ -65,6 +65,8 @@ import {targetChoices, targetName, isHostile, isChoosing, targetCandidates, coun
    Unless the ability says it works there: "at the beginning of your upkeep, you may return this card
    from your graveyard to your hand" (Squee, Goblin Nabob; `zone: "graveyard"`) moves its card out of
    the graveyard, so it functions there and only there (CR 113.6b, 113.6m). */
+import {isRingBearer} from "../keywords/ring.mjs";
+
 const WATCHING_ZONES = ["battlefield"];
 
 /* Whether a player is the one a trigger asks about: "you" its controller, "opponent" anyone else, "any" anyone. */
@@ -72,6 +74,7 @@ const whoseIs = (rule, player, controller) => (rule === "you" ? player === contr
 /* Whether an object fits a "this" / "another" / "any" rule and a filter, read where it is now. */
 function fits(state, id, condition, sourceId, controller) {
   if (id === null || id === undefined) return false;
+  if (condition.who === "ring-bearer" && !isRingBearer(state, id, controller)) return false;
   if (condition.who === "self" && id !== sourceId) return false;
   if (condition.who === "another" && id === sourceId) return false;
   if (condition.filter && !(state.objects[id] && matchesSelector(condition.filter, state, id, {controller, source: sourceId}))) return false;
@@ -121,12 +124,19 @@ function recordArrivals(state, events) {
  * it was dealt to, the player who drew -- for "that player" and "that card" in what the ability does.
  */
 function subjects(state, event, condition, sourceId, controller) {
+  /* A merged creature dies once, but puts each physical card into its graveyard (CR 730.3). */
+  const arrival = event.data?.fields;
+  if (condition.intoGraveyard && event.kind === "GameEventCardChangeZone" && !arrival?.componentArrival && objectsAfterMove(state, arrival?.becomes).length > 1)
+    return objectsAfterMove(state, arrival.becomes).flatMap(id => subjects(state,
+      {...event, data: {...event.data, fields: {...arrival, becomes: id, componentArrival: true}}}, condition, sourceId, controller));
   /* "Deals combat damage to a player or planeswalker" (Grateful Apparition): damage dealt to a permanent is watched too. */
   const toPermanent = condition.planeswalkers === true && condition.on === "GameEventPlayerDamaged" && event.kind === "GameEventCardDamaged";
   /* "Whenever you cast or copy an instant or sorcery spell" (magecraft; `orCopy`): a spell copied is watched too. */
   const copied = condition.orCopy === true && condition.on === "GameEventSpellAbilityCast" && event.kind === "GameEventSpellCopied";
   if (event.kind !== condition.on && !toPermanent && !copied) return [];
   const fields = event.data?.fields ?? {};
+  if (condition.on === "GameEventMutates") return fits(state, fields.card?.cardId, condition, sourceId, controller)
+    ? [{card: fields.card.cardId}] : [];
   /* A COPY OF A SPELL (CR 707.10): put on the stack by an effect, under that effect's controller's control -- the player who
      copied it, for "whenever you copy" (the magecraft rulings) -- once for each copy, about the copy as it is there and
      its controller ("that spell's mana value", CR 707.2). Never cast (CR 707.10), so nothing else a cast trigger asks
@@ -414,7 +424,7 @@ function subjects(state, event, condition, sourceId, controller) {
     /* And, from the battlefield, its copiable values as it last existed when they were not its card's (rules/layers.mjs,
        lastKnown): "create a token that's a copy of that creature" (Hofri Ghostforge). */
     const copied = fields.from?.zoneType === "Battlefield" ? fields.leftBehind?.copiable : undefined;
-    return [{card: fields.becomes, ...(Number.isInteger(player) ? {player} : {}), ...(came ? {cameFrom: {...came}} : {}), ...(copied ? {copiedAs: structuredClone(copied)} : {}),
+    return [{card: fields.becomes, ...(!fields.componentArrival && fields.from?.zoneType === "Battlefield" && objectsAfterMove(state, fields.becomes).length > 1 ? {cards: objectsAfterMove(state, fields.becomes)} : {}), ...(Number.isInteger(player) ? {player} : {}), ...(came ? {cameFrom: {...came}} : {}), ...(copied ? {copiedAs: structuredClone(copied)} : {}),
       ...leftAs(fields)}];
   }
   return [{}];
@@ -1043,6 +1053,8 @@ export function resolveTriggerCounted(state, awaiting, indices) {
     throw new Error("Invalid selection");
   const {entry} = targeting(state, awaiting.stackId);
   /* "Controlled by different players" (script/bind.mjs): refused, with what to do instead, before anything is aimed. */
+  const together = shareProblem(state, entry.script.targets[awaiting.index], picked.map(i => choice.options[i].targets[0]), entry.name ?? "That ability");
+  if (together) throw new Error(together);
   const split = differentControllersProblem(state, entry.script.targets[awaiting.index], picked.map((i) => choice.options[i].targets[0]), entry.name ?? "That ability");
   if (split) throw new Error(split);
   entry.targets[awaiting.index] = picked.map((i) => choice.options[i].targets[0]);

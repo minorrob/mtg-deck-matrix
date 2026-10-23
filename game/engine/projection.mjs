@@ -100,6 +100,11 @@ function cardFor(state, id, canSeeFace, viewer = null) {
     power: shown ? current.power : null,
     toughness: shown ? current.toughness : null,
     keywords: shown ? [...current.keywords] : [],
+    ...(object.zone === "battlefield" && object.merged ? {components: object.merged.map(part => ({
+      name: part.faceDown && viewer !== controller ? null : part.physical.card, faceDown: part.faceDown === true,
+      commander: part.physical.commander === true})), mutations: object.mutations ?? 0,
+      text: (current.abilities ?? object.abilities ?? []).map(a => a.text).filter(Boolean).join("\n")} : {}),
+    ...(object.zone === "battlefield" && state.players.some(p => p.ring?.bearer === id && p.id === controller) ? {ringBearer: true} : {}),
     /* A Class's level (CR 716.2a), a designation anyone can see (716.2b); none is level 1 (716.2d). */
     ...(Number.isInteger(object.level) ? {level: object.level} : {}),
     /* Monstrous (CR 701.37b) and prepared (CR 722.3a): designations, which anyone can see (script/effects/attributes.mjs). */

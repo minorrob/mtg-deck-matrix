@@ -20,6 +20,7 @@
  */
 
 import {runEffect, eachOf} from "./effects/index.mjs";
+import {mergedOrderToAsk} from "../state/index.mjs";
 import {ASKING, commandersGoingHome} from "./effects/asking.mjs";
 import {damageQuestion, addCounters, counterQuestion} from "./effects/resources.mjs";
 import {controllerOf} from "../rules/layers.mjs";
@@ -83,7 +84,8 @@ export function runResolution(state, rng = null) {
   const resolving = state.resolving;
   if (!resolving) return {status: "done", events: []};
 
-  while (resolving.queue.length > 0) {
+  while (resolving.queue.length > 0 || mergedOrderToAsk(state)) {
+    if (mergedOrderToAsk(state) && resolving.queue[0]?.effect !== "orderMerged") resolving.queue.unshift({effect: "orderMerged"});
     /* Bound as it reaches the head, not when the queue was built: a modal's chosen effects arrive later, and are
        bound against the same targets as everything else (bind.mjs). */
     /* And counted as it reaches the head (CR 608.2h): "draw a card for each creature you control" counts then. */
