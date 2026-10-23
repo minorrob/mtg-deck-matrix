@@ -239,6 +239,45 @@
           "cards": []
         }
       ]
+    },
+    {
+      "name": "{T}: mill two cards -- the ability the drafted game left untried (it tapped for mana first)",
+      "library": [
+        "Swamp",
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Skull Prophet"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Skull Prophet",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Forest",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Skull Prophet"
+        }
+      ]
     }
   ]
 }

@@ -422,11 +422,11 @@ export function compileSelector(selector) {
        existed (`lastKnown`, which the stack keeps for it: CR 113.7a, 608.2h) -- Reckless Bushwhacker's "other creatures you
        control", the Bushwhacker shocked in response: every creature its controller still controls. */
     if (selector.another === true) {
+      /* Or the card its source became as it left: "when this creature dies, return ANOTHER target artifact card from your
+         graveyard" (Myr Retriever's ruling: it can't return itself), `became` (rules/trigger.mjs, targeting). */
       const self = context.source ?? context.lastKnown?.cardId ?? context.became ?? null;
       if (self === null) throw new Error("A selector using `another` needs the source it is another than (CR 109.5)");
-      /* And never the card its source became as it left: "when this creature dies, return ANOTHER target artifact card from
-         your graveyard" (Myr Retriever's ruling: it can't return itself), `became` (rules/trigger.mjs, targeting). */
-      if (id === self || (context.became !== undefined && id === context.became)) return false;
+      if (id === self) return false;
     }
 
     if (selector.manaValue && !matchesManaValue(state, id, selector.manaValue, context)) return false;

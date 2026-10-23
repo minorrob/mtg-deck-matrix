@@ -390,6 +390,10 @@ function applyOne(state, {holderId, ability, effect = null}, proposal, dry = fal
   if (ability.change?.unlessPay) next.asks = [...(next.asks ?? []), {...ability.change.unlessPay}];
   /* "As this land enters, you may reveal an Island or Swamp card from your hand. If you don't, it enters tapped." */
   if (ability.change?.unlessReveal) next.asks = [...(next.asks ?? []), {reveal: structuredClone(ability.change.unlessReveal)}];
+  /* "If this artifact would enter, you may discard a land card instead. If you do, put this artifact onto the battlefield. If
+     you don't, put it into its owner's graveyard" (Mox Diamond; CR 614.1c, 614.12): a question for its controller, its arrival
+     held until it is answered, as a copy's is (rules/entering.mjs). */
+  if (ability.change?.discardInstead) next.asks = [...(next.asks ?? []), {discardInstead: structuredClone(ability.change.discardInstead)}];
   /* "As this artifact enters, choose a creature type", "choose Khans or Dragons": a question for its controller once it is
      there, the answer kept as the permanent's `chosen` (rules/entering.mjs). */
   if (ability.change?.choose) next.asks = [...(next.asks ?? []), {choose: structuredClone(ability.change.choose)}];
@@ -550,7 +554,7 @@ export function applyReplacements(state, proposal, {orders = [], askable = false
    the card it became (CR 400.7) once it is in exile -- by every route that asks applyReplacements of a zone change. */
 export function placeReplacedCounters(state, movedId, proposal) {
   const moved = state.objects[movedId];
-  if (!proposal?.withCounters || proposal.to !== "exile" || moved?.zone !== "exile") return;
+  if (!proposal?.withCounters || !moved) return;
   moved.counters ??= {};
   for (const [counter, n] of Object.entries(proposal.withCounters)) moved.counters[counter] = (moved.counters[counter] ?? 0) + n;
 }
