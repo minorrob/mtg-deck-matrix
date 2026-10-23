@@ -47,7 +47,8 @@ jobs:
   suites:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    # 60, not 45: the suites reached 44.8 minutes on PR #816, and wave 4d's six lanes add more (Rob, 2026-10-23).
+    timeout-minutes: 60
     env:
       GEOMETRY_REQUIRED: "1"
       PAGE_BUDGET_REQUIRED: "1"
