@@ -183,12 +183,24 @@ export function dealDamage(state, params, context) {
   if (params.remember) context.remembered = dealt;
   const {source, amount, hits} = damageHits(state, params, context);
   if (amount <= 0) return events;
+  /* "If the creature you control has trample, excess damage is dealt to that creature's controller instead" (Ram Through;
+     wave 4d L3, CR 120.4a, 702.19b): `trampleExcess` -- from a source with trample as this resolves, a creature is dealt
+     lethal damage (its damage marked counted, 1 from deathtouch) and the rest is dealt to its controller, at once. */
+  if (params.trampleExcess === true && source !== null && keywordsOf(state, source).includes("Trample"))
+    for (const hit of [...hits]) {
+      if (hit.toCard === undefined || !state.objects[hit.toCard] || !typesOf(state, hit.toCard).includes("Creature")) continue;
+      const excess = excessOf(state, hit.toCard, amount, source);
+      if (excess <= 0) continue;
+      hit.amount = amount - excess;
+      hits.push({toPlayer: controllerOf(state, hit.toCard), amount: excess});
+    }
 
   for (const hit of hits) {
+    if (hit.amount === 0) continue;
     /* CR 616.1: the order of the effects that change it, as the player dealt it chose (effects/asking.mjs, orderDamage);
        the order that leaves the least where nobody was asked (rules/replacement.mjs). */
     const {proposal} = applyReplacements(state, {
-      event: "damage", toPlayer: hit.toPlayer, toCard: hit.toCard, amount, sourceId: source, combat: false,
+      event: "damage", toPlayer: hit.toPlayer, toCard: hit.toCard, amount: hit.amount ?? amount, sourceId: source, combat: false,
     }, {orders: params.damageOrders?.[hitKey(source, hit.toPlayer, hit.toCard)] ?? []});
     /* What follows a prevention -- "each opponent mills that many cards" -- immediately afterward (CR 615.5). */
     if (proposal.prevented === true || proposal.amount <= 0) { events.push(...runFollowUps(state, proposal)); continue; }

@@ -657,7 +657,7 @@ Tier 0 (the seven decks), grouped, with the Forge ruler in parentheses only to s
   transforms for {2} into a 0/0 Phyrexian artifact creature, entering with N +1/+1 counters, CR 701.53, 111.10i; Train E,
   2026-10-12), `mergePermanent`, `ringTempts` (the Ring emblem and its bearer, CR 701.54), `emblem` ("you get an emblem with ...", CR 114: an object in its player's command zone, neither a card nor a
   permanent, whose triggered, replacement and player-rule abilities function there; the library load's L1, 2026-10-21).
-- Modifiers: `pump`, `pumpAll`, `alterAttribute`, `effectUntil` (a temporary static), `grantKeyword`, `regenerate` (a regeneration shield, CR 701.19a; added in M4 phase 3, batch 28).
+- Modifiers: `pump`, `pumpAll`, `alterAttribute`, `effectUntil` (a temporary static), `grantKeyword`, `regenerate` (a regeneration shield, CR 701.19a; added in M4 phase 3, batch 28), `removeFromCombat` (CR 506.4; added in wave 4d L3 for Reconnaissance).
 - Flow: `modal` (Charm), `sequence`, `repeatFor` (RepeatEach), `branch`, `delayedTrigger`, `immediateTrigger`,
   `counterSpell`, `copySpell`, `addTurn`, `chooseCard`, `chooseType`, `chooseColor` (a color chosen as it resolves, CR
   105.1; Train C phase 2), `genericChoice`, `twoPiles`, `connive`,

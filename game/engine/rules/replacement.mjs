@@ -312,6 +312,9 @@ function preventionsFor(state, proposal) {
     const how = effect.apply ?? {};
     if (how.combat === true && proposal.combat !== true) return false;
     if (Array.isArray(effect.sources) && !effect.sources.includes(proposal.sourceId)) return false;
+    /* "Prevent all combat damage that would be dealt this turn" (Fog; wave 4d L3, CR 615.1a): `apply.all`, to any player or
+       permanent, by any source. */
+    if (how.all === true) return true;
     if (Array.isArray(effect.players)) return proposal.toPlayer !== undefined && proposal.toPlayer !== null && effect.players.includes(proposal.toPlayer);
     return (how.to !== false && proposal.toCard !== undefined && proposal.toCard !== null && among(proposal.toCard))
       || (how.by === true && proposal.sourceId !== undefined && proposal.sourceId !== null && among(proposal.sourceId));

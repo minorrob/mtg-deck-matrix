@@ -1107,6 +1107,17 @@ export function goad(state, params, context) {
   return [];
 }
 
+
+/**
+ * `removeFromCombat` -- CR 506.4: "remove target attacking creature you control from combat" (Reconnaissance; wave 4d L3). It
+ * stops being an attacking, blocking or blocked creature (rules/combat.mjs); a creature not in combat is unchanged. What
+ * follows it on the card ("and untap it") is the next effect's.
+ */
+export function leaveCombat(state, params, context) {
+  for (const id of params.targets ?? []) if (state.objects[id]?.zone === "battlefield") removeFromCombat(state, id);
+  void context;
+  return [];
+}
 /**
  * `regenerate` -- CR 701.19a: a regeneration shield on each target (or each permanent `selector` describes, fixed as it
  * resolves: "regenerate each creature you control"), until end of turn. rules/replacement.mjs `regenerated` uses one up.

@@ -103,7 +103,17 @@ function printed(state, id) {
    cannot ask what they are still deriving. Anything else would be ignored, and a static would affect more than it says:
    the card compiler refuses it (cards/index.mjs). */
 export const LAYER_AFFECTS_KEYS = Object.freeze(["anyOf", "what", "ids", "types", "subtypes", "supertypes", "controller", "token", "another", "self", "attachedBy", "colors", "colorless", "countersAtLeast", "tapped", "counters",
-  "keywords", "hasDealtDamage", "hasDealtCombatDamage", "attacking", "zone"]);
+  "keywords", "hasDealtDamage", "hasDealtCombatDamage", "attacking", "zone", "modified"]);
+/* MODIFIED (CR 700.15; Kodama of the West Tree, wave 4d L3): a permanent with a counter on it, one that is equipped, or one
+   enchanted by an Aura its controller controls. Its attachments read as printed (an Equipment or an Aura subtype, its
+   controller) -- what the layers are deriving is the permanent, not them -- so the layer matcher and the selector grammar
+   (script/filter.mjs) share one reading. */
+export const isModified = (state, id, counters, controller) => Object.values(counters ?? {}).some((n) => n > 0)
+  || (state.objects[id]?.attachments ?? []).some((a) => {
+    const o = state.objects[a];
+    if (!o || o.zone !== "battlefield") return false;
+    return (o.subtypes ?? []).includes("Equipment") || ((o.subtypes ?? []).includes("Aura") && o.controller === controller);
+  });
 
 /* "CREATURES YOU CONTROL" MEANS CREATURE PERMANENTS (CR 109.2): a description that names no other zone takes in the battlefield
    only -- not a creature card in a hand, a graveyard, a library or exile, nor a creature spell. `zone`, as the selector
@@ -153,6 +163,8 @@ function affects(state, effect, current, sourceController) {
     : ((current.counters ?? {})[rule.counters] ?? 0) > 0)) return false;
   /* "Other tapped legendary creatures you control have indestructible" (The Seriema): tapped as it is, which no layer changes. */
   if (rule.tapped !== undefined && (state.objects[current.id]?.tapped === true) !== rule.tapped) return false;
+  /* "Modified creatures you control have trample" (Kodama of the West Tree; CR 700.15). */
+  if (rule.modified !== undefined && isModified(state, current.id, current.counters, current.controller) !== rule.modified) return false;
   /* "Ruric Thar has hexproof as long as they haven't dealt combat damage yet": whether this object has dealt damage, or
      combat damage, as the selector grammar reads it (script/filter.mjs) -- a fact of the game, which no layer changes. */
   if (rule.hasDealtDamage !== undefined && (state.objects[current.id]?.hasDealtDamage === true) !== rule.hasDealtDamage) return false;

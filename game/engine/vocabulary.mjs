@@ -86,6 +86,8 @@ export const PRIMITIVES = Object.freeze({
   ]),
   modifiers: Object.freeze([
     "pump", "pumpAll", "alterAttribute", "effectUntil", "grantKeyword", "regenerate",
+    /* Wave 4d L3: removed from combat (CR 506.4; Reconnaissance). */
+    "removeFromCombat",
   ]),
   flow: Object.freeze([
     "modal", "sequence", "repeatFor", "branch", "delayedTrigger", "immediateTrigger", "counterSpell",
