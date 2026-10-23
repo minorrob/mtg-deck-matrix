@@ -16,6 +16,9 @@ This task owns the engine additions required by those two cards. The separate Pl
   the turn module's copyright header. Both are fixed; `engine-derive-once` (17 checks), `engine-headers` (4), the affected
   Ring, mutate, filter, state-based action and turn suites, and both moved Ring breaks pass locally. The corrected head
   must pass CI before the merge.
+- **Rules review:** CR 702.140c gives the over/under choice to the mutating spell's controller, including when an opponent
+  controls the owned target. The regression first failed with the choice given to the creature's controller, then passed
+  with the correction; the creature keeps its controller. A deliberate break holds this case.
 - **Release gate:** the PR head must pass the secret scan and GitHub CI; staging uses the existing cloud-staging builder
   and both acceptance walks after the merge. Production is outside this request. No Forge behavior is claimed by this load.
 

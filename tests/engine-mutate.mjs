@@ -61,6 +61,9 @@ check(()=>{
  const way=alternativeCosts(s,0,n).find(w=>w.mutate);
  assert(way);assert.deepEqual(targetCandidates(s,way.overload.targets[0],{controller:0,source:n}).map(t=>t.id),[h]);
  s.objects[h].controller=1;assert(targetCandidates(s,way.overload.targets[0],{controller:0,source:n}).some(t=>t.id===h));
+ beginResolution(s,[{effect:"mergePermanent",targets:[h]}],{controller:0,source:n});
+ assert.equal(s.awaiting.player,0,"CR 702.140c: the spell's controller chooses over or under, even on a stolen creature");
+ answerResolution(s,[0]);assert.equal(s.objects[h].controller,1,"merging does not change the creature's controller");
 });
 check(()=>{
  const s=fresh(),a=addObject(s,{card:"Big",owner:0,types:["Creature"],power:11,toughness:11},"graveyard",0),

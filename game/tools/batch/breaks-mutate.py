@@ -5,6 +5,7 @@ M = 'game/engine/keywords/mutate.mjs'
 S = 'game/engine/state/index.mjs'
 B = 'game/engine/script/bind.mjs'
 BREAKS = [
+ ('spell controller chooses merge order', M, 'player: context.controller, host, spell: context.source', 'player: state.objects[host].controller, host, spell: context.source'),
  ('top characteristics', M, 'top = onTop ? incoming.values : previous;', 'top = previous;'),
  ('bottom characteristics', M, 'top = onTop ? incoming.values : previous;', 'top = incoming.values;'),
  ('inherited abilities', M, '...(incoming.values.abilities ?? [])', '...[]'),

@@ -4,7 +4,6 @@
  * Component records are not objects in a zone and cannot be selected. Copiable values live
  * on the permanent; its physical cards and commander designations never become copiable. */
 import {COPY_KEYS, removeObject, eventCard, commanderKeyOf} from "../state/index.mjs";
-import {controllerOf} from "../rules/layers.mjs";
 
 const values = (o) => Object.fromEntries(COPY_KEYS.filter(k => o[k] !== undefined).map(k => [k, structuredClone(o[k])]));
 function component(object) {
@@ -56,7 +55,7 @@ export const mergePermanent = {
   open(state, params, context) {
     const host = params.targets?.[0];
     if (!state.objects[host] || !state.objects[context.source]) return false;
-    state.awaiting = {kind: "effect-choice", effect: "mergePermanent", player: controllerOf(state, host), host, spell: context.source};
+    state.awaiting = {kind: "effect-choice", effect: "mergePermanent", player: context.controller, host, spell: context.source};
     return true;
   },
   choice(state, awaiting) {
