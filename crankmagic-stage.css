@@ -379,7 +379,7 @@
    question is not yours, its buttons are off, and the pass reads as off by itself. */
 .cm-stage-actions{position:absolute;left:50%;top:12px;z-index:12;display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:16px;background:#06161a;border:1px solid #3d5c55;box-shadow:0 16px 36px -14px rgb(0 0 0 / .9);transform:translateX(-50%);white-space:nowrap}
 #matrix-v2 .cm-stage-actions .v-button{min-height:49px;height:auto;padding:0 24px;border-radius:12px;font-size:17px;font-weight:800;letter-spacing:.01em;color:#f3fff7;background:#1c3432;border-color:#6f9c88}
-#matrix-v2 .cm-stage-actions .v-button.primary{color:var(--color-on-accent,#0d120c);background:var(--v-accent);border-color:var(--v-accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--v-accent) 35%,transparent),0 10px 24px -10px var(--v-accent)}
+#matrix-v2 .cm-stage-actions .v-button.primary{color:#0d120c;background:var(--v-accent);border-color:var(--v-accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--v-accent) 35%,transparent),0 10px 24px -10px var(--v-accent)}
 #matrix-v2 .cm-stage-actions .v-button.is-on{background:#87c6a1;color:#0d120c}
 #matrix-v2 .cm-stage-actions .v-button:disabled{box-shadow:none}
 .cm-stage-actions .cm-board-yield-control{max-width:260px}
