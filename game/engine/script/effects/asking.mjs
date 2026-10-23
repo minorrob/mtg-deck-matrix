@@ -787,8 +787,7 @@ export const proliferate = {
       ...state.players.filter((p) => !p.lost && hasCounters(playerCounters(p))).map((p) => ({player: p.id})),
     ];
     /* "Choose any number of permanents you control that had a counter put on them this way" (Ripples of Potential; card
-       load w4d L1): `remember`, the permanents given counters -- none, until some are. */
-    if (params.remember === true) context.remembered = [];
+       load w4d L1): `remember`, the permanents given counters (apply). */
     /* Nothing with a counter: nothing to choose, and nobody is asked -- but the player has proliferated. */
     if (candidates.length === 0) return {events: [proliferated(state, context.controller)]};
     state.awaiting = {kind: "effect-choice", effect: "proliferate", player: context.controller, candidates, ...(params.remember === true ? {remember: true} : {})};
@@ -957,7 +956,7 @@ export const sacrifice = {
       const {player, type} = awaiting.steps[awaiting.at];
       const source = awaiting.source !== null ? state.objects[awaiting.source]?.card : null;
       const noun = `${["Artifact", "Enchantment"].includes(type) ? "an" : "a"} ${type.toLowerCase()}`;
-      return {id: `sacrifice-keep-type:${player}:${type}:${state.turn}`, title: `${source ? `${source}: ` : ""}choose ${noun} ${awaiting.keptByEach ? "you keep" : `${state.players[player].name} keeps`}`, mode: "one", min: 1, max: 1,
+      return {id: `sacrifice-keep-type:${player}:${type}:${state.turn}`, title: `${source ? `${source}: ` : ""}choose ${noun} ${state.players[player].name} keeps`, mode: "one", min: 1, max: 1,
         options: keepCandidates(state, player, type).map((id, index) => ({index, label: state.objects[id].card, cardId: id, keeper: player}))};
     }
     const mine = offeredToSacrifice(state, awaiting.player, awaiting);

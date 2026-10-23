@@ -1608,9 +1608,6 @@ export function compileScript(script) {
       /* Mana kept until end of combat (firebending): plain mana; restricted mana kept so is not built. */
       if (effect.effect === "addMana" && effect.untilEndOfCombat !== undefined && (effect.untilEndOfCombat !== true || effect.spendOnly !== undefined))
         problems.push("addMana: untilEndOfCombat is true, on mana that is not restricted");
-      /* Mana kept until end of turn (Birgi, God of Storytelling): plain mana too. */
-      if (effect.effect === "addMana" && effect.untilEndOfTurn !== undefined && (effect.untilEndOfTurn !== true || effect.spendOnly !== undefined))
-        problems.push("addMana: untilEndOfTurn is true, on mana that is not restricted");
       /* "Add two mana of any one color" as an ability resolves (Ashling, Rimebound; script/resolution.mjs): of any color,
          more than one of it, one color for all. */
       if (effect.effect === "addMana" && effect.oneColor !== undefined && !(effect.oneColor === true && effect.anyColor === true && effect.mana === undefined && effect.count >= 2))

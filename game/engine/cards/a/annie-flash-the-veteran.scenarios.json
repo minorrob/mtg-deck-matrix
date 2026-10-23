@@ -37,7 +37,7 @@
       "manaCost": "{4}",
       "colors": []
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -128,7 +128,7 @@
           "cards": [
             "Bear",
             "Big Relic",
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ],
@@ -201,7 +201,7 @@
           "zone": "graveyard",
           "cards": [
             "Big Relic",
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ]

@@ -806,8 +806,6 @@ function staticReader(state) {
   /* A permanent's statics, and a card's that work from its graveyard (CR 113.6b; gatherEffects). */
   for (const id of state.zones.battlefield) take(id, false);
   for (const id of (state.zones.graveyard ?? []).flat()) take(id, true);
-  /* And an emblem's (gatherEffects). */
-  for (const id of emblemsIn(state)) take(id, false);
   const losers = losersAmong(state, removers), read = new Map();
   return (id) => {
     const object = state.objects[id];

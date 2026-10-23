@@ -54,6 +54,17 @@
       ],
       "steps": [
         {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Etali, Primal Sickness"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
           "tap": "Mountain"
         },
         {

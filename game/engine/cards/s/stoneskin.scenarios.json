@@ -13,7 +13,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -103,7 +103,7 @@
           "zone": "hand",
           "cards": [
             "Stoneskin",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -143,7 +143,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Bear"
@@ -160,7 +160,7 @@
           "zone": "graveyard",
           "cards": [
             "Bear",
-            "Murder",
+            "Smoke Murder",
             "Stoneskin"
           ]
         }
@@ -174,7 +174,7 @@
           "zone": "hand",
           "cards": [
             "Stoneskin",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -211,7 +211,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Bear"
@@ -231,7 +231,7 @@
           "zone": "graveyard",
           "cards": [
             "Bear",
-            "Murder",
+            "Smoke Murder",
             "Stoneskin"
           ]
         },

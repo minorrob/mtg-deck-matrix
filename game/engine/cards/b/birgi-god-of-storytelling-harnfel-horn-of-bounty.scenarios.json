@@ -78,6 +78,36 @@
       ],
       "power": 2,
       "toughness": 2
+    },
+    "Steal": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Gain control of target creature until end of turn.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "gainControl",
+            "targets": {
+              "target": 0
+            },
+            "until": "end-of-turn"
+          }
+        ]
+      }
     }
   },
   "scenarios": [
@@ -289,6 +319,167 @@
           "offers": {
             "kind": "activate",
             "card": "Boaster"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Cast from the hand as Birgi, its front face",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Birgi, God of Storytelling // Harnfel, Horn of Bounty"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Birgi, God of Storytelling"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Birgi, God of Storytelling",
+            "Mountain",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "In her turn, her Boaster attacked and he took it: with his Birgi it boasts only once -- not his turn",
+      "at": {
+        "turn": 2,
+        "phase": "MAIN1"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Birgi, God of Storytelling // Harnfel, Horn of Bounty",
+            "Mountain",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Steal"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Boaster"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Boaster"
+          ],
+          "seat": 1
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Mountain",
+          "seat": 0
+        },
+        {
+          "cast": "Steal",
+          "seat": 0,
+          "targets": [
+            {
+              "card": "Boaster",
+              "seat": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "pass": 1
+        },
+        {
+          "activate": "Boaster",
+          "seat": 0
+        },
+        {
+          "resolve": true
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Birgi, God of Storytelling",
+            "Boaster",
+            "Mountain",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Boaster",
+            "seat": 0
           },
           "count": 0
         }

@@ -16,7 +16,7 @@
       "power": 3,
       "toughness": 3
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -143,8 +143,8 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Murder",
-            "Murder",
+            "Smoke Murder",
+            "Smoke Murder",
             "Shatter"
           ]
         }
@@ -154,7 +154,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Tom, Bert, and William"
@@ -195,7 +195,7 @@
             {
               "offers": {
                 "kind": "cast",
-                "card": "Murder"
+                "card": "Smoke Murder"
               },
               "count": 0
             },
@@ -229,7 +229,7 @@
           "zone": "graveyard",
           "cards": [
             "Tom, Bert, and William",
-            "Murder",
+            "Smoke Murder",
             "Shatter"
           ]
         },

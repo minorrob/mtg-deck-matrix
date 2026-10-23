@@ -579,7 +579,7 @@ const kindOf = (ability, token) => (ability.each ?? []).find((kind) => (kind.sub
 /* "If one or more creature tokens would be created under your control, three times that many of those tokens are created
    instead" (Ojer Taq, Deepest Foundation; card load w4d L1): a doubler's `tokens`, the tokens it multiplies -- any, unsaid. */
 const multiplies = (ability, token) => !ability.tokens || describes(ability.tokens, token);
-const applying = (rest, event) => rest.filter(({ability}) => live(event).some((g) => (ability.rule === "more-tokens" ? multiplies(ability, g.token)
+const applying = (rest, event) => rest.filter(({ability}) => live(event).some((g) => (ability.rule === "more-tokens" ? true
   : ability.rule === "tokens-each" ? Boolean(kindOf(ability, g.token)) : describes(ability.affects, g.token))));
 /* What one of them makes of the event. */
 function tokenChange(ability, event) {

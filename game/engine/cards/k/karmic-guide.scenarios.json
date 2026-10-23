@@ -16,7 +16,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -370,7 +370,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ],
@@ -394,7 +394,7 @@
         {
           "offers": {
             "kind": "cast",
-            "card": "Murder",
+            "card": "Smoke Murder",
             "seat": 1
           },
           "count": 1,

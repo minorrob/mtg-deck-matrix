@@ -9,17 +9,17 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1562,
-  "provisional": 25,
-  "everyRule": 2833
+  "defined": 1611,
+  "provisional": 22,
+  "everyRule": 2840
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
     "built": 81,
     "partial": 0,
-    "named": 7,
-    "missing": 106
+    "named": 8,
+    "missing": 105
    },
    "entries": [
     {
@@ -723,12 +723,12 @@
      "rule": "702.181",
      "name": "Mobilize",
      "engine": null,
-     "status": "missing",
+     "status": "named",
      "forge": "Mobilize",
      "top": 3,
      "all": 15,
-     "blocks": 3,
-     "alone": 3
+     "blocks": 2,
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -3787,7 +3787,7 @@
      "forge": "ReplaceToken",
      "top": 17,
      "all": 35,
-     "blocks": 4,
+     "blocks": 3,
      "alone": 0
     },
     {
@@ -4135,7 +4135,7 @@
      "forge": "ChooseNumber",
      "top": 5,
      "all": 57,
-     "blocks": 4,
+     "blocks": 3,
      "alone": 1
     },
     {
@@ -7587,7 +7587,7 @@
      "forge": "Activations",
      "top": 1,
      "all": 3,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -8173,7 +8173,7 @@
      "forge": "CreateToken",
      "top": 17,
      "all": 32,
-     "blocks": 4,
+     "blocks": 3,
      "alone": 0
     },
     {
@@ -8925,7 +8925,7 @@
      "forge": "RememberChanged",
      "top": 124,
      "all": 1168,
-     "blocks": 57,
+     "blocks": 54,
      "alone": 4
     },
     {
@@ -8949,7 +8949,7 @@
      "forge": "RememberObjects",
      "top": 123,
      "all": 1460,
-     "blocks": 61,
+     "blocks": 59,
      "alone": 9
     },
     {
@@ -9009,7 +9009,7 @@
      "forge": "MayPlay",
      "top": 99,
      "all": 625,
-     "blocks": 42,
+     "blocks": 41,
      "alone": 1
     },
     {
@@ -9535,7 +9535,7 @@
      "forge": "RememberedSize",
      "top": 8,
      "all": 71,
-     "blocks": 8,
+     "blocks": 7,
      "alone": 5
     },
     {
@@ -9583,7 +9583,7 @@
      "forge": "ChosenNumber",
      "top": 5,
      "all": 77,
-     "blocks": 4,
+     "blocks": 3,
      "alone": 0
     },
     {
@@ -9811,8 +9811,8 @@
      "forge": "ValidStack",
      "top": 2,
      "all": 4,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",

@@ -7,8 +7,8 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,562 defined and playable today; 2,833 with every
-mechanic built, so only their definitions are left to write; 25 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
+**The most-played 80% of Commander cards:** 3,238 cards; 1,611 defined and playable today; 2,840 with every
+mechanic built, so only their definitions are left to write; 22 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
 yet named. **Top** is how many of the most-played cards use it, **All** how many of every card. **Holds back** is how
@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 81 | 0 | 7 | 106 |
+| Keyword abilities (CR 702) | 194 | 81 | 0 | 8 | 105 |
 | Keyword actions (CR 701) | 70 | 22 | 5 | 1 | 42 |
 | Effects | 192 | 79 | 2 | 1 | 110 |
 | Triggers | 138 | 26 | 4 | 1 | 107 |
@@ -36,16 +36,16 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 9 | 61 |
+| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 9 | 59 |
 | count | What entered or died this turn | — | missing | 9 | 9 |
 | effect | ChoosePlayer | — | missing | 6 | 8 |
 | effect | Discover | discover | named | 6 | 6 |
-| count | How many things an effect remembered | — | missing | 5 | 8 |
 | option | Imprint (a card exiled with this) | — | missing | 5 | 7 |
 | count | Times this resolved this turn | — | missing | 5 | 7 |
+| count | How many things an effect remembered | — | missing | 5 | 7 |
 | keyword ability | Cascade | — | missing | 5 | 5 |
 | trigger | AbilityCast | — | missing | 5 | 5 |
-| option | Remembering what an effect moved | — | missing | 4 | 57 |
+| option | Remembering what an effect moved | — | missing | 4 | 54 |
 | count | Your life total | — | missing | 4 | 10 |
 | count | Amount | — | missing | 4 | 8 |
 | option | Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 4 | 7 |
@@ -114,7 +114,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.151 | Reconfigure | — | missing | 3 | 21 | 3 | 1 |
 | 702.92 | Living Weapon | Living Weapon | built | 3 | 19 | 0 | 0 |
 | 702.94 | Miracle | — | missing | 3 | 17 | 3 | 3 |
-| 702.181 | Mobilize | — | missing | 3 | 15 | 3 | 3 |
+| 702.181 | Mobilize | — | named | 3 | 15 | 2 | 2 |
 | 702.89 | Umbra Armor | Umbra Armor | built | 3 | 15 | 0 | 0 |
 | 702.52 | Dredge | Dredge | built | 3 | 14 | 0 | 0 |
 | 702.37 | Morph | Morph | built | 2 | 153 | 0 | 0 |
@@ -377,7 +377,7 @@ The things that alone hold back the most of the most-played cards.
 | SacrificeAll | sacrificeAll | built | 19 | 130 | 0 | 0 |
 | ImmediateTrigger | immediateTrigger | built | 18 | 313 | 0 | 0 |
 | DigUntil | digUntil | built | 18 | 167 | 0 | 0 |
-| ReplaceToken | — | missing | 17 | 35 | 4 | 0 |
+| ReplaceToken | — | missing | 17 | 35 | 3 | 0 |
 | ReplaceCounter | the AddCounter replacement (rules/statics) | partial | 16 | 33 | 0 | 0 |
 | Fight | fight | built | 15 | 148 | 0 | 0 |
 | WinsGame | winGame | built | 15 | 43 | 0 | 0 |
@@ -406,7 +406,7 @@ The things that alone hold back the most of the most-played cards.
 | LosesGame | loseGame | built | 6 | 45 | 0 | 0 |
 | Discover | discover | named | 6 | 35 | 6 | 6 |
 | AlterAttribute | alterAttribute | built | 5 | 115 | 0 | 0 |
-| ChooseNumber | — | missing | 5 | 57 | 4 | 1 |
+| ChooseNumber | — | missing | 5 | 57 | 3 | 1 |
 | Protection | effectUntil | built | 5 | 53 | 0 | 0 |
 | MoveCounter | moveCounters | built | 5 | 32 | 0 | 0 |
 | Fog | — | missing | 4 | 34 | 4 | 3 |
@@ -702,7 +702,7 @@ The things that alone hold back the most of the most-played cards.
 | DisableTriggers | — | missing | 1 | 8 | 1 | 1 |
 | CantDraw | — | missing | 1 | 7 | 0 | 0 |
 | BlockRestrict | — | missing | 1 | 4 | 1 | 0 |
-| Activations | — | missing | 1 | 3 | 1 | 0 |
+| Activations | — | missing | 1 | 3 | 0 | 0 |
 | NumLoyaltyAct | — | missing | 1 | 2 | 0 | 0 |
 | CantExile | — | missing | 1 | 1 | 1 | 0 |
 | CantTarget | — | missing | 0 | 27 | 0 | 0 |
@@ -755,7 +755,7 @@ The things that alone hold back the most of the most-played cards.
 | Moved | replacement | partial | 280 | 955 | 0 | 0 |
 | DamageDone | rules/replacement | partial | 22 | 209 | 0 | 0 |
 | Counter | rules/statics | partial | 21 | 110 | 0 | 0 |
-| CreateToken | — | missing | 17 | 32 | 4 | 0 |
+| CreateToken | — | missing | 17 | 32 | 3 | 0 |
 | AddCounter | rules/statics | partial | 15 | 30 | 0 | 0 |
 | Draw | — | missing | 7 | 37 | 5 | 3 |
 | GainLife | — | missing | 6 | 21 | 5 | 1 |
@@ -826,14 +826,14 @@ The things that alone hold back the most of the most-played cards.
 | You may, decided by a named player | modal (Yes / No) | partial | 176 | 1499 | 0 | 0 |
 | An effect's condition: if a permanent is present | an effect's condition {present ...} | built | 142 | 1292 | 0 | 0 |
 | Fewer targets than the most ("up to", "any number of") | a target's count {min, max} (script/bind.mjs), picked as a pick-several | built | 126 | 1672 | 0 | 0 |
-| Remembering what an effect moved | — | missing | 124 | 1168 | 57 | 4 |
+| Remembering what an effect moved | — | missing | 124 | 1168 | 54 | 4 |
 | More than one target of a kind ("up to N") | a target's count {min, max} (script/bind.mjs); a count that is X is not built | partial | 123 | 1664 | 0 | 0 |
-| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 61 | 9 |
+| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 59 | 9 |
 | An intervening "if" or "activate only if": a permanent present | condition {present: selector} | built | 114 | 1200 | 0 | 0 |
 | How long an effect lasts (until end of turn is built; others not) | — | partial | 111 | 1658 | 0 | 0 |
 | An effect's condition: a comparison | a count compared: an arrival's unless {min, max}; a condition's {atLeast, atMost} | built | 104 | 684 | 0 | 0 |
 | You may (an optional effect, CR 603.5) | modal (Yes / No) | built | 101 | 1094 | 0 | 0 |
-| You may play or cast a card from another zone | — | missing | 99 | 625 | 42 | 1 |
+| You may play or cast a card from another zone | — | missing | 99 | 625 | 41 | 1 |
 | An intervening "if" or "activate only if": a counted value | condition {compare} | built | 79 | 974 | 0 | 0 |
 | An effect's condition: a counted value | condition {compare: {count, atLeast / atMost / moreThan / fewerThan}} | built | 75 | 603 | 0 | 0 |
 | Unless a player pays | unlessPays, by kind | partial | 66 | 677 | 0 | 0 |
@@ -881,11 +881,11 @@ The things that alone hold back the most of the most-played cards.
 | — | That much life ("loses that much life", the life gained) | {lifeGained: true}: the life the trigger is about (batch 68) | built | 11 | 38 | 0 | 0 |
 | — | Your life total | — | missing | 10 | 92 | 10 | 4 |
 | — | Amount | — | missing | 10 | 43 | 8 | 4 |
-| — | How many things an effect remembered | — | missing | 8 | 71 | 8 | 5 |
+| — | How many things an effect remembered | — | missing | 8 | 71 | 7 | 5 |
 | — | Times this resolved this turn | — | missing | 7 | 31 | 7 | 5 |
 | — | The monarch | condition {monarch: "you"} (script/condition.mjs); "while you're the monarch", a damage trigger's monarch: "you" | built | 7 | 15 | 0 | 0 |
 | 700.5 | Devotion to two colors (CR 700.5) | {devotion: [color, color]} | built | 6 | 13 | 0 | 0 |
-| — | A number a player chose | — | missing | 5 | 77 | 4 | 0 |
+| — | A number a player chose | — | missing | 5 | 77 | 3 | 0 |
 | — | Attackers declared | amount {creaturesAttackedWithThisTurn: "you" / "that player"} (rules/combat.mjs keeps them) | built | 5 | 62 | 0 | 0 |
 | — | Cards in exile | — | missing | 5 | 42 | 4 | 3 |
 | — | Your starting life total | — | missing | 5 | 23 | 5 | 0 |
@@ -904,7 +904,7 @@ The things that alone hold back the most of the most-played cards.
 | — | Cards you drew this turn | amount {cardsDrawnThisTurn: "you" / "that player"} (state/index.mjs recordDraw, rules/turn.mjs clears it) | built | 2 | 30 | 0 | 0 |
 | — | This card's mana value | — | missing | 2 | 12 | 2 | 2 |
 | — | MostCardName | — | missing | 2 | 4 | 2 | 2 |
-| — | ValidStack | — | missing | 2 | 4 | 1 | 1 |
+| — | ValidStack | — | missing | 2 | 4 | 0 | 0 |
 | — | wasCastFromExile | — | missing | 2 | 4 | 2 | 0 |
 | — | CastTotalManaSpent | — | missing | 1 | 32 | 1 | 1 |
 | — | Colors of mana spent (converge) | amount {colorsSpent: "self"} (rules/actions.mjs records the mana by kind) | built | 1 | 31 | 0 | 0 |
