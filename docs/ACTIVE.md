@@ -1,5 +1,22 @@
 # Who holds the work
 
+## Card load, 2026-10-23: wave 4d, six sessions (a Claude cloud session, for Rob; `claude/focused-feynman-tt20o3`)
+
+The library load's lanes are merged (#826–#831, #837): of Rob's library, 4 cards are unloaded and 8 are candidates. This
+wave reaches past the library into the most-played Commander cards (`data/engine/top-cards.json`). Its 333 cards are in
+`docs/engine/card-load-2026-10-23/`, dealt into six theme lanes:
+- **To write:** 189, the 185 most-played cards no table plays and no candidate covers (ranks 313 to 1,031), and the
+  library's last 4.
+- **To review and promote:** 144, every candidate among the most-played cards and Rob's 8. Three are in live decks: Absorb
+  (D7), Goblin Sledder (D6) and Blossoming Defense (D3).
+
+`README.md` there has the numbers, `BRIEF.md` the rules and the lane ownership, and `PROMPTS.md` the six prompts.
+- **The lanes:** branches `claude/engine-w4d-<lane>`, each with a draft PR titled `Card load w4d <lane>: …`. A lane does not
+  merge, mark its PR ready, edit this file or Linear.
+- **The integration:** when all six are up, this session merges them as one: it regenerates once, resolves rules two lanes
+  both built, verifies, opens one PR, closes the six as superseded, and records it here and in Linear (ROB-93).
+- **Then:** the engine progress report is brought up to date.
+
 ## Rob's two-card engine load, October 23, 2026 (Codex, `codex/cards-nethroi-boromir`)
 
 Rob requested Nethroi, Apex of Death (D4) and Boromir, Warden of the Tower (D7). After putting the release on hold,
