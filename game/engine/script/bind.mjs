@@ -395,6 +395,8 @@ function objectsOf(value, context) {
   if (value === "enchanted" || value === "equipped") return context.attached !== undefined && context.attached !== null ? [context.attached] : [];
   /* "A copy of it": what an earlier effect of this resolution moved (effects/zones.mjs, `remember`), while it is there. */
   if (value === "remembered") return (context.remembered ?? []).slice();
+  /* "The exiled cards" (Tibalt's Trickery): every card the digUntil before it exiled (`rememberAll`, effects/zones.mjs). */
+  if (value === "the exiled cards") return (context.exiledThisWay ?? []).slice();
   /* "Each creature that convoked this spell" (Lethal Scheme; CR 702.51c): the creatures tapped to pay for it as it was cast
      (rules/actions.mjs) -- each as it was then, one gone since among them, for an effect that reads last known information
      (connive, CR 701.50b). */

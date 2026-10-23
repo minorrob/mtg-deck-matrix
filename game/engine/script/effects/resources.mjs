@@ -447,6 +447,9 @@ export function rollDie(state, params, context, rng = null) {
   if (!(Number.isInteger(params.sides) && params.sides >= 2)) return [];
   const result = rng.int(params.sides) + 1;
   context.rolled = result;
+  /* "Choose 1, 2, or 3 at random" (Tibalt's Trickery; card load w4d L1): `atRandom`, a number chosen at random -- no die is
+     rolled (CR 706.1), so nothing that watches a roll sees it -- read after it as a die's result is ({dieRolled: true}). */
+  if (params.atRandom === true) return [event("GameEventNumberChosen", state, {player: {playerId: context.controller, name: state.players[context.controller]?.name}, of: params.sides, result})];
   return [event("GameEventDieRolled", state, {player: {playerId: context.controller, name: state.players[context.controller]?.name}, sides: params.sides, result})];
 }
 

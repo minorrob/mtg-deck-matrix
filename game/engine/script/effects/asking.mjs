@@ -2233,7 +2233,9 @@ const playable = (state, player, pool, {most, free, anyMana, payMana = false, la
 };
 export const play = {
   open(state, params, context) {
-    const player = context.controller;
+    /* "They may cast that card without paying its mana cost" (Tibalt's Trickery; card load w4d L1): `who`, the player who
+       may -- bound, its controller as the resolution began (script/bind.mjs) -- nobody when there is none. */
+    const player = Array.isArray(params.who) ? params.who[0] : context.controller;
     if (!state.players[player]) return false;
     const most = params.manaValueAtMost === undefined ? Infinity : amountOf(state, params.manaValueAtMost, context);
     const from = params.from ?? "hand";
