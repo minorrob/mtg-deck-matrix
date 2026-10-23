@@ -208,7 +208,8 @@ function checkEffect(effect, path, errors) {
   /* "You may tap another untapped Merfolk you control" (Meanders Guide): a selector of the payer's permanents, the cost's only
      part beside mana or life. */
   if (name === "unlessPays" && effect.tap !== undefined) {
-    checkSelector(effect.tap, `${path}.tap`, errors);
+    /* Or "that card", the permanent the trigger is about (Charismatic Conqueror: "they may tap that permanent"). */
+    if (effect.tap !== "that card") checkSelector(effect.tap, `${path}.tap`, errors);
     if (effect.sacrifice !== undefined || effect.discard !== undefined || effect.returnToHand !== undefined)
       errors.push({path: `${path}.tap`, message: "An \"unless\" cost taps a permanent, returns one, sacrifices one or discards a card: one of them"});
   }

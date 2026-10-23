@@ -140,7 +140,9 @@ export const AMOUNT_KINDS = Object.freeze(["x", "count", "countersOn", "powerOf"
   /* Wave 4c: "equal to the result" of a die rolled (CR 706.2; Ancient Copper Dragon). */
   "dieRolled",
   /* Wave 4d: "distribute two +1/+1 counters among one or two target creatures you control" (The Earth Crystal; CR 601.2d). */
-  "dividedAmong"]);
+  "dividedAmong",
+  /* Wave 4d: "eight or more artifacts with the same name as one another" (Mechanized Production). */
+  "mostSharingName"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "per", "filter", "controlledBy", "named", "another", "signed"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -409,6 +411,13 @@ export function amountOf(state, value, context = {}) {
   /* "This spell costs {X} less to cast, where X is the number of differently named lands you control" (Fungal Colossus;
      CR 201.2): the distinct names among what the selector matches now -- a copy's the name it copied (CR 707.2), and a
      face-down permanent, which has no name (CR 708.2a), none to count. */
+  /* "IF YOU CONTROL EIGHT OR MORE ARTIFACTS WITH THE SAME NAME AS ONE ANOTHER" (Mechanized Production; CR 201.2): of those the
+     selector matches, the most that share one name -- a token copy has its original's (CR 707.2). */
+  else if ("mostSharingName" in value) {
+    const byName = new Map();
+    for (const id of matching(state, value.mostSharingName, who)) { const name = state.objects[id].card; if (typeof name === "string" && name) byName.set(name, (byName.get(name) ?? 0) + 1); }
+    n = Math.max(0, ...byName.values());
+  }
   else if ("differentNames" in value) n = new Set(matching(state, value.differentNames, who).map((id) => state.objects[id].card).filter((name) => typeof name === "string" && name)).size;
   else if ("devotion" in value) n = devotion(state, context.controller, value.devotion);
   else if ("lifeLostThisWay" in value) n = context.lifeLost ?? 0;

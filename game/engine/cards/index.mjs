@@ -1494,7 +1494,8 @@ export function compileScript(script) {
       /* "Choose one that hasn't been chosen" (Gollum, Riddle Master): a triggered ability's one effect, choosing one, its
          modes chosen as it is put on the stack (rules/trigger.mjs) -- not a spell's, an activated ability's, nor a choice
          made as something resolves, which are not built. */
-      if (effect.effect === "modal" && effect.unchosen !== undefined && !(effect.unchosen === true && ability.kind === "triggered" && (ability.effects ?? []).length === 1
+      /* Or "choose one that hasn't been chosen this turn" (Monument to Endurance): `unchosen: "turn"`. */
+      if (effect.effect === "modal" && effect.unchosen !== undefined && !((effect.unchosen === true || effect.unchosen === "turn") && ability.kind === "triggered" && (ability.effects ?? []).length === 1
         && ability.effects[0] === effect && effect.chooser === undefined && (effect.choose ?? 1) === 1 && effect.mayChooseNone === undefined))
         problems.push("modal: \"choose one that hasn't been chosen\" (unchosen: true) is a triggered ability's one effect, choosing one");
       /* "You may play that card" until a time (effects/zones.mjs): this turn, or the end of its controller's next turn. */
@@ -1881,7 +1882,7 @@ export function compileScript(script) {
           ...(lone.chooseUpTo ? {upTo: lone.chooseUpTo} : {}),
           /* "Choose one that hasn't been chosen" (Gollum, Riddle Master): each mode once, for as long as its permanent is
              the object it is (rules/trigger.mjs, modesTaken). */
-          ...(lone.unchosen === true ? {unchosen: true} : {}),
+          ...(lone.unchosen === true || lone.unchosen === "turn" ? {unchosen: lone.unchosen} : {}),
           modes: (lone.modes ?? []).map((m) => ({text: m.text ?? "", targets: m.targets ?? [], effects: m.effects ?? []}))} : null;
       if (modal && (ability.optional || (ability.targets ?? []).length)) problems.push(`${ability.text}: a modal triggered ability names its targets in its modes, and "you may" as mayChooseNone`);
       if (modal && modal.modes.some((m) => m.targets.some((t) => t && typeof t === "object" && t.count !== undefined)))

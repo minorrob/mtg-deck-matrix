@@ -781,7 +781,7 @@ export function collectTriggers(state, events) {
             ...(object.offspring === true ? {offspring: true} : {}),
             /* "Choose one that hasn't been chosen" (Gollum, Riddle Master): the modes its permanent had chosen as it triggered,
                for its modes to be chosen by should the permanent be gone by then (CR 113.7a; modesTaken). */
-            ...(ability.modal?.unchosen ? {modesChosen: [...(object.modesChosen?.[ability.id] ?? [])]} : {}),
+            ...(ability.modal?.unchosen ? {modesChosen: [...modesChosenBy(state, object, ability.id, ability.modal.unchosen)]} : {}),
             /* What it is about ("that player", "that card", "that much"), when the event says. */
             ...(about.card !== undefined || about.player !== undefined || about.amount !== undefined ? {about} : {}),
             /* What it does, from the card script (phase 2.4), carried to the stack with it. */
@@ -1098,7 +1098,13 @@ function modalWaysOf(state, modal, context, taken, n) {
 function modesTaken(state, entry) {
   if (!entry.script?.modal?.unchosen) return [];
   const source = entry.cardId === null ? undefined : state.objects[entry.cardId];
-  return source ? source.modesChosen?.[entry.abilityId] ?? [] : entry.modesChosenWas ?? [];
+  return source ? modesChosenBy(state, source, entry.abilityId, entry.script.modal.unchosen) : entry.modesChosenWas ?? [];
+}
+/* "Choose one that hasn't been chosen THIS TURN" (Monument to Endurance; `unchosen: "turn"`): only the modes chosen in this
+   turn (`modesChosenOn`, the turn they were chosen in) -- in a turn after, none has been. */
+function modesChosenBy(state, object, abilityId, unchosen) {
+  if (unchosen === "turn" && object.modesChosenOn?.[abilityId] !== state.turn) return [];
+  return object.modesChosen?.[abilityId] ?? [];
 }
 
 /** The choice (§12.1): each legal way to aim the trigger, with what it is aimed at. */
@@ -1152,7 +1158,10 @@ export function resolveTriggerTargets(state, awaiting, indices) {
     /* The modes chosen, remembered on the permanent for its next time (modesTaken) -- once chosen, chosen, whatever then
        becomes of this trigger. */
     const source = modal.unchosen && entry.cardId !== null ? state.objects[entry.cardId] : undefined;
-    if (source) source.modesChosen = {...(source.modesChosen ?? {}), [entry.abilityId]: [...(source.modesChosen?.[entry.abilityId] ?? []), ...option.modes]};
+    if (source) {
+      source.modesChosen = {...(source.modesChosen ?? {}), [entry.abilityId]: [...modesChosenBy(state, source, entry.abilityId, modal.unchosen), ...option.modes]};
+      if (modal.unchosen === "turn") source.modesChosenOn = {...(source.modesChosenOn ?? {}), [entry.abilityId]: state.turn};
+    }
     entry.script = {...rest, ...modalScript(modal, option.modes)};
     entry.modes = [...option.modes];
   }
