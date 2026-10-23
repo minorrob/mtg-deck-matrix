@@ -132,9 +132,17 @@ try {
           });
           ok(gap.right <= gap.mat-10,`focus ${width}: preview keeps the play area clear (${JSON.stringify(gap)})`);
           if(width===2240)ok(gap.left>=gap.drawer+10,'focus: a wide gap holds the previews without covering the open drawer');
-          else ok(gap.mat-gap.drawer<gap.width+24&&gap.left<gap.drawer,'focus: only a gap narrower than the preview makes it overlap the drawer');
+          else ok(gap.mat-gap.drawer<gap.width&&gap.left<gap.drawer,'focus: only a gap narrower than the preview makes it overlap the drawer');
           if(process.env.UAT_SHOTS){mkdirSync(process.env.UAT_SHOTS,{recursive:true});await page.screenshot({path:path.join(process.env.UAT_SHOTS,`played-card-gap-${width}.png`)});}
         }
+        let low=1280,high=2240,edge;
+        for(let n=0;n<11;n++){
+          const width=Math.round((low+high)/2);await page.setViewportSize({width,height:900});
+          edge=await page.evaluate(()=>{dispatchEvent(new Event('resize'));const d=document.querySelector('.cm-stage-rail.is-open').getBoundingClientRect(),m=document.querySelector('.cm-board-stage .cm-board-mat').getBoundingClientRect(),p=document.querySelector('.cm-play-pop').getBoundingClientRect();return {space:m.left-d.right-p.width,left:p.left,drawer:d.right};});
+          if(edge.space>=4&&edge.space<=12)break;
+          if(edge.space<4)low=width+1;else high=width-1;
+        }
+        ok(edge.space>=0&&edge.space<24&&edge.left>=edge.drawer,'focus: a card that fits without the preferred margin still clears the drawer');
         await page.locator('[data-action=board-stage-rail]').evaluate(el=>el.click());
         const collapsed=await page.evaluate(()=>{const p=document.querySelector('.cm-play-pop').getBoundingClientRect(),m=document.querySelector('.cm-board-stage .cm-board-mat').getBoundingClientRect();return p.left>=8&&p.right<m.left;});
         ok(collapsed,'focus: collapsing the drawer recomputes the preview position');
