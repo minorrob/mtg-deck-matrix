@@ -1,0 +1,69 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hedge Shredder",
+    "oracleId": "f22665cd-4710-48df-83c1-3c9081097cb5",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Vehicle"
+    ],
+    "manaCost": "{2}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Whenever this Vehicle attacks, you may mill two cards.\nWhenever one or more land cards are put into your graveyard from your library, put them onto the battlefield tapped.\nCrew 1 (Tap any number of creatures you control with total power 1 or more: This Vehicle becomes an artifact creature until end of turn.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever this Vehicle attacks, you may mill two cards.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "mill",
+          "count": 2
+        }
+      ],
+      "optional": true
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever one or more land cards are put into your graveyard from your library, put them onto the battlefield tapped.",
+      "trigger": {
+        "on": "put into graveyard",
+        "batch": true,
+        "from": "library",
+        "filter": {
+          "types": [
+            "Land"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "those cards",
+          "to": "battlefield",
+          "tapped": true
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Crew 1",
+      "keyword": "crew",
+      "amount": 1
+    }
+  ]
+}

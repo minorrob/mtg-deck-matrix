@@ -36,7 +36,7 @@ import {typesOf, characteristicsOf, everyCreatureTypeOf, controllerOf, lastKnown
 import {isLandType} from "../../keywords/types.mjs";
 import {pushCopy, becameTarget, specsOf} from "../../rules/stack.mjs";
 import {loseLife, gainLife, DAMAGING, damageQuestion, addMana} from "./resources.mjs";
-import {damageOrderChoice} from "../../rules/replacement.mjs";
+import {damageOrderChoice, graveyardBound, placeReplacedCounters} from "../../rules/replacement.mjs";
 import {targetCandidates, targetName} from "../bind.mjs";
 import {commanderTax} from "../../rules/commander.mjs";
 import {cantBeCountered, counterOrderChoice, cantBeSacrificed, tokenOrderChoice, drawForbidden} from "../../rules/statics.mjs";
@@ -523,13 +523,16 @@ const countsFor = (state, params, players, context) => (params.perPlayer === tru
 function discardOne(state, id, player, events) {
   const card = cardRef(state, id);
   const owner = state.objects[id].owner;
-  const discarded = moveObject(state, id, "graveyard", owner);
+  /* Still a discard where a replacement sends it instead (CR 701.9a, 614.1a; Dauthi Voidwalker). */
+  const bound = graveyardBound(state, id);
+  const discarded = moveObject(state, id, bound.to, ["graveyard", "library", "hand"].includes(bound.to) ? owner : null);
+  placeReplacedCounters(state, discarded, bound);
   recordDiscard(state, player);
   events.push(event("GameEventCardChangeZone", state, {
     card,
     becomes: discarded,
     from: {zoneType: "Hand", player: {playerId: player}},
-    to: {zoneType: "Graveyard", player: {playerId: owner}},
+    to: {zoneType: bound.to[0].toUpperCase() + bound.to.slice(1), player: {playerId: owner}},
     discarded: true,
   }));
   return discarded;

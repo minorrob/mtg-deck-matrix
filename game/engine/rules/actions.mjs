@@ -748,7 +748,10 @@ function additionalChoices(state, player, spellId, costs) {
     let options = [];
     /* "Discard two cards" (Cathartic Reunion): each set of that many cards in the hand, never the spell itself, one offer
        each (discardSets, as an ability's "discard two cards" is); a card alone for one, as it always was. Too few, and none. */
-    if (atom.atom === "discard") options = discardSets(cardsIn(state, "hand", player).filter((id) => id !== spellId), atom.count ?? 1).map((d) => ({discard: d}));
+    /* "By discarding a land card in addition to paying its other costs" (retrace, CR 702.81a; Six): a card the selector
+       describes. */
+    if (atom.atom === "discard") options = discardSets(cardsIn(state, "hand", player).filter((id) => id !== spellId
+      && (!atom.selector || compileSelector({...atom.selector, what: "card", zone: "hand"})(state, id, {controller: player, source: spellId}))), atom.count ?? 1).map((d) => ({discard: d}));
     /* "Exile a blue card from your hand" (Force of Will): a card the selector describes, never the spell itself. */
     if (atom.atom === "exileFromHand") {
       const matches = compileSelector({...(atom.selector ?? {}), what: "card", zone: "hand", controller: "you"});

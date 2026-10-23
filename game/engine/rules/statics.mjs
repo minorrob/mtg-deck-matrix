@@ -61,6 +61,9 @@ export const STATIC_RULES = Object.freeze({
   "negative-power-as-positive": "rules/combat.mjs",
   /** CR 402.2's exception: "You have no maximum hand size" (Reliquary Tower, Thought Vessel). turn.mjs, at cleanup. */
   "no-maximum-hand-size": "rules/turn.mjs",
+  /** CR 614.10, 614.1b: "Skip your draw step" (Necropotence): `affects` the players whose draw steps don't happen. turn.mjs,
+      CONDITIONS.drawStep. */
+  "skip-draw-step": "rules/turn.mjs",
   /** CR 500.4 replaced (CR 614.1a, 106.4): "If you would lose unspent mana, that mana becomes colorless instead" (Omnath, Locus
       of the Void): `affects` the players whose pools it keeps (a player selector, "you" its controller). turn.mjs, as each
       step and phase ends (emptyManaPools). */

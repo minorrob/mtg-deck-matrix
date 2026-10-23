@@ -127,6 +127,8 @@ export const TRIGGER_EVENTS = Object.freeze([
   "transformed",
   /* "When this Class becomes level 2" (CR 716.2a; Caretaker's Talent, Wizard Class; wave 4c). */
   "becomes level",
+  /* "Whenever a permanent becomes untapped" (CR 701.26b; Mesmeric Orb; card load w4d, L2). */
+  "becomes untapped",
 ]);
 
 /** The cost atoms of §12.2. The two symbolic ones are named; the rest are structural. */

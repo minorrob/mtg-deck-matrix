@@ -1,0 +1,127 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Midnight Clock",
+    "oracleId": "c68faebc-b2cd-461b-b93e-e1fcd4816810",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {U}.\n{2}{U}: Put an hour counter on this artifact.\nAt the beginning of each upkeep, put an hour counter on this artifact.\nWhen the twelfth hour counter is put on this artifact, shuffle your hand and graveyard into your library, then draw seven cards. Exile this artifact.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {U}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "U": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{2}{U}: Put an hour counter on this artifact.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{U}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "hour",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of each upkeep, put an hour counter on this artifact.",
+      "trigger": {
+        "on": "upkeep",
+        "yours": false
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "hour",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "When the twelfth hour counter is put on this artifact, shuffle your hand and graveyard into your library, then draw seven cards. Exile this artifact.",
+      "trigger": {
+        "on": "counter added",
+        "counter": "hour",
+        "each": true
+      },
+      "effects": [
+        {
+          "effect": "moveZoneAll",
+          "selector": {
+            "what": "card",
+            "zone": "hand",
+            "controller": "you"
+          },
+          "to": "library"
+        },
+        {
+          "effect": "moveZoneAll",
+          "selector": {
+            "what": "card",
+            "zone": "graveyard",
+            "controller": "you"
+          },
+          "to": "library"
+        },
+        {
+          "effect": "shuffle"
+        },
+        {
+          "effect": "draw",
+          "count": 7
+        },
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "to": "exile"
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "countersOn": "self",
+            "counter": "hour"
+          },
+          "atLeast": 12,
+          "atMost": 12
+        }
+      }
+    }
+  ]
+}

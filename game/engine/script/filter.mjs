@@ -49,6 +49,8 @@ export const SELECTOR_KEYS = Object.freeze([
   "attachedBy", "colors", "tapped", "counters", "power", "self", "keywords", "nonSupertypes", "colorless", "attacking", "toughness", "countersAtLeast", "attackedThisTurn", "commander", "nonColors", "owner", "enteredThisTurn", "toughnessOverPower",
   "unblocked", "singleTarget", "goaded", "uniqueName", "sharesCreatureType", "multicolored", "sharesColor",
   "sharesCreatureTypeWithCommander",
+  /* "An opponent has 10 or less life" (Bloodghast): a player's life total, at most. */
+  "lifeAtMost", "lostThisTurnAtLeast",
   /* "A card exiled with this artifact" (CR 607.2a, 406.6): what this source's linked ability exiled, still in exile. */
   "exiledWith", "exiledThisTurn", "unequalPowerToughness",
   /* "Target creature that was dealt damage this turn" (Mirrodin Avenged; CR 120.3). */
@@ -324,6 +326,10 @@ export function compileSelector(selector) {
       /* "You ... gain hexproof from blue and from black" (Veil of Summer; CR 702.11d): no target of an opponent's spell or
          ability from a source of that color (rules/protection.mjs). */
       if (selector.target === true && playerHexproofFrom(state, id, chooser, context.source ?? null)) return false;
+      /* "As long as an opponent has 10 or less life" (Bloodghast; CR 119.1): its life total now. */
+      if (selector.lifeAtMost !== undefined && !(player.life <= selector.lifeAtMost)) return false;
+      /* "If an opponent lost 2 or more life this turn" (Bloodchief Ascension; CR 119.3): the life they lost this turn. */
+      if (selector.lostThisTurnAtLeast !== undefined && !((player.lostThisTurn ?? 0) >= selector.lostThisTurnAtLeast)) return false;
       const who = selector.who ?? "any";
       if (who === "you") return id === chooser;
       if (who === "opponent") return id !== chooser;
@@ -416,9 +422,11 @@ export function compileSelector(selector) {
        existed (`lastKnown`, which the stack keeps for it: CR 113.7a, 608.2h) -- Reckless Bushwhacker's "other creatures you
        control", the Bushwhacker shocked in response: every creature its controller still controls. */
     if (selector.another === true) {
-      const self = context.source ?? context.lastKnown?.cardId ?? null;
+      const self = context.source ?? context.lastKnown?.cardId ?? context.became ?? null;
       if (self === null) throw new Error("A selector using `another` needs the source it is another than (CR 109.5)");
-      if (id === self) return false;
+      /* And never the card its source became as it left: "when this creature dies, return ANOTHER target artifact card from
+         your graveyard" (Myr Retriever's ruling: it can't return itself), `became` (rules/trigger.mjs, targeting). */
+      if (id === self || (context.became !== undefined && id === context.became)) return false;
     }
 
     if (selector.manaValue && !matchesManaValue(state, id, selector.manaValue, context)) return false;

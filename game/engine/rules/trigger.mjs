@@ -367,7 +367,8 @@ function subjects(state, event, condition, sourceId, controller) {
     const card = fields.becomes;
     /* "When you discard this card": this card, and no other. */
     if (condition.who === "self" && card !== sourceId) return [];
-    if (condition.filter && !(card !== undefined && state.objects[card] && matchesSelector({...condition.filter, what: "card", zone: "graveyard"}, state, card, {controller, source: sourceId}))) return [];
+    /* Read where the card went: a graveyard, or exile instead (CR 701.9a: still a discard; Dauthi Voidwalker). */
+    if (condition.filter && !(card !== undefined && state.objects[card] && matchesSelector({...condition.filter, what: "card", zone: state.objects[card].zone}, state, card, {controller, source: sourceId}))) return [];
     return [{card, player: discarder}];
   }
   /* Ward (CR 702.21a): this permanent became the target of a spell or ability an opponent controls -- about that player
@@ -376,7 +377,9 @@ function subjects(state, event, condition, sourceId, controller) {
      emit as an attacker, a {T} cost, a creature tapped to pay or crew, and an effect turn a permanent sideways. */
   if (condition.on === "GameEventCardTapped") {
     const id = fields.card?.cardId;
-    return fields.tapped === true && fits(state, id, condition, sourceId, controller) ? [{card: id}] : [];
+    /* "Whenever a permanent becomes untapped" (Mesmeric Orb; CR 701.26b): `untapped`, the untap events -- the untap step, an
+       untap effect, a {Q} or untap cost (effects/resources.mjs untapOne, rules/actions.mjs). */
+    return fields.tapped === (condition.untapped !== true) && fits(state, id, condition, sourceId, controller) ? [{card: id}] : [];
   }
   if (condition.on === "GameEventBecomesTarget") {
     /* "Whenever this creature becomes the target", and (batch 76) "whenever a Dragon you control becomes the target"
@@ -417,7 +420,10 @@ function subjects(state, event, condition, sourceId, controller) {
      about the player who controls it too: "whenever a creature an opponent controls enters, you may have that player lose
      1 life" (Suture Priest). */
   if (event.kind === "GameEventCardChangeZone" && fields.becomes !== undefined) {
-    const player = fields.to?.zoneType === "Battlefield" ? state.objects[fields.becomes]?.controller : undefined;
+    /* Into a graveyard, the player whose graveyard it is -- its owner's (CR 400.3): "whenever a card is put into an opponent's
+       graveyard from anywhere, ... you may have that player lose 2 life" (Bloodchief Ascension). */
+    const player = fields.to?.zoneType === "Battlefield" ? state.objects[fields.becomes]?.controller
+      : fields.to?.zoneType === "Graveyard" ? state.objects[fields.becomes]?.owner : undefined;
     /* And where it came from, if from a library (Fblthp, the Lost: "if it entered from your library or was cast from your
        library"), kept with the trigger for when the permanent is gone before it resolves (CR 608.2h; script/condition.mjs). */
     const came = fields.to?.zoneType === "Battlefield" ? state.objects[fields.becomes]?.cameFrom : undefined;
@@ -983,7 +989,10 @@ function targeting(state, stackId) {
   /* And its X, for a target "with mana value X" (Halo Forager's reflexive trigger). */
   /* And the mana spent to cast its source, as it triggered: converge's "with mana value less than or equal to the number of
      colors of mana spent to cast this creature" (Sundering Archaic; script/amount.mjs, colorsSpent), its source gone. */
-  return {entry, context: {controller: entry.playerId, source, ...(entry.about ? {about: entry.about} : {}), ...(Number.isInteger(entry.x) ? {x: entry.x} : {}),
+  /* A permanent's own "when this dies" with its source gone (CR 603.10a): the card it became, which "another target ... card
+     from your graveyard" is never (Myr Retriever; script/filter.mjs). */
+  const became = source === null && entry.lastKnown && entry.about?.card !== undefined ? {became: entry.about.card} : {};
+  return {entry, context: {controller: entry.playerId, source, ...became, ...(entry.about ? {about: entry.about} : {}), ...(Number.isInteger(entry.x) ? {x: entry.x} : {}),
     ...(entry.spent ? {spent: entry.spent} : {}), chosenTargets: entry.targets ?? []}};
 }
 
