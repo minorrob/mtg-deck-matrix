@@ -57,7 +57,7 @@
   }
   function load() {
     if (!library) library=script('vendor/babylon.js?v=9.30.0',()=>root.BABYLON)
-      .then(()=>script('crankmagic-stage-tables.js?v=1',()=>root.CrankTables)).catch(error=>{library=null;throw error;});
+      .then(()=>script('crankmagic-stage-tables.js?v=2',()=>root.CrankTables)).catch(error=>{library=null;throw error;});
     return library;
   }
   function environment(s) {

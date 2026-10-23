@@ -32,6 +32,10 @@ Confirmed during this integration:
 
 The pre-push scan and remote CI status belong to the final Git/PR record. Screenshots from the integration fixture live in the local `design-review-2026-10-22/integration` review folder; they are explicitly recorded-game images. Oak/obsidian and phone lounge screenshots were inspected. This is not a live staging or production release. Physical phone input/GPU performance, broad card-angle/pickup behavior and complete multiplayer end-to-end acceptance remain unproven by this slice.
 
+The first GitHub run on `a3daaa32` passed 596 suites and failed only `tests/asset-versions.mjs`: five local files had CRLF bytes when their hashes were recorded, while Git's canonical files had LF bytes. The follow-up normalizes those working files to LF, advances their pins with the repository helper, and regenerates the manifest. Validation must compare the manifest against Git's committed blobs as well as the working files so Windows checkout bytes cannot hide this mismatch again.
+
+Cloudflare's separate checks failed before deployment: their feature-branch triggers ran `npx wrangler preview` without generating a release or its Wrangler configuration. On October 23 Rob chose to disable those failing triggers and preserve the release workflow. Both identified triggers were removed, and a fresh Cloudflare read confirmed no remaining triggers for either Worker. No deployed Worker or release artifact was changed; the failed check entries remain historical results.
+
 ## Preserved work
 
 The original dirty priority-card checkout was preserved, including untracked files, in the named Git stash `codex-preserve-priority-cards-before-play-engine-oct22` on `codex/play-priority-cards`. It has not been applied over newer main or deleted. The new branch contains only this integration and its plan/tests.
