@@ -40,7 +40,7 @@
 
 import {conditionHolds} from "../script/condition.mjs";
 import {isCounted, amountOf} from "../script/amount.mjs";
-import {chosenFor} from "../script/chosen.mjs";
+import {chosenFor, CHOSEN_COLOR_LETTER} from "../script/chosen.mjs";
 import {hasSubtype, everyCreatureType, isLandType, isCreatureType, isPlaneswalkerType, isEnchantmentType, BASIC_LAND_MANA} from "../keywords/types.mjs";
 
 /** The seven layers of CR 613.1, in order. */
@@ -142,7 +142,9 @@ function affects(state, effect, current, sourceController) {
   if (rule.attachedBy === "self" && state.objects[effect.sourceId]?.attachedTo !== current.id) return false;
   /* "As long as enchanted creature is white" (Steel of the Godhead): its colors as they now are -- layer 5 is done by the
      time layers 6 and 7 ask. */
-  if (rule.colors && !rule.colors.every((color) => (current.colors ?? []).includes(color))) return false;
+  /* "Creatures you control of the chosen color get +1/+0" (Heraldic Banner): the color its permanent chose as it entered, by
+     name ("$chosen", script/chosen.mjs), read as its mana symbol (CR 105.1); none chosen yet, it matches nothing. */
+  if (rule.colors && !rule.colors.every((color) => (current.colors ?? []).includes(CHOSEN_COLOR_LETTER[color] ?? color))) return false;
   /* "Colorless creatures you control get +2/+2" (Forsaken Monument): no color, as layer 5 left it. */
   if (rule.colorless === true && (current.colors ?? []).length > 0) return false;
   /* "As long as this creature has four or more +1/+1 counters on it" (Voice of the Blessed): counters as they are now. */

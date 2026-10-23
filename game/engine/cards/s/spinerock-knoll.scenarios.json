@@ -1,0 +1,502 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Spinerock Knoll",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Giant": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{5}",
+      "colors": [
+        "R"
+      ],
+      "power": 6,
+      "toughness": 6
+    },
+    "Brute": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{4}",
+      "colors": [
+        "R"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Goblin": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters tapped; hideaway 4 exiles the Ogre face down",
+      "library": [
+        "Bear",
+        "Ogre",
+        "Bear",
+        "Bear",
+        "Goblin"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Spinerock Knoll"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Spinerock Knoll"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Spinerock Knoll"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Bear",
+                  "Ogre",
+                  "Bear",
+                  "Bear"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Ogre"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "exile",
+          "faceDown": [
+            "Ogre"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6 combat damage and 1 noncombat to Maya make 7: the Ogre, free",
+      "library": [
+        "Ogre",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Spinerock Knoll"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Giant",
+            "Mountain",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Shivan Gorge"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Spinerock Knoll"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Ogre"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Giant"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Shivan Gorge"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 33
+            }
+          ]
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "activate": "Spinerock Knoll"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Ogre"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Giant",
+            "Mountain",
+            "Mountain",
+            "Ogre",
+            "Shivan Gorge",
+            "Spinerock Knoll",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Only 6: the Ogre stays hidden",
+      "library": [
+        "Ogre",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Spinerock Knoll"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Giant",
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Spinerock Knoll"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Ogre"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Giant"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "activate": "Spinerock Knoll"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "exile",
+          "faceDown": [
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 1,
+          "life": 34
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "5 combat damage to one opponent and 1 to each from the Gorge: 6 and 1 is 7 to neither",
+      "seats": 3,
+      "library": [
+        "Wastes",
+        "Ogre",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Spinerock Knoll"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Brute",
+            "Mountain",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Shivan Gorge"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Spinerock Knoll"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Ogre"
+          ]
+        },
+        {
+          "to": {
+            "turn": 4,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Brute"
+          ],
+          "at": "Maya"
+        },
+        {
+          "to": {
+            "turn": 4,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Shivan Gorge"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "activate": "Spinerock Knoll"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "exile",
+          "faceDown": [
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 1,
+          "life": 34
+        },
+        {
+          "seat": 2,
+          "life": 39
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

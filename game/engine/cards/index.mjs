@@ -473,7 +473,15 @@ function manaAbility(ability, id) {
     || (a?.atom === "tapCreature" && (a.count ?? 1) === 1 && Boolean(a.selector) && typeof a.selector === "object")
     /* "{T}, Exile a card from your graveyard: Add {R}" (Rubble Rouser): one card of its controller's graveyard the selector
        describes (rules/actions.mjs, graveyardChoices). */
-    || (a?.atom === "exileFromGraveyard" && a.self !== true && (a.count ?? 1) === 1 && Boolean(a.selector) && typeof a.selector === "object"))) return "unbuilt";
+    || (a?.atom === "exileFromGraveyard" && a.self !== true && (a.count ?? 1) === 1 && Boolean(a.selector) && typeof a.selector === "object")
+    /* "{R}, {T}, Exert this land: Add {R}{R}" (Arena of Glory; CR 701.43a): it won't untap during its exerting player's next
+       untap step (rules/turn.mjs). */
+    || (a?.atom === "exert" && a.self === true)
+    /* "Exile this card from your hand: Add {R}" (Simian Spirit Guide; CR 605.1a, 602.2): the card itself, from its owner's hand,
+       the ability's own zone. */
+    || (a?.atom === "exile" && a.self === true && ability.zone === "hand"))) return "unbuilt";
+  /* A mana ability from the hand is one whose cost exiles the card from there (CR 113.6b); from anywhere else, not built. */
+  if (ability.zone !== undefined && !(ability.zone === "hand" && cost.some((a) => a?.atom === "exile" && a.self === true))) return "unbuilt";
   /* "Put a -0/-1 counter on this creature: Add {G}" (Wall of Roots), "Remove five +1/+1 counters from Ramos: Add ...". */
   const counterCost = cost.filter((a) => ["addCounters", "removeCounters"].includes(a.atom)).map((a) => ({counter: a.counter, count: a.count ?? 1, put: a.atom === "addCounters"}));
   if (then.some((e) => !isBuilt(e?.effect) || NEEDS_A_DECISION.includes(e?.effect))) return "unbuilt";
@@ -512,6 +520,9 @@ function manaAbility(ability, id) {
   return {id, kind: "mana", tapSelf: cost.some((a) => a.atom === "{T}"), ...adds, ...(instead ? {instead} : {}), text: ability.text,
     ...(mana ? {cost: mana.cost} : {}), ...(life ? {payLife: life} : {}), ...(then.length ? {then} : {}),
     ...(cost.some((a) => a.atom === "sacrifice" && a.self === true) ? {sacrificeSelf: true} : {}),
+    /* Exert this permanent (Arena of Glory; CR 701.43a), exile this card from the hand (Simian Spirit Guide). */
+    ...(cost.some((a) => a.atom === "exert" && a.self === true) ? {exertSelf: true} : {}),
+    ...(ability.zone === "hand" ? {zone: "hand", exileSelf: true} : {}),
     /* "Mill a card" as part of the cost (Millikin): how many. */
     ...(cost.some((a) => a.atom === "mill") ? {millCost: cost.filter((a) => a.atom === "mill").reduce((n, a) => n + (a.count ?? 1), 0)} : {}),
     /* "Tap an untapped creature you control" (Jaspera Sentinel): which creature is the player's choice, one offer each. */
@@ -535,11 +546,14 @@ function manaAbility(ability, id) {
 function whenSpentProblems(effect) {
   const when = effect.whenSpent;
   if (when === undefined) return [];
-  if (!when || typeof when !== "object" || !when.spell || !Array.isArray(when.effects) || !when.effects.length || typeof when.text !== "string")
-    return ["addMana: what its mana does when spent is {spell, effects, text}"];
+  /* Or what the spell gains, not a trigger: "If any of that mana is spent on a creature spell, it gains haste until end of
+     turn" (Arena of Glory) -- keywords the permanent it becomes has until end of turn (`gains`, rules/actions.mjs). */
+  const gains = Array.isArray(when?.gains) && when.gains.length > 0 && when.gains.every((k) => typeof k === "string" && KEYWORDS_WITH_BEHAVIOR.has(k)) && when.effects === undefined;
+  if (!when || typeof when !== "object" || !when.spell || (!gains && (!Array.isArray(when.effects) || !when.effects.length)) || typeof when.text !== "string")
+    return ["addMana: what its mana does when spent is {spell, effects, text}, or {spell, gains, text}"];
   const problems = [];
   try { compileSelector({...when.spell, what: "card"}); } catch (error) { problems.push(`addMana: the spells its mana triggers for: ${error.message}`); }
-  for (const inner of effectsIn(when.effects)) if (!isBuilt(inner.effect)) problems.push(`${inner.effect}: declared, not built`);
+  for (const inner of effectsIn(when.effects ?? [])) if (!isBuilt(inner.effect)) problems.push(`${inner.effect}: declared, not built`);
   if (effect.spendOnly !== undefined) problems.push("addMana: mana that is restricted and does something when spent is not built");
   return problems;
 }

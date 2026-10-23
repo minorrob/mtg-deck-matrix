@@ -210,6 +210,9 @@ export function dealDamage(state, params, context) {
          opponent has been dealt noncombat damage this turn" (Grim Repriser; script/amount.mjs, playersDealtNoncombatDamage).
          rules/turn.mjs clears it as a turn begins. */
       state.players[toPlayer].noncombatDamagedThisTurn = true;
+      /* And how much, combat damage counted beside it (rules/combat.mjs): "if an opponent was dealt 7 or more damage this turn"
+         (Spinerock Knoll; script/amount.mjs, damageTakenThisTurn). */
+      state.players[toPlayer].damagedThisTurn = (state.players[toPlayer].damagedThisTurn ?? 0) + proposal.amount;
       if (infect) events.push(...givePoison(state, toPlayer, proposal.amount, putter));
       else changeLife(state, toPlayer, -proposal.amount, events);
       events.push(event("GameEventPlayerDamaged", state, {
