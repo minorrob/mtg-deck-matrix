@@ -990,7 +990,7 @@ globalThis.CrankBoard = Object.seal({
     const opts = {tilt: camera.tilt, zoom: camera.zoom, rotation: camera.rotation, cards: camera.cards, reduced: globalThis.CrankMotion?.reduced() ?? false,
       background: table?.appearance?.background || appearance.background, table: tableDesignId(table?.appearance?.table || appearance.table),
       mats: [big, ...players().filter((p) => p.playerId !== big.playerId)].map((p) => matOf(p.playerId)),
-      combat: view.state.phase.startsWith("COMBAT_"), instant: view.state.stack.some((s) => /Instant/i.test(typeLineOf(s))),
+      combat: view.state.phase?.startsWith("COMBAT_") ?? false, instant: view.state.stack.some((s) => /Instant/i.test(typeLineOf(s))),
       onReady() {stageError = ""; const el = document.querySelector(".cm-stage-error"); if (el) el.textContent = "";},
       onError(message) {stageError = message; const el = document.querySelector(".cm-stage-error"); if (el) el.textContent = `${message} Use Focus view in Camera if graphics are unavailable.`;}};
     CrankStage.mount(region, opts); CrankStage.layout(region.getBoundingClientRect(), opts);
