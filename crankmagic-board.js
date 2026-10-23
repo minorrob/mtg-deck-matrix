@@ -119,9 +119,11 @@ globalThis.CrankBoard = Object.seal({
   const LOGO = "assets/crankmagic/crankmagic-logo-wand-v3-256.webp";
   const RETRY_MAX = 10000;
   /* The three views, and the one this person last chose, remembered on this device. */
-  const VIEWS = [["table", "⊞", "Table"], ["focus", "◧", "Focus"], ["full", "⛶", "Full screen"]];
+  const VIEWS = [["table", "⊞", "Table"], ["focus", "◧", "Focus"], ["full", "⛶", "3D"]];
   const VIEW_KEY = "cm-board-view";
-  let mode = (() => {try {const v = localStorage.getItem(VIEW_KEY); return VIEWS.some(([k]) => k === v) ? v : "focus";} catch {return "focus";}})();
+  let mode = (() => {try {const v = localStorage.getItem(VIEW_KEY); return VIEWS.some(([k]) => k === v) ? v : "full";} catch {return "full";}})();
+  let inspection = null, inspectionFrom = null, actionsShut = false;
+  let actionCard = null, draftRevision = null;
   let stackSelected = null;
   let selected = null, hover = null;   /* Full screen: the card shown large in the side column (picked, and under the pointer) */
   let showing = null, held = null;     /* Show hand: null, "fan" or "held"; the card held up */
@@ -172,7 +174,7 @@ globalThis.CrankBoard = Object.seal({
   /* FOCUS AND FULL SCREEN'S DIVIDERS (items 15 and 18), remembered on the device like the rest: the seat pane's width,
      past which each tile is a miniature of that seat's board; and the share of the Panel, and of Full screen's side
      column, given to the card above its divider. */
-  const PANE_KEY = "cm-board-pane", PANE = [140, 560], MINI_AT = 300;
+  const PANE_KEY = "cm-board-pane", PANE = [260, 560], MINI_AT = 400;
   /* THE RIGHT PANE, DOCKED (Rob's note 10, 2026-10-11: "it should sit beside it like the left one, its width dragged
      within the same bounds"): beside the mat in Focus and the Table view, never over them, its width remembered on the
      device; its tabs are Turn Resources (note 9), Panel (the card to read, the stack, the history) and History. */
@@ -180,22 +182,22 @@ globalThis.CrankBoard = Object.seal({
   const panelWidth = () => {const raw = stored(PANELW_KEY), v = Number(raw); return raw !== null && v >= PANELW[0] && v <= PANELW[1] ? v : 340;};
   let panelTab = "panel";
   const SPLIT_KEY = {panel: "cm-board-split:panel", side: "cm-board-split:side"}, SPLIT = [0.2, 0.8], SPLIT_AT = {panel: 0.45, side: 0.4};
-  const paneWidth = () => {const raw = stored(PANE_KEY), v = Number(raw); return raw !== null && v >= PANE[0] && v <= PANE[1] ? v : 168;};
+  const paneWidth = () => {const raw = stored(PANE_KEY), v = Number(raw); return raw !== null && v >= PANE[0] && v <= PANE[1] ? v : 330;};
   const splitOf = (k) => {const raw = stored(SPLIT_KEY[k]), v = Number(raw); return raw !== null && v >= SPLIT[0] && v <= SPLIT[1] ? v : SPLIT_AT[k];};
-  let stageSide = false, stageRail = false, cameraOpen = false, stageError = "";
+  let stageSide = false, stageRail = true, cameraOpen = false, stageError = "";
   let paneEditing = false, paneSaving = false, profileOpen = false;
   const PANE_MODULES = [["history", "History"], ["coach", "AI Coach"], ["counter", "Counter-Intel"], ["resources", "Resources"], ["stack", "On the Stack"], ["inspect", "Card Preview"], ["table", "Table Vitals"], ["recommended", "Recommended Actions"], ["chat", "Chat"], ["actions", "Actions"]];
   const DEFAULT_MODULES = ["table", "inspect", "stack", "history", "counter"];
   // Preferences travel in the existing account library. Never apply a previous account's layout.
   function paneLayout() {
-    const saved = C.state.preferences?.play?.sidePane, fallback = {left:[], right:[...DEFAULT_MODULES]};
+    const saved = C.state.preferences?.play?.sidePane, fallback = {left:["actions"], right:[...DEFAULT_MODULES]};
     if (saved?.owner !== (C.signedInAs?.() || null)) return fallback;
     const raw = saved.version === 1 ? {left:[],right:saved.modules} : saved.version === 2 ? saved : fallback;
-    const seen = new Set(), clean = ids => (Array.isArray(ids) ? ids : []).filter(id => {
+    const seen = new Set(["actions"]), clean = ids => (Array.isArray(ids) ? ids : []).filter(id => {
       if (seen.has(id) || !PANE_MODULES.some(([key]) => key === id)) return false;
       seen.add(id); return true;
     });
-    return {left:clean(raw.left), right:clean(raw.right)};
+    return {left:["actions", ...clean(raw.left)], right:clean(raw.right)};
   }
   const paneModules = (side="right") => paneLayout()[side];
   async function savePaneModules(modules, side="right") {
@@ -291,6 +293,9 @@ globalThis.CrankBoard = Object.seal({
     if (!force && view && next.revision < view.revision) return;
     const before = view && view.decision && view.decision.id, was = view, priorBlocks = blockContext();
     view = next;
+    if (was?.revision !== next.revision || was?.matchId !== next.matchId || was?.seat !== next.seat) {picked = []; amounts = []; draftRevision = null; actionCard = null;}
+    if (inspection?.automatic && was?.revision !== next.revision) inspection = null;
+    if (inspection && (was?.matchId !== next.matchId || was?.seat !== next.seat)) inspection = null;
     yieldReady = true;
     if (yieldPending && (next.matchId !== yieldPending.matchId || next.state.turn !== yieldPending.turn ||
         next.status === "finished" || (next.yielding === true) === yieldPending.on)) yieldPending = null;
@@ -309,8 +314,10 @@ globalThis.CrankBoard = Object.seal({
     if (focus === null) focus = view.seat;
     /* On a phone the board you are looking at is the only one on screen: when you are asked, it is yours. */
     if (phone() && view.decision && view.decision.id !== before) focus = view.seat;
-    if ((view.decision && view.decision.id) !== before) {picked = []; amounts = []; sending = false; alsoOpen = false; if(view.decision) openModuleDrawer("actions");}
+    if ((view.decision && view.decision.id) !== before) {picked = []; amounts = []; sending = false; alsoOpen = false; if(view.decision && view.decision.kind !== "priority") {actionsShut = false; openModuleDrawer("actions");}}
     if (priorBlocks !== blockContext()) {blockEpoch++; picked = []; blockSelected = null; blockResult = null; blockListOpen = false;}
+    const source = /^choose-(?:cost|targets?):(\d+)/.exec(view.decision?.id || "");
+    if (!phone() && source && findCard(Number(source[1]))?.name && view.decision?.id !== before) inspection = {id:source[1],kind:"card",matchId:view.matchId,automatic:true};
     checkBlocks();
     if (selected !== null && !findCard(selected)) selected = null;
     skip();
@@ -679,7 +686,7 @@ globalThis.CrankBoard = Object.seal({
     return `<button type="button" class="cm-board-count cm-board-ribbon-button" data-action="board-steps" aria-expanded="${stepsOpen}" aria-label="Step ${at + 1} of ${STEPS.length}, ${step}${detail}; show the steps"><ol class="cm-board-ribbon is-strip" aria-hidden="true">${items}</ol></button>`;
   }
   function switcher(icons = false) {
-    return `<span class="cm-board-views" role="group" aria-label="View">${VIEWS.map(([k, icon, label]) => `<button type="button" class="v-button compact${mode === k ? " is-on" : ""}" data-action="board-view" data-view="${k}" aria-pressed="${mode === k}"${icons ? ` aria-label="${label}" title="${label}"` : ` title="${label}"`}>${icons ? icon : `${icon}<span class="cm-view-word"> ${k === "full" ? "Full" : label}</span>`}</button>`).join("")}</span>`;
+    return `<span class="cm-board-views" role="group" aria-label="View">${VIEWS.map(([k, icon, label]) => `<button type="button" class="v-button compact${mode === k ? " is-on" : ""}" data-action="board-view" data-view="${k}" aria-pressed="${mode === k}"${icons ? ` aria-label="${label}" title="${label}"` : ` title="${label}"`}>${icons ? icon : `${icon}<span class="cm-view-word"> ${label}</span>`}</button>`).join("")}</span>`;
   }
   /* ☰: the app's pages, over the game. The surface is the whole window, so the rail lives here. A list of links and a
      button, so it is a navigation region, not an ARIA menu (whose items would want arrow keys it does not take). */
@@ -870,13 +877,10 @@ globalThis.CrankBoard = Object.seal({
   }
   function focusView() {
     const p = players()[focus] || players()[view.seat];
-    const pane = paneShut
-      ? `<nav class="cm-board-pane is-shut" aria-label="Boards">${ib("▸", "board-pane", "Show the boards", {}, {pressed: false})}${players().map((x) => `<button type="button" class="cm-board-dot${focus === x.playerId ? " is-focus" : ""}" data-action="board-focus" data-seat="${x.playerId}" style="--seat:${seatColor(x.playerId)}" aria-label="${e(seatLabel(x))}: ${x.health.life} life" title="${e(seatLabel(x))}">${x.health.life}</button>`).join("")}</nav>`
-      : `<nav class="cm-board-pane" aria-label="Boards"><div class="cm-board-pane-head"><span>Boards</span>${ib("◂", "board-pane", "Collapse the boards", {}, {pressed: true})}</div>${players().map(tile).join("")}
-        ${b("My board", "board-focus", {seat: String(view.seat)}, true)}
-        <button type="button" class="cm-board-coach-open" data-action="board-coach" aria-pressed="${coach.open}" aria-label="CrankMagic Coach">${COACH}Coach</button></nav>`;
-    const paneGrip = paneShut ? "" : `<span class="cm-board-panegrip">${grip("pane", "The boards' width: drag, or use the arrow keys", paneWidth(), PANE, "vertical")}</span>`;
-    return `<div class="cm-board-body${panelOpen ? " has-panel" : ""}" style="--pane-w:${paneShut ? 44 : paneWidth()}px;--panel-w:${panelWidth()}px">${pane}${paneGrip}<div class="cm-board-main"><div class="cm-board-stage">${fan(p.playerId)}${mat(p, {size: "focus"})}</div>${ask()}${hand()}</div></div>`;
+    return `<div class="cm-board-body" style="--pane-w:0px;--panel-w:${panelWidth()}px"><div class="cm-board-main"><div class="cm-board-stage">${fan(p.playerId)}${mat(p, {size: "focus"})}</div>${ask()}${hand()}</div></div>`;
+  }
+  function boardsPane() {
+    return `<nav class="cm-board-pane${paneShut ? " is-shut" : ""}" aria-label="Boards"><div class="cm-board-pane-head"><h3>Boards</h3>${ib(paneShut ? "▸" : "▾", "board-pane", paneShut ? "Show the boards" : "Collapse the boards", {}, {pressed: !paneShut})}</div>${paneShut ? "" : players().map(tile).join("") + b("My board", "board-focus", {seat: String(view.seat)}, true) + `<button type="button" class="cm-board-coach-open" data-action="board-coach" aria-pressed="${coach.open}" aria-label="CrankMagic Coach">${COACH}Coach</button>`}</nav>`;
   }
   /* THE FULL SCREEN VIEW: the page given to the game. A slim rail; the others across the top, the big board across
      the foot -- yours, or whichever ⟳ Rotate has walked to -- with the step, Next and Pass over it and your hand along
@@ -924,9 +928,9 @@ globalThis.CrankBoard = Object.seal({
     const pill=`<div class="cm-full-pill">${stageEnabled() ? "" : `${passButton()}${resolveAllButton()}${skipControl(true)}`}</div>`;
     const conn=status === "open" ? "" : `<span class="cm-board-conn">${status === "reconnecting" ? "Reconnecting…" : "Connecting…"}</span>`;
     return `<header class="cm-stage-top"><span class="cm-stage-self">${vitals(me)}<b>${e(me.name)}</b></span><span class="cm-board-tools cm-board-turnsteps">${turnRibbon()}${stepsOpen ? stepsMenu() : ""}</span>
-      <span class="cm-stage-priority"><span class="cm-board-turn"${view.yourTurn ? ` title="Turn ${s.turn} of the game, counting every player's; your ${ordinal(view.yourTurn)} turn"` : ""}>${s.turn ? `Turn ${s.turn} · ${e(turnName)}${view.yourTurn ? ` (your ${ordinal(view.yourTurn)})` : ""}` : "Before turn 1"}</span><br>Priority: ${e(nameOf(view.state.priorityPlayerId))}<span class="cm-board-waiting" title="${e(waitingText())}">${e(waitingText())}</span>${conn}</span>${alsoButton()}${pill}${stageProfile(me)}${combatStrip()}</header>`;
+      <span class="cm-stage-priority"><span class="cm-board-turn"${view.yourTurn ? ` title="Turn ${s.turn} of the game, counting every player's; your ${ordinal(view.yourTurn)} turn"` : ""}>${s.turn ? `Turn ${s.turn} · ${e(turnName)}${view.yourTurn ? ` (your ${ordinal(view.yourTurn)})` : ""}` : "Before turn 1"}</span><br>Priority: ${e(nameOf(view.state.priorityPlayerId))}<span class="cm-board-waiting" title="${e(waitingText())}">${e(waitingText())}</span>${conn}</span>${alsoButton()}${opens(b(stageRail && !actionsShut ? "Actions" : (view.decision ? "Actions · choice pending" : "Actions"), "board-actions-open", {}, false, {cls:"compact"}), stageRail && !actionsShut)}${pill}${stageProfile(me)}${combatStrip()}</header>`;
   }
-  function boardDrawers() { return `<aside class="cm-stage-rail${stageRail ? " is-open" : ""}" aria-label="Left drawer" ${stageRail ? "" : "inert"}>${stageModules("left")}</aside>${ib(stageRail ? "◂" : "▸", "board-stage-rail", "Toggle board tools", {}, {cls: "cm-stage-handle cm-stage-left", pressed: stageRail})}
+  function boardDrawers() { return `<aside class="cm-stage-rail${stageRail ? " is-open" : ""}" aria-label="Left drawer" ${stageRail ? "" : "inert"}>${stageModules("left")}${boardsPane()}</aside>${stageRail ? `<span class="cm-board-panegrip">${grip("pane", "Actions and boards width: drag, or use the arrow keys", paneWidth(), PANE, "vertical")}</span>` : ""}${ib(stageRail ? "◂" : "▸", "board-stage-rail", "Toggle board tools", {}, {cls: "cm-stage-handle cm-stage-left", pressed: stageRail})}
       <aside class="cm-full-side cm-stage-side${stageSide ? " is-open" : ""}" aria-label="The table" ${stageSide ? "" : "inert"} style="--split:${Math.round(splitOf("side") * 100)}%">${stageEnabled() ? "" : `<span class="cm-board-panelgrip">${grip("panelw", "The drawer’s width: drag, or use the arrow keys", panelWidth(), PANELW, "vertical")}</span>`}<header><b>Your pane</b>${ib("⚙", "board-modules-edit", "Arrange modules", {}, {pressed: paneEditing})}${ib("✕", "board-stage-side", "Close table panel")}</header>
         ${stageModules()}</aside>
       ${ib(stageSide ? "▸" : "◂", "board-stage-side", "Toggle table panel", {}, {cls: "cm-stage-handle cm-stage-right", pressed: stageSide})}`; }
@@ -946,8 +950,8 @@ globalThis.CrankBoard = Object.seal({
     const layout = paneLayout();
     C.modal("Set Side Drawer Modules", `<div id="cm-drawer-settings"><p>Choose where each module appears. Drag its handle inside a drawer to change the order; arrow buttons work with a keyboard too.</p><table class="cm-drawer-settings"><thead><tr><th scope="col">Module</th><th scope="col">Left</th><th scope="col">Right</th><th scope="col">None</th></tr></thead><tbody>${PANE_MODULES.map(([id,title]) => {
       const current = layout.left.includes(id) ? "left" : layout.right.includes(id) ? "right" : "none";
-      return `<tr><th scope="row">${title}</th>${["left","right","none"].map(side => `<td><input type="radio" name="module-${id}" value="${side}" aria-label="${title}: ${side[0].toUpperCase()+side.slice(1)}"${side===current?" checked":""}></td>`).join("")}</tr>`;
-    }).join("")}</tbody></table><p class="cm-muted">Saved with your player profile through cloud library sync. Hiding a module keeps its game data.</p><div class="cm-form-footer">${b("Cancel", "close")}${b("Save drawer modules", "board-modules-save", {}, true)}</div></div>`);
+      return `<tr><th scope="row">${title}</th>${["left","right","none"].map(side => `<td><input type="radio" name="module-${id}" value="${side}" aria-label="${title}: ${side[0].toUpperCase()+side.slice(1)}"${side===current?" checked":""}${id === "actions" ? " disabled" : ""}></td>`).join("")}</tr>`;
+    }).join("")}</tbody></table><p class="cm-muted">Saved with your player profile through cloud library sync. Actions stays on the left and can be collapsed. Hiding an optional module keeps its game data.</p><div class="cm-form-footer">${b("Cancel", "close")}${b("Save drawer modules", "board-modules-save", {}, true)}</div></div>`);
   }
   function stageModules(side="right") {
     const ids = paneModules(side);
@@ -956,17 +960,17 @@ globalThis.CrankBoard = Object.seal({
       coach: () => coach.open ? `<div class="cm-module-coach-host"></div>` : `<p class="cm-muted">Ask about your board, hand, or table.</p>${b("Open AI Coach", "board-coach", {}, false, {cls:"compact"})}`,
       recommended: () => `<p class="cm-muted">Recommendations use your AI Coach conversation and its privacy settings.</p>${b("Recommend actions", "board-recommend", {}, false, {cls:"compact"})}`,
       chat: () => `<p class="cm-muted">Game chat is not connected yet. Shared messages and voice chat are coming in a later update.</p>`,
-      actions: () => decision() || `<p class="cm-muted">${e(waitingText())}</p>`,
+      actions: () => actionsShut ? `<p class="cm-muted">${e(view.decision ? "Your choice is waiting. Expand Actions to continue." : waitingText())}</p>` : `${decision() || `<p class="cm-muted">${e(waitingText() || "Choose a card or continue your turn.")}</p>`}`,
       table: () => `<div class="cm-full-vitals">${players().map(p => `<div class="${view.state.turnPlayerId === p.playerId ? "is-turn" : ""}" data-seat="${p.playerId}" style="--seat:${seatColor(p.playerId)}"><span>${e(seatLabel(p))}${turnMark(p.playerId)}</span>${vitals(p, {big:true})}</div>`).join("")}</div>`,
       inspect: () => `<div id="cm-full-pick">${pickPanel()}</div>`,
       stack: () => stack({module:true}) || `<p class="cm-muted">The stack is empty.</p>`,
-      history: () => historyBand(30),
+      history: () => historyBand(30) + eventCards(),
       resources: () => turnResources(),
       counter: () => `<p class="cm-muted">Public battlefield counts · cards with two types count in both.</p>${players().map(p => `<details class="cm-module-counts"><summary>${e(seatLabel(p))}</summary><dl>${["Creature", "Artifact", "Enchantment", "Land", "Planeswalker"].map(type => `<div><dt>${type}s</dt><dd>${controlledCards(p.playerId).filter(c => c.types.includes(type)).length}</dd></div>`).join("")}</dl></details>`).join("")}`
     };
     return `<div class="cm-stage-modules" data-module-side="${side}" aria-label="${side === "left" ? "Left" : "Right"} drawer modules">${ids.map((id, i) => {
       const title = PANE_MODULES.find(([key]) => key === id)[1];
-      return `<section class="cm-stage-module" data-module="${id}" aria-label="${title} module"><header><h3>${title}</h3>${paneEditing ? `<button type="button" class="cm-module-drag" draggable="true" data-module-drag="${id}" aria-label="Drag ${title}; use the adjacent move buttons for keyboard control">⠿</button>${ib("↑", "board-module-move", `Move ${title} up`, {module:id, side, by:"-1"}, {disabled:i===0})}${ib("↓", "board-module-move", `Move ${title} down`, {module:id, side, by:"1"}, {disabled:i===ids.length-1})}${ib("×", "board-module-remove", `Remove ${title}`, {module:id, side})}` : ""}</header><div class="cm-module-body">${bodies[id]()}</div></section>`;
+      return `<section class="cm-stage-module" data-module="${id}" aria-label="${title} module"><header><h3>${title}</h3>${id === "actions" ? ib(actionsShut ? "▸" : "▾", "board-actions-toggle", actionsShut ? "Expand Actions" : "Collapse Actions", {}, {pressed: !actionsShut}) : ""}${paneEditing && id !== "actions" ? `<button type="button" class="cm-module-drag" draggable="true" data-module-drag="${id}" aria-label="Drag ${title}; use the adjacent move buttons for keyboard control">⠿</button>${ib("↑", "board-module-move", `Move ${title} up`, {module:id, side, by:"-1"}, {disabled:i===0})}${ib("↓", "board-module-move", `Move ${title} down`, {module:id, side, by:"1"}, {disabled:i===ids.length-1})}${ib("×", "board-module-remove", `Remove ${title}`, {module:id, side})}` : ""}</header><div class="cm-module-body">${bodies[id]()}</div></section>`;
     }).join("")}</div>`;
   }
   function stageHand(p) {
@@ -994,7 +998,7 @@ globalThis.CrankBoard = Object.seal({
       onError(message) {stageError = message; const el = document.querySelector(".cm-stage-error"); if (el) el.textContent = `${message} Use Focus view in Camera if graphics are unavailable.`;}};
     CrankStage.mount(region, opts); CrankStage.layout(region.getBoundingClientRect(), opts);
     const tray = host.querySelector(".cm-stage-hand");
-    if (tray) tray.style.setProperty("--hc", `${Math.max(70, Math.min(190 * scaleOf("hand") / 100, (tray.clientHeight - 24) * 5 / 7, (host.clientWidth - 110) / 6.1))}px`);
+    if (tray) tray.style.setProperty("--hc", `${Math.max(70, Math.min(190 * scaleOf("hand") / 100, (tray.clientHeight - 24) * 5 / 7, (tray.clientWidth - 110) / 6.1))}px`);
   }
   function pickPanel() {
     const id = hover ?? selected, pick = id === null ? null : findCard(id);
@@ -1058,7 +1062,7 @@ globalThis.CrankBoard = Object.seal({
     if (module) {
       const ordered=[...items].reverse(), selectedIndex=Math.max(0,ordered.findIndex(s=>String(s.stackId)===stackSelected));
       const shown=ordered[selectedIndex], visible=CrankStage.carousel(ordered.length,selectedIndex,5);
-      return `<section class="cm-board-stack cm-module-stack" aria-label="The stack"><p class="cm-stack-order-note">#1 resolves next · click the pile to browse</p><div class="cm-stack-browser"><ol class="cm-stack-list">${ordered.map((s,i)=>`<li><button type="button" class="cm-stack-summary" data-action="board-stack-select" data-stack-id="${e(String(s.stackId))}" aria-pressed="${i===selectedIndex}"><b class="cm-stack-position">#${i+1}</b><strong>${e(s.name || 'A face-down spell')}</strong><span>${e(nameOf(s.playerId))}</span></button></li>`).join('')}</ol><div class="cm-stack-image"><button type="button" class="cm-stack-pile" data-action="board-stack-cycle" aria-label="${e(shown.name || 'A face-down spell')}, stack position ${selectedIndex+1} of ${ordered.length}; show next card" style="--pile-depth:${visible.length-1}">${visible.map((index,depth)=>{const s=ordered[index];return `<span class="cm-bcard cm-stack-card${s.name ? '' : ' is-back'}" data-stack-depth="${depth}" style="--depth:${depth};z-index:${visible.length-depth}" aria-hidden="true">${s.name ? `<span class="cm-bcard-name">${e(s.name)}</span><img src="${e(pictureOf(s.name))}" alt="" draggable="false" referrerpolicy="no-referrer">` : ''}</span>`;}).join('')}</button></div></div></section>`;
+      return `<section class="cm-board-stack cm-module-stack" aria-label="The stack"><p class="cm-stack-order-note">#1 resolves next · click the pile to browse</p>${shown.name ? b("Inspect card", "board-inspect", {kind:"stack", ref:String(shown.stackId)}, false, {cls:"compact"}) : ""}<div class="cm-stack-browser"><ol class="cm-stack-list">${ordered.map((s,i)=>`<li><button type="button" class="cm-stack-summary" data-action="board-stack-select" data-stack-id="${e(String(s.stackId))}" aria-pressed="${i===selectedIndex}"><b class="cm-stack-position">#${i+1}</b><strong>${e(s.name || 'A face-down spell')}</strong><span>${e(nameOf(s.playerId))}</span></button></li>`).join('')}</ol><div class="cm-stack-image"><button type="button" class="cm-stack-pile" data-action="board-stack-cycle" aria-label="${e(shown.name || 'A face-down spell')}, stack position ${selectedIndex+1} of ${ordered.length}; show next card" style="--pile-depth:${visible.length-1}">${visible.map((index,depth)=>{const s=ordered[index];return `<span class="cm-bcard cm-stack-card${s.name ? '' : ' is-back'}" data-stack-depth="${depth}" style="--depth:${depth};z-index:${visible.length-depth}" aria-hidden="true">${s.name ? `<span class="cm-bcard-name">${e(s.name)}</span><img src="${e(pictureOf(s.name))}" alt="" draggable="false" referrerpolicy="no-referrer">` : ''}</span>`;}).join('')}</button></div></div></section>`;
     }
     const rows = [];
     for (const s of [...items].reverse()) {
@@ -1119,6 +1123,18 @@ globalThis.CrankBoard = Object.seal({
       ${result && !result.open ? b("Check again", "board-block-retry") : ""}
       <details class="cm-block-list"${blockListOpen ? " open" : ""}><summary>All block options</summary>${options.map(o => `<button type="button" class="v-button compact" data-action="board-option" data-index="${o.index}" aria-pressed="${picked.includes(o.index)}"${sending ? " disabled" : ""}>${e(o.label)} · #${o.cardId} → #${o.attackerId}</button>`).join("")}</details></div>`;
   }
+  // Review uses only the current seat's offered words. No target, payment or outcome is inferred.
+  function selectionSummary(d) {
+    const choices = picked.map(i => d.options.find(o => o.index === i)).filter(Boolean);
+    return `<div class="cm-action-summary" aria-live="polite"><strong>Your selection</strong><ul>${choices.map(o => `<li>${e(d.kind === "priority" ? sayFor(o) : o.label)}</li>`).join("")}</ul></div>`;
+  }
+  function commitReview(d) {
+    if (!picked.length) return `<p class="cm-action-hint">Select an option to review it. Nothing is submitted until you confirm.</p>`;
+    const o = d.options.find(o => o.index === picked[0]);
+    if (!o) return "";
+    const cast = d.kind === "priority" && ["cast","activate"].includes(o.act);
+    return `<div class="cm-action-review">${selectionSummary(d)}<p>${cast ? "This submits the selected action. If the game asks for targets or payment next, you will review those choices here before submitting them. Casting does not guarantee resolution." : "Confirm submits this choice to the game. Review the card and selected option before continuing."}</p><div class="cm-actions">${b(d.kind === "priority" ? "Confirm action" : "Confirm choice", "board-confirm", {}, true, {disabled:sending || draftRevision !== view.revision})}${b("Clear selection", "board-reset", {}, false, {disabled:sending})}</div></div>`;
+  }
   function decision() {
     const d = view.decision;
     if (!d || view.status === "finished" || d.kind === "draw") return "";
@@ -1126,24 +1142,24 @@ globalThis.CrankBoard = Object.seal({
     let body = "", foot = "";
     if (d.kind === "priority") {
       /* Pass is the strip's; this is what else you can do, one button per kind of thing, the same land four
-         times over being one "Play Forest" (tapping a card in the hand plays that very one). */
+         times over being one "Play Forest" (clicking a card in the hand selects that very one). */
       const seen = new Map();
-      for (const o of d.options) {
+      for (const o of d.options.filter(o => actionCard === null || o.cardId === actionCard)) {
         /* A land just played goes back to the hand as one would take it back at a table, by its double-click: no button. */
         if (o.act === "pass" || o.act === "resolve-all" || o.act === "undo-land") continue;
-        const key = `${o.act}|${o.label}`;
+        const key = actionCard === null ? `${o.act}|${o.label}` : String(o.index);
         if (seen.has(key)) seen.get(key).n += 1; else seen.set(key, {o, n: 1});
       }
       if (!seen.size) return "";
       /* A card that can be used more than one way -- a spell's targets, a cost's sacrifice, a land's colors -- asks which
-         in its pop-up rather than doing the first (Rob, 2026-10-01). */
+         in Actions rather than doing the first (Rob, 2026-10-01). */
       const ways = (o) => new Set(d.options.filter((x) => x.act === o.act && x.label === o.label && x.detail).map((x) => x.detail)).size;
-      body = [...seen.values()].map(({o, n}) => ways(o) > 1
+      body = [...seen.values()].map(({o, n}) => actionCard === null && ways(o) > 1
         ? `<button type="button" class="v-button compact" data-action="board-choose" data-card="${o.cardId}"${sending ? " disabled" : ""}>${e(verbFor(o))} <span class="cm-muted">· ${ways(o)} ways</span></button>`
-        : `<button type="button" class="v-button compact" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}>${sayHtml(o)}${n > 1 ? ` <span class="cm-muted">×${n}</span>` : ""}</button>`).join("");
-      return `<section class="cm-board-decision is-also" id="cm-board-decision" aria-label="What you can do"><h3>You can also</h3><div class="cm-board-options">${body}</div></section>`;
+        : `<button type="button" class="v-button compact" data-action="board-option" data-index="${o.index}" aria-pressed="${picked.includes(o.index)}"${sending ? " disabled" : ""}>${sayHtml(o)}${n > 1 ? ` <span class="cm-muted">×${n}</span>` : ""}</button>`).join("");
+      return `<section class="cm-board-decision is-also" id="cm-board-decision" aria-label="What you can do"><h3>${actionCard === null ? "Choose an action" : e(findCard(actionCard)?.name || "Choose an action")}</h3>${actionCard === null ? "" : b("All actions", "board-action-all", {}, false, {cls:"compact"})}<div class="cm-board-options">${body}</div>${commitReview(d)}</section>`;
     }
-    if (["one", "boolean", "index"].includes(d.mode)) body = d.options.map((o) => opt(o)).join("");
+    if (["one", "boolean", "index"].includes(d.mode)) {body = d.options.map((o) => opt(o, ` aria-pressed="${picked.includes(o.index)}"`)).join(""); foot = commitReview(d);}
     else if (blocking()) {
       body = blockDraft();
       foot = `${b("No blocks", "board-block-none", {}, false, {disabled:sending})}${b(picked.length ? "Confirm blocks" : "Confirm no blocks", "board-confirm", {}, true, {disabled:!blockValid() || sending})}`;
@@ -1306,6 +1322,36 @@ globalThis.CrankBoard = Object.seal({
     for (const p of players()) for (const c of visibleCards(p)) if (c.cardId === cardId) return c;
     return null;
   }
+  // One read-only inspector for every view. Resolve references from this seat's current
+  // projection, never from a name supplied by an element or a hidden catalog lookup.
+  function inspectedCard() {
+    if (!inspection || inspection.matchId !== view?.matchId) return null;
+    let c;
+    if (inspection.kind === "stack") c = view.state.stack.find(s => String(s.stackId) === inspection.id);
+    else if (inspection.kind === "event") c = (view.events || []).find(x => playKey(view.matchId, x) === inspection.id)?.card;
+    else c = findCard(Number(inspection.id)) || shownCard(Number(inspection.id));
+    return c?.name ? {cardId: -1, types: [], counters: {}, power: null, ...c} : null;
+  }
+  function inspect(id, kind = "card", automatic = false) {
+    if (!view) return;
+    inspection = {id:String(id), kind, matchId:view.matchId, automatic};
+    if (!inspectedCard()) {inspection = null; return;}
+    if (coach.open && !moduleSide("coach")) {coach.open = false; drawCoach();}
+    inspectionFrom = C.focusKey(document.activeElement);
+    showing = null; held = null;
+    peek(null); stackPeek(null); draw();
+    document.querySelector("[data-action=board-inspect-close]")?.focus({preventScroll:true});
+  }
+  function inspector() {
+    if (!inspection) return "";
+    const c = inspectedCard();
+    return `<aside id="cm-card-inspector" aria-label="Card inspection"><header><h3>${e(c?.name || "Card unavailable")}</h3>${ib("✕", "board-inspect-close", "Close card inspection")}</header>
+      ${c ? `<p class="cm-inspection-context">${inspection.kind === "event" ? "Recorded event · card reference" : inspection.kind === "stack" ? "On the stack" : "Current visible card"} · inspection only</p>${card(c, {where:"peek", action:"none"})}${c.oracleText ? `<p>${e(c.oracleText)}</p>` : ""}${c.why ? `<p>${e(c.why)}</p>` : ""}` : `<p>This card is no longer visible in your current game view.</p>`}</aside>`;
+  }
+  function eventCards() {
+    const events = [...(view.events || [])].reverse().filter(x => x.card?.name && !x.card.faceDown).slice(0, 8);
+    return events.length ? `<div class="cm-history-cards" aria-label="Inspect recent event cards">${events.map(x => b(x.card.name, "board-inspect", {kind:"event", ref:playKey(view.matchId,x)}, false, {cls:"compact"})).join("")}</div>` : "";
+  }
   /* A card this seat was shown in its own decision (ROB-169: a look at another player's hand), which is not on any zone it
      can see: read from the decision, by name. */
   const shownCard = (cardId) => {
@@ -1314,12 +1360,10 @@ globalThis.CrankBoard = Object.seal({
   };
   function zoom(cardId) {
     const c = findCard(cardId) || shownCard(cardId);
-    if (!c || !c.name) return;
-    const opts = optionsFor(c.cardId);
-    const acts = opts.map((o) => `<button type="button" class="v-button primary" data-action="board-zoom-do" data-index="${o.index}"${sending ? " disabled" : ""}>${sayHtml(o)}</button>`).join("");
-    /* More than one way to use it: the ways listed to choose from, as many as there are, above Close. */
-    if (opts.length > 1) return C.modal(c.name, `<div class="cm-board-zoom is-choosing">${card(c, {where: "zoom", action: "close"})}</div><p class="cm-board-choose-say">Choose one:</p><div class="cm-board-choices" role="group" aria-label="Ways to use ${e(c.name)}">${acts}</div><div class="cm-form-footer">${b("Close", "close")}</div>`);
-    C.modal(c.name, `<div class="cm-board-zoom">${card(c, {where: "zoom", action: "close"})}</div>${!acts && c.why ? `<p class="cm-muted cm-hand-why">${e(c.why)}</p>` : ""}<div class="cm-form-footer">${acts}${b("Close", "close", {}, !acts)}</div>`);
+    if (!c?.name) return;
+    actionCard = cardId; picked = []; draftRevision = view.revision;
+    actionsShut = false; openModuleDrawer("actions"); alsoOpen = false;
+    if (phone()) {showing = null; held = null; draw();} else inspect(cardId, "card", true);
   }
   /* The peek follows the pointer: it is put away when the pointer leaves the card -- and, since a card redrawn or moved
      away from under a still pointer never says it was left (Rob, 2026-10-09: ending the game left a Plains shown large,
@@ -1331,6 +1375,7 @@ globalThis.CrankBoard = Object.seal({
     peekTimer = null;
     const old = document.getElementById("cm-board-peek");
     if (!el) {peekId = null; if (old) old.remove(); return;}
+    if (inspection) return;
     peekId = Number(el.dataset.card);
     peekTimer = setTimeout(() => {
       peekTimer = null;
@@ -1405,8 +1450,7 @@ globalThis.CrankBoard = Object.seal({
     const panelEl = document.getElementById("cm-board-coach");
     if (!panelEl) return;
     panelEl.hidden = !coach.open;
-    /* In Full screen the Coach is not a slide-over: it takes the side column's lower half, under the log (item 22). */
-    panelEl.classList.toggle("is-docked", mode === "full" && !phone() && !moduleSide("coach"));
+    /* Desktop reserves space beside the board; a configured Coach module stays in its drawer. */
     if (!coach.open) {panelEl.innerHTML = ""; return;}
     dock();
     /* A redraw keeps what the reader has in hand: the draft, its focus, and ⋯ if it is open (a rebuilt <details> is
@@ -1813,7 +1857,7 @@ globalThis.CrankBoard = Object.seal({
       el.addEventListener("mouseenter", () => {clearTimeout(timer); left = Math.max(1500, left - (performance.now() - since));});
       el.addEventListener("mouseleave", run);
       el.querySelector(".cm-play-close").addEventListener("click", () => {clearTimeout(timer); el.remove();});
-      el.querySelector(".cm-play-card").addEventListener("click", () => C.modal(name, `<div class="cm-board-zoom">${card({cardId: -1, name, types: [], counters: {}, power: null}, {where: "zoom", action: "close"})}</div><div class="cm-form-footer">${b("Close", "close", {}, true)}</div>`));
+      el.querySelector(".cm-play-card").addEventListener("click", () => inspect(playKey(next.matchId, x), "event"));
       layer.prepend(el);
       while (layer.children.length > PLAYS_SHOWN) layer.lastElementChild.remove();
       run();
@@ -1939,7 +1983,11 @@ globalThis.CrankBoard = Object.seal({
       ? choice.querySelector(".cm-board-options")?.scrollTop : null;
     const fight = host.querySelector(".cm-combat-groups"), fightPosition = fight && {key: fight.dataset.combatKey, x: fight.scrollLeft, y: fight.scrollTop};
     const blockPositions = new Map([...host.querySelectorAll("[data-block-key]")].map(el => [el.dataset.blockKey, el.scrollLeft]));
+    const rowKey = `${view?.matchId}:${view?.seat}`;
+    const rowPositions = new Map(host.dataset.rowScrollMatch === rowKey ? [...host.querySelectorAll('.cm-stage-front [data-card-section]')].map(el => [el.dataset.cardSection, [el.parentElement.scrollLeft, el.parentElement.scrollTop]]) : []);
     C.keepFocus(host, () => paint(host));
+    host.dataset.rowScrollMatch = rowKey;
+    for (const el of host.querySelectorAll('.cm-stage-front [data-card-section]')) {const pos = rowPositions.get(el.dataset.cardSection); if (pos) {el.parentElement.scrollLeft = pos[0]; el.parentElement.scrollTop = pos[1];}}
     for (const el of host.querySelectorAll("[data-block-key]")) el.scrollLeft = blockPositions.get(el.dataset.blockKey) || 0;
     const options = host.querySelector("#cm-board-decision .cm-board-options");
     if (choiceScroll !== null && options) options.scrollTop = choiceScroll;
@@ -1975,7 +2023,7 @@ globalThis.CrankBoard = Object.seal({
       host.dataset.view = "focus";
       delete host.dataset.stage; delete host.dataset.shell; globalThis.CrankStage?.unmount();
       host.dataset.phone = innerHeight > innerWidth ? "portrait" : "landscape";
-      host.innerHTML = `${phoneView()}${showHand()}${banner()}`;
+      host.innerHTML = `${phoneView()}${showHand()}${banner()}${inspector()}`;
       fit();
       return;
     }
@@ -1990,9 +2038,12 @@ globalThis.CrankBoard = Object.seal({
     host.style.setProperty("--panel-w", `${panelWidth()}px`);
     host.classList.remove("has-panel");
     host.dataset.shell="shared";
+    host.style.setProperty("--stage-left-width", `${paneWidth()}px`);
+    host.dataset.inspecting = inspection ? "on" : "off";
     if (mode === "full") host.innerHTML = `${fullView()}${showHand()}${banner()}`;
     else if (mode === "table") host.innerHTML = `${boardHeader()}${tableView()}${cameraMenu()}${boardDrawers()}${showHand()}${banner()}`;
     else host.innerHTML = `${boardHeader()}${focusView()}${cameraMenu()}${boardDrawers()}${showHand()}${banner()}`;
+    host.insertAdjacentHTML("beforeend", inspector());
     fit();
   }
 
@@ -2118,14 +2169,23 @@ globalThis.CrankBoard = Object.seal({
       placePlays();
     } finally {fitting = false;}
   }
-  /* The Coach docked in Full screen: over the lower half of the side column, which gives its log the upper half. */
+  /* The optional Coach uses the shared inspection space unless assigned to a drawer module. */
   function dock() {
     const el = document.getElementById("cm-board-coach"), side = document.querySelector("#cm-board .cm-full-side"), host = document.getElementById("cm-board");
     if (!el) return;
     const slot=host?.querySelector(".cm-module-coach-host");
     el.classList.toggle("is-module", !!slot && coach.open);
-    el.classList.toggle("is-docked", stageEnabled() && !slot && coach.open);
+    el.classList.toggle("is-docked", !!host?.dataset.shell && !slot && coach.open);
     if(slot && coach.open) {slot.append(el); for(const k of ["--dock-x","--dock-y","--dock-w","--dock-h"]) el.style.removeProperty(k); return;}
+    if (host?.dataset.shell === "shared" && el.classList.contains("is-docked")) {
+      const h = host.getBoundingClientRect(), top = host.querySelector(".cm-stage-top").getBoundingClientRect().bottom;
+      const width = Math.min(320, Math.max(240, innerWidth * .24));
+      el.style.setProperty("--dock-x", `${h.right - width}px`);
+      el.style.setProperty("--dock-y", `${top}px`);
+      el.style.setProperty("--dock-w", `${width}px`);
+      el.style.setProperty("--dock-h", `${Math.max(120, h.bottom - top)}px`);
+      return;
+    }
     if (!side || !host || !el.classList.contains("is-docked")) {for (const k of ["--dock-x", "--dock-y", "--dock-w", "--dock-h"]) el.style.removeProperty(k); return;}
     const s = side.getBoundingClientRect(), h = host.getBoundingClientRect(), top = Math.round(s.bottom + 6);
     el.style.setProperty("--dock-x", `${Math.round(s.left)}px`);
@@ -2210,8 +2270,8 @@ globalThis.CrankBoard = Object.seal({
     keep(PANE_KEY, w);
     if (was !== (w >= MINI_AT)) {render(); refocus("pane");}
     else {
-      const body = document.querySelector("#cm-board .cm-board-body");
-      if (body) body.style.setProperty("--pane-w", `${w}px`);
+      const host = document.getElementById("cm-board");
+      if (host) host.style.setProperty("--stage-left-width", `${w}px`);
       const g = document.querySelector('#cm-board [data-drag="pane"]');
       if (g) g.setAttribute("aria-valuenow", String(w));
       fit();
@@ -2310,7 +2370,7 @@ globalThis.CrankBoard = Object.seal({
       if (audio) audio.stopBgm(400);
       disconnect(); globalThis.CrankStage?.unmount(); stopSea(); if (observer) {observer.disconnect(); observer = null;}
       document.getElementById("cm-game-on")?.remove();
-      stackSelected = null; tableId = null; view = null; table = null; tools = false; confirmEnd = false; selected = null; hover = null; showing = null; held = null;
+      inspection = null; inspectionFrom = null; stackSelected = null; tableId = null; view = null; table = null; tools = false; confirmEnd = false; selected = null; hover = null; showing = null; held = null;
       historyOpen = false; historyFilter = ""; menuOpen = false; stepsOpen = false; panelOpen = false; skipping = null; records = null;
       coach.open = false; coach.thread = []; coach.typing = false; coach.asked += 1; peek(null); leaveFullscreen();
     },
@@ -2322,7 +2382,16 @@ globalThis.CrankBoard = Object.seal({
     if (blocking()) return draftBlock(index);
     const d = view.decision;
     if (!d || sending) return;
-    if (["one", "boolean", "index"].includes(d.mode)) return send({indices: [index]});
+    if (!d.options.some(o => o.index === index)) return;
+    draftRevision = view.revision;
+    actionsShut = false; openModuleDrawer("actions"); alsoOpen = false;
+    if (["one", "boolean", "index"].includes(d.mode)) {
+      picked = [index];
+      const o = d.options.find(o => o.index === index);
+      if (d.kind === "priority") actionCard = o.cardId ?? null;
+      if (!phone() && o.cardId !== undefined && findCard(o.cardId)?.name) inspection = {id:String(o.cardId),kind:"card",matchId:view.matchId,automatic:true};
+      showing = null; held = null; peek(null); draw(); return;
+    }
     if (d.mode === "many") {
       if (picked.includes(index)) picked = picked.filter((i) => i !== index);
       else {
@@ -2342,11 +2411,9 @@ globalThis.CrankBoard = Object.seal({
     C.modal(combatName(c), `<p>Object #${c.cardId}${c.power !== null && c.power !== undefined ? ` · ${e(c.power)}/${e(c.toughness)}` : ""}</p>
       <div class="cm-board-zoom">${card(shown, {where: "zoom", action: "close"})}</div><div class="cm-form-footer">${b("Close", "close", {}, true)}</div>`);
   };
-  /* A CARD IS PLAYED BY CLICKING IT, as one is put down at a table, in every view (Rob, 2026-10-21: "I should be able to
-     click on the card or double-click a card to play it"); Full screen shows it large at the side too. The second click of
-     a double-click does nothing more -- the first played it -- except on a land just played: there the double-click picks
-     it back up into the hand ("Oh wait, no, I didn't mean to lay that land down"; the room's `takeBackLand`), as a hand
-     reaches over at a table, so its single click (a tap for mana) waits out the double-click before it is done. */
+  /* A card click opens its legal choices for review in Actions. Confirmation submits the selected
+     choice. A land's existing double-click take-back remains a separate, explicit gesture; delay
+     its single-click mana selection so that a double-click does not stage the wrong action. */
   const DOUBLE_MS = 300;
   let clickLater = null;
   const takeBackOf = (id) => optionsFor(id).find((o) => o.act === "undo-land") || null;
@@ -2356,7 +2423,7 @@ globalThis.CrankBoard = Object.seal({
     /* Nothing to do with it: why, when the room says (ROB-24). */
     if (!opts.length && findCard(id)?.why) return C.notice(findCard(id).why);
     if (opts.length === 1) return option(opts[0].index);
-    /* More than one way to use it -- aimed at this or that, paid with this or that -- is a pop-up to choose in. */
+    /* More than one legal use: choose in the shared Actions pane. */
     if (opts.length > 1) zoom(id);
   }
   actions["board-card"] = (el, event) => {
@@ -2397,7 +2464,11 @@ globalThis.CrankBoard = Object.seal({
     picked = [];
     draw();
   };
-  actions["board-zoom-open"] = (el) => zoom(Number(el.dataset.card));
+  actions["board-zoom-open"] = (el) => inspect(el.dataset.card);
+  actions["board-inspect"] = el => inspect(el.dataset.ref, el.dataset.kind || "card");
+  actions["board-inspect-close"] = () => {inspection = null; draw(); C.focusFind(inspectionFrom)?.focus({preventScroll:true}); inspectionFrom = null;};
+  actions["board-actions-open"] = () => {stageRail = true; actionsShut = false; draw(); document.querySelector("[data-action=board-actions-toggle]")?.focus({preventScroll:true});};
+  actions["board-actions-toggle"] = () => {actionsShut = !actionsShut; draw();};
   actions["board-pass"] = () => {
     const d = view && view.decision;
     if (!d || d.kind !== "priority") return;
@@ -2440,6 +2511,10 @@ globalThis.CrankBoard = Object.seal({
   actions["board-confirm"] = () => {
     const d = view.decision;
     if (!d || sending) return;
+    if (["one","boolean","index"].includes(d.mode)) {
+      if (draftRevision !== view.revision || picked.length !== 1 || !d.options.some(o => o.index === picked[0])) return;
+      return send({indices:[...picked]});
+    }
     if (blocking()) {
       if (!blockValid()) return;
       blockResult = null; // A receipt alone must not reopen this already submitted draft.
@@ -2449,7 +2524,8 @@ globalThis.CrankBoard = Object.seal({
     if (d.mode === "damage" || d.mode === "amount") return send({amounts: d.options.map((_, i) => Number(amounts[i]) || 0)});
     send({indices: picked});
   };
-  actions["board-reset"] = () => {picked = []; draw();};
+  actions["board-reset"] = () => {picked = []; draftRevision = null; draw();};
+  actions["board-action-all"] = () => {actionCard = null; picked = []; draftRevision = null; draw();};
   actions["board-focus"] = (el) => {focus = Number(el.dataset.seat); if (mode === "table" && !phone()) setMode("focus"); else draw();};
   actions["board-rotate"] = (el) => {
     const n = players().length;
@@ -2512,6 +2588,14 @@ globalThis.CrankBoard = Object.seal({
   };
   actions["board-module-remove"] = el => savePaneModules(paneModules(el.dataset.side).filter(id => id !== el.dataset.module),el.dataset.side);
   let arranging=null;
+  document.addEventListener('wheel', event => {
+    const row = event.target.closest?.('.cm-stage-front .cm-board-group, .cm-stage-front .cm-board-lands');
+    if (!row || event.ctrlKey || event.metaKey || row.scrollWidth <= row.clientWidth + 1) return;
+    event.preventDefault();
+    const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? row.clientWidth : 1;
+    row.scrollLeft += (event.deltaX || event.deltaY) * unit;
+    peek(null);
+  }, {passive:false});
   const clearCardDrop=()=>document.querySelectorAll('.cm-card-drop').forEach(el=>el.classList.remove('cm-card-drop'));
   document.addEventListener('dragstart',event=>{
     const card=event.target.closest?.('[data-arrange-card]'),section=card?.closest('[data-card-section]');if(!section)return;
@@ -2602,18 +2686,13 @@ globalThis.CrankBoard = Object.seal({
   });
   actions["board-vitals"] = () => {if (view) tableVitals();};
   actions["board-view"] = (el) => {setMode(el.dataset.view); document.querySelector("#cm-board [data-action=board-camera]")?.focus({preventScroll: true});};
-  /* Full screen asks the browser for the whole screen as well, where it may; the view stands either way. It asks for
-     the DOCUMENT, not the board: a browser shows only the fullscreen element's own subtree, and the Coach, the app's
-     dialogs (Table vitals, Card zoom) and its notices live beside the board, so they opened unseen (item 22). */
+  /* 3D is a game view, independent of browser full-screen. */
   function setMode(next) {
     if (!VIEWS.some(([k]) => k === next)) return;
     mode = next; cameraOpen = false; profileOpen = false; tools = false; confirmEnd = false; menuOpen = false; stepsOpen = false; historyOpen = false;
     /* Full screen opens on your own board (its point is your playable space); ⟳ walks round from there. */
     if (view) focus = mode === "full" ? view.seat : (focus ?? view.seat);
     try {localStorage.setItem(VIEW_KEY, mode);} catch {}
-    const host = document.getElementById("cm-board");
-    if (mode === "full" && host && document.fullscreenEnabled && !document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
-    if (mode !== "full") leaveFullscreen();
     peek(null);
     draw();
     if (coach.open) drawCoach();
@@ -2626,7 +2705,12 @@ globalThis.CrankBoard = Object.seal({
   actions["board-hand-hold"] = (el) => {held = Number(el.dataset.card); showing = "held"; draw();};
   actions["board-hand-back"] = () => {held = null; showing = "fan"; draw();};
   actions["board-hand-do"] = (el) => {const index = Number(el.dataset.index); showing = null; held = null; option(index);};
-  actions["board-zoom-do"] = (el) => {actions.close(); option(Number(el.dataset.index));};
+  actions["board-zoom-do"] = (el) => {
+    if (el.dataset.match !== view?.matchId || el.dataset.choice !== view?.decision?.id || Number(el.dataset.revision) !== view?.revision) {
+      C.notice("The game changed. Review the current choices in Actions."); openModuleDrawer("actions"); draw(); return;
+    }
+    option(Number(el.dataset.index));
+  };
   actions["board-control-inspect"] = (el) => {
     const c = battlefieldCards().find(c => c.cardId === Number(el.dataset.controlCard));
     if (!c || !foreignControl(c)) return;
@@ -2666,20 +2750,25 @@ globalThis.CrankBoard = Object.seal({
     pointerAt = {x: event.clientX, y: event.clientY};
     if (event.pointerType !== "mouse" || !document.getElementById("cm-board") || !view) return;
     const el = event.target.closest && event.target.closest(".cm-board .cm-bcard[data-card]");
-    if (!el || el.closest(".cm-board-peek, .cm-full-pick, .cm-panel-card")) return;
-    if (mode === "full" && !phone()) {const id = Number(el.dataset.card); if (id !== hover) {hover = id; drawPick();} return;}
+    if (!el || el.closest(".cm-board-peek, .cm-full-pick, .cm-panel-card, #cm-card-inspector")) return;
+    const id = Number(el.dataset.card); if (id !== hover) {hover = id; drawPick();}
     if (!showing) peek(el);
   });
+  document.addEventListener("focusin", event => {
+    const el = event.target.closest?.("#cm-board .cm-bcard[data-card]");
+    if (el && !showing && !el.closest("#cm-card-inspector, .cm-board-peek")) peek(el);
+  });
+  document.addEventListener("focusout", event => {if (event.target.closest?.("#cm-board .cm-bcard[data-card]")) peek(null);});
   document.addEventListener("pointerout", (event) => {
     const el = event.target.closest && event.target.closest(".cm-board .cm-bcard[data-card]");
     if (!el) return;
-    if (mode === "full" && !phone()) {if (hover !== null) {hover = null; drawPick();} return;}
+    if (hover !== null) {hover = null; drawPick();}
     peek(null);
   });
   document.addEventListener("contextmenu", (event) => {
     const el = event.target.closest && event.target.closest(".cm-board .cm-bcard[data-card]");
     if (!el || !view) return;
-    event.preventDefault(); peek(null); zoom(Number(el.dataset.card));
+    event.preventDefault(); peek(null); inspect(el.dataset.card);
   });
   /* THE LOBBY'S MUSIC (Rob, 2026-10-09: "Lobby music."): the pack's lobby bed ("Lobby / seat", bgm_lobby_mythic_calm), from
      the first press on a table's page before its game -- a browser plays nothing before one -- and crossfading into the
@@ -2701,13 +2790,20 @@ globalThis.CrankBoard = Object.seal({
     if (!a || a.isArmed()) return;
     a.arm().then((on) => {if (on && view) {const bed = CrankAudio.bedFor(view, view.seat); if (bed) a.startBgm(bed);}});
   }, true);
-  let press = null;
+  let press = null, inspectedPress = 0;
+  document.addEventListener("click", event => {
+    // A touch long-press may be followed by a synthetic click after the inspector redraw.
+    // Consume that release; it is inspection, never a cast on the card now underneath it.
+    if (inspectedPress && performance.now() - inspectedPress < 900 && event.detail > 0) {
+      inspectedPress = 0; event.preventDefault(); event.stopImmediatePropagation();
+    }
+  }, true);
   document.addEventListener("pointerdown", (event) => {
     if (event.pointerType === "mouse") return;
     const el = event.target.closest && event.target.closest(".cm-board .cm-bcard[data-card]");
     if (!el || !view) return;
     const at = [event.clientX, event.clientY];
-    press = {at, timer: setTimeout(() => {press = null; zoom(Number(el.dataset.card));}, 500)};
+    press = {at, timer: setTimeout(() => {press = null; inspectedPress = performance.now(); inspect(el.dataset.card);}, 500)};
   });
   const unpress = (event) => {if (press && (event.type !== "pointermove" || Math.hypot(event.clientX - press.at[0], event.clientY - press.at[1]) > 10)) {clearTimeout(press.timer); press = null;}};
   for (const type of ["pointerup", "pointercancel", "pointermove"]) document.addEventListener(type, unpress);
@@ -2716,7 +2812,7 @@ globalThis.CrankBoard = Object.seal({
      Space would press has the focus), 1–9 (hold that card), Enter (do the held card's first thing), Escape
      (back a step: held, fanned, a menu, the panel, full screen), ⌘/Ctrl + and − (card size). */
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && peekId !== null) peek(null);
+    if (event.key === "Escape" && peekId !== null && !showing) {peek(null); return;}
     if (event.key === "Escape" && stackShown !== null) stackPeek(null);
     if (!document.getElementById("cm-board") || !view || document.querySelector("#cm-dialog[open]")) return;
     const tag = (document.activeElement && document.activeElement.tagName) || "";
@@ -2735,6 +2831,7 @@ globalThis.CrankBoard = Object.seal({
       return;
     }
     if (event.key === "Escape" && cameraOpen) {cameraOpen=false; draw(); document.querySelector("[data-action=board-camera]")?.focus(); return;}
+    if (event.key === "Escape" && inspection) {event.preventDefault(); actions["board-inspect-close"](); return;}
     if (coach.open && event.target && event.target.matches && event.target.matches(".cm-coach-input") && event.key === "Enter" && !event.shiftKey) {
       event.preventDefault(); event.target.form.requestSubmit(); return;
     }
@@ -2768,12 +2865,12 @@ globalThis.CrankBoard = Object.seal({
       if (showing) {actions["board-hand-close"](); return;}
       if (stageSide || stageRail) {const action=stageSide ? "board-stage-side" : "board-stage-rail"; stageSide=false; stageRail=false; draw(); document.querySelector(`[data-action="${action}"]`)?.focus(); return;}
       if (panelOpen) {panelOpen = false; draw(); return;}
-      if (mode === "full") setMode("focus");
+
     }
   });
   actions["board-tools"] = (el) => { tools = !tools; confirmEnd = false; historyOpen = false; menuOpen = false; stepsOpen = false; opened(el, tools); draw();};
-  actions["board-coach"] = () => {profileOpen=false; coach.open = !coach.open; tools = false; historyOpen = false; if (coach.open) {panelOpen = false;openModuleDrawer("coach");} draw(); drawCoach(); if (coach.open) document.querySelector("#cm-board-coach .cm-coach-input")?.focus();};
-  actions["board-recommend"] = () => {coach.open=true;openModuleDrawer("coach");draw();drawCoach();ask_("What are my best actions right now?");};
+  actions["board-coach"] = () => {profileOpen=false; coach.open = !coach.open; tools = false; historyOpen = false; if (coach.open) {if (!moduleSide("coach")) inspection = null; panelOpen = false;openModuleDrawer("coach");} draw(); drawCoach(); if (coach.open) document.querySelector("#cm-board-coach .cm-coach-input")?.focus();};
+  actions["board-recommend"] = () => {coach.open=true;if (!moduleSide("coach")) inspection = null;openModuleDrawer("coach");draw();drawCoach();ask_("What are my best actions right now?");};
   actions["board-coach-ask"] = (el) => ask_(el.dataset.q);
   /* Show me: the cards an answer names, lit on the board for four seconds. Why?: each play's reason, one sentence. */
   actions["board-coach-show"] = (el) => {

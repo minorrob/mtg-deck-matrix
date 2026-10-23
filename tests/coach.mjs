@@ -299,6 +299,21 @@ try {
   const link = page.locator(".cm-coach-msg.is-coach .cm-coach-chips a").last();
   await link.waitFor({timeout: 20000});
   eq(await link.getAttribute("href"), `/api/ai/login?to=${encodeURIComponent(`#table?id=${TABLE}`)}`, "signed out of the AI door: a link to sign in, which comes back to this table");
+  for (const mode of ["full", "table", "focus"]) {
+    await page.locator('[data-action="board-camera"]').click();
+    await page.locator(`[data-action="board-view"][data-view="${mode}"]`).click();
+    const layout = await page.evaluate(() => {
+      const coach = document.getElementById("cm-board-coach"), button = coach.querySelector('[data-action="board-coach-ask"]');
+      const c = coach.getBoundingClientRect(), b = button.getBoundingClientRect();
+      const surface = document.querySelector('.cm-stage-region, .cm-board-tabletop, .cm-board-body').getBoundingClientRect();
+      return {reserved: surface.right <= c.left + 1, hit: button.contains(document.elementFromPoint(b.x + b.width / 2, b.y + b.height / 2))};
+    });
+    eq(layout, {reserved: true, hit: true}, `${mode}: Coach keeps board space reserved and its prompts receive the pointer`);
+  }
+  await page.locator('.cm-board-hand .cm-bcard').first().click({button:"right"});
+  ok(await page.locator('#cm-board-coach').isHidden() && await page.locator('#cm-card-inspector').isVisible(), "card inspection replaces the optional Coach in the shared auxiliary space");
+  await page.locator('.cm-board-coach-open').click();
+  ok(await page.locator('#cm-board-coach').isVisible() && await page.locator('#cm-card-inspector').count() === 0, "reopening Coach replaces inspection without covering it");
   await context.close();
 } finally {
   await close();

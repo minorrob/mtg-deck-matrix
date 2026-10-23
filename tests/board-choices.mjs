@@ -306,6 +306,7 @@ function carry(ws) {
 try {
   const context = await browser.newContext({viewport: {width: 1400, height: 900}, serviceWorkers: "block"});
   const page = await context.newPage();
+  await page.addInitScript(() => {if (!localStorage.getItem("cm-board-view")) localStorage.setItem("cm-board-view", "focus");});
   if (stub) await stub(page);
   await page.route(`${base}/index.html*`, (r) => r.fulfill({contentType: "text/html; charset=utf-8", body: html}));
   await page.route(`${base}/api/me`, (r) => r.fulfill({json: {email: ROB}}));
@@ -315,46 +316,33 @@ try {
   await page.goto("about:blank");
   await page.goto(`${base}/index.html#table?id=${TABLE}`);
   await page.locator("#cm-board .cm-stage-top").waitFor({timeout: 60000});
-  await page.locator("[data-action=board-also]").waitFor({timeout: 20000});
+  await page.locator("[data-action=board-actions-open]").waitFor({timeout: 20000});
 
   const zapCard = page.locator(".cm-board-hand .cm-bcard[aria-label^='Zap']").first();
   const label = await zapCard.getAttribute("aria-label");
   ok(/^Zap: Cast Zap, \d+ ways$/.test(label), `the card in the hand says what it can do once, and how many ways: "${label}"`);
 
-  await page.click("[data-action=board-also]");
-  const choose = page.locator(".cm-board-also [data-action=board-choose]", {hasText: "Cast Zap"});
-  ok(await choose.count() === 1, "You can also ▾ lists Zap once");
+  await page.click("[data-action=board-actions-open]");
+  const choose = page.locator(".cm-stage-rail [data-action=board-choose]", {hasText: "Cast Zap"});
+  ok(await choose.count() === 1, "Actions lists Zap once");
   ok(new RegExp(`Cast Zap · ${castOptions.length} ways`).test((await choose.innerText()).replace(/\s+/g, " ")), `saying how many ways (${(await choose.innerText()).replace(/\s+/g, " ").trim()})`);
   await choose.click();
-  const dialog = page.locator("#cm-dialog[open]");
-  await dialog.waitFor({timeout: 5000});
-  const ways = (await dialog.locator(".cm-board-choices [data-action=board-zoom-do]").allInnerTexts()).map((w) => w.replace(/\s+/g, " ").trim());
-  eq(ways.length, castOptions.length, "pressing it opens a pop-up with every way");
-  ok(ways.includes("Cast Zap → Maya") && ways.includes("Cast Zap → Rob (you) · ⚠ against you") && ways.some((w) => /^Cast Zap → Maya Bear \(Maya's\)/.test(w)), `each by what it is aimed at: ${ways.join("; ")}`);
-  eq(await dialog.locator(".cm-board-choices [data-action=board-zoom-do] .cm-lean.is-against").allInnerTexts(), ["⚠ against you"], "the one against Rob himself marked so, and only it");
-  ok(await page.locator(".cm-board-also").count() === 0, "and the menu it came from is put away");
-  if (SHOTS) await page.screenshot({path: path.join(SHOTS, "board-choices-1400.png")});
-  await dialog.locator("[data-action=close]").first().click();
-  await page.waitForFunction(() => !document.querySelector("#cm-dialog[open]"));
-
-  /* The card itself, pressed in the hand: the same pop-up -- here at 1280 by 720, the smallest desk size, where the card
-     is drawn smaller while choosing so that every way and Close are on screen without scrolling. */
-  await page.setViewportSize({width: 1280, height: 720});
-  await page.waitForTimeout(400);
+  const dialog = page.locator("#cm-board-decision");
+  const ways = (await dialog.locator("[data-action=board-option]").allInnerTexts()).map(w=>w.replace(/\s+/g," ").trim());
+  eq(ways.length,castOptions.length,"Actions contains every legal way");
+  ok(ways.includes("Cast Zap → Maya") && ways.includes("Cast Zap → Rob (you) · ⚠ against you"),"target and self-harm warning are visible");
+  eq(await dialog.locator(".cm-lean.is-against").allInnerTexts(),["⚠ against you"],"only self-harm is marked");
+  eq(await page.locator("#cm-dialog[open]").count(),0,"choices leave the board unobstructed");
+  await page.setViewportSize({width:1280,height:720});
   await zapCard.click();
-  await dialog.waitFor({timeout: 5000});
-  const fit = await page.evaluate(() => {
-    const d = document.querySelector("#cm-dialog[open]"), r = (el) => el.getBoundingClientRect();
-    const all = [...d.querySelectorAll(".cm-board-choices [data-action=board-zoom-do]"), d.querySelector(".cm-form-footer [data-action=close]")];
-    return {inside: all.every((el) => r(el).bottom <= innerHeight && r(el).top >= 0), scrolls: d.scrollHeight > d.clientHeight + 1, card: Math.round(r(d.querySelector(".cm-board-zoom .cm-bcard")).height)};
-  });
-  ok(fit.inside && !fit.scrolls, `at 1280 by 720 every way and Close are on screen, the pop-up unscrolled (card ${fit.card}px tall)`);
-  if (SHOTS) await page.screenshot({path: path.join(SHOTS, "board-choices-1280x720.png")});
-  eq((await dialog.locator(".cm-board-choices [data-action=board-zoom-do]").allInnerTexts()).map((w) => w.replace(/\s+/g, " ").trim()).sort(), [...ways].sort(), "pressing Zap in the hand opens the same pop-up, rather than casting it at the first target");
+  ok(await page.locator("#cm-card-inspector").isVisible(),"source card remains visible beside choices");
+  if(SHOTS)await page.screenshot({path:path.join(SHOTS,"board-choices-1280x720.png")});
   /* The cast passes for Rob (game/room/room.mjs, passAfterCast) and the AI seat passes, so Zap resolves in the same turn of
      the room as it is cast: what it hit is read off the game, Maya one life down, rather than off the stack. */
   const mayaLife = (v) => v.state.players[1].health.life, before = mayaLife(latest), castsBefore = latest.history.filter((h) => h.text === "Rob cast Zap").length;
-  await dialog.locator(".cm-board-choices [data-action=board-zoom-do]", {hasText: /^Cast Zap → Maya$/}).click();
+  await dialog.locator("[data-action=board-option]", {hasText: /^Cast Zap → Maya$/}).click();
+  eq(mayaLife(latest),before,"selection has not changed the game");
+  await dialog.locator("[data-action=board-confirm]").click();
   await page.waitForFunction(() => !document.querySelector("#cm-dialog[open]"));
   for (let t = 0; t < 100 && mayaLife(latest) === before; t += 1) await new Promise((r) => setTimeout(r, 100));
   ok(mayaLife(latest) === before - 1 && latest.history.filter((h) => h.text === "Rob cast Zap").length === castsBefore + 1 && latest.history.some((h) => h.text === "Zap resolved"),
@@ -430,5 +418,5 @@ try {
   await close();
 }
 
-console.log(`board-choices: ${checks} checks passed — a card used more than one way says each way (its target, its sacrifice, its color), and the board asks which in a pop-up rather than doing the first; a scry is a pick-several pop-up for the bottom, then the order of the rest; combat damage among two blockers is divided by amounts, in no order.`);
+console.log(`board-choices: ${checks} checks passed — a card used more than one way says each way (its target, its sacrifice, its color), and the board stages the selection in Actions for confirmation; a scry is a pick-several pop-up for the bottom, then the order of the rest; combat damage among two blockers is divided by amounts, in no order.`);
 process.exit(0);

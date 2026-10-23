@@ -1,6 +1,6 @@
-/* The tabletop preview. Only applies to Full screen with the preview enabled. */
+/* The 3D tabletop and shared Play interaction surfaces. */
 .cm-board[data-stage="on"]{grid-template-columns:minmax(0,1fr);grid-template-rows:58px minmax(0,1fr) clamp(150px,22vh,230px);gap:0;padding:0;background:#071719;color:#edf6ef;isolation:isolate}
-.cm-stage-top{display:flex;align-items:center;gap:14px;padding:5px 16px;background:#101f20;border-bottom:1px solid #517e6b;min-width:0;z-index:20}
+.cm-stage-top{display:flex;align-items:center;gap:14px;padding:5px 16px;background:#101f20;border-bottom:1px solid #517e6b;min-width:0;z-index:30}
 .cm-stage-self{display:flex;align-items:center;gap:10px;white-space:nowrap;font-size:12px}
 .cm-stage-top .cm-board-ribbon{position:static;display:flex;flex:1;gap:6px;background:none;font-size:11px;white-space:nowrap;padding:0;min-width:0}
 .cm-stage-top .cm-board-ribbon li{padding:5px 6px;border-radius:20px;list-style:none}
@@ -148,8 +148,6 @@
 .cm-board[data-shell="shared"]>.cm-stage-right{right:var(--stage-side-offset)}
 .cm-board[data-shell="shared"]:has(>.cm-stage-rail.is-open)>.cm-stage-left{left:47px}
 
-.cm-board[data-stage="on"][data-coach="open"]>.cm-stage-side{height:calc((100% - 58px) / 2 - 3px)!important}
-
 /* Modules keep their own scrollable content; the whole pane reaches the hand's edge. */
 .cm-stage-side>header{position:sticky;top:-12px;z-index:3;background:#112526;padding:6px 0;flex-shrink:0}
 .cm-stage-side>header>b{margin-right:auto}
@@ -217,7 +215,9 @@
 .cm-stage-fan-cards{inset:auto 0 0;height:calc(var(--hc,140px)*1.4)}
 .cm-stage-fan-slot{top:auto;bottom:0;transform:translateX(calc(-50% + var(--fan-x)*var(--fan-step))) rotate(var(--fan-angle));transform-origin:50% 100%}
 .cm-stage-hand-label{top:auto;bottom:calc(var(--hc,140px)*1.4 + 2px)}
-.cm-stage-front .cm-board-group,.cm-stage-front .cm-board-lands{overflow:visible}
+/* Rows stay within their zone even when Actions and inspection narrow the table. */
+#matrix-v2 .cm-board .cm-stage-front :is(.cm-board-group,.cm-board-lands){overflow:auto;scrollbar-width:none}
+#matrix-v2 .cm-board .cm-stage-front :is(.cm-board-group,.cm-board-lands)::-webkit-scrollbar{display:none}
 
 /* Screen selection is one popout; the Coach keeps its existing conversation in a module. */
 .cm-screen-popout{position:fixed;z-index:25;width:144px;display:grid;gap:4px;padding:7px;background:#102425;border:1px solid #698477;border-radius:8px;box-shadow:0 6px 20px #0008}
@@ -430,3 +430,76 @@
 .cm-play-records{grid-column:1/-1}
 .cm-stage-region[data-renderer=fallback]{background:radial-gradient(ellipse at center,#294238,#101b18)}
 @media(max-width:700px){.cm-play-home{grid-template-columns:minmax(0,1fr)}.cm-play-welcome{min-height:0}.cm-play-home .v-panel{padding:20px}.cm-play-records{grid-column:auto}}
+/* R2: one calm Actions / Boards desk, with room reserved beside the game. */
+.cm-board[data-shell="shared"]{--stage-left-width:clamp(260px,24vw,330px);--play-left:0px;--play-inspector:0px}
+.cm-board[data-shell="shared"]:has(>.cm-stage-rail.is-open){--play-left:var(--stage-left-width)}
+.cm-board[data-shell="shared"][data-inspecting="on"]{--play-inspector:clamp(240px,24vw,320px)}
+.cm-board[data-shell="shared"][data-coach="open"]{--play-inspector:clamp(240px,24vw,320px)}
+.cm-board[data-shell="shared"]>.cm-board-body,.cm-board[data-shell="shared"]>.cm-board-tabletop,.cm-board[data-shell="shared"]>.cm-board-hand,.cm-board[data-shell="shared"]>.cm-stage-region,.cm-board[data-shell="shared"]>.cm-stage-hand{margin-left:var(--play-left);margin-right:var(--play-inspector);min-width:0}
+.cm-board[data-shell="shared"]>.cm-board-body{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr)}
+.cm-board[data-shell="shared"] .cm-stage-rail{background:#101c1e;border-right:1px solid #8d7856;box-shadow:8px 0 24px #0003;padding:14px 12px}
+.cm-stage-rail .cm-board-pane{position:static;display:block;width:100%;height:auto;max-height:none;padding:12px 0 0;margin:14px 0 0;border:0;border-top:1px solid #43564d;background:none;overflow:visible}
+.cm-stage-rail .cm-board-pane.is-shut{width:100%}
+.cm-stage-rail .cm-board-pane-head{display:flex;align-items:center;justify-content:space-between}
+.cm-stage-rail .cm-board-pane h3,.cm-stage-module h3,#cm-card-inspector h3{font-family:CrankOxanium,Satoshi,sans-serif;letter-spacing:.03em}
+.cm-stage-rail .cm-board-tile{width:100%;margin:8px 0;aspect-ratio:auto;min-height:86px}
+.cm-stage-rail .cm-stage-module[data-module="actions"]{background:none;border:0;border-bottom:1px solid #43564d;border-radius:0;box-shadow:none}
+.cm-stage-module[data-module="actions"]>.cm-module-body{max-height:none;overflow:visible;padding:10px 0}
+.cm-stage-module[data-module="actions"] .cm-board-decision{background:none;box-shadow:none;border:0;padding:0;color:#edf6ef}
+.cm-stage-module[data-module="actions"] .cm-board-decision{display:flex;flex-direction:column;max-height:calc(70vh - 130px);gap:10px;min-height:0}
+.cm-stage-module[data-module="actions"] .cm-board-decision>h3,.cm-stage-module[data-module="actions"] .cm-board-decision-foot{flex:none}
+#matrix-v2 .cm-stage-module h3,#matrix-v2 .cm-stage-rail .cm-board-pane h3,#matrix-v2 #cm-card-inspector h3{font-family:CrankOxanium,Satoshi,sans-serif;font-size:14px;font-weight:600;text-transform:none;color:inherit}
+.cm-stage-module[data-module="actions"] .cm-board-options{display:flex;flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:8px;min-height:0;max-height:none;overflow:auto;padding:3px;margin:-3px;scrollbar-width:thin}
+.cm-stage-module[data-module="actions"] .cm-board-options>*{flex:none}
+.cm-stage-rail .cm-block-tiles{flex-wrap:wrap;overflow:visible}
+#matrix-v2 .cm-stage-module[data-module="actions"] .v-button{white-space:normal;text-align:left;line-height:1.4;min-height:40px;overflow-wrap:anywhere}
+.cm-stage-module[data-module="actions"] .cm-board-decision-foot{position:sticky;bottom:0;background:#101c1e;padding:10px 0;display:flex;flex-wrap:wrap;gap:8px}
+#cm-card-inspector{position:absolute;right:0;top:58px;bottom:0;z-index:24;width:clamp(240px,24vw,320px);padding:16px;background:#101c1e;color:#edf6ef;border-left:1px solid #8d7856;overflow:auto;box-shadow:-8px 0 24px #0003}
+#cm-card-inspector>header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+#cm-card-inspector h3{font-size:16px;line-height:1.4;margin:0}
+#cm-card-inspector .cm-bcard{--bc:min(100%,280px);width:100%;height:auto;aspect-ratio:5/7;transform:none;display:block}
+#cm-card-inspector .cm-bcard img{object-fit:contain;width:100%;height:100%}
+#cm-card-inspector .cm-inspection-context{font-size:12px;color:#b6cbbf;margin:12px 0}
+.cm-board[data-combat]>#cm-card-inspector{top:188px}
+.cm-history-cards{display:flex;flex-wrap:wrap;gap:6px;padding-top:10px}
+.cm-board:is([data-inspecting="on"],[data-coach="open"])>.cm-stage-right{right:var(--play-inspector)}
+.cm-board:is([data-inspecting="on"],[data-coach="open"])>.cm-stage-side{right:var(--play-inspector)}
+.cm-board:is([data-inspecting="on"],[data-coach="open"])>.cm-stage-camera{right:calc(var(--play-inspector) + 18px)}
+.cm-board[data-phone] #cm-card-inspector{position:fixed;top:48px;bottom:12px;width:min(320px,90vw);max-height:calc(100dvh - 60px)}
+
+.cm-board[data-shell="shared"]>.cm-board-panegrip{position:absolute;left:calc(var(--stage-left-width) - 6px);top:58px;bottom:0;width:12px;z-index:26;display:flex}
+.cm-board[data-shell="shared"]>.cm-board-panegrip [data-drag]{width:12px;height:100%;cursor:col-resize}
+.cm-stage-rail .cm-board-tile.is-mini{aspect-ratio:16/9}
+.cm-board[data-shell="shared"] .cm-stage-fan{width:min(100%,1000px)}
+/* Fixed dark game chrome needs explicit ink in every site theme. */
+#matrix-v2 .cm-stage-rail .cm-board-pane{color:#edf6ef}
+#matrix-v2 .cm-stage-rail .cm-board-tile{color:#edf6ef;background:#172426}
+#matrix-v2 .cm-stage-rail .cm-board-tile .cm-muted{color:#bdcbbf}
+.cm-board[data-shell="shared"] .cm-stage-life-list{background:#101c1e}
+
+#matrix-v2 .cm-stage-rail .cm-board-pane h3{color:#edf6ef}
+
+/* Decision desk: a local selection and its consequence stay beside the board. */
+.cm-action-summary{width:100%;padding:12px;border:1px solid #8d7856;border-radius:8px;background:#1c2c2c;color:#edf6ef;font-size:13px;line-height:1.5;max-height:180px;overflow:auto}
+.cm-action-summary ul{margin:6px 0 0;padding-left:18px}.cm-action-summary li{margin:4px 0;overflow-wrap:anywhere}
+.cm-action-review{flex:none;border-top:1px solid #8d785666;padding-top:10px}.cm-action-review p,.cm-action-hint{font-size:12px;line-height:1.5;color:inherit;margin:8px 0}
+.cm-action-review .cm-actions{display:flex;flex-wrap:wrap;gap:8px}.cm-action-review button{min-height:40px}
+.cm-board-options [aria-pressed=true]{outline:2px solid #a9d9b0;outline-offset:-2px;background:#29463a!important;color:#fff!important}
+.cm-board-decision-foot>.cm-action-review{width:100%}.cm-stage-rail .cm-board-decision.is-also{max-height:calc(100dvh - 155px)}
+
+/* The pre-lobby follows the lounge reference: return, start, tables, conversation, then record. */
+.cm-play-home{grid-template-columns:minmax(240px,1fr) minmax(300px,1.35fr) minmax(240px,1fr);gap:16px}
+.cm-play-home .v-panel{border:1px solid #8d785666;border-radius:16px;padding:24px}
+#matrix-v2 .cm-play-home .cm-play-welcome{grid-column:1/-1;background:linear-gradient(90deg,#101c1ef5 20%,#101c1e77),url(assets/playmats/cloud-wolf.webp) center 40%/cover;color:#edf6ef;min-height:220px}
+.cm-play-welcome .cm-play-eyebrow{color:#d9c39a}.cm-play-welcome h2{color:#edf6ef!important}.cm-play-welcome .v-button{border-color:#8d7856}
+.cm-lounge-unavailable{padding:18px;border:1px dashed #8d785677;border-radius:12px;margin-top:24px;font-size:13px;line-height:1.6}
+.cm-lounge-table-art{height:150px;max-width:320px;margin:20px auto;display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:18px;background:linear-gradient(145deg,#715031,#372820);border:3px solid #8d7856;border-radius:24px;position:relative;box-shadow:0 12px 24px #0003}
+.cm-lounge-table-art i{background:#203c32;border:1px solid #7d9b78;border-radius:8px}.cm-lounge-table-art span{position:absolute;inset:0;display:grid;place-items:center;font-size:10px;letter-spacing:.2em;color:#ead5ad}
+.cm-play-stats{display:flex;gap:24px;margin:20px 0}.cm-play-stats div{display:grid;gap:4px}.cm-play-stats strong{font-size:32px}.cm-play-stats span{font-size:12px}
+.cm-play-records{grid-column:2/-1}.cm-new-table-square{display:grid;grid-template-columns:1fr 1fr;gap:32px;padding:24px;background:linear-gradient(140deg,#644b32,#292a23);border:2px solid #8d7856;border-radius:20px;position:relative;margin:24px 0}
+.cm-new-table-square .cm-table-new-seat{display:flex;flex-direction:column;gap:10px;padding:16px;min-width:0;background:#142a26;color:#edf6ef;border:1px solid #829b7d;border-radius:10px}
+.cm-new-table-square input,.cm-new-table-square select{width:100%;min-width:0}.cm-new-table-square [data-seat-position="1"]{grid-column:2;grid-row:2}.cm-new-table-square [data-seat-position="2"]{grid-column:1;grid-row:2}.cm-new-table-square [data-seat-position="3"]{grid-column:2;grid-row:1}.cm-new-table-square [data-seat-position="4"]{grid-column:1;grid-row:1}
+.cm-new-table-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:10px;color:#ead5ad;letter-spacing:.15em}.cm-new-table-rules{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}.cm-new-table-rules span{border:1px solid #8d7856;border-radius:20px;padding:5px 12px;font-size:12px}
+.cm-table-new{max-width:900px;margin:auto}.cm-table-new h2{font-family:CrankOxanium,Satoshi,sans-serif}
+@media(max-width:1000px){.cm-play-home{grid-template-columns:1fr 1fr}.cm-play-talk{grid-column:1/-1}.cm-play-records{grid-column:auto}}
+@media(max-width:700px){.cm-play-home{grid-template-columns:minmax(0,1fr)}.cm-play-home .v-panel{grid-column:1;padding:20px}.cm-new-table-square{padding:10px;gap:24px 10px}.cm-new-table-square .cm-table-new-seat{padding:10px}.cm-new-table-square input,.cm-new-table-square select{font-size:13px}}

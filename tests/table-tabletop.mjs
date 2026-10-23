@@ -43,12 +43,12 @@ const prefs={preferences:{play:{overlay:37,sidePane:{version:2,owner:'another@ex
 const prefScope={C:{state:prefs,signedInAs:()=> 'player@example.com',notice(){},async commit(command){prefs.preferences={...prefs.preferences,...command.values};}},draw(){}};
 vm.createContext(prefScope);vm.runInContext(preferenceCode,prefScope);
 const layout=()=>JSON.parse(JSON.stringify(vm.runInContext('paneLayout()',prefScope)));
-assert.deepEqual(layout(),{left:[],right:['table','inspect','stack','history','counter']},'another account never inherits the saved owner layout');
+assert.deepEqual(layout(),{left:['actions'],right:['table','inspect','stack','history','counter']},'another account never inherits the saved owner layout');
 await vm.runInContext('savePaneModules({left:["history"],right:["stack","table"]})',prefScope);
-assert.deepEqual(layout(),{left:['history'],right:['stack','table']},'saving preserves drawer placement and ordering');
+assert.deepEqual(layout(),{left:['actions','history'],right:['stack','table']},'saving preserves drawer placement and ordering');
 assert.equal(prefs.preferences.play.overlay,37,'saving modules does not replace unrelated Play settings');
 prefs.preferences.play.sidePane.right.push('history','unknown');
-assert.deepEqual(layout(),{left:['history'],right:['stack','table']},'duplicate and unknown modules cannot create ambiguous controls');
+assert.deepEqual(layout(),{left:['actions','history'],right:['stack','table']},'duplicate and unknown modules cannot create ambiguous controls');
 console.log('table-tabletop: profile ownership, placement, order and preference preservation passed');
 if(process.env.TABLETOP_PURE_ONLY==='1')process.exit(0);
 
@@ -109,6 +109,7 @@ try {
   assert.deepEqual(await fanIndices(),[8,0,1,2,3,4,5],'previous wraps to the end');
   await page.getByRole('button',{name:'Next hand card',exact:true}).click();
   assert.deepEqual(await fanIndices(),[0,1,2,3,4,5,6],'next wraps back through the start');
+  if(await page.locator('.cm-stage-rail.is-open').count()) await page.locator('.cm-stage-left').click();
   assert.equal(await page.locator('.cm-stage-rear').count(),3,"all other seats sit across the back");
   /* ROB-98 (Rob, Oct 18: "Go with the 48px land spacing"): every land on the front mat is reached by a pointer at its upper
      half -- 10%, 25% and 45% down its middle -- at rest and with each card of the fan hovered, at 1400x900, 1024x768 and
@@ -198,20 +199,20 @@ try {
     await __preview.commit({type:'createDeck',name:'Pane persistence fixture',deckId:'deck:pane-proof'},{renderView:false});
     await __preview.commit({type:'preferences',values:{play:{overlay:37,stepByStep:true}}},{renderView:false});
   });
-  const moduleOrder=()=>page.locator('.cm-stage-module').evaluateAll(els=>els.map(el=>el.dataset.module));
+  const moduleOrder=()=>page.locator('.cm-stage-side .cm-stage-module').evaluateAll(els=>els.map(el=>el.dataset.module));
   await page.getByRole('button',{name:'Arrange modules',exact:true}).click();
   await page.getByRole('button',{name:'Remove Card Preview',exact:true}).click();
   await page.waitForFunction(()=>!document.querySelector('[data-module="inspect"]'));
   await page.getByRole('button',{name:'Remove Counter-Intel',exact:true}).click();
   await page.waitForFunction(()=>!document.querySelector('[data-module="counter"]'));
   await page.getByRole('button',{name:'Move On the Stack up',exact:true}).click();
-  await page.waitForFunction(()=>document.querySelector('.cm-stage-module').dataset.module==='stack');
+  await page.waitForFunction(()=>document.querySelector('.cm-stage-side .cm-stage-module').dataset.module==='stack');
   assert.deepEqual(await moduleOrder(),['stack','table','history']);
   await page.locator('[data-module-drag="history"]').dragTo(page.locator('.cm-stage-module[data-module="stack"]'),{targetPosition:{x:20,y:5}});
-  await page.waitForFunction(()=>document.querySelector('.cm-stage-module').dataset.module==='history');
+  await page.waitForFunction(()=>document.querySelector('.cm-stage-side .cm-stage-module').dataset.module==='history');
   for(let i=0;i<2;i++) {
     await page.getByRole('button',{name:'Move History down',exact:true}).click();
-    await page.waitForFunction(n=>Array.from(document.querySelectorAll('.cm-stage-module')).findIndex(el=>el.dataset.module==='history')===n,i+1);
+    await page.waitForFunction(n=>Array.from(document.querySelectorAll('.cm-stage-side .cm-stage-module')).findIndex(el=>el.dataset.module==='history')===n,i+1);
   }
   assert.deepEqual(await moduleOrder(),['stack','table','history']);
   assert.equal(await page.evaluate(()=>__preview.state.preferences.play.overlay),37,'layout saves preserve other Play preferences');
@@ -225,7 +226,7 @@ try {
   await second.waitForFunction(()=>globalThis.__preview?.state.preferences?.play?.sidePane?.right?.[0]==='stack');
   await second.locator('.cm-stage-canvas').waitFor();
   await second.getByRole('button',{name:'Toggle table panel',exact:true}).click();
-  assert.deepEqual(await second.locator('.cm-stage-module').evaluateAll(els=>els.map(el=>el.dataset.module)),['stack','table','history'],'a fresh browser restores the account layout through cloud sync');
+  assert.deepEqual(await second.locator('.cm-stage-side .cm-stage-module').evaluateAll(els=>els.map(el=>el.dataset.module)),['stack','table','history'],'a fresh browser restores the account layout through cloud sync');
   await second.close();
   // Another player using this browser must not inherit this account's pane.
   await accountRoutes(page,'other@example.com');await page.reload();await page.locator('.cm-stage-canvas').waitFor();
@@ -242,7 +243,7 @@ try {
     await page.getByRole('button',{name:'Set Side Drawer Modules',exact:true}).click();
   };
   await openDrawerSettings();
-  for(const id of ['history','coach','counter','resources','stack','inspect','table','recommended','chat','actions']) await page.locator(`input[name="module-${id}"][value="${['table','inspect','stack','history','counter'].includes(id)?'right':'none'}"]`).check();
+  for(const id of ['history','coach','counter','resources','stack','inspect','table','recommended','chat']) await page.locator(`input[name="module-${id}"][value="${['table','inspect','stack','history','counter'].includes(id)?'right':'none'}"]`).check();
   await page.getByRole('button',{name:'Save drawer modules',exact:true}).click();
   await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
   assert.equal(await page.locator('.cm-module-add, [data-action=board-module-add], [data-action=board-module-reset]').count(),0,'drawer configuration uses Settings without taking module space');
@@ -259,7 +260,7 @@ try {
   await page.getByRole('radio',{name:'Counter-Intel: None',exact:true}).check();
   await page.getByRole('button',{name:'Save drawer modules',exact:true}).click();
   await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
-  await page.getByRole('button',{name:'Toggle board tools',exact:true}).click();
+  if(!await page.locator('.cm-stage-rail.is-open').count()) await page.getByRole('button',{name:'Toggle board tools',exact:true}).click();
   assert.equal(await page.locator('.cm-stage-rail .cm-stage-module[data-module="history"]').count(),1,'radio moves History into the left drawer');
   assert.equal(await page.locator('.cm-stage-module[data-module="counter"]').count(),0,'None hides Counter-Intel');
   for(const open of [true,false]) {
@@ -272,10 +273,10 @@ try {
   }
   await page.getByRole('button',{name:'Toggle table panel',exact:true}).click();
   await openDrawerSettings();
-  for(const id of ['history','coach','counter','resources','stack','inspect','table','recommended','chat','actions']) await page.locator(`input[name="module-${id}"][value="${['table','inspect','stack','history','counter'].includes(id)?'right':'none'}"]`).check();
+  for(const id of ['history','coach','counter','resources','stack','inspect','table','recommended','chat']) await page.locator(`input[name="module-${id}"][value="${['table','inspect','stack','history','counter'].includes(id)?'right':'none'}"]`).check();
   await page.getByRole('button',{name:'Save drawer modules',exact:true}).click();
   await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
-  await page.waitForFunction(()=>!document.querySelector('.cm-stage-rail .cm-stage-module'));
+  await page.waitForFunction(()=>document.querySelectorAll('.cm-stage-rail .cm-stage-module').length===1);
   await page.evaluate(()=>{globalThis.__canvas=document.querySelector('.cm-stage-canvas');});
   await page.getByRole('button',{name:'Close table panel',exact:true}).click();
   await page.locator('.cm-stage-seat-label').first().click();
@@ -285,7 +286,7 @@ try {
   ownArt(turned,"Viewing Friend");
   assert.equal(await page.locator('.cm-stage-hand .is-back').count(),7);
   assert.equal(await page.locator('.cm-stage-hand [data-card]').count(),0,"no opponent card identity is introduced by rotation");
-  await page.getByRole('button',{name:'My board',exact:true}).click();
+  await page.locator('.cm-stage-region').getByRole('button',{name:'My board',exact:true}).click();
   assert.equal(await page.locator('.cm-stage-fan').getAttribute('aria-label'),'Your hand');
   assert.equal(await page.evaluate(()=>globalThis.__canvas===document.querySelector('.cm-stage-canvas')),true,"the same graphics context survives redraw and rotation");
   await page.getByRole('button',{name:'Camera',exact:false}).click();
@@ -363,6 +364,7 @@ try {
   await page.getByRole('slider',{name:'Tabletop card size',exact:true}).fill('100');
   await page.getByRole('slider',{name:'Table tilt',exact:true}).fill('40');
   await page.getByRole('slider',{name:'Table zoom',exact:true}).fill('100');
+  if(await page.locator('.cm-stage-rail.is-open').count()) await page.locator('.cm-stage-left').click();
   const handEdges=await page.evaluate(()=>{
     const cards=[...document.querySelectorAll('.cm-stage-hand .cm-bcard')].map(e=>e.getBoundingClientRect());
     return {bottoms:cards.map(r=>r.bottom),top:Math.min(...cards.map(r=>r.top)),board:document.querySelector('.cm-stage-front').getBoundingClientRect().bottom,h:innerHeight};
@@ -372,7 +374,7 @@ try {
   await openDrawerSettings();
   const titles=await page.locator('#cm-drawer-settings tbody th').allTextContents();
   assert.deepEqual(titles,['History','AI Coach','Counter-Intel','Resources','On the Stack','Card Preview','Table Vitals','Recommended Actions','Chat','Actions']);
-  for(const title of ['AI Coach','Actions','Chat']) await page.getByRole('radio',{name:`${title}: Left`,exact:true}).check();
+  for(const title of ['AI Coach','Chat']) await page.getByRole('radio',{name:`${title}: Left`,exact:true}).check();
   await page.getByRole('button',{name:'Save drawer modules',exact:true}).click();
   await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
   assert.equal(await page.locator('.cm-stage-rail.is-open').count(),1,'assigning Actions opens its drawer for the current decision');
@@ -391,10 +393,10 @@ try {
   assert.match(await page.locator('.cm-stage-module[data-module="chat"]').innerText(),/not connected yet/,'Chat does not pretend to send shared messages');
   await page.getByRole('button',{name:'Close the Coach',exact:true}).click();
   await openDrawerSettings();
-  for(const title of ['AI Coach','Actions','Chat']) await page.getByRole('radio',{name:`${title}: None`,exact:true}).check();
+  for(const title of ['AI Coach','Chat']) await page.getByRole('radio',{name:`${title}: None`,exact:true}).check();
   await page.getByRole('button',{name:'Save drawer modules',exact:true}).click();
   await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
-  assert.equal(await page.locator('[data-action="board-also"]').count(),1,'hiding Actions restores the floating actions control');
+  assert.equal(await page.locator('.cm-stage-rail [data-module="actions"]').count(),1,'Actions stays available when optional modules are hidden');
   await page.emulateMedia({reducedMotion:'reduce'});
   await page.waitForTimeout(300);
   const still = await page.locator('canvas.cm-stage-canvas').screenshot();
@@ -435,10 +437,11 @@ try {
   assert.ok(await page.evaluate(()=>__backgroundVideo===document.querySelector('.cm-stage-environment video')),'redrawing drawers preserves the video element');
   await page.emulateMedia({reducedMotion:'reduce'});
   await page.waitForFunction(()=>document.querySelector('.cm-stage-environment video')?.paused);
+  console.log('table-tabletop: camera, drawers, arrangement and video passed');
   // An actual recorded two-entry stack: newest resolves first, every entry gets a readable image.
   for(let i=0;i<20;i++) await page.request.post(`${address}/preview/frame`,{data:'1'});
   await openDrawerSettings();
-  for(const id of ['history','coach','counter','resources','stack','inspect','table','recommended','chat','actions']) await page.locator(`input[name="module-${id}"][value="${id==='stack'?'left':id==='inspect'?'right':'none'}"]`).check();
+  for(const id of ['history','coach','counter','resources','stack','inspect','table','recommended','chat']) await page.locator(`input[name="module-${id}"][value="${id==='stack'?'left':id==='inspect'?'right':'none'}"]`).check();
   await page.getByRole('button',{name:'Save drawer modules',exact:true}).click();
   await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
   for(const [selector,label] of [['.cm-stage-rail','Toggle board tools'],['.cm-stage-side','Toggle table panel']]) if(!await page.locator(`${selector}.is-open`).count()) await page.getByRole('button',{name:label,exact:true}).click();
@@ -466,6 +469,7 @@ try {
   await page.emulateMedia({reducedMotion:'reduce'});
   await page.locator('.cm-stack-summary').nth(1).focus();await page.locator('.cm-stack-summary').nth(1).press('Enter');
   assert.equal(await page.locator('.cm-stack-pile').evaluate(el=>el.getAnimations({subtree:true}).length),0,'reduced motion changes the shown card without animation');
+  console.log('table-tabletop: stack geometry and focus passed');
   // Prove the size check rejects the former small stack thumbnails, then restore.
   const brokenSize=await page.addStyleTag({content:'.cm-stage-module .cm-stack-card{--bc:96px!important}'});
   const mismatched=await page.evaluate(()=>Math.abs(document.querySelector('.cm-stack-card').getBoundingClientRect().width-document.querySelector('.cm-full-pick .cm-bcard').getBoundingClientRect().width));
@@ -508,6 +512,7 @@ try {
         new Promise((_,reject)=>{const t=setTimeout(()=>reject(new Error("preview startup timed out")),10000);t.unref();})
       ]);
       for(const [width,height] of [[1024,768],[1280,720],[1400,900]]) {
+        console.log(`table-tabletop: checking ${count} options at ${width}x${height}`);
         const p=await browser.newPage({viewport:{width,height}}), sent=[], where=`${count} options at ${width}x${height}`;
         let roomSocket, latestView;
         await p.routeWebSocket(/\/api\/tables\//,ws=>{
@@ -522,7 +527,7 @@ try {
         p.on("pageerror",e=>errors.push(e.message));
         p.on("websocket",ws=>ws.on("framesent",f=>sent.push(String(f.payload))));
         await p.goto(`${at}/index.html#table?id=tablepreview01`);
-        await p.waitForFunction(n=>document.querySelectorAll('.cm-stage-region .cm-board-ask>#cm-board-decision .cm-board-options>button').length===n,count);
+        await p.waitForFunction(n=>document.querySelectorAll('.cm-stage-rail #cm-board-decision .cm-board-options>button').length===n,count);
         const title='#cm-board-decision>h3', tally='#cm-board-decision .cm-board-decision-foot>.cm-muted', confirm='#cm-board-decision [data-action="board-confirm"]';
         for(const s of [title,tally,confirm]) assert.ok((await reach(p,s)).reached,`${where}: ${s} is on screen and takes the pointer`);
         const list=await p.evaluate(()=>{const o=document.querySelector('#cm-board-decision .cm-board-options'),r=o.getBoundingClientRect(),first=o.firstElementChild.getBoundingClientRect(),h=document.querySelector('#cm-board-decision>h3').getBoundingClientRect();
