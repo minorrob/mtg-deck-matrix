@@ -66,6 +66,7 @@ export const FORGE_API = {
   /* BecomeMonarch ("you become the monarch", Ginger, Queen of Sweets; Train E): the game's designation, one player's at a time
      (CR 725.3), its two triggers the game's own (725.2; rules/trigger.mjs), passed on as its player leaves (725.4; rules/sba.mjs). */
   BecomeMonarch: "becomeMonarch",
+  RingTemptsYou: "ringTempts",
   /* Earthbend (batch 65): the land a creature with haste, its counters, its return. */
   Earthbend: "earthbend",
   /* Clone ("becomes a copy of target land", batch 58): a permanent becoming a copy, for a turn or for good. */
@@ -228,7 +229,7 @@ export const DECK_RULE_KEYWORDS = {Partner: "room/table.mjs", "Choose a Backgrou
 /* Affinity (CR 702.41a; Thought Monitor, wave 4c) -- "this spell costs {1} less to cast for each [text] you control": the
      spell's own `this-costs-less` (cards/index.mjs), read as it is cast (rules/statics.mjs, costReduction) -- for artifacts,
      tokens, or anything a selector says. */
-export const CAST_RULE_KEYWORDS = {AlternateAdditionalCost: "rules/actions.mjs", ETBReplacement: "rules/replacement.mjs", Overload: "rules/actions.mjs",
+export const CAST_RULE_KEYWORDS = {AlternateAdditionalCost: "rules/actions.mjs", ETBReplacement: "rules/replacement.mjs", Overload: "rules/actions.mjs", Mutate: "keywords/mutate.mjs",
   Affinity: "rules/statics.mjs",
   Gift: "rules/actions.mjs", MayEffectFromOpeningHand: "rules/mulligan.mjs"};
 

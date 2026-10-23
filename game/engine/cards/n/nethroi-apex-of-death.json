@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Nethroi, Apex of Death",
+    "oracleId": "66bef5a7-79b7-4a9c-98dc-8670f867f04c",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Cat",
+      "Nightmare",
+      "Beast"
+    ],
+    "manaCost": "{2}{W}{B}{G}",
+    "colors": [
+      "B",
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "G",
+      "W"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Mutate {4}{G/W}{B}{B} (If you cast this spell for its mutate cost, put it over or under target non-Human creature you own. They mutate into the creature on top plus all abilities from under it.)\nDeathtouch, lifelink\nWhenever this creature mutates, return any number of target creature cards with total power 10 or less from your graveyard to the battlefield.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Mutate {4}{G/W}{B}{B} (If you cast this spell for its mutate cost, put it over or under target non-Human creature you own. They mutate into the creature on top plus all abilities from under it.)",
+      "keyword": "mutate",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{4}{G/W}{B}{B}"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Deathtouch",
+      "keyword": "deathtouch"
+    },
+    {
+      "kind": "keyword",
+      "text": "lifelink",
+      "keyword": "lifelink"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature mutates, return any number of target creature cards with total power 10 or less from your graveyard to the battlefield.",
+      "trigger": {
+        "on": "mutates"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "battlefield"
+        }
+      ],
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "types": [
+            "Creature"
+          ],
+          "owner": "you",
+          "count": {
+            "min": 0
+          },
+          "totalPowerAtMost": 10
+        }
+      ]
+    }
+  ]
+}

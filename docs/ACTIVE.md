@@ -1,5 +1,21 @@
 # Who holds the work
 
+## Rob's two-card engine load, October 23, 2026 (Codex, `codex/cards-nethroi-boromir`)
+
+Rob requested Nethroi, Apex of Death (D4) and Boromir, Warden of the Tower (D7), merged and pushed to staging.
+This task owns the engine additions required by those two cards. The separate Play checkout and its changes are preserved.
+
+- **Implemented:** mutate casting and over/under choice, merged physical cards and zone changes, commander components,
+  copying, flickering, ordering and Nethroi's total-power target limit; the Ring emblem, bearer designation and all four
+  abilities, plus Boromir's vigilance, zero-mana counter trigger and protection ability. Both definitions have card scenarios.
+- **Local proof:** `node tests/engine-mutate.mjs` (20 checks), `node tests/engine-ring.mjs` (15 checks),
+  `node tests/engine-cards.mjs` (2,602 definitions and 6,250 scenarios), the affected state, stack, target, copy, commander,
+  combat, layer, schema, controller, projection and pilot suites, plus the table scenarios and save/resume storage suite.
+  `python game/tools/batch/breaks.py game/tools/batch/breaks-mutate.py` and `breaks-ring.py` prove the new paths can fail.
+- **Release gate:** the PR head must pass the secret scan and GitHub CI; staging uses the existing cloud-staging builder
+  and both acceptance walks after the merge. Production is outside this request. No Forge behavior is claimed by this load.
+
+
 ## Rob's fullscreen notes, 2026-10-21 (a Claude cloud session, for Rob; PR #832, `claude/wizardly-galileo-ol2d4s`): merged, on staging
 
 Rob, in Full screen: *"Make these changes now so that I can restart my game with them applied in staging."* At his word this

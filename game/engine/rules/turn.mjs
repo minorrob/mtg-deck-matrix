@@ -1,3 +1,4 @@
+import {mergedOrderChoice, finishMergedOrder} from "../state/index.mjs";
 /* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE. */
 
 /* THE TURN: CR 500 TO 514.
@@ -321,6 +322,7 @@ function choiceFor(state) {
   if (awaiting.kind === "mulligan-decision" || awaiting.kind === "mulligan-bottom" || awaiting.kind === "opening-hand")
     return mulliganChoice(state, awaiting);
   if (awaiting.kind === "effect-choice") return resolutionChoice(state, awaiting);
+  if (awaiting.kind === "merged-order") return mergedOrderChoice(state, awaiting);
   if (awaiting.kind === "commander-replacement") return commanderChoice(state, awaiting);
   if (awaiting.kind === "legend-rule") return legendChoice(state, awaiting);
   /* CR 616.1: which effect replaces a creature's destruction by lethal damage, when several would (rules/sba.mjs). */
@@ -424,6 +426,11 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
      scry's `toBottom`, for instance -- and the choice record says which fields it expects. */
   if (awaiting.kind === "effect-choice") return resolutionAnswered(state, answerResolution(state, indices, extra, rng));
 
+  if (awaiting.kind === "merged-order") {
+    const events = finishMergedOrder(state, awaiting, indices);
+    grantStepPriority(state, events);
+    return events;
+  }
   if (awaiting.kind === "commander-replacement") {
     const events = finishCommanderReplacement(state, awaiting, indices);
     grantStepPriority(state, events);

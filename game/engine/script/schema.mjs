@@ -410,7 +410,9 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
   /* A target is a selector, or `{anyOf: [...]}` for "any target" (script/bind.mjs) -- either with a `count`, `{min, max}`, for
      "up to N", "any number of", "one or two" (CR 115.1, 601.2c). */
   for (const [index, spec] of (ability.targets ?? []).entries()) {
-    const {count, distinctFrom, onlyIf, differentControllers, share, forEach, ownedByControllerOf, ...selector} = spec && typeof spec === "object" ? spec : {};
+    const {totalPowerAtMost, count, distinctFrom, onlyIf, differentControllers, share, forEach, ownedByControllerOf, ...selector} = spec && typeof spec === "object" ? spec : {};
+    if (totalPowerAtMost !== undefined && !(Number.isInteger(totalPowerAtMost) && totalPowerAtMost >= 0 && count !== undefined))
+      errors.push({path: `${path}.targets[${index}].totalPowerAtMost`, message: "A total power limit is a nonnegative integer on a counted target"});
     if (count !== undefined && !countValid(count))
       errors.push({path: `${path}.targets[${index}].count`, message: "A target's count is `{min, max}`: whole numbers, max at least 1 and at least min, or no max for \"any number\""});
     /* "Target artifact a player controls and target artifact card in that player's graveyard" (Goblin Welder; script/bind.mjs,

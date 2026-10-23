@@ -162,6 +162,8 @@ function validateIndices(choice, request) {
     if (!Number.isInteger(n) || n < 0 || n >= size || seen.has(n)) throw new Error("Invalid selection");
     seen.add(n);
   }
+  if (choice.budget && indices.reduce((total, i) => total + (choice.options[i]?.[choice.budget.by] ?? 0), 0) > choice.budget.most)
+    throw new Error(choice.budget.why ?? `Choose options totaling ${choice.budget.most} or less.`);
   /* SOME CHOICES OFFER THE SAME THING SEVERAL WAYS. Declaring attackers lists one option per
      creature per defender, so two distinct indices can name the same creature — and a creature
      attacks once (CR 508.1a). The record says which field has to stay unique, and every answerer is

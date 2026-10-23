@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,561 defined and playable today; 2,825 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,562 defined and playable today; 2,833 with every
 mechanic built, so only their definitions are left to write; 25 of those have a learned definition stored provisional, seated at no table until a played game or Rob confirms it.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -18,9 +18,9 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 80 | 0 | 7 | 107 |
+| Keyword abilities (CR 702) | 194 | 81 | 0 | 7 | 106 |
 | Keyword actions (CR 701) | 70 | 22 | 5 | 1 | 42 |
-| Effects | 192 | 78 | 2 | 1 | 111 |
+| Effects | 192 | 79 | 2 | 1 | 110 |
 | Triggers | 138 | 26 | 4 | 1 | 107 |
 | Static abilities | 77 | 14 | 2 | 0 | 61 |
 | Replacement effects | 34 | 0 | 6 | 0 | 28 |
@@ -38,7 +38,6 @@ The things that alone hold back the most of the most-played cards.
 | --- | --- | --- | --- | ---: | ---: |
 | option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 9 | 61 |
 | count | What entered or died this turn | — | missing | 9 | 9 |
-| effect | RingTemptsYou | — | missing | 8 | 11 |
 | effect | ChoosePlayer | — | missing | 6 | 8 |
 | effect | Discover | discover | named | 6 | 6 |
 | count | How many things an effect remembered | — | missing | 5 | 8 |
@@ -51,6 +50,7 @@ The things that alone hold back the most of the most-played cards.
 | count | Amount | — | missing | 4 | 8 |
 | option | Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 4 | 7 |
 | keyword ability | Protection | — | named | 4 | 6 |
+| keyword ability | Landwalk | — | named | 4 | 5 |
 
 ## Keyword abilities (CR 702)
 
@@ -174,7 +174,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.168 | Disguise | Disguise | built | 0 | 47 | 0 | 0 |
 | 702.45 | Bushido | Bushido | built | 0 | 37 | 0 | 0 |
 | 702.18 | Shroud | Shroud | built | 0 | 37 | 0 | 0 |
-| 702.140 | Mutate | — | missing | 0 | 34 | 0 | 0 |
+| 702.140 | Mutate | Mutate | built | 0 | 34 | 0 | 0 |
 | 702.146 | Disturb | — | missing | 0 | 32 | 0 | 0 |
 | 702.42 | Entwine | — | missing | 0 | 32 | 0 | 0 |
 | 702.171 | Saddle | Saddle | built | 0 | 32 | 0 | 0 |
@@ -389,7 +389,7 @@ The things that alone hold back the most of the most-played cards.
 | ManaReflected | addMana | built | 12 | 47 | 0 | 0 |
 | PeekAndReveal | peekAndReveal | built | 11 | 158 | 0 | 0 |
 | Goad | goad | built | 11 | 67 | 0 | 0 |
-| RingTemptsYou | — | missing | 11 | 49 | 11 | 8 |
+| RingTemptsYou | ringTempts | built | 11 | 49 | 0 | 0 |
 | Poison | poison | built | 11 | 36 | 0 | 0 |
 | AddTurn | addTurn | built | 10 | 65 | 0 | 0 |
 | BecomeMonarch | becomeMonarch | built | 10 | 62 | 0 | 0 |
@@ -555,7 +555,7 @@ The things that alone hold back the most of the most-played cards.
 | UnlockDoor | — | missing | 3 | 26 | 3 | 2 |
 | CounterAdded | counter added | built | 3 | 19 | 0 | 0 |
 | FullyUnlock | — | missing | 3 | 17 | 3 | 1 |
-| RingTemptsYou | — | missing | 3 | 9 | 3 | 0 |
+| RingTemptsYou | — | missing | 3 | 9 | 3 | 2 |
 | Blocks | blocks | built | 2 | 127 | 0 | 0 |
 | Always | state | built | 2 | 62 | 0 | 0 |
 | DamageDealtOnce | — | missing | 2 | 48 | 2 | 1 |

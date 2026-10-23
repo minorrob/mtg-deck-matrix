@@ -1,0 +1,348 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Boromir, Warden of the Tower",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Free Relic": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{0}",
+      "colors": []
+    },
+    "Paid Relic": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Sacrifice protects your creatures and chooses a bearer",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Boromir, Warden of the Tower",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Boromir, Warden of the Tower",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Boromir, Warden of the Tower"
+          ]
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Bear",
+            "has": [
+              "Indestructible"
+            ]
+          }
+        },
+        {
+          "seat": 1,
+          "keywords": {
+            "card": "Bear",
+            "lacks": [
+              "Indestructible"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "No creature still creates the Ring",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Boromir, Warden of the Tower"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Boromir, Warden of the Tower",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Boromir, Warden of the Tower"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "An opponent spends no mana and their spell is countered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Boromir, Warden of the Tower"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Free Relic"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "cast": "Free Relic",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Free Relic"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "Your own zero-mana spell is not countered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Boromir, Warden of the Tower"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Free Relic"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "cast": "Free Relic"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Boromir, Warden of the Tower",
+            "Free Relic"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "An opponent who pays mana keeps their spell",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Boromir, Warden of the Tower"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Paid Relic"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Paid Relic",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Paid Relic"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Protection ends at cleanup",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Boromir, Warden of the Tower",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Boromir, Warden of the Tower",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Bear",
+            "lacks": [
+              "Indestructible"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vigilance leaves Boromir untapped when attacking",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Boromir, Warden of the Tower"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DECLARE_ATTACKERS"
+          }
+        },
+        {
+          "attack": [
+            "Boromir, Warden of the Tower"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Boromir, Warden of the Tower",
+          "is": false
+        }
+      ]
+    }
+  ]
+}

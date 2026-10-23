@@ -71,6 +71,7 @@ function printed(state, id) {
   return {
     id,
     card: object.card,
+    supertypes: [...(object.supertypes ?? [])],
     types: [...(object.types ?? [])],
     /* Subtypes, which layer 4 may set ("is a colorless Forest land", Song of the Dryads). */
     subtypes: [...(object.subtypes ?? [])],
@@ -132,8 +133,8 @@ function affects(state, effect, current, sourceController) {
   /* "Other Elf creatures you control get +1/+1": a subtype (printed, or a type the layers added), and not the source. */
   /* A changeling is every creature type (CR 702.73a): an Elf lord's "other Elves" takes it in. */
   if (rule.subtypes && !rule.subtypes.every((t) => current.types.includes(t) || hasSubtype(current.subtypes, current.everyCreatureType, t))) return false;
-  /* "Legendary Humans you control have indestructible" (General's Enforcer): printed supertypes, which no layer changes. */
-  if (rule.supertypes && !rule.supertypes.every((t) => (state.objects[current.id]?.supertypes ?? []).includes(t))) return false;
+  /* "Legendary Humans you control have indestructible" (General's Enforcer): supertypes after layer 4, including the Ring-bearer designation. */
+  if (rule.supertypes && !rule.supertypes.every((t) => (current.supertypes ?? []).includes(t))) return false;
   if (rule.another === true && current.id === effect.sourceId) return false;
   /* "This creature's power and toughness are each equal to ...": the source itself. */
   if (rule.self === true && current.id !== effect.sourceId) return false;
@@ -170,6 +171,7 @@ export const staticAffects = (state, effect, id, sourceController) => affects(st
 
 function applyEffect(current, effect) {
   const change = effect.apply ?? {};
+  if (change.addSupertypes) current.supertypes = [...new Set([...current.supertypes, ...change.addSupertypes])];
   if (Number.isInteger(change.controller)) current.controller = change.controller;
   /* CR 613.1d: "in addition to its other types" adds; setTypes replaces. */
   if (change.addTypes) for (const type of change.addTypes) if (!current.types.includes(type)) current.types.push(type);
@@ -320,6 +322,14 @@ function gatherEffects(state) {
         partOf: partOf(id, ability),
       });
     }
+  }
+  /* CR 701.54c, 613.1d: the emblem makes the bearer legendary, without granting an ability.
+     Layer 2 has already determined control when this effect is applied. */
+  for (const player of state.players) {
+    const ring = player.ring;
+    if (ring?.bearer != null && state.objects[ring.bearer]?.zone === "battlefield") found.push({layer: 4,
+      sourceController: player.id, timestamp: state.objects[ring.emblem]?.timestamp ?? 0,
+      affects: {ids: [ring.bearer], controller: "you"}, apply: {addSupertypes: ["Legendary"]}});
   }
   for (const effect of state.effects ?? []) {
     found.push({...effect, sourceController: effect.sourceController ?? null});
@@ -819,7 +829,7 @@ export function lastKnown(state, id) {
     types: [...current.types],
     /* What "another Vampire you control dies" and "equipped creature dies" ask of a thing that is gone. */
     subtypes: [...current.subtypes],
-    supertypes: [...(object.supertypes ?? [])],
+    supertypes: [...current.supertypes],
     /* What it chose as it entered, for its abilities read as it last was. */
     ...(object.chosen !== undefined ? {chosen: object.chosen} : {}),
     /* Its Class level (CR 716.2a), for the abilities it had at that level. */

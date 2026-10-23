@@ -211,6 +211,29 @@ function faceOf(mdfc, face) {
  */
 export function transformObject(state, id) {
   const object = state.objects[id];
+  if (object?.merged) {
+    let changed = false;
+    for (const part of object.merged) {
+      const card = part.physical;
+      if (!card.mdfc || part.faceDown) continue;
+      const to = card.face === "back" ? "front" : "back";
+      if ((card.mdfc[to].types ?? []).some(t => t === "Instant" || t === "Sorcery")) continue;
+      const next = faceOf(card.mdfc, to);
+      Object.assign(card, next); card.face = to;
+      part.values = {...part.values, ...next}; changed = true;
+    }
+    if (!changed) return false;
+    const parts = object.merged.map(p => p.values);
+    const onto = object.uncopied ?? object;
+    for (const key of COPY_KEYS) {
+      if (parts[0][key] === undefined) delete onto[key]; else onto[key] = structuredClone(parts[0][key]);
+    }
+    onto.abilities = parts.flatMap(p => p.abilities ?? []).map((a, i) => ({...a, id: `merged-${id}-${i}`}));
+    onto.keywords = parts.flatMap(p => p.keywords ?? []);
+    object.transforms = (object.transforms ?? 0) + 1;
+    object.timestamp = state.nextTimestamp++;
+    return true;
+  }
   if (!object?.mdfc) return false;
   const to = object.face === "back" ? "front" : "back";
   if ((object.mdfc[to].types ?? []).some((type) => type === "Instant" || type === "Sorcery")) return false;
@@ -274,7 +297,12 @@ const CARD_KEYS = ["card", "types", "subtypes", "supertypes", "manaCost", "color
  */
 export function turnFaceUp(state, id) {
   const object = state.objects[id];
+  if (object.merged?.some(p => p.faceDown && (p.physical.types ?? []).some(t => t === "Instant" || t === "Sorcery"))) return false;
   const real = object.faceDownCard;
+  for (const part of object.merged ?? []) if (part.faceDown) {
+    part.values = Object.fromEntries(COPY_KEYS.filter(k => part.physical[k] !== undefined).map(k => [k, structuredClone(part.physical[k])]));
+    delete part.faceDown;
+  }
   delete object.faceDown;
   delete object.faceDownCard;
   delete object.disguised;
@@ -284,6 +312,7 @@ export function turnFaceUp(state, id) {
   }
   object.timestamp = state.nextTimestamp;
   state.nextTimestamp += 1;
+  return true;
 }
 
 /** Turn a modal double-faced card in a player's hand to the face it is played with (CR 712.12): before it moves, so how
@@ -520,7 +549,7 @@ export function recordUse(state, id, key) {
 
 /* `transformed` (CR 712.14a): a double-faced card put onto the battlefield with its back face up. */
 /* `disguised` (CR 702.168b): face down as a disguise casts it -- onto the stack, and from there onto the battlefield. */
-export function moveObject(state, id, zone, player = null, {faceDown = false, transformed = false, disguised = false} = {}) {
+export function moveObject(state, id, zone, player = null, {faceDown = false, transformed = false, disguised = false, nonCommanderTo = null, commanderKeys = []} = {}) {
   const current = state.objects[id];
   if (!current) throw new Error(`There is no object ${id} to move`);
   /* A face-down permanent leaving is revealed, and moves as the card it is (CR 708.9). */
@@ -542,6 +571,54 @@ export function moveObject(state, id, zone, player = null, {faceDown = false, tr
      left, wherever it went -- a card only, never a token (CR 108.2b) -- as revolt's count is (script/amount.mjs,
      cardsLeftGraveyardThisTurn; cleared as a turn begins, rules/turn.mjs). */
   if (from.zone === "graveyard" && from.token !== true) state.players[from.zonePlayer].leftGraveyardThisTurn = (state.players[from.zonePlayer].leftGraveyardThisTurn ?? 0) + 1;
+
+  /* One permanent leaves, all its components become separate objects (CR 730.3). */
+  if (current.merged) {
+    const moved = current.merged.map(({physical}) => {
+      const destination = physical.commander === true && commanderKeys.includes(commanderKeyOf(physical)) ? "command"
+        : zone === "command" && physical.commander !== true && nonCommanderTo ? nonCommanderTo : zone;
+      return moveCard(state, {...physical, zone: current.zone}, destination,
+        ["hand", "graveyard", "library", "command"].includes(destination) ? physical.owner : null, {faceDown, transformed, disguised});
+    });
+    state.objects[moved[0]].departedTogether = moved;
+    const ordering = moved.filter(id => ["library", "graveyard", "exile"].includes(state.objects[id].zone) && !state.objects[id].token);
+    if (ordering.length > 1) (state.mergedOrders ??= []).push({cards: ordering, player: current.owner});
+    return moved[0];
+  }
+  return moveCard(state, from, zone, player, {faceDown, transformed, disguised});
+}
+
+/** All objects an effect can find after a merged permanent leaves (CR 730.3c). */
+export const objectsAfterMove = (state, id) => id == null ? [] : state.objects[id]?.departedTogether ?? [id];
+
+/** Ordering the cards a merged permanent becomes is a choice (CR 730.3a-b). */
+export function mergedOrderToAsk(state) {
+  while (state.mergedOrders?.length) {
+    const first = state.mergedOrders[0];
+    const cards = first.cards.filter(id => state.objects[id] && ["library", "graveyard", "exile"].includes(state.objects[id].zone));
+    if (cards.length > 1) return {kind: "merged-order", player: first.player, cards};
+    state.mergedOrders.shift();
+  }
+  return null;
+}
+export function mergedOrderChoice(state, awaiting) {
+  return {id: `merged-order:${awaiting.cards.join(",")}`, title: "Order these cards, first to last", mode: "order",
+    min: awaiting.cards.length, max: awaiting.cards.length,
+    options: awaiting.cards.map((cardId, index) => ({index, cardId, label: state.objects[cardId].card}))};
+}
+export function finishMergedOrder(state, awaiting, indices) {
+  if (indices.length !== awaiting.cards.length || new Set(indices).size !== indices.length || indices.some(i => !awaiting.cards[i])) throw new Error("Choose an order containing each card once.");
+  const ordered = indices.map(i => awaiting.cards[i]);
+  const first = state.objects[ordered[0]], zone = listFor(state, first.zone, first.zonePlayer);
+  const positions = zone.flatMap((id, i) => ordered.includes(id) ? [i] : []);
+  positions.forEach((at, i) => { zone[at] = ordered[i]; });
+  if (first.zone === "exile") for (const id of ordered) state.objects[id].timestamp = state.nextTimestamp++;
+  state.mergedOrders.shift();
+  state.awaiting = null;
+  return [];
+}
+
+function moveCard(state, from, zone, player, {faceDown, transformed, disguised}) {
 
   /* Only what the CARD says survives the move: its identity, its printed types and its owner. The
      owner does (CR 108.3): a card goes to its OWNER's graveyard however long someone else
