@@ -77,7 +77,8 @@
  *   {votes: choice}                      the votes cast for that choice in this resolution's vote ("a card for each past
  *                                        vote", Fateful Tempest; CR 701.38; effects/asking.mjs, vote)
  *   {totalManaValue: "remembered"}       the mana values of what the effect before it remembered, added together ("the total
- *                                        mana value of cards milled this way")
+ *                                        mana value of cards milled this way"); or of what a selector matches ("the total
+ *                                        mana value of historic permanents you control", Excalibur, Sword of Eden)
  *   {colorsSpent: "self"}                converge: the colors of mana spent to cast its own object (Sundering Archaic)
  *   {planeswalkerTypesAmong: selector}   the different planeswalker types among what the selector matches (Tam, the
  *                                        Possibility; CR 205.3j)
@@ -213,13 +214,13 @@ export function amountProblems(value) {
   for (const key of ["times", "plus", "atMost"]) if (key in value && !Number.isInteger(value[key]) && !(key === "times" && value[key] === "X")) problems.push(`An amount's ${key} is a whole number${key === "times" ? ', or "X"' : ""}`);
   if ("playersWhoDid" in value && value.playersWhoDid !== true) problems.push("playersWhoDid is true");
   if ("votes" in value && !(typeof value.votes === "string" && value.votes.length)) problems.push("votes names the choice voted for");
-  if ("totalManaValue" in value && value.totalManaValue !== "remembered") problems.push('totalManaValue is "remembered"');
+  if ("totalManaValue" in value && value.totalManaValue !== "remembered" && !(value.totalManaValue && typeof value.totalManaValue === "object")) problems.push('totalManaValue is "remembered", or a selector');
   if ("if" in value) {
     problems.push(...conditionProblems(value.if).map((p) => `An amount's condition: ${p}`));
     for (const key of ["then", "else"]) if (key in value) problems.push(...amountProblems(value[key]));
   }
   /* What it counts is a selector, held to the selector grammar (script/filter.mjs), a choice of them included. */
-  for (const key of ["cardTypesAmong", "count", "greatestPower", "totalPower", "mostAmongOpponents", "differentPowers", "differentNames", "planeswalkerTypesAmong", "fewestAmongPlayers", "greatestManaValue"]) {
+  for (const key of ["cardTypesAmong", "count", "greatestPower", "totalPower", "mostAmongOpponents", "differentPowers", "differentNames", "planeswalkerTypesAmong", "fewestAmongPlayers", "greatestManaValue", "totalManaValue"]) {
     if (!(key in value) || value[key] === "remembered") continue;
     const {anyOf, ...shared} = value[key] ?? {};
     try { for (const one of Array.isArray(anyOf) ? anyOf.map((a) => ({...shared, ...a})) : [value[key]]) compileSelector(one); }
@@ -328,6 +329,10 @@ export function amountOf(state, value, context = {}) {
   /* "For each past vote" (Fateful Tempest; CR 701.38): this resolution's votes for that choice. */
   else if ("votes" in value) n = context.votes?.[value.votes] ?? 0;
   /* "The total mana value of cards milled this way" (CR 202.3): what the effect before it remembered, as the cards are now. */
+  /* "Where X is the total mana value of historic permanents you control" (Excalibur, Sword of Eden; CR 202.3, 700.6): what
+     the selector matches now, a token's mana value its mana cost's or 0 (CR 111.4). */
+  else if ("totalManaValue" in value && value.totalManaValue !== "remembered")
+    n = matching(state, value.totalManaValue, who).reduce((sum, id) => sum + manaValue(parseManaCost(valueCostOf(state.objects[id]) ?? "")), 0);
   else if ("totalManaValue" in value) n = (context.remembered ?? []).reduce((sum, id) => {
     const cost = state.objects[id] ? valueCostOf(state.objects[id]) : null;
     return sum + (cost ? manaValue(parseManaCost(cost)) : 0);

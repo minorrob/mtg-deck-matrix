@@ -1150,6 +1150,20 @@ export function compileScript(script) {
       keywords.push(word === "surge" ? "Surge" : "Freerunning");
       return;
     }
+    /* DASH [COST] (CR 702.109a; Ragavan, Nimble Pilferer, wave 4d L3): "You may cast this card by paying [cost] rather than its
+       mana cost" -- an alternative cost (CR 118.9) from wherever the card may be cast, marked as cast for it (`paidFor`) --
+       and, if it was, the permanent it becomes has haste and returns to its owner's hand at the beginning of the next end step
+       (rules/stack.mjs). A mana cost. */
+    if (word === "dash") {
+      const cost = Array.isArray(ability.cost) ? ability.cost : [];
+      let parsed = null;
+      try { parsed = cost.length === 1 && cost[0]?.atom === "mana" ? parseManaCost(cost[0].cost ?? "") : null; } catch { /* refused below */ }
+      if (!parsed || !parsed.symbols.length || parsed.variable > 0) problems.push(`${ability.text}: a dash cost of mana, once, without X`);
+      if (!(identity.types ?? []).includes("Creature")) problems.push(`${ability.text}: dash on a card that is no creature`);
+      abilities.push({id, kind: "static", rule: "alternative-cost", paidFor: "dash", text: ability.text, cost: structuredClone(cost), affects: {what: "card", self: true}});
+      keywords.push("Dash");
+      return;
+    }
     /* WARP [COST] (CR 702.185a; All-Fates Stalker, Pinnacle Emissary): "You may cast this card from your hand by paying [cost]
        rather than its mana cost" -- an alternative cost offered from the hand alone (`fromHand`; rules/actions.mjs), what it
        casts marked as cast for it (`paidFor`) and counted as warped this turn (702.185c, the condition `void`) -- and "if

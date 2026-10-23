@@ -39,6 +39,8 @@ import {protectedFrom} from "../rules/protection.mjs";
 export const KEYWORD_FAMILIES = Object.freeze({
   /** Who may block, and whom. */
   evasion: Object.freeze(["Flying", "Reach", "Menace", "Fear", "Forestwalk", "Islandwalk",
+    /* Nonbasic landwalk (CR 702.14a, c; Trailblazer's Boots, wave 4d L3): canBlockAttacker, below. */
+    "Nonbasic Landwalk",
     /* Shadow (CR 702.28; Minas Morgul, Dark Fortress's shadow counter, CR 122.1b): canBlockAttacker, below. */
     "Shadow"]),
   /** What happens when damage is dealt. */
@@ -94,6 +96,13 @@ export function canBlockAttacker(state, blockerId, attackerId) {
     const defender = state.combat?.attacks?.find(a => a.attacker === attackerId)?.defender ?? controllerOf(state, blockerId);
     if (state.zones.battlefield.some(id => controllerOf(state, id) === defender
         && typesOf(state, id).includes("Land") && subtypesOf(state, id).includes(type))) return false;
+  }
+  /* Nonbasic landwalk (CR 702.14a, c; Trailblazer's Boots): the defending player controls a land without the supertype
+     basic, its supertypes as they are now (CR 205.4a). */
+  if (has(state, attackerId, "Nonbasic Landwalk")) {
+    const defender = state.combat?.attacks?.find(a => a.attacker === attackerId)?.defender ?? controllerOf(state, blockerId);
+    if (state.zones.battlefield.some(id => controllerOf(state, id) === defender
+        && typesOf(state, id).includes("Land") && !(characteristicsOf(state, id).supertypes ?? []).includes("Basic"))) return false;
   }
   /* Protection (CR 702.16f): not blocked by a creature with the quality. */
   if (protectedFrom(state, {card: attackerId}, blockerId)) return false;

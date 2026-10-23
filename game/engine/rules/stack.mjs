@@ -506,6 +506,14 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     if (to === "battlefield" && entry.cast?.paidFor === "warp" && state.objects[arrived])
       delayedTrigger(state, {at: "end step", text: `Warp: exile ${card.name} at the beginning of the next end step.`,
         effects: [{effect: "moveZone", targets: [arrived], to: "exile", warped: state.turn}]}, {controller: entry.playerId, source: arrived});
+    /* DASH (CR 702.109a, 603.7d; Ragavan, Nimble Pilferer): cast for its dash cost, the permanent has haste as long as it is
+       this permanent, and a delayed trigger returns it to its owner's hand at the beginning of the next end step -- that
+       permanent, so one that left the battlefield meanwhile is a new object and stays where it is (CR 400.7). */
+    if (to === "battlefield" && entry.cast?.paidFor === "dash" && state.objects[arrived]) {
+      (state.effects ??= []).push({id: `dash-haste:${arrived}`, layer: 6, affects: {ids: [arrived]}, apply: {addKeywords: ["Haste"]}, until: null, sourceController: entry.playerId});
+      delayedTrigger(state, {at: "end step", text: `Dash: return ${card.name} to its owner's hand at the beginning of the next end step.`,
+        effects: [{effect: "moveZone", targets: [arrived], to: "hand"}]}, {controller: entry.playerId, source: arrived});
+    }
     /* Cast from suspend: haste, while it is this permanent (CR 702.62a). */
     if (to === "battlefield" && entry.fromSuspend && (state.objects[arrived].types ?? []).includes("Creature"))
       (state.effects ??= []).push({id: `suspend-haste:${arrived}`, layer: 6, affects: {ids: [arrived]}, apply: {addKeywords: ["Haste"]}, until: null, sourceController: entry.playerId});

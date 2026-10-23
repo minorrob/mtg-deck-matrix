@@ -1,0 +1,73 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ragavan, Nimble Pilferer",
+    "oracleId": "37108cd4-bbab-4ce3-9ed6-f60e8422e703",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Monkey",
+      "Pirate"
+    ],
+    "manaCost": "{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Whenever Ragavan deals combat damage to a player, create a Treasure token and exile the top card of that player's library. Until end of turn, you may cast that card.\nDash {1}{R} (You may cast this spell for its dash cost. If you do, it gains haste, and it's returned from the battlefield to its owner's hand at the beginning of the next end step.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever Ragavan deals combat damage to a player, create a Treasure token and exile the top card of that player's library. Until end of turn, you may cast that card.",
+      "trigger": {
+        "on": "damage dealt",
+        "who": "self",
+        "combat": true,
+        "to": "player"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "predefined": "Treasure"
+          }
+        },
+        {
+          "effect": "moveZone",
+          "fromTop": 1,
+          "who": "that player",
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "mayPlay",
+          "targets": "remembered",
+          "spellsOnly": true,
+          "until": "end-of-turn"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Dash {1}{R}",
+      "keyword": "dash",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{R}"
+        }
+      ]
+    }
+  ]
+}
