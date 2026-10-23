@@ -1,0 +1,841 @@
+{
+ "schema": "library-load-lane@1",
+ "lane": "L2-graveyard",
+ "theme": "graveyard",
+ "label": "The graveyard: recursion, death and leave-the-battlefield triggers, mill, manifest, shuffling cards away",
+ "source": {
+  "collection": "collection-2026-10-21.json",
+  "workbook": "Backup_Load_-_CrankMagic_-_2026-10-21.xlsx",
+  "decks": [
+   "D1",
+   "D2",
+   "D3",
+   "D4",
+   "D5",
+   "D6",
+   "D7",
+   "S1-D1",
+   "S1-D2",
+   "S1-D3",
+   "S1-D4",
+   "S1-D5",
+   "S1-D6",
+   "S2-D1",
+   "S2-D2",
+   "S2-D3",
+   "S2-D4",
+   "S2-D5",
+   "S2-D6",
+   "G0-D1",
+   "G0-D2",
+   "G0-D3",
+   "G0-D4",
+   "G1-D1",
+   "G1-D2",
+   "G1-D3",
+   "G1-D4",
+   "CJ1",
+   "CJ2",
+   "CJ3",
+   "CJ4",
+   "CJ5",
+   "HG1",
+   "HG2"
+  ],
+  "liveDecks": [
+   "D1",
+   "D2",
+   "D3",
+   "D4",
+   "D5",
+   "D6",
+   "D7"
+  ],
+  "top": 185,
+  "candidates": {
+   "pool": 29551,
+   "candidate": 2643,
+   "refused": 0,
+   "blocked": 6,
+   "vetoed": 18,
+   "unknown": 25793,
+   "structure": 1091,
+   "oneSentenceShort": 12544
+  }
+ },
+ "cards": [
+  {
+   "name": "Dauthi Voidwalker",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 448,
+   "type": "Creature — Dauthi Rogue",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Shadow (This creature can block or be blocked by only creatures with shadow.)",
+    "If a card would be put into an opponent's graveyard from anywhere, instead exile it with a void counter on it.",
+    "{T}, Sacrifice this creature: Choose an exiled card an opponent owns with a void counter on it.",
+    "You may play it this turn without paying its mana cost."
+   ],
+   "needs": [
+    "option:MayPlay",
+    "option:RememberObjects"
+   ]
+  },
+  {
+   "name": "Emry, Lurker of the Loch",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 487,
+   "type": "Legendary Creature — Merfolk Wizard",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{T}: Choose target artifact card in your graveyard.",
+    "You may cast that card this turn. (You still pay its costs. Timing rules still apply.)"
+   ],
+   "needs": [
+    "option:MayPlay",
+    "option:RememberObjects"
+   ]
+  },
+  {
+   "name": "Six",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 491,
+   "type": "Legendary Creature — Treefolk",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever Six attacks, mill three cards.",
+    "You may put a land card from among them into your hand.",
+    "During your turn, nonland permanent cards in your graveyard have retrace. (You may cast permanent cards from your graveyard by discarding a land card in addition to paying their other costs.)"
+   ],
+   "needs": []
+  },
+  {
+   "name": "Mox Diamond",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 532,
+   "type": "Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "If this artifact would enter, you may discard a land card instead.",
+    "If you do, put this artifact onto the battlefield.",
+    "If you don't, put it into its owner's graveyard."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Green Sun's Zenith",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 639,
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Search your library for a green creature card with mana value X or less, put it onto the battlefield, then shuffle.",
+    "Shuffle Green Sun's Zenith into its owner's library."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Haywire Mite",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 640,
+   "type": "Artifact Creature — Insect",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{G}, Sacrifice this creature: Exile target noncreature artifact or noncreature enchantment."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Bloodchief Ascension",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 677,
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "At the beginning of each end step, if an opponent lost 2 or more life this turn, you may put a quest counter on this enchantment. (Damage causes loss of life.)",
+    "Whenever a card is put into an opponent's graveyard from anywhere, if this enchantment has three or more quest counters on it, you may have that player lose 2 life.",
+    "If you do, you gain 2 life."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Splendid Reclamation",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 688,
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Return all land cards from your graveyard to the battlefield tapped."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Midnight Clock",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 710,
+   "type": "Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{2}{U}: Put an hour counter on this artifact.",
+    "At the beginning of each upkeep, put an hour counter on this artifact.",
+    "When the twelfth hour counter is put on this artifact, shuffle your hand and graveyard into your library, then draw seven cards.",
+    "Exile this artifact."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Scrap Trawler",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 717,
+   "type": "Artifact Creature — Construct",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever this creature dies or another artifact you control is put into a graveyard from the battlefield, return to your hand target artifact card in your graveyard with lesser mana value."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Rancor",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 718,
+   "type": "Enchantment — Aura",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this Aura is put into a graveyard from the battlefield, return it to its owner's hand."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Moldervine Reclamation",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 719,
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever a creature you control dies, you gain 1 life and draw a card."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Necropotence",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 720,
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Skip your draw step.",
+    "Pay 1 life: Exile the top card of your library face down.",
+    "Put that card into your hand at the beginning of your next end step."
+   ],
+   "needs": [
+    "replacement:BeginPhase",
+    "option:RememberChanged",
+    "option:RememberObjects"
+   ]
+  },
+  {
+   "name": "Reassembling Skeleton",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 728,
+   "type": "Creature — Skeleton Warrior",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{1}{B}: Return this card from your graveyard to the battlefield tapped."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Altar of Dementia",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 738,
+   "type": "Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Sacrifice a creature: Target player mills cards equal to the sacrificed creature's power."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Myr Retriever",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 759,
+   "type": "Artifact Creature — Myr",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature dies, return another target artifact card from your graveyard to your hand."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Sheoldred, Whispering One",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 782,
+   "type": "Legendary Creature — Phyrexian Praetor",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Swampwalk (This creature can't be blocked as long as defending player controls a Swamp.)",
+    "At the beginning of your upkeep, return target creature card from your graveyard to the battlefield.",
+    "At the beginning of each opponent's upkeep, that player sacrifices a creature of their choice."
+   ],
+   "needs": [
+    "keyword:Landwalk"
+   ]
+  },
+  {
+   "name": "Starfield Mystic",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 797,
+   "type": "Creature — Human Cleric",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever an enchantment you control is put into a graveyard from the battlefield, put a +1/+1 counter on this creature."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Kardur, Doomscourge",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 809,
+   "type": "Legendary Creature — Demon Berserker",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When Kardur enters, until your next turn, creatures your opponents control attack each combat if able and attack a player other than you if able.",
+    "Whenever an attacking creature dies, each opponent loses 1 life and you gain 1 life."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Kaya's Ghostform",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 819,
+   "type": "Enchantment — Aura",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Enchant creature or planeswalker you control",
+    "When enchanted permanent dies or is put into exile, return that card to the battlefield under your control."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Titania, Protector of Argoth",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 866,
+   "type": "Legendary Creature — Elemental",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When Titania enters, return target land card from your graveyard to the battlefield.",
+    "Whenever a land you control is put into a graveyard from the battlefield, create a 5/3 green Elemental creature token."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Bloodghast",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 888,
+   "type": "Creature — Vampire Spirit",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "This creature has haste as long as an opponent has 10 or less life.",
+    "Landfall — Whenever a land you control enters, you may return this card from your graveyard to the battlefield."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Breach the Multiverse",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 896,
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Each player mills ten cards.",
+    "For each player, choose a creature or planeswalker card in that player's graveyard.",
+    "Put those cards onto the battlefield under your control.",
+    "Then each creature you control becomes a Phyrexian in addition to its other types."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Pest Infestation",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 905,
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Destroy up to X target artifacts and/or enchantments.",
+    "Create twice X 1/1 black and green Pest creature tokens with \"When this token dies, you gain 1 life.\""
+   ],
+   "needs": []
+  },
+  {
+   "name": "Mesmeric Orb",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 907,
+   "type": "Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever a permanent becomes untapped, that permanent's controller mills a card."
+   ],
+   "needs": [
+    "trigger:Untaps"
+   ]
+  },
+  {
+   "name": "Combustible Gearhulk",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 908,
+   "type": "Artifact Creature — Construct",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature enters, target opponent may have you draw three cards.",
+    "If the player doesn't, you mill three cards, then this creature deals damage to that player equal to the total mana value of those cards."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Forge Anew",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 923,
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this enchantment enters, return target Equipment card from your graveyard to the battlefield.",
+    "During your turn, you may activate equip abilities any time you could cast an instant.",
+    "You may pay {0} rather than pay the equip cost of the first equip ability you activate during each of your turns."
+   ],
+   "needs": [
+    "count:ThisTurnActivated"
+   ]
+  },
+  {
+   "name": "Grisly Salvage",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 931,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Reveal the top five cards of your library.",
+    "You may put a creature or land card from among them into your hand.",
+    "Put the rest into your graveyard."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Noxious Revival",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 941,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "({G/P} can be paid with either {G} or 2 life.)",
+    "Put target card from a graveyard on top of its owner's library."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Hedge Shredder",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 948,
+   "type": "Artifact — Vehicle",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever this Vehicle attacks, you may mill two cards.",
+    "Whenever one or more land cards are put into your graveyard from your library, put them onto the battlefield tapped."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Cephalid Coliseum",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 983,
+   "type": "Land",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "This land deals 1 damage to you.",
+    "Threshold — {U}, {T}, Sacrifice this land: Target player draws three cards, then discards three cards.",
+    "Activate only if there are seven or more cards in your graveyard."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Mines of Moria",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 992,
+   "type": "Legendary Land",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{3}{R}, {T}, Exile three cards from your graveyard: Create two Treasure tokens."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Electro, Assaulting Battery",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1012,
+   "type": "Legendary Creature — Human Villain",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "You don't lose unspent red mana as steps and phases end.",
+    "Whenever you cast an instant or sorcery spell, add {R}.",
+    "When Electro leaves the battlefield, you may pay {X}.",
+    "When you do, he deals X damage to target player."
+   ],
+   "needs": [
+    "static:UnspentMana"
+   ]
+  }
+ ],
+ "review": [
+  {
+   "name": "Scarblade Scout",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Elf Scout",
+   "layout": "normal"
+  },
+  {
+   "name": "Mortuary Mire",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 806,
+   "type": "Land",
+   "layout": "normal"
+  },
+  {
+   "name": "Skull Prophet",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1013,
+   "type": "Creature — Human Druid",
+   "layout": "normal"
+  },
+  {
+   "name": "Dakmor Salvage",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1021,
+   "type": "Land",
+   "layout": "normal"
+  },
+  {
+   "name": "Return to Nature",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1106,
+   "type": "Instant",
+   "layout": "normal"
+  },
+  {
+   "name": "Unnatural Restoration",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1337,
+   "type": "Sorcery",
+   "layout": "normal"
+  },
+  {
+   "name": "Feldon of the Third Path",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1393,
+   "type": "Legendary Creature — Human Artificer",
+   "layout": "normal"
+  },
+  {
+   "name": "Thought Scour",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1819,
+   "type": "Instant",
+   "layout": "normal"
+  },
+  {
+   "name": "Vile Entomber",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2009,
+   "type": "Creature — Zombie Warlock",
+   "layout": "normal"
+  },
+  {
+   "name": "Electroduplicate",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2127,
+   "type": "Sorcery",
+   "layout": "normal"
+  },
+  {
+   "name": "Venser's Journal",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2278,
+   "type": "Artifact — Book",
+   "layout": "normal"
+  },
+  {
+   "name": "Blood Seeker",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2328,
+   "type": "Creature — Vampire Shaman",
+   "layout": "normal"
+  },
+  {
+   "name": "Goldmire Bridge",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2396,
+   "type": "Artifact Land",
+   "layout": "normal"
+  },
+  {
+   "name": "Poison Dart Frog",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2650,
+   "type": "Creature — Frog",
+   "layout": "normal"
+  },
+  {
+   "name": "Overkill",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2694,
+   "type": "Instant",
+   "layout": "normal"
+  },
+  {
+   "name": "Snow-Covered Plains",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2738,
+   "type": "Basic Snow Land — Plains",
+   "layout": "normal"
+  },
+  {
+   "name": "Rumble Arena",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2778,
+   "type": "Land",
+   "layout": "normal"
+  },
+  {
+   "name": "Raise the Past",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2781,
+   "type": "Sorcery",
+   "layout": "normal"
+  },
+  {
+   "name": "Darkmoss Bridge",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2900,
+   "type": "Artifact Land",
+   "layout": "normal"
+  },
+  {
+   "name": "Spellbook",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2953,
+   "type": "Artifact — Book",
+   "layout": "normal"
+  },
+  {
+   "name": "Bladewing the Risen",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2965,
+   "type": "Legendary Creature — Zombie Dragon",
+   "layout": "normal"
+  },
+  {
+   "name": "Deserted Temple",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 3101,
+   "type": "Land",
+   "layout": "normal"
+  }
+ ]
+}
