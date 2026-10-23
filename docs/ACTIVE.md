@@ -11,11 +11,32 @@ wave reaches past the library into the most-played Commander cards (`data/engine
   (D7), Goblin Sledder (D6) and Blossoming Defense (D3).
 
 `README.md` there has the numbers, `BRIEF.md` the rules and the lane ownership, and `PROMPTS.md` the six prompts.
-- **The lanes:** branches `claude/engine-w4d-<lane>`, each with a draft PR titled `Card load w4d <lane>: …`. A lane does not
-  merge, mark its PR ready, edit this file or Linear.
-- **The integration:** when all six are up, this session merges them as one: it regenerates once, resolves rules two lanes
-  both built, verifies, opens one PR, closes the six as superseded, and records it here and in Linear (ROB-93).
-- **Then:** the engine progress report is brought up to date.
+
+**Integrated, 2026-10-23, in one merge** (`claude/focused-feynman-tt20o3`) with the Decks screen and New deck flow (#844,
+below), which was held for it. **310 of the 333 cards are final:** 2,577 definitions became 2,887.
+
+| Lane | PR | Final | Stopped on |
+| --- | --- | ---: | --- |
+| L1 stack | #846 | 52 of 55 | Cunning Wish, Extrapolate the Impossible (cards from outside the game, CR 400.11); Wear // Tear (split cards and fuse) |
+| L2 graveyard | #845 | 48 of 55 | Sheoldred, Whispering One (swampwalk); Kardur (forced attacks until your next turn); Forge Anew (instant-speed and {0} equip); Electro (unspent red mana kept); Combustible Gearhulk (an opponent's choice of outcomes); Pest Infestation (up to X targets on a spell, L6 built it since); Mines of Moria (exiling three cards from a graveyard as a cost) |
+| L3 combat | #847 | 49 of 55 | Kappa Cannoneer (improvise, L6 built it since); Curse of Opulence (Auras that enchant a player); Grim Hireling and Chatterfang (sacrifice X as a cost); Trouble in Pairs (the second card drawn this turn); Shock stays a candidate (130 scenario files use a Shock fixture) |
+| L4 mana | #849 | 54 of 56 | Archway of Innovation (improvise, L6 built it since); Desperate Ritual (splice onto Arcane) |
+| L5 tokens | #848 | 53 of 56 | Springheart Nantuko (bestow); K'rrik (life for {B}); Caged Sun (mana doubling on any land's mana ability) |
+| L6 spells | #850 | 54 of 56 | Throne of Eldraine (mana spendable only on one color's costs); Marvin, Murderous Mimic (activated abilities copied in layer 6) |
+
+- **Every stored learned record is withdrawn.** The lanes confirmed the last 22 by hand, so the onboarding ledger is 28
+  confirmed and `data/engine/scripts/` is empty.
+- **Where two lanes built the same rule:**
+  - **`multiplyCounters`:** L3 and L5 both added `selector` and `counter`. L3's implementation is kept, and L5's break is
+    retargeted to it.
+  - **Recording the cards `digUntil` exiled:** L1 and L6 each record them, into different slots. L1's `rememberAll`
+    fills "the exiled cards" beside "that card" (Tibalt's Trickery); L6's `remember: "all"` makes them all "that card"
+    (cascade). Both are kept.
+  - **The X a cast announces, in its target context:** L5 and L6 wrote the same line, and it is kept once. L5's
+    `{min: "X", max: "X"}` and L6's up to X on an {X} spell are kept.
+- **Four breaks re-anchored** (`anchors.py`: 3,025 breaks, 0 problems) and proved caught again.
+- **Next (cards now within reach):** Kappa Cannoneer and Archway of Innovation (improvise exists now) and Pest Infestation
+  (up to X targets exists now).
 
 ## Rob's two-card engine load, October 23, 2026 (Codex, `codex/cards-nethroi-boromir`)
 
