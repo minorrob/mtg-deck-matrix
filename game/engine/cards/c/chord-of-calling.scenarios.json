@@ -1,0 +1,319 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Chord of Calling",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Wolf": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Elk": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Big Beast": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Beast"
+      ],
+      "manaCost": "{4}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Grizzly": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Trio": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{2}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 3,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "X=2 for three Forests and two tapped creatures: a Grizzly from the library; the 5-drop is not offered",
+      "library": [
+        "Big Beast",
+        "Grizzly"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Forest",
+            "Bear",
+            "Wolf"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Chord of Calling"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Chord of Calling",
+          "x": 2,
+          "convoke": true
+        },
+        {
+          "choose": [
+            "Bear",
+            "Wolf"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Grizzly"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Grizzly"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Forest",
+            "Forest",
+            "Forest",
+            "Bear",
+            "Wolf",
+            "Grizzly"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Wolf",
+          "is": true
+        }
+      ]
+    },
+    {
+      "name": "Creatures pay its {G}s too: X=0 for three green creatures, nothing to find",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Wolf",
+            "Elk"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Chord of Calling"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "cast": "Chord of Calling",
+          "x": 0,
+          "convoke": true
+        },
+        {
+          "choose": [
+            "Bear",
+            "Wolf",
+            "Elk"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": []
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Chord of Calling"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Elk",
+          "is": true
+        }
+      ]
+    },
+    {
+      "name": "Three Forests and three creatures: five ways (X=0 from the pool, X=0 to 3 convoked), not X=4; X=3 finds the 3-drop",
+      "library": [
+        "Big Beast",
+        "Trio"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Forest",
+            "Bear",
+            "Wolf",
+            "Elk"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Chord of Calling"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Chord of Calling",
+                "seat": 0
+              },
+              "count": 5
+            }
+          ]
+        },
+        {
+          "cast": "Chord of Calling",
+          "x": 3,
+          "convoke": true
+        },
+        {
+          "choose": [
+            "Bear",
+            "Wolf",
+            "Elk"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Trio"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Forest",
+            "Forest",
+            "Forest",
+            "Bear",
+            "Wolf",
+            "Elk",
+            "Trio"
+          ]
+        }
+      ]
+    }
+  ]
+}

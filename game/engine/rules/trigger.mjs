@@ -627,7 +627,9 @@ export function manaTriggered(state, event) {
   for (const d of state.delayedTriggers ?? []) {
     const mana = d.on?.manaAbility;
     if (!mana || !tappedForMana(state, fields, d.on, d.source, d.controller)) continue;
-    made.push({player: d.controller, mana: {...mana.mana}, source: d.source});
+    /* Its controller's -- or, "that player adds", the player who tapped: "until end of turn, whenever a player taps an Island
+       for mana, that player adds an additional {U}" (High Tide; cards/index.mjs, `toTapper`). */
+    made.push({player: mana.toTapper === true ? fields.player?.playerId ?? d.controller : d.controller, mana: {...mana.mana}, source: d.source});
   }
   return made;
 }

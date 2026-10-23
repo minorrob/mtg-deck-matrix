@@ -1,0 +1,87 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Ashaya, Soul of the Wild",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Their Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Two lands, the Bear and Ashaya herself: a 4/4; the Bear taps for {G}; Maya's Bear is no land",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ashaya, Soul of the Wild",
+            "Bear",
+            "Island",
+            "Island"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Bear"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Ashaya, Soul of the Wild",
+            "power": 4,
+            "toughness": 4
+          }
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1
+          }
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Their Bear",
+            "seat": 1
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

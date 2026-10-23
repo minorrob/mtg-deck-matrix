@@ -243,10 +243,11 @@ const tapped = (s, card) => s.objects[named(s, card)[0]].tapped === true;
   ok(!(chosen.kind === "cast" && chosen.convoke === true), "and the house pilot does not take it");
 }
 
-/* ---- named: {X} is not convoked ---- */
+/* ---- {X} convoked too (Chord of Calling, wave 4d L6): X as high as the pool and the creatures pay together ---- */
 {
   const s = play("x", [at(0, "battlefield", "Forest", "Bear", "Wolf"), at(0, "hand", "X Convoke")], [{tap: "Forest"}]);
-  eq([offers(s, "X Convoke").length > 0, offers(s, "X Convoke").some((a) => a.convoke === true)], [true, false], "a spell with {X} is cast from the pool, never convoked");
+  const xs = (convoke) => offers(s, "X Convoke").filter((a) => (a.convoke === true) === convoke).map((a) => a.x).sort();
+  eq([xs(false), xs(true)], [[0], [0, 1, 2]], "a spell with {X}: X=0 from the pool, or X up to 2 with the Forest's {G} and two creatures");
 }
 
 console.log(`engine-convoke: ${checks} checks passed -- convoke (CR 702.51): offered beside the pool's cast, the creatures picked, summoning-sick ones too, a commander's tax among what they pay, a pick that cannot pay refused before anything moves, and one that leaves the pool more than one way followed by which mana pays (X8b), at four players too.`);

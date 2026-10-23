@@ -214,7 +214,7 @@ export function draw(state, player, events) {
     from: {zoneType: ZONE_LABEL.library, player: {playerId: player}},
     to: {zoneType: ZONE_LABEL.hand, player: {playerId: player}},
     /* A draw (CR 121.1), as "whenever you draw a card" watches for; a search that puts a card into a hand is not one. */
-    drawn: true, drawNumber: recordDraw(state, player),
+    drawn: true, drawNumber: recordDraw(state, player, moved),
     /* And which of those drawn in the drawer's own draw step, there (Orcish Bowmasters; state/index.mjs). */
     ...drawStep(state, player),
     /* The card it is in the hand (CR 400.7): the drawer's own event names it by this (game/room/events.mjs). */

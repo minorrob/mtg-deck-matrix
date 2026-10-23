@@ -40,9 +40,12 @@ export const startingLifeOf = (state) => state.startingLife ?? STARTING_LIFE;
 
 /** A successful draw's ordinal this turn (CR 121.2): each card of a multi-card draw is separate.
  * Stored on the event as well as the player so later draws in one resolution cannot change it. */
-export function recordDraw(state, player) {
+export function recordDraw(state, player, id = null) {
   const who = state.players[player];
   who.drawnThisTurn = (who.drawnThisTurn ?? 0) + 1;
+  /* And the card drawn, as the object it is in the hand (CR 400.7): "choose two cards in your hand drawn this turn" (Sylvan
+     Library; script/filter.mjs, drawnThisTurn) -- with the turn it arrived there, a card no longer in the hand a new object. */
+  if (id !== null && state.objects[id]) state.objects[id].drawn = true;
   return who.drawnThisTurn;
 }
 /** "Except the first one they draw in each of their draw steps" (Orcish Bowmasters, wave 4b; CR 504.1): which card this is

@@ -1,0 +1,110 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Collective Resistance",
+    "oracleId": "bffdfe7b-f17a-41b6-a460-80280fe497d4",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Escalate {G} (Pay this cost for each mode chosen beyond the first.)\nChoose one or more —\n• Destroy target artifact.\n• Destroy target enchantment.\n• Target creature gains hexproof and indestructible until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Escalate {G}",
+      "keyword": "escalate",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{G}"
+        }
+      ]
+    },
+    {
+      "kind": "spell",
+      "text": "Choose one or more —\n• Destroy target artifact.\n• Destroy target enchantment.\n• Target creature gains hexproof and indestructible until end of turn.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "chooseUpTo": 3,
+          "modes": [
+            {
+              "text": "Destroy target artifact.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Artifact"
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "destroy",
+                  "targets": {
+                    "target": 0
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Destroy target enchantment.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Enchantment"
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "destroy",
+                  "targets": {
+                    "target": 0
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Target creature gains hexproof and indestructible until end of turn.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "pump",
+                  "targets": {
+                    "target": 0
+                  },
+                  "keywords": [
+                    "Hexproof",
+                    "Indestructible"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

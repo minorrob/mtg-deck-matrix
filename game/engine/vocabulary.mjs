@@ -248,7 +248,10 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
   "bushido",
   "saddle",
   /* And dredge (CR 702.52a; Life from the Loam), a draw replaced from the graveyard, its player's choice (script/effects/zones.mjs). */
-  "dredge"];
+  "dredge",
+  /* Wave 4d, L6: kicker (CR 702.33a; Tear Asunder), an optional additional cost paid once at most, and what the spell does then
+     (cards/index.mjs, rules/actions.mjs, rules/stack.mjs). */
+  "kicker"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

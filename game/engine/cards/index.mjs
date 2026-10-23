@@ -585,7 +585,7 @@ function withDelayedTriggers(abilities, problems) {
           /* Its mana is added to the pool as plain mana: mana that can't be spent on some things (Heartwood Crafter's,
              rules/restricted-mana.mjs) is not carried there yet. */
           if (adds.cantSpend !== undefined) problems.push(`${when.on}: a delayed triggered mana ability whose mana can't be spent on some things is not built`);
-          on.manaAbility = {mana: {...adds.mana}};
+          on.manaAbility = {mana: {...adds.mana}, ...(adds.who === "that player" ? {toTapper: true} : {})};
         }
         out = {...rest, on: on ?? {on: null}, ...(named ? {watch: when.who} : {})};
       } else if (!DELAYED_MOMENTS.includes(out.at ?? "end step")) problems.push(`${out.at}: a moment no delayed trigger waits for yet`);
@@ -687,7 +687,7 @@ export function compileScript(script) {
   const abilities = [];
   const keywords = [];
   let spell = null;
-  let multikicker = null;
+  let multikicker = null, kicker = null;
   /* Offspring (CR 702.175a): its cost, and its trigger, put on the spell once it is known (below). */
   let offspring = null;
   /* Replicate's cost (CR 702.56a), put on the spell once it is known (below). */
@@ -1359,6 +1359,17 @@ export function compileScript(script) {
     /* MULTIKICKER (CR 702.33c): "you may pay an additional {2} any number of times as you cast this spell" -- an additional
        cost of the spell's (rules/actions.mjs, additionalVariants), each number of times its own cast; the spell, and the
        permanent it becomes, kicked that many times (`kicked`, an amount). */
+    /* KICKER (CR 702.33a): "you may pay an additional [cost] as you cast this spell" -- once at most, so two casts, without it
+       and with it (rules/actions.mjs, additionalVariants); the spell kicked (`kicked`, 1), and what it does then, when the
+       card says it differs, its spell ability's `kicked` script (Tear Asunder; rules/stack.mjs, scriptOf). */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "kicker") {
+      let parsed = null;
+      try { parsed = parseManaCost(ability.cost ?? ""); } catch { /* refused below */ }
+      if (!parsed || !parsed.symbols.length || parsed.variable > 0) problems.push(`${ability.text}: kicker is a mana cost`);
+      kicker = String(ability.cost ?? "");
+      keywords.push("Kicker");
+      return;
+    }
     if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "multikicker") {
       let parsed = null;
       try { parsed = parseManaCost(ability.cost ?? ""); } catch { /* refused below */ }
@@ -1697,7 +1708,10 @@ export function compileScript(script) {
           ...(only.sameMode === true ? {sameMode: true} : {}),
           modes: (only.modes ?? []).map((m) => ({text: m.text ?? "", targets: m.targets ?? [], effects: m.effects ?? [], ...(m.cost !== undefined ? {cost: m.cost} : {})}))} : null;
       if (modal && (ability.targets ?? []).length) problems.push("a modal spell chosen as it is cast names its targets in its modes, not beside them");
-      spell = {id, text: ability.text, targets: ability.targets ?? [], effects: ability.effects, ...(modal ? {modal} : {}), ...(ability.additionalCost ? {additionalCost: ability.additionalCost} : {})};
+      spell = {id, text: ability.text, targets: ability.targets ?? [], effects: ability.effects, ...(modal ? {modal} : {}), ...(ability.additionalCost ? {additionalCost: ability.additionalCost} : {}),
+        /* "If this spell was kicked, exile target nonland permanent instead" (Tear Asunder): its targets and effects then. */
+        ...(ability.kicked ? {kicked: {targets: ability.kicked.targets ?? [], effects: ability.kicked.effects ?? []}} : {})};
+      if (ability.kicked && (modal || !(ability.kicked.effects ?? []).length)) problems.push("a kicked spell's script says its effects, on a spell that is not modal");
       return;
     }
     /* PARTNER WITH [NAME] (CR 702.124j; Pir, Imaginative Rascal): two abilities. A deck rule -- two legendary cards may be one's
@@ -2030,6 +2044,9 @@ export function compileScript(script) {
   if (!tiered && !spree && modeCosts.some((cost) => cost !== undefined)) problems.push("a mode's own cost is tiered's or spree's: the spell says which (CR 702.183a, 702.172a)");
   /* Multikicker's additional cost, on the spell -- a permanent's too, whose spell does nothing else (CR 608.3). */
   if (multikicker !== null) spell = {...(spell ?? {id: "multikicker", text: "Multikicker", targets: [], effects: []}), additionalCost: [...(spell?.additionalCost ?? []), {atom: "multikicker", cost: multikicker}]};
+  /* Kicker's, the same way. */
+  if (kicker !== null) spell = {...(spell ?? {id: "kicker", text: "Kicker", targets: [], effects: []}), additionalCost: [...(spell?.additionalCost ?? []), {atom: "kicker", cost: kicker}]};
+  if (spell?.kicked && kicker === null) problems.push("a kicked spell's script is a card with kicker's");
   /* Offspring's additional cost, on the spell -- a creature's, whose spell does nothing else (CR 608.3) -- and its trigger as
      the permanent enters, its "if" an intervening one (CR 603.4; script/condition.mjs, `offspringPaid`): a token copy of it,
      its copiable values with a base power and toughness of 1/1 (CR 707.9b), and of it as it last existed should it be gone

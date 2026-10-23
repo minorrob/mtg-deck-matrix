@@ -330,6 +330,9 @@ function digRest(state, player, cards, {rest, random}, rng, events) {
   const left = cards.filter((id) => state.objects[id]);
   if (random && !rng) throw new Error("A random order needs the game's random stream");
   const order = random ? rng.shuffle(left) : left;
+  /* "Put one of them into your hand, put one of them on the bottom of your library, and exile one of them" (Expressive
+     Iteration): the rest left where they are, on top, for the next of the card's choices to look at again. */
+  if (rest === "stay") return;
   if (rest !== "bottom") { for (const id of order) moveOne(state, id, rest, events, {owner: player}); return; }
   const library = state.zones.library[player];
   for (const id of order) {

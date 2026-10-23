@@ -1,0 +1,76 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Archmage of Runes",
+    "oracleId": "28045b32-4c1a-40e5-a15d-524d0f8fe6ec",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Giant",
+      "Wizard"
+    ],
+    "manaCost": "{3}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 3,
+    "toughness": 6
+  },
+  "oracleText": "Instant and sorcery spells you cast cost {1} less to cast.\nWhenever you cast an instant or sorcery spell, draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Instant and sorcery spells you cast cost {1} less to cast.",
+      "rule": "spells-cost-less",
+      "affects": {
+        "what": "spell",
+        "anyOf": [
+          {
+            "types": [
+              "Instant"
+            ]
+          },
+          {
+            "types": [
+              "Sorcery"
+            ]
+          }
+        ]
+      },
+      "amount": 1
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast an instant or sorcery spell, draw a card.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "filter": {
+          "anyOf": [
+            {
+              "types": [
+                "Instant"
+              ]
+            },
+            {
+              "types": [
+                "Sorcery"
+              ]
+            }
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

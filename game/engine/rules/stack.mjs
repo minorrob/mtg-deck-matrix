@@ -207,6 +207,8 @@ export function pushCopy(state, original, {controller, nonLegendary = false} = {
     entry.overload.targets[0].owner = controller;
   }
   if (original.x !== undefined) entry.x = original.x;
+  /* And whether it was kicked (CR 707.10, 702.33d). */
+  if (original.kicked) entry.kicked = original.kicked;
   /* And its modes (CR 707.10): a copy of a modal spell has the modes the original has. */
   if (Array.isArray(original.modes)) entry.modes = [...original.modes];
   /* And its gift, promised to the same opponent (CR 707.10, 702.174k; its ruling): the copy gives it too. */
@@ -221,6 +223,8 @@ function scriptOf(state, entry) {
     const spell = entry.objectId === null ? null : state.objects[entry.objectId]?.spell;
     /* Overloaded (CR 702.96b): what it does cast so. */
     if (entry.overload) return entry.overload;
+    /* Kicked, when the card says what it does then (CR 702.33d): its targets and effects so (cards/index.mjs, kicker). */
+    if (entry.kicked && spell?.kicked) return spell.kicked;
     /* Its modes, chosen as it was cast (CR 700.2): their targets in order, their effects aimed at them. */
     if (spell?.modal && Array.isArray(entry.modes)) return modalScript(spell.modal, entry.modes);
     return spell && (spell.effects ?? []).length ? spell : null;

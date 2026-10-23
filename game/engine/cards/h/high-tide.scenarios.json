@@ -1,0 +1,170 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "High Tide",
+  "fixtures": {
+    "Lesson": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{U}{U}{U}{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "You gain 1 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 1
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Each Island taps for {U}{U} this turn, Maya's too; a Forest does not; gone next turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Island",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "High Tide"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "High Tide"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "pool": {
+                "U": 2,
+                "G": 1
+              }
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 1
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "pool": {
+                "U": 2
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Island"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "U": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Two Islands pay a {U}{U}{U}{U} sorcery after it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "High Tide",
+            "Lesson"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "High Tide"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Lesson"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 41
+        }
+      ]
+    }
+  ]
+}
