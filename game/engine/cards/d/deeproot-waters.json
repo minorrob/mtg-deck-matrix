@@ -1,0 +1,60 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Deeproot Waters",
+    "oracleId": "8e7b31eb-7a91-4992-b24a-d81173e1dbc8",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever you cast a Merfolk spell, create a 1/1 blue Merfolk creature token with hexproof. (A creature with hexproof can't be the target of spells or abilities your opponents control.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a Merfolk spell, create a 1/1 blue Merfolk creature token with hexproof. (A creature with hexproof can't be the target of spells or abilities your opponents control.)",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "filter": {
+          "subtypes": [
+            "Merfolk"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Merfolk",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Merfolk"
+            ],
+            "colors": [
+              "U"
+            ],
+            "power": 1,
+            "toughness": 1,
+            "keywords": [
+              "Hexproof"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

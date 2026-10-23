@@ -3,7 +3,7 @@
  "cards": {
   "c9d8c983-2845-42e6-b6b8-bf7cf2729b23": {
    "name": "Shore Up",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "27076455cc358575",
    "attempts": 1,
    "model": "x10-session",
@@ -11,7 +11,10 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:05.932Z"
+   "at": "2026-10-06T16:16:05.932Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/s/shore-up.json"
   },
   "92301066-8904-41bc-84bd-4aa286cbab9c": {
    "name": "Liliana of the Dark Realms",
@@ -66,7 +69,7 @@
   },
   "8e7b31eb-7a91-4992-b24a-d81173e1dbc8": {
    "name": "Deeproot Waters",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "b67ea1b2b439569c",
    "attempts": 1,
    "model": "x10-session",
@@ -74,7 +77,10 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.093Z"
+   "at": "2026-10-06T16:16:06.093Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/d/deeproot-waters.json"
   },
   "1ebf2142-f171-40cd-8143-15f50084b707": {
    "name": "Koma, World-Eater",
@@ -150,7 +156,7 @@
   },
   "7522f7fd-6fda-4ed3-9131-21bf91616a73": {
    "name": "Chocobo Racetrack",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "63e433b64ca34958",
    "attempts": 1,
    "model": "x10-session",
@@ -158,11 +164,14 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.206Z"
+   "at": "2026-10-06T16:16:06.206Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/c/chocobo-racetrack.json"
   },
   "f43d1ea5-8127-4b64-a87b-ee5cc9b9e9fa": {
    "name": "Squirrel Sovereign",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "b0458da1f3abe0ba",
    "attempts": 1,
    "model": "x10-session",
@@ -170,7 +179,10 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.230Z"
+   "at": "2026-10-06T16:16:06.230Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/s/squirrel-sovereign.json"
   },
   "d5b9d250-92f5-40d8-b962-4ae4adb466c8": {
    "name": "Flicker of Fate",
@@ -186,7 +198,7 @@
   },
   "0c26ab0d-80f6-4e5b-9d0e-af17c1519583": {
    "name": "March of the Multitudes",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "8b3a37313eee87ad",
    "attempts": 1,
    "model": "x10-session",
@@ -194,7 +206,10 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.253Z"
+   "at": "2026-10-06T16:16:06.253Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/m/march-of-the-multitudes.json"
   },
   "99c2d3ef-e5b4-48cd-b3f5-de9b02c7c36a": {
    "name": "Ureni of the Unwritten",
@@ -234,7 +249,7 @@
   },
   "16f75a65-d067-4f79-81b9-833c373cf4d2": {
    "name": "Cryptbreaker",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "e586d92e1062c15d",
    "attempts": 1,
    "model": "x10-session",
@@ -242,7 +257,10 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.368Z"
+   "at": "2026-10-06T16:16:06.368Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/c/cryptbreaker.json"
   },
   "cc6a83c7-e645-4a53-9550-be79b42cd851": {
    "name": "Loyal Warhound",

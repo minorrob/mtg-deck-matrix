@@ -1,0 +1,156 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "March of the Multitudes",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "March of the Multitudes: X is 2, two 1/1 white Soldiers with lifelink",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "March of the Multitudes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "March of the Multitudes",
+          "x": 2
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Soldier",
+            "Soldier"
+          ]
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Soldier",
+            "has": [
+              "Lifelink"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Soldier",
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "March of the Multitudes: X is 0, no Soldier",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Plains",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "March of the Multitudes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "March of the Multitudes",
+          "x": 0
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Plains",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "March of the Multitudes"
+          ]
+        }
+      ]
+    }
+  ]
+}
