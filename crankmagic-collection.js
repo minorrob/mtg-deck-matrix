@@ -240,7 +240,9 @@ actions['sitting-confirm']=()=>{const sb=C.sandbox;if(!sb||!sb.open)return;
   const dlg=$('#cm-dialog');if(dlg){sb.hold();dlg.addEventListener('close',()=>sb.release(),{once:true});}};
 C.cardsHead=cardsHead;
 C.SUBNAV.cards=()=>{const n=tabCounts(),r=C.route(),tab=r.view==='cards'?(r.params.get('tab')||'library'):tabOf(),sheet=r.view==='cards'&&r.params.get('view')==='sheet';
-  return [{label:'Library',hash:'#cards',count:n.library,current:tab==='library'&&!sheet},{label:'To buy',hash:'#cards?tab=buy',count:n.buy,current:tab==='buy'},{label:'Orders',hash:'#cards?tab=orders',count:n.orders,current:tab==='orders'},{label:'Sheet',hash:'#cards?view=sheet',current:sheet},{label:'Upload cards',hash:'#cards',action:'import-list'}];};
+  return [{label:'Library',hash:'#cards',count:n.library,current:tab==='library'&&!sheet},{label:'To buy',hash:'#cards?tab=buy',count:n.buy,current:tab==='buy'},{label:'Orders',hash:'#cards?tab=orders',count:n.orders,current:tab==='orders'},{label:'Sheet',hash:'#cards?view=sheet',current:sheet},{label:'Upload cards',hash:'#cards',action:'import-list'},
+    /* SHARED LIBRARIES live under Library (the Decks requirements' Q9): the Decks nav's Shared is decks only. */
+    ...(C.sharingAvailable?.()?[{label:'Shared Libraries',hash:'#shared?kind=library',current:r.view==='shared'&&r.params.get('kind')==='library'}]:[])];};
 /* UPLOAD CARDS (Rob, 2026-09-28): every card you have, straight into the library, without going through a deck.
    It is the same reviewed import as everywhere else, reached from the Library's own menu. */
 /* Library and To buy each have a List and a Table; the Sheet reads the library only; Orders has its list. */

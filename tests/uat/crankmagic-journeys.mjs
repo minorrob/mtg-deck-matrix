@@ -25,7 +25,7 @@ page.on('pageerror',error=>errors.push(error.message));
    removed before it so that step stays honest. */
 const {stubNetwork}=await import('./scryfall-stub.mjs');const scryfallCalls=[];await stubNetwork(page,scryfallCalls);
 /* A deck tile's first button is its ⋯ menu (since the deck-page redesign); Open deck is inside it. */
-const openDeck=async name=>{await page.locator('.cm-deck-tile').filter({hasText:name}).first().getByRole('button').first().click();await page.getByRole('button',{name:'Open deck',exact:true}).click();};
+const openDeck=async name=>{await page.locator('.cm-deck-tile').filter({hasText:name}).first().getByRole('button',{name:/^Deck options for /}).click();await page.getByRole('button',{name:'Open deck',exact:true}).click();};
 const lab=async()=>{await page.evaluate(()=>{location.hash='#lab';});await page.waitForTimeout(400);};
 const click=label=>page.getByRole('button',{name:label,exact:true}).click(),nav=label=>page.getByRole('link',{name:label,exact:true}).click();
 /* Explore with no card, deck or commander in the address is the chooser; the graph is a card away. */
@@ -73,8 +73,8 @@ async function rung(label,n){await page.locator('#cm-status-submenu-toggle').hov
 async function newDeck(){await nav('Decks');await click('New deck');await page.locator('#cm-dialog [data-action=wizard-create]').click();await page.getByLabel('Card name or a Scryfall link').fill('Krenko, Mob Boss');await page.locator('[data-pick-card]').filter({has:page.getByText('Krenko, Mob Boss',{exact:true})}).click();/* Build a deck (R3.11): Strategy, Budget, then Review names it. */await click('Next: Budget');await click('Next: Review');await page.locator('#cm-dialog [name=name]').fill('Journey Goblins');await click('Create draft');await waitDialog();await click('Edit card list');await page.getByLabel('Cards (one per line, with quantity)').fill('1 Krenko, Mob Boss\n98 Mountain\n1 Lightning Bolt');await click('Resolve & save draft');await waitDialog();await click('Lock list');await click('Confirm change');await waitDialog();}
 try{
  await page.goto(BASE+'/'+ENTRY+'#decks');await page.getByRole('heading',{name:'Decks',level:1}).waitFor({timeout:45000});eq((await state()).lots.length,0);
- /* HOW A DECK COMES TOGETHER: a plain link on Decks opens the six-step map; each step's title opens where that step begins. */
- await page.locator('#cm-main').getByRole('link',{name:'How a deck comes together'}).click();await page.locator('.cm-how-flow').waitFor();eq(await page.locator('.cm-how-step').count(),6);eq(await page.locator('.cm-how-rungs li').count(),8);
+ /* ABOUT DECK BUILDING (renamed 2026-10-23 from How a deck comes together): a plain link on Decks opens the six-step map; each step's title opens where that step begins. */
+ await page.locator('#cm-main').getByRole('link',{name:'About Deck Building'}).click();await page.locator('.cm-how-flow').waitFor();ok(page.url().endsWith('#about-deck-building'));eq(await page.locator('.cm-how-step').count(),6);eq(await page.locator('#cm-how-ladder li').count(),9);eq(await page.locator('#cm-how-stages li').count(),4);
  await page.locator('.cm-how-title',{hasText:'Acquire'}).click();await page.locator('#cm-roster-table').waitFor();ok(page.url().endsWith('#cards?tab=buy'));eq(await page.getByRole('tab',{selected:true}).innerText().then(s=>s.split(/\s/)[0]),'To');
  /* SHARE. Two ways out of the rail's Menu: a share draft with the To line blank, and a QR code drawn
     in the page. The subscription draft to the maintainer left the Menu with the first-look list

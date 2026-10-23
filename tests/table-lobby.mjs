@@ -627,9 +627,10 @@ try {
     const nWord = n <= 10 ? ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"][n] : String(n);
     ok(summary.includes(`, ${nWord} playable.`) && !/\$|to finish/.test(summary), `the summary under Decks counts the decks the table plays whole, ${nWord}, and no cost to finish them all ("${summary}")`);
     eq(asked, ["POST"], "and the hub asked the table once, for every deck at once (POST /api/tables/known)");
-    /* The Playable chip, beside Boxed Decks: the decks the table plays whole, the rest put away once it has answered. */
-    eq(await olu.page.$$eval(".cm-decks-stages a", (as) => as.map((a) => a.textContent)).then((t) => t.filter((x) => /Playable|Boxed/.test(x))), ["Playable", "Boxed Decks"],
-      "the hub offers Playable (in the app) and Boxed Decks (the box), side by side");
+    /* The Playable chip, with Boxed (the Decks requirements' FLT-1, 2026-10-23: All · Boxed · Defined · Building · Playable ·
+       Shared): the Defined decks the table plays whole, the rest put away once it has answered. Every deck here is 100. */
+    eq(await olu.page.$$eval(".cm-decks-stages a", (as) => as.map((a) => a.textContent)).then((t) => t.filter((x) => /Playable|Boxed/.test(x))), ["Boxed", "Playable"],
+      "the hub offers Boxed (the box) and Playable (in the app)");
     await olu.page.locator(".cm-decks-stages a", {hasText: "Playable"}).click();
     await olu.page.waitForFunction((n) => document.querySelectorAll("[data-deck-tile]:not([hidden])").length === n && [...document.querySelectorAll("[data-deck-tile]")].some((t) => t.hidden), playableIds.length, {timeout: 15000});
     eq((await olu.page.$$eval("[data-deck-tile]:not([hidden])", (ts) => ts.map((t) => t.dataset.deckTile))).sort(), [...playableIds].sort(),

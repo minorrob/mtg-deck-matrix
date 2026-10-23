@@ -400,8 +400,22 @@ width:min(100%,max(900px,calc(var(--cm-table-h,68vh) * 1.9)));aspect-ratio:19/10
 /* The tick and the deck menu are quiet until the tile is hovered or one of them is focused,
    so seven tiles read as seven pictures rather than fourteen controls. A ticked tile keeps
    its tick showing, or there would be no way to see what is being compared. */
-.cm-deck-tile .cm-tile-tools{position:absolute;top:14px;left:14px;z-index:3;display:flex;gap:6px;opacity:0;transition:opacity .2s ease}
-.cm-deck-tile:hover .cm-tile-tools,.cm-deck-tile:focus-within .cm-tile-tools,.cm-deck-tile.is-picked .cm-tile-tools{opacity:1}
+/* The tools fade in on hover, one by one, so a favorite's filled star can stay without the rest (FAV-3). */
+.cm-deck-tile .cm-tile-tools{position:absolute;top:14px;left:14px;z-index:3;display:flex;gap:6px}
+.cm-deck-tile .cm-tile-tools>*{opacity:0;transition:opacity .2s ease}
+.cm-deck-tile:hover .cm-tile-tools>*,.cm-deck-tile:focus-within .cm-tile-tools>*,.cm-deck-tile.is-picked .cm-tile-tools>*,.cm-deck-tile .cm-tile-tools>.cm-tile-star.is-on{opacity:1}
+#matrix-v2 .cm-deck-tile .cm-tile-star{width:32px;height:32px;min-height:32px;font-size:17px;line-height:1;border-radius:var(--v-radius);background:color-mix(in srgb,var(--poster-ground) 55%,transparent);backdrop-filter:blur(6px);border:1px solid color-mix(in srgb,var(--poster-ink) 28%,transparent);color:var(--poster-ink)}
+#matrix-v2 .cm-deck-tile .cm-tile-star.is-on{color:var(--v-accent);border-color:var(--v-accent)}
+.cm-deck-tile .cm-tile-sets{display:flex;flex-wrap:wrap;gap:4px;padding:0 16px 12px}
+.cm-deck-shared .cm-deck-shared-link{display:grid;gap:6px;padding:56px 16px 16px;color:inherit;text-decoration:none}
+.cm-box-choices{display:grid;gap:10px;border:0;padding:0;margin:0}
+.cm-box-choices legend{font-weight:600;margin-bottom:6px}
+.cm-box-choice{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;padding:10px 12px;border:1px solid var(--v-line);border-radius:var(--v-radius)}
+.cm-box-choice.is-empty{opacity:.55}
+.cm-box-choice ul{margin:4px 0 0;padding-left:18px;font-size:13px}
+.cm-box-donors,.cm-box-waiting{color:var(--v-muted)}
+.cm-writeup-list{margin:4px 0 12px;padding-left:18px;max-height:220px;overflow:auto}
+.cm-how-to-play ol{margin:0;padding-left:22px;display:grid;gap:6px}
 .cm-deck-tile .cm-tile-pick{display:grid;place-items:center;width:32px;height:32px;border-radius:var(--v-radius);background:color-mix(in srgb,var(--poster-ground) 55%,transparent);backdrop-filter:blur(6px);border:1px solid color-mix(in srgb,var(--poster-ink) 28%,transparent);cursor:pointer}
 .cm-deck-tile .cm-tile-pick:hover{border-color:var(--v-accent)}
 /* The stage pill steps aside when the tools appear, so the two never share the corner. */
