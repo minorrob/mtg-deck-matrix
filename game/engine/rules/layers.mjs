@@ -110,7 +110,9 @@ export const LAYER_AFFECTS_KEYS = Object.freeze(["anyOf", "what", "ids", "types"
    grammar says it (script/filter.mjs), names another it reads ("creature cards in your graveyard", "graveyard"), or "any"
    (Maskwood Nexus: creature spells and creature cards that aren't on the battlefield too). An effect on named objects
    (`ids`) is on those, wherever they are. */
-const inZone = (wanted, zone) => wanted === "any" || (wanted ?? "battlefield") === zone;
+/* "Creature cards you own that aren't on the battlefield have flash" (Teferi, Mage of Zhalfir; CR 611.3a): "elsewhere", every
+   zone but the battlefield -- a card in a hand, a library, a graveyard, exile, the command zone, or a spell on the stack. */
+const inZone = (wanted, zone) => wanted === "any" || (wanted === "elsewhere" ? zone !== "battlefield" : (wanted ?? "battlefield") === zone);
 
 function affects(state, effect, current, sourceController) {
   const rule = effect.affects ?? {};
@@ -291,6 +293,9 @@ function graveyardGrant(state, holder, ability) {
     .filter((a) => a.kind === "activated" || a.kind === "mana").map((a) => ({...a, id: `${id}:${a.id}`})))}};
 }
 
+/* The emblems in the command zone (CR 114.1; script/effects/permanents.mjs, emblem). */
+const emblemsIn = (state) => (state.zones.command ?? []).flat().filter((id) => state.objects[id]?.emblem === true);
+
 function gatherEffects(state) {
   const found = [];
   for (const graveyard of state.zones.graveyard ?? []) for (const id of graveyard) {
@@ -321,6 +326,16 @@ function gatherEffects(state) {
         /* Which of its permanent's abilities this is (partOf): one its permanent loses makes no effect from then on. */
         partOf: partOf(id, ability),
       });
+    }
+  }
+  /* AN EMBLEM'S STATIC ABILITIES (CR 114.4), from the command zone, where they function: "Swamps you control have '{T}: Add
+     {B}{B}{B}{B}'" (Liliana of the Dark Realms' emblem; CR 113.6) -- read for every permanent as it now is, not fixed as the
+     emblem was made (an emblem's ability is no resolving effect, CR 611.3a). Its timestamp is the emblem's (CR 613.7e). */
+  for (const id of emblemsIn(state)) {
+    const holder = state.objects[id];
+    for (const ability of holder.abilities ?? []) {
+      if (ability.kind !== "static" || ability.rule || ability.layer === undefined) continue;
+      found.push({...ability, sourceId: id, sourceController: holder.controller, timestamp: ability.timestamp ?? holder.timestamp});
     }
   }
   /* CR 701.54c, 613.1d: the emblem makes the bearer legendary, without granting an ability.
@@ -746,7 +761,7 @@ function abilitiesChange(state) {
   const changes = (apply) => Boolean(apply && (apply.addAbilities || apply.removeAllAbilities || apply.topCardAbilities || apply.graveyardAbilities
     || [...(apply.addSubtypes ?? []), ...(apply.setSubtypes ?? [])].some((type) => BASIC_LAND_MANA[type])));
   if ((state.effects ?? []).some((effect) => changes(effect.apply))) return true;
-  const holders = [...state.zones.battlefield, ...(state.zones.graveyard ?? []).flat()];
+  const holders = [...state.zones.battlefield, ...(state.zones.graveyard ?? []).flat(), ...emblemsIn(state)];
   return holders.some((id) => (state.objects[id].abilities ?? []).some((ability) => ability.kind === "static" && changes(ability.apply)));
 }
 
@@ -791,6 +806,8 @@ function staticReader(state) {
   /* A permanent's statics, and a card's that work from its graveyard (CR 113.6b; gatherEffects). */
   for (const id of state.zones.battlefield) take(id, false);
   for (const id of (state.zones.graveyard ?? []).flat()) take(id, true);
+  /* And an emblem's (gatherEffects). */
+  for (const id of emblemsIn(state)) take(id, false);
   const losers = losersAmong(state, removers), read = new Map();
   return (id) => {
     const object = state.objects[id];
