@@ -92,7 +92,7 @@
         ]
       }
     },
-    "Shatter": {
+    "Smoke Shatter": {
       "types": [
         "Instant"
       ],
@@ -413,7 +413,7 @@
           "zone": "hand",
           "cards": [
             "Food Fight",
-            "Shatter",
+            "Smoke Shatter",
             "Elk Hunt"
           ]
         }
@@ -499,7 +499,7 @@
         {
           "offers": {
             "kind": "cast",
-            "card": "Shatter"
+            "card": "Smoke Shatter"
           },
           "count": 1,
           "targets": [

@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Blanket of Night",
+    "oracleId": "10e95489-a94d-4523-964c-ec9753103a62",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each land is a Swamp in addition to its other land types.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "layer": 4,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Land"
+        ]
+      },
+      "apply": {
+        "addSubtypes": [
+          "Swamp"
+        ]
+      },
+      "text": "Each land is a Swamp in addition to its other land types."
+    }
+  ]
+}

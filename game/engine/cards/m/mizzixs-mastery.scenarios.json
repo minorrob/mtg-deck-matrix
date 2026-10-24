@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Mizzix's Mastery",
   "fixtures": {
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -42,7 +42,7 @@
         ]
       }
     },
-    "Divination": {
+    "Smoke Divination": {
       "types": [
         "Sorcery"
       ],
@@ -76,7 +76,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Blaze": {
+    "Smoke Blaze": {
       "types": [
         "Sorcery"
       ],
@@ -142,7 +142,7 @@
           "seat": 0,
           "zone": "graveyard",
           "cards": [
-            "Shock",
+            "Smoke Shock",
             "Bear"
           ]
         }
@@ -165,7 +165,7 @@
           "alternative": false,
           "targets": [
             {
-              "card": "Shock"
+              "card": "Smoke Shock"
             }
           ]
         },
@@ -178,8 +178,8 @@
               "asks": {
                 "seat": 0,
                 "options": [
-                  "Shock → Maya",
-                  "Shock → Rob",
+                  "Smoke Shock → Maya",
+                  "Smoke Shock → Rob",
                   "Don't cast"
                 ]
               }
@@ -188,7 +188,7 @@
         },
         {
           "choose": [
-            "Shock → Maya"
+            "Smoke Shock → Maya"
           ]
         },
         {
@@ -204,7 +204,7 @@
           "seat": 0,
           "zone": "exile",
           "cards": [
-            "Shock",
+            "Smoke Shock",
             "Mizzix's Mastery"
           ]
         },
@@ -251,8 +251,8 @@
           "seat": 0,
           "zone": "graveyard",
           "cards": [
-            "Shock",
-            "Divination",
+            "Smoke Shock",
+            "Smoke Divination",
             "Bear"
           ]
         }
@@ -291,12 +291,12 @@
         },
         {
           "choose": [
-            "Divination"
+            "Smoke Divination"
           ]
         },
         {
           "choose": [
-            "Shock → Maya"
+            "Smoke Shock → Maya"
           ]
         },
         {
@@ -320,8 +320,8 @@
           "seat": 0,
           "zone": "exile",
           "cards": [
-            "Shock",
-            "Divination",
+            "Smoke Shock",
+            "Smoke Divination",
             "Mizzix's Mastery"
           ]
         },
@@ -358,7 +358,7 @@
           "seat": 0,
           "zone": "graveyard",
           "cards": [
-            "Blaze"
+            "Smoke Blaze"
           ]
         }
       ],
@@ -380,7 +380,7 @@
           "alternative": false,
           "targets": [
             {
-              "card": "Blaze"
+              "card": "Smoke Blaze"
             }
           ]
         },
@@ -398,7 +398,7 @@
           "seat": 0,
           "zone": "exile",
           "cards": [
-            "Blaze",
+            "Smoke Blaze",
             "Mizzix's Mastery"
           ]
         },

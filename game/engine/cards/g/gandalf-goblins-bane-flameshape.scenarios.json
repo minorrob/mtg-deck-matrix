@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Gandalf, Goblins' Bane // Flameshape",
   "fixtures": {
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -104,7 +104,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Shock"
+            "Smoke Shock"
           ]
         }
       ],
@@ -113,7 +113,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "targets": [
             {
               "player": 1
@@ -242,7 +242,7 @@
     {
       "name": "Flameshape: the top two exiled face down -- Rob may look at them, Maya sees two face-down cards; with no Wizard, neither may be played",
       "library": [
-        "Shock",
+        "Smoke Shock",
         "Mountain"
       ],
       "setup": [
@@ -290,7 +290,7 @@
             "Gandalf, Goblins' Bane"
           ],
           "faceDown": [
-            "Shock",
+            "Smoke Shock",
             "Mountain"
           ]
         },
@@ -322,7 +322,7 @@
         {
           "offers": {
             "kind": "cast",
-            "card": "Shock",
+            "card": "Smoke Shock",
             "seat": 0
           },
           "count": 0
@@ -340,7 +340,7 @@
     {
       "name": "Gandalf cast from exile is a Wizard: the exiled Shock cast from exile, turned face up, and Gandalf's trigger; gone to the graveyard, it may not be cast from there",
       "library": [
-        "Shock",
+        "Smoke Shock",
         "Mountain"
       ],
       "setup": [
@@ -422,7 +422,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "targets": [
             {
               "player": 1
@@ -450,7 +450,7 @@
               "where": {
                 "card": {
                   "cardId": 50,
-                  "name": "Shock",
+                  "name": "Smoke Shock",
                   "owner": 0,
                   "controller": 0,
                   "faceDown": false
@@ -478,7 +478,7 @@
           "seat": 0,
           "zone": "graveyard",
           "cards": [
-            "Shock"
+            "Smoke Shock"
           ]
         },
         {
@@ -500,7 +500,7 @@
         {
           "offers": {
             "kind": "cast",
-            "card": "Shock",
+            "card": "Smoke Shock",
             "seat": 0
           },
           "count": 0
@@ -654,7 +654,7 @@
     {
       "name": "Any Wizard: with an Apprentice out the Shock may be cast at once; once the Apprentice is gone, neither card may be played",
       "library": [
-        "Shock",
+        "Smoke Shock",
         "Forest"
       ],
       "setup": [
@@ -699,7 +699,7 @@
             {
               "offers": {
                 "kind": "cast",
-                "card": "Shock",
+                "card": "Smoke Shock",
                 "seat": 0
               },
               "count": 2
@@ -741,7 +741,7 @@
         {
           "offers": {
             "kind": "cast",
-            "card": "Shock",
+            "card": "Smoke Shock",
             "seat": 0
           },
           "count": 0
@@ -758,7 +758,7 @@
           "seat": 0,
           "zone": "exile",
           "faceDown": [
-            "Shock",
+            "Smoke Shock",
             "Forest"
           ]
         }

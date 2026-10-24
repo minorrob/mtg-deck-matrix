@@ -1,0 +1,38 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Phyrexian Juggernaut",
+    "oracleId": "009fcd1e-5c5f-435b-afc1-099f1622e45c",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Phyrexian",
+      "Juggernaut"
+    ],
+    "manaCost": "{6}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Infect (This creature deals damage to creatures in the form of -1/-1 counters and to players in the form of poison counters.)\nThis creature attacks each combat if able.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "infect",
+      "text": "Infect (This creature deals damage to creatures in the form of -1/-1 counters and to players in the form of poison counters.)"
+    },
+    {
+      "kind": "static",
+      "rule": "attacks-each-combat",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "text": "This creature attacks each combat if able."
+    }
+  ]
+}

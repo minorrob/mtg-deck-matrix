@@ -1,0 +1,34 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Zhur-Taa Goblin",
+    "oracleId": "1003304f-af01-4235-af82-6ef901bd00bf",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin",
+      "Berserker"
+    ],
+    "manaCost": "{R}{G}",
+    "colors": [
+      "G",
+      "R"
+    ],
+    "colorIdentity": [
+      "G",
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Riot (This creature enters with your choice of a +1/+1 counter or haste.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "riot",
+      "text": "Riot (This creature enters with your choice of a +1/+1 counter or haste.)"
+    }
+  ]
+}

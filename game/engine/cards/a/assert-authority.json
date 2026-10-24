@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Assert Authority",
+    "oracleId": "085bc7be-bd44-40af-8e8f-a1a8006fe22c",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{5}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Affinity for artifacts (This spell costs {1} less to cast for each artifact you control.)\nCounter target spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Affinity for artifacts (This spell costs {1} less to cast for each artifact you control.)",
+      "keyword": "affinity",
+      "of": {
+        "types": [
+          "Artifact"
+        ]
+      }
+    },
+    {
+      "kind": "spell",
+      "text": "Counter target spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard.",
+      "targets": [
+        {
+          "what": "spell"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "counterSpell",
+          "spells": {
+            "target": 0
+          },
+          "to": "exile"
+        }
+      ]
+    }
+  ]
+}

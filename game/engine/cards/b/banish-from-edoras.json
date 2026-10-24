@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Banish from Edoras",
+    "oracleId": "e4508afd-7cc3-4176-8291-cfc2c155ac11",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This spell costs {2} less to cast if it targets a tapped creature.\nExile target creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "this-costs-less",
+      "affects": {
+        "self": true
+      },
+      "amount": 2,
+      "targeting": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "tapped": true
+      },
+      "text": "This spell costs {2} less to cast if it targets a tapped creature."
+    },
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile"
+        }
+      ],
+      "text": "Exile target creature."
+    }
+  ]
+}

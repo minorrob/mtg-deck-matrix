@@ -1,0 +1,55 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Defiant Bloodlord",
+    "oracleId": "7bf5196d-a16c-418f-943c-2128e40c55da",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Vampire"
+    ],
+    "manaCost": "{5}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 4,
+    "toughness": 5
+  },
+  "oracleText": "Flying\nWhenever you gain life, target opponent loses that much life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "life gained"
+      },
+      "effects": [
+        {
+          "effect": "loseLife",
+          "amount": {
+            "lifeGained": true
+          },
+          "who": {
+            "target": 0
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "player",
+          "who": "opponent"
+        }
+      ],
+      "text": "Whenever you gain life, target opponent loses that much life."
+    }
+  ]
+}

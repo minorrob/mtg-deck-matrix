@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Galadhrim Guide",
+    "oracleId": "9204de14-cbb6-40e5-9dcc-44cce3723e8e",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Scout"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "When this creature enters, scry 2.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "scry",
+          "count": 2
+        }
+      ],
+      "text": "When this creature enters, scry 2."
+    }
+  ]
+}

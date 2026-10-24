@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wayward Giant",
+    "oracleId": "124cf15a-587a-4f1f-a943-f462072f2098",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Giant"
+    ],
+    "manaCost": "{4}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 4,
+    "toughness": 5
+  },
+  "oracleText": "Menace",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "menace",
+      "text": "Menace"
+    }
+  ]
+}

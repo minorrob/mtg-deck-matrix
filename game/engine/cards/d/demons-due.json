@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Demon's Due",
+    "oracleId": "bf65a5f5-5536-4616-a09e-2416439c7bc6",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Scry 2, then draw two cards. You lose 2 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "scry",
+          "count": 2
+        },
+        {
+          "effect": "draw",
+          "count": 2
+        },
+        {
+          "effect": "loseLife",
+          "who": "you",
+          "amount": 2
+        }
+      ],
+      "text": "Scry 2, then draw two cards. You lose 2 life."
+    }
+  ]
+}

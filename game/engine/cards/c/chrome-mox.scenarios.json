@@ -16,7 +16,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -83,7 +83,7 @@
           "cards": [
             "Chrome Mox",
             "Bear",
-            "Shock",
+            "Smoke Shock",
             "Relic",
             "Forest"
           ]
@@ -106,7 +106,7 @@
                 "seat": 0,
                 "options": [
                   "Bear",
-                  "Shock"
+                  "Smoke Shock"
                 ],
                 "min": 0
               }
@@ -131,7 +131,7 @@
               "seat": 0,
               "zone": "hand",
               "cards": [
-                "Shock",
+                "Smoke Shock",
                 "Relic",
                 "Forest"
               ]

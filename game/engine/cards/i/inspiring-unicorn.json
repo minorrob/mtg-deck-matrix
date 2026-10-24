@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Inspiring Unicorn",
+    "oracleId": "1f9797e2-7ebb-41f9-9199-e9ee575eefd3",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Unicorn"
+    ],
+    "manaCost": "{2}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Whenever this creature attacks, creatures you control get +1/+1 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "power": 1,
+          "toughness": 1
+        }
+      ],
+      "text": "Whenever this creature attacks, creatures you control get +1/+1 until end of turn."
+    }
+  ]
+}

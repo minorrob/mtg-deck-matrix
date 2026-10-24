@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Peek",
+    "oracleId": "873abbf4-c9b5-4b8f-8cd0-613cf3b9b1d5",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Look at target player's hand.\nDraw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "player"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "peekAndReveal",
+          "zone": "hand",
+          "who": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ],
+      "text": "Look at target player's hand.\nDraw a card."
+    }
+  ]
+}

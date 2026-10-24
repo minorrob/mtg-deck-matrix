@@ -16,7 +16,7 @@
       "power": 3,
       "toughness": 3
     },
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -62,7 +62,7 @@
         ]
       }
     },
-    "Blaze": {
+    "Smoke Blaze": {
       "types": [
         "Sorcery"
       ],
@@ -305,7 +305,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Shock"
+            "Smoke Shock"
           ]
         }
       ],
@@ -322,7 +322,7 @@
           "seat": 1
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "seat": 1,
           "targets": [
             {
@@ -344,7 +344,7 @@
           "seat": 0,
           "targets": [
             {
-              "card": "Shock"
+              "card": "Smoke Shock"
             }
           ]
         },
@@ -564,7 +564,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Shock"
+            "Smoke Shock"
           ]
         }
       ],
@@ -581,7 +581,7 @@
           "seat": 1
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "seat": 1,
           "targets": [
             {
@@ -603,7 +603,7 @@
           "seat": 0,
           "targets": [
             {
-              "card": "Shock"
+              "card": "Smoke Shock"
             }
           ]
         },
@@ -685,7 +685,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Blaze"
+            "Smoke Blaze"
           ]
         }
       ],
@@ -707,7 +707,7 @@
           "seat": 1
         },
         {
-          "cast": "Blaze",
+          "cast": "Smoke Blaze",
           "seat": 1,
           "x": 3,
           "targets": [
@@ -730,7 +730,7 @@
           "seat": 0,
           "targets": [
             {
-              "card": "Blaze"
+              "card": "Smoke Blaze"
             }
           ]
         },

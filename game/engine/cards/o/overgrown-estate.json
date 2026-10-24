@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Overgrown Estate",
+    "oracleId": "4d52c4a5-e5c8-4fb4-be50-78d5482dd1ae",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{W}{B}{G}",
+    "colors": [
+      "B",
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "G",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Sacrifice a land: You gain 3 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "types": [
+              "Land"
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 3
+        }
+      ],
+      "text": "Sacrifice a land: You gain 3 life."
+    }
+  ]
+}

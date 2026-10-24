@@ -1,0 +1,32 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Pyromantic Pilgrim",
+    "oracleId": "24d52cf1-d4f1-4b4c-a50b-87d3ba0aeebb",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Wizard"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 3,
+    "toughness": 1
+  },
+  "oracleText": "Haste (This creature can attack and {T} as soon as it comes under your control.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "haste",
+      "text": "Haste (This creature can attack and {T} as soon as it comes under your control.)"
+    }
+  ]
+}

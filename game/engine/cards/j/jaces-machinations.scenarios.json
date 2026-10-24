@@ -113,7 +113,7 @@
         }
       ]
     },
-    "Tidings": {
+    "Smoke Tidings": {
       "types": [
         "Instant"
       ],
@@ -401,7 +401,7 @@
           "zone": "hand",
           "cards": [
             "Jace's Machinations",
-            "Tidings"
+            "Smoke Tidings"
           ]
         }
       ],
@@ -425,7 +425,7 @@
           "tap": "Island"
         },
         {
-          "cast": "Tidings"
+          "cast": "Smoke Tidings"
         },
         {
           "expect": [

@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sweltering Suns",
+    "oracleId": "526cd570-046e-402a-986c-f6ece68eec47",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Sweltering Suns deals 3 damage to each creature.\nCycling {3} ({3}, Discard this card: Draw a card.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "damageAll",
+          "amount": 3,
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        }
+      ],
+      "text": "Sweltering Suns deals 3 damage to each creature."
+    },
+    {
+      "kind": "activated",
+      "zone": "hand",
+      "cycling": true,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}"
+        },
+        {
+          "atom": "discard",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ],
+      "text": "Cycling {3} ({3}, Discard this card: Draw a card.)"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Temur Tawnyback",
+    "oracleId": "889d26d6-9e6c-4cc0-8e8e-dd932f705a20",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Beast"
+    ],
+    "manaCost": "{2/G}{2/U}{2/R}",
+    "colors": [
+      "G",
+      "R",
+      "U"
+    ],
+    "colorIdentity": [
+      "G",
+      "R",
+      "U"
+    ],
+    "power": 4,
+    "toughness": 3
+  },
+  "oracleText": "When this creature enters, draw a card, then discard a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        },
+        {
+          "effect": "discard",
+          "count": 1
+        }
+      ],
+      "text": "When this creature enters, draw a card, then discard a card."
+    }
+  ]
+}

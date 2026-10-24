@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Phantom Ninja",
+    "oracleId": "e7a13f43-1171-4808-9964-c5ad424027cb",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Illusion",
+      "Ninja"
+    ],
+    "manaCost": "{1}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "This creature can't be blocked.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "cant-be-blocked",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "text": "This creature can't be blocked."
+    }
+  ]
+}

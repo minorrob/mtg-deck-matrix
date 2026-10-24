@@ -54,7 +54,7 @@
         ]
       }
     },
-    "Study": {
+    "Smoke Study": {
       "types": [
         "Sorcery"
       ],
@@ -90,7 +90,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Study"
+            "Smoke Study"
           ]
         }
       ],
@@ -105,7 +105,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Study"
+          "cast": "Smoke Study"
         },
         {
           "resolve": true

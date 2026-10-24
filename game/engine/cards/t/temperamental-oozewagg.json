@@ -1,0 +1,73 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Temperamental Oozewagg",
+    "oracleId": "07b0b2ad-4364-4a8d-94d5-8bf984b23d05",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Ooze",
+      "Brushwagg"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "{2}{G}: Adapt 2. (If this creature has no +1/+1 counters on it, put two +1/+1 counters on it.)\nModified creatures you control have trample. (Equipment, Auras you control, and counters are modifications.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{G}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 2,
+          "condition": {
+            "present": {
+              "self": true,
+              "countersAtLeast": {
+                "counter": "+1/+1",
+                "count": 1
+              }
+            },
+            "atMost": 0
+          }
+        }
+      ],
+      "text": "{2}{G}: Adapt 2. (If this creature has no +1/+1 counters on it, put two +1/+1 counters on it.)"
+    },
+    {
+      "kind": "static",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "modified": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Trample"
+        ]
+      },
+      "text": "Modified creatures you control have trample. (Equipment, Auras you control, and counters are modifications.)"
+    }
+  ]
+}

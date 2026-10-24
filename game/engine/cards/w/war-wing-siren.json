@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "War-Wing Siren",
+    "oracleId": "0e49ec18-f979-4168-b7df-7728f3fe442e",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Siren",
+      "Soldier"
+    ],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "Flying\nHeroic — Whenever you cast a spell that targets this creature, put a +1/+1 counter on this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "targets": {
+          "what": "permanent",
+          "self": true
+        }
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ],
+      "text": "Heroic — Whenever you cast a spell that targets this creature, put a +1/+1 counter on this creature."
+    }
+  ]
+}

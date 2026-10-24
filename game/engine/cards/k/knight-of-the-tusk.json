@@ -1,0 +1,32 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Knight of the Tusk",
+    "oracleId": "524d81fb-33f5-4e77-ae41-477b91e67be4",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Knight"
+    ],
+    "manaCost": "{4}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 7
+  },
+  "oracleText": "Vigilance (Attacking doesn't cause this creature to tap.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "vigilance",
+      "text": "Vigilance (Attacking doesn't cause this creature to tap.)"
+    }
+  ]
+}

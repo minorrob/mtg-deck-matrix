@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Spirit of the Hearth",
+    "oracleId": "30cd69a8-7893-4075-94ca-04450ff821d3",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Cat",
+      "Spirit"
+    ],
+    "manaCost": "{4}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 4,
+    "toughness": 5
+  },
+  "oracleText": "Flying\nYou have hexproof. (You can't be the target of spells or abilities your opponents control.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "static",
+      "rule": "player-hexproof",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "text": "You have hexproof. (You can't be the target of spells or abilities your opponents control.)"
+    }
+  ]
+}

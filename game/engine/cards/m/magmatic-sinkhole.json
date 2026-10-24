@@ -1,0 +1,60 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Magmatic Sinkhole",
+    "oracleId": "2da7f1b7-316b-4e8e-9fa3-5880b258d601",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{5}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Delve (Each card you exile from your graveyard while casting this spell pays for {1}.)\nMagmatic Sinkhole deals 5 damage to target creature or planeswalker.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "delve",
+      "text": "Delve (Each card you exile from your graveyard while casting this spell pays for {1}.)"
+    },
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 5,
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "text": "Magmatic Sinkhole deals 5 damage to target creature or planeswalker."
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rubbleback Rhino",
+    "oracleId": "33e87ab4-f680-4463-a48d-289fed7e196e",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Rhino"
+    ],
+    "manaCost": "{4}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "Hexproof (This creature can't be the target of spells or abilities your opponents control.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "hexproof",
+      "text": "Hexproof (This creature can't be the target of spells or abilities your opponents control.)"
+    }
+  ]
+}

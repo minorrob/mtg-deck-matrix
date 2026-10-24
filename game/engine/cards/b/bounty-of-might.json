@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bounty of Might",
+    "oracleId": "6f067bfd-1c59-463f-99e1-61161b43b405",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target creature gets +3/+3 until end of turn.\nTarget creature gets +3/+3 until end of turn.\nTarget creature gets +3/+3 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Target creature gets +3/+3 until end of turn.\nTarget creature gets +3/+3 until end of turn.\nTarget creature gets +3/+3 until end of turn.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        },
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        },
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 3,
+          "toughness": 3
+        },
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 1
+          },
+          "power": 3,
+          "toughness": 3
+        },
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 2
+          },
+          "power": 3,
+          "toughness": 3
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Frozen Shade",
+    "oracleId": "f75f9006-217d-4ec8-9c35-ceefe1c5ae4e",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Shade"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 0,
+    "toughness": 1
+  },
+  "oracleText": "{B}: This creature gets +1/+1 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{B}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 1,
+          "toughness": 1
+        }
+      ],
+      "text": "{B}: This creature gets +1/+1 until end of turn."
+    }
+  ]
+}

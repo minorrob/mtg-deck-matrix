@@ -1,0 +1,58 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Valor",
+    "oracleId": "b2ac84e3-cc3c-49c6-918b-a407ef1ee06c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Incarnation"
+    ],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "First strike\nAs long as this card is in your graveyard and you control a Plains, creatures you control have first strike.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "first strike",
+      "text": "First strike"
+    },
+    {
+      "kind": "static",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "addKeywords": [
+          "First Strike"
+        ]
+      },
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "subtypes": [
+            "Plains"
+          ],
+          "controller": "you"
+        }
+      },
+      "worksFrom": "graveyard",
+      "text": "As long as this card is in your graveyard and you control a Plains, creatures you control have first strike."
+    }
+  ]
+}

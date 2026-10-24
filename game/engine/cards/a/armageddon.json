@@ -1,0 +1,38 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Armageddon",
+    "oracleId": "c9ed8b01-959a-47d6-891e-0abbdccf6e4f",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Destroy all lands.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "destroyAll",
+          "selector": {
+            "types": [
+              "Land"
+            ]
+          }
+        }
+      ],
+      "text": "Destroy all lands."
+    }
+  ]
+}

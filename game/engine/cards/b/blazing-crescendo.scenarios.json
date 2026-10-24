@@ -16,7 +16,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -211,7 +211,7 @@
     {
       "name": "A Shock exiled on Rob's turn: still Rob's to cast on Rob's next turn, at Maya",
       "library": [
-        "Shock",
+        "Smoke Shock",
         "Island"
       ],
       "setup": [
@@ -261,7 +261,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "targets": [
             {
               "player": 1
@@ -282,7 +282,7 @@
           "zone": "graveyard",
           "cards": [
             "Blazing Crescendo",
-            "Shock"
+            "Smoke Shock"
           ]
         }
       ]
@@ -290,7 +290,7 @@
     {
       "name": "Not cast by the end of Rob's next turn: the Shock stays in exile, no longer Rob's to cast",
       "library": [
-        "Shock",
+        "Smoke Shock",
         "Island",
         "Forest",
         "Swamp"
@@ -346,7 +346,7 @@
             {
               "offers": {
                 "kind": "cast",
-                "card": "Shock"
+                "card": "Smoke Shock"
               },
               "count": 3
             }
@@ -366,7 +366,7 @@
             {
               "offers": {
                 "kind": "cast",
-                "card": "Shock"
+                "card": "Smoke Shock"
               },
               "count": 0
             }
@@ -378,7 +378,7 @@
           "seat": 0,
           "zone": "exile",
           "cards": [
-            "Shock"
+            "Smoke Shock"
           ]
         }
       ]

@@ -1,0 +1,38 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dokuchi Shadow-Walker",
+    "oracleId": "1e79b7bf-8a2d-4585-81d0-755dce78a4ea",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Ogre",
+      "Ninja"
+    ],
+    "manaCost": "{4}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Ninjutsu {3}{B} ({3}{B}, Return an unblocked attacker you control to hand: Put this card onto the battlefield from your hand tapped and attacking.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "ninjutsu",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}{B}"
+        }
+      ],
+      "text": "Ninjutsu {3}{B} ({3}{B}, Return an unblocked attacker you control to hand: Put this card onto the battlefield from your hand tapped and attacking.)"
+    }
+  ]
+}

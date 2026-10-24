@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Queza, Augur of Agonies",
   "fixtures": {
-    "Divination": {
+    "Smoke Divination": {
       "types": [
         "Sorcery"
       ],
@@ -80,7 +80,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Divination"
+            "Smoke Divination"
           ]
         }
       ],
@@ -92,7 +92,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Divination"
+          "cast": "Smoke Divination"
         },
         {
           "resolve": true

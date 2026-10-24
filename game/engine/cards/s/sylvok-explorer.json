@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sylvok Explorer",
+    "oracleId": "cf7371c8-2fd8-4e70-abde-27495af85011",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Druid"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "{T}: Add one mana of any color that a land an opponent controls could produce.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "reflect": {
+            "what": "permanent",
+            "types": [
+              "Land"
+            ],
+            "controller": "opponent"
+          }
+        }
+      ],
+      "text": "{T}: Add one mana of any color that a land an opponent controls could produce."
+    }
+  ]
+}

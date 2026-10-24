@@ -1,0 +1,55 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Garruk's Horde",
+    "oracleId": "b9da511e-a57f-43c2-aa97-902f3b4c55fb",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Beast"
+    ],
+    "manaCost": "{5}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 7,
+    "toughness": 7
+  },
+  "oracleText": "Trample\nPlay with the top card of your library revealed.\nYou may cast creature spells from the top of your library. (Do this only any time you could cast that creature spell. You still pay the spell's costs.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "Trample"
+    },
+    {
+      "kind": "static",
+      "rule": "top-revealed",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "text": "Play with the top card of your library revealed."
+    },
+    {
+      "kind": "static",
+      "rule": "play-from",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "zone": "library-top",
+      "spells": {
+        "types": [
+          "Creature"
+        ]
+      },
+      "text": "You may cast creature spells from the top of your library. (Do this only any time you could cast that creature spell. You still pay the spell's costs.)"
+    }
+  ]
+}

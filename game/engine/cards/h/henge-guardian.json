@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Henge Guardian",
+    "oracleId": "71744428-65ae-42ac-893d-0802fd41e9b4",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Dragon",
+      "Wurm"
+    ],
+    "manaCost": "{5}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "{2}: This creature gains trample until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Trample"
+          ]
+        }
+      ],
+      "text": "{2}: This creature gains trample until end of turn."
+    }
+  ]
+}

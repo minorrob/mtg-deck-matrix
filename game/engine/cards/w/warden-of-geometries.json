@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Warden of Geometries",
+    "oracleId": "448da389-81db-4931-9cf7-3fde0ce9392f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Eldrazi",
+      "Drone"
+    ],
+    "manaCost": "{4}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Vigilance\n{T}: Add {C}. ({C} represents colorless mana.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "vigilance",
+      "text": "Vigilance"
+    },
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 1
+          }
+        }
+      ],
+      "text": "{T}: Add {C}. ({C} represents colorless mana.)"
+    }
+  ]
+}

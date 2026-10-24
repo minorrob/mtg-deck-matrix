@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Serra's Blessing",
+    "oracleId": "49cdd05c-feeb-4c24-9d88-069f5d2e08c3",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Creatures you control have vigilance. (Attacking doesn't cause them to tap.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "addKeywords": [
+          "Vigilance"
+        ]
+      },
+      "text": "Creatures you control have vigilance. (Attacking doesn't cause them to tap.)"
+    }
+  ]
+}

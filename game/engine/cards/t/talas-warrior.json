@@ -1,0 +1,37 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Talas Warrior",
+    "oracleId": "12beabf3-a84b-49c2-9462-8876a4ac74d4",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Pirate",
+      "Warrior"
+    ],
+    "manaCost": "{1}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "This creature can't be blocked.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "cant-be-blocked",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "text": "This creature can't be blocked."
+    }
+  ]
+}

@@ -16,7 +16,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -218,7 +218,7 @@
           "cards": [
             "Fable of the Mirror-Breaker // Reflection of Kiki-Jiki",
             "Bear",
-            "Shock"
+            "Smoke Shock"
           ]
         }
       ],
@@ -253,7 +253,7 @@
         {
           "choose": [
             "Bear",
-            "Shock"
+            "Smoke Shock"
           ]
         },
         {
@@ -263,7 +263,7 @@
               "zone": "graveyard",
               "cards": [
                 "Bear",
-                "Shock"
+                "Smoke Shock"
               ]
             },
             {

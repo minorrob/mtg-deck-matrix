@@ -1,0 +1,28 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Arachnoid",
+    "oracleId": "7116db6d-82ea-4675-a0cd-73aaf94be43f",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Spider"
+    ],
+    "manaCost": "{6}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 2,
+    "toughness": 6
+  },
+  "oracleText": "Reach (This creature can block creatures with flying.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "reach",
+      "text": "Reach (This creature can block creatures with flying.)"
+    }
+  ]
+}

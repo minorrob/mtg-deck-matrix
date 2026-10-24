@@ -1,0 +1,32 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Elephant-Rat",
+    "oracleId": "84557d9d-ee22-46c9-8f4a-62a440fb302f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elephant",
+      "Rat"
+    ],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "Menace (This creature can't be blocked except by two or more creatures.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "menace",
+      "text": "Menace (This creature can't be blocked except by two or more creatures.)"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hulking Goblin",
+    "oracleId": "1451b623-8214-4d81-9436-62dbe8b79539",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin"
+    ],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "This creature can't block.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "cant-block",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "text": "This creature can't block."
+    }
+  ]
+}

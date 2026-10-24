@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Metathran Soldier",
+    "oracleId": "b723fcec-f208-4397-a178-e1e47b729cf1",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Metathran",
+      "Soldier"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "This creature can't be blocked.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "cant-be-blocked",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "text": "This creature can't be blocked."
+    }
+  ]
+}

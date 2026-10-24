@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Thoughtflare",
+    "oracleId": "faad0f02-da5b-47f4-9634-0ea6ee2ff4f6",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{U}{R}",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Draw four cards, then discard two cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 4
+        },
+        {
+          "effect": "discard",
+          "count": 2
+        }
+      ],
+      "text": "Draw four cards, then discard two cards."
+    }
+  ]
+}

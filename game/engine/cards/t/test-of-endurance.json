@@ -1,0 +1,39 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Test of Endurance",
+    "oracleId": "ffdad8fb-69ee-40d3-b2eb-b0aee0a5becc",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "At the beginning of your upkeep, if you have 50 or more life, you win the game.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "winGame"
+        }
+      ],
+      "condition": {
+        "lifeAtLeast": 50
+      },
+      "text": "At the beginning of your upkeep, if you have 50 or more life, you win the game."
+    }
+  ]
+}

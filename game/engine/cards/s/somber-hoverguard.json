@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Somber Hoverguard",
+    "oracleId": "3c88108e-d983-427a-9b85-b9cdd2d5083b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Drone"
+    ],
+    "manaCost": "{5}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "Affinity for artifacts (This spell costs {1} less to cast for each artifact you control.)\nFlying",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "affinity",
+      "of": {
+        "types": [
+          "Artifact"
+        ]
+      },
+      "text": "Affinity for artifacts (This spell costs {1} less to cast for each artifact you control.)"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    }
+  ]
+}

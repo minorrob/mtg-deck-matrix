@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Uproot",
+    "oracleId": "891d5c5e-3d4d-4183-b9fd-ab694639d1c3",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [
+      "Arcane"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Put target land on top of its owner's library.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Land"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "library",
+          "top": true
+        }
+      ],
+      "text": "Put target land on top of its owner's library."
+    }
+  ]
+}

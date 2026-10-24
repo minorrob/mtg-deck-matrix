@@ -105,7 +105,7 @@
           "zone": "hand",
           "cards": [
             "Windcrag Siege",
-            "Shatter"
+            "Smoke Shatter"
           ]
         }
       ],
@@ -147,7 +147,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Shatter",
+          "cast": "Smoke Shatter",
           "targets": [
             {
               "card": "Windcrag Siege"
@@ -194,14 +194,14 @@
           "zone": "graveyard",
           "cards": [
             "Windcrag Siege",
-            "Shatter"
+            "Smoke Shatter"
           ]
         }
       ]
     }
   ],
   "fixtures": {
-    "Shatter": {
+    "Smoke Shatter": {
       "types": [
         "Instant"
       ],

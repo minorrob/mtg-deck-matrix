@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Elemental Mascot",
   "fixtures": {
-    "Tidings": {
+    "Smoke Tidings": {
       "types": [
         "Instant"
       ],
@@ -22,7 +22,7 @@
         ]
       }
     },
-    "Blaze": {
+    "Smoke Blaze": {
       "types": [
         "Sorcery"
       ],
@@ -83,7 +83,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Tidings"
+            "Smoke Tidings"
           ]
         }
       ],
@@ -92,7 +92,7 @@
           "tap": "Island"
         },
         {
-          "cast": "Tidings"
+          "cast": "Smoke Tidings"
         },
         {
           "resolve": true
@@ -164,7 +164,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Blaze"
+            "Smoke Blaze"
           ]
         }
       ],
@@ -185,7 +185,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Blaze",
+          "cast": "Smoke Blaze",
           "targets": [
             {
               "player": 1
@@ -278,7 +278,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Blaze"
+            "Smoke Blaze"
           ]
         }
       ],
@@ -299,7 +299,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Blaze",
+          "cast": "Smoke Blaze",
           "targets": [
             {
               "player": 1
@@ -367,7 +367,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Blaze"
+            "Smoke Blaze"
           ]
         }
       ],
@@ -388,7 +388,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Blaze",
+          "cast": "Smoke Blaze",
           "targets": [
             {
               "player": 1
@@ -446,7 +446,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Blaze"
+            "Smoke Blaze"
           ]
         }
       ],
@@ -467,7 +467,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Blaze",
+          "cast": "Smoke Blaze",
           "targets": [
             {
               "player": 1

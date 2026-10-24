@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Eyeblight Assassin",
+    "oracleId": "09cacd93-5c20-4993-9ee2-a756204796f7",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Assassin"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "When this creature enters, target creature an opponent controls gets -1/-1 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": -1,
+          "toughness": -1
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "opponent"
+        }
+      ],
+      "text": "When this creature enters, target creature an opponent controls gets -1/-1 until end of turn."
+    }
+  ]
+}

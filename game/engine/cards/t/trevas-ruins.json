@@ -1,0 +1,80 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Treva's Ruins",
+    "oracleId": "7b2c7758-2b89-49ff-8838-8dc9880c7209",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [
+      "Lair"
+    ],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "G",
+      "U",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "When this land enters, sacrifice it unless you return a non-Lair land you control to its owner's hand.\n{T}: Add {G}, {W}, or {U}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "who": "you",
+          "returnToHand": {
+            "types": [
+              "Land"
+            ],
+            "nonSubtypes": [
+              "Lair"
+            ]
+          },
+          "effects": [
+            {
+              "effect": "moveZone",
+              "targets": "self",
+              "sacrifice": true
+            }
+          ]
+        }
+      ],
+      "text": "When this land enters, sacrifice it unless you return a non-Lair land you control to its owner's hand."
+    },
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "G": 1
+            },
+            {
+              "W": 1
+            },
+            {
+              "U": 1
+            }
+          ]
+        }
+      ],
+      "text": "{T}: Add {G}, {W}, or {U}."
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Cycle of Renewal",
+    "oracleId": "77eda626-5cef-496d-b291-cfa1ee6fc1fb",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [
+      "Lesson"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Sacrifice a land. Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "count": 1,
+          "selector": {
+            "types": [
+              "Land"
+            ]
+          }
+        },
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Land"
+            ],
+            "supertypes": [
+              "Basic"
+            ]
+          },
+          "count": 2,
+          "upTo": true,
+          "destinations": [
+            {
+              "to": "battlefield",
+              "tapped": true
+            }
+          ],
+          "shuffle": true
+        }
+      ],
+      "text": "Sacrifice a land. Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle."
+    }
+  ]
+}

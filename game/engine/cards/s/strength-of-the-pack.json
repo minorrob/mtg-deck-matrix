@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Strength of the Pack",
+    "oracleId": "be78a76c-e126-4f09-9e8e-b773a437cfeb",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Put two +1/+1 counters on each creature you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "putCounterAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "counter": "+1/+1",
+          "count": 2
+        }
+      ],
+      "text": "Put two +1/+1 counters on each creature you control."
+    }
+  ]
+}

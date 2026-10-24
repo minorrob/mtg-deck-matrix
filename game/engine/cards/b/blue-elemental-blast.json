@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Blue Elemental Blast",
+    "oracleId": "65e1558c-6b09-4ddc-b520-f19f4fb972af",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one —\n• Counter target red spell.\n• Destroy target red permanent.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Counter target red spell.",
+              "targets": [
+                {
+                  "what": "spell",
+                  "colors": [
+                    "R"
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "counterSpell",
+                  "spells": {
+                    "target": 0
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Destroy target red permanent.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "colors": [
+                    "R"
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "destroy",
+                  "targets": {
+                    "target": 0
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "text": "Choose one —\n• Counter target red spell.\n• Destroy target red permanent."
+    }
+  ]
+}

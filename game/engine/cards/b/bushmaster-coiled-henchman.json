@@ -1,0 +1,55 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bushmaster, Coiled Henchman",
+    "oracleId": "21067a25-f749-4b79-bc6d-820a91af2834",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Snake",
+      "Human",
+      "Villain"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Deathtouch\nEach other creature you control with a +1/+1 counter on it has deathtouch.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "deathtouch",
+      "text": "Deathtouch"
+    },
+    {
+      "kind": "static",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "counters": "+1/+1",
+        "another": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Deathtouch"
+        ]
+      },
+      "text": "Each other creature you control with a +1/+1 counter on it has deathtouch."
+    }
+  ]
+}

@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Ghost Vacuum",
   "fixtures": {
-    "Divination": {
+    "Smoke Divination": {
       "types": [
         "Sorcery"
       ],
@@ -72,7 +72,7 @@
           "seat": 0,
           "zone": "graveyard",
           "cards": [
-            "Divination"
+            "Smoke Divination"
           ]
         },
         {
@@ -89,7 +89,7 @@
           "ability": "a0",
           "targets": [
             {
-              "card": "Divination"
+              "card": "Smoke Divination"
             }
           ]
         },
@@ -120,7 +120,7 @@
               "seat": 0,
               "zone": "exile",
               "cards": [
-                "Divination"
+                "Smoke Divination"
               ]
             },
             {
@@ -211,7 +211,7 @@
           "seat": 0,
           "zone": "exile",
           "cards": [
-            "Divination"
+            "Smoke Divination"
           ]
         },
         {

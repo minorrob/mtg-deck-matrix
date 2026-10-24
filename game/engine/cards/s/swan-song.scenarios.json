@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Swan Song",
   "fixtures": {
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -104,7 +104,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Shock"
+            "Smoke Shock"
           ]
         },
         {
@@ -134,7 +134,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "targets": [
             {
               "player": 0
@@ -153,7 +153,7 @@
           "seat": 0,
           "targets": [
             {
-              "card": "Shock"
+              "card": "Smoke Shock"
             }
           ]
         },
@@ -166,7 +166,7 @@
           "seat": 1,
           "zone": "graveyard",
           "cards": [
-            "Shock"
+            "Smoke Shock"
           ]
         },
         {

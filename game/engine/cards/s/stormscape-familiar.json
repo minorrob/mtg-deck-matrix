@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Stormscape Familiar",
+    "oracleId": "a8f5a11f-3291-4ee9-a96d-4fa38af14932",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Bird"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Flying\nWhite spells and black spells you cast cost {1} less to cast.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "static",
+      "rule": "spells-cost-less",
+      "affects": {
+        "what": "spell",
+        "anyOf": [
+          {
+            "colors": [
+              "W"
+            ]
+          },
+          {
+            "colors": [
+              "B"
+            ]
+          }
+        ]
+      },
+      "amount": 1,
+      "text": "White spells and black spells you cast cost {1} less to cast."
+    }
+  ]
+}

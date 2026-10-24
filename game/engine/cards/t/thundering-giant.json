@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Thundering Giant",
+    "oracleId": "d23329e2-4134-4e49-b9b6-5febef2bce31",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Giant"
+    ],
+    "manaCost": "{3}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 4,
+    "toughness": 3
+  },
+  "oracleText": "Haste (This creature can attack and {T} as soon as it comes under your control.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "haste",
+      "text": "Haste (This creature can attack and {T} as soon as it comes under your control.)"
+    }
+  ]
+}

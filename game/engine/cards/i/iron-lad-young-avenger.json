@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Iron Lad, Young Avenger",
+    "oracleId": "fedcc722-ac5f-464a-bac9-c5f1d4de28d0",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Hero"
+    ],
+    "manaCost": "{2}{U/R}",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Flying (This creature can't be blocked except by creatures with flying or reach.)\nNoncreature spells you cast cost {1} less to cast.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying (This creature can't be blocked except by creatures with flying or reach.)"
+    },
+    {
+      "kind": "static",
+      "rule": "spells-cost-less",
+      "affects": {
+        "what": "spell",
+        "nonTypes": [
+          "Creature"
+        ]
+      },
+      "amount": 1,
+      "text": "Noncreature spells you cast cost {1} less to cast."
+    }
+  ]
+}

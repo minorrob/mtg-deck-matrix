@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Killer Whale",
+    "oracleId": "5ace3817-5a98-4eee-b6b9-8c105cea302f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Whale"
+    ],
+    "manaCost": "{3}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 3,
+    "toughness": 5
+  },
+  "oracleText": "{U}: This creature gains flying until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{U}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Flying"
+          ]
+        }
+      ],
+      "text": "{U}: This creature gains flying until end of turn."
+    }
+  ]
+}

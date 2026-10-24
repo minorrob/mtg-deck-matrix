@@ -1,0 +1,37 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Viashino Outrider",
+    "oracleId": "3e81c22e-52ec-4142-9a98-88681d04ce60",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Lizard"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 4,
+    "toughness": 3
+  },
+  "oracleText": "Echo {2}{R} (At the beginning of your upkeep, if this came under your control since the beginning of your last upkeep, sacrifice it unless you pay its echo cost.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "echo",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{R}"
+        }
+      ],
+      "text": "Echo {2}{R} (At the beginning of your upkeep, if this came under your control since the beginning of your last upkeep, sacrifice it unless you pay its echo cost.)"
+    }
+  ]
+}

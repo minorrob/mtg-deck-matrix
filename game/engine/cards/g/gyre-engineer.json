@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gyre Engineer",
+    "oracleId": "27eef5c1-259a-4d37-93af-7451f50905af",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Vedalken",
+      "Wizard"
+    ],
+    "manaCost": "{1}{G}{U}",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "{T}: Add {G}{U}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "G": 1,
+            "U": 1
+          }
+        }
+      ],
+      "text": "{T}: Add {G}{U}."
+    }
+  ]
+}

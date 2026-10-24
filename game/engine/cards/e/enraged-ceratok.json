@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Enraged Ceratok",
+    "oracleId": "e1f3f377-c7b1-474c-aed6-78b061d138c1",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Rhino"
+    ],
+    "manaCost": "{2}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "This creature can't be blocked by creatures with power 2 or less.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "cant-be-blocked-by",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "by": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "power": {
+          "max": 2
+        }
+      },
+      "text": "This creature can't be blocked by creatures with power 2 or less."
+    }
+  ]
+}

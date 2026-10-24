@@ -1,0 +1,38 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Pestilent Syphoner",
+    "oracleId": "1b27303b-756e-45b9-956f-6bbbd83d31ab",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Phyrexian",
+      "Insect"
+    ],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Flying\nToxic 1 (Players dealt combat damage by this creature also get a poison counter.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "toxic",
+      "amount": 1,
+      "text": "Toxic 1 (Players dealt combat damage by this creature also get a poison counter.)"
+    }
+  ]
+}

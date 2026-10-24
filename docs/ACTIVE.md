@@ -1,5 +1,35 @@
 # Who holds the work
 
+## Card load, 2026-10-24: the compiler's candidates and the shared sentences (a Claude cloud session, for Rob; `claude/engine-card-load-2026-10-24`)
+
+Rob, 2026-10-24: *"Look at the card list of cards not loaded in the engine but either automatically can be added or easily
+added because of shared mechanics and characteristics with other cards loaded. Then run the load."* Done in one
+session, in the Claude · Engine lane's card-load files only (`game/engine/cards/**`, the files generated from them,
+`data/engine/candidates.json`, `docs/engine/card-load-2026-10-24/`). No engine code changed. PR #855.
+
+- **The list:**
+  - the compiler's 2,731 candidates;
+  - 91 missing sentences each shared by 5 or more one-sentence-short cards (713 cards).
+- **What changed:** **2,887 definitions became 6,155.**
+  - 2,711 candidates promoted after review: 1,331 sentence-to-ability pairs, plus 83 whole cards.
+  - 60 cards written by hand, each teaching one shared sentence.
+  - 497 candidates those sentences unlocked, reviewed and promoted.
+  - A third compile found nothing new.
+- **Held back:** 23 candidates, each a compiler template bug: a wrong type slot, a number not carried through, another
+  card's overload effect, a dropped condition.
+- **Stopped:** 30 sentences that need engine rules (landwalk, horsemanship, wither, myriad, banding, buyback, unleash, …),
+  each with the cards it would unlock. `docs/engine/card-load-2026-10-24/README.md` has all three lists.
+- **Proof:** `check-cards` passes 6,155 definitions and 10,161 scenarios. The full run's five red suites were this load's
+  and are fixed at f255470:
+  - fixtures renamed `Smoke <name>`;
+  - 2 Mace filed under `2/`;
+  - 22 cards given scenarios that cast them;
+  - suites made to fit the drained store.
+
+  The PR's body holds the handoff, and it stays a draft until it is marked ready for Actions.
+- **Not proven:** the Worker build is untested here (no wrangler). `definitions.mjs` grows 2.5 → 4.4 MB (0.43 → 0.74 MB
+  gzip), so the release owner should read the size of `wrangler deploy --dry-run` before the next staging release.
+
 ## Card load, 2026-10-23: wave 4d, six sessions (a Claude cloud session, for Rob; `claude/focused-feynman-tt20o3`)
 
 The library load's lanes are merged (#826–#831, #837): of Rob's library, 4 cards are unloaded and 8 are candidates. This

@@ -9,9 +9,9 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1863,
+  "defined": 1873,
   "provisional": 0,
-  "everyRule": 2879
+  "everyRule": 2880
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -4171,8 +4171,8 @@
      "forge": "Fog",
      "top": 4,
      "all": 34,
-     "blocks": 3,
-     "alone": 2
+     "blocks": 2,
+     "alone": 1
     },
     {
      "kind": "effect",

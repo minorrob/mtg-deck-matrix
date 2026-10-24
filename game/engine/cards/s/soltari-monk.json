@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Soltari Monk",
+    "oracleId": "5fed5377-07cf-4ad9-86fd-1efe1f182088",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Soltari",
+      "Monk",
+      "Cleric"
+    ],
+    "manaCost": "{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Protection from black\nShadow (This creature can block or be blocked by only creatures with shadow.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "protection",
+      "from": {
+        "colors": [
+          "B"
+        ]
+      },
+      "text": "Protection from black"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "shadow",
+      "text": "Shadow (This creature can block or be blocked by only creatures with shadow.)"
+    }
+  ]
+}

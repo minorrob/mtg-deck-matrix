@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Scour All Possibilities",
+    "oracleId": "3fb9f0d9-6514-4005-b65a-7929f7c4df06",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Scry 2, then draw a card.\nFlashback {4}{U} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "scry",
+          "count": 2
+        },
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ],
+      "text": "Scry 2, then draw a card."
+    },
+    {
+      "kind": "keyword",
+      "keyword": "flashback",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{4}{U}"
+        }
+      ],
+      "text": "Flashback {4}{U} (You may cast this card from your graveyard for its flashback cost. Then exile it.)"
+    }
+  ]
+}

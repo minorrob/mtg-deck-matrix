@@ -1,0 +1,33 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Boon Reflection",
+    "oracleId": "b86d3142-568a-4eea-b1ae-5fcfc1453533",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "If you would gain life, you gain twice that much life instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "more-life",
+      "affects": {
+        "who": "you"
+      },
+      "times": 2,
+      "text": "If you would gain life, you gain twice that much life instead."
+    }
+  ]
+}

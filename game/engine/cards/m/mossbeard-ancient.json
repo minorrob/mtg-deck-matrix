@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mossbeard Ancient",
+    "oracleId": "26afc8c1-c23f-4212-a2aa-386c71c4a7f9",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Treefolk"
+    ],
+    "manaCost": "{5}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 7,
+    "toughness": 7
+  },
+  "oracleText": "Trample\nWhen this creature enters, you gain 5 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "Trample"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 5
+        }
+      ],
+      "text": "When this creature enters, you gain 5 life."
+    }
+  ]
+}

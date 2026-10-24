@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Nim Grotesque",
+    "oracleId": "ed4d4084-739b-43ac-bd2b-a86d1ecd7bbd",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Zombie"
+    ],
+    "manaCost": "{6}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 3,
+    "toughness": 6
+  },
+  "oracleText": "This creature gets +1/+0 for each artifact you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "power": {
+          "count": {
+            "what": "permanent",
+            "types": [
+              "Artifact"
+            ],
+            "controller": "you"
+          }
+        }
+      },
+      "text": "This creature gets +1/+0 for each artifact you control."
+    }
+  ]
+}

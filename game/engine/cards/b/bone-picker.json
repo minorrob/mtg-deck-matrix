@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bone Picker",
+    "oracleId": "2edf106d-f504-430e-ad9c-50fc95b0ad9c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Bird"
+    ],
+    "manaCost": "{3}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "This spell costs {3} less to cast if a creature died this turn.\nFlying, deathtouch",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "this-costs-less",
+      "affects": {
+        "self": true
+      },
+      "amount": {
+        "creaturesDiedThisTurn": "any",
+        "atMost": 1,
+        "times": 3
+      },
+      "text": "This spell costs {3} less to cast if a creature died this turn."
+    },
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "deathtouch",
+      "text": "deathtouch"
+    }
+  ]
+}

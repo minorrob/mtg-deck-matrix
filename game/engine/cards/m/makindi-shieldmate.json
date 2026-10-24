@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Makindi Shieldmate",
+    "oracleId": "b8a65e49-2379-42bf-823e-c208c2550aeb",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Kor",
+      "Soldier",
+      "Ally"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 0,
+    "toughness": 3
+  },
+  "oracleText": "Defender\nWhenever this creature or another Ally you control enters, you may put a +1/+1 counter on this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "defender",
+      "text": "Defender"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "anyOf": [
+            {
+              "self": true
+            },
+            {
+              "subtypes": [
+                "Ally"
+              ],
+              "controller": "you"
+            }
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ],
+      "optional": true,
+      "text": "Whenever this creature or another Ally you control enters, you may put a +1/+1 counter on this creature."
+    }
+  ]
+}

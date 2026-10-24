@@ -1,0 +1,33 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ronin Cavekeeper",
+    "oracleId": "56551cba-3871-4746-a11f-7ab8aaf46cf6",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Samurai"
+    ],
+    "manaCost": "{5}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 4,
+    "toughness": 3
+  },
+  "oracleText": "Bushido 2 (Whenever this creature blocks or becomes blocked, it gets +2/+2 until end of turn.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "bushido",
+      "amount": 2,
+      "text": "Bushido 2 (Whenever this creature blocks or becomes blocked, it gets +2/+2 until end of turn.)"
+    }
+  ]
+}

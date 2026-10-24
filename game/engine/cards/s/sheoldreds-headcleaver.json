@@ -1,0 +1,38 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sheoldred's Headcleaver",
+    "oracleId": "a7df9a4e-d556-4345-9884-0724a3f9d5f8",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Phyrexian",
+      "Warrior"
+    ],
+    "manaCost": "{3}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "Menace\nToxic 2 (Players dealt combat damage by this creature also get two poison counters.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "menace",
+      "text": "Menace"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "toxic",
+      "amount": 2,
+      "text": "Toxic 2 (Players dealt combat damage by this creature also get two poison counters.)"
+    }
+  ]
+}

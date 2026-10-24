@@ -1,0 +1,38 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Creeping Corrosion",
+    "oracleId": "33eefb22-51a6-4630-9bd2-0895997f6f33",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Destroy all artifacts.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "destroyAll",
+          "selector": {
+            "types": [
+              "Artifact"
+            ]
+          }
+        }
+      ],
+      "text": "Destroy all artifacts."
+    }
+  ]
+}

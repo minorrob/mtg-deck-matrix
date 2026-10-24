@@ -30,7 +30,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Tidings": {
+    "Smoke Tidings": {
       "types": [
         "Instant"
       ],
@@ -147,7 +147,7 @@
     {
       "name": "An instant from the top in combat, for its mana value in life",
       "library": [
-        "Tidings"
+        "Smoke Tidings"
       ],
       "setup": [
         {
@@ -168,7 +168,7 @@
           "resolve": true
         },
         {
-          "cast": "Tidings"
+          "cast": "Smoke Tidings"
         },
         {
           "resolve": true
@@ -188,7 +188,7 @@
           "seat": 0,
           "zone": "graveyard",
           "cards": [
-            "Tidings"
+            "Smoke Tidings"
           ]
         }
       ]

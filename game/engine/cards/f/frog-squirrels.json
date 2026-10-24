@@ -1,0 +1,32 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Frog-Squirrels",
+    "oracleId": "b8563788-debc-4f97-adf4-b186bf3960e2",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Frog",
+      "Squirrel"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Reach (This creature can block creatures with flying.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "reach",
+      "text": "Reach (This creature can block creatures with flying.)"
+    }
+  ]
+}

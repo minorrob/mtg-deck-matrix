@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Eumidian Terrabotanist",
+    "oracleId": "92226fd2-ad93-4722-89a0-ca88ea03e1b4",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Insect",
+      "Druid"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Landfall — Whenever a land you control enters, you gain 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Land"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 1
+        }
+      ],
+      "text": "Landfall — Whenever a land you control enters, you gain 1 life."
+    }
+  ]
+}

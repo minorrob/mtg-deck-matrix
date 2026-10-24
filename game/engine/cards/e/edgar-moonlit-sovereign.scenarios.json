@@ -16,7 +16,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Tidings": {
+    "Smoke Tidings": {
       "types": [
         "Instant"
       ],
@@ -190,7 +190,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Tidings"
+            "Smoke Tidings"
           ]
         }
       ],
@@ -212,7 +212,7 @@
           "tap": "Island"
         },
         {
-          "cast": "Tidings"
+          "cast": "Smoke Tidings"
         },
         {
           "expect": [

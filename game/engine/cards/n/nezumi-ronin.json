@@ -1,0 +1,33 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Nezumi Ronin",
+    "oracleId": "0f9672ac-f4fc-46e8-9fe5-93b3e66810a4",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Rat",
+      "Samurai"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 3,
+    "toughness": 1
+  },
+  "oracleText": "Bushido 1 (Whenever this creature blocks or becomes blocked, it gets +1/+1 until end of turn.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "bushido",
+      "amount": 1,
+      "text": "Bushido 1 (Whenever this creature blocks or becomes blocked, it gets +1/+1 until end of turn.)"
+    }
+  ]
+}

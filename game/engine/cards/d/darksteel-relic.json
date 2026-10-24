@@ -1,0 +1,25 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Darksteel Relic",
+    "oracleId": "2bda1fb1-528c-4e66-89f1-bb1a85e9181e",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{0}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Indestructible (Effects that say \"destroy\" don't destroy this artifact.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "indestructible",
+      "text": "Indestructible (Effects that say \"destroy\" don't destroy this artifact.)"
+    }
+  ]
+}

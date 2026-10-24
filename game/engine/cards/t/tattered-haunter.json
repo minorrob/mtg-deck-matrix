@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tattered Haunter",
+    "oracleId": "754a72fd-e837-44f7-9bd7-5bf55ee8134c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spirit"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Flying\nThis creature can block only creatures with flying.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "static",
+      "rule": "can-block-only",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "attackers": {
+        "keywords": [
+          "Flying"
+        ]
+      },
+      "text": "This creature can block only creatures with flying."
+    }
+  ]
+}

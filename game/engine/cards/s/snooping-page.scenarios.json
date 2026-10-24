@@ -64,7 +64,7 @@
         ]
       }
     },
-    "Tidings": {
+    "Smoke Tidings": {
       "types": [
         "Instant"
       ],
@@ -84,7 +84,7 @@
         ]
       }
     },
-    "Blaze": {
+    "Smoke Blaze": {
       "types": [
         "Sorcery"
       ],
@@ -277,8 +277,8 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Blaze",
-            "Tidings"
+            "Smoke Blaze",
+            "Smoke Tidings"
           ]
         }
       ],
@@ -287,7 +287,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Blaze",
+          "cast": "Smoke Blaze",
           "targets": [
             {
               "player": 1
@@ -308,7 +308,7 @@
           "tap": "Island"
         },
         {
-          "cast": "Tidings"
+          "cast": "Smoke Tidings"
         },
         {
           "expect": [

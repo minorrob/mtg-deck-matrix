@@ -1,0 +1,35 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sizzle",
+    "oracleId": "938cc97f-3908-401e-94cd-32004aff1ef1",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Sizzle deals 3 damage to each opponent.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 3,
+          "who": "opponent"
+        }
+      ],
+      "text": "Sizzle deals 3 damage to each opponent."
+    }
+  ]
+}

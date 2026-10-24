@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dross Prowler",
+    "oracleId": "a3122c6a-20be-4bb3-ab2f-928143378ea6",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Zombie"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Fear (This creature can't be blocked except by artifact creatures and/or black creatures.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "fear",
+      "text": "Fear (This creature can't be blocked except by artifact creatures and/or black creatures.)"
+    }
+  ]
+}

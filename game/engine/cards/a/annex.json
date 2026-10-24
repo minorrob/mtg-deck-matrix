@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Annex",
+    "oracleId": "5f1f49dd-b7ce-494a-9b4b-ac702d3664c5",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{2}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant land (Target a land as you cast this. This card enters attached to that land.)\nYou control enchanted land.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Land"
+        ]
+      },
+      "text": "Enchant land (Target a land as you cast this. This card enters attached to that land.)"
+    },
+    {
+      "kind": "static",
+      "rule": "control-enchanted",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "text": "You control enchanted land."
+    }
+  ]
+}

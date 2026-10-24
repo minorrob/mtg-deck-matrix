@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Illusory Ambusher",
+    "oracleId": "ad3add32-cb87-4cd4-8c36-a737a897a8c8",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Cat",
+      "Illusion"
+    ],
+    "manaCost": "{4}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 4,
+    "toughness": 1
+  },
+  "oracleText": "Flash (You may cast this spell any time you could cast an instant.)\nWhenever this creature is dealt damage, draw that many cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flash",
+      "text": "Flash (You may cast this spell any time you could cast an instant.)"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "damage dealt once",
+        "to": "self"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": {
+            "damageDealt": true
+          }
+        }
+      ],
+      "text": "Whenever this creature is dealt damage, draw that many cards."
+    }
+  ]
+}

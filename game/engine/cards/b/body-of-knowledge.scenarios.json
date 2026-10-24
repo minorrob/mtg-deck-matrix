@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Body of Knowledge",
   "fixtures": {
-    "Zap": {
+    "Smoke Zap": {
       "types": [
         "Instant"
       ],
@@ -49,7 +49,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Zap",
+            "Smoke Zap",
             "Wastes",
             "Wastes",
             "Wastes"
@@ -61,7 +61,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Zap",
+          "cast": "Smoke Zap",
           "targets": [
             {
               "card": "Body of Knowledge"

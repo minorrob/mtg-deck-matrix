@@ -65,7 +65,7 @@
         ]
       }
     },
-    "Peek": {
+    "Smoke Peek": {
       "types": [
         "Sorcery"
       ],
@@ -428,7 +428,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Peek"
+            "Smoke Peek"
           ]
         }
       ],
@@ -437,7 +437,7 @@
           "tap": "Island"
         },
         {
-          "cast": "Peek"
+          "cast": "Smoke Peek"
         },
         {
           "resolve": true

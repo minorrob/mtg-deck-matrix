@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Enatu Golem",
+    "oracleId": "1cb3f27c-2670-43b8-9305-8adf2e7bd3ae",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Golem"
+    ],
+    "manaCost": "{6}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 3,
+    "toughness": 5
+  },
+  "oracleText": "When this creature dies, you gain 4 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "dies"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 4
+        }
+      ],
+      "text": "When this creature dies, you gain 4 life."
+    }
+  ]
+}

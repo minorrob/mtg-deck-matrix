@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Markov Patrician",
+    "oracleId": "d56602f3-64df-4c68-a4a3-95c37c021e72",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Vampire"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 3,
+    "toughness": 1
+  },
+  "oracleText": "Lifelink (Damage dealt by this creature also causes you to gain that much life.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "lifelink",
+      "text": "Lifelink (Damage dealt by this creature also causes you to gain that much life.)"
+    }
+  ]
+}

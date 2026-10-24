@@ -16,7 +16,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Smash": {
+    "Smoke Smash": {
       "types": [
         "Instant"
       ],
@@ -90,7 +90,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Smash"
+            "Smoke Smash"
           ]
         },
         {
@@ -130,7 +130,7 @@
             {
               "offers": {
                 "kind": "cast",
-                "card": "Smash"
+                "card": "Smoke Smash"
               },
               "count": 1,
               "targets": [
@@ -157,7 +157,7 @@
             {
               "offers": {
                 "kind": "cast",
-                "card": "Smash"
+                "card": "Smoke Smash"
               },
               "count": 2,
               "targets": [
@@ -172,7 +172,7 @@
           ]
         },
         {
-          "cast": "Smash",
+          "cast": "Smoke Smash",
           "targets": [
             {
               "card": "Bear"
@@ -208,7 +208,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Smash"
+            "Smoke Smash"
           ]
         },
         {
@@ -249,7 +249,7 @@
         {
           "offers": {
             "kind": "cast",
-            "card": "Smash",
+            "card": "Smoke Smash",
             "seat": 0
           },
           "count": 1,

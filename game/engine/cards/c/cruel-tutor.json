@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Cruel Tutor",
+    "oracleId": "d9353eb6-c7e7-4d85-a0c2-32b1d091881a",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Search your library for a card, then shuffle and put that card on top. You lose 2 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {},
+          "shuffle": true,
+          "to": "top"
+        },
+        {
+          "effect": "loseLife",
+          "amount": 2
+        }
+      ],
+      "text": "Search your library for a card, then shuffle and put that card on top. You lose 2 life."
+    }
+  ]
+}

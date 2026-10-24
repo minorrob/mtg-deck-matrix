@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bartizan Bats",
+    "oracleId": "6987d5d4-0ef6-4326-a590-678ac160fe56",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Bat"
+    ],
+    "manaCost": "{3}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 3,
+    "toughness": 1
+  },
+  "oracleText": "Flying (This creature can't be blocked except by creatures with flying or reach.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying (This creature can't be blocked except by creatures with flying or reach.)"
+    }
+  ]
+}

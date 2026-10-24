@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hooting Mandrills",
+    "oracleId": "70e35385-6129-4bd1-861c-df04469566b7",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Ape"
+    ],
+    "manaCost": "{5}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Delve (Each card you exile from your graveyard while casting this spell pays for {1}.)\nTrample",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "delve",
+      "text": "Delve (Each card you exile from your graveyard while casting this spell pays for {1}.)"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "Trample"
+    }
+  ]
+}

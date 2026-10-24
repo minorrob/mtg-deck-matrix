@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Shu Soldier-Farmers",
+    "oracleId": "174cf7cd-3e8c-4f90-abc1-a78a0ce832d2",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Soldier"
+    ],
+    "manaCost": "{4}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "When this creature enters, you gain 4 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 4
+        }
+      ],
+      "text": "When this creature enters, you gain 4 life."
+    }
+  ]
+}

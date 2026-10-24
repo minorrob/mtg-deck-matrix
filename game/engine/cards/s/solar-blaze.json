@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Solar Blaze",
+    "oracleId": "424f3d53-47e7-4212-8267-53279ea8900a",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}{W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each creature deals damage to itself equal to its power.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "damageEach",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          },
+          "dealt": {
+            "powerOf": "that card"
+          },
+          "to": "itself"
+        }
+      ],
+      "text": "Each creature deals damage to itself equal to its power."
+    }
+  ]
+}

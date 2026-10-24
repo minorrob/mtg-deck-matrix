@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Molten Monstrosity",
+    "oracleId": "ea55886c-48a1-4339-81fd-03dbaa116c28",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Hellion"
+    ],
+    "manaCost": "{7}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "This spell costs {X} less to cast, where X is the greatest power among creatures you control.\nTrample",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "this-costs-less",
+      "affects": {
+        "self": true
+      },
+      "amount": {
+        "greatestPower": {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      },
+      "text": "This spell costs {X} less to cast, where X is the greatest power among creatures you control."
+    },
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "Trample"
+    }
+  ]
+}

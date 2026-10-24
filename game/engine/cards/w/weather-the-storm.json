@@ -1,0 +1,39 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Weather the Storm",
+    "oracleId": "3a091f7b-efc9-4aaa-9da8-157ef8099a36",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "You gain 3 life.\nStorm (When you cast this spell, copy it for each spell cast before it this turn.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 3
+        }
+      ],
+      "text": "You gain 3 life."
+    },
+    {
+      "kind": "keyword",
+      "keyword": "storm",
+      "text": "Storm (When you cast this spell, copy it for each spell cast before it this turn.)"
+    }
+  ]
+}

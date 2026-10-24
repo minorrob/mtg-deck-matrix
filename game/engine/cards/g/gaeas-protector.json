@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gaea's Protector",
+    "oracleId": "d91d5d22-9f94-4a41-9970-0a8ddd2f7711",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental",
+      "Warrior"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 2
+  },
+  "oracleText": "This creature must be blocked if able.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "must-be-blocked",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "text": "This creature must be blocked if able."
+    }
+  ]
+}

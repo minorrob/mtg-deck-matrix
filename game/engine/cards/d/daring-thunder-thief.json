@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Daring Thunder-Thief",
+    "oracleId": "0f5401c2-0189-4a07-8e7b-a765ccd7c954",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Turtle",
+      "Rogue"
+    ],
+    "manaCost": "{3}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Flash\nThis creature enters tapped.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flash",
+      "text": "Flash"
+    },
+    {
+      "kind": "replacement",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersTapped": true
+      },
+      "text": "This creature enters tapped."
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Granite Gargoyle",
+    "oracleId": "ef5248d4-4cd1-447c-bdcc-78a09a67d923",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Gargoyle"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Flying\n{R}: This creature gets +0/+1 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{R}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 0,
+          "toughness": 1
+        }
+      ],
+      "text": "{R}: This creature gets +0/+1 until end of turn."
+    }
+  ]
+}

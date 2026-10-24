@@ -1,0 +1,32 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Halberdier",
+    "oracleId": "1c3c23b5-b771-4117-83b5-febf7e96281a",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Barbarian"
+    ],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 3,
+    "toughness": 1
+  },
+  "oracleText": "First strike",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "first strike",
+      "text": "First strike"
+    }
+  ]
+}

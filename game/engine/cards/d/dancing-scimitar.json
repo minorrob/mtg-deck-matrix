@@ -1,0 +1,28 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dancing Scimitar",
+    "oracleId": "82b13601-d460-45c5-94a1-07e146d463a9",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Spirit"
+    ],
+    "manaCost": "{4}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 1,
+    "toughness": 5
+  },
+  "oracleText": "Flying (This creature can't be blocked except by creatures with flying or reach.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying (This creature can't be blocked except by creatures with flying or reach.)"
+    }
+  ]
+}

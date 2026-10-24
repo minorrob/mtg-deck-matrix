@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Altar's Reap",
+    "oracleId": "6a125750-2b8c-4f9d-8173-ac8d14c91ddb",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "As an additional cost to cast this spell, sacrifice a creature.\nDraw two cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "additionalCost": [
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 2
+        }
+      ],
+      "text": "As an additional cost to cast this spell, sacrifice a creature.\nDraw two cards."
+    }
+  ]
+}

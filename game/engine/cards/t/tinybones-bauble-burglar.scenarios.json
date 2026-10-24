@@ -30,7 +30,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Tidings": {
+    "Smoke Tidings": {
       "types": [
         "Instant"
       ],
@@ -236,7 +236,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Tidings"
+            "Smoke Tidings"
           ]
         }
       ],
@@ -280,7 +280,7 @@
             {
               "offers": {
                 "kind": "cast",
-                "card": "Tidings",
+                "card": "Smoke Tidings",
                 "seat": 0
               },
               "count": 0
@@ -297,7 +297,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Tidings"
+          "cast": "Smoke Tidings"
         },
         {
           "resolve": true
@@ -308,7 +308,7 @@
           "seat": 1,
           "zone": "graveyard",
           "cards": [
-            "Tidings"
+            "Smoke Tidings"
           ]
         }
       ]

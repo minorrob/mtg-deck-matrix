@@ -23,7 +23,7 @@
       "manaCost": "{1}",
       "colors": []
     },
-    "Tidings": {
+    "Smoke Tidings": {
       "types": [
         "Instant"
       ],
@@ -215,7 +215,7 @@
         "Wastes",
         "Charm",
         "Forest",
-        "Tidings"
+        "Smoke Tidings"
       ],
       "setup": [
         {
@@ -286,7 +286,7 @@
         {
           "offers": {
             "kind": "cast",
-            "card": "Tidings"
+            "card": "Smoke Tidings"
           },
           "count": 0
         }

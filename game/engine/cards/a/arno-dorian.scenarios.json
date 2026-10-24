@@ -17,7 +17,7 @@
       "power": 2,
       "toughness": 1
     },
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -340,7 +340,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Shock"
+            "Smoke Shock"
           ]
         },
         {
@@ -382,7 +382,7 @@
           "seat": 1
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "seat": 1,
           "targets": [
             {
@@ -426,7 +426,7 @@
           "seat": 1,
           "zone": "graveyard",
           "cards": [
-            "Shock"
+            "Smoke Shock"
           ]
         },
         {

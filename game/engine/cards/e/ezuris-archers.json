@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ezuri's Archers",
+    "oracleId": "bcaf3f32-c4e5-4d39-be98-bfc00327021b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Archer"
+    ],
+    "manaCost": "{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "Reach (This creature can block creatures with flying.)\nWhenever this creature blocks a creature with flying, this creature gets +3/+0 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "reach",
+      "text": "Reach (This creature can block creatures with flying.)"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "blocks",
+        "who": "self",
+        "each": "attacker",
+        "blocked": {
+          "keywords": [
+            "Flying"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 3,
+          "toughness": 0
+        }
+      ],
+      "text": "Whenever this creature blocks a creature with flying, this creature gets +3/+0 until end of turn."
+    }
+  ]
+}

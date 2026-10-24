@@ -1,0 +1,70 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rouse",
+    "oracleId": "475099d9-4743-420a-ada8-3932f5ef9e82",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "If you control a Swamp, you may pay 2 life rather than pay this spell's mana cost.\nTarget creature gets +2/+0 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "alternative-cost",
+      "affects": {
+        "what": "card",
+        "self": true
+      },
+      "cost": [
+        {
+          "atom": "payLife",
+          "amount": 2
+        }
+      ],
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "subtypes": [
+            "Swamp"
+          ],
+          "controller": "you"
+        }
+      },
+      "text": "If you control a Swamp, you may pay 2 life rather than pay this spell's mana cost."
+    },
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 2,
+          "toughness": 0
+        }
+      ],
+      "text": "Target creature gets +2/+0 until end of turn."
+    }
+  ]
+}

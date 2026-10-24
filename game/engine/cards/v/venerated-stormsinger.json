@@ -1,0 +1,58 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Venerated Stormsinger",
+    "oracleId": "4aff2f31-619f-406e-b2c9-a2c733c04bc4",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Orc",
+      "Cleric"
+    ],
+    "manaCost": "{3}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Mobilize 1 (Whenever this creature attacks, create a tapped and attacking 1/1 red Warrior creature token. Sacrifice it at the beginning of the next end step.)\nWhenever this creature or another creature you control dies, each opponent loses 1 life and you gain 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "mobilize",
+      "amount": 1,
+      "text": "Mobilize 1 (Whenever this creature attacks, create a tapped and attacking 1/1 red Warrior creature token. Sacrifice it at the beginning of the next end step.)"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "dies",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "loseLife",
+          "amount": 1,
+          "who": "opponent"
+        },
+        {
+          "effect": "gainLife",
+          "amount": 1
+        }
+      ],
+      "text": "Whenever this creature or another creature you control dies, each opponent loses 1 life and you gain 1 life."
+    }
+  ]
+}

@@ -56,7 +56,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Tidings": {
+    "Smoke Tidings": {
       "types": [
         "Instant"
       ],
@@ -278,7 +278,7 @@
     {
       "name": "Coven or not, an instant on top is not cast from there",
       "library": [
-        "Tidings"
+        "Smoke Tidings"
       ],
       "setup": [
         {
@@ -301,7 +301,7 @@
         {
           "offers": {
             "kind": "cast",
-            "card": "Tidings"
+            "card": "Smoke Tidings"
           },
           "count": 0
         }

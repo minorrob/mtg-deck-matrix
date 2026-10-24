@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Cleanfall",
+    "oracleId": "826b1c93-4e5d-4436-8d59-2d7d970f609f",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [
+      "Arcane"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Destroy all enchantments.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "destroyAll",
+          "selector": {
+            "types": [
+              "Enchantment"
+            ]
+          }
+        }
+      ],
+      "text": "Destroy all enchantments."
+    }
+  ]
+}

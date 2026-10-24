@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Underdark Basilisk",
+    "oracleId": "3b61b6da-44ed-4766-8134-fca37afd3f2a",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Basilisk"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "Deathtouch",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "deathtouch",
+      "text": "Deathtouch"
+    }
+  ]
+}

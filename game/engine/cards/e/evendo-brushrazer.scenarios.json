@@ -42,7 +42,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Tidings": {
+    "Smoke Tidings": {
       "types": [
         "Instant"
       ],
@@ -308,7 +308,7 @@
     {
       "name": "A token sacrificed exiles nothing; on Maya's turn the Tidings exiled with it is not his to cast",
       "library": [
-        "Tidings"
+        "Smoke Tidings"
       ],
       "setup": [
         {
@@ -358,7 +358,7 @@
               "seat": 0,
               "zone": "exile",
               "cards": [
-                "Tidings"
+                "Smoke Tidings"
               ]
             }
           ]
@@ -375,7 +375,7 @@
         {
           "offers": {
             "kind": "cast",
-            "card": "Tidings",
+            "card": "Smoke Tidings",
             "seat": 0
           },
           "count": 0

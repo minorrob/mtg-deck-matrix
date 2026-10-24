@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Herald of Eternal Dawn",
+    "oracleId": "4080f7e3-06d3-4d3d-9929-4e826cb66713",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel"
+    ],
+    "manaCost": "{4}{W}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 6,
+    "toughness": 6
+  },
+  "oracleText": "Flash (You may cast this spell any time you could cast an instant.)\nFlying\nYou can't lose the game and your opponents can't win the game.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flash",
+      "text": "Flash (You may cast this spell any time you could cast an instant.)"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "static",
+      "rule": "cant-lose",
+      "affects": {
+        "self": true
+      },
+      "text": "You can't lose the game and your opponents can't win the game."
+    },
+    {
+      "kind": "static",
+      "rule": "opponents-cant-win",
+      "affects": {
+        "self": true
+      },
+      "text": "You can't lose the game and your opponents can't win the game."
+    }
+  ]
+}

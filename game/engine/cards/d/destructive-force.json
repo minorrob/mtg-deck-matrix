@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Destructive Force",
+    "oracleId": "b0967525-554b-41eb-b639-75fe36e0fe57",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{5}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each player sacrifices five lands of their choice. Destructive Force deals 5 damage to each creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Each player sacrifices five lands of their choice. Destructive Force deals 5 damage to each creature.",
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "who": "each",
+          "count": 5,
+          "selector": {
+            "types": [
+              "Land"
+            ]
+          }
+        },
+        {
+          "effect": "damageAll",
+          "amount": 5,
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

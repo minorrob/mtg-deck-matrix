@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Repentance",
+    "oracleId": "9a345a67-0c6c-4f6f-b3c9-d525199cdbfa",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target creature deals damage to itself equal to its power.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "from": {
+            "target": 0
+          },
+          "targets": {
+            "target": 0
+          },
+          "amount": {
+            "powerOf": {
+              "target": 0
+            }
+          }
+        }
+      ],
+      "text": "Target creature deals damage to itself equal to its power."
+    }
+  ]
+}

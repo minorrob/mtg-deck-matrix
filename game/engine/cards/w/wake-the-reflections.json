@@ -1,0 +1,33 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wake the Reflections",
+    "oracleId": "211868ca-662b-4054-bf50-c9e16bb58c49",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Populate. (Create a token that's a copy of a creature token you control.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "populate"
+        }
+      ],
+      "text": "Populate. (Create a token that's a copy of a creature token you control.)"
+    }
+  ]
+}

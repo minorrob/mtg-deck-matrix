@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Cleaver Riot",
+    "oracleId": "49f42896-90cd-4a05-bcca-12b19f780446",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Creatures you control gain double strike until end of turn. (They deal both first-strike and regular combat damage.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Double Strike"
+          ],
+          "until": "end-of-turn"
+        }
+      ],
+      "text": "Creatures you control gain double strike until end of turn. (They deal both first-strike and regular combat damage.)"
+    }
+  ]
+}

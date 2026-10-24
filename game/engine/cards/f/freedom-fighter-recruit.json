@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Freedom Fighter Recruit",
+    "oracleId": "33e66662-aea6-480c-b69b-1907d987b69e",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Rebel",
+      "Ally"
+    ],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": 2
+  },
+  "oracleText": "Freedom Fighter Recruit's power is equal to the number of creatures you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "a",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "setPower": {
+          "count": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          }
+        }
+      },
+      "text": "Freedom Fighter Recruit's power is equal to the number of creatures you control."
+    }
+  ]
+}

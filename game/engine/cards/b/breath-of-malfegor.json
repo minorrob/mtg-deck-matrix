@@ -1,0 +1,37 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Breath of Malfegor",
+    "oracleId": "81e6ade9-a38f-4655-b09c-9ca41a11face",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{B}{R}",
+    "colors": [
+      "B",
+      "R"
+    ],
+    "colorIdentity": [
+      "B",
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Breath of Malfegor deals 5 damage to each opponent.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 5,
+          "who": "opponent"
+        }
+      ],
+      "text": "Breath of Malfegor deals 5 damage to each opponent."
+    }
+  ]
+}

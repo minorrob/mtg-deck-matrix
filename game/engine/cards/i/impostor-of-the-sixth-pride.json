@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Impostor of the Sixth Pride",
+    "oracleId": "a2b8185a-9ff2-4d65-9bdd-b060b7ce69bb",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Shapeshifter"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 1
+  },
+  "oracleText": "Changeling (This card is every creature type.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "changeling",
+      "text": "Changeling (This card is every creature type.)"
+    }
+  ]
+}

@@ -69,7 +69,7 @@
         "Legendary"
       ]
     },
-    "Raise Dead": {
+    "Smoke Raise Dead": {
       "types": [
         "Sorcery"
       ],
@@ -600,7 +600,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Raise Dead"
+            "Smoke Raise Dead"
           ]
         },
         {
@@ -616,7 +616,7 @@
           "tap": "Swamp"
         },
         {
-          "cast": "Raise Dead",
+          "cast": "Smoke Raise Dead",
           "targets": [
             {
               "card": "Bear"

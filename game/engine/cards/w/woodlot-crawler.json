@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Woodlot Crawler",
+    "oracleId": "e5b11e43-fc7c-4cea-a44a-8af3f124e29e",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Insect"
+    ],
+    "manaCost": "{U}{B}",
+    "colors": [
+      "B",
+      "U"
+    ],
+    "colorIdentity": [
+      "B",
+      "U"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Forestwalk (This creature can't be blocked as long as defending player controls a Forest.)\nProtection from green",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "forestwalk",
+      "text": "Forestwalk (This creature can't be blocked as long as defending player controls a Forest.)"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "protection",
+      "from": {
+        "colors": [
+          "G"
+        ]
+      },
+      "text": "Protection from green"
+    }
+  ]
+}

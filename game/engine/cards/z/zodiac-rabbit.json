@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Zodiac Rabbit",
+    "oracleId": "048cc868-1657-448d-9f2c-97973e73f477",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Rabbit"
+    ],
+    "manaCost": "{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Forestwalk (This creature can't be blocked as long as defending player controls a Forest.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "forestwalk",
+      "text": "Forestwalk (This creature can't be blocked as long as defending player controls a Forest.)"
+    }
+  ]
+}

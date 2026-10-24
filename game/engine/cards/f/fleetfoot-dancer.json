@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Fleetfoot Dancer",
+    "oracleId": "8f606acf-db16-42cd-8907-dad88c4a1d54",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Druid"
+    ],
+    "manaCost": "{1}{R}{G}{W}",
+    "colors": [
+      "G",
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "R",
+      "W"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Trample, lifelink, haste",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "Trample"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "lifelink",
+      "text": "lifelink"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "haste",
+      "text": "haste"
+    }
+  ]
+}

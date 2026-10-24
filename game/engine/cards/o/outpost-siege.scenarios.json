@@ -46,7 +46,7 @@
         ]
       }
     },
-    "Shatter": {
+    "Smoke Shatter": {
       "types": [
         "Instant"
       ],
@@ -363,7 +363,7 @@
           "zone": "hand",
           "cards": [
             "Outpost Siege",
-            "Shatter"
+            "Smoke Shatter"
           ]
         },
         {
@@ -421,7 +421,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Shatter",
+          "cast": "Smoke Shatter",
           "targets": [
             {
               "card": "Outpost Siege"
@@ -441,7 +441,7 @@
               "zone": "graveyard",
               "cards": [
                 "Outpost Siege",
-                "Shatter"
+                "Smoke Shatter"
               ]
             }
           ]
@@ -782,7 +782,7 @@
           "cards": [
             "Outpost Siege",
             "Bolt",
-            "Shatter"
+            "Smoke Shatter"
           ]
         },
         {
@@ -846,7 +846,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Shatter",
+          "cast": "Smoke Shatter",
           "targets": [
             {
               "card": "Outpost Siege"
@@ -879,7 +879,7 @@
             "Outpost Siege",
             "Bear",
             "Bolt",
-            "Shatter"
+            "Smoke Shatter"
           ]
         }
       ]

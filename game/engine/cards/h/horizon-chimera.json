@@ -1,0 +1,57 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Horizon Chimera",
+    "oracleId": "a1ed77f9-51ac-4cca-a9ce-d3874f3948ad",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Chimera"
+    ],
+    "manaCost": "{2}{G}{U}",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "Flash\nFlying, trample\nWhenever you draw a card, you gain 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flash",
+      "text": "Flash"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "trample"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "drawn",
+        "drawer": "you"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 1
+        }
+      ],
+      "text": "Whenever you draw a card, you gain 1 life."
+    }
+  ]
+}

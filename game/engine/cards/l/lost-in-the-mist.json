@@ -1,0 +1,51 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Lost in the Mist",
+    "oracleId": "98014ad2-7a2b-45f5-808c-edd4d0b2c597",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Counter target spell. Return target permanent to its owner's hand.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Counter target spell. Return target permanent to its owner's hand.",
+      "targets": [
+        {
+          "what": "spell"
+        },
+        {
+          "what": "permanent"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "counterSpell",
+          "spells": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 1
+          },
+          "to": "hand"
+        }
+      ]
+    }
+  ]
+}

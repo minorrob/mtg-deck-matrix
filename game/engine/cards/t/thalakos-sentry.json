@@ -1,0 +1,32 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Thalakos Sentry",
+    "oracleId": "ca65b908-e6fe-4ca3-8ecd-247df957aa0f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Thalakos",
+      "Soldier"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "Shadow (This creature can block or be blocked by only creatures with shadow.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "shadow",
+      "text": "Shadow (This creature can block or be blocked by only creatures with shadow.)"
+    }
+  ]
+}

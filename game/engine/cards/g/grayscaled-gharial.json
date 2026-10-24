@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Grayscaled Gharial",
+    "oracleId": "59483597-4d8c-4cdc-8bb5-226b1eef10f5",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Crocodile"
+    ],
+    "manaCost": "{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Islandwalk (This creature can't be blocked as long as defending player controls an Island.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "islandwalk",
+      "text": "Islandwalk (This creature can't be blocked as long as defending player controls an Island.)"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mass Hysteria",
+    "oracleId": "4500131b-7417-4f30-a1b0-97d51b2e6458",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "All creatures have haste.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      },
+      "apply": {
+        "addKeywords": [
+          "Haste"
+        ]
+      },
+      "text": "All creatures have haste."
+    }
+  ]
+}

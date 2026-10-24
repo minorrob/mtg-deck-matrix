@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Overflowing Insight",
+    "oracleId": "ff03a063-9634-4746-a208-9dbcde5c6bdb",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{U}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target player draws seven cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "player"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 7,
+          "who": {
+            "target": 0
+          }
+        }
+      ],
+      "text": "Target player draws seven cards."
+    }
+  ]
+}

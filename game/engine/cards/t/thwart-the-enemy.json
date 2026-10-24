@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Thwart the Enemy",
+    "oracleId": "5799baed-3457-4bf2-adf3-239a41dcc1c8",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Prevent all damage that would be dealt this turn by creatures your opponents control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "rule": "prevent-damage",
+          "affects": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "opponent"
+          },
+          "apply": {
+            "by": true,
+            "to": false
+          },
+          "until": "end-of-turn"
+        }
+      ],
+      "text": "Prevent all damage that would be dealt this turn by creatures your opponents control."
+    }
+  ]
+}

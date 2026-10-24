@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Perilous Shadow",
+    "oracleId": "3ba3405d-8c9a-4a80-811d-529cd3cb657f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Insect",
+      "Shade"
+    ],
+    "manaCost": "{2}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 0,
+    "toughness": 4
+  },
+  "oracleText": "{1}{B}: This creature gets +2/+2 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{B}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 2,
+          "toughness": 2
+        }
+      ],
+      "text": "{1}{B}: This creature gets +2/+2 until end of turn."
+    }
+  ]
+}

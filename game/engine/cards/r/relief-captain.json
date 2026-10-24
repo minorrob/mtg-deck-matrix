@@ -1,0 +1,58 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Relief Captain",
+    "oracleId": "97e088a3-65eb-42f5-85b8-6aeb770a3f56",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Kor",
+      "Knight",
+      "Ally"
+    ],
+    "manaCost": "{2}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "When this creature enters, support 3. (Put a +1/+1 counter on each of up to three other target creatures.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "another": true,
+          "count": {
+            "min": 0,
+            "max": 3
+          }
+        }
+      ],
+      "text": "When this creature enters, support 3. (Put a +1/+1 counter on each of up to three other target creatures.)"
+    }
+  ]
+}

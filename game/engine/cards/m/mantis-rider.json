@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mantis Rider",
+    "oracleId": "5c1a0a7a-dea4-4b8e-b9c0-8c19942a01ef",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Monk"
+    ],
+    "manaCost": "{U}{R}{W}",
+    "colors": [
+      "R",
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "U",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Flying, vigilance, haste",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "vigilance",
+      "text": "vigilance"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "haste",
+      "text": "haste"
+    }
+  ]
+}

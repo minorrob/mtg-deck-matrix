@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Darkling Stalker",
+    "oracleId": "0103b2f2-05dd-40af-954d-303c144edb04",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Shade",
+      "Spirit"
+    ],
+    "manaCost": "{3}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "{B}: Regenerate this creature.\n{B}: This creature gets +1/+1 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{B}: Regenerate this creature.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{B}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "regenerate",
+          "targets": "self"
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{B}: This creature gets +1/+1 until end of turn.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{B}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 1,
+          "toughness": 1
+        }
+      ]
+    }
+  ]
+}

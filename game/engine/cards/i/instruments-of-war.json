@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Instruments of War",
+    "oracleId": "8be46af9-1b70-4da9-b16d-869c3831dc99",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Flash\nAs this artifact enters, choose a creature type.\nCreatures you control of the chosen type get +1/+1.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flash",
+      "text": "Flash"
+    },
+    {
+      "kind": "replacement",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "choose": "creature type"
+      },
+      "text": "As this artifact enters, choose a creature type."
+    },
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "subtypes": [
+          "$chosen"
+        ]
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 1
+      },
+      "text": "Creatures you control of the chosen type get +1/+1."
+    }
+  ]
+}

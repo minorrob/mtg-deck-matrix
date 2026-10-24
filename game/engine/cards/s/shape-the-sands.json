@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Shape the Sands",
+    "oracleId": "d96506b1-845d-4a9b-8414-456bb457d80f",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target creature gets +0/+5 and gains reach until end of turn. (It can block creatures with flying.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 0,
+          "toughness": 5,
+          "keywords": [
+            "Reach"
+          ]
+        }
+      ],
+      "text": "Target creature gets +0/+5 and gains reach until end of turn. (It can block creatures with flying.)"
+    }
+  ]
+}

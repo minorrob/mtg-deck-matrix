@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sinister Starfish",
+    "oracleId": "58321467-41d6-4419-bcb2-cd3e60f677b3",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Starfish"
+    ],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 0,
+    "toughness": 3
+  },
+  "oracleText": "{T}: Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "surveil",
+          "count": 1
+        }
+      ],
+      "text": "{T}: Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)"
+    }
+  ]
+}

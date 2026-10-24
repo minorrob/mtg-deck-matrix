@@ -1,0 +1,39 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tarpan",
+    "oracleId": "b1e1ebc8-cd09-4280-a169-58ab7ece43ff",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Horse"
+    ],
+    "manaCost": "{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "When this creature dies, you gain 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "dies"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 1
+        }
+      ],
+      "text": "When this creature dies, you gain 1 life."
+    }
+  ]
+}

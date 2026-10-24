@@ -1,0 +1,37 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hover Barrier",
+    "oracleId": "a09cce6f-c957-49d7-af99-a7b2bce786e8",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Illusion",
+      "Wall"
+    ],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 0,
+    "toughness": 6
+  },
+  "oracleText": "Defender, flying",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "defender",
+      "text": "Defender"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "flying"
+    }
+  ]
+}

@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Duelist of the Mind",
   "fixtures": {
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -29,7 +29,7 @@
         ]
       }
     },
-    "Divination": {
+    "Smoke Divination": {
       "types": [
         "Sorcery"
       ],
@@ -66,7 +66,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Divination"
+            "Smoke Divination"
           ]
         }
       ],
@@ -108,7 +108,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Divination"
+          "cast": "Smoke Divination"
         },
         {
           "resolve": true
@@ -141,8 +141,8 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Shock",
-            "Shock"
+            "Smoke Shock",
+            "Smoke Shock"
           ]
         }
       ],
@@ -151,7 +151,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "targets": [
             {
               "player": 1
@@ -192,7 +192,7 @@
               "asks": {
                 "seat": 0,
                 "options": [
-                  "Shock",
+                  "Smoke Shock",
                   "Wastes"
                 ]
               }
@@ -228,7 +228,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "targets": [
             {
               "player": 1
@@ -279,8 +279,8 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Shock",
-            "Shock"
+            "Smoke Shock",
+            "Smoke Shock"
           ]
         }
       ],
@@ -289,7 +289,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "targets": [
             {
               "player": 0
@@ -310,7 +310,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "targets": [
             {
               "player": 1
@@ -354,8 +354,8 @@
           "seat": 0,
           "zone": "graveyard",
           "cards": [
-            "Shock",
-            "Shock"
+            "Smoke Shock",
+            "Smoke Shock"
           ]
         }
       ]

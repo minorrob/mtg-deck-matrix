@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Endless One",
+    "oracleId": "7a51780a-fa28-4ee0-94c7-4330800ca9cb",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Eldrazi"
+    ],
+    "manaCost": "{X}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 0,
+    "toughness": 0
+  },
+  "oracleText": "This creature enters with X +1/+1 counters on it.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersWithCounters": {
+          "counter": "+1/+1",
+          "count": "X"
+        }
+      },
+      "text": "This creature enters with X +1/+1 counters on it."
+    }
+  ]
+}

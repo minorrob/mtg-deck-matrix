@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Harrowing Journey",
+    "oracleId": "70f3d545-d114-485d-8d8b-4a93b2393c41",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target player draws three cards and loses 3 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "player"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 3,
+          "who": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "loseLife",
+          "amount": 3,
+          "who": {
+            "target": 0
+          }
+        }
+      ],
+      "text": "Target player draws three cards and loses 3 life."
+    }
+  ]
+}

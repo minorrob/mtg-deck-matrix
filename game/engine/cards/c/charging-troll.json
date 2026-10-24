@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Charging Troll",
+    "oracleId": "bbc1b96d-5a63-4091-a2c7-08bd289e0bf2",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Troll"
+    ],
+    "manaCost": "{2}{G}{W}",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Vigilance\n{G}: Regenerate this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "activated",
+      "text": "{G}: Regenerate this creature.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{G}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "regenerate",
+          "targets": "self"
+        }
+      ]
+    }
+  ]
+}

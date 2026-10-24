@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Laelia, the Blade Reforged",
   "fixtures": {
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -91,7 +91,7 @@
     {
       "name": "Haste: it attacks the turn it is cast; the top card exiled, a +1/+1 counter for it, and Shock cast from exile this turn",
       "library": [
-        "Shock",
+        "Smoke Shock",
         "Wastes"
       ],
       "setup": [
@@ -143,7 +143,7 @@
               "seat": 0,
               "zone": "exile",
               "cards": [
-                "Shock"
+                "Smoke Shock"
               ]
             }
           ]
@@ -167,7 +167,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "targets": [
             {
               "player": 1
@@ -226,7 +226,7 @@
           "zone": "graveyard",
           "cards": [
             "Bear",
-            "Shock"
+            "Smoke Shock"
           ]
         }
       ],

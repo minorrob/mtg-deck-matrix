@@ -1,0 +1,39 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Yavimaya Barbarian",
+    "oracleId": "04576b4d-2977-4cdf-b4a5-b0b47995e962",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Barbarian"
+    ],
+    "manaCost": "{R}{G}",
+    "colors": [
+      "G",
+      "R"
+    ],
+    "colorIdentity": [
+      "G",
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Protection from blue",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "protection",
+      "from": {
+        "colors": [
+          "U"
+        ]
+      },
+      "text": "Protection from blue"
+    }
+  ]
+}

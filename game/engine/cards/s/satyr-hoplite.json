@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Satyr Hoplite",
+    "oracleId": "ee7dc820-10ee-429a-a1ef-ecd6a11f5608",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Satyr",
+      "Soldier"
+    ],
+    "manaCost": "{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Heroic — Whenever you cast a spell that targets this creature, put a +1/+1 counter on this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "targets": {
+          "what": "permanent",
+          "self": true
+        }
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ],
+      "text": "Heroic — Whenever you cast a spell that targets this creature, put a +1/+1 counter on this creature."
+    }
+  ]
+}

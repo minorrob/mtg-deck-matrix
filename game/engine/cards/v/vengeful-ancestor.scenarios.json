@@ -47,7 +47,7 @@
         "Lifelink"
       ]
     },
-    "Zap": {
+    "Smoke Zap": {
       "types": [
         "Instant"
       ],
@@ -295,7 +295,7 @@
           "zone": "hand",
           "cards": [
             "Vengeful Ancestor",
-            "Zap"
+            "Smoke Zap"
           ]
         },
         {
@@ -370,7 +370,7 @@
           "seat": 0
         },
         {
-          "cast": "Zap",
+          "cast": "Smoke Zap",
           "seat": 0,
           "targets": [
             {

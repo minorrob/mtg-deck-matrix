@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hypersonic Dragon",
+    "oracleId": "e1bf20b0-2bd7-4a0f-9a02-41e43bd44641",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dragon"
+    ],
+    "manaCost": "{3}{U}{R}",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Flying, haste\nYou may cast sorcery spells as though they had flash. (You may cast them any time you could cast an instant.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "haste",
+      "text": "haste"
+    },
+    {
+      "kind": "static",
+      "rule": "cast-as-though-flash",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "spells": {
+        "types": [
+          "Sorcery"
+        ]
+      },
+      "text": "You may cast sorcery spells as though they had flash. (You may cast them any time you could cast an instant.)"
+    }
+  ]
+}

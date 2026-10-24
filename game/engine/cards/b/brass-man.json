@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Brass Man",
+    "oracleId": "64f56228-7874-4465-ba58-1049083ea02f",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Construct"
+    ],
+    "manaCost": "{1}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "This creature doesn't untap during your untap step.\nAt the beginning of your upkeep, you may pay {1}. If you do, untap this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "doesnt-untap",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "text": "This creature doesn't untap during your untap step."
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "who": "you",
+          "amount": 1,
+          "ifPaid": true,
+          "effects": [
+            {
+              "effect": "untap",
+              "targets": "self"
+            }
+          ]
+        }
+      ],
+      "text": "At the beginning of your upkeep, you may pay {1}. If you do, untap this creature."
+    }
+  ]
+}

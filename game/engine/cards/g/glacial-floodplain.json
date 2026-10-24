@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Glacial Floodplain",
+    "oracleId": "5d3563dd-a2c1-463c-a0ed-5ac22388bdbe",
+    "supertypes": [
+      "Snow"
+    ],
+    "types": [
+      "Land"
+    ],
+    "subtypes": [
+      "Plains",
+      "Island"
+    ],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "({T}: Add {W} or {U}.)\nThis land enters tapped.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "W": 1
+            },
+            {
+              "U": 1
+            }
+          ]
+        }
+      ],
+      "text": "({T}: Add {W} or {U}.)"
+    },
+    {
+      "kind": "replacement",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersTapped": true
+      },
+      "text": "This land enters tapped."
+    }
+  ]
+}

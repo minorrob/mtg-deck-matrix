@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Vryn Wingmare",
+    "oracleId": "c7c241f2-d3cc-4032-a9da-149de73c2539",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Pegasus"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Flying\nNoncreature spells cost {1} more to cast.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "static",
+      "rule": "spells-cost-more",
+      "affects": {
+        "what": "spell",
+        "nonTypes": [
+          "Creature"
+        ]
+      },
+      "amount": 1,
+      "text": "Noncreature spells cost {1} more to cast."
+    }
+  ]
+}

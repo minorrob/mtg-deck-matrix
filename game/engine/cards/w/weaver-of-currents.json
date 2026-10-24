@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Weaver of Currents",
+    "oracleId": "9aabb520-7e97-47b2-975c-11f457d0b870",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Snake",
+      "Druid"
+    ],
+    "manaCost": "{1}{G}{U}",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "{T}: Add {C}{C}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 2
+          }
+        }
+      ],
+      "text": "{T}: Add {C}{C}."
+    }
+  ]
+}

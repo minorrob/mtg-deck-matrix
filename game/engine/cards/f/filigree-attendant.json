@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Filigree Attendant",
+    "oracleId": "ab7c9e72-8f30-47f7-918c-cd3c0593d704",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Homunculus"
+    ],
+    "manaCost": "{2}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": 3
+  },
+  "oracleText": "Flying\nFiligree Attendant's power is equal to the number of artifacts you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "a",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "setPower": {
+          "count": {
+            "what": "permanent",
+            "types": [
+              "Artifact"
+            ],
+            "controller": "you"
+          }
+        }
+      },
+      "text": "Filigree Attendant's power is equal to the number of artifacts you control."
+    }
+  ]
+}

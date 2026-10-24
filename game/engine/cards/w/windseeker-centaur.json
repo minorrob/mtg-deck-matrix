@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Windseeker Centaur",
+    "oracleId": "b3d40cf7-a529-4bd0-8df7-231630a49bb8",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Centaur"
+    ],
+    "manaCost": "{1}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Vigilance",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "vigilance",
+      "text": "Vigilance"
+    }
+  ]
+}

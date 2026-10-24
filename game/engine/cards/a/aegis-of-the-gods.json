@@ -1,0 +1,37 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Aegis of the Gods",
+    "oracleId": "c5bfc1b9-a55d-4608-a6f7-bb62cb8dc3c6",
+    "types": [
+      "Enchantment",
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Soldier"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "You have hexproof. (You can't be the target of spells or abilities your opponents control.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "player-hexproof",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "text": "You have hexproof. (You can't be the target of spells or abilities your opponents control.)"
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Maro",
+    "oracleId": "ef32258a-d567-4fbc-ab85-8c00080f5b36",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental"
+    ],
+    "manaCost": "{2}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Maro's power and toughness are each equal to the number of cards in your hand.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "a",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "setPower": {
+          "count": {
+            "what": "card",
+            "zone": "hand",
+            "controller": "you"
+          }
+        },
+        "setToughness": {
+          "count": {
+            "what": "card",
+            "zone": "hand",
+            "controller": "you"
+          }
+        }
+      },
+      "text": "Maro's power and toughness are each equal to the number of cards in your hand."
+    }
+  ]
+}
