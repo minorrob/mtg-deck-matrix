@@ -39,7 +39,7 @@
         }
       ]
     },
-    "Grizzly Bears": {
+    "Brown Bear Cub": {
       "types": [
         "Creature"
       ],
@@ -73,7 +73,7 @@
       "name": "She enters: Maya's and Trey's top cards exiled face down; Rob may look at them, Maya sees only hers face down",
       "seats": 3,
       "library": [
-        "Grizzly Bears"
+        "Brown Bear Cub"
       ],
       "setup": [
         {
@@ -119,7 +119,7 @@
           "of": 1,
           "zone": "exile",
           "faceDown": [
-            "Grizzly Bears"
+            "Brown Bear Cub"
           ]
         },
         {
@@ -127,7 +127,7 @@
           "of": 2,
           "zone": "exile",
           "faceDown": [
-            "Grizzly Bears"
+            "Brown Bear Cub"
           ]
         },
         {
@@ -159,7 +159,7 @@
       "name": "A Food sacrificed, the first mode: Rob casts Maya's exiled Bears without paying -- and only one card",
       "seats": 3,
       "library": [
-        "Grizzly Bears"
+        "Brown Bear Cub"
       ],
       "setup": [
         {
@@ -222,14 +222,14 @@
             {
               "offers": {
                 "kind": "cast",
-                "card": "Grizzly Bears"
+                "card": "Brown Bear Cub"
               },
               "count": 2
             }
           ]
         },
         {
-          "cast": "Grizzly Bears"
+          "cast": "Brown Bear Cub"
         },
         {
           "resolve": true
@@ -239,7 +239,7 @@
             {
               "offers": {
                 "kind": "cast",
-                "card": "Grizzly Bears"
+                "card": "Brown Bear Cub"
               },
               "count": 0
             }
@@ -251,7 +251,7 @@
           "seat": 0,
           "controls": [
             "Lobelia, Defender of Bag End",
-            "Grizzly Bears",
+            "Brown Bear Cub",
             "Swamp",
             "Wastes",
             "Wastes"
@@ -340,7 +340,7 @@
     {
       "name": "Until end of turn only: not on his next turn",
       "library": [
-        "Grizzly Bears"
+        "Brown Bear Cub"
       ],
       "setup": [
         {
@@ -409,7 +409,7 @@
         {
           "offers": {
             "kind": "cast",
-            "card": "Grizzly Bears"
+            "card": "Brown Bear Cub"
           },
           "count": 0
         }

@@ -16,7 +16,7 @@
       "power": 1,
       "toughness": 1
     },
-    "Zap": {
+    "Sparkzap": {
       "types": [
         "Instant"
       ],
@@ -46,7 +46,7 @@
         ]
       }
     },
-    "Grizzly Bears": {
+    "Brown Bear Cub": {
       "types": [
         "Creature"
       ],
@@ -78,14 +78,14 @@
           "seat": 0,
           "zone": "battlefield",
           "cards": [
-            "Grizzly Bears"
+            "Brown Bear Cub"
           ]
         },
         {
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Zap"
+            "Sparkzap"
           ]
         }
       ],
@@ -94,7 +94,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Zap",
+          "cast": "Sparkzap",
           "targets": [
             {
               "card": "Spare Pup"
@@ -126,7 +126,7 @@
         {
           "seat": 0,
           "stats": {
-            "card": "Grizzly Bears",
+            "card": "Brown Bear Cub",
             "power": 3,
             "toughness": 3
           }
@@ -141,7 +141,7 @@
           "zone": "battlefield",
           "cards": [
             "Call for Unity",
-            "Grizzly Bears"
+            "Brown Bear Cub"
           ]
         }
       ],
@@ -160,7 +160,7 @@
         {
           "seat": 0,
           "stats": {
-            "card": "Grizzly Bears",
+            "card": "Brown Bear Cub",
             "power": 2,
             "toughness": 2
           }
@@ -189,7 +189,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Zap"
+            "Sparkzap"
           ]
         }
       ],
@@ -198,7 +198,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Zap",
+          "cast": "Sparkzap",
           "targets": [
             {
               "card": "Spare Pup"

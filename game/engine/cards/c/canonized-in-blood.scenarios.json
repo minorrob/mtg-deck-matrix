@@ -16,7 +16,7 @@
       "power": 1,
       "toughness": 1
     },
-    "Grizzly Bears": {
+    "Brown Bear Cub": {
       "types": [
         "Creature"
       ],
@@ -30,7 +30,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Zap": {
+    "Sparkzap": {
       "types": [
         "Instant"
       ],
@@ -143,7 +143,7 @@
           "cards": [
             "Canonized in Blood",
             "Spare Pup",
-            "Grizzly Bears",
+            "Brown Bear Cub",
             "Mountain"
           ]
         },
@@ -151,7 +151,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Zap"
+            "Sparkzap"
           ]
         }
       ],
@@ -160,7 +160,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Zap",
+          "cast": "Sparkzap",
           "targets": [
             {
               "card": "Spare Pup"
@@ -178,7 +178,7 @@
         },
         {
           "choose": [
-            "Grizzly Bears"
+            "Brown Bear Cub"
           ]
         },
         {
@@ -189,7 +189,7 @@
         {
           "seat": 0,
           "counters": {
-            "card": "Grizzly Bears",
+            "card": "Brown Bear Cub",
             "counter": "+1/+1",
             "count": 1
           }
@@ -199,7 +199,7 @@
     {
       "name": "Milled from the library counts too (\"from anywhere\")",
       "library": [
-        "Grizzly Bears"
+        "Brown Bear Cub"
       ],
       "setup": [
         {
@@ -324,7 +324,7 @@
           "zone": "hand",
           "cards": [
             "Pup Maker",
-            "Zap"
+            "Sparkzap"
           ]
         }
       ],
@@ -342,7 +342,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Zap",
+          "cast": "Sparkzap",
           "targets": [
             {
               "card": "Pup Token"
@@ -381,14 +381,14 @@
           "seat": 1,
           "zone": "battlefield",
           "cards": [
-            "Grizzly Bears"
+            "Brown Bear Cub"
           ]
         },
         {
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Zap"
+            "Sparkzap"
           ]
         }
       ],
@@ -397,10 +397,10 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Zap",
+          "cast": "Sparkzap",
           "targets": [
             {
-              "card": "Grizzly Bears"
+              "card": "Brown Bear Cub"
             }
           ]
         },

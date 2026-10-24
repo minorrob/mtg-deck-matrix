@@ -764,7 +764,7 @@ export function drawsInstead(state, player, count) {
  * P2): `plus`, added -- two Bilbos are plus 2, each applied once (CR 614.5). Multipliers alone, or adders alone, end the same in
  * any order. Beside each other the order is the gaining player's (CR 616.1) -- adding first gains more -- and a gain is made
  * where nothing can stop to ask (combat damage's lifelink, rules/combat.mjs), so the order that gains the most is taken: an
- * ignore of the question, named in docs/engine/gameplay-gaps. A gain the player can't have is no gain to change (cantGainLife,
+ * ignore of the question, named as one in the lane's report (Rob's lists P2). A gain the player can't have is no gain to change (cantGainLife,
  * asked first).
  */
 export function lifeGained(state, player, amount) {
@@ -1408,7 +1408,6 @@ export function loyaltyCostIncrease(state, player) {
  * no generic mana to take it from it does not take (rules/actions.mjs, costPayment).
  */
 export function abilityCostReduction(state, objectId) {
-  if (state.objects[objectId]?.zone !== "battlefield") return 0;
   let total = 0;
   const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {

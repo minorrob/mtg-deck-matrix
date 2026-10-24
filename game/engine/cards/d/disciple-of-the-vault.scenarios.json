@@ -39,7 +39,7 @@
         }
       ]
     },
-    "Smash": {
+    "Relic Smasher": {
       "types": [
         "Instant"
       ],
@@ -144,7 +144,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Smash"
+            "Relic Smasher"
           ]
         }
       ],
@@ -153,7 +153,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Smash",
+          "cast": "Relic Smasher",
           "targets": [
             {
               "card": "Food"

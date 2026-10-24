@@ -274,7 +274,7 @@ const delvable = (state, player, id) => cardsIn(state, "graveyard", player).filt
 /* The total cost a delved cast pays and the life it pays with, as castPayments reckons them (castTerms). */
 function delveCost(state, player, action) {
   const {tax, free, back, way, fled, permission, lifeCost} = castTerms(state, player, action);
-  const reckoned = castCost(state, player, action.objectId, tax, Boolean(free), lifeCost !== null ? "" : back ? back.mana : fled ? fled.mana : way ? way.mana : null, action.extraMana ?? "", action.targets, action.x);
+  const reckoned = castCost(state, player, action.objectId, tax, Boolean(free), lifeCost !== null ? "" : back ? back.mana : fled ? fled.mana : way ? way.mana : null, action.extraMana ?? "", action.targets);
   return {cost: anyTypeCost(reckoned.cost, permission), extra: reckoned.x,
     life: state.players[player].life - (back?.life ?? 0) - (way?.life ?? 0) - (lifeCost ?? 0) - lifeOwed(state, player, action)};
 }
@@ -344,7 +344,7 @@ function activationCostChoice(state, {action, player}) {
       options: numbered(units.map((u, index) => ({index, label: `${state.objects[u.id].card}: a ${u.counter} counter`, cardId: u.id, counter: u.counter})))};
   }
   const atom = sacrificeAtom(ability?.cost);
-  const n = atom?.count ?? 1;
+  const n = sacrificeCount(atom, action.x);
   return {id: `choose-cost:${action.objectId}:${action.abilityId}`, title: `${name}: sacrifice ${inWords(n)} permanent${n === 1 ? "" : "s"}`,
     mode: "many", min: n, max: n, cost: "sacrifice",
     options: numbered(sacrificeChoices(state, player, action.objectId, atom?.selector).map((cardId, index) => ({index, label: state.objects[cardId].card, cardId})))};
@@ -1812,7 +1812,8 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
   if (tapsForX) {
     const sources = tappable();
     for (let X = xs.length; X <= poolSize(pool) + sources.length; X += 1) {
-      if (!fundingPlans(state, player, id, {...xCounted(cost, X), generic: xCounted(cost, X).generic + x}, 1, sources).length) break;
+      /* What is left of a reduction takes off X's mana here too (castCost's `less`). */
+      if (!fundingPlans(state, player, id, {...xCounted(cost, X), generic: Math.max(0, xCounted(cost, X).generic + x - reckoned.less)}, 1, sources).length) break;
       xs.push(X);
     }
   }
@@ -1822,7 +1823,7 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
   if (convokesX) {
     const helpers = convokers(state, player, id);
     for (let X = xs.length; X <= poolSize(pool) + helpers.length; X += 1) {
-      if (!convokeCanPay(pool, {...xCounted(cost, X), generic: xCounted(cost, X).generic + x}, helpers)) break;
+      if (!convokeCanPay(pool, {...xCounted(cost, X), generic: Math.max(0, xCounted(cost, X).generic + x - reckoned.less)}, helpers)) break;
       xs.push(X);
     }
   }

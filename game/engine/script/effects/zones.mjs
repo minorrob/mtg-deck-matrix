@@ -587,7 +587,7 @@ export function mayPlay(state, params, context) {
      Rob's lists P2): `linked`, the cards this source's other ability exiled (CR 607.2a), still in exile -- face down there, each
      played as the card it is (CR 406.3a) -- and `count`, how many it lets be played before it is spent ("a card": one;
      rules/actions.mjs, spendPermission). */
-  const named = params.linked === true ? linkedMoving(state, {}, context).filter((id) => state.objects[id]?.zone === "exile") : params.targets ?? [];
+  const named = params.linked === true ? linkedMoving(state, {}, context) : params.targets ?? [];
   const ids = named.filter((id) => state.objects[id] && (params.zone === undefined || state.objects[id].zone === params.zone));
   const player = context.controller;
   if (!ids.length || !state.players[player]) return [];

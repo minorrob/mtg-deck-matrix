@@ -73,7 +73,7 @@
         }
       ]
     },
-    "Grizzly Bears": {
+    "Brown Bear Cub": {
       "types": [
         "Creature"
       ],
@@ -426,7 +426,7 @@
           "seat": 1,
           "zone": "battlefield",
           "cards": [
-            "Grizzly Bears",
+            "Brown Bear Cub",
             "Hill Ogre",
             "Spare Pup"
           ]
@@ -441,7 +441,7 @@
         {
           "block": [],
           "blockers": [
-            "Grizzly Bears",
+            "Brown Bear Cub",
             "Hill Ogre"
           ]
         }

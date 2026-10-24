@@ -70,7 +70,7 @@
         }
       ]
     },
-    "Zap": {
+    "Sparkzap": {
       "types": [
         "Instant"
       ],
@@ -129,7 +129,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Zap"
+            "Sparkzap"
           ]
         }
       ],
@@ -147,7 +147,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Zap",
+          "cast": "Sparkzap",
           "targets": [
             {
               "card": "Spare Pup"
@@ -214,7 +214,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Zap"
+            "Sparkzap"
           ]
         }
       ],
@@ -232,7 +232,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Zap",
+          "cast": "Sparkzap",
           "targets": [
             {
               "card": "Iron Captain"
@@ -269,7 +269,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Zap"
+            "Sparkzap"
           ]
         }
       ],
@@ -278,7 +278,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Zap",
+          "cast": "Sparkzap",
           "targets": [
             {
               "card": "Spare Pup"
@@ -295,6 +295,85 @@
         },
         {
           "seat": 1,
+          "life": 40
+        }
+      ]
+    },
+    {
+      "name": "Maya's commander is hers, not Rob's: it does not have the ability, and her Pup dying costs Rob nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Agent of the Iron Throne"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "command",
+          "cards": [
+            "Iron Captain"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Mountain",
+            "Spare Pup"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Sparkzap"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Plains",
+          "seat": 1
+        },
+        {
+          "cast": "Iron Captain",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "cast": "Sparkzap",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Spare Pup"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
           "life": 40
         }
       ]
@@ -329,7 +408,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Zap"
+            "Sparkzap"
           ]
         }
       ],
@@ -347,7 +426,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Zap",
+          "cast": "Sparkzap",
           "targets": [
             {
               "card": "Spare Pup"

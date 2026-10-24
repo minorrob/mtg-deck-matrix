@@ -16,7 +16,7 @@
       "power": 1,
       "toughness": 1
     },
-    "Grizzly Bears": {
+    "Brown Bear Cub": {
       "types": [
         "Creature"
       ],
@@ -61,7 +61,7 @@
           "zone": "battlefield",
           "cards": [
             "Spare Pup",
-            "Grizzly Bears",
+            "Brown Bear Cub",
             "Hill Ogre",
             "Plains",
             "Plains",
@@ -99,7 +99,7 @@
           "seat": 0,
           "controls": [
             "Spare Pup",
-            "Grizzly Bears",
+            "Brown Bear Cub",
             "Food",
             "Food",
             "Plains",

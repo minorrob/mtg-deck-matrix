@@ -16,7 +16,7 @@
       "power": 1,
       "toughness": 1
     },
-    "Grizzly Bears": {
+    "Brown Bear Cub": {
       "types": [
         "Creature"
       ],
@@ -56,7 +56,7 @@
           "zone": "graveyard",
           "cards": [
             "Spare Pup",
-            "Grizzly Bears",
+            "Brown Bear Cub",
             "Crypt Incursion"
           ]
         },

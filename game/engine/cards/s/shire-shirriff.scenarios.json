@@ -39,7 +39,7 @@
         }
       ]
     },
-    "Grizzly Bears": {
+    "Brown Bear Cub": {
       "types": [
         "Creature"
       ],
@@ -53,7 +53,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Zap": {
+    "Sparkzap": {
       "types": [
         "Instant"
       ],
@@ -93,7 +93,7 @@
           "zone": "hand",
           "cards": [
             "Shire Shirriff",
-            "Zap"
+            "Sparkzap"
           ]
         },
         {
@@ -110,7 +110,7 @@
           "seat": 1,
           "zone": "battlefield",
           "cards": [
-            "Grizzly Bears"
+            "Brown Bear Cub"
           ]
         }
       ],
@@ -149,7 +149,7 @@
         },
         {
           "choose": [
-            "Grizzly Bears"
+            "Brown Bear Cub"
           ]
         },
         {
@@ -176,7 +176,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Zap",
+          "cast": "Sparkzap",
           "targets": [
             {
               "card": "Shire Shirriff"
@@ -194,7 +194,7 @@
         {
           "seat": 1,
           "controls": [
-            "Grizzly Bears"
+            "Brown Bear Cub"
           ]
         }
       ]
@@ -221,7 +221,7 @@
           "seat": 1,
           "zone": "battlefield",
           "cards": [
-            "Grizzly Bears"
+            "Brown Bear Cub"
           ]
         }
       ],
@@ -246,7 +246,7 @@
         {
           "seat": 1,
           "controls": [
-            "Grizzly Bears"
+            "Brown Bear Cub"
           ]
         }
       ]

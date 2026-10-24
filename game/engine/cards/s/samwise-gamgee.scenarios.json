@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Samwise Gamgee",
   "fixtures": {
-    "Grizzly Bears": {
+    "Brown Bear Cub": {
       "types": [
         "Creature"
       ],
@@ -112,7 +112,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Grizzly Bears"
+            "Brown Bear Cub"
           ]
         }
       ],
@@ -124,7 +124,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Grizzly Bears"
+          "cast": "Brown Bear Cub"
         },
         {
           "resolve": true
@@ -138,7 +138,7 @@
           "seat": 0,
           "controls": [
             "Samwise Gamgee",
-            "Grizzly Bears",
+            "Brown Bear Cub",
             "Food",
             "Forest",
             "Wastes"
@@ -208,7 +208,7 @@
           "zone": "graveyard",
           "cards": [
             "Old Relic",
-            "Grizzly Bears"
+            "Brown Bear Cub"
           ]
         }
       ],

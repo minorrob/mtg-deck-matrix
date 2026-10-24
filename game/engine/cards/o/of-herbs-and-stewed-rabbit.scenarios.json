@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Of Herbs and Stewed Rabbit",
   "fixtures": {
-    "Grizzly Bears": {
+    "Brown Bear Cub": {
       "types": [
         "Creature"
       ],
@@ -32,7 +32,7 @@
           "seat": 0,
           "zone": "battlefield",
           "cards": [
-            "Grizzly Bears",
+            "Brown Bear Cub",
             "Plains",
             "Wastes",
             "Wastes"
@@ -57,7 +57,7 @@
         },
         {
           "choose": [
-            "Grizzly Bears"
+            "Brown Bear Cub"
           ]
         },
         {
@@ -68,7 +68,7 @@
             {
               "seat": 0,
               "counters": {
-                "card": "Grizzly Bears",
+                "card": "Brown Bear Cub",
                 "counter": "+1/+1",
                 "count": 1
               }
@@ -77,7 +77,7 @@
               "seat": 0,
               "controls": [
                 "Of Herbs and Stewed Rabbit",
-                "Grizzly Bears",
+                "Brown Bear Cub",
                 "Food",
                 "Plains",
                 "Wastes",
@@ -106,7 +106,7 @@
               "seat": 0,
               "controls": [
                 "Of Herbs and Stewed Rabbit",
-                "Grizzly Bears",
+                "Brown Bear Cub",
                 "Food",
                 "Food",
                 "Plains",
@@ -130,7 +130,7 @@
         {
           "seat": 0,
           "controls": [
-            "Grizzly Bears",
+            "Brown Bear Cub",
             "Food",
             "Food",
             "Halfling",

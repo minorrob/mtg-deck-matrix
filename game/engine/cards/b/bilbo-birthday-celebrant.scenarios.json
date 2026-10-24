@@ -22,7 +22,7 @@
         ]
       }
     },
-    "Grizzly Bears": {
+    "Brown Bear Cub": {
       "types": [
         "Creature"
       ],
@@ -183,9 +183,9 @@
       "name": "At 111 life: exiled, and any number of creature cards put onto the battlefield -- Rob takes two of three",
       "startingLife": 111,
       "library": [
-        "Grizzly Bears",
+        "Brown Bear Cub",
         "Hill Ogre",
-        "Grizzly Bears"
+        "Brown Bear Cub"
       ],
       "setup": [
         {
@@ -235,7 +235,7 @@
         {
           "choose": [
             "Hill Ogre",
-            "Grizzly Bears"
+            "Brown Bear Cub"
           ]
         }
       ],
@@ -244,7 +244,7 @@
           "seat": 0,
           "controls": [
             "Hill Ogre",
-            "Grizzly Bears",
+            "Brown Bear Cub",
             "Plains",
             "Swamp",
             "Forest",

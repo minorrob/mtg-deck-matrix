@@ -39,7 +39,7 @@
         }
       ]
     },
-    "Grizzly Bears": {
+    "Brown Bear Cub": {
       "types": [
         "Creature"
       ],
@@ -108,14 +108,14 @@
           "seat": 1,
           "zone": "battlefield",
           "cards": [
-            "Grizzly Bears"
+            "Brown Bear Cub"
           ]
         },
         {
           "seat": 0,
           "zone": "battlefield",
           "cards": [
-            "Grizzly Bears"
+            "Brown Bear Cub"
           ],
           "sick": true
         }
@@ -133,7 +133,7 @@
         {
           "seat": 0,
           "stats": {
-            "card": "Grizzly Bears",
+            "card": "Brown Bear Cub",
             "power": 5,
             "toughness": 5
           }
@@ -141,7 +141,7 @@
         {
           "seat": 0,
           "keywords": {
-            "card": "Grizzly Bears",
+            "card": "Brown Bear Cub",
             "has": [
               "Haste"
             ]
@@ -158,7 +158,7 @@
         {
           "seat": 1,
           "stats": {
-            "card": "Grizzly Bears",
+            "card": "Brown Bear Cub",
             "power": 2,
             "toughness": 2
           }

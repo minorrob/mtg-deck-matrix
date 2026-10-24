@@ -39,7 +39,7 @@
         }
       ]
     },
-    "Grizzly Bears": {
+    "Brown Bear Cub": {
       "types": [
         "Creature"
       ],
@@ -53,7 +53,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Zap": {
+    "Sparkzap": {
       "types": [
         "Instant"
       ],
@@ -93,7 +93,7 @@
           "zone": "battlefield",
           "cards": [
             "Rapacious Guest",
-            "Grizzly Bears"
+            "Brown Bear Cub"
           ]
         }
       ],
@@ -101,7 +101,7 @@
         {
           "attack": [
             "Rapacious Guest",
-            "Grizzly Bears"
+            "Brown Bear Cub"
           ]
         },
         {
@@ -123,7 +123,7 @@
           "seat": 0,
           "controls": [
             "Rapacious Guest",
-            "Grizzly Bears",
+            "Brown Bear Cub",
             "Food"
           ]
         },
@@ -196,7 +196,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Zap"
+            "Sparkzap"
           ]
         }
       ],
@@ -220,7 +220,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Zap",
+          "cast": "Sparkzap",
           "targets": [
             {
               "card": "Rapacious Guest"

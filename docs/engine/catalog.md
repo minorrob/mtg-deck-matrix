@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,873 defined and playable today; 2,880 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,884 defined and playable today; 2,884 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -18,7 +18,7 @@ many most-played cards need it among other missing things; **Alone** how many it
 
 | Section | Entries | Built | Partial | Named | Missing |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Keyword abilities (CR 702) | 194 | 84 | 0 | 9 | 101 |
+| Keyword abilities (CR 702) | 194 | 85 | 0 | 10 | 99 |
 | Keyword actions (CR 701) | 70 | 22 | 5 | 1 | 42 |
 | Effects | 192 | 79 | 2 | 1 | 110 |
 | Triggers | 138 | 26 | 4 | 1 | 107 |
@@ -48,9 +48,9 @@ The things that alone hold back the most of the most-played cards.
 | option | Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 4 | 7 |
 | count | Amount | — | missing | 4 | 7 |
 | option | Imprint (a card exiled with this) | — | missing | 4 | 6 |
-| keyword ability | Landwalk | — | named | 4 | 5 |
 | keyword ability | Myriad | — | missing | 4 | 5 |
 | static | RaiseCost | — | missing | 4 | 5 |
+| keyword ability | Landwalk | — | named | 4 | 4 |
 
 ## Keyword abilities (CR 702)
 
@@ -93,7 +93,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.174 | Gift | Gift | built | 6 | 27 | 0 | 0 |
 | 702.172 | Spree | Spree | built | 6 | 21 | 0 | 0 |
 | 702.33 | Kicker | Kicker | built | 5 | 239 | 0 | 0 |
-| 702.14 | Landwalk | — | named | 5 | 131 | 5 | 4 |
+| 702.14 | Landwalk | — | named | 5 | 131 | 4 | 4 |
 | 702.11 | Hexproof | Hexproof | built | 5 | 94 | 0 | 0 |
 | 702.41 | Affinity | Affinity | built | 5 | 77 | 0 | 0 |
 | 702.85 | Cascade | Cascade | built | 5 | 37 | 0 | 0 |
@@ -130,7 +130,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.134 | Mentor | Mentor | built | 2 | 19 | 0 | 0 |
 | 702.101 | Extort | Extort | built | 2 | 18 | 0 | 0 |
 | 702.123 | Fabricate | Fabricate | built | 2 | 16 | 0 | 0 |
-| 702.118 | Skulk | — | missing | 2 | 15 | 2 | 2 |
+| 702.118 | Skulk | Skulk | built | 2 | 15 | 0 | 0 |
 | 702.129 | Eternalize | Eternalize | built | 2 | 12 | 0 | 0 |
 | 702.121 | Melee | — | missing | 2 | 12 | 2 | 2 |
 | 702.107 | Outlast | — | missing | 2 | 12 | 2 | 2 |
@@ -147,7 +147,7 @@ The things that alone hold back the most of the most-played cards.
 | 702.80 | Wither | — | missing | 1 | 27 | 1 | 1 |
 | 702.141 | Encore | Encore | built | 1 | 26 | 0 | 0 |
 | 702.110 | Exploit | — | missing | 1 | 25 | 1 | 0 |
-| 702.82 | Devour | — | missing | 1 | 24 | 1 | 1 |
+| 702.82 | Devour | — | named | 1 | 24 | 1 | 1 |
 | 702.43 | Modular | — | missing | 1 | 24 | 1 | 1 |
 | 702.166 | Bargain | — | missing | 1 | 22 | 1 | 0 |
 | 702.109 | Dash | — | named | 1 | 22 | 0 | 0 |
@@ -377,7 +377,7 @@ The things that alone hold back the most of the most-played cards.
 | SacrificeAll | sacrificeAll | built | 19 | 130 | 0 | 0 |
 | ImmediateTrigger | immediateTrigger | built | 18 | 313 | 0 | 0 |
 | DigUntil | digUntil | built | 18 | 167 | 0 | 0 |
-| ReplaceToken | — | missing | 17 | 35 | 3 | 0 |
+| ReplaceToken | — | missing | 17 | 35 | 2 | 0 |
 | ReplaceCounter | the AddCounter replacement (rules/statics) | partial | 16 | 33 | 0 | 0 |
 | Fight | fight | built | 15 | 148 | 0 | 0 |
 | WinsGame | winGame | built | 15 | 43 | 0 | 0 |
@@ -564,7 +564,7 @@ The things that alone hold back the most of the most-played cards.
 | CounterPlayerAddedAll | — | missing | 2 | 8 | 2 | 1 |
 | SearchedLibrary | — | missing | 2 | 4 | 2 | 2 |
 | MilledAll | — | missing | 2 | 3 | 2 | 0 |
-| TokenCreated | — | missing | 2 | 3 | 1 | 1 |
+| TokenCreated | — | missing | 2 | 3 | 0 | 0 |
 | AttackerUnblocked | — | missing | 1 | 37 | 1 | 0 |
 | Exploited | — | missing | 1 | 25 | 1 | 0 |
 | Proliferate | proliferated | built | 1 | 6 | 0 | 0 |
@@ -755,7 +755,7 @@ The things that alone hold back the most of the most-played cards.
 | Moved | replacement | partial | 280 | 955 | 0 | 0 |
 | DamageDone | rules/replacement | partial | 22 | 209 | 0 | 0 |
 | Counter | rules/statics | partial | 21 | 110 | 0 | 0 |
-| CreateToken | — | missing | 17 | 32 | 3 | 0 |
+| CreateToken | — | missing | 17 | 32 | 2 | 0 |
 | AddCounter | rules/statics | partial | 15 | 30 | 0 | 0 |
 | Draw | — | missing | 7 | 37 | 4 | 3 |
 | GainLife | — | missing | 6 | 21 | 3 | 1 |

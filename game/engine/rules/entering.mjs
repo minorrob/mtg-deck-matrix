@@ -132,7 +132,7 @@ export function askEntering(state) {
 
 /* What a devouring permanent may sacrifice (CR 702.82a, c): its controller's permanents of the quality, other than itself, that
    can be sacrificed. */
-const devourable = (state, player, q) => state.zones.battlefield.filter((id) => id !== q.objectId && state.objects[id].controller === player
+const devourable = (state, player, q) => state.zones.battlefield.filter((id) => id !== q.objectId
   && matchesSelector({...q.devour.of, what: "permanent", controller: "you"}, state, id, {controller: player, source: q.objectId}) && !cantBeSacrificed(state, id));
 
 /** The choice (§12.1): pay, if the player can, or let it enter tapped. */

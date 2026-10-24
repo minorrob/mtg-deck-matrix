@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Rosie Cotton of South Lane",
   "fixtures": {
-    "Grizzly Bears": {
+    "Brown Bear Cub": {
       "types": [
         "Creature"
       ],
@@ -74,7 +74,7 @@
           "seat": 0,
           "zone": "battlefield",
           "cards": [
-            "Grizzly Bears",
+            "Brown Bear Cub",
             "Plains",
             "Wastes",
             "Wastes"
@@ -102,7 +102,7 @@
         },
         {
           "choose": [
-            "Grizzly Bears"
+            "Brown Bear Cub"
           ]
         },
         {
@@ -113,7 +113,7 @@
         {
           "seat": 0,
           "counters": {
-            "card": "Grizzly Bears",
+            "card": "Brown Bear Cub",
             "counter": "+1/+1",
             "count": 1
           }
@@ -136,7 +136,7 @@
           "zone": "battlefield",
           "cards": [
             "Rosie Cotton of South Lane",
-            "Grizzly Bears",
+            "Brown Bear Cub",
             "Wastes"
           ]
         },
@@ -166,7 +166,7 @@
         {
           "seat": 0,
           "counters": {
-            "card": "Grizzly Bears",
+            "card": "Brown Bear Cub",
             "counter": "+1/+1",
             "count": 2
           }
@@ -188,7 +188,7 @@
           "seat": 1,
           "zone": "battlefield",
           "cards": [
-            "Grizzly Bears"
+            "Brown Bear Cub"
           ]
         },
         {

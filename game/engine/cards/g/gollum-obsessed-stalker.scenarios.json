@@ -36,7 +36,7 @@
       "power": 1,
       "toughness": 1
     },
-    "Grizzly Bears": {
+    "Brown Bear Cub": {
       "types": [
         "Creature"
       ],
@@ -270,7 +270,7 @@
           "seat": 1,
           "zone": "battlefield",
           "cards": [
-            "Grizzly Bears",
+            "Brown Bear Cub",
             "Spare Pup"
           ]
         }

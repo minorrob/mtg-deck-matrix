@@ -41,7 +41,7 @@
           "cost": "{2}"
         }
       ],
-      "text": "Ward {2}"
+      "text": "ward {2}"
     },
     {
       "kind": "triggered",

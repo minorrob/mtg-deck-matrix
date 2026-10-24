@@ -36,7 +36,7 @@
       "power": 1,
       "toughness": 1
     },
-    "Grizzly Bears": {
+    "Brown Bear Cub": {
       "types": [
         "Creature"
       ],
@@ -50,7 +50,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Zap": {
+    "Sparkzap": {
       "types": [
         "Instant"
       ],
@@ -150,7 +150,7 @@
           "cards": [
             "Treebeard, Gracious Host",
             "Hobbit Pal",
-            "Grizzly Bears",
+            "Brown Bear Cub",
             "Plains"
           ]
         },
@@ -275,7 +275,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Zap"
+            "Sparkzap"
           ]
         }
       ],
@@ -291,7 +291,7 @@
           "seat": 1
         },
         {
-          "cast": "Zap",
+          "cast": "Sparkzap",
           "seat": 1,
           "targets": [
             {
@@ -311,7 +311,7 @@
           "seat": 1,
           "zone": "graveyard",
           "cards": [
-            "Zap"
+            "Sparkzap"
           ]
         },
         {

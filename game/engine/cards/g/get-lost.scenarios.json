@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Get Lost",
   "fixtures": {
-    "Grizzly Bears": {
+    "Brown Bear Cub": {
       "types": [
         "Creature"
       ],
@@ -56,7 +56,7 @@
           "seat": 1,
           "zone": "battlefield",
           "cards": [
-            "Grizzly Bears"
+            "Brown Bear Cub"
           ]
         }
       ],
@@ -71,7 +71,7 @@
           "cast": "Get Lost",
           "targets": [
             {
-              "card": "Grizzly Bears"
+              "card": "Brown Bear Cub"
             }
           ]
         },

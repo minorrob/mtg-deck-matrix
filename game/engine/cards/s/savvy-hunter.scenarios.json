@@ -39,7 +39,7 @@
         }
       ]
     },
-    "Grizzly Bears": {
+    "Brown Bear Cub": {
       "types": [
         "Creature"
       ],
@@ -93,7 +93,7 @@
           "seat": 1,
           "zone": "battlefield",
           "cards": [
-            "Grizzly Bears"
+            "Brown Bear Cub"
           ]
         },
         {
@@ -113,14 +113,14 @@
         },
         {
           "attack": [
-            "Grizzly Bears"
+            "Brown Bear Cub"
           ]
         },
         {
           "block": [
             [
               "Savvy Hunter",
-              "Grizzly Bears"
+              "Brown Bear Cub"
             ]
           ]
         },
