@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Marisi's Twinclaws",
+    "oracleId": "1fa3839a-127e-4740-bd2e-97b18fdddedc",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Cat",
+      "Warrior"
+    ],
+    "manaCost": "{2}{R/W}{G}",
+    "colors": [
+      "G",
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "R",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "Double strike",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "double strike",
+      "text": "Double strike"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "War Horn",
+    "oracleId": "99bc739e-c745-47d8-8401-2f34b6becd85",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Attacking creatures you control get +1/+0.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "attacking": true
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 0
+      },
+      "text": "Attacking creatures you control get +1/+0."
+    }
+  ]
+}

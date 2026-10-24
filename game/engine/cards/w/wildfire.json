@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wildfire",
+    "oracleId": "0da68ca2-07fd-4359-95a9-fb2f815e6ed0",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each player sacrifices four lands of their choice. Wildfire deals 4 damage to each creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Each player sacrifices four lands of their choice. Wildfire deals 4 damage to each creature.",
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "who": "each",
+          "count": 4,
+          "selector": {
+            "types": [
+              "Land"
+            ]
+          }
+        },
+        {
+          "effect": "damageAll",
+          "amount": 4,
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

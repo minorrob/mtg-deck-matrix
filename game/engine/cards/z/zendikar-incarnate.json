@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Zendikar Incarnate",
+    "oracleId": "ecd307e6-9096-401f-bd82-ad190532d389",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental"
+    ],
+    "manaCost": "{2}{R}{G}",
+    "colors": [
+      "G",
+      "R"
+    ],
+    "colorIdentity": [
+      "G",
+      "R"
+    ],
+    "power": null,
+    "toughness": 4
+  },
+  "oracleText": "Zendikar Incarnate's power is equal to the number of lands you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "a",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "setPower": {
+          "count": {
+            "what": "permanent",
+            "types": [
+              "Land"
+            ],
+            "controller": "you"
+          }
+        }
+      },
+      "text": "Zendikar Incarnate's power is equal to the number of lands you control."
+    }
+  ]
+}

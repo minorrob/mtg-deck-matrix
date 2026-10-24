@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Pilfer",
+    "oracleId": "d13f0907-de39-4a90-940a-831740d7aa9b",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target opponent reveals their hand. You choose a nonland card from it. That player discards that card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "player",
+          "who": "opponent"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "discard",
+          "who": {
+            "target": 0
+          },
+          "chooser": "you",
+          "reveal": true,
+          "selector": {
+            "nonTypes": [
+              "Land"
+            ]
+          },
+          "count": 1
+        }
+      ],
+      "text": "Target opponent reveals their hand. You choose a nonland card from it. That player discards that card."
+    }
+  ]
+}

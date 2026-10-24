@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Repercussion",
   "fixtures": {
-    "Zap": {
+    "Smoke Zap": {
       "types": [
         "Instant"
       ],
@@ -60,7 +60,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Zap"
+            "Smoke Zap"
           ]
         },
         {
@@ -76,7 +76,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Zap",
+          "cast": "Smoke Zap",
           "targets": [
             {
               "card": "Bear",

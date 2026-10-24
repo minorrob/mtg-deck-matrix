@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Grand Abolisher",
   "fixtures": {
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -45,7 +45,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Shock"
+            "Smoke Shock"
           ]
         },
         {
@@ -65,7 +65,7 @@
             {
               "offers": {
                 "kind": "cast",
-                "card": "Shock",
+                "card": "Smoke Shock",
                 "seat": 1
               },
               "count": 0
@@ -89,7 +89,7 @@
             {
               "offers": {
                 "kind": "cast",
-                "card": "Shock",
+                "card": "Smoke Shock",
                 "seat": 1
               },
               "count": 0
@@ -201,7 +201,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Shock"
+            "Smoke Shock"
           ]
         }
       ],
@@ -235,7 +235,7 @@
             {
               "offers": {
                 "kind": "cast",
-                "card": "Shock",
+                "card": "Smoke Shock",
                 "seat": 1
               },
               "count": 2

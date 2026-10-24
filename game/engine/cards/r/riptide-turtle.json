@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Riptide Turtle",
+    "oracleId": "cb7e076c-a695-4c79-9f20-498370c81380",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Turtle"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 0,
+    "toughness": 5
+  },
+  "oracleText": "Flash\nDefender",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flash",
+      "text": "Flash"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "defender",
+      "text": "Defender"
+    }
+  ]
+}

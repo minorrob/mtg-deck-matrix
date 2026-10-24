@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dampening Pulse",
+    "oracleId": "fe3c81b8-9bca-4760-b677-02bfa7e6137b",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Creatures your opponents control get -1/-0.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "opponent"
+      },
+      "apply": {
+        "power": -1,
+        "toughness": 0
+      },
+      "text": "Creatures your opponents control get -1/-0."
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Immersturm Raider",
+    "oracleId": "e3179dd6-5558-4385-8883-f78f9d1b1c4f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Demon",
+      "Berserker"
+    ],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "When this creature enters, you may discard a card. If you do, draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "discard",
+          "count": 1,
+          "remember": true
+        },
+        {
+          "effect": "draw",
+          "count": 1,
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          }
+        }
+      ],
+      "optional": true,
+      "text": "When this creature enters, you may discard a card. If you do, draw a card."
+    }
+  ]
+}

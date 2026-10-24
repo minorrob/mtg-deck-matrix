@@ -1,0 +1,51 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Shivan Devastator",
+    "oracleId": "b7daa74c-6142-4107-9355-be98af6ccf13",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dragon",
+      "Hydra"
+    ],
+    "manaCost": "{X}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 0,
+    "toughness": 0
+  },
+  "oracleText": "Flying, haste\nThis creature enters with X +1/+1 counters on it.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "haste",
+      "text": "haste"
+    },
+    {
+      "kind": "replacement",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersWithCounters": {
+          "counter": "+1/+1",
+          "count": "X"
+        }
+      },
+      "text": "This creature enters with X +1/+1 counters on it."
+    }
+  ]
+}

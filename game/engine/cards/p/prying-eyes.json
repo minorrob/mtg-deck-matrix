@@ -1,0 +1,38 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Prying Eyes",
+    "oracleId": "06b60766-a1fb-4ed0-93f6-8423008f75b4",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Draw four cards, then discard two cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 4
+        },
+        {
+          "effect": "discard",
+          "count": 2
+        }
+      ],
+      "text": "Draw four cards, then discard two cards."
+    }
+  ]
+}

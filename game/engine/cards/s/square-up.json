@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Square Up",
+    "oracleId": "013a465b-7034-45fe-bf62-c3d273131ec5",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{G/U}",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target creature has base power and toughness 4/4 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "layer": 7,
+          "sublayer": "b",
+          "targets": {
+            "target": 0
+          },
+          "apply": {
+            "setPower": 4,
+            "setToughness": 4
+          }
+        }
+      ],
+      "text": "Target creature has base power and toughness 4/4 until end of turn."
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Reach Through Mists",
+    "oracleId": "c81ca8ff-92f3-481e-82f7-0673b6c74ea0",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [
+      "Arcane"
+    ],
+    "manaCost": "{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ],
+      "text": "Draw a card."
+    }
+  ]
+}

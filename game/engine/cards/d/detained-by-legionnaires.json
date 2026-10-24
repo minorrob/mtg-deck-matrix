@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Detained by Legionnaires",
+    "oracleId": "d59488b5-1118-4276-b862-11e860c7c32a",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant creature\nEnchanted creature can't attack or block.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      },
+      "text": "Enchant creature"
+    },
+    {
+      "kind": "static",
+      "rule": "cant-attack",
+      "affects": {
+        "attachedBy": "self"
+      },
+      "text": "Enchanted creature can't attack or block."
+    },
+    {
+      "kind": "static",
+      "rule": "cant-block",
+      "affects": {
+        "attachedBy": "self"
+      },
+      "text": "Enchanted creature can't attack or block."
+    }
+  ]
+}

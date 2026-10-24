@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Epic Struggle",
+    "oracleId": "6f34ee2c-6e0b-4c71-9bdd-6ac55a323849",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "At the beginning of your upkeep, if you control twenty or more creatures, you win the game.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "winGame"
+        }
+      ],
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "controller": "you",
+          "types": [
+            "Creature"
+          ]
+        },
+        "atLeast": 20
+      },
+      "text": "At the beginning of your upkeep, if you control twenty or more creatures, you win the game."
+    }
+  ]
+}

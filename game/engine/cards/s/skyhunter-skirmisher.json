@@ -1,0 +1,37 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Skyhunter Skirmisher",
+    "oracleId": "0c07d09e-e127-4573-b827-6c50246f7a31",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Cat",
+      "Knight"
+    ],
+    "manaCost": "{1}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Flying, double strike",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "double strike",
+      "text": "double strike"
+    }
+  ]
+}

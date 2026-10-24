@@ -58,7 +58,7 @@
         ]
       }
     },
-    "Zap": {
+    "Smoke Zap": {
       "types": [
         "Instant"
       ],
@@ -108,7 +108,7 @@
         ]
       }
     },
-    "Blaze": {
+    "Smoke Blaze": {
       "types": [
         "Sorcery"
       ],
@@ -152,7 +152,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Blaze",
+            "Smoke Blaze",
             "Insight"
           ]
         }
@@ -170,7 +170,7 @@
           ]
         },
         {
-          "cast": "Blaze",
+          "cast": "Smoke Blaze",
           "targets": [
             {
               "player": 1

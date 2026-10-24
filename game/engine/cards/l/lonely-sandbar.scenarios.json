@@ -1,0 +1,115 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Lonely Sandbar",
+  "scenarios": [
+    {
+      "name": "Played, it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Lonely Sandbar"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Lonely Sandbar"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Lonely Sandbar"
+        }
+      ]
+    },
+    {
+      "name": "{T}: Add {U}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Lonely Sandbar"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Lonely Sandbar"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "U": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cycling {U}: discarded, a card drawn; red mana does not pay it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Lonely Sandbar"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Lonely Sandbar"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "activate": "Lonely Sandbar"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Lonely Sandbar"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wastes"
+          ]
+        }
+      ]
+    }
+  ]
+}

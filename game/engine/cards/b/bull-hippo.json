@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bull Hippo",
+    "oracleId": "4d62a448-b6a5-43b1-a281-9e9361a5524a",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Hippo"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Islandwalk (This creature can't be blocked as long as defending player controls an Island.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "islandwalk",
+      "text": "Islandwalk (This creature can't be blocked as long as defending player controls an Island.)"
+    }
+  ]
+}

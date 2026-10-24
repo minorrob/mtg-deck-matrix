@@ -1,0 +1,38 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Jawbone Duelist",
+    "oracleId": "14af3ec5-d90a-4560-a70a-8645765f1253",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Phyrexian",
+      "Soldier"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Double strike\nToxic 1 (Players dealt combat damage by this creature also get a poison counter.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "double strike",
+      "text": "Double strike"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "toxic",
+      "amount": 1,
+      "text": "Toxic 1 (Players dealt combat damage by this creature also get a poison counter.)"
+    }
+  ]
+}

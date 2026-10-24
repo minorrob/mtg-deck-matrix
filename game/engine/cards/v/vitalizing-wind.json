@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Vitalizing Wind",
+    "oracleId": "98b802f3-4785-41af-adfe-e77d0ae4648c",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{8}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Creatures you control get +7/+7 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "power": 7,
+          "toughness": 7
+        }
+      ],
+      "text": "Creatures you control get +7/+7 until end of turn."
+    }
+  ]
+}

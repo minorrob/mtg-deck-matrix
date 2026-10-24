@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Angelic Curator",
+    "oracleId": "cca29a9b-794f-4712-8e6c-36ce3da9cb8b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel",
+      "Spirit"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Flying, protection from artifacts",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "protection",
+      "from": {
+        "types": [
+          "Artifact"
+        ]
+      },
+      "text": "protection from artifacts"
+    }
+  ]
+}

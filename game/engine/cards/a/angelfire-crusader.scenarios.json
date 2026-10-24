@@ -1,0 +1,103 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Angelfire Crusader",
+  "scenarios": [
+    {
+      "name": "{R} twice: a 4/3 until end of turn, a 2/3 again on the next turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Angelfire Crusader",
+            "Mountain",
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "activate": "Angelfire Crusader"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "activate": "Angelfire Crusader"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Angelfire Crusader",
+                "power": 4,
+                "toughness": 3
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Angelfire Crusader",
+            "power": 2,
+            "toughness": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "White mana does not pay {R}: nothing is offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Angelfire Crusader",
+            "Plains"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Angelfire Crusader"
+          },
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Angelfire Crusader",
+            "power": 2,
+            "toughness": 3
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Holy Day",
+    "oracleId": "98423a34-f044-4811-b288-56981d604b6e",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Prevent all combat damage that would be dealt this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "rule": "prevent-damage",
+          "apply": {
+            "combat": true,
+            "all": true
+          },
+          "until": "end-of-turn"
+        }
+      ],
+      "text": "Prevent all combat damage that would be dealt this turn."
+    }
+  ]
+}

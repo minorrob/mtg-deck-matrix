@@ -1,0 +1,39 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Glowrider",
+    "oracleId": "aaf825b0-af0f-47a0-8b00-85f0614cef5d",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Cleric"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Noncreature spells cost {1} more to cast.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "spells-cost-more",
+      "affects": {
+        "what": "spell",
+        "nonTypes": [
+          "Creature"
+        ]
+      },
+      "amount": 1,
+      "text": "Noncreature spells cost {1} more to cast."
+    }
+  ]
+}

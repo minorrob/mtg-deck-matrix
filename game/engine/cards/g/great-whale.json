@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Great Whale",
+    "oracleId": "c43ce30a-0346-479d-8dbc-56c3872ff82a",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Whale"
+    ],
+    "manaCost": "{5}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "When this creature enters, untap up to seven lands.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "battlefield",
+          "selector": {
+            "types": [
+              "Land"
+            ]
+          },
+          "count": 7,
+          "upTo": true,
+          "to": "stay",
+          "remember": true
+        },
+        {
+          "effect": "untap",
+          "targets": "remembered"
+        }
+      ],
+      "text": "When this creature enters, untap up to seven lands."
+    }
+  ]
+}

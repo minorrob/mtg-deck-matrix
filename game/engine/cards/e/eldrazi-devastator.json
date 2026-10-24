@@ -1,0 +1,27 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Eldrazi Devastator",
+    "oracleId": "bc08ac66-969c-4905-a2d6-16ff565be475",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Eldrazi"
+    ],
+    "manaCost": "{8}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 8,
+    "toughness": 9
+  },
+  "oracleText": "Trample",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "Trample"
+    }
+  ]
+}

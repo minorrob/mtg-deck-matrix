@@ -109,7 +109,8 @@ export function waveEntries(ranked, {oracle, library, definition}) {
 /** A card's file name in the directory: its name in lower case, accents and apostrophes dropped, anything else a hyphen. */
 export const slugOf = (name) => String(name).normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/['’]/g, "")
   .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-const letterOf = (slug) => (slug.match(/[a-z]/) ?? ["z"])[0];
+/* Its folder: the slug's first character, a digit included ("2 Mace" is 2/2-mace.json), as tests/engine-cards.mjs files it. */
+const letterOf = (slug) => slug.charAt(0) || "z";
 
 /** Promote approved entries: each written into the directory with its drafted scenario. Returns the files written. */
 export function promote(entries, {root = CARDS_DIR, write = (file, text) => { mkdirSync(path.dirname(file), {recursive: true}); writeFileSync(file, text); }} = {}) {

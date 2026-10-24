@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Blood Price",
+    "oracleId": "93c6554f-096d-4556-81ca-e87e29265887",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Look at the top four cards of your library. Put two of them into your hand and the rest on the bottom of your library in any order. You lose 2 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Look at the top four cards of your library. Put two of them into your hand and the rest on the bottom of your library in any order. You lose 2 life.",
+      "effects": [
+        {
+          "effect": "dig",
+          "count": 4,
+          "take": 2,
+          "to": "hand",
+          "rest": "bottom"
+        },
+        {
+          "effect": "loseLife",
+          "amount": 2
+        }
+      ]
+    }
+  ]
+}

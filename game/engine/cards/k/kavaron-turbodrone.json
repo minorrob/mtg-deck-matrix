@@ -1,0 +1,60 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kavaron Turbodrone",
+    "oracleId": "3ebb8542-5d1d-4f0b-92a9-5a98425860fd",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Robot",
+      "Scout"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "{T}: Target creature you control gets +1/+1 and gains haste until end of turn. Activate only as a sorcery.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "timing": "sorcery",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 1,
+          "toughness": 1,
+          "keywords": [
+            "Haste"
+          ]
+        }
+      ],
+      "text": "{T}: Target creature you control gets +1/+1 and gains haste until end of turn. Activate only as a sorcery."
+    }
+  ]
+}

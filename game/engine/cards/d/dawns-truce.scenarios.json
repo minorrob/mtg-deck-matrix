@@ -30,7 +30,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Zap": {
+    "Smoke Zap": {
       "types": [
         "Instant"
       ],
@@ -98,7 +98,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Zap"
+            "Smoke Zap"
           ]
         }
       ],
@@ -127,7 +127,7 @@
             {
               "offers": {
                 "kind": "cast",
-                "card": "Zap",
+                "card": "Smoke Zap",
                 "seat": 1
               },
               "count": 2,
@@ -160,7 +160,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Zap"
+            "Smoke Zap"
           ]
         },
         {
@@ -352,7 +352,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Zap"
+            "Smoke Zap"
           ]
         }
       ],
@@ -395,7 +395,7 @@
         {
           "offers": {
             "kind": "cast",
-            "card": "Zap",
+            "card": "Smoke Zap",
             "seat": 1
           },
           "count": 3,

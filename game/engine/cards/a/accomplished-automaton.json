@@ -1,0 +1,29 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Accomplished Automaton",
+    "oracleId": "f5af0d1b-531e-4053-848a-5e0fa1022f9a",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Construct"
+    ],
+    "manaCost": "{7}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 5,
+    "toughness": 7
+  },
+  "oracleText": "Fabricate 1 (When this creature enters, put a +1/+1 counter on it or create a 1/1 colorless Servo artifact creature token.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "fabricate",
+      "amount": 1,
+      "text": "Fabricate 1 (When this creature enters, put a +1/+1 counter on it or create a 1/1 colorless Servo artifact creature token.)"
+    }
+  ]
+}

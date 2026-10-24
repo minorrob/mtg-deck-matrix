@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Hermes, Overseer of Elpis",
   "fixtures": {
-    "Peek": {
+    "Smoke Peek": {
       "types": [
         "Instant"
       ],
@@ -53,7 +53,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Peek"
+            "Smoke Peek"
           ]
         }
       ],
@@ -62,7 +62,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Peek"
+          "cast": "Smoke Peek"
         },
         {
           "resolve": true

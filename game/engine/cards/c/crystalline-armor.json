@@ -1,0 +1,79 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Crystalline Armor",
+    "oracleId": "93d2638b-0c19-4fba-a0ad-84b6a9784eb3",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant creature\nEnchanted creature gets +1/+1 for each land you control and has trample.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      },
+      "text": "Enchant creature"
+    },
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": {
+          "count": {
+            "types": [
+              "Land"
+            ],
+            "controller": "you"
+          }
+        },
+        "toughness": {
+          "count": {
+            "types": [
+              "Land"
+            ],
+            "controller": "you"
+          }
+        }
+      },
+      "text": "Enchanted creature gets +1/+1 for each land you control and has trample."
+    },
+    {
+      "kind": "static",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "addKeywords": [
+          "Trample"
+        ]
+      },
+      "text": "Enchanted creature gets +1/+1 for each land you control and has trample."
+    }
+  ]
+}

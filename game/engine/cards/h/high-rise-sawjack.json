@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "High-Rise Sawjack",
+    "oracleId": "0049438b-e37e-4c57-820e-f2ddf3322170",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Citizen"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Reach (This creature can block creatures with flying.)\nWhenever this creature blocks a creature with flying, this creature gets +2/+0 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "reach",
+      "text": "Reach (This creature can block creatures with flying.)"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "blocks",
+        "who": "self",
+        "each": "attacker",
+        "blocked": {
+          "keywords": [
+            "Flying"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 2,
+          "toughness": 0
+        }
+      ],
+      "text": "Whenever this creature blocks a creature with flying, this creature gets +2/+0 until end of turn."
+    }
+  ]
+}

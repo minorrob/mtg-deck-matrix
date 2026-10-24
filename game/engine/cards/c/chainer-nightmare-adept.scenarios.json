@@ -49,7 +49,7 @@
       "manaCost": "{1}",
       "colors": []
     },
-    "Tidings": {
+    "Smoke Tidings": {
       "types": [
         "Instant"
       ],
@@ -148,7 +148,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Tidings"
+            "Smoke Tidings"
           ]
         },
         {
@@ -163,7 +163,7 @@
       "steps": [
         {
           "activate": "Chainer, Nightmare Adept",
-          "discard": "Tidings"
+          "discard": "Smoke Tidings"
         },
         {
           "resolve": true
@@ -213,7 +213,7 @@
           "zone": "graveyard",
           "cards": [
             "Cub",
-            "Tidings"
+            "Smoke Tidings"
           ]
         }
       ]
@@ -233,7 +233,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Tidings"
+            "Smoke Tidings"
           ]
         },
         {
@@ -248,7 +248,7 @@
       "steps": [
         {
           "activate": "Chainer, Nightmare Adept",
-          "discard": "Tidings"
+          "discard": "Smoke Tidings"
         },
         {
           "resolve": true
@@ -460,7 +460,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Tidings",
+            "Smoke Tidings",
             "Smite"
           ]
         },
@@ -475,7 +475,7 @@
       "steps": [
         {
           "activate": "Chainer, Nightmare Adept",
-          "discard": "Tidings"
+          "discard": "Smoke Tidings"
         },
         {
           "resolve": true
@@ -530,7 +530,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Tidings"
+            "Smoke Tidings"
           ]
         },
         {
@@ -544,7 +544,7 @@
       "steps": [
         {
           "activate": "Chainer, Nightmare Adept",
-          "discard": "Tidings"
+          "discard": "Smoke Tidings"
         },
         {
           "resolve": true

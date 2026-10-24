@@ -92,7 +92,7 @@
         ]
       }
     },
-    "Flare": {
+    "Smoke Flare": {
       "types": [
         "Instant"
       ],
@@ -307,7 +307,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Flare"
+            "Smoke Flare"
           ]
         },
         {
@@ -330,7 +330,7 @@
           "seat": 1
         },
         {
-          "cast": "Flare",
+          "cast": "Smoke Flare",
           "seat": 1
         },
         {
@@ -348,7 +348,7 @@
           ],
           "targets": [
             {
-              "card": "Flare"
+              "card": "Smoke Flare"
             }
           ]
         },
@@ -365,7 +365,7 @@
           "seat": 1,
           "zone": "graveyard",
           "cards": [
-            "Flare"
+            "Smoke Flare"
           ]
         },
         {

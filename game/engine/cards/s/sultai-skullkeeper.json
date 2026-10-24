@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sultai Skullkeeper",
+    "oracleId": "726ba167-9e7b-4d46-a52c-72d5a500aee2",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Snake",
+      "Shaman"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "When this creature enters, mill two cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "mill",
+          "count": 2
+        }
+      ],
+      "text": "When this creature enters, mill two cards."
+    }
+  ]
+}

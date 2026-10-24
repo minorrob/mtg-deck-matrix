@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Fractured Powerstone",
   "fixtures": {
-    "Divination": {
+    "Smoke Divination": {
       "types": [
         "Sorcery"
       ],
@@ -119,7 +119,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Divination"
+            "Smoke Divination"
           ]
         }
       ],
@@ -131,7 +131,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Divination"
+          "cast": "Smoke Divination"
         },
         {
           "expect": [

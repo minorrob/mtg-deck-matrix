@@ -1,0 +1,35 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bristling Boar",
+    "oracleId": "f4aed3d2-04f5-49a4-a6be-d3cf097903f8",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Boar"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 3
+  },
+  "oracleText": "This creature can't be blocked by more than one creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "blocked-by-one-at-most",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "text": "This creature can't be blocked by more than one creature."
+    }
+  ]
+}

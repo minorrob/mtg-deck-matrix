@@ -30,7 +30,7 @@
       "power": 3,
       "toughness": 3
     },
-    "Tidings": {
+    "Smoke Tidings": {
       "types": [
         "Instant"
       ],
@@ -50,7 +50,7 @@
         ]
       }
     },
-    "Smash": {
+    "Smoke Smash": {
       "types": [
         "Instant"
       ],
@@ -149,7 +149,7 @@
       "name": "A land and an instant on top: neither played nor cast from there",
       "library": [
         "Forest",
-        "Tidings"
+        "Smoke Tidings"
       ],
       "setup": [
         {
@@ -202,7 +202,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Tidings"
+            "Smoke Tidings"
           ]
         },
         {
@@ -240,7 +240,7 @@
           }
         },
         {
-          "cast": "Tidings"
+          "cast": "Smoke Tidings"
         },
         {
           "resolve": true
@@ -278,7 +278,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Smash"
+            "Smoke Smash"
           ]
         }
       ],
@@ -287,7 +287,7 @@
           "tap": "Plains"
         },
         {
-          "cast": "Smash",
+          "cast": "Smoke Smash",
           "targets": [
             {
               "card": "Elven Chorus"

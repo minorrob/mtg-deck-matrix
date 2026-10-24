@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Madrush Cyclops",
+    "oracleId": "f45a2a66-04cc-4622-9c70-f2dfc1391bb1",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Cyclops",
+      "Warrior"
+    ],
+    "manaCost": "{1}{B}{R}{G}",
+    "colors": [
+      "B",
+      "G",
+      "R"
+    ],
+    "colorIdentity": [
+      "B",
+      "G",
+      "R"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "Creatures you control have haste.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "addKeywords": [
+          "Haste"
+        ]
+      },
+      "text": "Creatures you control have haste."
+    }
+  ]
+}

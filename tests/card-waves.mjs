@@ -17,7 +17,7 @@ import {readFileSync, mkdtempSync, rmSync} from "node:fs";
 import {tmpdir} from "node:os";
 import path from "node:path";
 import {rankCandidates, draftScenarios, reviewSheet, waveEntries, promote, slugOf} from "../game/tools/card-waves.mjs";
-import {scriptOf} from "../game/tools/card-compiler.mjs";
+import {scriptOf, compileCard} from "../game/tools/card-compiler.mjs";
 import {loadCardScripts, loadCardScenarios, loadCardIndex} from "../game/tools/engine-cards.mjs";
 import {createCardIndex} from "../game/engine/cards/index.mjs";
 import {createLibrary} from "../game/engine/cards/sentences.mjs";
@@ -44,7 +44,19 @@ const library = createLibrary(loadCardScripts().map((f) => f.script));
 }
 
 /* ---- 2. the drafted scenario ---- */
-const pick = (test) => file.cards.find((c) => byName.has(c.name) && test(c));
+/* Candidates as the compiler makes them. The store drains as waves promote it (2,731 to 23 in the load of 2026-10-24), so
+   when it holds no card of a kind, one is compiled here from a defined card of that kind, through the compiler's own
+   compileCard with every template trusted: the same shape a stored candidate has. */
+const trustAll = () => ({ok: true, cards: 99, band: {band: "50+", rate: 1, low: 0.99}});
+const compiled = loadCardScripts().map((f) => f.script).filter((s) => byName.has(s.identity.name)).sort((a, b) => (a.identity.name < b.identity.name ? -1 : 1));
+const pick = (test) => {
+  const stored = file.cards.find((c) => byName.has(c.name) && test(c));
+  if (stored) return stored;
+  for (const s of compiled) {
+    const c = compileCard(byName.get(s.identity.name), {library, trust: trustAll, definition});
+    if (c.status === "candidate" && test(c)) return c;
+  }
+};
 const flier = pick((c) => c.abilities.length === 1 && c.abilities[0].keyword === "flying" && /Creature/.test(byName.get(c.name).type));
 const lifer = pick((c) => c.abilities.some((a) => a.kind === "triggered" && JSON.stringify(a.effects).includes("\"gainLife\"")) && /Creature/.test(byName.get(c.name).type));
 {

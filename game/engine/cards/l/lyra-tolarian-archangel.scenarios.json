@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Lyra, Tolarian Archangel",
   "fixtures": {
-    "Tidings": {
+    "Smoke Tidings": {
       "types": [
         "Instant"
       ],
@@ -61,7 +61,7 @@
           "zone": "hand",
           "cards": [
             "Insight",
-            "Tidings"
+            "Smoke Tidings"
           ]
         }
       ],
@@ -79,7 +79,7 @@
           "tap": "Island"
         },
         {
-          "cast": "Tidings"
+          "cast": "Smoke Tidings"
         },
         {
           "resolve": true
@@ -200,9 +200,9 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Tidings",
-            "Tidings",
-            "Tidings"
+            "Smoke Tidings",
+            "Smoke Tidings",
+            "Smoke Tidings"
           ]
         }
       ],
@@ -221,7 +221,7 @@
           "seat": 0
         },
         {
-          "cast": "Tidings",
+          "cast": "Smoke Tidings",
           "seat": 0
         },
         {
@@ -235,7 +235,7 @@
           "seat": 0
         },
         {
-          "cast": "Tidings",
+          "cast": "Smoke Tidings",
           "seat": 0
         },
         {
@@ -249,7 +249,7 @@
           "seat": 0
         },
         {
-          "cast": "Tidings",
+          "cast": "Smoke Tidings",
           "seat": 0
         },
         {

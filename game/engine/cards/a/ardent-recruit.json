@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ardent Recruit",
+    "oracleId": "9275108c-7eaf-4edd-aa6d-e5263d5ac7fd",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Soldier"
+    ],
+    "manaCost": "{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Metalcraft — This creature gets +2/+2 as long as you control three or more artifacts.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Metalcraft — This creature gets +2/+2 as long as you control three or more artifacts.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "power": 2,
+        "toughness": 2
+      },
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "types": [
+            "Artifact"
+          ],
+          "controller": "you"
+        },
+        "atLeast": 3
+      }
+    }
+  ]
+}

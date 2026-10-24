@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Quirion Explorer",
+    "oracleId": "766c8a68-9c51-44ea-903c-1f5cb30941d1",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Druid",
+      "Scout"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "{T}: Add one mana of any color that a land an opponent controls could produce.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "reflect": {
+            "what": "permanent",
+            "types": [
+              "Land"
+            ],
+            "controller": "opponent"
+          }
+        }
+      ],
+      "text": "{T}: Add one mana of any color that a land an opponent controls could produce."
+    }
+  ]
+}

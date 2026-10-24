@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Alania's Pathmaker",
+    "oracleId": "ce36a450-68a6-4519-a9f0-0e3b772054eb",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Otter",
+      "Wizard"
+    ],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 4,
+    "toughness": 2
+  },
+  "oracleText": "When this creature enters, exile the top card of your library. Until the end of your next turn, you may play that card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "fromTop": 1,
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "mayPlay",
+          "targets": "remembered",
+          "until": "your-next-end"
+        }
+      ],
+      "text": "When this creature enters, exile the top card of your library. Until the end of your next turn, you may play that card."
+    }
+  ]
+}

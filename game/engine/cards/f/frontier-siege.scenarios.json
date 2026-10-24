@@ -85,7 +85,7 @@
           "zone": "hand",
           "cards": [
             "Frontier Siege",
-            "Shatter"
+            "Smoke Shatter"
           ]
         }
       ],
@@ -130,7 +130,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Shatter",
+          "cast": "Smoke Shatter",
           "targets": [
             {
               "card": "Frontier Siege"
@@ -150,7 +150,7 @@
               "zone": "graveyard",
               "cards": [
                 "Frontier Siege",
-                "Shatter"
+                "Smoke Shatter"
               ]
             }
           ]
@@ -173,7 +173,7 @@
     }
   ],
   "fixtures": {
-    "Shatter": {
+    "Smoke Shatter": {
       "types": [
         "Instant"
       ],

@@ -188,7 +188,9 @@ const objectCall = (table) => async (method, path, email, body) => {
   const object = new GameTable(objectCtx(), {PLAYTEST_TABLES: "on"}, {random, now: () => now}), staging = objectCall(object);
   await staging("POST", "/table/create", ROB, {tableId: "candstage1", hostName: "Rob", seats: [{kind: "ai"}]});
   eq((await staging("POST", "/table/known", ROB, {names: picks})).json.unknown, [], "on staging, every table a playtest table, a candidate is known");
-  const general = file.cards.find((c) => /Legendary Creature/.test(byName.get(c.name)?.type || "")).name;
+  /* A candidate commander while the store holds one; the load of 2026-10-24 promoted the last, so then a defined one. */
+  const candidateGeneral = file.cards.find((c) => /Legendary Creature/.test(byName.get(c.name)?.type || ""))?.name;
+  const general = candidateGeneral ?? "Atraxa, Praetors' Voice";
   const real = (tag) => ({name: tag, commander: [general],
     cards: [...Array.from({length: 38}, () => "Forest"), ...Array.from({length: 61}, (_, i) => picks[i % picks.length])]});
   await staging("POST", "/table/deck", ROB, {seatId: 0, deck: real("sa")}); await staging("POST", "/table/deck", ROB, {seatId: 1, deck: real("sb")});
@@ -196,7 +198,7 @@ const objectCall = (table) => async (method, path, email, body) => {
   now += 10000; await object.alarm();
   const live = (await object.table.currentRoom()).view("s0").state.players[0].zones.Hand.cards.find((c) => c.candidate === true);
   const sent = await staging("POST", "/table/report", ROB, {cardId: live.cardId, note: "wrong"});
-  eq([sent.status, sent.json.report.card], [201, live.name], "and POST /table/report takes a report of one, with a commander that is a candidate too");
+  eq([sent.status, sent.json.report.card], [201, live.name], `and POST /table/report takes a report of one, with ${candidateGeneral ? "a commander that is a candidate too" : `${general} commanding`}`);
   const prod = objectCall(new GameTable(objectCtx(), {}, {random, now: () => now}));
   await prod("POST", "/table/create", ROB, {tableId: "candprod1", hostName: "Rob", seats: [{kind: "ai"}]});
   eq((await prod("POST", "/table/known", ROB, {names: picks})).json.unknown, [...picks].sort(), "elsewhere it is not");

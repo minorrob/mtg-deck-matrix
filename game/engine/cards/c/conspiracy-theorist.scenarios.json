@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Conspiracy Theorist",
   "fixtures": {
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -98,7 +98,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Shock"
+            "Smoke Shock"
           ]
         }
       ],
@@ -113,7 +113,7 @@
         },
         {
           "choose": [
-            "Discard Shock and pay {1}"
+            "Discard Smoke Shock and pay {1}"
           ]
         },
         {
@@ -141,7 +141,7 @@
               "asks": {
                 "seat": 0,
                 "options": [
-                  "Shock"
+                  "Smoke Shock"
                 ]
               }
             }
@@ -149,7 +149,7 @@
         },
         {
           "choose": [
-            "Shock"
+            "Smoke Shock"
           ]
         },
         {
@@ -158,7 +158,7 @@
               "seat": 0,
               "zone": "exile",
               "cards": [
-                "Shock"
+                "Smoke Shock"
               ]
             }
           ]
@@ -173,7 +173,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "targets": [
             {
               "player": 1
@@ -193,7 +193,7 @@
           "seat": 0,
           "zone": "graveyard",
           "cards": [
-            "Shock"
+            "Smoke Shock"
           ]
         }
       ]
@@ -216,7 +216,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Shock"
+            "Smoke Shock"
           ]
         }
       ],
@@ -240,7 +240,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Shock"
+            "Smoke Shock"
           ]
         },
         {
@@ -271,7 +271,7 @@
           "zone": "hand",
           "cards": [
             "Purge",
-            "Shock",
+            "Smoke Shock",
             "Bear",
             "Forest"
           ]
@@ -289,7 +289,7 @@
         },
         {
           "choose": [
-            "Shock",
+            "Smoke Shock",
             "Bear"
           ]
         },
@@ -309,7 +309,7 @@
               "asks": {
                 "seat": 0,
                 "options": [
-                  "Shock",
+                  "Smoke Shock",
                   "Bear"
                 ]
               }
@@ -335,7 +335,7 @@
               "zone": "graveyard",
               "cards": [
                 "Purge",
-                "Shock"
+                "Smoke Shock"
               ]
             }
           ]
@@ -391,7 +391,7 @@
           "zone": "hand",
           "cards": [
             "Purge",
-            "Shock",
+            "Smoke Shock",
             "Forest"
           ]
         }
@@ -408,7 +408,7 @@
         },
         {
           "choose": [
-            "Shock",
+            "Smoke Shock",
             "Forest"
           ]
         },
@@ -421,7 +421,7 @@
               "asks": {
                 "seat": 0,
                 "options": [
-                  "Shock"
+                  "Smoke Shock"
                 ]
               }
             }
@@ -445,7 +445,7 @@
           "zone": "graveyard",
           "cards": [
             "Purge",
-            "Shock",
+            "Smoke Shock",
             "Forest"
           ]
         }

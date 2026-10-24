@@ -43,7 +43,7 @@
         ]
       }
     },
-    "Shatter": {
+    "Smoke Shatter": {
       "types": [
         "Instant"
       ],
@@ -145,7 +145,7 @@
           "cards": [
             "Smoke Murder",
             "Smoke Murder",
-            "Shatter"
+            "Smoke Shatter"
           ]
         }
       ],
@@ -202,14 +202,14 @@
             {
               "offers": {
                 "kind": "cast",
-                "card": "Shatter"
+                "card": "Smoke Shatter"
               },
               "count": 1
             }
           ]
         },
         {
-          "cast": "Shatter",
+          "cast": "Smoke Shatter",
           "targets": [
             {
               "card": "Tom, Bert, and William"
@@ -230,7 +230,7 @@
           "cards": [
             "Tom, Bert, and William",
             "Smoke Murder",
-            "Shatter"
+            "Smoke Shatter"
           ]
         },
         {

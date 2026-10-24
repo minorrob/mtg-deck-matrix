@@ -16,7 +16,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -81,7 +81,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Shock",
+            "Smoke Shock",
             "Bear",
             "Forest"
           ]
@@ -126,7 +126,7 @@
                 "seat": 0,
                 "options": [
                   "Bear",
-                  "Shock"
+                  "Smoke Shock"
                 ]
               }
             },
@@ -142,7 +142,7 @@
         },
         {
           "choose": [
-            "Shock"
+            "Smoke Shock"
           ]
         }
       ],
@@ -151,7 +151,7 @@
           "seat": 1,
           "zone": "graveyard",
           "cards": [
-            "Shock"
+            "Smoke Shock"
           ]
         },
         {
@@ -180,7 +180,7 @@
           "zone": "hand",
           "cards": [
             "Temporal Intervention",
-            "Shock"
+            "Smoke Shock"
           ]
         },
         {
@@ -203,7 +203,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "targets": [
             {
               "card": "Bear"

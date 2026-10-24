@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Konda, Lord of Eiganjo",
+    "oracleId": "efea2342-bb24-472a-acfb-1b9e012af91b",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Samurai"
+    ],
+    "manaCost": "{5}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Vigilance, indestructible\nBushido 5 (Whenever this creature blocks or becomes blocked, it gets +5/+5 until end of turn.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "vigilance",
+      "text": "Vigilance"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "indestructible",
+      "text": "indestructible"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "bushido",
+      "amount": 5,
+      "text": "Bushido 5 (Whenever this creature blocks or becomes blocked, it gets +5/+5 until end of turn.)"
+    }
+  ]
+}

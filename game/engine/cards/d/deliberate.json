@@ -1,0 +1,38 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Deliberate",
+    "oracleId": "362fc643-ab76-4160-a73e-73397464db40",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Scry 2, then draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "scry",
+          "count": 2
+        },
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ],
+      "text": "Scry 2, then draw a card."
+    }
+  ]
+}

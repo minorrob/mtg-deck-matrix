@@ -112,7 +112,7 @@
         }
       ]
     },
-    "Unmake": {
+    "Smoke Unmake": {
       "types": [
         "Instant"
       ],
@@ -491,7 +491,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Unmake"
+            "Smoke Unmake"
           ]
         }
       ],
@@ -500,7 +500,7 @@
           "tap": "Swamp"
         },
         {
-          "cast": "Unmake",
+          "cast": "Smoke Unmake",
           "targets": [
             {
               "card": "Way of the Wildspeaker"
@@ -528,7 +528,7 @@
           "zone": "graveyard",
           "cards": [
             "Way of the Wildspeaker",
-            "Unmake"
+            "Smoke Unmake"
           ]
         }
       ]

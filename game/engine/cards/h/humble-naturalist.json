@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Humble Naturalist",
+    "oracleId": "ff3a69a7-a244-4958-9e8b-d153942c1ba6",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Druid"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "{T}: Add one mana of any color. Spend this mana only to cast a creature spell.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyColor": true,
+          "spendOnly": {
+            "spell": {
+              "types": [
+                "Creature"
+              ]
+            }
+          }
+        }
+      ],
+      "text": "{T}: Add one mana of any color. Spend this mana only to cast a creature spell."
+    }
+  ]
+}

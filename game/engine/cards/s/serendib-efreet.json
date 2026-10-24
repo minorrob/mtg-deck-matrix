@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Serendib Efreet",
+    "oracleId": "dd520d83-297a-487f-b8f3-4997bbc056e0",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Efreet"
+    ],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "Flying\nAt the beginning of your upkeep, this creature deals 1 damage to you.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 1,
+          "who": "you"
+        }
+      ],
+      "text": "At the beginning of your upkeep, this creature deals 1 damage to you."
+    }
+  ]
+}

@@ -23,7 +23,7 @@
       "manaCost": "{1}",
       "colors": []
     },
-    "Unmake": {
+    "Smoke Unmake": {
       "types": [
         "Instant"
       ],
@@ -196,7 +196,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Unmake"
+            "Smoke Unmake"
           ]
         }
       ],
@@ -238,7 +238,7 @@
           "seat": 1
         },
         {
-          "cast": "Unmake",
+          "cast": "Smoke Unmake",
           "seat": 1,
           "targets": [
             {

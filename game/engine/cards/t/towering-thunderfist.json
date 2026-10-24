@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Towering Thunderfist",
+    "oracleId": "d68adf9b-57b1-4c14-97b1-c5906dc5d29b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Giant",
+      "Soldier"
+    ],
+    "manaCost": "{4}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "{W}: This creature gains vigilance until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{W}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Vigilance"
+          ]
+        }
+      ],
+      "text": "{W}: This creature gains vigilance until end of turn."
+    }
+  ]
+}

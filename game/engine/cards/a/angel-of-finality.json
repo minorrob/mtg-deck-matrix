@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Angel of Finality",
+    "oracleId": "48d14b5c-711a-4f8a-9de5-55415cb7a79a",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel"
+    ],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "Flying\nWhen this creature enters, exile target player's graveyard.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "moveZoneAll",
+          "selector": {
+            "what": "card",
+            "zone": "graveyard",
+            "controller": {
+              "target": 0
+            }
+          },
+          "to": "exile"
+        }
+      ],
+      "targets": [
+        {
+          "what": "player"
+        }
+      ],
+      "text": "When this creature enters, exile target player's graveyard."
+    }
+  ]
+}

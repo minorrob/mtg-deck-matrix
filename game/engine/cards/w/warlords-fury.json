@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Warlord's Fury",
+    "oracleId": "7340199d-60c7-4c27-9a0f-047790273db0",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Creatures you control gain first strike until end of turn.\nDraw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "First Strike"
+          ],
+          "until": "end-of-turn"
+        },
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ],
+      "text": "Creatures you control gain first strike until end of turn.\nDraw a card."
+    }
+  ]
+}

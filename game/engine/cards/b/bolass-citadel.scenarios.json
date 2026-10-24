@@ -48,7 +48,7 @@
         ]
       }
     },
-    "Blaze": {
+    "Smoke Blaze": {
       "types": [
         "Instant"
       ],
@@ -237,7 +237,7 @@
     {
       "name": "An {X} spell from the top: X is 0, and 1 life (CR 107.3b)",
       "library": [
-        "Blaze"
+        "Smoke Blaze"
       ],
       "setup": [
         {
@@ -250,7 +250,7 @@
       ],
       "steps": [
         {
-          "cast": "Blaze",
+          "cast": "Smoke Blaze",
           "targets": [
             {
               "player": 1
@@ -274,7 +274,7 @@
           "seat": 0,
           "zone": "graveyard",
           "cards": [
-            "Blaze"
+            "Smoke Blaze"
           ]
         }
       ]

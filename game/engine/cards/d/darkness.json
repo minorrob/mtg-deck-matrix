@@ -1,0 +1,39 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Darkness",
+    "oracleId": "932708ae-9d5c-4561-aa8b-0d2222d37fdc",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Prevent all combat damage that would be dealt this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "rule": "prevent-damage",
+          "apply": {
+            "combat": true,
+            "all": true
+          },
+          "until": "end-of-turn"
+        }
+      ],
+      "text": "Prevent all combat damage that would be dealt this turn."
+    }
+  ]
+}

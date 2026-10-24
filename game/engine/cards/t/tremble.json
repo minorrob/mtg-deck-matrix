@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tremble",
+    "oracleId": "0fa0f562-e66f-4630-890a-9a4ae24fd6c0",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each player sacrifices a land of their choice.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "who": "each",
+          "count": 1,
+          "selector": {
+            "types": [
+              "Land"
+            ]
+          }
+        }
+      ],
+      "text": "Each player sacrifices a land of their choice."
+    }
+  ]
+}

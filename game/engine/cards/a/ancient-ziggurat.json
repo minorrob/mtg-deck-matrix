@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ancient Ziggurat",
+    "oracleId": "0baabe39-72ae-47bd-a095-cbf7eb8a6361",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add one mana of any color. Spend this mana only to cast a creature spell.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyColor": true,
+          "spendOnly": {
+            "spell": {
+              "types": [
+                "Creature"
+              ]
+            }
+          }
+        }
+      ],
+      "text": "{T}: Add one mana of any color. Spend this mana only to cast a creature spell."
+    }
+  ]
+}

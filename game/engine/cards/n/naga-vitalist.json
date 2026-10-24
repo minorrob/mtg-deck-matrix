@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Naga Vitalist",
+    "oracleId": "9cea8783-c7d7-49f9-b23d-324309efc140",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Snake",
+      "Druid"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "{T}: Add one mana of any type that a land you control could produce.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "reflect": {
+            "what": "permanent",
+            "types": [
+              "Land"
+            ],
+            "controller": "you"
+          },
+          "anyType": true
+        }
+      ],
+      "text": "{T}: Add one mana of any type that a land you control could produce."
+    }
+  ]
+}

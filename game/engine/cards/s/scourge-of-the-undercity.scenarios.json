@@ -1,0 +1,233 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Scourge of the Undercity",
+  "fixtures": {
+    "Smoke Commander": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{W}{U}{B}{R}{G}",
+      "colorIdentity": [
+        "W",
+        "U",
+        "B",
+        "R",
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Smoke Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Smoke Relic": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{2}"
+    },
+    "Smoke Charm": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{2}"
+    },
+    "Smoke Giant": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{4}{G}",
+      "power": 5,
+      "toughness": 5
+    },
+    "Smoke Sorcery": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{0}",
+      "spell": {
+        "id": "s",
+        "text": "Target player draws a card.",
+        "targets": [
+          {
+            "what": "player"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "draw",
+            "count": 1,
+            "who": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Scourge of the Undercity cast, and each ability used once (drafted by game/tools/card-waves.mjs, approved in review)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "command",
+          "cards": [
+            "Smoke Commander"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Smoke Bear",
+            "Smoke Relic"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Scourge of the Undercity"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Smoke Bear",
+            "Smoke Giant",
+            "Smoke Relic",
+            "Smoke Charm",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Smoke Sorcery"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes",
+          "seat": 0,
+          "optional": true
+        },
+        {
+          "tap": "Swamp",
+          "seat": 0,
+          "optional": true
+        },
+        {
+          "cast": "Scourge of the Undercity",
+          "seat": 0,
+          "targets": "any",
+          "optional": true
+        },
+        {
+          "settle": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1",
+            "settle": true
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Scourge of the Undercity",
+            "Smoke Bear",
+            "Smoke Relic",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": []
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": []
+        },
+        {
+          "seat": 1,
+          "life": 40
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Smoke Sorcery",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Smoke Bear",
+            "Smoke Charm",
+            "Smoke Giant",
+            "Smoke Relic",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": []
+        },
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": []
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Scourge of the Undercity",
+            "has": [
+              "Lifelink"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
