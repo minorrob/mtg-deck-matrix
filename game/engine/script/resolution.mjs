@@ -250,6 +250,11 @@ export function runResolution(state, rng = null) {
        of any kinds, its controller chooses as it resolves (CR 608.2d; effects/asking.mjs, countersToRemove). */
     else if (effect?.effect === "removeCounter" && effect.counter === "any" && effect.removing === undefined)
       resolving.queue[0] = {effect: "countersToRemove", then: effect};
+    /* "Move any number of counters from target permanent you control onto a second target permanent you control" (Resourceful
+       Defense; CR 122.5, 608.2d): which of the counters on the first, of any kinds, its controller chooses as it resolves --
+       the same question (effects/asking.mjs, countersToRemove), then moved (`moving`, effects/resources.mjs). */
+    else if (effect?.effect === "moveCounters" && effect.counter === "any" && effect.moving === undefined)
+      resolving.queue[0] = {effect: "countersToRemove", then: effect};
     /* "You may move any number of +1/+1 counters from this creature onto other creatures" (Forgotten Ancient): where each
        goes, its controller's choice as it resolves (effects/asking.mjs, countersOnto). */
     else if (effect?.effect === "moveCounters" && effect.onto !== undefined)

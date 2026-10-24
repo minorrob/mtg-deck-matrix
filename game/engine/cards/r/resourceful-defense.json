@@ -1,0 +1,94 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Resourceful Defense",
+    "oracleId": "83e78565-e61f-4bbc-b834-f47941f7e3ec",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever a permanent you control leaves the battlefield, if it had counters on it, put those counters on target permanent you control.\n{4}{W}: Move any number of counters from target permanent you control onto a second target permanent you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever a permanent you control leaves the battlefield, if it had counters on it, put those counters on target permanent you control.",
+      "trigger": {
+        "on": "leaves",
+        "who": "any",
+        "filter": {
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "countersOf": "that card"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "controller": "you"
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "countersOn": "that card",
+            "counter": "any"
+          },
+          "atLeast": 1
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{4}{W}: Move any number of counters from target permanent you control onto a second target permanent you control.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{4}{W}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "controller": "you"
+        },
+        {
+          "what": "permanent",
+          "controller": "you",
+          "distinctFrom": [
+            0
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveCounters",
+          "from": {
+            "target": 0
+          },
+          "targets": {
+            "target": 1
+          },
+          "counter": "any"
+        }
+      ]
+    }
+  ]
+}

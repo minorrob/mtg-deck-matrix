@@ -447,6 +447,11 @@ function subjects(state, event, condition, sourceId, controller) {
     return [{card: fields.becomes, ...(!fields.componentArrival && fields.from?.zoneType === "Battlefield" && objectsAfterMove(state, fields.becomes).length > 1 ? {cards: objectsAfterMove(state, fields.becomes)} : {}), ...(Number.isInteger(player) ? {player} : {}), ...(came ? {cameFrom: {...came}} : {}), ...(copied ? {copiedAs: structuredClone(copied)} : {}),
       ...leftAs(fields)}];
   }
+  /* Gone from the battlefield to a hidden zone -- returned to its owner's hand, put on top of a library -- the card it became
+     is nobody's to name (CR 400.7), but what left is still known as it last existed (CR 603.10a): "whenever a permanent you
+     control leaves the battlefield, if it had counters on it, put those counters on target permanent you control"
+     (Resourceful Defense) reads them from there. */
+  if (event.kind === "GameEventCardChangeZone") return [{...leftAs(fields)}];
   return [{}];
 }
 
@@ -522,9 +527,10 @@ function matches(state, event, condition, sourceId, controller) {
   /* "On a creature you control" (Simic Ascendancy; `who: "any"`): the permanent they were put on, as `filter` describes it
      now -- "you" this ability's controller. */
   /* "Whenever YOU put ..." (Exemplar of Light; `putBy`): put by this ability's controller, as the event says who did. */
+  /* "One or more counters" of any kind (`counter: "any"`; Generous Patron, Rikku, Resourceful Guardian). */
   if (condition.on === "GameEventCardCounters" && condition.counterAdded)
     return (condition.who === "any" ? fits(state, fields.card?.cardId, condition, sourceId, controller) : fields.card?.cardId === sourceId)
-      && fields.type === condition.counter && (fields.newValue ?? 0) > (fields.oldValue ?? 0)
+      && (condition.counter === "any" || fields.type === condition.counter) && (fields.newValue ?? 0) > (fields.oldValue ?? 0)
       && (condition.putBy !== "you" || fields.by === controller);
   if (condition.on === "GameEventCardCounters")
     return fields.card?.cardId === sourceId && fields.type === condition.counter && (fields.oldValue ?? 0) < condition.reaches && (fields.newValue ?? 0) >= condition.reaches;
@@ -769,7 +775,9 @@ export function collectTriggers(state, events) {
              for each creature dealt it. "Whenever a player discards one or more cards" (Tinybones, Pocket Nuisance): once for
              each player who discarded (CR 603.2c). */
           const once = `${id}:${ability.id}${ability.trigger.on === "GameEventPlayerDamaged" || ability.trigger.loser !== undefined || ability.trigger.discarded ? `:${about.player}`
-            : ability.trigger.on === "GameEventCardDamaged" && ["creature", "enchanted"].includes(ability.trigger.to) ? `:${about.card}` : ""}`;
+            : ability.trigger.on === "GameEventCardDamaged" && ["creature", "enchanted"].includes(ability.trigger.to) ? `:${about.card}`
+            /* Counters of any kind put on a permanent (Generous Patron): once for each permanent they were put on. */
+            : ability.trigger.on === "GameEventCardCounters" && ability.trigger.counter === "any" ? `:${about.card}` : ""}`;
           if (ability.trigger.batch && joined(once, about)) continue;
           /* "This ability triggers only once each turn": once it has, this turn, it does not again. */
           if (ability.limit && usesThisTurn(state, id, `trigger:${ability.id}`) >= ability.limit) continue;
@@ -806,7 +814,8 @@ export function collectTriggers(state, events) {
                for its modes to be chosen by should the permanent be gone by then (CR 113.7a; modesTaken). */
             ...(ability.modal?.unchosen ? {modesChosen: [...(object.modesChosen?.[ability.id] ?? [])]} : {}),
             /* What it is about ("that player", "that card", "that much"), when the event says. */
-            ...(about.card !== undefined || about.player !== undefined || about.amount !== undefined ? {about} : {}),
+            /* Or what left the battlefield for a hidden zone, as it last existed there (subjects; Resourceful Defense). */
+            ...(about.card !== undefined || about.player !== undefined || about.amount !== undefined || about.lastKnown !== undefined ? {about} : {}),
             /* What it does, from the card script (phase 2.4), carried to the stack with it. */
             ...scriptOf(ability),
           });

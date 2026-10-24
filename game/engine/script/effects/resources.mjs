@@ -640,6 +640,12 @@ export function moveCounters(state, params, context) {
   /* "Onto other creatures" (Forgotten Ancient): where each goes is asked (effects/asking.mjs, countersOnto), never decided here. */
   if (params.onto !== undefined) throw new Error("moveCounters onto permanents its controller chooses asks where: run it through resolution.mjs");
   const [from] = params.from ?? [], [to] = params.targets ?? [];
+  /* "Move any number of counters" (Resourceful Defense): the ones its controller chose (`moving`, how many of each kind;
+     effects/asking.mjs, countersToRemove), each kind moved as one kind is below. */
+  if (params.counter === "any") {
+    if (!params.moving) throw new Error("moveCounters of any kinds asks its controller which counters: run it through resolution.mjs");
+    return Object.entries(params.moving).flatMap(([kind, n]) => moveCounters(state, {...params, counter: kind, count: n, moving: undefined}, context));
+  }
   /* "Move all counters from The Ozolith onto target creature" (wave 4b; CR 122.5): every kind there, all of each, each moved as
      one kind is below. */
   if (params.counter === "all") {

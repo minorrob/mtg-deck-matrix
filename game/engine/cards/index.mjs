@@ -307,7 +307,11 @@ const TRIGGERS = {
        they are put on it -- about that permanent and how many (rules/trigger.mjs; "that many", script/amount.mjs
        `countersPut`). Once for each time, never for each counter. */
     : t.who === "any" && t.each === undefined ? {on: "GameEventCardCounters", counterAdded: true, counter: t.counter, who: "any", ...(t.filter ? {filter: t.filter} : {}),
-      ...(t.putBy ? {putBy: t.putBy} : {})} : null),
+      ...(t.putBy ? {putBy: t.putBy} : {}),
+      /* "Whenever you put one or more counters on a creature you don't control" (Generous Patron), "... on a creature" (Rikku,
+         Resourceful Guardian; CR 122.6): `counter: "any"`, of any kind -- once for each permanent for everything one action
+         put on it, however many kinds (`batch`, rules/trigger.mjs). */
+      ...(t.counter === "any" ? {batch: true} : {})} : null),
   /* "Whenever you scry or surveil" (Proft, Consulting Detective; CR 701.22a, 701.25a): once each is done, by `scrier`. */
   scried: (t) => ({on: "GameEventScried", scrier: t.scrier ?? "you"}),
   /* "Whenever you proliferate" (Ezuri, Stalker of Spheres; CR 701.34a): once each proliferate is done, by `proliferator`
