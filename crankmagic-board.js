@@ -790,11 +790,12 @@ globalThis.CrankBoard = Object.seal({
     const i = p.playerId, you = i === view.seat, z = p.zones, field = controlledCards(i);
     const ghosts = z.Battlefield.cards.filter(foreignControl);
     const lands = field.filter((c) => c.types.includes("Land"));
-    const creatures = field.filter((c) => !c.types.includes("Land") && c.types.includes("Creature"));
-    const other = field.filter((c) => !c.types.includes("Land") && !c.types.includes("Creature"));
+    const leadsBattlefield = c => c.types.includes("Creature") || c.types.includes("Planeswalker");
+    const creatures = field.filter((c) => !c.types.includes("Land") && leadsBattlefield(c));
+    const other = field.filter((c) => !c.types.includes("Land") && !leadsBattlefield(c));
     const group = (label, cards) => {
-      const references = ghosts.filter(c => !c.types.includes("Land") && c.types.includes("Creature") === (label === "Creatures"));
-      return cards.length || references.length ? `<div class="cm-board-group" data-card-group="${label === "Creatures" ? "creatures" : "others"}"><h3>${e(label)} · ${cards.length}${references.length ? ` · ${references.length} with other players` : ""}</h3>${cardSection(cards,`${i}:${label === "Creatures" ? "creatures" : "others"}`,references)}</div>` : "";
+      const references = ghosts.filter(c => !c.types.includes("Land") && leadsBattlefield(c) === (label === "Creatures"));
+      return cards.length || references.length ? `<div class="cm-board-group" data-card-group="${label === "Creatures" ? "creatures" : "others"}"><h3>${e(label === "Creatures" && cards.some(c=>c.types.includes("Planeswalker")) ? "Creatures & planeswalkers" : label)} · ${cards.length}${references.length ? ` · ${references.length} with other players` : ""}</h3>${cardSection(cards,`${i}:${label === "Creatures" ? "creatures" : "others"}`,references)}</div>` : "";
     };
     const mana = p.mana.reduce((n, m) => n + m.amount, 0);
     const bare = size === "full" || size === "opp" || size === "side" || size === "phone";
@@ -2158,6 +2159,7 @@ globalThis.CrankBoard = Object.seal({
       }
       fitStage(host);
       overlap(host);
+      fitCardRows(host);
       fitZoneNavigation(host);
       dock();
       if (tbl) sea(tbl); else stopSea();
@@ -2206,7 +2208,7 @@ globalThis.CrankBoard = Object.seal({
       row.classList.remove("is-scrolling");
       const kids = [...row.children];
       /* A side seat's rows wrap (Full screen's far sides): nothing to overlap. */
-      if (kids.length < 2 || row.closest('.cm-mat[data-fit="side"]')) continue;
+      if (row.hasAttribute("data-card-section") || kids.length < 2 || row.closest('.cm-mat[data-fit="side"]')) continue;
       const footprint = (k) => {const cs = getComputedStyle(k); return k.offsetWidth + (parseFloat(cs.marginLeft) || 0) + (parseFloat(cs.marginRight) || 0);};
       const room = row.clientWidth, need = kids.reduce((n, k) => n + footprint(k), 0) + 6 * (kids.length - 1);
       if (need <= room) continue;
@@ -2589,15 +2591,38 @@ globalThis.CrankBoard = Object.seal({
     return savePaneModules(ids,side);
   };
   actions["board-module-remove"] = el => savePaneModules(paneModules(el.dataset.side).filter(id => id !== el.dataset.module),el.dataset.side);
+  /* Whole battlefield cards form rows instead of disappearing under their neighbors. A partial next
+     row is a quiet cue to scroll; it is only reserved when a whole row fits above it. */
+  function fitCardRows(host) {
+    for(const field of host.querySelectorAll('.cm-board-field')) field.style.removeProperty('height');
+    for(const section of host.querySelectorAll('[data-card-section]')) {
+      section.style.removeProperty('height');
+      const cards=[...section.children];if(!cards.length)continue;
+      const width=Math.max(...cards.map(c=>c.offsetWidth)), height=Math.max(...cards.map(c=>c.offsetHeight));
+      // Tapped cards reserve their rotated footprint; their full image stays in the cell.
+      const tapped=cards.some(c=>c.classList.contains('is-tapped'));
+      const cellWidth=Math.ceil(tapped ? width*.866+height*.5 : width);
+      const cellHeight=Math.ceil(tapped ? height*.866+width*.5 : height);
+      section.style.setProperty('--zone-cell-width',`${cellWidth}px`);
+      section.style.setProperty('--zone-cell-height',`${cellHeight}px`);
+      const viewport=section.closest('.cm-board-field') || section;
+      const inset=viewport===section ? 4 : section.offsetTop+4;
+      const available=viewport.clientHeight, gap=8, peek=Math.max(10,Math.round(cellHeight*.16));
+      const rows=Math.floor((available-inset-peek)/(cellHeight+gap));
+      const columns=Math.max(1,Math.floor((section.clientWidth-8+gap)/(cellWidth+gap)));
+      if(rows>=1 && cards.length>rows*columns && (!section.closest('.cm-board-field') || section.parentElement===viewport.firstElementChild)) viewport.style.height=`${inset+rows*(cellHeight+gap)+peek}px`;
+    }
+  }
   function fitZoneNavigation(host) {
     for(const el of host.querySelectorAll('[data-zone-scroll]')) {delete el.dataset.zoneScroll;el.removeAttribute('tabindex');el.removeAttribute('role');el.removeAttribute('aria-label');}
     for(const section of host.querySelectorAll('[data-card-section]')) {
       const parent=section.parentElement;
-      const candidates=section.closest('.cm-stage-region')?[parent,section]:[section,parent];
+      const field=section.closest('.cm-board-field');
+      const candidates=field?[field]:[section,parent];
       const el=candidates.find(e=>e.scrollWidth>e.clientWidth+1&&/auto|scroll/.test(getComputedStyle(e).overflowX)) || candidates.find(e=>e.scrollHeight>e.clientHeight+1&&/auto|scroll/.test(getComputedStyle(e).overflowY));
       if(!el)continue;
-      el.dataset.zoneScroll=section.dataset.cardSection;el.tabIndex=0;el.setAttribute('role','region');
-      const [seat,area]=section.dataset.cardSection.split(':');
+      el.dataset.zoneScroll=field?`${section.dataset.cardSection.split(':')[0]}:battlefield`:section.dataset.cardSection;el.tabIndex=0;el.setAttribute('role','region');
+      const [seat,area]=el.dataset.zoneScroll.split(':');
       el.setAttribute('aria-label',`${nameOf(Number(seat))}: ${area==='others'?'other permanents':area}; scroll to explore`);
     }
   }
@@ -2605,7 +2630,7 @@ globalThis.CrankBoard = Object.seal({
   document.addEventListener('wheel', event => {
     const row=event.target.closest?.('[data-zone-scroll]');
     if(!row||event.ctrlKey||event.metaKey)return;
-    const horizontal=row.scrollWidth>row.clientWidth+1;
+    const horizontal=row.scrollWidth>row.clientWidth+1 && (event.shiftKey || Math.abs(event.deltaX)>Math.abs(event.deltaY) || row.scrollHeight<=row.clientHeight+1);
     const unit=event.deltaMode===1?16:event.deltaMode===2?(horizontal?row.clientWidth:row.clientHeight):1;
     event.preventDefault();
     if(horizontal) {
@@ -2617,7 +2642,7 @@ globalThis.CrankBoard = Object.seal({
   document.addEventListener('keydown',event=>{
     const row=event.target.matches?.('[data-zone-scroll]')?event.target:null;
     if(!row||event.altKey||event.ctrlKey||event.metaKey||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','PageUp','PageDown','Home','End'].includes(event.key))return;
-    event.preventDefault();const horizontal=row.scrollWidth>row.clientWidth+1,prop=horizontal?'scrollLeft':'scrollTop',page=horizontal?row.clientWidth:row.clientHeight;
+    event.preventDefault();const horizontal=row.scrollWidth>row.clientWidth+1 && (['ArrowLeft','ArrowRight'].includes(event.key) || row.scrollHeight<=row.clientHeight+1),prop=horizontal?'scrollLeft':'scrollTop',page=horizontal?row.clientWidth:row.clientHeight;
     if(event.key==='Home')row[prop]=0;
     else if(event.key==='End')row[prop]=horizontal?row.scrollWidth:row.scrollHeight;
     else row[prop]+=(['ArrowLeft','ArrowUp','PageUp'].includes(event.key)?-1:1)*(event.key.startsWith('Page')?page*.85:48);

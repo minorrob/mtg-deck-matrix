@@ -86,9 +86,9 @@ try {
     sent.length = 0;
     if (mode === 'full') {
       await page.locator('.cm-stage-hand .cm-bcard').last().click({button:'right'});
-      const row = page.locator('.cm-stage-front .cm-board-lands');
+      const row = page.locator('.cm-stage-front .cm-board-lands [data-zone-scroll]');
       await row.hover();await page.mouse.wheel(0,900);await page.waitForTimeout(150);
-      ok(await row.evaluate(el=>el.scrollLeft>0), 'the narrowed land row scrolls instead of spilling under graveyard');
+      ok(await row.evaluate(el=>el.scrollTop>0||el.scrollLeft>0), 'the narrowed land row scrolls instead of spilling under graveyard');
     }
     await page.locator(`#cm-board .cm-bcard[data-card='${PLAYED}'][data-action=board-card]`).dblclick();
     await page.waitForTimeout(600);
