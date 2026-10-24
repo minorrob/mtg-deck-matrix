@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kalonian Behemoth",
+    "oracleId": "68d0b5c0-df6a-4eea-8dea-20358270f916",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Beast"
+    ],
+    "manaCost": "{5}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 9,
+    "toughness": 9
+  },
+  "oracleText": "Shroud (This creature can't be the target of spells or abilities.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "shroud",
+      "text": "Shroud (This creature can't be the target of spells or abilities.)"
+    }
+  ]
+}

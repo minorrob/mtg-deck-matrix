@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Nettletooth Djinn",
+    "oracleId": "f1d300b6-f9cf-40a9-8520-d78cd7d813cf",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Djinn"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "At the beginning of your upkeep, this creature deals 1 damage to you.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 1,
+          "who": "you"
+        }
+      ],
+      "text": "At the beginning of your upkeep, this creature deals 1 damage to you."
+    }
+  ]
+}

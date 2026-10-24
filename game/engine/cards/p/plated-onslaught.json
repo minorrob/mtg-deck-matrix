@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Plated Onslaught",
+    "oracleId": "1589d90d-411a-4e77-9771-51518b2b224b",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Affinity for artifacts (This spell costs {1} less to cast for each artifact you control.)\nCreatures you control get +2/+1 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "affinity",
+      "of": {
+        "types": [
+          "Artifact"
+        ]
+      },
+      "text": "Affinity for artifacts (This spell costs {1} less to cast for each artifact you control.)"
+    },
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "power": 2,
+          "toughness": 1
+        }
+      ],
+      "text": "Creatures you control get +2/+1 until end of turn."
+    }
+  ]
+}

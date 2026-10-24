@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Skulking Fugitive",
+    "oracleId": "4178ae56-2449-4617-aff8-f59d8fb96c66",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Horror",
+      "Mercenary"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "When this creature becomes the target of a spell or ability, sacrifice it.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "becomes target",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "sacrifice": true
+        }
+      ],
+      "text": "When this creature becomes the target of a spell or ability, sacrifice it."
+    }
+  ]
+}

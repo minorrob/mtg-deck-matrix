@@ -1,0 +1,51 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Viridian Shaman",
+    "oracleId": "5aa6d553-a144-4c5b-83fa-65e931903899",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Shaman"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "When this creature enters, destroy target artifact.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Artifact"
+          ]
+        }
+      ],
+      "text": "When this creature enters, destroy target artifact."
+    }
+  ]
+}

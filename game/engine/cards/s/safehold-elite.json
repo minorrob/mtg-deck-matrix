@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Safehold Elite",
+    "oracleId": "68ca91ba-31fb-47e0-9b32-e4f3504cbbca",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Scout"
+    ],
+    "manaCost": "{1}{G/W}",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Persist (When this creature dies, if it had no -1/-1 counters on it, return it to the battlefield under its owner's control with a -1/-1 counter on it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "dies",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "that card",
+          "to": "battlefield",
+          "withCounter": "-1/-1"
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "countersOn": "self",
+            "counter": "-1/-1"
+          },
+          "atMost": 0
+        }
+      },
+      "text": "Persist (When this creature dies, if it had no -1/-1 counters on it, return it to the battlefield under its owner's control with a -1/-1 counter on it.)"
+    }
+  ]
+}

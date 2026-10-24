@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kiln Walker",
+    "oracleId": "ca868ac4-6144-402e-ae23-629628d02883",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Phyrexian",
+      "Construct"
+    ],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 0,
+    "toughness": 3
+  },
+  "oracleText": "Whenever this creature attacks, it gets +3/+0 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 3,
+          "toughness": 0,
+          "until": "end-of-turn"
+        }
+      ],
+      "text": "Whenever this creature attacks, it gets +3/+0 until end of turn."
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Goldmeadow Harrier",
+    "oracleId": "546f037b-aea8-4c7a-9b66-373f1be0bac6",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Kithkin",
+      "Soldier"
+    ],
+    "manaCost": "{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "{W}, {T}: Tap target creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{W}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "tap",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "text": "{W}, {T}: Tap target creature."
+    }
+  ]
+}

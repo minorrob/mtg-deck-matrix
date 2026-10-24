@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Phantasmal Abomination",
+    "oracleId": "f4925e05-1332-4466-b2ea-9f6f4ccf7db4",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Illusion"
+    ],
+    "manaCost": "{1}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Defender\nWhen this creature becomes the target of a spell or ability, sacrifice it.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "defender",
+      "text": "Defender"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "becomes target",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "sacrifice": true
+        }
+      ],
+      "text": "When this creature becomes the target of a spell or ability, sacrifice it."
+    }
+  ]
+}

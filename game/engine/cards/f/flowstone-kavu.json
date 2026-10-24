@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Flowstone Kavu",
+    "oracleId": "49475268-be95-4670-a5ca-2f2b6c5cf005",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Kavu"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Menace (This creature can't be blocked except by two or more creatures.)\n{R}: This creature gets +1/-1 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "menace",
+      "text": "Menace (This creature can't be blocked except by two or more creatures.)"
+    },
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{R}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 1,
+          "toughness": -1
+        }
+      ],
+      "text": "{R}: This creature gets +1/-1 until end of turn."
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Compelling Argument",
+    "oracleId": "686e0b86-121c-45be-842d-c83d3b6547f6",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target player mills five cards.\nCycling {U} ({U}, Discard this card: Draw a card.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "player"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "mill",
+          "who": {
+            "target": 0
+          },
+          "count": 5
+        }
+      ],
+      "text": "Target player mills five cards."
+    },
+    {
+      "kind": "activated",
+      "zone": "hand",
+      "cycling": true,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{U}"
+        },
+        {
+          "atom": "discard",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ],
+      "text": "Cycling {U} ({U}, Discard this card: Draw a card.)"
+    }
+  ]
+}

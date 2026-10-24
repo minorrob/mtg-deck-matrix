@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Skulking Knight",
+    "oracleId": "11e4c731-4212-4aad-891f-fe066ed0436f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Zombie",
+      "Knight"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Flanking (Whenever a creature without flanking blocks this creature, the blocking creature gets -1/-1 until end of turn.)\nWhen this creature becomes the target of a spell or ability, sacrifice it.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flanking",
+      "text": "Flanking (Whenever a creature without flanking blocks this creature, the blocking creature gets -1/-1 until end of turn.)"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "becomes target",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "sacrifice": true
+        }
+      ],
+      "text": "When this creature becomes the target of a spell or ability, sacrifice it."
+    }
+  ]
+}

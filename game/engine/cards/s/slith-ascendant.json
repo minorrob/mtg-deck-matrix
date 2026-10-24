@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Slith Ascendant",
+    "oracleId": "72f5095f-b4ba-45ba-82e5-9a22bddd544b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Slith"
+    ],
+    "manaCost": "{1}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Flying\nWhenever this creature deals combat damage to a player, put a +1/+1 counter on it.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "damage dealt",
+        "who": "self",
+        "to": "player",
+        "combat": true
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ],
+      "text": "Whenever this creature deals combat damage to a player, put a +1/+1 counter on it."
+    }
+  ]
+}

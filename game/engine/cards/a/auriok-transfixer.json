@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Auriok Transfixer",
+    "oracleId": "0ad5f4c5-f6d2-4e96-af65-5488d9711113",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Scout"
+    ],
+    "manaCost": "{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "{W}, {T}: Tap target artifact.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{W}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Artifact"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "tap",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "text": "{W}, {T}: Tap target artifact."
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Phantasmal Dreadmaw",
+    "oracleId": "cbde4b9d-1549-4892-b8ca-38256a6ac1ba",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dinosaur",
+      "Illusion"
+    ],
+    "manaCost": "{2}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 6,
+    "toughness": 6
+  },
+  "oracleText": "Trample\nWhen this creature becomes the target of a spell or ability, sacrifice it.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "Trample"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "becomes target",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "sacrifice": true
+        }
+      ],
+      "text": "When this creature becomes the target of a spell or ability, sacrifice it."
+    }
+  ]
+}

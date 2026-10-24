@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Uktabi Orangutan",
+    "oracleId": "6cc07a7e-e70c-45c5-83c5-a2704e57dbc5",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Ape"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "When this creature enters, destroy target artifact.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Artifact"
+          ]
+        }
+      ],
+      "text": "When this creature enters, destroy target artifact."
+    }
+  ]
+}

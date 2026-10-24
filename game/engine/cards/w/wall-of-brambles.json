@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wall of Brambles",
+    "oracleId": "f8d82a00-c10e-4b9e-9642-d05706900a97",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Plant",
+      "Wall"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Defender (This creature can't attack.)\n{G}: Regenerate this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "defender",
+      "text": "Defender (This creature can't attack.)"
+    },
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{G}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "regenerate",
+          "targets": "self"
+        }
+      ],
+      "text": "{G}: Regenerate this creature."
+    }
+  ]
+}

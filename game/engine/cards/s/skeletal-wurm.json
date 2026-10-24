@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Skeletal Wurm",
+    "oracleId": "d988ed15-2927-421b-9a6e-01f0261272c2",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Skeleton",
+      "Wurm"
+    ],
+    "manaCost": "{7}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 7,
+    "toughness": 6
+  },
+  "oracleText": "{B}: Regenerate this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{B}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "regenerate",
+          "targets": "self"
+        }
+      ],
+      "text": "{B}: Regenerate this creature."
+    }
+  ]
+}

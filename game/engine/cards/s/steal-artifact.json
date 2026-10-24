@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Steal Artifact",
+    "oracleId": "cd8ae9f2-edac-473a-8846-c08219e617c3",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{2}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant artifact\nYou control enchanted artifact.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Artifact"
+        ]
+      },
+      "text": "Enchant artifact"
+    },
+    {
+      "kind": "static",
+      "rule": "control-enchanted",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "text": "You control enchanted artifact."
+    }
+  ]
+}

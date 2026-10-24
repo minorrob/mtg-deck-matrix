@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Boulderborn Dragon",
+    "oracleId": "1654cab1-0697-4547-b1fe-2d0a61385199",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Dragon"
+    ],
+    "manaCost": "{5}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Flying, vigilance\nWhenever this creature attacks, surveil 1. (Look at the top card of your library. You may put it into your graveyard.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "vigilance",
+      "text": "vigilance"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "surveil",
+          "count": 1
+        }
+      ],
+      "text": "Whenever this creature attacks, surveil 1. (Look at the top card of your library. You may put it into your graveyard.)"
+    }
+  ]
+}

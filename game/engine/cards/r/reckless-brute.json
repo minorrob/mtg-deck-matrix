@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Reckless Brute",
+    "oracleId": "5ba6a472-b2f3-4d8e-838c-269aaa5eb2e3",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Ogre",
+      "Warrior"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 3,
+    "toughness": 1
+  },
+  "oracleText": "Haste (This creature can attack and {T} as soon as it comes under your control.)\nThis creature attacks each combat if able.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "haste",
+      "text": "Haste (This creature can attack and {T} as soon as it comes under your control.)"
+    },
+    {
+      "kind": "static",
+      "rule": "attacks-each-combat",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "text": "This creature attacks each combat if able."
+    }
+  ]
+}

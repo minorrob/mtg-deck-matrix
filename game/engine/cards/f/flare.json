@@ -1,0 +1,78 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Flare",
+    "oracleId": "ff8fae94-3a34-4bc6-aaa2-7ab7d2e2d0dd",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Flare deals 1 damage to any target.\nDraw a card at the beginning of the next turn's upkeep.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Flare deals 1 damage to any target.\nDraw a card at the beginning of the next turn's upkeep.",
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Battle"
+              ]
+            },
+            {
+              "what": "player"
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 1,
+          "targets": {
+            "target": 0
+          },
+          "who": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "delayedTrigger",
+          "at": "upkeep",
+          "text": "Draw a card at the beginning of the next turn's upkeep.",
+          "effects": [
+            {
+              "effect": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

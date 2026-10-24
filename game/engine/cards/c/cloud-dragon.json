@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Cloud Dragon",
+    "oracleId": "3c46f309-69ae-43b1-adf6-bdb26599c1f4",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Illusion",
+      "Dragon"
+    ],
+    "manaCost": "{5}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 5,
+    "toughness": 4
+  },
+  "oracleText": "Flying\nThis creature can block only creatures with flying.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "static",
+      "rule": "can-block-only",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "attackers": {
+        "keywords": [
+          "Flying"
+        ]
+      },
+      "text": "This creature can block only creatures with flying."
+    }
+  ]
+}

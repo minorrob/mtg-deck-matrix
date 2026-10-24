@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Red Room Recruit",
+    "oracleId": "4e60c38c-cbf5-4ff7-8fff-634f7e3086cc",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Spy",
+      "Villain"
+    ],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "When this creature enters, it connives. (Draw a card, then discard a card. If you discarded a nonland card, put a +1/+1 counter on this creature.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "connive",
+          "targets": "self"
+        }
+      ],
+      "text": "When this creature enters, it connives. (Draw a card, then discard a card. If you discarded a nonland card, put a +1/+1 counter on this creature.)"
+    }
+  ]
+}

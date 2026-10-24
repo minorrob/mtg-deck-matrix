@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Charging Griffin",
+    "oracleId": "1c99a5cc-d974-4a4b-a03b-a78bfe738ed7",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Griffin"
+    ],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Flying (This creature can't be blocked except by creatures with flying or reach.)\nWhenever this creature attacks, it gets +1/+1 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying (This creature can't be blocked except by creatures with flying or reach.)"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 1,
+          "toughness": 1,
+          "until": "end-of-turn"
+        }
+      ],
+      "text": "Whenever this creature attacks, it gets +1/+1 until end of turn."
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Guardian Gladewalker",
+    "oracleId": "03a3f54e-9289-4d99-beab-bfa0988a050e",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Shapeshifter"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Changeling (This card is every creature type.)\nWhen this creature enters, put a +1/+1 counter on target creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "changeling",
+      "text": "Changeling (This card is every creature type.)"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "text": "When this creature enters, put a +1/+1 counter on target creature."
+    }
+  ]
+}

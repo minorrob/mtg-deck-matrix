@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Soltari Trooper",
+    "oracleId": "501109bb-3406-41d8-9433-a100e494f938",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Soltari",
+      "Soldier"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Shadow (This creature can block or be blocked by only creatures with shadow.)\nWhenever this creature attacks, it gets +1/+1 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "shadow",
+      "text": "Shadow (This creature can block or be blocked by only creatures with shadow.)"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 1,
+          "toughness": 1,
+          "until": "end-of-turn"
+        }
+      ],
+      "text": "Whenever this creature attacks, it gets +1/+1 until end of turn."
+    }
+  ]
+}

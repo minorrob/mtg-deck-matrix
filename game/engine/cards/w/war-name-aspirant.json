@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "War-Name Aspirant",
+    "oracleId": "448c84f9-712b-4970-8719-2ab9c2a59d20",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Warrior"
+    ],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Raid — This creature enters with a +1/+1 counter on it if you attacked this turn.\nThis creature can't be blocked by creatures with power 1 or less.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersWithCounters": {
+          "counter": "+1/+1",
+          "count": {
+            "creaturesAttackedWithThisTurn": "you",
+            "atMost": 1
+          }
+        }
+      },
+      "text": "Raid — This creature enters with a +1/+1 counter on it if you attacked this turn."
+    },
+    {
+      "kind": "static",
+      "rule": "cant-be-blocked-by",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "by": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "power": {
+          "max": 1
+        }
+      },
+      "text": "This creature can't be blocked by creatures with power 1 or less."
+    }
+  ]
+}

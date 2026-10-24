@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Welkin Tern",
+    "oracleId": "010c660a-a67b-48f0-a63a-15470eb89f69",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Bird"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Flying (This creature can't be blocked except by creatures with flying or reach.)\nThis creature can block only creatures with flying.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying (This creature can't be blocked except by creatures with flying or reach.)"
+    },
+    {
+      "kind": "static",
+      "rule": "can-block-only",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "attackers": {
+        "keywords": [
+          "Flying"
+        ]
+      },
+      "text": "This creature can block only creatures with flying."
+    }
+  ]
+}

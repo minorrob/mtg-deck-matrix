@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Vodalian Merchant",
+    "oracleId": "3d62c8f8-7a1c-4771-891d-05fdaa56bf47",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Merfolk"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "When this creature enters, draw a card, then discard a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        },
+        {
+          "effect": "discard",
+          "count": 1
+        }
+      ],
+      "text": "When this creature enters, draw a card, then discard a card."
+    }
+  ]
+}

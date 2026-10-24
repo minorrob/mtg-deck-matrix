@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Path of Anger's Flame",
+    "oracleId": "9e89db98-fc9f-4574-b5bc-ee421fa29428",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [
+      "Arcane"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Creatures you control get +2/+0 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "power": 2,
+          "toughness": 0
+        }
+      ],
+      "text": "Creatures you control get +2/+0 until end of turn."
+    }
+  ]
+}

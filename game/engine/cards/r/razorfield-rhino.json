@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Razorfield Rhino",
+    "oracleId": "834efbf7-7b93-42ac-ab20-0b7b8ca58a16",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Rhino"
+    ],
+    "manaCost": "{6}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Metalcraft — This creature gets +2/+2 as long as you control three or more artifacts.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "power": 2,
+        "toughness": 2
+      },
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "types": [
+            "Artifact"
+          ],
+          "controller": "you"
+        },
+        "atLeast": 3
+      },
+      "text": "Metalcraft — This creature gets +2/+2 as long as you control three or more artifacts."
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dune Mover",
+    "oracleId": "38d2176c-1a1e-4030-9c63-e28ba4a69b6d",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Phyrexian",
+      "Golem"
+    ],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Toxic 1 (Players dealt combat damage by this creature also get a poison counter.)\nWhen this creature enters, you may search your library for a basic land card, reveal it, then shuffle and put that card on top.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "toxic",
+      "amount": 1,
+      "text": "Toxic 1 (Players dealt combat damage by this creature also get a poison counter.)"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Land"
+            ],
+            "supertypes": [
+              "Basic"
+            ]
+          },
+          "to": "top",
+          "reveal": true,
+          "shuffle": true
+        }
+      ],
+      "optional": true,
+      "text": "When this creature enters, you may search your library for a basic land card, reveal it, then shuffle and put that card on top."
+    }
+  ]
+}

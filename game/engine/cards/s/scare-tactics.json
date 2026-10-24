@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Scare Tactics",
+    "oracleId": "d7548770-5c60-4c3f-b1d6-554ab5f931f9",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Creatures you control get +1/+0 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "power": 1,
+          "toughness": 0
+        }
+      ],
+      "text": "Creatures you control get +1/+0 until end of turn."
+    }
+  ]
+}

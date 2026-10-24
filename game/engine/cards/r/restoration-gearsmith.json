@@ -1,0 +1,68 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Restoration Gearsmith",
+    "oracleId": "447c7fe0-6ec7-4163-9d9c-f08f0a4c7109",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Artificer"
+    ],
+    "manaCost": "{2}{W}{B}",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "When this creature enters, return target artifact or creature card from your graveyard to your hand.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "hand"
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you",
+              "types": [
+                "Artifact"
+              ]
+            },
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you",
+              "types": [
+                "Creature"
+              ]
+            }
+          ]
+        }
+      ],
+      "text": "When this creature enters, return target artifact or creature card from your graveyard to your hand."
+    }
+  ]
+}
