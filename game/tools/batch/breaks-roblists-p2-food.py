@@ -68,12 +68,12 @@ BREAKS = [
     ('X paid more than one way', ACTIONS, ' action.extraMana ?? "", action.targets, action.x);\n  const {x} = reckoned, cost = anyTypeCost(reckoned.cost, permission);\n  return paymentOptions',
      ' action.extraMana ?? "", action.targets);\n  const {x} = reckoned, cost = anyTypeCost(reckoned.cost, permission);\n  return paymentOptions'),
     ('X tapped for, paid', ACTIONS, 'castCost(state, player, action.objectId, tax, false, null, action.extraMana ?? "", action.targets, action.x));', 'castCost(state, player, action.objectId, tax, false, null, action.extraMana ?? "", action.targets));'),
-    ('X paid', ACTIONS, '    const reckoned = castCost(state, player, action.objectId, tax, Boolean(free), lifeCost !== null ? "" : back ? back.mana : fled ? fled.mana : way ? way.mana : null, action.extraMana ?? "", action.targets, action.x);',
-     '    const reckoned = castCost(state, player, action.objectId, tax, Boolean(free), lifeCost !== null ? "" : back ? back.mana : fled ? fled.mana : way ? way.mana : null, action.extraMana ?? "", action.targets);'),
+    ('X paid', ACTIONS, '    const reckoned = castCost(state, player, action.objectId, tax, Boolean(free), lifeCost !== null ? "" : back ? back.mana : fled ? fled.mana : way ? way.mana : manaInstead, action.extraMana ?? "", action.targets, action.x);',
+     '    const reckoned = castCost(state, player, action.objectId, tax, Boolean(free), lifeCost !== null ? "" : back ? back.mana : fled ? fled.mana : way ? way.mana : manaInstead, action.extraMana ?? "", action.targets);'),
     # Lobelia: a linked card played free, one only.
     ('may play linked', ZONES, '  const named = params.linked === true ? linkedMoving(state, {}, context) : params.targets ?? [];', '  const named = params.targets ?? [];'),
     ('may play count kept', ZONES, '\n    ...(Number.isInteger(params.count) ? {count: params.count} : {}),\n', '\n'),
-    ('may play count read', ACTIONS, '      ...(Number.isInteger(e.count) ? {count: e.count} : {}),\n      ...(Number.isInteger(e.afterTurn)', '      ...(Number.isInteger(e.afterTurn)'),
+    ('may play count read', ACTIONS, '      ...(Number.isInteger(e.count) ? {count: e.count} : {}),\n      /* "Its owner may cast it', '      /* "Its owner may cast it'),
     ('may play linked schema', SCHEMA, '  if (name === "mayPlay" && effect.linked !== undefined && !(effect.linked === true', '  if (false && !(effect.linked === true'),
     ('may play linked count schema', SCHEMA, '  if (name === "mayPlay" && effect.linked === true && effect.count !== undefined', '  if (false && effect.count !== undefined'),
     # Feasting Hobbit: devour (CR 702.82a, 702.82c).

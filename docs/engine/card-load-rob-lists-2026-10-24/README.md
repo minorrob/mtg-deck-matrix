@@ -58,3 +58,54 @@ this branch integrates the three and goes to `main` as one PR.
 | P3 counters | `lane-P3-counters.json` | 33 | `claude/engine-roblists-p3-counters` |
 
 `BRIEF.md` is every lane's brief. Where each card stands: `node tools/library-engine-index.mjs --check-lane <lane file>`.
+
+## The result: all 100 written, every list playable
+
+| Lane | PR | Final | Scenarios | Stopped |
+| --- | --- | ---: | ---: | --- |
+| P1 blink | #861 | 29 of 29 | 91 | none |
+| P2 Food | #860 | 38 of 38 | 141 | none |
+| P3 counters | #859 | 33 of 33 | 89 | none |
+
+**6,155 definitions became 6,255.** All 287 cards of the four lists are final: 284 by name, the other 3 by their flavor
+names. Each lane's PR body lists its engine changes; in short:
+
+- **P1:** airbend as an owner's {2} alternative cost (a card with no mana cost too); waterbend and transforming Aang;
+  myriad; harness and ∞; an additional end step; copies until the next end step; "leave without dying"; spells cast from
+  anywhere but a hand, and opponents barred from that; Elesh Norn's suppression; a spell exiling itself; opponents' extra
+  turns skipped; Trouble in Pairs' second draw, second spell and two attackers.
+- **P2:** devour; sacrifice X as a cost; X reduced by a cost reduction left over (affinity); Sam's Food discount; a
+  life-gain adder; descend; a named creature's combat damage this game; the Ring-bearer and tempt count; playing a linked
+  exiled card free; "commander creatures you own"; skulk. The sentence library no longer reads a permanent's sentence as a
+  spell (CR 113.3a).
+- **P3:** shield counters (CR 122.1c; they had not been built); Alliance's unchosen modes; "choose one at random"; moving
+  any number of counters; monstrosity X counted at resolution; an attack tax until your next turn; counter triggers once
+  per creature per action; a copy entering with X more counters.
+- **The integration:** fidelity no longer lets an ability inside a longer sentence claim the rest of it (Gandalf the
+  White's Flash had claimed "... as though they had flash"; an all-reminder line, Dryad Arbor's, still is claimed by the
+  ability inside it, CR 207.2a). `engine-compile`'s held-out checks no longer depend on where the sample lands: its
+  miscount check samples 40 cards and claims a catch among those it changed. `card-waves` compares paths with forward
+  slashes, so it passes on Windows.
+
+**Ignores** (a card that plays differently from a table in one case, named, not fixed):
+- **Entity Tracker, Fear of Sleep Paralysis:** "whenever you fully unlock a Room" is not watched. The engine has no Rooms.
+- **Bilbo, Birthday Celebrant beside a life doubler:** +1 then doubling is applied without asking; the order is the
+  affected player's (CR 616.1).
+- **Feasting Hobbit:** devour's counters go on just after it enters (as riot's do), so an "enters with power N or more"
+  trigger would miss them.
+- **Lobelia, Defender of Bag End:** its mode is chosen as it resolves, not as it is activated (CR 700.2a), the engine's
+  existing rule for modes without targets.
+
+These go on the gameplay-gap list (`docs/engine/gameplay-gaps-2026-10-21.md`, PR #834) when it reaches `main`.
+
+**Follow-up:** the new templates make 58 compiler candidates (from 23), playable only at playtest tables until a wave
+reviews them.
+
+**Proof** (Personal-HP, the integrated head):
+- `check-cards`: 6,255 definitions, 10,482 scenarios, 0 failed. Definitions, coverage, catalog and the data inventory
+  `--check` current.
+- 414 suites green: every `tests/engine-*.mjs`, the three lanes' suites, `card-waves`, `card-compiler`,
+  `sentence-library`, `table-candidates`, `table-basics`, `table-scenarios`, the `room-*` suites, `data-integrity`,
+  `feature-wiring`.
+- Breaks: each lane's file `missed: []` (P1 53, P2 58, P3 on its own branch); `breaks-roblists-integration.py` 2 of 2; the
+  two P2 breaks re-anchored by the merge caught again; `anchors.py` 3,184 breaks in 151 files, no problems.

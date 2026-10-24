@@ -594,7 +594,7 @@ export function mayPlay(state, params, context) {
      (`owner: true`), one for each card -- and `manaInstead`, the mana it is cast for rather than its mana cost, an alternative
      cost (CR 118.9; rules/actions.mjs, castOffers). */
   if (params.owner === true && ids.length) {
-    for (const id of ids) mayPlay(state, {...params, owner: false, linked: false, targets: [id], player: state.objects[id].owner}, context);
+    for (const id of ids) mayPlay(state, {...params, owner: false, targets: [id], player: state.objects[id].owner}, context);
     return [];
   }
   const player = Number.isInteger(params.player) ? params.player : context.controller;
