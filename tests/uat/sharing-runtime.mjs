@@ -55,3 +55,36 @@ try{
   console.log('PASS native Workers '+scenario);
  }
 }finally{await mf.dispose();}
+
+// Native bindings must reuse only immutable projections across requests, never permission results.
+const projectionEntry=`import {sharing} from '../../cloud/sharing.mjs';
+export default {async fetch(request,env){try{return Response.json(await sharing(env.DB,{}).read('native-share',{id:2,email:'reader@example.com'}));}catch(e){return Response.json({error:e.message},{status:e.status||500});}}};`;
+const projectionFiles=['cloud/sharing.mjs','cloud/library.mjs','cloud/advise-cards.mjs','cloud/mail.mjs','cloud/access-invites.mjs','collection-model.js','collection-exchange.js'];
+const projectionOptions={compatibilityDate:process.env.WORKER_RUNTIME_DATE||'2026-09-30',d1Databases:['DB'],modules:[
+ {type:'ESModule',path:fileURLToPath(new URL('tests/uat/sharing-projection-worker.mjs',root)),contents:projectionEntry},
+ ...projectionFiles.map(p=>({type:'ESModule',path:fileURLToPath(new URL(p,root)),contents:readFileSync(new URL(p,root),'utf8')}))
+]};
+const native=new Miniflare(convertV4MiniflareOptions?convertV4MiniflareOptions(projectionOptions):projectionOptions);
+try{
+ const db=await native.getD1Database('DB');
+ for(const file of ['0001_accounts','0002_ai','0003_sharing']){
+  const sql=readFileSync(new URL('cloud/migrations/'+file+'.sql',root),'utf8').replace(/--[^\r\n]*/g,'');
+  for(const statement of sql.split(';').map(x=>x.trim()).filter(Boolean))await db.prepare(statement).run();
+ }
+ await import('../../collection-model.js');await import('../../collection-exchange.js');
+ const {createLibrary}=await import('../../cloud/library.mjs'),{gzipSync}=await import('node:zlib');
+ const lib=createLibrary(db),owner=await lib.user('owner@example.com');await lib.user('reader@example.com');
+ const M=globalThis.CrankCollection,E=globalThis.CrankExchange;let state=M.empty();
+ state=M.apply(state,{type:'cards',id:crypto.randomUUID(),cards:[{id:'leader',name:'Native leader',commander:true,verified:true,typeLine:'Legendary Creature',colorIdentity:[],legalities:{commander:'legal'}}]}).state;
+ state=M.apply(state,{type:'createDeck',id:crypto.randomUUID(),deckId:'native-deck',name:'Native cached deck',commanders:['leader'],slots:[{cardId:'leader',quantity:1}]}).state;
+ const backup=await E.backup({state,history:[]});const head=await lib.save(owner.id,{parent:null,revision:state.revision,device:'Test',checksum:backup.checksum,body:gzipSync(JSON.stringify(backup)).toString('base64')});
+ await db.prepare("INSERT INTO shares(id,owner_id,kind,source_id,public_role,revision) VALUES ('native-share',1,'deck','native-deck','reviewer',1)").run();
+ let response=await native.dispatchFetch('https://example.com/read');assert.equal(response.status,200);assert.equal((await response.json()).content.name,'Native cached deck');
+ // Deliberate storage damage in this isolated fixture proves the next request uses a projection,
+ // without a second full-library read. App snapshots are immutable; no live database is changed.
+ await db.prepare("UPDATE snapshots SET body='not-a-backup' WHERE id=?").bind(head.id).run();
+ response=await native.dispatchFetch('https://example.com/read');assert.equal(response.status,200);assert.equal((await response.json()).content.name,'Native cached deck');
+ await db.prepare("UPDATE shares SET public_role=NULL WHERE id='native-share'").run();
+ response=await native.dispatchFetch('https://example.com/read');assert.equal(response.status,404,'native cache cannot bypass revocation');
+ console.log('PASS native Workers projection reuse and immediate permission revocation');
+}finally{await native.dispose();}
