@@ -503,3 +503,8 @@
 .cm-table-new{max-width:900px;margin:auto}.cm-table-new h2{font-family:CrankOxanium,Satoshi,sans-serif}
 @media(max-width:1000px){.cm-play-home{grid-template-columns:1fr 1fr}.cm-play-talk{grid-column:1/-1}.cm-play-records{grid-column:auto}}
 @media(max-width:700px){.cm-play-home{grid-template-columns:minmax(0,1fr)}.cm-play-home .v-panel{grid-column:1;padding:20px}.cm-new-table-square{padding:10px;gap:24px 10px}.cm-new-table-square .cm-table-new-seat{padding:10px}.cm-new-table-square input,.cm-new-table-square select{font-size:13px}}
+/* R3: the same discoverable zone navigation in every board view. */
+#matrix-v2 .cm-board [data-zone-scroll]{scrollbar-width:none;overscroll-behavior:contain;touch-action:pan-x pan-y;cursor:grab}
+#matrix-v2 .cm-board [data-zone-scroll]::-webkit-scrollbar{display:none}
+#matrix-v2 .cm-board [data-zone-scroll]:focus-visible{outline:2px solid var(--mat-ink);outline-offset:-2px}
+#matrix-v2 .cm-board .is-zone-dragging{cursor:grabbing;user-select:none}
