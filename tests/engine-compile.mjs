@@ -319,16 +319,24 @@ const trust = trustOf(library, calibrate({scripts, library, scenarios, definitio
     return {answer: {...a, abilitiesJson: JSON.stringify(list.slice(1))}, usage: {}};
   };
   const bad = await heldOutSample({scripts, scenarios, definition: index.definition, oracle: ORACLE, library, trust, call: wrong, examples: [], n: 3});
-  /* At fidelity, or -- where the checker reads the sentence left out as claimed all the same (Gandalf the White's "You may cast
-     legendary spells and artifact spells as though they had flash" beside its Flash, sampled once Rob's lists P2 grew the
-     directory) -- at play: either way it is not a card. */
-  ok(bad.passed < 3 && bad.results.filter((r) => r.outcome === "failed").every((r) => /^(fidelity|plays): /.test(r.why)), "a writer that leaves a sentence out fails, at fidelity or in play");
+  ok(bad.passed < 3 && bad.results.filter((r) => r.outcome === "failed").every((r) => /^fidelity: /.test(r.why)), "a writer that leaves a sentence out fails, at fidelity");
+  /* A sentence left out beside a keyword it mentions is still unclaimed: Gandalf the White's Flash does not claim "You may
+     cast legendary spells and artifact spells as though they had flash" (Rob's lists P2, 2026-10-24, sampled it). */
+  const gandalf = handOf("Gandalf the White");
+  ok(gandalf !== undefined && !checkFidelity({...gandalf, abilities: gandalf.abilities.filter((a) => !/as though they had flash/.test(a.text))}).ok,
+    "Gandalf the White without its flash-granting sentence is refused at fidelity, its Flash beside it");
+  /* A miscount only shows where a missing ability has a count of 1 to get wrong, so three evenly spaced cards may hold none
+     (Rob's lists P3, 2026-10-24: 33 more cards moved the pick onto +2 Mace, Gather the Townsfolk and Realmwalker). The
+     writer answers free, so the sample is wide enough to hold such cards, and the claim is made of the ones miscounted. */
+  const changed = new Set();
   const miscounted = async (body) => {
-    const a = right(body);
-    return {answer: {...a, abilitiesJson: a.abilitiesJson.replace(/"count":1\b/g, "\"count\":2")}, usage: {}};
+    const a = right(body), wrongly = a.abilitiesJson.replace(/"count":1\b/g, "\"count\":2");
+    if (wrongly !== a.abilitiesJson) changed.add(JSON.parse(body.messages[0].content).card.name);
+    return {answer: {...a, abilitiesJson: wrongly}, usage: {}};
   };
-  const played = await heldOutSample({scripts, scenarios, definition: index.definition, oracle: ORACLE, library, trust, call: miscounted, examples: [], n: 3});
-  ok(played.results.some((r) => r.outcome === "failed" && /^plays: /.test(r.why)), `one that writes every sentence with a wrong number passes every check but its scenarios: "${played.results.find((r) => r.outcome === "failed")?.why}"`);
+  const played = await heldOutSample({scripts, scenarios, definition: index.definition, oracle: ORACLE, library, trust, call: miscounted, examples: [], n: 40});
+  const caught = played.results.filter((r) => changed.has(r.name) && r.outcome === "failed" && /^plays: /.test(r.why));
+  ok(changed.size >= 3 && caught.length >= 1, `one that writes every sentence with a wrong number passes every check but its scenarios: ${changed.size} miscounted, caught in play: ${caught.map((r) => r.name).join(", ")}`);
   const capped = await heldOutSample({scripts, scenarios, definition: index.definition, oracle: ORACLE, library, trust, call: writer, examples: [], n: 3, maxCost: 0});
   ok(capped.tried === 0 && /cap/.test(capped.stopped), "the sample stops at its cap");
   /* Every card the sample may take, asked of a writer that answers nothing (free, and refused at fidelity): never one the
