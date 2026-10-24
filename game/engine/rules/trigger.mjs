@@ -117,6 +117,24 @@ function recordArrivals(state, events) {
   }
 }
 
+/* "ONE OR MORE" AT ONCE (`batch`): once for everything one action did. And "whenever you put one or more counters on a creature
+   you don't control" (Generous Patron), "... on a creature" (Rikku, Resourceful Guardian; CR 122.6) -- counters of any kind
+   (`counter: "any"`, cards/index.mjs) -- once for each permanent for everything one action put on it, however many kinds
+   (collectTriggers keys it by the permanent). */
+const oneOrMore = (trigger) => trigger.batch === true || (trigger.on === "GameEventCardCounters" && trigger.counterAdded === true && trigger.counter === "any");
+
+/* THE TURN A COUNTER WAS LAST PUT ON A PERMANENT (CR 122.6): "if a counter was put on Wakka this turn" (Wakka, Devoted
+   Guardian; script/condition.mjs, counterPutThisTurn) -- any kind, by anyone, as it entered too. Kept on the permanent, so
+   one that changes zones is a new object with none (CR 400.7). */
+function recordCounters(state, events) {
+  for (const event of events ?? []) {
+    const fields = event.data?.fields ?? {};
+    if (event.kind !== "GameEventCardCounters" || !((fields.newValue ?? 0) > (fields.oldValue ?? 0))) continue;
+    const object = state.objects[fields.card?.cardId];
+    if (object?.zone === "battlefield") object.counterPutTurn = state.turn;
+  }
+}
+
 /**
  * WHAT A TRIGGER IS ABOUT, ONE ENTRY PER TRIGGERING (CR 603.2c). "Whenever a creature you control attacks" triggers once
  * for each creature that attacks, so an event can answer more than once; each answer says what it was about -- the spell
@@ -433,6 +451,11 @@ function subjects(state, event, condition, sourceId, controller) {
     return [{card: fields.becomes, ...(!fields.componentArrival && fields.from?.zoneType === "Battlefield" && objectsAfterMove(state, fields.becomes).length > 1 ? {cards: objectsAfterMove(state, fields.becomes)} : {}), ...(Number.isInteger(player) ? {player} : {}), ...(came ? {cameFrom: {...came}} : {}), ...(copied ? {copiedAs: structuredClone(copied)} : {}),
       ...leftAs(fields)}];
   }
+  /* Gone from the battlefield to a hidden zone -- returned to its owner's hand, put on top of a library -- the card it became
+     is nobody's to name (CR 400.7), but what left is still known as it last existed (CR 603.10a): "whenever a permanent you
+     control leaves the battlefield, if it had counters on it, put those counters on target permanent you control"
+     (Resourceful Defense) reads them from there. */
+  if (event.kind === "GameEventCardChangeZone") return [{...leftAs(fields)}];
   return [{}];
 }
 
@@ -508,9 +531,10 @@ function matches(state, event, condition, sourceId, controller) {
   /* "On a creature you control" (Simic Ascendancy; `who: "any"`): the permanent they were put on, as `filter` describes it
      now -- "you" this ability's controller. */
   /* "Whenever YOU put ..." (Exemplar of Light; `putBy`): put by this ability's controller, as the event says who did. */
+  /* "One or more counters" of any kind (`counter: "any"`; Generous Patron, Rikku, Resourceful Guardian). */
   if (condition.on === "GameEventCardCounters" && condition.counterAdded)
     return (condition.who === "any" ? fits(state, fields.card?.cardId, condition, sourceId, controller) : fields.card?.cardId === sourceId)
-      && fields.type === condition.counter && (fields.newValue ?? 0) > (fields.oldValue ?? 0)
+      && (condition.counter === "any" || fields.type === condition.counter) && (fields.newValue ?? 0) > (fields.oldValue ?? 0)
       && (condition.putBy !== "you" || fields.by === controller);
   if (condition.on === "GameEventCardCounters")
     return fields.card?.cardId === sourceId && fields.type === condition.counter && (fields.oldValue ?? 0) < condition.reaches && (fields.newValue ?? 0) >= condition.reaches;
@@ -676,6 +700,7 @@ function inherentTriggers(state, event) {
 export function collectTriggers(state, events) {
   if (!state.pendingTriggers) state.pendingTriggers = [];
   recordArrivals(state, events);
+  recordCounters(state, events);
   /* Triggers that trigger again (triggersAgain): copied once this action is read, so a "one or more" trigger is copied
      with everything it came to be about. */
   const again = [];
@@ -754,8 +779,10 @@ export function collectTriggers(state, events) {
              for each creature dealt it. "Whenever a player discards one or more cards" (Tinybones, Pocket Nuisance): once for
              each player who discarded (CR 603.2c). */
           const once = `${id}:${ability.id}${ability.trigger.on === "GameEventPlayerDamaged" || ability.trigger.loser !== undefined || ability.trigger.discarded ? `:${about.player}`
-            : ability.trigger.on === "GameEventCardDamaged" && ["creature", "enchanted"].includes(ability.trigger.to) ? `:${about.card}` : ""}`;
-          if (ability.trigger.batch && joined(once, about)) continue;
+            : ability.trigger.on === "GameEventCardDamaged" && ["creature", "enchanted"].includes(ability.trigger.to) ? `:${about.card}`
+            /* Counters of any kind put on a permanent (Generous Patron): once for each permanent they were put on. */
+            : ability.trigger.on === "GameEventCardCounters" && ability.trigger.counter === "any" ? `:${about.card}` : ""}`;
+          if (oneOrMore(ability.trigger) && joined(once, about)) continue;
           /* "This ability triggers only once each turn": once it has, this turn, it does not again. */
           if (ability.limit && usesThisTurn(state, id, `trigger:${ability.id}`) >= ability.limit) continue;
           if (ability.limit) recordUse(state, id, `trigger:${ability.id}`);
@@ -791,13 +818,14 @@ export function collectTriggers(state, events) {
                for its modes to be chosen by should the permanent be gone by then (CR 113.7a; modesTaken). */
             ...(ability.modal?.unchosen ? {modesChosen: [...(object.modesChosen?.[ability.id] ?? [])]} : {}),
             /* What it is about ("that player", "that card", "that much"), when the event says. */
-            ...(about.card !== undefined || about.player !== undefined || about.amount !== undefined ? {about} : {}),
+            /* Or what left the battlefield for a hidden zone, as it last existed there (subjects; Resourceful Defense). */
+            ...(about.card !== undefined || about.player !== undefined || about.amount !== undefined || about.lastKnown !== undefined ? {about} : {}),
             /* What it does, from the card script (phase 2.4), carried to the stack with it. */
             ...scriptOf(ability),
           });
           const times = triggersAgain(state, event, object.controller, id, null, departed);
           if (times) again.push({at: state.pendingTriggers.length - 1, times});
-          if (ability.trigger.batch) opened(once, about);
+          if (oneOrMore(ability.trigger)) opened(once, about);
           }
         }
       }
@@ -1109,6 +1137,8 @@ function modalWaysOf(state, modal, context, taken, n) {
    chosen, kept on the permanent by ability (`modesChosen`) -- a new object has chosen none -- or, the permanent gone before
    this trigger's modes are chosen, those it had chosen as it triggered (CR 113.7a; collectTriggers). */
 function modesTaken(state, entry) {
+  /* "Choose one at random" (Summon: Magus Sisters): once the game has picked it (randomMode), every other mode is taken. */
+  if (entry.script?.modal?.random && Number.isInteger(entry.randomMode)) return entry.script.modal.modes.map((_, i) => i).filter((i) => i !== entry.randomMode);
   if (!entry.script?.modal?.unchosen) return [];
   const source = entry.cardId === null ? undefined : state.objects[entry.cardId];
   return source ? modesChosenBy(state, source, entry.abilityId, entry.script.modal.unchosen) : entry.modesChosenWas ?? [];
@@ -1127,6 +1157,10 @@ export function triggerTargetsChoice(state, awaiting) {
      may choose none, that too. */
   if (entry.script.modal) {
     const modal = entry.script.modal;
+    /* "Choose one at random" (CR 700.2), not picked yet: the one thing to do is have the game pick it (resolveTriggerTargets). */
+    if (modal.random && !Number.isInteger(entry.randomMode))
+      return {id: `trigger-random:${entry.stackId}`, title: `${entry.name ?? "A triggered ability"}: choose one at random`, mode: "one", min: 1, max: 1,
+        options: [{index: 0, label: "Choose a mode at random", random: true, ...(entry.cardId !== null ? {cardId: entry.cardId} : {})}]};
     const options = modalWays(state, modal, context, modesTaken(state, entry)).map(({modes, targets}, index) => {
       let at = 0;
       const label = modes.map((m) => {
@@ -1154,12 +1188,21 @@ export function triggerTargetsChoice(state, awaiting) {
 }
 
 /** Apply the chosen targets, then ask for the next trigger's, if any. */
-export function resolveTriggerTargets(state, awaiting, indices) {
+export function resolveTriggerTargets(state, awaiting, indices, rng = null) {
   const choice = triggerTargetsChoice(state, awaiting);
   const option = choice.options[indices?.[0]];
   if (!Array.isArray(indices) || indices.length !== 1 || !option) throw new Error("Invalid selection");
-  const {entry} = targeting(state, awaiting.stackId);
+  const {entry, context} = targeting(state, awaiting.stackId);
   state.awaiting = null;
+  /* "Choose one at random" (Summon: Magus Sisters; CR 700.2): the game's random stream (rng.mjs) picks one of the modes that
+     could be chosen -- one with a legal way to aim it (CR 603.3c) -- and its controller is then asked its targets. */
+  if (option.random) {
+    if (!rng) throw new Error("A mode chosen at random needs the game's random stream");
+    const able = entry.script.modal.modes.map((_, i) => i).filter((i) => modalWaysOf(state, entry.script.modal, context, entry.script.modal.modes.map((__, j) => j).filter((j) => j !== i), 1).length);
+    entry.randomMode = rng.pick(able);
+    askTriggerTargets(state);
+    return [];
+  }
   /* A modal trigger: none chosen, and it is removed from the stack (CR 603.3c); else what resolves is the chosen modes'. */
   if (entry.script.modal) {
     if (option.none) {

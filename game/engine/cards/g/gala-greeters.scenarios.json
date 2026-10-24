@@ -1,0 +1,213 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Gala Greeters",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Cub": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Alliance: each creature entering this turn chooses a mode not yet chosen -- a counter, a tapped Treasure, 2 life -- and a fourth finds none left",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Gala Greeters",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Cub",
+            "Cub",
+            "Cub",
+            "Cub"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Cub"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Put a +1/+1 counter on this creature.",
+                  "Create a tapped Treasure token.",
+                  "You gain 2 life."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Create a tapped Treasure token."
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Treasure"
+            }
+          ]
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Cub"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Put a +1/+1 counter on this creature.",
+                  "You gain 2 life."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Put a +1/+1 counter on this creature."
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Cub"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "You gain 2 life."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "You gain 2 life."
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Cub"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 42
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Gala Greeters",
+            "counter": "+1/+1",
+            "count": 1
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Gala Greeters",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Cub",
+            "Cub",
+            "Cub",
+            "Cub",
+            "Treasure"
+          ]
+        }
+      ]
+    }
+  ]
+}

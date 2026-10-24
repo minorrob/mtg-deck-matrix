@@ -1,0 +1,55 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Clifftop Lookout",
+    "oracleId": "446db5a4-21b0-44c1-b12b-d365313dd67a",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Frog",
+      "Scout"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "Reach\nWhen this creature enters, reveal cards from the top of your library until you reveal a land card. Put that card onto the battlefield tapped and the rest on the bottom of your library in a random order.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Reach",
+      "keyword": "reach"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, reveal cards from the top of your library until you reveal a land card. Put that card onto the battlefield tapped and the rest on the bottom of your library in a random order.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "digUntil",
+          "selector": {
+            "types": [
+              "Land"
+            ]
+          },
+          "found": {
+            "to": "battlefield",
+            "tapped": true
+          },
+          "rest": "bottom"
+        }
+      ]
+    }
+  ]
+}

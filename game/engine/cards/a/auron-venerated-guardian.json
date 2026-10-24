@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Auron, Venerated Guardian",
+    "oracleId": "5e166b42-252e-4f34-9610-dcddc04a62ff",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Spirit",
+      "Samurai"
+    ],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 5
+  },
+  "oracleText": "Vigilance\nShooting Star — Whenever Auron attacks, put a +1/+1 counter on it. When you do, exile target creature defending player controls with power less than Auron's power until Auron leaves the battlefield.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "triggered",
+      "text": "Shooting Star — Whenever Auron attacks, put a +1/+1 counter on it. When you do, exile target creature defending player controls with power less than Auron's power until Auron leaves the battlefield.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        },
+        {
+          "effect": "immediateTrigger",
+          "text": "When you do, exile target creature defending player controls with power less than Auron's power until Auron leaves the battlefield.",
+          "targets": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "that player",
+              "power": {
+                "lessThan": "self"
+              }
+            }
+          ],
+          "effects": [
+            {
+              "effect": "exileUntil",
+              "targets": {
+                "target": 0
+              },
+              "until": "this leaves"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

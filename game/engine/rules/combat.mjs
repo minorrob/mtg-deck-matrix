@@ -751,7 +751,10 @@ export const combatDamage = {
        dealt it -- or the controller of the creature dealt it -- chooses which applies first. All of it is dealt at once
        (CR 510.2), so every such choice is asked BEFORE any of it is dealt, one at a time ("order-damage"), each answer
        kept by its hit for this step and replayed below. Tried dry: asking spends no shield. */
-    const proposalOf = (raw) => ({event: "damage", toPlayer: raw.toPlayer, toCard: raw.toCard, amount: raw.amount, sourceId: raw.source, combat: true});
+    /* `batch`: all of this step's combat damage is dealt at once (CR 510.2) -- a shield counter removed once for it (rules/
+       replacement.mjs, SHIELD). */
+    const proposalOf = (raw) => ({event: "damage", toPlayer: raw.toPlayer, toCard: raw.toCard, amount: raw.amount, sourceId: raw.source, combat: true,
+      batch: `combat:${state.turn}:${step}`});
     const orders = state.combat.damageOrders?.[step] ?? {};
     for (const raw of damageChoicesPossible(state) ? pending : []) {
       const key = hitKey(raw.source, raw.toPlayer, raw.toCard);

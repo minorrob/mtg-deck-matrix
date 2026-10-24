@@ -1075,6 +1075,11 @@ export function attackTax(state, picked) {
       && conditionHolds(state, ability.condition, {controller: holder.controller, source: holderId}))
       total += amountOf(state, ability.amount ?? 0, {controller: holder.controller, source: holderId});
   }
+  /* And for a while, an effect's (effectUntil's `rule: "attack-tax"`, `apply.amount`): "until your next turn, creatures can't
+     attack you unless their controller pays {2} for each of those creatures" (Summon: Yojimbo; CR 508.1g, 611.2a) -- its
+     controller, the "you", attacked; not a planeswalker of theirs. It lasts whatever became of the Saga. */
+  for (const {defenderId, planeswalkerId} of picked) for (const effect of state.effects ?? [])
+    if (effect.rule === "attack-tax" && effect.sourceController === defenderId && planeswalkerId === undefined) total += effect.apply?.amount ?? 0;
   return total;
 }
 
