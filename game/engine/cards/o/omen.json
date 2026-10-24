@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Omen",
+    "oracleId": "9b8c44a0-82ef-4beb-a762-c2a2a21380f3",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Look at the top three cards of your library, then put them back in any order. You may shuffle.\nDraw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "rearrangeTop",
+          "count": 3
+        },
+        {
+          "effect": "modal",
+          "title": "You may shuffle.",
+          "modes": [
+            {
+              "text": "Shuffle your library",
+              "effects": [
+                {
+                  "effect": "shuffle"
+                }
+              ]
+            },
+            {
+              "text": "Don't shuffle",
+              "effects": []
+            }
+          ]
+        },
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ],
+      "text": "Look at the top three cards of your library, then put them back in any order. You may shuffle.\nDraw a card."
+    }
+  ]
+}

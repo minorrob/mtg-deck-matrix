@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Venerable Lammasu",
+    "oracleId": "359c6272-fcb5-4d3f-a4b5-4209e354a044",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Lammasu"
+    ],
+    "manaCost": "{6}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 5,
+    "toughness": 4
+  },
+  "oracleText": "Flying",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    }
+  ]
+}

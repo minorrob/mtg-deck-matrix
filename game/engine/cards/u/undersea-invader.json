@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Undersea Invader",
+    "oracleId": "ff12dfee-7140-44bd-a62e-5f8ab98e93c6",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Giant",
+      "Rogue"
+    ],
+    "manaCost": "{4}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 5,
+    "toughness": 6
+  },
+  "oracleText": "Flash (You may cast this spell any time you could cast an instant.)\nThis creature enters tapped.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flash",
+      "text": "Flash (You may cast this spell any time you could cast an instant.)"
+    },
+    {
+      "kind": "replacement",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersTapped": true
+      },
+      "text": "This creature enters tapped."
+    }
+  ]
+}

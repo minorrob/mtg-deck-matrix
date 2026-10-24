@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Beast Hunt",
+    "oracleId": "069c8fa1-fa04-4620-9356-a618158dad3e",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Reveal the top three cards of your library. Put all creature cards revealed this way into your hand and the rest into your graveyard.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "dig",
+          "count": 3,
+          "take": 3,
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          },
+          "to": "hand",
+          "reveal": true,
+          "rest": "graveyard"
+        }
+      ],
+      "text": "Reveal the top three cards of your library. Put all creature cards revealed this way into your hand and the rest into your graveyard."
+    }
+  ]
+}

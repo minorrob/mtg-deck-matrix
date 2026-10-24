@@ -1,0 +1,38 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bilious Skulldweller",
+    "oracleId": "83bf5610-a798-4508-88d2-c60d96f60d23",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Phyrexian",
+      "Insect"
+    ],
+    "manaCost": "{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Deathtouch\nToxic 1 (Players dealt combat damage by this creature also get a poison counter.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "deathtouch",
+      "text": "Deathtouch"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "toxic",
+      "amount": 1,
+      "text": "Toxic 1 (Players dealt combat damage by this creature also get a poison counter.)"
+    }
+  ]
+}

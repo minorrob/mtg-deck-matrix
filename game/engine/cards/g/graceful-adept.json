@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Graceful Adept",
+    "oracleId": "684b2026-1589-4f59-bd72-5795fae44c1c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Wizard"
+    ],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "You have no maximum hand size.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "no-maximum-hand-size",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "text": "You have no maximum hand size."
+    }
+  ]
+}

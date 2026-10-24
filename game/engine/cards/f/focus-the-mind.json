@@ -1,0 +1,51 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Focus the Mind",
+    "oracleId": "695a84b5-96b0-4e48-b615-15624efab3b7",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This spell costs {2} less to cast if you've cast another spell this turn.\nDraw three cards, then discard a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "this-costs-less",
+      "affects": {
+        "self": true
+      },
+      "amount": {
+        "spellsCastThisTurn": "you",
+        "atMost": 1,
+        "times": 2
+      },
+      "text": "This spell costs {2} less to cast if you've cast another spell this turn."
+    },
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 3
+        },
+        {
+          "effect": "discard",
+          "count": 1
+        }
+      ],
+      "text": "Draw three cards, then discard a card."
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Darksteel Gargoyle",
+    "oracleId": "73010421-374f-458e-aa88-248ef8ae4f8b",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Gargoyle"
+    ],
+    "manaCost": "{7}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Flying\nIndestructible (Damage and effects that say \"destroy\" don't destroy this creature.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "indestructible",
+      "text": "Indestructible (Damage and effects that say \"destroy\" don't destroy this creature.)"
+    }
+  ]
+}

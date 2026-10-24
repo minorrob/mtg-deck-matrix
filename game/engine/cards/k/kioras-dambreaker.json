@@ -1,0 +1,39 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kiora's Dambreaker",
+    "oracleId": "795b903b-5260-4c06-b26f-a89cecdfa1f8",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Leviathan"
+    ],
+    "manaCost": "{5}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 5,
+    "toughness": 6
+  },
+  "oracleText": "When this creature enters, proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "proliferate"
+        }
+      ],
+      "text": "When this creature enters, proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)"
+    }
+  ]
+}

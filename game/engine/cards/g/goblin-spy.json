@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Goblin Spy",
+    "oracleId": "5f1e8aa2-6b85-4e2e-92e4-876470447d6f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin",
+      "Rogue"
+    ],
+    "manaCost": "{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Play with the top card of your library revealed.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "top-revealed",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "text": "Play with the top card of your library revealed."
+    }
+  ]
+}

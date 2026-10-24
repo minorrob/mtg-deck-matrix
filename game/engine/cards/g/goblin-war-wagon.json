@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Goblin War Wagon",
+    "oracleId": "81a38340-9558-49d3-8de6-d7d01babfd97",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Juggernaut"
+    ],
+    "manaCost": "{4}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "This creature doesn't untap during your untap step.\nAt the beginning of your upkeep, you may pay {2}. If you do, untap this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "doesnt-untap",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "text": "This creature doesn't untap during your untap step."
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "who": "you",
+          "amount": 2,
+          "ifPaid": true,
+          "effects": [
+            {
+              "effect": "untap",
+              "targets": "self"
+            }
+          ]
+        }
+      ],
+      "text": "At the beginning of your upkeep, you may pay {2}. If you do, untap this creature."
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Blood Burglar",
+    "oracleId": "9c975fda-471a-4d41-9bb6-ea42edc6a0e6",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Vampire",
+      "Rogue"
+    ],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "During your turn, this creature has lifelink.(Damage dealt by this creature also causes you to gain that much life.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Lifelink"
+        ]
+      },
+      "condition": {
+        "yourTurn": true
+      },
+      "text": "During your turn, this creature has lifelink.(Damage dealt by this creature also causes you to gain that much life.)"
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Spirit of the Spires",
+    "oracleId": "bf10ce45-c6d6-461e-ab46-06b4205d31fb",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spirit"
+    ],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "Flying\nOther creatures you control with flying get +0/+1.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "another": true,
+        "keywords": [
+          "Flying"
+        ]
+      },
+      "apply": {
+        "power": 0,
+        "toughness": 1
+      },
+      "text": "Other creatures you control with flying get +0/+1."
+    }
+  ]
+}

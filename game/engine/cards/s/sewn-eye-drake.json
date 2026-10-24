@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sewn-Eye Drake",
+    "oracleId": "994cf8bb-c900-448f-b055-ecc2ee6cf9e2",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Zombie",
+      "Drake"
+    ],
+    "manaCost": "{2}{U/R}{B}",
+    "colors": [
+      "B",
+      "R",
+      "U"
+    ],
+    "colorIdentity": [
+      "B",
+      "R",
+      "U"
+    ],
+    "power": 3,
+    "toughness": 1
+  },
+  "oracleText": "Flying, haste",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "haste",
+      "text": "haste"
+    }
+  ]
+}

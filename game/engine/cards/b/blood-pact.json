@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Blood Pact",
+    "oracleId": "cfc5a284-7238-4c98-9d2f-7e5c3329be7b",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target player draws two cards and loses 2 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "player"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 2,
+          "who": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "loseLife",
+          "amount": 2,
+          "who": {
+            "target": 0
+          }
+        }
+      ],
+      "text": "Target player draws two cards and loses 2 life."
+    }
+  ]
+}

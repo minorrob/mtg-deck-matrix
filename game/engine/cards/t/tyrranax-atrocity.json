@@ -1,0 +1,38 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tyrranax Atrocity",
+    "oracleId": "08261b68-b261-4e47-a085-c489ba394108",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Phyrexian",
+      "Dinosaur"
+    ],
+    "manaCost": "{3}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Haste\nToxic 3 (Players dealt combat damage by this creature also get three poison counters.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "haste",
+      "text": "Haste"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "toxic",
+      "amount": 3,
+      "text": "Toxic 3 (Players dealt combat damage by this creature also get three poison counters.)"
+    }
+  ]
+}

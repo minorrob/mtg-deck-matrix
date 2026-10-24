@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Blot Out",
+    "oracleId": "9609cd5c-b537-4cb2-9dde-4b12795531f7",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target opponent exiles a creature or planeswalker they control with the greatest mana value among creatures and planeswalkers they control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "player",
+          "who": "opponent"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "battlefield",
+          "who": {
+            "target": 0
+          },
+          "count": 1,
+          "greatest": "manaValue",
+          "to": "exile",
+          "selector": {
+            "anyOf": [
+              {
+                "types": [
+                  "Creature"
+                ],
+                "controller": "you"
+              },
+              {
+                "types": [
+                  "Planeswalker"
+                ],
+                "controller": "you"
+              }
+            ]
+          }
+        }
+      ],
+      "text": "Target opponent exiles a creature or planeswalker they control with the greatest mana value among creatures and planeswalkers they control."
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Magus of the Future",
+    "oracleId": "10758aa7-0f64-499f-8010-514e8fc31b7e",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Wizard"
+    ],
+    "manaCost": "{2}{U}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Play with the top card of your library revealed.\nYou may play lands and cast spells from the top of your library.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "top-revealed",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "text": "Play with the top card of your library revealed."
+    },
+    {
+      "kind": "static",
+      "rule": "play-from",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "zone": "library-top",
+      "lands": true,
+      "spells": true,
+      "text": "You may play lands and cast spells from the top of your library."
+    }
+  ]
+}

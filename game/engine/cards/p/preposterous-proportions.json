@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Preposterous Proportions",
+    "oracleId": "1e03aad2-6426-4d18-a0e5-bc3d8e6b7b11",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{5}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Creatures you control get +10/+10 and gain vigilance until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "power": 10,
+          "toughness": 10,
+          "keywords": [
+            "Vigilance"
+          ],
+          "until": "end-of-turn"
+        }
+      ],
+      "text": "Creatures you control get +10/+10 and gain vigilance until end of turn."
+    }
+  ]
+}

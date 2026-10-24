@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Marble Titan",
+    "oracleId": "62674cfd-f400-44d9-bfff-15bdfbd243fe",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Giant"
+    ],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Creatures with power 3 or greater don't untap during their controllers' untap steps.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "doesnt-untap",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "power": {
+          "min": 3
+        }
+      },
+      "text": "Creatures with power 3 or greater don't untap during their controllers' untap steps."
+    }
+  ]
+}

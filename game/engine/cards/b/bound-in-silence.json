@@ -1,0 +1,55 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bound in Silence",
+    "oracleId": "b8cee34a-710d-4c09-b475-0e4754eccd66",
+    "types": [
+      "Kindred",
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Rebel",
+      "Aura"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant creature\nEnchanted creature can't attack or block.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      },
+      "text": "Enchant creature"
+    },
+    {
+      "kind": "static",
+      "rule": "cant-attack",
+      "affects": {
+        "attachedBy": "self"
+      },
+      "text": "Enchanted creature can't attack or block."
+    },
+    {
+      "kind": "static",
+      "rule": "cant-block",
+      "affects": {
+        "attachedBy": "self"
+      },
+      "text": "Enchanted creature can't attack or block."
+    }
+  ]
+}

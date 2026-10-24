@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Cackling Slasher",
+    "oracleId": "b9671f4b-72d2-48d7-a497-2ea0ab72cd0b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Assassin"
+    ],
+    "manaCost": "{3}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Deathtouch\nThis creature enters with a +1/+1 counter on it if a creature died this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "deathtouch",
+      "text": "Deathtouch"
+    },
+    {
+      "kind": "replacement",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersWithCounters": {
+          "counter": "+1/+1",
+          "count": {
+            "creaturesDiedThisTurn": "any",
+            "atMost": 1
+          }
+        }
+      },
+      "text": "This creature enters with a +1/+1 counter on it if a creature died this turn."
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gluttonous Slug",
+    "oracleId": "68fbc13c-00b3-49bb-b343-4f2f1e8f5a7c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Slug",
+      "Horror"
+    ],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 0,
+    "toughness": 3
+  },
+  "oracleText": "Menace\nEvolve (Whenever a creature you control enters, if that creature has greater power or toughness than this creature, put a +1/+1 counter on this creature.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "menace",
+      "text": "Menace"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "evolve",
+      "text": "Evolve (Whenever a creature you control enters, if that creature has greater power or toughness than this creature, put a +1/+1 counter on this creature.)"
+    }
+  ]
+}

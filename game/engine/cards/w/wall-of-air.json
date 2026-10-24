@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wall of Air",
+    "oracleId": "b2d3da40-e2f7-4480-9da9-33019d6f4071",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Wall"
+    ],
+    "manaCost": "{1}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 5
+  },
+  "oracleText": "Defender, flying (This creature can't attack, and it can block creatures with flying.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "defender",
+      "text": "Defender"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "flying (This creature can't attack, and it can block creatures with flying.)"
+    }
+  ]
+}
