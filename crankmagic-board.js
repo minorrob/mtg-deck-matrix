@@ -2632,6 +2632,10 @@ globalThis.CrankBoard = Object.seal({
     if(!row||event.ctrlKey||event.metaKey)return;
     const horizontal=row.scrollWidth>row.clientWidth+1 && (event.shiftKey || Math.abs(event.deltaX)>Math.abs(event.deltaY) || row.scrollHeight<=row.clientHeight+1);
     const unit=event.deltaMode===1?16:event.deltaMode===2?(horizontal?row.clientWidth:row.clientHeight):1;
+    // Chain vertical wheel input to the phone frame when this zone cannot move farther.
+    const phone=row.closest('.cm-phone-battlefield');
+    if(phone && !horizontal && ((event.deltaY>0 && row.scrollTop>=row.scrollHeight-row.clientHeight-1) || (event.deltaY<0 && row.scrollTop<=0))){event.preventDefault();phone.scrollTop+=event.deltaY*unit;peek(null);return;}
+    if(row.scrollWidth<=row.clientWidth+1 && row.scrollHeight<=row.clientHeight+1)return;
     event.preventDefault();
     if(horizontal) {
       row.scrollLeft += (event.deltaX || event.deltaY) * unit;
@@ -3109,5 +3113,7 @@ globalThis.CrankBoard = Object.seal({
     else setScale("hand", scaleOf("hand") + up * 5);
   });
   /* A picture that does not come leaves the card's own frame, which already names it. */
+  // A loaded picture replaces the fallback name. Do not leave hidden text painted under a rotated image.
+  document.addEventListener("load", event => {const img=event.target;if(img?.matches?.('.cm-bcard[data-card] img') && img.naturalWidth>0)img.dataset.cardLoaded='true';}, true);
   document.addEventListener("error", (event) => {const t = event.target; if (t && t.matches && t.matches(".cm-bcard img, .cm-combat-card img, .cm-block-tile img")) t.remove();}, true);
 });

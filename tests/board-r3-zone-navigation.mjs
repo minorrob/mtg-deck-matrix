@@ -16,11 +16,12 @@ let checks = 0;
 const ok = (c, m) => {assert.ok(c, m); checks += 1;};
 const eq = (a, b, m) => {assert.deepEqual(a, b, m); checks += 1;};
 
-async function board(mode, {width = 1440, height = 900} = {}) {
+async function board(mode, {width = 1440, height = 900, failedArt = false} = {}) {
   const context = await browser.newContext({viewport: {width, height}, reducedMotion: "reduce", serviceWorkers: "block"});
   await context.addInitScript((m) => {localStorage.setItem("cm-board-view", m); localStorage.setItem("crankmagic-audio-muted", "true");}, mode);
   const page = await context.newPage();
   if (stub) await stub(page);
+  if (failedArt) await page.route('**://cards.scryfall.io/**', route => route.abort());
   const errors = [], sent = [];
   let sock = null;
   page.on("pageerror", (e) => errors.push(e.message));
@@ -42,6 +43,10 @@ try {
  for(const mode of ['focus','table','full']) {
   const {page,context,show,acts}=await board(mode,{width:1440,height:900});
   ok(await page.locator('.cm-bcard-count').evaluateAll(els=>els.length>0&&els.filter(el=>el.getBoundingClientRect().width>0).every(el=>parseFloat(getComputedStyle(el).fontSize)>=10)),`${mode}: pile counts stay at least 10px on every mat`);
+  const island=page.locator('.cm-bcard[data-card="469"]').first();
+  await island.locator('img').evaluate(async img=>{if(!img.complete)await new Promise(resolve=>img.addEventListener('load',resolve,{once:true}));});
+  eq(await island.locator('.cm-bcard-name').evaluate(el=>getComputedStyle(el).visibility),'hidden',`${mode}: loaded artwork replaces the painted fallback name`);
+  ok((await island.getAttribute('aria-label')).includes('Island'),`${mode}: loaded artwork keeps the card's accessible name`);
   const v=structuredClone(sample);v.revision+=200;
   for(const player of v.state.players){
    player.zones.Battlefield.cards=Array.from({length:60},(_,i)=>({cardId:20000+player.playerId*1000+i,name:i===19?'Jace Beleren':i<20?'Grizzly Bears':i<40?'Sol Ring':'Island',types:[i===19?'Planeswalker':i<20?'Creature':i<40?'Artifact':'Land'],owner:player.playerId,controller:player.playerId,tapped:false,counters:{},token:false,...(i<19?{power:2,toughness:2}:{})}));player.zones.Battlefield.count=60;
@@ -123,5 +128,21 @@ try {
   eq(acts().length,before,'sizing and keyboard inspection never act');
   await context.close();
  }
+ const phone=await board('focus',{width:844,height:390});
+ const frame=phone.page.locator('.cm-phone-battlefield');
+ const bounds=await frame.boundingBox();
+ await phone.page.mouse.move(bounds.x+bounds.width/2,bounds.y+bounds.height/2);
+ for(let i=0;i<8;i++){await phone.page.mouse.wheel(0,400);await phone.page.waitForTimeout(80);}
+ ok(await frame.evaluate(el=>el.scrollTop>0),'phone: wheel reaches the outer frame past a card zone boundary');
+ const library=frame.locator('[data-zone="library"]');
+ ok(await library.evaluate(el=>{const b=el.getBoundingClientRect();return !!document.elementFromPoint(b.x+b.width/2,b.y+b.height/2)?.closest('[data-zone="library"]');}),'phone: library is reachable after scrolling through card zones');
+ await phone.context.close();
+ const failed=await board('focus',{failedArt:true});
+ const fallback=failed.page.locator('.cm-bcard[data-card="469"]').first();
+ await fallback.locator('img').waitFor({state:'detached'});
+ eq(await fallback.locator('.cm-bcard-name').evaluate(el=>getComputedStyle(el).visibility),'visible','failed artwork retains a visible fallback name');
+ eq(await fallback.locator('.cm-bcard-name').innerText(),'Island','failed artwork names the actual card');
+ ok((await fallback.getAttribute('aria-label')).includes('Island'),'failed artwork preserves the accessible name too');
+ await failed.context.close();
 } finally {await close();}
 console.log(`board-r3-zone-navigation: ${checks} checks passed`);

@@ -298,7 +298,7 @@ try {
   ok(await heard(active === rob ? ROB : MAYA, "sfx/sfx_play_land.mp3"), "and it sounds as a land played (the pack's land voice)");
   await other.page.click(`.cm-board-tile[data-seat='${activeSeat}'] [data-action=board-focus]`);
   await waitText(other.page, ".cm-board-lands", /Lands · 1/);
-  ok((await text(other.page, ".cm-board-lands")).includes(land), "the other board shows the same land, now public");
+  ok(await other.page.locator('.cm-board-lands').getByRole('button',{name:new RegExp(`^${land}(?:,|:|$)`)}).count()>0, "the other board shows the same land, now public");
   /* With the land down there is its mana, and a creature it could pay for: Next step passes, and taps nothing. */
   await active.page.click("[data-action=board-actions-open]");
   ok(/Tap for mana/.test(await text(active.page, "#cm-board-decision")), "the land played, Actions offers its mana");
@@ -452,7 +452,7 @@ try {
     await rob.page.locator('[data-action=board-camera]').click();
     await rob.page.setViewportSize(was);
   }
-  ok((await text(rob.page, `.cm-seatboard[data-seat='${activeSeat}']`)).includes(land), "the land played is on its owner's board in the Table view too");
+  ok(await rob.page.locator(`.cm-seatboard[data-seat='${activeSeat}']`).getByRole('button',{name:new RegExp(`^${land}(?:,|:|$)`)}).count()>0, "the land played is on its owner's board in the Table view too");
   await shot(rob.page, "board-table-1400");
   await rob.page.click(".cm-board-center");
   await rob.page.locator(".cm-table-vitals").waitFor();
@@ -887,7 +887,7 @@ try {
   await rob.page.locator("#cm-board-peek .cm-bcard").waitFor({timeout: 5000});
   const peekWidth = await rob.page.evaluate(() => document.querySelector("#cm-board-peek .cm-bcard").getBoundingClientRect().width);
   const peekBox = await rob.page.evaluate(() => {const r = document.querySelector("#cm-board-peek .cm-bcard").getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2), innerWidth / 2, innerHeight / 2];});
-  ok(Math.round(peekWidth) === 400 && Math.abs(peekBox[0] - peekBox[2]) < 2 && Math.abs(peekBox[1] - peekBox[3]) < 2 && (await text(rob.page, "#cm-board-peek")).includes(robCardName), `a card under the pointer shows large at the center of the screen, 400px (${robCardName})`);
+  ok(Math.round(peekWidth) === 400 && Math.abs(peekBox[0] - peekBox[2]) < 2 && (await rob.page.locator('#cm-board-peek .cm-bcard').getAttribute('aria-label')).includes(robCardName) && Math.abs(peekBox[1] - peekBox[3]) < 2, `a card under the pointer shows large at the center of the screen, 400px (${robCardName})`);
   /* The accessibility pass: the pop-up is said as well as shown, by the board's one polite status region beside the board
      (tests/a11y-board.mjs), its picture not read twice. */
   const peekSaid = await rob.page.evaluate(() => {const p = document.getElementById("cm-board-peek"), s = document.getElementById("cm-board-said"); return {hidden: p.getAttribute("aria-hidden"), role: s && s.getAttribute("role"), live: s && s.getAttribute("aria-live"), said: s ? s.textContent : "", beside: !!s && !s.closest("#cm-board")};});
@@ -971,7 +971,7 @@ try {
   await second.page.locator("#cm-board-decision [data-action=board-confirm]").click(); if(await second.page.locator("[data-action=board-inspect-close]").count()) await second.page.locator("[data-action=board-inspect-close]").click();
   await second.page.click(`.cm-board-tile[data-seat='${secondSeat}'] [data-action=board-focus]`);
   await waitText(second.page, ".cm-board-lands", /Lands · 1/);
-  ok((await text(second.page, ".cm-board-lands")).includes(secondLand), "Enter plays it: the hand is put away and the land is down");
+  ok(await second.page.locator('.cm-board-lands').getByRole('button',{name:new RegExp(`^${secondLand}(?:,|:|$)`)}).count()>0, "Enter plays it: the hand is put away and the land is down");
   for (let i = 0; i < 3; i += 1) await second.page.keyboard.press("Control+Minus");
   /* B1, item 17: the Panel reads a tapped card upright, with a small Tapped mark, and no "Card" heading over it. */
   await second.page.click("[data-action=board-actions-open]");

@@ -531,6 +531,8 @@
 #matrix-v2 .cm-board .cm-board-lands:focus-within{overflow:hidden}
 
 #matrix-v2 .cm-board .cm-bcard img{object-fit:contain}
+/* State-backed cards keep an accessible name; ownership references deliberately overlay their title. */
+.cm-bcard[data-card]:has(>img[data-card-loaded="true"])>.cm-bcard-name{visibility:hidden}
 
 #matrix-v2 .cm-board [data-card-section] .cm-bcard-pt{font-size:max(10px,calc(var(--bc)*.13));padding:1px 3px;line-height:1.1}
 
