@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Elesh Norn, Mother of Machines",
+    "oracleId": "5ade11c0-41dd-4b6a-9f5b-c5903a3a0d7f",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Phyrexian",
+      "Praetor"
+    ],
+    "manaCost": "{4}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 4,
+    "toughness": 7
+  },
+  "oracleText": "Vigilance\nIf a permanent entering causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time.\nPermanents entering don't cause abilities of permanents your opponents control to trigger.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "static",
+      "text": "If a permanent entering causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time.",
+      "rule": "triggers-again",
+      "affects": {
+        "what": "permanent",
+        "controller": "you"
+      },
+      "cause": {
+        "event": "enters"
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Permanents entering don't cause abilities of permanents your opponents control to trigger.",
+      "rule": "entering-doesnt-trigger",
+      "affects": {
+        "what": "permanent",
+        "controller": "opponent"
+      }
+    }
+  ]
+}

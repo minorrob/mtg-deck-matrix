@@ -98,6 +98,14 @@ export function alterAttribute(state, params, context) {
       object.solved = true;
       events.push(changed(state, id, "solved", true));
     }
+    /* HARNESSED (The Mind Stone: "{5}{W}, {T}: Harness The Mind Stone. (Once harnessed, its ∞ ability is active.)"): a
+       designation kept until it leaves the battlefield (CR 400.7) -- given once, never taken; its ∞ abilities are active only
+       while it has it (rules/trigger.mjs). */
+    if (params.attribute === "harnessed") {
+      if (object.harnessed === true) continue;
+      object.harnessed = true;
+      events.push(changed(state, id, "harnessed", true));
+    }
     if (params.attribute === "prepared") {
       if (params.value === false) unprepare(state, id, events);
       else prepare(state, id, events);
