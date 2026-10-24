@@ -314,9 +314,16 @@ const PILOT_SCHEMA = {
   required: ["indices", "why"],
   additionalProperties: false,
 };
+/* Thinking off for the seat: one pick from a short list, with the heuristic's pick as the hint. Left on (the model's
+   default), it spent the whole 300-token allowance before the answer on 14 of staging's first 21 calls (2026-10-22's
+   ai_calls: output_tokens 300, outcome error), each paid for and then answered by the house pilot anyway. Each model
+   in MODELS says "off" its own way: Haiku 5.5 takes `disabled` at effort high or below, Sonnet 5.5 refuses `disabled`
+   and takes `between_tools`, which with no tools is no thinking at all. */
+const PILOT_THINKING = {"claude-haiku-5-5": {type: "disabled"}, "claude-sonnet-5-5": {type: "between_tools"}};
 export function pilotBody(brief, model) {
   return {
     model, max_tokens: PILOT_MAX_TOKENS, system: PILOT_SYSTEM,
+    ...(PILOT_THINKING[model] ? {thinking: PILOT_THINKING[model]} : {}),
     output_config: {effort: "low", format: {type: "json_schema", schema: PILOT_SCHEMA}},
     messages: [{role: "user", content: JSON.stringify(brief)}],
   };

@@ -1,5 +1,32 @@
 # Who holds the work
 
+## AI spend audit and the Claude seat's thinking, 2026-10-24 (a Claude cloud session, for Rob; `claude/busy-dirac-1jkaoo`)
+
+Rob, 2026-10-24: *"I want to understand API usage for the games that have been played. I'm seeing costs much higher
+than expected. Make sure that the Claude model we're using for Hard is on the lowest cost model."* The AI seat on Claude
+(level `llm`) is already on Claude Haiku 5.5, the lowest-cost model ($0.10 in, $0.50 out a million), on both release
+profiles. Every call the door has made is in `ai_calls` (read 2026-10-24):
+
+| Database | Feature | Calls | Logged cost |
+| --- | --- | ---: | ---: |
+| `crankmagic` (production) | any | 0 | $0 |
+| `crankmagic-staging` | pilot (the AI seat on Claude), Oct 22 | 21 (14 errors) | $0.0099 |
+| `crankmagic-staging` | coach, Oct 11 to 15 | 12 | $0.0079 |
+| `crankmagic-staging` | explain, Oct 9 | 1 | $0.0002 |
+
+- **So the bill is not the games.** About 2 cents in all. The rest of the key's spend is outside the door, which logs
+  nothing: the card compiler (`game/tools/engine-compile.mjs`, Sonnet 5.5 writer and Haiku 4.5 read-back), the deck
+  guides (`guide-agent.js`, Opus 5) and any session using the same key. Only the Anthropic Console's usage page, by key,
+  shows those.
+- **Fixed:** 14 of the 21 seat calls ended at exactly 300 output tokens. Haiku 5.5's default thinking used the whole
+  allowance, so the answer was cut off: billed, logged as an error, and answered by the house pilot. `pilotBody` now
+  turns thinking off for each model in `MODELS`. `tests/ai-door.mjs` checks it, and goes red without it.
+- **Not proven:** the live API taking `thinking: {type: "disabled"}` with structured output at low effort on Haiku 5.5.
+  Read staging's next seat calls in `ai_calls`: the outcome should be `ok`, with output well under 300 tokens.
+- **Joe is on the invite list.** He was added to the Access rule group "CrankMagic invitees",
+  which staging's Invited policy includes, as Luke and K. Harbeson are. Production's Invited policy does not include the
+  group, so production still admits Rob only.
+
 ## Card load, 2026-10-24: the compiler's candidates and the shared sentences (a Claude cloud session, for Rob; `claude/engine-card-load-2026-10-24`)
 
 Rob, 2026-10-24: *"Look at the card list of cards not loaded in the engine but either automatically can be added or easily
