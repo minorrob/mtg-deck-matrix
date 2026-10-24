@@ -40,8 +40,10 @@
 
 import {conditionHolds} from "../script/condition.mjs";
 import {isCounted, amountOf} from "../script/amount.mjs";
-import {chosenFor} from "../script/chosen.mjs";
+import {chosenFor, CHOSEN_COLOR_LETTER} from "../script/chosen.mjs";
 import {hasSubtype, everyCreatureType, isLandType, isCreatureType, isPlaneswalkerType, isEnchantmentType, BASIC_LAND_MANA} from "../keywords/types.mjs";
+import {parseManaCost, manaValue} from "./mana.mjs";
+import {valueCostOf} from "../state/index.mjs";
 
 /** The seven layers of CR 613.1, in order. */
 export const LAYERS = Object.freeze([1, 2, 3, 4, 5, 6, 7]);
@@ -103,14 +105,26 @@ function printed(state, id) {
    cannot ask what they are still deriving. Anything else would be ignored, and a static would affect more than it says:
    the card compiler refuses it (cards/index.mjs). */
 export const LAYER_AFFECTS_KEYS = Object.freeze(["anyOf", "what", "ids", "types", "subtypes", "supertypes", "controller", "token", "another", "self", "attachedBy", "colors", "colorless", "countersAtLeast", "tapped", "counters",
-  "keywords", "hasDealtDamage", "hasDealtCombatDamage", "attacking", "zone"]);
+  "keywords", "hasDealtDamage", "hasDealtCombatDamage", "attacking", "zone", "modified", "nonTypes", "nonSubtypes", "continued", "nonSupertypes", "commander"]);
+/* MODIFIED (CR 700.15; Kodama of the West Tree, wave 4d L3): a permanent with a counter on it, one that is equipped, or one
+   enchanted by an Aura its controller controls. Its attachments read as printed (an Equipment or an Aura subtype, its
+   controller) -- what the layers are deriving is the permanent, not them -- so the layer matcher and the selector grammar
+   (script/filter.mjs) share one reading. */
+export const isModified = (state, id, counters, controller) => Object.values(counters ?? {}).some((n) => n > 0)
+  || (state.objects[id]?.attachments ?? []).some((a) => {
+    const o = state.objects[a];
+    if (!o || o.zone !== "battlefield") return false;
+    return (o.subtypes ?? []).includes("Equipment") || ((o.subtypes ?? []).includes("Aura") && o.controller === controller);
+  });
 
 /* "CREATURES YOU CONTROL" MEANS CREATURE PERMANENTS (CR 109.2): a description that names no other zone takes in the battlefield
    only -- not a creature card in a hand, a graveyard, a library or exile, nor a creature spell. `zone`, as the selector
    grammar says it (script/filter.mjs), names another it reads ("creature cards in your graveyard", "graveyard"), or "any"
    (Maskwood Nexus: creature spells and creature cards that aren't on the battlefield too). An effect on named objects
    (`ids`) is on those, wherever they are. */
-const inZone = (wanted, zone) => wanted === "any" || (wanted ?? "battlefield") === zone;
+/* "Creature cards you own that aren't on the battlefield have flash" (Teferi, Mage of Zhalfir; CR 611.3a): "elsewhere", every
+   zone but the battlefield -- a card in a hand, a library, a graveyard, exile, the command zone, or a spell on the stack. */
+const inZone = (wanted, zone) => wanted === "any" || (wanted === "elsewhere" ? zone !== "battlefield" : (wanted ?? "battlefield") === zone);
 
 function affects(state, effect, current, sourceController) {
   const rule = effect.affects ?? {};
@@ -126,6 +140,9 @@ function affects(state, effect, current, sourceController) {
      it has a counter of that kind -- and once it has none, no longer (rules/sba.mjs ends it for good, endCounterDurations). */
   if (effect.whileCounter && !(((current.counters ?? {})[effect.whileCounter] ?? 0) > 0)) return false;
   if (rule.types && !rule.types.every((type) => current.types.includes(type))) return false;
+  /* "Each noncreature, non-Equipment artifact" (Bludgeon Brawl; wave 4d L3): none of these types or subtypes, as it now is. */
+  if (rule.nonTypes && rule.nonTypes.some((type) => current.types.includes(type))) return false;
+  if (rule.nonSubtypes && rule.nonSubtypes.some((type) => current.subtypes.includes(type))) return false;
   if (rule.controller === "you" && current.controller !== sourceController) return false;
   if (rule.controller === "opponent" && current.controller === sourceController) return false;
   if (Number.isInteger(rule.controller) && current.controller !== rule.controller) return false;
@@ -135,6 +152,11 @@ function affects(state, effect, current, sourceController) {
   if (rule.subtypes && !rule.subtypes.every((t) => current.types.includes(t) || hasSubtype(current.subtypes, current.everyCreatureType, t))) return false;
   /* "Legendary Humans you control have indestructible" (General's Enforcer): supertypes after layer 4, including the Ring-bearer designation. */
   if (rule.supertypes && !rule.supertypes.every((t) => (current.supertypes ?? []).includes(t))) return false;
+  /* "Nonlegendary creatures you control get +1/+1" (Flowering of the White Tree): none of these supertypes, after layer 4. */
+  if (rule.nonSupertypes && rule.nonSupertypes.some((t) => (current.supertypes ?? []).includes(t))) return false;
+  /* "Commander creatures you control get +2/+2" (Bastion Protector; CR 903.3): a commander, whoever owns it -- a designation
+     of the card, which no layer changes. */
+  if (rule.commander === true && state.objects[current.id]?.commander !== true) return false;
   if (rule.another === true && current.id === effect.sourceId) return false;
   /* "This creature's power and toughness are each equal to ...": the source itself. */
   if (rule.self === true && current.id !== effect.sourceId) return false;
@@ -142,7 +164,9 @@ function affects(state, effect, current, sourceController) {
   if (rule.attachedBy === "self" && state.objects[effect.sourceId]?.attachedTo !== current.id) return false;
   /* "As long as enchanted creature is white" (Steel of the Godhead): its colors as they now are -- layer 5 is done by the
      time layers 6 and 7 ask. */
-  if (rule.colors && !rule.colors.every((color) => (current.colors ?? []).includes(color))) return false;
+  /* "Creatures you control of the chosen color get +1/+0" (Heraldic Banner): the color its permanent chose as it entered, by
+     name ("$chosen", script/chosen.mjs), read as its mana symbol (CR 105.1); none chosen yet, it matches nothing. */
+  if (rule.colors && !rule.colors.every((color) => (current.colors ?? []).includes(CHOSEN_COLOR_LETTER[color] ?? color))) return false;
   /* "Colorless creatures you control get +2/+2" (Forsaken Monument): no color, as layer 5 left it. */
   if (rule.colorless === true && (current.colors ?? []).length > 0) return false;
   /* "As long as this creature has four or more +1/+1 counters on it" (Voice of the Blessed): counters as they are now. */
@@ -153,6 +177,8 @@ function affects(state, effect, current, sourceController) {
     : ((current.counters ?? {})[rule.counters] ?? 0) > 0)) return false;
   /* "Other tapped legendary creatures you control have indestructible" (The Seriema): tapped as it is, which no layer changes. */
   if (rule.tapped !== undefined && (state.objects[current.id]?.tapped === true) !== rule.tapped) return false;
+  /* "Modified creatures you control have trample" (Kodama of the West Tree; CR 700.15). */
+  if (rule.modified !== undefined && isModified(state, current.id, current.counters, current.controller) !== rule.modified) return false;
   /* "Ruric Thar has hexproof as long as they haven't dealt combat damage yet": whether this object has dealt damage, or
      combat damage, as the selector grammar reads it (script/filter.mjs) -- a fact of the game, which no layer changes. */
   if (rule.hasDealtDamage !== undefined && (state.objects[current.id]?.hasDealtDamage === true) !== rule.hasDealtDamage) return false;
@@ -291,6 +317,9 @@ function graveyardGrant(state, holder, ability) {
     .filter((a) => a.kind === "activated" || a.kind === "mana").map((a) => ({...a, id: `${id}:${a.id}`})))}};
 }
 
+/* The emblems in the command zone (CR 114.1; script/effects/permanents.mjs, emblem). */
+const emblemsIn = (state) => (state.zones.command ?? []).flat().filter((id) => state.objects[id]?.emblem === true);
+
 function gatherEffects(state) {
   const found = [];
   for (const graveyard of state.zones.graveyard ?? []) for (const id of graveyard) {
@@ -323,6 +352,16 @@ function gatherEffects(state) {
       });
     }
   }
+  /* AN EMBLEM'S STATIC ABILITIES (CR 114.4), from the command zone, where they function: "Swamps you control have '{T}: Add
+     {B}{B}{B}{B}'" (Liliana of the Dark Realms' emblem; CR 113.6) -- read for every permanent as it now is, not fixed as the
+     emblem was made (an emblem's ability is no resolving effect, CR 611.3a). Its timestamp is the emblem's (CR 613.7e). */
+  for (const id of emblemsIn(state)) {
+    const holder = state.objects[id];
+    for (const ability of holder.abilities ?? []) {
+      if (ability.kind !== "static" || ability.rule || ability.layer === undefined) continue;
+      found.push({...ability, sourceId: id, sourceController: holder.controller, timestamp: ability.timestamp ?? holder.timestamp});
+    }
+  }
   /* CR 701.54c, 613.1d: the emblem makes the bearer legendary, without granting an ability.
      Layer 2 has already determined control when this effect is applied. */
   for (const player of state.players) {
@@ -343,13 +382,15 @@ function gatherEffects(state) {
    being made skips the counted changes it meets: they change power and toughness only, never what is counted, and
    without the skip two Masters of Etherium would each ask the other forever. */
 let counting = 0;
-function counted(state, effect) {
+function counted(state, effect, affected = null) {
   const change = effect.apply ?? {};
   if (!Object.values(change).some(isCounted)) return effect;
   if (counting > 0) return null;
   counting += 1;
   try {
-    const context = {controller: effect.sourceController, source: effect.sourceId ?? null, x: state.objects[effect.sourceId]?.xPaid ?? 0};
+    /* `affected`: the object it is applied to, for an amount about "it" (script/amount.mjs) -- "each creature you control gets
+       +1/+0 for each time it has attacked this turn" (Moraug), "equipped creature gets +X/+0" (Bludgeon Brawl). */
+    const context = {controller: effect.sourceController, source: effect.sourceId ?? null, x: state.objects[effect.sourceId]?.xPaid ?? 0, affected};
     return {...effect, apply: Object.fromEntries(Object.entries(change).map(([k, v]) => [k, isCounted(v) ? amountOf(state, v, context) : v]))};
   } finally {
     counting -= 1;
@@ -667,8 +708,11 @@ function derive(state, id, counts = true, through = 7) {
   const applied = (effect) => {
     if (effect.partOf !== undefined) begun.add(effect.partOf);
     if (effect.apply?.removeAllAbilities) removedBy.push(effect.partOf);
-    return applyEffect(current, effect);
+    return applyEffect(current, effect.apply?.manaValueX === true ? withManaValueX(state, id, effect) : effect);
   };
+  /* CR 613.6: a later part of an ability whose effect began to apply to this object in an earlier layer (`continued`) goes on
+     applying to it, and to nothing else -- Bludgeon Brawl's artifacts, Equipment from layer 4, given equip in layer 6. */
+  const reaches = (effect) => (effect.affects?.continued === true ? begun.has(effect.partOf) : affects(state, effect, current, sourceOf(effect)));
 
   for (const layer of LAYERS) {
     if (layer > through) break;
@@ -681,7 +725,7 @@ function derive(state, id, counts = true, through = 7) {
 
     if (layer !== 7) {
       for (const effect of orderWithin(state, inLayer, current, sourceOf)) {
-        if (affects(state, effect, current, sourceOf(effect))) current = applied(effect);
+        if (reaches(effect)) current = applied(effect);
       }
       if (layer === 4) intrinsicMana(state, id, current);
       continue;
@@ -705,15 +749,29 @@ function derive(state, id, counts = true, through = 7) {
       }
       const here = inLayer.filter((effect) => (effect.sublayer ?? "c") === sublayer);
       for (const effect of orderWithin(state, here, current, sourceOf)) {
-        if (!affects(state, effect, current, sourceOf(effect))) continue;
-        const now = counts ? counted(state, effect) : uncounted(effect);
+        if (!reaches(effect)) continue;
+        const now = counts ? counted(state, effect, id) : uncounted(effect);
         if (now) current = applyEffect(current, now);
       }
     }
   }
 
   removals.set(current, removedBy);
+  partsOn.set(current, [...begun]);
   return current;
+}
+
+/* WHICH ABILITIES' EFFECTS APPLY TO IT NOW (CR 613.6): each by `partOf`, its permanent and its words -- "an artifact Bludgeon
+   Brawl made an Equipment" (script/filter.mjs, `affectedBy`). Kept beside the derivation, as `removals` is. */
+const partsOn = new WeakMap();
+export const partsApplied = (state, id) => partsOn.get(derived(state, id, false)) ?? [];
+
+/* "AN EQUIPMENT WITH EQUIP {X} ... WHERE X IS THAT ARTIFACT'S MANA VALUE" (Bludgeon Brawl; CR 202.3): what a layer-6 effect
+   gives (`manaValueX`), its {X} the mana value of the object given it -- a token's that of its mana cost, or 0 (CR 111.4). */
+function withManaValueX(state, id, effect) {
+  const mv = manaValue(parseManaCost(valueCostOf(state.objects[id]) ?? ""));
+  const swap = (v) => (typeof v === "string" ? v.replaceAll("{X}", `{${mv}}`) : Array.isArray(v) ? v.map(swap) : v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, swap(x)])) : v);
+  return {...effect, apply: {...effect.apply, addAbilities: swap(effect.apply.addAbilities ?? [])}};
 }
 
 /** Current power. Null for an object that has none — which is not the same as zero. */
@@ -746,7 +804,7 @@ function abilitiesChange(state) {
   const changes = (apply) => Boolean(apply && (apply.addAbilities || apply.removeAllAbilities || apply.topCardAbilities || apply.graveyardAbilities
     || [...(apply.addSubtypes ?? []), ...(apply.setSubtypes ?? [])].some((type) => BASIC_LAND_MANA[type])));
   if ((state.effects ?? []).some((effect) => changes(effect.apply))) return true;
-  const holders = [...state.zones.battlefield, ...(state.zones.graveyard ?? []).flat()];
+  const holders = [...state.zones.battlefield, ...(state.zones.graveyard ?? []).flat(), ...emblemsIn(state)];
   return holders.some((id) => (state.objects[id].abilities ?? []).some((ability) => ability.kind === "static" && changes(ability.apply)));
 }
 

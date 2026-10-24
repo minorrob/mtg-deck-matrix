@@ -61,6 +61,13 @@ export const STATIC_RULES = Object.freeze({
   "negative-power-as-positive": "rules/combat.mjs",
   /** CR 402.2's exception: "You have no maximum hand size" (Reliquary Tower, Thought Vessel). turn.mjs, at cleanup. */
   "no-maximum-hand-size": "rules/turn.mjs",
+  /** "Creatures you control can boast twice during each of your turns rather than once" (Birgi, God of Storytelling; CR
+      702.142a; card load w4d L1): for the static's controller, a boast ability's limit 2 in their own turns.
+      rules/actions.mjs, boastLimit. */
+  "boast-twice": "rules/actions.mjs",
+  /** CR 614.10, 614.1b: "Skip your draw step" (Necropotence): `affects` the players whose draw steps don't happen. turn.mjs,
+      CONDITIONS.drawStep. */
+  "skip-draw-step": "rules/turn.mjs",
   /** CR 500.4 replaced (CR 614.1a, 106.4): "If you would lose unspent mana, that mana becomes colorless instead" (Omnath, Locus
       of the Void): `affects` the players whose pools it keeps (a player selector, "you" its controller). turn.mjs, as each
       step and phase ends (emptyManaPools). */
@@ -114,6 +121,9 @@ export const STATIC_RULES = Object.freeze({
       Equipment spells" (Sigarda's Aid): `spells` true or a selector of the spell, for the static's controller (CR 702.8a
       by permission). rules/actions.mjs, flashGranted. */
   "cast-as-though-flash": "rules/actions.mjs",
+  /** "Nonartifact spells you cast have improvise" (Inspiring Statuary; CR 702.126a): `spells`, a selector of the spell, for the
+      static's controller. rules/actions.mjs, hasImprovise. */
+  "spells-have-improvise": "rules/actions.mjs",
   /** "You may cast this spell as though it had flash if it targets a commander" (Timely Ward; library load L2): the card's own,
       `targeting` what one of its targets must be, its targets then chosen as it is offered. rules/actions.mjs, flashAims. */
   "flash-if-targets": "rules/actions.mjs",
@@ -130,6 +140,10 @@ export const STATIC_RULES = Object.freeze({
   "look-at-top": "projection.mjs",
   /** "Play with the top card of your library revealed": everyone sees it (projection.mjs). */
   "top-revealed": "projection.mjs",
+  /** "You control your opponents while they're searching their libraries. While an opponent is searching their library, they
+      exile each card they find" (Opposition Agent; CR 722.1): `affects` the players, from its controller's side.
+      searchController, read as a search of a library is put to its searcher (script/effects/asking.mjs, chooseCard). */
+  "controls-searches": "script/effects/asking.mjs",
   /** "You may play an additional land on each of your turns" (CR 305.2): one more land drop. rules/actions.mjs. */
   "extra-land-drop": "rules/actions.mjs",
   /** "Your opponents can't gain life" (Archfiend of Despair), "players can't gain life" (Rampaging Ferocidon; CR 119.7):
@@ -140,6 +154,10 @@ export const STATIC_RULES = Object.freeze({
       from its controller's side, `times`. lifeGained, read wherever life is gained: changeLife (script/effects/resources.mjs)
       and lifelink in combat (rules/combat.mjs). */
   "more-life": "script/effects/resources.mjs",
+  /** "If an opponent would lose life during your turn, they lose twice that much life instead" (Bloodletter of Aclazotz; CR
+      614.1a): `affects` the players, from its controller's side, `times`, and `duringYourTurn`. lifeLost, read in changeLife
+      (script/effects/resources.mjs) -- every loss, life paid too (its rulings), never the damage dealt. */
+  "more-life-loss": "script/effects/resources.mjs",
   /** "If an effect would create one or more tokens under your control, it creates twice that many of those tokens instead"
       (Anointed Procession; CR 614.1a): `affects` the player whose tokens they are -- "you", or anyone's (Primal Vigor) --
       `times`. tokensCreated, read where tokens are made (script/effects/permanents.mjs). */
@@ -572,11 +590,14 @@ const describes = (affects, token) => matchesLastKnown(affects ?? {}, token);
 const kindOf = (ability, token) => (ability.each ?? []).find((kind) => (kind.subtypes ?? []).some((t) => (token.subtypes ?? []).includes(t)));
 /* Which of them apply to the event as it now stands (CR 616.1f): a doubler to any tokens; the rest while a token they
    describe is made. */
+/* "If one or more creature tokens would be created under your control, three times that many of those tokens are created
+   instead" (Ojer Taq, Deepest Foundation; card load w4d L1): a doubler's `tokens`, the tokens it multiplies -- any, unsaid. */
+const multiplies = (ability, token) => !ability.tokens || describes(ability.tokens, token);
 const applying = (rest, event) => rest.filter(({ability}) => live(event).some((g) => (ability.rule === "more-tokens" ? true
   : ability.rule === "tokens-each" ? Boolean(kindOf(ability, g.token)) : describes(ability.affects, g.token))));
 /* What one of them makes of the event. */
 function tokenChange(ability, event) {
-  if (ability.rule === "more-tokens") return event.map((g) => ({...g, count: g.count * ability.times}));
+  if (ability.rule === "more-tokens") return event.map((g) => (multiplies(ability, g.token) ? {...g, count: g.count * ability.times} : g));
   /* Made as its token instead: no longer the effect's own (a copy is not made a copy). */
   if (ability.rule === "tokens-instead") return event.map((g) => (g.count > 0 && describes(ability.affects, g.token) ? {token: ability.token, count: g.count} : g));
   if (ability.rule === "tokens-each") return event.flatMap((g) => {
@@ -741,6 +762,22 @@ export function lifeGained(state, player, amount) {
     const holder = state.objects[holderId];
     for (const ability of held(holderId)) {
       if (ability.kind !== "static" || ability.rule !== "more-life") continue;
+      if (compileSelector({what: "player", ...ability.affects})(state, player, {controller: holder.controller, source: holderId})) n *= ability.times;
+    }
+  }
+  return n;
+}
+
+/** How much life a player loses (`more-life-loss`; CR 614.1a): each static that affects them, during its controller's turn
+    when it says so, multiplies it. */
+export function lifeLost(state, player, amount) {
+  let n = amount;
+  const held = staticAbilities(state);
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of held(holderId)) {
+      if (ability.kind !== "static" || ability.rule !== "more-life-loss") continue;
+      if (ability.duringYourTurn === true && state.activePlayer !== holder.controller) continue;
       if (compileSelector({what: "player", ...ability.affects})(state, player, {controller: holder.controller, source: holderId})) n *= ability.times;
     }
   }
@@ -1137,6 +1174,23 @@ export function flashGranted(state, player, id) {
 }
 
 /** The "play-from" and similar static abilities a player's permanents give them: each such ability, with its source. */
+/** "You control your opponents while they're searching their libraries" (Opposition Agent; CR 722.1): the permanent whose
+    controller makes this player's choices while they search their library -- of several, the latest (CR 613.7) -- or null.
+    Never the player's own: the static names its controller's opponents. */
+export function searchController(state, player) {
+  const held = staticAbilities(state);
+  let found = null;
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of held(holderId)) {
+      if (ability.kind !== "static" || ability.rule !== "controls-searches") continue;
+      if (!compileSelector(ability.affects)(state, player, {controller: holder.controller, source: holderId})) continue;
+      if (found === null || holder.timestamp > state.objects[found].timestamp) found = holderId;
+    }
+  }
+  return found;
+}
+
 export function playerStatics(state, rule, player) {
   const found = [];
   const held = staticAbilities(state);

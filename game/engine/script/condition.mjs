@@ -114,6 +114,8 @@ const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTu
   "surge", "freerunning", "paidFor",
   /* Breena, the Demagogue's "more life than another of your opponents" (CR 119.1). */
   "lifeAboveAnotherOpponent",
+  /* "If it's your main phase" (Moraug, Fury of Akoum; wave 4d L3, CR 505.1). */
+  "yourMainPhase",
   /* Smaug, Wicked Worm's "if mana from a Treasure was spent to cast it" (CR 106.3, 601.2h). */
   "spentFrom",
   /* Void (CR 207.2c, 702.185c) and sneak's timing (CR 702.190a). */
@@ -445,6 +447,8 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   if (condition.loyaltyThisTurn === true && !((state.players[controller]?.loyaltyThisTurn ?? 0) > 0)) return false;
   /* "Activate only during your turn" (Humble Defector). */
   if (condition.yourTurn === true && state.activePlayer !== controller) return false;
+  /* "If it's your main phase" (Moraug): a main phase of its controller's turn, an added one too (CR 500.8, 505.1). */
+  if (condition.yourMainPhase === true && !(state.activePlayer === controller && ["MAIN1", "MAIN2"].includes(state.phase))) return false;
   /* Corrupted (Skrelv's Hive): "as long as an opponent has three or more poison counters" -- a player who has left the game
      is no opponent (CR 800.4a). */
   if (condition.opponentPoisonAtLeast !== undefined
@@ -496,6 +500,7 @@ export function conditionProblems(condition) {
   if ("notTheirTurn" in condition && condition.notTheirTurn !== true) problems.push("notTheirTurn is true");
   if ("firstCombat" in condition && condition.firstCombat !== true) problems.push("firstCombat is true");
   if ("yourTurn" in condition && condition.yourTurn !== true) problems.push("yourTurn is true");
+  if ("yourMainPhase" in condition && condition.yourMainPhase !== true) problems.push("yourMainPhase is true");
   if ("enduringStory" in condition && typeof condition.enduringStory !== "boolean") problems.push("enduringStory is true or false");
   if ("citysBlessing" in condition && typeof condition.citysBlessing !== "boolean") problems.push("citysBlessing is true or false");
   if ("saddled" in condition && typeof condition.saddled !== "boolean") problems.push("saddled is true or false");

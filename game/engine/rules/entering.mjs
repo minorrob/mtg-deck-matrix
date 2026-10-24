@@ -19,11 +19,11 @@
  */
 
 import {runEffect} from "../script/effects/index.mjs";
-import {cardsIn, eventCard} from "../state/index.mjs";
+import {cardsIn, eventCard, moveObject} from "../state/index.mjs";
 import {matchesSelector} from "../script/filter.mjs";
-import {creatureTypesInGame} from "../script/effects/asking.mjs";
+import {creatureTypesInGame, discardOne} from "../script/effects/asking.mjs";
 import {copyOnto} from "../script/effects/permanents.mjs";
-import {ownEntering} from "./replacement.mjs";
+import {ownEntering, graveyardBound, placeReplacedCounters} from "./replacement.mjs";
 import {collectTriggers} from "./trigger.mjs";
 import {enteringCountersPlaced} from "./statics.mjs";
 import {amountOf} from "../script/amount.mjs";
@@ -38,7 +38,7 @@ const revealable = (state, player, selector) => cardsIn(state, "hand", player).f
  * rules/stack.mjs) its arrival is marked; rules/trigger.mjs passes a marked one by.
  */
 export function holdArrival(state, objectId, arrival) {
-  const waiting = (state.enteringQuestions ?? []).filter((q) => q.objectId === objectId && q.copyOf);
+  const waiting = (state.enteringQuestions ?? []).filter((q) => q.objectId === objectId && (q.copyOf || q.discardInstead));
   if (!waiting.length || !arrival) return;
   arrival.data.fields.awaitingCopy = true;
   for (const q of waiting) q.arrival = arrival;
@@ -69,6 +69,25 @@ function arrived(state, q) {
   collectTriggers(state, [q.arrival]);
 }
 
+/* The land cards (what `discardInstead` describes) in its controller's hand that Mox Diamond's replacement may discard. */
+const discardableInstead = (state, player, selector) => cardsIn(state, "hand", player)
+  .filter((id) => matchesSelector({...(selector ?? {}), what: "card", zone: "hand"}, state, id, {controller: player}));
+/* NOT DISCARDED, IT NEVER ENTERED (Mox Diamond; CR 614.1c): into its owner's graveyard from where it was coming -- its held
+   arrival rewritten to say so, then seen (a replacement on that route too: Dauthi Voidwalker). It was never on the
+   battlefield, so nothing that watches the battlefield sees it come or go. */
+function putAside(state, q) {
+  const object = state.objects[q.objectId];
+  const bound = graveyardBound(state, q.objectId);
+  const went = moveObject(state, q.objectId, bound.to, ["graveyard", "library", "hand"].includes(bound.to) ? object.owner : null);
+  placeReplacedCounters(state, went, bound);
+  if (!q.arrival) return;
+  const fields = q.arrival.data.fields;
+  delete fields.enteredAs; delete fields.enteredTapped; delete fields.awaitingCopy;
+  fields.becomes = went;
+  fields.to = {zoneType: bound.to[0].toUpperCase() + bound.to.slice(1), player: {playerId: object.owner}};
+  collectTriggers(state, [q.arrival]);
+}
+
 /* The permanent that just entered, and what its controller may pay, waits here until it can be asked. */
 export function queueEnteringQuestion(state, objectId, ask) {
   if (!state.enteringQuestions) state.enteringQuestions = [];
@@ -90,6 +109,10 @@ export function askEntering(state) {
        creature, ...": the options named. None to choose among, and nothing is asked. */
     const choices = q.choose === "creature type" ? creatureTypesInGame(state) : Array.isArray(q.choose) ? q.choose : null;
     if (q.choose !== undefined && !(choices ?? []).length) { queue.shift(); continue; }
+    /* "You may discard a land card instead": none in the hand, no choice -- it goes to the graveyard. */
+    const lands = q.discardInstead ? discardableInstead(state, object.controller, q.discardInstead) : null;
+    if (lands && !lands.length) { queue.shift(); putAside(state, q); continue; }
+    if (lands) { state.awaiting = {kind: "entering-choice", player: object.controller, objectId: q.objectId, discardInstead: lands}; return true; }
     /* "Enter as a copy of any creature on the battlefield": nothing to copy, and it arrives as itself. */
     const copies = q.copyOf ? copyChoices(state, q, object) : null;
     if (copies && !copies.length) { arrived(state, q); queue.shift(); continue; }
@@ -108,6 +131,10 @@ export function enteringChoice(state, awaiting) {
   if (awaiting.copyOf) return {id: `entering-copy:${awaiting.objectId}`, title: `${name}: enter as a copy?`, mode: "one", min: 1, max: 1,
     options: [...awaiting.copyOf.map((id, index) => ({index, label: state.objects[id]?.card ?? "?", cardId: id, copyOf: id})),
       {index: awaiting.copyOf.length, label: "No copy", cardId: awaiting.objectId, copyOf: null}]};
+  /* Mox Diamond: each land card it may discard, or none -- and then it goes to the graveyard. */
+  if (awaiting.discardInstead) return {id: `entering-discard:${awaiting.objectId}`, title: `${name}: discard a land card?`, mode: "one", min: 1, max: 1,
+    options: [...awaiting.discardInstead.map((id, index) => ({index, label: `Discard ${state.objects[id]?.card ?? "?"}: ${name} enters`, cardId: id, discard: id})),
+      {index: awaiting.discardInstead.length, label: `Don't discard: ${name} goes to the graveyard`, cardId: awaiting.objectId, discard: null}]};
   /* Riot (CR 702.136a): a +1/+1 counter, or haste -- one or the other, the controller's to choose. */
   if (awaiting.riot) return {id: `entering-riot:${awaiting.objectId}`, title: `${name}: riot`, mode: "one", min: 1, max: 1,
     options: [{index: 0, label: `${name} enters with a +1/+1 counter`, cardId: awaiting.objectId, riot: "counter"},
@@ -169,6 +196,11 @@ export function resolveEnteringChoice(state, awaiting, indices) {
       if (object.tapped && asked?.arrival) asked.arrival.data.fields.enteredTapped = true;
     }
     arrived(state, asked);
+  }
+  /* Discarded (CR 701.9a), it enters, and its arrival is seen; not, and it goes to the graveyard instead. */
+  if (option.discard !== undefined) {
+    if (option.discard !== null && state.objects[option.discard]?.zone === "hand") { discardOne(state, option.discard, awaiting.player, events); arrived(state, asked); }
+    else putAside(state, asked);
   }
   if (option.reveal !== undefined && option.reveal !== null) {
     /* Revealed to everyone (CR 701.20a): the card is named in the history; it stays in the hand. */

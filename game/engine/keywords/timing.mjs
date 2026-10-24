@@ -81,7 +81,8 @@ export const KEYWORD_FAMILIES = Object.freeze({
   /** Delve (CR 702.66a; Treasure Cruise, wave 4c k2): each card its caster exiles from their graveyard while casting it pays
       for {1} of its generic mana -- offered beside the cast the pool pays, the cards picked once it is taken (rules/actions.mjs,
       rules/mana.mjs). */
-  pay: Object.freeze(["Convoke", "Evoke", "Prowl", "Escalate", "Overload", "Spectacle", "Surge", "Freerunning", "Tiered", "Spree", "Disguise", "Morph", "Warp", "Sneak", "Delve"]),
+  /** Improvise (CR 702.126a), each artifact its caster taps paying {1}, as convoke's creatures do (rules/actions.mjs). */
+  pay: Object.freeze(["Convoke", "Evoke", "Prowl", "Escalate", "Overload", "Spectacle", "Surge", "Freerunning", "Tiered", "Spree", "Disguise", "Morph", "Warp", "Sneak", "Delve", "Improvise"]),
   /** How a permanent enters: Riot (CR 702.136a), with a +1/+1 counter or with haste, its controller's choice as it arrives --
       a replacement on its own entering (cards/index.mjs, rules/replacement.mjs), asked once it is there (rules/entering.mjs).
       Compleated (CR 702.150a): two fewer loyalty counters for each Phyrexian symbol of its cost its caster paid with life

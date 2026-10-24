@@ -41,7 +41,7 @@ import {combatNeedsFirstStrike} from "../keywords/combat.mjs";
 import {checkStateBasedActions, gameOver, finishCommanderReplacement, legendChoice, finishLegendRule, finishDestructionChoice} from "./sba.mjs";
 import {destructionChoice, dredgers, dredgeInstead, dredgeWords} from "../script/effects/zones.mjs";
 import {commanderChoice} from "./commander.mjs";
-import {damageOrderChoice} from "./replacement.mjs";
+import {damageOrderChoice, graveyardBound, placeReplacedCounters} from "./replacement.mjs";
 import {mulliganChoice, resolveMulligan} from "./mulligan.mjs";
 import {answerResolution, answerDeparted, resolutionChoice} from "../script/resolution.mjs";
 import {finishResolving} from "./stack.mjs";
@@ -88,7 +88,8 @@ const CONDITIONS = {
      so nothing triggers at its beginning (Teferi's Puzzle Box) and nobody receives priority in it. That is the turn's own
      draw step: one an added beginning phase brings (CR 500.8) happens. In a game of three or more every draw step happens
      (103.8c). */
-  drawStep: (state, added = false) => added || !skipsFirstDraw(state),
+  /* "Skip your draw step" (Necropotence; CR 614.10, 614.1b): the active player's, every one -- an added phase's too. */
+  drawStep: (state, added = false) => !playerRuleChanged(state, "skip-draw-step", state.activePlayer) && (added || !skipsFirstDraw(state)),
   /* CR 506.5: no attackers, no declare blockers step and no combat damage step. */
   attackers: (state) => (state.combat?.attacks?.length ?? 0) > 0,
   /* CR 510.4: the first-strike damage step exists only if an attacking or blocking creature has first or double strike
@@ -182,6 +183,9 @@ function untap(state, events) {
   if ((state.phasedOut ?? []).length) phaseIn(state, state.activePlayer);
   for (const id of state.zones.battlefield) {
     const o = state.objects[id];
+    /* Exerted (Arena of Glory; CR 701.43a): it doesn't untap during its exerting player's next untap step -- this one, used up
+       whether or not it is tapped. */
+    if (o.exerted === state.activePlayer) { delete o.exerted; continue; }
     /* The active player's permanents (CR 502.3), and another player's that a static of theirs untaps now (Seedborn Muse). */
     if (!o.tapped || (o.controller !== state.activePlayer && !untapsDuringOthers(state, id))) continue;
     /* "Doesn't untap during your untap step" (Mana Vault, Meekstone). */
@@ -214,7 +218,7 @@ export function draw(state, player, events) {
     from: {zoneType: ZONE_LABEL.library, player: {playerId: player}},
     to: {zoneType: ZONE_LABEL.hand, player: {playerId: player}},
     /* A draw (CR 121.1), as "whenever you draw a card" watches for; a search that puts a card into a hand is not one. */
-    drawn: true, drawNumber: recordDraw(state, player),
+    drawn: true, drawNumber: recordDraw(state, player, moved),
     /* And which of those drawn in the drawer's own draw step, there (Orcish Bowmasters; state/index.mjs). */
     ...drawStep(state, player),
     /* The card it is in the hand (CR 400.7): the drawer's own event names it by this (game/room/events.mjs). */
@@ -239,9 +243,18 @@ function emptyManaPools(state, events) {
      spends plain mana before rider mana. */
   const combatGoesOn = state.phase.startsWith("COMBAT_") && state.phase !== "COMBAT_END";
   for (const player of state.players) {
-    const kept = combatGoesOn ? Object.fromEntries(Object.entries(player.combatMana ?? {}).map(([color, n]) => [color, Math.min(n, player.manaPool[color])]).filter(([, n]) => n > 0)) : {};
-    if (Object.keys(kept).length) player.combatMana = kept;
+    const combatKept = combatGoesOn ? Object.fromEntries(Object.entries(player.combatMana ?? {}).map(([color, n]) => [color, Math.min(n, player.manaPool[color])]).filter(([, n]) => n > 0)) : {};
+    if (Object.keys(combatKept).length) player.combatMana = combatKept;
     else delete player.combatMana;
+    /* And mana its player does not lose until end of turn (Birgi, God of Storytelling; script/effects/resources.mjs): kept as
+       each step of the turn it was made in ends, of what the pool holds beyond the combat's -- lost as the next turn's untap
+       step ends, in which nobody can spend it (CR 502.4). */
+    const turnKept = player.turnMana?.turn === state.turn
+      ? Object.fromEntries(Object.entries(player.turnMana.mana).map(([color, n]) => [color, Math.min(n, player.manaPool[color] - (combatKept[color] ?? 0))]).filter(([, n]) => n > 0)) : {};
+    if (Object.keys(turnKept).length) player.turnMana = {turn: state.turn, mana: turnKept};
+    else delete player.turnMana;
+    const kept = {...combatKept};
+    for (const [color, n] of Object.entries(turnKept)) kept[color] = (kept[color] ?? 0) + n;
     /* "IF YOU WOULD LOSE UNSPENT MANA, THAT MANA BECOMES COLORLESS INSTEAD" (Omnath, Locus of the Void; CR 614.1a): none of
        it is lost -- what would have been becomes {C}, the mana kept beside the pool too, its restrictions and riders with it
        (rules/restricted-mana.mjs) -- and nothing is emptied, so nothing is said. Mana not lost now (firebending's, kept)
@@ -550,12 +563,15 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
   for (const id of chosen) {
     const card = cardRef(state, id);
     const owner = state.objects[id].owner;
-    const discarded = moveObject(state, id, "graveyard", owner);
+    /* Still a discard where a replacement sends it instead (CR 701.9a, 614.1a; Dauthi Voidwalker). */
+    const bound = graveyardBound(state, id);
+    const discarded = moveObject(state, id, bound.to, ["graveyard", "library", "hand"].includes(bound.to) ? owner : null);
+    placeReplacedCounters(state, discarded, bound);
     recordDiscard(state, awaiting.player);
     events.push(event("GameEventCardChangeZone", state, {
       card,
       from: {zoneType: ZONE_LABEL.hand, player: {playerId: awaiting.player}},
-      to: {zoneType: ZONE_LABEL.graveyard, player: {playerId: owner}},
+      to: {zoneType: ZONE_LABEL[bound.to] ?? bound.to, player: {playerId: owner}},
       discarded: true,
       /* The card it became in the graveyard (CR 400.7e), as every discard says: what "whenever you discard a creature card"
          and "put into your graveyard" read. */
@@ -580,7 +596,9 @@ function arrive(state, events) {
     /* And which round it is in (`nextRound`), where the game keeps rounds, for the table's events (room/events.mjs). */
     ...(state.phase === "UNTAP" && Number.isInteger(state.round) ? {round: state.round, turnInRound: state.turnInRound} : {}),
   }));
-  if (state.phase === "UNTAP") untap(state, events);
+  /* What untapping triggered (Mesmeric Orb, "whenever a permanent becomes untapped") has triggered: no player gets priority in
+     the untap step, so it waits for the upkeep's (CR 502.4, 503.1a). */
+  if (state.phase === "UNTAP") { untap(state, events); collectTriggers(state, events); }
   /* "Until your next end step, you may play those cards" (Shadow Urchin; script/effects/zones.mjs, mayPlay): over as that
      player's next end step begins (CR 513.1, 611.2a) -- this turn's, for one made before it began; one made during it lasts
      to their next. Before anything triggers at its beginning, or anyone has priority in it. */
@@ -737,6 +755,17 @@ export function advance(state) {
   const due = (state.extraPhases ?? []).filter((added) => added.turn === state.turn && added.after === state.phase);
   if (due.length) {
     state.extraPhases = state.extraPhases.filter((added) => !due.includes(added));
+    /* An added combat a delayed trigger waits on ("at the beginning of that combat", Moraug; script/effects/permanents.mjs,
+       addPhase): numbered among this turn's combats as it is put in the turn, the most recently added first. */
+    let combats = state.combatsThisTurn ?? 0;
+    for (const added of [...due].reverse()) {
+      if (!added.steps.includes("COMBAT_BEGIN")) continue;
+      combats += 1;
+      for (const waiting of (state.delayedTriggers ?? []).filter((d) => d.at === "that combat" && d.tag !== undefined && d.tag === added.tag)) {
+        waiting.combat = combats;
+        waiting.turn = state.turn;
+      }
+    }
     state.stepQueue = [...due.reverse().flatMap((added) => added.steps.map((name) => PHASE_NAMES.indexOf(name))), ...(state.stepQueue ?? [])];
     if (!Number.isInteger(state.resumeAfter)) state.resumeAfter = state.stepIndex;
   }
@@ -797,6 +826,8 @@ export function advance(state) {
     for (const player of state.players) if (player.castThisTurn) player.castThisTurn = [];
     /* Phases added to the turn that ended went with it; the combats of this one are counted from none. */
     state.extraPhases = [];
+    /* And a delayed trigger of an added combat that never came goes with them. */
+    if ((state.delayedTriggers ?? []).some((d) => d.at === "that combat")) state.delayedTriggers = state.delayedTriggers.filter((d) => d.at !== "that combat");
     state.stepQueue = [];
     state.resumeAfter = null;
     state.combatsThisTurn = 0;
@@ -820,6 +851,8 @@ export function advance(state) {
       if (player.enteredThisTurn) player.enteredThisTurn = [];
       /* And whether each was dealt combat damage (rules/combat.mjs). */
       if (player.combatDamagedThisTurn) player.combatDamagedThisTurn = false;
+      /* And how much damage each was dealt (rules/combat.mjs, effects/resources.mjs). */
+      if (player.damagedThisTurn) player.damagedThisTurn = 0;
       /* And the sources each controlled that dealt combat damage to a player, with their creature types (prowl, CR 702.76a). */
       if (player.combatDamageSources) delete player.combatDamageSources;
       /* And the creatures that died under each one's control (state/index.mjs, morbid), whether each was dealt noncombat
