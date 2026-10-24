@@ -767,14 +767,18 @@ export function drawQuestion(state, effect, context, answers = {}) {
  *   "umbra:<id>": an Aura attached to it with umbra armor (CR 702.89a) -- "instead remove all damage marked on it and destroy
  *     this Aura" -- each Aura its own effect, the Aura's ability as it now is (a lost ability is no shield), and "can't be
  *     regenerated" no bar to it: umbra armor is not regeneration.
+ *   "shield": one or more shield counters on it (CR 122.1c) -- "instead remove a shield counter from it" -- when it would be
+ *     destroyed as the result of an effect (`byEffect`: a destroy effect's, umbra armor's), never by the state-based actions
+ *     for lethal damage or deathtouch (Protection Magic, Summon: Magus Sisters; Rob's lists P3).
  * Never for what is put into a graveyard otherwise -- a sacrifice, the legend rule, toughness 0 or less (CR 701.8b, 704.5f) --
  * and the callers ask indestructible first: an indestructible permanent is not destroyed (CR 702.12b).
  */
-export function destructionReplacements(state, id, {noRegenerate = false} = {}) {
+export function destructionReplacements(state, id, {noRegenerate = false, byEffect = false} = {}) {
   const object = state.objects[id];
   if (!object || object.zone !== "battlefield") return [];
   const found = [];
   if (!noRegenerate && (state.effects ?? []).some((e) => e.rule === "regeneration" && (e.affects?.ids ?? []).includes(id))) found.push({key: "regenerate"});
+  if (byEffect && (object.counters?.shield ?? 0) > 0) found.push({key: "shield"});
   for (const aura of object.attachments ?? []) {
     /* One that has left is still listed until something unattaches it (CR 400.7: a new object; rules/sba.mjs). */
     if (state.objects[aura]?.zone !== "battlefield" || state.objects[aura].attachedTo !== id) continue;
@@ -787,6 +791,7 @@ export function destructionReplacements(state, id, {noRegenerate = false} = {}) 
 const replacementWords = (state, id, key) => {
   const name = state.objects[id]?.card ?? "It";
   if (key === "regenerate") return `Regenerate ${name}: remove all damage from it, tap it, and remove it from combat`;
+  if (key === "shield") return `Remove a shield counter from ${name}`;
   const aura = Number(String(key).split(":")[1]);
   return `${state.objects[aura]?.card ?? "Its Aura"}'s umbra armor: remove all damage from ${name} and destroy ${state.objects[aura]?.card ?? "that Aura"}`;
 };
@@ -798,12 +803,12 @@ const replacementWords = (state, id, key) => {
  * first player's in APNAP order first when several are destroyed at once (616.1, 101.4): `{player, objectId, options}`,
  * the options its keys.
  */
-export function destructionAsks(state, ids, answers = {}, {noRegenerate = false} = {}) {
+export function destructionAsks(state, ids, answers = {}, {noRegenerate = false, byEffect = false} = {}) {
   const seats = state.players.length, rank = (player) => (player - (state.activePlayer ?? 0) + seats) % seats;
   const asks = [];
   for (const id of ids) {
     if (answers[id] !== undefined || !state.objects[id] || keywordsOf(state, id).includes("Indestructible")) continue;
-    const candidates = destructionReplacements(state, id, {noRegenerate});
+    const candidates = destructionReplacements(state, id, {noRegenerate, byEffect});
     if (candidates.length >= 2) asks.push({player: controllerOf(state, id), objectId: id, options: candidates.map((c) => c.key)});
   }
   return asks.sort((a, b) => rank(a.player) - rank(b.player));
@@ -812,13 +817,13 @@ export function destructionAsks(state, ids, answers = {}, {noRegenerate = false}
 export function destructionChoice(state, awaiting) {
   const name = state.objects[awaiting.objectId]?.card ?? "That permanent";
   return {id: `destruction-replacement:${state.turn}:${awaiting.objectId}`, title: `${name} would be destroyed: which replaces it?`, mode: "one", min: 1, max: 1,
-    options: awaiting.options.map((key, index) => ({index, label: replacementWords(state, awaiting.objectId, key), cardId: key === "regenerate" ? awaiting.objectId : Number(key.split(":")[1])}))};
+    options: awaiting.options.map((key, index) => ({index, label: replacementWords(state, awaiting.objectId, key), cardId: ["regenerate", "shield"].includes(key) ? awaiting.objectId : Number(key.split(":")[1])}))};
 }
 /* Of what a board wipe destroys, those something would replace the destruction of first: an Aura with umbra armor destroyed
    in the same wipe as its creature still saves it -- the destructions happen at once, and the replacement applies to the
    event before it happens (CR 614.1) -- and the wipe takes the Aura either way. */
-const replacedFirst = (state, ids, params) => [...ids.filter((id) => destructionReplacements(state, id, {noRegenerate: params.noRegenerate === true}).length),
-  ...ids.filter((id) => !destructionReplacements(state, id, {noRegenerate: params.noRegenerate === true}).length)];
+const replacedFirst = (state, ids, params) => [...ids.filter((id) => destructionReplacements(state, id, {noRegenerate: params.noRegenerate === true, byEffect: true}).length),
+  ...ids.filter((id) => !destructionReplacements(state, id, {noRegenerate: params.noRegenerate === true, byEffect: true}).length)];
 /* What a destroy effect would destroy now, before any of it is: its targets, or what its selector matches but what it spares
    (destroyAll) -- destructionAsks passes over the indestructible and what is not on the battlefield. */
 function wouldDestroy(state, params, context) {
@@ -829,7 +834,7 @@ function wouldDestroy(state, params, context) {
 /** The question a resolving destroy must ask before it destroys anything (script/resolution.mjs), or null. */
 export function destructionQuestion(state, effect, context) {
   if (effect?.effect !== "destroy" && effect?.effect !== "destroyAll") return null;
-  return destructionAsks(state, wouldDestroy(state, effect, context), effect.destructionAnswers ?? {}, {noRegenerate: effect.noRegenerate === true})[0] ?? null;
+  return destructionAsks(state, wouldDestroy(state, effect, context), effect.destructionAnswers ?? {}, {noRegenerate: effect.noRegenerate === true, byEffect: true})[0] ?? null;
 }
 
 /**
@@ -843,16 +848,23 @@ export function destructionQuestion(state, effect, context) {
  *
  * @returns {boolean} whether the destruction was replaced
  */
-export function destructionReplaced(state, id, events, {noRegenerate = false, chosen = undefined} = {}) {
-  const candidates = destructionReplacements(state, id, {noRegenerate});
+export function destructionReplaced(state, id, events, {noRegenerate = false, chosen = undefined, byEffect = false} = {}) {
+  const candidates = destructionReplacements(state, id, {noRegenerate, byEffect});
   if (!candidates.length) return false;
   const pick = candidates.length === 1 ? candidates[0] : candidates.find((c) => c.key === chosen) ?? candidates[0];
   if (pick.key === "regenerate") return regenerated(state, id, events);
   const object = state.objects[id];
+  /* A shield counter removed instead (CR 122.1c): it stays, damage and all. */
+  if (pick.key === "shield") {
+    const before = object.counters.shield;
+    object.counters.shield = before - 1;
+    events.push(event("GameEventCardCounters", state, {card: cardRef(state, id), type: "shield", oldValue: before, newValue: object.counters.shield}));
+    return true;
+  }
   object.damage = 0;
   object.deathtouched = false;
   events.push(event("GameEventUmbraArmor", state, {card: cardRef(state, id), aura: cardRef(state, pick.aura)}));
-  if (!keywordsOf(state, pick.aura).includes("Indestructible") && !destructionReplaced(state, pick.aura, events)) moveOne(state, pick.aura, "graveyard", events);
+  if (!keywordsOf(state, pick.aura).includes("Indestructible") && !destructionReplaced(state, pick.aura, events, {byEffect: true})) moveOne(state, pick.aura, "graveyard", events);
   return true;
 }
 
@@ -875,7 +887,7 @@ export function destroy(state, params, context) {
     if (keywordsOf(state, id).includes("Indestructible")) continue;
     /* A regeneration shield replaces the destruction (CR 701.19a), unless "it can't be regenerated" (`noRegenerate`); an Aura's
        umbra armor does (CR 702.89a) -- the one its controller chose, when several would (destructionReplaced). */
-    if (destructionReplaced(state, id, events, {noRegenerate: params.noRegenerate === true, chosen: params.destructionAnswers?.[id]})) continue;
+    if (destructionReplaced(state, id, events, {noRegenerate: params.noRegenerate === true, chosen: params.destructionAnswers?.[id], byEffect: true})) continue;
     const before = params.remember ? lastKnown(state, id) : null;
     const moved = moveOne(state, id, "graveyard", events);
     if (before && moved !== null && state.objects[moved]?.zone === "graveyard") { destroyed.push(moved); destroyedWas.push(before); }
@@ -903,7 +915,7 @@ export function destroyAll(state, params, context) {
      Aura's umbra armor saves (CR 702.89a), the Aura destroyed in its place -- one in this wipe too is gone already. */
   const destroyed = [], destroyedWas = [];
   for (const id of doomed) {
-    if (destructionReplaced(state, id, events, {noRegenerate: params.noRegenerate === true, chosen: params.destructionAnswers?.[id]})) continue;
+    if (destructionReplaced(state, id, events, {noRegenerate: params.noRegenerate === true, chosen: params.destructionAnswers?.[id], byEffect: true})) continue;
     /* What it was as it left the battlefield (CR 608.2h), for `remember`: read before it moves. */
     const before = params.remember ? lastKnown(state, id) : null;
     const moved = moveOne(state, id, "graveyard", events);

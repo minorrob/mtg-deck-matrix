@@ -1964,9 +1964,18 @@ export function compileScript(script) {
           /* "Choose one that hasn't been chosen" (Gollum, Riddle Master): each mode once, for as long as its permanent is
              the object it is (rules/trigger.mjs, modesTaken). */
           ...(lone.unchosen === true || lone.unchosen === "turn" ? {unchosen: lone.unchosen} : {}),
+          /* "Choose one at random" (Summon: Magus Sisters; CR 700.2): the game's random stream picks the mode as the ability is
+             put on the stack (rules/trigger.mjs), among those it could choose -- nobody's choice; its targets are then its
+             controller's. */
+          ...(lone.random === true ? {random: true} : {}),
           modes: (lone.modes ?? []).map((m) => ({text: m.text ?? "", targets: m.targets ?? [], effects: m.effects ?? []}))} : null;
+      if (modal?.random && (modal.choose !== 1 || modal.upTo || modal.unchosen || modal.mayChooseNone || modal.differentPlayers))
+        problems.push(`${ability.text}: "choose one at random" chooses one, and nothing else about its modes`);
       if (modal && (ability.optional || (ability.targets ?? []).length)) problems.push(`${ability.text}: a modal triggered ability names its targets in its modes, and "you may" as mayChooseNone`);
-      if (modal && modal.modes.some((m) => m.targets.some((t) => t && typeof t === "object" && t.count !== undefined)))
+      /* A counted target in a mode is picked once the mode is chosen, as any trigger's is (rules/trigger.mjs, askCounted) -- built
+         for a mode chosen at random ("Fight! -- This creature fights up to one target creature an opponent controls", Summon:
+         Magus Sisters), the one mode there is to aim; not yet beside a choice of modes a player makes. */
+      if (modal && !modal.random && modal.modes.some((m) => m.targets.some((t) => t && typeof t === "object" && t.count !== undefined)))
         problems.push(`${ability.text}: a counted target in a triggered ability's mode is not built`);
       abilities.push({id, kind: "triggered", text: ability.text, trigger: trigger ?? {on: null}, effects: modal ? [] : effects, ...(modal ? {modal} : {}),
         ...((ability.targets ?? []).length ? {targets: ability.targets} : {}),

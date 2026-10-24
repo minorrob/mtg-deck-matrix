@@ -464,7 +464,7 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
     return events;
   }
   if (awaiting.kind === "trigger-targets") {
-    const events = resolveTriggerTargets(state, awaiting, indices);
+    const events = resolveTriggerTargets(state, awaiting, indices, rng);
     /* What the trigger is now aimed at triggers at once (ward), even while another trigger still asks for its targets
        and nobody receives priority yet. */
     collectTriggers(state, events);

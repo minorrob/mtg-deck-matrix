@@ -80,6 +80,14 @@ function unlessHolds(state, unless, player) {
 /* The replacement effect finality counters make (CR 122.1h): the counted permanent's own, never an ability it could lose. */
 const FINALITY = Object.freeze({id: "finality-counter", kind: "replacement", watches: {event: "zone-change", from: "battlefield", to: "graveyard"}, change: {to: "exile"}});
 
+/* A SHIELD COUNTER (CR 122.1c): one or more on a permanent make one prevention effect, "if damage would be dealt to this
+   permanent, prevent that damage and remove a shield counter from it" (Protection Magic, Summon: Magus Sisters) -- its
+   own, ordered with the others that apply as any is (CR 616.1). Damage dealt to it at once by several sources (combat
+   damage from two blockers, `batch`) is all prevented, and one counter removed (the card's ruling): the counter is removed
+   once for the batch, and the effect still applies to the rest of it (applyOne). */
+const SHIELD = Object.freeze({id: "shield-counter", kind: "replacement", text: "Prevent that damage and remove a shield counter from it",
+  watches: {event: "damage"}, change: {prevent: true, shieldCounter: true}});
+
 /* "IF THAT CREATURE WOULD DIE THIS TURN, EXILE IT INSTEAD" (Essence Burn, Combustion Technique; CR 614.1a, 700.4): a spell's
    effect with a duration (effectUntil's `rule: "exile-if-dies"`, gone at the turn's cleanup) about the objects it named as it
    resolved -- one that left and came back is a new object (CR 400.7), not one of them. A replacement effect over that
@@ -264,6 +272,10 @@ function applicable(state, proposal) {
      that apply as any is (CR 616.1). */
   const moving = proposal.event === "zone-change" ? state.objects[proposal.objectId] : null;
   if ((moving?.counters?.finality ?? 0) > 0 && applies(state, FINALITY, moving, proposal)) found.push({holderId: proposal.objectId, ability: FINALITY});
+  /* A shield counter's prevention (SHIELD), on the permanent damage would be dealt to. */
+  const shielded = proposal.event === "damage" && proposal.toCard !== undefined && proposal.toCard !== null ? state.objects[proposal.toCard] : null;
+  if (shielded?.zone === "battlefield" && ((shielded.counters?.shield ?? 0) > 0 || (proposal.batch !== undefined && shielded.shieldBatch === proposal.batch))
+    && applies(state, SHIELD, shielded, proposal)) found.push({holderId: proposal.toCard, ability: SHIELD});
   /* And "if it would die this turn, exile it instead" about it (EXILE_IF_DIES). */
   if ((state.effects ?? []).some((effect) => effect.rule === "exile-if-dies" && effect.affects.ids.includes(proposal.objectId))
     && applies(state, EXILE_IF_DIES, moving, proposal)) found.push({holderId: proposal.objectId, ability: EXILE_IF_DIES});
@@ -455,6 +467,14 @@ function applyOne(state, {holderId, ability, effect = null}, proposal, dry = fal
       const holder = state.objects[holderId];
       next.followUps = [...(next.followUps ?? []), {effects: structuredClone(ability.change.then), context: {controller: holder.controller, source: holderId,
         about: {...(proposal.toCard !== undefined && proposal.toCard !== null ? {card: proposal.toCard} : {}), ...(proposal.toPlayer !== undefined && proposal.toPlayer !== null ? {player: proposal.toPlayer} : {}), amount: next.amount}}}];
+    }
+    /* A shield counter (SHIELD): removed as it prevents damage -- once for damage dealt to it at once (`batch`), never by an
+       order tried dry -- immediately afterward, with what follows any prevention (runFollowUps). */
+    if (ability.change.shieldCounter === true && next.amount > 0 && !dry && state.objects[holderId]
+      && (proposal.batch === undefined || state.objects[holderId].shieldBatch !== proposal.batch)) {
+      if (proposal.batch !== undefined) state.objects[holderId].shieldBatch = proposal.batch;
+      next.followUps = [...(next.followUps ?? []), {effects: [{effect: "removeCounter", targets: "self", counter: "shield", count: 1}],
+        context: {controller: controllerOf(state, holderId), source: holderId}}];
     }
     /* "The next time ...": used up once it has prevented damage (CR 615.8) -- never by an order tried dry. */
     if (effect?.next === true && next.amount > 0 && !dry) state.effects = state.effects.filter((e) => e !== effect);

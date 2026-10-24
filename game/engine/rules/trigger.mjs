@@ -1124,6 +1124,8 @@ function modalWaysOf(state, modal, context, taken, n) {
    chosen, kept on the permanent by ability (`modesChosen`) -- a new object has chosen none -- or, the permanent gone before
    this trigger's modes are chosen, those it had chosen as it triggered (CR 113.7a; collectTriggers). */
 function modesTaken(state, entry) {
+  /* "Choose one at random" (Summon: Magus Sisters): once the game has picked it (randomMode), every other mode is taken. */
+  if (entry.script?.modal?.random && Number.isInteger(entry.randomMode)) return entry.script.modal.modes.map((_, i) => i).filter((i) => i !== entry.randomMode);
   if (!entry.script?.modal?.unchosen) return [];
   const source = entry.cardId === null ? undefined : state.objects[entry.cardId];
   return source ? modesChosenBy(state, source, entry.abilityId, entry.script.modal.unchosen) : entry.modesChosenWas ?? [];
@@ -1142,6 +1144,10 @@ export function triggerTargetsChoice(state, awaiting) {
      may choose none, that too. */
   if (entry.script.modal) {
     const modal = entry.script.modal;
+    /* "Choose one at random" (CR 700.2), not picked yet: the one thing to do is have the game pick it (resolveTriggerTargets). */
+    if (modal.random && !Number.isInteger(entry.randomMode))
+      return {id: `trigger-random:${entry.stackId}`, title: `${entry.name ?? "A triggered ability"}: choose one at random`, mode: "one", min: 1, max: 1,
+        options: [{index: 0, label: "Choose a mode at random", random: true, ...(entry.cardId !== null ? {cardId: entry.cardId} : {})}]};
     const options = modalWays(state, modal, context, modesTaken(state, entry)).map(({modes, targets}, index) => {
       let at = 0;
       const label = modes.map((m) => {
@@ -1169,12 +1175,21 @@ export function triggerTargetsChoice(state, awaiting) {
 }
 
 /** Apply the chosen targets, then ask for the next trigger's, if any. */
-export function resolveTriggerTargets(state, awaiting, indices) {
+export function resolveTriggerTargets(state, awaiting, indices, rng = null) {
   const choice = triggerTargetsChoice(state, awaiting);
   const option = choice.options[indices?.[0]];
   if (!Array.isArray(indices) || indices.length !== 1 || !option) throw new Error("Invalid selection");
-  const {entry} = targeting(state, awaiting.stackId);
+  const {entry, context} = targeting(state, awaiting.stackId);
   state.awaiting = null;
+  /* "Choose one at random" (Summon: Magus Sisters; CR 700.2): the game's random stream (rng.mjs) picks one of the modes that
+     could be chosen -- one with a legal way to aim it (CR 603.3c) -- and its controller is then asked its targets. */
+  if (option.random) {
+    if (!rng) throw new Error("A mode chosen at random needs the game's random stream");
+    const able = entry.script.modal.modes.map((_, i) => i).filter((i) => modalWaysOf(state, entry.script.modal, context, entry.script.modal.modes.map((__, j) => j).filter((j) => j !== i), 1).length);
+    entry.randomMode = rng.pick(able);
+    askTriggerTargets(state);
+    return [];
+  }
   /* A modal trigger: none chosen, and it is removed from the stack (CR 603.3c); else what resolves is the chosen modes'. */
   if (entry.script.modal) {
     if (option.none) {
