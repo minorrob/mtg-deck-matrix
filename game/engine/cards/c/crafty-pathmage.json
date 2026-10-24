@@ -1,0 +1,57 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Crafty Pathmage",
+    "oracleId": "c4020178-71d9-4363-a0bd-b9a7eecd5d02",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Wizard"
+    ],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "{T}: Target creature with power 2 or less can't be blocked this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Target creature with power 2 or less can't be blocked this turn.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "power": {
+            "max": 2
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "targets": {
+            "target": 0
+          },
+          "rule": "cant-be-blocked",
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

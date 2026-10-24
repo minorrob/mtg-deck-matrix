@@ -1,0 +1,357 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Archaeomancer",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Zap": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Zap deals 1 damage to target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 1,
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Study": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Draw a card.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "draw",
+            "count": 1
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters, and the Zap -- an instant -- comes back from the graveyard to Rob's hand; the Bear is no choice",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Archaeomancer"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Zap",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Archaeomancer"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Zap"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Zap"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Archaeomancer",
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A sorcery comes back as well",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Archaeomancer"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Study"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Archaeomancer"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Study"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "name": "Only a creature card in the graveyard: the trigger has no target and does nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Archaeomancer"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Archaeomancer"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "Only from Rob's own graveyard: Maya's Zap stays where it is",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Archaeomancer"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Zap"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Archaeomancer"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 0
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Zap"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,231 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Demon of Catastrophes",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Wall": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Wall"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 0,
+      "toughness": 4,
+      "keywords": [
+        "Reach"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "The Bear sacrificed as it is cast; the Demon resolves, a 6/6 flier",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Demon of Catastrophes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Demon of Catastrophes"
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Bear"
+              ]
+            },
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Demon of Catastrophes",
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Demon of Catastrophes",
+            "has": [
+              "Flying",
+              "Trample"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "No creature to sacrifice, an artifact will not do: it cannot be cast",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Demon of Catastrophes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Rock"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Demon of Catastrophes"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Trample: blocked by a 0/4 Wall with reach, two damage tramples over to Maya",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Demon of Catastrophes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wall"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Demon of Catastrophes"
+          ]
+        },
+        {
+          "block": [
+            [
+              "Wall",
+              "Demon of Catastrophes"
+            ]
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 38
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Wall"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -65,7 +65,9 @@
         {
           "effect": "effectUntil",
           "rule": "exile-if-dies",
-          "targets": "remembered",
+          "targets": {
+            "target": 0
+          },
           "until": "end-of-turn",
           "condition": {
             "about": "remembered",

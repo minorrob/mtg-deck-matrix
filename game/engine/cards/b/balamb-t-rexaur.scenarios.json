@@ -1,0 +1,213 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Balamb T-Rexaur",
+  "scenarios": [
+    {
+      "name": "It enters: Rob gains 3 life; it has trample",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Balamb T-Rexaur"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Balamb T-Rexaur"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 43
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Balamb T-Rexaur",
+            "has": [
+              "Trample"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Forestcycling {2}: discarded, a Forest found, revealed and put in hand",
+      "library": [
+        "Wastes",
+        "Island",
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Balamb T-Rexaur"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Balamb T-Rexaur"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Forest"
+                ],
+                "min": 0
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Forest"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Balamb T-Rexaur"
+          ]
+        },
+        {
+          "event": "GameEventCardRevealed"
+        }
+      ]
+    },
+    {
+      "name": "No Forest in the library: nothing found, still discarded; on the battlefield it does not cycle",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Balamb T-Rexaur"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Balamb T-Rexaur"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Balamb T-Rexaur"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "activate": "Balamb T-Rexaur"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": []
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Balamb T-Rexaur"
+          ]
+        }
+      ]
+    }
+  ]
+}

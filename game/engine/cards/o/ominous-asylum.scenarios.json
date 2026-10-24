@@ -1,0 +1,134 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Ominous Asylum",
+  "scenarios": [
+    {
+      "name": "Played, it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Ominous Asylum"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Ominous Asylum"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Ominous Asylum"
+        }
+      ]
+    },
+    {
+      "name": "{4}, {T}: surveil 1, the Island put into the graveyard",
+      "library": [
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ominous Asylum",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Ominous Asylum",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Island"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "answer": [
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Ominous Asylum"
+        }
+      ]
+    },
+    {
+      "name": "Three mana is not {4}: the surveil is not offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ominous Asylum",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Ominous Asylum"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

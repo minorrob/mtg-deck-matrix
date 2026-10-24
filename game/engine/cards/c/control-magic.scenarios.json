@@ -1,0 +1,303 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Control Magic",
+  "fixtures": {
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Unmake": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target enchantment.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Enchantment"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "At Maya's Ogre: Rob controls it, and it untaps for him on his turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Control Magic"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Control Magic",
+          "targets": [
+            {
+              "card": "Ogre"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "controls": [
+                "Control Magic",
+                "Ogre",
+                "Island",
+                "Island",
+                "Wastes",
+                "Wastes"
+              ]
+            },
+            {
+              "seat": 1,
+              "controls": []
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Ogre"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 37
+        }
+      ]
+    },
+    {
+      "name": "The Aura destroyed: the Ogre goes back to Maya",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Control Magic"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Unmake"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Control Magic",
+          "targets": [
+            {
+              "card": "Ogre"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Plains",
+          "seat": 1
+        },
+        {
+          "cast": "Unmake",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Control Magic"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Ogre",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Control Magic"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "No creature on the battlefield: nothing to enchant, no cast",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Control Magic"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Control Magic"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Control Magic"
+          ]
+        }
+      ]
+    }
+  ]
+}

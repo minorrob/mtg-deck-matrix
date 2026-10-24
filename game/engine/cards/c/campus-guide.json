@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Campus Guide",
+    "oracleId": "5b8e0913-47e9-4d56-971d-abd91b0f7587",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Golem"
+    ],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "When this creature enters, you may search your library for a basic land card, reveal it, then shuffle and put that card on top.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, you may search your library for a basic land card, reveal it, then shuffle and put that card on top.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Land"
+            ],
+            "supertypes": [
+              "Basic"
+            ]
+          },
+          "to": "top",
+          "reveal": true,
+          "shuffle": true
+        }
+      ],
+      "optional": true
+    }
+  ]
+}

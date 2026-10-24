@@ -1,0 +1,271 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Crossway Vampire",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Wall": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Wall"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 0,
+      "toughness": 4
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters: Maya's Ogre can't block Rob's Bear this turn; her Wall still can",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Mountain",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Crossway Vampire"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre",
+            "Wall"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Crossway Vampire"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Ogre"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "attack": [
+            "Bear"
+          ]
+        },
+        {
+          "block": [],
+          "blockers": [
+            "Wall"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 38
+        }
+      ]
+    },
+    {
+      "name": "Only for this turn: on Rob's next turn the Ogre blocks again",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Mountain",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Crossway Vampire"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Crossway Vampire"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Ogre"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Bear"
+          ]
+        },
+        {
+          "block": [],
+          "blockers": [
+            "Ogre"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 38
+        }
+      ]
+    },
+    {
+      "name": "No other creature: it must target itself",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Mountain",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Crossway Vampire"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Crossway Vampire"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Crossway Vampire"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Mountain",
+            "Mountain",
+            "Wastes",
+            "Crossway Vampire"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,134 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Dark Fortress",
+  "fixtures": {
+    "Tower": {
+      "types": [
+        "Land"
+      ],
+      "manaCost": null,
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Played this turn, no basic land: it taps for {B}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Dark Fortress"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tower"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Dark Fortress"
+        },
+        {
+          "tap": "Dark Fortress",
+          "mana": {
+            "B": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "B": 1,
+            "C": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "A later turn and no basic land: only {C}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Dark Fortress",
+            "Tower"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Dark Fortress"
+              },
+              "count": 1
+            }
+          ]
+        },
+        {
+          "tap": "Dark Fortress"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 1,
+            "B": 0,
+            "R": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "A later turn with a Swamp: it taps for {R}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Dark Fortress",
+            "Swamp"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Dark Fortress",
+          "mana": {
+            "R": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "R": 1
+          }
+        }
+      ]
+    }
+  ]
+}

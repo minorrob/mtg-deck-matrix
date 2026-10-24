@@ -1,0 +1,249 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Keldon Vandals",
+  "fixtures": {
+    "Relic": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters: Maya's Relic destroyed; her Bear is no artifact",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Keldon Vandals"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Relic",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Keldon Vandals"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Relic"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Relic"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Relic"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Keldon Vandals"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "No artifact anywhere: the trigger has no target and does nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Keldon Vandals"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Keldon Vandals"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Echo {2}{R} not paid at Rob's next upkeep: it is sacrificed",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Keldon Vandals"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Keldon Vandals"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Pay {2}{R}",
+                  "Don't pay"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Don't pay"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Keldon Vandals"
+          ]
+        }
+      ]
+    }
+  ]
+}

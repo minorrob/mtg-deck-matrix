@@ -1,0 +1,195 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Assert Authority",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Relic": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Four artifacts make it {1}{U}{U}: Rob's Bear countered, and exiled rather than put in his graveyard",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Assert Authority"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Relic",
+            "Relic",
+            "Relic",
+            "Relic",
+            "Island",
+            "Island",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Bear"
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Assert Authority",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": []
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Assert Authority"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "No artifacts: three mana does not cast it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Assert Authority"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Bear"
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Assert Authority",
+            "seat": 1
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

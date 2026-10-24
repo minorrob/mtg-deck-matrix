@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Angelfire Crusader",
+    "oracleId": "1a587b8d-fcb4-47ca-9689-610897117166",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Soldier",
+      "Knight"
+    ],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "{R}: This creature gets +1/+0 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{R}: This creature gets +1/+0 until end of turn.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{R}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 1,
+          "toughness": 0
+        }
+      ]
+    }
+  ]
+}
