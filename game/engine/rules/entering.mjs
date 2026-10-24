@@ -22,10 +22,11 @@ import {runEffect} from "../script/effects/index.mjs";
 import {cardsIn, eventCard, moveObject} from "../state/index.mjs";
 import {matchesSelector} from "../script/filter.mjs";
 import {creatureTypesInGame, discardOne} from "../script/effects/asking.mjs";
+import {sacrificeOne} from "../script/effects/zones.mjs";
 import {copyOnto} from "../script/effects/permanents.mjs";
 import {ownEntering, graveyardBound, placeReplacedCounters} from "./replacement.mjs";
 import {collectTriggers} from "./trigger.mjs";
-import {enteringCountersPlaced} from "./statics.mjs";
+import {enteringCountersPlaced, cantBeSacrificed} from "./statics.mjs";
 import {amountOf} from "../script/amount.mjs";
 import {withChosen} from "../script/chosen.mjs";
 
@@ -113,6 +114,11 @@ export function askEntering(state) {
     const lands = q.discardInstead ? discardableInstead(state, object.controller, q.discardInstead) : null;
     if (lands && !lands.length) { queue.shift(); putAside(state, q); continue; }
     if (lands) { state.awaiting = {kind: "entering-choice", player: object.controller, objectId: q.objectId, discardInstead: lands}; return true; }
+    /* DEVOUR (CR 702.82a, c): the permanents of its controller's that the quality describes, never itself -- none, and nothing
+       is asked (it enters with no counters). */
+    const fodder = q.devour ? devourable(state, object.controller, q) : null;
+    if (fodder && !fodder.length) { queue.shift(); continue; }
+    if (fodder) { state.awaiting = {kind: "entering-choice", player: object.controller, objectId: q.objectId, devour: {amount: q.devour.amount, ids: fodder}}; return true; }
     /* "Enter as a copy of any creature on the battlefield": nothing to copy, and it arrives as itself. */
     const copies = q.copyOf ? copyChoices(state, q, object) : null;
     if (copies && !copies.length) { arrived(state, q); queue.shift(); continue; }
@@ -124,9 +130,18 @@ export function askEntering(state) {
   return false;
 }
 
+/* What a devouring permanent may sacrifice (CR 702.82a, c): its controller's permanents of the quality, other than itself, that
+   can be sacrificed. */
+const devourable = (state, player, q) => state.zones.battlefield.filter((id) => id !== q.objectId && state.objects[id].controller === player
+  && matchesSelector({...q.devour.of, what: "permanent", controller: "you"}, state, id, {controller: player, source: q.objectId}) && !cantBeSacrificed(state, id));
+
 /** The choice (§12.1): pay, if the player can, or let it enter tapped. */
 export function enteringChoice(state, awaiting) {
   const name = state.objects[awaiting.objectId]?.card ?? "It";
+  /* Devour (CR 702.82a): any number of them, none included -- its controller's to choose. */
+  if (awaiting.devour) return {id: `entering-devour:${awaiting.objectId}`, title: `${name}: devour -- sacrifice any number (each gives ${awaiting.devour.amount} +1/+1 counters)`,
+    mode: "many", min: 0, max: awaiting.devour.ids.length,
+    options: awaiting.devour.ids.map((id, index) => ({index, label: state.objects[id]?.card ?? "?", cardId: id}))};
   /* "You may have it enter as a copy": each permanent it may copy, or none. */
   if (awaiting.copyOf) return {id: `entering-copy:${awaiting.objectId}`, title: `${name}: enter as a copy?`, mode: "one", min: 1, max: 1,
     options: [...awaiting.copyOf.map((id, index) => ({index, label: state.objects[id]?.card ?? "?", cardId: id, copyOf: id})),
@@ -164,6 +179,29 @@ export function enteringChoice(state, awaiting) {
 
 /** Apply the answer: paying untaps the permanent. Then the next question, if any. */
 export function resolveEnteringChoice(state, awaiting, indices) {
+  /* DEVOUR (CR 702.82a, c): the chosen permanents sacrificed (CR 701.21a), and N +1/+1 counters for each one sacrificed -- put
+     on as it entered (CR 614.12, 122.6), by its controller (122.6a), and said, as riot's counter is below. */
+  if (awaiting.devour) {
+    const picked = [...new Set(indices ?? [])];
+    if (!Array.isArray(indices) || picked.length !== indices.length || picked.some((i) => !awaiting.devour.ids[i])) throw new Error("Invalid selection");
+    const events = [];
+    (state.enteringQuestions ?? []).shift();
+    state.awaiting = null;
+    let eaten = 0;
+    for (const i of picked) {
+      const id = awaiting.devour.ids[i];
+      if (state.objects[id]?.zone === "battlefield" && sacrificeOne(state, id, events) !== null) eaten += 1;
+    }
+    const devourer = state.objects[awaiting.objectId];
+    if (devourer && eaten > 0) {
+      const was = devourer.counters["+1/+1"] ?? 0;
+      devourer.counters["+1/+1"] = was + enteringCountersPlaced(state, awaiting.objectId, "+1/+1", awaiting.devour.amount * eaten, devourer.controller);
+      events.push({kind: "GameEventCardCounters", data: {turn: state.turn, phase: state.phase,
+        fields: {card: eventCard(state, awaiting.objectId), type: "+1/+1", oldValue: was, newValue: devourer.counters["+1/+1"], by: devourer.controller}}});
+    }
+    askEntering(state);
+    return events;
+  }
   const option = enteringChoice(state, awaiting).options[indices?.[0]];
   if (!Array.isArray(indices) || indices.length !== 1 || !option) throw new Error("Invalid selection");
   const events = [];

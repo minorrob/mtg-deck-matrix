@@ -583,7 +583,12 @@ export function mayPlay(state, params, context) {
   }
   /* "For as long as it remains exiled" (Thranduil's Decree, `zone: "exile"`): only a card there now -- one put elsewhere never
      starts the duration, and the effect does nothing to it (CR 611.2b). */
-  const ids = (params.targets ?? []).filter((id) => state.objects[id] && (params.zone === undefined || state.objects[id].zone === params.zone));
+  /* "Until end of turn, you may play A CARD EXILED WITH LOBELIA without paying its mana cost" (Lobelia, Defender of Bag End;
+     Rob's lists P2): `linked`, the cards this source's other ability exiled (CR 607.2a), still in exile -- face down there, each
+     played as the card it is (CR 406.3a) -- and `count`, how many it lets be played before it is spent ("a card": one;
+     rules/actions.mjs, spendPermission). */
+  const named = params.linked === true ? linkedMoving(state, {}, context).filter((id) => state.objects[id]?.zone === "exile") : params.targets ?? [];
+  const ids = named.filter((id) => state.objects[id] && (params.zone === undefined || state.objects[id].zone === params.zone));
   const player = context.controller;
   if (!ids.length || !state.players[player]) return [];
   const effects = (state.effects ??= []);
@@ -597,6 +602,7 @@ export function mayPlay(state, params, context) {
     /* "And mana of any type can be spent to cast that spell" (Hostage Taker; CR 609.4b): how it may be paid for
        (rules/actions.mjs, anyTypeCost), as a permanent's play-from says it. */
     ...(params.anyMana === true ? {anyMana: true} : {}),
+    ...(Number.isInteger(params.count) ? {count: params.count} : {}),
     until: params.until ?? "end-of-turn", madeOnTurn: state.turn, sourceController: player});
   return [];
 }

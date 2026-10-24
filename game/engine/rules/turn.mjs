@@ -848,6 +848,8 @@ export function advance(state) {
       if (player.leftThisTurn) player.leftThisTurn = 0;
       /* And how many cards left each one's graveyard (state/index.mjs; "if a card left your graveyard this turn"). */
       if (player.leftGraveyardThisTurn) player.leftGraveyardThisTurn = 0;
+      /* And whether each descended (state/index.mjs; Canonized in Blood). */
+      if (player.descendedThisTurn) player.descendedThisTurn = 0;
       if (player.enteredThisTurn) player.enteredThisTurn = [];
       /* And whether each was dealt combat damage (rules/combat.mjs). */
       if (player.combatDamagedThisTurn) player.combatDamagedThisTurn = false;

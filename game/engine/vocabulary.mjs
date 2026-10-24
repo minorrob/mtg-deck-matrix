@@ -267,7 +267,10 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
   "improvise",
   /* And cascade (CR 702.85a; Apex Devastator), a cast trigger: cards exiled until a nonland one that costs less, cast free
      (cards/index.mjs). */
-  "cascade"];
+  "cascade",
+  /* Rob's lists P2: devour (CR 702.82; Feasting Hobbit's "Devour Food 3"), permanents sacrificed as it enters for +1/+1
+     counters (cards/index.mjs, rules/entering.mjs); skulk (CR 702.118; Gollum, Obsessed Stalker), evasion (keywords/combat.mjs). */
+  "devour", "skulk"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

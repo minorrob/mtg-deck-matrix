@@ -1296,9 +1296,15 @@ function abilityXValues(state, player, ability, id) {
   /* "−X:" (CR 606.4): any X from none to the loyalty it has -- and past it by what an effect adds to the cost (Carth the
      Lion's [+1]: X of 3 from two loyalty is a total cost of [−2], CR 606.6; costOf). */
   if (ability.loyalty === "-X") return Array.from({length: (state.objects[id]?.counters?.loyalty ?? 0) + loyaltyCostIncrease(state, player) + 1}, (_, n) => n);
+  /* "SACRIFICE X SQUIRRELS" (Chatterfang, Squirrel General; Rob's lists P2): X announced as the ability is activated (CR
+     601.2b, 602.2b), from none to as many as it could sacrifice -- each its own offer, the X its effects read. */
+  const sacrificeX = (ability.cost ?? []).find((a) => a?.atom === "sacrifice" && a.count === "X" && a.selector);
+  if (sacrificeX) return Array.from({length: sacrificeChoices(state, player, id, sacrificeX.selector).length + 1}, (_, n) => n);
   const atom = (ability.cost ?? []).find((a) => a?.atom === "mana");
   return atom ? xValues(poolFor(state, player, {ability: id}), parseManaCost(atom.cost)) : [null];
 }
+/* How many a sacrifice cost takes: its number, or the X announced for it ("Sacrifice X Squirrels"). */
+const sacrificeCount = (atom, X) => (atom?.count === "X" ? X ?? 0 : atom?.count ?? 1);
 
 /** How many lands this player may still play this turn. CR 305.2; effects raise the allowance. */
 /* "You may play an additional land this turn" (Hearthhull): an effect for the turn (effects/permanents.mjs, effectUntil). */
@@ -1378,6 +1384,8 @@ const allPlayPermissions = (state, player) => onceAQuestion(state, `play-permiss
       ...(e.sorcery === true ? {sorcery: true} : {}),
       /* "Mana of any type can be spent to cast that spell" (Hostage Taker; anyTypeCost below). */
       ...(e.anyMana === true ? {anyMana: true} : {}),
+      /* "A card exiled with Lobelia": so many of the named cards before it is spent (spendPermission). */
+      ...(Number.isInteger(e.count) ? {count: e.count} : {}),
       ...(Number.isInteger(e.afterTurn) ? {afterTurn: e.afterTurn} : {})}}))];
 });
 /* A CARD PLAYED THROUGH A PERMISSION (CR 601.2a, 305.1): what it uses up -- a limited one's use this turn ("once during each
@@ -2125,7 +2133,9 @@ function abilityOffers(state, player, id, ability) {
        some may be -- which ones, and the mana for the rest, asked once it is taken. */
     const bends = (waterbendRange(state, player, id, ability, X ?? 0, abilityLess(state, player, id, ability, aim))?.most ?? 0) > 0;
     if (!plain && !bends) continue;
-    const atom = sacrificeAtom(ability.cost), back = returnAtom(ability.cost), toss = discardAtom(ability.cost);
+    /* A sacrifice of X (Chatterfang): the X of this offer, as a number of permanents. */
+    const printedAtom = sacrificeAtom(ability.cost), atom = printedAtom?.count === "X" ? {...printedAtom, count: sacrificeCount(printedAtom, X)} : printedAtom;
+    const back = returnAtom(ability.cost), toss = discardAtom(ability.cost);
     /* A permanent you control to sacrifice, or to return to its owner's hand, or a card in your hand to discard: one
        offer each (CR 602.2b). No card to discard, and the ability can't be activated. */
     const crew = crewAtom(ability.cost), tapper = tapAtom(ability.cost), untapper = untapAtom(ability.cost), blighter = blightAtom(ability.cost), grave = graveyardAtom(ability.cost);
@@ -2134,7 +2144,7 @@ function abilityOffers(state, player, id, ability) {
        cards of "discard two cards" are; fewer than that there, and it can't be activated. */
     /* Ten of many permanents: one offer, the ten asked once it is taken (sacrificesLater). */
     const later = sacrificesLater(state, player, id, atom), among = countersAmongAtom(ability.cost);
-    const fodder = later ? [null] : atom ? discardSets(sacrificeChoices(state, player, id, atom.selector), atom.count ?? 1).map((s) => ({sacrifice: s}))
+    const fodder = later ? [null] : atom?.count === 0 ? [{sacrifice: []}] : atom ? discardSets(sacrificeChoices(state, player, id, atom.selector), atom.count ?? 1).map((s) => ({sacrifice: s}))
       : back ? sacrificeChoices(state, player, id, back.selector).map((r) => ({returnToHand: r}))
       /* "Discard a creature card" (Fauna Shaman): only a card its selector describes. */
       : toss ? discardSets(cardsIn(state, "hand", player).filter((c) => c !== id && (!toss.selector || compileSelector({...toss.selector, what: "card", zone: "hand"})(state, c, {controller: player, source: id}))),
@@ -3052,7 +3062,7 @@ function performOffered(state, player, action, during) {
     const bent = action.waterbend === true ? waterbendPicked(state, player, action) : [];
     /* The permanents and counters picked once it was taken, checked before anything moves. */
     if (action.sacrificeLater) {
-      const n = sacrificeAtom(ability.cost)?.count ?? 1, able = sacrificeChoices(state, player, action.objectId, sacrificeAtom(ability.cost)?.selector);
+      const n = sacrificeCount(sacrificeAtom(ability.cost), action.x), able = sacrificeChoices(state, player, action.objectId, sacrificeAtom(ability.cost)?.selector);
       const set = action.sacrificeSet ?? [];
       if (set.length !== n || new Set(set).size !== n || !set.every((s) => able.includes(s))) throw new Error(`Choose ${inWords(n)} permanents ${object.card}'s cost can sacrifice`);
     }

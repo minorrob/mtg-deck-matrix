@@ -1,0 +1,101 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Lobelia, Defender of Bag End",
+    "oracleId": "0f2e3e2e-9857-4be5-9bf0-62da1cc147fc",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Halfling",
+      "Citizen"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "When Lobelia enters, look at the top card of each opponent's library and exile those cards face down.\n{T}, Sacrifice an artifact: Choose one —\n• Until end of turn, you may play a card exiled with Lobelia without paying its mana cost.\n• Each opponent loses 2 life and you gain 2 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When Lobelia enters, look at the top card of each opponent's library and exile those cards face down.",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "fromTop": 1,
+          "who": "opponent",
+          "to": "exile",
+          "faceDown": true,
+          "look": true,
+          "link": true
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{T}, Sacrifice an artifact: Choose one —\n• Until end of turn, you may play a card exiled with Lobelia without paying its mana cost.\n• Each opponent loses 2 life and you gain 2 life.",
+      "cost": [
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "types": [
+              "Artifact"
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Until end of turn, you may play a card exiled with Lobelia without paying its mana cost.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "mayPlay",
+                  "linked": true,
+                  "count": 1,
+                  "free": true,
+                  "until": "end-of-turn"
+                }
+              ]
+            },
+            {
+              "text": "Each opponent loses 2 life and you gain 2 life.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "loseLife",
+                  "who": "opponent",
+                  "amount": 2
+                },
+                {
+                  "effect": "gainLife",
+                  "amount": 2
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

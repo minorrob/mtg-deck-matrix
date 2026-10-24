@@ -258,8 +258,14 @@ function checkEffect(effect, path, errors) {
     if (effect.payLife !== undefined && effect.payLife !== "manaValue") errors.push({path: `${path}.payLife`, message: "payLife is \"manaValue\""});
     if (effect.count !== undefined && !(Number.isInteger(effect.count) && effect.count >= 1)) errors.push({path: `${path}.count`, message: "count is how many cards it lets be played, 1 or more"});
   }
-  if (name === "mayPlay" && effect.from === undefined && ["spells", "payLife", "count"].some((key) => effect[key] !== undefined))
-    errors.push({path, message: "spells, payLife and count are a mayPlay's from a zone (`from`)"});
+  /* "You may play a card exiled with Lobelia" (Rob's lists P2): `linked`, the cards this source's other ability exiled, and
+     `count`, how many of them -- in place of `targets`. */
+  if (name === "mayPlay" && effect.linked !== undefined && !(effect.linked === true && effect.from === undefined && effect.targets === undefined))
+    errors.push({path: `${path}.linked`, message: "mayPlay's `linked` is true: the cards this source's other ability exiled, in place of targets or a zone"});
+  if (name === "mayPlay" && effect.linked === true && effect.count !== undefined && !(Number.isInteger(effect.count) && effect.count >= 1))
+    errors.push({path: `${path}.count`, message: "count is how many cards it lets be played, 1 or more"});
+  if (name === "mayPlay" && effect.from === undefined && ["spells", "payLife", ...(effect.linked === true ? [] : ["count"])].some((key) => effect[key] !== undefined))
+    errors.push({path, message: "spells, payLife and count are a mayPlay's from a zone (`from`); count also a linked one's"});
   /* Amass (CR 701.47a): the creature type its Army is, "Goblin" for "amass Goblins 2"; the Army chosen remembered or not. */
   if (name === "amass") {
     if (!isText(effect.subtype) || !isCreatureType(effect.subtype))
@@ -667,6 +673,8 @@ function checkAbility(ability, path, errors, {permanent = false, manaX = false} 
       if (Object.keys(ability.affects ?? {}).some((key) => !["types", "subtypes"].includes(key)) || Object.values(ability.affects ?? {}).some((v) => !Array.isArray(v) || !v.length))
         errors.push({path: `${path}.affects`, message: "The tokens another is added to are told by their card types and subtypes, or any token: affects {types?, subtypes?}"});
       if (!tokenSpec(ability.token)) errors.push({path: `${path}.token`, message: "What is added is a token: {name, types, ...} or {predefined}"});
+      /* "Plus that many 1/1 green Squirrel creature tokens" (Chatterfang): as many as the event makes, not one. */
+      if (ability.thatMany !== undefined && ability.thatMany !== true) errors.push({path: `${path}.thatMany`, message: "thatMany is true: as many added as the tokens it adds to"});
     }
     /* "If you would create a Clue, Food, or Treasure token, instead create one of each" (Academy Manufactor): the tokens it
        names, two or more predefined tokens (CR 111.10), each told by its subtype. */
@@ -679,7 +687,11 @@ function checkAbility(ability, path, errors, {permanent = false, manaX = false} 
       if (ability.exceptFirstInDrawStep !== undefined && ability.exceptFirstInDrawStep !== true) errors.push({path: `${path}.exceptFirstInDrawStep`, message: "exceptFirstInDrawStep is true"});
     }
     /* "Twice that much life instead" (rules/statics.mjs, lifeGained): how many times, 2 or more. */
-    if (["more-life", "more-life-loss"].includes(ability.rule) && !(Number.isInteger(ability.times) && ability.times >= 2))
+    /* Or "that much life plus 1" (Bilbo, Birthday Celebrant; rules/statics.mjs, lifeGained): `plus`, 1 or more, in place of `times`. */
+    if (ability.rule === "more-life" && ability.plus !== undefined) {
+      if (!(Number.isInteger(ability.plus) && ability.plus >= 1 && ability.times === undefined))
+        errors.push({path: `${path}.plus`, message: "More life plus some says how much more: plus, a whole number, 1 or more, and no times beside it"});
+    } else if (["more-life", "more-life-loss"].includes(ability.rule) && !(Number.isInteger(ability.times) && ability.times >= 2))
       errors.push({path: `${path}.times`, message: "More life instead says how many times as much: a whole number, 2 or more"});
     /* A card's own restriction on casting it (Proft, Sinister Mastermind): what lets it be cast, a condition, said. */
     if (ability.rule === "cant-cast-self") {

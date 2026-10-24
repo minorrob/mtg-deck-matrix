@@ -1049,6 +1049,18 @@ export function compileScript(script) {
     /* RIOT (CR 702.136a; Ghor-Clan Wrecker): "You may have this permanent enter with an additional +1/+1 counter on it. If you
        don't, it gains haste" -- a replacement on its own entering, its controller asked once it is there (rules/replacement.mjs,
        rules/entering.mjs). Each instance works separately (702.136b). Only on a card that enters as a permanent. */
+    /* DEVOUR [QUALITY] N (CR 702.82a, 702.82c; Feasting Hobbit's "Devour Food 3", Rob's lists P2): "as this object enters, you
+       may sacrifice any number of [quality] permanents. This permanent enters with N +1/+1 counters on it for each permanent
+       sacrificed this way" -- a replacement on its own entering, its controller asked which once it is there, as riot's
+       question is (rules/replacement.mjs, rules/entering.mjs). `amount` N, `of` the quality (a selector; creatures, unsaid). */
+    if (word === "devour") {
+      if (!(Number.isInteger(ability.amount) && ability.amount >= 1)) problems.push(`${ability.text}: devour needs its number, 1 or more`);
+      if ((identity.types ?? []).some((t) => t === "Instant" || t === "Sorcery")) problems.push(`${ability.text}: devour on a card that never enters the battlefield`);
+      abilities.push({id, kind: "replacement", text: ability.text, watches: {event: "enters", who: "self"},
+        change: {devour: {amount: ability.amount ?? 1, of: structuredClone(ability.of ?? {types: ["Creature"]})}}});
+      keywords.push("Devour");
+      return;
+    }
     if (word === "riot") {
       if ((identity.types ?? []).some((t) => t === "Instant" || t === "Sorcery")) problems.push(`${ability.text}: riot on a card that never enters the battlefield`);
       abilities.push({id, kind: "replacement", text: ability.text, watches: {event: "enters", who: "self"}, change: {riot: true}});
