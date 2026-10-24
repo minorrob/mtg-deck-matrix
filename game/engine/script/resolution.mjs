@@ -103,7 +103,7 @@ export function runResolution(state, rng = null) {
          last was (CR 113.7a): what this resolution remembers of what its effects did. */
       movedWas: resolving.context.movedWas, searched: resolving.context.searched, lastKnown: resolving.context.lastKnown,
       /* "If this is the first time this ability has resolved this turn" (rules/stack.mjs counts them). */
-      resolvedBefore: resolving.context.resolvedBefore, gift: resolving.context.gift, rolled: resolving.context.rolled})) {
+      resolvedBefore: resolving.context.resolvedBefore, gift: resolving.context.gift})) {
       resolving.queue.shift();
       continue;
     }
@@ -112,9 +112,9 @@ export function runResolution(state, rng = null) {
        put in front of whatever follows, so one of them may stop to ask (Composer of Spring's "you may put a card"). */
     if (effect?.effect === "branch") {
       const holds = conditionHolds(state, effect.if, {controller: resolving.context.controller, source: resolving.context.source, about: resolving.context.about,
-        remembered: resolving.context.remembered, targets: resolving.context.targets, cast: resolving.context.cast,
+        remembered: resolving.context.remembered, targets: resolving.context.targets, cast: resolving.context.cast, rolled: resolving.context.rolled,
         movedWas: resolving.context.movedWas, searched: resolving.context.searched, lastKnown: resolving.context.lastKnown, resolvedBefore: resolving.context.resolvedBefore,
-        gift: resolving.context.gift, rolled: resolving.context.rolled});
+        gift: resolving.context.gift});
       resolving.queue.shift();
       resolving.queue.unshift(...structuredClone((holds ? effect.then : effect.otherwise) ?? []));
       continue;

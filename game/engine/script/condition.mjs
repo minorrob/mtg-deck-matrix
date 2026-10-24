@@ -136,13 +136,15 @@ const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTu
   "solved", "sacrificedNontokenThisTurn",
   /* Every one of several conditions (Happily Ever After). */
   "allOf",
+  /* Rob's lists, P1: Getaway Glamer's "if no other creature has greater power" (CR 208.1); Preston, the Vanisher's "if it
+     wasn't cast" (CR 601.2); Y'shtola Rhul's "if it's the first end step of the turn" (CR 513.1, 500.10). */
+  "noGreaterPower", "wasCast", "firstEndStep",
+  /* Battle Angels of Tyr's "if that player has more cards in hand / controls more lands / has more life than each other player". */
+  "thatPlayerMost",
   /* Gift's "if the gift was promised" (CR 702.174b). */
   "giftPromised",
   /* Offspring's "if its offspring cost was paid" (CR 702.175a; wave 4c). */
-  "offspringPaid",
-  /* Rob's lists, P1: Getaway Glamer's "if no other creature has greater power" (CR 208.1); Preston, the Vanisher's "if it
-     wasn't cast" (CR 601.2); Y'shtola Rhul's "if it's the first end step of the turn" (CR 513.1, 500.10). */
-  "noGreaterPower", "wasCast", "firstEndStep"];
+  "offspringPaid"];
 /** Whether these effects, nested ones included, ask `firstResolution` -- so their ability's resolutions are counted
     (rules/stack.mjs). */
 export const asksFirstResolution = (effects) => JSON.stringify(effects ?? []).includes('"firstResolution"');
@@ -389,9 +391,9 @@ export function conditionHolds(state, condition, {controller, source = null, abo
       ...(movedWas !== undefined ? {movedWas} : {}),
       /* How the spell resolving was cast: "if you've cast another instant or sorcery spell this turn" leaves its own cast out
          (Burrog Barrage; script/amount.mjs, spellsCastThisTurn's `another`). */
-      ...(cast !== undefined ? {cast} : {}),
       /* "1-9 | ..., 10-20 | ..." (Lae'zel's Acrobatics; CR 706.2): the result of the die this resolution rolled ({dieRolled}). */
-      ...(rolled !== undefined ? {rolled} : {})};
+      ...(rolled !== undefined ? {rolled} : {}),
+      ...(cast !== undefined ? {cast} : {})};
     const than = (v) => amountOf(state, v, counted);
     /* "If a land entered the battlefield under your control this turn and you control a prime number of lands" (Zimone): a
        list of comparisons, every one of them holding. */
@@ -491,6 +493,15 @@ export function conditionHolds(state, condition, {controller, source = null, abo
     const them = state.players[about?.player];
     if (!them || !state.players.some((p) => p.id !== controller && !p.lost && p.life < them.life)) return false;
   }
+  /* "IF THAT PLAYER HAS MORE CARDS IN HAND THAN EACH OTHER PLAYER", "... CONTROLS MORE LANDS ...", "... HAS MORE LIFE ..."
+     (Battle Angels of Tyr; CR 402.2, 119.1): the player the trigger is about against every other player still in the game
+     (CR 800.4a), you among them -- a tie is not more. */
+  if (condition.thatPlayerMost !== undefined) {
+    const measure = (id) => (condition.thatPlayerMost === "hand" ? cardsIn(state, "hand", id).length : condition.thatPlayerMost === "life" ? state.players[id].life
+      : state.zones.battlefield.filter((x) => controllerOf(state, x) === id && typesOf(state, x).includes("Land")).length);
+    const them = state.players[about?.player];
+    if (!them || them.lost || state.players.some((p) => p.id !== them.id && !p.lost && measure(p.id) >= measure(them.id))) return false;
+  }
   /* "If you have 40 or more life" (Felidar Sovereign). */
   if (condition.lifeAtLeast !== undefined && state.players[controller].life < condition.lifeAtLeast) return false;
   /* "If it's not your turn, you may exile a blue card from your hand rather than pay this spell's mana cost". */
@@ -547,6 +558,7 @@ export function conditionProblems(condition) {
     problems.push("noGreaterPower is {target: n}: no other creature has greater power than that target");
   if ("wasCast" in condition && typeof condition.wasCast !== "boolean") problems.push("wasCast is true or false");
   if ("firstEndStep" in condition && condition.firstEndStep !== true) problems.push("firstEndStep is true");
+  if ("thatPlayerMost" in condition && !["hand", "lands", "life"].includes(condition.thatPlayerMost)) problems.push("thatPlayerMost is \"hand\", \"lands\" or \"life\"");
   if ("powerAboveOthers" in condition && condition.powerAboveOthers !== "that card") problems.push("powerAboveOthers is \"that card\": the creature a trigger is about has more power than each other creature");
   if ("firstResolution" in condition && condition.firstResolution !== true) problems.push("firstResolution is true: the first time this ability has resolved this turn");
   if ("freerunning" in condition && condition.freerunning !== true) problems.push("freerunning is true");

@@ -236,6 +236,15 @@ export function enterAttacking(state, ids, whom, context, controller) {
   if (!state.combat && state.phase === "COMBAT_DECLARE_ATTACKERS" && controller === state.activePlayer)
     state.combat = {attackingPlayerId: controller, defenders: [], attacks: []};
   if (!state.combat || state.combat.attackingPlayerId !== controller) return;
+  /* "Tapped and attacking that player or a planeswalker they control" (myriad, CR 702.116a): the player the effect is about,
+     or one of their planeswalkers, its controller's choice as it enters (asking.mjs, attackWhom). */
+  if (whom === "that player or their planeswalker") {
+    const places = attackPlaces(state, controller).filter((place) => place.player === context.about?.player);
+    if (!places.length) return;
+    if (places.length === 1 || !state.resolving) { for (const id of creatures) joinAttack(state, id, places[0].player, places[0].planeswalker); return; }
+    state.resolving.queue.unshift({effect: "attackWhom", tokens: creatures, player: controller, places});
+    return;
+  }
   if (whom === "that player") {
     const player = context.about?.player, planeswalker = context.about?.planeswalker;
     if (player === controller || !state.players[player] || state.players[player].lost) return;
@@ -377,6 +386,8 @@ export function copyPermanent(state, params, context) {
   const made = makeCopies(state, gone ?? originals, params, context, events);
   /* "If the token is an Aura, untap Yenna" (batch 70): the tokens made, for the effects after it. */
   if (params.remember) context.remembered = made;
+  /* "Exile the tokens at end of combat" (myriad): every token made by each time it is repeated, kept together. */
+  if (params.rememberMore) context.remembered = [...(context.remembered ?? []), ...made];
   return events;
 }
 
@@ -805,13 +816,19 @@ export function effectUntil(state, params, context) {
      ("you"). "Your opponents can't cast spells this turn" (Silence; library load L2): each opponent still in the game as it
      resolves ("opponent"); "players can't cast spells this turn" (Bilbo's Gambit): each player ("each") -- named now, as
      the rule is changed for players and not objects (CR 611.2c is about characteristics). */
+  /* "Until your next turn, your opponents can't cast spells from anywhere other than their hands" (Avatar's Wrath; CR 601.3):
+     every spell from anywhere but a hand (`fromAnywhereButHand`; rules/statics.mjs, castForbidden). */
+  if (params.rule === "cant-cast" && params.fromAnywhereButHand === true) {
+    const forbidden = Array.isArray(params.who) ? params.who : playersFor(state, params.who, context.controller);
+    if (!forbidden.length) return [];
+    pushEffect(state, {id: params.id ?? `effect:${context.source ?? "effect"}`, rule: "cant-cast", players: [...forbidden], spells: {}, fromAnywhereButHand: true,
+      affects: {what: "player"}, apply: {}, until: params.until ?? "end-of-turn", sourceController: context.controller});
+    return [];
+  }
   if (params.rule === "cant-cast") {
     const who = typeof params.who === "string" ? playersFor(state, params.who, context.controller) : params.who;
-    if (!(typeof params.named === "string" || params.allSpells === true || params.fromAnywhereButHand === true) || !Array.isArray(who) || !who.length) return [];
-    /* "Until your next turn, your opponents can't cast spells from anywhere other than their hands" (Avatar's Wrath; CR 601.3):
-       every spell from anywhere but a hand (`fromAnywhereButHand`; rules/statics.mjs, castForbidden). */
-    pushEffect(state, {id: params.id ?? `effect:${context.source ?? "effect"}`, rule: "cant-cast", players: [...who],
-      spells: params.allSpells === true || params.fromAnywhereButHand === true ? {} : {named: params.named}, ...(params.fromAnywhereButHand === true ? {fromAnywhereButHand: true} : {}),
+    if (!(typeof params.named === "string" || params.allSpells === true) || !Array.isArray(who) || !who.length) return [];
+    pushEffect(state, {id: params.id ?? `effect:${context.source ?? "effect"}`, rule: "cant-cast", players: [...who], spells: params.allSpells === true ? {} : {named: params.named},
       affects: {what: "player"}, apply: {}, until: params.until ?? "end-of-turn", sourceController: context.controller});
     return [];
   }

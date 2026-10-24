@@ -58,14 +58,14 @@ const handOf = (name) => scripts.find((s) => s.identity.name === name);
      creature for the modes its mana pays (Cloud's Limit Break) or at all (Eriette's Lullaby), a red or white creature or
      planeswalker of an opponent's (Flourishing Grapple), a spell that targets a permanent its caster controls (Rebuff the
      Wicked), a spell of mana value 1 to counter (Mental Misstep), the {2} a mode adds to its mana cost, which spree's one
-     or more modes always do (Explosive Derailment, and Return the Favor's {1}; CR 702.172a) -- or for want of seven cards in its player's graveyard, without which it can't be cast at all (Proft,
+     or more modes always do (Explosive Derailment, Getaway Glamer of Rob's lists, and Return the Favor's {1}; CR 702.172a) -- or for want of seven cards in its player's graveyard, without which it can't be cast at all (Proft,
      Sinister Mastermind). The card load of 2026-10-24 added 23 for the same wants, and an artifact card in its player's
      graveyard to return (Refurbish); each has scenarios of its own that cast it. Named, so a card that stops being played
      in its smoke game is found, not counted. */
   const unplayed = smoked.filter((r) => !r.played).map((r) => r.name).sort();
   eq(unplayed, ["Argivian Restoration", "Artifact Blast", "Assassinate", "Blue Elemental Blast", "Bright Reprisal",
     "Cloud's Limit Break", "Condemn", "Death Stroke", "Devout Decree", "Eriette's Lullaby", "Explosive Derailment",
-    "Flashfreeze", "Flourishing Grapple", "Halt Order", "Immolating Glare", "Keep Safe", "Kill Shot",
+    "Flashfreeze", "Flourishing Grapple", "Getaway Glamer", "Halt Order", "Immolating Glare", "Keep Safe", "Kill Shot",
     "Mental Misstep", "Mirrodin Avenged", "Precise Redaction", "Proft, Sinister Mastermind", "Rebuff the Wicked",
     "Rebuke", "Reconstruction", "Refurbish", "Return the Favor", "Ritual of Restoration", "Silverstrike",
     "Spell Snare", "Swift Response", "Take Vengeance", "Turn Aside", "Vengeance", "You Are Already Dead"], `and the other ${scripts.length - unplayed.length} of ${scripts.length} were actually played or cast in it`);

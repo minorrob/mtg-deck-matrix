@@ -887,6 +887,22 @@ export function compileScript(script) {
       keywords.push("Cascade");
       return;
     }
+    /* MYRIAD (CR 702.116a; Battle Angels of Tyr): "Whenever this creature attacks, for each opponent other than defending
+       player, you may create a token that's a copy of this creature that's tapped and attacking that player or a planeswalker
+       they control. If one or more tokens are created this way, exile the tokens at end of combat." Each "you may" is asked
+       in turn (CR 101.4), the player or planeswalker asked as each token enters (effects/permanents.mjs, enterAttacking),
+       and one delayed trigger exiles every token made (CR 603.7) -- none made, and there is none. Instances trigger
+       separately (702.116b). */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "myriad") {
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.attacks({who: "self"}),
+        effects: [{effect: "repeatFor", each: "other opponent", effects: [{effect: "modal", title: "Myriad: create a token copy attacking this player?",
+          modes: [{text: "Yes", effects: [{effect: "copyPermanent", targets: "self", lastKnown: true, tapped: true, attacking: "that player or their planeswalker", rememberMore: true}]},
+            {text: "No", effects: []}]}]},
+          {effect: "delayedTrigger", at: "end of combat", text: "Exile the tokens at end of combat.", condition: {compare: {count: {rememberedCount: true}, atLeast: 1}},
+            effects: [{effect: "moveZone", targets: "remembered", to: "exile"}]}]});
+      keywords.push("Myriad");
+      return;
+    }
     if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "exalted") {
       abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.attacks({who: "any", alone: true, filter: {types: ["Creature"], controller: "you"}}),
         effects: [{effect: "pump", targets: "that card", power: 1, toughness: 1}]});
@@ -1787,11 +1803,11 @@ export function compileScript(script) {
           modes: (only.modes ?? []).map((m) => ({text: m.text ?? "", targets: m.targets ?? [], effects: m.effects ?? [], ...(m.cost !== undefined ? {cost: m.cost} : {})}))} : null;
       if (modal && (ability.targets ?? []).length) problems.push("a modal spell chosen as it is cast names its targets in its modes, not beside them");
       spell = {id, text: ability.text, targets: ability.targets ?? [], effects: ability.effects, ...(modal ? {modal} : {}), ...(ability.additionalCost ? {additionalCost: ability.additionalCost} : {}),
-        /* "If this spell was kicked, exile target nonland permanent instead" (Tear Asunder): its targets and effects then. */
-        ...(ability.kicked ? {kicked: {targets: ability.kicked.targets ?? [], effects: ability.kicked.effects ?? []}} : {}),
         /* "Exile Avatar's Wrath." (CR 608.2n): the last of what it does, exiled as it resolves rather than put into its owner's
            graveyard -- one that does not resolve goes where any spell would (rules/stack.mjs). */
-        ...(ability.exileAsResolves === true ? {exileAsResolves: true} : {})};
+        ...(ability.exileAsResolves === true ? {exileAsResolves: true} : {}),
+        /* "If this spell was kicked, exile target nonland permanent instead" (Tear Asunder): its targets and effects then. */
+        ...(ability.kicked ? {kicked: {targets: ability.kicked.targets ?? [], effects: ability.kicked.effects ?? []}} : {})};
       if (ability.kicked && (modal || !(ability.kicked.effects ?? []).length)) problems.push("a kicked spell's script says its effects, on a spell that is not modal");
       return;
     }
