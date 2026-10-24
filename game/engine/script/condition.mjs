@@ -89,6 +89,8 @@
  *                                      permanent the spell became (rules/stack.mjs)
  *   {offspringPaid: true|false}        its own permanent was cast with its offspring cost paid, or was not (CR 702.175a;
  *                                      Coruscation Mage) -- asked again as the trigger resolves, as it triggered
+ *   {ringBearer: true}                 its own permanent is its controller's Ring-bearer (CR 701.54; Frodo, Adventurous Hobbit)
+ *   {ringTemptedAtLeast: n}            the Ring has tempted its controller n or more times this game (CR 701.54d)
  *   {allOf: [condition, ...]}          every one of them holds: Happily Ever After's three, two of them counted comparisons
  *
  * The keys are closed, like every other grammar here: an unknown one is refused at the schema rather than read as true.
@@ -101,6 +103,7 @@ import {amountOf, amountProblems} from "./amount.mjs";
 import {characteristicsOf, subtypesOf, everyCreatureTypeOf} from "../rules/layers.mjs";
 import {isCreatureType} from "../keywords/types.mjs";
 import {hasCitysBlessing, isSaddled} from "../keywords/designations.mjs";
+import {isRingBearer} from "../keywords/ring.mjs";
 
 const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn", "notYourTurn", "about", "is", "chosen", "selfCounters", "lifeAtLeast", "cast", "compare", "escaped", "evoked", "spent", "enduringStory", "loyaltyThisTurn", "impending",
   "uniqueCreatureName", "cameFrom", "sinceYourLastUpkeep", "level", "opponentPoisonAtLeast", "searched",
@@ -139,7 +142,10 @@ const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTu
   /* Gift's "if the gift was promised" (CR 702.174b). */
   "giftPromised",
   /* Offspring's "if its offspring cost was paid" (CR 702.175a; wave 4c). */
-  "offspringPaid"];
+  "offspringPaid",
+  /* The Ring (CR 701.54): "if Frodo is your Ring-bearer and the Ring has tempted you two or more times this game" (Frodo,
+     Adventurous Hobbit; Rob's lists P2). */
+  "ringBearer", "ringTemptedAtLeast"];
 /** Whether these effects, nested ones included, ask `firstResolution` -- so their ability's resolutions are counted
     (rules/stack.mjs). */
 export const asksFirstResolution = (effects) => JSON.stringify(effects ?? []).includes('"firstResolution"');
@@ -412,6 +418,12 @@ export function conditionHolds(state, condition, {controller, source = null, abo
     && Number.isInteger(gift ?? (source !== null && source !== undefined ? state.objects[source]?.gift : undefined)) !== condition.giftPromised) return false;
   /* "If you're the monarch" (CR 725.1, 725.3): its controller holds the game's designation now. */
   if (condition.monarch === "you" && state.monarch !== controller) return false;
+  /* "IF FRODO IS YOUR RING-BEARER" (CR 701.54a, 701.54c; Frodo, Adventurous Hobbit): its own permanent is the creature its
+     controller chose as their Ring-bearer, still on the battlefield under their control (keywords/ring.mjs). */
+  if (condition.ringBearer === true && !isRingBearer(state, source, controller)) return false;
+  /* "AND THE RING HAS TEMPTED YOU TWO OR MORE TIMES THIS GAME" (CR 701.54d): every time the Ring tempted its controller this
+     game, a time with no creature to choose included (keywords/ring.mjs counts each). */
+  if (condition.ringTemptedAtLeast !== undefined && (state.players[controller]?.ring?.count ?? 0) < condition.ringTemptedAtLeast) return false;
   /* "IF YOU CONTROL THE CREATURE WITH THE GREATEST POWER OR TIED FOR THE GREATEST POWER" (Summon: Fenrir; CR 208.1): a creature of
      its controller's whose power, through the layers, no creature on the battlefield exceeds -- a power below zero as it is,
      not as none. With no creature of theirs, they control none. */
@@ -518,6 +530,9 @@ export function conditionProblems(condition) {
   if ("void" in condition && condition.void !== true) problems.push("void is true");
   if ("sneak" in condition && condition.sneak !== true) problems.push("sneak is true");
   if ("monarch" in condition && condition.monarch !== "you") problems.push("monarch is \"you\": its controller is the monarch");
+  if ("ringBearer" in condition && condition.ringBearer !== true) problems.push("ringBearer is true: its own permanent is its controller's Ring-bearer");
+  if ("ringTemptedAtLeast" in condition && !(Number.isInteger(condition.ringTemptedAtLeast) && condition.ringTemptedAtLeast >= 1))
+    problems.push("ringTemptedAtLeast is a whole number of times the Ring has tempted its controller this game, 1 or more");
   if ("greatestPower" in condition && condition.greatestPower !== "you") problems.push("greatestPower is \"you\": its controller controls the creature with the greatest power, or one tied for it");
   if ("powerAboveOthers" in condition && condition.powerAboveOthers !== "that card") problems.push("powerAboveOthers is \"that card\": the creature a trigger is about has more power than each other creature");
   if ("firstResolution" in condition && condition.firstResolution !== true) problems.push("firstResolution is true: the first time this ability has resolved this turn");

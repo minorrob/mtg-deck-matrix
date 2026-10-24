@@ -1,0 +1,83 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Frodo, Adventurous Hobbit",
+    "oracleId": "58ee8c10-7be8-4889-944d-13cae0a4166d",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Halfling",
+      "Scout"
+    ],
+    "manaCost": "{W}{B}",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "W"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "Partner with Sam, Loyal Attendant\nVigilance\nWhenever Frodo attacks, if you gained 3 or more life this turn, the Ring tempts you. Then if Frodo is your Ring-bearer and the Ring has tempted you two or more times this game, draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Partner with Sam, Loyal Attendant",
+      "keyword": "partner with",
+      "name": "Sam, Loyal Attendant"
+    },
+    {
+      "kind": "keyword",
+      "text": "Vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever Frodo attacks, if you gained 3 or more life this turn, the Ring tempts you. Then if Frodo is your Ring-bearer and the Ring has tempted you two or more times this game, draw a card.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "ringTempts"
+        },
+        {
+          "effect": "branch",
+          "if": {
+            "allOf": [
+              {
+                "ringBearer": true
+              },
+              {
+                "ringTemptedAtLeast": 2
+              }
+            ]
+          },
+          "then": [
+            {
+              "effect": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "lifeGainedThisTurn": "you"
+          },
+          "atLeast": 3
+        }
+      }
+    }
+  ]
+}

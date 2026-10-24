@@ -85,6 +85,11 @@ export const STATIC_RULES = Object.freeze({
       controller), `amount` generic mana, `condition`. A mana ability is never made to cost more by it (CR 605). Read as an
       activated ability's cost is, on the battlefield, in a hand or in a graveyard: actions.mjs, costPayment. */
   "abilities-cost-more": "rules/actions.mjs",
+  /** CR 602.2b, 601.2f: "Activated abilities of Foods you control cost {1} less to activate" (Sam, Loyal Attendant; Rob's
+      lists P2): `affects`, a selector of the permanents whose abilities cost less ("you" the static's controller), `amount` generic
+      mana -- only generic mana, never below none (CR 601.2f). Read as an activated ability's cost is, beside its own
+      `costLess`: actions.mjs, abilityLess, through abilityCostReduction below. */
+  "abilities-cost-less": "rules/actions.mjs",
   /** CR 601.2f, the card's own: "This spell costs {1} less to cast for each creature on the battlefield" (Vanquish the
       Horde), "{X} less, where X is the total power of creatures you control" (Ghalta). Read from the card wherever it
       is cast from, by actions.mjs through costReduction; its `amount` may be counted (script/amount.mjs). "If it targets
@@ -1381,6 +1386,28 @@ export function loyaltyCostIncrease(state, player) {
       if (ability.kind !== "static" || ability.rule !== "loyalty-costs-more") continue;
       const context = {controller: holder.controller, source: holderId};
       if (!compileSelector({what: "player", ...(ability.affects ?? {})})(state, player, context)) continue;
+      total += amountOf(state, ability.amount ?? 1, context);
+    }
+  }
+  return total;
+}
+
+/**
+ * HOW MUCH LESS AN ACTIVATED ABILITY COSTS (CR 602.2b, 601.2f): every `abilities-cost-less` static on the battlefield whose `affects`
+ * -- a selector of permanents, "you" the static's controller -- takes in the permanent whose ability it is: "Activated
+ * abilities of Foods you control cost {1} less to activate" (Sam, Loyal Attendant). Generic mana, summed; what the cost has
+ * no generic mana to take it from it does not take (rules/actions.mjs, costPayment).
+ */
+export function abilityCostReduction(state, objectId) {
+  if (state.objects[objectId]?.zone !== "battlefield") return 0;
+  let total = 0;
+  const held = staticAbilities(state);
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of held(holderId)) {
+      if (ability.kind !== "static" || ability.rule !== "abilities-cost-less") continue;
+      const context = {controller: holder.controller, source: holderId};
+      if (!matchesSelector({...(ability.affects ?? {}), what: "permanent"}, state, objectId, context)) continue;
       total += amountOf(state, ability.amount ?? 1, context);
     }
   }
