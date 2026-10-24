@@ -1871,7 +1871,8 @@ export const attackWhom = {
   /* Queued only with two defending players or more, and asked at once: nothing happens between. */
   /* Each defending player, and each planeswalker one of them controls (CR 508.4; effects/permanents.mjs, attackPlaces). */
   open(state, params) {
-    state.awaiting = {kind: "effect-choice", effect: "attackWhom", player: params.player, tokens: [...params.tokens], places: attackPlaces(state, params.player)};
+    /* Or only some of them (myriad's "that player or a planeswalker they control"; effects/permanents.mjs, enterAttacking). */
+    state.awaiting = {kind: "effect-choice", effect: "attackWhom", player: params.player, tokens: [...params.tokens], places: params.places ?? attackPlaces(state, params.player)};
     return true;
   },
   choice(state, awaiting) {

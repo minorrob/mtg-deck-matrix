@@ -184,9 +184,13 @@ function checkEffect(effect, path, errors) {
   /* "Can't cast spells with the same name as that creature" (Reflector Mage): which name, and whose -- both, or it forbids
      nothing it could say. */
   /* Or every spell (`allSpells`, Conduit of Worlds's "you can't cast additional spells this turn"), never beside a name. */
-  if (name === "effectUntil" && effect.rule === "cant-cast" && ((effect.named === undefined) === (effect.allSpells !== true) || effect.who === undefined
+  if (name === "effectUntil" && effect.rule === "cant-cast" && effect.fromAnywhereButHand === undefined && ((effect.named === undefined) === (effect.allSpells !== true) || effect.who === undefined
     || (effect.allSpells !== undefined && effect.allSpells !== true)))
     errors.push({path, message: "A cast forbidden for a while names the spells (`named`) or forbids every one (`allSpells: true`), and the players (`who`)"});
+  /* Or every spell from anywhere but a hand (`fromAnywhereButHand: true`, Avatar's Wrath), never beside a name or allSpells. */
+  if (name === "effectUntil" && effect.rule === "cant-cast" && effect.fromAnywhereButHand !== undefined
+    && (effect.fromAnywhereButHand !== true || effect.named !== undefined || effect.allSpells !== undefined || effect.who === undefined))
+    errors.push({path, message: "A cast forbidden from anywhere but a hand is fromAnywhereButHand: true, with the players (`who`) and no name or allSpells"});
   /* "If that creature would die this turn, exile it instead" (rules/replacement.mjs): about what it names, fixed as it
      resolves -- `targets`, and for this turn. */
   if (name === "effectUntil" && effect.rule === "exile-if-dies" && (effect.targets === undefined || (effect.until ?? "end-of-turn") !== "end-of-turn"))
@@ -344,8 +348,11 @@ function checkEffect(effect, path, errors) {
     if (effect.anyNumber !== undefined && effect.onto === undefined) errors.push({path: `${path}.anyNumber`, message: "anyNumber goes with `onto`"});
   }
   /* A designation (alterAttribute, script/effects/attributes.mjs): monstrous or prepared. */
-  if (name === "alterAttribute" && !["monstrous", "prepared", "solved"].includes(effect.attribute))
-    errors.push({path: `${path}.attribute`, message: "alterAttribute gives or takes a designation: \"monstrous\", \"prepared\" or \"solved\""});
+  if (name === "alterAttribute" && !["monstrous", "prepared", "solved"].includes(effect.attribute) && effect.attribute !== "harnessed")
+    errors.push({path: `${path}.attribute`, message: "alterAttribute gives or takes a designation: \"monstrous\", \"prepared\", \"solved\" or \"harnessed\""});
+  /* Harnessed stays until the permanent leaves the battlefield (The Mind Stone): given, never taken. */
+  if (name === "alterAttribute" && effect.attribute === "harnessed" && effect.value !== undefined)
+    errors.push({path: `${path}.value`, message: "A permanent once harnessed stays harnessed: harnessed is given, never taken"});
   /* Solved stays until the Case leaves the battlefield (CR 719.3b): given, never taken. */
   if (name === "alterAttribute" && effect.attribute === "solved" && effect.value !== undefined)
     errors.push({path: `${path}.value`, message: "A Case once solved stays solved (CR 719.3b): solved is given, never taken"});

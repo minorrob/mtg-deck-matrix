@@ -404,7 +404,8 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
 
   /* PARADIGM'S TWO SPELL ABILITIES (CR 702.192a), the last of the spell's resolution: one that did not resolve does neither. */
   const paradigm = fizzled ? null : paradigmResolves(state, entry);
-  const exiles = paradigm !== null;
+  /* "Exile Avatar's Wrath." (CR 608.2n; cards/index.mjs, `exileAsResolves`): resolved, it is exiled as the last of it. */
+  const exiles = paradigm !== null || (!fizzled && state.objects[entry.objectId]?.spell?.exileAsResolves === true);
 
   /* A copy leaves the stack and ceases to exist (CR 707.10a, 704.5e) -- an instant's or sorcery's, or one that did not
      resolve. A copy of a permanent spell that resolves becomes a token instead, and is no longer a copy (CR 608.3f). */

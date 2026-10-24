@@ -37,7 +37,7 @@ BREAKS = [
     ('repeatFor over the remembered ranges over nothing', EFFECTS,
      'if (each === "remembered") return (context.remembered ?? [])', 'if (each === "remembered") return ([])'),
     ('repeatFor may not range over the remembered', EFFECTS,
-     '"creature", "remembered"]);', '"creature"]);'),
+     '"creature", "remembered", "other opponent"]);', '"creature", "other opponent"]);'),
     # High Tide: "that player adds".
     ('the tapper\'s extra mana goes to the trigger\'s controller', TRIGGER,
      'player: mana.toTapper === true ? fields.player?.playerId ?? d.controller : d.controller,', 'player: d.controller,'),

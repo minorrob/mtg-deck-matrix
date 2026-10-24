@@ -589,7 +589,15 @@ export function mayPlay(state, params, context) {
      rules/actions.mjs, spendPermission). */
   const named = params.linked === true ? linkedMoving(state, {}, context) : params.targets ?? [];
   const ids = named.filter((id) => state.objects[id] && (params.zone === undefined || state.objects[id].zone === params.zone));
-  const player = context.controller;
+  /* AIRBEND (Avatar's Wrath: "Exile them. While each one is exiled, its owner may cast it for {2} rather than its mana cost";
+     Aerial Extortionist: "For as long as that card remains exiled, its owner may cast it"): a permission of each card's OWNER
+     (`owner: true`), one for each card -- and `manaInstead`, the mana it is cast for rather than its mana cost, an alternative
+     cost (CR 118.9; rules/actions.mjs, castOffers). */
+  if (params.owner === true && ids.length) {
+    for (const id of ids) mayPlay(state, {...params, owner: false, linked: false, targets: [id], player: state.objects[id].owner}, context);
+    return [];
+  }
+  const player = Number.isInteger(params.player) ? params.player : context.controller;
   if (!ids.length || !state.players[player]) return [];
   const effects = (state.effects ??= []);
   let serial = effects.length, id;
@@ -603,6 +611,7 @@ export function mayPlay(state, params, context) {
        (rules/actions.mjs, anyTypeCost), as a permanent's play-from says it. */
     ...(params.anyMana === true ? {anyMana: true} : {}),
     ...(Number.isInteger(params.count) ? {count: params.count} : {}),
+    ...(typeof params.manaInstead === "string" ? {manaInstead: params.manaInstead} : {}),
     until: params.until ?? "end-of-turn", madeOnTurn: state.turn, sourceController: player});
   return [];
 }
@@ -610,7 +619,10 @@ export function mayPlay(state, params, context) {
 export function moveZoneAll(state, params, context, rng = null) {
   const events = [];
   const arrivedAll = [];
-  const matched = selectMatching(state, params.selector ?? {what: "permanent"}, context);
+  /* "Choose up to one target creature, then airbend all OTHER creatures" (Avatar's Wrath): `exceptTarget`, the target of that
+     place spared -- none chosen, and every creature is moved. */
+  const spared = Number.isInteger(params.exceptTarget) ? [].concat(context.targets?.[params.exceptTarget] ?? []).map((t) => (t?.kind === "object" ? t.id : t)) : [];
+  const matched = selectMatching(state, params.selector ?? {what: "permanent"}, context).filter((id) => !spared.includes(id));
   /* A copy, because each move rewrites the zone list underneath the iteration. */
   const was = {};
   /* "Put all creature cards from all graveyards onto the battlefield under your control" (Rise of the Dark Realms): each enters

@@ -943,7 +943,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 577 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 578 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1521,6 +1521,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-libload-stack` - `tests/engine-libload-stack.mjs`: the stack and control (library load L2, 2026-10-21) -- spree (CR 702.172a), each set of modes its own cast with their costs added; "as though it had flash if it targets a commander" (Timely Ward) and its guards; a spell that targets a permanent you control (Rebuff the Wicked) and creatures attacking you (Mangara, the Diplomat) in the selector grammar; Silence at a table of four
 - `engine-lands-and-mana` - `tests/engine-lands-and-mana.mjs`: lands and mana (the card load of 2026-10-23, lane L4) -- Simian Spirit Guide and Arena of Glory's exert are plays in response, the damage each player was dealt this turn (Spinerock Knoll), and two Opposition Agents, the latest controlling the search
 - `engine-roblists-food` - `tests/engine-roblists-food.mjs`: Rob's priority lists, lane P2 (2026-10-24) -- descend counted for a card's owner this turn, the Ring's temptations counted, a life adder for its controller alone, a leftover reduction taking off X (affinity), sacrifice X, that many Squirrels, devour, a linked card played free, damage by a name, skulk, what the schema refuses of each new key, and the lane's cards through their scenarios.
+- `engine-roblists-p1` - `tests/engine-roblists-p1.mjs`: Rob's priority lists, lane P1 (blink, 2026-10-24): a Phyrexian added as a card returns, Preston's 0/1 white Illusion, third from the top, an airbended card its owner's to cast, a permanent's own entering trigger when it is gone again in the same resolution (Panharmonicon, Elesh Norn), Y'shtola Rhul's additional end step each turn, and myriad at four seats.
 
 ## Design and execution record
 

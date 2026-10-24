@@ -1,0 +1,353 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Preston, the Vanisher",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Phantasm": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Illusion"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "power": 1,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A creature put onto the battlefield without being cast (Cloudshift blinks the Bear): a 0/1 white Illusion copy of it -- the fifth Illusion for its own ability once Getaway Glamer exiles the nontoken Bear; that Bear returns at the end step, uncast, and is copied again",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Preston, the Vanisher",
+            "Bear",
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Plains",
+            "Wastes",
+            "Phantasm",
+            "Phantasm",
+            "Phantasm",
+            "Phantasm"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Cloudshift",
+            "Getaway Glamer"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Cloudshift",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "controls": [
+                "Bear",
+                "Bear",
+                "Phantasm",
+                "Phantasm",
+                "Phantasm",
+                "Phantasm",
+                "Plains",
+                "Plains",
+                "Plains",
+                "Preston, the Vanisher",
+                "Wastes",
+                "Wastes"
+              ]
+            },
+            {
+              "stack": 0
+            }
+          ]
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Getaway Glamer",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ],
+          "modes": [
+            0
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Bear"
+              ]
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Bear",
+                "power": 0,
+                "toughness": 1
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Preston, the Vanisher"
+              },
+              "count": 6
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "END_OF_TURN"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Bear",
+            "Bear",
+            "Bear",
+            "Phantasm",
+            "Phantasm",
+            "Phantasm",
+            "Phantasm",
+            "Plains",
+            "Plains",
+            "Plains",
+            "Preston, the Vanisher",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A creature cast does not trigger it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Preston, the Vanisher",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Bear"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Bear",
+            "Forest",
+            "Preston, the Vanisher",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "{1}{W}, Sacrifice five Illusions: exile target nonland permanent",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Preston, the Vanisher",
+            "Phantasm",
+            "Phantasm",
+            "Phantasm",
+            "Phantasm",
+            "Phantasm",
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Preston, the Vanisher",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Phantasm",
+            "Phantasm",
+            "Phantasm",
+            "Phantasm",
+            "Phantasm"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "With four Illusions, the exile ability is not offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Preston, the Vanisher",
+            "Phantasm",
+            "Phantasm",
+            "Phantasm",
+            "Phantasm",
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Preston, the Vanisher"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

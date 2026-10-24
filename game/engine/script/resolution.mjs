@@ -112,7 +112,7 @@ export function runResolution(state, rng = null) {
        put in front of whatever follows, so one of them may stop to ask (Composer of Spring's "you may put a card"). */
     if (effect?.effect === "branch") {
       const holds = conditionHolds(state, effect.if, {controller: resolving.context.controller, source: resolving.context.source, about: resolving.context.about,
-        remembered: resolving.context.remembered, targets: resolving.context.targets, cast: resolving.context.cast,
+        remembered: resolving.context.remembered, targets: resolving.context.targets, cast: resolving.context.cast, rolled: resolving.context.rolled,
         movedWas: resolving.context.movedWas, searched: resolving.context.searched, lastKnown: resolving.context.lastKnown, resolvedBefore: resolving.context.resolvedBefore,
         gift: resolving.context.gift});
       resolving.queue.shift();

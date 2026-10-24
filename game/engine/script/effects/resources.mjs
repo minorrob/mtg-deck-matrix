@@ -22,7 +22,7 @@ import {selectMatching} from "../filter.mjs";
 import {event, cardRef, playersFor} from "./zones.mjs";
 import {markDeathtouch, lifelinkFrom} from "../../keywords/combat.mjs";
 import {typesOf, powerOf, toughnessOf, keywordsOf, isKeywordCounter, controllerOf} from "../../rules/layers.mjs";
-import {cantGainLife, lifeGained, lifeLost, countersPlaced, playerCountersPlaced, placeCounters} from "../../rules/statics.mjs";
+import {cantGainLife, lifeGained, lifeLost, countersPlaced, playerCountersPlaced, placeCounters, ruleChanged} from "../../rules/statics.mjs";
 import {playerRuled, leaveGame, monarchLeft} from "../../rules/sba.mjs";
 import {amountOf} from "../amount.mjs";
 import {recordUse} from "../../state/index.mjs";
@@ -611,6 +611,9 @@ export function removeCounter(state, params, context) {
     const kinds = params.counter === "all" ? Object.keys(object.counters ?? {}) : params.counter === "any" ? Object.keys(params.removing) : [params.counter ?? "+1/+1"];
     for (const kind of kinds) {
       const before = object.counters[kind] ?? 0;
+      /* "Stun counters can't be removed from permanents your opponents control" (Fear of Sleep Paralysis; CR 122.1d): not by
+         anything -- an untap they replace (untapOne, below) leaves it tapped. */
+      if (kind === "stun" && before > 0 && object.zone === "battlefield" && ruleChanged(state, "stun-counters-stay", id)) continue;
       const after = params.counter === "all" || params.all === true ? 0 : Math.max(0, before - (params.counter === "any" ? params.removing[kind] : params.count ?? 1));
       if (after === before) continue;
       object.counters[kind] = after;

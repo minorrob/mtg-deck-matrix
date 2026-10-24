@@ -219,6 +219,16 @@ export const STATIC_RULES = Object.freeze({
   "doesnt-untap": "rules/turn.mjs",
   /** "Lands you control enter untapped" (Horizon Explorer): entersUntapped, as a land arrives. effects/zones.mjs. */
   "lands-enter-untapped": "script/effects/zones.mjs",
+  /** "Stun counters can't be removed from permanents your opponents control" (Fear of Sleep Paralysis; CR 122.1d): `affects`
+      the permanents. removeCounter, wherever a stun counter would be removed -- the untap it replaces too, so one of those
+      permanents with a stun counter doesn't untap (script/effects/resources.mjs). */
+  "stun-counters-stay": "script/effects/resources.mjs",
+  /** "Permanents entering don't cause abilities of permanents your opponents control to trigger" (Elesh Norn, Mother of
+      Machines; CR 603.2, 603.6a): `affects` the permanents whose abilities don't trigger on an arrival. rules/trigger.mjs. */
+  "entering-doesnt-trigger": "rules/trigger.mjs",
+  /** "If an opponent would begin an extra turn, that player skips that turn instead" (Trouble in Pairs; CR 614.1b, 614.10,
+      500.7): `affects` the players. rules/turn.mjs, as an extra turn would begin. */
+  "skip-extra-turns": "rules/turn.mjs",
   /** "Threshold -- You can't cast this spell unless there are seven or more cards in your graveyard" (Proft, Sinister
       Mastermind; CR 601.2): the card's own restriction, `unless` the condition that lets it be cast, asked of its caster
       wherever the card would be cast from -- a hand, the command zone, a graveyard. castForbidden, below. */
@@ -395,6 +405,8 @@ export function castForbidden(state, player, cardId) {
      spells `spells` describes (a name, CR 201.2a), from any zone they would be cast from. */
   for (const effect of state.effects ?? []) {
     if (effect.rule !== "cant-cast" || !(effect.players ?? []).includes(player)) continue;
+    /* "Can't cast spells from anywhere other than their hands" (Avatar's Wrath): a spell from a hand is not forbidden. */
+    if (effect.fromAnywhereButHand === true && object.zone === "hand") continue;
     if (compileSelector({...(effect.spells ?? {}), what: "card", zone: object.zone})(state, cardId, {controller: effect.sourceController})) return true;
   }
   const held = staticAbilities(state);

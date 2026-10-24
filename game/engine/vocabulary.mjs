@@ -265,6 +265,9 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
   /* And improvise (CR 702.126a; Organic Extinction), artifacts tapped to pay a spell's generic mana, as convoke's creatures
      are (rules/actions.mjs). */
   "improvise",
+  /* Rob's lists, P1: myriad (CR 702.116a; Battle Angels of Tyr), an attack trigger making token copies attacking the other
+     opponents (cards/index.mjs). */
+  "myriad",
   /* And cascade (CR 702.85a; Apex Devastator), a cast trigger: cards exiled until a nonland one that costs less, cast free
      (cards/index.mjs). */
   "cascade",

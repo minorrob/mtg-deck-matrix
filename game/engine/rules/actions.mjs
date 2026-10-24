@@ -273,8 +273,8 @@ const hasDelve = (state, id) => keywordsOf(state, id).includes("Delve");
 const delvable = (state, player, id) => cardsIn(state, "graveyard", player).filter((c) => c !== id);
 /* The total cost a delved cast pays and the life it pays with, as castPayments reckons them (castTerms). */
 function delveCost(state, player, action) {
-  const {tax, free, back, way, fled, permission, lifeCost} = castTerms(state, player, action);
-  const reckoned = castCost(state, player, action.objectId, tax, Boolean(free), lifeCost !== null ? "" : back ? back.mana : fled ? fled.mana : way ? way.mana : null, action.extraMana ?? "", action.targets);
+  const {tax, free, back, way, fled, permission, lifeCost, manaInstead} = castTerms(state, player, action);
+  const reckoned = castCost(state, player, action.objectId, tax, Boolean(free), lifeCost !== null ? "" : back ? back.mana : fled ? fled.mana : way ? way.mana : manaInstead, action.extraMana ?? "", action.targets);
   return {cost: anyTypeCost(reckoned.cost, permission), extra: reckoned.x,
     life: state.players[player].life - (back?.life ?? 0) - (way?.life ?? 0) - (lifeCost ?? 0) - lifeOwed(state, player, action)};
 }
@@ -369,12 +369,14 @@ function castTerms(state, player, action) {
   const permission = !back && !fled && ["graveyard", "library", "exile"].includes(object.zone) ? playPermission(state, player, action.objectId, "spell", action.via ?? null) : null;
   const free = action.free ? (permission?.ability.free ? {source: permission.source, limited: false} : freeCast(state, player, action.objectId)) : null;
   const lifeCost = way ? null : free ? freeLife(object, free) : lifeInstead(object, permission);
-  return {tax, free, back, way, fled, permission, lifeCost};
+  /* Airbended: "for {2} rather than its mana cost" (castOffers), the mana its permission names. */
+  const manaInstead = !way && !free && lifeCost === null && typeof permission?.ability.manaInstead === "string" ? permission.ability.manaInstead : null;
+  return {tax, free, back, way, fled, permission, lifeCost, manaInstead};
 }
 /* The ways the pool pays a cast taken with `payWays` (castOffers): its total cost, as perform reckons it. */
 function castPayments(state, player, action) {
-  const {tax, free, back, way, fled, permission, lifeCost} = castTerms(state, player, action);
-  const reckoned = castCost(state, player, action.objectId, tax, Boolean(free), lifeCost !== null ? "" : back ? back.mana : fled ? fled.mana : way ? way.mana : null, action.extraMana ?? "", action.targets, action.x);
+  const {tax, free, back, way, fled, permission, lifeCost, manaInstead} = castTerms(state, player, action);
+  const reckoned = castCost(state, player, action.objectId, tax, Boolean(free), lifeCost !== null ? "" : back ? back.mana : fled ? fled.mana : way ? way.mana : manaInstead, action.extraMana ?? "", action.targets, action.x);
   const {x} = reckoned, cost = anyTypeCost(reckoned.cost, permission);
   return paymentOptions(poolFor(state, player, {spell: action.objectId}), cost,
     {life: state.players[player].life - (back?.life ?? 0) - (way?.life ?? 0) - (lifeCost ?? 0) - (action.extraLife ?? 0), x: x + (action.x ?? 0) * cost.variable}, PAY_CHOICES);
@@ -1386,6 +1388,8 @@ const allPlayPermissions = (state, player) => onceAQuestion(state, `play-permiss
       ...(e.anyMana === true ? {anyMana: true} : {}),
       /* "A card exiled with Lobelia": so many of the named cards before it is spent (spendPermission). */
       ...(Number.isInteger(e.count) ? {count: e.count} : {}),
+      /* "Its owner may cast it for {2} rather than its mana cost" (airbend; castOffers). */
+      ...(typeof e.manaInstead === "string" ? {manaInstead: e.manaInstead} : {}),
       ...(Number.isInteger(e.afterTurn) ? {afterTurn: e.afterTurn} : {})}}))];
 });
 /* A CARD PLAYED THROUGH A PERMISSION (CR 601.2a, 305.1): what it uses up -- a limited one's use this turn ("once during each
@@ -1732,8 +1736,12 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
      alternative cost (CR 118.6a), and this is one: its mana value, 0, in life. */
   const permit = !flashback && !escape && ["graveyard", "library", "exile"].includes(from) ? playPermission(state, player, id, "spell", via) : null;
   const lifeCost = lifeInstead(object, permit);
+  /* AIRBENDED (Avatar's Wrath, Aang): "its owner may cast it for {2} rather than its mana cost" -- an alternative cost (CR
+     118.9), so that mana and no other alternative cost (118.9a), a card with no mana cost included (118.6a). */
+  const manaInstead = typeof permit?.ability.manaInstead === "string" ? permit.ability.manaInstead : null;
   if (disguise && (lifeCost !== null || permit?.ability.free)) return actions;
-  if (!object.manaCost && lifeCost === null && !disguise && !(permit?.ability.free || freeCast(state, player, id))) return actions;
+  if (manaInstead !== null && !disguise) { /* airbended, with no mana cost or with one: for that mana (CR 118.6a) */ }
+  else if (!object.manaCost && lifeCost === null && !disguise && !(permit?.ability.free || freeCast(state, player, id))) return actions;
   if (lifeCost !== null && lifeCost > state.players[player].life) return actions;
   /* "Can't cast" (castForbidden): from a graveyard, during its controller's turn, more than one each turn. */
   if (castForbidden(state, player, id)) return actions;
@@ -1754,7 +1762,7 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
   /* Its own alternative costs (CR 118.9), each an offer of its own -- never with flashback, escape, a free cast or the
      Citadel's life, each an alternative cost too (118.9a). */
   /* Warp's "from your hand" (CR 702.185a): from there alone. */
-  const alternatives = disguise ? [DISGUISE_WAY] : flashback || escape || lifeCost !== null || permit?.ability.free ? []
+  const alternatives = disguise ? [DISGUISE_WAY] : flashback || escape || lifeCost !== null || manaInstead !== null || permit?.ability.free ? []
     : alternativeCosts(state, player, id).filter((w) => !w.fromHand || from === "hand");
   /* The flashback cost instead of the mana cost, and its life: a player can pay life only if their total is at least
      that much (CR 119.4). */
@@ -1792,7 +1800,7 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
   /* The life it costs: the Citadel's, or -- cast without paying its mana cost by a cost of life (freeLife) -- that. */
   const paidLife = freely ? freeLife(object, free) : lifeCost;
   if (paidLife !== null && paidLife > state.players[player].life) continue;
-  const reckoned = castCost(state, player, id, tax, freely, paidLife !== null ? "" : back ? back.mana : fled ? fled.mana : way ? way.mana : null, variant.mana, aim);
+  const reckoned = castCost(state, player, id, tax, freely, paidLife !== null ? "" : back ? back.mana : fled ? fled.mana : way ? way.mana : manaInstead, variant.mana, aim);
   const {x} = reckoned, cost = anyTypeCost(reckoned.cost, permit);
   /* The life left to pay with once its other life costs are counted: the alternative cost's, the Citadel's, and what it
      costs more for targeting this way (Terror of the Peaks) -- less than none, and no way to aim it so is offered
@@ -2774,7 +2782,7 @@ function performOffered(state, player, action, during) {
     /* "Whenever you cast a legendary spell from your hand" (Jodah): where it was cast from, for what watches. */
     const castFrom = object.zone;
     /* Its terms, reckoned again (castTerms): the tax, a free cast, flashback, an alternative cost, escape, a permission. */
-    const {tax, free, back, way, fled, permission, lifeCost} = castTerms(state, player, action);
+    const {tax, free, back, way, fled, permission, lifeCost, manaInstead} = castTerms(state, player, action);
     if (action.free && !free) throw new Error(`${object.card} cannot be cast without paying its mana cost now`);
     if (action.flashback && !back) throw new Error(`${object.card} cannot be cast with flashback now`);
     if (action.alternative !== undefined && !way) throw new Error(`${object.card} cannot be cast that way now`);
@@ -2807,7 +2815,7 @@ function performOffered(state, player, action, during) {
     }
     if (action.via !== undefined && !permission) throw new Error(`${object.card} cannot be cast that way now`);
     if (lifeCost !== null && lifeCost > state.players[player].life) throw new Error(`${object.card} costs ${lifeCost} life, and ${state.players[player].name} has ${state.players[player].life}`);
-    const reckoned = castCost(state, player, action.objectId, tax, Boolean(free), lifeCost !== null ? "" : back ? back.mana : fled ? fled.mana : way ? way.mana : null, action.extraMana ?? "", action.targets, action.x);
+    const reckoned = castCost(state, player, action.objectId, tax, Boolean(free), lifeCost !== null ? "" : back ? back.mana : fled ? fled.mana : way ? way.mana : manaInstead, action.extraMana ?? "", action.targets, action.x);
     const {x} = reckoned, cost = anyTypeCost(reckoned.cost, permission);
     /* The life it owes besides (lifeOwed): for its targets as they are now chosen -- a counted one's too (Terror of the Peaks)
        -- and X life (Toxic Deluge). More than there is, and it is refused, saying so (CR 119.4). */

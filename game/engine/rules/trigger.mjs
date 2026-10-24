@@ -53,7 +53,7 @@
 import {conditionHolds} from "../script/condition.mjs";
 import {pushAbility, becameTarget, crimeCommitted} from "./stack.mjs";
 import {objectsAfterMove, cardsIn, usesThisTurn, recordUse} from "../state/index.mjs";
-import {playerStatics} from "./statics.mjs";
+import {playerStatics, ruleChanged} from "./statics.mjs";
 import {matchesSelector, matchesLastKnown} from "../script/filter.mjs";
 import {abilitiesOf, abilitiesReader, characteristicsOf} from "./layers.mjs";
 import {chosenFor, CHOSEN_COLOR_LETTER} from "../script/chosen.mjs";
@@ -202,6 +202,8 @@ function subjects(state, event, condition, sourceId, controller) {
     const spell = state.stack.find((e) => e.stackId === fields.sa?.stackId)?.objectId ?? fields.card?.cardId;
     if (!whoseIs(condition.caster ?? "you", caster, controller)) return [];
     if (condition.castFrom && fields.castFrom !== condition.castFrom) return [];
+    /* "Casts a spell from anywhere other than their hand" (Aerial Extortionist): where it was cast from (rules/actions.mjs). */
+    if (condition.notCastFrom && fields.castFrom === condition.notCastFrom) return [];
     /* "When you cast this spell" (CR 603.2, Emrakul, the Exigent Doom): this spell's own cast, and no other. */
     if (condition.who === "self" && spell !== sourceId) return [];
     /* "When you cast this spell while you control a creature" (Social Snub): `while` holds as it is cast, and is not asked
@@ -263,7 +265,9 @@ function subjects(state, event, condition, sourceId, controller) {
   if (condition.on === "GameEventAttackersDeclared" && condition.declared) {
     const attacker = fields.player?.playerId, attacks = fields.attackers ?? [];
     if (!attacks.length || !whoseIs(condition.attacker ?? "you", attacker, controller)) return [];
-    if (condition.atLeast && attacks.length < condition.atLeast) return [];
+    /* "Attacks you with two or more creatures" (Trouble in Pairs; CR 506.3): the creatures attacking this ability's controller
+       counted, never one attacking a planeswalker of theirs. */
+    if (condition.atLeast && (condition.attacksYou ? attacks.filter((a) => a.defender?.playerId === controller && !a.defender.planeswalker) : attacks).length < condition.atLeast) return [];
     /* "Whenever you attack with one or more non-Gnome creatures" (Anim Pakal): an attacker the filter fits. */
     if (condition.filter && !attacks.some((a) => fits(state, a.card?.cardId, {filter: condition.filter}, sourceId, controller))) return [];
     /* "Each player mills that many cards" (The Ur-Sphinx): the attackers the filter fits, as "those cards". */
@@ -482,6 +486,9 @@ function matches(state, event, condition, sourceId, controller) {
     if (condition.discarded && fields.discarded !== true) return false;
     if (condition.from && fields.from?.zoneType !== condition.from) return false;
     if (condition.to && fields.to?.zoneType !== condition.to) return false;
+    /* "Leave the battlefield without dying" (Dour Port-Mage; CR 700.4): anywhere but a graveyard -- a creature that would die
+       and is exiled instead never died. */
+    if (condition.notTo && fields.to?.zoneType === condition.notTo) return false;
     /* "Put into exile from your library and/or your graveyard" (Laelia; cards/index.mjs, exiledFrom): from one of those
        zones, a card of the owner it names -- the library or graveyard was its owner's (CR 400.3). */
     if (condition.fromZones) return condition.fromZones.includes(fields.from?.zoneType) && whoseIs(condition.owner ?? "you", fields.card?.owner, controller);
@@ -580,23 +587,30 @@ function triggersAgain(state, event, controller, sourceId, lastSeen = null, depa
     /* A key last known information does not keep (filter.mjs) is not a match. */
     try { theirs = lastSeen ? matchesLastKnown(ability.affects, lastSeen, context) : matchesSelector(ability.affects, state, sourceId, context); } catch { theirs = false; }
     if (!theirs) continue;
-    if (ability.cause && !causedBy(state, event, ability.cause, context)) continue;
+    if (ability.cause && !causedBy(state, event, ability.cause, context, departed)) continue;
     times += 1;
   }
   return times;
 }
+/* "Permanents entering don't cause abilities of permanents your opponents control to trigger" (Elesh Norn, Mother of Machines),
+   for a permanent that entered and is gone again in the same action: as it last existed (CR 603.10a). */
+const enteringSuppressedGone = (state, gone) => state.zones.battlefield.some((holderId) => abilitiesOf(state, holderId).some((a) => a.kind === "static" && a.rule === "entering-doesnt-trigger"
+  && matchesLastKnown(a.affects ?? {}, gone, {controller: state.objects[holderId].controller, source: holderId})));
 /* The event a trigger triggered on, as a `triggers-again` names it: something entering (what arrived, where it is now),
    dying (as it last was), or attacking. */
 /* "If a legendary permanent or an artifact entering or leaving the battlefield causes a triggered ability ... to trigger"
    (Gandalf the White; CR 603.2d, 603.6a, 603.10a): "enters or leaves", the arrival as it now is, or a departure to anywhere
    as it last existed on the battlefield -- only a move from the battlefield keeps that (effects/zones.mjs, `leftBehind`). */
-function causedBy(state, event, cause, context) {
+function causedBy(state, event, cause, context, departed = []) {
   const fields = event.data?.fields ?? {};
   if (cause.event === "enters or leaves") return causedBy(state, event, {...cause, event: "enters"}, context) || matchesLastKnown(cause.filter ?? {}, fields.leftBehind, context);
   if (cause.event === "enters") {
     const arrived = fields.enteredAs ?? fields.card?.cardId;
-    return event.kind === "GameEventCardChangeZone" && fields.to?.zoneType === "Battlefield" && state.objects[arrived]?.zone === "battlefield"
-      && matchesSelector({what: "permanent", ...(cause.filter ?? {})}, state, arrived, context);
+    if (event.kind !== "GameEventCardChangeZone" || fields.to?.zoneType !== "Battlefield") return false;
+    if (state.objects[arrived]?.zone === "battlefield") return matchesSelector({what: "permanent", ...(cause.filter ?? {})}, state, arrived, context);
+    /* Entered and gone again in the same action (Lae'zel's Acrobatics): what entered, as it last existed (CR 603.10a). */
+    const gone = departed.find((g) => g?.cardId === arrived);
+    return Boolean(gone) && matchesLastKnown(cause.filter ?? {}, gone, context);
   }
   if (cause.event === "dies") return event.kind === "GameEventCardChangeZone" && fields.from?.zoneType === "Battlefield" && fields.to?.zoneType === "Graveyard"
     && Boolean(fields.leftBehind) && matchesLastKnown(cause.filter ?? {}, fields.leftBehind, context);
@@ -769,6 +783,13 @@ export function collectTriggers(state, events) {
           if ((zone === "graveyard") !== (ability.zone === "graveyard")) continue;
           /* An ability of a Class level its permanent has not reached, it does not have (CR 716.2a, 716.2d). */
           if (Number.isInteger(ability.level) && (object.level ?? 1) < ability.level) continue;
+          /* An ∞ ability of a permanent not harnessed is not active (The Mind Stone: "Once harnessed, its ∞ ability is active";
+             script/effects/attributes.mjs). */
+          if (ability.harnessed === true && object.harnessed !== true) continue;
+          /* "Permanents entering don't cause abilities of permanents your opponents control to trigger" (Elesh Norn, Mother of
+             Machines; CR 603.2, 603.6a): an arrival, and an ability of a permanent the static's `affects` names. */
+          if (zone === "battlefield" && event.kind === "GameEventCardChangeZone" && event.data?.fields?.to?.zoneType === "Battlefield"
+            && ruleChanged(state, "entering-doesnt-trigger", id)) continue;
           if (zone === "cycled" && !(ability.trigger.cycled && ability.trigger.who === "self")) continue;
           if (zone === "discarded" && !(ability.trigger.discarded && ability.trigger.who === "self")) continue;
           if (zone === "cast" && !(ability.trigger.on === "GameEventSpellAbilityCast" && ability.trigger.who === "self")) continue;
@@ -829,6 +850,21 @@ export function collectTriggers(state, events) {
           }
         }
       }
+    }
+    /* ENTERED, AND GONE AGAIN IN THE SAME ACTION (Lae'zel's Acrobatics, 10-20: "return those cards to the battlefield ...,
+       then exile them again"; CR 603.2, 603.6a): its own "when this enters" triggered as it entered, and is put on the stack
+       all the same -- read from the permanent as it last existed there (CR 603.10a's look-back, as its departure kept it). */
+    const arrivedThen = event.kind === "GameEventCardChangeZone" && event.data?.fields?.to?.zoneType === "Battlefield" ? event.data.fields.enteredAs ?? event.data.fields.card?.cardId : undefined;
+    const goneAgain = arrivedThen !== undefined && state.objects[arrivedThen]?.zone !== "battlefield" ? departed.find((g) => g?.cardId === arrivedThen) : undefined;
+    if (goneAgain && !enteringSuppressedGone(state, goneAgain)) for (const own of goneAgain.abilities ?? []) {
+      const ability = chosenFor(own, goneAgain);
+      if (ability.kind !== "triggered" || !ability.trigger || ability.trigger.who !== "self" || ability.trigger.to !== "Battlefield") continue;
+      if (!matches(state, event, ability.trigger, goneAgain.cardId, goneAgain.controller)) continue;
+      if (!conditionHolds(state, ability.condition, {controller: goneAgain.controller, source: goneAgain.cardId, lastKnown: goneAgain})) continue;
+      state.pendingTriggers.push({abilityId: ability.id, text: ability.text ?? ability.id, controller: goneAgain.controller,
+        source: {cardId: goneAgain.cardId, name: goneAgain.name}, cause: goneAgain, optional: ability.optional === true, ...scriptOf(ability)});
+      const times = triggersAgain(state, event, goneAgain.controller, goneAgain.cardId, goneAgain, departed);
+      if (times) again.push({at: state.pendingTriggers.length - 1, times});
     }
     /* And the game's own, the monarch's (CR 725.2). */
     inherentTriggers(state, event);
