@@ -55,7 +55,7 @@ const byName = new Map(oracle.cards.map((c) => [c.name, c]));
   const provisional = Object.values(JSON.parse(readFileSync(new URL("../data/engine/onboarding-ledger.json", import.meta.url), "utf8")).cards)
     .filter((row) => row.status === "provisional").length;
   ok((backstop.length >= 1 || provisional === 0) && backstop.every((b) => JSON.stringify(candidateDefinition(b.identity.name)) === JSON.stringify(compileScript(b).definition) && !tableDefinition(b.identity.name)),
-    `each backstop card (${backstop.length ? `${backstop.slice(0, 3).map((b) => b.identity.name).join(", ")}, ...` : "none, and no provisional row"}) as it compiles, none a directory card`);
+    `each backstop card (${backstop.length ? `${backstop.slice(0, 3).map((b) => b.identity.name).join(", ")}, ...` : provisional ? `none, yet ${provisional} provisional in the ledger` : "none, and no provisional row"}) as it compiles, none a directory card`);
   const bolt = {schema: "CrankCardScript@1", identity: {name: "Lightning Bolt"}, abilities: []}, odd = {...bolt, identity: {name: "Test Backstop Card"}};
   eq(backstopScripts([{status: "provisional", script: bolt}, {status: "blocked", script: odd}, {status: "provisional", script: odd}]).map((s) => s.identity.name),
     ["Test Backstop Card"], "of the backstop's cards, only a provisional one the directory does not define");
