@@ -1,0 +1,140 @@
+[
+ {
+  "card": "Aven Fogbringer",
+  "round": 1,
+  "sentence": "When this creature enters, return target land to its owner's hand.",
+  "why": "Aven Fogbringer: 'return target land to its owner's hand' targets {types:[Creature]}. It must target a Land."
+ },
+ {
+  "card": "Dizzy Spell",
+  "round": 1,
+  "sentence": "Transmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with the same mana value as this card, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
+  "why": "Transmute should search for a card with the same mana value as this card. Dizzy Spell ({U}) has MV 1, but the selector is hard-coded to manaValue exactly 3, apparently read from the {1}{U}{U} transmute cost."
+ },
+ {
+  "card": "Electrickery",
+  "round": 1,
+  "sentence": "Overload {1}{R} (You may cast this spell for its overload cost. If you do, change \"target\" in its text to \"each.\")",
+  "why": "Overload {1}{R} carries a Vandalblast effect (destroyAll artifacts opponents control). Wrong for both cards: Electrickery overloaded deals 1 damage to each creature you don't control; Weapon Surge overloaded gives each creature you control +1/+0 and first strike until end of turn. The overload effect must be the card's own spell text with 'target' changed to 'each' (CR 702.96)."
+ },
+ {
+  "card": "Elite Guardmage",
+  "round": 1,
+  "sentence": "When this creature enters, you gain 3 life and draw a card.",
+  "why": "Elite Guardmage says 'you gain 3 life and draw a card', but draw count is 3. It should be 1."
+ },
+ {
+  "card": "Galvanizing Sawship",
+  "round": 1,
+  "sentence": "3+ | Flying, haste",
+  "why": "haste compiled unconditional; it belongs in the same 3+ charge-counter static as flying"
+ },
+ {
+  "card": "Granite Grip",
+  "round": 1,
+  "sentence": "Enchanted creature gets +1/+0 for each Mountain you control.",
+  "why": "Granite Grip says +1/+0 for each Mountain, but toughness also gets the Mountain count. Toughness should be 0."
+ },
+ {
+  "card": "Gust of Wind",
+  "round": 1,
+  "sentence": "This spell costs {2} less to cast if you control a creature with flying.",
+  "why": "'costs {2} less if you control a creature with flying' compiled as amount {count: flyers, atMost: 2}, which per script/amount.mjs gives {1} less with one flyer; should be a flat 2 when at least one flyer is present (e.g. count atMost 1, times 2)."
+ },
+ {
+  "card": "Looming Spires",
+  "round": 1,
+  "sentence": "When this land enters, target creature gets +1/+1 and gains first strike until end of turn.",
+  "why": "Looming Spires: the trigger target is {what: permanent, types: [\"Land\"]}, but the text says target creature gets +1/+1 and first strike. It should be types [\"Creature\"]."
+ },
+ {
+  "card": "Mizzium Skin",
+  "round": 1,
+  "sentence": "Overload {1}{U} (You may cast this spell for its overload cost. If you do, change \"target\" in its text to \"each.\")",
+  "why": "Overload {1}{U} carries a Cyclonic Rift effect (return each nonland permanent opponents control to hand). Mizzium Skin overloaded should give each creature you control +0/+1 and hexproof until end of turn."
+ },
+ {
+  "card": "Noggle Bridgebreaker",
+  "round": 1,
+  "sentence": "When this creature enters, return a land you control to its owner's hand.",
+  "why": "'return a land you control to its owner's hand' compiled with selector types [\"Creature\"]; must be Land (Noggle Bridgebreaker would bounce a creature, possibly itself)."
+ },
+ {
+  "card": "Phantom General",
+  "round": 1,
+  "sentence": "Creature tokens you control get +1/+1.",
+  "why": "Phantom General is not a Class, but the ability carries \"level\":3. cards/index.mjs classLevel turns that into condition {level:{atLeast:3}}, so 'Creature tokens you control get +1/+1' would never apply. The level field must be dropped."
+ },
+ {
+  "card": "Pteron Ghost",
+  "round": 1,
+  "sentence": "Sacrifice this creature: Regenerate target artifact.",
+  "why": "Pteron Ghost says 'Regenerate target artifact', but the target is restricted to types [Creature]. It should be [Artifact]."
+ },
+ {
+  "card": "Salvage Slasher",
+  "round": 1,
+  "sentence": "This creature gets +1/+0 for each artifact card in your graveyard.",
+  "why": "'+1/+0 for each artifact card in your graveyard' compiled as counting Creature cards (wrong type) and also adds the count to toughness (should be +N/+0)."
+ },
+ {
+  "card": "Sandstone Bridge",
+  "round": 1,
+  "sentence": "When this land enters, target creature gets +1/+1 and gains vigilance until end of turn.",
+  "why": "Sandstone Bridge: 'target creature gets +1/+1 and gains vigilance' targets {types:[Land]}. It must target a Creature."
+ },
+ {
+  "card": "Skyshaper",
+  "round": 1,
+  "sentence": "Sacrifice this artifact: Creatures you control gain flying until end of turn.",
+  "why": "Skyshaper: the pumpAll selector is types [\"Artifact\"], but the text says creatures you control gain flying. It should be types [\"Creature\"], controller you."
+ },
+ {
+  "card": "Smoldering Spires",
+  "round": 2,
+  "sentence": "When this land enters, target creature can't block this turn.",
+  "why": "Sentence says 'target creature can't block this turn' but the ability's target is {what:permanent,types:[Land]}; it must be types:[Creature]. Effect (effectUntil cant-block, end-of-turn) is otherwise right."
+ },
+ {
+  "card": "Soaring Seacliff",
+  "round": 1,
+  "sentence": "When this land enters, target creature gains flying until end of turn.",
+  "why": "'target creature gains flying until end of turn' compiled with target types [\"Land\"]; target must be a Creature (Soaring Seacliff)."
+ },
+ {
+  "card": "Stormcaller's Boon",
+  "round": 1,
+  "sentence": "Sacrifice this enchantment: Creatures you control gain flying until end of turn.",
+  "why": "'Creatures you control gain flying' compiled with pumpAll selector types [\"Enchantment\"]; it must select Creatures you control (Stormcaller's Boon would give flying to your enchantments, not creatures)."
+ },
+ {
+  "card": "Tarnished Citadel",
+  "round": 1,
+  "sentence": "{T}: Add one mana of any color. This land deals 3 damage to you.",
+  "why": "Tarnished Citadel: 'This land deals 3 damage to you' is compiled as dealDamage amount 1. The amount must be 3."
+ },
+ {
+  "card": "Teetering Peaks",
+  "round": 2,
+  "sentence": "When this land enters, target creature gets +2/+0 until end of turn.",
+  "why": "Target restriction is wrong: the ability targets {what:permanent, types:[Land]} but the oracle says 'target creature gets +2/+0'. It should be types:[Creature]. As written it could only pump a land, which does nothing useful."
+ },
+ {
+  "card": "Tolaria West",
+  "round": 1,
+  "sentence": "Transmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with mana value 0, reveal it, put it into your hand, then shuffle. Transmute only as a sorcery.)",
+  "why": "Transmute must search for a card with the same mana value as this card. The JSON hard-codes manaValue exactly 3, copied from Drift of Phantasms (MV 3). Tolaria West has mana value 0, and its own reminder text says 'mana value 0', so it would fetch MV-3 cards instead of MV-0 cards."
+ },
+ {
+  "card": "Turntimber Grove",
+  "round": 2,
+  "sentence": "When this land enters, target creature gets +1/+1 until end of turn.",
+  "why": "Sentence says 'target creature gets +1/+1', but the target restriction is types [\"Land\"] (template generalized 'this land' into the target). Target must be {what:permanent, types:[Creature]}."
+ },
+ {
+  "card": "Weapon Surge",
+  "round": 1,
+  "sentence": "Overload {1}{R} (You may cast this spell for its overload cost. If you do, change \"target\" in its text to \"each.\")",
+  "why": "Overload {1}{R} carries a Vandalblast effect (destroyAll artifacts opponents control). Wrong for both cards: Electrickery overloaded deals 1 damage to each creature you don't control; Weapon Surge overloaded gives each creature you control +1/+0 and first strike until end of turn. The overload effect must be the card's own spell text with 'target' changed to 'each' (CR 702.96)."
+ }
+]
