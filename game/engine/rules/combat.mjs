@@ -53,7 +53,7 @@
 import {cardsIn, recordUse, shownName, eventCard} from "../state/index.mjs";
 import {applyReplacements, hitKey, damageChoicesPossible} from "./replacement.mjs";
 import {runFollowUps} from "../script/effects/index.mjs";
-import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf, abilitiesOf, deriving, subtypesOf, everyCreatureTypeOf} from "./layers.mjs";
+import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf, abilitiesOf, deriving, subtypesOf, everyCreatureTypeOf, characteristicsOf} from "./layers.mjs";
 import {isCreatureType} from "../keywords/types.mjs";
 import {givePoison, changeLife, infects, addCounters, damagePermanent} from "../script/effects/resources.mjs";
 import {summoningSick} from "../keywords/timing.mjs";
@@ -789,6 +789,14 @@ export const combatDamage = {
         /* Dealt combat damage this turn, infect or not ("the number of opponents that were dealt combat damage this turn",
            Tymna the Weaver; script/amount.mjs). turn.mjs clears it. */
         state.players[hit.toPlayer].combatDamagedThisTurn = true;
+        /* And by what names this game (Gollum, Obsessed Stalker: "each opponent dealt combat damage this game by a creature named
+           Gollum, Obsessed Stalker"; Rob's lists P2): the source's name as it dealt it (CR 201.2), kept for the game -- nothing
+           clears it (script/condition.mjs, combatDamagedBy). */
+        if (state.objects[hit.source]) {
+          const named = characteristicsOf(state, hit.source).name ?? state.objects[hit.source].card;
+          const names = (state.players[hit.toPlayer].combatDamagedByNames ??= []);
+          if (named && !names.includes(named)) names.push(named);
+        }
         /* And how much, noncombat damage counted beside it (effects/resources.mjs; Spinerock Knoll). */
         state.players[hit.toPlayer].damagedThisTurn = (state.players[hit.toPlayer].damagedThisTurn ?? 0) + hit.amount;
         /* PROWL'S RECORD (CR 702.76a): "a source that, at the time it dealt that damage, was under your control and had any

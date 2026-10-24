@@ -1,0 +1,212 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Banquet Guests",
+  "fixtures": {
+    "Food": {
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [
+        "Food"
+      ],
+      "colors": [],
+      "token": true,
+      "abilities": [
+        {
+          "id": "food",
+          "kind": "activated",
+          "text": "{2}, {T}, Sacrifice this artifact: You gain 3 life.",
+          "targets": [],
+          "cost": [
+            {
+              "atom": "mana",
+              "cost": "{2}"
+            },
+            {
+              "atom": "{T}"
+            },
+            {
+              "atom": "sacrifice",
+              "self": true
+            }
+          ],
+          "effects": [
+            {
+              "effect": "gainLife",
+              "amount": 3
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "X=2 with two Foods: {G}{W} pays it, and it enters with four +1/+1 counters",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Banquet Guests"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Plains",
+            "Food",
+            "Food"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Banquet Guests",
+          "x": 2
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Banquet Guests",
+            "counter": "+1/+1",
+            "count": 4
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Banquet Guests",
+            "power": 4,
+            "toughness": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "X=1 and no Food: {1}{G}{W}, two counters",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Banquet Guests"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Plains",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Banquet Guests",
+          "x": 1
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Banquet Guests",
+            "counter": "+1/+1",
+            "count": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "X=1 with one Food ({G}{W}), then {2} and the Food: indestructible until end of turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Banquet Guests"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Food",
+            "Forest",
+            "Plains",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Banquet Guests",
+          "x": 1
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Banquet Guests",
+          "sacrifice": "Food"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Banquet Guests",
+            "has": [
+              "Indestructible",
+              "Trample"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Shire Shirriff",
+    "oracleId": "14f36157-f55f-495d-9ffe-f38135a59750",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Halfling",
+      "Soldier"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Vigilance\nWhen this creature enters, you may sacrifice a token. When you do, exile target creature an opponent controls until this creature leaves the battlefield.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, you may sacrifice a token. When you do, exile target creature an opponent controls until this creature leaves the battlefield.",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "count": 1,
+          "optional": true,
+          "selector": {
+            "what": "permanent",
+            "token": true
+          },
+          "remember": true
+        },
+        {
+          "effect": "immediateTrigger",
+          "text": "When you do, exile target creature an opponent controls until this creature leaves the battlefield.",
+          "about": "remembered",
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          },
+          "targets": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "opponent"
+            }
+          ],
+          "effects": [
+            {
+              "effect": "exileUntil",
+              "targets": {
+                "target": 0
+              },
+              "until": "this leaves"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bilbo, Birthday Celebrant",
+    "oracleId": "5789520c-e4b2-44b2-b756-3f6b468dc55b",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Halfling",
+      "Rogue"
+    ],
+    "manaCost": "{W}{B}{G}",
+    "colors": [
+      "B",
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "G",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "If you would gain life, you gain that much life plus 1 instead.\n{2}{W}{B}{G}, {T}, Exile Bilbo: Search your library for any number of creature cards, put them onto the battlefield, then shuffle. Activate only if you have 111 or more life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "If you would gain life, you gain that much life plus 1 instead.",
+      "rule": "more-life",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "plus": 1
+    },
+    {
+      "kind": "activated",
+      "text": "{2}{W}{B}{G}, {T}, Exile Bilbo: Search your library for any number of creature cards, put them onto the battlefield, then shuffle. Activate only if you have 111 or more life.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{W}{B}{G}"
+        },
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "exile",
+          "self": true
+        }
+      ],
+      "condition": {
+        "lifeAtLeast": 111
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          },
+          "count": 99,
+          "upTo": true,
+          "to": "battlefield",
+          "shuffle": true
+        }
+      ]
+    }
+  ]
+}

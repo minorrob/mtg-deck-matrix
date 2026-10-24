@@ -9,17 +9,17 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1887,
+  "defined": 1898,
   "provisional": 0,
-  "everyRule": 2882
+  "everyRule": 2886
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 84,
+    "built": 85,
     "partial": 0,
-    "named": 9,
-    "missing": 101
+    "named": 10,
+    "missing": 99
    },
    "entries": [
     {
@@ -475,7 +475,7 @@
      "forge": "Landwalk",
      "top": 5,
      "all": 131,
-     "blocks": 5,
+     "blocks": 4,
      "alone": 4
     },
     {
@@ -914,13 +914,13 @@
      "kind": "keyword ability",
      "rule": "702.118",
      "name": "Skulk",
-     "engine": null,
-     "status": "missing",
+     "engine": "Skulk",
+     "status": "built",
      "forge": "Skulk",
      "top": 2,
      "all": 15,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -1119,7 +1119,7 @@
      "rule": "702.82",
      "name": "Devour",
      "engine": null,
-     "status": "missing",
+     "status": "named",
      "forge": "Devour",
      "top": 1,
      "all": 24,
@@ -3787,7 +3787,7 @@
      "forge": "ReplaceToken",
      "top": 17,
      "all": 35,
-     "blocks": 3,
+     "blocks": 2,
      "alone": 0
     },
     {
@@ -5981,8 +5981,8 @@
      "forge": "TokenCreated",
      "top": 2,
      "all": 3,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -8173,7 +8173,7 @@
      "forge": "CreateToken",
      "top": 17,
      "all": 32,
-     "blocks": 3,
+     "blocks": 2,
      "alone": 0
     },
     {

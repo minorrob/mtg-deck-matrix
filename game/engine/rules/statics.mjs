@@ -85,6 +85,11 @@ export const STATIC_RULES = Object.freeze({
       controller), `amount` generic mana, `condition`. A mana ability is never made to cost more by it (CR 605). Read as an
       activated ability's cost is, on the battlefield, in a hand or in a graveyard: actions.mjs, costPayment. */
   "abilities-cost-more": "rules/actions.mjs",
+  /** CR 602.2b, 601.2f: "Activated abilities of Foods you control cost {1} less to activate" (Sam, Loyal Attendant; Rob's
+      lists P2): `affects`, a selector of the permanents whose abilities cost less ("you" the static's controller), `amount` generic
+      mana -- only generic mana, never below none (CR 601.2f). Read as an activated ability's cost is, beside its own
+      `costLess`: actions.mjs, abilityLess, through abilityCostReduction below. */
+  "abilities-cost-less": "rules/actions.mjs",
   /** CR 601.2f, the card's own: "This spell costs {1} less to cast for each creature on the battlefield" (Vanquish the
       Horde), "{X} less, where X is the total power of creatures you control" (Ghalta). Read from the card wherever it
       is cast from, by actions.mjs through costReduction; its `amount` may be counted (script/amount.mjs). "If it targets
@@ -151,7 +156,8 @@ export const STATIC_RULES = Object.freeze({
       (script/effects/resources.mjs, changeLife) and lifelink in combat (rules/combat.mjs). */
   "cant-gain-life": "script/effects/resources.mjs",
   /** "If you would gain life, you gain twice that much life instead" (Rhox Faithmender; CR 614.1a): `affects` the players,
-      from its controller's side, `times`. lifeGained, read wherever life is gained: changeLife (script/effects/resources.mjs)
+      from its controller's side, `times` -- or "that much life plus 1 instead" (Bilbo, Birthday Celebrant), `plus`. lifeGained,
+      read wherever life is gained: changeLife (script/effects/resources.mjs)
       and lifelink in combat (rules/combat.mjs). */
   "more-life": "script/effects/resources.mjs",
   /** "If an opponent would lose life during your turn, they lose twice that much life instead" (Bloodletter of Aclazotz; CR
@@ -604,7 +610,9 @@ function tokenChange(ability, event) {
     const kind = g.count > 0 ? kindOf(ability, g.token) : undefined;
     return kind ? [g, ...ability.each.filter((k) => k !== kind).map((k) => ({token: k, count: g.count}))] : [g];
   });
-  return [...event, {token: ability.token, count: 1}];
+  /* "Those tokens plus THAT MANY 1/1 green Squirrel creature tokens" (Chatterfang, Squirrel General; Rob's lists P2): `thatMany`,
+     as many as the event now makes (CR 614.6), each group counted. */
+  return [...event, {token: ability.token, count: ability.thatMany === true ? tokensIn(live(event)) : 1}];
 }
 const tokensIn = (event) => event.reduce((n, g) => n + g.count, 0);
 const nameOf = (token) => token?.name ?? token?.card ?? null;
@@ -752,20 +760,26 @@ export function drawsInstead(state, player, count) {
 /**
  * HOW MUCH LIFE IS GAINED (CR 614.1a, 119.3): "if you would gain life, you gain twice that much life instead" (Rhox
  * Faithmender) -- each `more-life` static whose `affects` names the player, "you" its controller, multiplies the gain by its
- * `times`. Only multiplying is built, so their order never changes how much and nobody is asked (CR 616.1); two
- * Faithmenders are four times. A gain the player can't have is no gain to double (cantGainLife, asked first).
+ * `times`; two Faithmenders are four times. "You gain that much life plus 1 instead" (Bilbo, Birthday Celebrant; Rob's lists
+ * P2): `plus`, added -- two Bilbos are plus 2, each applied once (CR 614.5). Multipliers alone, or adders alone, end the same in
+ * any order. Beside each other the order is the gaining player's (CR 616.1) -- adding first gains more -- and a gain is made
+ * where nothing can stop to ask (combat damage's lifelink, rules/combat.mjs), so the order that gains the most is taken: an
+ * ignore of the question, named as one in the lane's report (Rob's lists P2). A gain the player can't have is no gain to change (cantGainLife,
+ * asked first).
  */
 export function lifeGained(state, player, amount) {
-  let n = amount;
+  let times = 1, plus = 0;
   const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
     for (const ability of held(holderId)) {
       if (ability.kind !== "static" || ability.rule !== "more-life") continue;
-      if (compileSelector({what: "player", ...ability.affects})(state, player, {controller: holder.controller, source: holderId})) n *= ability.times;
+      if (!compileSelector({what: "player", ...ability.affects})(state, player, {controller: holder.controller, source: holderId})) continue;
+      if (Number.isInteger(ability.plus)) plus += ability.plus;
+      else times *= ability.times;
     }
   }
-  return n;
+  return (amount + plus) * times;
 }
 
 /** How much life a player loses (`more-life-loss`; CR 614.1a): each static that affects them, during its controller's turn
@@ -1386,6 +1400,27 @@ export function loyaltyCostIncrease(state, player) {
       if (ability.kind !== "static" || ability.rule !== "loyalty-costs-more") continue;
       const context = {controller: holder.controller, source: holderId};
       if (!compileSelector({what: "player", ...(ability.affects ?? {})})(state, player, context)) continue;
+      total += amountOf(state, ability.amount ?? 1, context);
+    }
+  }
+  return total;
+}
+
+/**
+ * HOW MUCH LESS AN ACTIVATED ABILITY COSTS (CR 602.2b, 601.2f): every `abilities-cost-less` static on the battlefield whose `affects`
+ * -- a selector of permanents, "you" the static's controller -- takes in the permanent whose ability it is: "Activated
+ * abilities of Foods you control cost {1} less to activate" (Sam, Loyal Attendant). Generic mana, summed; what the cost has
+ * no generic mana to take it from it does not take (rules/actions.mjs, costPayment).
+ */
+export function abilityCostReduction(state, objectId) {
+  let total = 0;
+  const held = staticAbilities(state);
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of held(holderId)) {
+      if (ability.kind !== "static" || ability.rule !== "abilities-cost-less") continue;
+      const context = {controller: holder.controller, source: holderId};
+      if (!matchesSelector({...(ability.affects ?? {}), what: "permanent"}, state, objectId, context)) continue;
       total += amountOf(state, ability.amount ?? 1, context);
     }
   }

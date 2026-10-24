@@ -319,7 +319,10 @@ const trust = trustOf(library, calibrate({scripts, library, scenarios, definitio
     return {answer: {...a, abilitiesJson: JSON.stringify(list.slice(1))}, usage: {}};
   };
   const bad = await heldOutSample({scripts, scenarios, definition: index.definition, oracle: ORACLE, library, trust, call: wrong, examples: [], n: 3});
-  ok(bad.passed < 3 && bad.results.filter((r) => r.outcome === "failed").every((r) => /^fidelity: /.test(r.why)), "a writer that leaves a sentence out fails, at fidelity");
+  /* At fidelity, or -- where the checker reads the sentence left out as claimed all the same (Gandalf the White's "You may cast
+     legendary spells and artifact spells as though they had flash" beside its Flash, sampled once Rob's lists P2 grew the
+     directory) -- at play: either way it is not a card. */
+  ok(bad.passed < 3 && bad.results.filter((r) => r.outcome === "failed").every((r) => /^(fidelity|plays): /.test(r.why)), "a writer that leaves a sentence out fails, at fidelity or in play");
   const miscounted = async (body) => {
     const a = right(body);
     return {answer: {...a, abilitiesJson: a.abilitiesJson.replace(/"count":1\b/g, "\"count\":2")}, usage: {}};

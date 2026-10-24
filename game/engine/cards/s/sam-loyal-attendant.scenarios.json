@@ -1,0 +1,350 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Sam, Loyal Attendant",
+  "fixtures": {
+    "Food": {
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [
+        "Food"
+      ],
+      "colors": [],
+      "token": true,
+      "abilities": [
+        {
+          "id": "food",
+          "kind": "activated",
+          "text": "{2}, {T}, Sacrifice this artifact: You gain 3 life.",
+          "targets": [],
+          "cost": [
+            {
+              "atom": "mana",
+              "cost": "{2}"
+            },
+            {
+              "atom": "{T}"
+            },
+            {
+              "atom": "sacrifice",
+              "self": true
+            }
+          ],
+          "effects": [
+            {
+              "effect": "gainLife",
+              "amount": 3
+            }
+          ]
+        }
+      ]
+    },
+    "Clue": {
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [
+        "Clue"
+      ],
+      "colors": [],
+      "token": true,
+      "abilities": [
+        {
+          "id": "clue",
+          "kind": "activated",
+          "text": "{2}, Sacrifice this artifact: Draw a card.",
+          "targets": [],
+          "cost": [
+            {
+              "atom": "mana",
+              "cost": "{2}"
+            },
+            {
+              "atom": "sacrifice",
+              "self": true
+            }
+          ],
+          "effects": [
+            {
+              "effect": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "The beginning of combat on Rob's turn: a Food",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sam, Loyal Attendant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_BEGIN"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Sam, Loyal Attendant",
+            "Food"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The beginning of combat on Maya's turn: nothing (the one Food is from Rob's turn 1)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sam, Loyal Attendant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "COMBAT_BEGIN"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Sam, Loyal Attendant",
+            "Food"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "A Food's {2} costs {1}: one Wastes pays it, and Rob gains 3 life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sam, Loyal Attendant",
+            "Food",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Food"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 43
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Sam, Loyal Attendant",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Two Sams (one Rob's, one Maya's): only his own counts -- his Food still costs {1}, offered with one Wastes",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sam, Loyal Attendant",
+            "Food",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Sam, Loyal Attendant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Food"
+          },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "Maya's Sam does not make Rob's Food cheaper: one Wastes is not enough",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Food",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Sam, Loyal Attendant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Food"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "A Clue is no Food: its {2} stays {2}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sam, Loyal Attendant",
+            "Clue",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Clue"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Sam enters: Rob may search for Frodo, and does",
+      "library": [
+        "Wastes",
+        "Frodo, Adventurous Hobbit"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sam, Loyal Attendant"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Plains",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Sam, Loyal Attendant"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Rob"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Search"
+          ]
+        },
+        {
+          "choose": [
+            "Frodo, Adventurous Hobbit"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Frodo, Adventurous Hobbit"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}
