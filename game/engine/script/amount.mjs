@@ -414,7 +414,11 @@ export function amountOf(state, value, context = {}) {
     n = id !== null && state.objects[id]?.zone === "battlefield" ? toughnessOf(state, id) : cardFigure(state, value.toughnessOf, id, "toughness") ?? (aboutWas(value.toughnessOf, context)?.toughness ?? context.lastKnown?.toughness ?? 0);
   } else if ("countersAmong" in value) {
     /* "The number of +1/+1 counters on lands you control" (Toph, the Blind Bandit): all of them, of the kind. */
-    n = matching(state, value.countersAmong, who).reduce((sum, id) => sum + (state.objects[id].counters?.[value.counter ?? "+1/+1"] ?? 0), 0);
+    /* Or of every kind, `counter: "any"`: "where X is the number of counters among creatures you control" (Maester Seymour;
+       CR 122.1) -- each counter on each of them, whatever its kind. */
+    n = matching(state, value.countersAmong, who).reduce((sum, id) => sum + (value.counter === "any"
+      ? Object.values(state.objects[id].counters ?? {}).reduce((a, b) => a + Math.max(0, b), 0)
+      : state.objects[id].counters?.[value.counter ?? "+1/+1"] ?? 0), 0);
   } else if ("greatestToughness" in value) {
     /* "Draw cards equal to the greatest toughness among creatures you control" (Last March of the Ents). */
     n = Math.max(0, ...matching(state, value.greatestToughness, who).map((id) => characteristicsOf(state, id).toughness ?? 0));

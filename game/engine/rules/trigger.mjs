@@ -253,6 +253,8 @@ function subjects(state, event, condition, sourceId, controller) {
     /* Attacking a planeswalker of a player's is not attacking that player (CR 506.3): not "attacking you", and no player
        attacked for "that player". */
     if (condition.notAttacking === "you" && attacks.some((a) => a.defender?.playerId === controller && !a.defender.planeswalker)) return [];
+    /* "Whenever an opponent attacks you" (Lulu, Stern Guardian): one of those creatures at you, not at a planeswalker of yours. */
+    if (condition.attacksYou && !attacks.some((a) => a.defender?.playerId === controller && !a.defender.planeswalker)) return [];
     /* Each player attacked, "that player"; the attacking player is `attacker` ("that attacking player creates ..."). One of
        this ability's controller's opponents only, when it says so (CR 508.3e). */
     if (condition.eachDefender) return [...new Set(attacks.filter((a) => !a.defender?.planeswalker).map((a) => a.defender?.playerId))]

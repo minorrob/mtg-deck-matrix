@@ -93,6 +93,9 @@ export const SELECTOR_KEYS = Object.freeze([
   /* "Unless ... it's only the color its controller chose" (Selective Obliteration; CR 105.2): the one color its controller chose
      as this resolution did (effects/asking.mjs, chooseColor's `chooser`), and no other. */
   "onlyChosenColor",
+  /* "Each creature without a +1/+1 counter on it" (Wave Goodbye; Rob's lists P3): none of that kind of counter, whatever
+     else it has (CR 122.1) -- unlike `counters: "none"`, no counters at all. */
+  "nonCounters",
 ]);
 
 /** The card types (CR 205.2a). */
@@ -229,6 +232,8 @@ function assertGrammar(selector) {
       throw new Error("A selector's targeting is a spell's: a selector of the permanent one of its targets is");
     compileSelector({...selector.targeting, what: "permanent"});
   }
+  if (selector.nonCounters !== undefined && (typeof selector.nonCounters !== "string" || ["any", "none"].includes(selector.nonCounters)))
+    throw new Error("A selector's nonCounters is a kind of counter it has none of: \"+1/+1\"");
   /* "Attacking you and/or planeswalkers you control" (Mangara, the Diplomat): `attacking` true, or "you". */
   if (selector.attacking !== undefined && ![true, "you"].includes(selector.attacking)) throw new Error("A selector says attacking: true, or attacking: \"you\" -- attacking you or a planeswalker you control");
   const shared = selector.sharesCardTypeWith;
@@ -503,6 +508,7 @@ export function compileSelector(selector) {
     if (selector.counters !== undefined && !(selector.counters === "any" ? Object.values(object.counters ?? {}).some((n) => n > 0)
       : selector.counters === "none" ? !Object.values(object.counters ?? {}).some((n) => n > 0)
       : (object.counters?.[selector.counters] ?? 0) > 0)) return false;
+    if (selector.nonCounters !== undefined && (object.counters?.[selector.nonCounters] ?? 0) > 0) return false;
     /* Modified (CR 700.15): a counter on it, equipped, or enchanted by an Aura its controller controls (rules/layers.mjs). */
     if (selector.modified !== undefined && isModified(state, id, object.counters, controllerOf(state, id)) !== selector.modified) return false;
     /* "Creatures that entered this turn" (Force of Despair): on the battlefield since this turn. */

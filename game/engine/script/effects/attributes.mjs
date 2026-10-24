@@ -28,6 +28,7 @@
 import {addObject, removeObject} from "../../state/index.mjs";
 import {event, cardRef} from "./zones.mjs";
 import {addCounters} from "./resources.mjs";
+import {amountOf, isCounted} from "../amount.mjs";
 import {controllerOf} from "../../rules/layers.mjs";
 
 /** The designations `alterAttribute` gives or takes. */
@@ -85,7 +86,10 @@ export function alterAttribute(state, params, context) {
     if (object?.zone !== "battlefield") continue;
     if (params.attribute === "monstrous") {
       if (params.value === false || object.monstrous === true) continue;
-      const n = Number.isInteger(params.counters) ? Math.max(0, params.counters) : null;
+      /* "Monstrosity X, where X is the number of counters among creatures you control" (Maester Seymour; CR 701.37a, 701.37c):
+         an amount, counted as the ability resolves -- what the counters are then, not when it was activated. */
+      const n = Number.isInteger(params.counters) ? Math.max(0, params.counters)
+        : isCounted(params.counters) ? Math.max(0, amountOf(state, params.counters, context)) : null;
       if (n) addCounters(state, id, "+1/+1", n, events, context.controller);
       object.monstrous = true;
       if (n !== null) object.monstrosityX = n;

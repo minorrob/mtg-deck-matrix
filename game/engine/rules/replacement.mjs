@@ -406,8 +406,15 @@ function applyOne(state, {holderId, ability, effect = null}, proposal, dry = fal
   if (ability.change?.riot === true) next.asks = [...(next.asks ?? []), {riot: true}];
   /* "You may have this creature enter as a copy of any creature on the battlefield" (CR 614.1c, 707.9): which one is asked
      once it is there, its arrival waiting for the answer (rules/entering.mjs) -- "except", "until end of turn", "tapped". */
-  if (ability.change?.copyOf) next.asks = [...(next.asks ?? []), {copyOf: structuredClone(ability.change.copyOf),
-    copy: {except: structuredClone(ability.change.except ?? {}), keep: [...(ability.change.keep ?? [])], until: ability.change.until ?? null, tapped: ability.change.tapped === true}}];
+  /* "Except it enters with X additional +1/+1 counters on it" (Altered Ego; CR 107.3m, 707.9a): a count of the exception's
+     counted now, with the X paid to cast it, as its own "enters with X counters" is. */
+  if (ability.change?.copyOf) {
+    const except = structuredClone(ability.change.except ?? {});
+    if (Array.isArray(except.entersWithCounters)) except.entersWithCounters = except.entersWithCounters.map((extra) => (isCounted(extra.count)
+      ? {...extra, count: amountOf(state, extra.count, {controller: proposal.player, source: proposal.objectId, x: proposal.x ?? 0, kicked: proposal.kicked ?? 0})} : extra));
+    next.asks = [...(next.asks ?? []), {copyOf: structuredClone(ability.change.copyOf),
+      copy: {except, keep: [...(ability.change.keep ?? [])], until: ability.change.until ?? null, tapped: ability.change.tapped === true}}];
+  }
   /* "This creature enters prepared" (Goblin Glasswright; CR 614.1c, 722.3a): a designation it enters with, given as it
      arrives (effects/attributes.mjs, prepare) -- and with it the copy of its prepare spell in exile (722.3c). */
   if (ability.change?.entersPrepared === true) next.designations = [...new Set([...(next.designations ?? []), "prepared"])];

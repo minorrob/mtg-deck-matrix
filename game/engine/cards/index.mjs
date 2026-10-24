@@ -335,7 +335,11 @@ const TRIGGERS = {
     ...(t.each === "defender" ? {eachDefender: true} : {}), ...(t.notAttacking ? {notAttacking: t.notAttacking} : {}), ...(t.filter ? {filter: t.filter} : {}),
     /* "Whenever a player attacks one of your opponents" (Combat Calligrapher; CR 508.3e): once for each opponent of this
        ability's controller attacked (`each: "defender"`, `defender: "opponent"`), about that player and the attacking one. */
-    ...(t.each === "defender" && t.defender === "opponent" ? {defender: "opponent"} : {})}),
+    ...(t.each === "defender" && t.defender === "opponent" ? {defender: "opponent"} : {}),
+    /* "Whenever an opponent attacks you" (Lulu, Stern Guardian; CR 508.1, 506.3): once for the attack, if one or more of its
+       creatures attack this ability's controller -- a planeswalker of theirs attacked is not them -- about the attacking
+       player. */
+    ...(t.each === undefined && t.defender === "you" ? {attacksYou: true} : {})}),
   /* "Whenever this creature attacks", "whenever a creature you control attacks": once per attacker (CR 508.1m). */
   attacks: (t) => (ARRIVALS.includes(t.who ?? "self") && [undefined, "opponent", "you", "player"].includes(t.defender) && [undefined, true].includes(t.alone)
     ? {on: "GameEventAttackersDeclared", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {}),
