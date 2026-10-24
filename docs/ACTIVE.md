@@ -1,5 +1,18 @@
 # Who holds the work
 
+## Card load, 2026-10-24: Rob's four priority lists (Claude Code on Personal-HP, for Rob; `claude/card-engine-loading-0584aa`)
+
+Rob, 2026-10-24: *"Here are a few lists of cards we need to prioritize loading into the engine. Review what needs to be
+loaded, then begin the engine updates to make all of these cards playable."* Four deck lists, 287 distinct cards: 187
+play now (three are flavor names of defined cards), **100 to write**, every list's commander among them.
+`docs/engine/card-load-rob-lists-2026-10-24/` has the review (`README.md`), the lanes' brief and the three lane files.
+
+- **In progress:** three lanes in the Claude · Engine lane's card files, each on its own branch from this one
+  (`claude/engine-roblists-p1-blink`, `-p2-food`, `-p3-counters`), each with a draft PR into this branch. This session
+  integrates them and opens the one PR to `main`.
+- **Rules to build** (the README's table): airbend, myriad, harness, an additional end step, devour, sacrifice X,
+  descend, Alliance's unchosen modes, moving counters, and a few more.
+
 ## Card load, 2026-10-24: the compiler's candidates and the shared sentences (a Claude cloud session, for Rob; `claude/engine-card-load-2026-10-24`)
 
 Rob, 2026-10-24: *"Look at the card list of cards not loaded in the engine but either automatically can be added or easily
