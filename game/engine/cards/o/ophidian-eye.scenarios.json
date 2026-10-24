@@ -13,7 +13,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -123,7 +123,7 @@
           "zone": "hand",
           "cards": [
             "Ophidian Eye",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -163,7 +163,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Bear"
@@ -180,7 +180,7 @@
           "zone": "graveyard",
           "cards": [
             "Bear",
-            "Murder",
+            "Smoke Murder",
             "Ophidian Eye"
           ]
         }
@@ -194,7 +194,7 @@
           "zone": "hand",
           "cards": [
             "Ophidian Eye",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -231,7 +231,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Bear"
@@ -251,7 +251,7 @@
           "zone": "graveyard",
           "cards": [
             "Bear",
-            "Murder",
+            "Smoke Murder",
             "Ophidian Eye"
           ]
         },

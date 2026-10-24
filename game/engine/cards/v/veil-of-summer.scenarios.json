@@ -42,7 +42,7 @@
         ]
       }
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -303,7 +303,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Murder",
+            "Smoke Murder",
             "Agony",
             "Bolt",
             "Shock"
@@ -365,7 +365,7 @@
             {
               "offers": {
                 "kind": "cast",
-                "card": "Murder",
+                "card": "Smoke Murder",
                 "seat": 1
               },
               "count": 0
@@ -429,7 +429,7 @@
         {
           "offers": {
             "kind": "cast",
-            "card": "Murder",
+            "card": "Smoke Murder",
             "seat": 1
           },
           "count": 1,
@@ -490,7 +490,7 @@
           "zone": "hand",
           "cards": [
             "Cancel",
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ],
@@ -556,7 +556,7 @@
           "seat": 1
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "seat": 1,
           "targets": [
             {
@@ -582,7 +582,7 @@
           "zone": "graveyard",
           "cards": [
             "Cancel",
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ]

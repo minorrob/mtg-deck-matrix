@@ -1,0 +1,88 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kaya's Ghostform",
+    "oracleId": "b15c6203-6311-44eb-916d-a4c271960c74",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant creature or planeswalker you control\nWhen enchanted permanent dies or is put into exile, return that card to the battlefield under your control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Enchant creature or planeswalker you control",
+      "keyword": "enchant",
+      "target": {
+        "anyOf": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          {
+            "what": "permanent",
+            "types": [
+              "Planeswalker"
+            ],
+            "controller": "you"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "When enchanted permanent dies or is put into exile, return that card to the battlefield under your control.",
+      "trigger": {
+        "on": "leaves",
+        "to": "graveyard",
+        "who": "any",
+        "filter": {
+          "attachedBy": "self"
+        }
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "that card",
+          "to": "battlefield",
+          "controller": "you"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "When enchanted permanent dies or is put into exile, return that card to the battlefield under your control.",
+      "trigger": {
+        "on": "exiled",
+        "who": "any",
+        "filter": {
+          "attachedBy": "self"
+        }
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "that card",
+          "to": "battlefield",
+          "controller": "you"
+        }
+      ]
+    }
+  ]
+}

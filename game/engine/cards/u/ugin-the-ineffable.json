@@ -1,0 +1,116 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ugin, the Ineffable",
+    "oracleId": "18bdc181-9592-4147-81fb-7f83ce137f70",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Planeswalker"
+    ],
+    "subtypes": [
+      "Ugin"
+    ],
+    "manaCost": "{6}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null,
+    "loyalty": 4
+  },
+  "oracleText": "Colorless spells you cast cost {2} less to cast.\n+1: Exile the top card of your library face down and look at it. Create a 2/2 colorless Spirit creature token. When that token leaves the battlefield, put the exiled card into your hand.\n−3: Destroy target permanent that's one or more colors.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Colorless spells you cast cost {2} less to cast.",
+      "rule": "spells-cost-less",
+      "affects": {
+        "what": "spell",
+        "colorless": true
+      },
+      "amount": 2
+    },
+    {
+      "kind": "activated",
+      "text": "+1: Exile the top card of your library face down and look at it. Create a 2/2 colorless Spirit creature token. When that token leaves the battlefield, put the exiled card into your hand.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": 1
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "fromTop": 1,
+          "to": "exile",
+          "faceDown": true,
+          "look": true,
+          "remember": true
+        },
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Spirit",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Spirit"
+            ],
+            "colors": [],
+            "power": 2,
+            "toughness": 2,
+            "abilities": [
+              {
+                "id": "ugin-spirit",
+                "kind": "triggered",
+                "text": "When this token leaves the battlefield, put the exiled card into your hand.",
+                "trigger": {
+                  "on": "GameEventCardChangeZone",
+                  "from": "Battlefield",
+                  "who": "self"
+                },
+                "effects": [
+                  {
+                    "effect": "moveZone",
+                    "linked": true,
+                    "to": "hand"
+                  }
+                ]
+              }
+            ]
+          },
+          "linkRemembered": true
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "−3: Destroy target permanent that's one or more colors.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": -3
+        }
+      ],
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "colorless": false
+        }
+      ]
+    }
+  ]
+}

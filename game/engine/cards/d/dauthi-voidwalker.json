@@ -1,0 +1,79 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dauthi Voidwalker",
+    "oracleId": "f1c2dbe2-fbe0-4058-bdf1-91d1b1832786",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dauthi",
+      "Rogue"
+    ],
+    "manaCost": "{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "Shadow (This creature can block or be blocked by only creatures with shadow.)\nIf a card would be put into an opponent's graveyard from anywhere, instead exile it with a void counter on it.\n{T}, Sacrifice this creature: Choose an exiled card an opponent owns with a void counter on it. You may play it this turn without paying its mana cost.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Shadow",
+      "keyword": "shadow"
+    },
+    {
+      "kind": "replacement",
+      "text": "If a card would be put into an opponent's graveyard from anywhere, instead exile it with a void counter on it.",
+      "watches": {
+        "event": "zone-change",
+        "to": "graveyard",
+        "card": true,
+        "owner": "opponent"
+      },
+      "change": {
+        "to": "exile",
+        "withCounters": {
+          "void": 1
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}, Sacrifice this creature: Choose an exiled card an opponent owns with a void counter on it. You may play it this turn without paying its mana cost.",
+      "cost": [
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "exile",
+          "selector": {
+            "owner": "opponent",
+            "counters": "void"
+          },
+          "to": "stay",
+          "remember": true
+        },
+        {
+          "effect": "mayPlay",
+          "targets": "remembered",
+          "free": true,
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

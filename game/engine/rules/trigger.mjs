@@ -367,7 +367,8 @@ function subjects(state, event, condition, sourceId, controller) {
     const card = fields.becomes;
     /* "When you discard this card": this card, and no other. */
     if (condition.who === "self" && card !== sourceId) return [];
-    if (condition.filter && !(card !== undefined && state.objects[card] && matchesSelector({...condition.filter, what: "card", zone: "graveyard"}, state, card, {controller, source: sourceId}))) return [];
+    /* Read where the card went: a graveyard, or exile instead (CR 701.9a: still a discard; Dauthi Voidwalker). */
+    if (condition.filter && !(card !== undefined && state.objects[card] && matchesSelector({...condition.filter, what: "card", zone: state.objects[card].zone}, state, card, {controller, source: sourceId}))) return [];
     return [{card, player: discarder}];
   }
   /* Ward (CR 702.21a): this permanent became the target of a spell or ability an opponent controls -- about that player
@@ -376,7 +377,9 @@ function subjects(state, event, condition, sourceId, controller) {
      emit as an attacker, a {T} cost, a creature tapped to pay or crew, and an effect turn a permanent sideways. */
   if (condition.on === "GameEventCardTapped") {
     const id = fields.card?.cardId;
-    return fields.tapped === true && fits(state, id, condition, sourceId, controller) ? [{card: id}] : [];
+    /* "Whenever a permanent becomes untapped" (Mesmeric Orb; CR 701.26b): `untapped`, the untap events -- the untap step, an
+       untap effect, a {Q} or untap cost (effects/resources.mjs untapOne, rules/actions.mjs). */
+    return fields.tapped === (condition.untapped !== true) && fits(state, id, condition, sourceId, controller) ? [{card: id}] : [];
   }
   if (condition.on === "GameEventBecomesTarget") {
     /* "Whenever this creature becomes the target", and (batch 76) "whenever a Dragon you control becomes the target"
@@ -417,7 +420,10 @@ function subjects(state, event, condition, sourceId, controller) {
      about the player who controls it too: "whenever a creature an opponent controls enters, you may have that player lose
      1 life" (Suture Priest). */
   if (event.kind === "GameEventCardChangeZone" && fields.becomes !== undefined) {
-    const player = fields.to?.zoneType === "Battlefield" ? state.objects[fields.becomes]?.controller : undefined;
+    /* Into a graveyard, the player whose graveyard it is -- its owner's (CR 400.3): "whenever a card is put into an opponent's
+       graveyard from anywhere, ... you may have that player lose 2 life" (Bloodchief Ascension). */
+    const player = fields.to?.zoneType === "Battlefield" ? state.objects[fields.becomes]?.controller
+      : fields.to?.zoneType === "Graveyard" ? state.objects[fields.becomes]?.owner : undefined;
     /* And where it came from, if from a library (Fblthp, the Lost: "if it entered from your library or was cast from your
        library"), kept with the trigger for when the permanent is gone before it resolves (CR 608.2h; script/condition.mjs). */
     const came = fields.to?.zoneType === "Battlefield" ? state.objects[fields.becomes]?.cameFrom : undefined;
@@ -627,7 +633,9 @@ export function manaTriggered(state, event) {
   for (const d of state.delayedTriggers ?? []) {
     const mana = d.on?.manaAbility;
     if (!mana || !tappedForMana(state, fields, d.on, d.source, d.controller)) continue;
-    made.push({player: d.controller, mana: {...mana.mana}, source: d.source});
+    /* Its controller's -- or, "that player adds", the player who tapped: "until end of turn, whenever a player taps an Island
+       for mana, that player adds an additional {U}" (High Tide; cards/index.mjs, `toTapper`). */
+    made.push({player: mana.toTapper === true ? fields.player?.playerId ?? d.controller : d.controller, mana: {...mana.mana}, source: d.source});
   }
   return made;
 }
@@ -808,7 +816,7 @@ export function collectTriggers(state, events) {
     /* "At the beginning of your next main phase" (Mana Drain, `at: "your next main"`; CR 505.1): either main phase, the next of
        its controller's turns' -- one made in a precombat main phase waits for that turn's postcombat one. */
     const moment = event.kind === "GameEventTurnPhase" ? {END_OF_TURN: "end step", UPKEEP: "upkeep", MAIN1: "precombat main", MAIN2: "postcombat main", COMBAT_END: "end of combat",
-      COMBAT_DECLARE_ATTACKERS: "declare attackers"}[event.data?.fields?.phase] : undefined;
+      COMBAT_DECLARE_ATTACKERS: "declare attackers", COMBAT_BEGIN: "beginning of combat"}[event.data?.fields?.phase] : undefined;
     /* SUSPEND (CR 702.62a): at the beginning of its owner's upkeep, a suspended card in exile with a time counter on it has
        one removed -- and when the last is, its owner may cast it without paying its mana cost (a creature so cast has haste,
        rules/actions.mjs). One triggered ability does both, in order. */
@@ -832,7 +840,9 @@ export function collectTriggers(state, events) {
       const due = state.delayedTriggers.filter((d) => (d.at === moment && (!d.yours || d.controller === turnOf) && (!d.yourTurn || d.controller === turnOf) && (d.player === undefined || d.player === turnOf))
         || (moment === "upkeep" && d.at === "your upkeep" && d.controller === turnOf)
         || ((moment === "precombat main" || moment === "postcombat main") && d.at === "your next main" && d.controller === turnOf)
-        || (moment === "declare attackers" && d.at === "your next declare attackers" && d.controller === turnOf && state.turn > d.madeOnTurn));
+        || (moment === "declare attackers" && d.at === "your next declare attackers" && d.controller === turnOf && state.turn > d.madeOnTurn)
+        /* "At the beginning of that combat" (Moraug): the added combat it was numbered for (rules/turn.mjs). */
+        || (moment === "beginning of combat" && d.at === "that combat" && d.turn === state.turn && d.combat === state.combatsThisTurn));
       state.delayedTriggers = state.delayedTriggers.filter((d) => !due.includes(d) || d.forever === true);
       for (const d of due) state.pendingTriggers.push({
         abilityId: "delayed", text: d.text ?? (moment === "upkeep" ? "At the beginning of the next upkeep" : "At the beginning of the next end step"), controller: d.controller,
@@ -983,7 +993,10 @@ function targeting(state, stackId) {
   /* And its X, for a target "with mana value X" (Halo Forager's reflexive trigger). */
   /* And the mana spent to cast its source, as it triggered: converge's "with mana value less than or equal to the number of
      colors of mana spent to cast this creature" (Sundering Archaic; script/amount.mjs, colorsSpent), its source gone. */
-  return {entry, context: {controller: entry.playerId, source, ...(entry.about ? {about: entry.about} : {}), ...(Number.isInteger(entry.x) ? {x: entry.x} : {}),
+  /* A permanent's own "when this dies" with its source gone (CR 603.10a): the card it became, which "another target ... card
+     from your graveyard" is never (Myr Retriever; script/filter.mjs). */
+  const became = source === null && entry.lastKnown && entry.about?.card !== undefined ? {became: entry.about.card} : {};
+  return {entry, context: {controller: entry.playerId, source, ...became, ...(entry.about ? {about: entry.about} : {}), ...(Number.isInteger(entry.x) ? {x: entry.x} : {}),
     ...(entry.spent ? {spent: entry.spent} : {}), chosenTargets: entry.targets ?? []}};
 }
 
@@ -1098,7 +1111,13 @@ function modalWaysOf(state, modal, context, taken, n) {
 function modesTaken(state, entry) {
   if (!entry.script?.modal?.unchosen) return [];
   const source = entry.cardId === null ? undefined : state.objects[entry.cardId];
-  return source ? source.modesChosen?.[entry.abilityId] ?? [] : entry.modesChosenWas ?? [];
+  return source ? modesChosenBy(state, source, entry.abilityId, entry.script.modal.unchosen) : entry.modesChosenWas ?? [];
+}
+/* "Choose one that hasn't been chosen THIS TURN" (Monument to Endurance; `unchosen: "turn"`): only the modes chosen in this
+   turn (`modesChosenOn`, the turn they were chosen in) -- in a turn after, none has been. */
+function modesChosenBy(state, object, abilityId, unchosen) {
+  if (unchosen === "turn" && object.modesChosenOn?.[abilityId] !== state.turn) return [];
+  return object.modesChosen?.[abilityId] ?? [];
 }
 
 /** The choice (§12.1): each legal way to aim the trigger, with what it is aimed at. */
@@ -1152,7 +1171,10 @@ export function resolveTriggerTargets(state, awaiting, indices) {
     /* The modes chosen, remembered on the permanent for its next time (modesTaken) -- once chosen, chosen, whatever then
        becomes of this trigger. */
     const source = modal.unchosen && entry.cardId !== null ? state.objects[entry.cardId] : undefined;
-    if (source) source.modesChosen = {...(source.modesChosen ?? {}), [entry.abilityId]: [...(source.modesChosen?.[entry.abilityId] ?? []), ...option.modes]};
+    if (source) {
+      source.modesChosen = {...(source.modesChosen ?? {}), [entry.abilityId]: [...modesChosenBy(state, source, entry.abilityId, modal.unchosen), ...option.modes]};
+      if (modal.unchosen === "turn") source.modesChosenOn = {...(source.modesChosenOn ?? {}), [entry.abilityId]: state.turn};
+    }
     entry.script = {...rest, ...modalScript(modal, option.modes)};
     entry.modes = [...option.modes];
   }

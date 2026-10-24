@@ -1,0 +1,70 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Sylvan Safekeeper",
+  "scenarios": [
+    {
+      "name": "Sylvan Safekeeper: sacrifice a land, and it gains shroud until end of turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sylvan Safekeeper",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Sylvan Safekeeper",
+          "sacrifice": "Forest",
+          "targets": [
+            {
+              "card": "Sylvan Safekeeper"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Sylvan Safekeeper",
+                "has": [
+                  "Shroud"
+                ]
+              }
+            },
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Forest"
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Sylvan Safekeeper",
+            "lacks": [
+              "Shroud"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

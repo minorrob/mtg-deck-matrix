@@ -174,6 +174,6 @@ BREAKS = [
     ('controller: as it last existed', BIND, '    return Number.isInteger(was) ? [was] : [];', '    return [];'),
 
     # Command Beacon: the command zone is public.
-    ('command: no failing to find', ASKING, ' || zone === "exile" || zone === "command";', ' || zone === "exile";'),
+    ('command: no failing to find', ASKING, ' || zone === "exile" || zone === "command" || (zone', ' || zone === "exile" || (zone'),
     ('command: asked in its words', ASKING, '        : awaiting.zone === "command" ? "Choose a card in your command zone"\n', ''),
 ]

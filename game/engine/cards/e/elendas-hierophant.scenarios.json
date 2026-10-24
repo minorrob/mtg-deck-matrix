@@ -19,7 +19,7 @@
         ]
       }
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -64,7 +64,7 @@
           "zone": "hand",
           "cards": [
             "Salve",
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ],
@@ -85,7 +85,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Elenda's Hierophant"

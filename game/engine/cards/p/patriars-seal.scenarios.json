@@ -1,0 +1,136 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Patriar's Seal",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Legend": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{1}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "supertypes": [
+        "Legendary"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Untaps a legendary creature of its controller",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Patriar's Seal",
+            "Wastes",
+            "Legend",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Legend"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Patriar's Seal"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Legend"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Patriar's Seal",
+          "targets": [
+            {
+              "card": "Legend"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Legend",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "tapped": "Patriar's Seal"
+        }
+      ]
+    },
+    {
+      "name": "One mana of any color",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Patriar's Seal"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Patriar's Seal",
+          "mana": {
+            "B": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "B": 1
+          }
+        }
+      ]
+    }
+  ]
+}

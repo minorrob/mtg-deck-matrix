@@ -1,0 +1,96 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tibalt's Trickery",
+    "oracleId": "6623cb85-fb1e-4561-8b21-0977c25096c2",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Counter target spell. Choose 1, 2, or 3 at random. Its controller mills that many cards, then exiles cards from the top of their library until they exile a nonland card with a different name than that spell. They may cast that card without paying its mana cost. Then they put the exiled cards on the bottom of their library in a random order.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Counter target spell. Choose 1, 2, or 3 at random. Its controller mills that many cards, then exiles cards from the top of their library until they exile a nonland card with a different name than that spell. They may cast that card without paying its mana cost. Then they put the exiled cards on the bottom of their library in a random order.",
+      "targets": [
+        {
+          "what": "spell"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "counterSpell",
+          "spells": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "rollDie",
+          "sides": 3,
+          "atRandom": true
+        },
+        {
+          "effect": "mill",
+          "who": {
+            "controllerOf": {
+              "target": 0
+            }
+          },
+          "count": {
+            "dieRolled": true
+          }
+        },
+        {
+          "effect": "digUntil",
+          "who": {
+            "controllerOf": {
+              "target": 0
+            }
+          },
+          "exile": true,
+          "selector": {
+            "nonTypes": [
+              "Land"
+            ]
+          },
+          "differentName": {
+            "nameOf": {
+              "target": 0
+            }
+          },
+          "found": {},
+          "remember": true,
+          "rememberAll": true
+        },
+        {
+          "effect": "play",
+          "who": {
+            "controllerOf": {
+              "target": 0
+            }
+          },
+          "from": "targets",
+          "targets": "remembered",
+          "free": true
+        },
+        {
+          "effect": "moveZone",
+          "targets": "the exiled cards",
+          "to": "library",
+          "random": true
+        }
+      ]
+    }
+  ]
+}

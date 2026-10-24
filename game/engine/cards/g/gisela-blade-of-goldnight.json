@@ -1,0 +1,72 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gisela, Blade of Goldnight",
+    "oracleId": "66f9f325-5e8e-4ebf-b5b3-c6410d80f2c5",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel"
+    ],
+    "manaCost": "{4}{R}{W}{W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Flying, first strike\nIf a source would deal damage to an opponent or a permanent an opponent controls, that source deals double that damage to that player or permanent instead.\nIf a source would deal damage to you or a permanent you control, prevent half that damage, rounded up.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "first strike",
+      "keyword": "first strike"
+    },
+    {
+      "kind": "replacement",
+      "text": "If a source would deal damage to an opponent or a permanent an opponent controls, that source deals double that damage to that player or permanent instead.",
+      "watches": {
+        "event": "damage",
+        "to": "opponent"
+      },
+      "change": {
+        "multiply": 2
+      }
+    },
+    {
+      "kind": "replacement",
+      "text": "If a source would deal damage to you or a permanent you control, prevent half that damage, rounded up.",
+      "watches": {
+        "event": "damage",
+        "anyOf": [
+          {
+            "toPlayer": "you"
+          },
+          {
+            "toCard": {
+              "controller": "you"
+            }
+          }
+        ]
+      },
+      "change": {
+        "preventHalf": true
+      }
+    }
+  ]
+}

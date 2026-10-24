@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Glaring Fleshraker",
+    "oracleId": "0ffce5e0-6b1d-4d1a-9318-1a1a219df532",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Eldrazi",
+      "Drone"
+    ],
+    "manaCost": "{2}{C}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Whenever you cast a colorless spell, create a 0/1 colorless Eldrazi Spawn creature token with \"Sacrifice this token: Add {C}.\"\nWhenever another colorless creature you control enters, this creature deals 1 damage to each opponent.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a colorless spell, create a 0/1 colorless Eldrazi Spawn creature token with \"Sacrifice this token: Add {C}.\"",
+      "trigger": {
+        "on": "spell cast",
+        "filter": {
+          "colorless": true
+        }
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Eldrazi Spawn",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Eldrazi",
+              "Spawn"
+            ],
+            "colors": [],
+            "power": 0,
+            "toughness": 1,
+            "abilities": [
+              {
+                "id": "spawn",
+                "kind": "mana",
+                "tapSelf": false,
+                "produces": {
+                  "C": 1
+                },
+                "sacrificeSelf": true,
+                "text": "Sacrifice this token: Add {C}."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever another colorless creature you control enters, this creature deals 1 damage to each opponent.",
+      "trigger": {
+        "on": "enters",
+        "who": "another",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "colorless": true,
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 1,
+          "who": "opponent"
+        }
+      ]
+    }
+  ]
+}

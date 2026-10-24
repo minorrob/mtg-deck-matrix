@@ -1,0 +1,69 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tragic Slip",
+    "oracleId": "fa6e2a47-a8cb-4224-ae3e-f61c90477285",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target creature gets -1/-1 until end of turn.\nMorbid — That creature gets -13/-13 until end of turn instead if a creature died this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Target creature gets -1/-1 until end of turn.\nMorbid — That creature gets -13/-13 until end of turn instead if a creature died this turn.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "branch",
+          "if": {
+            "compare": {
+              "count": {
+                "creaturesDiedThisTurn": "any"
+              },
+              "atLeast": 1
+            }
+          },
+          "then": [
+            {
+              "effect": "pump",
+              "targets": {
+                "target": 0
+              },
+              "power": -13,
+              "toughness": -13
+            }
+          ],
+          "otherwise": [
+            {
+              "effect": "pump",
+              "targets": {
+                "target": 0
+              },
+              "power": -1,
+              "toughness": -1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

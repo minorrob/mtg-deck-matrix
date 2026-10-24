@@ -13,7 +13,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -115,7 +115,7 @@
           "zone": "hand",
           "cards": [
             "Keen Sense",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -147,7 +147,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Bear"
@@ -165,7 +165,7 @@
           "cards": [
             "Bear",
             "Keen Sense",
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ]
@@ -178,7 +178,7 @@
           "zone": "hand",
           "cards": [
             "Keen Sense",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -207,7 +207,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Bear"
@@ -228,7 +228,7 @@
           "cards": [
             "Bear",
             "Keen Sense",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {

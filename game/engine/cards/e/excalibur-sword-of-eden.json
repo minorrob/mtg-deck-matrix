@@ -1,0 +1,115 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Excalibur, Sword of Eden",
+    "oracleId": "9fb6bd72-031b-40a1-83c5-8a1c82f84e12",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Equipment"
+    ],
+    "manaCost": "{12}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This spell costs {X} less to cast, where X is the total mana value of historic permanents you control. (Artifacts, legendaries, and Sagas are historic.)\nEquipped creature gets +10/+0 and has vigilance.\nEquip legendary creature {2}",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This spell costs {X} less to cast, where X is the total mana value of historic permanents you control. (Artifacts, legendaries, and Sagas are historic.)",
+      "rule": "this-costs-less",
+      "affects": {
+        "self": true
+      },
+      "amount": {
+        "totalManaValue": {
+          "what": "permanent",
+          "controller": "you",
+          "anyOf": [
+            {
+              "types": [
+                "Artifact"
+              ]
+            },
+            {
+              "supertypes": [
+                "Legendary"
+              ]
+            },
+            {
+              "subtypes": [
+                "Saga"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Equipped creature gets +10/+0 and has vigilance.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": 10,
+        "toughness": 0
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Equipped creature gets +10/+0 and has vigilance.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "addKeywords": [
+          "Vigilance"
+        ]
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "Equip legendary creature {2}",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "attach",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "timing": "sorcery",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "supertypes": [
+            "Legendary"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "High Tide",
+    "oracleId": "dc671205-f2fa-454f-9957-921a6069ad53",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Until end of turn, whenever a player taps an Island for mana, that player adds an additional {U}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Until end of turn, whenever a player taps an Island for mana, that player adds an additional {U}.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "delayedTrigger",
+          "when": {
+            "on": "tapped for mana",
+            "tapper": "any",
+            "filter": {
+              "subtypes": [
+                "Island"
+              ]
+            }
+          },
+          "thisTurn": true,
+          "text": "Until end of turn, whenever a player taps an Island for mana, that player adds an additional {U}.",
+          "effects": [
+            {
+              "effect": "addMana",
+              "mana": {
+                "U": 1
+              },
+              "who": "that player"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

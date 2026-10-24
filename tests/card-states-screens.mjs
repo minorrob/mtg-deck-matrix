@@ -9,7 +9,7 @@
  *   3. The card panel's Status chips count the card's records by their status, as labels, not links; Change status
  *      and Change assignment sit at the end of the lines.
  *   4. The Table view's piles are places, and Ready to add names a waiting copy Loading.
- *   5. How a deck comes together climbs the ownership words, then the uses.
+ *   5. About Deck Building climbs the ownership words, then the uses.
  *
  * Needs Playwright and Chromium; GEOMETRY_REQUIRED=1 (CI) turns a missing browser into a failure.
  */
@@ -116,8 +116,8 @@ try {
 
   /* 6. The ladder. */
   await page.goto(`${base}/index.html#how`);
-  await page.locator(".cm-how-ladder li").first().waitFor({timeout: 30000});
-  eq(await page.$$eval(".cm-how-ladder li strong", (s) => s.map((x) => x.textContent)), ["Watch", "To buy", "Ordered", "Own", "Upgrade", "Reserved", "Substitute", "Final"], "How a deck comes together climbs the ownership words, then the uses that bring a card into a deck");
+  await page.locator("#cm-how-ladder li").first().waitFor({timeout: 30000});
+  eq(await page.$$eval("#cm-how-ladder li strong", (s) => s.map((x) => x.textContent)), ["Watch", "To buy", "Ordered", "Own", "Upgrade", "Reserved", "Loading", "Substitute", "Final"], "About Deck Building (still at #how) climbs the ownership words, then the uses that bring a card into a deck, Loading among them (ABT-3)");
   await context.close();
 } finally {
   await close();

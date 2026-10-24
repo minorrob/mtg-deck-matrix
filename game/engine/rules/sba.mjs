@@ -45,8 +45,8 @@
  */
 
 import {moveObject, removeObject, PER_PLAYER, PUBLIC_ZONES, eventCard, rememberExileLooker, recordDeath} from "../state/index.mjs";
-import {applyReplacements} from "./replacement.mjs";
-import {lastKnown, supertypesOf, toughnessOf, typesOf, keywordsOf, controllerOf, deriving, staticAbilities} from "./layers.mjs";
+import {applyReplacements, placeReplacedCounters} from "./replacement.mjs";
+import {lastKnown, supertypesOf, subtypesOf, toughnessOf, typesOf, keywordsOf, controllerOf, deriving, staticAbilities} from "./layers.mjs";
 import {matchesSelector} from "../script/filter.mjs";
 import {commanderToAsk, resolveCommanderChoice, recordCommanderDamage} from "./commander.mjs";
 import {sacrificeOne, moveOne, returnExiledUntil, leavingRef, destructionReplaced, destructionAsks} from "../script/effects/zones.mjs";
@@ -215,6 +215,7 @@ function auraToGraveyard(state, id, events) {
   const leftBehind = lastKnown(state, id);
   const {proposal} = applyReplacements(state, {event: "zone-change", objectId: id, from: "battlefield", to: "graveyard", player: object.controller});
   const fell = moveObject(state, id, proposal.to, PER_PLAYER.includes(proposal.to) ? object.owner : null);
+  placeReplacedCounters(state, fell, proposal);
   /* An Aura that is a creature too, put there (CR 303.4d), dies (CR 700.4; state/index.mjs). */
   recordDeath(state, leftBehind, proposal.to);
   events.push(event("GameEventCardChangeZone", state, {
@@ -313,7 +314,8 @@ export function checkStateBasedActions(state) {
       const object = state.objects[id];
       if (object.attachedTo === null || object.attachedTo === undefined) continue;
       const host = state.objects[object.attachedTo];
-      const equipment = (object.subtypes ?? []).includes("Equipment");
+      /* Its subtypes as they now are: an artifact an effect made an Equipment (Bludgeon Brawl; CR 205.1b) is one. */
+      const equipment = subtypesOf(state, id).includes("Equipment");
       const attachable = !typesOf(state, id).includes("Creature") && (Boolean(object.enchant) || equipment);
       /* An Aura enchanting a card in a graveyard (Animate Dead) stays attached to it, as the check above found legal. */
       const there = host && (host.zone === "battlefield" || (object.enchant?.what === "card" && host.zone === object.enchant.zone));
@@ -394,6 +396,7 @@ export function checkStateBasedActions(state) {
         const destination = proposal.to;
         const died = moveObject(state, id, destination, destination === "graveyard" || destination === "hand" || destination === "library"
           ? object.owner : null);
+        placeReplacedCounters(state, died, proposal);
         /* Died, unless a replacement sent it elsewhere (CR 700.4; state/index.mjs). */
         recordDeath(state, leftBehind, destination);
         events.push(event("GameEventCardChangeZone", state, {
@@ -420,6 +423,7 @@ export function checkStateBasedActions(state) {
       const leftBehind = lastKnown(state, id);
       const {proposal} = applyReplacements(state, {event: "zone-change", objectId: id, from: "battlefield", to: "graveyard", player: object.controller});
       const went = moveObject(state, id, proposal.to, PER_PLAYER.includes(proposal.to) ? object.owner : null);
+      placeReplacedCounters(state, went, proposal);
       /* A planeswalker that is a creature too dies as it is put there (CR 700.4; state/index.mjs). */
       recordDeath(state, leftBehind, proposal.to);
       events.push(event("GameEventCardChangeZone", state, {

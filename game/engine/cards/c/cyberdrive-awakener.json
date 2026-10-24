@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Cyberdrive Awakener",
+    "oracleId": "126a5d0b-e7d6-458e-87af-47d845678014",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Construct"
+    ],
+    "manaCost": "{5}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Flying\nOther artifact creatures you control have flying.\nWhen this creature enters, each noncreature artifact you control becomes a 4/4 artifact creature until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "static",
+      "text": "Other artifact creatures you control have flying.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Artifact",
+          "Creature"
+        ],
+        "controller": "you",
+        "another": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Flying"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, each noncreature artifact you control becomes a 4/4 artifact creature until end of turn.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "animateAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Artifact"
+            ],
+            "nonTypes": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "power": 4,
+          "toughness": 4,
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Chimil, the Inner Sun",
+    "oracleId": "119d9671-61ba-4629-89b1-f94bdec5cb74",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{6}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Spells you control can't be countered.\nAt the beginning of your end step, discover 5. (Exile cards from the top of your library until you exile a nonland card with mana value 5 or less. Cast it without paying its mana cost or put it into your hand. Put the rest on the bottom in a random order.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Spells you control can't be countered.",
+      "rule": "cant-be-countered",
+      "affects": {
+        "what": "spell",
+        "controller": "you"
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your end step, discover 5. (Exile cards from the top of your library until you exile a nonland card with mana value 5 or less. Cast it without paying its mana cost or put it into your hand. Put the rest on the bottom in a random order.)",
+      "trigger": {
+        "on": "end step"
+      },
+      "effects": [
+        {
+          "effect": "digUntil",
+          "exile": true,
+          "selector": {
+            "nonTypes": [
+              "Land"
+            ]
+          },
+          "manaValueBelow": 6,
+          "count": 1,
+          "rest": "bottom",
+          "remember": true
+        },
+        {
+          "effect": "play",
+          "from": "targets",
+          "targets": "remembered",
+          "free": true,
+          "manaValueAtMost": 5
+        },
+        {
+          "effect": "moveZone",
+          "targets": "remembered",
+          "to": "hand"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Greater Good",
+  "fixtures": {
+    "Giant": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{4}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Greater Good: sacrifice a 5/5, draw five, then discard three",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Greater Good",
+            "Giant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Greater Good",
+          "sacrifice": "Giant"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 2
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "count": 4
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Greater Good"
+          ]
+        }
+      ]
+    }
+  ]
+}

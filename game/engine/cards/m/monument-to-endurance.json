@@ -1,0 +1,68 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Monument to Endurance",
+    "oracleId": "e69e8de4-b521-4888-8074-17f1efe2f345",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever you discard a card, choose one that hasn't been chosen this turn —\n• Draw a card.\n• Create a Treasure token.\n• Each opponent loses 3 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever you discard a card, choose one that hasn't been chosen this turn —\n• Draw a card.\n• Create a Treasure token.\n• Each opponent loses 3 life.",
+      "trigger": {
+        "on": "discarded",
+        "discarder": "you"
+      },
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "unchosen": "turn",
+          "modes": [
+            {
+              "text": "Draw a card.",
+              "effects": [
+                {
+                  "effect": "draw",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "text": "Create a Treasure token.",
+              "effects": [
+                {
+                  "effect": "createToken",
+                  "count": 1,
+                  "token": {
+                    "predefined": "Treasure"
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Each opponent loses 3 life.",
+              "effects": [
+                {
+                  "effect": "loseLife",
+                  "amount": 3,
+                  "who": "opponent"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

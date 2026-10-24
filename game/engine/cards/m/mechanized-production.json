@@ -1,0 +1,73 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mechanized Production",
+    "oracleId": "39d8406a-90c3-460c-b4e8-0f590573db51",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{2}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant artifact you control\nAt the beginning of your upkeep, create a token that's a copy of enchanted artifact. Then if you control eight or more artifacts with the same name as one another, you win the game.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Enchant artifact you control",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Artifact"
+        ],
+        "controller": "you"
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your upkeep, create a token that's a copy of enchanted artifact. Then if you control eight or more artifacts with the same name as one another, you win the game.",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "copyPermanent",
+          "targets": "enchanted"
+        },
+        {
+          "effect": "branch",
+          "if": {
+            "compare": {
+              "count": {
+                "mostSharingName": {
+                  "what": "permanent",
+                  "types": [
+                    "Artifact"
+                  ],
+                  "controller": "you"
+                }
+              },
+              "atLeast": 8
+            }
+          },
+          "then": [
+            {
+              "effect": "winGame"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

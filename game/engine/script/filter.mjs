@@ -33,7 +33,7 @@
  */
 
 import {usesThisTurn, valueCostOf} from "../state/index.mjs";
-import {typesOf, keywordsOf, controllerOf, characteristicsOf, colorsOf, everyCreatureTypeOf, subtypesOf, supertypesOf, staticAbilities} from "../rules/layers.mjs";
+import {typesOf, keywordsOf, controllerOf, characteristicsOf, colorsOf, everyCreatureTypeOf, subtypesOf, supertypesOf, staticAbilities, isModified, partsApplied} from "../rules/layers.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {hasSubtype, isCreatureType} from "../keywords/types.mjs";
 import {protectedFrom, hexproofFrom, playerHexproofFrom} from "../rules/protection.mjs";
@@ -47,8 +47,16 @@ const BLOCKERS_DECLARED = ["COMBAT_DECLARE_BLOCKERS", "COMBAT_FIRST_STRIKE_DAMAG
 export const SELECTOR_KEYS = Object.freeze([
   "what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "zone", "controller", "who", "another", "target", "token", "manaValue", "named",
   "attachedBy", "colors", "tapped", "counters", "power", "self", "keywords", "nonSupertypes", "colorless", "attacking", "toughness", "countersAtLeast", "attackedThisTurn", "commander", "nonColors", "owner", "enteredThisTurn", "toughnessOverPower",
-  "unblocked", "singleTarget", "goaded", "uniqueName", "sharesCreatureType", "multicolored", "sharesColor",
+  "unblocked", "singleTarget", "abilityKind", "goaded", "uniqueName", "sharesCreatureType", "multicolored", "sharesColor",
+  /* "Whenever a modified creature you control deals combat damage" (Kodama of the West Tree; CR 700.15, rules/layers.mjs). */
+  "modified",
+  /* Bludgeon Brawl (wave 4d L3): "attached to it", the object a layer-7 amount is counted for (rules/layers.mjs, counted's
+     `affected`); "made so by this ability" (CR 613.6: an ability of the source's whose effect applies to it, rules/layers.mjs
+     partsApplied). */
+  "attachedTo", "affectedBy",
   "sharesCreatureTypeWithCommander",
+  /* "An opponent has 10 or less life" (Bloodghast): a player's life total, at most. */
+  "lifeAtMost", "lostThisTurnAtLeast",
   /* "A card exiled with this artifact" (CR 607.2a, 406.6): what this source's linked ability exiled, still in exile. */
   "exiledWith", "exiledThisTurn", "unequalPowerToughness",
   /* "Target creature that was dealt damage this turn" (Mirrodin Avenged; CR 120.3). */
@@ -60,6 +68,8 @@ export const SELECTOR_KEYS = Object.freeze([
   "equipped",
   /* "Each with power greater than its base power" (Kutzil, Malamet Exemplar; CR 208.4b). */
   "powerAboveBase",
+  /* "Cards in your hand drawn this turn" (Sylvan Library; CR 121.1). */
+  "drawnThisTurn",
   /* "If this creature isn't prepared" (Paradox Shaper // Omit Variables; CR 722.3): the prepared designation. */
   "prepared",
   /* "Target attacking or blocking creature" (Gideon's Memorial): declared as a blocker in this combat (CR 509.1g). */
@@ -155,7 +165,9 @@ const WHAT = ["permanent", "card", "player", "spell", "ability"];
    entry, `id` the entry's stack id -- an activated or triggered ability's, never a spell's. What may be asked of it: who
    controls it (`controller`), and "with a single target" (`singleTarget`, CR 115.9a: one object or player chosen in all).
    Nothing gives an ability hexproof or protection, so being a target asks nothing more (`target`). */
-const ABILITY_KEYS = ["what", "controller", "singleTarget", "target"];
+/* `abilityKind`: "triggered" -- "copy target triggered ability you control" (Strionic Resonator; CR 113.3c, card load w4d
+   L1). */
+const ABILITY_KEYS = ["what", "controller", "singleTarget", "target", "abilityKind"];
 const abilityMatcher = (selector) => {
   const extra = Object.keys(selector).filter((key) => !ABILITY_KEYS.includes(key));
   if (extra.length) throw new Error(`An ability on the stack is chosen by ${ABILITY_KEYS.join(", ")}, not ${extra.join(", ")}`);
@@ -165,6 +177,7 @@ const abilityMatcher = (selector) => {
     if (selector.controller === "you" && entry.playerId !== context.controller) return false;
     if (selector.controller === "opponent" && entry.playerId === context.controller) return false;
     if (selector.singleTarget === true && (entry.targets ?? []).flat().filter(Boolean).length !== 1) return false;
+    if (selector.abilityKind === "triggered" && entry.kind !== "trigger") return false;
     return true;
   };
 };
@@ -324,6 +337,10 @@ export function compileSelector(selector) {
       /* "You ... gain hexproof from blue and from black" (Veil of Summer; CR 702.11d): no target of an opponent's spell or
          ability from a source of that color (rules/protection.mjs). */
       if (selector.target === true && playerHexproofFrom(state, id, chooser, context.source ?? null)) return false;
+      /* "As long as an opponent has 10 or less life" (Bloodghast; CR 119.1): its life total now. */
+      if (selector.lifeAtMost !== undefined && !(player.life <= selector.lifeAtMost)) return false;
+      /* "If an opponent lost 2 or more life this turn" (Bloodchief Ascension; CR 119.3): the life they lost this turn. */
+      if (selector.lostThisTurnAtLeast !== undefined && !((player.lostThisTurn ?? 0) >= selector.lostThisTurnAtLeast)) return false;
       const who = selector.who ?? "any";
       if (who === "you") return id === chooser;
       if (who === "opponent") return id !== chooser;
@@ -406,6 +423,12 @@ export function compileSelector(selector) {
       if (Number.isInteger(selector.controller) && holder !== selector.controller) return false;
     }
 
+    /* "Equipped creature gets +X/+0, where X is that artifact's mana value" (Bludgeon Brawl): attached to "it", the creature
+       the amount is counted for -- none, and nothing is. */
+    if (selector.attachedTo === "it" && (context.affected === undefined || context.affected === null || state.objects[id]?.attachedTo !== context.affected)) return false;
+    /* An ability of the source's applies to it now (CR 613.6): "each noncreature, non-Equipment artifact is an Equipment"
+       (Bludgeon Brawl) -- the artifacts it made so, not those printed Equipment. */
+    if (selector.affectedBy === "self" && !partsApplied(state, id).some((part) => part.startsWith(`${context.source}|`))) return false;
     /* "Equipped creature": the permanent the source is attached to (CR 301.5, 701.3). */
     if (selector.attachedBy === "self") {
       if (context.source === undefined || context.source === null) throw new Error("A selector using `attachedBy` needs the source attached to it");
@@ -416,7 +439,9 @@ export function compileSelector(selector) {
        existed (`lastKnown`, which the stack keeps for it: CR 113.7a, 608.2h) -- Reckless Bushwhacker's "other creatures you
        control", the Bushwhacker shocked in response: every creature its controller still controls. */
     if (selector.another === true) {
-      const self = context.source ?? context.lastKnown?.cardId ?? null;
+      /* Or the card its source became as it left: "when this creature dies, return ANOTHER target artifact card from your
+         graveyard" (Myr Retriever's ruling: it can't return itself), `became` (rules/trigger.mjs, targeting). */
+      const self = context.source ?? context.lastKnown?.cardId ?? context.became ?? null;
       if (self === null) throw new Error("A selector using `another` needs the source it is another than (CR 109.5)");
       if (id === self) return false;
     }
@@ -474,10 +499,16 @@ export function compileSelector(selector) {
        603.4): whether it has the prepared designation now -- a permanent's alone (script/effects/attributes.mjs). */
     if (selector.prepared !== undefined && (object.prepared === true) !== selector.prepared) return false;
     /* "With a +1/+1 counter on it", or `"any"`: "permanents you control with counters on them" (Mutational Advantage). */
+    /* Or `"none"`: "destroy all creatures with no counters on them" (Damning Verdict). */
     if (selector.counters !== undefined && !(selector.counters === "any" ? Object.values(object.counters ?? {}).some((n) => n > 0)
+      : selector.counters === "none" ? !Object.values(object.counters ?? {}).some((n) => n > 0)
       : (object.counters?.[selector.counters] ?? 0) > 0)) return false;
+    /* Modified (CR 700.15): a counter on it, equipped, or enchanted by an Aura its controller controls (rules/layers.mjs). */
+    if (selector.modified !== undefined && isModified(state, id, object.counters, controllerOf(state, id)) !== selector.modified) return false;
     /* "Creatures that entered this turn" (Force of Despair): on the battlefield since this turn. */
     if (selector.enteredThisTurn === true && !(object.zone === "battlefield" && object.arrivedTurn === state.turn)) return false;
+    /* "Cards in your hand drawn this turn" (Sylvan Library): drawn (state/index.mjs, recordDraw) into the hand this turn. */
+    if (selector.drawnThisTurn === true && !(object.zone === "hand" && object.drawn === true && object.arrivedTurn === state.turn)) return false;
     /* Gilt-Leaf Winnower: either direction of inequality, through current layers. */
     if (selector.unequalPowerToughness === true) {
       const c = characteristicsOf(state, id);

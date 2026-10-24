@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Hunted Witness",
   "fixtures": {
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -46,7 +46,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ],
@@ -55,7 +55,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Hunted Witness"
@@ -106,7 +106,7 @@
           "zone": "graveyard",
           "cards": [
             "Hunted Witness",
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ]

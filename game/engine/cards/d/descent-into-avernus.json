@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Descent into Avernus",
+    "oracleId": "1313da2f-92bb-4862-9153-373972cc1520",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "At the beginning of your upkeep, put two descent counters on this enchantment. Then each player creates X Treasure tokens and this enchantment deals X damage to each player, where X is the number of descent counters on this enchantment.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your upkeep, put two descent counters on this enchantment. Then each player creates X Treasure tokens and this enchantment deals X damage to each player, where X is the number of descent counters on this enchantment.",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "descent",
+          "count": 2
+        },
+        {
+          "effect": "repeatFor",
+          "each": "player",
+          "effects": [
+            {
+              "effect": "createToken",
+              "controller": "that player",
+              "count": {
+                "countersOn": "self",
+                "counter": "descent"
+              },
+              "token": {
+                "predefined": "Treasure"
+              }
+            }
+          ]
+        },
+        {
+          "effect": "dealDamage",
+          "amount": {
+            "countersOn": "self",
+            "counter": "descent"
+          },
+          "who": "each"
+        }
+      ]
+    }
+  ]
+}

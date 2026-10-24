@@ -1,0 +1,111 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Urza's Tower",
+  "scenarios": [
+    {
+      "name": "With a Mine and a Power-Plant: {C}{C}{C}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Urza's Tower",
+            "Urza's Mine",
+            "Urza's Power Plant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Urza's Tower"
+              },
+              "count": 1,
+              "mana": [
+                {
+                  "C": 3
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Urza's Tower"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 3
+          }
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "With a Mine but no Power-Plant: {C}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Urza's Tower",
+            "Urza's Mine"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Urza's Tower"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "An opponent's Mine and Power-Plant are not yours: {C}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Urza's Tower"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Urza's Mine",
+            "Urza's Power Plant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Urza's Tower"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 1
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Splendid Reclamation",
+    "oracleId": "13fe5e46-77a6-45d8-ac0b-c3d740eccf86",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Return all land cards from your graveyard to the battlefield tapped.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Return all land cards from your graveyard to the battlefield tapped.",
+      "effects": [
+        {
+          "effect": "moveZoneAll",
+          "selector": {
+            "what": "card",
+            "zone": "graveyard",
+            "types": [
+              "Land"
+            ],
+            "controller": "you"
+          },
+          "to": "battlefield",
+          "tapped": true
+        }
+      ]
+    }
+  ]
+}

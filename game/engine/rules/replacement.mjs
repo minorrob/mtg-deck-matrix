@@ -156,6 +156,14 @@ function applies(state, ability, holder, proposal) {
     if (watches.to && watches.to !== proposal.to) return false;
     /* "If a creature an opponent controls would die" (Liesa): what is moving, as it is now, "you" the holder's controller. */
     if (watches.filter && !(holder && compileSelector(watches.filter)(state, proposal.objectId, {controller: holder.controller, source: holder.id}))) return false;
+    /* "If a CARD would be put into an OPPONENT'S graveyard from anywhere" (Dauthi Voidwalker): from any zone, a card its
+       owner -- whose graveyard it goes to (CR 400.3) -- is an opponent of the holder's controller. A token or a copy of a
+       spell is no card (CR 108.2b, 707.10), so it goes where it was going. */
+    if (watches.card === true) {
+      const moving = state.objects[proposal.objectId];
+      if (!holder || !moving || moving.token === true || moving.copy === true) return false;
+      if (watches.owner === "opponent" && moving.owner === holder.controller) return false;
+    }
     return true;
   }
 
@@ -312,6 +320,9 @@ function preventionsFor(state, proposal) {
     const how = effect.apply ?? {};
     if (how.combat === true && proposal.combat !== true) return false;
     if (Array.isArray(effect.sources) && !effect.sources.includes(proposal.sourceId)) return false;
+    /* "Prevent all combat damage that would be dealt this turn" (Fog; wave 4d L3, CR 615.1a): `apply.all`, to any player or
+       permanent, by any source. */
+    if (how.all === true) return true;
     if (Array.isArray(effect.players)) return proposal.toPlayer !== undefined && proposal.toPlayer !== null && effect.players.includes(proposal.toPlayer);
     return (how.to !== false && proposal.toCard !== undefined && proposal.toCard !== null && among(proposal.toCard))
       || (how.by === true && proposal.sourceId !== undefined && proposal.sourceId !== null && among(proposal.sourceId));
@@ -365,6 +376,12 @@ function applyOne(state, {holderId, ability, effect = null}, proposal, dry = fal
   const next = {...proposal, applied: [...(proposal.applied ?? []), ability.id], appliedBy: [...(proposal.appliedBy ?? []), appliedKey(holderId, ability)]};
 
   if (ability.change?.to) next.to = ability.change.to;
+  /* "Instead exile it with a void counter on it" (Dauthi Voidwalker; CR 614.1a, 122.1): counters the card is given as it
+     arrives in exile (placeReplacedCounters). A later effect that sends it elsewhere leaves them behind. */
+  if (ability.change?.withCounters) {
+    next.withCounters = {...(next.withCounters ?? {})};
+    for (const [counter, n] of Object.entries(ability.change.withCounters)) next.withCounters[counter] = (next.withCounters[counter] ?? 0) + n;
+  }
 
   /* CR 614.12: modifying how a permanent ENTERS, rather than where a card goes. The permanent is
      not on the battlefield yet, so these land on the proposal and the caller applies them as part
@@ -376,6 +393,10 @@ function applyOne(state, {holderId, ability, effect = null}, proposal, dry = fal
   if (ability.change?.unlessPay) next.asks = [...(next.asks ?? []), {...ability.change.unlessPay}];
   /* "As this land enters, you may reveal an Island or Swamp card from your hand. If you don't, it enters tapped." */
   if (ability.change?.unlessReveal) next.asks = [...(next.asks ?? []), {reveal: structuredClone(ability.change.unlessReveal)}];
+  /* "If this artifact would enter, you may discard a land card instead. If you do, put this artifact onto the battlefield. If
+     you don't, put it into its owner's graveyard" (Mox Diamond; CR 614.1c, 614.12): a question for its controller, its arrival
+     held until it is answered, as a copy's is (rules/entering.mjs). */
+  if (ability.change?.discardInstead) next.asks = [...(next.asks ?? []), {discardInstead: structuredClone(ability.change.discardInstead)}];
   /* "As this artifact enters, choose a creature type", "choose Khans or Dragons": a question for its controller once it is
      there, the answer kept as the permanent's `chosen` (rules/entering.mjs). */
   if (ability.change?.choose) next.asks = [...(next.asks ?? []), {choose: structuredClone(ability.change.choose)}];
@@ -437,6 +458,9 @@ function applyOne(state, {holderId, ability, effect = null}, proposal, dry = fal
     /* "Prevent 1 of that damage" (Hedron-Field Purists; CR 615.10): a static's prevention of that much of each damage event it
        applies to, never used up -- not a shield (`prevent` on the ability, below). */
     if (Number.isInteger(ability.change.prevent)) next.amount = Math.max(0, next.amount - ability.change.prevent);
+    /* "Prevent half that damage, rounded up" (Gisela, Blade of Goldnight; wave 4d L3, CR 615.1a): of each damage event it
+       applies to, as it now is, the greater half is prevented and the rest dealt. */
+    if (ability.change.preventHalf === true) next.amount = Math.floor(next.amount / 2);
     /* REDIRECTION (CR 614.9): "all damage that would be dealt to you is dealt to enchanted creature instead" (Pariah) -- the
        same damage, to the permanent its holder enchants, while it enchants one; the rest of the replacements then look
        at the damage as it now is. */
@@ -530,6 +554,24 @@ export function applyReplacements(state, proposal, {orders = [], askable = false
   }
 
   return {proposal: current, applied: current.applied, awaiting: false};
+}
+
+/* The counters an exile replacement gives the card it sends there ("with a void counter on it", Dauthi Voidwalker), put on
+   the card it became (CR 400.7) once it is in exile -- by every route that asks applyReplacements of a zone change. */
+export function placeReplacedCounters(state, movedId, proposal) {
+  const moved = state.objects[movedId];
+  if (!proposal?.withCounters || !moved) return;
+  moved.counters ??= {};
+  for (const [counter, n] of Object.entries(proposal.withCounters)) moved.counters[counter] = (moved.counters[counter] ?? 0) + n;
+}
+
+/* A card bound for its owner's graveyard by a route that is no effect's move -- a spell finishing on the stack (CR 608.2n),
+   a discard (CR 701.9a), the cleanup's discard (CR 514.1) -- asked of the replacement effects as every other route is
+   ("if a card would be put into an opponent's graveyard from anywhere", Dauthi Voidwalker; CR 614.1a). The proposal, its
+   `to` where the card goes. */
+export function graveyardBound(state, id) {
+  const object = state.objects[id];
+  return applyReplacements(state, {event: "zone-change", objectId: id, from: object.zone, to: "graveyard", player: object.controller}).proposal;
 }
 
 /**

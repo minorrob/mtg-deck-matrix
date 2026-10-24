@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Reassembling Skeleton",
+  "scenarios": [
+    {
+      "name": "From the graveyard, {1}{B}: back on the battlefield tapped; not offered from the battlefield",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Reassembling Skeleton"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Reassembling Skeleton"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Reassembling Skeleton"
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": []
+        },
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Reassembling Skeleton"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

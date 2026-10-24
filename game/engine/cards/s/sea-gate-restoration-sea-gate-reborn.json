@@ -1,0 +1,94 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sea Gate Restoration // Sea Gate, Reborn",
+    "oracleId": "4a8d41fe-e04d-484b-a7d1-19be311e6ca7",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{U}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Draw cards equal to the number of cards in your hand plus one. You have no maximum hand size for the rest of the game.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Draw cards equal to the number of cards in your hand plus one. You have no maximum hand size for the rest of the game.",
+      "effects": [
+        {
+          "effect": "draw",
+          "count": {
+            "count": {
+              "what": "card",
+              "zone": "hand",
+              "controller": "you"
+            },
+            "plus": 1
+          }
+        },
+        {
+          "effect": "effectUntil",
+          "rule": "no-maximum-hand-size",
+          "until": "ever"
+        }
+      ]
+    }
+  ],
+  "back": {
+    "identity": {
+      "name": "Sea Gate, Reborn",
+      "types": [
+        "Land"
+      ],
+      "subtypes": [],
+      "manaCost": null,
+      "colors": [],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "As this land enters, you may pay 3 life. If you don't, it enters tapped.\n{T}: Add {U}.",
+    "abilities": [
+      {
+        "kind": "replacement",
+        "text": "As this land enters, you may pay 3 life. If you don't, it enters tapped.",
+        "watches": {
+          "event": "enters",
+          "who": "self"
+        },
+        "change": {
+          "entersTapped": true,
+          "unlessPay": {
+            "life": 3
+          }
+        }
+      },
+      {
+        "kind": "activated",
+        "text": "{T}: Add {U}.",
+        "mana": true,
+        "cost": [
+          {
+            "atom": "{T}"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "addMana",
+            "mana": {
+              "U": 1
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

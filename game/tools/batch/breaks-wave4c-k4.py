@@ -41,7 +41,7 @@ BREAKS = [
     ('affinity: a selector the grammar knows', INDEX,
      '      else try { compileSelector(counted); } catch (error) { problems.push(`${ability.text}: ${error.message}`); }\n', ''),
     ('affinity: a keyword a script may say', VOCAB, '  "affinity",\n', ''),
-    ('affinity: credited', CONSTRUCTS, '  Affinity: "rules/statics.mjs",\n', ''),
+    ('affinity: credited', CONSTRUCTS, '  Affinity: "rules/statics.mjs", Kicker: "rules/actions.mjs",', '  Kicker: "rules/actions.mjs",'),
 
     # ---- a cast or a copy making a trigger trigger again (CR 603.2d; Veyran, Voice of Duality) ----
     ('cast or copy: a cause read', TRIGGER, '  if (cause.event === "cast or copy") {', '  if (false) {'),

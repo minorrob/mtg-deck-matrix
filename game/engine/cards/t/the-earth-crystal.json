@@ -1,0 +1,93 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "The Earth Crystal",
+    "oracleId": "5e7ef7fe-968b-4ada-9fe4-6fda0541aafc",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Green spells you cast cost {1} less to cast.\nIf one or more +1/+1 counters would be put on a creature you control, twice that many +1/+1 counters are put on that creature instead.\n{4}{G}{G}, {T}: Distribute two +1/+1 counters among one or two target creatures you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Green spells you cast cost {1} less to cast.",
+      "rule": "spells-cost-less",
+      "affects": {
+        "what": "spell",
+        "colors": [
+          "G"
+        ]
+      },
+      "amount": 1
+    },
+    {
+      "kind": "static",
+      "text": "If one or more +1/+1 counters would be put on a creature you control, twice that many +1/+1 counters are put on that creature instead.",
+      "rule": "more-counters",
+      "affects": {
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "counter": "+1/+1",
+      "times": 2
+    },
+    {
+      "kind": "activated",
+      "text": "{4}{G}{G}, {T}: Distribute two +1/+1 counters among one or two target creatures you control.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{4}{G}{G}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "counter": "+1/+1",
+          "count": {
+            "dividedAmong": {
+              "total": 2,
+              "target": 0
+            }
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "count": {
+            "min": 1,
+            "max": 2
+          }
+        }
+      ]
+    }
+  ]
+}

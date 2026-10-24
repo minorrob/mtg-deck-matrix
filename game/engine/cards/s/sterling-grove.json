@@ -1,0 +1,72 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sterling Grove",
+    "oracleId": "2c275a85-5a15-46cd-a6e7-add63f9b853d",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{G}{W}",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Other enchantments you control have shroud. (They can't be the targets of spells or abilities.)\n{1}, Sacrifice this enchantment: Search your library for an enchantment card, reveal it, then shuffle and put that card on top.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Other enchantments you control have shroud. (They can't be the targets of spells or abilities.)",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "controller": "you",
+        "types": [
+          "Enchantment"
+        ],
+        "another": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Shroud"
+        ]
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{1}, Sacrifice this enchantment: Search your library for an enchantment card, reveal it, then shuffle and put that card on top.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Enchantment"
+            ]
+          },
+          "shuffle": true,
+          "to": "top",
+          "reveal": true
+        }
+      ]
+    }
+  ]
+}

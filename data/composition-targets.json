@@ -29,6 +29,7 @@
     "Aggressive": {"note": "More bodies, fewer answers; wipes hurt the aggressor most.", "roles": {"threat": {"min": 4, "max": 4}, "removal": {"min": -2, "max": 0}, "wipe": {"min": -1, "max": -1}, "draw": {"min": -2, "max": 0}}},
     "Reactive": {"note": "Answers first; threats can wait.", "roles": {"removal": {"min": 2, "max": 2}, "counterspell": {"min": 2, "max": 2}, "protection": {"min": 2, "max": 2}, "threat": {"min": -4, "max": -4}, "wipe": {"min": 1, "max": 1}}},
     "Value engine": {"note": "Card advantage and recursion over raw aggression.", "roles": {"draw": {"min": 2, "max": 2}, "recursion": {"min": 2, "max": 2}, "threat": {"min": -2, "max": 0}}},
-    "Combo": {"note": "Find the pieces, protect the turn.", "roles": {"tutor": {"min": 3, "max": 3}, "protection": {"min": 2, "max": 2}, "threat": {"min": -4, "max": -4}, "finisher": {"min": 0, "max": 2}}}
+    "Combo": {"note": "Find the pieces, protect the turn.", "roles": {"tutor": {"min": 3, "max": 3}, "protection": {"min": 2, "max": 2}, "threat": {"min": -4, "max": -4}, "finisher": {"min": 0, "max": 2}}},
+    "Defensive": {"note": "Blockers, answers and protection; fewer threats, a slower clock. Auto-create's Defense (Rob, 2026-10-23); first numbers, to tune.", "roles": {"removal": {"min": 2, "max": 2}, "wipe": {"min": 1, "max": 1}, "protection": {"min": 2, "max": 2}, "threat": {"min": -3, "max": -3}}}
   }
 }

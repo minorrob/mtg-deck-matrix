@@ -13,7 +13,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -117,7 +117,7 @@
           "zone": "hand",
           "cards": [
             "Ancestral Mask",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -157,7 +157,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Bear"
@@ -175,7 +175,7 @@
           "cards": [
             "Ancestral Mask",
             "Bear",
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ]
@@ -188,7 +188,7 @@
           "zone": "hand",
           "cards": [
             "Ancestral Mask",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -225,7 +225,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Bear"
@@ -246,7 +246,7 @@
           "cards": [
             "Ancestral Mask",
             "Bear",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {

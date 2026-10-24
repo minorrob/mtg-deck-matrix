@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bloodletter of Aclazotz",
+    "oracleId": "469956a2-7cd4-4695-b8f4-c841526f160d",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Vampire",
+      "Demon"
+    ],
+    "manaCost": "{1}{B}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "Flying\nIf an opponent would lose life during your turn, they lose twice that much life instead. (Damage causes loss of life.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "static",
+      "text": "If an opponent would lose life during your turn, they lose twice that much life instead. (Damage causes loss of life.)",
+      "rule": "more-life-loss",
+      "affects": {
+        "who": "opponent"
+      },
+      "times": 2,
+      "duringYourTurn": true
+    }
+  ]
+}

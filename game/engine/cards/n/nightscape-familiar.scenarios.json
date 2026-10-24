@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Nightscape Familiar",
   "fixtures": {
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -58,7 +58,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ],
@@ -79,7 +79,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Nightscape Familiar"

@@ -30,7 +30,7 @@
       "power": 3,
       "toughness": 3
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -79,9 +79,9 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Murder",
-            "Murder",
-            "Murder"
+            "Smoke Murder",
+            "Smoke Murder",
+            "Smoke Murder"
           ]
         },
         {
@@ -97,7 +97,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Bear",
@@ -115,7 +115,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Ogre"
@@ -132,7 +132,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Bear",

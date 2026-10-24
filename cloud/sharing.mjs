@@ -48,14 +48,16 @@ export function sharing(db,env,{now=()=>new Date().toISOString(),fetchImpl=fetch
     const access=mine?'owner':grant?.role==='collaborator'||s.public_role==='collaborator'?'collaborator':grant?.role||s.public_role;
     if(!access)fail('This shared item is unavailable.',404);
     if((owner&&!mine)||(write&&!['owner','collaborator'].includes(access)))fail('Only the owner can manage access; Collaborators can edit the shared content.',403);
-    return {...s,access};
+    /* HOW THE PERSON REACHES IT (the Decks requirements' FLT-6, 2026-10-23): their own, a grant to them, or public only. A
+       grant wins over public, so a deck shared with someone and also made public reads as theirs to see either way. */
+    return {...s,access,via:mine?'owner':grant?'grant':'public'};
   }
   function project(s,state){
     if(s.kind==='deck'){
       const d=state.decks.find(x=>x.id===s.source_id&&!x.archived);if(!d)fail('The owner removed or archived this deck.',404);
       const slots=d.slots.filter(x=>x.purpose==='main');
       const ids=new Set([...d.commanders,...slots.map(x=>x.cardId)]);
-      return {name:d.name,notes:d.notes||'',commanders:d.commanders.map(id=>card(state.cards[id])),cards:[...ids].map(id=>card(state.cards[id])),slots:slots.map(x=>({id:x.id,cardId:x.cardId,quantity:x.quantity})),bracket:d.definition?.bracket||3};
+      return {name:d.name,notes:d.notes||'',description:d.description||'',commanders:d.commanders.map(id=>card(state.cards[id])),cards:[...ids].map(id=>card(state.cards[id])),slots:slots.map(x=>({id:x.id,cardId:x.cardId,quantity:x.quantity})),bracket:d.definition?.bracket||3};
     }
     return {name:'Library',cards:Object.values(state.cards).map(card),lots:state.lots.map(l=>({id:l.id,cardId:l.cardId,quantity:l.quantity,source:l.source,assigned:!!l.allocation||l.location?.kind==='deck'}))};
   }
@@ -65,7 +67,7 @@ export function sharing(db,env,{now=()=>new Date().toISOString(),fetchImpl=fetch
     const key=`${s.owner_id}:${head.id}:${s.kind}:${s.source_id}`;
     let content=projections?.get(key);
     if(!content){const {data}=await loadSnapshot(s.owner_id,head);content=project(s,data.state);projections?.put(key,content);}
-    return {id:s.id,kind:s.kind,owner:s.owner_name||'CrankMagic player',access:s.access,head:head.id,content};
+    return {id:s.id,kind:s.kind,owner:s.owner_name||'CrankMagic player',access:s.access,via:s.via,head:head.id,content};
   }
   async function list(person,kind){
     if(!['deck','library'].includes(kind))fail('Choose decks or libraries.');

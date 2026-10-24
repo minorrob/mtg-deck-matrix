@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Urza's Mine",
+  "scenarios": [
+    {
+      "name": "With a Power-Plant and a Tower: {C}{C}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Urza's Tower",
+            "Urza's Mine",
+            "Urza's Power Plant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Urza's Mine"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alone: {C}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Urza's Mine",
+            "Urza's Power Plant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Urza's Mine"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 1
+          }
+        }
+      ]
+    }
+  ]
+}

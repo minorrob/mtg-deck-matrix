@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "The Wind Crystal",
+    "oracleId": "240f0835-36af-4ad8-9336-d6d3d816d293",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "White spells you cast cost {1} less to cast.\nIf you would gain life, you gain twice that much life instead.\n{4}{W}{W}, {T}: Creatures you control gain flying and lifelink until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "White spells you cast cost {1} less to cast.",
+      "rule": "spells-cost-less",
+      "affects": {
+        "what": "spell",
+        "colors": [
+          "W"
+        ]
+      },
+      "amount": 1
+    },
+    {
+      "kind": "static",
+      "text": "If you would gain life, you gain twice that much life instead.",
+      "rule": "more-life",
+      "affects": {
+        "who": "you"
+      },
+      "times": 2
+    },
+    {
+      "kind": "activated",
+      "text": "{4}{W}{W}, {T}: Creatures you control gain flying and lifelink until end of turn.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{4}{W}{W}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "keywords": [
+            "Flying",
+            "Lifelink"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -229,7 +229,9 @@ const problems = (abilities, more) => compileScript(script(abilities, more)).pro
     "Land Tax", "Tropical Island", "Academy Ruins", "Minas Tirith", TERROR, "Selvala, Heart of the Wilds", "Volcanic Island", "Massacre Wurm", "Damnation", "Scavenger Grounds"];
   eq(cards.filter((name) => !tableCards(name)), [], "every one of the lane's twenty-eight cards plays at the table");
   /* Mosswort Bridge plays since wave 4c's lane k1 built the land played as an effect resolves (CR 305.2a). */
-  eq(["Six"].filter((name) => tableCards(name)), [], "and the one it stopped on, Six, does not yet");
+  /* Six plays since the card load of 2026-10-23 (wave 4d, lane L2) built retrace as a permission to cast from the graveyard by
+     discarding a land card (CR 702.81a). */
+  eq(["Six"].filter((name) => !tableCards(name)), [], "and the one it stopped on, Six, now plays too");
   eq(["Mosswort Bridge"].filter((name) => !tableCards(name)), [], "while Mosswort Bridge, the other, now plays");
 }
 

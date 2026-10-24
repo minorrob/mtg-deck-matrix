@@ -208,7 +208,8 @@ function checkEffect(effect, path, errors) {
   /* "You may tap another untapped Merfolk you control" (Meanders Guide): a selector of the payer's permanents, the cost's only
      part beside mana or life. */
   if (name === "unlessPays" && effect.tap !== undefined) {
-    checkSelector(effect.tap, `${path}.tap`, errors);
+    /* Or "that card", the permanent the trigger is about (Charismatic Conqueror: "they may tap that permanent"). */
+    if (effect.tap !== "that card") checkSelector(effect.tap, `${path}.tap`, errors);
     if (effect.sacrifice !== undefined || effect.discard !== undefined || effect.returnToHand !== undefined)
       errors.push({path: `${path}.tap`, message: "An \"unless\" cost taps a permanent, returns one, sacrifices one or discards a card: one of them"});
   }
@@ -390,11 +391,12 @@ function checkSelector(selector, path, errors, {choice = false} = {}) {
 /* `x`: "up to that many" -- a reflexive trigger's `max: "X"`, the X it was made with (Bloodthirsty Adversary). */
 const countValid = (count, {x = false} = {}) => Boolean(count) && typeof count === "object" && !Array.isArray(count)
   && Object.keys(count).every((k) => k === "min" || k === "max")
-  && (count.min === undefined || (Number.isInteger(count.min) && count.min >= 0))
-  && (count.max === undefined || (x && count.max === "X" && (count.min ?? 0) === 0) || (Number.isInteger(count.max) && count.max >= 1 && count.max >= (count.min ?? 0)));
+  /* "Exile X target creatures" (Curse of the Swine; script/bind.mjs countOf): exactly X, `{min: "X", max: "X"}`. */
+  && (count.min === undefined || (Number.isInteger(count.min) && count.min >= 0) || (count.min === "X" && count.max === "X"))
+  && (count.max === undefined || (x && count.max === "X" && (count.min ?? 0) === 0) || (count.min === "X" && count.max === "X") || (Number.isInteger(count.max) && count.max >= 1 && count.max >= (count.min ?? 0)));
 
 /* `permanent`: the card is a permanent card, whose spell ability may say only its additional cost (below). */
-function checkAbility(ability, path, errors, {permanent = false} = {}) {
+function checkAbility(ability, path, errors, {permanent = false, manaX = false} = {}) {
   if (!ability || typeof ability !== "object") {
     errors.push({path, message: "An ability is an object"});
     return;
@@ -413,7 +415,9 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
     const {totalPowerAtMost, count, distinctFrom, onlyIf, differentControllers, share, forEach, ownedByControllerOf, ...selector} = spec && typeof spec === "object" ? spec : {};
     if (totalPowerAtMost !== undefined && !(Number.isInteger(totalPowerAtMost) && totalPowerAtMost >= 0 && count !== undefined))
       errors.push({path: `${path}.targets[${index}].totalPowerAtMost`, message: "A total power limit is a nonnegative integer on a counted target"});
-    if (count !== undefined && !countValid(count))
+    /* "Each of up to X targets" (Crackle with Power): a spell's X, in its mana cost, is announced before its targets are chosen
+       (CR 601.2b-c). */
+    if (count !== undefined && !countValid(count, {x: ability.kind === "spell" && manaX}))
       errors.push({path: `${path}.targets[${index}].count`, message: "A target's count is `{min, max}`: whole numbers, max at least 1 and at least min, or no max for \"any number\""});
     /* "Target artifact a player controls and target artifact card in that player's graveyard" (Goblin Welder; script/bind.mjs,
        `ownedByControllerOf`): an earlier, single target of the same ability, a permanent -- this one a card, uncounted. */
@@ -568,6 +572,9 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
     if (!ability.affects) errors.push({path: `${path}.affects`, message: "A static ability says what it affects"});
     /* A rule is read through the whole selector grammar (rules/statics.mjs), a choice of selectors included: "creatures you
        control with power or toughness 1 or less". A layer's `affects` is the layers' narrower matcher, and is not. */
+    /* "The same objects as this ability's earlier part" (`continued`, CR 613.6; Bludgeon Brawl, rules/layers.mjs): no selector,
+       on a layer static alone. */
+    else if (ability.affects.continued === true && ability.rule === undefined && Object.keys(ability.affects).length === 1) { /* the earlier part's objects */ }
     else checkSelector(ability.affects, `${path}.affects`, errors, {choice: ability.rule !== undefined});
     /* "By paying life equal to its mana value rather than paying its mana cost" (Demon of Fate's Design): a free cast's cost of
        life, its mana value. */
@@ -582,10 +589,11 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
       if (ability.perType === true && ability.limit !== undefined) errors.push({path: `${path}.perType`, message: "A permission kept by type has no other limit"});
       if (ability.spells && typeof ability.spells === "object") checkSelector(ability.spells, `${path}.spells`, errors, {choice: true});
       /* "By sacrificing a land in addition to paying its other costs" (Exploration Broodship; CR 601.2b): an additional cost of
-         the spells cast through it -- a sacrifice of a permanent the selector describes, the one form built. */
+         the spells cast through it -- a sacrifice of a permanent the selector describes; or "by discarding a land card" (retrace,
+         CR 702.81a, given by Six), a discard of a card it describes. */
       if (ability.additionalCost !== undefined) {
-        if (!(Array.isArray(ability.additionalCost) && ability.additionalCost.length && ability.additionalCost.every((a) => a?.atom === "sacrifice" && a.count === undefined)))
-          errors.push({path: `${path}.additionalCost`, message: "A permission's additional cost is a list of sacrifices of one permanent each ({atom: \"sacrifice\", selector})"});
+        if (!(Array.isArray(ability.additionalCost) && ability.additionalCost.length && ability.additionalCost.every((a) => ["sacrifice", "discard"].includes(a?.atom) && a.count === undefined)))
+          errors.push({path: `${path}.additionalCost`, message: "A permission's additional cost is a list of sacrifices or discards of one each ({atom: \"sacrifice\" or \"discard\", selector})"});
         else ability.additionalCost.forEach((a, i) => { if (a.selector !== undefined) checkSelector(a.selector, `${path}.additionalCost[${i}].selector`, errors, {choice: true}); });
         if (ability.lands) errors.push({path: `${path}.additionalCost`, message: "An additional cost is a spell's (CR 601.2b): a permission with one lets spells be cast, not lands be played"});
       }
@@ -671,7 +679,7 @@ function checkAbility(ability, path, errors, {permanent = false} = {}) {
       if (ability.exceptFirstInDrawStep !== undefined && ability.exceptFirstInDrawStep !== true) errors.push({path: `${path}.exceptFirstInDrawStep`, message: "exceptFirstInDrawStep is true"});
     }
     /* "Twice that much life instead" (rules/statics.mjs, lifeGained): how many times, 2 or more. */
-    if (ability.rule === "more-life" && !(Number.isInteger(ability.times) && ability.times >= 2))
+    if (["more-life", "more-life-loss"].includes(ability.rule) && !(Number.isInteger(ability.times) && ability.times >= 2))
       errors.push({path: `${path}.times`, message: "More life instead says how many times as much: a whole number, 2 or more"});
     /* A card's own restriction on casting it (Proft, Sinister Mastermind): what lets it be cast, a condition, said. */
     if (ability.rule === "cant-cast-self") {
@@ -761,7 +769,9 @@ export function validateScript(script) {
     errors.push({path: "abilities", message: "A script has an abilities list, empty for a vanilla card"});
   } else {
     const permanent = Array.isArray(script.identity?.types) && !script.identity.types.some((t) => t === "Instant" || t === "Sorcery");
-    script.abilities.forEach((ability, index) => checkAbility(ability, `abilities[${index}]`, errors, {permanent}));
+    /* {X} in its mana cost (CR 107.3): a spell whose targets may be "up to X" (Crackle with Power). */
+    const manaX = /\{X\}/.test(String(script.identity?.manaCost ?? ""));
+    script.abilities.forEach((ability, index) => checkAbility(ability, `abilities[${index}]`, errors, {permanent, manaX}));
   }
 
   /* A NONMODAL DOUBLE-FACED CARD (CR 712.2): one that transforms says so, `layout: "transform"`, beside its back face; a

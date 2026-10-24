@@ -30,7 +30,7 @@
       "power": 5,
       "toughness": 5
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -109,7 +109,7 @@
           "zone": "hand",
           "cards": [
             "Skyclave Apparition",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -166,7 +166,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Skyclave Apparition"
@@ -214,7 +214,7 @@
           "zone": "graveyard",
           "cards": [
             "Skyclave Apparition",
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ]
@@ -245,7 +245,7 @@
           "zone": "hand",
           "cards": [
             "Skyclave Apparition",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -302,7 +302,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Skyclave Apparition"
@@ -353,7 +353,7 @@
           "zone": "hand",
           "cards": [
             "Skyclave Apparition",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -393,7 +393,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Skyclave Apparition"
@@ -448,7 +448,7 @@
           "zone": "hand",
           "cards": [
             "Skyclave Apparition",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -487,7 +487,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Skyclave Apparition"
@@ -554,7 +554,7 @@
           "zone": "hand",
           "cards": [
             "Skyclave Apparition",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -596,7 +596,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Skyclave Apparition"

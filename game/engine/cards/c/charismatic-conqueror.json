@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Charismatic Conqueror",
+    "oracleId": "3dcc35f3-74dc-46a8-8aa9-3411189f0547",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Vampire",
+      "Soldier"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Vigilance\nWhenever an artifact or creature an opponent controls enters untapped, they may tap that permanent. If they don't, you create a 1/1 white Vampire creature token with lifelink.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever an artifact or creature an opponent controls enters untapped, they may tap that permanent. If they don't, you create a 1/1 white Vampire creature token with lifelink.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "untapped": true,
+        "filter": {
+          "anyOf": [
+            {
+              "types": [
+                "Artifact"
+              ]
+            },
+            {
+              "types": [
+                "Creature"
+              ]
+            }
+          ],
+          "controller": "opponent"
+        }
+      },
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "who": "that card's controller",
+          "tap": "that card",
+          "effects": [
+            {
+              "effect": "createToken",
+              "count": 1,
+              "token": {
+                "name": "Vampire",
+                "types": [
+                  "Creature"
+                ],
+                "subtypes": [
+                  "Vampire"
+                ],
+                "colors": [
+                  "W"
+                ],
+                "power": 1,
+                "toughness": 1,
+                "keywords": [
+                  "Lifelink"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
