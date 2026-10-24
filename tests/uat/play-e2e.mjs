@@ -236,8 +236,8 @@ try {
       const o = oracle.find((x) => x.name === name);
       return C.normalize({name, typeLine: o.type, manaCost: o.mana ?? "", oracleText: o.text ?? "", colors: o.colors ?? [], colorIdentity: o.ci ?? [], legalities: {commander: "legal"}, price: null});
     };
-    /* One red card the engine has yet to define, for the deck that is not whole: the first of these still waiting. */
-    const gap = ["Shared Animosity", "Purphoros, God of the Forge", "Wheel of Fortune", "Chaos Warp"].find((name) => !playable(name));
+    /* Select from the current catalog: card loads can make a fixed shortlist fully playable. */
+    const gap = oracle.find((card) => card.ci?.length === 1 && card.ci[0] === "R" && !playable(card.name))?.name;
     ok(Boolean(gap), `a red card the table cannot play yet, for the deck that is not whole (${gap})`);
     const card = Object.fromEntries(["Krenko, Mob Boss", "Mountain", "Ezuri, Renegade Leader", "Forest", gap].map((name) => [name, fact(name)]));
     let library = M.empty(), serial = 0;

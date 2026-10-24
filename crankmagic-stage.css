@@ -503,3 +503,40 @@
 .cm-table-new{max-width:900px;margin:auto}.cm-table-new h2{font-family:CrankOxanium,Satoshi,sans-serif}
 @media(max-width:1000px){.cm-play-home{grid-template-columns:1fr 1fr}.cm-play-talk{grid-column:1/-1}.cm-play-records{grid-column:auto}}
 @media(max-width:700px){.cm-play-home{grid-template-columns:minmax(0,1fr)}.cm-play-home .v-panel{grid-column:1;padding:20px}.cm-new-table-square{padding:10px;gap:24px 10px}.cm-new-table-square .cm-table-new-seat{padding:10px}.cm-new-table-square input,.cm-new-table-square select{font-size:13px}}
+/* R3: the same discoverable zone navigation in every board view. */
+#matrix-v2 .cm-board [data-zone-scroll]{scrollbar-width:none;overscroll-behavior:contain;touch-action:pan-x pan-y;cursor:grab}
+#matrix-v2 .cm-board [data-zone-scroll]::-webkit-scrollbar{display:none}
+#matrix-v2 .cm-board [data-zone-scroll]:focus-visible{outline:2px solid var(--mat-ink);outline-offset:-2px}
+#matrix-v2 .cm-board .is-zone-dragging{cursor:grabbing;user-select:none}
+
+/* R3: whole-card rows. Battlefield groups share a viewport; lands scroll independently. */
+#matrix-v2 .cm-board .cm-board-field{display:flex;flex-direction:column;flex-wrap:nowrap;align-items:stretch;overflow:auto;align-self:stretch;max-height:100%;box-sizing:border-box}
+#matrix-v2 .cm-board .cm-board-group{display:flex;flex-direction:column;flex:0 0 auto;min-height:0;overflow:visible}
+#matrix-v2 .cm-board .cm-board-group>h3{flex:none;align-self:flex-start}
+#matrix-v2 .cm-board .cm-board-lands{overflow:hidden;align-items:stretch}
+#matrix-v2 .cm-board [data-card-section]{display:grid;grid-template-columns:repeat(auto-fill,var(--zone-cell-width,var(--bc)));grid-auto-rows:var(--zone-cell-height,calc(var(--bc)*1.4));gap:8px;align-content:start;align-items:center;justify-items:center;flex:0 1 auto;width:100%;min-height:0;max-height:100%;overflow:auto;padding:4px;box-sizing:border-box}
+#matrix-v2 .cm-board .cm-board-field [data-card-section]{overflow:visible;max-height:none;flex:none}
+#matrix-v2 .cm-board [data-card-section]>*{margin:0!important}
+#matrix-v2 .cm-board [data-card-section]>.cm-bcard.is-tapped{transform:rotate(30deg)}
+#matrix-v2 .cm-board .cm-stage-region .cm-board-field{display:flex;grid-column:1;grid-row:1 / 3;padding:4px}
+#matrix-v2 .cm-board .cm-stage-region :is(.cm-board-group,.cm-board-lands){overflow:hidden}
+#matrix-v2 .cm-board .cm-stage-region .cm-board-group{overflow:visible}
+#matrix-v2 .cm-board .cm-stage-region .cm-mat-grid{grid-template-rows:minmax(0,1fr) minmax(0,1fr) minmax(0,2fr)}
+#matrix-v2 .cm-board .cm-mat:is([data-fit="table"],[data-fit="focus"]) .cm-mat-grid{grid-template-rows:var(--pile-row) minmax(0,1fr) calc(var(--pile-row) + var(--land-turn,0px) + clamp(10px,calc(var(--bc)*.3),28px)) auto}
+/* Sparse phone boards leave room for both partners; crowded zones keep their own bounded scroll. */
+#matrix-v2 .cm-phone-battlefield .cm-board-field{height:auto;max-height:clamp(130px,25dvh,220px);min-height:130px}
+#matrix-v2 .cm-phone-battlefield .cm-board-lands{height:auto;max-height:clamp(120px,22dvh,180px);min-height:120px}
+/* Legacy focus styles opened zone overflow; keep these viewports scrollable while focused. */
+#matrix-v2 .cm-board .cm-board-field:focus-within{overflow:auto}
+#matrix-v2 .cm-board .cm-board-lands:focus-within{overflow:hidden}
+
+#matrix-v2 .cm-board .cm-bcard img{object-fit:contain}
+/* State-backed cards keep an accessible name; ownership references deliberately overlay their title. */
+.cm-bcard[data-card]:has(>img[data-card-loaded="true"])>.cm-bcard-name{visibility:hidden}
+
+#matrix-v2 .cm-board [data-card-section] .cm-bcard-pt{font-size:max(10px,calc(var(--bc)*.13));padding:1px 3px;line-height:1.1}
+
+#matrix-v2 .cm-board .cm-mat-grid:has(.cm-board-lands .is-tapped){--land-turn:calc(var(--bc)*.35)}
+
+/* Pile counts stay readable even on the compact opponent mats. */
+#matrix-v2 .cm-board .cm-bcard-count{font-size:max(10px,calc(var(--bc)*.3));background:#10232f;color:#fff;padding:1px 3px;border-radius:4px}
