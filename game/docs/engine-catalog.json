@@ -9,9 +9,9 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1873,
+  "defined": 1887,
   "provisional": 0,
-  "everyRule": 2880
+  "everyRule": 2882
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -5945,8 +5945,8 @@
      "forge": "CounterPlayerAddedAll",
      "top": 2,
      "all": 8,
-     "blocks": 2,
-     "alone": 1
+     "blocks": 1,
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -8949,8 +8949,8 @@
      "forge": "RememberObjects",
      "top": 123,
      "all": 1460,
-     "blocks": 53,
-     "alone": 10
+     "blocks": 52,
+     "alone": 9
     },
     {
      "kind": "option",
