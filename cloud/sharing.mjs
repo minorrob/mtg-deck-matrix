@@ -47,11 +47,20 @@ export function sharing(db,env,{now=()=>new Date().toISOString(),fetchImpl=fetch
     }
     return {name:'Library',cards:Object.values(state.cards).map(card),lots:state.lots.map(l=>({id:l.id,cardId:l.cardId,quantity:l.quantity,source:l.source,assigned:!!l.allocation||l.location?.kind==='deck'}))};
   }
-  async function read(id,person){const s=await permitted(id,person),{head,data}=await snapshot(s.owner_id);return {id:s.id,kind:s.kind,owner:s.owner_name||'CrankMagic player',access:s.access,via:s.via,head:head.id,content:project(s,data.state)};}
+  async function read(id,person,loadSnapshot=snapshot){const s=await permitted(id,person),{head,data}=await loadSnapshot(s.owner_id);return {id:s.id,kind:s.kind,owner:s.owner_name||'CrankMagic player',access:s.access,via:s.via,head:head.id,content:project(s,data.state)};}
   async function list(person,kind){
     if(!['deck','library'].includes(kind))fail('Choose decks or libraries.');
-    const rows=await all(`SELECT s.id FROM shares s WHERE s.kind=? AND s.owner_id<>? AND (s.public_role IS NOT NULL OR EXISTS(SELECT 1 FROM share_grants g WHERE g.share_id=s.id AND g.user_id=?)) ORDER BY s.id LIMIT 200`,kind,person.id,person.id);
-    const items=[];for(const s of rows){try{items.push(await read(s.id,person));}catch(e){if(e.status!==404)throw e;}}return {items};
+    const rows=await all(`SELECT s.id,s.owner_id FROM shares s WHERE s.kind=? AND s.owner_id<>? AND (s.public_role IS NOT NULL OR EXISTS(SELECT 1 FROM share_grants g WHERE g.share_id=s.id AND g.user_id=?)) ORDER BY s.id LIMIT 200`,kind,person.id,person.id);
+    // Decode an owner's library once per list request, after every share's permission check.
+    // Group only the already-selected rows; hold one full library, not one per owner.
+    let cachedOwner=null,cachedSnapshot=null;
+    const loadSnapshot=owner=>{if(owner!==cachedOwner){cachedOwner=owner;cachedSnapshot=null;cachedSnapshot=snapshot(owner);}return cachedSnapshot;};
+    const items=[];
+    for(const s of rows.sort((a,b)=>a.owner_id-b.owner_id)){
+      try{items.push(await read(s.id,person,loadSnapshot));}catch(e){if(e.status!==404)throw e;}
+    }
+    items.sort((a,b)=>a.id<b.id?-1:a.id>b.id?1:0);
+    return {items};
   }
   async function settings(person,kind,source){
     if(!['deck','library'].includes(kind))fail('Choose a deck or library.');
