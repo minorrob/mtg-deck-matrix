@@ -12,8 +12,8 @@ wave reaches past the library into the most-played Commander cards (`data/engine
 
 `README.md` there has the numbers, `BRIEF.md` the rules and the lane ownership, and `PROMPTS.md` the six prompts.
 
-**Integrated, 2026-10-23, in one merge** (`claude/focused-feynman-tt20o3`) with the Decks screen and New deck flow (#844,
-below), which was held for it. **310 of the 333 cards are final:** 2,577 definitions became 2,887.
+**Integrated, 2026-10-23, in one merge** (PR #852, `claude/focused-feynman-tt20o3`) with the Decks screen and New deck flow
+(#844, below), which was held for it. **310 of the 333 cards are final:** 2,577 definitions became 2,887.
 
 | Lane | PR | Final | Stopped on |
 | --- | --- | ---: | --- |
@@ -328,7 +328,7 @@ Counterintelligence. The current preview milestone is deployed to staging. Side-
 The module registry now includes Screen View, History, AI Coach, Counter-Intel, Resources, On the Stack, Card Preview, Table Vitals, Recommended Actions, Chat, and Actions. AI Coach embeds its existing conversation and preserves drafts through moves; Recommended Actions uses that service. Chat is explicitly unavailable pending the contract below. Actions routes to its assigned drawer in Full screen, with ordinary popups retained elsewhere.
 Volcano uses Rob's supplied video; other environments and the table artwork still need final assets. Crowded-mat layout and text readability need further polish.
 
-## Decks screen and New deck flow, October 23, 2026 (a Claude cloud session, for Rob; `claude/vibrant-turing-50yl3r`, PR #844): built, for the merge session
+## Decks screen and New deck flow, October 23, 2026 (a Claude cloud session, for Rob; `claude/vibrant-turing-50yl3r`, PR #844): merged with wave 4d (PR #852)
 
 Rob named this session for the lanes the Decks requirements name (§19): **Codex · Workshop** for the screens and the
 collection model, **Claude · Deck intelligence** for the backup builder, the write-ups, the vocabulary, recommendations and
