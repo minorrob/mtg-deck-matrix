@@ -236,8 +236,14 @@ try {
       const o = oracle.find((x) => x.name === name);
       return C.normalize({name, typeLine: o.type, manaCost: o.mana ?? "", oracleText: o.text ?? "", colors: o.colors ?? [], colorIdentity: o.ci ?? [], legalities: {commander: "legal"}, price: null});
     };
-    /* One red card the engine has yet to define, for the deck that is not whole: the first of these still waiting. */
-    const gap = ["Shared Animosity", "Purphoros, God of the Forge", "Wheel of Fortune", "Chaos Warp"].find((name) => !playable(name));
+    /* One red card the engine has yet to define, for the deck that is not whole: of Krenko's color alone and no land, the
+       most-played first, found as the walk runs, as `none` above is. Not a candidate either: a playtest table counts a
+       candidate known. A named list went stale with each load (Shared Animosity, Purphoros, Wheel of Fortune and Chaos
+       Warp were all defined by 2026-10-24). */
+    const {candidateDefinition} = await import("../../game/engine/cards/candidates.mjs");
+    const red = new Set(oracle.filter((o) => JSON.stringify(o.ci ?? []) === JSON.stringify(["R"]) && !/\bLand\b/.test(o.type ?? "") && !o.name.includes(" // ")).map((o) => o.name));
+    const gap = JSON.parse(readFileSync(new URL("../../data/engine/top-cards.json", import.meta.url), "utf8")).cards
+      .map((c) => c.name).find((name) => red.has(name) && !playable(name) && !candidateDefinition(name));
     ok(Boolean(gap), `a red card the table cannot play yet, for the deck that is not whole (${gap})`);
     const card = Object.fromEntries(["Krenko, Mob Boss", "Mountain", "Ezuri, Renegade Leader", "Forest", gap].map((name) => [name, fact(name)]));
     let library = M.empty(), serial = 0;
