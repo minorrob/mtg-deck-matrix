@@ -38,7 +38,7 @@ import {holdArrival, enteredWith} from "./entering.mjs";
 import {ascendAsItResolves} from "../keywords/designations.mjs";
 import {conditionHolds, asksFirstResolution} from "../script/condition.mjs";
 import {moveObject, addObject, removeObject, eventCard} from "../state/index.mjs";
-import {enteringModifications} from "./replacement.mjs";
+import {enteringModifications, graveyardBound, placeReplacedCounters} from "./replacement.mjs";
 import {enteringCountersPlaced} from "./statics.mjs";
 import {beginResolution, resolutionPending} from "../script/resolution.mjs";
 import {delayedTrigger, enterAttacking} from "../script/effects/permanents.mjs";
@@ -174,7 +174,7 @@ export function pushAbility(state, {sourceId = null, controller, abilityId, kind
   /* "Transform Venat" (CR 701.27f): how many times a double-faced source had transformed as its ability was put on the
      stack -- or, a delayed trigger's, as it was made (effects/permanents.mjs) -- for an instruction to transform it to be
      ignored once it has since. */
-  const transforms = sourceTransforms ?? (source?.mdfc && source.zone === "battlefield" ? source.transforms ?? 0 : undefined);
+  const transforms = sourceTransforms ?? ((source?.mdfc || source?.merged?.some(p => p.physical.mdfc)) && source.zone === "battlefield" ? source.transforms ?? 0 : undefined);
   if (transforms !== undefined) entry.sourceTransforms = transforms;
   state.stack.push(entry);
   return entry;
@@ -201,11 +201,32 @@ export function pushCopy(state, original, {controller, nonLegendary = false} = {
     abilityId: original.abilityId, targets: structuredClone(original.targets ?? [])});
   entry.permanent = original.permanent === true;
   entry.copy = true;
+  if (original.overload) entry.overload = structuredClone(original.overload);
+  if (original.mutating) {
+    entry.mutating = true;
+    entry.overload.targets[0].owner = controller;
+  }
   if (original.x !== undefined) entry.x = original.x;
+  /* And whether it was kicked (CR 707.10, 702.33d). */
+  if (original.kicked) entry.kicked = original.kicked;
   /* And its modes (CR 707.10): a copy of a modal spell has the modes the original has. */
   if (Array.isArray(original.modes)) entry.modes = [...original.modes];
   /* And its gift, promised to the same opponent (CR 707.10, 702.174k; its ruling): the copy gives it too. */
   if (original.gift !== undefined) entry.gift = original.gift;
+  state.stack.push(entry);
+  return entry;
+}
+
+/**
+ * Copy an activated or triggered ability on the stack (CR 707.10; Strionic Resonator, Return the Favor; card load w4d L1):
+ * a new ability with the original's text, source and every choice made for it -- its modes, targets, X, what it is about --
+ * controlled by whoever copied it (CR 707.10, 113.7a). It is put on the stack, not activated, and it did not trigger
+ * (CR 707.10c), so nothing that says "whenever you activate" or "triggers" sees it.
+ */
+export function pushAbilityCopy(state, original, {controller} = {}) {
+  if (!original || original.kind === "spell") throw new Error("There is no ability there to copy");
+  const entry = {...structuredClone(original), stackId: state.nextStackId, playerId: controller, stage: "waiting", copy: true};
+  state.nextStackId += 1;
   state.stack.push(entry);
   return entry;
 }
@@ -216,6 +237,8 @@ function scriptOf(state, entry) {
     const spell = entry.objectId === null ? null : state.objects[entry.objectId]?.spell;
     /* Overloaded (CR 702.96b): what it does cast so. */
     if (entry.overload) return entry.overload;
+    /* Kicked, when the card says what it does then (CR 702.33d): its targets and effects so (cards/index.mjs, kicker). */
+    if (entry.kicked && spell?.kicked) return spell.kicked;
     /* Its modes, chosen as it was cast (CR 700.2): their targets in order, their effects aimed at them. */
     if (spell?.modal && Array.isArray(entry.modes)) return modalScript(spell.modal, entry.modes);
     return spell && (spell.effects ?? []).length ? spell : null;
@@ -287,6 +310,9 @@ export function resolveTop(state, effect = null, rng = null) {
     ...(entry.sourceTransforms !== undefined ? {sourceTransforms: entry.sourceTransforms} : {}),
     /* What its cost sacrificed, as each last existed: "the sacrificed creature's toughness" (rules/actions.mjs). */
     ...(entry.sacrificed ? {sacrificed: entry.sacrificed} : {}),
+    /* Its targets as they were chosen, before any is checked again: what a division among them was (CR 601.2d; script/amount.mjs,
+       dividedAmong). */
+    ...(entry.targets ? {targetsChosen: entry.targets} : {}),
     /* The mana spent to cast its source, as its trigger remembered it: converge's count, its source gone, for its targets
        asked again (CR 608.2b; script/amount.mjs, colorsSpent). */
     ...(entry.spent ? {spent: entry.spent} : {}),
@@ -296,7 +322,8 @@ export function resolveTop(state, effect = null, rng = null) {
      source as it last existed, which no target can now be (CR 608.2b, 113.7a). */
   const {targets, fizzles} = recheckTargets(state, script.targets, entry.targets, source === null && (entry.cardId ?? entry.lastKnown?.cardId ?? null) !== null
     ? {...context, source: entry.cardId ?? entry.lastKnown.cardId} : context);
-  if (fizzles) return finishTop(state, entry, events, true);
+  /* An illegal mutate target makes this resolve as a creature spell (CR 702.140b). */
+  if (fizzles) return finishTop(state, entry, events, entry.mutating !== true);
   /* ASCEND ON AN INSTANT OR SORCERY (CR 702.131a): its spell ability, first as it is printed first -- the city's blessing for
      its controller if they control ten or more permanents now (keywords/designations.mjs). An ability on the stack has no
      object of its own (pushAbility), and a permanent spell with ascend has no script and was finished above -- its ascend
@@ -402,7 +429,11 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
        graveyard -- one that did not resolve goes where any spell would. */
     const adventured = entry.adventure === true && !fizzled;
     /* "Exile this spell" (paradigm, CR 702.192a): it resolved, and is exiled as the last of it. */
-    const to = entry.permanent && !fizzled ? "battlefield" : entry.flashback || entry.graveyardToExile || rebound || adventured || exiles ? "exile" : entry.graveyardToLibraryBottom ? "library" : "graveyard";
+    const planned = entry.permanent && !fizzled ? "battlefield" : entry.flashback || entry.graveyardToExile || rebound || adventured || exiles ? "exile" : entry.graveyardToLibraryBottom ? "library" : "graveyard";
+    /* Into its owner's graveyard, as the replacement effects have it (CR 608.2n, 614.1a): "if a card would be put into an
+       opponent's graveyard from anywhere, instead exile it" (Dauthi Voidwalker). */
+    const replaced = planned === "graveyard" ? graveyardBound(state, entry.objectId) : null;
+    const to = replaced ? replaced.to : planned;
     /* CR 614.12, asked before the move: a permanent coming off the stack enters tapped or with
        counters as ONE event, and the abilities that say so are on the spell, not on anything that
        is on the battlefield yet. */
@@ -425,7 +456,8 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
       : null;
     /* A face-down spell becomes a face-down permanent, the same characteristics (CR 702.168b). */
     const down = object.disguised === true ? {faceDown: true, disguised: true} : {};
-    const arrived = moveObject(state, entry.objectId, to, ["graveyard", "library"].includes(to) ? owner : null, down);
+    const arrived = moveObject(state, entry.objectId, to, ["graveyard", "library", "hand"].includes(to) ? owner : null, down);
+    placeReplacedCounters(state, arrived, replaced);
     /* WHAT ITS COST EXILED (CR 607.2q; rules/actions.mjs, "behold a Goblin and exile it"): the permanent it becomes has it, for
        its ability that names the exiled card. Such a spell always becomes one as it resolves: a permanent card's spell ability
        has no targets to fail (cards/index.mjs), and an Aura has no additional cost. One countered leaves the cards exiled under
@@ -500,6 +532,14 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     if (to === "battlefield" && entry.cast?.paidFor === "warp" && state.objects[arrived])
       delayedTrigger(state, {at: "end step", text: `Warp: exile ${card.name} at the beginning of the next end step.`,
         effects: [{effect: "moveZone", targets: [arrived], to: "exile", warped: state.turn}]}, {controller: entry.playerId, source: arrived});
+    /* DASH (CR 702.109a, 603.7d; Ragavan, Nimble Pilferer): cast for its dash cost, the permanent has haste as long as it is
+       this permanent, and a delayed trigger returns it to its owner's hand at the beginning of the next end step -- that
+       permanent, so one that left the battlefield meanwhile is a new object and stays where it is (CR 400.7). */
+    if (to === "battlefield" && entry.cast?.paidFor === "dash" && state.objects[arrived]) {
+      (state.effects ??= []).push({id: `dash-haste:${arrived}`, layer: 6, affects: {ids: [arrived]}, apply: {addKeywords: ["Haste"]}, until: null, sourceController: entry.playerId});
+      delayedTrigger(state, {at: "end step", text: `Dash: return ${card.name} to its owner's hand at the beginning of the next end step.`,
+        effects: [{effect: "moveZone", targets: [arrived], to: "hand"}]}, {controller: entry.playerId, source: arrived});
+    }
     /* Cast from suspend: haste, while it is this permanent (CR 702.62a). */
     if (to === "battlefield" && entry.fromSuspend && (state.objects[arrived].types ?? []).includes("Creature"))
       (state.effects ??= []).push({id: `suspend-haste:${arrived}`, layer: 6, affects: {ids: [arrived]}, apply: {addKeywords: ["Haste"]}, until: null, sourceController: entry.playerId});

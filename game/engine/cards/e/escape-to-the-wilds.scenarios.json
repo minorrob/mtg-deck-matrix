@@ -16,7 +16,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -131,7 +131,7 @@
         "Island",
         "Ogre",
         "Swamp",
-        "Shock",
+        "Smoke Shock",
         "Bear",
         "Plains"
       ],
@@ -216,7 +216,7 @@
           "cards": [
             "Ogre",
             "Swamp",
-            "Shock",
+            "Smoke Shock",
             "Bear"
           ]
         }

@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Juzám Djinn",
+    "oracleId": "4e81596c-9225-43d1-bd35-798212144f2c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Djinn"
+    ],
+    "manaCost": "{2}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "At the beginning of your upkeep, this creature deals 1 damage to you.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 1,
+          "who": "you"
+        }
+      ],
+      "text": "At the beginning of your upkeep, this creature deals 1 damage to you."
+    }
+  ]
+}

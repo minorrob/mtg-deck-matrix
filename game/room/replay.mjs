@@ -19,20 +19,20 @@ import {startRoom, openRoom} from "./room.mjs";
 import {hashState} from "../engine/journal.mjs";
 
 /** Replays `tape` on a fresh in-memory room started from `pod` and `seed`; returns the room. */
-export async function replayTape({matchId, pod, seed, tape, cards, pilot, storage = memoryStorage()}) {
-  const room = await startRoom({storage, matchId, pod, seed, ...(cards ? {cards} : {}), ...(pilot ? {pilot} : {})});
+export async function replayTape({matchId, pod, seed, tape, cards, candidates, pilot, storage = memoryStorage()}) {
+  const room = await startRoom({storage, matchId, pod, seed, ...(cards ? {cards} : {}), ...(candidates ? {candidates} : {}), ...(pilot ? {pilot} : {})});
   for (const entry of tape) await room.replay(entry);
   return room;
 }
 
 /** Reads a stored match (its seed, pod and tape), replays it, and compares it with the stored game. */
-export async function replayMatch({storage, matchId, cards, pilot}) {
+export async function replayMatch({storage, matchId, cards, candidates, pilot}) {
   const store = createMatchStore(storage, matchId);
   const meta = await store.loadMatch();
   if (!meta) throw new Error(`There is no match ${matchId} in this storage.`);
   const tape = await store.readTape();
-  const original = await openRoom({storage, matchId, ...(cards ? {cards} : {}), ...(pilot ? {pilot} : {})});
-  const fresh = memoryStorage(), replayed = await replayTape({matchId, pod: meta.pod, seed: meta.seed, tape, cards, pilot, storage: fresh});
+  const original = await openRoom({storage, matchId, ...(cards ? {cards} : {}), ...(candidates ? {candidates} : {}), ...(pilot ? {pilot} : {})});
+  const fresh = memoryStorage(), replayed = await replayTape({matchId, pod: meta.pod, seed: meta.seed, tape, cards, candidates, pilot, storage: fresh});
   /* The journals as stored, compared by their hash: the same events, in the same order, with the same ids. */
   const a = {...original.fingerprint(), journal: hashState(await store.readJournal())};
   const b = {...replayed.fingerprint(), journal: hashState(await createMatchStore(fresh, matchId).readJournal())};

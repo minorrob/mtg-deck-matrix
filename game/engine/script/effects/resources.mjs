@@ -22,7 +22,7 @@ import {selectMatching} from "../filter.mjs";
 import {event, cardRef, playersFor} from "./zones.mjs";
 import {markDeathtouch, lifelinkFrom} from "../../keywords/combat.mjs";
 import {typesOf, powerOf, toughnessOf, keywordsOf, isKeywordCounter, controllerOf} from "../../rules/layers.mjs";
-import {cantGainLife, lifeGained, countersPlaced, playerCountersPlaced, placeCounters} from "../../rules/statics.mjs";
+import {cantGainLife, lifeGained, lifeLost, countersPlaced, playerCountersPlaced, placeCounters} from "../../rules/statics.mjs";
 import {playerRuled, leaveGame, monarchLeft} from "../../rules/sba.mjs";
 import {amountOf} from "../amount.mjs";
 import {recordUse} from "../../state/index.mjs";
@@ -43,6 +43,13 @@ export function addMana(state, params, context) {
   if (params.untilEndOfCombat === true) {
     const kept = (state.players[context.controller].combatMana ??= {});
     for (const [color, n] of Object.entries(mana)) kept[color] = (kept[color] ?? 0) + n;
+  }
+  /* "Until end of turn, you don't lose this mana as steps and phases end" (Birgi, God of Storytelling; CR 106.4, 500.4; card
+     load w4d L1): how much of the pool its player keeps as this turn's steps end (`turnMana`, rules/turn.mjs). */
+  if (params.untilEndOfTurn === true) {
+    const player = state.players[context.controller];
+    if (player.turnMana?.turn !== state.turn) player.turnMana = {turn: state.turn, mana: {}};
+    for (const [color, n] of Object.entries(mana)) player.turnMana.mana[color] = (player.turnMana.mana[color] ?? 0) + n;
   }
   return [event("GameEventManaPool", state, {
     player: {playerId: context.controller, name: state.players[context.controller].name},
@@ -112,6 +119,9 @@ export function changeLife(state, player, delta, events) {
   /* "If you would gain life, you gain twice that much life instead" (Rhox Faithmender; rules/statics.mjs, lifeGained): an
      exchange of life totals and a life total set higher are gains too (CR 701.12b, 119.5). */
   if (delta > 0) delta = lifeGained(state, player, delta);
+  /* "They lose twice that much life instead" (Bloodletter of Aclazotz; rules/statics.mjs, lifeLost): damage's loss and life
+     paid alike -- whether the life could be paid was asked of the amount before (CR 119.4; its rulings). */
+  if (delta < 0) delta = -lifeLost(state, player, -delta);
   const before = state.players[player].life;
   state.players[player].life += delta;
   /* The life each player has lost this turn (Wound Reflection; script/amount.mjs), cleared as a turn begins (turn.mjs). */
@@ -183,12 +193,23 @@ export function dealDamage(state, params, context) {
   if (params.remember) context.remembered = dealt;
   const {source, amount, hits} = damageHits(state, params, context);
   if (amount <= 0) return events;
+  /* "If the creature you control has trample, excess damage is dealt to that creature's controller instead" (Ram Through;
+     wave 4d L3, CR 120.4a, 702.19b): `trampleExcess` -- from a source with trample as this resolves, a creature is dealt
+     lethal damage (its damage marked counted, 1 from deathtouch) and the rest is dealt to its controller, at once. */
+  if (params.trampleExcess === true && source !== null && keywordsOf(state, source).includes("Trample"))
+    for (const hit of [...hits]) {
+      if (hit.toCard === undefined || !state.objects[hit.toCard] || !typesOf(state, hit.toCard).includes("Creature")) continue;
+      const excess = excessOf(state, hit.toCard, amount, source);
+      if (excess <= 0) continue;
+      hit.amount = amount - excess;
+      hits.push({toPlayer: controllerOf(state, hit.toCard), amount: excess});
+    }
 
   for (const hit of hits) {
     /* CR 616.1: the order of the effects that change it, as the player dealt it chose (effects/asking.mjs, orderDamage);
        the order that leaves the least where nobody was asked (rules/replacement.mjs). */
     const {proposal} = applyReplacements(state, {
-      event: "damage", toPlayer: hit.toPlayer, toCard: hit.toCard, amount, sourceId: source, combat: false,
+      event: "damage", toPlayer: hit.toPlayer, toCard: hit.toCard, amount: hit.amount ?? amount, sourceId: source, combat: false,
     }, {orders: params.damageOrders?.[hitKey(source, hit.toPlayer, hit.toCard)] ?? []});
     /* What follows a prevention -- "each opponent mills that many cards" -- immediately afterward (CR 615.5). */
     if (proposal.prevented === true || proposal.amount <= 0) { events.push(...runFollowUps(state, proposal)); continue; }
@@ -210,6 +231,9 @@ export function dealDamage(state, params, context) {
          opponent has been dealt noncombat damage this turn" (Grim Repriser; script/amount.mjs, playersDealtNoncombatDamage).
          rules/turn.mjs clears it as a turn begins. */
       state.players[toPlayer].noncombatDamagedThisTurn = true;
+      /* And how much, combat damage counted beside it (rules/combat.mjs): "if an opponent was dealt 7 or more damage this turn"
+         (Spinerock Knoll; script/amount.mjs, damageTakenThisTurn). */
+      state.players[toPlayer].damagedThisTurn = (state.players[toPlayer].damagedThisTurn ?? 0) + proposal.amount;
       if (infect) events.push(...givePoison(state, toPlayer, proposal.amount, putter));
       else changeLife(state, toPlayer, -proposal.amount, events);
       events.push(event("GameEventPlayerDamaged", state, {
@@ -361,7 +385,11 @@ export function damageQuestion(state, effect, context, answers = {}) {
     if (amount <= 0) continue;
     for (const hit of hits) {
       const key = hitKey(source, hit.toPlayer, hit.toCard);
-      const {question} = applyReplacements(state, {event: "damage", toPlayer: hit.toPlayer, toCard: hit.toCard, amount, sourceId: source, combat: false},
+      /* Only what the hit is dealt to: the question it asks is kept in the state, which a room saves as JSON (game/engine/
+         storage.mjs, lostIn) -- damage to a player has no `toCard` at all, never an undefined one (Ajani Steadfast's emblem
+         and Hedron-Field Purists, ordered for a Lightning Bolt at their controller). */
+      const {question} = applyReplacements(state, {event: "damage", ...(hit.toPlayer !== undefined ? {toPlayer: hit.toPlayer} : {}),
+        ...(hit.toCard !== undefined ? {toCard: hit.toCard} : {}), amount, sourceId: source, combat: false},
         {orders: answers[key] ?? [], askable: true, dry: true});
       if (question) return {...question, key};
     }
@@ -425,11 +453,20 @@ export function loseGame(state, params, context) {
  * said to everyone. Nothing yet modifies a roll or watches for one ("whenever you roll a die", CR 706.2's results changed).
  */
 export function rollDie(state, params, context, rng = null) {
+  /* "Roll the planar die" (Fractured Powerstone; `planar: true`, a six-sided die, CR 901.3a): in a game that isn't a
+     Planechase game it has no effect (the card's ruling of 2012-06-01) -- there is no plane to planeswalk to (CR 701.31a,
+     901.8) and no chaos ability (311.7), and only in Planechase does it count as rolling dice (706.7). The engine plays no
+     Planechase, so nothing is rolled, nothing triggers, and "if you would roll one or more planar dice" (Ichor Elixir) has
+     nothing to replace. */
+  if (params.planar === true) return [];
   if (!rng) throw new Error("A die roll needs the game's random stream");
   /* A die of no number of sides is no die: nothing rolled (the schema refuses a script that says one, script/schema.mjs). */
   if (!(Number.isInteger(params.sides) && params.sides >= 2)) return [];
   const result = rng.int(params.sides) + 1;
   context.rolled = result;
+  /* "Choose 1, 2, or 3 at random" (Tibalt's Trickery; card load w4d L1): `atRandom`, a number chosen at random -- no die is
+     rolled (CR 706.1), so nothing that watches a roll sees it -- read after it as a die's result is ({dieRolled: true}). */
+  if (params.atRandom === true) return [event("GameEventNumberChosen", state, {player: {playerId: context.controller, name: state.players[context.controller]?.name}, of: params.sides, result})];
   return [event("GameEventDieRolled", state, {player: {playerId: context.controller, name: state.players[context.controller]?.name}, sides: params.sides, result})];
 }
 
@@ -538,14 +575,18 @@ export function counterQuestion(state, effect, context, answers = {}) {
  * `multiplyCounters` -- "double the number of each kind of counter on any number of target permanents" (Deepglow Skate;
  * Forge's MultiplyCounter): on each target, as many more of each kind as it has now, put on as counters are (CR 122.1 --
  * doubling is putting that many on, which "if counters would be put on" sees); `who`, the players whose own counters
- * double ("each kind of counter you have": poison, CR 122.1c). `times` 2 unless it says.
+ * double ("each kind of counter you have": poison, CR 122.1c). `times` 2 unless it says. "Double the number of +1/+1
+ * counters on this creature" (Mossborn Hydra; wave 4d L3): `counter`, that kind alone; "on each creature you control"
+ * (Kalonian Hydra): `selector`, every permanent it matches as the effect resolves, in place of targets.
  */
 export function multiplyCounters(state, params, context) {
   const events = [], more = Math.max(1, params.times ?? 2) - 1;
-  for (const id of params.targets ?? []) {
+  const ids = params.selector !== undefined ? selectMatching(state, params.selector, context) : params.targets ?? [];
+  for (const id of ids) {
     const object = state.objects[id];
     if (!object || object.zone !== "battlefield") continue;
-    for (const [kind, n] of Object.entries({...object.counters})) if (n > 0) addCounters(state, id, kind, n * more, events, context.controller);
+    for (const [kind, n] of Object.entries({...object.counters}))
+      if (n > 0 && (params.counter === undefined || kind === params.counter)) addCounters(state, id, kind, n * more, events, context.controller);
   }
   for (const player of params.who !== undefined ? playersFor(state, params.who, context.controller) : [])
     if ((state.players[player].poison ?? 0) > 0) events.push(...givePoison(state, player, state.players[player].poison * more, context.controller));

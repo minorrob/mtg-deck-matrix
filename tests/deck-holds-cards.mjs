@@ -62,15 +62,12 @@ try {
   const before = await page.evaluate(() => {const g = globalThis.__cm.state.groups.find((x) => x.name === "Quintorius pile"); return {gid: g.id, bench: globalThis.__cm.state.lots.filter((l) => l.groupIds.includes(g.id) && l.location?.kind === "bench").length};});
   eq(before.bench, 9, "the 9 owned cards are on the Bench, filed in the new group");
 
-  /* DECK: New deck › Create › The cards in a collection group › the group */
+  /* DECK: a deck from the group's own cards. New deck's Create no longer takes this road (the Decks requirements' NEW-3,
+     2026-10-23: it is Define the Deck's Merge in a Group now); a deck made from a group, after an import or from the
+     Library, is still this one command, and this walk holds it. */
   await page.goto(`${base}/index.html#decks`);
   await page.locator("[data-action=new-deck]").first().waitFor({timeout: 60000});
-  await page.locator("[data-action=new-deck]").first().click();
-  await page.locator("#cm-dialog [data-action=wizard-create]").click();
-  await page.selectOption("#cm-dialog [name=how]", "group");
-  await page.selectOption("#cm-dialog [name=groupId]", before.gid);
-  ok(/draft deck whose list is the 9 cards in Quintorius pile/.test(await page.locator("#cm-new-deck-road").innerText()), "the wizard says what Continue makes: a draft deck whose list is the group's 9 cards");
-  await page.click("#cm-dialog button[type=submit]");
+  await page.evaluate((gid) => globalThis.__cm.groupDeck(gid), before.gid);
   await page.locator("#cm-dialog[open] h2", {hasText: "New deck from Quintorius pile"}).waitFor();
   const move = page.locator("#cm-dialog [name=move]");
   ok(await move.isChecked() && /Put the 9 copies you own from Quintorius pile \(now on the Bench\) in the deck's box/.test(await page.locator("#cm-dialog label.cm-checkbox").innerText()), "New deck from the group offers, ticked, to put the 9 copies in the deck's box");
@@ -81,9 +78,9 @@ try {
     const C = globalThis.__cm, d = C.state.decks.find((x) => x.groupId === gid), read = C.M.stateReader(C.state);
     const mine = C.state.lots.filter((l) => l.groupIds.includes(gid));
     return {status: d.status, inBox: mine.filter((l) => l.location?.kind === "deck" && l.location.deckId === d.id).length,
-      roles: [...new Set(mine.map((l) => read({...l, kind: "lot"}).role))], reserved: mine.filter((l) => l.allocation?.deckId === d.id).length, name: d.name};
+      roles: [...new Set(mine.map((l) => read({...l, kind: "lot"}).use))], reserved: mine.filter((l) => l.allocation?.deckId === d.id).length, name: d.name};
   }, before.gid);
-  eq([after.status, after.inBox, after.reserved, after.roles], ["draft", 9, 9, ["target"]], "the draft deck holds all 9 copies in its box, each reserved for its seat: Target, not Bench");
+  eq([after.status, after.inBox, after.reserved, after.roles], ["draft", 9, 9, ["final"]], "the draft deck holds all 9 copies in its box, each reserved for its seat: Final, not Bench");
   await shot(page, "draft-deck-with-copies-1280");
 
   /* G3c: the badge reads Commander + 99 live, and the deck's More menu offers its Draft list, not an empty buy list */

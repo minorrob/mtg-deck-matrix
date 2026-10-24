@@ -42,7 +42,7 @@
         ]
       }
     },
-    "Study": {
+    "Smoke Study": {
       "types": [
         "Sorcery"
       ],
@@ -256,7 +256,7 @@
           "zone": "graveyard",
           "cards": [
             "Bolt",
-            "Study"
+            "Smoke Study"
           ]
         }
       ],
@@ -298,7 +298,7 @@
         {
           "choose": [
             "Bolt",
-            "Study"
+            "Smoke Study"
           ]
         },
         {
@@ -306,7 +306,7 @@
         },
         {
           "choose": [
-            "Study"
+            "Smoke Study"
           ]
         },
         {
@@ -344,7 +344,7 @@
           "zone": "exile",
           "cards": [
             "Bolt",
-            "Study"
+            "Smoke Study"
           ]
         }
       ]

@@ -1,0 +1,159 @@
+{
+ "schema": "library-load-lane@1",
+ "lane": "candidates",
+ "theme": "review",
+ "label": "Candidates to review and promote to final",
+ "source": {
+  "collection": "collection-2026-10-21.json",
+  "workbook": "Backup_Load_-_CrankMagic_-_2026-10-21.xlsx",
+  "decks": [
+   "D1",
+   "D2",
+   "D3",
+   "D4",
+   "D5",
+   "D6",
+   "D7",
+   "S1-D1",
+   "S1-D2",
+   "S1-D3",
+   "S1-D4",
+   "S1-D5",
+   "S1-D6",
+   "S2-D1",
+   "S2-D2",
+   "S2-D3",
+   "S2-D4",
+   "S2-D5",
+   "S2-D6",
+   "G0-D1",
+   "G0-D2",
+   "G0-D3",
+   "G0-D4",
+   "G1-D1",
+   "G1-D2",
+   "G1-D3",
+   "G1-D4",
+   "CJ1",
+   "CJ2",
+   "CJ3",
+   "CJ4",
+   "CJ5",
+   "HG1",
+   "HG2"
+  ],
+  "liveDecks": [
+   "D1",
+   "D2",
+   "D3",
+   "D4",
+   "D5",
+   "D6",
+   "D7"
+  ],
+  "candidates": {
+   "pool": 29551,
+   "candidate": 2643,
+   "refused": 0,
+   "blocked": 6,
+   "vetoed": 18,
+   "unknown": 25793,
+   "structure": 1091,
+   "oneSentenceShort": 12544
+  }
+ },
+ "cards": [
+  {
+   "name": "Blossoming Defense",
+   "scope": "live",
+   "liveDecks": [
+    "D3"
+   ],
+   "decks": [
+    "D3"
+   ],
+   "owned": 1,
+   "rank": 2981,
+   "type": "Instant",
+   "layout": "normal"
+  },
+  {
+   "name": "Absorb",
+   "scope": "live",
+   "liveDecks": [
+    "D7"
+   ],
+   "decks": [
+    "D7"
+   ],
+   "owned": 1,
+   "rank": null,
+   "type": "Instant",
+   "layout": "normal"
+  },
+  {
+   "name": "Goblin Sledder",
+   "scope": "live",
+   "liveDecks": [
+    "D6"
+   ],
+   "decks": [
+    "D6"
+   ],
+   "owned": 0,
+   "rank": null,
+   "type": "Creature — Goblin",
+   "layout": "normal"
+  },
+  {
+   "name": "Ankle Biter",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Snake",
+   "layout": "normal"
+  },
+  {
+   "name": "Hydroblast",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Instant",
+   "layout": "normal"
+  },
+  {
+   "name": "Pyroclasm",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Sorcery",
+   "layout": "normal"
+  },
+  {
+   "name": "Scarblade Scout",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Elf Scout",
+   "layout": "normal"
+  },
+  {
+   "name": "Voracious Varmint",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Varmint",
+   "layout": "normal"
+  }
+ ]
+}

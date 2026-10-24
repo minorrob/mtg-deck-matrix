@@ -47,8 +47,8 @@ const eq = (a, b, m) => { assert.deepEqual(a, b, m); checks += 1; };
     if (!flat.startsWith("- ")) continue;
     for (const [, name] of flat.matchAll(/`([^`]+)`/g)) named.add(name);
   }
-  eq(named.size, 92,
-    "ninety-two names are written in backticks in §12.2 — ninety effect primitives (regenerate joined in batch 28, addPhase in batch 33, becomeCopy in batch 58, digUntil in batch 62, poison in batch 64, earthbend and changeTargets in batch 65, winGame in batch 68, goad in batch 69, empowerJace on 2026-10-04, manifest on 2026-10-06, loseGame on 2026-10-11, chooseColor, chooseSource and vote in Train C phase 2, exchangeControl in Train D, explore, incubate and becomeMonarch in Train E, rearrangeTop in wave 4b, rollDie in wave 4c) and the two symbolic cost atoms");
+  eq(named.size, 96,
+    "ninety-six names are written in backticks in §12.2 — ninety-four effect primitives (regenerate joined in batch 28, addPhase in batch 33, becomeCopy in batch 58, digUntil in batch 62, poison in batch 64, earthbend and changeTargets in batch 65, winGame in batch 68, goad in batch 69, empowerJace on 2026-10-04, manifest on 2026-10-06, loseGame on 2026-10-11, chooseColor, chooseSource and vote in Train C phase 2, exchangeControl in Train D, explore, incubate and becomeMonarch in Train E, rearrangeTop in wave 4b, rollDie in wave 4c, emblem in the library load of 2026-10-21, ringTempts for Boromir and mergePermanent for Nethroi, removeFromCombat in wave 4d) and the two symbolic cost atoms");
 
   const missing = [...named].filter((name) => !ALL_PRIMITIVES.includes(name) && !COST_ATOMS.includes(name));
   eq(missing, [],
@@ -76,8 +76,8 @@ const eq = (a, b, m) => { assert.deepEqual(a, b, m); checks += 1; };
 
 /* ---- keywords, and the two things the plan's list conflates ---- */
 {
-  eq(TIER0_KEYWORDS.length + TIER0_CONSTRUCTS.length, 52,
-    "§12.2 lists fifty-two named things under Keywords (its heading says fifty-three; the list is the part that matters)");
+  eq(TIER0_KEYWORDS.length + TIER0_CONSTRUCTS.length, 53,
+    "§12.2 lists fifty-three named things under Keywords, including mutate");
 
   /* NOT EVERYTHING IN THAT LIST IS A KEYWORD. "saga chapters" and "alternate additional cost" are
      construct families that were grouped with the keywords. The difference is operational: a

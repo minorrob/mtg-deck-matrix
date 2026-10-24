@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Eye of Nowhere",
+    "oracleId": "27ffdf11-bb7f-40bf-94c4-6bfbc41668e5",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [
+      "Arcane"
+    ],
+    "manaCost": "{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Return target permanent to its owner's hand.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "permanent"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "hand"
+        }
+      ],
+      "text": "Return target permanent to its owner's hand."
+    }
+  ]
+}

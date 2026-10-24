@@ -54,7 +54,7 @@
         ]
       }
     },
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -111,7 +111,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Shock"
+            "Smoke Shock"
           ]
         },
         {
@@ -135,7 +135,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "targets": [
             {
               "player": 1

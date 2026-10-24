@@ -1,0 +1,32 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Elvish Archers",
+    "oracleId": "534ce8e2-53a1-407c-9881-d3b5347d43c3",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Archer"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "First strike",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "first strike",
+      "text": "First strike"
+    }
+  ]
+}

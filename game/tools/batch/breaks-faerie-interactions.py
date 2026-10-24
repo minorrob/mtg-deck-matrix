@@ -4,8 +4,8 @@ SUITES=['tests/engine-faerie-interactions.mjs']
 T='game/engine/rules/turn.mjs';Z='game/engine/script/effects/zones.mjs';F='game/engine/script/filter.mjs';C='game/engine/cards/index.mjs'
 BREAKS=[
  ('redirected move counts as draw',Z,'moved !== null && state.objects[moved]?.zone === "hand"','moved !== null'),
- ('step draw loses ordinal',T,'drawn: true, drawNumber: recordDraw(state, player)','drawn: true'),
- ('effect draw loses ordinal',Z,'fields.drawNumber = recordDraw(state, player);',''),
+ ('step draw loses ordinal',T,'drawn: true, drawNumber: recordDraw(state, player, moved)','drawn: true'),
+ ('effect draw loses ordinal',Z,'fields.drawNumber = recordDraw(state, player, moved);',''),
  ('draw count never resets',T,'if (player.drawnThisTurn) player.drawnThisTurn = 0;',''),
  ('draws always numbered first','game/engine/state/index.mjs','who.drawnThisTurn = (who.drawnThisTurn ?? 0) + 1','who.drawnThisTurn = 1'),
  ('ordinal trigger ignored','game/engine/rules/trigger.mjs','if (condition.nthThisTurn !== undefined && fields.drawNumber !== condition.nthThisTurn) return [];',''),

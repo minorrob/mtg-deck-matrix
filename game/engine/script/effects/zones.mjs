@@ -21,11 +21,11 @@ import {holdArrival, enteredWith} from "../../rules/entering.mjs";
 import {prepare} from "./attributes.mjs";
 import {afterwards, delayedTrigger, enchantable, enchantOnArrival, controlSourceLeft, endWhileSourceRemains} from "./permanents.mjs";
 import {typesOf} from "../../rules/layers.mjs";
-import {moveObject, cardsIn, PUBLIC_ZONES, removeObject, eventCard, rememberExileLooker, recordDraw, recordDrawStepDraw, recordDeath} from "../../state/index.mjs";
+import {objectsAfterMove, moveObject, cardsIn, PUBLIC_ZONES, removeObject, eventCard, rememberExileLooker, recordDraw, recordDrawStepDraw, recordDeath} from "../../state/index.mjs";
 import {lastKnown} from "../../rules/layers.mjs";
 import {keywordsOf, controllerOf, abilitiesOf} from "../../rules/layers.mjs";
 import {selectMatching, compileSelector, matchesSelector, shareCreatureType} from "../filter.mjs";
-import {applyReplacements, enteringModifications, regenerated} from "../../rules/replacement.mjs";
+import {applyReplacements, enteringModifications, placeReplacedCounters, regenerated} from "../../rules/replacement.mjs";
 import {cantBeCountered, entersUntapped, enteringCountersPlaced, drawsInstead, cantBeSacrificed, drawForbidden, emptyDrawWins, drawsMore} from "../../rules/statics.mjs";
 import {winGame} from "./resources.mjs";
 import {amountOf} from "../amount.mjs";
@@ -73,7 +73,7 @@ const PERMANENT_TYPES = ["Artifact", "Battle", "Creature", "Enchantment", "Land"
 /* `notOnto`: permanents entering the battlefield at the same time as this one (effects/zones.mjs, moveZone's `together`) --
    an Aura among them enchants none of them (CR 303.4f: what it will enchant is chosen as it enters, and they are not yet
    there to be chosen). */
-export function moveOne(state, id, to, events, {owner = null, controller = null, tapped = false, faceDown = false, lookers = null, exiledBy = null, transformed = false, counters = null, notOnto = null} = {}) {
+export function moveOne(state, id, to, events, {owner = null, controller = null, tapped = false, faceDown = false, lookers = null, exiledBy = null, transformed = false, counters = null, notOnto = null, nonCommanderTo = null, commanderKeys = [], orderingPlayer = null} = {}) {
   const object = state.objects[id];
   if (!object) return null;
   /* A TOKEN THAT HAS LEFT THE BATTLEFIELD STAYS WHERE IT IS (CR 111.8): it can't move to another zone or come back onto the
@@ -131,7 +131,9 @@ export function moveOne(state, id, to, events, {owner = null, controller = null,
      just as hideaway replaced with another destination is. The public move names a card that was not hidden. */
   const hidden = faceDown === true && to === "exile" && destination === "exile";
   if (faceDown === true && !asDown && !hidden) card = leavingRef(state, id);
-  const moved = moveObject(state, id, destination, PER_PLAYER.includes(destination) ? holder : null, {faceDown: asDown || hidden, transformed: backUp});
+  const moved = moveObject(state, id, destination, PER_PLAYER.includes(destination) ? holder : null, {faceDown: asDown || hidden, transformed: backUp, nonCommanderTo, commanderKeys});
+  if (destination === "exile" && orderingPlayer !== null && object.merged && state.mergedOrders?.length)
+    state.mergedOrders[state.mergedOrders.length - 1].player = orderingPlayer;
   /* A creature put into a graveyard from the battlefield died (CR 700.4): destroyed, sacrificed, put there -- what left
      another zone has no last known information, and did not (state/index.mjs). */
   recordDeath(state, leftBehind, destination);
@@ -164,6 +166,8 @@ export function moveOne(state, id, to, events, {owner = null, controller = null,
      that changes how many are put on one reads them (CR 122.6). */
   if (destination === "exile" && counters && state.objects[moved])
     for (const [counter, count] of Object.entries(counters)) state.objects[moved].counters[counter] = (state.objects[moved].counters[counter] ?? 0) + count;
+  /* And the counters an exile replacement gave it ("exile it with a void counter on it", Dauthi Voidwalker). */
+  if (destination === proposal.to) placeReplacedCounters(state, moved, proposal);
   events.push(event("GameEventCardChangeZone", state, {
     card,
     ...(leftBehind ? {leftBehind} : {}),
@@ -200,6 +204,9 @@ export function moveOne(state, id, to, events, {owner = null, controller = null,
  * `sameName`, a selector of the others. They are not targets -- one with hexproof goes too -- and are read as the exile
  * happens: every other permanent the target's controller then controls that has the target's name (CR 201.2a), exiled
  * with it and returned with it.
+ *
+ * "You may cast that card for as long as it remains exiled" (Hostage Taker): `remember`, what it exiled, as the cards they
+ * became in exile (CR 400.7), for the effect after it.
  */
 export function exileUntil(state, params, context) {
   const events = [];
@@ -214,11 +221,13 @@ export function exileUntil(state, params, context) {
     for (const id of state.zones.battlefield)
       if (!exiling.includes(id) && state.objects[id].card === name && controllerOf(state, id) === holder && others(state, id, {controller: context.controller, source})) exiling.push(id);
   }
+  const exiled = [];
   for (const id of exiling) {
     if (!state.objects[id]) continue;
     const moved = moveOne(state, id, "exile", events);
-    if (moved !== null && state.objects[moved]?.zone === "exile") (state.exiledUntil ??= []).push({source, exiled: moved});
+    if (moved !== null && state.objects[moved]?.zone === "exile") { (state.exiledUntil ??= []).push({source, exiled: moved}); exiled.push(moved); }
   }
+  if (params.remember) context.remembered = exiled;
   return events;
 }
 
@@ -422,10 +431,11 @@ export function moveZone(state, params, context, rng = null) {
        with no characteristics there, named to nobody as they move (CR 406.3a) -- and, looked at first (`look`), seen by this
        effect's controller for as long as they remain exiled (CR 406.3: "if a player is instructed to look at a card and then
        exile it face down ... that player may continue to look at that card"; projection.mjs, `lookers`). */
-    const moved = params.sacrifice === true ? sacrificeOne(state, id, events) : moveOne(state, id, to, events, {tapped: params.tapped === true, transformed: params.transformed === true,
+    const firstMoved = params.sacrifice === true ? sacrificeOne(state, id, events) : moveOne(state, id, to, events, {orderingPlayer: context.controller, commanderKeys: params.commanderKeys ?? [], nonCommanderTo: params.to, tapped: params.tapped === true, transformed: params.transformed === true,
       ...(params.withCounters ? {counters: params.withCounters} : {}), ...(to === "battlefield" && together.length ? {notOnto: together} : {}),
       ...(params.faceDown === true ? {faceDown: true, lookers: params.look === true ? [context.controller] : []} : {})});
-    if (before && moved !== null && state.objects[moved]?.zone === (params.sacrifice === true ? "graveyard" : to)) movedWas.push(before);
+    for (const moved of objectsAfterMove(state, firstMoved)) {
+    if (before && moved === firstMoved && moved !== null && state.objects[moved]?.zone === (params.sacrifice === true ? "graveyard" : to)) movedWas.push(before);
     /* What it is now, for `remember`: what it became -- or, exiled and returned at once, the permanent that came back
        ("if that creature is a Bird", Splash Portal, batch 79), set below. */
     let landed = moved;
@@ -469,6 +479,7 @@ export function moveZone(state, params, context, rng = null) {
       else { returning.push({id, back}); continue; }
     }
     if (landed !== null) { became.push(landed); if (leftBy.has(id)) was[landed] = leftBy.get(id); }
+    }
   }
   /* "EXILE TWO TARGET ARTIFACTS, CREATURES, AND/OR LANDS YOU CONTROL, THEN RETURN THOSE CARDS TO THE BATTLEFIELD" (Ghostly
      Flicker; Brago, King Eternal's "any number"): the instructions in order (CR 608.2c) -- every one exiled, then those cards
@@ -583,6 +594,9 @@ export function mayPlay(state, params, context) {
     ...(params.free === true ? {free: true} : {}),
     ...(params.graveyardToLibraryBottom === true ? {graveyardToLibraryBottom: true} : {}),
     ...(params.spellsOnly === true ? {spellsOnly: true} : {}), ...(params.onlyIf !== undefined ? {onlyIf: structuredClone(params.onlyIf)} : {}),
+    /* "And mana of any type can be spent to cast that spell" (Hostage Taker; CR 609.4b): how it may be paid for
+       (rules/actions.mjs, anyTypeCost), as a permanent's play-from says it. */
+    ...(params.anyMana === true ? {anyMana: true} : {}),
     until: params.until ?? "end-of-turn", madeOnTurn: state.turn, sourceController: player});
   return [];
 }
@@ -596,11 +610,16 @@ export function moveZoneAll(state, params, context, rng = null) {
   /* "Put all creature cards from all graveyards onto the battlefield under your control" (Rise of the Dark Realms): each enters
      under this effect's controller's control, not its owner's (CR 110.2a) -- as it enters, before what it enters with. */
   const under = params.to === "battlefield" && params.controller === "you" ? context.controller : null;
+  /* "Exchange your hand and library, then shuffle" (Mordenkainen; CR 701.12d, 701.12f): `exchange`, the cards of its player's
+     zone `to` names, taken before anything moves, go to the zone the selector names -- the two zones' cards exchanged, one
+     of them empty or not. Its player is this effect's controller, whose zones they are. */
+  const exchanged = params.exchange === true ? [...(state.zones[params.to]?.[context.controller] ?? [])] : [];
   for (const id of [...matched]) {
     const controller = state.objects[id]?.zone === "battlefield" ? controllerOf(state, id) : null;
     const moved = moveOne(state, id, params.to ?? "graveyard", events, {tapped: params.tapped === true, controller: under});
     if (moved !== null) { arrivedAll.push(moved); if (controller !== null) was[moved] = controller; }
   }
+  for (const id of exchanged) moveOne(state, id, params.selector.zone, events);
   /* "Each player shuffles the cards from their hand into their library" (Winds of Change, batch 80, `shuffle`): each library
      a card was put into, shuffled after. */
   if (params.shuffle === true) for (const owner of new Set(arrivedAll.filter((id) => state.objects[id]?.zone === "library").map((id) => state.objects[id].owner))) shuffleLibrary(state, owner, rng, events);
@@ -640,6 +659,10 @@ export function draw(state, params, context) {
     }
     for (let i = 0; i < count; i += 1) drawOne(state, player, events);
   }
+  /* "Each opponent draws a card, then you draw a card for each opponent who drew a card this way" (Cut a Deal): the cards drawn,
+     each the object it is in its drawer's hand, for what follows to count -- one who drew none (an empty library, CR 121.4) is
+     not among them. */
+  if (params.remember) context.remembered = events.map((e) => e.data?.fields).filter((f) => f?.drawn === true && state.objects[f.drewAs]).map((f) => f.drewAs);
   return events;
 }
 /* One card off the top of a player's library into their hand, said to be drawn; from an empty library, the mark that loses (CR 704.5b). */
@@ -663,7 +686,7 @@ function drawOne(state, player, events, replaced = []) {
   if (moved !== null && state.objects[moved]?.zone === "hand") {
     const fields = events[events.length - 1].data.fields;
     fields.drawn = true;
-    fields.drawNumber = recordDraw(state, player);
+    fields.drawNumber = recordDraw(state, player, moved);
     /* The card it is in the hand (CR 400.7): the drawer's own event names it by this (game/room/events.mjs). */
     fields.drewAs = moved;
     /* In the drawer's own draw step, which of the cards drawn there (Orcish Bowmasters; state/index.mjs). */
@@ -918,10 +941,15 @@ export function destroyAll(state, params, context) {
 export function digUntil(state, params, context, rng = null) {
   const events = [];
   const found = [];
+  /* "Exile cards from the top of your library until you exile a nonland card that costs less ... Put the exiled cards on the
+     bottom in a random order" (cascade, CR 702.85a): `remember: "all"`, every card exiled, the one found among them, left
+     in exile for what follows (cards/index.mjs, cascade). */
+  const all = [];
   const below = params.manaValueBelow !== undefined ? amountOf(state, params.manaValueBelow, context) : null;
   const fits = params.selector ? compileSelector({...params.selector, what: "card", zone: params.exile ? "exile" : "library", ...(below !== null ? {manaValue: {max: below - 1}} : {})}) : null;
   const valueOf = (id) => (state.objects[id]?.manaCost ? manaValue(parseManaCost(state.objects[id].manaCost)) : 0);
   const wanted = params.count ?? 1;
+  const dug = [];
   for (const player of playersFor(state, params.who, context.controller)) {
     const taken = [], hits = [];
     let total = 0;
@@ -929,7 +957,10 @@ export function digUntil(state, params, context, rng = null) {
       const id = params.exile ? moveOne(state, top, "exile", events, {owner: player}) : top;
       if (id === null) break;
       if (!params.exile) events.push(event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: player}}));
-      if (fits && fits(state, id, {controller: context.controller, source: context.source})) hits.push(id);
+      /* "Until they exile a nonland card with a different name than that spell" (Tibalt's Trickery; card load w4d L1):
+         `differentName`, the name it must not have -- bound as the resolution began (script/bind.mjs, nameOf). */
+      if (fits && fits(state, id, {controller: context.controller, source: context.source})
+        && (params.differentName === undefined || state.objects[id]?.card !== params.differentName)) hits.push(id);
       else { taken.push(id); total += valueOf(id); }
       if (hits.length >= wanted) break;
       if (params.totalManaValue !== undefined && total >= params.totalManaValue) break;
@@ -940,6 +971,8 @@ export function digUntil(state, params, context, rng = null) {
         ...(params.found?.controller === "you" ? {controller: context.controller} : {})}) : hit;
       if (landed !== null) found.push(landed);
     }
+    if (params.exile && params.rest === undefined) dug.push(...taken);
+    all.push(...taken, ...found);
     if (params.rest === "graveyard" || (params.rest === "exile" && !params.exile)) for (const id of taken) moveOne(state, id, params.rest, events, {owner: player});
     if (params.rest === "bottom") for (const id of inRandomOrder(taken, rng)) {
       if (params.exile) { moveOne(state, id, "library", events, {owner: player}); continue; }
@@ -949,7 +982,10 @@ export function digUntil(state, params, context, rng = null) {
     }
     if (params.rest === "shuffle" && (taken.length || hits.length)) shuffleLibrary(state, player, rng, events);
   }
-  if (params.remember) context.remembered = found.filter((id) => state.objects[id]);
+  if (params.remember) context.remembered = (params.remember === "all" ? all : found).filter((id) => state.objects[id]);
+  /* "Then they put the exiled cards on the bottom of their library in a random order" (Tibalt's Trickery): `rememberAll`,
+     every card this exiled -- the one found too -- for the effect that names them "the exiled cards" (script/bind.mjs). */
+  if (params.rememberAll === true) context.exiledThisWay = [...dug, ...found].filter((id) => state.objects[id]);
   return events;
 }
 

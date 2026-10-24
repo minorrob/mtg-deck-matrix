@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Avacyn, Angel of Hope",
+    "oracleId": "216cb26e-8da9-478b-bfbc-8030f7adee72",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel"
+    ],
+    "manaCost": "{5}{W}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 8,
+    "toughness": 8
+  },
+  "oracleText": "Flying, vigilance, indestructible\nOther permanents you control have indestructible.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "keyword",
+      "text": "indestructible",
+      "keyword": "indestructible"
+    },
+    {
+      "kind": "static",
+      "text": "Other permanents you control have indestructible.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "controller": "you",
+        "another": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Indestructible"
+        ]
+      }
+    }
+  ]
+}

@@ -62,7 +62,7 @@ import {paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits} from "./man
 import {recordCommanderDamage} from "./commander.mjs";
 import {damageAssignmentProblem} from "../controller.mjs";
 import {
-  canBlockAttacker, blockersAreLegal, whyBlockersAreIllegal, lethalNeededFrom,
+  canBlockAttacker, blockersAreLegal, whyBlockersAreIllegal, lethalNeededFrom, oneBlockerWords,
   dealsFirstStrike, dealsRegular, trampleOver, lifelinkFrom, markDeathtouch,
 } from "../keywords/combat.mjs";
 
@@ -442,6 +442,38 @@ const nextDefenderToDeclare = (state, after = null) => {
   return null;
 };
 
+/* "THIS CREATURE MUST BE BLOCKED IF ABLE" (CR 509.1c; Vinebred Brawler, library load L4): a requirement on the defending
+   player's declaration. Of the attackers at this player a rule says must be blocked, the most any one declaration can block
+   at once -- each blocker blocking one of them (509.1a), a menace attacker by two (CR 702.111b), and one that can't be
+   blocked by more than one creature never by two -- is how many must be: the requirements obeyed are maximized without
+   breaking a restriction (509.1c). Which blockers, and which of them when not all can be, is the player's. Said in the
+   record's `requires` -- `per`, a menace attacker's two -- with what to do instead, so controller.mjs holds every answerer
+   to it and a pilot can meet it (pilots/house-pilot.mjs, meetRequirements); `check` refuses a declaration short of it. */
+function blockRequirements(state, options) {
+  const required = [...new Set(options.map((o) => o.attackerId))].filter((id) => ruleChanged(state, "must-be-blocked", id));
+  if (!required.length) return [];
+  const per = (id) => (hasNow(state, id, "Menace") ? 2 : 1);
+  const able = new Map(required.map((id) => [id, [...new Set(options.filter((o) => o.attackerId === id).map((o) => o.cardId))]]));
+  let most = 0;
+  const walk = (k, used, blocked) => {
+    if (k === required.length) { most = Math.max(most, blocked); return; }
+    const id = required[k], n = per(id), pool = able.get(id).filter((b) => !used.has(b));
+    const pick = (from, chosen) => {
+      if (chosen.length === n) { walk(k + 1, new Set([...used, ...chosen]), blocked + 1); return; }
+      for (let j = from; j < pool.length; j += 1) pick(j + 1, [...chosen, pool[j]]);
+    };
+    if (n === 1 || !ruleChanged(state, "blocked-by-one-at-most", id)) pick(0, []);
+    walk(k + 1, used, blocked);
+  };
+  walk(0, new Set(), 0);
+  if (most === 0) return [];
+  const names = required.map((id) => shownName(state.objects[id])), twice = required.filter((id) => per(id) > 1);
+  const why = most === required.length
+    ? `${named(names)} must be blocked if able. Declare ${required.length === 1 ? "a creature that can block it as its blocker" : "a blocker for each of them"}.`
+    : `${named(names)} must be blocked if able, and ${most === 1 ? "one of them" : `${most} of them`} can be blocked at once. Declare blockers for ${most === 1 ? "one of them" : `${most} of them`}.`;
+  return [{by: "attackerId", values: required, least: most, ...(twice.length ? {per: Object.fromEntries(twice.map((id) => [id, 2]))} : {}), why}];
+}
+
 export const blockers = {
   /* `after`: a defending player who left the game while asked (rules/turn.mjs, goOnWithout) -- the next one is asked. */
   open(state, after = null) {
@@ -471,6 +503,15 @@ export const blockers = {
         });
       }
     }
+    /* The same pairs by blocker, for a board drafting its blocks a creature at a time (Linear ROB-75): which attackers
+       each may block. Nothing in it that the options do not say. */
+    const by = new Map();
+    for (const o of options) by.set(o.cardId, [...(by.get(o.cardId) ?? []), o.attackerId]);
+    /* "CAN'T BE BLOCKED BY MORE THAN ONE CREATURE" (CR 509.1b; Safewright Cavalry): at most one option naming it, said in the
+       record with what to do instead, as an attack cap is -- every answerer held to it by controller.mjs. */
+    const one = [...new Set(options.map((o) => o.attackerId))].filter((id) => ruleChanged(state, "blocked-by-one-at-most", id));
+    const capped = one.length ? {by: "attackerId", most: Object.fromEntries(one.map((id) => [id, 1])), why: Object.fromEntries(one.map((id) => [id, oneBlockerWords(state, id)]))} : null;
+    const requires = blockRequirements(state, options);
     return {
       id: `declare-blockers:${state.turn}:${awaiting.player}`,
       title: "Declare blockers",
@@ -479,7 +520,10 @@ export const blockers = {
       max: new Set(options.map((o) => o.cardId)).size,
       /* One option per blocker per attacker, so the same rule applies (CR 509.1a). */
       exclusiveBy: "cardId",
+      ...(capped ? {capped} : {}),
+      ...(requires.length ? {requires} : {}),
       options,
+      legalBlocks: [...by].map(([blocker, attackers]) => ({blocker, attackers})),
     };
   },
 
@@ -507,17 +551,24 @@ export const blockers = {
     return events;
   },
 
-  /* The answer read against the question, the set of blocks checked: only reads. */
+  /* The answer read against the question, the set of blocks checked: only reads. Refused for the first thing wrong with
+     it (`check`). */
   declared(state, awaiting, indices) {
-    const choice = blockers.choice(state, awaiting);
-    const picked = indices.map((index) => {
-      const option = choice.options[index];
-      if (!option) throw new Error("Invalid selection");
-      return option;
-    });
+    const {picked, reasons} = blockers.check(state, awaiting, indices);
+    if (reasons.length) throw new Error(reasons[0]);
+    return picked;
+  },
+
+  /* EVERYTHING WRONG WITH A DRAFT OF BLOCKS, AND NOTHING CHANGED (Linear ROB-75): what a board asks before Confirm, and
+     what `declared` refuses an answer for, so the two cannot differ. Each reason says what is wrong, then what to do. */
+  check(state, awaiting, indices) {
+    const choice = blockers.choice(state, awaiting), reasons = [];
+    if (!Array.isArray(indices) || indices.some((index) => !choice.options[index]) || new Set(indices).size !== indices.length)
+      return {picked: [], reasons: ["Invalid selection"]};
+    const picked = indices.map((index) => choice.options[index]);
     /* CR 509.1a: one creature blocks one attacker, unless an effect says otherwise. */
-    if (new Set(picked.map((o) => o.cardId)).size !== picked.length)
-      throw new Error("A creature can block only one attacker; the same blocker was declared twice");
+    const twice = new Set(picked.filter((o, i) => picked.findIndex((p) => p.cardId === o.cardId) !== i).map((o) => o.cardId));
+    for (const id of twice) reasons.push(`${shownName(state.objects[id])} can block only one attacker. Choose one attacker for it to block.`);
 
     /* MENACE IS A RULE ABOUT THE SET (CR 702.111b), so it can only be checked once the whole
        declaration is in. Every individual blocker was legal or it would not have been offered. */
@@ -528,9 +579,14 @@ export const blockers = {
     }
     for (const [attackerId, ids] of bySeat) {
       if (blockersAreLegal(state, attackerId, ids)) continue;
-      throw new Error(whyBlockersAreIllegal(state, attackerId, ids));
+      reasons.push(whyBlockersAreIllegal(state, attackerId, ids));
     }
-    return picked;
+    /* "Must be blocked if able" (CR 509.1c): as many of them blocked as can be at once -- each by as many as it needs. */
+    for (const need of choice.requires ?? []) {
+      const met = need.values.filter((id) => (bySeat.get(id) ?? []).length >= (need.per?.[id] ?? 1)).length;
+      if (met < need.least) reasons.push(need.why);
+    }
+    return {picked, reasons};
   },
 };
 
@@ -730,6 +786,8 @@ export const combatDamage = {
         /* Dealt combat damage this turn, infect or not ("the number of opponents that were dealt combat damage this turn",
            Tymna the Weaver; script/amount.mjs). turn.mjs clears it. */
         state.players[hit.toPlayer].combatDamagedThisTurn = true;
+        /* And how much, noncombat damage counted beside it (effects/resources.mjs; Spinerock Knoll). */
+        state.players[hit.toPlayer].damagedThisTurn = (state.players[hit.toPlayer].damagedThisTurn ?? 0) + hit.amount;
         /* PROWL'S RECORD (CR 702.76a): "a source that, at the time it dealt that damage, was under your control and had any
            of this spell's creature types" -- each source that dealt combat damage to a player this turn, kept for the player
            who controlled it, with its creature types as it dealt it (a changeling's, every one). turn.mjs clears it. */

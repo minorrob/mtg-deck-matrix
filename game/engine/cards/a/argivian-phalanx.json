@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Argivian Phalanx",
+    "oracleId": "1ca8d2cb-58ba-476b-a4f2-1bf273a54cf3",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Kor",
+      "Soldier"
+    ],
+    "manaCost": "{5}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Affinity for creatures (This spell costs {1} less to cast for each creature you control.)\nVigilance (Attacking doesn't cause this creature to tap.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "affinity",
+      "of": {
+        "types": [
+          "Creature"
+        ]
+      },
+      "text": "Affinity for creatures (This spell costs {1} less to cast for each creature you control.)"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "vigilance",
+      "text": "Vigilance (Attacking doesn't cause this creature to tap.)"
+    }
+  ]
+}

@@ -31,7 +31,7 @@ for (const f of ["data/live-state.json", "data/live-load.json"]) ok(NEVER.test(f
 ok(!/load-live|live-state\.json|treycmload/.test(built.get("crankmagic-exchange-ui.js").toString("utf8")), "and nothing in the release offers to fetch it");
 eq(files.filter((f) => /^(AGENTS|CLAUDE|BACKLOG|README|HOTFIX-SUMMARY)\.md$|\.(ps1|sh)$/.test(f)), [], "and none of the repository's own working files");
 for (const f of profile.leaveOut) ok(!built.has(f), `${f} is Play, and is not in the release`);
-ok(mentions.every((m) => / names (tools|data\/archive)\/| names data\/live-(state|load)\.json$/.test(m)), `the names it declined to follow are tools, the archive and the owner's collection, named as provenance: ${mentions.join("; ")}`);
+ok(mentions.every((m) => / names (tools|data\/archive|data\/source)\/| names data\/live-(state|load)\.json$/.test(m)), `the names it declined to follow are tools, the archive, the source workbooks and the owner's collection, named as provenance: ${mentions.join("; ")}`);
 
 /* Play says Coming Soon, and nothing left can reach a game host. */
 for (const p of PAGES) {
@@ -167,8 +167,8 @@ ok(verify(new Map([...sb, ["wrangler.jsonc", Buffer.from(JSON.stringify({...sw2,
   "a release that would hand the Worker its own signing keys is refused");
 /* PLAY IN THE CLOUD, ON STAGING (Rob, 2026-09-29: "execute the play release and merge to staging"). */
 const stagingProfile = PROFILES["cloud-staging"];
-ok(["crankmagic-stage.js", "crankmagic-stage.css", "vendor/pixi.min.js", "vendor/pixi-csp.min.js", "vendor/PIXI-LICENSE.txt"].every(f => sb.has(f)), "staging carries the tabletop renderer, CSP adapter and upstream license");
-ok(![...built.keys()].some(f => f.startsWith("vendor/pixi") || f === "vendor/PIXI-LICENSE.txt"), "the non-Play profile does not include the tabletop renderer");
+ok(["crankmagic-stage.js", "crankmagic-stage.css", "crankmagic-stage-tables.js", "vendor/babylon.js", "vendor/BABYLON-LICENSE.txt"].every(f => sb.has(f)), "staging carries the live Babylon renderer, table geometry and upstream license");
+ok(![...built.keys()].some(f => f === "vendor/babylon.js" || f === "vendor/BABYLON-LICENSE.txt" || f === "crankmagic-stage-tables.js"), "the non-Play profile does not include the tabletop renderer");
 
 eq([sw2.durable_objects, sw2.migrations], [{bindings: [{name: "TABLES", class_name: "GameTable"}]}, [{tag: "tables-v1", new_sqlite_classes: ["GameTable"]}]], "staging binds TABLES to the table's Durable Object, made once by a SQLite-class migration");
 ok(PAGES.every((p) => sb.get(p).toString("utf8").includes('<meta name="crankmagic-play" content="cloud">')), "both staging pages are marked Play in the cloud");

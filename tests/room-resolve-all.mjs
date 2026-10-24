@@ -246,6 +246,9 @@ let queue = Promise.resolve();
 const serial = (fn) => (queue = queue.then(fn, fn));
 const callAt = (p, body) => serial(async () => (await table.fetch(new Request(`https://table.internal${p}`, {method: body === undefined ? "GET" : "POST", headers: {"content-type": "application/json", "x-crankmagic-email": ROB}, ...(body !== undefined ? {body: JSON.stringify(body)} : {})}))).json());
 await callAt("/table/create", {tableId: TABLE, hostName: "Rob", seats: [{kind: "ai", name: "Maya"}]});
+/* Rob's triggers asked about, as before ROB-102: with the stack passed for a player with no answer, a run of them would
+   resolve unasked and Resolve all would never be offered. The rule's own proof is tests/game-table.mjs. */
+await callAt("/table/rules", {passStack: false});
 await callAt("/table/deck", {seatId: 0, deck: {name: "Rob's deck", ...deck("Rob", ["Quest Field", "Goblin Den"])}});
 await callAt("/table/deck", {seatId: 1, deck: {name: "Maya's deck", ...deck("Maya", ["Forest"])}});
 await callAt("/table/ready", {ready: true});
@@ -301,6 +304,7 @@ function carry(ws) {
 }
 try {
   const context = await browser.newContext({viewport: {width: 1400, height: 900}, serviceWorkers: "block"});
+  await context.addInitScript(() => localStorage.setItem("cm-board-view", "focus"));
   const page = await context.newPage();
   if (stub) await stub(page);
   await page.route(`${base}/index.html*`, (r) => r.fulfill({contentType: "text/html; charset=utf-8", body: html}));
@@ -333,8 +337,9 @@ try {
   await note.waitFor({timeout: 20000});
   ok(/your answer goes for this same question each time the run asks it/.test(await note.textContent()), "the first of the run's questions says the answer goes for the rest of the run");
   await page.locator("#cm-board-decision [data-action=board-option]", {hasText: /^Yes/}).first().click();
+  await page.locator("#cm-board-decision [data-action=board-confirm]").click();
   for (let i = 0; i < 200 && latest.state.stack.length; i += 1) {clock += 1000; await serial(() => table.alarm()); await page.waitForTimeout(20);}
-  eq([latest.state.stack.length, latest.state.players[0].life - lifeBefore, latest.decision?.title ?? ""].map((x, i) => (i === 2 ? /you may/.test(x) : x)), [0, 3, false], "two clicks in all: Resolve all, then one Yes; the three resolve, Rob gains 3 life, and he is asked no more");
+  eq([latest.state.stack.length, latest.state.players[0].life - lifeBefore, latest.decision?.title ?? ""].map((x, i) => (i === 2 ? /you may/.test(x) : x)), [0, 3, false], "Resolve all, select Yes, and confirm once; the three resolve, Rob gains 3 life, and he is asked no more");
   await context.close();
 } finally {
   await close();

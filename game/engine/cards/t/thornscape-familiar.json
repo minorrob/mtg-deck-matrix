@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Thornscape Familiar",
+    "oracleId": "3f92c684-f2fd-4fe5-bfb5-e27061d2c45b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Insect"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Red spells and white spells you cast cost {1} less to cast.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "spells-cost-less",
+      "affects": {
+        "what": "spell",
+        "anyOf": [
+          {
+            "colors": [
+              "R"
+            ]
+          },
+          {
+            "colors": [
+              "W"
+            ]
+          }
+        ]
+      },
+      "amount": 1,
+      "text": "Red spells and white spells you cast cost {1} less to cast."
+    }
+  ]
+}

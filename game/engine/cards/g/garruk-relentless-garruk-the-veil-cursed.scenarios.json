@@ -1,0 +1,436 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Garruk Relentless // Garruk, the Veil-Cursed",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Giant": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{4}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 4,
+      "toughness": 4
+    },
+    "Elf": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "0: 3 damage to Maya's Bear, which deals 2 back: Garruk at 1, transforms; the Bear dies",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Garruk Relentless // Garruk, the Veil-Cursed"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Garruk Relentless",
+          "ability": "a1",
+          "targets": [
+            {
+              "card": "Bear",
+              "seat": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Garruk, the Veil-Cursed"
+          ]
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Garruk, the Veil-Cursed",
+            "counter": "loyalty",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "0 at the Elf: Garruk at 2 -- two or fewer, so he transforms",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Garruk Relentless // Garruk, the Veil-Cursed"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Elf"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Garruk Relentless",
+          "ability": "a1",
+          "targets": [
+            {
+              "card": "Elf",
+              "seat": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Garruk, the Veil-Cursed"
+          ]
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Garruk, the Veil-Cursed",
+            "counter": "loyalty",
+            "count": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "0: a 2/2 green Wolf; Garruk stays at 3, front face up",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Garruk Relentless // Garruk, the Veil-Cursed"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Garruk Relentless",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Garruk Relentless",
+            "Wolf"
+          ]
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Garruk Relentless",
+            "counter": "loyalty",
+            "count": 3
+          }
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "Transformed: +1 a 1/1 black Wolf with deathtouch",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Garruk Relentless // Garruk, the Veil-Cursed"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Garruk Relentless",
+          "ability": "a1",
+          "targets": [
+            {
+              "card": "Bear",
+              "seat": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Garruk, the Veil-Cursed",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Garruk, the Veil-Cursed",
+            "Wolf"
+          ]
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Wolf",
+            "has": [
+              "Deathtouch"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Garruk, the Veil-Cursed",
+            "counter": "loyalty",
+            "count": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transformed: -1 sacrifices Rob's Elf and finds the Giant in his library",
+      "library": [
+        "Island",
+        "Giant"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Garruk Relentless // Garruk, the Veil-Cursed",
+            "Elf"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Garruk Relentless",
+          "ability": "a1",
+          "targets": [
+            {
+              "card": "Bear",
+              "seat": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Garruk, the Veil-Cursed",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        },
+        {
+          "answer": [
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Elf",
+            "Garruk Relentless"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island",
+            "Giant"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Transformed: -1 with no creature to sacrifice searches for nothing",
+      "library": [
+        "Island",
+        "Giant"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Garruk Relentless // Garruk, the Veil-Cursed"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Garruk Relentless",
+          "ability": "a1",
+          "targets": [
+            {
+              "card": "Bear",
+              "seat": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Garruk, the Veil-Cursed",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Garruk Relentless"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -13,7 +13,7 @@
       "power": 4,
       "toughness": 4
     },
-    "Study": {
+    "Smoke Study": {
       "types": [
         "Sorcery"
       ],
@@ -47,13 +47,13 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Study"
+            "Smoke Study"
           ]
         }
       ],
       "steps": [
         {
-          "cast": "Study"
+          "cast": "Smoke Study"
         },
         {
           "resolve": true
@@ -64,7 +64,7 @@
           "seat": 0,
           "zone": "graveyard",
           "cards": [
-            "Study"
+            "Smoke Study"
           ]
         }
       ]

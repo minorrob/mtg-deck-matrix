@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Eidolon of Rhetoric",
+    "oracleId": "33017203-233e-498e-806e-94b1dccf5c35",
+    "types": [
+      "Enchantment",
+      "Creature"
+    ],
+    "subtypes": [
+      "Spirit"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 4
+  },
+  "oracleText": "Each player can't cast more than one spell each turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "cant-cast",
+      "affects": {
+        "what": "player"
+      },
+      "moreThan": 1,
+      "text": "Each player can't cast more than one spell each turn."
+    }
+  ]
+}

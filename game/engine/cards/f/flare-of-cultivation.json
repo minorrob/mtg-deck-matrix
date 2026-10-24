@@ -1,0 +1,78 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Flare of Cultivation",
+    "oracleId": "1766f1f4-0924-4436-8379-94030adcccc5",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "You may sacrifice a nontoken green creature rather than pay this spell's mana cost.\nSearch your library for up to two basic land cards, reveal those cards, put one onto the battlefield tapped and the other into your hand, then shuffle.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "alternative-cost",
+      "affects": {
+        "what": "card",
+        "self": true
+      },
+      "cost": [
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "types": [
+              "Creature"
+            ],
+            "colors": [
+              "G"
+            ],
+            "token": false
+          }
+        }
+      ],
+      "text": "You may sacrifice a nontoken green creature rather than pay this spell's mana cost."
+    },
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Land"
+            ],
+            "supertypes": [
+              "Basic"
+            ]
+          },
+          "shuffle": true,
+          "count": 2,
+          "upTo": true,
+          "reveal": true,
+          "destinations": [
+            {
+              "to": "battlefield",
+              "tapped": true
+            },
+            {
+              "to": "hand"
+            }
+          ]
+        }
+      ],
+      "text": "Search your library for up to two basic land cards, reveal those cards, put one onto the battlefield tapped and the other into your hand, then shuffle."
+    }
+  ]
+}

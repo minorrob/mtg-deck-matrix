@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Segovian Leviathan",
+    "oracleId": "853b02e1-fc0a-413b-8381-88596624440f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Leviathan"
+    ],
+    "manaCost": "{4}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Islandwalk (This creature can't be blocked as long as defending player controls an Island.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "islandwalk",
+      "text": "Islandwalk (This creature can't be blocked as long as defending player controls an Island.)"
+    }
+  ]
+}

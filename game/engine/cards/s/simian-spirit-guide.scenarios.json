@@ -1,0 +1,154 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Simian Spirit Guide",
+  "scenarios": [
+    {
+      "name": "Exiled from the hand: {R}, off the stack",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Simian Spirit Guide"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Simian Spirit Guide"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "R": 1
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Simian Spirit Guide"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": []
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "Its {R} and a Wastes cast Pyretic Ritual",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Simian Spirit Guide",
+            "Pyretic Ritual"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Simian Spirit Guide"
+        },
+        {
+          "cast": "Pyretic Ritual"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "R": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "On the battlefield it has no mana ability",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Simian Spirit Guide"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Simian Spirit Guide"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Simian Spirit Guide"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "An opponent's in their hand is theirs to use, not this player's",
+      "setup": [
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Simian Spirit Guide"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Simian Spirit Guide"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "hand",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

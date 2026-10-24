@@ -1,0 +1,106 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Kenrith's Transformation",
+  "fixtures": {
+    "Dragon": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Dragon"
+      ],
+      "manaCost": "{4}{R}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 6,
+      "toughness": 6,
+      "abilities": [
+        {
+          "id": "k",
+          "kind": "keyword",
+          "keyword": "flying"
+        }
+      ],
+      "keywords": [
+        "Flying"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "On Maya's 6/6 flying Dragon: a 3/3 green Elk without flying, and a card",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Kenrith's Transformation"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Dragon"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Kenrith's Transformation",
+          "targets": [
+            {
+              "card": "Dragon"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Dragon",
+            "power": 3,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 1,
+          "keywords": {
+            "card": "Dragon",
+            "has": [],
+            "lacks": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

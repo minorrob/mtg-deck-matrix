@@ -1,0 +1,170 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Necropotence",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Pay 1 life twice: two cards exiled face down, into the hand at the end step; the next turn has no draw step",
+      "library": [
+        "Bear",
+        "Forest",
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Necropotence"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Necropotence"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Necropotence"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "life": 38
+            },
+            {
+              "seat": 0,
+              "zone": "hand",
+              "cards": []
+            },
+            {
+              "seat": 0,
+              "zone": "exile",
+              "faceDown": [
+                null,
+                null
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "END_OF_TURN"
+          }
+        },
+        {
+          "settle": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "hand",
+              "cards": [
+                "Bear",
+                "Forest"
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 18
+        }
+      ]
+    },
+    {
+      "name": "A card discarded is exiled from the graveyard (cleanup's discard to seven)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Necropotence"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear",
+            "Bear",
+            "Bear",
+            "Bear",
+            "Bear",
+            "Bear",
+            "Bear",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 1,
+            "phase": "CLEANUP"
+          }
+        },
+        {
+          "choose": [
+            "Forest"
+          ]
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": []
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ]
+    }
+  ]
+}

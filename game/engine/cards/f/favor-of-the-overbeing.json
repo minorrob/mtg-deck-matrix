@@ -1,0 +1,107 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Favor of the Overbeing",
+    "oracleId": "56568fc4-7133-40e2-833c-29ecc1f953d6",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{1}{G/U}",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant creature\nAs long as enchanted creature is green, it gets +1/+1 and has vigilance.\nAs long as enchanted creature is blue, it gets +1/+1 and has flying.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      },
+      "text": "Enchant creature"
+    },
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self",
+        "colors": [
+          "G"
+        ]
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 1
+      },
+      "text": "As long as enchanted creature is green, it gets +1/+1 and has vigilance."
+    },
+    {
+      "kind": "static",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self",
+        "colors": [
+          "G"
+        ]
+      },
+      "apply": {
+        "addKeywords": [
+          "Vigilance"
+        ]
+      },
+      "text": "As long as enchanted creature is green, it gets +1/+1 and has vigilance."
+    },
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self",
+        "colors": [
+          "U"
+        ]
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 1
+      },
+      "text": "As long as enchanted creature is blue, it gets +1/+1 and has flying."
+    },
+    {
+      "kind": "static",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self",
+        "colors": [
+          "U"
+        ]
+      },
+      "apply": {
+        "addKeywords": [
+          "Flying"
+        ]
+      },
+      "text": "As long as enchanted creature is blue, it gets +1/+1 and has flying."
+    }
+  ]
+}

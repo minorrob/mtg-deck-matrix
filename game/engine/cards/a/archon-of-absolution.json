@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Archon of Absolution",
+    "oracleId": "0e3ac581-3d78-4879-9afb-3db69c5c47a5",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Archon"
+    ],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "Flying\nProtection from white (This creature can't be blocked, targeted, dealt damage, enchanted, or equipped by anything white.)\nCreatures can't attack you or planeswalkers you control unless their controller pays {1} for each of those creatures.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "protection",
+      "from": {
+        "colors": [
+          "W"
+        ]
+      },
+      "text": "Protection from white (This creature can't be blocked, targeted, dealt damage, enchanted, or equipped by anything white.)"
+    },
+    {
+      "kind": "static",
+      "rule": "attack-tax",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "amount": 1,
+      "planeswalkers": true,
+      "text": "Creatures can't attack you or planeswalkers you control unless their controller pays {1} for each of those creatures."
+    }
+  ]
+}

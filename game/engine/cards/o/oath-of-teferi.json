@@ -1,0 +1,66 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Oath of Teferi",
+    "oracleId": "ee00a42d-6ee4-4e46-92d6-62e8e5910880",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{W}{U}",
+    "colors": [
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "When Oath of Teferi enters, exile another target permanent you control. Return it to the battlefield under its owner's control at the beginning of the next end step.\nYou may activate the loyalty abilities of planeswalkers you control twice each turn rather than only once.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When Oath of Teferi enters, exile another target permanent you control. Return it to the battlefield under its owner's control at the beginning of the next end step.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile",
+          "andReturn": "end step"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "controller": "you",
+          "another": true
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "You may activate the loyalty abilities of planeswalkers you control twice each turn rather than only once.",
+      "rule": "loyalty-twice",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Planeswalker"
+        ],
+        "controller": "you"
+      }
+    }
+  ]
+}

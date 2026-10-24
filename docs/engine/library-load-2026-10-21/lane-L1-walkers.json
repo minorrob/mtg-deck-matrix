@@ -1,0 +1,401 @@
+{
+ "schema": "library-load-lane@1",
+ "lane": "L1-walkers",
+ "theme": "walkers",
+ "label": "Planeswalkers and loyalty: walker abilities, loyalty counters, planeswalker triggers, sagas and battles; Cards with more than one face (split, adventure, modal double-faced, transform, flip, meld) and mutate",
+ "source": {
+  "collection": "collection-2026-10-21.json",
+  "workbook": "Backup_Load_-_CrankMagic_-_2026-10-21.xlsx",
+  "decks": [
+   "D1",
+   "D2",
+   "D3",
+   "D4",
+   "D5",
+   "D6",
+   "D7",
+   "S1-D1",
+   "S1-D2",
+   "S1-D3",
+   "S1-D4",
+   "S1-D5",
+   "S1-D6",
+   "S2-D1",
+   "S2-D2",
+   "S2-D3",
+   "S2-D4",
+   "S2-D5",
+   "S2-D6",
+   "G0-D1",
+   "G0-D2",
+   "G0-D3",
+   "G0-D4",
+   "G1-D1",
+   "G1-D2",
+   "G1-D3",
+   "G1-D4",
+   "CJ1",
+   "CJ2",
+   "CJ3",
+   "CJ4",
+   "CJ5",
+   "HG1",
+   "HG2"
+  ],
+  "liveDecks": [
+   "D1",
+   "D2",
+   "D3",
+   "D4",
+   "D5",
+   "D6",
+   "D7"
+  ],
+  "candidates": {
+   "pool": 29551,
+   "candidate": 2643,
+   "refused": 0,
+   "blocked": 6,
+   "vetoed": 18,
+   "unknown": 25793,
+   "structure": 1091,
+   "oneSentenceShort": 12544
+  }
+ },
+ "cards": [
+  {
+   "name": "Teferi, Time Raveler",
+   "scope": "live",
+   "liveDecks": [
+    "D7"
+   ],
+   "decks": [
+    "D7"
+   ],
+   "owned": 1,
+   "rank": 1104,
+   "type": "Legendary Planeswalker — Teferi",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Each opponent can cast spells only any time they could cast a sorcery.",
+    "+1: Until your next turn, you may cast sorcery spells as though they had flash.",
+    "−3: Return up to one target artifact, creature, or enchantment to its owner's hand."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Grist, the Hunger Tide",
+   "scope": "live",
+   "liveDecks": [
+    "D1"
+   ],
+   "decks": [
+    "D1"
+   ],
+   "owned": 0,
+   "rank": 1511,
+   "type": "Legendary Planeswalker — Grist",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "As long as Grist isn't on the battlefield, it's a 1/1 Insect creature in addition to its other types.",
+    "+1: Create a 1/1 black and green Insect creature token, then mill a card.",
+    "If an Insect card was milled this way, put a loyalty counter on Grist and repeat this process.",
+    "−2: You may sacrifice a creature.",
+    "When you do, destroy target creature or planeswalker.",
+    "−5: Each opponent loses life equal to the number of creature cards in your graveyard."
+   ],
+   "needs": [
+    "api:Repeat",
+    "option:UnlessCostSac"
+   ]
+  },
+  {
+   "name": "Oath of Teferi",
+   "scope": "live",
+   "liveDecks": [
+    "D1"
+   ],
+   "decks": [
+    "D1"
+   ],
+   "owned": 0,
+   "rank": 2388,
+   "type": "Legendary Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When Oath of Teferi enters, exile another target permanent you control.",
+    "Return it to the battlefield under its owner's control at the beginning of the next end step.",
+    "You may activate the loyalty abilities of planeswalkers you control twice each turn rather than only once."
+   ],
+   "needs": [
+    "static:NumLoyaltyAct",
+    "option:RememberChanged",
+    "option:RememberObjects"
+   ]
+  },
+  {
+   "name": "Ajani Steadfast",
+   "scope": "live",
+   "liveDecks": [
+    "D1"
+   ],
+   "decks": [
+    "D1"
+   ],
+   "owned": 1,
+   "rank": null,
+   "type": "Legendary Planeswalker — Ajani",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "+1: Until end of turn, up to one target creature gets +1/+1 and gains first strike, vigilance, and lifelink.",
+    "−2: Put a +1/+1 counter on each creature you control and a loyalty counter on each other planeswalker you control.",
+    "−7: You get an emblem with \"If a source would deal damage to you or a planeswalker you control, prevent all but 1 of that damage.\""
+   ],
+   "needs": null
+  },
+  {
+   "name": "Ajani, the Greathearted",
+   "scope": "live",
+   "liveDecks": [
+    "D1"
+   ],
+   "decks": [
+    "D1"
+   ],
+   "owned": 1,
+   "rank": null,
+   "type": "Legendary Planeswalker — Ajani",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "+1: You gain 3 life.",
+    "−2: Put a +1/+1 counter on each creature you control and a loyalty counter on each other planeswalker you control."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Carth the Lion",
+   "scope": "live",
+   "liveDecks": [
+    "D1"
+   ],
+   "decks": [
+    "D1"
+   ],
+   "owned": 1,
+   "rank": null,
+   "type": "Legendary Creature — Human Warrior",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever Carth enters or a planeswalker you control dies, look at the top seven cards of your library.",
+    "You may reveal a planeswalker card from among them and put it into your hand.",
+    "Put the rest on the bottom of your library in a random order.",
+    "Planeswalkers' loyalty abilities you activate cost an additional [+1] to activate."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Garruk Relentless // Garruk, the Veil-Cursed",
+   "scope": "live",
+   "liveDecks": [
+    "D1"
+   ],
+   "decks": [
+    "D1"
+   ],
+   "owned": 1,
+   "rank": null,
+   "type": "Legendary Planeswalker — Garruk // Legendary Planeswalker — Garruk",
+   "layout": "transform",
+   "compiler": "structure",
+   "needs": null
+  },
+  {
+   "name": "Interplanar Beacon",
+   "scope": "live",
+   "liveDecks": [
+    "D1"
+   ],
+   "decks": [
+    "D1"
+   ],
+   "owned": 1,
+   "rank": null,
+   "type": "Land",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever you cast a planeswalker spell, you gain 1 life.",
+    "{1}, {T}: Add two mana of different colors.",
+    "Spend this mana only to cast planeswalker spells."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Mordenkainen",
+   "scope": "live",
+   "liveDecks": [
+    "D1"
+   ],
+   "decks": [
+    "D1"
+   ],
+   "owned": 1,
+   "rank": null,
+   "type": "Legendary Planeswalker — Mordenkainen",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "−2: Create a blue Dog Illusion creature token with \"This token's power and toughness are each equal to twice the number of cards in your hand.\"",
+    "−10: Exchange your hand and library, then shuffle.",
+    "You get an emblem with \"You have no maximum hand size.\""
+   ],
+   "needs": null
+  },
+  {
+   "name": "Nethroi, Apex of Death",
+   "scope": "live",
+   "liveDecks": [
+    "D4"
+   ],
+   "decks": [
+    "D4"
+   ],
+   "owned": 0,
+   "rank": null,
+   "type": "Legendary Creature — Cat Nightmare Beast",
+   "layout": "mutate",
+   "compiler": "structure",
+   "needs": [
+    "trigger:Mutates",
+    "keyword:Mutate"
+   ]
+  },
+  {
+   "name": "Teferi, Hero of Dominaria",
+   "scope": "live",
+   "liveDecks": [
+    "D1"
+   ],
+   "decks": [
+    "D1"
+   ],
+   "owned": 1,
+   "rank": null,
+   "type": "Legendary Planeswalker — Teferi",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "+1: Draw a card.",
+    "At the beginning of the next end step, untap up to two lands.",
+    "−3: Put target nonland permanent into its owner's library third from the top.",
+    "−8: You get an emblem with \"Whenever you draw a card, exile target permanent an opponent controls.\""
+   ],
+   "needs": null
+  },
+  {
+   "name": "The Wandering Emperor",
+   "scope": "live",
+   "liveDecks": [
+    "D1"
+   ],
+   "decks": [
+    "D1"
+   ],
+   "owned": 1,
+   "rank": null,
+   "type": "Legendary Planeswalker",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "As long as The Wandering Emperor entered this turn, you may activate her loyalty abilities any time you could cast an instant.",
+    "+1: Put a +1/+1 counter on up to one target creature.",
+    "It gains first strike until end of turn.",
+    "−1: Create a 2/2 white Samurai creature token with vigilance.",
+    "−2: Exile target tapped creature."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Vraska, Relic Seeker",
+   "scope": "live",
+   "liveDecks": [
+    "D1"
+   ],
+   "decks": [
+    "D1"
+   ],
+   "owned": 0,
+   "rank": null,
+   "type": "Legendary Planeswalker — Vraska",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "+2: Create a 2/2 black Pirate creature token with menace.",
+    "−3: Destroy target artifact, creature, or enchantment.",
+    "−10: Target player's life total becomes 1."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Way of the Mentor",
+   "scope": "live",
+   "liveDecks": [
+    "D1"
+   ],
+   "decks": [
+    "D1"
+   ],
+   "owned": 1,
+   "rank": null,
+   "type": "Legendary Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever you gain life, put a loyalty counter on each planeswalker you control."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Hedron-Field Purists",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Human Cleric",
+   "layout": "leveler",
+   "compiler": "structure",
+   "needs": null
+  },
+  {
+   "name": "Stingerquill Voxmancer // Vicious Verse",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Goblin Sorcerer // Sorcery",
+   "layout": "prepare",
+   "compiler": "structure",
+   "needs": null
+  },
+  {
+   "name": "Woodwork Prodigy // Soul Tether",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Creature — Cat Druid // Sorcery",
+   "layout": "prepare",
+   "compiler": "structure",
+   "needs": null
+  }
+ ]
+}

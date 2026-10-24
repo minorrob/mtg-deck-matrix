@@ -1,0 +1,105 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Woodwork Prodigy // Soul Tether",
+    "oracleId": "f3ed157f-a09b-405f-aec4-0e7a81d80fc8",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Cat",
+      "Druid"
+    ],
+    "manaCost": "{2}{R/G}",
+    "colors": [
+      "R",
+      "G"
+    ],
+    "colorIdentity": [
+      "G",
+      "R"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "At the beginning of your upkeep, if this creature isn't prepared, it becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your upkeep, if this creature isn't prepared, it becomes prepared.",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "alterAttribute",
+          "targets": "self",
+          "attribute": "prepared"
+        }
+      ],
+      "condition": {
+        "present": {
+          "self": true,
+          "prepared": false
+        }
+      }
+    }
+  ],
+  "prepare": {
+    "identity": {
+      "name": "Soul Tether",
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "manaCost": "{2}{R/G}",
+      "colors": [
+        "R",
+        "G"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "Create a Heartwood token. (It's a red and green artifact with \"{T}: Add {R} or {G}.\")",
+    "abilities": [
+      {
+        "kind": "spell",
+        "text": "Create a Heartwood token.",
+        "effects": [
+          {
+            "effect": "createToken",
+            "count": 1,
+            "token": {
+              "name": "Heartwood",
+              "types": [
+                "Artifact"
+              ],
+              "subtypes": [],
+              "colors": [
+                "R",
+                "G"
+              ],
+              "abilities": [
+                {
+                  "id": "heartwood-mana",
+                  "kind": "mana",
+                  "tapSelf": true,
+                  "produces": [
+                    {
+                      "R": 1
+                    },
+                    {
+                      "G": 1
+                    }
+                  ],
+                  "text": "{T}: Add {R} or {G}."
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Scattershot",
+    "oracleId": "ed3652da-0127-4c9e-9913-f20becdd0ba9",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Scattershot deals 1 damage to target creature.\nStorm (When you cast this spell, copy it for each spell cast before it this turn. You may choose new targets for the copies.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 1,
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "text": "Scattershot deals 1 damage to target creature."
+    },
+    {
+      "kind": "keyword",
+      "keyword": "storm",
+      "text": "Storm (When you cast this spell, copy it for each spell cast before it this turn. You may choose new targets for the copies.)"
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Clairvoyance",
+    "oracleId": "851333be-d7d5-472a-95cb-0a28da09ce24",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Look at target player's hand.\nDraw a card at the beginning of the next turn's upkeep.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Look at target player's hand.\nDraw a card at the beginning of the next turn's upkeep.",
+      "targets": [
+        {
+          "what": "player"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "peekAndReveal",
+          "zone": "hand",
+          "who": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "delayedTrigger",
+          "at": "upkeep",
+          "text": "Draw a card at the beginning of the next turn's upkeep.",
+          "effects": [
+            {
+              "effect": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

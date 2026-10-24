@@ -7,6 +7,19 @@ import {ADVISE_CARDS,ADVISE_FIELDS} from './advise-cards.mjs';
 import {mailReady,sendMail} from './mail.mjs';
 import {admitAddress} from './access-invites.mjs';
 const M = globalThis.CrankCollection, E = globalThis.CrankExchange;
+// Only immutable, sanitized projections are memoized. Never cache permissions, full backups,
+// bindings, promises, or request objects. Each database has a bounded, best-effort cache.
+const PROJECTION_CACHES=new WeakMap(),PROJECTION_BYTES=2*1024*1024,PROJECTION_ENTRIES=100;
+function projectionMemo(db){
+  let cache=PROJECTION_CACHES.get(db);if(cache)return cache;
+  const entries=new Map();let bytes=0;
+  const remove=key=>{const entry=entries.get(key);if(entry){bytes-=entry.bytes;entries.delete(key);}};
+  cache={
+    get(key){const entry=entries.get(key);if(!entry)return null;if(entry.expires<Date.now()){remove(key);return null;}entries.delete(key);entries.set(key,entry);return JSON.parse(entry.json);},
+    put(key,content){const json=JSON.stringify(content),size=json.length*2;if(size>PROJECTION_BYTES)return;remove(key);while(entries.size>=PROJECTION_ENTRIES||bytes+size>PROJECTION_BYTES)remove(entries.keys().next().value);entries.set(key,{json,bytes:size,expires:Date.now()+300000});bytes+=size;}
+  };
+  PROJECTION_CACHES.set(db,cache);return cache;
+}
 export class ShareError extends Error {constructor(message, status=400){super(message);this.status=status;}}
 // Keep the original game/library identity stable when its verified sign-in address changes.
 export async function sharedIdentity(db,email){const row=await db.prepare('SELECT i.active,u.email AS canonical FROM account_identities i JOIN users u ON u.id=i.user_id WHERE i.email=?').bind(email).first();return row?row.active?row.canonical:null:email;}
@@ -16,8 +29,9 @@ const email=s=>{const v=str(s,254).toLowerCase();return /^[^\s@<>]+@[^\s@<>]+\.[
 const role=r=>['reviewer','collaborator'].includes(r)?r:fail('Choose Reviewer or Collaborator.');
 const card=c=>c?{id:c.id,name:c.name,oracleId:c.oracleId||null,typeLine:c.typeLine||'',manaCost:c.manaCost||'',image:c.image||null}:null;
 const encode=async data=>{const copy=await E.backup(data);const bytes=new Uint8Array(await new Response(new Blob([JSON.stringify(copy)]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer());let binary='';for(const byte of bytes)binary+=String.fromCharCode(byte);return {body:btoa(binary),checksum:copy.checksum,revision:data.state.revision};};
-async function decode(body){const bytes=Uint8Array.from(atob(body),c=>c.charCodeAt(0));const reader=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip')).getReader();let size=0,parts=[];for(;;){const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>24*1024*1024){await reader.cancel();fail('This library is too large to share. Export a smaller library.',413);}parts.push(value);}return E.readBackup(await new Blob(parts).text());}
-export function sharing(db,env,{now=()=>new Date().toISOString(),fetchImpl=fetch}={}){
+async function decode(body){const binary=atob(body),bytes=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);const reader=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip')).getReader();let size=0,parts=[];for(;;){const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>24*1024*1024){await reader.cancel();fail('This library is too large to share. Export a smaller library.',413);}parts.push(value);}return E.readBackup(await new Blob(parts).text());}
+export function sharing(db,env,{now=()=>new Date().toISOString(),fetchImpl=fetch,cacheProjections=true}={}){
+  const projections=cacheProjections?projectionMemo(db):null;
   const library=createLibrary(db,{now}),q=(sql,...args)=>db.prepare(sql).bind(...args);
   const all=async(sql,...args)=>(await q(sql,...args).all()).results;
   async function profile(person){
@@ -25,7 +39,7 @@ export function sharing(db,env,{now=()=>new Date().toISOString(),fetchImpl=fetch
     const p=await q('SELECT name,avatar,email FROM profiles WHERE user_id=?',person.id).first();
     return {...p,id:person.id,email:p.email||person.email,canInvite:String(person.id)===String(env.INVITE_ADMIN_ID||''),emailReady:mailReady(env)};
   }
-  async function snapshot(owner){const head=await library.head(owner);if(!head)fail('Sync your library to the cloud before sharing it.',409);const version=await library.version(owner,head.id);return {head,data:await decode(version.body)};}
+  async function snapshot(owner,knownHead){const head=knownHead||await library.head(owner);if(!head)fail('Sync your library to the cloud before sharing it.',409);const version=await library.version(owner,head.id);return {head,data:await decode(version.body)};}
   async function permitted(id,person,write=false,owner=false){
     const s=await q('SELECT s.*,p.name AS owner_name FROM shares s LEFT JOIN profiles p ON p.user_id=s.owner_id WHERE s.id=?',id).first();
     if(!s)fail('This shared item is unavailable.',404);
@@ -34,22 +48,40 @@ export function sharing(db,env,{now=()=>new Date().toISOString(),fetchImpl=fetch
     const access=mine?'owner':grant?.role==='collaborator'||s.public_role==='collaborator'?'collaborator':grant?.role||s.public_role;
     if(!access)fail('This shared item is unavailable.',404);
     if((owner&&!mine)||(write&&!['owner','collaborator'].includes(access)))fail('Only the owner can manage access; Collaborators can edit the shared content.',403);
-    return {...s,access};
+    /* HOW THE PERSON REACHES IT (the Decks requirements' FLT-6, 2026-10-23): their own, a grant to them, or public only. A
+       grant wins over public, so a deck shared with someone and also made public reads as theirs to see either way. */
+    return {...s,access,via:mine?'owner':grant?'grant':'public'};
   }
   function project(s,state){
     if(s.kind==='deck'){
       const d=state.decks.find(x=>x.id===s.source_id&&!x.archived);if(!d)fail('The owner removed or archived this deck.',404);
       const slots=d.slots.filter(x=>x.purpose==='main');
       const ids=new Set([...d.commanders,...slots.map(x=>x.cardId)]);
-      return {name:d.name,notes:d.notes||'',commanders:d.commanders.map(id=>card(state.cards[id])),cards:[...ids].map(id=>card(state.cards[id])),slots:slots.map(x=>({id:x.id,cardId:x.cardId,quantity:x.quantity})),bracket:d.definition?.bracket||3};
+      return {name:d.name,notes:d.notes||'',description:d.description||'',commanders:d.commanders.map(id=>card(state.cards[id])),cards:[...ids].map(id=>card(state.cards[id])),slots:slots.map(x=>({id:x.id,cardId:x.cardId,quantity:x.quantity})),bracket:d.definition?.bracket||3};
     }
     return {name:'Library',cards:Object.values(state.cards).map(card),lots:state.lots.map(l=>({id:l.id,cardId:l.cardId,quantity:l.quantity,source:l.source,assigned:!!l.allocation||l.location?.kind==='deck'}))};
   }
-  async function read(id,person){const s=await permitted(id,person),{head,data}=await snapshot(s.owner_id);return {id:s.id,kind:s.kind,owner:s.owner_name||'CrankMagic player',access:s.access,head:head.id,content:project(s,data.state)};}
+  async function read(id,person,loadSnapshot=snapshot){
+    const s=await permitted(id,person),head=await library.head(s.owner_id);
+    if(!head)fail('Sync your library to the cloud before sharing it.',409);
+    const key=`${s.owner_id}:${head.id}:${s.kind}:${s.source_id}`;
+    let content=projections?.get(key);
+    if(!content){const {data}=await loadSnapshot(s.owner_id,head);content=project(s,data.state);projections?.put(key,content);}
+    return {id:s.id,kind:s.kind,owner:s.owner_name||'CrankMagic player',access:s.access,via:s.via,head:head.id,content};
+  }
   async function list(person,kind){
     if(!['deck','library'].includes(kind))fail('Choose decks or libraries.');
-    const rows=await all(`SELECT s.id FROM shares s WHERE s.kind=? AND s.owner_id<>? AND (s.public_role IS NOT NULL OR EXISTS(SELECT 1 FROM share_grants g WHERE g.share_id=s.id AND g.user_id=?)) ORDER BY s.id LIMIT 200`,kind,person.id,person.id);
-    const items=[];for(const s of rows){try{items.push(await read(s.id,person));}catch(e){if(e.status!==404)throw e;}}return {items};
+    const rows=await all(`SELECT s.id,s.owner_id FROM shares s WHERE s.kind=? AND s.owner_id<>? AND (s.public_role IS NOT NULL OR EXISTS(SELECT 1 FROM share_grants g WHERE g.share_id=s.id AND g.user_id=?)) ORDER BY s.id LIMIT 200`,kind,person.id,person.id);
+    // Decode an owner's library once per list request, after every share's permission check.
+    // Group only the already-selected rows; hold one full library, not one per owner.
+    let cachedKey=null,cachedSnapshot=null;
+    const loadSnapshot=(owner,head)=>{const key=`${owner}:${head.id}`;if(key!==cachedKey){cachedKey=key;cachedSnapshot=null;cachedSnapshot=snapshot(owner,head);}return cachedSnapshot;};
+    const items=[];
+    for(const s of rows.sort((a,b)=>a.owner_id-b.owner_id)){
+      try{items.push(await read(s.id,person,loadSnapshot));}catch(e){if(e.status!==404)throw e;}
+    }
+    items.sort((a,b)=>a.id<b.id?-1:a.id>b.id?1:0);
+    return {items};
   }
   async function settings(person,kind,source){
     if(!['deck','library'].includes(kind))fail('Choose a deck or library.');

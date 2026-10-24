@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Goblin Boarders",
+    "oracleId": "4c64feae-95d7-426d-9e42-d3b0841d2054",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin",
+      "Pirate"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "Raid — This creature enters with a +1/+1 counter on it if you attacked this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "Raid — This creature enters with a +1/+1 counter on it if you attacked this turn.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersWithCounters": {
+          "counter": "+1/+1",
+          "count": {
+            "creaturesAttackedWithThisTurn": "you",
+            "atMost": 1
+          }
+        }
+      }
+    }
+  ]
+}

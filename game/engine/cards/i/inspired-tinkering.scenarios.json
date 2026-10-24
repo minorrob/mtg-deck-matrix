@@ -16,7 +16,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -128,7 +128,7 @@
     {
       "name": "The top three exiled, three Treasures: one sacrificed for {R} to cast the Shock",
       "library": [
-        "Shock",
+        "Smoke Shock",
         "Island",
         "Forest",
         "Swamp"
@@ -181,7 +181,7 @@
               "seat": 0,
               "zone": "exile",
               "cards": [
-                "Shock",
+                "Smoke Shock",
                 "Island",
                 "Forest"
               ]
@@ -195,7 +195,7 @@
           }
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "targets": [
             {
               "player": 1

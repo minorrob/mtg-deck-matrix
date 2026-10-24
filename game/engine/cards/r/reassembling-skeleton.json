@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Reassembling Skeleton",
+    "oracleId": "9dbc3530-b278-4c8d-b2cc-a09dfac9d5e5",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Skeleton",
+      "Warrior"
+    ],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "{1}{B}: Return this card from your graveyard to the battlefield tapped.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{1}{B}: Return this card from your graveyard to the battlefield tapped.",
+      "zone": "graveyard",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{B}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "to": "battlefield",
+          "tapped": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hippo-Cows",
+    "oracleId": "f66fca2b-6c44-4079-b29e-4d18ef030a0c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Hippo",
+      "Ox"
+    ],
+    "manaCost": "{4}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 5,
+    "toughness": 4
+  },
+  "oracleText": "Trample (This creature can deal excess combat damage to the player it's attacking.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "Trample (This creature can deal excess combat damage to the player it's attacking.)"
+    }
+  ]
+}

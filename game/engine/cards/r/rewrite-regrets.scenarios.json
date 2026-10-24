@@ -30,7 +30,7 @@
       "power": 7,
       "toughness": 7
     },
-    "Omen": {
+    "Smoke Omen": {
       "types": [
         "Sorcery"
       ],
@@ -156,7 +156,7 @@
           "cards": [
             "Giant",
             "Drake",
-            "Omen",
+            "Smoke Omen",
             "Rock"
           ]
         }
@@ -227,7 +227,7 @@
           "zone": "graveyard",
           "cards": [
             "Drake",
-            "Omen",
+            "Smoke Omen",
             "Rock",
             "Rewrite Regrets"
           ]

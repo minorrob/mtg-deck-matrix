@@ -3,6 +3,7 @@
  *   node tools/build-live-state.mjs                       # data/live-load.json -> data/live-state.json
  *   node tools/build-live-state.mjs --check               # build and report, write nothing
  *   node tools/build-live-state.mjs --scryfall cache.json # enrich identities from a Scryfall dump
+ *   node tools/build-live-state.mjs <live-load.json> --out <backup.json>   # a backup file to restore, written elsewhere
  *
  * data/live-load.json is the owner's collection in the owner's words (deck targets, what
  * is in each box, the bench, orders, the buy list, the upgrades). This turns it into
@@ -55,7 +56,8 @@ export async function buildFile(source=SOURCE,{scryfall=null}={}){
   /* The envelope: schema first, then the backup as the app wrote it. The checksum covers the
      payload alone, so the wrapper keys do not disturb it. */
   const backup={schema:'live-state@1',...built_backup,generator:'tools/build-live-state.mjs',count:built.state.decks.length};
-  backup.note=`Built from data/live-load.json (saved ${doc.savedAt||'undated'}) by tools/build-live-state.mjs. Restore it in CrankMagic with User Functions → Restore from a backup file, or Load Live.`;
+  const from=String(source)===String(SOURCE)?'data/live-load.json':decodeURIComponent(String(source.pathname||source).split('/').pop());
+  backup.note=`Built from ${from}${doc.workbook?` (the workbook ${doc.workbook})`:''} (saved ${doc.savedAt||'undated'}) by tools/build-live-state.mjs. Restore it in CrankMagic with User Functions → Restore from a backup file, or Load Live.`;
   /* cardOf joins a library reference to its record, the way the app's C.card does. */
   const cardOf=id=>{const c=built.state.cards[id];return c&&c.shipped===true?{...(lookup.byId(id)||{}),...c}:c||null;};
   return {...built,doc,backup,cardOf};
@@ -69,12 +71,13 @@ export function describe({summary,issues}){
 }
 
 if(process.argv[1]&&pathToFileURL(process.argv[1]).href===import.meta.url){
-  const args=process.argv.slice(2),check=args.includes('--check'),at=args.indexOf('--scryfall');
+  const args=process.argv.slice(2),check=args.includes('--check'),at=args.indexOf('--scryfall'),to=args.indexOf('--out');
   const scryfall=at>=0?JSON.parse(await readFile(args[at+1],'utf8')):null;
-  const positional=args.filter((a,i)=>!a.startsWith('--')&&args[i-1]!=='--scryfall');
+  const target=to>=0?pathToFileURL(args[to+1]):TARGET;
+  const positional=args.filter((a,i)=>!a.startsWith('--')&&args[i-1]!=='--scryfall'&&args[i-1]!=='--out');
   try{
     const out=await buildFile(positional[0]?pathToFileURL(positional[0]):SOURCE,{scryfall});
     console.log(describe(out));
-    if(!check){await writeFile(TARGET,JSON.stringify(out.backup)+'\n');console.log(`Wrote ${TARGET.pathname} (checksum ${out.backup.checksum.slice(0,12)}…)`);}
+    if(!check){await writeFile(target,JSON.stringify(out.backup)+'\n');console.log(`Wrote ${target.pathname} (checksum ${out.backup.checksum.slice(0,12)}…)`);}
   }catch(err){console.error('live-state: '+err.message);process.exit(1);}
 }

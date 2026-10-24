@@ -1,13 +1,15 @@
-/* THE CARD STATES ON THE SCREENS BEYOND THE LIBRARY (docs/card-states.md, step 2b).
+/* THE CARD STATUS ON THE SCREENS (docs/card-states.md; Rob, 2026-10-18).
  *
  * In a real page with the committed library restored:
  *
- *   1. The deck page's hundred: each slot's pill is a card-state word (Watching, To buy, Ordered, Target), and
- *      "To add" sits beside exactly the slots with an owned copy reserved for them and not yet in the box,
- *      judged from the stored copies.
- *   2. The card inspector's Status chips count the card's records by their state, and every figure agrees
- *      with the model's cardState run here, in Node, on the same stored library.
- *   3. How a deck comes together: the ladder is the four stages and the box.
+ *   1. The deck page's hundred is the deck's view: In the deck (Final and Substitute), then Loading, Reserved and
+ *      Upgrades, each line wearing the model's pill and note, every count the model's deckStatus.
+ *   2. The Library scoped to the same deck counts the same: its tiles and caption are that deckStatus too, and it
+ *      lists the deck's group -- no Bench copies unless asked.
+ *   3. The card panel's Status chips count the card's records by their status, as labels, not links; Change status
+ *      and Change assignment sit at the end of the lines.
+ *   4. The Table view's piles are places, and Ready to add names a waiting copy Loading.
+ *   5. About Deck Building climbs the ownership words, then the uses.
  *
  * Needs Playwright and Chromium; GEOMETRY_REQUIRED=1 (CI) turns a missing browser into a failure.
  */
@@ -30,80 +32,94 @@ try {
   if (stub) await stub(page);
   await loadLiveState(page, base);
   const st = await stateOf(page);
-  /* The deck with the most copies waiting outside its box, so "To add" has something to find. */
+  /* The deck with the most copies loading or claimed from another box, so every part of the hundred has rows. */
   const waitingIn = (id) => st.lots.filter((l) => l.source === "owned" && l.allocation?.deckId === id && !(l.location?.kind === "deck" && l.location.deckId === id));
   const DECK = [...st.decks].filter((d) => !d.archived).sort((a, b) => waitingIn(b.id).length - waitingIn(a.id).length)[0]?.id || D6;
-  ok(waitingIn(DECK).length > 0, `${DECK} has copies waiting outside its box, so the check below can fail`);
+  const deck = st.decks.find((d) => d.id === DECK), ds = M.deckStatus(st, deck);
+  ok(ds.loading + ds.reserved.total > 0, `${deck.name} has cards loading or reserved, so the checks below can fail`);
   await page.goto(`${base}/index.html#decks?deck=${encodeURIComponent(DECK)}&tab=hundred`);
   await page.locator(".cm-deck-cards li .cm-deck-flags .cm-pill").first().waitFor({timeout: 30000});
 
   /* 1. The hundred. */
-  const lines = await page.$$eval(".cm-deck-cards li", (ls) => ls.map((li) => ({card: li.querySelector(".cm-card-name")?.dataset.card, pill: li.querySelector(".cm-deck-flags .cm-pill")?.textContent.trim(), role: li.querySelector(".cm-deck-flags .cm-badge-upgrade, .cm-deck-flags .cm-badge-reserved")?.textContent.trim() || ""})).filter((x) => x.card));
-  ok(lines.length > 50, `the hundred is drawn (${lines.length} lines)`);
-  const bad = lines.filter((l) => !/^(Watching|To buy( \d+)?|Ordered|To add|Target)$/.test(l.pill));
-  eq(bad.slice(0, 3), [], "every slot's pill is a card-state word: Watching, To buy, Ordered, To add or Target");
-  const deck = st.decks.find((d) => d.id === DECK);
-  const waiting = new Set(waitingIn(DECK).map((l) => l.allocation.slotId));
-  const waitingCards = new Set(deck.slots.filter((r) => waiting.has(r.id)).map((r) => r.cardId));
-  eq(new Set(lines.filter((l) => l.pill === "To add").map((l) => l.card)), waitingCards, `"To add" is the pill on exactly the ${waitingCards.size} slots with an owned copy reserved for them and not in the box`);
-  /* Outside the box a slot wears its role. Every box here is full, so each is an upgrade and the deck plays. */
-  const readS = M.stateReader(st), full = M.readiness(st, deck).playable;
-  ok(full, `${deck.name}'s box is full`);
-  const outside = lines.filter((l) => l.pill !== "Target" && l.pill !== "Watching");
-  ok(outside.length > 0 && outside.every((l) => l.role === "Upgrade"), `every slot outside the box wears "Upgrade" (${outside.length}), because the full box holds its seat`);
-  ok(lines.filter((l) => l.pill === "Target").every((l) => !l.role), "and no Target in the box wears a role badge");
-  ok(/^Playable: every seat holds a card · \d+ upgrades? to make$/.test(await page.locator(".cm-deck-playable").innerText()), `the hundred says the deck plays, and how many upgrades are left: "${await page.locator(".cm-deck-playable").innerText()}"`);
+  const lines = await page.$$eval(".cm-deck-cards li", (ls) => ls.map((li) => ({card: li.querySelector(".cm-card-name")?.dataset.card, pill: li.querySelector(".cm-deck-flags .cm-pill")?.textContent.trim(), note: li.querySelector(".cm-deck-flags .cm-badge")?.textContent.trim() || ""})).filter((x) => x.card));
+  eq(lines.length, ds.rows.length, `the hundred lists every record of ${deck.name}'s view (${ds.rows.length})`);
+  const bad = lines.filter((l) => !["Final", "Substitute", "Loading", "Reserved", "Upgrade"].includes(l.pill));
+  eq(bad.slice(0, 3), [], "every line wears a deck use: Final, Substitute, Loading, Reserved or Upgrade");
+  const tally = (list) => list.reduce((m, x) => ({...m, [x]: (m[x] || 0) + 1}), {});
+  eq(tally(lines.map((l) => l.pill)), tally(ds.rows.map(({st: x}) => M.stateLabel(x))), "and each word as often as the model's deckStatus says");
+  const parts = Object.fromEntries(await page.$$eval(".cm-deck-cards h3.cm-deck-part", (hs) => hs.map((h) => [h.childNodes[0].textContent.trim(), Number(h.querySelector("small").textContent.replace(/,/g, ""))])));
+  eq(parts["In the deck"], ds.deckTotal, `In the deck is the Deck total, Final + Substitute (${ds.deckTotal})`);
+  eq([parts.Loading || 0, parts.Reserved || 0, parts.Upgrades || 0], [ds.loading, ds.reserved.total, ds.upgrade], "Loading, Reserved and Upgrades count what the model counts");
+  const readD = M.stateReader(st, DECK), name = (id) => st.cards[id]?.name || id, deckName = (id) => (st.decks.find((d) => d.id === id)?.name.match(/^(D\d+)\b/) || [])[1] || "";
+  const notes = tally(ds.rows.map(({st: x}) => M.stateNote(x, name, deckName)).filter(Boolean));
+  eq(tally(lines.map((l) => l.note).filter(Boolean)), notes, "and each line's note is the model's, word for word");
+  ok(/^Boxed: the box holds 100: Final \d+ \+ Substitute \d+/.test(await page.locator(".cm-deck-playable").innerText()), `the hundred says why the deck plays: "${await page.locator(".cm-deck-playable").innerText()}"`);
+  /* And a deck with Upgrades lists them in their own part, each naming what it would replace or asking. */
+  {
+    const UP = [...st.decks].filter((d) => !d.archived).sort((a, b) => M.deckStatus(st, b).upgrade - M.deckStatus(st, a).upgrade)[0], up = M.deckStatus(st, UP);
+    ok(up.upgrade > 0, `${UP.name} has Upgrades (${up.upgrade}), so the check below can fail`);
+    await page.goto(`${base}/index.html#decks?deck=${encodeURIComponent(UP.id)}&tab=hundred`);
+    await page.locator(".cm-deck-cards h3.cm-deck-part").first().waitFor({timeout: 30000});
+    const upParts = Object.fromEntries(await page.$$eval(".cm-deck-cards h3.cm-deck-part", (hs) => hs.map((h) => [h.childNodes[0].textContent.trim(), Number(h.querySelector("small").textContent.replace(/,/g, ""))])));
+    eq(upParts.Upgrades, up.upgrade, `${UP.name}'s Upgrades part lists its ${up.upgrade} Upgrades`);
+    const upPills = await page.$$eval(".cm-deck-cards li .cm-deck-flags", (fs) => fs.map((f) => [f.querySelector(".cm-pill")?.textContent.trim(), f.querySelector(".cm-badge")?.textContent.trim() || ""]).filter(([p]) => p === "Upgrade"));
+    ok(upPills.length === up.upgrade && upPills.every(([, n]) => /would replace|choose what it replaces/.test(n)), "each wearing Upgrade and saying what it would replace, or asking");
+  }
 
-  /* 2. The inspector, for the card on this deck's list whose records fall in the most different states, so a
-     count put under the wrong word has somewhere to show. */
-  const recsOf = (id) => [...M.projection(st).filter((r) => r.cardId === id), ...st.groups.flatMap((g) => g.entries.filter((r) => r.cardId === id).map((r) => ({...r, kind: "entry", groupId: g.id})))].map((r) => ({r, s: readS(r)}));
+  /* 2. The Library scoped to the same deck: the same deckStatus on its tiles, and no Bench copy unless asked. */
+  await page.goto(`${base}/index.html#cards?deck=${encodeURIComponent(DECK)}`);
+  await page.locator(".cm-kpi").first().waitFor({timeout: 30000});
+  const tiles = Object.fromEntries(await page.$$eval(".cm-kpi", (ks) => ks.map((k) => [k.querySelector("span").textContent.trim(), Number(k.querySelector("strong").textContent.replace(/,/g, ""))])));
+  eq([tiles.Final, tiles.Substitute, tiles.Reserved, tiles.Upgrade, tiles.Loading, tiles.Bench], [ds.final, ds.substitute, ds.reserved.total, ds.upgrade, ds.loading, 0], "the Library scoped to the deck counts what the hundred counts, and no Bench");
+  ok((await page.locator(".cm-kpi-caption").innerText()).startsWith(`Deck total ${ds.deckTotal} = Final ${ds.final} + Substitute ${ds.substitute} · Group total ${ds.groupTotal}`), "its caption states the Deck total and the Group total");
+  await page.locator("#cm-bench-too").check();
+  await page.waitForFunction(() => Number(document.querySelectorAll(".cm-kpi")[5]?.querySelector("strong")?.textContent.replace(/,/g, "")) > 0);
+  ok(true, "ticking Show Bench cards that could go in brings the Bench back beside the deck's cards");
+
+  /* 3. The card panel, for the card on this deck's list whose records fall in the most different states. */
+  const recsOf = (id) => M.records(st).filter((r) => r.cardId === id).map((r) => ({r, s: M.stateReader(st)(r)}));
   const variety = (id) => new Set(recsOf(id).map(({s}) => M.stateLabel(s))).size;
-  const owned = [...lines].sort((a, b) => variety(b.card) - variety(a.card))[0];
-  ok(variety(owned.card) >= 3, `the inspector is read for a card in ${variety(owned.card)} different states`);
-  await page.locator(`.cm-deck-cards li .cm-card-name[data-card="${owned.card}"]`).first().click();
+  const pickCard = [...new Set(lines.map((l) => l.card))].sort((a, b) => variety(b) - variety(a))[0];
+  ok(variety(pickCard) >= 2, `the card panel is read for a card in ${variety(pickCard)} different states`);
+  await page.goto(`${base}/index.html#decks?deck=${encodeURIComponent(DECK)}&tab=hundred`);
+  await page.locator(`.cm-deck-cards li .cm-card-name[data-card="${pickCard}"]`).first().click();
   await page.locator("#cm-dialog[open] .cm-standing").waitFor({timeout: 30000});
   const chips = await page.$$eval("#cm-dialog .cm-standing p:first-child .cm-pill", (ps) => ps.map((p) => { const n = p.querySelector("strong"); return [p.textContent.replace(n ? n.textContent : "", "").trim(), Number(n ? n.textContent : 0)]; }));
-  /* The same count, in Node: the card's copies and needs from the projection, and its group entries. */
-  const recs = recsOf(owned.card);
-  const count = (f) => recs.filter(({s}) => f(s)).reduce((n, {r}) => n + r.quantity, 0);
-  const want = [["Owned", count((s) => s.stage === "owned")], ...M.STATE_LABELS.map((l) => [l, count((s) => M.stateLabel(s) === l)]), ["Upgrade", count((s) => !!s.deckId && !s.inBox && s.role === "upgrade")], ["Reserved", count((s) => !!s.deckId && !s.inBox && s.role === "reserved")]].filter(([, n]) => n > 0);
-  eq(chips.filter(([l]) => l !== "Option" && l !== "Pinned"), want, `the inspector's Status chips for ${st.cards[owned.card]?.name || owned.card} are the model's card states, counted: ${JSON.stringify(want)}`);
-  ok(chips.every(([l]) => ["Owned", "Upgrade", "Reserved", "Option", "Pinned", ...M.STATE_LABELS].includes(l)), "and every chip is a card-state word");
+  const recs = recsOf(pickCard), count = (f) => recs.filter(({s}) => f(s)).reduce((n, {r}) => n + (r.quantity || 1), 0);
+  const want = [["Own", count((s) => s.ownership === "own")], ...M.STATE_LABELS.map((l) => [l, count((s) => M.stateLabel(s) === l)])].filter(([, n]) => n > 0);
+  eq(chips.filter(([l]) => l !== "Option" && l !== "Pinned"), want, `the card panel's Status chips for ${name(pickCard)} are the model's, counted: ${JSON.stringify(want)}`);
+  eq(await page.$$eval("#cm-dialog .cm-standing .cm-pill", (ps) => ps.filter((p) => p.closest("[data-action]")).length), 0, "and they are labels: none opens the Library");
+  eq(await page.$$eval("#cm-dialog .cm-standing .cm-standing-act", (bs) => bs.map((b) => b.textContent)), ["Change status", "Change assignment"], "Change status and Change assignment end the two lines");
   await page.keyboard.press("Escape");
 
-  /* 4. The Table view (step 2c; G6b): Group piles by Status breaks the table into the card states, each counting the
-     copies the model puts in it, and "To add" is the pile Ready to add empties. Its own Status dropdown offers the same
-     words. The Bench, which the status band used to leave to its rail, is a pile of its own here. */
+  /* 4. The Table view: Group piles by Status breaks the table into places (the model's placeLabel), and its Status
+     dropdown offers the same words. */
   await page.goto(`${base}/index.html#cards?view=tabletop`);
   await page.locator("select[name=tabletopGroupBy]").waitFor({timeout: 30000});
   await page.selectOption("select[name=tabletopGroupBy]", "status");
   await page.locator(".cm-tt-mat [data-pile^='group:status:']").first().waitFor({timeout: 30000});
   const piles = Object.fromEntries(await page.$$eval(".cm-tt-mat [data-pile^='group:status:']", (ps) => ps.map((x) => { const m = x.getAttribute("aria-label").match(/^(.*), ([\d,]+) cards?$/); return m ? [m[1], Number(m[2].replace(/,/g, ""))] : [x.getAttribute("aria-label"), -1]; })));
-  const all = [...M.projection(st), ...st.groups.flatMap((g) => g.entries.map((r) => ({...r, kind: "entry", groupId: g.id})))].map((r) => ({r, s: readS(r)}));
-  const n = (f) => all.filter(({s}) => f(s)).reduce((k, {r}) => k + r.quantity, 0);
-  const own = (f) => n((s) => s.stage === "owned" && f(s));
-  const pileWant = {"Target": own((s) => s.role === "target" && s.inBox), "To add": own((s) => !!s.deckId && !s.inBox), "Substitute": own((s) => s.role === "substitute"), "Ordered": n((s) => s.stage === "ordered"), "To buy": n((s) => s.stage === "buy"), "Watching": n((s) => s.stage === "watching")};
-  for (const k of Object.keys(pileWant)) if (!pileWant[k]) delete pileWant[k];
-  ok(Object.keys(piles).every((k) => k === "Bench" || k in pileWant), `the breakout's piles are the card states (${Object.keys(piles).join(", ")})`);
-  eq(Object.fromEntries(Object.keys(pileWant).map((k) => [k, piles[k]])), pileWant, "Group piles by Status breaks the table into the card states, each counting what the model puts in it");
-  eq(await page.$$eval("[name=ttStatus] option", (os) => os.map((o) => o.textContent)), ["Any status", "Owned (any)", "Target", "To add", "Substitute", "Bench", "Ordered", "To buy", "Watching"], "and its Status dropdown offers the same words");
+  const read = M.stateReader(st), all = M.records(st).map((r) => ({r, s: read(r)}));
+  const pileWant = {};
+  for (const {r, s} of all) { const k = M.placeLabel(s); if (k !== "Bench") pileWant[k] = (pileWant[k] || 0) + (r.quantity || 1); }
+  ok(Object.keys(piles).every((k) => k === "Bench" || k in pileWant), `the breakout's piles are places (${Object.keys(piles).join(", ")})`);
+  eq(Object.fromEntries(Object.keys(pileWant).map((k) => [k, piles[k]])), pileWant, "each counting what the model puts there");
+  eq(await page.$$eval("[name=ttStatus] option", (os) => os.map((o) => o.textContent)), ["Any status", "Own (any)", "Final", "Loading", "Substitute", "Bench", "Ordered", "To buy", "Watch"], "and its Status dropdown offers the same words");
 
-  /* 5. Ready to add: a copy waiting outside its box wears "To add", with where to find it. */
-  /* A deck whose waiting copy sits on the Bench, which is the group that wears this pill. */
+  /* 5. Ready to add: a copy waiting on the Bench wears "Loading", with where to find it. */
   const PULL = st.decks.find((d) => !d.archived && waitingIn(d.id).some((l) => l.location?.kind !== "deck"))?.id;
   ok(PULL, "some deck has a copy waiting on the Bench, so the check below can fail");
   await page.goto(`${base}/index.html#pull?deck=${encodeURIComponent(PULL)}`);
   await page.waitForTimeout(1500);
-  /* The waiting copies' pills: the Bench group's, which used to read "Bench · <box>". */
-  const pullPills = await page.$$eval(".cm-pill", (ps) => ps.map((p) => p.textContent.trim()).filter((t) => /^(Bench|To add)\b/.test(t)));
-  ok(pullPills.some((t) => /^To add · /.test(t)) && !pullPills.some((t) => /^Bench · /.test(t)), `Ready to add names each waiting copy "To add", then where it is, where it said "Bench": ${pullPills.slice(0, 3).join(" | ")}`);
+  const pullPills = await page.$$eval(".cm-pill", (ps) => ps.map((p) => p.textContent.trim()).filter((t) => /^(Bench|To add|Loading)\b/.test(t)));
+  ok(pullPills.some((t) => /^Loading · /.test(t)) && !pullPills.some((t) => /^(To add|Bench) · /.test(t)), `Ready to add names each waiting copy "Loading", then where it is: ${pullPills.slice(0, 3).join(" | ")}`);
 
-  /* 3. The ladder. */
+  /* 6. The ladder. */
   await page.goto(`${base}/index.html#how`);
-  await page.locator(".cm-how-ladder li").first().waitFor({timeout: 30000});
-  eq(await page.$$eval(".cm-how-ladder li strong", (s) => s.map((x) => x.textContent)), ["Watching", "To buy", "Ordered", "Owned", "In the box"], "How a deck comes together climbs the four stages, then the box");
+  await page.locator("#cm-how-ladder li").first().waitFor({timeout: 30000});
+  eq(await page.$$eval("#cm-how-ladder li strong", (s) => s.map((x) => x.textContent)), ["Watch", "To buy", "Ordered", "Own", "Upgrade", "Reserved", "Loading", "Substitute", "Final"], "About Deck Building (still at #how) climbs the ownership words, then the uses that bring a card into a deck, Loading among them (ABT-3)");
   await context.close();
 } finally {
   await close();
 }
-console.log(`card-states-screens: ${checks} checks passed — the deck page, the card inspector and the ladder speak the card states.`);
+console.log(`card-states-screens: ${checks} checks passed — the hundred, the Library scoped to a deck, the card panel, the Table and the ladder speak the card status.`);

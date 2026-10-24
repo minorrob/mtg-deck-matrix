@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Inkfathom Divers",
+    "oracleId": "dbdf3c82-b0fc-479c-acce-f7e60be3a2b1",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Merfolk",
+      "Soldier"
+    ],
+    "manaCost": "{3}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Islandwalk (This creature can't be blocked as long as defending player controls an Island.)\nWhen this creature enters, look at the top four cards of your library, then put them back in any order.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "islandwalk",
+      "text": "Islandwalk (This creature can't be blocked as long as defending player controls an Island.)"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "rearrangeTop",
+          "count": 4
+        }
+      ],
+      "text": "When this creature enters, look at the top four cards of your library, then put them back in any order."
+    }
+  ]
+}

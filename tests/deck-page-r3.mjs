@@ -117,7 +117,7 @@ try {
   await page.locator(".cm-deck-hero").getByRole("button", {name: /^More/}).click();
   await page.locator(".cm-menu:popover-open").getByRole("button", {name: "Compare with…"}).click();
   await page.locator(".cm-deck-grid").waitFor();
-  ok(await page.$eval(`input[data-action=compare-pick][data-deck="${DECK}"]`, (i) => i.checked), "Compare with… lands on Decks with this deck ticked");
+  ok(await page.$eval(`input[data-action=select-deck][data-deck="${DECK}"]`, (i) => i.checked), "Compare with… lands on Decks with this deck selected");
   ok(/Tick another deck to compare with Krenko Goblins/.test(await page.locator("#cm-notice").innerText()), "and says what to do next");
 
   /* 3. An archived deck: Restore, and a red Delete deck…. */

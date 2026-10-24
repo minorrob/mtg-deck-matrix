@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tower Gargoyle",
+    "oracleId": "681ca1eb-2ef5-4d60-b834-58bd9b5a47b8",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Gargoyle"
+    ],
+    "manaCost": "{1}{W}{U}{B}",
+    "colors": [
+      "B",
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "U",
+      "W"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Flying",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    }
+  ]
+}

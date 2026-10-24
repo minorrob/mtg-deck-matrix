@@ -1,0 +1,32 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tajuru Snarecaster",
+    "oracleId": "2061fe08-0c7c-4d79-a144-996c3012952c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Rogue"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 4
+  },
+  "oracleText": "Reach",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "reach",
+      "text": "Reach"
+    }
+  ]
+}

@@ -42,7 +42,12 @@ const PAGES = [
      four stage chips, the sort, and Show archived, which moved up from the footer under the grid. That is one
      control more than the old head had room for and one word more, both the design's own; the budget rises
      to exactly what it draws and no further. The explainer budget does not move. */
-  ["decks", "Decks", ".cm-deck-grid", [25, 9, 4], [25, 9, 4]],
+  /* The Play status (Rob, 2026-10-18; docs/card-states.md): the chips read All · To load · Playable · Complete, and
+     Loading only while a deck is loading. "To load" is two words where "Building" was one, so 25 -> 26 words;
+     controls stay at nine because Loading, like Defining before it, shows only when it has decks.
+     The deck stages (Rob, 2026-10-23, the Decks requirements' FLT-1): All · Boxed · Defined · Building · Shared, five
+     chips that always show where there were four, and Bulk actions where Compare was -- ten controls. */
+  ["decks", "Decks", ".cm-deck-grid", [26, 10, 4], [26, 10, 4]],
   /* R3.8, the landing page (INTAKE row R3.8, 2026-09-26): measured up to the four doors, so it counts the header,
      the hero and Step one -- 92 words and 10 controls, every one of them the design's own copy. A landing page
      speaks more than a working page before its first list; the budget holds it at what it says today. */
@@ -99,7 +104,7 @@ const PAGES = [
      carried before, because the facet bar now sits behind a scope rather than above everything. */
   [`discover?commander=${EXPLORE_COMMANDER}`, "Explore · graph", "#cm-graph", [310, 24, 12], [310, 24, 12]],
   [`pull?deck=${DECK}`, "Ready to add", ".cm-pull-group", [48, 8, 4], [48, 8, 4]],
-  ["how", "How a deck comes together", ".cm-how-flow", [14, 3, 2], [14, 3, 2]],
+  ["about-deck-building", "About Deck Building", ".cm-how-flow", [14, 3, 2], [14, 3, 2]],
   ["cards?tab=orders", "Cards · Orders", ".cm-orders, .cm-table", [35, 11, 4], [35, 11, 4]],
   /* Cards · Table (15 September, play space PR 6). Everything above the mat is the page head,
      the three tabs, the view switch and the five filters — the mat itself carries no prose, which

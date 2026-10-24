@@ -234,8 +234,8 @@ const castPox = [...SWAMPS.map((tap) => ({tap})), {cast: "Pox Plague"}, {resolve
   resolveAwaiting(s, [0]);
   eq(s.awaiting.player, 1, "then Maya");
   resolveAwaiting(s, [0]);
-  eq([s.awaiting.player, awaitingChoice(s).max], [2, 0], "then Trey, with nothing in his graveyard to exile");
-  resolveAwaiting(s, []);
+  /* A graveyard's card is chosen, not searched for (CR 404.2; card load w4d, L2): with none there, nobody is asked. */
+  eq(s.awaiting.player, 3, "Trey, with nothing in his graveyard to exile, is not asked: then Sam");
   resolveAwaiting(s, [0]);
   eq(s.zones.exile.map((id) => s.objects[id].card).sort(), ["Bear", "Elk", "Rock"], "Rob's Bear, Maya's Elk and Sam's Rock exiled");
   const reflexive = s.stack.at(-1);

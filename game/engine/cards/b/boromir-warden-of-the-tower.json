@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Boromir, Warden of the Tower",
+    "oracleId": "d72b57e5-1c6e-4f02-968f-7e2dd24f0d3c",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Soldier"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Vigilance\nWhenever an opponent casts a spell, if no mana was spent to cast it, counter that spell.\nSacrifice Boromir: Creatures you control gain indestructible until end of turn. The Ring tempts you.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever an opponent casts a spell, if no mana was spent to cast it, counter that spell.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "opponent"
+      },
+      "effects": [
+        {
+          "effect": "counterSpell",
+          "spells": "that card"
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "manaSpent": "that card"
+          },
+          "atMost": 0
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "Sacrifice Boromir: Creatures you control gain indestructible until end of turn. The Ring tempts you.",
+      "cost": [
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "keywords": [
+            "Indestructible"
+          ],
+          "until": "end-of-turn"
+        },
+        {
+          "effect": "ringTempts"
+        }
+      ]
+    }
+  ]
+}

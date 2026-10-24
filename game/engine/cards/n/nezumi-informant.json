@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Nezumi Informant",
+    "oracleId": "a70ffefb-840c-48c3-a59d-e12306086bb6",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Rat",
+      "Rogue"
+    ],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "When this creature enters, each opponent discards a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "discard",
+          "who": "opponent",
+          "count": 1
+        }
+      ],
+      "text": "When this creature enters, each opponent discards a card."
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Crystacean",
+    "oracleId": "baddf7ee-f6b9-41e3-b930-57129952cc1d",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Crab"
+    ],
+    "manaCost": "{3}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 6
+  },
+  "oracleText": "Flash (You may cast this spell any time you could cast an instant.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flash",
+      "text": "Flash (You may cast this spell any time you could cast an instant.)"
+    }
+  ]
+}

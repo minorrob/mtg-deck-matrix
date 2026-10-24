@@ -25,7 +25,7 @@ page.on('pageerror',error=>errors.push(error.message));
    removed before it so that step stays honest. */
 const {stubNetwork}=await import('./scryfall-stub.mjs');const scryfallCalls=[];await stubNetwork(page,scryfallCalls);
 /* A deck tile's first button is its ⋯ menu (since the deck-page redesign); Open deck is inside it. */
-const openDeck=async name=>{await page.locator('.cm-deck-tile').filter({hasText:name}).first().getByRole('button').first().click();await page.getByRole('button',{name:'Open deck',exact:true}).click();};
+const openDeck=async name=>{await page.locator('.cm-deck-tile').filter({hasText:name}).first().getByRole('button',{name:/^Deck options for /}).click();await page.getByRole('button',{name:'Open deck',exact:true}).click();};
 const lab=async()=>{await page.evaluate(()=>{location.hash='#lab';});await page.waitForTimeout(400);};
 const click=label=>page.getByRole('button',{name:label,exact:true}).click(),nav=label=>page.getByRole('link',{name:label,exact:true}).click();
 /* Explore with no card, deck or commander in the address is the chooser; the graph is a card away. */
@@ -35,10 +35,11 @@ const state=()=>page.evaluate(async()=>{const r=await CrankRepository.open();try
 const waitDialog=()=>page.getByRole('dialog').waitFor({state:'hidden'});
 /* A row is matched on a CELL that says exactly the source (or the deck), not on any text in
    the row: the row's own verb buttons say "Ordered" and "Bought" too now. */
-/* The pill speaks the card-state taxonomy now (docs/card-states.md): an owned copy says where it is,
-   Bench, To add (for a deck, not in its box yet), Target or Substitute, and a card being looked at
-   is Watching. The old words stay in the family for any screen still saying them. */
-const FAMILY={Owned:['Owned','Target','Substitute','To add','Bench','Physical deck','Reserved'],Ordered:['Ordered'],Watched:['Watching','Watched']};
+/* The pill speaks the card status now (docs/card-states.md, 2026-10-18): an owned copy says what it is for -- Final,
+   Loading (the deck's, not in its box yet), Substitute, Bench, Sell, Trade, or an Upgrade it owns -- an ordered copy
+   for a deck is Reserved with "Ordered" beside it, and a card being looked at is Watch. The old words stay in the
+   family for any screen still saying them. */
+const FAMILY={Owned:['Own','Owned','Final','Loading','Substitute','Bench','Sell','Trade','Upgrade Own','Target','To add','Physical deck'],Ordered:['Ordered','Reserved Ordered','Upgrade Ordered'],'To buy':['To buy','Reserved To buy','Upgrade To buy'],Watched:['Watch','Watching','Watched','Upgrade Watch']};
 const row=(name,source)=>page.locator('tbody tr').filter({has:page.getByRole('button',{name,exact:true})}).filter({has:page.locator('td').filter({hasText:new RegExp('^\\s*('+(FAMILY[source]||[source]).map(s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')(\\s|$)')})});
 async function actionsFor(name,source){await row(name,source).getByRole('button',{name:'Actions',exact:true}).click();}
 /* Status is one column now: an owned copy reads as where it is, and the cell also carries the
@@ -69,11 +70,11 @@ async function rung(label,n){await page.locator('#cm-status-submenu-toggle').hov
    on naming the old button. It had been unrunnable since someone left an absolute container path
    in scryfall-stub.mjs, so nothing ever said so: a gate that cannot start cannot rot loudly. The
    wizard path is taken by its data-action, which is stable where the visible label was not. */
-async function newDeck(){await nav('Decks');await click('New deck');await page.locator('#cm-dialog [data-action=wizard-create]').click();await page.getByLabel('Card name or a Scryfall link').fill('Krenko, Mob Boss');await page.locator('[data-pick-card]').filter({has:page.getByText('Krenko, Mob Boss',{exact:true})}).click();/* Build a deck (R3.11): Strategy, Budget, then Review names it. */await click('Next: Budget');await click('Next: Review');await page.locator('#cm-dialog [name=name]').fill('Journey Goblins');await click('Create draft');await waitDialog();await click('Edit card list');await page.getByLabel('Cards (one per line, with quantity)').fill('1 Krenko, Mob Boss\n98 Mountain\n1 Lightning Bolt');await click('Resolve & save draft');await waitDialog();await click('Finalize');await click('Confirm change');await waitDialog();}
+async function newDeck(){await nav('Decks');await click('New deck');await page.locator('#cm-dialog [data-action=start-from]').click();/* Start from (2026-10-23): the name, the commander, Next, then Leave undefined. */await page.locator('#cm-flow-name').fill('Journey Goblins');await page.locator('#cm-flow-query').fill('Krenko, Mob Boss');await page.locator('.cm-flow-results [data-name="Krenko, Mob Boss"]').click();await page.locator('[data-action=flow-next]').click();await page.locator('#cm-dialog[open] #cm-dialog-title',{hasText:'Define the Deck'}).waitFor({timeout:60000});await page.check('input[name=mode][value=undefined]');await page.locator('[data-action=flow-create]').click();await waitDialog();await click('Edit card list');await page.getByLabel('Cards (one per line, with quantity)').fill('1 Krenko, Mob Boss\n98 Mountain\n1 Lightning Bolt');await click('Resolve & save draft');await waitDialog();await click('Lock list');await click('Confirm change');await waitDialog();}
 try{
  await page.goto(BASE+'/'+ENTRY+'#decks');await page.getByRole('heading',{name:'Decks',level:1}).waitFor({timeout:45000});eq((await state()).lots.length,0);
- /* HOW A DECK COMES TOGETHER: a plain link on Decks opens the six-step map; each step's title opens where that step begins. */
- await page.locator('#cm-main').getByRole('link',{name:'How a deck comes together'}).click();await page.locator('.cm-how-flow').waitFor();eq(await page.locator('.cm-how-step').count(),6);eq(await page.locator('.cm-how-rungs li').count(),5);
+ /* ABOUT DECK BUILDING (renamed 2026-10-23 from How a deck comes together): a plain link on Decks opens the six-step map; each step's title opens where that step begins. */
+ await page.locator('#cm-main').getByRole('link',{name:'About Deck Building'}).click();await page.locator('.cm-how-flow').waitFor();ok(page.url().endsWith('#about-deck-building'));eq(await page.locator('.cm-how-step').count(),6);eq(await page.locator('#cm-how-ladder li').count(),9);eq(await page.locator('#cm-how-stages li').count(),4);
  await page.locator('.cm-how-title',{hasText:'Acquire'}).click();await page.locator('#cm-roster-table').waitFor();ok(page.url().endsWith('#cards?tab=buy'));eq(await page.getByRole('tab',{selected:true}).innerText().then(s=>s.split(/\s/)[0]),'To');
  /* SHARE. Two ways out of the rail's Menu: a share draft with the To line blank, and a QR code drawn
     in the page. The subscription draft to the maintainer left the Menu with the first-look list
@@ -88,7 +89,7 @@ try{
  /* The deck page opens on Overview; the hundred is its Cards tab, and the full table with actions is one button from there. */
  await page.getByRole('tab',{name:/^The hundred/}).click();await page.locator('.cm-deck-list').first().waitFor();eq(await page.locator('.cm-deck-list li').count()>0,true,'The hundred tab lists the hundred');await click('View deck cards');await page.getByRole('table').waitFor();ok((await page.locator('.cm-chip').innerText()).startsWith('Deck: Journey Goblins'));
  await actionsFor('Mountain','To buy');await rung('Ordered',40);await page.waitForTimeout(700);current=await state();eq(current.lots[0].quantity,40);eq(current.lots[0].source,'ordered');
- await actionsFor('Mountain','Ordered');await rung('Owned',10);await page.waitForTimeout(700);current=await state();eq(current.lots.filter(l=>l.source==='owned').reduce((n,l)=>n+l.quantity,0),10);eq(current.lots.filter(l=>l.source==='ordered').reduce((n,l)=>n+l.quantity,0),30);
+ await actionsFor('Mountain','Ordered');await rung('Own',10);await page.waitForTimeout(700);current=await state();eq(current.lots.filter(l=>l.source==='owned').reduce((n,l)=>n+l.quantity,0),10);eq(current.lots.filter(l=>l.source==='ordered').reduce((n,l)=>n+l.quantity,0),30);
  /* THE PULL SHEET. Ten owned Mountains sit on the bench, reserved: the sheet lists them under
     Add from the Bench, one tick puts the lot in the box, the row stays, grayed, and the deck's
     In box figure moves by the lot. Then back to the Collection where the journey was. */
@@ -193,7 +194,7 @@ try{
  const labTotal=labDeck.slots.filter(r=>r.purpose==='main').reduce((n,r)=>n+r.quantity,0);
  const labRow=()=>row('Krenko, Mob Boss','To buy').filter({hasText:'Constructive run'});
  await page.locator('#cm-roster-query').fill('Krenko');await labRow().first().waitFor();
- await labRow().getByRole('button',{name:'Actions',exact:true}).click();await rung('Owned',1);await page.waitForTimeout(900);current=await state();
+ await labRow().getByRole('button',{name:'Actions',exact:true}).click();await rung('Own',1);await page.waitForTimeout(900);current=await state();
  const krenko=current.lots.find(l=>l.source==='owned'&&l.cardId===CrankKey('Krenko, Mob Boss'));ok(krenko&&krenko.quantity===1&&krenko.allocation?.deckId===labDeck.id,'the copy is owned and reserved for the draft');
  eq(await labRow().count(),0);
  /* Grouped by deck, every band folds and unfolds from its heading. */
@@ -216,7 +217,7 @@ try{
  await page.getByRole('tab',{name:/^Overview/}).click();await page.locator('.cm-record-table').waitFor({timeout:8000});current=await state();
  {const g=current.games[current.games.length-1];eq(g.outcome,'win');eq(g.finish,1);eq(g.pod,4);eq(g.mvpCardId,CrankKey('Krenko, Mob Boss'));}
  eq(await page.locator('.cm-record-table tbody tr').count(),1);
- await click('More');await click('Watched');await click('Confirm change');await waitDialog();current=await state();
+ await click('More');await click('Watch');await click('Confirm change');await waitDialog();current=await state();
  {const forLab=l=>l.allocation?.deckId===labDeck.id||l.groupIds.includes(labDeck.groupId);
   eq(current.lots.filter(forLab).reduce((n,l)=>n+l.quantity,0),labTotal);
   ok(current.lots.some(l=>l.source==='watching'&&forLab(l)));}
@@ -273,7 +274,7 @@ try{
      are a breakout now: "Group piles by" Status spreads the table into its card-state piles, in
      the card-state words (Target, To add, Watching), so the journey asks for "the status pile
      called X" through that grouping rather than for a pile in a fixed place. */
-  const WORD={'Physical deck':'Target','Reserved':'To add','Watched':'Watching'},say=label=>WORD[label]||label;
+  const WORD={'Physical deck':'Final','Target':'Final','Reserved':'Loading','To add':'Loading','Watched':'Watch','Watching':'Watch'},say=label=>WORD[label]||label;
   const stPile=label=>`.cm-tt-pile.cm-tt-group[data-pile="group:status:${say(label)}"]`;
   const byStatus=async()=>{if(await page.locator('select[name=tabletopGroupBy]').inputValue()!=='status'){await page.locator('select[name=tabletopGroupBy]').selectOption('status');await page.waitForTimeout(500);}};
   const bandPile='.cm-tt-pile.cm-tt-status';
@@ -291,7 +292,7 @@ try{
   /* The breakout's piles are the status column's tallies, under the taxonomy's words. */
   await byStatus();
   eq(await placard('Physical deck'),tallies['Physical deck']||0);eq(await placard('Reserved'),tallies['Reserved']||0);eq(await placard('To buy'),tallies['To buy']||0);
-  ok(/^Target, /.test(await page.locator(".cm-tt-pile.cm-tt-group[data-pile^='group:status:']").first().getAttribute('aria-label')),'in the order a deck is finished, Target first');
+  ok(/^Final, /.test(await page.locator(".cm-tt-pile.cm-tt-group[data-pile^='group:status:']").first().getAttribute('aria-label')),'in the order a deck is finished, Final first');
   eq((await state()).preferences.tabletopGroupBy,'status','and the grouping is remembered');
   ok((await page.locator('.cm-tt-pile.cm-tt-group').count())>=3);
   await page.locator('select[name=tabletopGroupBy]').selectOption('color');await page.waitForTimeout(500);ok(await page.locator('.cm-tt-pile.cm-tt-group[aria-label^="Red,"]').count()===1);eq((await state()).preferences.tabletopGroupBy,'color');
@@ -523,7 +524,7 @@ try{
    ok(shown.some(x=>bench.test(x)),'Move to… offers the Bench for a requirement');
    eq(await page.locator('.cm-row-menu button[disabled]').count(),0,'and offers nothing it would refuse');
    ok(!shown.some(x=>/^(Journey Goblins|Constructive run|To Trade)/.test(x)),'a deck or a Sell / Trade pile is not offered for a requirement');
-   ok(!shown.some(x=>/^(Target|To add|Substitute|To buy|Ordered|Watching)\b/.test(x)),'and no status pile is offered as a destination');}
+   ok(!shown.some(x=>/^(Final|Loading|Target|To add|Substitute|To buy|Ordered|Watch|Watching)\b/.test(x)),'and no status pile is offered as a destination');}
   const t2=await tally();
   await page.locator('.cm-row-menu button[data-pile=bench]').click();await page.waitForTimeout(600);
   await page.locator('.cm-sitting').waitFor();ok(/1 move pending/.test(await page.locator('.cm-sitting').innerText()),'Move to… stages rather than saving');
@@ -559,7 +560,7 @@ try{
   await page.keyboard.press('ArrowUp');ok(await page.evaluate(()=>document.activeElement.matches('.cm-tt-pile.cm-tt-group, .cm-tt-chip')),'and again to the group piles');await page.keyboard.press('Enter');await page.locator('.cm-tt-grid').waitFor();await page.keyboard.press('Escape');await page.waitForTimeout(200);
   /* The status piles' own order went with the status band (G6b-1): the breakout is always in the
      order a deck is finished, so there is no order to choose. */
-  eq(await page.locator('select[name=tabletopStatusOrder]').count(),0,'no status-pile order to choose');eq((await pileCounts())[0].label,'Target');
+  eq(await page.locator('select[name=tabletopStatusOrder]').count(),0,'no status-pile order to choose');eq((await pileCounts())[0].label,'Final');
 
   /* THE SORTING SPACE (G6b-2; docs/plan-groups.md). The play space held the middle of the table --
      a draw pile you lifted cards into, trays that built a deck's list, a scoreboard for the deck being
@@ -605,7 +606,7 @@ try{
    await page.keyboard.press('Escape');await page.waitForTimeout(200);}
   /* THE BACK ARROW AT EVERY LEVEL (§2.4): the laid-out pile in the drawer carries one, and it comes
      home to the board. Escape put the Bench away above, so the piles are the whole table's again (G6d). */
-  {await byStatus();await page.locator(stPile('Watched')).click();await page.locator('.cm-tt-grid').waitFor({timeout:20000});
+  {await byStatus();await page.locator(stPile('Watch')).click();await page.locator('.cm-tt-grid').waitFor({timeout:20000});
    eq(await page.locator('.cm-tt-strip.is-top .cm-tt-back').count(),1,'a laid-out pile carries a back arrow');
    await page.locator('.cm-tt-strip.is-top .cm-tt-back').click();await page.waitForTimeout(400);
    eq(await page.locator('.cm-tt-grid').count(),0,'and it comes home to the board');}
@@ -617,49 +618,21 @@ try{
    eq(await page.locator('.cm-tt-play, .cm-tt-tray').count(),0,'with no play space or trays left to calibrate it');}
   await page.locator('select[name=tabletopGroupBy]').waitFor();}
 
- /* THE LOBBY (game G0; docs/crankmagic-game-plan.md §5.1). Pick your deck and the table's bracket
-    judges the seat; nothing a table does writes to the library. The web copy no longer draws the lobby:
-    its Play page says games run on the local host and links there, and the lobby is the local copy's,
-    four seats round a table of rules. So the journey reads the pointer here, then walks the lobby on
-    the local copy -- the same server at its loopback name, a library of its own, seeded with this one
-    as a backup would bring it. The seed that fixed the turn order has no field any more, and a pasted
-    list that is not a hundred is no longer refused by number: it is made into a planned hundred, a
-    draft deck in the library, so that is what is walked in its place. */
- {await nav('Play');await page.getByRole('heading',{name:'Games run on your local host'}).waitFor({timeout:30000});
-  ok(/^http:\/\/127\.0\.0\.1:8768\//.test(await page.locator('.cm-pointer-host').getAttribute('href')),'the web copy points at the local host to play');
-  const lobbyState=await state(),lp=await context.newPage();lp.on('pageerror',error=>errors.push(error.message));await stubNetwork(lp,[]);
-  const LOCAL=BASE.replace('crankmagic.localhost','localhost')+'/'+ENTRY;
-  const revision=()=>lp.evaluate(async()=>{const r=await CrankRepository.open();try{return (await r.getState()).revision;}finally{r.close();}});
-  await lp.goto(LOCAL+'#decks');await lp.waitForFunction(()=>typeof CrankRepository!=='undefined',null,{timeout:60000});
-  await lp.evaluate(async s=>{const r=await CrankRepository.open();try{const c=await r.getState();await r.replace({state:s},c.revision);}finally{r.close();}},lobbyState);
-  await lp.goto(LOCAL+'#game');await lp.reload();await lp.locator('[data-action=lobby-host-deck]').first().waitFor({timeout:60000});
-  const seat=()=>lp.locator('.cm-lobby-seat.is-you'),main=()=>lp.locator('#cm-main').innerText();
-  ok(/No one is seated yet/.test(await main()),'the lobby opens with nobody seated');
-  ok(/Table rules[\s\S]*Bracket\s+3\b/.test(await main()),'and at bracket 3, the upgraded table');
-  const before=await revision();
-  await lp.locator('[data-action=lobby-host-deck]').first().click();await lp.locator('#cm-dialog[open]').waitFor();
-  await lp.locator('#cm-dialog [name=deckId]').selectOption({label:'Journey Goblins'});await lp.getByRole('button',{name:'Seat it',exact:true}).click();await lp.locator('#cm-dialog[open]').waitFor({state:'hidden'});
-  /* The seat's audit (cards, Game Changers, the verdict) is drawn folded, so it is read as text rather than as seen. */
-  await seat().locator('.cm-lobby-figs').waitFor({state:'attached',timeout:15000});
-  {const figs=await seat().locator('.cm-lobby-figs').textContent();
-   ok(/100 of 100/.test(figs),'a real deck seats as a hundred');
-   ok(/0 of 3/.test(figs),'and carries no Game Changers against the bracket\'s three');
-   ok(/Deck fits the table/.test(await seat().textContent()),'so it can sit');}
-  ok(/Launches when every seat is ready · 1 to go/.test(await main()),'and the table waits for the seat to say Ready');
-  eq(await revision(),before,'seating a deck from the library never touched the library');
-  await lp.reload();await seat().locator('.cm-lobby-figs').waitFor({state:'attached',timeout:60000});
-  ok(/Journey Goblins|Krenko, Mob Boss/.test(await seat().innerText()),'the table survives a reload');
-  /* A pasted list: the names are read, and six cards become a planned hundred. */
-  await seat().getByRole('button',{name:'Change deck',exact:true}).click();await lp.locator('#cm-dialog[open]').waitFor();
-  await lp.locator('#cm-dialog [name=from]').selectOption('paste');await lp.locator('#cm-dialog [name=paste]').fill('1 Krenko, Mob Boss\n\n1 Sol Ring\n4 Mountain');
-  await lp.getByRole('button',{name:'Seat it',exact:true}).click();await lp.locator('#cm-dialog[open]').waitFor({state:'hidden'});await lp.waitForTimeout(1500);
-  {const s=await lp.evaluate(async()=>{const r=await CrankRepository.open();try{return await r.getState();}finally{r.close();}}),pasted=s.decks.find(d=>d.name==='Pasted deck');
-   ok(pasted&&pasted.status==='draft','the pasted list is kept as a draft deck in the library');
-   eq(pasted.slots.reduce((n,r)=>n+r.quantity,0),100,'planned to a hundred');
-   ok(/100 of 100/.test(await seat().locator('.cm-lobby-figs').textContent()),'and seats as one');}
-  await lp.locator('[data-action=lobby-host-tools]').click();await lp.locator('.cm-menu:popover-open [data-action=lobby-clear]').click();await lp.waitForTimeout(800);
-  ok(/No one is seated yet/.test(await main()),'Clear the table empties it');
-  await lp.close();}
+ /* PLAY IS A TABLE (the cloud table; the local host's lobby this used to walk was retired with that direction,
+    2026-09-24's program). The web copy's Play is New table: you in seat 1 as its host, each other seat a person you
+    invite, an AI at Normal or Easy, or nobody; two to four seats. Reading it writes nothing to the library. The table
+    itself -- its lobby, its invitations and its game -- needs the Worker, which a static copy doesn't have: those are
+    walked against the real Worker by tests/table-lobby.mjs, tests/uat/play-e2e.mjs and tests/uat/solo-vs-ai.mjs. */
+ {const before=JSON.stringify(await state());
+  await nav('Play');await page.getByRole('heading',{name:'New table'}).waitFor({timeout:30000});
+  ok(/You sit in seat 1 as the host/.test(await page.locator('#cm-main').innerText()),'Play is a new table, with you in seat 1 as its host');
+  ok(await page.getByLabel('Your name at the table').count()===1,'it asks your name at the table');
+  for(const n of [2,3,4]){
+    const kinds=await page.getByLabel(`Seat ${n}`,{exact:true}).locator('option').allInnerTexts();
+    eq(kinds,['A person I will invite','An AI · Normal','An AI · Easy','Nobody'],`seat ${n} is a person you invite, an AI at Normal or Easy, or nobody`);
+  }
+  ok(await page.getByRole('button',{name:'Create the table',exact:true}).count()===1,'and Create the table');
+  eq(JSON.stringify(await state()),before,'reading Play wrote nothing to the library');}
 
  /* PUBLISH THE TO TRADE LIST (backlog #200): a copy filed in the To Trade group and one offered for Sell / Trade
     become a link; the page the link opens shows both with a way to ask; a visitor with an empty library sees
@@ -757,15 +730,20 @@ try{
  await nav('Library');await page.locator('#cm-roster-table').waitFor();await click('More');await page.getByRole('button',{name:'Make the change for Journey Goblins'}).click();await page.locator('.cm-change').waitFor();
  /* The roster's search is shared with the Shop, so it is cleared before the Shop steps read money. */
  await nav('Library');await page.locator('#cm-roster-table').waitFor();await click('Clear filters');await page.waitForTimeout(300);
- /* THE BENCH SURVIVES A DECK SCOPE (Rob, 14 September): working on one deck, what you already
-    own and no deck has reserved is exactly what you want in front of you. The To buy tab still
-    drops it, because money is not the question there. */
+ /* A DECK'S VIEW IS ITS GROUP (Rob, 2026-10-18, D6, replacing his 14 September call): scoped to a deck, the Library
+    lists the deck's own records, and "Show Bench cards that could go in" brings the Bench back beside them. The Table
+    view keeps its Bench, the ledge a card is pulled from; the To buy tab drops it, because money is not the question. */
  {const deck=(await state()).decks.find(d=>d.status==='final'&&!d.archived);
   if(deck){await page.goto(BASE+'/'+ENTRY+'#cards?deck='+encodeURIComponent(deck.id));await page.locator('#cm-roster-table table').waitFor({timeout:30000});await page.waitForTimeout(400);
    const statuses=await page.evaluate(()=>{const h=[...document.querySelectorAll('#cm-roster-table th')].map(x=>x.textContent.trim().split(/\s/)[0]),i=h.indexOf('Status');
      return [...document.querySelectorAll('#cm-roster-table tbody tr')].map(tr=>((tr.children[i]||{}).textContent||'').trim().split('\n')[0]);});
-   ok(statuses.includes('Bench'),'a deck scope keeps the Bench in the table');
-   ok(/Bench/.test(await page.locator('#cm-roster-stats').innerText()),'and the counts row says the Bench is not in its figures');
+   ok(!statuses.includes('Bench'),'a deck scope lists the deck, not the Bench');
+   await page.locator('#cm-bench-too').check();await page.waitForTimeout(500);
+   /* The rows are paged by name, so the Bench card's figure says they are back, wherever they fall. */
+   const benchN=await page.evaluate(()=>{const k=[...document.querySelectorAll('#cm-roster-stats .cm-kpi')].find(x=>x.querySelector('span')?.textContent.trim()==='Bench');return k?Number(k.querySelector('strong').textContent.replace(/,/g,'')):-1;});
+   const benchModel=await page.evaluate(async()=>{const r=await CrankRepository.open();try{const st=await r.getState(),read=CrankCollection.stateReader(st);return st.lots.filter(l=>read({...l,kind:'lot'}).use==='bench').reduce((n,l)=>n+l.quantity,0);}finally{r.close();}});
+   eq(benchN,benchModel,`and Show Bench cards that could go in brings back every Bench copy (${benchModel}; a spare filed in the deck's group is one of its Upgrades)`);
+   ok(/Bench/.test(await page.locator('#cm-roster-stats').innerText()),'and the counts row names the Bench');
    await page.goto(BASE+'/'+ENTRY+'#cards?view=tabletop&deck='+encodeURIComponent(deck.id));await page.locator('.cm-tt-mat').waitFor({timeout:30000});await page.waitForTimeout(500);
    ok(/Bench . [1-9]/.test((await page.locator('.cm-tt-pile.cm-tt-bench .cm-tt-placard').innerText()).replace(/\s+/g,' ')),'and the Bench pile still holds cards');
    await page.goto(BASE+'/'+ENTRY+'#cards?tab=buy&deck='+encodeURIComponent(deck.id));await page.locator('#cm-roster-table table, .cm-shop-strip').first().waitFor({timeout:30000});await page.waitForTimeout(400);

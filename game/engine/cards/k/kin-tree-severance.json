@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kin-Tree Severance",
+    "oracleId": "211d1c59-0111-48dd-9ff6-d03e7ff2ad5c",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2/W}{2/B}{2/G}",
+    "colors": [
+      "B",
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "G",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Exile target permanent with mana value 3 or greater.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "permanent",
+          "manaValue": {
+            "min": 3
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile"
+        }
+      ],
+      "text": "Exile target permanent with mana value 3 or greater."
+    }
+  ]
+}

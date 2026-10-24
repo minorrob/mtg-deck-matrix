@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Storm-Kiln Artist",
   "fixtures": {
-    "Tidings": {
+    "Smoke Tidings": {
       "types": [
         "Instant"
       ],
@@ -22,7 +22,7 @@
         ]
       }
     },
-    "Omen": {
+    "Smoke Omen": {
       "types": [
         "Sorcery"
       ],
@@ -120,7 +120,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Tidings"
+            "Smoke Tidings"
           ]
         }
       ],
@@ -129,7 +129,7 @@
           "tap": "Island"
         },
         {
-          "cast": "Tidings"
+          "cast": "Smoke Tidings"
         },
         {
           "expect": [
@@ -180,7 +180,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Omen",
+            "Smoke Omen",
             "Twin"
           ]
         }
@@ -190,7 +190,7 @@
           "tap": "Island"
         },
         {
-          "cast": "Omen"
+          "cast": "Smoke Omen"
         },
         {
           "tap": "Island"
@@ -199,7 +199,7 @@
           "cast": "Twin",
           "targets": [
             {
-              "card": "Omen"
+              "card": "Smoke Omen"
             }
           ]
         },
@@ -267,7 +267,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Tidings"
+            "Smoke Tidings"
           ]
         }
       ],
@@ -277,7 +277,7 @@
           "seat": 1
         },
         {
-          "cast": "Tidings",
+          "cast": "Smoke Tidings",
           "seat": 1
         },
         {
@@ -292,7 +292,7 @@
           "seat": 0,
           "targets": [
             {
-              "card": "Tidings"
+              "card": "Smoke Tidings"
             }
           ]
         },
@@ -337,7 +337,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Tidings"
+            "Smoke Tidings"
           ]
         },
         {
@@ -360,7 +360,7 @@
           "tap": "Island"
         },
         {
-          "cast": "Tidings"
+          "cast": "Smoke Tidings"
         },
         {
           "pass": 1
@@ -374,7 +374,7 @@
           "seat": 1,
           "targets": [
             {
-              "card": "Tidings"
+              "card": "Smoke Tidings"
             }
           ]
         },

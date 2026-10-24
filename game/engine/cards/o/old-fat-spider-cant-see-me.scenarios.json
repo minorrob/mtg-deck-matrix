@@ -30,7 +30,7 @@
       "power": 3,
       "toughness": 3
     },
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -169,7 +169,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Shock"
+            "Smoke Shock"
           ]
         }
       ],
@@ -225,7 +225,7 @@
             {
               "offers": {
                 "kind": "cast",
-                "card": "Shock",
+                "card": "Smoke Shock",
                 "seat": 1
               },
               "count": 3

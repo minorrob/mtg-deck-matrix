@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Prismatic Omen",
+    "oracleId": "d90882ae-6572-4214-8d9c-0bdfb75f9be2",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Lands you control are every basic land type in addition to their other types.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "layer": 4,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Land"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "addSubtypes": [
+          "Plains",
+          "Island",
+          "Swamp",
+          "Mountain",
+          "Forest"
+        ]
+      },
+      "text": "Lands you control are every basic land type in addition to their other types."
+    }
+  ]
+}

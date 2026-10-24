@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Elusive Krasis",
+    "oracleId": "b876101b-7b18-48d7-9c8c-aaa6b1b5c199",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Fish",
+      "Mutant"
+    ],
+    "manaCost": "{1}{G}{U}",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": 0,
+    "toughness": 4
+  },
+  "oracleText": "This creature can't be blocked.\nEvolve (Whenever a creature you control enters, if that creature has greater power or toughness than this creature, put a +1/+1 counter on this creature.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "cant-be-blocked",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "text": "This creature can't be blocked."
+    },
+    {
+      "kind": "keyword",
+      "keyword": "evolve",
+      "text": "Evolve (Whenever a creature you control enters, if that creature has greater power or toughness than this creature, put a +1/+1 counter on this creature.)"
+    }
+  ]
+}

@@ -20,13 +20,14 @@
  */
 
 import {runEffect, eachOf} from "./effects/index.mjs";
+import {mergedOrderToAsk} from "../state/index.mjs";
 import {ASKING, commandersGoingHome} from "./effects/asking.mjs";
 import {damageQuestion, addCounters, counterQuestion} from "./effects/resources.mjs";
 import {controllerOf} from "../rules/layers.mjs";
 import {destructionQuestion, drawQuestion, dredgers, singleDraws} from "./effects/zones.mjs";
 import {tokenQuestion} from "./effects/permanents.mjs";
 import {bindEffect} from "./bind.mjs";
-import {countEffect} from "./amount.mjs";
+import {countEffect, amountOf} from "./amount.mjs";
 import {conditionHolds} from "./condition.mjs";
 import {proliferateTimes} from "../rules/statics.mjs";
 
@@ -57,6 +58,8 @@ export function beginResolution(state, effects, context = {}, rng = null) {
       ...(context.sourceTransforms !== undefined ? {sourceTransforms: context.sourceTransforms} : {}),
       /* What the cost sacrificed, as it last existed ("the sacrificed creature's power"; script/amount.mjs). */
       ...(context.sacrificed ? {sacrificed: context.sacrificed} : {}),
+      /* Its targets as they were chosen: what a total was divided among (CR 601.2d; script/amount.mjs, dividedAmong). */
+      ...(context.targetsChosen ? {targetsChosen: context.targetsChosen} : {}),
       /* How many times its ability resolved before this one this turn (rules/stack.mjs; script/condition.mjs, firstResolution). */
       ...(context.resolvedBefore !== undefined ? {resolvedBefore: context.resolvedBefore} : {})},
     events: [],
@@ -83,7 +86,8 @@ export function runResolution(state, rng = null) {
   const resolving = state.resolving;
   if (!resolving) return {status: "done", events: []};
 
-  while (resolving.queue.length > 0) {
+  while (resolving.queue.length > 0 || mergedOrderToAsk(state)) {
+    if (mergedOrderToAsk(state) && resolving.queue[0]?.effect !== "orderMerged") resolving.queue.unshift({effect: "orderMerged"});
     /* Bound as it reaches the head, not when the queue was built: a modal's chosen effects arrive later, and are
        bound against the same targets as everything else (bind.mjs). */
     /* And counted as it reaches the head (CR 608.2h): "draw a card for each creature you control" counts then. */
@@ -126,7 +130,12 @@ export function runResolution(state, rng = null) {
     if (effect?.effect === "repeatFor" && (effect.effects ?? []).some((inner) => ASKING[inner?.effect] || inner?.effect === "connive")) {
       resolving.queue.shift();
       const before = resolving.context.about;
-      const spliced = eachOf(state, effect.each, resolving.context).flatMap((about) => [{effect: "__about", about: {...(before ?? {}), ...about}}, ...structuredClone(effect.effects ?? [])]);
+      const round = eachOf(state, effect.each, resolving.context).flatMap((about) => [{effect: "__about", about: {...(before ?? {}), ...about}}, ...structuredClone(effect.effects ?? [])]);
+      /* "REPEAT THE FOLLOWING PROCESS X TIMES. EACH OPPONENT LOSES 3 LIFE UNLESS ..." (Torment of Hailfire; CR 608.2c, its
+         instructions in order): `times`, counted as it reaches the head (CR 608.2h) -- the whole round, each of what it ranges
+         over in turn, that many times over; none, and nothing is done. */
+      const times = effect.times === undefined ? 1 : amountOf(state, effect.times, resolving.context);
+      const spliced = Array.from({length: times}, () => structuredClone(round)).flat();
       resolving.queue.unshift(...spliced, {effect: "__about", ...(before !== undefined ? {about: before} : {})});
       continue;
     }

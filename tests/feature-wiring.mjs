@@ -213,12 +213,12 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
   const css = read("crankmagic.css"), col = read("crankmagic-collection.js");
   /* By content, not by the first .cm-kpis in the file: the narrow breakpoints override the
      column count, and matching the first rule found the four-column phone one. */
-  /* The card states (docs/card-states.md, 2026-09-26): eight tiles in two rows of four, the stages over where an owned card is. */
+  /* The card status (docs/card-states.md, 2026-10-18): eight tiles in two rows of four, the deck uses over the rest, so every record counts in one. */
   const tiles = (css.match(/\.cm-kpis\{display:grid;[^}]*grid-template-columns:repeat\(4,minmax\(0,1fr\)\)[^}]*\}/) || [""])[0];
   ok(tiles, "the counts are two rows of four equal tiles");
-  ok(/STAT_FIGURES=\[\['watching','Watching'[^\n]*\['toadd','To add'[^\n]*\['substitute','Substitute'/.test(col), "the stages, then Bench, To add, Target, Substitute");
+  ok(/STAT_FIGURES=\[\['final','Final'[^\n]*\['substitute','Substitute'[^\n]*\['reserved','Reserved'[^\n]*\['upgrade','Upgrade'[^\n]*\['loading','Loading'[^\n]*\['bench','Bench'/.test(col), "Final, Substitute, Reserved, Upgrade, then Loading, Bench and the rest");
   ok(/gap:8px/.test(tiles), `at the guide's gap (found ${tiles || "no rule"})`);
-  ok(/cm-kpi-caption">[^`]*Owned = Bench \+ To add \+ Target \+ Substitute · To buy: /.test(col), "and one caption line states the equation, Owned = Bench + To add + Target + Substitute, and how To buy divides");
+  ok(/cm-kpi-caption">\$\{deckId\?`Deck total \$\{n\(t\.final\+t\.substitute\)\} = Final \$\{n\(t\.final\)\} \+ Substitute \$\{n\(t\.substitute\)\} · Group total /.test(col), "and one caption line states the equation scoped to a deck: Deck total = Final + Substitute, then the Group total");
   ok(/font-family:var\(--v-display\)/.test((css.match(/\.cm-kpi strong\{[^}]*\}/) || [""])[0]), "the figure is in the display face");
   /* The head's summary sentence, through the same pageHead the deck pages use. */
   ok(/cm-cards-summary/.test(col), "the Library head carries its summary sentence");
@@ -275,14 +275,17 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
 {
   const {execFileSync} = await import("node:child_process");
   const UK = /\b(colour|colours|coloured|centre|centred|recognise|recognised|recognises|normalise|normalised|honour|honours|favour|favourite|grey|licence|organise|organised|analyse|cancelled|behaviour|catalogue|towards|defence|programme|artefact|artefacts|initialise|serialise|customise|minimise|optimise|summarise|visualise|prioritise|realise|utilise|authorise|neighbour|flavour|labour|humour|theatre|metre|litre|manoeuvre|jewellery|travelling|modelling|labelled|signalling|fulfil|enrol|instalment|skilful|ageing|judgement|acknowledgement|amongst|whilst)\b/gi;
-  const tracked = execFileSync("git", ["ls-files", "--", "*.md", "*.mjs", "*.js", "*.css", "*.html"], {cwd: ROOT, encoding: "utf8"}).split(/\r?\n/).filter((f) => f && !f.startsWith("vendor/") && !f.includes("design_handoff_") && !(f.startsWith("docs/uat/") && f.split("/").length > 3) && f !== "tests/feature-wiring.mjs" /* the word list lives here */ && f !== "docs/design/BRIEF.md" /* and the designers' "never write" column */ && f !== "game/engine/cards/definitions.mjs" /* generated from the card JSON, which this does not read: printed names and Oracle text (The Grey Havens) */
+  const tracked = execFileSync("git", ["ls-files", "--", "*.md", "*.mjs", "*.js", "*.css", "*.html"], {cwd: ROOT, encoding: "utf8"}).split(/\r?\n/).filter((f) => f && !f.startsWith("vendor/") && !f.includes("design_handoff_") && !(f.startsWith("docs/uat/") && f.split("/").length > 3) && f !== "tests/feature-wiring.mjs" /* the word list lives here */ && f !== "docs/design/BRIEF.md" /* and the designers' "never write" column */ && f !== "game/engine/cards/definitions.mjs" /* generated from the card JSON, which this does not read: printed names and Oracle text (The Grey Havens) */ && f !== "game/engine/cards/candidates.mjs" /* generated the same way from the oracle data: printed names (Grey Havens Navigator) */
     && f !== "cloud/advise-cards.mjs" /* generated from data/cards.json, which this does not read: printed names and type lines */);
   let total = 0; const byFile = [];
   /* Two event names the Java engine adapter emits (ForgeBrowserBridge.java) keep their spelling: they are
      protocol, not prose, and a journal written before today carries them. Nothing else is exempt. */
   const PROTOCOL = /browser-cast-cancelled|cancelled-model-request/g;
+  /* A card's printed name is its name, not prose: "Long-Bodied Grey Dog" is spelled as Wizards printed it, in the deck
+     write-ups (docs/design/2026-10-23-decks-screen/) as on the card. Only printed names are listed here. */
+  const PRINTED = /Long-Bodied Grey Dog/g;
   const EMAIL = /\be-mails?\b|\be-mailed\b/gi;   // US usage is "email"
-  for (const f of tracked) { const text = readFileSync(path.join(ROOT, f), "utf8").replace(PROTOCOL, ""); const n = (text.match(UK) || []).length + (text.match(EMAIL) || []).length; if (n) { total += n; byFile.push(`${f} (${n})`); } }
+  for (const f of tracked) { const text = readFileSync(path.join(ROOT, f), "utf8").replace(PROTOCOL, "").replace(PRINTED, ""); const n = (text.match(UK) || []).length + (text.match(EMAIL) || []).length; if (n) { total += n; byFile.push(`${f} (${n})`); } }
   /* 586 on the day the rule landed; 563 after V.1c, which rewrote enough stylesheet and deck-file
      prose to take twenty-three with it; 530 after the pass before the first production release
      (2026-09-24), which took every UK spelling in the app's own on-screen words away -- "Colour

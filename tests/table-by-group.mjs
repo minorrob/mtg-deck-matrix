@@ -92,8 +92,8 @@ try {
   await page.locator(`.cm-tt-mat [data-pile='place:${d1.gid}']`).click();
   await page.locator(".cm-tt-mat [data-pile^='group:status:']").first().waitFor({timeout: 30000});
   const byStatus = await page.locator(".cm-tt-mat [data-pile^='group:status:']").evaluateAll((bs) => bs.map((b) => b.getAttribute("aria-label")));
-  ok(byStatus.some((l) => /^Target, /.test(l)) && byStatus.reduce((n, l) => n + countOf(l), 0) === d1Count, `Group piles by Status breaks D1 into its card-state piles, adding up to D1 (${byStatus.join(" | ")})`);
-  ok(/^Target, /.test(byStatus[0]), `and in the order a deck is finished, Target first (${byStatus[0]})`);
+  ok(byStatus.some((l) => /^Final, /.test(l)) && byStatus.reduce((n, l) => n + countOf(l), 0) === d1Count, `Group piles by Status breaks D1 into its places, adding up to D1 (${byStatus.join(" | ")})`);
+  ok(/^Final, /.test(byStatus[0]), `and in the order a deck is finished, Final first (${byStatus[0]})`);
   eq(await page.locator("select[name=tabletopArrange]").count(), 0, "there is no second arrangement: the status piles are a breakout, not a band");
   await shot(page, "table-d1-by-status-1400");
   /* PUT AWAY, THE WHOLE TABLE AGAIN (G6d; found by the journeys walk): leaving an opened group -- Escape, or Back to Play

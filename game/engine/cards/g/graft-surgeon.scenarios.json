@@ -30,7 +30,7 @@
       "power": 3,
       "toughness": 3
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -165,7 +165,7 @@
           "cards": [
             "Graft Surgeon",
             "Oil",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -210,7 +210,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Graft Surgeon"
@@ -295,7 +295,7 @@
           "zone": "hand",
           "cards": [
             "Graft Surgeon",
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ],
@@ -319,7 +319,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Graft Surgeon"
@@ -381,7 +381,7 @@
           "zone": "hand",
           "cards": [
             "Graft Surgeon",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -412,7 +412,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Graft Surgeon"
@@ -435,7 +435,7 @@
           "zone": "graveyard",
           "cards": [
             "Graft Surgeon",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {

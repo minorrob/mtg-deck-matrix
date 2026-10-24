@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Elderfang Disciple",
+    "oracleId": "8db63f1a-0d63-4b11-966d-818d83a082f9",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Cleric"
+    ],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "When this creature enters, each opponent discards a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "discard",
+          "who": "opponent",
+          "count": 1
+        }
+      ],
+      "text": "When this creature enters, each opponent discards a card."
+    }
+  ]
+}

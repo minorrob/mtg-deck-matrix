@@ -1,0 +1,265 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Garruk Relentless // Garruk, the Veil-Cursed",
+    "oracleId": "7cec9021-6f25-4fd8-b40e-adf4ffd3a7b8",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Planeswalker"
+    ],
+    "subtypes": [
+      "Garruk"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "B",
+      "G"
+    ],
+    "power": null,
+    "toughness": null,
+    "loyalty": 3
+  },
+  "oracleText": "When Garruk has two or fewer loyalty counters on him, transform him.\n0: Garruk deals 3 damage to target creature. That creature deals damage equal to its power to him.\n0: Create a 2/2 green Wolf creature token.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When Garruk has two or fewer loyalty counters on him, transform him.",
+      "trigger": {
+        "on": "state",
+        "state": {
+          "compare": {
+            "count": {
+              "countersOn": "self",
+              "counter": "loyalty"
+            },
+            "atMost": 2
+          }
+        }
+      },
+      "effects": [
+        {
+          "effect": "setState",
+          "targets": "self",
+          "transform": true
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "0: Garruk deals 3 damage to target creature. That creature deals damage equal to its power to him.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": 0
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "targets": {
+            "target": 0
+          },
+          "amount": 3
+        },
+        {
+          "effect": "dealDamage",
+          "from": {
+            "target": 0
+          },
+          "targets": "self",
+          "amount": {
+            "powerOf": {
+              "target": 0
+            }
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "0: Create a 2/2 green Wolf creature token.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": 0
+        }
+      ],
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Wolf",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Wolf"
+            ],
+            "colors": [
+              "G"
+            ],
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    }
+  ],
+  "layout": "transform",
+  "back": {
+    "identity": {
+      "name": "Garruk, the Veil-Cursed",
+      "supertypes": [
+        "Legendary"
+      ],
+      "types": [
+        "Planeswalker"
+      ],
+      "subtypes": [
+        "Garruk"
+      ],
+      "manaCost": null,
+      "colors": [
+        "B",
+        "G"
+      ],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "+1: Create a 1/1 black Wolf creature token with deathtouch.\n−1: Sacrifice a creature. If you do, search your library for a creature card, reveal it, put it into your hand, then shuffle.\n−3: Creatures you control gain trample and get +X/+X until end of turn, where X is the number of creature cards in your graveyard.",
+    "abilities": [
+      {
+        "kind": "activated",
+        "text": "+1: Create a 1/1 black Wolf creature token with deathtouch.",
+        "cost": [
+          {
+            "atom": "loyalty",
+            "amount": 1
+          }
+        ],
+        "effects": [
+          {
+            "effect": "createToken",
+            "count": 1,
+            "token": {
+              "name": "Wolf",
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Wolf"
+              ],
+              "colors": [
+                "B"
+              ],
+              "power": 1,
+              "toughness": 1,
+              "keywords": [
+                "Deathtouch"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "kind": "activated",
+        "text": "−1: Sacrifice a creature. If you do, search your library for a creature card, reveal it, put it into your hand, then shuffle.",
+        "cost": [
+          {
+            "atom": "loyalty",
+            "amount": -1
+          }
+        ],
+        "effects": [
+          {
+            "effect": "sacrifice",
+            "count": 1,
+            "selector": {
+              "types": [
+                "Creature"
+              ]
+            },
+            "remember": true
+          },
+          {
+            "effect": "chooseCard",
+            "zone": "library",
+            "selector": {
+              "types": [
+                "Creature"
+              ]
+            },
+            "to": "hand",
+            "reveal": true,
+            "shuffle": true,
+            "condition": {
+              "about": "remembered",
+              "is": {}
+            }
+          }
+        ]
+      },
+      {
+        "kind": "activated",
+        "text": "−3: Creatures you control gain trample and get +X/+X until end of turn, where X is the number of creature cards in your graveyard.",
+        "cost": [
+          {
+            "atom": "loyalty",
+            "amount": -3
+          }
+        ],
+        "effects": [
+          {
+            "effect": "pumpAll",
+            "selector": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you"
+            },
+            "power": {
+              "count": {
+                "what": "card",
+                "zone": "graveyard",
+                "controller": "you",
+                "types": [
+                  "Creature"
+                ]
+              }
+            },
+            "toughness": {
+              "count": {
+                "what": "card",
+                "zone": "graveyard",
+                "controller": "you",
+                "types": [
+                  "Creature"
+                ]
+              }
+            },
+            "keywords": [
+              "Trample"
+            ],
+            "until": "end-of-turn"
+          }
+        ]
+      }
+    ]
+  }
+}

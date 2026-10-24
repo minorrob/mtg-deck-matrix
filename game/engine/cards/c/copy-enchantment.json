@@ -1,0 +1,39 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Copy Enchantment",
+    "oracleId": "87bc0b1f-49ef-4c06-9049-2c148b467882",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "You may have this enchantment enter as a copy of any enchantment on the battlefield.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "copyOf": {
+          "types": [
+            "Enchantment"
+          ]
+        }
+      },
+      "text": "You may have this enchantment enter as a copy of any enchantment on the battlefield."
+    }
+  ]
+}

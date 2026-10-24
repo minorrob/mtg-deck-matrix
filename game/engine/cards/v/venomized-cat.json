@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Venomized Cat",
+    "oracleId": "eb54d807-624b-471e-8c44-07322003903e",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Symbiote",
+      "Cat",
+      "Villain"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Deathtouch\nWhen this creature enters, mill two cards. (Put the top two cards of your library into your graveyard.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "deathtouch",
+      "text": "Deathtouch"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "mill",
+          "count": 2
+        }
+      ],
+      "text": "When this creature enters, mill two cards. (Put the top two cards of your library into your graveyard.)"
+    }
+  ]
+}

@@ -33,11 +33,19 @@ export const ZONES = [...PER_PLAYER, ...SHARED];
 
 const STARTING_LIFE = 40;
 
+/** The game's starting life total (CR 103.4, 119.1; 40 in Commander, CR 903.7, or the table's house rule): "your life total
+    is greater than or equal to your starting life total" (Happily Ever After). Kept on the state only when it is not 40
+    (createState), so every game at 40 hashes, checkpoints and replays as it did. */
+export const startingLifeOf = (state) => state.startingLife ?? STARTING_LIFE;
+
 /** A successful draw's ordinal this turn (CR 121.2): each card of a multi-card draw is separate.
  * Stored on the event as well as the player so later draws in one resolution cannot change it. */
-export function recordDraw(state, player) {
+export function recordDraw(state, player, id = null) {
   const who = state.players[player];
   who.drawnThisTurn = (who.drawnThisTurn ?? 0) + 1;
+  /* And the card drawn, as the object it is in the hand (CR 400.7): "choose two cards in your hand drawn this turn" (Sylvan
+     Library; script/filter.mjs, drawnThisTurn) -- with the turn it arrived there, a card no longer in the hand a new object. */
+  if (id !== null && state.objects[id]) state.objects[id].drawn = true;
   return who.drawnThisTurn;
 }
 /** "Except the first one they draw in each of their draw steps" (Orcish Bowmasters, wave 4b; CR 504.1): which card this is
@@ -120,6 +128,15 @@ export function createState(pod) {
     /* A cast tapped for tops up floating mana, and a source of more than one mana is tapped for all of it (rules/actions.mjs,
        `pooledTaps`; Rob, 2026-10-15). Only a pod that asks carries the key, as above. */
     ...(pod?.pooledTaps === true ? {pooledTaps: true} : {}),
+    /* And an {X} spell tapped for too, for each X the pool and the untapped sources pay together (rules/actions.mjs, `xTaps`;
+       Oct 21). Only a pod that asks carries the key, as above. */
+    ...(pod?.xTaps === true ? {xTaps: true} : {}),
+    /* And the players who may play their land in any step of their own turn, not only a main phase (rules/actions.mjs,
+       `landAnyStep`; Rob, 2026-10-21: "When I am on any step of my turn, I should be able to play a land"): a house rule,
+       for the people at a table, never its AI seats. Only a pod that names them carries the key, as above. */
+    ...(Array.isArray(pod?.landAnyStep) && pod.landAnyStep.length ? {landAnyStep: [...pod.landAnyStep]} : {}),
+    /* A starting life other than 40, for "your starting life total" (startingLifeOf, above). */
+    ...(life !== STARTING_LIFE ? {startingLife: life} : {}),
     players: seats.map((seat, id) => ({
       id,
       name: seat.name ?? `Seat ${id + 1}`,
@@ -197,6 +214,29 @@ function faceOf(mdfc, face) {
  */
 export function transformObject(state, id) {
   const object = state.objects[id];
+  if (object?.merged) {
+    let changed = false;
+    for (const part of object.merged) {
+      const card = part.physical;
+      if (!card.mdfc || part.faceDown) continue;
+      const to = card.face === "back" ? "front" : "back";
+      if ((card.mdfc[to].types ?? []).some(t => t === "Instant" || t === "Sorcery")) continue;
+      const next = faceOf(card.mdfc, to);
+      Object.assign(card, next); card.face = to;
+      part.values = {...part.values, ...next}; changed = true;
+    }
+    if (!changed) return false;
+    const parts = object.merged.map(p => p.values);
+    const onto = object.uncopied ?? object;
+    for (const key of COPY_KEYS) {
+      if (parts[0][key] === undefined) delete onto[key]; else onto[key] = structuredClone(parts[0][key]);
+    }
+    onto.abilities = parts.flatMap(p => p.abilities ?? []).map((a, i) => ({...a, id: `merged-${id}-${i}`}));
+    onto.keywords = parts.flatMap(p => p.keywords ?? []);
+    object.transforms = (object.transforms ?? 0) + 1;
+    object.timestamp = state.nextTimestamp++;
+    return true;
+  }
   if (!object?.mdfc) return false;
   const to = object.face === "back" ? "front" : "back";
   if ((object.mdfc[to].types ?? []).some((type) => type === "Instant" || type === "Sorcery")) return false;
@@ -260,7 +300,12 @@ const CARD_KEYS = ["card", "types", "subtypes", "supertypes", "manaCost", "color
  */
 export function turnFaceUp(state, id) {
   const object = state.objects[id];
+  if (object.merged?.some(p => p.faceDown && (p.physical.types ?? []).some(t => t === "Instant" || t === "Sorcery"))) return false;
   const real = object.faceDownCard;
+  for (const part of object.merged ?? []) if (part.faceDown) {
+    part.values = Object.fromEntries(COPY_KEYS.filter(k => part.physical[k] !== undefined).map(k => [k, structuredClone(part.physical[k])]));
+    delete part.faceDown;
+  }
   delete object.faceDown;
   delete object.faceDownCard;
   delete object.disguised;
@@ -270,6 +315,7 @@ export function turnFaceUp(state, id) {
   }
   object.timestamp = state.nextTimestamp;
   state.nextTimestamp += 1;
+  return true;
 }
 
 /** Turn a modal double-faced card in a player's hand to the face it is played with (CR 712.12): before it moves, so how
@@ -378,6 +424,13 @@ export function addObject(state, object, zone, player = null) {
     token: object.token === true,
     /* A copy of a spell (CR 707.10): a spell on the stack that is no card. Anywhere else it ceases to exist (CR 704.5e). */
     ...(object.copy === true ? {copy: true} : {}),
+    /* A candidate (card load step 5, Rob's decision 2): a card the card compiler wrote and no wave has reviewed yet, seated
+       at a playtest table only (game/room/room.mjs, `candidates`). No rule reads it; the board labels it. A fact of the
+       card, not of the object, so it survives every zone change (moveObject). */
+    ...(object.candidate === true ? {candidate: true} : {}),
+    /* An emblem (CR 114; script/effects/permanents.mjs, emblem): an object in the command zone, neither a card nor a
+       permanent (114.5), whose abilities function there (114.4). */
+    ...(object.emblem === true ? {emblem: true} : {}),
     /* CR 903.3: a card designated as a commander stays one wherever it goes, so this survives every
        zone change along with the card's own characteristics. Three modules read it — the tax, the
        command-zone replacement and the 21-damage tally — and for a while none of them could,
@@ -499,7 +552,7 @@ export function recordUse(state, id, key) {
 
 /* `transformed` (CR 712.14a): a double-faced card put onto the battlefield with its back face up. */
 /* `disguised` (CR 702.168b): face down as a disguise casts it -- onto the stack, and from there onto the battlefield. */
-export function moveObject(state, id, zone, player = null, {faceDown = false, transformed = false, disguised = false} = {}) {
+export function moveObject(state, id, zone, player = null, {faceDown = false, transformed = false, disguised = false, nonCommanderTo = null, commanderKeys = []} = {}) {
   const current = state.objects[id];
   if (!current) throw new Error(`There is no object ${id} to move`);
   /* A face-down permanent leaving is revealed, and moves as the card it is (CR 708.9). */
@@ -522,11 +575,59 @@ export function moveObject(state, id, zone, player = null, {faceDown = false, tr
      cardsLeftGraveyardThisTurn; cleared as a turn begins, rules/turn.mjs). */
   if (from.zone === "graveyard" && from.token !== true) state.players[from.zonePlayer].leftGraveyardThisTurn = (state.players[from.zonePlayer].leftGraveyardThisTurn ?? 0) + 1;
 
+  /* One permanent leaves, all its components become separate objects (CR 730.3). */
+  if (current.merged) {
+    const moved = current.merged.map(({physical}) => {
+      const destination = physical.commander === true && commanderKeys.includes(commanderKeyOf(physical)) ? "command"
+        : zone === "command" && physical.commander !== true && nonCommanderTo ? nonCommanderTo : zone;
+      return moveCard(state, {...physical, zone: current.zone}, destination,
+        ["hand", "graveyard", "library", "command"].includes(destination) ? physical.owner : null, {faceDown, transformed, disguised});
+    });
+    state.objects[moved[0]].departedTogether = moved;
+    const ordering = moved.filter(id => ["library", "graveyard", "exile"].includes(state.objects[id].zone) && !state.objects[id].token);
+    if (ordering.length > 1) (state.mergedOrders ??= []).push({cards: ordering, player: current.owner});
+    return moved[0];
+  }
+  return moveCard(state, from, zone, player, {faceDown, transformed, disguised});
+}
+
+/** All objects an effect can find after a merged permanent leaves (CR 730.3c). */
+export const objectsAfterMove = (state, id) => id == null ? [] : state.objects[id]?.departedTogether ?? [id];
+
+/** Ordering the cards a merged permanent becomes is a choice (CR 730.3a-b). */
+export function mergedOrderToAsk(state) {
+  while (state.mergedOrders?.length) {
+    const first = state.mergedOrders[0];
+    const cards = first.cards.filter(id => state.objects[id] && ["library", "graveyard", "exile"].includes(state.objects[id].zone));
+    if (cards.length > 1) return {kind: "merged-order", player: first.player, cards};
+    state.mergedOrders.shift();
+  }
+  return null;
+}
+export function mergedOrderChoice(state, awaiting) {
+  return {id: `merged-order:${awaiting.cards.join(",")}`, title: "Order these cards, first to last", mode: "order",
+    min: awaiting.cards.length, max: awaiting.cards.length,
+    options: awaiting.cards.map((cardId, index) => ({index, cardId, label: state.objects[cardId].card}))};
+}
+export function finishMergedOrder(state, awaiting, indices) {
+  if (indices.length !== awaiting.cards.length || new Set(indices).size !== indices.length || indices.some(i => !awaiting.cards[i])) throw new Error("Choose an order containing each card once.");
+  const ordered = indices.map(i => awaiting.cards[i]);
+  const first = state.objects[ordered[0]], zone = listFor(state, first.zone, first.zonePlayer);
+  const positions = zone.flatMap((id, i) => ordered.includes(id) ? [i] : []);
+  positions.forEach((at, i) => { zone[at] = ordered[i]; });
+  if (first.zone === "exile") for (const id of ordered) state.objects[id].timestamp = state.nextTimestamp++;
+  state.mergedOrders.shift();
+  state.awaiting = null;
+  return [];
+}
+
+function moveCard(state, from, zone, player, {faceDown, transformed, disguised}) {
+
   /* Only what the CARD says survives the move: its identity, its printed types and its owner. The
      owner does (CR 108.3): a card goes to its OWNER's graveyard however long someone else
      controlled it. Counters, damage, attachments and control do not — that is CR 400.7. */
   const kept = {owner: from.owner, controller: from.owner, token: from.token, copy: from.copy, commander: from.commander,
-    commanderKey: from.commander === true ? commanderKeyOf(from) : undefined, colorIdentity: from.colorIdentity};
+    commanderKey: from.commander === true ? commanderKeyOf(from) : undefined, colorIdentity: from.colorIdentity, candidate: from.candidate};
   /* PUT ONTO THE BATTLEFIELD FACE DOWN (manifest, CR 701.40a): turned face down before it enters (708.3), so it arrives
      with the face-down characteristics and nothing of its own -- the card it is kept beside them, as it was where it came
      from: a double-faced card's front face (712.8a, 712.15). */
@@ -549,7 +650,9 @@ export function moveObject(state, id, zone, player = null, {faceDown = false, tr
   const arrived = addObject(state, {
     /* A double-faced card keeps the face that was up only onto the battlefield, where it was put that way; anywhere else
        it is its front (CR 712.8a). */
-    ...(from.mdfc ? {mdfc: from.mdfc, face: zone === "battlefield" && (from.face === "back" || transformed === true) ? "back" : undefined} : {}),
+    ...(from.mdfc ? {mdfc: from.mdfc, face: (zone === "battlefield" && (from.face === "back" || transformed === true))
+      /* And onto the stack, a modal double-faced card cast as its back face (CR 712.11a; rules/actions.mjs, withBackFace). */
+      || (zone === "stack" && from.face === "back" && from.mdfc.transforming !== true) ? "back" : undefined} : {}),
     /* An adventurer card goes to the stack as its Adventure when it was shown as one to be cast (CR 715.3b), and leaves it --
        countered, resolved, wherever it goes -- as itself (715.4). */
     ...(from.adventurer ? {adventurer: from.adventurer, face: zone === "stack" && from.face === "adventure" ? "adventure" : undefined} : {}),

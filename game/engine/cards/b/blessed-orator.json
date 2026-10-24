@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Blessed Orator",
+    "oracleId": "c0856fea-cbdc-427b-ae00-bfd9311f284f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Cleric"
+    ],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 4
+  },
+  "oracleText": "Other creatures you control get +0/+1.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "controller": "you",
+        "types": [
+          "Creature"
+        ],
+        "another": true
+      },
+      "apply": {
+        "power": 0,
+        "toughness": 1
+      },
+      "text": "Other creatures you control get +0/+1."
+    }
+  ]
+}

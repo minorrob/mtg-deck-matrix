@@ -37,7 +37,7 @@ import {
 } from "./resources.mjs";
 import {
   createToken, animate, animateAll, pump, pumpAll, effectUntil, delayedTrigger, cleanup, attach, copyPermanent, regenerate, addPhase, gainControl,
-  becomeCopy, earthbend, goad, immediateTrigger, investigate, phaseOut, setState, exchangeControl, incubate,
+  becomeCopy, earthbend, goad, immediateTrigger, investigate, phaseOut, setState, exchangeControl, incubate, emblem, leaveCombat,
 } from "./permanents.mjs";
 import {alterAttribute} from "./attributes.mjs";
 import {addTurn} from "./turns.mjs";
@@ -82,7 +82,7 @@ export const TOP_25 = Object.freeze([
  * `effects/asking.mjs`, driven by `resolution.mjs`. Putting a throwing stub in the registry would
  * have made "is this built" answer yes to something no caller can use.
  */
-export const NEEDS_A_DECISION = Object.freeze(["dig", "scry", "surveil", "discard", "modal", "chooseCard", "proliferate", "sacrifice", "populate", "amass", "unlessPays", "copySpell", "chooseType", "chooseColor", "play", "changeTargets", "empowerJace", "twoPiles", "chooseSource", "vote",
+export const NEEDS_A_DECISION = Object.freeze(["mergePermanent", "ringTempts", "dig", "scry", "surveil", "discard", "modal", "chooseCard", "proliferate", "sacrifice", "populate", "amass", "unlessPays", "copySpell", "chooseType", "chooseColor", "play", "changeTargets", "empowerJace", "twoPiles", "chooseSource", "vote",
   /* Connive (CR 701.50): which permanent connives next, and what its controller discards. */
   "connive",
   /* Explore (CR 701.44): whether the revealed nonland card goes to the graveyard. */
@@ -98,10 +98,15 @@ export function eachOf(state, each, context) {
   if (each === "player") return players.map((player) => ({player}));
   if (each === "opponent") return players.filter((player) => player !== context.controller).map((player) => ({player}));
   if (each === "creature") return state.zones.battlefield.filter((id) => typesOf(state, id).includes("Creature")).map((card) => ({card, player: controllerOf(state, card)}));
+  /* "For each of those cards, pay 4 life or put the card on top of your library" (Sylvan Library): each card an earlier effect
+     remembered, still there, in the order it was chosen, as "that card" -- its owner "that player". */
+  if (each === "remembered") return (context.remembered ?? []).filter((id) => state.objects[id]).map((card) => ({card, player: state.objects[card].owner}));
   return [];
 }
+/* The most passes a process repeated "again" makes: more than any library holds, so only a library run out ends it. */
+const REPEAT_LIMIT = 1000;
 /** What `repeatFor` may range over. */
-export const REPEAT_EACH = Object.freeze(["player", "opponent", "creature"]);
+export const REPEAT_EACH = Object.freeze(["player", "opponent", "creature", "remembered"]);
 
 /**
  * `repeatFor` — Forge's RepeatEach: "deals damage to each player equal to twice the number of nonbasic lands that
@@ -111,6 +116,16 @@ export const REPEAT_EACH = Object.freeze(["player", "opponent", "creature"]);
  */
 function repeatFor(state, params, context, rng = null) {
   const events = [];
+  /* "Create a 1/1 ... Insect creature token, then mill a card. If an Insect card was milled this way, put a loyalty counter on
+     Grist and repeat this process" (Grist, the Hunger Tide): `again`, a condition asked after each pass, the effects done once
+     more while it holds -- no `each`. A pass that mills an empty library mills nothing, and the process ends there. */
+  if (params.again !== undefined) {
+    for (let pass = 0; pass < REPEAT_LIMIT; pass += 1) {
+      for (const effect of params.effects ?? []) events.push(...runEffect(state, countEffect(state, bindEffect(effect, context), context), context, rng));
+      if (!conditionHolds(state, params.again, {controller: context.controller, source: context.source ?? null, remembered: context.remembered, targets: context.targets})) break;
+    }
+    return events;
+  }
   for (const about of eachOf(state, params.each, context)) {
     const each = {...context, about: {...(context.about ?? {}), ...about}};
     for (const effect of params.effects ?? []) events.push(...runEffect(state, countEffect(state, bindEffect(effect, each), each), each, rng));
@@ -146,6 +161,8 @@ export const EFFECTS = Object.freeze({
   /* Batch 24: damage to each creature and each opponent. Batch 28: a regeneration shield. Batch 33: extra phases.
      Batch 36: the same for each player, opponent or creature. */
   damageAll, regenerate, addPhase, repeatFor,
+  /* Wave 4d L3: "remove target attacking creature you control from combat" (Reconnaissance; CR 506.4). */
+  removeFromCombat: leaveCombat,
   /* Batch 52: two creatures fight (CR 701.14). */
   fight,
   /* Batch 40: a change of control, for a turn or for good. Batch 49: every permanent a selector fits, sacrificed. */
@@ -186,6 +203,8 @@ export const EFFECTS = Object.freeze({
   moveCounters, addTurn,
   /* "Loses all abilities" (Train D): control of two permanents exchanged (CR 701.12b; Oko, Thief of Crowns). */
   exchangeControl,
+  /* The library load's L1: "you get an emblem with ..." (CR 114; Teferi, Hero of Dominaria). */
+  emblem,
   /* Train E: incubate (CR 701.53a; Sunfall), an Incubator token entering with +1/+1 counters. */
   incubate,
   /* Train E: "you become the monarch" (CR 725; Ginger, Queen of Sweets), and the monarch's own trigger (rules/trigger.mjs). */

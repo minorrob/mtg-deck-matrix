@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Nezumi Cutthroat",
+    "oracleId": "a323a3af-8a74-433c-8994-707a09ef3a0c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Rat",
+      "Warrior"
+    ],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Fear (This creature can't be blocked except by artifact creatures and/or black creatures.)\nThis creature can't block.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "fear",
+      "text": "Fear (This creature can't be blocked except by artifact creatures and/or black creatures.)"
+    },
+    {
+      "kind": "static",
+      "rule": "cant-block",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "text": "This creature can't block."
+    }
+  ]
+}

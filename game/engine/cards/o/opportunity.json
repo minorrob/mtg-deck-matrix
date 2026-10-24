@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Opportunity",
+    "oracleId": "1f544a9f-c238-4858-be19-d6cd7d023dcc",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target player draws four cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "player"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 4,
+          "who": {
+            "target": 0
+          }
+        }
+      ],
+      "text": "Target player draws four cards."
+    }
+  ]
+}

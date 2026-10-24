@@ -6,7 +6,8 @@ import {sharing,ShareError,sharedIdentity} from '../cloud/sharing.mjs';
 import {createLibrary} from '../cloud/library.mjs';
 const raw=new DatabaseSync(':memory:');raw.exec('PRAGMA foreign_keys=ON');
 for(const f of ['0001_accounts','0002_ai','0003_sharing','0004_mail_retries','0005_access_invites'])raw.exec(readFileSync(new URL('../cloud/migrations/'+f+'.sql',import.meta.url),'utf8'));
-const stmt=(sql,args=[])=>({bind:(...v)=>stmt(sql,v),first:async()=>raw.prepare(sql).get(...args)||null,all:async()=>({results:raw.prepare(sql).all(...args)}),run:async()=>({meta:{changes:Number(raw.prepare(sql).run(...args).changes)}}),sync:()=>({meta:{changes:Number(raw.prepare(sql).run(...args).changes)}})});
+let snapshotReads=0;
+const stmt=(sql,args=[])=>({bind:(...v)=>stmt(sql,v),first:async()=>{if(sql.includes(', s.body FROM snapshots'))snapshotReads++;return raw.prepare(sql).get(...args)||null},all:async()=>({results:raw.prepare(sql).all(...args)}),run:async()=>({meta:{changes:Number(raw.prepare(sql).run(...args).changes)}}),sync:()=>({meta:{changes:Number(raw.prepare(sql).run(...args).changes)}})});
 const db={prepare:s=>stmt(s),batch:async list=>{raw.exec('BEGIN');try{const out=list.map(x=>x.sync());raw.exec('COMMIT');return out;}catch(e){raw.exec('ROLLBACK');throw e;}}};
 const M=globalThis.CrankCollection,E=globalThis.CrankExchange,lib=createLibrary(db);
 const owner=await lib.user('owner@example.com'),reviewer=await lib.user('reviewer@example.com'),writer=await lib.user('writer@example.com'),stranger=await lib.user('stranger@example.com');
@@ -20,13 +21,13 @@ let sent=[],failMail=false,requests=[];
 let clock=Date.now();const now=()=>new Date(clock).toISOString();
 const mailFetch=async (url,args)=>{assert.equal(url,'https://api.resend.com/emails');requests.push(args);if(failMail)throw Error('offline');sent.push(JSON.parse(args.body));return Response.json({id:crypto.randomUUID()});};
 const env={INVITE_ADMIN_ID:String(owner.id),RESEND_API_KEY:'test-only'};
-const svc=sharing(db,env,{fetchImpl:mailFetch,now});let checks=0;const eq=(a,b,m)=>{assert.deepEqual(a,b,m);checks++;};const rejects=async(fn,status)=>{await assert.rejects(fn,e=>e instanceof ShareError&&e.status===status);checks++;};
+const svc=sharing(db,env,{fetchImpl:mailFetch,now,cacheProjections:false});let checks=0;const eq=(a,b,m)=>{assert.deepEqual(a,b,m);checks++;};const rejects=async(fn,status)=>{await assert.rejects(fn,e=>e instanceof ShareError&&e.status===status);checks++;};
 await svc.updateProfile(writer,{name:'Will Player',avatar:''});await svc.profile(owner);
 eq((await svc.search(owner,'Wi')).users.length,0,'minimum search length');eq((await svc.search(owner,'Will')).users[0].id,writer.id,'name search');eq((await svc.search(owner,'writer@')).users[0].id,writer.id,'email search');eq((await svc.search(owner,'%%%')).users.length,0,'wildcards are literal');
 let result=await svc.save(owner,{kind:'deck',sourceId:'deck:one',revision:0,publicRole:null,grants:[{id:reviewer.id,role:'reviewer'},{id:writer.id,role:'collaborator'}]},'https://example.com');const id=result.settings.id;
 eq(sent.length,2,'one notification per new recipient');eq(sent[0].from,'CrankMagic <invite@crankmagic.com>','verified sender domain');
 eq((await svc.list(stranger,'deck')).items.length,0,'private item not listed');await rejects(()=>svc.read(id,stranger),404);
-let item=await svc.read(id,reviewer);eq(item.access,'reviewer','review role');eq(item.content.slots.reduce((s,x)=>s+x.quantity,0),100,'complete playable list');
+let item=await svc.read(id,reviewer);eq(item.access,'reviewer','review role');eq(item.via,'grant','reached through a grant to them');eq((await svc.read(id,owner)).via,'owner','the owner reads their own');eq(item.content.slots.reduce((s,x)=>s+x.quantity,0),100,'complete playable list');
 eq(JSON.stringify(item).includes('PRIVATE'),false,'no inventory notes or preferences');
 await rejects(()=>svc.edit(reviewer,id,{head:item.head,command:{type:'editDeck',name:'Hijacked'}}),403);
 const updated=await svc.edit(writer,id,{head:item.head,command:{type:'editDeck',name:'Edited with permission',notes:'New strategy'}});eq(updated.content.name,'Edited with permission','collaborator edits owner item');
@@ -35,7 +36,7 @@ await rejects(()=>svc.edit(writer,id,{head:updated.head,command:{type:'deleteDec
 const quantity=await svc.edit(writer,id,{head:updated.head,command:{type:'target',cardId:'wastes',quantity:98}});eq(quantity.content.slots.find(x=>x.cardId==='wastes').quantity,98,'quantity uses model rules');
 await rejects(()=>svc.emailDeck(writer,{id,email:'friend@example.com'},'https://example.com'),403);
 result=await svc.save(owner,{kind:'deck',sourceId:'deck:one',revision:1,publicRole:'reviewer',grants:[]},'https://example.com');
-eq((await svc.list(stranger,'deck')).items.length,1,'public deck available');await rejects(()=>svc.edit(writer,id,{head:quantity.head,command:{type:'editDeck',name:'No longer writer'}}),403);
+eq((await svc.list(stranger,'deck')).items.length,1,'public deck available');eq((await svc.list(stranger,'deck')).items[0].via,'public','a stranger reaches it only because it is public');await rejects(()=>svc.edit(writer,id,{head:quantity.head,command:{type:'editDeck',name:'No longer writer'}}),403);
 await rejects(()=>svc.save(owner,{kind:'deck',sourceId:'deck:one',revision:1,publicRole:'collaborator',grants:[]},'https://example.com'),409);
 result=await svc.save(owner,{kind:'deck',sourceId:'deck:one',revision:2,publicRole:'collaborator',grants:[]},'https://example.com');eq((await svc.read(id,stranger)).access,'collaborator','explicit public editing');
 result=await svc.save(owner,{kind:'deck',sourceId:'deck:one',revision:3,publicRole:null,grants:[]},'https://example.com');await rejects(()=>svc.read(id,stranger),404);
@@ -132,4 +133,49 @@ for(const reply of [()=>Response.json({error:'private provider data'},{status:42
   const failedSvc=sharing(db,env,{now,fetchImpl:async()=>reply()}),mid=await failedSvc.queue(owner,'retry@example.com','Failure','Test');
   const result=await failedSvc.delivery(owner,mid);eq(result.status,'failed','invalid provider response never accepted');eq(JSON.stringify(result).includes('private provider'),false,'provider data stays private');
 }
+// A shared-deck list must not decode a large collection once for every deck in it.
+const loadOwner=await lib.user('load-owner@example.com');
+let loadState=M.empty();
+const loadApply=(type,args)=>loadState=M.apply(loadState,{type,id:crypto.randomUUID(),...args}).state;
+loadApply('cards',{cards:[...Object.values(state.cards),...Array.from({length:1400},(_,i)=>({id:`load-card-${i}`,name:`Collection card ${i}`,typeLine:'Artifact',verified:true}))]});
+for(let i=0;i<100;i++)loadApply('createDeck',{deckId:`load-deck-${i}`,name:`Load deck ${i}`,commanders:['leader'],slots:[{cardId:'leader',quantity:1},{cardId:'wastes',quantity:99}]});
+async function saveLoadState(){const b=await E.backup({state:loadState,history:[]}),head=await lib.head(loadOwner.id);await lib.save(loadOwner.id,{parent:head?.id||null,revision:loadState.revision,device:'Test',checksum:b.checksum,body:gzipSync(JSON.stringify(b)).toString('base64')});}
+await saveLoadState();
+const loadIds=[];
+for(let i=0;i<100;i++){
+ const shared=await svc.save(loadOwner,{kind:'deck',sourceId:`load-deck-${i}`,revision:0,publicRole:'reviewer',grants:[]},'https://example.com');loadIds.push(shared.settings.id);
+ if(i===9||i===99){
+  snapshotReads=0;const listed=await svc.list(stranger,'deck');
+  eq(listed.items.length,i+1,`${i+1} shared decks returned completely`);
+  eq(snapshotReads,1,`${i+1} decks load their owner's full library only once`);
+  eq(listed.items.map(x=>x.id),[...loadIds].sort(),'list order remains share-id order');
+  eq(listed.items.every(x=>x.content.slots.reduce((n,slot)=>n+slot.quantity,0)===100),true,'every shared deck is complete');
+ }
+}
+loadApply('editDeck',{deckId:'load-deck-0',name:'Fresh owner edit'});await saveLoadState();
+snapshotReads=0;eq((await svc.list(stranger,'deck')).items.find(x=>x.id===loadIds[0]).content.name,'Fresh owner edit','later list reads fresh owner edits');eq(snapshotReads,1,'snapshot reuse ends with its list request');
+await svc.save(loadOwner,{kind:'deck',sourceId:'load-deck-0',revision:1,publicRole:null,grants:[]},'https://example.com');
+eq((await svc.list(stranger,'deck')).items.some(x=>x.id===loadIds[0]),false,'revocation applies on next list');await rejects(()=>svc.read(loadIds[0],stranger),404);
+// Interleaved share IDs from different owners still use one snapshot per owner and keep public order.
+await svc.save(owner,{kind:'deck',sourceId:'deck:one',revision:4,publicRole:'reviewer',grants:[]},'https://example.com');
+snapshotReads=0;const mixed=await svc.list(stranger,'deck');eq(snapshotReads,2,'different owners load only their own library once');eq(mixed.items.length,100,'both owners retain their visible decks');eq(mixed.items.map(x=>x.id),mixed.items.map(x=>x.id).sort(),'grouping owners does not change visible order');
+eq(mixed.items.find(x=>x.id===id).content.name,'Edited with permission','another owner never receives the cached first owner data');
+// Projection memoization never caches authority or whole private libraries.
+const memoDb={...db},cached=sharing(memoDb,env,{fetchImpl:mailFetch,now});
+snapshotReads=0;const cold=await cached.list(stranger,'deck');eq(cold.items.length,100,'cold cached list remains complete');
+eq(snapshotReads,2,'cold list decodes once per owner');
+snapshotReads=0;const warm=await sharing(memoDb,env,{fetchImpl:mailFetch,now}).list(stranger,'deck');
+eq(warm,cold,'another request receives the same authorized projections');eq(snapshotReads,0,'warm list does not decode full owner libraries');
+const visibleId=loadIds[1];const visible=await cached.read(visibleId,stranger);visible.content.name='Caller mutation';
+eq((await cached.read(visibleId,stranger)).content.name,'Load deck 1','returned data cannot mutate shared cache');
+loadApply('editDeck',{deckId:'load-deck-1',name:'Fresh cached edit'});await saveLoadState();
+snapshotReads=0;eq((await cached.read(visibleId,stranger)).content.name,'Fresh cached edit','new snapshot bypasses prior cached content immediately');eq(snapshotReads,1,'fresh head is decoded and validated');
+snapshotReads=0;await cached.read(id,stranger);eq(snapshotReads,1,'projection entry bound evicts the least recently used version');
+await svc.save(loadOwner,{kind:'deck',sourceId:'load-deck-1',revision:1,publicRole:null,grants:[{id:reviewer.id,role:'reviewer'}]},'https://example.com');
+await rejects(()=>cached.read(visibleId,stranger),404);eq((await cached.read(visibleId,reviewer)).access,'reviewer','cached content still requires a current grant');
+eq((await cached.list(stranger,'deck')).items.some(x=>x.id===visibleId),false,'revoked item is absent from warm list');
+const scopedDb={...db};snapshotReads=0;await sharing(scopedDb,env,{fetchImpl:mailFetch,now}).read(id,stranger);eq(snapshotReads,1,'different database binding does not reuse another cache');
+const damaged=await E.backup({state:loadState,history:[]});damaged.payload.state.decks[1].name='Unchecked change';
+const oldHead=await lib.head(loadOwner.id);await lib.save(loadOwner.id,{parent:oldHead.id,revision:loadState.revision,device:'Test',checksum:damaged.checksum,body:gzipSync(JSON.stringify(damaged)).toString('base64')});
+await assert.rejects(()=>cached.read(visibleId,reviewer),/checksum/);checks++;
 console.log(`sharing: ${checks} checks passed — live permissions, revocation, public access, concurrent edits, privacy, notification retry and owner-only invitations.`);

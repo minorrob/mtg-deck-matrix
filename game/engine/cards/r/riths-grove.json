@@ -1,0 +1,80 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rith's Grove",
+    "oracleId": "e13289e5-370b-435b-a38e-cf57c3078cec",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [
+      "Lair"
+    ],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "G",
+      "R",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "When this land enters, sacrifice it unless you return a non-Lair land you control to its owner's hand.\n{T}: Add {R}, {G}, or {W}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "who": "you",
+          "returnToHand": {
+            "types": [
+              "Land"
+            ],
+            "nonSubtypes": [
+              "Lair"
+            ]
+          },
+          "effects": [
+            {
+              "effect": "moveZone",
+              "targets": "self",
+              "sacrifice": true
+            }
+          ]
+        }
+      ],
+      "text": "When this land enters, sacrifice it unless you return a non-Lair land you control to its owner's hand."
+    },
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "R": 1
+            },
+            {
+              "G": 1
+            },
+            {
+              "W": 1
+            }
+          ]
+        }
+      ],
+      "text": "{T}: Add {R}, {G}, or {W}."
+    }
+  ]
+}

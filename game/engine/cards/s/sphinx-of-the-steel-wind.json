@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sphinx of the Steel Wind",
+    "oracleId": "1c96772b-463c-4655-836b-cf6e9dc6319f",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Sphinx"
+    ],
+    "manaCost": "{5}{W}{U}{B}",
+    "colors": [
+      "B",
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "U",
+      "W"
+    ],
+    "power": 6,
+    "toughness": 6
+  },
+  "oracleText": "Flying, first strike, vigilance, lifelink, protection from red and from green",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "first strike",
+      "text": "first strike"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "vigilance",
+      "text": "vigilance"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "lifelink",
+      "text": "lifelink"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "protection",
+      "from": {
+        "colors": [
+          "R",
+          "G"
+        ]
+      },
+      "text": "protection from red and from green"
+    }
+  ]
+}

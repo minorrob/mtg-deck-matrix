@@ -1,0 +1,66 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Timely Ward",
+    "oracleId": "8e589dca-d31e-4d2f-81b1-18e5f9198795",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "You may cast this spell as though it had flash if it targets a commander.\nEnchant creature\nEnchanted creature has indestructible.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "You may cast this spell as though it had flash if it targets a commander.",
+      "rule": "flash-if-targets",
+      "targeting": {
+        "types": [
+          "Creature"
+        ],
+        "commander": true
+      },
+      "affects": {
+        "what": "card",
+        "self": true
+      }
+    },
+    {
+      "kind": "keyword",
+      "text": "Enchant creature",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Enchanted creature has indestructible.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "addKeywords": [
+          "Indestructible"
+        ]
+      }
+    }
+  ]
+}

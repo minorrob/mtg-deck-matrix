@@ -10,7 +10,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Darksteel Myr": {
+    "Smoke Darksteel Myr": {
       "types": [
         "Artifact",
         "Creature"
@@ -109,7 +109,7 @@
           "seat": 1,
           "zone": "battlefield",
           "cards": [
-            "Darksteel Myr"
+            "Smoke Darksteel Myr"
           ]
         }
       ],
@@ -124,7 +124,7 @@
           "cast": "Infernal Grasp",
           "targets": [
             {
-              "card": "Darksteel Myr"
+              "card": "Smoke Darksteel Myr"
             }
           ]
         },
@@ -137,7 +137,7 @@
           "seat": 1,
           "zone": "battlefield",
           "cards": [
-            "Darksteel Myr"
+            "Smoke Darksteel Myr"
           ]
         },
         {

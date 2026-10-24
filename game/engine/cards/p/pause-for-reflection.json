@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Pause for Reflection",
+    "oracleId": "a7f266b5-7258-4eaa-b447-66460ec38505",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.)\nPrevent all combat damage that would be dealt this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "convoke",
+      "text": "Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.)"
+    },
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "rule": "prevent-damage",
+          "apply": {
+            "combat": true,
+            "all": true
+          },
+          "until": "end-of-turn"
+        }
+      ],
+      "text": "Prevent all combat damage that would be dealt this turn."
+    }
+  ]
+}

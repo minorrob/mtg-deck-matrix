@@ -92,11 +92,15 @@ try {
     await page.keyboard.press("Escape");
     await page.keyboard.press("Escape");
 
-    /* Play is Coming Soon -- or, on a release with Play in the cloud (staging since 2026-09-29), the table's page. */
+    /* Cloud Play opens the lounge; making a new table is an explicit action there. */
     await nav("Play");
     if (await page.getAttribute('meta[name="crankmagic-play"]', "content") === "cloud") {
-      await page.getByRole("heading", {name: "New table"}).waitFor({timeout: 20000});
-      ok(!/Coming Soon/.test(await page.locator("#cm-main").textContent()), "Play is the table's page: New table, not Coming Soon");
+      await page.locator("#cm-play-home").waitFor({timeout: 20000});
+      ok(await page.getByRole("heading", {name: "A place at the table"}).count() === 1 && await page.locator("#cm-table-new").count() === 0, "Play opens the Commander lounge before table setup");
+      await shot("02-play-lounge");
+      await page.getByRole("button", {name: "New table", exact: true}).click();
+      await page.locator("#cm-table-new").waitFor({timeout: 20000});
+      ok(await page.getByRole("heading", {name: "New table", exact: true}).count() === 1, "New table opens table setup from the lounge");
       await shot("02-play-new-table");
       await nav("Decks");
       await page.waitForFunction(() => location.hash.startsWith("#decks"));
@@ -145,7 +149,7 @@ try {
   await shot("05-create-deck-page");
   /* Finalize marks the list final (G3d, D4: a draft already reserves what you own and lists the rest to buy, so
      finalizing is the badge, not the step that makes the buy list). */
-  await click("Finalize");
+  await click("Lock list");
   await click("Confirm change");
   await page.getByRole("dialog").waitFor({state: "hidden"});
   ok((await library()).decks.find((d) => d.id === saved.id).status === "final", "Finalize makes it final");

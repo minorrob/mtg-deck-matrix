@@ -162,6 +162,8 @@ function validateIndices(choice, request) {
     if (!Number.isInteger(n) || n < 0 || n >= size || seen.has(n)) throw new Error("Invalid selection");
     seen.add(n);
   }
+  if (choice.budget && indices.reduce((total, i) => total + (choice.options[i]?.[choice.budget.by] ?? 0), 0) > choice.budget.most)
+    throw new Error(choice.budget.why ?? `Choose options totaling ${choice.budget.most} or less.`);
   /* SOME CHOICES OFFER THE SAME THING SEVERAL WAYS. Declaring attackers lists one option per
      creature per defender, so two distinct indices can name the same creature — and a creature
      attacks once (CR 508.1a). The record says which field has to stay unique, and every answerer is
@@ -187,11 +189,13 @@ function validateIndices(choice, request) {
     }
   }
   /* AND SOME OPTIONS MUST BE AMONG THOSE TAKEN: "other Goblin creatures you control attack each combat if able" (CR 508.1d)
-     -- at least `least` of the options whose `by` field is one of `values`, each value once. Refused with the record's own
-     words (`why`): which, and what to do instead. */
+     -- at least `least` of the values, each met by an option whose `by` field is it -- by `per[value]` of them where the
+     record says more than one (a menace attacker that must be blocked if able, by two; CR 509.1c). Refused with the
+     record's own words (`why`): which, and what to do instead. */
   for (const need of Array.isArray(choice.requires) ? choice.requires : []) {
-    const met = new Set(indices.map((n) => (choice.options ?? [])[n]?.[need.by]).filter((value) => (need.values ?? []).includes(value)));
-    if (met.size < (need.least ?? 0)) throw new Error(need.why ?? "Invalid selection");
+    const taken = indices.map((n) => (choice.options ?? [])[n]?.[need.by]);
+    const met = (need.values ?? []).filter((value) => taken.filter((t) => t === value).length >= (need.per?.[value] ?? 1));
+    if (met.length < (need.least ?? 0)) throw new Error(need.why ?? "Invalid selection");
   }
   if (choice.choiceKind === "manipulate") validateManipulateOrder(choice, request);
 }
@@ -308,6 +312,17 @@ export function createController(resume = null) {
          retried action returns from the receipt cache above and moves nothing. */
       revision += 1;
       return receiptFor(actionId);
+    },
+
+    /**
+     * Why an answer of these indices to the pending choice would be refused, or null, changing nothing (Linear ROB-75):
+     * what `answer` checks of a choice of options, for a board to ask before it sends one.
+     */
+    check({choiceId, indices} = {}) {
+      if (!pending || answered || choiceId !== pending.id) return "This choice has expired";
+      if (!BY_INDICES(pending.mode)) return "Only a choice of options can be checked";
+      try {validateIndices(pending, {indices});} catch (error) {return error.message;}
+      return null;
     },
 
     /**

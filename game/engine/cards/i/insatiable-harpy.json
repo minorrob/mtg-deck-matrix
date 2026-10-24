@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Insatiable Harpy",
+    "oracleId": "6774c0ce-103e-471b-8de0-f325805674ca",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Harpy"
+    ],
+    "manaCost": "{2}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Flying, lifelink",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "lifelink",
+      "text": "lifelink"
+    }
+  ]
+}

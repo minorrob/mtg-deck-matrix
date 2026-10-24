@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Spellbook",
+    "oracleId": "83133f51-bfbd-4db5-9be0-f660e3b66435",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Book"
+    ],
+    "manaCost": "{0}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "You have no maximum hand size.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "no-maximum-hand-size",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "text": "You have no maximum hand size."
+    }
+  ]
+}

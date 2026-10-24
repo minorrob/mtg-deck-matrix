@@ -1,0 +1,446 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Grist, the Hunger Tide",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Giant": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{4}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 4,
+      "toughness": 4
+    },
+    "Elf": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Beetle": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Insect"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "+1: an Insect token, then a Forest milled -- no Insect, so it stops; Grist at 4",
+      "library": [
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Grist, the Hunger Tide"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Grist, the Hunger Tide",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Grist, the Hunger Tide",
+            "Insect"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Grist, the Hunger Tide",
+            "counter": "loyalty",
+            "count": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "+1 milling two Insect cards, then a Forest: three tokens and two more loyalty counters, Grist at 6",
+      "library": [
+        "Beetle",
+        "Beetle",
+        "Forest",
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Grist, the Hunger Tide"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Grist, the Hunger Tide",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Grist, the Hunger Tide",
+            "Insect",
+            "Insect",
+            "Insect"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Beetle",
+            "Beetle",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Grist, the Hunger Tide",
+            "counter": "loyalty",
+            "count": 6
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 17
+        }
+      ]
+    },
+    {
+      "name": "-2: Rob sacrifices his Elf; when he does, Maya's Giant is destroyed",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Grist, the Hunger Tide",
+            "Elf"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Giant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Grist, the Hunger Tide",
+          "ability": "a3"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        },
+        {
+          "answer": [
+            0
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Elf"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Giant"
+          ]
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Grist, the Hunger Tide",
+            "counter": "loyalty",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "-2: Rob may decline to sacrifice: no trigger, Maya's Giant stays",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Grist, the Hunger Tide",
+            "Elf"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Giant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Grist, the Hunger Tide",
+          "ability": "a3"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": []
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Grist, the Hunger Tide",
+            "Elf"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Giant"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "-5 from exactly 5 at a table of three: each opponent loses 5 -- the Elf, the Bear, the Beetle, the Grist already there, and this Grist, put there as its cost left it no loyalty (CR 704.5i), each a creature card off the battlefield",
+      "seats": 3,
+      "library": [
+        "Forest",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Forest",
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Grist, the Hunger Tide"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Elf",
+            "Bear",
+            "Beetle",
+            "Grist, the Hunger Tide"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Grist, the Hunger Tide",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 4,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Grist, the Hunger Tide",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 7,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Grist, the Hunger Tide",
+          "ability": "a4"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 35
+        },
+        {
+          "seat": 2,
+          "life": 35
+        },
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Elf",
+            "Bear",
+            "Beetle",
+            "Grist, the Hunger Tide",
+            "Grist, the Hunger Tide",
+            "Forest",
+            "Forest"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Cast from the hand it is a creature spell (Beast Whisperer draws), and it enters a planeswalker with 3 loyalty, no 1/1",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Forest",
+            "Wastes",
+            "Beast Whisperer"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Grist, the Hunger Tide"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Grist, the Hunger Tide"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Grist, the Hunger Tide",
+            "counter": "loyalty",
+            "count": 3
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Grist, the Hunger Tide",
+            "power": null,
+            "toughness": null
+          }
+        }
+      ]
+    }
+  ]
+}

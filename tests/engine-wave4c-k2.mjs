@@ -324,7 +324,9 @@ const DREDGE = "Dredge 3: mill three cards and return Life from the Loam to your
     "Life from the Loam", "Mother of Runes", "Cabal Ritual", "Darksteel Mutation", "Reckless Fireweaver", "Changeling Outcast", "Relic of Legends", "Treasure Cruise",
     "Dragon Tempest", "Deathrite Shaman", "Thassa's Oracle", "Growing Rites of Itlimoc // Itlimoc, Cradle of the Sun", "Dig Through Time"];
   eq(lane.filter((name) => !tableDefinition(name)), [], "each of the lane's nineteen cards plays at the table");
-  eq(tableDefinition("Mox Diamond"), null, "Mox Diamond waits: its replacement is asked before it enters");
+  /* Mox Diamond plays since the card load of 2026-10-23 (wave 4d, L2): its replacement asked with its arrival held, as a
+     copy's is (rules/entering.mjs). */
+  ok(tableDefinition("Mox Diamond") !== null, "Mox Diamond plays: its replacement is asked before its arrival is seen");
   /* Every scenario of the lane's cards, and of the cards whose rules moved under them (the rest in any order, protection,
      draws replaced), played through the rules here as tests/engine-cards.mjs plays them all. */
   const also = ["Flow State", "Goblin Ringleader", "Sleight of Hand", "Mulch", "Sword of Hearth and Home", "Akroma's Will", "Alms Collector", "Narset, Parter of Veils"];

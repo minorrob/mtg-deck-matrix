@@ -58,8 +58,8 @@ const blocks = (trigger) => compiled([{kind: "triggered", text: "Whenever this c
   eq([snub.trigger.who, snub.trigger.while, snub.condition], ["self", {present: {what: "permanent", types: ["Creature"], controller: "you"}}, undefined],
     "Social Snub's \"while you control a creature\": the trigger's own condition, and no intervening if carried to the stack");
   const odd = (trigger) => compiled([{kind: "triggered", text: "When this enters while you control a creature, draw a card.", trigger, effects: [{effect: "draw", count: 1}]}]).problems;
-  ok(odd({on: "enters", who: "self", while: {present: {what: "permanent", types: ["Creature"], controller: "you"}}}).some((p) => p.includes("read by a spell cast trigger alone")),
-    "`while` on another trigger is refused: only a spell cast trigger reads it");
+  ok(odd({on: "enters", who: "self", while: {present: {what: "permanent", types: ["Creature"], controller: "you"}}}).some((p) => p.includes("read by a spell cast trigger and an attack trigger alone")),
+    "`while` on another trigger is refused: only a spell cast trigger and an attack trigger read it");
   ok(odd({on: "spell cast", who: "self", while: {soon: true}}).some((p) => p.includes("soon")), "`while` is held to the condition grammar");
   eq(odd({on: "spell cast", who: "self", while: {present: {what: "permanent", types: ["Creature"], controller: "you"}}}), [], "and a spell cast trigger's `while` compiles");
 }

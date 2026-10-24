@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tangle Hulk",
+    "oracleId": "f6d0360c-ebc6-48b5-80ad-d52dadcdd5f5",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Phyrexian",
+      "Beast"
+    ],
+    "manaCost": "{5}",
+    "colors": [],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 5,
+    "toughness": 3
+  },
+  "oracleText": "{2}{G}: Regenerate this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{G}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "regenerate",
+          "targets": "self"
+        }
+      ],
+      "text": "{2}{G}: Regenerate this creature."
+    }
+  ]
+}

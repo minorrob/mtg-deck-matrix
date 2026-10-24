@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Persistent Specimen",
+    "oracleId": "5f4ad578-f2c4-47f6-8080-8fbc17383f6f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Skeleton"
+    ],
+    "manaCost": "{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "{2}{B}: Return this card from your graveyard to the battlefield tapped.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "zone": "graveyard",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{B}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "to": "battlefield",
+          "tapped": true
+        }
+      ],
+      "text": "{2}{B}: Return this card from your graveyard to the battlefield tapped."
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Guardian Lions",
+    "oracleId": "9291f31d-6953-4fe1-9a88-b8dd09fde89c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Cat"
+    ],
+    "manaCost": "{4}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 6
+  },
+  "oracleText": "Vigilance (Attacking doesn't cause this creature to tap.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "vigilance",
+      "text": "Vigilance (Attacking doesn't cause this creature to tap.)"
+    }
+  ]
+}

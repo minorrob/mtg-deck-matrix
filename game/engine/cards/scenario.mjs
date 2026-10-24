@@ -18,7 +18,7 @@
  *   {schema: "CrankCardScenarios@1", card, fixtures?: {name: object}, scenarios: [{
  *     name, seats?: 2..4, at?: {turn, phase}, library?: [names],
  *     setup: [{seat, zone, cards, sick?}]   (a card put in the command zone is that seat's commander),
- *     steps: [ {play|tap|cast|activate|turnFaceUp|suspend: name, seat?, targets?: [{card, seat?} | {player} | {ability}] | "any", ability?, mana?, x?, optional?, gift?}
+ *     steps: [ {play|tap|cast|activate|turnFaceUp|suspend|plot: name, seat?, targets?: [{card, seat?} | {player} | {ability}] | "any", ability?, mana?, x?, optional?, gift?}
  *            | {resolve: true} | {settle: true} | {pass: n} | {to: {turn, phase}} | {answer: [indices]} | {expect: [...]}
  *            | {attack: [names], at?} | {block: [[blocker, attacker], ...]} | {choose: [labels]} ],
  *   (`targets: "any"` takes the first legal aim; `optional` skips a move the rules do not offer; `settle` answers every
@@ -58,7 +58,8 @@ const STEP_LIMIT = 2000;
 function routine(state) {
   const kind = state.awaiting?.kind;
   if (kind === "declare-attackers") return resolveAwaiting(state, meetRequirements(awaitingChoice(state), []));
-  if (kind === "declare-blockers") return resolveAwaiting(state, []);
+  /* Nobody blocks, unless the rules make it: "must be blocked if able" (CR 509.1c), met as the house pilot meets it. */
+  if (kind === "declare-blockers") return resolveAwaiting(state, meetRequirements(awaitingChoice(state), []));
   if (kind === "order-triggers") return resolveAwaiting(state, awaitingChoice(state).options.map((o) => o.index));
   if (kind === "legend-rule") return resolveAwaiting(state, [0]);
   return null;
@@ -83,8 +84,10 @@ export function runScenario(scenario, cards, fixtures = {}) {
      after all (CR 103.8a; game/room/table.mjs). */
   /* `pooledTaps: true`: a cast tapped for tops up floating mana and taps a source for all it makes (rules/actions.mjs), as a
      table's new matches do. */
+  /* `startingLife`: a table's house-rule starting life (game/room/table.mjs) -- "your starting life total" (Happily Ever After). */
   const state = createState({matchId: "scenario", seed: scenario.name, players: names.map((name) => ({name})),
-    ...(scenario.skipFirstDraw === false ? {skipFirstDraw: false} : {}), ...(scenario.pooledTaps === true ? {pooledTaps: true} : {})});
+    ...(scenario.skipFirstDraw === false ? {skipFirstDraw: false} : {}), ...(scenario.pooledTaps === true ? {pooledTaps: true} : {}),
+    ...(scenario.xTaps === true ? {xTaps: true} : {}), ...(Number.isInteger(scenario.startingLife) ? {startingLife: scenario.startingLife} : {})});
   const rng = createRng(scenario.name);
   const record = (list) => { events.push(...(list ?? [])); return list; };
 
@@ -167,8 +170,10 @@ export function runScenario(scenario, cards, fixtures = {}) {
     /* `turnFaceUp`: a manifested permanent turned face up (CR 701.40b), named by the card it is -- as its controller,
        who is offered it, sees it (CR 708.5). */
     /* `suspend`: a card suspended from its owner's hand (CR 702.62a), a special action. */
+    /* `plot`: a card plotted from its owner's hand (CR 702.170a), a special action. */
     const [kind, card] = step.play ? ["play-land", step.play] : step.tap ? ["activate-mana", step.tap]
-      : step.cast ? ["cast", step.cast] : step.turnFaceUp ? ["turn-face-up", step.turnFaceUp] : step.suspend ? ["suspend", step.suspend] : ["activate", step.activate];
+      : step.cast ? ["cast", step.cast] : step.turnFaceUp ? ["turn-face-up", step.turnFaceUp] : step.suspend ? ["suspend", step.suspend]
+      : step.plot ? ["plot", step.plot] : ["activate", step.activate];
     const aim = step.targets === "any" ? undefined : (kind === "cast" || kind === "activate" ? step.targets ?? [] : undefined);
     let found = offered({kind, card, seat}, aim);
     if (kind === "activate" && step.ability !== undefined) found = found.filter((a) => a.abilityId === step.ability);
@@ -356,7 +361,7 @@ export function runScenario(scenario, cards, fixtures = {}) {
   }
 
   for (const step of scenario.steps ?? []) {
-    if (step.play || step.tap || step.cast || step.activate || step.turnFaceUp || step.suspend) act(step);
+    if (step.play || step.tap || step.cast || step.activate || step.turnFaceUp || step.suspend || step.plot) act(step);
     else if (step.resolve) {
       if (!state.stack.length) fail("there is nothing on the stack to resolve");
       /* Everyone passes in turn until the top object has left the stack, or stopped to ask somebody. What its

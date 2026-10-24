@@ -202,8 +202,21 @@ try {
 
   /* THE PLAY TAB, marked for Play in the cloud: the table's page, not the local game host's (staging's Play release). */
   await rob.page.goto(`${base}/index.html#game`);
+  await rob.page.locator("#cm-play-home").waitFor({timeout: 30000});
+  ok(await rob.page.locator("#cm-table-new").count() === 0, "Play opens the lounge without creating a table");
+  ok(await rob.page.locator('.cm-play-talk').count()===1 && /not connected/.test(await rob.page.locator('.cm-play-talk').innerText()),"lounge has truthful Table talk availability");
+  ok(await rob.page.locator('.cm-play-standing .cm-play-stats').count()===1,"lounge shows the saved personal record");
+  await rob.page.getByRole('button',{name:'Set up an AI game',exact:true}).click();
+  await rob.page.locator('#cm-table-new').waitFor();
+  eq(await rob.page.locator('[name=kind2]').inputValue(),'ai','AI shortcut stages a normal AI seat');
+  ok(rob.page.url().includes('ai=1'),'AI setup has a restorable navigation URL');
+  await rob.page.goto(`${base}/index.html#game`);
+  await rob.page.locator('#cm-play-home').waitFor();
+  await rob.page.getByRole('button',{name:'New table',exact:true}).click();
   await rob.page.locator("#cm-table-new").waitFor({timeout: 30000});
-  ok(!/Coming Soon/.test(await pageText(rob.page, "#cm-main")), "with the cloud-Play mark, the Play tab opens a new table");
+  ok(!/Coming Soon/.test(await pageText(rob.page, "#cm-main")), "New table is an explicit action from the lounge");
+  ok(await rob.page.locator('.cm-new-table-square .cm-table-new-seat').count()===4,"table setup shows four seats around a table");
+  ok(await rob.page.locator('#cm-new-table-deck').count()===1,"a deck can be chosen before creating the table");
 
   /* HOST: a new table. */
   /* The AI door not open to Rob (GET /api/ai-seat says so): no AI on Claude is offered. */
@@ -294,6 +307,28 @@ try {
   ok(counts.some((t) => /^\d+ of \d+ known · \d+ to learn$/.test(t)) && counts.some((t) => /^All \d+ cards known$/.test(t)),
     `each deck says how much of it the table can play: "${counts.find((t) => /to learn/.test(t))}", "${counts.find((t) => /^All/.test(t))}"`);
   eq(await rob.page.locator("[data-action=table-use-test-deck]").count(), 0, "this table is not a playtest table, so the basic lands test deck is not offered (staging's are: tests/uat/play-e2e.mjs)");
+  /* Each row its commanders' colors and what the deck does (Rob, 2026-10-22), and Playable, off until ticked, puts away the
+     decks the table cannot play every card of, remembered on the device. */
+  const rows = await rob.page.$$eval("[data-action=table-use-deck]", (bs) => bs.map((b) => ({pips: b.querySelectorAll(".cm-table-deck-cmdr .cm-pip, .cm-table-deck-cmdr .cm-color").length, about: (b.querySelector(".cm-table-deck-about")?.textContent || "").trim()})));
+  ok(rows.every((r) => r.pips > 0 && r.about.length > 20), `each library deck's row shows its commanders' colors and a line on what it does (${rows.length} rows; "${rows[0] && rows[0].about.slice(0, 60)}…")`);
+  const sharedRows = await rob.page.$$eval("[data-action=table-use-shared-deck]", (bs) => bs.map((b) => ({name: b.querySelector("strong").textContent, pips: b.querySelectorAll(".cm-table-deck-cmdr .cm-pip, .cm-table-deck-cmdr .cm-color").length, about: (b.querySelector(".cm-table-deck-about")?.textContent || "").trim()})));
+  /* A shared deck's line is its commanders' rules text: the records the app ships hold most; the rest the card catalog
+     fetches from Scryfall, which this sandbox answers only for the shipped records (scryfall-stub.mjs), so those wait. */
+  const shippedText = new Set(JSON.parse(readFileSync(path.join(ROOT, "data", "cards.json"), "utf8")).cards.filter((c) => c.oracleText).map((c) => c.name));
+  const sharedDecks = JSON.parse(readFileSync(path.join(ROOT, "tests", "fixtures", "shared-staging-decks.json"), "utf8")).decks;
+  const told = sharedRows.filter((r) => sharedDecks.find((d) => d.name === r.name)?.commander.every((c) => shippedText.has(c)));
+  ok(sharedRows.every((r) => r.pips > 0) && told.length >= 3 && told.every((r) => r.about.length > 20),
+    `and each shared deck's colors, and what its commander does wherever its text is to be had (${told.map((r) => r.name).join(", ")}; waiting: ${sharedRows.filter((r) => !r.about).map((r) => r.name).join(", ")})`);
+  const visible = () => rob.page.$$eval(".cm-table-deck", (bs) => bs.filter((b) => b.offsetParent !== null).length);
+  const allRows = await visible();
+  ok(!(await rob.page.isChecked("[data-table-deck-playable]")), "Playable is off until it is ticked");
+  await rob.page.check("[data-table-deck-playable]");
+  const playableRows = await visible(), unplayable = await rob.page.locator(".cm-table-deck.is-unknown, .cm-table-deck[data-shared-deck]:disabled").count();
+  ok(unplayable > 0 && playableRows === allRows - unplayable && await rob.page.$$eval(".cm-table-deck.is-unknown, .cm-table-deck[data-shared-deck]:disabled", (bs) => bs.every((b) => b.offsetParent === null)),
+    `ticked, Playable puts away the ${unplayable} decks the table cannot play every card of (${playableRows} of ${allRows} left)`);
+  eq(await rob.page.evaluate(() => localStorage.getItem("cm-table-deck-playable")), "on", "and it is remembered on the device");
+  await rob.page.uncheck("[data-table-deck-playable]");
+  eq(await visible(), allRows, "unticked, every deck is back");
   /* Find a deck with the refused card by trying them in turn until one is refused, then one that is not. */
   let refusedSeen = false, chosen = null;
   for (let i = 0; i < deckCount && (!refusedSeen || !chosen); i += 1) {
@@ -525,8 +560,8 @@ try {
 
   /* AFTER: the game ended (by End game on the board, played in table-board), the lobby says it is over. */
   await tableFor(id).fetch(new Request("https://table.internal/table/end", {method: "POST", headers: {"content-type": "application/json", "x-crankmagic-email": "maya@example.com"}, body: "{}"}));
-  await waitText(maya.page, "#cm-table-game", /The game is over/);
-  await waitText(rob.page, "#cm-table-game", /The game is over/);
+  await waitText(maya.page, "#cm-table-game", /Play again\?|The game is over/);
+  await waitText(rob.page, "#cm-table-game", /Play again\?|The game is over/);
   ok(/record is kept/.test(await pageText(rob.page, "#cm-table-game")), "once it is over, the lobby says so, and that its record is kept");
   eq(await maya.page.evaluate(() => localStorage.getItem("crankmagic-play-seat")), null, "and her device forgets the seat: Play no longer leads back to a game that is over");
   await shot(maya.page, "over-390");
@@ -595,7 +630,22 @@ try {
     eq(tiles.map(([id, text, good]) => [id, text, good]).sort(),
       listed.map((d) => {const n = refused.get(d.id); return [d.id, n ? `${n} card${n === 1 ? "" : "s"} to learn for the table` : "Playable at the table", !n];}).sort(),
       "each deck's tile says whether the table can play it: Playable at the table, or how many of its cards are still to learn");
+    /* The summary under Decks counts the same: playable means playable on Play (Rob, 2026-10-22), and it names no cost to
+       finish them all. */
+    await olu.page.waitForFunction(() => document.getElementById("cm-decks-playable")?.textContent, null, {timeout: 10000});
+    const summary = (await olu.page.textContent(".cm-decks-summary")).replace(/\s+/g, " ").trim(), n = playableIds.length;
+    const nWord = n <= 10 ? ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"][n] : String(n);
+    ok(summary.includes(`, ${nWord} playable.`) && !/\$|to finish/.test(summary), `the summary under Decks counts the decks the table plays whole, ${nWord}, and no cost to finish them all ("${summary}")`);
     eq(asked, ["POST"], "and the hub asked the table once, for every deck at once (POST /api/tables/known)");
+    /* The Playable chip, with Boxed (the Decks requirements' FLT-1, 2026-10-23: All · Boxed · Defined · Building · Playable ·
+       Shared): the Defined decks the table plays whole, the rest put away once it has answered. Every deck here is 100. */
+    eq(await olu.page.$$eval(".cm-decks-stages a", (as) => as.map((a) => a.textContent)).then((t) => t.filter((x) => /Playable|Boxed/.test(x))), ["Boxed", "Playable"],
+      "the hub offers Boxed (the box) and Playable (in the app)");
+    await olu.page.locator(".cm-decks-stages a", {hasText: "Playable"}).click();
+    await olu.page.waitForFunction((n) => document.querySelectorAll("[data-deck-tile]:not([hidden])").length === n && [...document.querySelectorAll("[data-deck-tile]")].some((t) => t.hidden), playableIds.length, {timeout: 15000});
+    eq((await olu.page.$$eval("[data-deck-tile]:not([hidden])", (ts) => ts.map((t) => t.dataset.deckTile))).sort(), [...playableIds].sort(),
+      `Playable shows exactly the ${playableIds.length} decks the table plays every card of`);
+    await olu.page.goto(`${base}/index.html#decks`);
     await shot(olu.page, "decks-playable-1400");
     /* The deck page: the line, and Play this deck only where the table plays every card. */
     const deckLine = async (id) => {
@@ -643,7 +693,7 @@ try {
     await olu.page.goto(`${base}/index.html#table?deck=${encodeURIComponent(learning.id)}`);
     await olu.page.locator("#cm-table-new-deck:not([hidden])").waitFor({timeout: 30000});
     const warn = (await olu.page.locator("#cm-table-new-deck").innerText()).trim();
-    ok(warn.startsWith(`${learning.name} cannot be played at the table yet`) && /\(Sol Ring\)/.test(warn) && !(await olu.page.locator("#cm-table-new [name=deck]").count()),
+    ok(warn.startsWith(`${learning.name} cannot be played at the table yet`) && /\(Sol Ring\)/.test(warn) && (await olu.page.locator("#cm-table-new [name=deck]").inputValue()) === "",
       `a deck it cannot play whole is named with its cards, and not brought (${warn})`);
     /* New from Wizards' Play it: the precon comes in through the import, becomes a deck, and goes on to a new table. */
     await olu.page.goto(`${base}/index.html#decks`);

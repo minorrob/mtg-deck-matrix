@@ -1,0 +1,37 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sultai Scavenger",
+    "oracleId": "837f72a9-9522-46e9-a48c-c6ff6d0bbe67",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Bird",
+      "Warrior"
+    ],
+    "manaCost": "{5}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Delve (Each card you exile from your graveyard while casting this spell pays for {1}.)\nFlying",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "delve",
+      "text": "Delve (Each card you exile from your graveyard while casting this spell pays for {1}.)"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    }
+  ]
+}

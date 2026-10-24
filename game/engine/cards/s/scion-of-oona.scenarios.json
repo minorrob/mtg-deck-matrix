@@ -43,7 +43,7 @@
         "U"
       ]
     },
-    "Zap": {
+    "Smoke Zap": {
       "types": [
         "Instant"
       ],
@@ -73,7 +73,7 @@
         ]
       }
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -208,7 +208,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Zap"
+            "Smoke Zap"
           ]
         },
         {
@@ -222,7 +222,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Zap"
+            "Smoke Zap"
           ]
         }
       ],
@@ -235,7 +235,7 @@
             {
               "offers": {
                 "kind": "cast",
-                "card": "Zap"
+                "card": "Smoke Zap"
               },
               "count": 2,
               "targets": [
@@ -270,7 +270,7 @@
         {
           "offers": {
             "kind": "cast",
-            "card": "Zap",
+            "card": "Smoke Zap",
             "seat": 1
           },
           "count": 2,
@@ -317,8 +317,8 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Murder",
-            "Zap"
+            "Smoke Murder",
+            "Smoke Zap"
           ]
         }
       ],
@@ -368,7 +368,7 @@
           "seat": 1
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "seat": 1,
           "targets": [
             {
@@ -396,7 +396,7 @@
         {
           "offers": {
             "kind": "cast",
-            "card": "Zap",
+            "card": "Smoke Zap",
             "seat": 1
           },
           "count": 1,

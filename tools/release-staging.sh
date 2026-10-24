@@ -19,7 +19,7 @@ WORK="${2:-$(mktemp -d)}"
 : "${WRANGLER:?set WRANGLER to wrangler.js, for the Play walk}"
 mkdir -p "$WORK"
 export TMPDIR="$WORK"
-unset UAT_CHROME UAT_PLAYWRIGHT
+# Honor the caller's browser overrides (Personal-HP uses its installed Chrome).
 cd "$CHECKOUT"
 git fetch -q origin
 git checkout -q --detach origin/main

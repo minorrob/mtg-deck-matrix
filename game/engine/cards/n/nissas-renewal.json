@@ -1,0 +1,51 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Nissa's Renewal",
+    "oracleId": "6a6e0f0b-af11-40a5-b454-0aea2d1b99cf",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{5}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Search your library for up to three basic land cards, put them onto the battlefield tapped, then shuffle. You gain 7 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Search your library for up to three basic land cards, put them onto the battlefield tapped, then shuffle. You gain 7 life.",
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Land"
+            ],
+            "supertypes": [
+              "Basic"
+            ]
+          },
+          "count": 3,
+          "upTo": true,
+          "to": "battlefield",
+          "tapped": true,
+          "shuffle": true
+        },
+        {
+          "effect": "gainLife",
+          "amount": 7
+        }
+      ]
+    }
+  ]
+}

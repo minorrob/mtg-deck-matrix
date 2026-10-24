@@ -1,0 +1,76 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Isochron Scepter",
+    "oracleId": "ddd649f4-dbaf-48ec-8ff7-95581257772d",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Imprint — When this artifact enters, you may exile an instant card with mana value 2 or less from your hand.\n{2}, {T}: You may copy the exiled card. If you do, you may cast the copy without paying its mana cost.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Imprint — When this artifact enters, you may exile an instant card with mana value 2 or less from your hand.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "hand",
+          "selector": {
+            "types": [
+              "Instant"
+            ],
+            "manaValue": {
+              "max": 2
+            }
+          },
+          "upTo": true,
+          "to": "stay",
+          "remember": true
+        },
+        {
+          "effect": "moveZone",
+          "targets": "remembered",
+          "to": "exile",
+          "link": true
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{2}, {T}: You may copy the exiled card. If you do, you may cast the copy without paying its mana cost.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "play",
+          "from": "selector",
+          "selector": {
+            "zone": "exile",
+            "exiledWith": "self"
+          },
+          "copies": true,
+          "free": true
+        }
+      ]
+    }
+  ]
+}

@@ -14,6 +14,9 @@
  *      card learned once for its oracle text and again when the text changes; the cost cap; the rules flagged.
  *   3. The command line spends nothing without --yes, and its plan says what a run would take.
  *   4. The directory reads compiled cards, and a hand-authored one wins.
+ *   5. The backstop (card load step 4): the writer handed what the sentence library already wrote of a card and asked
+ *      only for the rest; the card checked whole; a sentence written twice refused; the compiler's candidates never
+ *      asked for; the held-out sample played through each card's own scenarios, with its cost.
  */
 import assert from "node:assert/strict";
 import {readFileSync, mkdtempSync, mkdirSync, writeFileSync, rmSync} from "node:fs";
@@ -23,10 +26,13 @@ import {spawnSync} from "node:child_process";
 import {fileURLToPath} from "node:url";
 import {
   identityOf, assembleScript, checkFidelity, oracleClauses, checkReadBack, smokeTest, smokeScenario, zoneProblems,
-  writerSystem, writerRequest, WRITER_SCHEMA, READBACK_SCHEMA, checkAnswer, oracleHash, COMPILED_SCHEMA,
+  writerSystem, writerRequest, WRITER_SCHEMA, READBACK_SCHEMA, checkAnswer, oracleHash, COMPILED_SCHEMA, mergeAbilities,
 } from "../game/engine/cards/compile.mjs";
-import {compileCards, costOf, examplesFrom, WRITER_MODEL, READER_MODEL} from "../game/tools/engine-compile.mjs";
-import {loadCardScripts, loadCardIndex} from "../game/tools/engine-cards.mjs";
+import {compileCards, heldOutSample, costOf, examplesFrom, WRITER_MODEL, READER_MODEL} from "../game/tools/engine-compile.mjs";
+import {loadCardScripts, loadCardIndex, loadCardScenarios} from "../game/tools/engine-cards.mjs";
+import {createLibrary} from "../game/engine/cards/sentences.mjs";
+import {calibrate} from "../game/tools/sentence-library.mjs";
+import {assistOf, trustOf} from "../game/tools/card-compiler.mjs";
 
 let checks = 0;
 const ok = (c, m) => { assert.ok(c, m); checks += 1; };
@@ -49,11 +55,20 @@ const handOf = (name) => scripts.find((s) => s.identity.name === name);
   eq(smoked.filter((r) => !r.ok).map((r) => `${r.name}: ${r.problems.join("; ")}`), [], "every hand definition survives its smoke game");
   /* The few a smoke game cannot cast, each for want of what its only target must be: an attacking creature (Condemn), a
      creature dealt damage this turn (Mirrodin Avenged), a white or black spell to counter (Precise Redaction), a tapped
-     creature for the modes its mana pays (Cloud's Limit Break) -- or for want of seven cards in its player's graveyard,
-     without which it can't be cast at all (Proft, Sinister Mastermind). Named, so a card that stops being played in its
-     smoke game is found, not counted. */
+     creature for the modes its mana pays (Cloud's Limit Break) or at all (Eriette's Lullaby), a red or white creature or
+     planeswalker of an opponent's (Flourishing Grapple), a spell that targets a permanent its caster controls (Rebuff the
+     Wicked), a spell of mana value 1 to counter (Mental Misstep), the {2} a mode adds to its mana cost, which spree's one
+     or more modes always do (Explosive Derailment, and Return the Favor's {1}; CR 702.172a) -- or for want of seven cards in its player's graveyard, without which it can't be cast at all (Proft,
+     Sinister Mastermind). The card load of 2026-10-24 added 23 for the same wants, and an artifact card in its player's
+     graveyard to return (Refurbish); each has scenarios of its own that cast it. Named, so a card that stops being played
+     in its smoke game is found, not counted. */
   const unplayed = smoked.filter((r) => !r.played).map((r) => r.name).sort();
-  eq(unplayed, ["Cloud's Limit Break", "Condemn", "Mirrodin Avenged", "Precise Redaction", "Proft, Sinister Mastermind"], `and the other ${scripts.length - unplayed.length} of ${scripts.length} were actually played or cast in it`);
+  eq(unplayed, ["Argivian Restoration", "Artifact Blast", "Assassinate", "Blue Elemental Blast", "Bright Reprisal",
+    "Cloud's Limit Break", "Condemn", "Death Stroke", "Devout Decree", "Eriette's Lullaby", "Explosive Derailment",
+    "Flashfreeze", "Flourishing Grapple", "Halt Order", "Immolating Glare", "Keep Safe", "Kill Shot",
+    "Mental Misstep", "Mirrodin Avenged", "Precise Redaction", "Proft, Sinister Mastermind", "Rebuff the Wicked",
+    "Rebuke", "Reconstruction", "Refurbish", "Return the Favor", "Ritual of Restoration", "Silverstrike",
+    "Spell Snare", "Swift Response", "Take Vengeance", "Turn Aside", "Vengeance", "You Are Already Dead"], `and the other ${scripts.length - unplayed.length} of ${scripts.length} were actually played or cast in it`);
   /* Batch 30: a card aimed at its controller's own creature spell answers the Smoke Whelp its player casts first. */
   ok(smoked.find((r) => r.name === "Double Major")?.played === true, "Double Major (\"copy target creature spell you control\") is cast in its smoke game, at its player's own creature spell");
   /* A creature whose ACTIVATED ability copies its controller's spells is cast as any creature is: no spell of its own put on
@@ -231,6 +246,13 @@ const job = (names, call, ledger = {cards: {}}, extra = {}) => {
   const plan = spawnSync(process.execPath, ["game/tools/engine-compile.mjs", "--plan", "--decks", "--sample", "200"], {cwd: ROOT, encoding: "utf8", env});
   eq(plan.status, 0, "--plan exits cleanly");
   ok(/cards asked for; \d+ hand-authored, \d+ not in the oracle data, \d+ still to learn/.test(plan.stdout) && /spends money/.test(plan.stdout), `and says what a run would take, for free: ${plan.stdout.split("\n")[0]}`);
+  const asked = path.join(mkdtempSync(path.join(tmpdir(), "demand-")), "demand.json");
+  /* A candidate as the store holds it today: A.I.M. Bot was one until the load of 2026-10-24 promoted it. */
+  const candidate = JSON.parse(readFileSync(path.join(ROOT, "data/engine/candidates.json"), "utf8")).cards[0].name;
+  writeFileSync(asked, JSON.stringify({schema: "CrankCardDemand@1", cards: [{name: "Lightning Bolt", demand: {decks: 2, asked: 3}}, {name: candidate}, {name: "Grim Lavamancer"}]}));
+  const demanded = spawnSync(process.execPath, ["game/tools/engine-compile.mjs", "--plan", "--demand", asked], {cwd: ROOT, encoding: "utf8", env});
+  ok(demanded.status === 0 && /^engine-compile: 3 cards asked for; 1 hand-authored/.test(demanded.stdout) && /1 are the card compiler's candidates and cost nothing/.test(demanded.stdout),
+    `the demand list is a run's cards, its candidates free: ${demanded.stdout.split("\n").slice(0, 2).join(" ")}`);
   const bare = spawnSync(process.execPath, ["game/tools/engine-compile.mjs", "--cards", "Lightning Bolt"], {cwd: ROOT, encoding: "utf8", env});
   ok(bare.status === 2 && /spends money/.test(bare.stdout) && !/no key/.test(bare.stderr), "without --yes it refuses with exit 2 before it looks for a key, having called nothing");
 }
@@ -250,6 +272,70 @@ const job = (names, call, ledger = {cards: {}}, extra = {}) => {
       "a compiled card joins the directory, marked compiled and provisional");
     eq([merged.resolve("Elvish Visionary").source, merged.definition("Elvish Visionary").abilities.length], ["hand", 1], "and where a hand-authored definition exists it wins");
   } finally { rmSync(dir, {recursive: true, force: true}); }
+}
+
+/* ---- 5. the backstop: what the library knows, the writer finishes ---- */
+const library = createLibrary(scripts);
+const scenarios = new Map(loadCardScenarios().map((f) => [f.scenarios.card, f.scenarios]));
+const trust = trustOf(library, calibrate({scripts, library, scenarios, definition: index.definition}));
+{
+  ok(writerSystem([]).includes("alreadyWritten") && writerSystem([]).includes("writeOnly"), "the writer is told what `alreadyWritten` and `writeOnly` mean");
+  /* Baleful Strix with its enters trigger distrusted: the library writes Flying and deathtouch, the writer the trigger. */
+  const strix = ORACLE.get("Baleful Strix"), own = handOf("Baleful Strix").abilities;
+  const assist = assistOf(strix, {library, trust: (id) => (/enters/.test(id) ? {ok: false} : trust(id)), except: "Baleful Strix"});
+  eq([assist.known.map((a) => a.text), assist.write.map((w) => w.text)], [["Flying", "deathtouch"], ["When this creature enters, draw a card."]],
+    "assisted: the library's trusted sentences written, the distrusted one left for the writer");
+  const req = JSON.parse(writerRequest(strix, null, assist));
+  eq([req.alreadyWritten.length, req.writeOnly], [2, ["When this creature enters, draw a card."]], "the request carries both, and asks for the one sentence");
+  const trigger = own.filter((a) => a.kind === "triggered");
+  eq(mergeAbilities(strix, assist.known, trigger).map((a) => a.text), ["Flying", "deathtouch", "When this creature enters, draw a card."], "merged in the order of the card's text");
+  const {calls, call} = stub({"Baleful Strix": {writer: {abilitiesJson: JSON.stringify(trigger), notes: "", crFlags: []}}});
+  const ledger = {cards: {}}, written = {};
+  const {results} = await compileCards({names: ["Baleful Strix"], oracle: ORACLE, hand: new Set(), cards: index.definition, ledger, call, examples: [],
+    write: (id, compiled) => { written[id] = compiled; }, assist: () => assist});
+  eq(results.map((r) => r.outcome), ["provisional"], "the card, the library's two sentences and the writer's one, passes every check");
+  eq(written[strix.id].script.abilities.map((a) => a.text), own.map((a) => a.text), "and is stored whole, as the card reads");
+  eq(ledger.cards[strix.id].assisted, {known: 2, written: 1}, "the ledger says how much the writer wrote");
+  eq(JSON.parse(calls[0].messages[0].content).writeOnly, ["When this creature enters, draw a card."], "the writer was asked for that one sentence");
+  const twice = checkAnswer(strix, {abilitiesJson: JSON.stringify([own[0], ...trigger])}, null, assist.known);
+  ok(twice.stage === "fidelity" && /already written, not to be written again: "Flying"/.test(twice.problems[0]), "a sentence already written and written again is refused: it would apply twice");
+  const none = stub({});
+  const skipped = await compileCards({names: ["Baleful Strix"], oracle: ORACLE, hand: new Set(), cards: index.definition, ledger: {cards: {}}, call: none.call, examples: [],
+    write: () => {}, candidates: new Set(["Baleful Strix"])});
+  eq([skipped.results[0].outcome, none.calls.length], ["a candidate", 0], "a card the compiler made a candidate is never asked of the writer");
+}
+{
+  /* The sample: three defined cards held out, each finished by a writer that answers with the card's own missing abilities. */
+  const right = (body) => {
+    const r = JSON.parse(body.messages[0].content), known = new Set(r.alreadyWritten.map((a) => a.text));
+    return {abilitiesJson: JSON.stringify(handOf(r.card.name).abilities.filter((a) => !known.has(a.text))), notes: "", crFlags: []};
+  };
+  const writer = async (body) => ({answer: right(body), usage: {input_tokens: 1000, output_tokens: 100}});
+  const run = await heldOutSample({scripts, scenarios, definition: index.definition, oracle: ORACLE, library, trust, call: writer, examples: [], n: 3});
+  eq([run.tried, run.passed], [3, 3], `three defined cards held out, finished from their own missing sentences, pass their own scenarios (${run.results.map((r) => r.name).join(", ")})`);
+  ok(run.results.every((r) => r.written >= 1) && Math.abs(run.cost - 3 * costOf(WRITER_MODEL, {input_tokens: 1000, output_tokens: 100})) < 1e-9, "each asked for at least one sentence, the cost counted at list prices");
+  const wrong = async (body) => {
+    const a = right(body), list = JSON.parse(a.abilitiesJson);
+    return {answer: {...a, abilitiesJson: JSON.stringify(list.slice(1))}, usage: {}};
+  };
+  const bad = await heldOutSample({scripts, scenarios, definition: index.definition, oracle: ORACLE, library, trust, call: wrong, examples: [], n: 3});
+  ok(bad.passed < 3 && bad.results.filter((r) => r.outcome === "failed").every((r) => /^fidelity: /.test(r.why)), "a writer that leaves a sentence out fails, at fidelity");
+  const miscounted = async (body) => {
+    const a = right(body);
+    return {answer: {...a, abilitiesJson: a.abilitiesJson.replace(/"count":1\b/g, "\"count\":2")}, usage: {}};
+  };
+  const played = await heldOutSample({scripts, scenarios, definition: index.definition, oracle: ORACLE, library, trust, call: miscounted, examples: [], n: 3});
+  ok(played.results.some((r) => r.outcome === "failed" && /^plays: /.test(r.why)), `one that writes every sentence with a wrong number passes every check but its scenarios: "${played.results.find((r) => r.outcome === "failed")?.why}"`);
+  const capped = await heldOutSample({scripts, scenarios, definition: index.definition, oracle: ORACLE, library, trust, call: writer, examples: [], n: 3, maxCost: 0});
+  ok(capped.tried === 0 && /cap/.test(capped.stopped), "the sample stops at its cap");
+  /* Every card the sample may take, asked of a writer that answers nothing (free, and refused at fidelity): never one the
+     library writes half an ability of -- Gemstone Caverns' "{T}: Add {C}." -- however the evenly spaced pick falls as the
+     directory grows (the library load's L1, 2026-10-22: sixteen more cards moved the pick off it). */
+  ok(handOf("Gemstone Caverns") !== undefined, "Gemstone Caverns is defined, a card the library writes half an ability of");
+  const asked = [];
+  const silent = async (body) => { asked.push(JSON.parse(body.messages[0].content).card.name); return {answer: {abilitiesJson: "[]", notes: "", crFlags: []}, usage: {}}; };
+  await heldOutSample({scripts, scenarios, definition: index.definition, oracle: ORACLE, library, trust, call: silent, examples: [], n: scripts.length, maxCost: 1});
+  ok(asked.length > 3 && !asked.includes("Gemstone Caverns"), `the whole pool asked (${asked.length} cards), Gemstone Caverns never among them`);
 }
 
 console.log(`engine-compile: ${checks} checks passed — the loader's four checks held against ${scripts.length} hand definitions, every refusal at its stage, a card learned once for its text, and nothing spent without --yes.`);

@@ -52,12 +52,12 @@
 
 import {conditionHolds} from "../script/condition.mjs";
 import {pushAbility, becameTarget, crimeCommitted} from "./stack.mjs";
-import {cardsIn, usesThisTurn, recordUse} from "../state/index.mjs";
+import {objectsAfterMove, cardsIn, usesThisTurn, recordUse} from "../state/index.mjs";
 import {playerStatics} from "./statics.mjs";
 import {matchesSelector, matchesLastKnown} from "../script/filter.mjs";
 import {abilitiesOf, abilitiesReader, characteristicsOf} from "./layers.mjs";
 import {chosenFor, CHOSEN_COLOR_LETTER} from "../script/chosen.mjs";
-import {targetChoices, targetName, isHostile, isChoosing, targetCandidates, countedChoice, modalScript, differentControllersProblem} from "../script/bind.mjs";
+import {targetChoices, targetName, isHostile, isChoosing, targetCandidates, countedChoice, modalScript, differentControllersProblem, shareProblem} from "../script/bind.mjs";
 
 /* An ability lives where its card is (CR 113.6). A triggered ability of a permanent watches the
    game only while that permanent is on the battlefield, so an ability on a card in a graveyard is
@@ -65,6 +65,8 @@ import {targetChoices, targetName, isHostile, isChoosing, targetCandidates, coun
    Unless the ability says it works there: "at the beginning of your upkeep, you may return this card
    from your graveyard to your hand" (Squee, Goblin Nabob; `zone: "graveyard"`) moves its card out of
    the graveyard, so it functions there and only there (CR 113.6b, 113.6m). */
+import {isRingBearer} from "../keywords/ring.mjs";
+
 const WATCHING_ZONES = ["battlefield"];
 
 /* Whether a player is the one a trigger asks about: "you" its controller, "opponent" anyone else, "any" anyone. */
@@ -72,6 +74,7 @@ const whoseIs = (rule, player, controller) => (rule === "you" ? player === contr
 /* Whether an object fits a "this" / "another" / "any" rule and a filter, read where it is now. */
 function fits(state, id, condition, sourceId, controller) {
   if (id === null || id === undefined) return false;
+  if (condition.who === "ring-bearer" && !isRingBearer(state, id, controller)) return false;
   if (condition.who === "self" && id !== sourceId) return false;
   if (condition.who === "another" && id === sourceId) return false;
   if (condition.filter && !(state.objects[id] && matchesSelector(condition.filter, state, id, {controller, source: sourceId}))) return false;
@@ -121,12 +124,19 @@ function recordArrivals(state, events) {
  * it was dealt to, the player who drew -- for "that player" and "that card" in what the ability does.
  */
 function subjects(state, event, condition, sourceId, controller) {
+  /* A merged creature dies once, but puts each physical card into its graveyard (CR 730.3). */
+  const arrival = event.data?.fields;
+  if (condition.intoGraveyard && event.kind === "GameEventCardChangeZone" && !arrival?.componentArrival && objectsAfterMove(state, arrival?.becomes).length > 1)
+    return objectsAfterMove(state, arrival.becomes).flatMap(id => subjects(state,
+      {...event, data: {...event.data, fields: {...arrival, becomes: id, componentArrival: true}}}, condition, sourceId, controller));
   /* "Deals combat damage to a player or planeswalker" (Grateful Apparition): damage dealt to a permanent is watched too. */
   const toPermanent = condition.planeswalkers === true && condition.on === "GameEventPlayerDamaged" && event.kind === "GameEventCardDamaged";
   /* "Whenever you cast or copy an instant or sorcery spell" (magecraft; `orCopy`): a spell copied is watched too. */
   const copied = condition.orCopy === true && condition.on === "GameEventSpellAbilityCast" && event.kind === "GameEventSpellCopied";
   if (event.kind !== condition.on && !toPermanent && !copied) return [];
   const fields = event.data?.fields ?? {};
+  if (condition.on === "GameEventMutates") return fits(state, fields.card?.cardId, condition, sourceId, controller)
+    ? [{card: fields.card.cardId}] : [];
   /* A COPY OF A SPELL (CR 707.10): put on the stack by an effect, under that effect's controller's control -- the player who
      copied it, for "whenever you copy" (the magecraft rulings) -- once for each copy, about the copy as it is there and
      its controller ("that spell's mana value", CR 707.2). Never cast (CR 707.10), so nothing else a cast trigger asks
@@ -180,10 +190,13 @@ function subjects(state, event, condition, sourceId, controller) {
        again as it resolves -- a trigger condition, not an intervening "if" (CR 603.4). */
     if (!conditionHolds(state, condition.while, {controller, source: sourceId})) return [];
     /* "An instant or sorcery spell that targets a creature" (Rehearsed Debater): one of what it targets, chosen as it was
-       cast (CR 601.2c) and so before it became cast (601.2i), fits `targets`. A player it targets fits no such selector. */
+       cast (CR 601.2c) and so before it became cast (601.2i), fits `targets`. A player it targets fits a player selector
+       alone: "a spell that targets an opponent" (Danitha, Spear of Agony; library load L4), `what: "player"`. */
     const aimed = () => (state.stack.find((e) => e.stackId === fields.sa?.stackId)?.targets ?? []).flat();
+    const aimedAt = (t, selector) => (selector.what === "player" ? t?.kind === "player" : t?.kind === "object" && Boolean(state.objects[t.id]))
+      && matchesSelector(selector, state, t.id, {controller, source: sourceId});
     const fitsCast = (one) => (!one.filter || (state.objects[spell] && matchesSelector({...one.filter, what: "spell"}, state, spell, {controller, source: sourceId})))
-      && (!one.targets || aimed().some((t) => t?.kind === "object" && state.objects[t.id] && matchesSelector(one.targets, state, t.id, {controller, source: sourceId})));
+      && (!one.targets || aimed().some((t) => aimedAt(t, one.targets)));
     if (!fitsCast(condition)) return [];
     /* "Whenever you cast an Equipment spell or a spell that targets a creature you control" (Danitha, Sword of Hope): one of
        these, each a filter of the spell or of what it targets, or both. */
@@ -208,6 +221,13 @@ function subjects(state, event, condition, sourceId, controller) {
     return (fields.blockers ?? []).filter((b) => fits(state, b.blocking?.cardId, {who: condition.who}, sourceId, controller)
       && (!condition.filter || (state.objects[b.card?.cardId] && matchesSelector({what: "permanent", ...condition.filter}, state, b.card.cardId, {controller, source: sourceId}))))
       .map((b) => ({card: b.card.cardId}));
+  }
+  /* BUSHIDO'S "WHENEVER THIS CREATURE BLOCKS OR BECOMES BLOCKED" (CR 702.45a; Hand of Honor): once as it is declared a
+     blocker, however many it blocks (509.3a), or once as it becomes blocked, however many block it (509.3c) -- one
+     declaration names it one way or the other, never both. About it. */
+  if (condition.on === "GameEventBlockersDeclared" && condition.blocksOrBlocked) {
+    const named = new Set((fields.blockers ?? []).flatMap((b) => [b.card?.cardId, b.blocking?.cardId]));
+    return [...named].filter((id) => fits(state, id, {who: condition.who}, sourceId, controller)).map((card) => ({card}));
   }
   /* "Whenever a +1/+1 counter is put on this creature" (Fathom Mage): once for EACH counter put on it (`each`), counters it
      enters with too (CR 122.6; rules/entering.mjs, enteredWith) -- not once however many, as "one or more" is. */
@@ -243,6 +263,9 @@ function subjects(state, event, condition, sourceId, controller) {
     /* "Whenever a creature you control attacks alone" (Thoughtweft Imbuer; CR 506.5): it is the only creature declared as an
        attacker -- the event names every one declared, and one put onto the battlefield attacking never was (CR 508.4). */
     if (condition.alone && (fields.attackers ?? []).length !== 1) return [];
+    /* "Whenever this creature attacks while saddled" (Bounding Felidar; CR 702.171b): asked as it attacks, and not again as
+       it resolves -- a trigger condition, not an intervening "if" (CR 603.4). */
+    if (condition.while !== undefined && !conditionHolds(state, condition.while, {controller, source: sourceId})) return [];
     const matched = (fields.attackers ?? []).filter((a) => fits(state, a.card?.cardId, condition, sourceId, controller))
       /* "Attacks for the first time each turn": its first attack this turn is this one (rules/combat.mjs counts them). */
       .filter((a) => !condition.firstTime || usesThisTurn(state, a.card?.cardId, "attacked") === 1)
@@ -344,7 +367,8 @@ function subjects(state, event, condition, sourceId, controller) {
     const card = fields.becomes;
     /* "When you discard this card": this card, and no other. */
     if (condition.who === "self" && card !== sourceId) return [];
-    if (condition.filter && !(card !== undefined && state.objects[card] && matchesSelector({...condition.filter, what: "card", zone: "graveyard"}, state, card, {controller, source: sourceId}))) return [];
+    /* Read where the card went: a graveyard, or exile instead (CR 701.9a: still a discard; Dauthi Voidwalker). */
+    if (condition.filter && !(card !== undefined && state.objects[card] && matchesSelector({...condition.filter, what: "card", zone: state.objects[card].zone}, state, card, {controller, source: sourceId}))) return [];
     return [{card, player: discarder}];
   }
   /* Ward (CR 702.21a): this permanent became the target of a spell or ability an opponent controls -- about that player
@@ -353,7 +377,9 @@ function subjects(state, event, condition, sourceId, controller) {
      emit as an attacker, a {T} cost, a creature tapped to pay or crew, and an effect turn a permanent sideways. */
   if (condition.on === "GameEventCardTapped") {
     const id = fields.card?.cardId;
-    return fields.tapped === true && fits(state, id, condition, sourceId, controller) ? [{card: id}] : [];
+    /* "Whenever a permanent becomes untapped" (Mesmeric Orb; CR 701.26b): `untapped`, the untap events -- the untap step, an
+       untap effect, a {Q} or untap cost (effects/resources.mjs untapOne, rules/actions.mjs). */
+    return fields.tapped === (condition.untapped !== true) && fits(state, id, condition, sourceId, controller) ? [{card: id}] : [];
   }
   if (condition.on === "GameEventBecomesTarget") {
     /* "Whenever this creature becomes the target", and (batch 76) "whenever a Dragon you control becomes the target"
@@ -394,14 +420,17 @@ function subjects(state, event, condition, sourceId, controller) {
      about the player who controls it too: "whenever a creature an opponent controls enters, you may have that player lose
      1 life" (Suture Priest). */
   if (event.kind === "GameEventCardChangeZone" && fields.becomes !== undefined) {
-    const player = fields.to?.zoneType === "Battlefield" ? state.objects[fields.becomes]?.controller : undefined;
+    /* Into a graveyard, the player whose graveyard it is -- its owner's (CR 400.3): "whenever a card is put into an opponent's
+       graveyard from anywhere, ... you may have that player lose 2 life" (Bloodchief Ascension). */
+    const player = fields.to?.zoneType === "Battlefield" ? state.objects[fields.becomes]?.controller
+      : fields.to?.zoneType === "Graveyard" ? state.objects[fields.becomes]?.owner : undefined;
     /* And where it came from, if from a library (Fblthp, the Lost: "if it entered from your library or was cast from your
        library"), kept with the trigger for when the permanent is gone before it resolves (CR 608.2h; script/condition.mjs). */
     const came = fields.to?.zoneType === "Battlefield" ? state.objects[fields.becomes]?.cameFrom : undefined;
     /* And, from the battlefield, its copiable values as it last existed when they were not its card's (rules/layers.mjs,
        lastKnown): "create a token that's a copy of that creature" (Hofri Ghostforge). */
     const copied = fields.from?.zoneType === "Battlefield" ? fields.leftBehind?.copiable : undefined;
-    return [{card: fields.becomes, ...(Number.isInteger(player) ? {player} : {}), ...(came ? {cameFrom: {...came}} : {}), ...(copied ? {copiedAs: structuredClone(copied)} : {}),
+    return [{card: fields.becomes, ...(!fields.componentArrival && fields.from?.zoneType === "Battlefield" && objectsAfterMove(state, fields.becomes).length > 1 ? {cards: objectsAfterMove(state, fields.becomes)} : {}), ...(Number.isInteger(player) ? {player} : {}), ...(came ? {cameFrom: {...came}} : {}), ...(copied ? {copiedAs: structuredClone(copied)} : {}),
       ...leftAs(fields)}];
   }
   return [{}];
@@ -604,7 +633,9 @@ export function manaTriggered(state, event) {
   for (const d of state.delayedTriggers ?? []) {
     const mana = d.on?.manaAbility;
     if (!mana || !tappedForMana(state, fields, d.on, d.source, d.controller)) continue;
-    made.push({player: d.controller, mana: {...mana.mana}, source: d.source});
+    /* Its controller's -- or, "that player adds", the player who tapped: "until end of turn, whenever a player taps an Island
+       for mana, that player adds an additional {U}" (High Tide; cards/index.mjs, `toTapper`). */
+    made.push({player: mana.toTapper === true ? fields.player?.playerId ?? d.controller : d.controller, mana: {...mana.mana}, source: d.source});
   }
   return made;
 }
@@ -682,6 +713,9 @@ export function collectTriggers(state, events) {
   /* The cards in graveyards with a triggered ability that works there (WATCHING_ZONES): found once, as the first event is read. */
   let fromGraveyards = null;
   const inGraveyards = () => (fromGraveyards ??= state.zones.graveyard.flat().filter((id) => (state.objects[id]?.abilities ?? []).some((a) => a.kind === "triggered" && a.zone === "graveyard")));
+  /* And the emblems in the command zone, whose abilities function there (CR 114.4; "whenever you draw a card, exile target
+     permanent an opponent controls", Teferi, Hero of Dominaria's): its controller the player who got it (114.2). */
+  const emblems = (state.zones.command ?? []).flat().filter((id) => state.objects[id]?.emblem === true);
   for (const event of events ?? []) {
     /* An arrival waiting to be told what it is a copy of triggers once it is (rules/entering.mjs). */
     if (event.data?.fields?.awaitingCopy === true) continue;
@@ -696,8 +730,9 @@ export function collectTriggers(state, events) {
     /* And a spell just cast, on the stack: its own "when you cast this spell" alone (CR 603.2). */
     const castSpell = event.kind === "GameEventSpellAbilityCast" && event.data?.fields?.sa?.isSpell ? state.stack.find((e) => e.stackId === event.data.fields.sa.stackId)?.objectId : undefined;
     const justCast = castSpell !== undefined && state.objects[castSpell] ? [castSpell] : [];
-    for (const zone of [...WATCHING_ZONES, "graveyard", "cycled", "discarded", "cast"]) {
-      for (const id of zone === "cycled" ? wentTo : zone === "discarded" ? discardedTo : zone === "cast" ? justCast : zone === "graveyard" ? inGraveyards() : state.zones[zone]) {
+    for (const zone of [...WATCHING_ZONES, "graveyard", "cycled", "discarded", "cast", "emblem"]) {
+      for (const id of zone === "cycled" ? wentTo : zone === "discarded" ? discardedTo : zone === "cast" ? justCast : zone === "graveyard" ? inGraveyards()
+        : zone === "emblem" ? emblems : state.zones[zone]) {
         const object = state.objects[id];
         /* A permanent's abilities now, the ones given it included (layers.mjs); a card's elsewhere. */
         for (const own of abilitiesNow(id)) {
@@ -724,6 +759,10 @@ export function collectTriggers(state, events) {
           /* "This ability triggers only once each turn": once it has, this turn, it does not again. */
           if (ability.limit && usesThisTurn(state, id, `trigger:${ability.id}`) >= ability.limit) continue;
           if (ability.limit) recordUse(state, id, `trigger:${ability.id}`);
+          /* "THIS ABILITY TRIGGERS ONLY ONCE" (Acrobatic Cheerleader, library load L5): once it has, never again -- for as long as
+             its permanent is the object it is; one that leaves and returns is a new object, its ability new (CR 400.7). */
+          if (ability.onlyOnce && (object.triggeredOnce ?? []).includes(ability.id)) continue;
+          if (ability.onlyOnce) object.triggeredOnce = [...(object.triggeredOnce ?? []), ability.id];
           state.pendingTriggers.push({
             abilityId: ability.id,
             text: ability.text ?? ability.id,
@@ -777,7 +816,7 @@ export function collectTriggers(state, events) {
     /* "At the beginning of your next main phase" (Mana Drain, `at: "your next main"`; CR 505.1): either main phase, the next of
        its controller's turns' -- one made in a precombat main phase waits for that turn's postcombat one. */
     const moment = event.kind === "GameEventTurnPhase" ? {END_OF_TURN: "end step", UPKEEP: "upkeep", MAIN1: "precombat main", MAIN2: "postcombat main", COMBAT_END: "end of combat",
-      COMBAT_DECLARE_ATTACKERS: "declare attackers"}[event.data?.fields?.phase] : undefined;
+      COMBAT_DECLARE_ATTACKERS: "declare attackers", COMBAT_BEGIN: "beginning of combat"}[event.data?.fields?.phase] : undefined;
     /* SUSPEND (CR 702.62a): at the beginning of its owner's upkeep, a suspended card in exile with a time counter on it has
        one removed -- and when the last is, its owner may cast it without paying its mana cost (a creature so cast has haste,
        rules/actions.mjs). One triggered ability does both, in order. */
@@ -801,7 +840,9 @@ export function collectTriggers(state, events) {
       const due = state.delayedTriggers.filter((d) => (d.at === moment && (!d.yours || d.controller === turnOf) && (!d.yourTurn || d.controller === turnOf) && (d.player === undefined || d.player === turnOf))
         || (moment === "upkeep" && d.at === "your upkeep" && d.controller === turnOf)
         || ((moment === "precombat main" || moment === "postcombat main") && d.at === "your next main" && d.controller === turnOf)
-        || (moment === "declare attackers" && d.at === "your next declare attackers" && d.controller === turnOf && state.turn > d.madeOnTurn));
+        || (moment === "declare attackers" && d.at === "your next declare attackers" && d.controller === turnOf && state.turn > d.madeOnTurn)
+        /* "At the beginning of that combat" (Moraug): the added combat it was numbered for (rules/turn.mjs). */
+        || (moment === "beginning of combat" && d.at === "that combat" && d.turn === state.turn && d.combat === state.combatsThisTurn));
       state.delayedTriggers = state.delayedTriggers.filter((d) => !due.includes(d) || d.forever === true);
       for (const d of due) state.pendingTriggers.push({
         abilityId: "delayed", text: d.text ?? (moment === "upkeep" ? "At the beginning of the next upkeep" : "At the beginning of the next end step"), controller: d.controller,
@@ -952,7 +993,10 @@ function targeting(state, stackId) {
   /* And its X, for a target "with mana value X" (Halo Forager's reflexive trigger). */
   /* And the mana spent to cast its source, as it triggered: converge's "with mana value less than or equal to the number of
      colors of mana spent to cast this creature" (Sundering Archaic; script/amount.mjs, colorsSpent), its source gone. */
-  return {entry, context: {controller: entry.playerId, source, ...(entry.about ? {about: entry.about} : {}), ...(Number.isInteger(entry.x) ? {x: entry.x} : {}),
+  /* A permanent's own "when this dies" with its source gone (CR 603.10a): the card it became, which "another target ... card
+     from your graveyard" is never (Myr Retriever; script/filter.mjs). */
+  const became = source === null && entry.lastKnown && entry.about?.card !== undefined ? {became: entry.about.card} : {};
+  return {entry, context: {controller: entry.playerId, source, ...became, ...(entry.about ? {about: entry.about} : {}), ...(Number.isInteger(entry.x) ? {x: entry.x} : {}),
     ...(entry.spent ? {spent: entry.spent} : {}), chosenTargets: entry.targets ?? []}};
 }
 
@@ -1022,6 +1066,8 @@ export function resolveTriggerCounted(state, awaiting, indices) {
     throw new Error("Invalid selection");
   const {entry} = targeting(state, awaiting.stackId);
   /* "Controlled by different players" (script/bind.mjs): refused, with what to do instead, before anything is aimed. */
+  const together = shareProblem(state, entry.script.targets[awaiting.index], picked.map(i => choice.options[i].targets[0]), entry.name ?? "That ability");
+  if (together) throw new Error(together);
   const split = differentControllersProblem(state, entry.script.targets[awaiting.index], picked.map((i) => choice.options[i].targets[0]), entry.name ?? "That ability");
   if (split) throw new Error(split);
   entry.targets[awaiting.index] = picked.map((i) => choice.options[i].targets[0]);
@@ -1065,7 +1111,13 @@ function modalWaysOf(state, modal, context, taken, n) {
 function modesTaken(state, entry) {
   if (!entry.script?.modal?.unchosen) return [];
   const source = entry.cardId === null ? undefined : state.objects[entry.cardId];
-  return source ? source.modesChosen?.[entry.abilityId] ?? [] : entry.modesChosenWas ?? [];
+  return source ? modesChosenBy(state, source, entry.abilityId, entry.script.modal.unchosen) : entry.modesChosenWas ?? [];
+}
+/* "Choose one that hasn't been chosen THIS TURN" (Monument to Endurance; `unchosen: "turn"`): only the modes chosen in this
+   turn (`modesChosenOn`, the turn they were chosen in) -- in a turn after, none has been. */
+function modesChosenBy(state, object, abilityId, unchosen) {
+  if (unchosen === "turn" && object.modesChosenOn?.[abilityId] !== state.turn) return [];
+  return object.modesChosen?.[abilityId] ?? [];
 }
 
 /** The choice (§12.1): each legal way to aim the trigger, with what it is aimed at. */
@@ -1119,7 +1171,10 @@ export function resolveTriggerTargets(state, awaiting, indices) {
     /* The modes chosen, remembered on the permanent for its next time (modesTaken) -- once chosen, chosen, whatever then
        becomes of this trigger. */
     const source = modal.unchosen && entry.cardId !== null ? state.objects[entry.cardId] : undefined;
-    if (source) source.modesChosen = {...(source.modesChosen ?? {}), [entry.abilityId]: [...(source.modesChosen?.[entry.abilityId] ?? []), ...option.modes]};
+    if (source) {
+      source.modesChosen = {...(source.modesChosen ?? {}), [entry.abilityId]: [...modesChosenBy(state, source, entry.abilityId, modal.unchosen), ...option.modes]};
+      if (modal.unchosen === "turn") source.modesChosenOn = {...(source.modesChosenOn ?? {}), [entry.abilityId]: state.turn};
+    }
     entry.script = {...rest, ...modalScript(modal, option.modes)};
     entry.modes = [...option.modes];
   }

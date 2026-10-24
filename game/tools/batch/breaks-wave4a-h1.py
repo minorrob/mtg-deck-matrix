@@ -66,7 +66,7 @@ NAMES_NONE = '    if (effect.targets !== undefined || effect.zone !== undefined 
 FROM_ONLY = '["spells", "payLife", "count"].some((key) => effect[key] !== undefined)'
 CANT_CAST_SCHEMA = '((effect.named === undefined) === (effect.allSpells !== true) || effect.who === undefined\n    || (effect.allSpells !== undefined && effect.allSpells !== true)))'
 TRUE_KEYS = '["free", "graveyardToLibraryBottom", "perType", "anyMana"]'
-EXTRA_SHAPE = 'Array.isArray(ability.additionalCost) && ability.additionalCost.length && ability.additionalCost.every((a) => a?.atom === "sacrifice" && a.count === undefined)'
+EXTRA_SHAPE = 'Array.isArray(ability.additionalCost) && ability.additionalCost.length && ability.additionalCost.every((a) => ["sacrifice", "discard"].includes(a?.atom) && a.count === undefined)'
 
 BREAKS = [
     # "During each of your turns, you may play a land and cast a permanent spell of each permanent type from your graveyard"
@@ -178,7 +178,7 @@ BREAKS = [
     # "You can't cast additional spells this turn" (Conduit of Worlds).
     ("can't cast: every spell", PERMANENTS, CANT_CAST_ALL, 'spells: {named: params.named},'),
     ("can't cast: allowed", PERMANENTS, CANT_CAST_OK, CANT_CAST_OK.replace(' || params.allSpells === true', '')),
-    ("can't cast: you", PERMANENTS, '    const who = params.who === "you" ? [context.controller] : params.who;', '    const who = params.who;'),
+    ("can't cast: you", PERMANENTS, '    const who = typeof params.who === "string" ? playersFor(state, params.who, context.controller) : params.who;', '    const who = params.who;'),
 
     # Rule statics that read their condition now.
     ('condition read: play-from', INDEX, READS, '  "cast-self-from",\n'),
@@ -212,7 +212,7 @@ BREAKS = [
     ('schema: anyMana true', SCHEMA, TRUE_KEYS, '["free", "graveyardToLibraryBottom", "perType"]'),
     ('schema: perType alone', SCHEMA, '      if (ability.perType === true && ability.limit !== undefined) errors.push', '      if (false) errors.push'),
     ("schema: permission's cost a list", SCHEMA, EXTRA_SHAPE, EXTRA_SHAPE.replace('ability.additionalCost.length && ', '')),
-    ("schema: permission's cost a sacrifice", SCHEMA, EXTRA_SHAPE, EXTRA_SHAPE.replace('a?.atom === "sacrifice" && ', '')),
+    ("schema: permission's cost a sacrifice", SCHEMA, EXTRA_SHAPE, EXTRA_SHAPE.replace('["sacrifice", "discard"].includes(a?.atom) && ', '')),
     ("schema: permission's cost one each", SCHEMA, EXTRA_SHAPE, EXTRA_SHAPE.replace(' && a.count === undefined', '')),
     ("schema: permission's cost's selector", SCHEMA, '        else ability.additionalCost.forEach(', '        else [].forEach('),
     ("schema: permission's cost not a land's", SCHEMA, '        if (ability.lands) errors.push({path: `${path}.additionalCost`', '        if (false) errors.push({path: `${path}.additionalCost`'),

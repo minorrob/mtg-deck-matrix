@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rigging Runner",
+    "oracleId": "72b600e3-d671-4279-8ca6-9a3d6e774b53",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin",
+      "Pirate"
+    ],
+    "manaCost": "{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "First strike\nRaid — This creature enters with a +1/+1 counter on it if you attacked this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "first strike",
+      "text": "First strike"
+    },
+    {
+      "kind": "replacement",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersWithCounters": {
+          "counter": "+1/+1",
+          "count": {
+            "creaturesAttackedWithThisTurn": "you",
+            "atMost": 1
+          }
+        }
+      },
+      "text": "Raid — This creature enters with a +1/+1 counter on it if you attacked this turn."
+    }
+  ]
+}

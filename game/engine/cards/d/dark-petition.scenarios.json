@@ -111,7 +111,7 @@
         ]
       }
     },
-    "Divination": {
+    "Smoke Divination": {
       "types": [
         "Sorcery"
       ],
@@ -163,7 +163,7 @@
           "zone": "graveyard",
           "cards": [
             "Small Insight",
-            "Divination"
+            "Smoke Divination"
           ]
         }
       ],

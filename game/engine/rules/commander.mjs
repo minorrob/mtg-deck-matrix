@@ -141,8 +141,11 @@ export function recordCommanderDamage(state, player, sourceId, amount) {
   const source = state.objects[sourceId];
   if (source?.commander !== true || !(amount > 0)) return;
   const tally = state.players[player].commanderDamage;
-  const key = commanderKeyOf(source);
-  tally[key] = (tally[key] ?? 0) + amount;
+  const commanders = source.merged ? source.merged.map(p => p.physical).filter(p => p.commander === true) : [source];
+  for (const card of commanders) {
+    const key = commanderKeyOf(card);
+    tally[key] = (tally[key] ?? 0) + amount;
+  }
 }
 
 /* ---- CR 903.9a, back to the command zone ---- */

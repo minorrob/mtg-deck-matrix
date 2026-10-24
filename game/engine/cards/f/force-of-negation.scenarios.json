@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Force of Negation",
   "fixtures": {
-    "Study": {
+    "Smoke Study": {
       "types": [
         "Sorcery"
       ],
@@ -47,7 +47,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Study"
+            "Smoke Study"
           ]
         }
       ],
@@ -57,7 +57,7 @@
           "seat": 1
         },
         {
-          "cast": "Study",
+          "cast": "Smoke Study",
           "seat": 1
         },
         {
@@ -70,7 +70,7 @@
           "exile": "Ponder",
           "targets": [
             {
-              "card": "Study"
+              "card": "Smoke Study"
             }
           ]
         },
@@ -83,7 +83,7 @@
           "seat": 1,
           "zone": "exile",
           "cards": [
-            "Study"
+            "Smoke Study"
           ]
         },
         {
@@ -109,7 +109,7 @@
           "cards": [
             "Force of Negation",
             "Ponder",
-            "Study"
+            "Smoke Study"
           ]
         },
         {
@@ -125,7 +125,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Study"
+          "cast": "Smoke Study"
         },
         {
           "expect": [

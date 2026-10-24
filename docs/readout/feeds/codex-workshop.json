@@ -1,9 +1,9 @@
 {
   "workstream": "codex-workshop",
-  "updated": "2026-10-18T12:23:20.186Z",
-  "updated_by": "Codex · Workshop, sharing acceptance",
+  "updated": "2026-10-24T20:32:43.113Z",
+  "updated_by": "Codex · Workshop",
   "branch": "codex/workshop-sharing-acceptance",
-  "now": "Paused at Rob’s request after pushing the scoped sharing acceptance slice in PR #769. Next: recipient browser coverage and live Share Library acceptance, then ROB-122, ROB-125, ROB-106, and ROB-105’s paste path.",
+  "now": "Merging the completed Share Library boundary tests in PR #769 and releasing current main to staging on Rob’s October 24 instruction. Live recipient sharing acceptance remains open.",
   "items": [
     {
       "id": "ROB-36",
@@ -13,25 +13,25 @@
       "remaining_hours": 8,
       "evidence": [
         {
-          "label": "Draft PR #769: sharing acceptance",
+          "label": "PR #769: sharing boundary tests",
           "url": "https://github.com/minorrob/mtg-deck-matrix/pull/769"
         }
       ],
-      "note": "Local sharing checks pass. Live recipient deck selection and Email Deck evidence remain open."
+      "note": "Isolated permission/privacy checks; live recipient browser acceptance remains unproven."
     },
     {
       "id": "ROB-37",
       "outcome": "share",
       "feature": "Share Library with Reviewer and Collaborator, proven live",
       "status": "in_progress",
-      "remaining_hours": 6,
+      "remaining_hours": 8,
       "evidence": [
         {
-          "label": "Draft PR #769: sharing acceptance",
+          "label": "PR #769: sharing boundary tests",
           "url": "https://github.com/minorrob/mtg-deck-matrix/pull/769"
         }
       ],
-      "note": "87 isolated sharing checks pass; all four library mutations caught. Recipient browser coverage and live acceptance remain unproven."
+      "note": "Isolated permission/privacy checks; live recipient browser acceptance remains unproven."
     },
     {
       "id": "ROB-133",
@@ -73,8 +73,17 @@
       "id": "ROB-107",
       "outcome": "library",
       "feature": "Where every card is and what it is doing, readable without the glossary",
-      "status": "backlog",
-      "remaining_hours": 12
+      "status": "in_progress",
+      "remaining_hours": 4,
+      "note": "The status words, one cardState and the note beside each pill shipped in PR #777 (ROB-150, docs/card-states.md); the per-row next-action sentence, bulk moves with preview, the complexity dial (ROB-125) and the usability pass remain."
+    },
+    {
+      "id": "ROB-150",
+      "outcome": "library",
+      "feature": "Card status: Use, Ownership and Play, with Upgrade; The hundred and the Library agree",
+      "status": "done",
+      "remaining_hours": 0,
+      "note": "Merged in PR #777 (71155f15); docs/card-states.md."
     },
     {
       "id": "ROB-108",
@@ -88,7 +97,8 @@
       "outcome": "library",
       "feature": "Watch-group card capture that never changes what I own",
       "status": "backlog",
-      "remaining_hours": 6
+      "remaining_hours": 6,
+      "note": "A watched card for a deck is now an Upgrade that names the card it would replace (PR #777); the Watch group capture itself remains."
     },
     {
       "id": "ROB-110",
@@ -120,6 +130,14 @@
       "feature": "One order across decks; arrivals go to the right box",
       "status": "backlog",
       "remaining_hours": 12
+    },
+    {
+      "id": "ROB-151",
+      "outcome": "tailored",
+      "feature": "Budgets per deck and account-wide, informational only",
+      "status": "done",
+      "remaining_hours": 0,
+      "note": "Merged in PR #777 (71155f15); docs/budgets.md. Rob kept all three defaults."
     },
     {
       "id": "ROB-122",

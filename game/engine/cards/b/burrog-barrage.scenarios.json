@@ -30,7 +30,7 @@
       "power": 3,
       "toughness": 3
     },
-    "Tidings": {
+    "Smoke Tidings": {
       "types": [
         "Instant"
       ],
@@ -185,7 +185,7 @@
           "zone": "hand",
           "cards": [
             "Burrog Barrage",
-            "Tidings"
+            "Smoke Tidings"
           ]
         },
         {
@@ -201,7 +201,7 @@
           "tap": "Island"
         },
         {
-          "cast": "Tidings"
+          "cast": "Smoke Tidings"
         },
         {
           "resolve": true

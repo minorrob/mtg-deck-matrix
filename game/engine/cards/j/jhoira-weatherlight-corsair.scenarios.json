@@ -84,7 +84,7 @@
       "manaCost": "{5}",
       "colors": []
     },
-    "Shatter": {
+    "Smoke Shatter": {
       "types": [
         "Instant"
       ],
@@ -545,7 +545,7 @@
           "zone": "hand",
           "cards": [
             "Jhoira, Weatherlight Corsair",
-            "Shatter"
+            "Smoke Shatter"
           ]
         },
         {
@@ -588,7 +588,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Shatter",
+          "cast": "Smoke Shatter",
           "targets": [
             {
               "card": "Rock"
@@ -611,7 +611,7 @@
           "seat": 0,
           "zone": "graveyard",
           "cards": [
-            "Shatter"
+            "Smoke Shatter"
           ]
         }
       ]

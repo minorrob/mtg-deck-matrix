@@ -1,0 +1,71 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Duelist of the Mind",
+    "oracleId": "ff78f166-cca2-44bc-abe3-3a338bf543be",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Advisor"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": 3
+  },
+  "oracleText": "Flying, vigilance\nDuelist of the Mind's power is equal to the number of cards you've drawn this turn.\nWhenever you commit a crime, you may draw a card. If you do, discard a card. This ability triggers only once each turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "static",
+      "text": "Duelist of the Mind's power is equal to the number of cards you've drawn this turn.",
+      "layer": 7,
+      "sublayer": "a",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "setPower": {
+          "cardsDrawnThisTurn": "you"
+        }
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you commit a crime, you may draw a card. If you do, discard a card. This ability triggers only once each turn.",
+      "trigger": {
+        "on": "crime committed",
+        "criminal": "you"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        },
+        {
+          "effect": "discard",
+          "count": 1
+        }
+      ],
+      "optional": true,
+      "limit": 1
+    }
+  ]
+}

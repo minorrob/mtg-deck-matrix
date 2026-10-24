@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Flowstone Hellion",
+    "oracleId": "69ea4ef2-794d-4c76-904f-0435b0efd6a0",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Hellion",
+      "Beast"
+    ],
+    "manaCost": "{4}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Haste\n{0}: This creature gets +1/-1 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "haste",
+      "text": "Haste"
+    },
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{0}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 1,
+          "toughness": -1
+        }
+      ],
+      "text": "{0}: This creature gets +1/-1 until end of turn."
+    }
+  ]
+}

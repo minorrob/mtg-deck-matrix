@@ -1,0 +1,84 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Umbral Mantle",
+    "oracleId": "44f3241f-af82-4f2e-b15d-7f279bf6e816",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Equipment"
+    ],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Equipped creature has \"{3}, {Q}: This creature gets +2/+2 until end of turn.\" ({Q} is the untap symbol.)\nEquip {0}",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Equipped creature has \"{3}, {Q}: This creature gets +2/+2 until end of turn.\"",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "addAbilities": [
+          {
+            "kind": "activated",
+            "text": "{3}, {Q}: This creature gets +2/+2 until end of turn.",
+            "cost": [
+              {
+                "atom": "mana",
+                "cost": "{3}"
+              },
+              {
+                "atom": "{Q}"
+              }
+            ],
+            "effects": [
+              {
+                "effect": "pump",
+                "targets": "self",
+                "power": 2,
+                "toughness": 2
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "Equip {0}",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{0}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "attach",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "timing": "sorcery",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ]
+    }
+  ]
+}

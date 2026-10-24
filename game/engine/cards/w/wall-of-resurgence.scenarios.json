@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Wall of Resurgence",
   "fixtures": {
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -249,7 +249,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ],
@@ -308,7 +308,7 @@
           "seat": 1
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "seat": 1,
           "targets": [
             {

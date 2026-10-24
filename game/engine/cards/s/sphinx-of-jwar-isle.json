@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sphinx of Jwar Isle",
+    "oracleId": "3951f13e-f6dd-4d67-a088-23925baaf99b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Sphinx"
+    ],
+    "manaCost": "{4}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Flying\nShroud (This creature can't be the target of spells or abilities.)\nYou may look at the top card of your library any time.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "shroud",
+      "text": "Shroud (This creature can't be the target of spells or abilities.)"
+    },
+    {
+      "kind": "static",
+      "rule": "look-at-top",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "text": "You may look at the top card of your library any time."
+    }
+  ]
+}

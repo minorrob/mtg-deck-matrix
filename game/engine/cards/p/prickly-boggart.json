@@ -1,0 +1,32 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Prickly Boggart",
+    "oracleId": "fa110e05-6759-4eeb-96eb-9b7a8e4a94c3",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin",
+      "Rogue"
+    ],
+    "manaCost": "{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Fear (This creature can't be blocked except by artifact creatures and/or black creatures.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "fear",
+      "text": "Fear (This creature can't be blocked except by artifact creatures and/or black creatures.)"
+    }
+  ]
+}

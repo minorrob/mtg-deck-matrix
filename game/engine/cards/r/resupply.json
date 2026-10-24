@@ -1,0 +1,38 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Resupply",
+    "oracleId": "129ec223-e76d-491d-b299-07ac91168d31",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{5}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "You gain 6 life.\nDraw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "You gain 6 life.\nDraw a card.",
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 6
+        },
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

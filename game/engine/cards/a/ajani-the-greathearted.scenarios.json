@@ -1,0 +1,223 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Ajani, the Greathearted",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Rob's creatures have vigilance, Maya's do not; +1: Rob gains 3 life and Ajani has 6 loyalty",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ajani, the Greathearted",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Ajani, the Greathearted",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Bear",
+            "has": [
+              "Vigilance"
+            ]
+          }
+        },
+        {
+          "seat": 1,
+          "keywords": {
+            "card": "Bear",
+            "lacks": [
+              "Vigilance"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "life": 43
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Ajani, the Greathearted",
+            "counter": "loyalty",
+            "count": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "-2: a +1/+1 counter on each of Rob's creatures and a loyalty counter on his other planeswalker -- not on Ajani, not on Maya's",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ajani, the Greathearted",
+            "Bear",
+            "Elspeth, Sun's Champion"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Ajani Unrelenting"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Ajani, the Greathearted",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 3,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Bear",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Elspeth, Sun's Champion",
+            "counter": "loyalty",
+            "count": 5
+          }
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Ajani, the Greathearted",
+            "counter": "loyalty",
+            "count": 3
+          }
+        },
+        {
+          "seat": 1,
+          "counters": {
+            "card": "Ajani Unrelenting",
+            "counter": "loyalty",
+            "count": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rob's commander in the command zone is no emblem: his Ajani's Pridemate there doesn't trigger as he gains life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ajani, the Greathearted"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "command",
+          "cards": [
+            "Ajani's Pridemate"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Ajani, the Greathearted",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "life": 43
+        }
+      ]
+    },
+    {
+      "name": "One loyalty ability a turn (CR 606.3): after the +1, neither is offered again this turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ajani, the Greathearted"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Ajani, the Greathearted",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Ajani, the Greathearted"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

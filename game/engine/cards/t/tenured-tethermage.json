@@ -1,0 +1,113 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tenured Tethermage",
+    "oracleId": "571cb06d-55b5-46e4-9678-1f74aca73068",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Artificer"
+    ],
+    "manaCost": "{1}{R}{G}",
+    "colors": [
+      "G",
+      "R"
+    ],
+    "colorIdentity": [
+      "G",
+      "R"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "When this creature enters, you may sacrifice a land. If you do, create two tapped Heartwood tokens. (They're red and green artifacts with \"{T}: Add {R} or {G}.\")\nTap two untapped artifacts you control: Put two +1/+1 counters on this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, you may sacrifice a land. If you do, create two tapped Heartwood tokens.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "count": 1,
+          "optional": true,
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Land"
+            ]
+          },
+          "remember": true
+        },
+        {
+          "effect": "createToken",
+          "count": 2,
+          "tapped": true,
+          "token": {
+            "name": "Heartwood",
+            "types": [
+              "Artifact"
+            ],
+            "subtypes": [
+              "Heartwood"
+            ],
+            "colors": [
+              "R",
+              "G"
+            ],
+            "abilities": [
+              {
+                "id": "heartwood",
+                "kind": "mana",
+                "tapSelf": true,
+                "produces": [
+                  {
+                    "R": 1
+                  },
+                  {
+                    "G": 1
+                  }
+                ],
+                "text": "{T}: Add {R} or {G}."
+              }
+            ]
+          },
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "Tap two untapped artifacts you control: Put two +1/+1 counters on this creature.",
+      "cost": [
+        {
+          "atom": "tapCreature",
+          "selector": {
+            "types": [
+              "Artifact"
+            ],
+            "controller": "you"
+          },
+          "count": 2
+        }
+      ],
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 2
+        }
+      ]
+    }
+  ]
+}

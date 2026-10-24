@@ -34,14 +34,18 @@ import {makeCopies, afterwards, joinAttack, attackPlaces, attachTo, createToken,
 import {payGeneric, canPayGeneric, parseManaCost, manaValue, paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits, unlessPlans, planWords, payPlan} from "../../rules/mana.mjs";
 import {typesOf, characteristicsOf, everyCreatureTypeOf, controllerOf, lastKnown, staticAbilities} from "../../rules/layers.mjs";
 import {isLandType} from "../../keywords/types.mjs";
-import {pushCopy, becameTarget, specsOf} from "../../rules/stack.mjs";
-import {loseLife, DAMAGING, damageQuestion, addMana} from "./resources.mjs";
-import {damageOrderChoice} from "../../rules/replacement.mjs";
+import {pushCopy, pushAbilityCopy, becameTarget, specsOf} from "../../rules/stack.mjs";
+import {loseLife, gainLife, DAMAGING, damageQuestion, addMana} from "./resources.mjs";
+import {damageOrderChoice, graveyardBound, placeReplacedCounters} from "../../rules/replacement.mjs";
 import {targetCandidates, targetName} from "../bind.mjs";
 import {commanderTax} from "../../rules/commander.mjs";
-import {cantBeCountered, counterOrderChoice, cantBeSacrificed, tokenOrderChoice, drawForbidden} from "../../rules/statics.mjs";
+import {cantBeCountered, counterOrderChoice, cantBeSacrificed, tokenOrderChoice, drawForbidden, searchController} from "../../rules/statics.mjs";
 import {amountOf} from "../amount.mjs";
 import {castNow, castChoicesNow, landChoicesNow, withFaceUp} from "../../rules/actions.mjs";
+
+import {mergedOrderToAsk, mergedOrderChoice, finishMergedOrder} from "../../state/index.mjs";
+import {mergePermanent} from "../../keywords/mutate.mjs";
+import {ringTempts} from "../../keywords/ring.mjs";
 
 const cardOptions = (state, ids) => ids.map((id, index) => ({index, label: state.objects[id].card, cardId: id}));
 
@@ -326,6 +330,9 @@ function digRest(state, player, cards, {rest, random}, rng, events) {
   const left = cards.filter((id) => state.objects[id]);
   if (random && !rng) throw new Error("A random order needs the game's random stream");
   const order = random ? rng.shuffle(left) : left;
+  /* "Put one of them into your hand, put one of them on the bottom of your library, and exile one of them" (Expressive
+     Iteration): the rest left where they are, on top, for the next of the card's choices to look at again. */
+  if (rest === "stay") return;
   if (rest !== "bottom") { for (const id of order) moveOne(state, id, rest, events, {owner: player}); return; }
   const library = state.zones.library[player];
   for (const id of order) {
@@ -441,6 +448,9 @@ export const dig = {
       ...(params.random === true ? {random: true} : {}), ...(params.remember ? {remember: true} : {}),
       ...(Array.isArray(params.toByType) ? {toByType: structuredClone(params.toByType)} : {}),
       ...(params.faceDown === true && (params.to ?? "hand") === "exile" ? {faceDown: true} : {}),
+      /* Manifest dread (CR 701.62a, script/schema.mjs): the card taken put onto the battlefield face down, manifested (moveOne,
+         CR 701.40a) -- a 2/2 with no text, which its controller may look at (CR 708.5) and turn face up if it is a creature card. */
+      ...(params.manifest === true ? {faceDown: true, manifest: true} : {}),
       ...(params.link === true && context.source !== null && context.source !== undefined ? {link: context.source} : {}),
     };
     return true;
@@ -461,6 +471,7 @@ export const dig = {
       id: `dig:${awaiting.cards.join(",")}`,
       title: awaiting.toByType ? `Choose ${awaiting.min === 0 ? "up to " : ""}${awaiting.take} to reveal`
         : awaiting.to === "exile" ? `Choose ${awaiting.min === 0 ? "up to " : ""}${awaiting.take} to exile${awaiting.faceDown ? " face down" : ""}`
+        : awaiting.manifest ? "Manifest dread: choose 1 to manifest; the other goes into your graveyard"
         : `Choose ${awaiting.min === 0 ? "up to " : ""}${awaiting.take} to put into your ${awaiting.to}`,
       mode: awaiting.take === 1 && awaiting.min === 1 ? "one" : "many",
       min: awaiting.min ?? awaiting.take,
@@ -512,16 +523,19 @@ const countsFor = (state, params, players, context) => (params.perPlayer === tru
   ? Object.fromEntries(players.map((player) => [player, amountOf(state, params.count, {...context, about: {...context.about, player}})])) : null);
 
 /* One card from a hand to its owner's graveyard, said as a discard (CR 701.9a) -- what "whenever you discard" reads. */
-function discardOne(state, id, player, events) {
+export function discardOne(state, id, player, events) {
   const card = cardRef(state, id);
   const owner = state.objects[id].owner;
-  const discarded = moveObject(state, id, "graveyard", owner);
+  /* Still a discard where a replacement sends it instead (CR 701.9a, 614.1a; Dauthi Voidwalker). */
+  const bound = graveyardBound(state, id);
+  const discarded = moveObject(state, id, bound.to, ["graveyard", "library", "hand"].includes(bound.to) ? owner : null);
+  placeReplacedCounters(state, discarded, bound);
   recordDiscard(state, player);
   events.push(event("GameEventCardChangeZone", state, {
     card,
     becomes: discarded,
     from: {zoneType: "Hand", player: {playerId: player}},
-    to: {zoneType: "Graveyard", player: {playerId: owner}},
+    to: {zoneType: bound.to[0].toUpperCase() + bound.to.slice(1), player: {playerId: owner}},
     discarded: true,
   }));
   return discarded;
@@ -584,6 +598,9 @@ export const discard = {
       ...(counts === null ? {count: params.count ?? 1} : {counts}), ...(params.who !== undefined ? {who: params.who} : {}),
       controller: Number.isInteger(params.rememberOf) ? params.rememberOf : Array.isArray(params.who) && params.who.length === 1 ? params.who[0] : context.controller,
       ...(params.remember ? {remembering: []} : {}),
+      /* Or every discarder's (`remember: "all"`): "each other player discards a card. You draw a card for each card discarded
+         this way" (Syphon Mind). */
+      ...(params.remember === "all" ? {rememberAll: true} : {}),
       /* "You may discard UP TO two cards. If you do, draw that many cards" (Fable of the Mirror-Breaker, chapter II): how many,
          from none to that many, is the discarder's to say (CR 701.9a, 701.9b); "that many" counts what they discarded
          (`remember`, then `rememberedCount`). "Discards ANY NUMBER of cards" (Steal the Show, `anyNumber`): from none to
@@ -643,7 +660,7 @@ function discardDecided(state, awaiting, decided, events) {
   let remembering = awaiting.remembering;
   for (const {player, ids} of decided.filter((d) => !state.players[d.player].lost)) {
     const gone = ids.map((id) => discardOne(state, id, player, events));
-    if (remembering && player === awaiting.controller) remembering = [...remembering, ...gone];
+    if (remembering && (player === awaiting.controller || awaiting.rememberAll === true)) remembering = [...remembering, ...gone];
   }
   return remembering ? {events, remembered: remembering} : events;
 }
@@ -778,9 +795,11 @@ export const proliferate = {
       ...state.zones.battlefield.filter((id) => hasCounters(state.objects[id].counters)).map((id) => ({id})),
       ...state.players.filter((p) => !p.lost && hasCounters(playerCounters(p))).map((p) => ({player: p.id})),
     ];
+    /* "Choose any number of permanents you control that had a counter put on them this way" (Ripples of Potential; card
+       load w4d L1): `remember`, the permanents given counters (apply). */
     /* Nothing with a counter: nothing to choose, and nobody is asked -- but the player has proliferated. */
     if (candidates.length === 0) return {events: [proliferated(state, context.controller)]};
-    state.awaiting = {kind: "effect-choice", effect: "proliferate", player: context.controller, candidates};
+    state.awaiting = {kind: "effect-choice", effect: "proliferate", player: context.controller, candidates, ...(params.remember === true ? {remember: true} : {})};
     return true;
   },
 
@@ -802,7 +821,9 @@ export const proliferate = {
 
   apply(state, awaiting, indices) {
     const chosen = (indices ?? []).map((i) => awaiting.candidates[i]).filter(Boolean).map((c) => (c.player !== undefined ? {player: c.player} : c.id));
-    return [...giveEachAnother(state, {chosen}, {controller: awaiting.player}), proliferated(state, awaiting.player)];
+    const events = [...giveEachAnother(state, {chosen}, {controller: awaiting.player}), proliferated(state, awaiting.player)];
+    /* The permanents a counter was put on (`remember`): each chosen one still there. */
+    return awaiting.remember ? {events, remembered: chosen.filter((id) => typeof id !== "object" && state.objects[id]?.zone === "battlefield")} : events;
   },
 };
 
@@ -870,7 +891,9 @@ function nextKeepType(state, awaiting) {
     if (candidates.length > 1) break;
     if (candidates.length === 1) kept[player] = [...new Set([...(kept[player] ?? []), candidates[0]])];
   }
-  return {...awaiting, kept, at};
+  /* "EACH OPPONENT CHOOSES A PERMANENT THEY CONTROL OF EACH PERMANENT TYPE AND SACRIFICES THE REST" (Liliana, Dreadhorde
+     General; `keptByEach`): each player makes their own choices (CR 608.2d), in the same order. */
+  return {...awaiting, kept, at, ...(awaiting.keptByEach && at < awaiting.steps.length ? {player: awaiting.steps[at].player} : {})};
 }
 function sacrificeUnkept(state, awaiting) {
   const events = [];
@@ -904,7 +927,7 @@ export const sacrifice = {
     /* The effect's controller chooses what each player keeps, by type (Tragic Arrogance). */
     if (Array.isArray(params.keepTypes)) {
       const begun = nextKeepType(state, {kind: "effect-choice", effect: "sacrifice", player: context.controller, selector: asked.selector, source: asked.source,
-        keepTypes: [...params.keepTypes], everyone, steps: everyone.flatMap((player) => params.keepTypes.map((type) => ({player, type}))), at: 0, kept: {}});
+        ...(params.keptByEach === true ? {keptByEach: true} : {}), keepTypes: [...params.keepTypes], everyone, steps: everyone.flatMap((player) => params.keepTypes.map((type) => ({player, type}))), at: 0, kept: {}});
       if (begun.at >= begun.steps.length) return {events: sacrificeUnkept(state, begun)};
       state.awaiting = begun;
       return true;
@@ -1149,19 +1172,31 @@ const exileWords = (state, awaiting) => {
 };
 function costWords(awaiting, state) {
   if (awaiting.exileFromGraveyard) return exileWords(state, awaiting);
+  if (awaiting.opponentGainsLife) return gainsWords(awaiting.opponentGainsLife);
   if (awaiting.amountX) return "pay {X}";
   if (awaiting.timesAny) return `pay ${awaiting.mana} any number of times`;
   const paid = [awaiting.mana ?? null, awaiting.amount > 0 ? `{${awaiting.amount}}` : null, lifeAsked(awaiting) ? `${awaiting.life} life` : null].filter(Boolean);
-  const other = awaiting.discard ? `discard ${discardNoun(awaiting.discard)}` : awaiting.sacrificeCount ? `sacrifice ${awaiting.sacrificeCount} permanents` : awaiting.sacrifice ? `sacrifice ${noun(awaiting.sacrifice)}`
+  const other = awaiting.discard && awaiting.sacrifice ? `sacrifice ${awaiting.sacrifice.nonTypes?.includes("Land") ? "a nonland permanent" : noun(awaiting.sacrifice)} or discard ${discardNoun(awaiting.discard)}`
+    : awaiting.discard ? `discard ${discardNoun(awaiting.discard)}` : awaiting.sacrificeCount ? `sacrifice ${awaiting.sacrificeCount} permanents` : awaiting.sacrifice ? `sacrifice ${noun(awaiting.sacrifice)}`
     : awaiting.returnToHand ? `return ${otherNoun(awaiting.returnToHand)} you control to its owner's hand`
+    : awaiting.tapIds ? `tap ${awaiting.tapIds.map((id) => state.objects[id]?.card ?? "that permanent").join(", ") || "that permanent"}`
     : awaiting.tap ? `tap ${otherNoun(awaiting.tap).replace(/^(a|another) /, "$1 untapped ").replace(/^a untapped/, "an untapped")} you control` : null;
   return [other, paid.length ? `pay ${paid.join(" and ")}` : null].filter(Boolean).join(" and ") || `pay {${awaiting.amount}}`;
 }
+/* "CUMULATIVE UPKEEP -- AN OPPONENT GAINS 1 LIFE" (Wall of Shards, library load L5; CR 702.24a, 118.12): `opponentGainsLife`, that
+   much life for an opponent of the payer's, `times` over -- one for each age counter, counted as it is asked. Paid, which
+   opponent gains each is the payer's choice, the same one or a different one each time (its ruling), asked in turn when there
+   is more than one opponent still in the game; each one chosen gains what it was chosen for at once, as one life gain from
+   the one cost (CR 119.10). */
+const opponentsOf = (state, player) => state.players.filter((p) => p.id !== player && !p.lost).map((p) => p.id);
+const gainsWords = ({amount, times}) => `have an opponent gain ${amount} life${times > 1 ? `, ${times} times` : ""}`;
 /* "YOU MAY PAY {X}" (Halo Forager; `amountX`, CR 107.3f): X is the payer's to choose as it resolves -- each amount their pool
    and plain mana sources could pay, from {0}, its own option -- and what follows knows it (`paidX`, script/resolution.mjs). */
-function xOptions(state, player) {
+/* "You may pay {X}, where X is less than or equal to the amount of life you gained" (Well of Lost Dreams): `atMost`, the most X
+   may be, counted as it is asked (`mostX`). */
+function xOptions(state, player, most = Infinity) {
   const options = [];
-  for (let x = 0; canPayGeneric(state, player, x); x += 1) options.push({label: `Pay {${x}}`, pay: true, x});
+  for (let x = 0; x <= most && canPayGeneric(state, player, x); x += 1) options.push({label: `Pay {${x}}`, pay: true, x});
   return options;
 }
 /* "YOU MAY PAY {2}{R} ANY NUMBER OF TIMES" (Bloodthirsty Adversary; `timesAny`, CR 118.12a, 601.2g-h's payment repeated):
@@ -1175,8 +1210,14 @@ function timesOptions(state, awaiting) {
   return options;
 }
 function payOptions(state, awaiting) {
-  if (awaiting.amountX && awaiting.amount === undefined) return xOptions(state, awaiting.player);
+  if (awaiting.amountX && awaiting.amount === undefined) return xOptions(state, awaiting.player, awaiting.mostX ?? Infinity);
   if (awaiting.timesAny && awaiting.paidTimes === undefined) return timesOptions(state, awaiting);
+  /* Having said they pay, which opponent gains the next of it; else, to pay it at all, an opponent to gain it. */
+  if (awaiting.gaining) return opponentsOf(state, awaiting.player).map((id) => ({label: state.players[id].name, gainer: id}));
+  if (awaiting.opponentGainsLife) {
+    const words = gainsWords(awaiting.opponentGainsLife);
+    return [{label: `${words[0].toUpperCase()}${words.slice(1)}`, pay: true, opponentsGain: true}];
+  }
   const {player} = awaiting, amount = awaiting.amount ?? 0, life = awaiting.life ?? 0;
   if (amount > 0 && !canPayGeneric(state, player, amount)) return [];
   if (awaiting.mana && !unlessPlans(state, player, awaiting.mana, 1).plans.length) return [];
@@ -1193,7 +1234,13 @@ function payOptions(state, awaiting) {
       return awaiting.sacrificing ? mine.map((id) => ({label: state.objects[id].card, cardId: id}))
         : mine.length >= awaiting.sacrificeCount ? [{label: `Sacrifice ${awaiting.sacrificeCount} permanents${also}`, pay: true, sacrificeMany: true}] : [];
     }
-    return mine.map((id) => ({label: `Sacrifice ${state.objects[id].card}${also}`, pay: true, sacrifice: id, cardId: id}));
+    const sacrifices = mine.map((id) => ({label: `Sacrifice ${state.objects[id].card}${also}`, pay: true, sacrifice: id, cardId: id}));
+    /* "UNLESS THAT PLAYER SACRIFICES A NONLAND PERMANENT OF THEIR CHOICE OR DISCARDS A CARD" (Torment of Hailfire; CR 118.12a):
+       `sacrifice` and `discard` both, either one paying it -- each permanent and each card in hand its own option, which one
+       the payer's choice. */
+    if (!awaiting.discard) return sacrifices;
+    return [...sacrifices, ...cardsIn(state, "hand", player).filter((id) => discardFits(state, awaiting.discard, id, player))
+      .map((id) => ({label: `Discard ${state.objects[id].card}${also}`, pay: true, discard: id, cardId: id}))];
   }
   if (awaiting.discard) return cardsIn(state, "hand", player).filter((id) => discardFits(state, awaiting.discard, id, player))
     .map((id) => ({label: `Discard ${state.objects[id].card}${also}`, pay: true, discard: id, cardId: id}));
@@ -1208,6 +1255,8 @@ function payOptions(state, awaiting) {
   /* "YOU MAY TAP ANOTHER UNTAPPED MERFOLK YOU CONTROL. WHEN YOU DO, ..." (Meanders Guide; CR 118.12a, 603.12): each untapped
      permanent of the payer's the selector describes its own option -- `another` not the ability's source -- and not paying.
      Which one is the payer's choice. */
+  if (awaiting.tapIds) return awaiting.tapIds.filter((id) => state.objects[id]?.zone === "battlefield" && !state.objects[id].tapped && controllerOf(state, id) === player)
+    .map((id) => ({label: `Tap ${state.objects[id].card}${also}`, pay: true, tap: id, cardId: id}));
   if (awaiting.tap) {
     const fits = compileSelector({...awaiting.tap, what: "permanent", controller: "you"});
     return state.zones.battlefield.filter((id) => !state.objects[id].tapped && fits(state, id, {controller: player, source: awaiting.source}))
@@ -1244,7 +1293,12 @@ export const unlessPays = {
       ...(params.sacrificeCount ? {sacrificeCount: params.sacrificeCount} : {}),
       ...(params.returnToHand ? {returnToHand: structuredClone(params.returnToHand)} : {}),
       ...(params.tap ? {tap: structuredClone(params.tap)} : {}),
+      ...(params.opponentGainsLife ? {opponentGainsLife: {amount: params.opponentGainsLife.amount, times: Math.max(0, amountOf(state, params.opponentGainsLife.times ?? 1, context))}} : {}),
       ...(params.amountX === true ? {amountX: true} : {}),
+      ...(params.amountX === true && params.atMost !== undefined ? {mostX: Math.max(0, amountOf(state, params.atMost, context))} : {}),
+      /* "They may tap that permanent. If they don't, ..." (Charismatic Conqueror; CR 118.12a): the permanent the trigger is
+         about, tapped to pay -- while it is still that player's and untapped. */
+      ...(params.tap === "that card" ? {tapIds: context.about?.card !== undefined && context.about.card !== null ? [context.about.card] : []} : {}),
       ...(params.timesAny === true ? {timesAny: true} : {}),
       ...(params.exileFromGraveyard ? {exileFromGraveyard: structuredClone(params.exileFromGraveyard), ...(params.exileSelf === true ? {exileSelf: true} : {})} : {}),
       effects: structuredClone(params.effects ?? []), source: context.source ?? null,
@@ -1268,6 +1322,12 @@ export const unlessPays = {
     /* Having said they exile that many, with more there: which ones. */
     if (awaiting.exiling) return {id: `unless-exile:${awaiting.player}:${state.turn}`, title: `Choose ${NUMBER_WORDS[awaiting.exileFromGraveyard.count]} cards to exile`,
       mode: "many", min: awaiting.exileFromGraveyard.count, max: awaiting.exileFromGraveyard.count, options: payOptions(state, awaiting).map((option, index) => ({index, ...option}))};
+    /* Having said they pay, with more than one opponent: who gains the next of it. */
+    if (awaiting.gaining) {
+      const {amount, times} = awaiting.opponentGainsLife;
+      return {id: `unless-gain:${awaiting.player}:${state.turn}:${awaiting.gaining.chosen.length}`, title: `Which opponent gains ${amount} life (${awaiting.gaining.chosen.length + 1} of ${times})?`,
+        mode: "one", min: 1, max: 1, options: payOptions(state, awaiting).map((option, index) => ({index, ...option}))};
+    }
     /* Having said they sacrifice that many: which ones. */
     if (awaiting.sacrificing) return {id: `unless-sacrifice:${awaiting.player}:${state.turn}`, title: `Choose ${awaiting.sacrificeCount} permanents to sacrifice`, mode: "many",
       min: awaiting.sacrificeCount, max: awaiting.sacrificeCount, options: payOptions(state, awaiting).map((option, index) => ({index, ...option}))};
@@ -1297,6 +1357,17 @@ export const unlessPays = {
       const {exiling, ...rest} = awaiting;
       return unlessPaid(state, rest, {...exiling.option, exile: chosen}, []);
     }
+    /* The opponent for the next of it: asked again until each has one. */
+    if (awaiting.gaining) {
+      const gainer = payOptions(state, awaiting)[(indices ?? [])[0]]?.gainer;
+      if (gainer === undefined || (indices ?? []).length !== 1) throw new Error("Invalid selection");
+      const {gaining, ...rest} = awaiting, chosen = [...gaining.chosen, gainer];
+      if (chosen.length < awaiting.opponentGainsLife.times) {
+        state.awaiting = {...awaiting, gaining: {...gaining, chosen}};
+        return {events: [], again: true};
+      }
+      return unlessPaid(state, rest, {...gaining.option, gainers: chosen}, []);
+    }
     if (awaiting.sacrificing) {
       const ids = payOptions(state, awaiting).map((o) => o.cardId);
       const chosen = [...new Set(indices ?? [])].map((i) => ids[i]);
@@ -1318,6 +1389,13 @@ export const unlessPays = {
       return {events: [], again: true};
     }
     if (!option.pay) return unpaid(awaiting);
+    /* An opponent to gain it: with one there, that one each time -- no choice -- and with more, asked in turn. */
+    if (option.opponentsGain) {
+      const opponents = opponentsOf(state, awaiting.player);
+      if (opponents.length === 1) return unlessPaid(state, awaiting, {...option, gainers: Array(awaiting.opponentGainsLife.times).fill(opponents[0])}, []);
+      state.awaiting = {...awaiting, gaining: {option, chosen: []}};
+      return {events: [], again: true};
+    }
     /* The X chosen is the amount paid. */
     if (option.x !== undefined) return unlessPays.paid(state, {...awaiting, amount: option.x}, option);
     /* So many times: the cost that many times over, paid as one (CR 601.2h). */
@@ -1355,6 +1433,9 @@ export const unlessPays = {
 };
 /* What paying an "unless" cost is besides its mana -- life, a discard, a sacrifice -- and what follows it. */
 function unlessPaid(state, awaiting, option, events) {
+  /* Life an opponent gains as the cost is paid: each one chosen, all they were chosen for, at once (CR 119.10). */
+  for (const gainer of new Set(option.gainers ?? [])) events.push(...gainLife(state, {amount: awaiting.opponentGainsLife.amount * option.gainers.filter((id) => id === gainer).length, who: [gainer]},
+    {controller: awaiting.player, source: awaiting.source}));
   /* Paying life is losing it (CR 119.4, 119.3). */
   if ((awaiting.life ?? 0) > 0) events.push(...loseLife(state, {amount: awaiting.life, who: [awaiting.player]}, {controller: awaiting.player, source: awaiting.source}));
   /* A discard: the card it became, remembered -- "when you discard a card this way, ... the mana value of the discarded card"
@@ -1545,10 +1626,20 @@ function retargetOptions(state, question, {withOthers = false} = {}) {
 }
 export const copySpell = {
   open(state, params, context) {
-    const originals = (params.spells ?? []).map((id) => state.stack.find((e) => e.objectId === id)).filter(Boolean);
+    /* Or a spell or ability by its stack entry (`stack`: "copy target triggered ability you control", Strionic Resonator;
+       "target instant spell, sorcery spell, activated ability, or triggered ability", Return the Favor): an ability's copy is
+       an ability (rules/stack.mjs, pushAbilityCopy), a spell's a spell. */
+    const originals = [...(params.spells ?? []).map((id) => state.stack.find((e) => e.objectId === id)),
+      ...(Array.isArray(params.stack) ? params.stack.map((id) => state.stack.find((e) => e.stackId === id)) : [])].filter(Boolean);
     const count = Math.max(0, params.count ?? 1);
     const events = [], questions = [];
     for (const original of originals) for (let n = 0; n < count; n += 1) {
+      if (original.kind !== "spell") {
+        const copy = pushAbilityCopy(state, original, {controller: context.controller});
+        events.push(event("GameEventAbilityCopied", state, {name: original.name, playerId: context.controller, stackId: copy.stackId, original: original.stackId}));
+        if (params.newTargets === true) copy.targets.forEach((t, index) => { if (!Array.isArray(t)) questions.push({stackId: copy.stackId, index}); });
+        continue;
+      }
       const copy = pushCopy(state, original, {controller: context.controller, nonLegendary: params.except?.nonLegendary === true});
       events.push(event("GameEventSpellCopied", state, {card: cardRef(state, copy.objectId), original: cardRef(state, original.objectId),
         playerId: context.controller, stackId: copy.stackId}));
@@ -1941,7 +2032,9 @@ export const chooseCard = {
     /* Exile is face up (CR 406.3): what fits there is seen, so there is no failing to find it either. */
     /* So is the command zone (CR 400.2): "put your commander into your hand from the command zone" (Command Beacon, wave 4b)
        takes the one there, and with none there nobody is asked. */
-    const faceUp = among || onField || zone === "exile" || zone === "command";
+    /* And a graveyard (CR 404.2): public, so "choose a creature or planeswalker card in that player's graveyard" (Breach the
+       Multiverse) takes one that fits -- only a hidden zone's search may fail to find (CR 701.23b). */
+    const faceUp = among || onField || zone === "exile" || zone === "command" || (zone === "graveyard" && !zones);
     if (faceUp && cards.length === 0) return false;
     /* "IF AN EQUIPMENT IS PUT ONTO THE BATTLEFIELD THIS WAY, YOU MAY ATTACH IT TO A CREATURE YOU CONTROL" (Armored Skyhunter;
        `attach: "remembered"`, beside `to: "stay"`): "it" is what the effect before it put there (CR 701.3a) -- the permanent
@@ -1958,10 +2051,23 @@ export const chooseCard = {
       /* "Untap that land" (Fabled Passage): what it found, for the effects after it (resolution.mjs). "Add": beside what was
          remembered before -- each player's creature chosen in turn, "not chosen this way" all of them (The Eternal Wanderer). */
       ...(params.remember ? {remember: params.remember === "add" ? "add" : true} : {}),
+      /* "Each player may put a land card from their hand onto the battlefield, then each opponent who didn't draws a card"
+         (Kynaios and Tiro of Meletis): `did`, a player who chooses a card has done it (apply, below). */
+      ...(params.did === true ? {did: true} : {}),
       /* Sneak Attack: "That creature gains haste. Sacrifice the creature at the beginning of the next end step." */
-      ...(params.gains || params.gainsUntilEndOfTurn || params.atEndStep ? {then: {gains: params.gains, gainsUntilEndOfTurn: params.gainsUntilEndOfTurn, atEndStep: params.atEndStep},
-        source: context.source ?? null} : {}),
+      /* "Onto the battlefield tapped and attacking that opponent" (Kaalia of the Vast; library load L4): `attacking`, as a
+         token made attacking is (effects/permanents.mjs, enterAttacking) -- "that player" the one this ability is about,
+         kept with the question (`about`; CR 508.4). */
+      ...(params.gains || params.gainsUntilEndOfTurn || params.atEndStep || params.attacking ? {then: {gains: params.gains, gainsUntilEndOfTurn: params.gainsUntilEndOfTurn, atEndStep: params.atEndStep,
+        ...(params.attacking ? {attacking: params.attacking} : {})}, source: context.source ?? null,
+        ...(params.attacking && context.about ? {about: structuredClone(context.about)} : {})} : {}),
     };
+    /* "You control your opponents while they're searching their libraries. While an opponent is searching their library, they
+       exile each card they find" (Opposition Agent; CR 722.1, 701.23): the search of this player's library is put to that
+       permanent's controller, who chooses what it finds -- the searcher's still (`searcher`), from their library, shuffled
+       after -- and what is found there goes to exile, playable by them (apply, below). */
+    const agent = zone === "library" || zones?.includes("library") ? searchController(state, player) : null;
+    if (agent !== null) Object.assign(awaiting, {searcher: player, player: state.objects[agent].controller, opposition: state.objects[agent].card});
     if (Array.isArray(params.searches) || params.sharing === "land type") {
       state.awaiting = {...awaiting, cards: pool, steps: {searches: params.searches ?? null, sharing: params.sharing ?? null, selector: params.selector ?? null, pool,
         step: 0, total: params.searches ? params.searches.length : count, found: [], source: context.source ?? null}};
@@ -2035,13 +2141,16 @@ export const chooseCard = {
     const chosen = (indices ?? []).map((index) => awaiting.cards[index]);
     if (chosen.length < awaiting.min || chosen.length > awaiting.max || chosen.some((id) => id === undefined) || new Set(chosen).size !== chosen.length)
       throw new Error("Invalid selection");
-    const player = awaiting.player;
+    const player = awaiting.searcher ?? awaiting.player;
     const tops = [], arrivedHere = [], found = [];
+    /* A card found in the library of a player another controls as they search it (Opposition Agent): exiled, wherever the
+       search would have put it. */
+    const exiling = chosen.map((id) => awaiting.opposition !== undefined && state.objects[id]?.zone === "library");
     /* A commander chosen for its owner's hand or library may go to the command zone instead (CR 903.9b): Dream Stalker's
        "return a permanent you control to its owner's hand", Brainstorm's put-back. Its move is left to moveZone, after this
        answer, and its owner is asked first (script/resolution.mjs). One bound for the top takes every card chosen for the
        top with it, so the order chosen holds. */
-    const whereOf = (i) => awaiting.destinations[Math.min(i, awaiting.destinations.length - 1)];
+    const whereOf = (i) => (exiling[i] ? {to: "exile"} : awaiting.destinations[Math.min(i, awaiting.destinations.length - 1)]);
     const goingHome = (id, i) => {
       const to = whereOf(i).to, object = state.objects[id];
       if (object?.commander !== true) return false;
@@ -2071,11 +2180,17 @@ export const chooseCard = {
       }
       const moved = moveOne(state, id, where.to, events, {owner: state.objects[id].owner, controller: awaiting.controller, tapped: where.tapped === true});
       if (moved !== null && state.objects[moved]) found.push(moved);
+      /* "You may play those cards for as long as they remain exiled, and you may spend mana as though it were mana of any color
+         to cast them" (Opposition Agent; CR 609.4b): the player who controlled the search may, the card's own effect for as
+         long as it is that object (CR 400.7) -- read as Hostage Taker's is (rules/actions.mjs, anyTypeCost). */
+      if (exiling[i] && moved !== null && state.objects[moved]?.zone === "exile")
+        (state.effects ??= []).push({id: `opposition:${moved}`, rule: "may-play", affects: {ids: [moved]}, player: awaiting.player, name: awaiting.opposition,
+          anyMana: true, until: "ever", madeOnTurn: state.turn, sourceController: awaiting.player});
       if (moved !== null && state.objects[moved] && where.to === "battlefield") {
         arrivedHere.push(moved);
       }
     });
-    if (awaiting.then && arrivedHere.length) afterwards(state, arrivedHere, awaiting.then, {controller: player, source: awaiting.source ?? null});
+    if (awaiting.then && arrivedHere.length) afterwards(state, arrivedHere, awaiting.then, {controller: player, source: awaiting.source ?? null, ...(awaiting.about ? {about: awaiting.about} : {})});
     if (awaiting.shuffle) {
       if (!rng) throw new Error("A search that shuffles needs the game's random stream");
       const library = state.zones.library[player].filter((id) => !tops.includes(id));
@@ -2097,8 +2212,11 @@ export const chooseCard = {
     const adds = awaiting.remember === "add" ? {rememberAdd: true} : {};
     /* A library searched (CR 701.23), found or not: "if you search your library this way, shuffle" (Claim Jumper). */
     const searched = awaiting.zone === "library" ? {searched: true} : {};
+    /* A player who chose a card has done what was offered (`did`, beside what it remembers): kept for "each opponent who
+       didn't" (script/resolution.mjs, `whoDid`; script/bind.mjs). One who chose none has not. */
+    const did = awaiting.did === true && chosen.length > 0 ? {did: player} : {};
     if (splice.length) return {events, splice, ...searched, ...(awaiting.remember ? {remembered: [...found, ...tops], ...adds} : {})};
-    return awaiting.remember || awaiting.zone === "library" ? {events, ...searched, ...(awaiting.remember ? {remembered: [...found, ...tops], ...adds} : {})} : events;
+    return awaiting.remember || awaiting.zone === "library" ? {events, ...searched, ...did, ...(awaiting.remember ? {remembered: [...found, ...tops], ...adds} : {})} : events;
   },
 
   /* The chooser has left the game. Their own cards went with them (CR 800.4a) -- a search of their library, a choice from
@@ -2156,7 +2274,9 @@ const playable = (state, player, pool, {most, free, anyMana, payMana = false, la
 };
 export const play = {
   open(state, params, context) {
-    const player = context.controller;
+    /* "They may cast that card without paying its mana cost" (Tibalt's Trickery; card load w4d L1): `who`, the player who
+       may -- bound, its controller as the resolution began (script/bind.mjs) -- nobody when there is none. */
+    const player = Array.isArray(params.who) ? params.who[0] : context.controller;
     if (!state.players[player]) return false;
     const most = params.manaValueAtMost === undefined ? Infinity : amountOf(state, params.manaValueAtMost, context);
     const from = params.from ?? "hand";
@@ -2168,7 +2288,10 @@ export const play = {
        707.12): each card it names copied in the zone it is in -- its copiable values (CR 707.2), the copy its caster's -- and
        the copies are what may be cast, each chosen for itself (707.12a; with `anyNumber`, one after another in the order
        its caster chooses, CR 608.2g). A copy not cast ceases to exist (CR 707.10a, 704.5e; rules/sba.mjs). */
-    const copies = params.copies === true ? (params.targets ?? []).filter((id) => state.objects[id] && !["battlefield", "stack"].includes(state.objects[id].zone))
+    /* Or the cards a selector finds now (`from: "selector"`): "you may copy the exiled card" (Isochron Scepter), the card exiled
+       with this artifact (CR 607.2a). */
+    const copying = from === "selector" ? selectMatching(state, {what: "card", ...(params.selector ?? {})}, context) : params.targets ?? [];
+    const copies = params.copies === true ? copying.filter((id) => state.objects[id] && !["battlefield", "stack"].includes(state.objects[id].zone))
       .map((id) => {
         const card = state.objects[id];
         const values = Object.fromEntries(COPY_KEYS.filter((key) => card[key] !== undefined).map((key) => [key, structuredClone(card[key])]));
@@ -2269,6 +2392,9 @@ export const play = {
    yes going to the command zone instead (effects/zones.mjs, `commanderHome`). Moved as a whole, so nothing moves before
    every owner has answered. A move other than moveZone (a cost that returns a permanent to its owner's hand) is named,
    not built. */
+// A merged commander is asked about by physical card (CR 903.9c), independently of its other components.
+const commanderPiece = (state, ref) => typeof ref === "string" && ref.startsWith("merged:")
+  ? state.objects[ref.split(":")[1]]?.merged?.[Number(ref.split(":")[2])]?.physical : state.objects[ref];
 export function commandersGoingHome(state, params) {
   if (params.commandersAsked) return [];
   /* "Counter target spell. If that spell is countered this way, put it on top of its owner's library instead" (Memory
@@ -2286,30 +2412,31 @@ export function commandersGoingHome(state, params) {
   return (params.targets ?? []).filter((id) => {
     const bottom = params.to === "graveyard" && state.stack.some(e => e.objectId === id && e.graveyardToLibraryBottom && !e.flashback && !e.graveyardToExile);
     return (["hand", "library"].includes(params.to) || bottom) && state.objects[id]?.commander === true && state.objects[id].zone !== params.to;
-  });
+  }).flatMap(id => state.objects[id].merged ? state.objects[id].merged.flatMap((part, i) => part.physical.commander === true ? [`merged:${id}:${i}`] : []) : [id]);
 }
 export const commanderHome = {
   open(state, params) {
-    const seats = state.players.length, apnap = (id) => (state.objects[id].owner - (state.activePlayer ?? 0) + seats) % seats;
+    const seats = state.players.length, apnap = (id) => (commanderPiece(state, id).owner - (state.activePlayer ?? 0) + seats) % seats;
     const queue = [...params.commanders].sort((a, b) => apnap(a) - apnap(b));
-    state.awaiting = {kind: "effect-choice", effect: "commanderHome", player: state.objects[queue[0]].owner, objectId: queue[0], remaining: queue.slice(1),
+    state.awaiting = {kind: "effect-choice", effect: "commanderHome", player: commanderPiece(state, queue[0]).owner, objectId: queue[0], remaining: queue.slice(1),
       home: [], move: params.move};
     return true;
   },
   choice(state, awaiting) {
-    return {id: `commander-home:${state.turn}:${awaiting.objectId}`, title: `Put ${state.objects[awaiting.objectId]?.card ?? "your commander"} into the command zone instead?`,
+    return {id: `commander-home:${state.turn}:${awaiting.objectId}`, title: `Put ${commanderPiece(state, awaiting.objectId)?.card ?? "your commander"} into the command zone instead?`,
       mode: "boolean", min: 1, max: 1,
       options: [{index: 0, label: "Put it into the command zone"}, {index: 1, label: `Let it go to your ${awaiting.move.to === "top" || ([undefined, "graveyard"].includes(awaiting.move.to) && state.stack.some(e => e.objectId === awaiting.objectId && e.graveyardToLibraryBottom)) ? "library" : awaiting.move.to}`}]};
   },
   apply(state, awaiting, indices) {
     if (!Array.isArray(indices) || indices.length !== 1 || ![0, 1].includes(indices[0])) throw new Error("Answer yes or no");
     const home = indices[0] === 0 ? [...awaiting.home, awaiting.objectId] : awaiting.home;
-    const [next, ...rest] = (awaiting.remaining ?? []).filter((id) => state.objects[id]);
+    const [next, ...rest] = (awaiting.remaining ?? []).filter((id) => commanderPiece(state, id));
     if (next !== undefined) {
-      state.awaiting = {...awaiting, player: state.objects[next].owner, objectId: next, remaining: rest, home};
+      state.awaiting = {...awaiting, player: commanderPiece(state, next).owner, objectId: next, remaining: rest, home};
       return {events: [], again: true};
     }
-    return {events: [], splice: [{...awaiting.move, commandersAsked: true, ...(home.length ? {commanderHome: home} : {})}]};
+    return {events: [], splice: [{...awaiting.move, commandersAsked: true, ...(home.length ? {commanderHome: home.filter(id => typeof id !== "string" || !id.startsWith("merged:")),
+      commanderKeys: home.filter(id => typeof id === "string" && id.startsWith("merged:")).map(id => commanderPiece(state, id).commanderKey)} : {})}]};
   },
   /* Its owner has left the game, and the commander with them (CR 800.4a): it goes nowhere, and the next owner is asked. */
   left(state, awaiting) {
@@ -2756,7 +2883,13 @@ export const chooseInstead = {
   },
 };
 
-export const ASKING = Object.freeze({twoPiles, scry, rearrangeTop, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, chooseColor, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage, orderCounters, orderTokens, orderDraws, explore,
+export const ASKING = Object.freeze({
+  orderMerged: {
+    open(state) { const ask = mergedOrderToAsk(state); if (!ask) return false; state.awaiting = {...ask, kind: "effect-choice", effect: "orderMerged"}; return true; },
+    choice: mergedOrderChoice, apply: finishMergedOrder,
+    left(state, awaiting) { return finishMergedOrder(state, awaiting, awaiting.cards.map((_, i) => i)); },
+  },
+  mergePermanent, ringTempts, twoPiles, scry, rearrangeTop, surveil, dig, discard, modal, chooseCard, proliferate, sacrifice, populate, amass, unlessPays, copySpell, chooseType, chooseColor, play, changeTargets, attackWhom, enchantWhat, commanderHome, orderDamage, orderCounters, orderTokens, orderDraws, explore,
   conniveWhich, manaColors, counterKind, countersToRemove, countersOnto, orderDestruction, chooseInstead, chooseSource, vote,
   /* Wave 4c: a hand looked at (Gitaxian Probe). */
   handLook,

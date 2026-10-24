@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Diminish",
+    "oracleId": "3e554ab4-8179-4d3e-84ba-9a67b51cff7f",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target creature has base power and toughness 1/1 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "layer": 7,
+          "sublayer": "b",
+          "targets": {
+            "target": 0
+          },
+          "apply": {
+            "setPower": 1,
+            "setToughness": 1
+          }
+        }
+      ],
+      "text": "Target creature has base power and toughness 1/1 until end of turn."
+    }
+  ]
+}

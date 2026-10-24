@@ -1,0 +1,33 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Weaponcraft Enthusiast",
+    "oracleId": "7c27136a-bf9d-4f42-9c37-abe347fad1bb",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Aetherborn",
+      "Artificer"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 0,
+    "toughness": 1
+  },
+  "oracleText": "Fabricate 2 (When this creature enters, put two +1/+1 counters on it or create two 1/1 colorless Servo artifact creature tokens.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "fabricate",
+      "amount": 2,
+      "text": "Fabricate 2 (When this creature enters, put two +1/+1 counters on it or create two 1/1 colorless Servo artifact creature tokens.)"
+    }
+  ]
+}

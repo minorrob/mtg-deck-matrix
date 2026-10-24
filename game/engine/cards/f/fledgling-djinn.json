@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Fledgling Djinn",
+    "oracleId": "2c73ef77-ae58-401f-8747-538c4cd075d0",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Djinn"
+    ],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Flying\nAt the beginning of your upkeep, this creature deals 1 damage to you.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your upkeep, this creature deals 1 damage to you.",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 1,
+          "who": "you"
+        }
+      ]
+    }
+  ]
+}

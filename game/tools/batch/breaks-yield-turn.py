@@ -11,7 +11,7 @@ Run from the repository root, with nothing else editing the worktree:
 SUITES = ['tests/engine-pass-stack.mjs', 'tests/room-yield-turn.mjs', 'tests/game-table.mjs', 'tests/game-leave.mjs']
 A = 'game/engine/rules/actions.mjs'
 R = 'game/room/room.mjs'
-COSTS = 'const MANA_COSTS = ["sacrifice", "sacrificeSelf", "tapCreature", "payLife", "counterCost", "millCost", "exileFromGraveyard"];'
+COSTS = 'const MANA_COSTS = ["sacrifice", "sacrificeSelf", "tapCreature", "payLife", "counterCost", "millCost", "exileFromGraveyard", "exertSelf", "exileSelf"];'
 BREAKS = [
     # rules/actions.mjs
     ('the stack never passed for anyone', A,
@@ -38,7 +38,7 @@ BREAKS = [
 ] + [
     # game/room/room.mjs: passStack and held priority
     ('the room not passing the stack', R,
-     'nothingToDo(state, seat, actions, {stack: passStack})',
+     'nothingToDo(state, seat, actions, {stack: passStack && prefs[seats[seat].seatId]?.askStack !== true})',
      'nothingToDo(state, seat, actions)'),
     ('the pod\'s passStack not read', R,
      '...(pod && pod.passStack === true ? {passStack: true} : {}), ',
@@ -63,8 +63,8 @@ BREAKS = [
      'return Boolean(y) && state.turn === y.turn && !state.players[y.active].lost;',
      'return Boolean(y) && state.turn === y.turn;'),
     ('the pod\'s yieldTurn not read', R,
-     '...(pod && pod.yieldTurn === true ? {yieldTurn: true} : {})};',
-     '};'),
+     '...(pod && pod.yieldTurn === true ? {yieldTurn: true} : {}),',
+     ''),
     ('a match launched before may yield', R,
      '      if (!yieldable) throw new RoomError(409, "This game was started before Yield turn, so it plays as it did: you are asked for each priority.");\n',
      ''),
@@ -115,12 +115,12 @@ BREAKS = [
      '["answer", "leave", "end", "prefer", "yield"]',
      '["answer", "leave", "end", "prefer"]'),
     ('a table\'s new match without Yield turn', 'game/room/table.mjs',
-     '      yieldTurn: true};',
-     '      };'),
-    ('a table\'s new match passing the stack before the board shows what it passed', 'game/room/table.mjs',
-     '      yieldTurn: true};',
-     '      yieldTurn: true, passStack: true};'),
+     '      yieldTurn: true,\n',
+     '\n'),
+    ('a table\'s new match passing the stack with the host\'s rule off', 'game/room/table.mjs',
+     '      yieldTurn: true,\n',
+     '      yieldTurn: true, passStack: true,\n'),
     ('the G1 harness launching its games otherwise than the table', 'tools/fuzz-live.mjs',
-     'pooledTaps: true, yieldTurn: true, seats:',
-     'pooledTaps: true, seats:'),
+     'xTaps: true, yieldTurn: true, drawBeat: true,',
+     'xTaps: true, drawBeat: true,'),
 ]

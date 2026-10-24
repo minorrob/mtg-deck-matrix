@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Scarland Thrinax",
+    "oracleId": "1a185f90-69eb-496b-8e38-8dcf241a84a4",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Lizard"
+    ],
+    "manaCost": "{B}{R}{G}",
+    "colors": [
+      "B",
+      "G",
+      "R"
+    ],
+    "colorIdentity": [
+      "B",
+      "G",
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Sacrifice a creature: Put a +1/+1 counter on this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ],
+      "text": "Sacrifice a creature: Put a +1/+1 counter on this creature."
+    }
+  ]
+}

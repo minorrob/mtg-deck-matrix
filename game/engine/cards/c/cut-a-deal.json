@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Cut a Deal",
+    "oracleId": "8b5cffd5-5db3-4151-9275-d91387554412",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each opponent draws a card, then you draw a card for each opponent who drew a card this way.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Each opponent draws a card, then you draw a card for each opponent who drew a card this way.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "draw",
+          "who": "opponent",
+          "count": 1,
+          "remember": true
+        },
+        {
+          "effect": "draw",
+          "count": {
+            "rememberedCount": true
+          }
+        }
+      ]
+    }
+  ]
+}

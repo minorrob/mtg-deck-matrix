@@ -1,0 +1,29 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Horizon Stone",
+    "oracleId": "add46292-470e-47fa-a261-4884d02e65fe",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{5}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "If you would lose unspent mana, that mana becomes colorless instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "mana-becomes-colorless",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "text": "If you would lose unspent mana, that mana becomes colorless instead."
+    }
+  ]
+}

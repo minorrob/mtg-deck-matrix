@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rampaging Rendhorn",
+    "oracleId": "b867deb4-a088-492e-95fe-487071ebfe8d",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Beast"
+    ],
+    "manaCost": "{4}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Riot (This creature enters with your choice of a +1/+1 counter or haste.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "riot",
+      "text": "Riot (This creature enters with your choice of a +1/+1 counter or haste.)"
+    }
+  ]
+}

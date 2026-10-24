@@ -1,0 +1,70 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mindbreak Trap",
+    "oracleId": "48712d36-5c13-4ded-87a4-68106da4a5cd",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [
+      "Trap"
+    ],
+    "manaCost": "{2}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "If an opponent cast three or more spells this turn, you may pay {0} rather than pay this spell's mana cost.\nExile any number of target spells.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "If an opponent cast three or more spells this turn, you may pay {0} rather than pay this spell's mana cost.",
+      "rule": "alternative-cost",
+      "affects": {
+        "what": "card",
+        "self": true
+      },
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{0}"
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "spellsCastThisTurn": "an opponent"
+          },
+          "atLeast": 3
+        }
+      }
+    },
+    {
+      "kind": "spell",
+      "text": "Exile any number of target spells.",
+      "targets": [
+        {
+          "what": "spell",
+          "count": {
+            "min": 0
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile"
+        }
+      ]
+    }
+  ]
+}

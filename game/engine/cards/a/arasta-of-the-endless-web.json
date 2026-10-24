@@ -1,0 +1,80 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Arasta of the Endless Web",
+    "oracleId": "695eea46-1535-48c5-bbb6-0b8379e77bfc",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Enchantment",
+      "Creature"
+    ],
+    "subtypes": [
+      "Spider"
+    ],
+    "manaCost": "{2}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 3,
+    "toughness": 5
+  },
+  "oracleText": "Reach\nWhenever an opponent casts an instant or sorcery spell, create a 1/2 green Spider creature token with reach.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Reach",
+      "keyword": "reach"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever an opponent casts an instant or sorcery spell, create a 1/2 green Spider creature token with reach.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "opponent",
+        "filter": {
+          "anyOf": [
+            {
+              "types": [
+                "Instant"
+              ]
+            },
+            {
+              "types": [
+                "Sorcery"
+              ]
+            }
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Spider",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Spider"
+            ],
+            "colors": [
+              "G"
+            ],
+            "power": 1,
+            "toughness": 2,
+            "keywords": [
+              "Reach"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

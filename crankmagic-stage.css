@@ -1,16 +1,19 @@
-/* The tabletop preview. Only applies to Full screen with the preview enabled. */
+/* The 3D tabletop and shared Play interaction surfaces. */
 .cm-board[data-stage="on"]{grid-template-columns:minmax(0,1fr);grid-template-rows:58px minmax(0,1fr) clamp(150px,22vh,230px);gap:0;padding:0;background:#071719;color:#edf6ef;isolation:isolate}
-.cm-stage-top{display:flex;align-items:center;gap:14px;padding:5px 16px;background:#101f20;border-bottom:1px solid #517e6b;min-width:0;z-index:20}
+.cm-stage-top{display:flex;align-items:center;gap:14px;padding:5px 16px;background:#101f20;border-bottom:1px solid #517e6b;min-width:0;z-index:30}
 .cm-stage-self{display:flex;align-items:center;gap:10px;white-space:nowrap;font-size:12px}
 .cm-stage-top .cm-board-ribbon{position:static;display:flex;flex:1;gap:6px;background:none;font-size:11px;white-space:nowrap;padding:0;min-width:0}
 .cm-stage-top .cm-board-ribbon li{padding:5px 6px;border-radius:20px;list-style:none}
 .cm-stage-top .cm-board-ribbon .is-now{background:#286c53;color:#fff}
 .cm-stage-priority{font-size:11px;line-height:1.5;color:#b2c8bd;white-space:nowrap}
 .cm-stage-top .cm-full-pill{position:static;transform:none;background:none;border:0;padding:0;max-width:none;flex-shrink:0}
+.cm-board-yield-control{display:inline-flex;flex-direction:column;align-items:center;gap:2px;max-width:180px}
+.cm-board-yield-control small{font-size:10px;line-height:1.2;white-space:normal;text-align:center;color:var(--v-ink,#edf6ef)}
 .cm-stage-top .cm-full-pill>.cm-board-step,.cm-stage-top .cm-full-pill>.cm-board-next{display:none}
 .cm-stage-top .cm-full-pill>.cm-board-waiting{position:absolute;top:62px;left:50%;transform:translateX(-50%);font-size:11px;background:#0a1d20ed;border-radius:14px;padding:3px 14px;max-width:60vw;overflow:hidden;text-overflow:ellipsis}
 .cm-stage-region{display:block;position:relative;overflow:hidden;min-height:0;min-width:0;background:radial-gradient(ellipse at 50% 10%,#315847,#071719 70%)}
-.cm-stage-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.cm-stage-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:auto;touch-action:none;z-index:0;cursor:grab}
+.cm-stage-canvas:active{cursor:grabbing}
 .cm-stage-caption{position:absolute;left:18px;top:12px;z-index:2;display:flex;flex-direction:column;gap:4px;font-size:10px;letter-spacing:.13em;color:#b9d1bc;pointer-events:none}
 .cm-stage-caption small{font-size:10px;letter-spacing:0;color:#93aaa0}
 /* The words over the tabletop read at 4.5:1 on any mat and in any theme (tests/a11y-board.mjs): the turn's caption on a dark plate, a fanned card's name on a title plate. */
@@ -19,7 +22,13 @@
 /* and, as the Focus hand does, a fanned name ends before the next card begins: no glyph lies under that card's translucent edge */
 .cm-stage-fan-slot:not(:last-child) .cm-bcard-name{right:max(5%,calc(100% - var(--fan-step,106px) + 16px))}
 .cm-stage-front,.cm-stage-rear{position:absolute;z-index:1;min-width:0;min-height:0}
-.cm-stage-front>.cm-mat,.cm-stage-mini>.cm-mat{background:transparent!important;height:100%;width:100%;border:0;box-shadow:none!important;--pad:4px;--mat-reserve:0px}
+.cm-stage-front>.cm-mat,.cm-stage-mini>.cm-mat{height:100%;width:100%;border:0;box-shadow:none!important;--pad:4px;--mat-reserve:0px}
+/* Every mat is drawn here as in every other view: a drawn mat's pattern (Rob, 2026-10-17), and Rob's art cropped to its
+   seat, never stretched; in Full screen the art is at full strength, with no wash over it (Rob, 2026-10-18) */
+.cm-stage-region{--mat-art-wash:linear-gradient(transparent,transparent)}
+/* so the piles' captions, over the art with nothing under them, take the seat labels' plate, tall enough for a descender,
+   and read at 4.5:1 over the brightest picture */
+.cm-stage-region .cm-mat .cm-board-pile figcaption{background:#091b1de6;padding:2px 4px;border-radius:5px}
 .cm-stage-front>.cm-mat{--bc:var(--stage-card,96px);padding-top:38px}
 .cm-stage-front .cm-mat-grid{display:grid;height:100%;grid-template-columns:calc(var(--bc) * 1.15) minmax(0,1fr) repeat(2,calc(var(--bc) + 4px));grid-template-rows:minmax(0,1fr) minmax(0,1fr);gap:12px;padding:5px 8px}
 .cm-stage-front .cm-board-field{grid-column:2;grid-row:1 / 3;display:flex;flex-direction:column;overflow:auto;gap:16px;padding:4px}
@@ -49,7 +58,7 @@
 .cm-stage-mini .cm-mat-grid{height:100%;gap:3px;grid-template-rows:1fr 1fr;padding:1px;grid-template-columns:1fr 33px 33px}
 .cm-stage-mini .cm-board-field{grid-row:1}.cm-stage-mini .cm-board-lands{grid-row:2;padding:0}.cm-stage-mini .cm-board-chip{display:none}
 .cm-stage-mini .cm-board-pile[data-zone="library"],.cm-stage-mini .cm-board-pile[data-zone="graveyard"]{grid-row:2}
-.cm-stage-mini .cm-bcard-name,.cm-stage-mini .cm-bcard-pt,.cm-stage-mini .cm-bcard-marks{display:none}
+.cm-stage-mini .cm-bcard-name,.cm-stage-mini .cm-bcard-pt,.cm-stage-mini .cm-bcard-marks,.cm-stage-mini .cm-bcard-tax{display:none}
 .cm-stage-mini .cm-board-pile figcaption{font-size:10px}
 .cm-stage-camera{position:absolute;right:18px;top:10px;z-index:9;min-width:90px;background:#0b2023eb;border:1px solid #5e8a77;border-radius:8px;color:#eaf2e9;box-shadow:0 6px 24px #0005}
 .cm-stage-camera>button{width:100%;padding:7px 14px;color:inherit;background:none;border:0;cursor:pointer;font-size:12px}
@@ -77,7 +86,19 @@
 @media(prefers-reduced-motion:reduce){#matrix-v2 .cm-stage-handle{transition:none}}
 .cm-stage-left{left:0}.cm-stage-right{right:0}
 .cm-stage-error{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);z-index:8;max-width:75%;font-size:12px;color:#fff2b7;background:#172727}
-.cm-stage-region .cm-board-ask{z-index:12;max-width:80%;left:50%;transform:translateX(-50%);bottom:4px}
+/* What the room asks is never taller than the table under it: its title and its foot (Confirm, the count) stay on screen
+   and a long list of options scrolls between them, as a search across most of a library makes (2026-10-19). The box is only
+   as tall as what it holds, so the table below it still takes clicks. */
+.cm-stage-region .cm-board-ask{z-index:12;max-width:80%;left:50%;transform:translateX(-50%);max-height:calc(100% - 12px)}
+.cm-stage-region .cm-board-ask>#cm-board-decision{display:flex;flex-direction:column;min-height:0}
+/* 3px inside the scroll keeps a chosen option's outline (2px, 1px out) whole at the list's edges */
+.cm-stage-region .cm-board-ask>#cm-board-decision>.cm-board-options{overflow-y:auto;padding:3px;margin:-3px}
+/* Table (.cm-board-tabletop) and Focus (.cm-board-main) too (ROB-26's blocking, Oct 20): the question floats 52px into the board, which scrolls, so a long draft
+   or an open "All block options" pushed No blocks and Confirm below the window, where only scrolling the whole board
+   found them (CI's taller fonts did it at 1280x720). The question is held to the window instead (its max-height is set
+   by the board's fit(), measured from where it starts), its title and buttons kept, its middle scrolling. */
+.cm-board-main>.cm-board-ask>#cm-board-decision,.cm-board-tabletop>.cm-board-ask>#cm-board-decision{display:flex;flex-direction:column;min-height:0}
+.cm-board-main>.cm-board-ask>#cm-board-decision>.cm-board-options,.cm-board-tabletop>.cm-board-ask>#cm-board-decision>.cm-board-options{overflow-y:auto;min-height:0;padding:3px;margin:-3px}
 @media(max-width:1100px){.cm-stage-top{gap:8px;padding:5px 8px}.cm-stage-self>b{display:none}.cm-stage-top .cm-board-ribbon{gap:2px;font-size:10px}.cm-stage-top .cm-board-ribbon li{padding:4px}.cm-stage-priority{font-size:10px}.cm-stage-top .cm-full-pill{gap:3px}.cm-stage-top .cm-full-pill .v-button{padding:0 6px!important;font-size:11px}.cm-stage-caption{left:9px;font-size:10px}.cm-stage-caption small{display:none}}
 
 /* Zone slots occupy the near-left edge, followed by lands and the open battlefield. */
@@ -111,7 +132,7 @@
 /* The fan's shadow falls right and down, under the next card, never left over the previous card's name (tests/a11y-board.mjs reads a name against the ground its glyphs lie on). */
 .cm-stage-fan-slot .cm-bcard{--bc:var(--hc,140px);width:var(--bc);cursor:pointer;transform-origin:50% 100%;box-shadow:10px 10px 16px -8px #000b;transition:transform .16s}
 .cm-stage-fan-slot:hover,.cm-stage-fan-slot:focus-within{z-index:20!important}
-.cm-stage-fan-slot .cm-bcard:hover,.cm-stage-fan-slot .cm-bcard:focus-visible{transform:translateY(-22px)}
+.cm-stage-fan-slot .cm-bcard:hover,.cm-stage-fan-slot .cm-bcard:focus-visible{transform:translateY(0)}
 .cm-stage-fan-slot .cm-bcard.is-dim{filter:brightness(.85) saturate(.85)}
 .cm-stage-hand-label{position:absolute;top:0;left:50%;transform:translateX(-50%);color:#fff2d2;background:#181714cc;clip-path:polygon(8% 0,92% 0,100% 100%,0 100%);padding:5px 23px;font-size:11px;white-space:nowrap}
 .cm-stage-hand-empty{display:block;text-align:center;padding-top:50px;color:#e3d8c7;font-size:13px}
@@ -126,8 +147,6 @@
 .cm-board[data-shell="shared"] .cm-stage-camera{right:calc(var(--stage-side-offset) + 16px);z-index:14}
 .cm-board[data-shell="shared"]>.cm-stage-right{right:var(--stage-side-offset)}
 .cm-board[data-shell="shared"]:has(>.cm-stage-rail.is-open)>.cm-stage-left{left:47px}
-
-.cm-board[data-stage="on"][data-coach="open"]>.cm-stage-side{height:calc((100% - 58px) / 2 - 3px)!important}
 
 /* Modules keep their own scrollable content; the whole pane reaches the hand's edge. */
 .cm-stage-side>header{position:sticky;top:-12px;z-index:3;background:#112526;padding:6px 0;flex-shrink:0}
@@ -154,6 +173,9 @@
 .cm-stage-region [data-card-group="creatures"]{grid-row:1}.cm-stage-region [data-card-group="others"]{grid-row:2}
 .cm-stage-front .cm-board-group h3,.cm-stage-region .cm-mat-label,.cm-stage-mini .cm-board-group h3{display:none!important}
 .cm-stage-front .cm-board-lands,.cm-stage-mini .cm-board-lands{grid-column:1;grid-row:3;padding:0;overflow:auto;background:none;border:0}
+/* ROB-98 (Rob, Oct 18: "Go with the 48px land spacing"): the front mat keeps 48px clear at its foot, so the hand fan, at
+   rest or with a card hovered, never covers a land's upper half (docs/play-overhaul/ROB-98-LAND-SPACING.md). */
+.cm-stage-front>.cm-mat{padding-bottom:48px}
 .cm-stage-region .cm-board-lands .cm-board-cards{flex-direction:row;flex-wrap:nowrap;gap:8px}
 .cm-stage-region .cm-board-lands .cm-board-cards>*+*{margin-top:0}
 .cm-stage-region .cm-board-group .cm-board-cards{flex-wrap:nowrap;gap:8px}
@@ -189,11 +211,13 @@
 @media(max-width:1100px){.cm-stage-priority{display:block;max-width:180px}.cm-stage-top{gap:6px}}
 
 /* The fan is held at the screen edge; its lower corners disappear just below it. */
-.cm-board[data-stage="on"]>.cm-stage-hand{bottom:-12px;height:clamp(220px,34vh,330px)}
+.cm-board[data-stage="on"]>.cm-stage-hand{bottom:20px;height:clamp(220px,34vh,330px)}
 .cm-stage-fan-cards{inset:auto 0 0;height:calc(var(--hc,140px)*1.4)}
 .cm-stage-fan-slot{top:auto;bottom:0;transform:translateX(calc(-50% + var(--fan-x)*var(--fan-step))) rotate(var(--fan-angle));transform-origin:50% 100%}
 .cm-stage-hand-label{top:auto;bottom:calc(var(--hc,140px)*1.4 + 2px)}
-.cm-stage-front .cm-board-group,.cm-stage-front .cm-board-lands{overflow:visible}
+/* Rows stay within their zone even when Actions and inspection narrow the table. */
+#matrix-v2 .cm-board .cm-stage-front :is(.cm-board-group,.cm-board-lands){overflow:auto;scrollbar-width:none}
+#matrix-v2 .cm-board .cm-stage-front :is(.cm-board-group,.cm-board-lands)::-webkit-scrollbar{display:none}
 
 /* Screen selection is one popout; the Coach keeps its existing conversation in a module. */
 .cm-screen-popout{position:fixed;z-index:25;width:144px;display:grid;gap:4px;padding:7px;background:#102425;border:1px solid #698477;border-radius:8px;box-shadow:0 6px 20px #0008}
@@ -253,7 +277,9 @@
 .cm-board[data-shell="shared"]>.cm-stage-rail:not(.is-open),.cm-board[data-shell="shared"]>.cm-stage-side:not(.is-open){display:none}
 
 .cm-board[data-shell="shared"]:not([data-view="full"]){--stage-side-width:min(var(--panel-w,340px),45vw)}
-.cm-stage-side>.cm-board-panelgrip{position:sticky;float:left;left:0;top:0;height:100%;width:12px;margin-left:-12px}
+/* The right drawer's resize line on the drawer's edge, not 17px inside it over its modules (Rob, Oct 18; Codex's fix). */
+.cm-stage-side>.cm-board-panelgrip{position:absolute;left:0;top:0;height:100%;width:12px;margin:0}
+.cm-stage-side>.cm-board-panelgrip .cm-board-grip::before{left:0;transform:none}
 
 /* The shared dark header keeps its own ink in light themes; pop-ups use their panel ink. */
 .cm-stage-top{color:#edf6ef}
@@ -264,3 +290,216 @@
 #matrix-v2 .cm-stage-camera label,#matrix-v2 .cm-stage-camera output{color:#edf6ef}
 #matrix-v2 .cm-stage-camera .cm-board-views .v-button{height:38px;color:#edf6ef;background:#1c302e}
 #matrix-v2 .cm-stage-camera .cm-board-views .v-button.is-on{color:#0d120c;background:#87c6a1}
+/* ROB-171: real objects remain actionable; ownership ghosts are inspection references only. */
+#matrix-v2 .cm-board .cm-bcard.is-controlled{border:3px double #a8dcff}
+#matrix-v2 .cm-board .cm-control-label{position:absolute;left:0;right:0;top:23%;z-index:2;display:block;padding:3px 2px;background:#133c57;color:#fff;font:600 max(10px,calc(var(--bc) * .09))/1.2 system-ui;text-align:center;white-space:normal;overflow-wrap:anywhere}
+#matrix-v2 .cm-board .cm-control-ghost{border:2px dashed #a8dcff;background:#152a35;box-shadow:none;cursor:help}
+#matrix-v2 .cm-board .cm-control-ghost img{opacity:.28;filter:grayscale(1)}
+#matrix-v2 .cm-board .cm-control-ghost .cm-bcard-name{display:block;top:auto;bottom:4px;opacity:1;color:#fff;background:#10232f;font-size:max(10px,calc(var(--bc) * .09));line-height:1.15}
+#matrix-v2 .cm-board .cm-control-ghost:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.cm-control-peek{position:fixed;z-index:1100;box-sizing:border-box;width:300px;max-width:calc(100vw - 16px);max-height:calc(100vh - 16px);overflow:auto;padding:12px 16px;border:1px solid #a8dcff;border-radius:8px;background:#10232f;color:#fff;font:14px/1.45 system-ui;box-shadow:0 8px 30px #0009;pointer-events:none}
+.cm-control-peek p{margin:0 0 8px}.cm-control-peek p:last-child{margin-bottom:0}
+
+/* Confirmed combat gets its own header space; decisions keep the surface below it. */
+.cm-board[data-shell="shared"][data-combat]{grid-template-rows:188px minmax(0,1fr)}
+.cm-board[data-shell="shared"][data-view="table"][data-combat]{grid-template-rows:188px var(--tabletop-h,minmax(0,1fr)) auto}
+.cm-board[data-combat]>.cm-stage-top{position:relative;padding-bottom:135px}
+.cm-board[data-combat]>.cm-stage-rail,.cm-board[data-combat]>.cm-stage-side{top:188px}
+.cm-board[data-combat]>.cm-stage-side{height:calc(100% - 188px)!important}
+.cm-board[data-shell="shared"][data-combat]>.cm-stage-camera{top:198px}
+.cm-combat{position:absolute;left:0;right:0;bottom:0;height:130px;padding:4px 12px;background:#102425;color:#edf6ef;border-top:1px solid #72988a;box-sizing:border-box;min-width:0}
+.cm-combat-heading{display:block;font-size:11px;font-weight:700;line-height:18px}
+.cm-combat-groups{display:flex;gap:12px;overflow:auto;height:100px;min-width:0;scrollbar-width:thin}
+.cm-combat-group{flex:0 0 auto;min-width:0}
+#matrix-v2 .cm-board .cm-combat-group h3{font:700 11px/16px system-ui;margin:0;color:#edf6ef}
+#matrix-v2 .cm-board .cm-combat-group ul{display:flex;flex-direction:column;gap:8px;list-style:none;padding:0;margin:0}
+.cm-combat-row{display:flex;align-items:center;gap:6px;min-height:66px;padding:2px 6px;border:1px solid #72988a;border-radius:6px}
+.cm-combat-card{display:flex;align-items:center;gap:5px;width:136px;min-width:136px;height:60px;padding:3px;border:1px solid #72988a;border-radius:5px;background:#1c302e;color:#edf6ef;text-align:left;cursor:pointer}
+.cm-combat-card img,.cm-combat-back{display:block;width:35px;height:49px;object-fit:cover;border-radius:3px;flex:none}
+.cm-combat-back{background:repeating-linear-gradient(45deg,#132735,#132735 4px,#274456 4px,#274456 8px)}
+.cm-combat-card strong{display:block;font:600 11px/1.15 system-ui;max-height:39px;overflow:hidden}
+.cm-combat-card small,.cm-combat-blocks>small{display:block;font:11px/1.2 system-ui;color:#d4e8dd}
+.cm-combat-target,.cm-combat-missing{font:11px/1.25 system-ui;max-width:110px}
+.cm-combat-target:has(.cm-combat-card){max-width:none}
+.cm-combat-blocks{display:flex;flex-direction:column;gap:2px}
+.cm-combat-blocks>span{display:flex;align-items:center;gap:4px}
+.cm-combat-arrow{font-size:18px}
+.cm-combat :focus-visible{outline:3px solid #fff;outline-offset:-3px}
+.cm-phone-center>.cm-combat{position:static;flex:none;height:auto;max-height:130px;overflow:auto;padding:4px 6px}
+
+/* ROB-26: a private block draft alongside the shared, confirmed combat strip. */
+.cm-block-draft{width:100%;min-width:0;font:12px/1.4 system-ui;color:#edf6ef}
+.cm-block-draft p{margin:4px 0}
+.cm-block-tiles{display:flex;gap:4px;overflow-x:auto;padding:3px;max-width:100%}
+.cm-block-tile{display:flex;align-items:center;gap:4px;flex:0 0 128px;min-height:48px;padding:4px;border:1px solid #91a697;border-radius:5px;background:#162820;color:#fff;text-align:left;font:11px/1.3 system-ui}
+.cm-block-tile img{width:28px;height:40px;object-fit:cover}
+.cm-block-tile[aria-pressed="true"]{outline:2px solid #ffdd70;outline-offset:-2px;background:#314331}
+.cm-block-tile:focus-visible{outline:3px solid #fff;outline-offset:-3px}
+.cm-block-pairs{padding-left:16px;margin:4px 0}
+.cm-block-pairs li{margin:3px 0;overflow-wrap:anywhere}
+.cm-block-status{padding:5px;border-left:3px solid #ffdd70;background:#162820}
+.cm-block-list summary{cursor:pointer;padding:6px 0}
+.cm-block-list[open]{display:block}
+.cm-block-list .v-button{display:block;margin:4px 0;white-space:normal}
+
+.cm-phone-ask:has(.is-blocking){height:33%;max-height:33%;overflow:hidden}
+.cm-phone-ask .cm-board-decision.is-blocking{display:flex;flex-direction:column;flex-wrap:nowrap;align-items:stretch;min-height:0;height:100%;gap:2px;padding:4px 6px}
+.cm-phone-ask .is-blocking>.cm-board-options{display:block;min-height:0;overflow:auto;flex:1;padding:3px}
+.cm-phone-ask .is-blocking>.cm-board-decision-foot{flex:none}
+.cm-phone-ask .is-blocking h3{display:none}
+/* Upright (ROB-18), blocking takes half the phone's height -- the blockers, the attackers for the one picked, the draft and
+   its buttons all in reach -- and the blockers share its width and wrap, rather than run past its edge. */
+.cm-board[data-phone="portrait"] .cm-phone-ask:has(.is-blocking){height:50%;max-height:50%}
+.cm-phone-ask .cm-block-tiles{flex-wrap:wrap}
+.cm-phone-ask .cm-block-tile{flex:1 1 104px;min-width:0}
+
+#matrix-v2 .cm-phone-ask .is-blocking>.cm-board-decision-foot .v-button{min-height:32px;height:32px;padding:0 10px}
+/* THE COMMANDER TAX (ROB-29): at the commander's right in the command zone, as Rob asked -- just under the title bar, so the
+   card's own mana cost stays in sight (Rob, 2026-10-21: "covering the card's mana value"); never under 10px, light on dark
+   in either theme (the theme's ink turns light in dark, a11y-board). The name
+   leaves it room (a badge over the name made its letters unreadable, a11y-board), wrapping sooner instead. */
+.cm-bcard.has-tax .cm-bcard-name{right:calc(5% + max(10px,calc(var(--bc,72px) * .13)) * 1.7 + 10px)}
+.cm-bcard-tax{position:absolute;right:4%;top:13%;z-index:2;padding:1px 5px;border-radius:5px;background:#0b1d1f;color:#f3fff7;font-size:max(10px,calc(var(--bc,72px) * .13));font-weight:800;line-height:1.2;pointer-events:none}
+/* PARTNERS (ROB-29): both commanders in the command zone, the second over the first like a small pile, each its own button. */
+.cm-board-pile>.cm-board-partners{position:relative;justify-self:start;display:block;z-index:1}
+.cm-mat:not(.is-bare) .cm-board-pile>.cm-board-partners{margin:-3px 0 0 -3px}
+/* each card its own layer, so the first one's labels (z-index 1 inside it) never paint over the second */
+.cm-board-partners>.cm-bcard{z-index:1}
+.cm-board-partners>.cm-bcard+.cm-bcard{position:absolute;z-index:2;left:22%;top:30%;box-shadow:0 2px 8px rgb(0 0 0 / .55)}
+/* WHAT YOU WERE SHOWN (ROB-169): the cards an acknowledgment is about, large enough to read. */
+.cm-board-shown{display:flex;flex-wrap:wrap;gap:8px;--bc:96px}
+
+/* ROB'S FULLSCREEN NOTES (Oct 21). */
+/* A card you can use now: its outline brighter, with a glow (Rob: "make the green outlines around cards more prominent"); a
+   card already chosen keeps its own glow (.is-picked). */
+#matrix-v2 .cm-board .cm-bcard.is-bright:not(.is-picked){box-shadow:0 0 0 4px var(--v-accent),0 0 14px 3px color-mix(in srgb,var(--v-accent) 60%,transparent),0 6px 14px -6px rgb(0 0 0 / .85)}
+#matrix-v2 .cm-board .cm-bcard.is-bright:not(.is-picked):focus-visible{box-shadow:0 0 0 2px var(--focus-halo),0 0 0 7px var(--v-accent),0 0 16px 4px color-mix(in srgb,var(--v-accent) 60%,transparent)}
+/* THE TURN'S ACTIONS over the table in Full screen, large, at the top where the callouts are; dimmed while not yours. */
+/* Solid behind its words, whatever the scene under it (a11y-board reads every word's contrast over every mat); while the
+   question is not yours, its buttons are off, and the pass reads as off by itself. */
+.cm-stage-actions{position:absolute;left:50%;top:12px;z-index:12;display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:16px;background:#06161a;border:1px solid #3d5c55;box-shadow:0 16px 36px -14px rgb(0 0 0 / .9);transform:translateX(-50%);white-space:nowrap}
+#matrix-v2 .cm-stage-actions .v-button{min-height:49px;height:auto;padding:0 24px;border-radius:12px;font-size:17px;font-weight:800;letter-spacing:.01em;color:#f3fff7;background:#1c3432;border-color:#6f9c88}
+#matrix-v2 .cm-stage-actions .v-button.primary{color:#0d120c;background:var(--v-accent);border-color:var(--v-accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--v-accent) 35%,transparent),0 10px 24px -10px var(--v-accent)}
+#matrix-v2 .cm-stage-actions .v-button.is-on{background:#87c6a1;color:#0d120c}
+#matrix-v2 .cm-stage-actions .v-button:disabled{box-shadow:none}
+.cm-stage-actions .cm-board-yield-control{max-width:260px}
+.cm-stage-actions .cm-board-yield-control small{color:#d7e8dd}
+.cm-stage-actions.is-rising{animation:cm-actions-rise .34s cubic-bezier(.2,.8,.2,1)}
+@keyframes cm-actions-rise{from{opacity:0;transform:translate(-50%,-14px) scale(.9)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
+/* the callouts below the actions, never over them */
+.cm-board[data-stage="on"]~.cm-board-callouts{top:calc(16% + 64px)}
+@media(max-width:1100px){#matrix-v2 .cm-stage-actions .v-button{min-height:44px;padding:0 16px;font-size:16px}.cm-stage-actions{gap:9px;padding:7px 9px}}
+/* WHAT THE OTHER PLAYERS PLAY: each card held up at the table's left, under the life list, its player's name over it, for
+   ten seconds. */
+.cm-board-plays{position:fixed;left:var(--plays-left,56px);top:176px;z-index:57;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+/* three at most, each as large as a third of the window below the caption leaves: a header and a 5:7 card */
+.cm-play-pop{--pw:max(96px,min(13vw,210px,calc(((100vh - 196px) / 3 - 46px) * 5 / 7)));width:var(--pw);padding:6px;border-radius:12px;background:rgb(6 20 22 / .9);border:2px solid var(--seat,#6f9c88);box-shadow:0 18px 40px -16px #000;color:#f3fff7;pointer-events:auto;animation:cm-play-in .3s cubic-bezier(.2,.8,.2,1);transition:opacity .6s,transform .6s}
+.cm-play-pop.is-leaving{opacity:0;transform:translateX(-24px)}
+.cm-play-pop header{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:0 2px 5px;font-size:13px}
+.cm-play-pop header b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#matrix-v2 .cm-play-close{flex:none;width:26px;height:26px;padding:0;border:1px solid rgb(255 255 255 / .25);border-radius:7px;background:#1c3432;color:#f3fff7;font-size:13px;line-height:1}
+#matrix-v2 .cm-play-card{display:block;width:100%;padding:0;border:0;background:none;aspect-ratio:5/7;border-radius:8px;overflow:hidden}
+.cm-play-card img{display:block;width:100%;height:100%;object-fit:cover}
+@keyframes cm-play-in{from{opacity:0;transform:translateX(-30px) scale(.94)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.cm-stage-actions.is-rising,.cm-play-pop{animation:none}.cm-play-pop{transition:none}}
+.cm-board[data-phone]~.cm-board-plays{left:8px;top:64px}
+.cm-board[data-phone]~.cm-board-plays .cm-play-pop{--pw:110px}
+/* The two choices in Settings: a checkbox of its own size, the words as the Card size label is set, bold and light. */
+.cm-board-hold{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:12px;font-weight:700;color:var(--v-ink);cursor:pointer}
+#matrix-v2 .cm-board-hold input[type=checkbox]{flex:none;width:16px;height:16px;min-width:0;min-height:0;margin:0;padding:0;accent-color:var(--v-accent)}
+/* THE LOBBY'S DECK CHOOSER (Rob, 2026-10-22): each row its commanders' colors and what the deck does; and Playable, which
+   puts away the decks the table cannot play every card of -- a library deck with cards to learn, a shared deck not
+   available on this server -- once it has said so. */
+.cm-table-deck-cmdr{display:flex;align-items:center;gap:6px;min-width:0}
+.cm-table-deck-cmdr .cm-pip{width:16px;height:16px}
+.cm-table-deck-about{font-size:12px;line-height:1.35;color:var(--v-muted)}
+.cm-table-deck-only{margin:0 0 10px}
+.cm-table-deck-choose.is-playable-only li:has(>.cm-table-deck.is-unknown),
+.cm-table-deck-choose.is-playable-only li:has(>.cm-table-deck[data-shared-deck]:disabled){display:none}
+.cm-play-home{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(280px,1fr);gap:18px;max-width:1400px;margin:auto}
+.cm-play-home .v-panel{margin:0;padding:clamp(20px,3vw,38px)}
+.cm-play-home h2{font-family:CrankOxanium,Satoshi,sans-serif;line-height:1.2}
+.cm-play-welcome{background:radial-gradient(ellipse at 90% 0,#376b4933,transparent 65%),var(--panel);min-height:260px}
+.cm-play-eyebrow{font-size:12px;letter-spacing:.16em;font-weight:700;color:var(--accent)}
+.cm-play-welcome h2{font-size:clamp(28px,3.2vw,46px);margin:12px 0}
+.cm-play-home p{max-width:65ch;line-height:1.65}
+.cm-play-home input{width:100%;min-width:0;margin-top:8px}
+.cm-play-home .cm-actions{flex-wrap:wrap;margin-top:20px}
+.cm-play-return{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:16px 0}
+.cm-play-return span{flex:1 1 180px}
+.cm-play-records{grid-column:1/-1}
+.cm-stage-region[data-renderer=fallback]{background:radial-gradient(ellipse at center,#294238,#101b18)}
+@media(max-width:700px){.cm-play-home{grid-template-columns:minmax(0,1fr)}.cm-play-welcome{min-height:0}.cm-play-home .v-panel{padding:20px}.cm-play-records{grid-column:auto}}
+/* R2: one calm Actions / Boards desk, with room reserved beside the game. */
+.cm-board[data-shell="shared"]{--stage-left-width:clamp(260px,24vw,330px);--play-left:0px;--play-inspector:0px}
+.cm-board[data-shell="shared"]:has(>.cm-stage-rail.is-open){--play-left:var(--stage-left-width)}
+.cm-board[data-shell="shared"][data-inspecting="on"]{--play-inspector:clamp(240px,24vw,320px)}
+.cm-board[data-shell="shared"][data-coach="open"]{--play-inspector:clamp(240px,24vw,320px)}
+.cm-board[data-shell="shared"]>.cm-board-body,.cm-board[data-shell="shared"]>.cm-board-tabletop,.cm-board[data-shell="shared"]>.cm-board-hand,.cm-board[data-shell="shared"]>.cm-stage-region,.cm-board[data-shell="shared"]>.cm-stage-hand{margin-left:var(--play-left);margin-right:var(--play-inspector);min-width:0}
+.cm-board[data-shell="shared"]>.cm-board-body{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr)}
+.cm-board[data-shell="shared"] .cm-stage-rail{background:#101c1e;border-right:1px solid #8d7856;box-shadow:8px 0 24px #0003;padding:14px 12px}
+.cm-stage-rail .cm-board-pane{position:static;display:block;width:100%;height:auto;max-height:none;padding:12px 0 0;margin:14px 0 0;border:0;border-top:1px solid #43564d;background:none;overflow:visible}
+.cm-stage-rail .cm-board-pane.is-shut{width:100%}
+.cm-stage-rail .cm-board-pane-head{display:flex;align-items:center;justify-content:space-between}
+.cm-stage-rail .cm-board-pane h3,.cm-stage-module h3,#cm-card-inspector h3{font-family:CrankOxanium,Satoshi,sans-serif;letter-spacing:.03em}
+.cm-stage-rail .cm-board-tile{width:100%;margin:8px 0;aspect-ratio:auto;min-height:86px}
+.cm-stage-rail .cm-stage-module[data-module="actions"]{background:none;border:0;border-bottom:1px solid #43564d;border-radius:0;box-shadow:none}
+.cm-stage-module[data-module="actions"]>.cm-module-body{max-height:none;overflow:visible;padding:10px 0}
+.cm-stage-module[data-module="actions"] .cm-board-decision{background:none;box-shadow:none;border:0;padding:0;color:#edf6ef}
+.cm-stage-module[data-module="actions"] .cm-board-decision{display:flex;flex-direction:column;max-height:calc(70vh - 130px);gap:10px;min-height:0}
+.cm-stage-module[data-module="actions"] .cm-board-decision>h3,.cm-stage-module[data-module="actions"] .cm-board-decision-foot{flex:none}
+#matrix-v2 .cm-stage-module h3,#matrix-v2 .cm-stage-rail .cm-board-pane h3,#matrix-v2 #cm-card-inspector h3{font-family:CrankOxanium,Satoshi,sans-serif;font-size:14px;font-weight:600;text-transform:none;color:inherit}
+.cm-stage-module[data-module="actions"] .cm-board-options{display:flex;flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:8px;min-height:0;max-height:none;overflow:auto;padding:3px;margin:-3px;scrollbar-width:thin}
+.cm-stage-module[data-module="actions"] .cm-board-options>*{flex:none}
+.cm-stage-rail .cm-block-tiles{flex-wrap:wrap;overflow:visible}
+#matrix-v2 .cm-stage-module[data-module="actions"] .v-button{white-space:normal;text-align:left;line-height:1.4;min-height:40px;overflow-wrap:anywhere}
+.cm-stage-module[data-module="actions"] .cm-board-decision-foot{position:sticky;bottom:0;background:#101c1e;padding:10px 0;display:flex;flex-wrap:wrap;gap:8px}
+#cm-card-inspector{position:absolute;right:0;top:58px;bottom:0;z-index:24;width:clamp(240px,24vw,320px);padding:16px;background:#101c1e;color:#edf6ef;border-left:1px solid #8d7856;overflow:auto;box-shadow:-8px 0 24px #0003}
+#cm-card-inspector>header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+#cm-card-inspector h3{font-size:16px;line-height:1.4;margin:0}
+#cm-card-inspector .cm-bcard{--bc:min(100%,280px);width:100%;height:auto;aspect-ratio:5/7;transform:none;display:block}
+#cm-card-inspector .cm-bcard img{object-fit:contain;width:100%;height:100%}
+#cm-card-inspector .cm-inspection-context{font-size:12px;color:#b6cbbf;margin:12px 0}
+.cm-board[data-combat]>#cm-card-inspector{top:188px}
+.cm-history-cards{display:flex;flex-wrap:wrap;gap:6px;padding-top:10px}
+.cm-board:is([data-inspecting="on"],[data-coach="open"])>.cm-stage-right{right:var(--play-inspector)}
+.cm-board:is([data-inspecting="on"],[data-coach="open"])>.cm-stage-side{right:var(--play-inspector)}
+.cm-board:is([data-inspecting="on"],[data-coach="open"])>.cm-stage-camera{right:calc(var(--play-inspector) + 18px)}
+.cm-board[data-phone] #cm-card-inspector{position:fixed;top:48px;bottom:12px;width:min(320px,90vw);max-height:calc(100dvh - 60px)}
+
+.cm-board[data-shell="shared"]>.cm-board-panegrip{position:absolute;left:calc(var(--stage-left-width) - 6px);top:58px;bottom:0;width:12px;z-index:26;display:flex}
+.cm-board[data-shell="shared"]>.cm-board-panegrip [data-drag]{width:12px;height:100%;cursor:col-resize}
+.cm-stage-rail .cm-board-tile.is-mini{aspect-ratio:16/9}
+.cm-board[data-shell="shared"] .cm-stage-fan{width:min(100%,1000px)}
+/* Fixed dark game chrome needs explicit ink in every site theme. */
+#matrix-v2 .cm-stage-rail .cm-board-pane{color:#edf6ef}
+#matrix-v2 .cm-stage-rail .cm-board-tile{color:#edf6ef;background:#172426}
+#matrix-v2 .cm-stage-rail .cm-board-tile .cm-muted{color:#bdcbbf}
+.cm-board[data-shell="shared"] .cm-stage-life-list{background:#101c1e}
+
+#matrix-v2 .cm-stage-rail .cm-board-pane h3{color:#edf6ef}
+
+/* Decision desk: a local selection and its consequence stay beside the board. */
+.cm-action-summary{width:100%;padding:12px;border:1px solid #8d7856;border-radius:8px;background:#1c2c2c;color:#edf6ef;font-size:13px;line-height:1.5;max-height:180px;overflow:auto}
+.cm-action-summary ul{margin:6px 0 0;padding-left:18px}.cm-action-summary li{margin:4px 0;overflow-wrap:anywhere}
+.cm-action-review{flex:none;border-top:1px solid #8d785666;padding-top:10px}.cm-action-review p,.cm-action-hint{font-size:12px;line-height:1.5;color:inherit;margin:8px 0}
+.cm-action-review .cm-actions{display:flex;flex-wrap:wrap;gap:8px}.cm-action-review button{min-height:40px}
+.cm-board-options [aria-pressed=true]{outline:2px solid #a9d9b0;outline-offset:-2px;background:#29463a!important;color:#fff!important}
+.cm-board-decision-foot>.cm-action-review{width:100%}.cm-stage-rail .cm-board-decision.is-also{max-height:calc(100dvh - 155px)}
+
+/* The pre-lobby follows the lounge reference: return, start, tables, conversation, then record. */
+.cm-play-home{grid-template-columns:minmax(240px,1fr) minmax(300px,1.35fr) minmax(240px,1fr);gap:16px}
+.cm-play-home .v-panel{border:1px solid #8d785666;border-radius:16px;padding:24px}
+#matrix-v2 .cm-play-home .cm-play-welcome{grid-column:1/-1;background:linear-gradient(90deg,#101c1ef5 20%,#101c1e77),url(assets/playmats/cloud-wolf.webp) center 40%/cover;color:#edf6ef;min-height:220px}
+.cm-play-welcome .cm-play-eyebrow{color:#d9c39a}.cm-play-welcome h2{color:#edf6ef!important}.cm-play-welcome .v-button{border-color:#8d7856}
+.cm-lounge-unavailable{padding:18px;border:1px dashed #8d785677;border-radius:12px;margin-top:24px;font-size:13px;line-height:1.6}
+.cm-lounge-table-art{height:150px;max-width:320px;margin:20px auto;display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:18px;background:linear-gradient(145deg,#715031,#372820);border:3px solid #8d7856;border-radius:24px;position:relative;box-shadow:0 12px 24px #0003}
+.cm-lounge-table-art i{background:#203c32;border:1px solid #7d9b78;border-radius:8px}.cm-lounge-table-art span{position:absolute;inset:0;display:grid;place-items:center;font-size:10px;letter-spacing:.2em;color:#ead5ad}
+.cm-play-stats{display:flex;gap:24px;margin:20px 0}.cm-play-stats div{display:grid;gap:4px}.cm-play-stats strong{font-size:32px}.cm-play-stats span{font-size:12px}
+.cm-play-records{grid-column:2/-1}.cm-new-table-square{display:grid;grid-template-columns:1fr 1fr;gap:32px;padding:24px;background:linear-gradient(140deg,#644b32,#292a23);border:2px solid #8d7856;border-radius:20px;position:relative;margin:24px 0}
+.cm-new-table-square .cm-table-new-seat{display:flex;flex-direction:column;gap:10px;padding:16px;min-width:0;background:#142a26;color:#edf6ef;border:1px solid #829b7d;border-radius:10px}
+.cm-new-table-square input,.cm-new-table-square select{width:100%;min-width:0}.cm-new-table-square [data-seat-position="1"]{grid-column:2;grid-row:2}.cm-new-table-square [data-seat-position="2"]{grid-column:1;grid-row:2}.cm-new-table-square [data-seat-position="3"]{grid-column:2;grid-row:1}.cm-new-table-square [data-seat-position="4"]{grid-column:1;grid-row:1}
+.cm-new-table-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:10px;color:#ead5ad;letter-spacing:.15em}.cm-new-table-rules{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}.cm-new-table-rules span{border:1px solid #8d7856;border-radius:20px;padding:5px 12px;font-size:12px}
+.cm-table-new{max-width:900px;margin:auto}.cm-table-new h2{font-family:CrankOxanium,Satoshi,sans-serif}
+@media(max-width:1000px){.cm-play-home{grid-template-columns:1fr 1fr}.cm-play-talk{grid-column:1/-1}.cm-play-records{grid-column:auto}}
+@media(max-width:700px){.cm-play-home{grid-template-columns:minmax(0,1fr)}.cm-play-home .v-panel{grid-column:1;padding:20px}.cm-new-table-square{padding:10px;gap:24px 10px}.cm-new-table-square .cm-table-new-seat{padding:10px}.cm-new-table-square input,.cm-new-table-square select{font-size:13px}}

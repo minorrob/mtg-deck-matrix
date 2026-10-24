@@ -1,0 +1,129 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ojer Taq, Deepest Foundation // Temple of Civilization",
+    "oracleId": "486bb9a5-73f1-4cec-b097-fb07ac80b72e",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "God"
+    ],
+    "manaCost": "{4}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 6,
+    "toughness": 6
+  },
+  "oracleText": "Vigilance\nIf one or more creature tokens would be created under your control, three times that many of those tokens are created instead.\nWhen Ojer Taq dies, return it to the battlefield tapped and transformed under its owner's control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "static",
+      "text": "If one or more creature tokens would be created under your control, three times that many of those tokens are created instead.",
+      "rule": "more-tokens",
+      "affects": {
+        "who": "you"
+      },
+      "tokens": {
+        "types": [
+          "Creature"
+        ]
+      },
+      "times": 3
+    },
+    {
+      "kind": "triggered",
+      "text": "When Ojer Taq dies, return it to the battlefield tapped and transformed under its owner's control.",
+      "trigger": {
+        "on": "dies",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "that card",
+          "to": "battlefield",
+          "tapped": true,
+          "transformed": true
+        }
+      ]
+    }
+  ],
+  "layout": "transform",
+  "back": {
+    "identity": {
+      "name": "Temple of Civilization",
+      "types": [
+        "Land"
+      ],
+      "subtypes": [],
+      "manaCost": null,
+      "colors": [],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "(Transforms from Ojer Taq, Deepest Foundation.)\n{T}: Add {W}.\n{2}{W}, {T}: Transform this land. Activate only if you attacked with three or more creatures this turn and only as a sorcery.",
+    "abilities": [
+      {
+        "kind": "activated",
+        "text": "{T}: Add {W}.",
+        "mana": true,
+        "cost": [
+          {
+            "atom": "{T}"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "addMana",
+            "mana": {
+              "W": 1
+            }
+          }
+        ]
+      },
+      {
+        "kind": "activated",
+        "text": "{2}{W}, {T}: Transform this land. Activate only if you attacked with three or more creatures this turn and only as a sorcery.",
+        "cost": [
+          {
+            "atom": "mana",
+            "cost": "{2}{W}"
+          },
+          {
+            "atom": "{T}"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "setState",
+            "targets": "self",
+            "transform": true
+          }
+        ],
+        "timing": "sorcery",
+        "condition": {
+          "compare": {
+            "count": {
+              "creaturesAttackedWithThisTurn": "you"
+            },
+            "atLeast": 3
+          }
+        }
+      }
+    ]
+  }
+}

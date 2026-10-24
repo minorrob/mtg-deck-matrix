@@ -1,0 +1,143 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Prismari Command",
+    "oracleId": "fa3e28b1-131c-4223-81e0-18dfbab22c26",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{U}{R}",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose two —\n• Prismari Command deals 2 damage to any target.\n• Target player draws two cards, then discards two cards.\n• Target player creates a Treasure token.\n• Destroy target artifact.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose two —\n• Prismari Command deals 2 damage to any target.\n• Target player draws two cards, then discards two cards.\n• Target player creates a Treasure token.\n• Destroy target artifact.",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 2,
+          "modes": [
+            {
+              "text": "Prismari Command deals 2 damage to any target.",
+              "targets": [
+                {
+                  "anyOf": [
+                    {
+                      "what": "permanent",
+                      "types": [
+                        "Creature"
+                      ]
+                    },
+                    {
+                      "what": "permanent",
+                      "types": [
+                        "Planeswalker"
+                      ]
+                    },
+                    {
+                      "what": "permanent",
+                      "types": [
+                        "Battle"
+                      ]
+                    },
+                    {
+                      "what": "player"
+                    }
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "dealDamage",
+                  "amount": 2,
+                  "targets": {
+                    "target": 0
+                  },
+                  "who": {
+                    "target": 0
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Target player draws two cards, then discards two cards.",
+              "targets": [
+                {
+                  "what": "player"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "draw",
+                  "count": 2,
+                  "who": {
+                    "target": 0
+                  }
+                },
+                {
+                  "effect": "discard",
+                  "count": 2,
+                  "who": {
+                    "target": 0
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Target player creates a Treasure token.",
+              "targets": [
+                {
+                  "what": "player"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "createToken",
+                  "count": 1,
+                  "controller": {
+                    "target": 0
+                  },
+                  "token": {
+                    "predefined": "Treasure"
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Destroy target artifact.",
+              "targets": [
+                {
+                  "what": "permanent",
+                  "types": [
+                    "Artifact"
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "destroy",
+                  "targets": {
+                    "target": 0
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

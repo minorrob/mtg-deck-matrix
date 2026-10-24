@@ -13,14 +13,14 @@
  * product, and a divergence between the two is adjudicated against the CR, not settled by
  * copying. See `docs/engine/ADR-001-own-engine.md`.
  *
- * PHASE 0, STILL. `createGame` throws until the phase 1 kernel lands, because a stub that returned
+ * `createGame` THROWS. The phase 1 kernel has landed (`ENGINE_STATUS.phase`), but a stub that returned
  * a plausible-looking game would let callers be written against a fiction and fail later, further
  * from the cause. Principle 6: unsupported is loud.
  *
- * Pieces of the kernel now exist and `ENGINE_STATUS.implemented` names them. That list is not a
- * promise that a game can be played — it cannot, there is no mana and no combat — it is so a
- * caller can ask what is here instead of discovering it by catching an exception. The list moves
- * only when a module's suite is green.
+ * Pieces of the kernel now exist and `ENGINE_STATUS.implemented` names them, mana and combat among
+ * them. Games are played through the room (game/room/room.mjs), never through `createGame`; the
+ * list is so a caller can ask what is here instead of discovering it by catching an exception. The
+ * list moves only when a module's suite is green.
  */
 
 /** The flag value that selects this engine. `serve-review.mjs` reads CRANKMAGIC_ENGINE. */

@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Imperial Seal",
+    "oracleId": "16cd0b90-f70c-4efa-b252-8de8784ef9a3",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Search your library for a card, then shuffle and put that card on top. You lose 2 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {},
+          "shuffle": true,
+          "to": "top"
+        },
+        {
+          "effect": "loseLife",
+          "amount": 2
+        }
+      ],
+      "text": "Search your library for a card, then shuffle and put that card on top. You lose 2 life."
+    }
+  ]
+}

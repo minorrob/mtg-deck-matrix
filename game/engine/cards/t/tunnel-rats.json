@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tunnel Rats",
+    "oracleId": "0a8e5c48-885d-4ea8-9c68-a3e9213d4289",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Rat"
+    ],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "{4}{B}: Return this card from your graveyard to the battlefield tapped.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "zone": "graveyard",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{4}{B}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "to": "battlefield",
+          "tapped": true
+        }
+      ],
+      "text": "{4}{B}: Return this card from your graveyard to the battlefield tapped."
+    }
+  ]
+}

@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Brash Taunter",
   "fixtures": {
-    "Zap": {
+    "Smoke Zap": {
       "types": [
         "Instant"
       ],
@@ -60,7 +60,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Zap"
+            "Smoke Zap"
           ]
         }
       ],
@@ -69,7 +69,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Zap",
+          "cast": "Smoke Zap",
           "targets": [
             {
               "card": "Brash Taunter"

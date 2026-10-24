@@ -1,0 +1,315 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Mordenkainen",
+  "scenarios": [
+    {
+      "name": "+2: Rob draws two, then puts one of the three in his hand on the bottom of his library",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mordenkainen"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Opt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Mordenkainen",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 2
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 19
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Mordenkainen",
+            "counter": "loyalty",
+            "count": 7
+          }
+        }
+      ]
+    },
+    {
+      "name": "-2: a blue Dog Illusion, twice Rob's hand: 4/4 with two cards, 2/2 once he casts one",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mordenkainen",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Opt",
+            "Opt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Mordenkainen",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Dog Illusion",
+                "power": 4,
+                "toughness": 4
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Opt"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Dog Illusion",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Mordenkainen",
+            "counter": "loyalty",
+            "count": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "-10 after three +2s: hand and library exchanged, the library shuffled, and the emblem: Rob keeps all fourteen at cleanup",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mordenkainen"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Opt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Mordenkainen",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Mordenkainen",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Mordenkainen",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        },
+        {
+          "to": {
+            "turn": 7,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "hand",
+              "count": 7
+            },
+            {
+              "seat": 0,
+              "zone": "library",
+              "count": 14
+            }
+          ]
+        },
+        {
+          "activate": "Mordenkainen",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "hand",
+              "count": 14
+            },
+            {
+              "seat": 0,
+              "zone": "library",
+              "count": 7
+            },
+            {
+              "seat": 0,
+              "zone": "command",
+              "cards": [
+                "Mordenkainen emblem"
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 8,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 14
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Mordenkainen",
+            "counter": "loyalty",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Without the emblem Rob discards down to seven at cleanup",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mordenkainen"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Opt",
+            "Opt",
+            "Opt",
+            "Opt",
+            "Opt",
+            "Opt",
+            "Opt",
+            "Opt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 1,
+            "phase": "CLEANUP"
+          }
+        },
+        {
+          "answer": [
+            0
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 7
+        }
+      ]
+    }
+  ]
+}

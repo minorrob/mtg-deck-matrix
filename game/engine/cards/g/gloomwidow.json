@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gloomwidow",
+    "oracleId": "e5139376-cdb1-4f1e-b417-b956d6b713b9",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spider"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Reach\nThis creature can block only creatures with flying.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "reach",
+      "text": "Reach"
+    },
+    {
+      "kind": "static",
+      "rule": "can-block-only",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "attackers": {
+        "keywords": [
+          "Flying"
+        ]
+      },
+      "text": "This creature can block only creatures with flying."
+    }
+  ]
+}

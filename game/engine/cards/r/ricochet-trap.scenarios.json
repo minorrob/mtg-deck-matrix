@@ -56,7 +56,7 @@
         ]
       }
     },
-    "Tidings": {
+    "Smoke Tidings": {
       "types": [
         "Instant"
       ],
@@ -185,7 +185,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Tidings",
+            "Smoke Tidings",
             "Bolt"
           ]
         }
@@ -199,7 +199,7 @@
           "seat": 1
         },
         {
-          "cast": "Tidings",
+          "cast": "Smoke Tidings",
           "seat": 1
         },
         {
@@ -271,7 +271,7 @@
           "seat": 1,
           "zone": "graveyard",
           "cards": [
-            "Tidings",
+            "Smoke Tidings",
             "Bolt",
             "Bear"
           ]
@@ -517,7 +517,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Tidings",
+            "Smoke Tidings",
             "Bolt",
             "Bolt"
           ]
@@ -535,7 +535,7 @@
           "seat": 1
         },
         {
-          "cast": "Tidings",
+          "cast": "Smoke Tidings",
           "seat": 1
         },
         {
@@ -655,7 +655,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Tidings",
+            "Smoke Tidings",
             "Split"
           ]
         }
@@ -669,7 +669,7 @@
           "seat": 1
         },
         {
-          "cast": "Tidings",
+          "cast": "Smoke Tidings",
           "seat": 1
         },
         {

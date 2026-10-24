@@ -1,0 +1,353 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Wall of Shards",
+  "scenarios": [
+    {
+      "name": "Rob's upkeep: an age counter, and Maya gains 1 life to keep it; next time two counters, and 2 life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wall of Shards"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Have an opponent gain 1 life",
+                  "Don't pay"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Have an opponent gain 1 life"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 41
+            },
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Wall of Shards",
+                "counter": "age",
+                "count": 1
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Have an opponent gain 1 life, 2 times"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 43
+        },
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Wall of Shards",
+            "counter": "age",
+            "count": 2
+          }
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Wall of Shards"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Not paid: sacrificed, and nobody gains life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wall of Shards"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Don't pay"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Wall of Shards"
+          ]
+        },
+        {
+          "seat": 1,
+          "life": 40
+        }
+      ]
+    },
+    {
+      "name": "Only Rob's upkeep: Maya's passes with no age counter",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wall of Shards"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Wall of Shards",
+            "counter": "age",
+            "count": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Four players, two age counters: a different opponent for each, Maya and then Trey, 1 life apiece",
+      "seats": 4,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wall of Shards"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 5,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Have an opponent gain 1 life"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Maya",
+                  "Trey",
+                  "Sam"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Sam"
+          ]
+        },
+        {
+          "to": {
+            "turn": 9,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Have an opponent gain 1 life, 2 times"
+          ]
+        },
+        {
+          "choose": [
+            "Maya"
+          ]
+        },
+        {
+          "choose": [
+            "Trey"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 41
+        },
+        {
+          "seat": 2,
+          "life": 41
+        },
+        {
+          "seat": 3,
+          "life": 41
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Wall of Shards",
+            "counter": "age",
+            "count": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "Four players: the same opponent for both, Sam gains 2 at once",
+      "seats": 4,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wall of Shards"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 5,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Have an opponent gain 1 life"
+          ]
+        },
+        {
+          "choose": [
+            "Maya"
+          ]
+        },
+        {
+          "to": {
+            "turn": 9,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Have an opponent gain 1 life, 2 times"
+          ]
+        },
+        {
+          "choose": [
+            "Sam"
+          ]
+        },
+        {
+          "choose": [
+            "Sam"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 41
+        },
+        {
+          "seat": 2,
+          "life": 40
+        },
+        {
+          "seat": 3,
+          "life": 42
+        },
+        {
+          "event": "GameEventPlayerLivesChanged",
+          "where": {
+            "oldLives": 40,
+            "newLives": 42
+          }
+        }
+      ]
+    }
+  ]
+}

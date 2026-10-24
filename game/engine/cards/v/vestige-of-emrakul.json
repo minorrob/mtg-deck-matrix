@@ -1,0 +1,35 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Vestige of Emrakul",
+    "oracleId": "55187899-c445-48e9-80b9-235eaf42f803",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Eldrazi",
+      "Drone"
+    ],
+    "manaCost": "{3}{R}",
+    "colors": [],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "Devoid (This card has no color.)\nTrample",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "devoid",
+      "text": "Devoid (This card has no color.)"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "Trample"
+    }
+  ]
+}

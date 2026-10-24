@@ -21,11 +21,12 @@ import {addObject, transformObject, rememberExileLooker, COPY_KEYS} from "../../
 import {selectMatching, compileSelector} from "../filter.mjs";
 import {bindEffect, rememberNow, countThisWay} from "../bind.mjs";
 import {amountOf} from "../amount.mjs";
-import {event, cardRef, moveOne} from "./zones.mjs";
+import {event, cardRef, moveOne, playersFor} from "./zones.mjs";
 import {typesOf, controllerOf, staticAbilities} from "../../rules/layers.mjs";
 import {protectedFrom} from "../../rules/protection.mjs";
 import {manaValue, parseManaCost} from "../../rules/mana.mjs";
 import {countersPlaced, enteringCountersPlaced, tokensCreated} from "../../rules/statics.mjs";
+import {clearRingBearer} from "../../keywords/ring.mjs";
 import {removeFromCombat} from "../../rules/combat.mjs";
 import {enteringModifications} from "../../rules/replacement.mjs";
 
@@ -466,6 +467,23 @@ export function incubate(state, params, context) {
   return createToken(state, {count: 1, token: {predefined: "Incubator"}, entersWithCounters: {"+1/+1": params.count ?? 0}}, context);
 }
 
+/**
+ * `emblem` -- "you get an emblem with ..." (CR 114; the library load's L1: Ajani Steadfast, Teferi, Hero of Dominaria,
+ * Mordenkainen). An object put into its player's command zone (114.1, 114.2), owned and controlled by that player, with the
+ * abilities the effect gives it (`abilities`, compiled as a card's are, cards/index.mjs) and no other characteristic: no
+ * types, no mana cost, no color (114.3). It is neither a card nor a permanent (114.5); `card` is only what the board calls
+ * it, after what made it. Its abilities function in the command zone (114.4): its triggered abilities (rules/trigger.mjs),
+ * its replacement effects (rules/replacement.mjs) and the rules it changes for players (rules/statics.mjs,
+ * playerRuleChanged). Nothing removes it.
+ */
+export function emblem(state, params, context) {
+  const player = context.controller;
+  const named = state.objects[context.source]?.card ?? context.lastKnown?.name ?? null;
+  const id = addObject(state, {card: named ? `${named} emblem` : "Emblem", emblem: true, owner: player, controller: player,
+    abilities: params.abilities ?? []}, "command", player);
+  return [event("GameEventEmblemCreated", state, {player: {playerId: player, name: state.players[player].name}, card: cardRef(state, id)})];
+}
+
 /* A face of a double-faced token (an Incubator, CR 111.10i), as a double-faced card's face is kept (cards/index.mjs,
    faceOfDefinition): what transformObject turns over (state/index.mjs). */
 const tokenFace = (spec) => ({card: spec.name ?? "Token", types: [...(spec.types ?? [])], subtypes: [...(spec.subtypes ?? [])], supertypes: [...(spec.supertypes ?? [])],
@@ -517,6 +535,12 @@ export function createToken(state, params, context) {
   if (params.attachedTo !== undefined) for (const id of made) if (state.objects[id].enchant) attachTo(state, id, host);
   /* "They gain haste until end of turn" (Ovika), and the rest a made permanent may gain (afterwards). */
   afterwards(state, made, {...params, controller}, context);
+  /* "Exile the top card of your library face down ... Create a 2/2 colorless Spirit creature token. When that token leaves the
+     battlefield, put the exiled card into your hand" (Ugin, the Ineffable; CR 607.2a; card load w4d L1): `linkRemembered`,
+     what an earlier effect of this resolution remembered, linked to each token made, for its own ability (`linked`,
+     effects/zones.mjs) -- "the exiled card", still that card in exile (CR 400.7). */
+  if (params.linkRemembered === true) for (const id of made) if (state.objects[id])
+    (state.links ??= {})[id] = (context.remembered ?? []).filter((card) => state.objects[card]?.zone === "exile");
   /* "Create X 1/1 white Soldier creature tokens. If X is 5 or more, destroy all OTHER creatures" (Martial Coup): the
      tokens this made, for the effects after it -- the ones a replacement added among them (CR 614.6). */
   if (params.remember) context.remembered = made;
@@ -769,9 +793,11 @@ export function effectUntil(state, params, context) {
      cast is offered (rules/statics.mjs, castForbidden). Lands are played, not cast, and stay playable (the card's ruling). A
      name that could not be read (the creature gone) forbids nothing. */
   /* "If you do, you can't cast additional spells this turn" (Conduit of Worlds): every spell (`allSpells`), its controller's
-     ("you"). */
+     ("you"). "Your opponents can't cast spells this turn" (Silence; library load L2): each opponent still in the game as it
+     resolves ("opponent"); "players can't cast spells this turn" (Bilbo's Gambit): each player ("each") -- named now, as
+     the rule is changed for players and not objects (CR 611.2c is about characteristics). */
   if (params.rule === "cant-cast") {
-    const who = params.who === "you" ? [context.controller] : params.who;
+    const who = typeof params.who === "string" ? playersFor(state, params.who, context.controller) : params.who;
     if (!(typeof params.named === "string" || params.allSpells === true) || !Array.isArray(who) || !who.length) return [];
     pushEffect(state, {id: params.id ?? `effect:${context.source ?? "effect"}`, rule: "cant-cast", players: [...who], spells: params.allSpells === true ? {} : {named: params.named},
       affects: {what: "player"}, apply: {}, until: params.until ?? "end-of-turn", sourceController: context.controller});
@@ -815,6 +841,10 @@ export function effectUntil(state, params, context) {
        players, read where a target is chosen (script/filter.mjs, playerHasHexproof). */
     ...(params.until === "their-next-turn" || (["protection", "life-cant-change", "no-maximum-hand-size", "damage-doubled", "look-at-top", "player-hexproof"].includes(params.rule)
       && !(params.rule === "protection" && (params.targets || params.selector))) ? {players: Array.isArray(params.who) ? [...params.who] : [context.controller]} : {}),
+    /* And "you ... gain hexproof from blue and from black until end of turn" (Veil of Summer; CR 702.11d): a hexproof from over
+       players (rules/protection.mjs, playerHexproofFrom) -- with no targets and no selector, where Skrelv's is over the
+       permanents it targets. */
+    ...(params.rule === "hexproof-from" && !params.targets && !params.selector ? {players: Array.isArray(params.who) ? [...params.who] : [context.controller]} : {}),
     /* "If a source would deal damage to that player or a permanent that player controls, it deals double that damage
        instead" (Lightning, Army of One; rules/replacement.mjs, rememberedReplacement): `who` the players it remembers, its
        name for the order's question (CR 616.1). "That creature enters with an additional +1/+1 counter on it" (Summon:
@@ -822,6 +852,11 @@ export function effectUntil(state, params, context) {
     ...(params.rule === "damage-doubled" ? {name: state.objects[context.source]?.card ?? context.lastKnown?.name ?? "An effect"} : {}),
     ...(params.rule === "enters-with-counters" ? {counters: {counter: params.counter, count: params.count ?? 1}} : {}),
     ...(params.rule === "protection" ? {from: params.from ?? "everything"} : {}),
+    /* "You may cast sorcery spells as though they had flash" until your next turn (Teferi, Time Raveler's +1): for its
+       controller (`players`), and which spells, a card selector, or every spell (`true`) -- read where a cast's timing is
+       (rules/statics.mjs, flashGranted). */
+    ...(params.rule === "cast-as-though-flash" ? {players: Array.isArray(params.who) ? [...params.who] : [context.controller],
+      spells: params.spells === true ? true : structuredClone(params.spells ?? {})} : {}),
     /* "Creatures your opponents control attack this turn if able" (Bident of Thassa; rules/statics.mjs, attacksEachCombat):
        named by its source when a declaration breaks it, as it was then, gone or not (rules/combat.mjs). */
     ...(params.rule === "attacks-each-combat" ? {sourceId: context.source ?? null, sourceName: state.objects[context.source]?.card ?? context.lastKnown?.name ?? null} : {}),
@@ -885,6 +920,10 @@ export function gainControl(state, params, context) {
   const source = context.source ?? null;
   if (params.until === "this leaves" && (source === null || state.objects[source]?.zone !== "battlefield")) return [];
   const ids = (params.selector ? selectMatching(state, params.selector, context) : params.targets ?? []).filter((id) => state.objects[id]?.zone === "battlefield");
+  /* "Gain control of all creatures with power 4 or greater until end of turn. Untap those creatures" (Mob Rule; library load
+     L2): what it named as it resolved, for the effects after it to name as "remembered" -- not the selector read again, which
+     a creature's power changed by the control change itself (an anthem left behind) would no longer fit. */
+  if (params.remember) context.remembered = ids.slice();
   for (const id of ids) {
     const object = state.objects[id];
     /* Kept even for good, and even when it changes nothing: a later change outlasts the earlier ones in layer 2 (CR 613.7),
@@ -893,6 +932,7 @@ export function gainControl(state, params, context) {
       apply: {controller: object.controller}, to, ...(params.until ? {until: params.until} : {}), ...(params.until === "this leaves" ? {source} : {}), sourceController: context.controller});
     rememberExileLooker(state, id, controllerOf(state, id));
     if (object.controller !== to) {
+      clearRingBearer(state, id);
       object.controlledSinceTurn = state.turn;
       removeFromCombat(state, id);
     }
@@ -1073,6 +1113,17 @@ export function goad(state, params, context) {
   return [];
 }
 
+
+/**
+ * `removeFromCombat` -- CR 506.4: "remove target attacking creature you control from combat" (Reconnaissance; wave 4d L3). It
+ * stops being an attacking, blocking or blocked creature (rules/combat.mjs); a creature not in combat is unchanged. What
+ * follows it on the card ("and untap it") is the next effect's.
+ */
+export function leaveCombat(state, params, context) {
+  for (const id of params.targets ?? []) if (state.objects[id]?.zone === "battlefield") removeFromCombat(state, id);
+  void context;
+  return [];
+}
 /**
  * `regenerate` -- CR 701.19a: a regeneration shield on each target (or each permanent `selector` describes, fixed as it
  * resolves: "regenerate each creature you control"), until end of turn. rules/replacement.mjs `regenerated` uses one up.
@@ -1105,8 +1156,13 @@ const endOfPhase = (step) => (["UNTAP", "UPKEEP", "DRAW"].includes(step) ? "DRAW
  */
 export function addPhase(state, params, context) {
   const steps = (params.phases ?? ["combat"]).flatMap((kind) => ADDED_STEPS[kind] ?? []);
-  if (steps.length) (state.extraPhases ??= []).push({turn: state.turn, after: endOfPhase(state.phase), steps});
-  void context;
+  if (!steps.length) return [];
+  /* "At the beginning of that combat, untap all creatures you control" (Moraug, Fury of Akoum; wave 4d L3, CR 603.7): a
+     delayed trigger of that added combat's beginning, and no other's -- `atBeginning`, tagged with it; rules/turn.mjs numbers
+     the combat as the phase is put in the turn, and rules/trigger.mjs fires it there. */
+  const tag = steps.includes("COMBAT_BEGIN") && params.atBeginning ? `combat:${state.turn}:${(state.extraPhases ?? []).length}:${(state.delayedTriggers ?? []).length}` : undefined;
+  (state.extraPhases ??= []).push({turn: state.turn, after: endOfPhase(state.phase), steps, ...(tag ? {tag} : {})});
+  if (tag) delayedTrigger(state, {at: "that combat", tag, text: params.atBeginning.text, effects: params.atBeginning.effects}, context);
   return [];
 }
 
@@ -1167,12 +1223,14 @@ export function delayedTrigger(state, params, context) {
          "At the beginning of that player's next end step" (The Eternal Wanderer): a moment of that player's turn only (`player`). */
       : {at: params.at ?? "end step", ...(params.yours === true ? {yours: true} : {}), ...(Number.isInteger(params.player) ? {player: params.player} : {}),
         /* "On your next turn" (Meandering Towershell): a turn after this one (rules/trigger.mjs). */
-        ...(params.at === "your next declare attackers" ? {madeOnTurn: state.turn} : {})}),
+        ...(params.at === "your next declare attackers" ? {madeOnTurn: state.turn} : {}),
+        /* "At the beginning of that combat" (addPhase's `atBeginning`): the added combat it names. */
+        ...(params.at === "that combat" ? {tag: params.tag} : {})}),
     controller: context.controller,
     source: context.source ?? null,
     /* A double-faced source's transforms as this is made: "transform it" from a delayed trigger is ignored once it has
        transformed since (CR 701.27f; setState). */
-    ...(state.objects[context.source]?.mdfc && state.objects[context.source].zone === "battlefield" ? {sourceTransforms: state.objects[context.source].transforms ?? 0} : {}),
+    ...((state.objects[context.source]?.mdfc || state.objects[context.source]?.merged?.some(p => p.physical.mdfc)) && state.objects[context.source].zone === "battlefield" ? {sourceTransforms: state.objects[context.source].transforms ?? 0} : {}),
     effects: rememberNow(params.effects ?? [], context, {keepThat: waits, state}),
     text: params.text ?? null,
   });

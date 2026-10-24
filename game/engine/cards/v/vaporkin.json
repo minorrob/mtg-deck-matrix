@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Vaporkin",
+    "oracleId": "169e415a-9ff6-43bb-bb68-fc49e69f95a8",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Flying\nThis creature can block only creatures with flying.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "static",
+      "rule": "can-block-only",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "attackers": {
+        "keywords": [
+          "Flying"
+        ]
+      },
+      "text": "This creature can block only creatures with flying."
+    }
+  ]
+}

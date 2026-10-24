@@ -89,6 +89,7 @@
  *                                      permanent the spell became (rules/stack.mjs)
  *   {offspringPaid: true|false}        its own permanent was cast with its offspring cost paid, or was not (CR 702.175a;
  *                                      Coruscation Mage) -- asked again as the trigger resolves, as it triggered
+ *   {allOf: [condition, ...]}          every one of them holds: Happily Ever After's three, two of them counted comparisons
  *
  * The keys are closed, like every other grammar here: an unknown one is refused at the schema rather than read as true.
  */
@@ -99,7 +100,7 @@ import {matchesSelector, compileSelector, matchesLastKnown} from "./filter.mjs";
 import {amountOf, amountProblems} from "./amount.mjs";
 import {characteristicsOf, subtypesOf, everyCreatureTypeOf} from "../rules/layers.mjs";
 import {isCreatureType} from "../keywords/types.mjs";
-import {hasCitysBlessing} from "../keywords/designations.mjs";
+import {hasCitysBlessing, isSaddled} from "../keywords/designations.mjs";
 
 const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn", "notYourTurn", "about", "is", "chosen", "selfCounters", "lifeAtLeast", "cast", "compare", "escaped", "evoked", "spent", "enduringStory", "loyaltyThisTurn", "impending",
   "uniqueCreatureName", "cameFrom", "sinceYourLastUpkeep", "level", "opponentPoisonAtLeast", "searched",
@@ -107,10 +108,14 @@ const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTu
   "evolves", "prowl", "prowled",
   /* Ascend's city's blessing (CR 702.131). */
   "citysBlessing",
+  /* A Mount's saddled designation (CR 702.171b). */
+  "saddled",
   /* Surge (CR 702.117a) and freerunning (CR 702.173a), and the cost a spell was cast for. */
   "surge", "freerunning", "paidFor",
   /* Breena, the Demagogue's "more life than another of your opponents" (CR 119.1). */
   "lifeAboveAnotherOpponent",
+  /* "If it's your main phase" (Moraug, Fury of Akoum; wave 4d L3, CR 505.1). */
+  "yourMainPhase",
   /* Smaug, Wicked Worm's "if mana from a Treasure was spent to cast it" (CR 106.3, 601.2h). */
   "spentFrom",
   /* Void (CR 207.2c, 702.185c) and sneak's timing (CR 702.190a). */
@@ -129,6 +134,8 @@ const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTu
   "castFromYourHand", "castByYou",
   /* A Case's solved designation (CR 719.3b), and Evendo Brushrazer's "as long as you've sacrificed a nontoken permanent this turn". */
   "solved", "sacrificedNontokenThisTurn",
+  /* Every one of several conditions (Happily Ever After). */
+  "allOf",
   /* Gift's "if the gift was promised" (CR 702.174b). */
   "giftPromised",
   /* Offspring's "if its offspring cost was paid" (CR 702.175a; wave 4c). */
@@ -144,7 +151,10 @@ const CAME_FROM = ["library"];
 /* The mana a condition may ask was spent to cast its object: the five colors and colorless (CR 106.1). */
 const SPENT_KEYS = ["W", "U", "B", "R", "G", "C"];
 /* A counted comparison's keys: what is counted, and against what. */
-const COMPARE_KEYS = ["count", "atLeast", "atMost", "moreThan", "fewerThan"];
+const COMPARE_KEYS = ["count", "atLeast", "atMost", "moreThan", "fewerThan", "prime"];
+/* "IF ... YOU CONTROL A PRIME NUMBER OF LANDS" (Zimone, All-Questioning, library load L5): `prime: true`, the count a prime number
+   -- 2, 3, 5, 7 and on; 0 and 1 are not. */
+const isPrime = (n) => Number.isInteger(n) && n >= 2 && Array.from({length: Math.floor(Math.sqrt(n)) - 1}, (_, i) => i + 2).every((d) => n % d !== 0);
 /* A NAMED OBJECT (Forge's ConditionDefined): "if it was a creature card" (Scavenging Ooze: what was exiled), "if it's
    blue" (Pyroblast: the target), "if it's a planeswalker" (Forge of Heroes): `about` which -- "remembered", "that card"
    (a trigger's subject), "target" (the first) -- and `is` what it must be, read where it now is. None there, and it is
@@ -224,6 +234,11 @@ function castHolds(rule, cast) {
 export function conditionHolds(state, condition, {controller, source = null, about = undefined, remembered = undefined, targets = undefined, cast = undefined, x = undefined, spent = undefined, excessDamage = undefined, rememberedControllers = undefined,
   movedWas = undefined, searched = undefined, lastKnown = undefined, paidFor = undefined, resolvedBefore = undefined, gift = undefined, offspring = undefined} = {}) {
   if (!condition) return true;
+  /* "IF there are five colors among permanents you control, there are six or more card types among ..., AND your life total is
+     greater than or equal to your starting life total" (Happily Ever After): every one of them, each a condition of its own --
+     two counted comparisons cannot share one `compare`. Asked with what this one is asked with. */
+  if (Array.isArray(condition.allOf) && !condition.allOf.every((one) => conditionHolds(state, one, {controller, source, about, remembered, targets, cast, x, spent,
+    excessDamage, rememberedControllers, movedWas, searched, lastKnown, paidFor, resolvedBefore, gift, offspring}))) return false;
   /* "IF ITS OFFSPRING COST WAS PAID" (CR 702.175a; Coruscation Mage, wave 4c): its own permanent was cast with it paid -- or,
      asked again as its trigger resolves (CR 603.4), its source as it triggered, which may be gone: the token is made all the
      same (the card's ruling; rules/trigger.mjs keeps it, `offspring`). */
@@ -317,9 +332,11 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   if (condition.selfCounters !== undefined && (source === null ? 0 : state.objects[source]?.counters?.[condition.selfCounters.counter] ?? 0) < condition.selfCounters.atLeast) return false;
   if (condition.about === "moved") {
     let fits = false;
-    try { fits = (movedWas ?? []).some((was) => matchesLastKnown(condition.is ?? {}, was, {controller, source})); } catch { fits = false; }
+    try { fits = (movedWas ?? []).some((was) => matchesLastKnown(condition.is ?? {}, was, {controller, source, lastKnown})); } catch { fits = false; }
     if (!fits) return false;
-  } else if (condition.about !== undefined && !namedIs(state, namedObject(condition.about, {remembered, targets, about}), condition.is ?? {}, {controller, source},
+  /* With its source and, gone, the source as it last existed (CR 113.7a, 608.2h): "each other creature you control" of a
+     trigger whose creature left before it resolved (Canopy Gargantuan) is other than that creature as it last was. */
+  } else if (condition.about !== undefined && !namedIs(state, namedObject(condition.about, {remembered, targets, about}), condition.is ?? {}, {controller, source, lastKnown},
     condition.about === "that card" ? about?.was ?? null : null)) return false;
   if (condition.notTheirTurn === true && (about?.player === undefined || about.player === state.activePlayer)) return false;
   if (condition.handEmpty === true && cardsIn(state, "hand", controller).length > 0) return false;
@@ -360,11 +377,17 @@ export function conditionHolds(state, condition, {controller, source = null, abo
       /* How the spell resolving was cast: "if you've cast another instant or sorcery spell this turn" leaves its own cast out
          (Burrog Barrage; script/amount.mjs, spellsCastThisTurn's `another`). */
       ...(cast !== undefined ? {cast} : {})};
-    const n = amountOf(state, condition.compare.count, counted), than = (v) => amountOf(state, v, counted);
-    if (condition.compare.atLeast !== undefined && n < than(condition.compare.atLeast)) return false;
-    if (condition.compare.atMost !== undefined && n > than(condition.compare.atMost)) return false;
-    if (condition.compare.moreThan !== undefined && !(n > than(condition.compare.moreThan))) return false;
-    if (condition.compare.fewerThan !== undefined && !(n < than(condition.compare.fewerThan))) return false;
+    const than = (v) => amountOf(state, v, counted);
+    /* "If a land entered the battlefield under your control this turn and you control a prime number of lands" (Zimone): a
+       list of comparisons, every one of them holding. */
+    for (const compare of [].concat(condition.compare)) {
+      const n = amountOf(state, compare.count, counted);
+      if (compare.atLeast !== undefined && n < than(compare.atLeast)) return false;
+      if (compare.atMost !== undefined && n > than(compare.atMost)) return false;
+      if (compare.moreThan !== undefined && !(n > than(compare.moreThan))) return false;
+      if (compare.fewerThan !== undefined && !(n < than(compare.fewerThan))) return false;
+      if (compare.prime === true && !isPrime(n)) return false;
+    }
   }
   /* "As long as you have an enduring story" (Storied, CR 702.195b), or "unless you have one": the player's designation
      (keywords/designations.mjs). */
@@ -372,6 +395,8 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   /* "Unless you have the city's blessing" (Wayward Swordtooth; CR 702.131c): its controller's designation, or theirs this
      moment by a permanent's ascend (keywords/designations.mjs). */
   if (condition.citysBlessing !== undefined && hasCitysBlessing(state, controller) !== condition.citysBlessing) return false;
+  /* "While saddled" (Bounding Felidar; CR 702.171b): the source, a Mount, saddled now (keywords/designations.mjs). */
+  if (condition.saddled !== undefined && isSaddled(state, source) !== condition.saddled) return false;
   /* Prowl's cost may be paid (CR 702.76a): asked of the card as its cast is offered (rules/actions.mjs, alternativeCosts). */
   if (condition.prowl === true && !prowlable(state, controller, source)) return false;
   /* VOID (an ability word, CR 207.2c): "if a nonland permanent left the battlefield this turn" -- any player's, counted as it
@@ -422,6 +447,8 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   if (condition.loyaltyThisTurn === true && !((state.players[controller]?.loyaltyThisTurn ?? 0) > 0)) return false;
   /* "Activate only during your turn" (Humble Defector). */
   if (condition.yourTurn === true && state.activePlayer !== controller) return false;
+  /* "If it's your main phase" (Moraug): a main phase of its controller's turn, an added one too (CR 500.8, 505.1). */
+  if (condition.yourMainPhase === true && !(state.activePlayer === controller && ["MAIN1", "MAIN2"].includes(state.phase))) return false;
   /* Corrupted (Skrelv's Hive): "as long as an opponent has three or more poison counters" -- a player who has left the game
      is no opponent (CR 800.4a). */
   if (condition.opponentPoisonAtLeast !== undefined
@@ -462,6 +489,10 @@ export function conditionProblems(condition) {
   if (!condition || typeof condition !== "object" || Array.isArray(condition)) return ["A condition is an object: {present: selector} or {handEmpty: true}"];
   const problems = [];
   for (const key of Object.keys(condition)) if (!CONDITION_KEYS.includes(key)) problems.push(`A condition has no key ${JSON.stringify(key)}; it has ${CONDITION_KEYS.join(", ")}`);
+  if ("allOf" in condition) {
+    if (!(Array.isArray(condition.allOf) && condition.allOf.length >= 2)) problems.push("allOf is a list of two or more conditions, every one of which must hold");
+    else condition.allOf.forEach((one, n) => problems.push(...conditionProblems(one).map((p) => `allOf[${n}]: ${p}`)));
+  }
   if ("atLeast" in condition && !(Number.isInteger(condition.atLeast) && condition.atLeast >= 1)) problems.push("A condition's atLeast is a whole number, 1 or more");
   if ("atMost" in condition && !(Number.isInteger(condition.atMost) && condition.atMost >= 0)) problems.push("A condition's atMost is a whole number, 0 or more");
   if (("atLeast" in condition || "atMost" in condition) && !("present" in condition)) problems.push("atLeast and atMost count what `present` describes");
@@ -469,8 +500,10 @@ export function conditionProblems(condition) {
   if ("notTheirTurn" in condition && condition.notTheirTurn !== true) problems.push("notTheirTurn is true");
   if ("firstCombat" in condition && condition.firstCombat !== true) problems.push("firstCombat is true");
   if ("yourTurn" in condition && condition.yourTurn !== true) problems.push("yourTurn is true");
+  if ("yourMainPhase" in condition && condition.yourMainPhase !== true) problems.push("yourMainPhase is true");
   if ("enduringStory" in condition && typeof condition.enduringStory !== "boolean") problems.push("enduringStory is true or false");
   if ("citysBlessing" in condition && typeof condition.citysBlessing !== "boolean") problems.push("citysBlessing is true or false");
+  if ("saddled" in condition && typeof condition.saddled !== "boolean") problems.push("saddled is true or false");
   if ("lifeAboveAnotherOpponent" in condition && condition.lifeAboveAnotherOpponent !== "that player") problems.push("lifeAboveAnotherOpponent is \"that player\": the player the trigger is about");
   if ("spentFrom" in condition) {
     try { matchesLastKnown(condition.spentFrom ?? {}, {}, {}); } catch (error) { problems.push(`What spentFrom asks of the mana's source: ${error.message}`); }
@@ -513,14 +546,15 @@ export function conditionProblems(condition) {
       || !Object.entries(spent).every(([key, n]) => SPENT_KEYS.includes(key) && Number.isInteger(n) && n >= 1))
       problems.push(`spent is mana by color, ${SPENT_KEYS.join(", ")}, each a whole number 1 or more: {G: 2} is "if {G}{G} was spent to cast it"`);
   }
-  if ("compare" in condition) {
-    const compare = condition.compare;
-    if (!compare || typeof compare !== "object" || Array.isArray(compare)) problems.push("compare is {count, atLeast | atMost | moreThan | fewerThan}");
+  /* One comparison, or a list of them that must all hold (Zimone). */
+  if ("compare" in condition) for (const compare of Array.isArray(condition.compare) && condition.compare.length ? condition.compare : [condition.compare]) {
+    if (!compare || typeof compare !== "object" || Array.isArray(compare)) problems.push("compare is {count, atLeast | atMost | moreThan | fewerThan | prime}, or a list of them");
     else {
       for (const key of Object.keys(compare)) if (!COMPARE_KEYS.includes(key)) problems.push(`compare has no key ${JSON.stringify(key)}; it has ${COMPARE_KEYS.join(", ")}`);
       if (!("count" in compare)) problems.push("compare counts something: {count: an amount}");
-      if (!COMPARE_KEYS.slice(1).some((key) => key in compare)) problems.push("compare says against what: atLeast, atMost, moreThan or fewerThan");
-      for (const key of COMPARE_KEYS) if (key in compare) problems.push(...amountProblems(compare[key]).map((p) => `compare's ${key}: ${p}`));
+      if (!COMPARE_KEYS.slice(1).some((key) => key in compare)) problems.push("compare says against what: atLeast, atMost, moreThan, fewerThan or prime");
+      if ("prime" in compare && compare.prime !== true) problems.push("compare's prime is true: the count a prime number");
+      for (const key of COMPARE_KEYS.slice(0, -1)) if (key in compare) problems.push(...amountProblems(compare[key]).map((p) => `compare's ${key}: ${p}`));
     }
   }
   if ("level" in condition) {

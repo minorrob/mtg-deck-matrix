@@ -1,0 +1,246 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Mox Diamond",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A land card discarded: Mox Diamond enters, and taps for any color",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Mox Diamond",
+            "Forest",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "cast": "Mox Diamond"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Discard Forest: Mox Diamond enters"
+          ]
+        },
+        {
+          "settle": true
+        },
+        {
+          "tap": "Mox Diamond",
+          "mana": {
+            "B": 1
+          },
+          "optional": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mox Diamond"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Declined: it goes to the graveyard from the stack, and never enters",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Mox Diamond",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "cast": "Mox Diamond"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Don't discard: Mox Diamond goes to the graveyard"
+          ]
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": []
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Mox Diamond"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "No land card in hand: no question, it goes to the graveyard; Scrap Trawler, watching artifacts leave the battlefield, does not trigger",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Mox Diamond",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Scrap Trawler"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Altar of Dementia"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "cast": "Mox Diamond"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Altar of Dementia",
+            "Mox Diamond"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "The discard is a discard: Necropotence exiles the land",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Mox Diamond",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Necropotence"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "cast": "Mox Diamond"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Discard Island: Mox Diamond enters"
+          ]
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mox Diamond",
+            "Necropotence"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": []
+        }
+      ]
+    }
+  ]
+}

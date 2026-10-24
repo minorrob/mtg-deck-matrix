@@ -54,7 +54,7 @@ BREAKS = [
     ('warp: a mana cost without X', INDEX, "problems.push(`${ability.text}: a warp cost of mana, once, without X`);", 'void 0;'),
     ('warp: a permanent card', INDEX, "problems.push(`${ability.text}: warp on a card that never becomes a permanent from the stack`);", 'void 0;'),
     ('keywords: warp and sneak declared', VOCAB, '  "warp", "sneak",\n', ''),
-    ('built: Warp and Sneak', TIMING, '"Disguise", "Morph", "Warp", "Sneak", "Delve"]),', '"Disguise", "Morph", "Delve"]),'),
+    ('built: Warp and Sneak', TIMING, '"Disguise", "Morph", "Warp", "Sneak", "Delve", "Improvise"]),', '"Disguise", "Morph", "Delve", "Improvise"]),'),
     # Warp, offered (rules/actions.mjs).
     ('warp: fromHand carried to the way', ACTIONS, '      ...(ability.fromHand === true ? {fromHand: true} : {}),\n', ''),
     ('warp: from the hand alone', ACTIONS, '.filter((w) => !w.fromHand || from === "hand");', ';'),
@@ -89,7 +89,7 @@ BREAKS = [
     ('sneak: the creature returned with the cast', ACTIONS, ' || a.atom === "sacrifice" || a.atom === "returnToHand"), evoke', ' || a.atom === "sacrifice"), evoke'),
     ('sneak: each creature its own offer', ACTIONS,
      'options = state.zones.battlefield.filter((id) => matches(state, id, {controller: player})).map((id) => ({returnToHand: id}));', 'options = [];'),
-    ('sneak: at an instant\'s timing', ACTIONS, '  if (!timely && !sneaking) return actions;', '  if (!timely) return actions;'),
+    ('sneak: at an instant\'s timing', ACTIONS, '  if (!timely && !sneaking && !flashIf) return actions;', '  if (!timely && !flashIf) return actions;'),
     ('sneak: its sneak cost alone then', ACTIONS, '  if (sneaking && !way?.sneak) continue;\n', ''),
     ('sneak: no additional cost', ACTIONS, 'extraPaid.some(([kind]) => kind !== "returnToHand")', 'extraPaid.length'),
     ('sneak: to its owner\'s hand', ACTIONS, '        moveOne(state, id, "hand", events);\n        continue;\n', ''),

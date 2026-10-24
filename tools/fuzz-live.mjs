@@ -43,6 +43,14 @@
  *
  *   node tools/fuzz-live.mjs --library [--humans 0] [--level normal] [--seeds 1-50] [--replay] [--leaks] [--json <out.json>]
  *
+ * HOW MANY LANDS THE AI SEATS GET DOWN (Linear ROB-164, 2026-10-19). `--lands <n>` reads each seat's lands in play at
+ * the end of its nth turn off the match's journal (`landsByTurn`); `--no-picks` launches the games as a table did before its
+ * AI seats took what an "up to" or a search is for (game/room/room.mjs, `pilotPicks`), so the two can be compared on the
+ * same seeds. `--backup` also takes the shared decks a hub serves (tests/fixtures/shared-staging-decks.json, Rob's six):
+ *
+ *   node tools/fuzz-live.mjs --backup tests/fixtures/shared-staging-decks.json --decks "D1 Tymna + Kraum|D2 Chulane|D3 Kiora|D4 Felothar"
+ *        --level normal --seeds 1-5 --lands 6 [--no-picks]
+ *
  * Exit 0 when every game is clean, 1 when any is not, 2 on a usage error. The card source is the cloud table's own
  * (cloud/game-room.mjs `tableCards`): a deck with a card the table cannot play is refused by name, as at the table. */
 import {readFileSync, writeFileSync} from "node:fs";
@@ -58,8 +66,14 @@ import {randomLegalPilot} from "../game/engine/pilots/random-legal.mjs";
 const NAMES = ["Rob", "Friend", "AI 2", "AI 3"];
 export const PERSON_TRIES = 50;
 
-/** The decks of a crankmagic-backup file, by name, as the table takes them (crankmagic-table.js `deckForTable`). */
+/** The decks of a crankmagic-backup file, by name, as the table takes them (crankmagic-table.js `deckForTable`); or of the
+    shared decks a hub serves ({decks: [{name, commander, cards}]}, tests/fixtures/shared-staging-decks.json), as they are. */
 export function decksFromBackup(backup, names) {
+  if (backup && !backup.payload && Array.isArray(backup.decks)) return names.map((wanted) => {
+    const deck = backup.decks.find((d) => d.name === wanted);
+    if (!deck) throw new Error(`The shared decks have none named "${wanted}". Its decks: ${backup.decks.map((d) => d.name).join("; ")}.`);
+    return {name: deck.name, commander: [...deck.commander], cards: [...deck.cards]};
+  });
   const state = backup && backup.payload && backup.payload.state;
   if (!backup || backup.format !== "crankmagic-backup" || !state) throw new Error("That file is not a CrankMagic backup (crankmagic-backup, version 1).");
   const cardName = (id) => (state.cards[id] || {}).name;
@@ -133,10 +147,12 @@ export function person(seed) {
     if (now !== turn) {turn = now; taken = new Map();}
     const all = decision.kind === "priority" ? decision.options.find((o) => o.act === "resolve-all") : null;
     if (all) {answer.resolvedAll += 1; return {kind: "answer", choiceId: decision.id, indices: [all.index]};}
-    /* Untap, its mana unspent (game/room/room.mjs, `untapMana`), is a person's second thought, not a move: it is never
-       taken here, and is not among what the coin is tossed over -- so a game picks as it did before it was offered. */
-    const untaps = decision.kind === "priority" ? decision.options.filter((o) => o.act === "undo-mana").length : 0;
-    let a = pilot.answer(untaps ? {...decision, options: decision.options.filter((o) => o.act !== "undo-mana")} : decision);
+    /* Untap, its mana unspent (game/room/room.mjs, `untapMana`), and a land taken back (`takeBackLand`) are a person's second
+       thoughts, not moves: never taken here, and not among what the coin is tossed over -- so a game picks as it did before
+       they were offered. Both come last among the offers, so the rest keep their indices. */
+    const second = (o) => o.act === "undo-mana" || o.act === "undo-land";
+    const untaps = decision.kind === "priority" ? decision.options.filter(second).length : 0;
+    let a = pilot.answer(untaps ? {...decision, options: decision.options.filter((o) => !second(o))} : decision);
     const [one] = a.indices ?? [], option = decision.kind === "priority" && a.indices?.length === 1 ? decision.options?.[one] : null;
     if (option?.act === "activate") {
       const key = `${option.cardId}:${option.label}`, pass = decision.options.find((o) => o.act === "pass");
@@ -307,6 +323,24 @@ export async function checkLeaks(room, storage, matchId, memory, turn) {
   return found;
 }
 
+/** Each seat's lands in play at the end of each of its turns, by seat (`--lands`), read off the match's journal: a land counts
+    for its controller from the zone change that put it onto the battlefield -- played, found by a search, put there by a
+    spell -- to the one that took it off. A seat's turn ends where the next turn's untap step begins, or where the game does. */
+export async function landsByTurn(storage, matchId, cards) {
+  const lands = {}, after = {};
+  let turnOf = null;
+  const close = () => {if (turnOf !== null) (after[turnOf] ??= []).push(lands[turnOf] ?? 0);};
+  for (const key of await storage.list(`match/${matchId}/journal/`)) {
+    const {kind, data} = JSON.parse(await storage.get(key)), f = data?.fields ?? {};
+    if (kind === "GameEventTurnPhase" && f.phase === "UNTAP") {close(); turnOf = f.playerTurn?.playerId ?? null;}
+    if (kind !== "GameEventCardChangeZone" || !(cards(f.card?.name)?.types ?? []).includes("Land")) continue;
+    if (f.to?.zoneType === "Battlefield") lands[f.card.controller] = (lands[f.card.controller] ?? 0) + 1;
+    if (f.from?.zoneType === "Battlefield") lands[f.card.controller] = (lands[f.card.controller] ?? 0) - 1;
+  }
+  close();
+  return after;
+}
+
 /**
  * One seeded game, played to its end. `decks` are table decks ({name, commander, cards}); `humans` the seat indices
  * a person sits in; `reopenEvery`, when set, puts the room away and wakes it from its storage after that many of the
@@ -315,14 +349,16 @@ export async function checkLeaks(room, storage, matchId, memory, turn) {
  * people's longest wait, their answers the rules refused, and the room's tally of refused AI answers.
  */
 export async function playGame({decks, seed, cards, humans = [], levels = [], matchId = `fuzz-${seed}`, pilot, storage = memoryStorage(), turnLimit = 400, reopenEvery = 0, people: answerer = person,
-  replay = false, leaks = false}) {
+  replay = false, leaks = false, picks = true}) {
   /* The pod as the table launches it (game/room/table.mjs): a step with nothing to do passes itself, once every person is
      out the game ends there, a run of identical triggers may resolve at once, a person's cast passes for them, and their own
      end step is asked of them, and a land they tap may be untapped; floating mana and the sources left pay a cast
-     together, and they may yield a turn -- so a wait measured here
+     together, and they may yield a turn, and are not asked to declare blockers with none to declare, and play a land in any step
+     of their own turn, may take one back, and are asked about what is aimed at them -- so a wait measured here
      is one a person at the table has, not the AI seats playing a game out for nobody. */
-  /* `levels`: an AI seat's setting (AI-2), "easy" or "normal", for L1; none, L0. */
-  const pod = {passEmpty: true, endWhenNoPerson: true, resolveAll: true, passAfterCast: true, endAsks: true, untapMana: true, pooledTaps: true, yieldTurn: true, seats: decks.map((d, i) => ({seatId: `s${i}`, name: NAMES[i] || `Seat ${i + 1}`, pilot: humans.includes(i) ? "human" : "house",
+  /* `levels`: an AI seat's setting (AI-2), "easy" or "normal", for L1; none, L0. And its AI seats take what an "up to" or a
+     search is for (`pilotPicks`), unless `picks` is false: a table's games before they did. */
+  const pod = {...(picks ? {pilotPicks: true} : {}), passEmpty: true, endWhenNoPerson: true, resolveAll: true, passAfterCast: true, endAsks: true, untapMana: true, pooledTaps: true, xTaps: true, yieldTurn: true, drawBeat: true, passStack: true, blocksNone: true, landAnyStep: true, takeBackLand: true, askAimed: true, seats: decks.map((d, i) => ({seatId: `s${i}`, name: NAMES[i] || `Seat ${i + 1}`, pilot: humans.includes(i) ? "human" : "house",
     ...(!humans.includes(i) && levels[i] ? {level: levels[i]} : {}), commander: d.commander, cards: d.cards}))};
   const people = Object.fromEntries(humans.map((i) => [`s${i}`, answerer(`person-${seed}-${i}`)]));
   const started = Date.now();
@@ -408,23 +444,32 @@ async function main(argv) {
   const humans = humansSpec ? humansSpec.split(",").map(Number) : [];
   const level = arg("level", null), levels = level ? [0, 1, 2, 3].map((i) => (humans.includes(i) ? null : level)) : [];
   const seeds = seedsFrom(arg("seeds", "1-50"));
+  const landsAt = arg("lands", null) === null ? null : Number(arg("lands")), picks = !argv.includes("--no-picks"), counted = [];
+  if (landsAt !== null && !(Number.isInteger(landsAt) && landsAt > 0)) {console.error("--lands takes a turn number, like 6"); return 2;}
   if (fixed) fixed.forEach((d, i) => console.log(`s${i} ${NAMES[i]} (${humans.includes(i) ? "human" : "house"}): ${d.name}`));
   const rows = [];
   for (const seed of seeds) {
     const decks = fixed ?? decksFromLibrary(seed, {...library, cards: tableCards});
     if (!fixed) console.log(`seed ${seed}: ${decks.map((d, i) => `s${i} ${d.name}`).join(" · ")}`);
-    const {game, exception} = await playSafely({decks, seed, cards: tableCards, humans, levels, replay: argv.includes("--replay"), leaks: argv.includes("--leaks"), ...(fixed ? {} : {matchId: `lib-${seed}`})});
+    const storage = memoryStorage(), matchId = fixed ? `fuzz-${seed}` : `lib-${seed}`;
+    const {game, exception} = await playSafely({decks, seed, cards: tableCards, humans, levels, replay: argv.includes("--replay"), leaks: argv.includes("--leaks"), picks, storage, matchId});
     if (exception) {console.log(`seed ${seed}: threw: ${exception}`); rows.push({seed, ...(fixed ? {} : {decks: decks.map((d) => d.name)}), exception, clean: false}); continue;}
     console.log(describe(game));
+    /* Each seat's lands at the end of its turn `landsAt`; a seat out of the game by then has none counted. */
+    const lands = landsAt === null ? null : Object.fromEntries(Object.entries(await landsByTurn(storage, matchId, tableCards))
+      .filter(([, after]) => after.length >= landsAt).map(([seat, after]) => [`s${seat}`, after[landsAt - 1]]));
+    if (lands) {counted.push(...Object.values(lands)); console.log(`  lands in play after each seat's turn ${landsAt}: ${Object.entries(lands).map(([s, n]) => `${s} ${n}`).join(", ")}`);}
     rows.push({seed, ...(fixed ? {} : {decks: decks.map((d) => d.name)}), status: game.status, result: game.result, turns: game.turns, decisions: game.decisions, ms: game.ms, longestWait: game.longestWait, refusals: game.refusals,
       personRefused: game.personRefused.length, loopsStopped: game.loopsStopped, ...(game.replay ? {replaySame: game.replay.same} : {}), ...(game.leaks ? {leaks: game.leaks, leakChecks: game.leakChecks} : {}),
-      clean: verdict(game).clean});
+      ...(lands ? {lands} : {}), clean: verdict(game).clean});
   }
   const clean = rows.filter((r) => r.clean).length;
   const terms = [argv.includes("--replay") ? "replayed identically" : "", argv.includes("--leaks") ? "no seat sent a card it may not know" : ""].filter(Boolean);
   console.log(`${clean} of ${rows.length} games clean (finished, refusals counted from the match's start, none refused${terms.length ? `, ${terms.join(", ")}` : ""})`);
+  const total = counted.reduce((n, x) => n + x, 0);
+  if (landsAt !== null) console.log(`lands in play after a seat's turn ${landsAt}${picks ? "" : " (--no-picks)"}: ${total} over ${counted.length} seats, ${(total / Math.max(1, counted.length)).toFixed(2)} each`);
   const out = arg("json");
-  if (out) writeFileSync(out, JSON.stringify({...(fixed ? {decks: fixed.map((d) => d.name)} : {library: true}), humans, level, node: process.version, rows}, null, 2));
+  if (out) writeFileSync(out, JSON.stringify({...(fixed ? {decks: fixed.map((d) => d.name)} : {library: true}), humans, level, ...(picks ? {} : {picks}), ...(landsAt !== null ? {landsAt} : {}), node: process.version, rows}, null, 2));
   return clean === rows.length ? 0 : 1;
 }
 

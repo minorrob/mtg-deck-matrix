@@ -1,0 +1,90 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Descent into Avernus",
+  "scenarios": [
+    {
+      "name": "Descent into Avernus: two descent counters a turn; each player gets that many Treasures and is dealt that much",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Descent into Avernus"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Descent into Avernus",
+                "counter": "descent",
+                "count": 2
+              }
+            },
+            {
+              "seat": 0,
+              "life": 38
+            },
+            {
+              "seat": 1,
+              "life": 38
+            },
+            {
+              "seat": 1,
+              "zone": "battlefield",
+              "cards": [
+                "Treasure",
+                "Treasure"
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Descent into Avernus",
+            "counter": "descent",
+            "count": 4
+          }
+        },
+        {
+          "seat": 0,
+          "life": 34
+        },
+        {
+          "seat": 1,
+          "life": 34
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "count": 6
+        }
+      ]
+    }
+  ]
+}

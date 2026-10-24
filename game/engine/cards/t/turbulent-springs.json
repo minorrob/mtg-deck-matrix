@@ -1,0 +1,69 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Turbulent Springs",
+    "oracleId": "9aef7510-9f06-4939-8cae-f71330d1105e",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [
+      "Island",
+      "Mountain"
+    ],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "({T}: Add {U} or {R}.)\nThis land enters tapped unless your opponents control eight or more lands.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "U": 1
+            },
+            {
+              "R": 1
+            }
+          ]
+        }
+      ],
+      "text": "({T}: Add {U} or {R}.)"
+    },
+    {
+      "kind": "replacement",
+      "watches": {
+        "event": "enters",
+        "who": "self",
+        "unless": {
+          "opponentsControl": {
+            "what": "permanent",
+            "types": [
+              "Land"
+            ]
+          },
+          "min": 8
+        }
+      },
+      "change": {
+        "entersTapped": true
+      },
+      "text": "This land enters tapped unless your opponents control eight or more lands."
+    }
+  ]
+}

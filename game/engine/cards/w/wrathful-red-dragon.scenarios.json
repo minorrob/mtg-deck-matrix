@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Wrathful Red Dragon",
   "fixtures": {
-    "Zap": {
+    "Smoke Zap": {
       "types": [
         "Instant"
       ],
@@ -76,7 +76,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Zap"
+            "Smoke Zap"
           ]
         }
       ],
@@ -85,7 +85,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Zap",
+          "cast": "Smoke Zap",
           "targets": [
             {
               "card": "Wrathful Red Dragon",
@@ -142,7 +142,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Zap"
+            "Smoke Zap"
           ]
         }
       ],
@@ -151,7 +151,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Zap",
+          "cast": "Smoke Zap",
           "targets": [
             {
               "card": "Wyrm",

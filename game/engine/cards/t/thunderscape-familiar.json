@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Thunderscape Familiar",
+    "oracleId": "40f6ea6f-71e1-46bd-8d9a-ccb5f437892c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Kavu"
+    ],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "First strike\nBlack spells and green spells you cast cost {1} less to cast.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "first strike",
+      "text": "First strike"
+    },
+    {
+      "kind": "static",
+      "rule": "spells-cost-less",
+      "affects": {
+        "what": "spell",
+        "anyOf": [
+          {
+            "colors": [
+              "B"
+            ]
+          },
+          {
+            "colors": [
+              "G"
+            ]
+          }
+        ]
+      },
+      "amount": 1,
+      "text": "Black spells and green spells you cast cost {1} less to cast."
+    }
+  ]
+}

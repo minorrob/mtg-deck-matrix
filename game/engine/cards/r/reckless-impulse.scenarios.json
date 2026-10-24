@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Reckless Impulse",
   "fixtures": {
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -48,7 +48,7 @@
       "name": "The top two exiled: a land played from exile as the land for the turn, and Shock cast from there at Maya",
       "library": [
         "Mountain",
-        "Shock",
+        "Smoke Shock",
         "Island"
       ],
       "setup": [
@@ -88,7 +88,7 @@
               "zone": "exile",
               "cards": [
                 "Mountain",
-                "Shock"
+                "Smoke Shock"
               ]
             },
             {
@@ -107,7 +107,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "targets": [
             {
               "player": 1
@@ -133,7 +133,7 @@
           "zone": "graveyard",
           "cards": [
             "Reckless Impulse",
-            "Shock"
+            "Smoke Shock"
           ]
         }
       ]
@@ -141,7 +141,7 @@
     {
       "name": "Still playable through the end of Rob's next turn, and not after it",
       "library": [
-        "Shock",
+        "Smoke Shock",
         "Island",
         "Wastes",
         "Wastes",
@@ -191,7 +191,7 @@
             {
               "offers": {
                 "kind": "cast",
-                "card": "Shock"
+                "card": "Smoke Shock"
               },
               "count": 2
             },
@@ -218,7 +218,7 @@
         {
           "offers": {
             "kind": "cast",
-            "card": "Shock"
+            "card": "Smoke Shock"
           },
           "count": 0
         },
@@ -233,7 +233,7 @@
           "seat": 0,
           "zone": "exile",
           "cards": [
-            "Shock",
+            "Smoke Shock",
             "Island"
           ]
         }

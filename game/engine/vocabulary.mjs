@@ -81,9 +81,13 @@ export const PRIMITIVES = Object.freeze({
   permanents: Object.freeze([
     "createToken", "copyPermanent", "becomeCopy", "earthbend", "populate", "unlessPays", "animate", "animateAll", "attach", "gainControl", "setState",
     "phaseOut", "exchangeControl", "incubate",
+    /* The library load's L1: "you get an emblem with ..." (CR 114), an object in the command zone, not a permanent (114.5). */
+    "emblem", "mergePermanent", "ringTempts",
   ]),
   modifiers: Object.freeze([
     "pump", "pumpAll", "alterAttribute", "effectUntil", "grantKeyword", "regenerate",
+    /* Wave 4d L3: removed from combat (CR 506.4; Reconnaissance). */
+    "removeFromCombat",
   ]),
   flow: Object.freeze([
     "modal", "sequence", "repeatFor", "branch", "delayedTrigger", "immediateTrigger", "counterSpell",
@@ -106,7 +110,7 @@ export const TRIGGER_EVENTS = Object.freeze([
   "enters", "dies", "leaves", "exiled",
   "phase", "step", "upkeep", "end step",
   "attacks", "attackers declared", "blocks",
-  "spell cast", "damage dealt", "damage dealt once",
+  "mutates", "spell cast", "damage dealt", "damage dealt once",
   "discarded", "drawn", "land played", "becomes target", "sacrificed", "tapped for mana", "becomes tapped", "cycled",
   "put into graveyard", "left graveyard",
   "counter added", "counter added once", "life gained", "life lost", "token created",
@@ -125,6 +129,8 @@ export const TRIGGER_EVENTS = Object.freeze([
   "transformed",
   /* "When this Class becomes level 2" (CR 716.2a; Caretaker's Talent, Wizard Class; wave 4c). */
   "becomes level",
+  /* "Whenever a permanent becomes untapped" (CR 701.26b; Mesmeric Orb; card load w4d, L2). */
+  "becomes untapped",
 ]);
 
 /** The cost atoms of §12.2. The two symbolic ones are named; the rest are structural. */
@@ -134,11 +140,10 @@ export const COST_ATOMS = Object.freeze([
   "tapUntapped", "reveal", "payLife", "removeAnyCounter", "mill", "draw", "returnToHand",
 ]);
 
-/* §12.2 lists fifty-two named things under a heading that says fifty-three. The list is the part
-   that matters, and not all of it is keywords — see TIER0_CONSTRUCTS. */
+/* §12.2 lists fifty-three named things, including mutate. Not all of them are keywords — see TIER0_CONSTRUCTS. */
 const TIER0_ALL = [
   "flying", "defender", "flash", "vigilance", "lifelink", "equip", "haste", "flashback",
-  "first strike", "trample", "enters with counters", "overload", "reach", "enchant", "deathtouch",
+  "mutate", "first strike", "trample", "enters with counters", "overload", "reach", "enchant", "deathtouch",
   "indestructible", "enters-the-battlefield replacements", "alternate additional cost", "menace",
   "changeling", "class", "cycling", "echo", "crew", "hexproof", "partner", "double strike",
   "escape", "protection", "unearth", "rebound", "evoke", "hideaway", "landwalk", "living weapon",
@@ -168,6 +173,8 @@ export const TIER0_KEYWORDS = Object.freeze(TIER0_ALL.filter((word) => !TIER0_CO
 const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
   /* Train C phase 2, p6-combat: islandwalk (CR 702.14; Meandering Towershell), forestwalk's rule for Islands. */
   "islandwalk",
+  /* Wave 4d L3: nonbasic landwalk (CR 702.14; Trailblazer's Boots), a land without the supertype basic. */
+  "nonbasic landwalk",
   /* M4 phase 3, batch 54: an ability of the card in hand (cards/index.mjs). Batch 58: station (CR 702.184). */
   "ninjutsu", "station",
   /* Batch 60: a Saga's reminder line, the lore counter it enters with (CR 714.3a). */
@@ -198,12 +205,18 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
   "split second", "riot",
   /* Surge (CR 702.117) and freerunning (CR 702.173): alternative costs (keywords/timing.mjs). */
   "surge", "freerunning",
+  /* Dash (CR 702.109; Ragavan, Nimble Pilferer, wave 4d L3): an alternative cost, haste and a return to the hand (rules/stack.mjs). */
+  "dash",
   /* Embalm (CR 702.128): a token copy from the graveyard (cards/index.mjs). */
   "embalm",
   /* Tiered (CR 702.183): each mode its own additional cost (keywords/timing.mjs). */
   "tiered",
+  /* Library load L2: spree (CR 702.172), each mode chosen its own additional cost (keywords/timing.mjs). */
+  "spree",
   /* Suspend (CR 702.62), from the hand (keywords/timing.mjs). */
   "suspend",
+  /* Plot (CR 702.170), from the hand, and the cast on a later turn it allows (library load L5; rules/actions.mjs). */
+  "plot",
   /* Partner with [name] (CR 702.124j): a deck rule and a trigger as it enters (cards/index.mjs). */
   "partner with",
   /* Firebending N (CR 702.189): an attack trigger, its mana kept until end of combat (cards/index.mjs, rules/turn.mjs). */
@@ -238,8 +251,23 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
   /* Wave 4c, k2: delve (CR 702.66a; Treasure Cruise, Dig Through Time), cards of the graveyard exiled to pay generic mana as a
      spell is cast (rules/actions.mjs). */
   "delve",
+  /* Library load L4: bushido (CR 702.45; Hand of Honor), a triggered ability as it blocks or becomes blocked (cards/index.mjs); and
+     saddle (CR 702.171; Bounding Felidar), crew's cost making a Mount saddled until end of turn (cards/index.mjs). */
+  "bushido",
+  "saddle",
   /* And dredge (CR 702.52a; Life from the Loam), a draw replaced from the graveyard, its player's choice (script/effects/zones.mjs). */
-  "dredge"];
+  "dredge",
+  /* Card load w4d L1: mobilize (CR 702.181; Voice of Victory), a triggered ability as it attacks (cards/index.mjs). */
+  "mobilize",
+  /* Wave 4d, L6: kicker (CR 702.33a; Tear Asunder), an optional additional cost paid once at most, and what the spell does then
+     (cards/index.mjs, rules/actions.mjs, rules/stack.mjs). */
+  "kicker",
+  /* And improvise (CR 702.126a; Organic Extinction), artifacts tapped to pay a spell's generic mana, as convoke's creatures
+     are (rules/actions.mjs). */
+  "improvise",
+  /* And cascade (CR 702.85a; Apex Devastator), a cast trigger: cards exiled until a nonland one that costs less, cast free
+     (cards/index.mjs). */
+  "cascade"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

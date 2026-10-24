@@ -29,7 +29,7 @@
         ]
       }
     },
-    "Blaze": {
+    "Smoke Blaze": {
       "types": [
         "Sorcery"
       ],
@@ -205,7 +205,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Blaze"
+            "Smoke Blaze"
           ]
         }
       ],
@@ -226,7 +226,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Blaze",
+          "cast": "Smoke Blaze",
           "targets": [
             {
               "player": 1
@@ -299,7 +299,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Blaze",
+            "Smoke Blaze",
             "Spark"
           ]
         }
@@ -321,7 +321,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Blaze",
+          "cast": "Smoke Blaze",
           "targets": [
             {
               "player": 1
@@ -408,7 +408,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Blaze"
+            "Smoke Blaze"
           ]
         },
         {
@@ -444,7 +444,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Blaze",
+          "cast": "Smoke Blaze",
           "targets": [
             {
               "player": 1
@@ -491,7 +491,7 @@
           "zone": "graveyard",
           "cards": [
             "Colorstorm Stallion",
-            "Blaze"
+            "Smoke Blaze"
           ]
         },
         {

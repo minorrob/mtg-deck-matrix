@@ -30,7 +30,7 @@
       "power": 4,
       "toughness": 4
     },
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -260,7 +260,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Shock"
+            "Smoke Shock"
           ]
         }
       ],
@@ -270,7 +270,7 @@
           "seat": 1
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "seat": 1,
           "targets": [
             {
@@ -298,7 +298,7 @@
         },
         {
           "choose": [
-            "Shock, a spell (Maya's)"
+            "Smoke Shock, a spell (Maya's)"
           ]
         },
         {

@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Deflection",
+    "oracleId": "ec7ae9ed-dc5b-47ed-a4ad-086f3c7c377c",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Change the target of target spell with a single target.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "spell",
+          "singleTarget": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "changeTargets",
+          "spells": {
+            "target": 0
+          }
+        }
+      ],
+      "text": "Change the target of target spell with a single target."
+    }
+  ]
+}

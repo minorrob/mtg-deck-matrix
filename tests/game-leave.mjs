@@ -159,7 +159,9 @@ async function stepRoom(room, n, people) {
   const by = room.waitingOn === "s0" ? "s1" : "s0";
   await room.end(by);
   const v = room.view("s0");
-  eq([v.status, v.result, v.waitingOn, v.decision], ["finished", {winner: null, reason: "ended early", endedBy: by}, null, null], "End game finishes the game for everyone, with no winner, recorded as ended early and by whom");
+  const {ending, ...words} = v.result;
+  eq([v.status, words, v.waitingOn, v.decision], ["finished", {winner: null, reason: "ended early", endedBy: by}, null, null], "End game finishes the game for everyone, with no winner, recorded as ended early and by whom");
+  eq([ending.kind, ending.seatId], ["ended", by], "and its `ending` says so too (tests/room-ending.mjs)");
   await refuses(room.act("s0", {actionId: randomUUID(), revision: v.revision, kind: "answer", choiceId: "x", indices: [0]}), 409, /over/, "nothing more is played");
   await refuses(room.end("s1"), 409, /over/, "and it ends once");
   eq((await openRoom({storage: s3, matchId: "end", cards})).view("s1").result.reason, "ended early", "a woken room still says it ended early");
@@ -212,7 +214,32 @@ async function playingTable(storage = memoryStorage()) {
   eq((await t.currentRoom()).view("s0").departures, {s1: "timed-out"}, "at five minutes she concedes, recorded as timed out, which her record shows as not finished");
   eq([(await t.view(ROB)).away, (await t.view(ROB)).seats[1].occupied], [[], false], "and the clock is gone with her");
   await t.dropped(0, now);
-  eq((await t.view(ROB)).away.length, 1, "the host dropping starts the host's clock too");
+  eq((await t.view(ROB)).away, [], "with Maya gone, only an AI is left at the table: the host dropping starts no clock (ROB-170)");
+  t = await playingTable();
+  await t.dropped(0, now);
+  eq((await t.view(ROB)).away, [{seatId: 0, until: now + AWAY_LIMIT}], "while Maya is at the table, the host dropping starts the host's clock too");
+}
+
+/* 3b. ALONE WITH THE AIs (Linear ROB-170): a person whose only company is AI seats holds nobody up, so their game waits for
+   them, with no clock -- and comes back as they left it. Their Concede still ends it. */
+{
+  const t = tableOn(memoryStorage(), {cards, random});
+  await t.create({tableId: `tbl${String(seq).padStart(8, "0")}`, host: ROB, hostName: "Rob", seats: [{kind: "ai", name: "Bot"}, {kind: "ai", name: "Bot 2"}]});
+  await t.deck(ROB, 0, deck("sa"), now); await t.deck(ROB, 1, deck("sb"), now); await t.deck(ROB, 2, deck("sc"), now);
+  await t.ready(ROB, true, now);
+  await t.start(ROB, now);
+  await t.tick(now + 10000);
+  const before = (await t.currentRoom()).view("s0");
+  await t.dropped(0, now + 20000);
+  eq([(await t.view(ROB)).away, await t.nextAlarm(now + 20000)], [[], null], "Rob alone with two AIs drops: no five minutes, and no alarm set for them");
+  await t.tick(now + 20000 + 10 * AWAY_LIMIT);
+  const after = (await t.currentRoom()).view("s0");
+  eq([after.departures, after.status, (await t.view(ROB)).seats[0].occupied], [{}, "playing", true], "fifty minutes on, he has not been conceded: the game is still on and his seat is his");
+  eq([after.revision, after.decision && after.decision.id], [before.revision, before.decision && before.decision.id], "at the same revision, with the same question waiting for him");
+  await t.back(0, now + 20000 + 10 * AWAY_LIMIT);
+  eq((await t.view(ROB)).seats[0].connected, true, "and he is back, the game as he left it");
+  const ended = await t.concede(ROB, now + 20000 + 10 * AWAY_LIMIT);
+  eq(ended.phase, "rematch", "his Concede still ends it: with no person left, the table moves on to Play again");
 }
 
 /* 4. THE OBJECT: one alarm, two clocks, and the others told. */
@@ -274,7 +301,9 @@ async function playingTable(storage = memoryStorage()) {
   const room = await openRoom({storage, matchId: "nobody", cards});  /* woken first: the rule is kept with the room */
   await room.leave("s0", "conceded");
   const v = room.view("s0");
-  eq([v.status, v.result, v.departures], ["finished", {winner: null, reason: NO_PERSON_REASON, endedBy: null}, {s0: "conceded"}], "the only person concedes: the game ends there, with two AI seats still in it, and says why");
+  eq([v.status, v.result, v.departures], ["finished", {winner: null, reason: NO_PERSON_REASON, endedBy: null, ending: {kind: "conceded", seatId: "s0", reason: "conceded",
+    seats: [{seatId: "s0", outcome: "conceded", reason: "conceded"}, {seatId: "s1", outcome: "playing", reason: null}, {seatId: "s2", outcome: "playing", reason: null}]}}, {s0: "conceded"}],
+  "the only person concedes: the game ends there, with two AI seats still in it, and says why -- in words, and as data: conceded (tests/room-ending.mjs)");
   eq(room.history.at(-1).text, "Every person is out of the game, so it ends here · not finished", "the history says so too");
   await refuses(room.end("s0"), 409, /over/, "nothing more is played, or ended");
   const meta = await createMatchStore(storage, "nobody").loadMatch();
@@ -293,6 +322,7 @@ async function playingTable(storage = memoryStorage()) {
     const w = r.view("s0"), active = w.state.players.filter((p) => p.health.status === "active").length;
     if (w.result.reason === NO_PERSON_REASON) {
       ok(w.state.players[0].health.status === "lost" && !w.departures.s0 && active >= 2, `game ko${n}: Rob is knocked out with ${active} AI seats still in, and the game ends there`);
+      eq([w.result.ending.kind, w.result.ending.seatId, w.result.ending.reason], ["eliminated", "s0", w.state.players[0].health.lossReason], `and its \`ending\` says Rob was eliminated, and why (${w.result.ending.reason}), not that he left`);
       knocked = w;
     } else ok(w.result.reason === "last player standing", `game ko${n}: it ended naturally first (${w.result.winner} won)`);
   }
@@ -305,7 +335,7 @@ async function playingTable(storage = memoryStorage()) {
   /* The G1 harness (tools/fuzz-live.mjs) plays its games as the table launches them, or the person's waits it measures
      would include the AI seats playing a game out for nobody, which no person at the table waits through. */
   const beats = (p) => ({drawBeat: p.drawBeat, passEmpty: p.passEmpty, endWhenNoPerson: p.endWhenNoPerson, resolveAll: p.resolveAll, passAfterCast: p.passAfterCast,
-    endAsks: p.endAsks, untapMana: p.untapMana, pooledTaps: p.pooledTaps, passStack: p.passStack, yieldTurn: p.yieldTurn});
+    endAsks: p.endAsks, untapMana: p.untapMana, pooledTaps: p.pooledTaps, xTaps: p.xTaps, passStack: p.passStack, yieldTurn: p.yieldTurn});
   const harness = memoryStorage();
   await playGame({decks: ["ha", "hb", "hc"].map((tag) => ({name: tag, ...deck(tag)})), seed: 1, cards, humans: [0], matchId: "harness", storage: harness, turnLimit: 1});
   eq(beats((await createMatchStore(harness, "harness").loadMatch()).pod), beats(launched), "and the G1 harness launches its games with the table's beats: the empty step passed, the game ending once every person is out, Resolve all, the cast that passes, the end step asked, Untap, pooled taps, Yield turn -- and no held draw");
@@ -315,4 +345,4 @@ async function playingTable(storage = memoryStorage()) {
   eq(ended.phase, "rematch", "the last person concedes: the game ends, and the table moves on to the rematch question");
 }
 
-console.log(`game-leave: ${checks} checks passed — ${conceded} concessions fuzzed through the engine, End game for everyone by any person, the five minutes a dropped player has, recorded as not finished, and the game ending once every person is out.`);
+console.log(`game-leave: ${checks} checks passed — ${conceded} concessions fuzzed through the engine, End game for everyone by any person, the five minutes a dropped player has when another person waits on them (and none alone with AIs), recorded as not finished, and the game ending once every person is out.`);

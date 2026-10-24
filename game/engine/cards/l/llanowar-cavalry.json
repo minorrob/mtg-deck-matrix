@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Llanowar Cavalry",
+    "oracleId": "3e6e70eb-6638-4aa6-997b-90f5810e12a0",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Soldier"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": 1,
+    "toughness": 4
+  },
+  "oracleText": "{W}: This creature gains vigilance until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{W}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Vigilance"
+          ]
+        }
+      ],
+      "text": "{W}: This creature gains vigilance until end of turn."
+    }
+  ]
+}

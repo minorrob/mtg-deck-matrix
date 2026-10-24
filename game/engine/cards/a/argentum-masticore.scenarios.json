@@ -82,7 +82,7 @@
         ]
       }
     },
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -343,7 +343,7 @@
           "zone": "hand",
           "cards": [
             "Gold Bolt",
-            "Shock"
+            "Smoke Shock"
           ]
         },
         {
@@ -389,7 +389,7 @@
             {
               "offers": {
                 "kind": "cast",
-                "card": "Shock",
+                "card": "Smoke Shock",
                 "seat": 1
               },
               "count": 4

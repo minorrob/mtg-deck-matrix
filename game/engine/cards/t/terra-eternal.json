@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Terra Eternal",
+    "oracleId": "a5ce8125-da02-48b0-83cd-871c934352b0",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "All lands have indestructible.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Land"
+        ]
+      },
+      "apply": {
+        "addKeywords": [
+          "Indestructible"
+        ]
+      },
+      "text": "All lands have indestructible."
+    }
+  ]
+}

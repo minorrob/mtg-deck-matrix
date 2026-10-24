@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Day of Destiny",
+    "oracleId": "64247fcb-0e1b-48c9-bdac-769d7edd8d1d",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Legendary creatures you control get +2/+2.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "controller": "you",
+        "types": [
+          "Creature"
+        ],
+        "supertypes": [
+          "Legendary"
+        ]
+      },
+      "apply": {
+        "power": 2,
+        "toughness": 2
+      },
+      "text": "Legendary creatures you control get +2/+2."
+    }
+  ]
+}

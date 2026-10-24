@@ -1,0 +1,810 @@
+{
+ "schema": "library-load-lane@1",
+ "lane": "L3-combat",
+ "theme": "combat",
+ "label": "Combat and equipment: attack and block triggers and requirements, evasion, protection, equip, saddle, bushido",
+ "source": {
+  "collection": "collection-2026-10-21.json",
+  "workbook": "Backup_Load_-_CrankMagic_-_2026-10-21.xlsx",
+  "decks": [
+   "D1",
+   "D2",
+   "D3",
+   "D4",
+   "D5",
+   "D6",
+   "D7",
+   "S1-D1",
+   "S1-D2",
+   "S1-D3",
+   "S1-D4",
+   "S1-D5",
+   "S1-D6",
+   "S2-D1",
+   "S2-D2",
+   "S2-D3",
+   "S2-D4",
+   "S2-D5",
+   "S2-D6",
+   "G0-D1",
+   "G0-D2",
+   "G0-D3",
+   "G0-D4",
+   "G1-D1",
+   "G1-D2",
+   "G1-D3",
+   "G1-D4",
+   "CJ1",
+   "CJ2",
+   "CJ3",
+   "CJ4",
+   "CJ5",
+   "HG1",
+   "HG2"
+  ],
+  "liveDecks": [
+   "D1",
+   "D2",
+   "D3",
+   "D4",
+   "D5",
+   "D6",
+   "D7"
+  ],
+  "top": 185,
+  "candidates": {
+   "pool": 29551,
+   "candidate": 2643,
+   "refused": 0,
+   "blocked": 6,
+   "vetoed": 18,
+   "unknown": 25793,
+   "structure": 1091,
+   "oneSentenceShort": 12544
+  }
+ },
+ "cards": [
+  {
+   "name": "Bludgeon Brawl",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Each noncreature, non-Equipment artifact is an Equipment with equip {X} and \"Equipped creature gets +X/+0,\" where X is that artifact's mana value."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Ragavan, Nimble Pilferer",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 393,
+   "type": "Legendary Creature — Monkey Pirate",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever Ragavan deals combat damage to a player, create a Treasure token and exile the top card of that player's library.",
+    "Until end of turn, you may cast that card.",
+    "Dash {1}{R} (You may cast this spell for its dash cost. If you do, it gains haste, and it's returned from the battlefield to its owner's hand at the beginning of the next end step.)"
+   ],
+   "needs": [
+    "option:MayPlay",
+    "option:RememberChanged",
+    "option:RememberObjects",
+    "keyword:Dash"
+   ]
+  },
+  {
+   "name": "Shizo, Death's Storehouse",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 663,
+   "type": "Legendary Land",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{B}, {T}: Target legendary creature gains fear until end of turn. (It can't be blocked except by artifact creatures and/or black creatures.)"
+   ],
+   "needs": []
+  },
+  {
+   "name": "Mossborn Hydra",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 696,
+   "type": "Creature — Elemental Hydra",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Landfall — Whenever a land you control enters, double the number of +1/+1 counters on this creature."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Kappa Cannoneer",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 702,
+   "type": "Artifact Creature — Turtle Warrior",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Improvise (Your artifacts can help cast this spell. Each artifact you tap after you're done activating mana abilities pays for {1}.)",
+    "Whenever this creature or another artifact you control enters, put a +1/+1 counter on this creature.",
+    "It can't be blocked this turn."
+   ],
+   "needs": [
+    "option:RememberObjects",
+    "keyword:Improvise"
+   ]
+  },
+  {
+   "name": "Hammer of Nazahn",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 726,
+   "type": "Legendary Artifact — Equipment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever Hammer of Nazahn or another Equipment you control enters, you may attach that Equipment to target creature you control."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Trailblazer's Boots",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 768,
+   "type": "Artifact — Equipment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Equipped creature has nonbasic landwalk. (It can't be blocked as long as defending player controls a nonbasic land.)"
+   ],
+   "needs": []
+  },
+  {
+   "name": "Curse of Opulence",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 773,
+   "type": "Enchantment — Aura Curse",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Enchant player",
+    "Whenever enchanted player is attacked, create a Gold token.",
+    "Each opponent attacking that player does the same. (A Gold token is an artifact with \"Sacrifice this token: Add one mana of any color.\")"
+   ],
+   "needs": []
+  },
+  {
+   "name": "Colossus Hammer",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 779,
+   "type": "Artifact — Equipment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Equipped creature gets +10/+10 and loses flying."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Kodama of the West Tree",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 790,
+   "type": "Legendary Creature — Spirit",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Modified creatures you control have trample. (Equipment, Auras you control, and counters are modifications.)",
+    "Whenever a modified creature you control deals combat damage to a player, search your library for a basic land card, put it onto the battlefield tapped, then shuffle."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Grim Hireling",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 862,
+   "type": "Creature — Tiefling Rogue",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever one or more creatures you control deal combat damage to a player, create two Treasure tokens.",
+    "{B}, Sacrifice X Treasures: Target creature gets -X/-X until end of turn.",
+    "Activate only as a sorcery."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Bear Umbra",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 867,
+   "type": "Enchantment — Aura",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Enchanted creature gets +2/+2 and has \"Whenever this creature attacks, untap all lands you control.\""
+   ],
+   "needs": []
+  },
+  {
+   "name": "Excalibur, Sword of Eden",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 870,
+   "type": "Legendary Artifact — Equipment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "This spell costs {X} less to cast, where X is the total mana value of historic permanents you control. (Artifacts, legendaries, and Sagas are historic.)"
+   ],
+   "needs": []
+  },
+  {
+   "name": "Chatterfang, Squirrel General",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 893,
+   "type": "Legendary Creature — Squirrel Warrior",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "If one or more tokens would be created under your control, those tokens plus that many 1/1 green Squirrel creature tokens are created instead.",
+    "{B}, Sacrifice X Squirrels: Target creature gets +X/-X until end of turn."
+   ],
+   "needs": [
+    "api:ReplaceToken",
+    "replacement:CreateToken",
+    "keyword:Landwalk"
+   ]
+  },
+  {
+   "name": "Ram Through",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 895,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "If the creature you control has trample, excess damage is dealt to that creature's controller instead."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Reconnaissance",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 899,
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{0}: Remove target attacking creature you control from combat and untap it. (If you activate during end of combat, the creature will untap after it deals combat damage.)"
+   ],
+   "needs": [
+    "api:RemoveFromCombat"
+   ]
+  },
+  {
+   "name": "Moraug, Fury of Akoum",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 912,
+   "type": "Legendary Creature — Minotaur Warrior",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Each creature you control gets +1/+0 for each time it has attacked this turn.",
+    "Landfall — Whenever a land you control enters, if it's your main phase, there's an additional combat phase after this phase.",
+    "At the beginning of that combat, untap all creatures you control."
+   ],
+   "needs": [
+    "count:CardNumAttacksThisTurn"
+   ]
+  },
+  {
+   "name": "Steelshaper's Gift",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 918,
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Search your library for an Equipment card, reveal that card, put it into your hand, then shuffle."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Fog",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 921,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Prevent all combat damage that would be dealt this turn."
+   ],
+   "needs": [
+    "api:Fog"
+   ]
+  },
+  {
+   "name": "Noxious Gearhulk",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 926,
+   "type": "Artifact Creature — Construct",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature enters, you may destroy another target creature.",
+    "If a creature is destroyed this way, you gain life equal to its toughness."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Champion's Helm",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 928,
+   "type": "Artifact — Equipment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "As long as equipped creature is legendary, it has hexproof. (It can't be the target of spells or abilities your opponents control.)"
+   ],
+   "needs": []
+  },
+  {
+   "name": "Drakuseth, Maw of Flames",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 963,
+   "type": "Legendary Creature — Dragon",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever Drakuseth attacks, Drakuseth deals 4 damage to any target and 3 damage to each of up to two other targets."
+   ],
+   "needs": [
+    "api:DamageResolve"
+   ]
+  },
+  {
+   "name": "Kalonian Hydra",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 966,
+   "type": "Creature — Hydra",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever this creature attacks, double the number of +1/+1 counters on each creature you control."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Gisela, Blade of Goldnight",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 967,
+   "type": "Legendary Creature — Angel",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "If a source would deal damage to an opponent or a permanent an opponent controls, that source deals double that damage to that player or permanent instead.",
+    "If a source would deal damage to you or a permanent you control, prevent half that damage, rounded up."
+   ],
+   "needs": [
+    "api:ReplaceDamage"
+   ]
+  },
+  {
+   "name": "Trouble in Pairs",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 968,
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "If an opponent would begin an extra turn, that player skips that turn instead.",
+    "Whenever an opponent attacks you with two or more creatures, draws their second card each turn, or casts their second spell each turn, you draw a card."
+   ],
+   "needs": [
+    "replacement:BeginTurn"
+   ]
+  },
+  {
+   "name": "Ghalta, Stampede Tyrant",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 988,
+   "type": "Legendary Creature — Elder Dinosaur",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When Ghalta enters, put any number of creature cards from your hand onto the battlefield."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Yawgmoth, Thran Physician",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 989,
+   "type": "Legendary Creature — Human Cleric",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Protection from Humans",
+    "Pay 1 life, Sacrifice another creature: Put a -1/-1 counter on up to one target creature and draw a card.",
+    "{B}{B}, Discard a card: Proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)"
+   ],
+   "needs": [
+    "keyword:Protection"
+   ]
+  },
+  {
+   "name": "Stoneforge Mystic",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1016,
+   "type": "Creature — Kor Artificer",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature enters, you may search your library for an Equipment card, reveal it, put it into your hand, then shuffle.",
+    "{1}{W}, {T}: You may put an Equipment card from your hand onto the battlefield."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Xenagos, God of Revels",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1017,
+   "type": "Legendary Enchantment Creature — God",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "As long as your devotion to red and green is less than seven, Xenagos isn't a creature.",
+    "At the beginning of combat on your turn, another target creature you control gains haste and gets +X/+X until end of turn, where X is that creature's power."
+   ],
+   "needs": []
+  }
+ ],
+ "review": [
+  {
+   "name": "Noble Hierarch",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 748,
+   "type": "Creature — Human Druid",
+   "layout": "normal"
+  },
+  {
+   "name": "Stonecoil Serpent",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1462,
+   "type": "Artifact Creature — Snake",
+   "layout": "normal"
+  },
+  {
+   "name": "Malcolm, Alluring Scoundrel",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1570,
+   "type": "Legendary Creature — Siren Pirate",
+   "layout": "normal"
+  },
+  {
+   "name": "Ureni of the Unwritten",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1593,
+   "type": "Legendary Creature — Spirit Dragon",
+   "layout": "normal"
+  },
+  {
+   "name": "Voltaic Key",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1774,
+   "type": "Artifact",
+   "layout": "normal"
+  },
+  {
+   "name": "Koma, World-Eater",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1851,
+   "type": "Legendary Creature — Serpent",
+   "layout": "normal"
+  },
+  {
+   "name": "Adventurer's Inn",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1857,
+   "type": "Land — Town",
+   "layout": "normal"
+  },
+  {
+   "name": "Explosive Vegetation",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1911,
+   "type": "Sorcery",
+   "layout": "normal"
+  },
+  {
+   "name": "Snow-Covered Swamp",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1922,
+   "type": "Basic Snow Land — Swamp",
+   "layout": "normal"
+  },
+  {
+   "name": "Faerie Seer",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2002,
+   "type": "Creature — Faerie Wizard",
+   "layout": "normal"
+  },
+  {
+   "name": "Erebor Flamesmith",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2071,
+   "type": "Creature — Dwarf Artificer",
+   "layout": "normal"
+  },
+  {
+   "name": "Burglar Rat",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2092,
+   "type": "Creature — Rat",
+   "layout": "normal"
+  },
+  {
+   "name": "Crash Through",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2118,
+   "type": "Sorcery",
+   "layout": "normal"
+  },
+  {
+   "name": "Zhalfirin Void",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2206,
+   "type": "Land",
+   "layout": "normal"
+  },
+  {
+   "name": "Curious Altisaur",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2269,
+   "type": "Creature — Dinosaur",
+   "layout": "normal"
+  },
+  {
+   "name": "Overrun",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2273,
+   "type": "Sorcery",
+   "layout": "normal"
+  },
+  {
+   "name": "Blade Historian",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2279,
+   "type": "Creature — Human Cleric",
+   "layout": "normal"
+  },
+  {
+   "name": "Berserkers' Onslaught",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2365,
+   "type": "Enchantment",
+   "layout": "normal"
+  },
+  {
+   "name": "Hyena Umbra",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2391,
+   "type": "Enchantment — Aura",
+   "layout": "normal"
+  },
+  {
+   "name": "Tormented Soul",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2494,
+   "type": "Creature — Spirit",
+   "layout": "normal"
+  },
+  {
+   "name": "Argentum Armor",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2499,
+   "type": "Artifact — Equipment",
+   "layout": "normal"
+  },
+  {
+   "name": "Agent Frank Horrigan",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2852,
+   "type": "Legendary Creature — Mutant Warrior",
+   "layout": "normal"
+  },
+  {
+   "name": "Copper Myr",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2920,
+   "type": "Artifact Creature — Myr",
+   "layout": "normal"
+  },
+  {
+   "name": "Vitalize",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2993,
+   "type": "Instant",
+   "layout": "normal"
+  },
+  {
+   "name": "Shock",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 3071,
+   "type": "Instant",
+   "layout": "normal"
+  },
+  {
+   "name": "Seal of Cleansing",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 3199,
+   "type": "Enchantment",
+   "layout": "normal"
+  }
+ ]
+}

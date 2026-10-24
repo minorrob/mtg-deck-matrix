@@ -24,6 +24,15 @@
  * kills the attacker and survives, or when the damage coming in would be lethal. It keeps a hand of two to
  * five lands. These are heuristics on the visible board.
  *
+ * WHAT IT MAY TAKE NONE OF (`picks`; Linear ROB-164, found by the Play readiness evaluation of 2026-10-19: a person and three AIs).
+ * A choice whose least answer is none -- "search your library for up to two basic land cards", a search for a card with a
+ * quality, which may fail to find (CR 701.23b), proliferate's "any number" -- used to fall through to its first `min`
+ * options: none. So an AI seat cracked Evolving Wilds for nothing and proliferated nothing. With `picks` it takes what
+ * such a choice is for: a search, as many as it may, the lands of the colors it lacks or the costliest card it could cast
+ * soon; proliferate, its own counters that help it and another player's that hurt them; any other, the permanents and
+ * players on the side it is meant for. A match launched before `picks` keeps the old answers, so it replays as it was
+ * played (game/room/room.mjs, `pilotPicks`).
+ *
  * THIS IS L0, the floor of the house pilot's levels of decision (AI-2, docs/plan-to-done-2026-09-30.md). L1 scores the
  * choices that decide games -- the mana it spends, where a spell is aimed, the activated abilities worth their cost
  * (which this pilot never takes), attacks against the swing back, blocks, the opening hand's odds -- and answers the
@@ -42,6 +51,8 @@ export const HOUSE_PILOT_ID = "house-pilot";
  * A CHOICE'S REQUIREMENTS, MET (CR 508.1d: "other Goblin creatures you control attack each combat if able"): `indices`, with
  * as few options added as the record's `requires` asks -- for each, at least `least` of the options whose `by` value is
  * one of `values`, each value once -- keeping to `exclusiveBy` and to `capped` (no more at a planeswalker than it allows).
+ * A value may need more than one option (`per`): "must be blocked if able" asks two blockers of an attacker with menace
+ * (CR 509.1c, 702.111b; rules/combat.mjs, blockRequirements), each blocker blocking once (`exclusiveBy`).
  * And to `budget`, what the player can pay for (an attack tax, CR 508.1d, 508.1h): the picks it is given are kept, in
  * order, while they fit it, and what it adds fits it.
  * A player the answerer prefers (`prefer`, the house pilot's defender) is tried first, then players before planeswalkers,
@@ -51,9 +62,13 @@ export const HOUSE_PILOT_ID = "house-pilot";
 export function meetRequirements(choice, indices, prefer = null) {
   const options = choice.options ?? [];
   const requirements = Array.isArray(choice.requires) ? choice.requires : [];
-  const room = (list, option) => withinBudget(choice, [...list, option.index]) && (option.planeswalkerId === undefined
-    || choice.capped?.most?.[option.planeswalkerId] === undefined
-    || list.filter((i) => options[i]?.planeswalkerId === option.planeswalkerId).length < choice.capped.most[option.planeswalkerId]);
+  /* `capped` by its own field: a planeswalker an attack may name (CR 508.1c; the field unsaid, as before), an attacker a
+     blocker may (509.1b). */
+  const cap = (option) => (choice.capped ? option[choice.capped.by ?? "planeswalkerId"] : undefined);
+  const room = (list, option) => withinBudget(choice, [...list, option.index])
+    && (choice.exclusiveBy === undefined || !list.some((i) => options[i]?.[choice.exclusiveBy] === option[choice.exclusiveBy]))
+    && (cap(option) === undefined || choice.capped.most?.[cap(option)] === undefined
+      || list.filter((i) => options[i] && cap(options[i]) === cap(option)).length < choice.capped.most[cap(option)]);
   const costs = (o) => (choice.budget && (o[choice.budget.by] ?? 0) > 0 ? 1 : 0);
   const rank = (o) => (o.planeswalkerId === undefined ? (prefer !== null && o.defenderId === prefer ? 0 : 1) : 2) * 2 + costs(o);
   indices = keptWithin(choice, indices);
@@ -62,19 +77,26 @@ export function meetRequirements(choice, indices, prefer = null) {
   const solve = (n, selected) => {
     if (n >= requirements.length) return selected;
     const need = requirements[n];
-    const taken = new Set(selected.map((i) => options[i]?.[need.by]));
-    const missing = (need.values ?? []).filter((value) => !taken.has(value));
+    const per = (value) => need.per?.[value] ?? 1;
+    const count = (list, value) => list.filter((i) => options[i]?.[need.by] === value).length;
+    const missing = (need.values ?? []).filter((value) => count(selected, value) < per(value));
     const short = (need.least ?? 0) - ((need.values ?? []).length - missing.length);
-    /* The first way that fits, depth first, a value left out only when the rest can still make up the number. */
+    /* The first way that fits, depth first, a value left out only when the rest can still make up the number: each value's
+       options taken, as many as it still needs, each with room beside those before it. */
     const fill = (k, list, left) => {
       if (left <= 0) return solve(n + 1, list);
       if (missing.length - k < left) return null;
-      const ways = options.filter((o) => o[need.by] === missing[k] && room(list, o)).sort((a, b) => rank(a) - rank(b) || a.index - b.index);
-      for (const way of ways) {
-        const rest = fill(k + 1, [...list, way.index], left - 1);
-        if (rest) return rest;
-      }
-      return fill(k + 1, list, left);
+      const ways = options.filter((o) => o[need.by] === missing[k]).sort((a, b) => rank(a) - rank(b) || a.index - b.index);
+      const take = (list2, from, still) => {
+        if (still <= 0) return fill(k + 1, list2, left - 1);
+        for (let j = from; j < ways.length; j += 1) {
+          if (list2.includes(ways[j].index) || !room(list2, ways[j])) continue;
+          const rest = take([...list2, ways[j].index], j + 1, still - 1);
+          if (rest) return rest;
+        }
+        return null;
+      };
+      return take(list, 0, per(missing[k]) - count(list, missing[k])) ?? fill(k + 1, list, left);
     };
     return fill(0, selected, short);
   };
@@ -103,11 +125,31 @@ const MAIN = ["MAIN1", "MAIN2"];
 const isLand = (card) => (card?.types ?? []).includes("Land");
 const isCreature = (card) => (card?.types ?? []).includes("Creature");
 
+/* THE MANA A CARD MAKES, read off the card as anyone reads it: what each of its mana abilities says it adds (`produces`, one
+   way or a list of them; a basic land type's is written there too, CR 305.6), all five for "one mana of any color", and C
+   for colorless. What a land found by a search would give; the room's public facts carry it as `makes` (game/room/room.mjs).
+   Pure, over a definition. */
+const MANA = ["W", "U", "B", "R", "G", "C"];
+export function manaColors(card) {
+  const made = new Set();
+  for (const ability of card?.abilities ?? []) {
+    if (ability.kind !== "mana") continue;
+    if (ability.anyColor) for (const color of MANA.slice(0, 5)) made.add(color);
+    for (const way of [ability.produces ?? []].flat()) for (const color of Object.keys(way ?? {})) made.add(color);
+  }
+  return MANA.filter((color) => made.has(color));
+}
+/* Counters that cost the one who has them: a negative one (CR 122.1a), poison (CR 122.1f), stun (CR 122.1d), finality
+   (CR 122.1h), and the kinds a card counts against its holder. Any other kind is its holder's: +1/+1, loyalty, charge, lore. */
+const HARMFUL = new Set(["poison", "stun", "finality", "age", "burden", "doom", "rad", "depletion", "bounty"]);
+const harmful = (kind) => kind.startsWith("-") || HARMFUL.has(kind);
+
 /**
- * @param {{seat: number, cards?: (name: string) => ?{manaValue?: number, types?: string[], power?: number, toughness?: number}}} options
- *   `cards` answers public questions about a named card; without it the pilot plays what it can see.
+ * @param {{seat: number, cards?: (name: string) => ?{manaValue?: number, types?: string[], power?: number, toughness?: number}, picks?: boolean}} options
+ *   `cards` answers public questions about a named card; without it the pilot plays what it can see. `picks`: it takes what
+ *   a choice it may answer with none is for (above); without it, none.
  */
-export function housePilot({seat, cards = () => null} = {}) {
+export function housePilot({seat, cards = () => null, picks = false} = {}) {
   if (!Number.isInteger(seat) || seat < 0) throw new Error("A house pilot sits in one seat");
   const known = (name) => (name ? cards(name) : null) ?? null;
   const manaValue = (name) => known(name)?.manaValue ?? Infinity;
@@ -152,6 +194,93 @@ export function housePilot({seat, cards = () => null} = {}) {
       out.push(index);
     }
     return out;
+  }
+
+  /* ---- What it takes when it may take none (`picks`) ---- */
+
+  /* Its permanents, wherever their owners' battlefields list them: the view lists a permanent under its owner. */
+  const mine = (view) => (view.players ?? []).flatMap((p) => zone(p, "Battlefield")).filter((c) => c.controller === seat);
+  const makes = (name) => known(name)?.makes ?? manaColors(known(name));
+  /* An option's card by name: as the view shows it, or as the option says it ("Bear, in your graveyard", a search of two zones). */
+  const nameOf = (view, option) => (view.players ?? []).flatMap((p) => Object.values(p.zones ?? {}).flatMap((z) => z.cards ?? []))
+    .find((c) => c.cardId === option.cardId && c.name)?.name ?? String(option.label ?? "").replace(/, in your [a-z ]+$/, "");
+  /* Lands, best first: each the one making most of the colors its hand and commanders cost and nothing of its own makes yet,
+     then most of those it needs at all; one taken counts as made, so the next brings another color. */
+  function landOrder(view, self, choice, indices) {
+    const need = Object.fromEntries(MANA.map((color) => [color, 0]));
+    for (const c of [...zone(self, "Hand"), ...zone(self, "Command").filter((c) => c.commander)])
+      for (const color of known(c.name)?.colors ?? []) need[color] = (need[color] ?? 0) + (c.commander ? 2 : 1);
+    const have = new Set(mine(view).flatMap((c) => makes(c.name)));
+    const left = [...indices], order = [];
+    while (left.length) {
+      const score = (i) => makes(nameOf(view, choice.options[i])).reduce((n, color) => n + need[color] * (have.has(color) ? 1 : 4), 0);
+      const best = left.reduce((top, i) => (score(i) > score(top) ? i : top));
+      order.push(best);
+      left.splice(left.indexOf(best), 1);
+      for (const color of makes(nameOf(view, choice.options[best]))) have.add(color);
+    }
+    return order;
+  }
+  /* Other cards, best first: the costliest it could cast by its next turn -- a mana for each of its sources, and the land it
+     would play -- then the cheapest of the rest, which it reaches soonest. */
+  function spellOrder(view, choice, indices) {
+    const could = mine(view).filter((c) => isLand(c) || makes(c.name).length).length + 1;
+    const mv = (i) => manaValue(nameOf(view, choice.options[i]));
+    return [...indices.filter((i) => mv(i) <= could).sort((a, b) => mv(b) - mv(a) || a - b), ...indices.filter((i) => mv(i) > could).sort((a, b) => mv(a) - mv(b) || a - b)];
+  }
+  /* A player's or a permanent's counters, the kinds there are: a player's poison among them (CR 122.1f). */
+  function countersOf(view, option) {
+    if (option.playerId !== undefined) {
+      const p = view.players?.[option.playerId];
+      return Object.entries({...(p?.counters ?? {}), ...(p?.health?.poison > 0 ? {poison: p.health.poison} : {})}).filter(([, n]) => n > 0).map(([kind]) => kind);
+    }
+    const card = (view.players ?? []).flatMap((p) => zone(p, "Battlefield")).find((c) => c.cardId === option.cardId);
+    return Object.entries(card?.counters ?? {}).filter(([, n]) => n > 0).map(([kind]) => kind);
+  }
+
+  /* The answer to a choice it may answer with none -- or to any search of a library -- when it has a rule for it; null when
+     it has none. Each takes the options it wants in order, as many as it may, kept to the choice's `exclusiveBy` and
+     `capped` (firstOf); a choice held to a `budget` never comes here, the rule for it in `answer` keeping the most it can. */
+  function takes(view, self, choice) {
+    const id = String(choice.id ?? ""), options = choice.options ?? [], min = choice.min ?? 0, max = choice.max ?? 0;
+    const all = options.map((o) => o.index), title = String(choice.title ?? "");
+    /* A search (CR 701.23) of its library, or a card it may put somewhere from its hand or graveyard ("you may put a land card
+       from your hand onto the battlefield", Chulane): as many as it may of what it is for. A land search, the lands of the
+       colors it lacks; any other, the costliest card it could cast soon -- and a land first when its hand has none and it
+       has fewer than four in play. A search for a card with a quality may fail to find (CR 701.23b), but finding is why
+       the card was played. A card it must put from its hand or graveyard (Brainstorm's two, back on top) is not one it
+       wants: those are left to the first answer, below. */
+    if (id.startsWith("chooseCard:") && (/^Search your library/.test(title) || (min === 0 && /^Search your (hand|graveyard)/.test(title)))) {
+      const land = (i) => (known(nameOf(view, options[i]))?.types ?? []).includes("Land");
+      const lands = all.filter(land), others = all.filter((i) => !land(i));
+      const short = !zone(self, "Hand").some(isLand) && mine(view).filter(isLand).length < 4;
+      const order = short || !others.length ? [...landOrder(view, self, choice, lands), ...spellOrder(view, choice, others)]
+        : [...spellOrder(view, choice, others), ...landOrder(view, self, choice, lands)];
+      return firstOf(choice, order, max);
+    }
+    /* Proliferate (CR 701.34a): each permanent and player whose counters are all of a kind it wants more of -- its own where
+       each kind helps it (+1/+1, loyalty), another's where each kind hurts them (poison, -1/-1) -- so never an opponent's
+       +1/+1 or loyalty, and never its own poison. */
+    if (id.startsWith("proliferate:")) {
+      const wanted = options.filter((o) => {
+        const kinds = countersOf(view, o);
+        const own = o.playerId !== undefined ? o.playerId === seat : controllerIn(view, o.cardId) === seat;
+        return kinds.length > 0 && (own ? !kinds.some(harmful) : kinds.every(harmful));
+      });
+      return firstOf(choice, wanted.map((o) => o.index), max);
+    }
+    /* Any other choice of any number, none among them (Peregrine Drake's "untap up to five lands"; "choose up to two to keep,
+       the rest are sacrificed"): the permanents and players on the side it is meant for, as `aim` reads a spell's targets --
+       an opponent's when the choice is hostile, else its own -- the costliest first, as many as it may. A card in another
+       zone is on no side, and is left: the top of a library being surveilled, a card it may put into its graveyard. */
+    if (choice.mode === "many" && min === 0) {
+      const sided = options.filter((o) => o.targets || o.playerId !== undefined || controllerIn(view, o.cardId) !== null);
+      const aimed = sided.filter((o) => aim(view, o.targets ? o : {hostile: choice.hostile === true || o.hostile === true,
+        targets: [o.playerId !== undefined ? {kind: "player", id: o.playerId} : {kind: "card", id: o.cardId}]}) > 0);
+      const value = (o) => (o.playerId !== undefined ? 0 : known(nameOf(view, o))?.manaValue ?? 0);
+      return firstOf(choice, aimed.sort((a, b) => value(b) - value(a) || a.index - b.index).map((o) => o.index), max);
+    }
+    return null;
   }
 
   return {
@@ -320,7 +449,9 @@ export function housePilot({seat, cards = () => null} = {}) {
           const biggest = [...single].sort((x, y) => (onBoard.get(y.attackerId)?.power ?? 0) - (onBoard.get(x.attackerId)?.power ?? 0) || x.index - y.index);
           for (const o of biggest) if (!used.has(o.cardId) && !blocked.has(o.attackerId)) { picks.push(o.index); used.add(o.cardId); blocked.add(o.attackerId); }
         }
-        return {indices: picks.slice(0, Math.max(min, Math.min(max, picks.length)))};
+        /* And what the record requires ("must be blocked if able", CR 509.1c): those blocks added to its own. */
+        const kept = picks.slice(0, Math.max(min, Math.min(max, picks.length)));
+        return {indices: Array.isArray(choice.requires) && choice.requires.length ? meetRequirements(choice, kept) : kept};
       }
       /* A trigger's targets (engine 2.4c): aimed as a cast is -- a hostile one at an opponent's things. */
       if (id.startsWith("trigger-targets:") && options.length) {
@@ -403,6 +534,11 @@ export function housePilot({seat, cards = () => null} = {}) {
       if (id.startsWith("order-tokens:") && options.length) {
         const best = options.reduce((b, o) => ((o.makes ?? 0) > (b.makes ?? 0) ? o : b));
         return {indices: [best.index]};
+      }
+      /* A choice it may answer with none, or a search: what the choice is for (`picks`, above). */
+      if (picks && max > 0) {
+        const taken = takes(view, self, choice);
+        if (taken) return {indices: taken};
       }
       /* Anything else (trigger order, the commander's zone, an effect's choice): the first legal answer,
          in the order offered, which is also what a careful reader would do by default. */

@@ -1,0 +1,318 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Flourishing Grapple",
+  "fixtures": {
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Giant": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{3}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 4,
+      "toughness": 4
+    },
+    "Knight": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Knight"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Soldier": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Soldier"
+      ],
+      "manaCost": "{R}{W}",
+      "colors": [
+        "R",
+        "W"
+      ],
+      "power": 2,
+      "toughness": 4,
+      "keywords": [
+        "Indestructible"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Rob's Giant deals 4 to Maya's red Ogre; her green Bear is no legal first target",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Giant",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Flourishing Grapple"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Flourishing Grapple"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Ogre",
+                  "Giant"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Flourishing Grapple",
+          "targets": [
+            {
+              "card": "Ogre"
+            },
+            {
+              "card": "Giant"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Losing all abilities first: a red-white Soldier's indestructible is gone, so the Giant's 4 damage destroys it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Giant",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Flourishing Grapple"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Soldier",
+            "Knight"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "keywords": {
+                "card": "Soldier",
+                "has": [
+                  "Indestructible"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "cast": "Flourishing Grapple",
+          "targets": [
+            {
+              "card": "Soldier"
+            },
+            {
+              "card": "Giant"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Soldier"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Knight"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A white Knight with a smaller creature: the Bear deals 2, and the Knight survives; abilities return at end of turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Flourishing Grapple"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Soldier"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Flourishing Grapple",
+          "targets": [
+            {
+              "card": "Soldier"
+            },
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "keywords": {
+                "card": "Soldier",
+                "lacks": [
+                  "Indestructible"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "keywords": {
+            "card": "Soldier",
+            "has": [
+              "Indestructible"
+            ]
+          }
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Soldier"
+          ]
+        }
+      ]
+    }
+  ]
+}

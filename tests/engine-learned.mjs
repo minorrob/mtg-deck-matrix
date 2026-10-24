@@ -46,7 +46,10 @@ const index = loadCardIndex();
 const spec = JSON.parse(readFileSync(new URL("./fixtures/learned-scenarios.json", import.meta.url), "utf8"));
 
 /* ---- 1. each record is its card, today ---- */
-ok(records.length > 0, `the learned folder holds definitions (${records.length})`);
+/* Empty once every learned definition is confirmed and withdrawn (wave 4d's lanes confirmed the last 22, 2026-10-23):
+   then no ledger row is still provisional, and section 4 holds each confirmed one to its hand-authored definition. */
+ok(records.length > 0 || Object.values(ledger.cards).every((row) => row.status !== "provisional"),
+  `the learned folder holds definitions (${records.length}), or none is left provisional`);
 eq(loadCompiledScripts().length, records.length, "and the card directory reads every one of them");
 for (const {file, record} of records) {
   const card = oracle.get(record.oracleId);

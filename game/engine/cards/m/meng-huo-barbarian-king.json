@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Meng Huo, Barbarian King",
+    "oracleId": "ea7fdff3-9d45-4a4a-b7fe-84b334f04291",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Barbarian",
+      "Soldier"
+    ],
+    "manaCost": "{3}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Other green creatures you control get +1/+1.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "colors": [
+          "G"
+        ],
+        "another": true
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 1
+      },
+      "text": "Other green creatures you control get +1/+1."
+    }
+  ]
+}

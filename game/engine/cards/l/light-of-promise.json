@@ -1,0 +1,67 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Light of Promise",
+    "oracleId": "64c54c9f-0550-41e2-a44a-5892a199f670",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant creature\nEnchanted creature has \"Whenever you gain life, put that many +1/+1 counters on this creature.\"",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      },
+      "text": "Enchant creature"
+    },
+    {
+      "kind": "static",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "addAbilities": [
+          {
+            "kind": "triggered",
+            "text": "Whenever you gain life, put that many +1/+1 counters on this creature.",
+            "trigger": {
+              "on": "life gained"
+            },
+            "effects": [
+              {
+                "effect": "putCounter",
+                "targets": "self",
+                "counter": "+1/+1",
+                "count": {
+                  "lifeGained": true
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "text": "Enchanted creature has \"Whenever you gain life, put that many +1/+1 counters on this creature.\""
+    }
+  ]
+}

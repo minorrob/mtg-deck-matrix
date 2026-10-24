@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Scrawling Crawler",
   "fixtures": {
-    "Tidings": {
+    "Smoke Tidings": {
       "types": [
         "Instant"
       ],
@@ -22,7 +22,7 @@
         ]
       }
     },
-    "Study": {
+    "Smoke Study": {
       "types": [
         "Instant"
       ],
@@ -135,7 +135,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Study"
+            "Smoke Study"
           ]
         }
       ],
@@ -154,7 +154,7 @@
           "seat": 1
         },
         {
-          "cast": "Study",
+          "cast": "Smoke Study",
           "seat": 1
         },
         {
@@ -197,7 +197,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Tidings"
+            "Smoke Tidings"
           ]
         }
       ],
@@ -206,7 +206,7 @@
           "tap": "Island"
         },
         {
-          "cast": "Tidings"
+          "cast": "Smoke Tidings"
         },
         {
           "resolve": true

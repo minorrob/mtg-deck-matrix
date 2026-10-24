@@ -1,14 +1,18 @@
-/* THE CARD-STATE TAXONOMY (docs/card-states.md; Rob, 2026-09-26). One definition, in the model: a stage
- * (Watching, To buy, Ordered, Owned), a deck and a role at any stage -- Target or Substitute in the box, Upgrade
- * or Reserved outside it -- and two facts (in the box, for trade). A deck is playable when nothing for it is
- * reserved. This suite pins:
+/* THE CARD STATUS: USE, OWNERSHIP, PLAY (docs/card-states.md; Rob, 2026-10-18, replacing the taxonomy of
+ * 2026-09-26). One definition, in the model's cardState: what the copy is for (Final, Substitute, Reserved,
+ * Upgrade; Bench, Sell, Trade, Unowned), where it is in the buying cycle (Watch, To buy, Ordered, Own, To sell,
+ * Trade), and the system's reading of play (playable, loading, to load). This suite pins:
  *
- *   1. every mapping in the definition's table, on records built for the purpose;
- *   2. the rules that make it one taxonomy -- a role exactly when there is a deck, in the box only when
- *      owned, a substitute always owned and in a box, a label from the vocabulary and nowhere else;
- *   3. Rob's library as committed, every record mapped, and the counts the proposal gave him;
- *   4. the old status beside the new state, record by record: they agree except where Rob decided
- *      otherwise, and each difference is named.
+ *   1. every branch of the definition, on records built for the purpose, with the pill word and the note;
+ *   2. the rules that make it one definition, on every one of Rob's records -- an ownership the use admits,
+ *      a deck exactly for the four deck uses, in the box exactly for Final and Substitute, a word from the
+ *      vocabulary and nowhere else;
+ *   3. Rob's library as committed, counted;
+ *   4. his worked example: 90 Final, 10 Substitute, 10 Reserved, 4 Upgrade -- a Deck total of 100 and a
+ *      Group total of 114;
+ *   5. a deck's totals agree with the deck tiles' readiness, deck by deck;
+ *   6. a copy in one box claimed by another deck: a Substitute where it sits, the claiming deck's Reserved;
+ *   7. the workbook's State column and the Table view's piles speak the same words.
  */
 import assert from "node:assert/strict";
 import {createRequire} from "node:module";
@@ -18,137 +22,190 @@ const require = createRequire(import.meta.url), M = require("../collection-model
 let checks = 0;
 const eq = (a, b, msg) => { checks++; assert.deepEqual(a, b, msg); };
 const ok = (c, msg) => { checks++; assert.ok(c, msg); };
-const pick = (st) => ({stage: st.stage, deckId: st.deckId, role: st.role, inBox: st.inBox, ...(st.reservedFor ? {reservedFor: st.reservedFor} : {}), ...(st.trade ? {trade: st.trade} : {})});
-const lot = (x) => ({kind: "lot", source: "owned", location: {kind: "bench", box: ""}, allocation: null, offer: "none", purpose: "", ...x});
 
-/* 1. The table. A synthetic library's seats: d1's box is full, d3's box is short but a substitute holds seat "s",
-   d9 is a draft with nothing in its box, and d4 owns the group "group:live:D4". */
-const ctx = {decks: new Map([["d1", {full: true, held: new Set()}], ["d2", {full: true, held: new Set()}], ["d3", {full: false, held: new Set(["s"])}], ["d9", {full: false, held: new Set()}]]), groups: new Map([["group:live:D4", "d4"]])};
+/* 1. The branches. A small library: d1's list is cards A to F with two options (an Upgrade for A, and a committed
+   one for B); d2's list is G; d1's group is g1. */
+const slot = (id, cardId, x = {}) => ({id, cardId, quantity: 1, purpose: "main", committed: true, replaces: "", ...x});
+const lib = {
+  decks: [
+    {id: "d1", name: "D1", status: "final", groupId: "g1", slots: [slot("a", "A"), slot("b", "B"), slot("c", "C"), slot("d", "D"), slot("e", "E"), slot("f", "F"),
+      slot("u1", "U", {purpose: "upgrade", committed: false, replaces: "a"}), slot("u2", "V", {purpose: "upgrade", committed: true, replaces: "b"})]},
+    {id: "d2", name: "D2", status: "final", groupId: "g2", slots: [slot("g", "G")]}],
+  lots: [],
+};
+const lot = (x) => ({kind: "lot", quantity: 1, source: "owned", location: {kind: "bench", box: ""}, allocation: null, offer: "none", groupIds: [], ...x});
+const inBox = (deckId) => ({kind: "deck", deckId, box: ""});
+const L = {
+  final: lot({cardId: "A", location: inBox("d1"), allocation: {deckId: "d1", slotId: "a"}}),
+  sub: lot({cardId: "X", location: inBox("d1"), standInFor: "b"}),
+  loading: lot({cardId: "C", allocation: {deckId: "d1", slotId: "c"}}),
+  claimed: lot({cardId: "D", location: inBox("d2"), allocation: {deckId: "d1", slotId: "d"}}),
+  ordered: lot({cardId: "F", source: "ordered", location: null, allocation: {deckId: "d1", slotId: "f"}}),
+  bench: lot({cardId: "H"}),
+  trade: lot({cardId: "H", offer: "available"}),
+  sell: lot({cardId: "H", offer: "available", offerKind: "sell"}),
+  held: lot({cardId: "H", offer: "held", offerKind: "sell"}),
+  watch: lot({cardId: "W", source: "watching", location: null}),
+  orderedFree: lot({cardId: "W", source: "ordered", location: null}),
+  considered: lot({cardId: "K", groupIds: ["g1"]}),
+  free: lot({cardId: "U"}),
+};
+lib.lots = Object.values(L);
+const ctx = M.seats(lib);
+const pick = (st) => Object.fromEntries(Object.entries(st).filter(([, v]) => v !== "" && v !== false));
+const names = {A: "Alpha", B: "Bravo", X: "Xray", C: "Charlie", D: "Delta", F: "Foxtrot"}, name = (id) => names[id] || id, deckName = (id) => id.toUpperCase();
 const table = [
-  ["Physical deck", lot({allocation: {deckId: "d1", slotId: "s"}, purpose: "main", location: {kind: "deck", deckId: "d1"}}), {stage: "owned", deckId: "d1", role: "target", inBox: true}, "Target"],
-  ["Reserved, its seat held (the box is full)", lot({allocation: {deckId: "d1", slotId: "s"}, purpose: "main"}), {stage: "owned", deckId: "d1", role: "upgrade", inBox: false}, "To add"],
-  ["Reserved, its seat empty", lot({allocation: {deckId: "d9", slotId: "s"}, purpose: "main"}), {stage: "owned", deckId: "d9", role: "reserved", inBox: false}, "To add"],
-  ["Substitute", lot({location: {kind: "deck", deckId: "d2"}}), {stage: "owned", deckId: "d2", role: "substitute", inBox: true}, "Substitute"],
-  ["Substitute, reserved elsewhere", lot({allocation: {deckId: "d1", slotId: "s"}, purpose: "main", location: {kind: "deck", deckId: "d2"}}), {stage: "owned", deckId: "d2", role: "substitute", inBox: true, reservedFor: "d1"}, "Substitute"],
-  ["Owned upgrade option", lot({allocation: {deckId: "d9", slotId: "u"}, purpose: "upgrade"}), {stage: "owned", deckId: "d9", role: "upgrade", inBox: false}, "To add"],
-  ["Bench", lot({}), {stage: "owned", deckId: "", role: "", inBox: false}, "Bench"],
-  ["Bench, shortlisted (was Watched)", lot({shortlistedFor: ["d3"]}), {stage: "owned", deckId: "", role: "", inBox: false}, "Bench"],
-  ["Bench, for trade", lot({offer: "available"}), {stage: "owned", deckId: "", role: "", inBox: false, trade: "available"}, "Bench"],
-  ["Ordered for a full deck", lot({source: "ordered", location: null, allocation: {deckId: "d1", slotId: "s"}, purpose: "main"}), {stage: "ordered", deckId: "d1", role: "upgrade", inBox: false}, "Ordered"],
-  ["Ordered", lot({source: "ordered", location: null}), {stage: "ordered", deckId: "", role: "", inBox: false}, "Ordered"],
-  ["Watched copy", lot({source: "watching", location: null}), {stage: "watching", deckId: "", role: "", inBox: false}, "Watching"],
-  ["To buy, the box full: an upgrade", {kind: "need", deckId: "d1", slotId: "x", purpose: "main"}, {stage: "buy", deckId: "d1", role: "upgrade", inBox: false}, "To buy"],
-  ["To buy, a substitute in its seat: an upgrade", {kind: "need", deckId: "d3", slotId: "s", purpose: "main"}, {stage: "buy", deckId: "d3", role: "upgrade", inBox: false}, "To buy"],
-  ["To buy, its seat empty: reserved", {kind: "need", deckId: "d3", slotId: "y", purpose: "main"}, {stage: "buy", deckId: "d3", role: "reserved", inBox: false}, "To buy"],
-  ["To buy (a committed upgrade option)", {kind: "need", deckId: "d9", slotId: "u", purpose: "upgrade"}, {stage: "buy", deckId: "d9", role: "upgrade", inBox: false}, "To buy"],
-  ["Draft list", {kind: "draft", deckId: "d9", slotId: "s", purpose: "main"}, {stage: "watching", deckId: "d9", role: "reserved", inBox: false}, "Watching"],
-  ["Suggestion (an option)", {kind: "option", deckId: "d1", purpose: "upgrade"}, {stage: "watching", deckId: "d1", role: "upgrade", inBox: false}, "Watching"],
-  ["Bracket option", {kind: "option", deckId: "d1", purpose: "bracket"}, {stage: "watching", deckId: "d1", role: "upgrade", inBox: false}, "Watching"],
-  ["Wanted (the To Buy list)", {kind: "entry", groupId: M.WANT_LIST}, {stage: "buy", deckId: "", role: "", inBox: false}, "To buy"],
-  ["Planned (another group)", {kind: "entry", groupId: "group:live:upgrades"}, {stage: "watching", deckId: "", role: "", inBox: false}, "Watching"],
-  ["Planned in a deck's own group", {kind: "entry", groupId: "group:live:D4"}, {stage: "watching", deckId: "d4", role: "upgrade", inBox: false}, "Watching"],
+  ["the list's card in its box", L.final, {use: "final", ownership: "own", play: "playable", deckId: "d1", slotId: "a", inBox: true}, "Final", ""],
+  ["a substitute holding B's seat", L.sub, {use: "substitute", ownership: "own", play: "playable", deckId: "d1", holds: "B", inBox: true}, "Substitute", "holds the seat for Bravo"],
+  ["the deck's own card, owned, not put in yet", L.loading, {use: "final", ownership: "own", play: "loading", deckId: "d1", slotId: "c"}, "Loading", "put it in the box"],
+  ["a copy in D2's box claimed by D1, read from anywhere", L.claimed, {use: "substitute", ownership: "own", play: "playable", deckId: "d2", claimedBy: "d1", inBox: true}, "Substitute", "reserved for D1"],
+  ["an ordered copy for a seat", L.ordered, {use: "reserved", ownership: "ordered", play: "toload", deckId: "d1", slotId: "f"}, "Reserved", "Ordered · empty seat"],
+  ["a seat to buy, a substitute in it", {kind: "need", deckId: "d1", slotId: "b", purpose: "main"}, {use: "reserved", ownership: "buy", play: "toload", deckId: "d1", slotId: "b", replaces: "X"}, "Reserved", "To buy · replaces Xray"],
+  ["a seat to buy, nothing in it", {kind: "need", deckId: "d1", slotId: "e", purpose: "main"}, {use: "reserved", ownership: "buy", play: "toload", deckId: "d1", slotId: "e"}, "Reserved", "To buy · empty seat"],
+  ["a committed upgrade option, to buy", {kind: "need", deckId: "d1", slotId: "u2", purpose: "upgrade"}, {use: "upgrade", ownership: "buy", deckId: "d1", slotId: "u2", replaces: "B"}, "Upgrade", "To buy · would replace Bravo"],
+  ["an upgrade option, a free copy owned", {kind: "option", deckId: "d1", slotId: "u1", cardId: "U"}, {use: "upgrade", ownership: "own", deckId: "d1", slotId: "u1", replaces: "A"}, "Upgrade", "Own · would replace Alpha"],
+  ["an upgrade option, none owned", {kind: "option", deckId: "d1", slotId: "u1", cardId: "Z"}, {use: "upgrade", ownership: "watch", deckId: "d1", slotId: "u1", replaces: "A"}, "Upgrade", "Watch · would replace Alpha"],
+  ["a candidate filed in the deck's group", {kind: "entry", groupId: "g1"}, {use: "upgrade", ownership: "watch", deckId: "d1"}, "Upgrade", "Watch · choose what it replaces"],
+  ["an owned Bench copy filed in the deck's group", L.considered, {use: "upgrade", ownership: "own", deckId: "d1"}, "Upgrade", "Own · choose what it replaces"],
+  ["the To Buy list", {kind: "entry", groupId: M.WANT_LIST}, {use: "unowned", ownership: "buy"}, "To buy", ""],
+  ["a planned entry in another group", {kind: "entry", groupId: "group:lists"}, {use: "unowned", ownership: "watch"}, "Watch", ""],
+  ["a watched copy", L.watch, {use: "unowned", ownership: "watch"}, "Watch", ""],
+  ["an ordered copy for no deck", L.orderedFree, {use: "unowned", ownership: "ordered"}, "Ordered", ""],
+  ["a Bench copy", L.bench, {use: "bench", ownership: "own"}, "Bench", ""],
+  ["offered, not said which (as before October 18)", L.trade, {use: "trade", ownership: "trade"}, "Trade", ""],
+  ["offered for sale", L.sell, {use: "sell", ownership: "sell"}, "Sell", ""],
+  ["held for a pending sale", L.held, {use: "sell", ownership: "sell"}, "Sell", ""],
 ];
-for (const [name, rec, want, label] of table) {
+for (const [what, rec, want, label, note] of table) {
   const st = M.cardState(rec, ctx);
-  eq(pick(st), want, `${name} maps to ${JSON.stringify(want)}`);
-  eq(M.stateLabel(st), label, `${name} wears "${label}"`);
+  eq(pick(st), want, `${what}: ${JSON.stringify(want)}`);
+  eq(M.stateLabel(st), label, `${what} wears "${label}"`);
+  eq(M.stateNote(st, name, deckName), note, `${what} says "${note}" beside it`);
 }
 assert.throws(() => M.cardState({kind: "fold"}), /not fold/); checks++;
-eq(M.STAGES.map((x) => x.label), ["Watching", "To buy", "Ordered", "Owned"], "the stages, in their order");
-eq(M.ROLES.map((x) => x.label), ["Target", "Substitute", "Upgrade", "Reserved"], "the roles: two in the box, two outside it");
+eq(pick(M.cardState(L.claimed, ctx, "d1")), {use: "reserved", ownership: "own", play: "toload", deckId: "d1", slotId: "d", from: "d2"}, "read from D1, the copy in D2's box is D1's Reserved card, in D2");
+eq(M.stateNote(M.cardState(L.claimed, ctx, "d1"), name, deckName), "in D2 · empty seat", "and says where it is");
+eq(pick(M.cardState(L.claimed, ctx, "d2")), {use: "substitute", ownership: "own", play: "playable", deckId: "d2", claimedBy: "d1", inBox: true}, "read from D2 it is D2's substitute");
+eq(M.USES.map((x) => x.label), ["Final", "Substitute", "Reserved", "Upgrade", "Bench", "Sell", "Trade", "Unowned"], "the uses");
+eq(M.USES.filter((x) => x.inDeck).map((x) => x.id), ["final", "substitute"], "only Final and Substitute put a card in the deck");
+eq(M.OWNERSHIP.map((x) => x.label), ["Watch", "To buy", "Ordered", "Own", "To sell", "Trade"], "the ownership statuses, with no Canceled");
+eq(M.PLAY.map((x) => x.label), ["Playable", "Loading", "To load"], "the play statuses");
+eq(M.USE_OWNERSHIP.reserved, ["buy", "ordered", "own"], "Reserved is to buy, ordered, or owned in another deck's box -- never only watched");
+eq(M.USE_OWNERSHIP.upgrade, ["watch", "buy", "ordered", "own"], "an Upgrade may be anywhere in the buying cycle");
 
-/* 2 and 3. Rob's library as committed: rebuilt from "MtG - Master - 9.30" (2026-09-30). Against v25 no deck's target
-   or box moved; 198 more copies are owned, the six orders in flight are off the sheet, and four cards the decks
-   needed are now owned and on the Bench, so they are Ready to add instead of To buy. */
-const live = M.migrate(JSON.parse(readFileSync(new URL("../data/live-state.json", import.meta.url), "utf8")).payload.state); // as the app reads a backup: migrated to the current schema first
-
-/* The records a screen draws: copies and needs from the projection, the draft and option rows of each
-   deck, and every group entry -- built as crankmagic-collection.js builds them. */
-const records = [...M.projection(live)];
-for (const d of live.decks.filter((x) => !x.archived)) for (const r of d.slots.filter((x) => d.status === "draft" || !x.committed)) records.push({kind: r.committed ? "draft" : "option", deckId: d.id, purpose: r.purpose, quantity: r.quantity, option: !!r.option});
-for (const g of live.groups) for (const r of g.entries) records.push({...r, kind: "entry", groupId: g.id});
-const labels = new Set(M.STATE_LABELS), read = M.stateReader(live);
-let bad = [];
+/* 2 and 3. Rob's library as committed (rebuilt from "MtG - Master - 9.30", 2026-09-30). */
+const live = M.migrate(JSON.parse(readFileSync(new URL("../data/live-state.json", import.meta.url), "utf8")).payload.state);
+const records = M.records(live), read = M.stateReader(live), labels = new Set(M.STATE_LABELS);
+const DECK_USES = new Set(["final", "substitute", "reserved", "upgrade"]);
+const bad = [];
 for (const r of records) {
   const st = read(r);
-  const why = !M.STAGES.some((x) => x.id === st.stage) ? "stage" : !!st.role !== !!st.deckId ? "role iff deck" : st.inBox && st.stage !== "owned" ? "in box but not owned"
-    : st.role === "substitute" && !(st.stage === "owned" && st.inBox) ? "substitute not owned in a box"
-    : st.inBox && !["target", "substitute"].includes(st.role) ? "in the box, but not a target or substitute" : st.deckId && !st.inBox && !["upgrade", "reserved"].includes(st.role) ? "outside the box, but not an upgrade or reserved"
-    : !labels.has(M.stateLabel(st)) ? "label" : "";
-  if (why) bad.push([why, r.kind, r.recordId || r.id]);
+  const why = !M.USES.some((x) => x.id === st.use) ? "use" : !M.USE_OWNERSHIP[st.use].includes(st.ownership) ? `ownership ${st.ownership} with ${st.use}`
+    : DECK_USES.has(st.use) !== !!st.deckId ? "a deck exactly for the deck uses" : st.inBox !== (st.use === "final" && st.play === "playable" || st.use === "substitute") ? "in the box exactly for Final and Substitute"
+    : (st.use === "upgrade" || !st.deckId) !== !st.play ? "play only for a deck's card" : !labels.has(M.stateLabel(st)) ? "label" : "";
+  if (why) bad.push([why, r.kind, r.recordId]);
 }
-eq(bad.slice(0, 5), [], `every one of Rob's ${records.length} records maps under the rules (a role exactly with a deck; in the box only owned, and then Target or Substitute; outside it Upgrade or Reserved; a label from the vocabulary)`);
+eq(bad.slice(0, 5), [], `every one of Rob's ${records.length} records keeps the rules`);
 const copies = (f) => records.filter((r) => f(read(r), r)).reduce((n, r) => n + (r.quantity || 1), 0);
-const count = (f) => records.filter((r) => f(read(r), r)).length;
-eq(copies((s) => s.stage === "owned" && s.role === "target" && s.inBox), 577, "577 owned targets in their deck's box");
-eq(copies((s) => s.stage === "owned" && !!s.deckId && !s.inBox), 9, "9 owned copies for a deck, not yet in its box: To add (Ready to add) -- v25's 5 and the 4 bought since");
-eq(copies((s) => s.stage === "owned" && s.role === "substitute"), 123, "123 substitutes");
-eq(copies((s) => s.stage === "owned" && !s.deckId), 889, "889 on the Bench");
-eq(copies((s) => s.stage === "ordered"), 0, "nothing ordered: the six in flight at v25 are off the 9.30 sheet");
-eq(copies((s, r) => s.stage === "buy" && r.kind === "need"), 107, "107 copies to buy for decks");
-eq(copies((s, r) => s.stage === "buy" && r.kind === "need" && s.role === "upgrade"), 107, "and all 107 are upgrades: every deck's box is full, so each replaces the substitute holding its seat");
-eq(copies((s) => s.role === "reserved"), 0, "nothing is reserved: no deck has an empty seat");
-/* The rebuilt library (step 3b): the To Buy list duplicated the decks' needs and is empty; the Upgrade Path is gone,
-   because each of its entries was a need whose seat a substitute holds, and that seat is now on the substitute. */
-eq(count((s, r) => r.kind === "entry" && r.groupId === M.WANT_LIST), 0, "the To Buy list holds nothing the decks already need: none today");
-ok(!live.groups.some((g) => g.id === "group:live:upgrades"), "there is no Upgrade Path group");
-eq(copies((s) => s.stage === "buy"), 107, "so To buy is the decks' 107 needs, each counted once");
-eq(copies((s) => s.stage === "watching"), 13, "and Watching is the 13 candidates in the decks' own groups");
-const seated = M.projection(live).filter((r) => r.kind === "lot" && r.standInFor);
-eq(seated.length, 122, "122 substitutes record the seat they hold, one per pairing the 9.30 sheet's Dn-Buy columns name");
-/* The seats they hold: To buy's, but for D7's Peppersmoke, whose substitute the 9.30 sheet no longer names (v25 had
-   Bile-Vial Boggart); all nine Ready to add; and the rest are upgrades Rob owns in another deck's box. */
-const needSeats = new Set(M.projection(live).filter((r) => r.kind === "need").map((r) => r.slotId)), heldSeats = new Set(seated.map((r) => r.standInFor));
-const slotCard = (id) => { for (const d of live.decks) { const r = d.slots.find((x) => x.id === id); if (r) return `${d.id.slice(-2)} ${live.cards[r.cardId].name}`; } return id; };
-eq([...needSeats].filter((x) => !heldSeats.has(x)).map(slotCard), ["D7 Peppersmoke"], "every seat To buy fills is held by a substitute but Peppersmoke's");
-const readyHeld = records.filter((r) => { const s = read(r); return s.stage === "owned" && !!s.deckId && !s.inBox; });
-ok(readyHeld.length === 9 && readyHeld.every((r) => heldSeats.has(r.allocation?.slotId)), "and each of the 9 Ready to add holds the seat it will take");
-eq(count((s, r) => r.kind === "entry" && r.groupId !== M.WANT_LIST && s.stage === "watching" && !!s.deckId && s.role === "upgrade"), 13, "the 13 entries in D4's and D6's own groups are Watching upgrades for their decks");
-eq(copies((s) => s.stage === "owned"), 1598, "and every owned copy is counted once: 577 + 9 + 123 + 889 = 1,598");
-/* PLAYABLE (Rob, 2026-09-26): a deck plays when none of its records is reserved -- every seat holds a card. The
-   model's own flag and the roles agree, deck by deck. */
-for (const d of live.decks.filter((x) => !x.archived && x.status === "final")) eq(M.readiness(live, d).playable, !records.some((r) => { const st = read(r); return st.deckId === d.id && st.role === "reserved"; }), `${d.name}: playable exactly when nothing for it is reserved`);
+eq(copies((s) => s.use === "final" && s.inBox), 577, "577 Final, in their deck's box");
+eq(copies((s) => s.use === "final" && s.play === "loading"), 9, "9 Loading: owned, the deck's own card, waiting on the Bench (what Ready to add lists)");
+eq(copies((s) => s.use === "substitute"), 123, "123 Substitutes");
+eq(copies((s) => s.use === "bench"), 888, "888 on the Bench");
+eq(copies((s) => s.use === "reserved"), 107, "107 Reserved, every one to buy");
+eq(copies((s) => s.use === "reserved" && !!s.replaces), 106, "106 of them replace the substitute holding their seat");
+eq(copies((s) => s.use === "upgrade"), 14, "14 Upgrades: the 13 candidates in D4's and D6's groups and one owned copy filed in D4's");
+eq(copies((s) => s.use === "upgrade" && !s.replaces), 14, "none of them names the card it would replace yet: each asks");
+eq(copies((s) => s.ownership === "own"), 1598, "every owned copy counted once: 577 + 9 + 123 + 888 + 1 = 1,598");
+eq(copies((s) => s.ownership === "ordered"), 0, "nothing ordered");
 
-/* 4. The old status beside the new state. */
-/* A copy reserved for one deck and standing in inside another wore Reserved with a "Substitute in D2" badge;
-   the state says the same thing the other way up: a substitute in D2, reserved for D7. */
-const agrees = {"Physical deck": (s) => s.stage === "owned" && s.role === "target" && s.inBox, "Reserved": (s, r) => s.stage === "owned" && (!!s.deckId && !s.inBox || r.standIn && s.role === "substitute" && s.reservedFor === r.allocation?.deckId),
-  "Substitute": (s) => s.role === "substitute", "Bench": (s) => s.stage === "owned" && !s.deckId, "Ordered": (s) => s.stage === "ordered", "Watched": (s) => s.stage === "watching",
-  "To buy": (s) => s.stage === "buy" && !!s.deckId, "Draft list": (s) => s.stage === "watching" && !!s.deckId, "Suggestion": (s) => s.stage === "watching" && !!s.deckId, "Planned": (s) => s.stage === "watching" && (!s.deckId || s.role === "upgrade")};
-const decided = {"Wanted": (s) => s.stage === "buy" && !s.deckId};
-const differ = {};
-for (const r of records) {
-  const old = M.statusOf(r), st = read(r);
-  if (agrees[old]?.(st, r)) continue;
-  if (decided[old]?.(st)) { differ[old] = (differ[old] || 0) + 1; continue; }
-  if (old === "Watched" && r.kind === "lot" && r.source === "owned" && st.stage === "owned" && !st.deckId) { differ["Watched (owned, shortlisted)"] = (differ["Watched (owned, shortlisted)"] || 0) + 1; continue; }
-  assert.fail(`old status ${old} and new state ${JSON.stringify(pick(st))} disagree for ${r.recordId || r.id}`);
-}
-checks++;
-/* The rebuilt library has no To Buy list entries, so "Wanted" differs only where one is added; the table above holds that mapping. */
-ok(Object.keys(differ).every((k) => k === "Wanted" || k === "Watched (owned, shortlisted)"), `old and new agree on every record except Rob's decisions: ${JSON.stringify(differ)}`);
-/* 5. The workbook export's State column (step 2c): the same words, counted the same, on the Library sheet. */
+/* 4. Rob's example (2026-10-18): a hundred with 90 of the list in the box, 10 substitutes each holding a seat whose
+   card is to buy, and 4 cards watched as upgrades, each naming the card it would replace. */
 {
-  const E = require("../collection-exchange.js"), book = E.workbook(live), lib = book.sheets.find((x) => x.name === "Library");
-  ok(lib.columns.some((c) => c.key === "state" && c.label === "State"), "the Library sheet has a State column");
-  const q = (f) => lib.rows.filter(f).reduce((n, r) => n + r.quantity, 0);
-  eq([q((r) => r.state === "Target"), q((r) => r.state === "To add · upgrade"), q((r) => r.state === "Substitute"), q((r) => r.state === "Bench"), q((r) => r.state === "Ordered")], [577, 9, 123, 889, 0], "and it counts 577 Target, 9 To add (upgrades), 123 Substitute, 889 Bench, 0 Ordered, as the Library does");
+  const s = M.empty();
+  for (let i = 0; i < 114; i++) s.cards["card:x" + i] = {id: "card:x" + i, name: "Card " + i, typeLine: "Creature", manaCost: "{1}", manaValue: 1, colorIdentity: [], oracleText: "", mechanics: [], keywords: []};
+  const slots = [];
+  for (let i = 0; i < 100; i++) slots.push(slot("s" + i, "card:x" + i));
+  for (let i = 0; i < 4; i++) slots.push(slot("u" + i, "card:x" + (110 + i), {purpose: "upgrade", committed: false, replaces: "s" + i}));
+  const d = {id: "deck:ex", name: "D1 Example", status: "final", archived: false, commanders: ["card:x0"], slots, groupId: null};
+  s.decks.push(d);
+  for (let i = 0; i < 90; i++) s.lots.push({...lot({cardId: "card:x" + i, location: inBox(d.id), allocation: {deckId: d.id, slotId: "s" + i}}), id: "lot:" + i, printing: {}});
+  for (let i = 0; i < 10; i++) s.lots.push({...lot({cardId: "card:x" + (100 + i), location: inBox(d.id), standInFor: "s" + (90 + i)}), id: "lot:sub" + i, printing: {}});
+  const x = M.deckStatus(s, d);
+  eq([x.final, x.substitute, x.reserved.total, x.upgrade], [90, 10, 10, 4], "90 Final, 10 Substitute, 10 Reserved, 4 Upgrade");
+  eq([x.deckTotal, x.groupTotal, x.play, x.complete], [100, 114, "playable", false], "a Deck total of 100 (only Final and Substitute), a Group total of 114, Playable, not complete");
+  ok(x.rows.filter((y) => y.st.use === "reserved").every((y) => y.st.replaces && y.st.ownership === "buy"), "each Reserved card is to buy and names the substitute it replaces");
+  ok(x.rows.filter((y) => y.st.use === "upgrade").every((y) => y.st.replaces), "each Upgrade names the card it would replace");
+  eq(x.rows.filter((y) => y.st.use === "final").every((y) => y.st.inBox), true, "and the cards an Upgrade names stay Final: an Upgrade changes nothing in the box");
+}
+
+/* 5. A deck's totals and the deck tiles' readiness agree, deck by deck. */
+const fromOther = {};
+for (const d of live.decks.filter((x) => !x.archived)) {
+  const x = M.deckStatus(live, d, records), rd = M.readiness(live, d);
+  eq(x.deckTotal, rd.sleeved, `${d.name}: the Deck total is what readiness counts in the box`);
+  eq(x.play === "playable", rd.playable, `${d.name}: Playable exactly when readiness says so`);
+  eq(x.groupTotal, x.rows.reduce((n, y) => n + (y.r.quantity || 1), 0), `${d.name}: the Group total is every record its view lists`);
+  eq(x.final + x.loading + x.reserved.total, x.list, `${d.name}: the list is Final + Loading + Reserved`);
+  fromOther[d.id.slice(-2)] = x.reserved.from;
+}
+eq(fromOther, {D1: 1, D2: 1, D3: 0, D4: 0, D5: 0, D6: 0, D7: 5}, "7 copies sit in one deck's box and are claimed by another: D7's five are in D2's and D4's");
+eq(M.deckStatus(live, live.decks.find((d) => d.id === "deck:live:D7"), records).reserved.empty, 1, "D7 has one empty seat (Peppersmoke: the 9.30 sheet names no substitute for it)");
+
+/* 6. Read unscoped, the seven claimed copies are Substitutes where they sit, each saying which deck claims it. */
+const claimed = records.filter((r) => r.kind === "lot" && r.source === "owned" && r.allocation && r.location?.kind === "deck" && r.location.deckId !== r.allocation.deckId);
+eq(claimed.length, 7, "seven claimed copies");
+ok(claimed.every((r) => { const st = read(r); return st.use === "substitute" && st.deckId === r.location.deckId && st.claimedBy === r.allocation.deckId; }), "each a Substitute in the box it sits in, claimed by the other deck");
+ok(claimed.every((r) => { const st = M.stateReader(live, r.allocation.deckId)(r); return st.use === "reserved" && st.from === r.location.deckId && st.deckId === r.allocation.deckId; }), "and, read from the deck that claims it, that deck's Reserved card in the other box");
+
+/* 7. The workbook's State column and the Table view's piles. */
+{
+  const E = require("../collection-exchange.js"), book = E.workbook(live), sheet = book.sheets.find((x) => x.name === "Library");
+  ok(sheet.columns.some((c) => c.key === "state" && c.label === "State"), "the Library sheet has a State column");
+  const q = (f) => sheet.rows.filter(f).reduce((n, r) => n + r.quantity, 0);
+  eq([q((r) => r.state === "Final"), q((r) => r.state === "Loading"), q((r) => r.state === "Substitute"), q((r) => r.state === "Bench"), q((r) => r.state === "Upgrade · Own")], [577, 9, 123, 888, 1], "it counts 577 Final, 9 Loading, 123 Substitute, 888 Bench and 1 Upgrade, as the Library does");
   ok(["Allocations", "Acquisition queue"].every((n) => book.sheets.find((x) => x.name === n).columns.some((c) => c.key === "state")), "Allocations and the Acquisition queue carry it too");
-}
-/* 6. The Table view's card-state piles take the drops their old labels took (step 2c). */
-{
   const T = require("../crankmagic-tabletop.js"), pile = (label) => ({kind: "status", label});
   const benchCopy = {kind: "lot", source: "owned", location: {kind: "bench"}, allocation: null, quantity: 1};
   const reserved = {kind: "lot", source: "owned", location: {kind: "bench"}, allocation: {deckId: "d1", slotId: "s"}, quantity: 1};
   const watched = {kind: "lot", source: "watching", location: null, allocation: null, quantity: 1};
-  const sent = {kind: "catalog", quantity: 1};
-  eq(T.accepts(pile("Target"), [benchCopy]).action, "place", "a Bench copy dropped on Target goes into a deck's box, as on Physical deck");
-  eq(T.accepts(pile("To add"), [benchCopy]).action, "reserve", "dropped on To add it is reserved for a deck, as on Reserved");
-  eq(T.accepts(pile("Watching"), [benchCopy]).action, "source:watching", "dropped on Watching it becomes a watched card, as on Watched");
-  eq(T.accepts(pile("To buy"), [reserved]).action, "release", "a reserved copy dropped on To buy is released, so its deck's need comes back");
-  eq(T.accepts(pile("To buy"), [sent]).ok, false, "a card sent from Explore is refused, as on every status pile: it is not a copy you hold (file it in a group first)");
-  eq(T.accepts(pile("To buy"), [watched]).action, "wanted:plan", "and so does a watched copy");
-  eq(T.accepts(pile("To buy"), [benchCopy]).ok, false, "but an unreserved owned copy is refused: it is not to buy");
-  eq(T.accepts(pile("Upgrade"), [benchCopy]).ok, false, "Upgrade is a role, not a pile: nothing is dropped on it");
+  eq(T.accepts(pile("Final"), [benchCopy]).action, "place", "a Bench copy dropped on Final goes into a deck's box");
+  eq(T.accepts(pile("Loading"), [benchCopy]).action, "reserve", "dropped on Loading it is claimed for a deck's seat, to be put in");
+  eq(T.accepts(pile("Watch"), [benchCopy]).action, "source:watching", "dropped on Watch it becomes a watched card");
+  eq(T.accepts(pile("To buy"), [reserved]).action, "release", "a claimed copy dropped on To buy is released, so its deck's seat is to buy again");
+  eq(T.accepts(pile("To buy"), [watched]).action, "wanted:plan", "a watched copy dropped on To buy joins the To Buy list");
+  eq(T.accepts(pile("Upgrade"), [benchCopy]).ok, false, "Upgrade is a use, not a place: nothing is dropped on it");
+  const places = new Set(["Final", "Loading", "Substitute", "Bench", "Ordered", "To buy", "Watch"]);
+  ok(records.every((r) => places.has(M.placeLabel(read(r)))), "every record sits on one of the Table view's seven piles");
 }
-console.log(`card-states: ${checks} checks passed — one taxonomy (stage, deck and role, in the box, for trade), every old status mapped, Rob's library counted.`);
+/* 8. Rob's rules for the two ways a card replaces another (2026-10-18), through the model's own commands: a Reserved
+   card turns the card it replaces into a Substitute holding its seat; an Upgrade names the card it would replace and
+   changes nothing until it is reserved; and an offer is Sell or Trade. */
+{
+  let s = M.empty(), n = 0;
+  const run = (type, a) => { s = M.apply(s, {type, id: "r" + (++n), at: "2026-10-18T00:00:00Z", confirmed: true, ...a}).state; };
+  const card = (id, name) => ({id, name, typeLine: "Creature", manaCost: "{1}", manaValue: 1, colorIdentity: [], oracleText: "", mechanics: [], keywords: [], verified: true, legalities: {commander: "legal"}});
+  run("createDeck", {deckId: "d1", name: "D1 Rules", commanders: ["Y"], slots: [{cardId: "Y", quantity: 1}, {cardId: "Q", quantity: 1}], cards: [card("Y", "Yarrow"), card("Q", "Quill")]});
+  const seatOf = (cid) => s.decks[0].slots.find((r) => r.cardId === cid && r.purpose === "main").id;
+  for (const cid of ["Y", "Q"]) { run("acquire", {lot: {id: "l" + cid, cardId: cid, quantity: 1}}); run("place", {lotId: "l" + cid, deckId: "d1", quantity: 1}); }
+  const now = () => { const read = M.stateReader(s), recs = M.records(s); return (pred) => recs.filter(pred).map(read); };
+  eq(now()((r) => r.kind === "lot").map((x) => x.use), ["final", "final"], "Yarrow and Quill are Final in D1's box");
+  const ySeat = seatOf("Y");
+  run("swap", {deckId: "d1", slotId: ySeat, cardId: "X", cards: [card("X", "Xenon")], substitute: true});
+  eq(pick(now()((r) => r.kind === "lot" && r.cardId === "Y")[0]), {use: "substitute", ownership: "own", play: "playable", deckId: "d1", holds: "X", inBox: true}, "Reserving Xenon in place of Yarrow makes Yarrow the Substitute holding Xenon's seat");
+  eq(pick(now()((r) => r.kind === "need" && r.cardId === "X")[0]), {use: "reserved", ownership: "buy", play: "toload", deckId: "d1", slotId: ySeat, replaces: "Y"}, "and Xenon is Reserved, to buy, replacing Yarrow");
+  eq(M.deckStatus(s, s.decks[0]).deckTotal, 2, "the box still holds two");
+  const qSeat = seatOf("Q");
+  run("option", {deckId: "d1", replaces: qSeat, cards: [card("W", "Wisp")], option: {cardId: "W", quantity: 1, purpose: "upgrade"}});
+  eq(pick(now()((r) => r.kind === "option")[0]), {use: "upgrade", ownership: "watch", deckId: "d1", slotId: s.decks[0].slots.find((r) => r.cardId === "W").id, replaces: "Q"}, "Wisp is an Upgrade that would replace Quill");
+  eq(now()((r) => r.kind === "lot" && r.cardId === "Q")[0].use, "final", "and Quill stays Final: an Upgrade changes nothing in the box");
+  run("acceptOption", {deckId: "d1", slotId: s.decks[0].slots.find((r) => r.cardId === "W").id, substitute: true});
+  eq(now()((r) => r.kind === "lot" && r.cardId === "Q")[0].holds, "W", "reserving the Upgrade makes Quill the Substitute holding Wisp's seat");
+  eq(pick(now()((r) => r.kind === "need" && r.cardId === "W")[0]).replaces, "Q", "and Wisp, Reserved, replaces Quill");
+  run("acquire", {lot: {id: "lH", cardId: "Y", quantity: 1}});
+  run("offer", {lotId: "lH", offer: "available", offerKind: "sell", quantity: 1});
+  eq([now()((r) => r.recordId === "lH")[0].use, s.lots.find((l) => l.id === "lH").offerKind], ["sell", "sell"], "an offer for sale reads Sell");
+  run("offer", {lotId: "lH", offer: "none", quantity: 1});
+  eq([now()((r) => r.recordId === "lH")[0].use, "offerKind" in s.lots.find((l) => l.id === "lH")], ["bench", false], "taken off, it is back on the Bench and says neither");
+  M.validate(s); checks++;
+}
+console.log(`card-states: ${checks} checks passed — use, ownership and play, one function; Rob's example 100 in the deck, 114 in the group.`);

@@ -30,7 +30,7 @@
       "power": 5,
       "toughness": 5
     },
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -52,7 +52,7 @@
       "name": "Four milled; offered the permanent cards among them -- not the instant, not the card already there -- and the Bear returned",
       "library": [
         "Bear",
-        "Shock",
+        "Smoke Shock",
         "Forest",
         "Rock",
         "Island"
@@ -127,7 +127,7 @@
           "zone": "graveyard",
           "cards": [
             "Big Bear",
-            "Shock",
+            "Smoke Shock",
             "Forest",
             "Rock",
             "Midnight Tilling"
@@ -144,7 +144,7 @@
       "name": "\"You may\": none returned, all four stay milled",
       "library": [
         "Bear",
-        "Shock",
+        "Smoke Shock",
         "Forest",
         "Rock",
         "Island"
@@ -194,7 +194,7 @@
           "zone": "graveyard",
           "cards": [
             "Bear",
-            "Shock",
+            "Smoke Shock",
             "Forest",
             "Rock",
             "Midnight Tilling"

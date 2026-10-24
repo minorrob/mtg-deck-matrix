@@ -1,0 +1,88 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Agent Frank Horrigan",
+    "oracleId": "aedcde3b-3ed5-443c-a81c-03d785153e55",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Mutant",
+      "Warrior"
+    ],
+    "manaCost": "{5}{B}{G}",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "colorIdentity": [
+      "B",
+      "G"
+    ],
+    "power": 8,
+    "toughness": 6
+  },
+  "oracleText": "Trample\nAgent Frank Horrigan has indestructible as long as it attacked this turn.\nWhenever Agent Frank Horrigan enters or attacks, proliferate twice. (To proliferate, choose any number of permanents and/or players, then give each another counter of each kind already there.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "static",
+      "text": "Agent Frank Horrigan has indestructible as long as it attacked this turn.",
+      "layer": 6,
+      "affects": {
+        "self": true
+      },
+      "condition": {
+        "present": {
+          "self": true,
+          "attackedThisTurn": true
+        }
+      },
+      "apply": {
+        "addKeywords": [
+          "Indestructible"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever Agent Frank Horrigan enters or attacks, proliferate twice. (To proliferate, choose any number of permanents and/or players, then give each another counter of each kind already there.)",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "proliferate"
+        },
+        {
+          "effect": "proliferate"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever Agent Frank Horrigan enters or attacks, proliferate twice. (To proliferate, choose any number of permanents and/or players, then give each another counter of each kind already there.)",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "proliferate"
+        },
+        {
+          "effect": "proliferate"
+        }
+      ]
+    }
+  ]
+}

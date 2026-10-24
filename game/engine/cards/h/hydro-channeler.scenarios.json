@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Hydro-Channeler",
   "fixtures": {
-    "Tidings": {
+    "Smoke Tidings": {
       "types": [
         "Instant"
       ],
@@ -22,7 +22,7 @@
         ]
       }
     },
-    "Omen": {
+    "Smoke Omen": {
       "types": [
         "Sorcery"
       ],
@@ -109,7 +109,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Tidings"
+            "Smoke Tidings"
           ]
         }
       ],
@@ -121,7 +121,7 @@
           }
         },
         {
-          "cast": "Tidings"
+          "cast": "Smoke Tidings"
         },
         {
           "resolve": true
@@ -139,7 +139,7 @@
           "seat": 0,
           "zone": "graveyard",
           "cards": [
-            "Tidings"
+            "Smoke Tidings"
           ]
         }
       ]
@@ -158,7 +158,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Omen"
+            "Smoke Omen"
           ]
         }
       ],
@@ -170,7 +170,7 @@
           }
         },
         {
-          "cast": "Omen"
+          "cast": "Smoke Omen"
         },
         {
           "resolve": true
@@ -181,7 +181,7 @@
           "seat": 0,
           "zone": "graveyard",
           "cards": [
-            "Omen"
+            "Smoke Omen"
           ]
         }
       ]
@@ -342,7 +342,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Tidings"
+            "Smoke Tidings"
           ]
         }
       ],

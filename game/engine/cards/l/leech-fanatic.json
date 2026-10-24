@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Leech Fanatic",
+    "oracleId": "17bcd92b-1826-4a36-9048-49e5e65a12fd",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Warlock"
+    ],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "During your turn, this creature has lifelink.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Lifelink"
+        ]
+      },
+      "condition": {
+        "yourTurn": true
+      },
+      "text": "During your turn, this creature has lifelink."
+    }
+  ]
+}

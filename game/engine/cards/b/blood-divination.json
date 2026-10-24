@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Blood Divination",
+    "oracleId": "c1cf9d74-e700-456a-9e5a-1c4df22db268",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "As an additional cost to cast this spell, sacrifice a creature.\nDraw three cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "additionalCost": [
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 3
+        }
+      ],
+      "text": "As an additional cost to cast this spell, sacrifice a creature.\nDraw three cards."
+    }
+  ]
+}

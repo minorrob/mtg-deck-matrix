@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Alms Collector",
   "fixtures": {
-    "Divination": {
+    "Smoke Divination": {
       "types": [
         "Instant"
       ],
@@ -20,7 +20,7 @@
         ]
       }
     },
-    "Peek": {
+    "Smoke Peek": {
       "types": [
         "Instant"
       ],
@@ -62,7 +62,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Divination"
+            "Smoke Divination"
           ]
         }
       ],
@@ -79,7 +79,7 @@
           "seat": 1
         },
         {
-          "cast": "Divination",
+          "cast": "Smoke Divination",
           "seat": 1
         },
         {
@@ -120,7 +120,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Divination"
+            "Smoke Divination"
           ]
         },
         {
@@ -134,7 +134,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Peek"
+            "Smoke Peek"
           ]
         }
       ],
@@ -146,7 +146,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Divination"
+          "cast": "Smoke Divination"
         },
         {
           "resolve": true
@@ -159,7 +159,7 @@
           "seat": 1
         },
         {
-          "cast": "Peek",
+          "cast": "Smoke Peek",
           "seat": 1
         },
         {
@@ -211,7 +211,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Divination"
+            "Smoke Divination"
           ]
         }
       ],
@@ -228,7 +228,7 @@
           "seat": 1
         },
         {
-          "cast": "Divination",
+          "cast": "Smoke Divination",
           "seat": 1
         },
         {

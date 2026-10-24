@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hulk, Bruce Banner",
+    "oracleId": "1f14d336-71ef-4e3f-b8e0-42585af8db40",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Gamma",
+      "Berserker",
+      "Hero"
+    ],
+    "manaCost": "{3}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 7,
+    "toughness": 4
+  },
+  "oracleText": "Trample (This creature can deal excess combat damage to the player he's attacking.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "Trample (This creature can deal excess combat damage to the player he's attacking.)"
+    }
+  ]
+}

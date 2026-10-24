@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Snarespinner",
+    "oracleId": "0f63de7b-03f2-49ad-b217-88fe9c50d68a",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spider"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "Reach\nWhenever this creature blocks a creature with flying, this creature gets +2/+0 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "reach",
+      "text": "Reach"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "blocks",
+        "who": "self",
+        "each": "attacker",
+        "blocked": {
+          "keywords": [
+            "Flying"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 2,
+          "toughness": 0
+        }
+      ],
+      "text": "Whenever this creature blocks a creature with flying, this creature gets +2/+0 until end of turn."
+    }
+  ]
+}

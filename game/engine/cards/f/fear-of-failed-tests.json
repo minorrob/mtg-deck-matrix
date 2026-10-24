@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Fear of Failed Tests",
+    "oracleId": "34fd461b-a913-4a60-9477-ce2bd5c6fc5a",
+    "types": [
+      "Enchantment",
+      "Creature"
+    ],
+    "subtypes": [
+      "Nightmare"
+    ],
+    "manaCost": "{4}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 7
+  },
+  "oracleText": "Whenever this creature deals combat damage to a player, draw that many cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature deals combat damage to a player, draw that many cards.",
+      "trigger": {
+        "on": "damage dealt",
+        "who": "self",
+        "to": "player",
+        "combat": true
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": {
+            "damageDealt": true
+          }
+        }
+      ]
+    }
+  ]
+}

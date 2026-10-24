@@ -1,0 +1,90 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Valakut Awakening // Valakut Stoneforge",
+    "oracleId": "ff0ab867-b710-4b1a-baed-95fc3cf68f79",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Put any number of cards from your hand on the bottom of your library, then draw that many cards plus one.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Put any number of cards from your hand on the bottom of your library, then draw that many cards plus one.",
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "hand",
+          "count": 99,
+          "upTo": true,
+          "to": "library",
+          "remember": true
+        },
+        {
+          "effect": "draw",
+          "count": {
+            "rememberedCount": true,
+            "plus": 1
+          }
+        }
+      ]
+    }
+  ],
+  "back": {
+    "identity": {
+      "name": "Valakut Stoneforge",
+      "types": [
+        "Land"
+      ],
+      "subtypes": [],
+      "manaCost": null,
+      "colors": [],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "This land enters tapped.\n{T}: Add {R}.",
+    "abilities": [
+      {
+        "kind": "replacement",
+        "text": "This land enters tapped.",
+        "watches": {
+          "event": "enters",
+          "who": "self"
+        },
+        "change": {
+          "entersTapped": true
+        }
+      },
+      {
+        "kind": "activated",
+        "text": "{T}: Add {R}.",
+        "mana": true,
+        "cost": [
+          {
+            "atom": "{T}"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "addMana",
+            "mana": {
+              "R": 1
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

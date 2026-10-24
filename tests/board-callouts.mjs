@@ -125,10 +125,50 @@ const words = (list) => list.map((c) => `${c.word}${c.number ? " " + c.number : 
   eq(got.map((c) => [c.word, c.line, c.big]), [["VICTORY", "You won", true]], "you won: VICTORY, big, alone");
   const [w2, n2] = after((n) => {n.status = "finished"; n.result = {winner: "s2", reason: "last standing"};});
   eq(calloutsFor(w2, n2).map((c) => [c.word, c.line]), [["GAME OVER", "Nina won"]], "another's win: GAME OVER, naming them");
+  ok(got[0].final === true && calloutsFor(w2, n2)[0].final === true, "the game's end is the final callout");
+}
+/* NEVER BEHIND THE GAME (Rob's one-person, three-AI table, Oct 21): the AI seats' turns come faster than callouts are read,
+   and the queue fell turns behind -- "YOUR TURN · Turn 33" on turn 38, over the game-over panel. When a view's callouts
+   come, those still waiting from more than 2 s before are passed over, a KO or a FATAL never; the game's end clears the
+   queue and the screen; one batch alone is read whole. */
+{
+  const queueCallouts = (queue, list, now) => JSON.parse(JSON.stringify(box.CrankBoard.queueCallouts(queue, list, now)));
+  const said = (q) => q.queue.map((c) => c.word);
+  const first = queueCallouts([], [{word: "YOUR TURN"}, {word: "HIT"}, {word: "KO", big: true}, {word: "LIFE"}], 1000);
+  eq([said(first), first.queue.map((c) => c.at), first.clear], [["YOUR TURN", "HIT", "KO", "LIFE"], [1000, 1000, 1000, 1000], false], "one batch is queued whole, each stamped with when it came");
+  const soon = queueCallouts(first.queue, [{word: "INCOMING"}], 2500);
+  eq(said(soon), ["YOUR TURN", "HIT", "KO", "LIFE", "INCOMING"], "the next view's within 2 s: what waits is still read, the new after it");
+  const late = queueCallouts(first.queue.slice(1), [{word: "INCOMING"}], 3500);
+  eq(said(late), ["KO", "INCOMING"], "the next view's 2.5 s on: the stale ones are passed over, the KO kept, the new read");
+  const over = queueCallouts(soon.queue, [{word: "GAME OVER", big: true, final: true}], 2600);
+  eq([said(over), over.clear], [["GAME OVER"], true], "the game's end clears the queue and the screen: its word is the last");
 }
 /* 9. Never more than six, and nothing for an older view or another game. */
 {
   const [was, next] = after((n) => {n.state.turn = 4; n.state.turnPlayerId = 0; for (const p of n.state.players) p.health.life = 30; n.history = [{turn: 4, text: "Maya's Opt was countered by Negate"}, {turn: 4, text: "Krenko created 3 Goblin tokens"}, {turn: 3, text: "Maya played Swamp"}];});
   ok(calloutsFor(was, next).length === 6, `at most six at once (${calloutsFor(was, next).length} of 7 earned)`);
 }
-console.log(`board-callouts: ${checks} checks passed — the board's reading of a new view against the last: your turn, attackers against you, hits and life, a seat out, countered, proliferate and tokens, destroyed and exiled, counters grown, a response on the stack, the game's end; a hidden card never named; six at most.`);
+/* A SPELL THAT CAME AND WENT (ROB-102): with the stack passed for a person with no answer, another seat's spell can be cast
+   and resolve between two of their views. The view's events say so, and so does a CAST callout. */
+{
+  const cast = (eventId, player, name, stackId) => ({eventId, kind: "cast", turn: 3, phase: "MAIN1", player, card: {cardId: 900 + stackId, name}, stackId});
+  const resolve = (eventId, name, stackId) => ({eventId, kind: "resolve", turn: 3, phase: "MAIN1", card: {cardId: 900 + stackId, name}, stackId});
+  const [was, next] = after((n) => {n.events = [cast("event:40", 2, "Lightning Bolt", 7), resolve("event:41", "Lightning Bolt", 7)];});
+  const got = calloutsFor(was, next).filter((c) => c.word === "CAST");
+  eq(got.map((c) => c.line), ["Nina · Lightning Bolt · resolved"], "another seat's spell cast and resolved between two views is called out: who, what, resolved");
+  ok(got[0].tone === "answer", "as the stack's own color");
+  const [w2, n2] = after((n) => {n.events = [cast("event:40", 2, null, 7), resolve("event:41", null, 7)];});
+  eq(calloutsFor(w2, n2).filter((c) => c.word === "CAST").map((c) => c.line), ["Nina · a face-down spell · resolved"], "a face-down spell is never named");
+  const [w3, n3] = after((n) => {n.events = [cast("event:40", 0, "Counterspell", 8)];});
+  eq(words(calloutsFor(w3, n3)).filter((w) => w === "CAST"), [], "your own cast is not called out to you");
+  const [w4, n4] = after((n) => {n.events = [cast("event:40", 1, "Swords to Plowshares", 9)]; n.state.stack = [{stackId: 9, kind: "spell", name: "Swords to Plowshares", playerId: 1}];});
+  eq(words(calloutsFor(w4, n4)).filter((w) => w === "CAST"), [], "a spell still on the stack is not CAST (you are asked about it)");
+  const [w5, n5] = after((n) => {n.events = [cast("event:40", 3, "Rhystic Study", 10), {eventId: "event:41", kind: "countered", player: 1, stackId: 10}];});
+  eq(words(calloutsFor(w5, n5)).filter((w) => w === "CAST"), [], "a countered spell is the history's COUNTERED, not a CAST");
+  const [w6, n6] = after((n) => {n.events = [cast("event:40", 2, "Lightning Bolt", 7), resolve("event:41", "Lightning Bolt", 7)];});
+  n6.revision = w6.revision;
+  eq(words(calloutsFor(w6, n6)).filter((w) => w === "CAST"), [], "a view sent again, the same revision, calls out nothing again");
+  const [w7, n7] = after((n) => {n.events = [1, 2, 3, 4, 5].map((i) => cast(`event:${40 + i}`, 1 + (i % 3), `Spell ${i}`, 20 + i));});
+  eq(calloutsFor(w7, n7).filter((c) => c.word === "CAST").length, 3, "three CASTs at most from one view");
+}
+console.log(`board-callouts: ${checks} checks passed — the board's reading of a new view against the last: your turn, attackers against you, hits and life, a seat out, countered, proliferate and tokens, destroyed and exiled, counters grown, a response on the stack, a spell that came and went (CAST), the game's end; a hidden card never named; six at most.`);

@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gold Rush",
+    "oracleId": "45687a24-e8cb-4864-8721-410eb8320aab",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Create a Treasure token. Until end of turn, up to one target creature gets +2/+2 for each Treasure you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Create a Treasure token. Until end of turn, up to one target creature gets +2/+2 for each Treasure you control.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "count": {
+            "max": 1
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "predefined": "Treasure"
+          }
+        },
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": {
+            "count": {
+              "what": "permanent",
+              "subtypes": [
+                "Treasure"
+              ],
+              "controller": "you"
+            },
+            "times": 2
+          },
+          "toughness": {
+            "count": {
+              "what": "permanent",
+              "subtypes": [
+                "Treasure"
+              ],
+              "controller": "you"
+            },
+            "times": 2
+          }
+        }
+      ]
+    }
+  ]
+}

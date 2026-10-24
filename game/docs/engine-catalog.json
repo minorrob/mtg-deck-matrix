@@ -9,17 +9,17 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1540,
-  "provisional": 25,
-  "everyRule": 2814
+  "defined": 1873,
+  "provisional": 0,
+  "everyRule": 2880
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 77,
+    "built": 84,
     "partial": 0,
-    "named": 6,
-    "missing": 111
+    "named": 9,
+    "missing": 101
    },
    "entries": [
     {
@@ -403,8 +403,8 @@
      "forge": "Protection",
      "top": 6,
      "all": 58,
-     "blocks": 6,
-     "alone": 4
+     "blocks": 4,
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -446,25 +446,25 @@
      "kind": "keyword ability",
      "rule": "702.172",
      "name": "Spree",
-     "engine": null,
-     "status": "missing",
+     "engine": "Spree",
+     "status": "built",
      "forge": "Spree",
      "top": 6,
      "all": 21,
-     "blocks": 6,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
      "rule": "702.33",
      "name": "Kicker",
-     "engine": null,
-     "status": "missing",
+     "engine": "Kicker",
+     "status": "built",
      "forge": "Kicker",
      "top": 5,
      "all": 239,
-     "blocks": 5,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -506,13 +506,13 @@
      "kind": "keyword ability",
      "rule": "702.85",
      "name": "Cascade",
-     "engine": null,
-     "status": "missing",
+     "engine": "Cascade",
+     "status": "built",
      "forge": "Cascade",
      "top": 5,
      "all": 37,
-     "blocks": 5,
-     "alone": 5
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -674,13 +674,13 @@
      "kind": "keyword ability",
      "rule": "702.126",
      "name": "Improvise",
-     "engine": null,
-     "status": "missing",
+     "engine": "Improvise",
+     "status": "built",
      "forge": "Improvise",
      "top": 3,
      "all": 24,
-     "blocks": 3,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -723,12 +723,12 @@
      "rule": "702.181",
      "name": "Mobilize",
      "engine": null,
-     "status": "missing",
+     "status": "named",
      "forge": "Mobilize",
      "top": 3,
      "all": 15,
-     "blocks": 3,
-     "alone": 3
+     "blocks": 2,
+     "alone": 2
     },
     {
      "kind": "keyword ability",
@@ -1047,7 +1047,7 @@
      "rule": "702.170",
      "name": "Plot",
      "engine": null,
-     "status": "missing",
+     "status": "named",
      "forge": "Plot",
      "top": 1,
      "all": 33,
@@ -1155,11 +1155,11 @@
      "rule": "702.109",
      "name": "Dash",
      "engine": null,
-     "status": "missing",
+     "status": "named",
      "forge": "Dash",
      "top": 1,
      "all": 22,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -1418,8 +1418,8 @@
      "kind": "keyword ability",
      "rule": "702.45",
      "name": "Bushido",
-     "engine": null,
-     "status": "missing",
+     "engine": "Bushido",
+     "status": "built",
      "forge": "Bushido",
      "top": 0,
      "all": 37,
@@ -1442,8 +1442,8 @@
      "kind": "keyword ability",
      "rule": "702.140",
      "name": "Mutate",
-     "engine": null,
-     "status": "missing",
+     "engine": "Mutate",
+     "status": "built",
      "forge": "Mutate",
      "top": 0,
      "all": 34,
@@ -1478,8 +1478,8 @@
      "kind": "keyword ability",
      "rule": "702.171",
      "name": "Saddle",
-     "engine": null,
-     "status": "missing",
+     "engine": "Saddle",
+     "status": "built",
      "forge": "Saddle",
      "top": 0,
      "all": 32,
@@ -2634,8 +2634,8 @@
      "forge": "Discover",
      "top": 6,
      "all": 35,
-     "blocks": 6,
-     "alone": 6
+     "blocks": 5,
+     "alone": 5
     },
     {
      "kind": "keyword action",
@@ -3208,10 +3208,10 @@
   },
   "Effects": {
    "tally": {
-    "built": 78,
+    "built": 79,
     "partial": 2,
     "named": 1,
-    "missing": 111
+    "missing": 110
    },
    "entries": [
     {
@@ -3787,7 +3787,7 @@
      "forge": "ReplaceToken",
      "top": 17,
      "all": 35,
-     "blocks": 4,
+     "blocks": 3,
      "alone": 0
     },
     {
@@ -3926,13 +3926,13 @@
      "kind": "effect",
      "rule": null,
      "name": "RingTemptsYou",
-     "engine": null,
-     "status": "missing",
+     "engine": "ringTempts",
+     "status": "built",
      "forge": "RingTemptsYou",
      "top": 11,
      "all": 49,
-     "blocks": 11,
-     "alone": 8
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4027,8 +4027,8 @@
      "forge": "ChoosePlayer",
      "top": 8,
      "all": 120,
-     "blocks": 8,
-     "alone": 6
+     "blocks": 7,
+     "alone": 5
     },
     {
      "kind": "effect",
@@ -4039,7 +4039,7 @@
      "forge": "Repeat",
      "top": 8,
      "all": 58,
-     "blocks": 8,
+     "blocks": 6,
      "alone": 1
     },
     {
@@ -4111,8 +4111,8 @@
      "forge": "Discover",
      "top": 6,
      "all": 35,
-     "blocks": 6,
-     "alone": 6
+     "blocks": 5,
+     "alone": 5
     },
     {
      "kind": "effect",
@@ -4135,7 +4135,7 @@
      "forge": "ChooseNumber",
      "top": 5,
      "all": 57,
-     "blocks": 4,
+     "blocks": 2,
      "alone": 1
     },
     {
@@ -4171,8 +4171,8 @@
      "forge": "Fog",
      "top": 4,
      "all": 34,
-     "blocks": 4,
-     "alone": 3
+     "blocks": 2,
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -4327,8 +4327,8 @@
      "forge": "ReplaceDamage",
      "top": 2,
      "all": 38,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 1,
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -4399,8 +4399,8 @@
      "forge": "DamageResolve",
      "top": 1,
      "all": 64,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -4435,8 +4435,8 @@
      "forge": "RemoveFromCombat",
      "top": 1,
      "all": 28,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "effect",
@@ -5825,8 +5825,8 @@
      "forge": "Untaps",
      "top": 3,
      "all": 30,
-     "blocks": 3,
-     "alone": 1
+     "blocks": 2,
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -5874,7 +5874,7 @@
      "top": 3,
      "all": 9,
      "blocks": 3,
-     "alone": 0
+     "alone": 2
     },
     {
      "kind": "trigger",
@@ -7587,7 +7587,7 @@
      "forge": "Activations",
      "top": 1,
      "all": 3,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -7599,7 +7599,7 @@
      "forge": "NumLoyaltyAct",
      "top": 1,
      "all": 2,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -8173,7 +8173,7 @@
      "forge": "CreateToken",
      "top": 17,
      "all": 32,
-     "blocks": 4,
+     "blocks": 3,
      "alone": 0
     },
     {
@@ -8197,7 +8197,7 @@
      "forge": "Draw",
      "top": 7,
      "all": 37,
-     "blocks": 5,
+     "blocks": 4,
      "alone": 3
     },
     {
@@ -8209,7 +8209,7 @@
      "forge": "GainLife",
      "top": 6,
      "all": 21,
-     "blocks": 5,
+     "blocks": 3,
      "alone": 1
     },
     {
@@ -8257,7 +8257,7 @@
      "forge": "BeginPhase",
      "top": 1,
      "all": 21,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -8269,7 +8269,7 @@
      "forge": "GameLoss",
      "top": 1,
      "all": 18,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -8281,7 +8281,7 @@
      "forge": "LifeReduced",
      "top": 1,
      "all": 8,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -8317,7 +8317,7 @@
      "forge": "GameWin",
      "top": 1,
      "all": 5,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -8925,7 +8925,7 @@
      "forge": "RememberChanged",
      "top": 124,
      "all": 1168,
-     "blocks": 61,
+     "blocks": 51,
      "alone": 4
     },
     {
@@ -8949,8 +8949,8 @@
      "forge": "RememberObjects",
      "top": 123,
      "all": 1460,
-     "blocks": 65,
-     "alone": 8
+     "blocks": 53,
+     "alone": 10
     },
     {
      "kind": "option",
@@ -9009,7 +9009,7 @@
      "forge": "MayPlay",
      "top": 99,
      "all": 625,
-     "blocks": 44,
+     "blocks": 36,
      "alone": 1
     },
     {
@@ -9201,8 +9201,8 @@
      "forge": "Imprint",
      "top": 10,
      "all": 97,
-     "blocks": 7,
-     "alone": 5
+     "blocks": 6,
+     "alone": 4
     },
     {
      "kind": "option",
@@ -9249,7 +9249,7 @@
      "forge": "UnlessCostSac",
      "top": 7,
      "all": 89,
-     "blocks": 6,
+     "blocks": 4,
      "alone": 4
     },
     {
@@ -9285,8 +9285,8 @@
      "forge": "UnlessCostOther",
      "top": 3,
      "all": 162,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 1,
+     "alone": 1
     },
     {
      "kind": "option",
@@ -9475,8 +9475,8 @@
      "forge": "ThisTurnEntered",
      "top": 11,
      "all": 174,
-     "blocks": 9,
-     "alone": 9
+     "blocks": 8,
+     "alone": 8
     },
     {
      "kind": "count",
@@ -9523,7 +9523,7 @@
      "forge": "Amount",
      "top": 10,
      "all": 43,
-     "blocks": 8,
+     "blocks": 7,
      "alone": 4
     },
     {
@@ -9535,7 +9535,7 @@
      "forge": "RememberedSize",
      "top": 8,
      "all": 71,
-     "blocks": 8,
+     "blocks": 7,
      "alone": 5
     },
     {
@@ -9583,7 +9583,7 @@
      "forge": "ChosenNumber",
      "top": 5,
      "all": 77,
-     "blocks": 4,
+     "blocks": 2,
      "alone": 0
     },
     {
@@ -9631,7 +9631,7 @@
      "forge": "LifeGained",
      "top": 5,
      "all": 20,
-     "blocks": 4,
+     "blocks": 2,
      "alone": 0
     },
     {
@@ -9643,8 +9643,8 @@
      "forge": "Kicked",
      "top": 3,
      "all": 92,
-     "blocks": 3,
-     "alone": 0
+     "blocks": 2,
+     "alone": 2
     },
     {
      "kind": "count",
@@ -9656,7 +9656,7 @@
      "top": 3,
      "all": 30,
      "blocks": 2,
-     "alone": 0
+     "alone": 1
     },
     {
      "kind": "count",
@@ -9739,8 +9739,8 @@
      "forge": "UrzaLands",
      "top": 3,
      "all": 3,
-     "blocks": 3,
-     "alone": 3
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",
@@ -9799,8 +9799,8 @@
      "forge": "MostCardName",
      "top": 2,
      "all": 4,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 1,
+     "alone": 1
     },
     {
      "kind": "count",
@@ -9811,8 +9811,8 @@
      "forge": "ValidStack",
      "top": 2,
      "all": 4,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",
@@ -9991,8 +9991,8 @@
      "forge": "ValidAll",
      "top": 1,
      "all": 6,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",
@@ -10087,8 +10087,8 @@
      "forge": "MaxOppDamageThisTurn",
      "top": 1,
      "all": 2,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",
@@ -10111,8 +10111,8 @@
      "forge": "CardNumAttacksThisTurn",
      "top": 1,
      "all": 1,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",

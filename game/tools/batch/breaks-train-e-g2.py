@@ -17,7 +17,7 @@ TRIGGER = 'game/engine/rules/trigger.mjs'
 SCHEMA = 'game/engine/script/schema.mjs'
 
 WHILE_ASKED = '    if (!conditionHolds(state, condition.while, {controller, source: sourceId})) return [];\n'
-SCHEMA_WHILE_ON = '      if (on !== "spell cast") errors.push({path: `${path}.trigger.while`, message: "\\"While\\" a condition holds is read by a spell cast trigger alone"});\n'
+SCHEMA_WHILE_ON = '      if (!["spell cast", "attacks"].includes(on)) errors.push({path: `${path}.trigger.while`, message: "\\"While\\" a condition holds is read by a spell cast trigger and an attack trigger alone"});\n'
 SCHEMA_WHILE_GRAMMAR = '      for (const message of conditionProblems(ability.trigger.while ?? null)) errors.push({path: `${path}.trigger.while`, message});\n'
 BLOCKED_FILTER = 'matchesSelector({what: "permanent", ...(condition.blocked ?? {})}, state, b.blocking?.cardId, {controller, source: sourceId}))'
 COMPILE_BLOCKED_ON = ('        if (ability.trigger.on !== "blocks") problems.push(`${ability.text}: the creature blocked is read by a blocks trigger, and by no other`);\n'

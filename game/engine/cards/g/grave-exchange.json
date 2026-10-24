@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Grave Exchange",
+    "oracleId": "cc7d902e-c86e-4771-ba66-2f63e847cff1",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Return target creature card from your graveyard to your hand. Target player sacrifices a creature of their choice.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Return target creature card from your graveyard to your hand. Target player sacrifices a creature of their choice.",
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "controller": "you",
+          "types": [
+            "Creature"
+          ]
+        },
+        {
+          "what": "player"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "hand"
+        },
+        {
+          "effect": "sacrifice",
+          "who": {
+            "target": 1
+          },
+          "count": 1,
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

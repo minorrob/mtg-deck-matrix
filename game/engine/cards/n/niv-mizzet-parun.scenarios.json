@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Niv-Mizzet, Parun",
   "fixtures": {
-    "Peek": {
+    "Smoke Peek": {
       "types": [
         "Instant"
       ],
@@ -36,7 +36,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Peek"
+            "Smoke Peek"
           ]
         }
       ],
@@ -45,7 +45,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Peek"
+          "cast": "Smoke Peek"
         },
         {
           "resolve": true

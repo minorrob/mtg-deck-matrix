@@ -1,0 +1,79 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kruphix, God of Horizons",
+    "oracleId": "b2cefcd6-4b81-479c-86ff-1695b836972c",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Enchantment",
+      "Creature"
+    ],
+    "subtypes": [
+      "God"
+    ],
+    "manaCost": "{3}{G}{U}",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": 4,
+    "toughness": 7
+  },
+  "oracleText": "Indestructible\nAs long as your devotion to green and blue is less than seven, Kruphix isn't a creature.\nYou have no maximum hand size.\nIf you would lose unspent mana, that mana becomes colorless instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "indestructible",
+      "text": "Indestructible"
+    },
+    {
+      "kind": "static",
+      "layer": 4,
+      "affects": {
+        "self": true
+      },
+      "condition": {
+        "compare": {
+          "count": {
+            "devotion": [
+              "G",
+              "U"
+            ]
+          },
+          "fewerThan": 7
+        }
+      },
+      "apply": {
+        "removeTypes": [
+          "Creature"
+        ]
+      },
+      "text": "As long as your devotion to green and blue is less than seven, Kruphix isn't a creature."
+    },
+    {
+      "kind": "static",
+      "rule": "no-maximum-hand-size",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "text": "You have no maximum hand size."
+    },
+    {
+      "kind": "static",
+      "rule": "mana-becomes-colorless",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "text": "If you would lose unspent mana, that mana becomes colorless instead."
+    }
+  ]
+}

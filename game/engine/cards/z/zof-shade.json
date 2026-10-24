@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Zof Shade",
+    "oracleId": "8e4b8fe8-882c-4d0f-8fec-0256c62a0df0",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Shade"
+    ],
+    "manaCost": "{3}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "{2}{B}: This creature gets +2/+2 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{B}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 2,
+          "toughness": 2
+        }
+      ],
+      "text": "{2}{B}: This creature gets +2/+2 until end of turn."
+    }
+  ]
+}
