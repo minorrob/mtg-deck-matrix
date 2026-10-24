@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Starfield Vocalist",
+    "oracleId": "4add809e-9caa-45ae-bb0d-4760a360b8e2",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Bard"
+    ],
+    "manaCost": "{3}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "If a permanent entering the battlefield causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time.\nWarp {1}{U} (You may cast this card from your hand for its warp cost. Exile this creature at the beginning of the next end step, then you may cast it from exile on a later turn.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "If a permanent entering the battlefield causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time.",
+      "rule": "triggers-again",
+      "affects": {
+        "what": "permanent",
+        "controller": "you"
+      },
+      "cause": {
+        "event": "enters"
+      }
+    },
+    {
+      "kind": "keyword",
+      "text": "Warp {1}{U}",
+      "keyword": "warp",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{U}"
+        }
+      ]
+    }
+  ]
+}

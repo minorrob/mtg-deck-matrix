@@ -604,6 +604,9 @@ function arrive(state, events) {
      to their next. Before anything triggers at its beginning, or anyone has priority in it. */
   if (state.phase === "END_OF_TURN" && (state.effects ?? []).some((e) => e.until === "your-next-end-step"))
     state.effects = state.effects.filter((e) => !(e.until === "your-next-end-step" && e.sourceController === state.activePlayer));
+  /* "Shards you control become copies of it until the next end step" (Niko, Light of Hope; effects/permanents.mjs, becomeCopy):
+     over as the next end step begins, anyone's (CR 513.1, 611.2a). */
+  if (state.phase === "END_OF_TURN") endCopies(state, "next-end-step");
   /* A draw step skipped (CR 103.8a) is never arrived at: `drawStep`, above. */
   if (state.phase === "DRAW" && !state.players[state.activePlayer].lost) {
     /* CR 504.1 makes the draw a turn-based action, not a choice. A table that asks for the beat (item 13) holds it

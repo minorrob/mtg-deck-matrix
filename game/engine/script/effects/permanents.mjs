@@ -439,12 +439,14 @@ export function endCounterDurations(state) {
   if (over.size) state.effects = state.effects.filter((e) => !over.has(e));
 }
 
-/** "Until end of turn": those copy effects end (rules/turn.mjs, the cleanup step). */
-export function endCopies(state) {
+/** "Until end of turn": those copy effects end (rules/turn.mjs, the cleanup step). "Shards you control become copies of it
+    until the next end step" (Niko, Light of Hope): `until` "next-end-step", over as an end step begins (rules/turn.mjs),
+    before anything triggers then (CR 513.1, 611.2a). */
+export function endCopies(state, until = "end-of-turn") {
   for (const id of state.zones.battlefield) {
     const object = state.objects[id];
-    if (!(object.copyEffects ?? []).some((c) => c.until === "end-of-turn")) continue;
-    object.copyEffects = object.copyEffects.filter((c) => c.until !== "end-of-turn");
+    if (!(object.copyEffects ?? []).some((c) => c.until === until)) continue;
+    object.copyEffects = object.copyEffects.filter((c) => c.until !== until);
     showCopy(object);
   }
 }

@@ -1,0 +1,71 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Parting Gust",
+    "oracleId": "367bb252-41e1-4f98-9d22-442dd332cccf",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Gift a tapped Fish (You may promise an opponent a gift as you cast this spell. If you do, they create a tapped 1/1 blue Fish creature token before its other effects.)\nExile target nontoken creature. If the gift wasn't promised, return that card to the battlefield under its owner's control with a +1/+1 counter on it at the beginning of the next end step.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Gift a tapped Fish",
+      "keyword": "gift",
+      "gift": "a tapped Fish"
+    },
+    {
+      "kind": "spell",
+      "text": "Exile target nontoken creature. If the gift wasn't promised, return that card to the battlefield under its owner's control with a +1/+1 counter on it at the beginning of the next end step.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "token": false
+        }
+      ],
+      "effects": [
+        {
+          "effect": "branch",
+          "if": {
+            "giftPromised": true
+          },
+          "then": [
+            {
+              "effect": "moveZone",
+              "targets": {
+                "target": 0
+              },
+              "to": "exile"
+            }
+          ],
+          "otherwise": [
+            {
+              "effect": "moveZone",
+              "targets": {
+                "target": 0
+              },
+              "to": "exile",
+              "andReturn": "end step",
+              "returnWithCounter": "+1/+1"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

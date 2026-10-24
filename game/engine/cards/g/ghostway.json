@@ -1,0 +1,55 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ghostway",
+    "oracleId": "c8981af1-b0aa-4c19-8520-a7fb59018bc8",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Exile each creature you control. Return those cards to the battlefield under their owner's control at the beginning of the next end step.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Exile each creature you control. Return those cards to the battlefield under their owner's control at the beginning of the next end step.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "moveZoneAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "delayedTrigger",
+          "at": "end step",
+          "text": "Return those cards to the battlefield under their owner's control at the beginning of the next end step.",
+          "effects": [
+            {
+              "effect": "moveZone",
+              "targets": "remembered",
+              "to": "battlefield"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
