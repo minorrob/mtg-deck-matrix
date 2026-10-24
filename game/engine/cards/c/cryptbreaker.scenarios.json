@@ -1,0 +1,224 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Cryptbreaker",
+  "fixtures": {
+    "Grunt": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Zombie"
+      ],
+      "manaCost": "{1}{B}",
+      "colors": [
+        "B"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}"
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Cryptbreaker: {1}{B}, {T}, discard a card makes a 2/2 black Zombie; then it and two other Zombies tap to draw and lose 1",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Cryptbreaker",
+            "Grunt",
+            "Grunt",
+            "Swamp",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rock"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Cryptbreaker",
+          "discard": "Rock"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Rock"
+              ]
+            },
+            {
+              "seat": 0,
+              "tapped": "Cryptbreaker"
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Zombie",
+                "power": 2,
+                "toughness": 2
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Cryptbreaker",
+          "tapping": [
+            "Grunt",
+            "Grunt",
+            "Cryptbreaker"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 2
+        },
+        {
+          "seat": 0,
+          "tapped": "Grunt"
+        },
+        {
+          "seat": 0,
+          "tapped": "Zombie",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Cryptbreaker",
+            "Grunt",
+            "Grunt",
+            "Zombie",
+            "Swamp",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Cryptbreaker: with no card in hand the discard cost cannot be paid; an opponent's Zombies do not pay the tap cost",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Cryptbreaker",
+            "Swamp",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Grunt",
+            "Grunt",
+            "Grunt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Cryptbreaker",
+            "seat": 0
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Cryptbreaker: only Zombies pay the tap cost -- one set of three among it, two Zombies and a Bear",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Cryptbreaker",
+            "Grunt",
+            "Grunt",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Cryptbreaker",
+            "seat": 0
+          },
+          "count": 1,
+          "costs": [
+            [
+              "Cryptbreaker",
+              "Grunt",
+              "Grunt"
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

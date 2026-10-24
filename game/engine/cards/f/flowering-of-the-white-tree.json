@@ -1,0 +1,97 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Flowering of the White Tree",
+    "oracleId": "3cda958a-f777-433d-850e-a6c8f581db4e",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Legendary creatures you control get +2/+1 and have ward {1}.\nNonlegendary creatures you control get +1/+1.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Legendary creatures you control get +2/+1 and have ward {1}.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "controller": "you",
+        "types": [
+          "Creature"
+        ],
+        "supertypes": [
+          "Legendary"
+        ]
+      },
+      "apply": {
+        "power": 2,
+        "toughness": 1
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Legendary creatures you control get +2/+1 and have ward {1}.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "controller": "you",
+        "types": [
+          "Creature"
+        ],
+        "supertypes": [
+          "Legendary"
+        ]
+      },
+      "apply": {
+        "addAbilities": [
+          {
+            "kind": "keyword",
+            "text": "Ward {1}",
+            "keyword": "ward",
+            "cost": [
+              {
+                "atom": "mana",
+                "cost": "{1}"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Nonlegendary creatures you control get +1/+1.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "controller": "you",
+        "types": [
+          "Creature"
+        ],
+        "nonSupertypes": [
+          "Legendary"
+        ]
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dramatic Reversal",
+    "oracleId": "da46904c-8fb8-44c2-b2ab-775a1cc12ec3",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Untap all nonland permanents you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Untap all nonland permanents you control.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "untapAll",
+          "selector": {
+            "what": "permanent",
+            "nonTypes": [
+              "Land"
+            ],
+            "controller": "you"
+          }
+        }
+      ]
+    }
+  ]
+}

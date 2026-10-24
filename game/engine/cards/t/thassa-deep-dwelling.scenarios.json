@@ -44,7 +44,7 @@
       "power": 1,
       "toughness": 1
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -272,7 +272,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ],
@@ -285,7 +285,7 @@
         {
           "offers": {
             "kind": "cast",
-            "card": "Murder"
+            "card": "Smoke Murder"
           },
           "count": 1,
           "targets": [
@@ -312,7 +312,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ],
@@ -325,7 +325,7 @@
             {
               "offers": {
                 "kind": "cast",
-                "card": "Murder"
+                "card": "Smoke Murder"
               },
               "count": 2,
               "targets": [
@@ -340,7 +340,7 @@
           ]
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Thassa, Deep-Dwelling"

@@ -86,6 +86,8 @@ export const PRIMITIVES = Object.freeze({
   ]),
   modifiers: Object.freeze([
     "pump", "pumpAll", "alterAttribute", "effectUntil", "grantKeyword", "regenerate",
+    /* Wave 4d L3: removed from combat (CR 506.4; Reconnaissance). */
+    "removeFromCombat",
   ]),
   flow: Object.freeze([
     "modal", "sequence", "repeatFor", "branch", "delayedTrigger", "immediateTrigger", "counterSpell",
@@ -127,6 +129,8 @@ export const TRIGGER_EVENTS = Object.freeze([
   "transformed",
   /* "When this Class becomes level 2" (CR 716.2a; Caretaker's Talent, Wizard Class; wave 4c). */
   "becomes level",
+  /* "Whenever a permanent becomes untapped" (CR 701.26b; Mesmeric Orb; card load w4d, L2). */
+  "becomes untapped",
 ]);
 
 /** The cost atoms of §12.2. The two symbolic ones are named; the rest are structural. */
@@ -169,6 +173,8 @@ export const TIER0_KEYWORDS = Object.freeze(TIER0_ALL.filter((word) => !TIER0_CO
 const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
   /* Train C phase 2, p6-combat: islandwalk (CR 702.14; Meandering Towershell), forestwalk's rule for Islands. */
   "islandwalk",
+  /* Wave 4d L3: nonbasic landwalk (CR 702.14; Trailblazer's Boots), a land without the supertype basic. */
+  "nonbasic landwalk",
   /* M4 phase 3, batch 54: an ability of the card in hand (cards/index.mjs). Batch 58: station (CR 702.184). */
   "ninjutsu", "station",
   /* Batch 60: a Saga's reminder line, the lore counter it enters with (CR 714.3a). */
@@ -199,6 +205,8 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
   "split second", "riot",
   /* Surge (CR 702.117) and freerunning (CR 702.173): alternative costs (keywords/timing.mjs). */
   "surge", "freerunning",
+  /* Dash (CR 702.109; Ragavan, Nimble Pilferer, wave 4d L3): an alternative cost, haste and a return to the hand (rules/stack.mjs). */
+  "dash",
   /* Embalm (CR 702.128): a token copy from the graveyard (cards/index.mjs). */
   "embalm",
   /* Tiered (CR 702.183): each mode its own additional cost (keywords/timing.mjs). */
@@ -248,7 +256,18 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
   "bushido",
   "saddle",
   /* And dredge (CR 702.52a; Life from the Loam), a draw replaced from the graveyard, its player's choice (script/effects/zones.mjs). */
-  "dredge"];
+  "dredge",
+  /* Card load w4d L1: mobilize (CR 702.181; Voice of Victory), a triggered ability as it attacks (cards/index.mjs). */
+  "mobilize",
+  /* Wave 4d, L6: kicker (CR 702.33a; Tear Asunder), an optional additional cost paid once at most, and what the spell does then
+     (cards/index.mjs, rules/actions.mjs, rules/stack.mjs). */
+  "kicker",
+  /* And improvise (CR 702.126a; Organic Extinction), artifacts tapped to pay a spell's generic mana, as convoke's creatures
+     are (rules/actions.mjs). */
+  "improvise",
+  /* And cascade (CR 702.85a; Apex Devastator), a cast trigger: cards exiled until a nonland one that costs less, cast free
+     (cards/index.mjs). */
+  "cascade"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

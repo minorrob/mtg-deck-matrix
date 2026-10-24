@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dreamstone Hedron",
+    "oracleId": "0e2575be-c596-4c8c-bf07-7941ca065721",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{6}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {C}{C}{C}.\n{3}, {T}, Sacrifice this artifact: Draw three cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 3
+          }
+        }
+      ],
+      "text": "{T}: Add {C}{C}{C}."
+    },
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}"
+        },
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 3
+        }
+      ],
+      "text": "{3}, {T}, Sacrifice this artifact: Draw three cards."
+    }
+  ]
+}

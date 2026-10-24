@@ -1,0 +1,73 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Heraldic Banner",
+    "oracleId": "3525e263-e29a-49bf-a29f-fb3ce43bbd33",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "As this artifact enters, choose a color.\nCreatures you control of the chosen color get +1/+0.\n{T}: Add one mana of the chosen color.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "As this artifact enters, choose a color.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "choose": [
+          "White",
+          "Blue",
+          "Black",
+          "Red",
+          "Green"
+        ]
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Creatures you control of the chosen color get +1/+0.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "controller": "you",
+        "types": [
+          "Creature"
+        ],
+        "colors": [
+          "$chosen"
+        ]
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 0
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add one mana of the chosen color.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "chosenColor": true
+        }
+      ]
+    }
+  ]
+}

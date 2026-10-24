@@ -11,11 +11,32 @@ wave reaches past the library into the most-played Commander cards (`data/engine
   (D7), Goblin Sledder (D6) and Blossoming Defense (D3).
 
 `README.md` there has the numbers, `BRIEF.md` the rules and the lane ownership, and `PROMPTS.md` the six prompts.
-- **The lanes:** branches `claude/engine-w4d-<lane>`, each with a draft PR titled `Card load w4d <lane>: …`. A lane does not
-  merge, mark its PR ready, edit this file or Linear.
-- **The integration:** when all six are up, this session merges them as one: it regenerates once, resolves rules two lanes
-  both built, verifies, opens one PR, closes the six as superseded, and records it here and in Linear (ROB-93).
-- **Then:** the engine progress report is brought up to date.
+
+**Integrated, 2026-10-23, in one merge** (PR #852, `claude/focused-feynman-tt20o3`) with the Decks screen and New deck flow
+(#844, below), which was held for it. **310 of the 333 cards are final:** 2,577 definitions became 2,887.
+
+| Lane | PR | Final | Stopped on |
+| --- | --- | ---: | --- |
+| L1 stack | #846 | 52 of 55 | Cunning Wish, Extrapolate the Impossible (cards from outside the game, CR 400.11); Wear // Tear (split cards and fuse) |
+| L2 graveyard | #845 | 48 of 55 | Sheoldred, Whispering One (swampwalk); Kardur (forced attacks until your next turn); Forge Anew (instant-speed and {0} equip); Electro (unspent red mana kept); Combustible Gearhulk (an opponent's choice of outcomes); Pest Infestation (up to X targets on a spell, L6 built it since); Mines of Moria (exiling three cards from a graveyard as a cost) |
+| L3 combat | #847 | 49 of 55 | Kappa Cannoneer (improvise, L6 built it since); Curse of Opulence (Auras that enchant a player); Grim Hireling and Chatterfang (sacrifice X as a cost); Trouble in Pairs (the second card drawn this turn); Shock stays a candidate (130 scenario files use a Shock fixture) |
+| L4 mana | #849 | 54 of 56 | Archway of Innovation (improvise, L6 built it since); Desperate Ritual (splice onto Arcane) |
+| L5 tokens | #848 | 53 of 56 | Springheart Nantuko (bestow); K'rrik (life for {B}); Caged Sun (mana doubling on any land's mana ability) |
+| L6 spells | #850 | 54 of 56 | Throne of Eldraine (mana spendable only on one color's costs); Marvin, Murderous Mimic (activated abilities copied in layer 6) |
+
+- **Every stored learned record is withdrawn.** The lanes confirmed the last 22 by hand, so the onboarding ledger is 28
+  confirmed and `data/engine/scripts/` is empty.
+- **Where two lanes built the same rule:**
+  - **`multiplyCounters`:** L3 and L5 both added `selector` and `counter`. L3's implementation is kept, and L5's break is
+    retargeted to it.
+  - **Recording the cards `digUntil` exiled:** L1 and L6 each record them, into different slots. L1's `rememberAll`
+    fills "the exiled cards" beside "that card" (Tibalt's Trickery); L6's `remember: "all"` makes them all "that card"
+    (cascade). Both are kept.
+  - **The X a cast announces, in its target context:** L5 and L6 wrote the same line, and it is kept once. L5's
+    `{min: "X", max: "X"}` and L6's up to X on an {X} spell are kept.
+- **Four breaks re-anchored** (`anchors.py`: 3,025 breaks, 0 problems) and proved caught again.
+- **Next (cards now within reach):** Kappa Cannoneer and Archway of Innovation (improvise exists now) and Pest Infestation
+  (up to X targets exists now).
 
 ## Rob's two-card engine load, October 23, 2026 (Codex, `codex/cards-nethroi-boromir`)
 
@@ -309,6 +330,41 @@ Counterintelligence. The current preview milestone is deployed to staging. Side-
 The module registry now includes Screen View, History, AI Coach, Counter-Intel, Resources, On the Stack, Card Preview, Table Vitals, Recommended Actions, Chat, and Actions. AI Coach embeds its existing conversation and preserves drafts through moves; Recommended Actions uses that service. Chat is explicitly unavailable pending the contract below. Actions routes to its assigned drawer in Full screen, with ordinary popups retained elsewhere.
 Volcano uses Rob's supplied video; other environments and the table artwork still need final assets. Crowded-mat layout and text readability need further polish.
 
+## Decks screen and New deck flow, October 23, 2026 (a Claude cloud session, for Rob; `claude/vibrant-turing-50yl3r`, PR #844): merged with wave 4d (PR #852)
+
+Rob named this session for the lanes the Decks requirements name (§19): **Codex · Workshop** for the screens and the
+collection model, **Claude · Deck intelligence** for the backup builder, the write-ups, the vocabulary, recommendations and
+Auto-create. Rob's go, October 23: "Go ahead with the Q1 default, run C, A, B straight through. And handle 844." Every §16
+question took its default (Q1 approved by Rob); §17 and the other Proposed lines (GEN-7, GEN-8, GEN-9) are not built. Six
+other sessions work the engine and card loads; a separate merge session merges this branch with theirs, so this session
+does not merge. The requirements and the plan are `docs/design/2026-10-23-decks-screen/`.
+- **Branch and commits:** Part C `6242caf`, Part A `17a0490`, Part B on top (the PR's head names it).
+- **Proved here (cloud container, Chromium):** Node suites `deck-writeups` 203, `deck-stages` 51, `deck-autocreate` 207,
+  `live-load` 1,266, `collection-model` 746, `card-states` 140, `card-status-flows` 40, `sharing` 71, `deck-composition` 198,
+  `build-wizard` 9, `release-pages` 223, `asset-versions` 133, `feature-wiring` 124, `data-integrity`; browser suites
+  `decks-hub` 64, `new-deck-flow` 41, `deck-writeups-screens` 26, `deck-page-r3` 41, `card-states-screens` 24, `page-budget`
+  80, `browser-geometry` 138, `mobile-r3` 27, `a11y-app` 48, `import-flow` 29, `landing-r3` 51, `group-templates` 16,
+  `deck-holds-cards` 26, `table-lobby` 132; `tests/uat/tour-walk.mjs` 61 steps. Breaks, each caught by a suite:
+  `breaks-deck-writeups.py` 14, `breaks-deck-writeups-screens.py` 6, `breaks-deck-stages.py` 16, `breaks-decks-hub.py` 12,
+  `breaks-deck-autocreate.py` 18, `breaks-new-deck-flow.py` 12: all 78 caught. `tools/local-ci.sh HEAD 0`: SCAN PASS.
+- **For the merge session:** regenerate the `?v=` record (`node tests/asset-versions.mjs --update`) after merging the
+  others; this branch bumped every served file it changed and adds `deck-vocabulary.js`, `deck-recommend.js`,
+  `deck-autocreate.js`, `crankmagic-newdeck.js`, and puts `compliance-model.js`, `deck-generator.js` and
+  `commander-legality.js` on the pages; it removes `crankmagic-build.js`. README's suite count is 568 here (four suites
+  added). Data: `data/deck-writeups-2026-10-23.json`, `data/deck-reference-2026-10-21.json`, `data/commander-index.json`
+  (`node tools/build-commander-index.mjs --check`), and a `Defensive` play style in `data/composition-targets.json`.
+- **Cross-lane, said here:** `tests/table-lobby.mjs` (Codex · Play's suite) had one assertion about the Decks hub's chips;
+  it now reads Boxed and Playable. `tests/release-pages.mjs` allows `data/source/` as provenance (the write-ups name their
+  workbook). `tests/feature-wiring.mjs` exempts printed card names ("Long-Bodied Grey Dog") from the UK-spelling count.
+- **Not proved, and why:** Rob's own restored library isn't reachable from here; Apply deck write-ups is proved on the
+  committed library and a backup built from the 10-21 workbook. Sharing's Shared chip with an account (no Worker here);
+  `tests/sharing.mjs` proves the `via` field. `tests/uat/crankmagic-journeys.mjs` (not in the gate) passes every Decks and
+  New deck step and stops at the Play step's "New table" heading, which this branch doesn't touch.
+- **Known limits, on the PR:** Friends forever pairs aren't offered in Start from's second slot (the graph doesn't mark
+  them); mass land denial is refused only where a card's text is in hand (compliance-model.js); CRD-6's pool check is per
+  mechanic, not per combination; Compare is greyed when a shared deck is selected; the four new play styles are read by
+  `deck-vocabulary.js` from each commander's terms, not added to `crankmagic-strategies.js`.
+
 ## The lanes (AGENTS.md, *Lanes*), since 2026-10-12; five lanes since 2026-10-18
 
 | Lane | Held by | Branch | Doing |
@@ -356,6 +412,8 @@ The session that built step 1 on `claude/practical-shannon-ga8i5j` has stopped. 
 ### Requests between the lanes
 
 Latest UI requests:
+
+- October 23, Workshop (Decks) → Play: the lobby's deck chooser shows a deck's notes (`crankmagic-table.js`). Notes are the owner's own now (the Decks requirements' DPG-4); please show `description` first, then the commanders' rules text as today. Every deck of the 10-21 backup carries one.
 
 - October 22, Codex Play → Engine: the first-final plan requires standard Commander defaults, with `landAnyStep` and broader take-backs only as explicit shared opt-in policies recorded at launch; preserve old match versions. Current human-only relaxed timing is not standard Commander acceptance. ROB-190's pause is not lifted by this planning synthesis.
 - October 22, Codex Play → Engine/shared service: ROB-54 authenticated lobby/table chat and presence are required for first-final. Define membership, ordering/cursors, reconnect, retention and privacy before wiring a live composer. Public discovery, spectators and leaderboards may follow. Existing placeholders stay honest until that service exists.

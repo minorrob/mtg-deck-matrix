@@ -1,0 +1,138 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Inspiring Statuary",
+  "fixtures": {
+    "Big Beast": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Beast"
+      ],
+      "manaCost": "{4}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Clock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{2}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A {4}{G} creature for a Forest, a Wastes and three tapped artifacts, the Statuary among them",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Inspiring Statuary",
+            "Rock",
+            "Ornithopter",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Big Beast"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Big Beast",
+          "convoke": true
+        },
+        {
+          "choose": [
+            "Inspiring Statuary",
+            "Rock",
+            "Ornithopter"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Inspiring Statuary",
+            "Rock",
+            "Ornithopter",
+            "Forest",
+            "Wastes",
+            "Big Beast"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Inspiring Statuary",
+          "is": true
+        }
+      ]
+    },
+    {
+      "name": "An artifact spell does not have improvise",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Inspiring Statuary",
+            "Rock",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Clock"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Clock",
+                "seat": 0
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": []
+    }
+  ]
+}

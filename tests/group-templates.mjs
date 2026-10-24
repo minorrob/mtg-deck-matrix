@@ -86,13 +86,19 @@ try {
   await page.fill("#cm-dialog [name=name]", "Someone");
   await page.locator("#cm-dialog [name=template]").selectOption("commander");
   await page.click("#cm-dialog button[type=submit]");
-  await page.locator("#cm-dialog[open] h2", {hasText: "Create a deck from a commander"}).waitFor();
-  ok(!(await templates(page)).Someone, "choosing Commander deck makes no group of its own: it opens the deck wizard");
+  await page.locator("#cm-dialog[open] h2", {hasText: "Start from"}).waitFor();
+  ok(!(await templates(page)).Someone, "choosing Commander deck makes no group of its own: it opens Start from");
+  await page.locator("#cm-dialog [data-action=close]").first().click();
 
-  /* DECKS: the Bench and a To sell / trade pile are never a deck's box */
-  await page.selectOption("#cm-dialog [name=how]", "group");
-  const boxes = await page.locator("#cm-dialog [name=groupId] option").allInnerTexts();
-  ok(!boxes.includes("Bench") && !boxes.includes("To Buy") && !boxes.some((x) => /To sell \/ trade|Commander deck/.test(x)) && boxes.includes("Binder 3"), `the wizard offers only groups a deck may take (${boxes.join(" | ")})`);
+  /* DECKS: the Bench and a To sell / trade pile are never a deck's box, nor a group to merge in (Define the Deck's Merge
+     in a Group, which took over this road on 2026-10-23) */
+  const withLead = await page.evaluate(() => globalThis.__cm.state.decks.find((d) => d.commanders.length && !d.archived).id);
+  await page.evaluate((id) => globalThis.__cm.actions["define-deck"]({dataset: {deck: id}}), withLead);
+  await page.locator("#cm-dialog[open] h2", {hasText: "Define the Deck"}).waitFor({timeout: 60000});
+  await page.locator(".cm-flow-nav button", {hasText: "Cards"}).click();
+  await page.check("input[name=cards][value=merge]");
+  const boxes = await page.locator("#cm-dialog [name=group] option").allInnerTexts();
+  ok(!boxes.includes("Bench") && !boxes.includes("To Buy") && !boxes.some((x) => /To sell \/ trade|Commander deck/.test(x)) && boxes.includes("Binder 3"), `Merge in a Group offers only groups a deck may take (${boxes.join(" | ")})`);
 
   /* DECKS: Change the collection group, on a deck's page, offers the same */
   await page.locator("#cm-dialog [data-action=close]").first().click();

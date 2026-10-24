@@ -292,9 +292,11 @@ const lands = (s, seat = 0) => legalActions(s, seat).filter((a) => a.kind === "p
   bad(play({spells: true, perType: true, limit: 1}), /no other limit/, "kept by type and limited besides: no");
   bad(play({spells: true, anyMana: 1}), /anyMana is true/, "anyMana: true or nothing");
   good(play({spells: true, limit: 1, additionalCost: [{atom: "sacrifice", selector: {types: ["Land"]}}]}), "the Broodship's");
-  bad(play({spells: true, additionalCost: [{atom: "discard"}]}), /sacrifices of one permanent/, "an additional cost other than a sacrifice: not built");
-  bad(play({spells: true, additionalCost: []}), /sacrifices of one permanent/, "an additional cost of nothing: no");
-  bad(play({spells: true, additionalCost: [{atom: "sacrifice", selector: {types: ["Land"]}, count: 2}]}), /sacrifices of one permanent/, "a sacrifice of two: not built");
+  /* Retrace's land card (CR 702.81a; Six, card load w4d L2): a discard of a card the selector describes. */
+  good(play({spells: true, yourTurn: true, additionalCost: [{atom: "discard", selector: {types: ["Land"]}}]}), "Six's retrace");
+  bad(play({spells: true, additionalCost: [{atom: "payLife", amount: 2}]}), /sacrifices or discards of one each/, "an additional cost other than a sacrifice or a discard: not built");
+  bad(play({spells: true, additionalCost: []}), /sacrifices or discards of one each/, "an additional cost of nothing: no");
+  bad(play({spells: true, additionalCost: [{atom: "sacrifice", selector: {types: ["Land"]}, count: 2}]}), /sacrifices or discards of one each/, "a sacrifice of two: not built");
   bad(play({spells: true, additionalCost: [{atom: "sacrifice", selector: {hue: "R"}}]}), /hue/, "its sacrifice's selector, held to the grammar");
   bad(play({lands: true, spells: true, additionalCost: [{atom: "sacrifice", selector: {types: ["Land"]}}]}), /a spell's/, "an additional cost for a land played: no");
   good([{kind: "static", rule: "cast-without-paying", affects: {types: ["Enchantment"]}, limit: 1, payLife: "manaValue"}], "the Demon's");

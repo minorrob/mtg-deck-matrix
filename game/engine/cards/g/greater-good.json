@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Greater Good",
+    "oracleId": "dc0593c2-ccb4-4648-a592-c5bcd121dc72",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Sacrifice a creature: Draw cards equal to the sacrificed creature's power, then discard three cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "Sacrifice a creature: Draw cards equal to the sacrificed creature's power, then discard three cards.",
+      "cost": [
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": {
+            "powerOf": "sacrificed"
+          }
+        },
+        {
+          "effect": "discard",
+          "count": 3
+        }
+      ]
+    }
+  ]
+}

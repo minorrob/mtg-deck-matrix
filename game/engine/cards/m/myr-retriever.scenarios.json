@@ -1,0 +1,109 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Myr Retriever",
+  "fixtures": {
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Myr Retriever dies: another artifact card returns, never itself",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Myr Retriever",
+            "Altar of Dementia"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Rock"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Altar of Dementia",
+          "sacrifice": "Myr Retriever",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rock"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Myr Retriever"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Alone in the graveyard: nothing to return",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Myr Retriever",
+            "Altar of Dementia"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Altar of Dementia",
+          "sacrifice": "Myr Retriever",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": []
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Myr Retriever"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Liberator, Urza's Battlethopter",
+    "oracleId": "798a4a6f-7443-4e8e-afcb-0a694fdfcbb3",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Thopter"
+    ],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "Flash\nFlying\nYou may cast colorless spells and artifact spells as though they had flash.\nWhenever you cast a spell, if the amount of mana spent to cast that spell is greater than Liberator's power, put a +1/+1 counter on Liberator.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flash",
+      "keyword": "flash"
+    },
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "static",
+      "text": "You may cast colorless spells and artifact spells as though they had flash.",
+      "rule": "cast-as-though-flash",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "spells": {
+        "anyOf": [
+          {
+            "colorless": true
+          },
+          {
+            "types": [
+              "Artifact"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a spell, if the amount of mana spent to cast that spell is greater than Liberator's power, put a +1/+1 counter on Liberator.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you"
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "manaSpent": "that card"
+          },
+          "moreThan": {
+            "powerOf": "self"
+          }
+        }
+      }
+    }
+  ]
+}

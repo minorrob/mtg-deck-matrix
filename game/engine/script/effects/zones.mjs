@@ -25,7 +25,7 @@ import {objectsAfterMove, moveObject, cardsIn, PUBLIC_ZONES, removeObject, event
 import {lastKnown} from "../../rules/layers.mjs";
 import {keywordsOf, controllerOf, abilitiesOf} from "../../rules/layers.mjs";
 import {selectMatching, compileSelector, matchesSelector, shareCreatureType} from "../filter.mjs";
-import {applyReplacements, enteringModifications, regenerated} from "../../rules/replacement.mjs";
+import {applyReplacements, enteringModifications, placeReplacedCounters, regenerated} from "../../rules/replacement.mjs";
 import {cantBeCountered, entersUntapped, enteringCountersPlaced, drawsInstead, cantBeSacrificed, drawForbidden, emptyDrawWins, drawsMore} from "../../rules/statics.mjs";
 import {winGame} from "./resources.mjs";
 import {amountOf} from "../amount.mjs";
@@ -166,6 +166,8 @@ export function moveOne(state, id, to, events, {owner = null, controller = null,
      that changes how many are put on one reads them (CR 122.6). */
   if (destination === "exile" && counters && state.objects[moved])
     for (const [counter, count] of Object.entries(counters)) state.objects[moved].counters[counter] = (state.objects[moved].counters[counter] ?? 0) + count;
+  /* And the counters an exile replacement gave it ("exile it with a void counter on it", Dauthi Voidwalker). */
+  if (destination === proposal.to) placeReplacedCounters(state, moved, proposal);
   events.push(event("GameEventCardChangeZone", state, {
     card,
     ...(leftBehind ? {leftBehind} : {}),
@@ -657,6 +659,10 @@ export function draw(state, params, context) {
     }
     for (let i = 0; i < count; i += 1) drawOne(state, player, events);
   }
+  /* "Each opponent draws a card, then you draw a card for each opponent who drew a card this way" (Cut a Deal): the cards drawn,
+     each the object it is in its drawer's hand, for what follows to count -- one who drew none (an empty library, CR 121.4) is
+     not among them. */
+  if (params.remember) context.remembered = events.map((e) => e.data?.fields).filter((f) => f?.drawn === true && state.objects[f.drewAs]).map((f) => f.drewAs);
   return events;
 }
 /* One card off the top of a player's library into their hand, said to be drawn; from an empty library, the mark that loses (CR 704.5b). */
@@ -680,7 +686,7 @@ function drawOne(state, player, events, replaced = []) {
   if (moved !== null && state.objects[moved]?.zone === "hand") {
     const fields = events[events.length - 1].data.fields;
     fields.drawn = true;
-    fields.drawNumber = recordDraw(state, player);
+    fields.drawNumber = recordDraw(state, player, moved);
     /* The card it is in the hand (CR 400.7): the drawer's own event names it by this (game/room/events.mjs). */
     fields.drewAs = moved;
     /* In the drawer's own draw step, which of the cards drawn there (Orcish Bowmasters; state/index.mjs). */
@@ -935,10 +941,15 @@ export function destroyAll(state, params, context) {
 export function digUntil(state, params, context, rng = null) {
   const events = [];
   const found = [];
+  /* "Exile cards from the top of your library until you exile a nonland card that costs less ... Put the exiled cards on the
+     bottom in a random order" (cascade, CR 702.85a): `remember: "all"`, every card exiled, the one found among them, left
+     in exile for what follows (cards/index.mjs, cascade). */
+  const all = [];
   const below = params.manaValueBelow !== undefined ? amountOf(state, params.manaValueBelow, context) : null;
   const fits = params.selector ? compileSelector({...params.selector, what: "card", zone: params.exile ? "exile" : "library", ...(below !== null ? {manaValue: {max: below - 1}} : {})}) : null;
   const valueOf = (id) => (state.objects[id]?.manaCost ? manaValue(parseManaCost(state.objects[id].manaCost)) : 0);
   const wanted = params.count ?? 1;
+  const dug = [];
   for (const player of playersFor(state, params.who, context.controller)) {
     const taken = [], hits = [];
     let total = 0;
@@ -946,7 +957,10 @@ export function digUntil(state, params, context, rng = null) {
       const id = params.exile ? moveOne(state, top, "exile", events, {owner: player}) : top;
       if (id === null) break;
       if (!params.exile) events.push(event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: player}}));
-      if (fits && fits(state, id, {controller: context.controller, source: context.source})) hits.push(id);
+      /* "Until they exile a nonland card with a different name than that spell" (Tibalt's Trickery; card load w4d L1):
+         `differentName`, the name it must not have -- bound as the resolution began (script/bind.mjs, nameOf). */
+      if (fits && fits(state, id, {controller: context.controller, source: context.source})
+        && (params.differentName === undefined || state.objects[id]?.card !== params.differentName)) hits.push(id);
       else { taken.push(id); total += valueOf(id); }
       if (hits.length >= wanted) break;
       if (params.totalManaValue !== undefined && total >= params.totalManaValue) break;
@@ -957,6 +971,8 @@ export function digUntil(state, params, context, rng = null) {
         ...(params.found?.controller === "you" ? {controller: context.controller} : {})}) : hit;
       if (landed !== null) found.push(landed);
     }
+    if (params.exile && params.rest === undefined) dug.push(...taken);
+    all.push(...taken, ...found);
     if (params.rest === "graveyard" || (params.rest === "exile" && !params.exile)) for (const id of taken) moveOne(state, id, params.rest, events, {owner: player});
     if (params.rest === "bottom") for (const id of inRandomOrder(taken, rng)) {
       if (params.exile) { moveOne(state, id, "library", events, {owner: player}); continue; }
@@ -966,7 +982,10 @@ export function digUntil(state, params, context, rng = null) {
     }
     if (params.rest === "shuffle" && (taken.length || hits.length)) shuffleLibrary(state, player, rng, events);
   }
-  if (params.remember) context.remembered = found.filter((id) => state.objects[id]);
+  if (params.remember) context.remembered = (params.remember === "all" ? all : found).filter((id) => state.objects[id]);
+  /* "Then they put the exiled cards on the bottom of their library in a random order" (Tibalt's Trickery): `rememberAll`,
+     every card this exiled -- the one found too -- for the effect that names them "the exiled cards" (script/bind.mjs). */
+  if (params.rememberAll === true) context.exiledThisWay = [...dug, ...found].filter((id) => state.objects[id]);
   return events;
 }
 

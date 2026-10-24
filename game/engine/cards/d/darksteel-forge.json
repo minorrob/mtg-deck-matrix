@@ -1,0 +1,37 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Darksteel Forge",
+    "oracleId": "9b3bec05-441f-4fdf-8b51-69fa8613fcd4",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{9}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Artifacts you control have indestructible. (Effects that say \"destroy\" don't destroy them. Artifact creatures with indestructible can't be destroyed by damage.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Artifact"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "addKeywords": [
+          "Indestructible"
+        ]
+      },
+      "text": "Artifacts you control have indestructible. (Effects that say \"destroy\" don't destroy them. Artifact creatures with indestructible can't be destroyed by damage.)"
+    }
+  ]
+}

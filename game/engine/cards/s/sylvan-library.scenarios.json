@@ -1,0 +1,373 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Sylvan Library",
+  "fixtures": {
+    "Alpha": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Bravo": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Charlie": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Delta": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Echo": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Three drawn; Bravo kept for 4 life, Charlie put back -- and drawn again next turn",
+      "library": [
+        "Alpha",
+        "Bravo",
+        "Charlie",
+        "Delta"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sylvan Library"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Echo"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "DRAW"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Yes"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Alpha",
+                  "Bravo",
+                  "Charlie"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Bravo",
+            "Charlie"
+          ]
+        },
+        {
+          "choose": [
+            "Pay 4 life"
+          ]
+        },
+        {
+          "choose": [
+            "Don't pay"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "hand",
+              "cards": [
+                "Echo",
+                "Alpha",
+                "Bravo"
+              ]
+            },
+            {
+              "seat": 0,
+              "life": 36
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "DRAW"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "No"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Echo",
+            "Alpha",
+            "Bravo",
+            "Charlie"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Both put back, Charlie then Alpha: Alpha on top, drawn next turn -- when Bravo, drawn on turn 3, is not one to choose",
+      "library": [
+        "Alpha",
+        "Bravo",
+        "Charlie"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sylvan Library"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "DRAW"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Yes"
+          ]
+        },
+        {
+          "choose": [
+            "Charlie",
+            "Alpha"
+          ]
+        },
+        {
+          "choose": [
+            "Don't pay"
+          ]
+        },
+        {
+          "choose": [
+            "Don't pay"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "hand",
+              "cards": [
+                "Bravo"
+              ]
+            },
+            {
+              "seat": 0,
+              "life": 40
+            },
+            {
+              "seat": 0,
+              "zone": "library",
+              "count": 19
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "DRAW"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Yes"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Alpha",
+                  "Charlie",
+                  "Wastes"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Alpha",
+            "Charlie"
+          ]
+        },
+        {
+          "choose": [
+            "Pay 4 life"
+          ]
+        },
+        {
+          "choose": [
+            "Pay 4 life"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bravo",
+            "Alpha",
+            "Charlie",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "life": 32
+        }
+      ]
+    },
+    {
+      "name": "Declined: the step's card alone, nothing to pay",
+      "library": [
+        "Alpha",
+        "Bravo",
+        "Charlie"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sylvan Library"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "DRAW"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "No"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Alpha"
+          ]
+        },
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

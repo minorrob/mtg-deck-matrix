@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Vedalken Archmage",
+    "oracleId": "568cf486-0261-4634-ac36-a6507101b2d0",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Vedalken",
+      "Wizard"
+    ],
+    "manaCost": "{2}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 0,
+    "toughness": 2
+  },
+  "oracleText": "Whenever you cast an artifact spell, draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "filter": {
+          "types": [
+            "Artifact"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ],
+      "text": "Whenever you cast an artifact spell, draw a card."
+    }
+  ]
+}

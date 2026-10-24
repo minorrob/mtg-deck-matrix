@@ -13,7 +13,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -118,7 +118,7 @@
           "zone": "hand",
           "cards": [
             "Ethereal Armor",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -150,7 +150,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Bear"
@@ -168,7 +168,7 @@
           "cards": [
             "Bear",
             "Ethereal Armor",
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ]
@@ -181,7 +181,7 @@
           "zone": "hand",
           "cards": [
             "Ethereal Armor",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -210,7 +210,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Bear"
@@ -231,7 +231,7 @@
           "cards": [
             "Bear",
             "Ethereal Armor",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {

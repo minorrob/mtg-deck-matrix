@@ -1,0 +1,80 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Necropotence",
+    "oracleId": "94a844d2-0574-45a7-b347-e0e329767c42",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{B}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Skip your draw step.\nWhenever you discard a card, exile that card from your graveyard.\nPay 1 life: Exile the top card of your library face down. Put that card into your hand at the beginning of your next end step.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Skip your draw step.",
+      "rule": "skip-draw-step",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you discard a card, exile that card from your graveyard.",
+      "trigger": {
+        "on": "discarded"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "that card",
+          "to": "exile"
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "Pay 1 life: Exile the top card of your library face down. Put that card into your hand at the beginning of your next end step.",
+      "cost": [
+        {
+          "atom": "payLife",
+          "amount": 1
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "fromTop": 1,
+          "who": "you",
+          "to": "exile",
+          "faceDown": true,
+          "remember": true
+        },
+        {
+          "effect": "delayedTrigger",
+          "at": "end step",
+          "yours": true,
+          "text": "Put that card into your hand at the beginning of your next end step.",
+          "effects": [
+            {
+              "effect": "moveZone",
+              "targets": "remembered",
+              "to": "hand"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

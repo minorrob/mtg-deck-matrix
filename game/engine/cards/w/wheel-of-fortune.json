@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wheel of Fortune",
+    "oracleId": "a8abd966-de7b-46a3-8ac7-8747ab35653a",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each player discards their hand, then draws seven cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Each player discards their hand, then draws seven cards.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "discard",
+          "who": "each",
+          "all": true
+        },
+        {
+          "effect": "draw",
+          "who": "each",
+          "count": 7
+        }
+      ]
+    }
+  ]
+}

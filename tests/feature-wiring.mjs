@@ -281,8 +281,11 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
   /* Two event names the Java engine adapter emits (ForgeBrowserBridge.java) keep their spelling: they are
      protocol, not prose, and a journal written before today carries them. Nothing else is exempt. */
   const PROTOCOL = /browser-cast-cancelled|cancelled-model-request/g;
+  /* A card's printed name is its name, not prose: "Long-Bodied Grey Dog" is spelled as Wizards printed it, in the deck
+     write-ups (docs/design/2026-10-23-decks-screen/) as on the card. Only printed names are listed here. */
+  const PRINTED = /Long-Bodied Grey Dog/g;
   const EMAIL = /\be-mails?\b|\be-mailed\b/gi;   // US usage is "email"
-  for (const f of tracked) { const text = readFileSync(path.join(ROOT, f), "utf8").replace(PROTOCOL, ""); const n = (text.match(UK) || []).length + (text.match(EMAIL) || []).length; if (n) { total += n; byFile.push(`${f} (${n})`); } }
+  for (const f of tracked) { const text = readFileSync(path.join(ROOT, f), "utf8").replace(PROTOCOL, "").replace(PRINTED, ""); const n = (text.match(UK) || []).length + (text.match(EMAIL) || []).length; if (n) { total += n; byFile.push(`${f} (${n})`); } }
   /* 586 on the day the rule landed; 563 after V.1c, which rewrote enough stylesheet and deck-file
      prose to take twenty-three with it; 530 after the pass before the first production release
      (2026-09-24), which took every UK spelling in the app's own on-screen words away -- "Colour

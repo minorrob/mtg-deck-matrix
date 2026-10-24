@@ -104,7 +104,9 @@ export function countOf(spec, context = {}) {
   /* "For each opponent, up to one target" (`forEach`): none at least, and no most but the one of each opponent's (oneOfEach). */
   if (forEachOpponent(spec)) return {min: 0, max: null};
   const count = spec && typeof spec === "object" ? spec.count : undefined;
-  return count && typeof count === "object" ? {min: count.min ?? 0, max: count.max === "X" ? Math.max(0, context?.x ?? 0) : count.max ?? null} : null;
+  /* "Exile X target creatures" (Curse of the Swine; CR 601.2c, X chosen before the targets, 601.2b): `min` "X" too, exactly X. */
+  const x = Math.max(0, context?.x ?? 0);
+  return count && typeof count === "object" ? {min: count.min === "X" ? x : count.min ?? 0, max: count.max === "X" ? x : count.max ?? null} : null;
 }
 /** The placeholder a counted target holds in an offer until its controller picks (rules/turn.mjs, "choose-targets"), and
     how many there are to pick from (`of`): "up to two" with none to pick does nothing, for a pilot weighing the offer. */
@@ -395,6 +397,8 @@ function objectsOf(value, context) {
   if (value === "enchanted" || value === "equipped") return context.attached !== undefined && context.attached !== null ? [context.attached] : [];
   /* "A copy of it": what an earlier effect of this resolution moved (effects/zones.mjs, `remember`), while it is there. */
   if (value === "remembered") return (context.remembered ?? []).slice();
+  /* "The exiled cards" (Tibalt's Trickery): every card the digUntil before it exiled (`rememberAll`, effects/zones.mjs). */
+  if (value === "the exiled cards") return (context.exiledThisWay ?? []).slice();
   /* "Each creature that convoked this spell" (Lethal Scheme; CR 702.51c): the creatures tapped to pay for it as it was cast
      (rules/actions.mjs) -- each as it was then, one gone since among them, for an effect that reads last known information
      (connive, CR 701.50b). */

@@ -1,0 +1,55 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Empyrean Eagle",
+    "oracleId": "270d14b2-07bc-46bc-918f-658102265ccf",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Bird",
+      "Spirit"
+    ],
+    "manaCost": "{1}{W}{U}",
+    "colors": [
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Flying\nOther creatures you control with flying get +1/+1.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "another": true,
+        "keywords": [
+          "Flying"
+        ]
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 1
+      },
+      "text": "Other creatures you control with flying get +1/+1."
+    }
+  ]
+}

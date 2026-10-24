@@ -27,7 +27,7 @@ eq((await svc.search(owner,'Wi')).users.length,0,'minimum search length');eq((aw
 let result=await svc.save(owner,{kind:'deck',sourceId:'deck:one',revision:0,publicRole:null,grants:[{id:reviewer.id,role:'reviewer'},{id:writer.id,role:'collaborator'}]},'https://example.com');const id=result.settings.id;
 eq(sent.length,2,'one notification per new recipient');eq(sent[0].from,'CrankMagic <invite@crankmagic.com>','verified sender domain');
 eq((await svc.list(stranger,'deck')).items.length,0,'private item not listed');await rejects(()=>svc.read(id,stranger),404);
-let item=await svc.read(id,reviewer);eq(item.access,'reviewer','review role');eq(item.content.slots.reduce((s,x)=>s+x.quantity,0),100,'complete playable list');
+let item=await svc.read(id,reviewer);eq(item.access,'reviewer','review role');eq(item.via,'grant','reached through a grant to them');eq((await svc.read(id,owner)).via,'owner','the owner reads their own');eq(item.content.slots.reduce((s,x)=>s+x.quantity,0),100,'complete playable list');
 eq(JSON.stringify(item).includes('PRIVATE'),false,'no inventory notes or preferences');
 await rejects(()=>svc.edit(reviewer,id,{head:item.head,command:{type:'editDeck',name:'Hijacked'}}),403);
 const updated=await svc.edit(writer,id,{head:item.head,command:{type:'editDeck',name:'Edited with permission',notes:'New strategy'}});eq(updated.content.name,'Edited with permission','collaborator edits owner item');
@@ -36,7 +36,7 @@ await rejects(()=>svc.edit(writer,id,{head:updated.head,command:{type:'deleteDec
 const quantity=await svc.edit(writer,id,{head:updated.head,command:{type:'target',cardId:'wastes',quantity:98}});eq(quantity.content.slots.find(x=>x.cardId==='wastes').quantity,98,'quantity uses model rules');
 await rejects(()=>svc.emailDeck(writer,{id,email:'friend@example.com'},'https://example.com'),403);
 result=await svc.save(owner,{kind:'deck',sourceId:'deck:one',revision:1,publicRole:'reviewer',grants:[]},'https://example.com');
-eq((await svc.list(stranger,'deck')).items.length,1,'public deck available');await rejects(()=>svc.edit(writer,id,{head:quantity.head,command:{type:'editDeck',name:'No longer writer'}}),403);
+eq((await svc.list(stranger,'deck')).items.length,1,'public deck available');eq((await svc.list(stranger,'deck')).items[0].via,'public','a stranger reaches it only because it is public');await rejects(()=>svc.edit(writer,id,{head:quantity.head,command:{type:'editDeck',name:'No longer writer'}}),403);
 await rejects(()=>svc.save(owner,{kind:'deck',sourceId:'deck:one',revision:1,publicRole:'collaborator',grants:[]},'https://example.com'),409);
 result=await svc.save(owner,{kind:'deck',sourceId:'deck:one',revision:2,publicRole:'collaborator',grants:[]},'https://example.com');eq((await svc.read(id,stranger)).access,'collaborator','explicit public editing');
 result=await svc.save(owner,{kind:'deck',sourceId:'deck:one',revision:3,publicRole:null,grants:[]},'https://example.com');await rejects(()=>svc.read(id,stranger),404);

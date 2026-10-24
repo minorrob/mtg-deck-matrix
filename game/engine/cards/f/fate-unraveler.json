@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Fate Unraveler",
+    "oracleId": "7d66f67d-3148-4636-ac5a-2cf8a51d5e50",
+    "types": [
+      "Enchantment",
+      "Creature"
+    ],
+    "subtypes": [
+      "Hag"
+    ],
+    "manaCost": "{3}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "Whenever an opponent draws a card, this creature deals 1 damage to that player.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "drawn",
+        "drawer": "opponent"
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 1,
+          "who": "that player"
+        }
+      ],
+      "text": "Whenever an opponent draws a card, this creature deals 1 damage to that player."
+    }
+  ]
+}

@@ -1,0 +1,222 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Dauthi Voidwalker",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Giant": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [],
+      "manaCost": "{4}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    }
+  },
+  "scenarios": [
+    {
+      "name": "An opponent's milled cards are exiled with void counters, its caster's own spell goes to the graveyard; then the Giant is played free",
+      "library": [
+        "Giant",
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Dauthi Voidwalker",
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Thought Scour"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Thought Scour",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "zone": "graveyard",
+              "cards": []
+            },
+            {
+              "seat": 1,
+              "zone": "exile",
+              "cards": [
+                "Bear",
+                "Giant"
+              ]
+            },
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Thought Scour"
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Dauthi Voidwalker"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Giant"
+          ]
+        },
+        {
+          "settle": true
+        },
+        {
+          "cast": "Giant"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Giant",
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Dauthi Voidwalker",
+            "Thought Scour"
+          ]
+        },
+        {
+          "seat": 0,
+          "pool": {}
+        }
+      ]
+    },
+    {
+      "name": "An opponent's creature that dies is exiled instead; its caster's own spell goes to the graveyard",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Dauthi Voidwalker",
+            "Swamp",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Overkill"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Overkill",
+          "targets": [
+            {
+              "card": "Bear",
+              "seat": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": []
+        },
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Overkill"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -134,8 +134,8 @@
       "sha": "ed5b8619450f0b9d"
     },
     "collection-model.js": {
-      "version": 59,
-      "sha": "386931afea001ff1"
+      "version": 61,
+      "sha": "bcef2ee7bd8b031e"
     },
     "collection-repository.js": {
       "version": 4,
@@ -144,6 +144,14 @@
     "combat.js": {
       "version": 3,
       "sha": "a35a68f87ac2dadf"
+    },
+    "commander-legality.js": {
+      "version": 1,
+      "sha": "206ce458090103cf"
+    },
+    "compliance-model.js": {
+      "version": 1,
+      "sha": "5843be95892058c1"
     },
     "crankmagic-account.js": {
       "version": 12,
@@ -154,8 +162,8 @@
       "sha": "5dd742bd996b24a6"
     },
     "crankmagic-app.js": {
-      "version": 553,
-      "sha": "c43fba556f21ed56"
+      "version": 554,
+      "sha": "22da33615b9496d7"
     },
     "crankmagic-assets.js": {
       "version": 36,
@@ -173,10 +181,6 @@
       "version": 6,
       "sha": "d9da069f4e655846"
     },
-    "crankmagic-build.js": {
-      "version": 3,
-      "sha": "5bca30af2d16550d"
-    },
     "crankmagic-card-client.js": {
       "version": 1,
       "sha": "4c937886d914b612"
@@ -190,12 +194,12 @@
       "sha": "ff45272f85b35fdf"
     },
     "crankmagic-collection.js": {
-      "version": 105,
-      "sha": "3c8e6055cbed6843"
+      "version": 107,
+      "sha": "a7a73869523ca858"
     },
     "crankmagic-decks.js": {
-      "version": 111,
-      "sha": "cb6bfad4f950293c"
+      "version": 113,
+      "sha": "37398f3a37a0fe59"
     },
     "crankmagic-design.css": {
       "version": 26,
@@ -238,8 +242,8 @@
       "sha": "3dc096731746b0f8"
     },
     "crankmagic-how.js": {
-      "version": 8,
-      "sha": "96523a5abac2599e"
+      "version": 9,
+      "sha": "581878ff5f8c1a8e"
     },
     "crankmagic-lab.js": {
       "version": 59,
@@ -265,6 +269,10 @@
       "version": 2,
       "sha": "63072d792c0f337c"
     },
+    "crankmagic-newdeck.js": {
+      "version": 1,
+      "sha": "1b0758d6246f9046"
+    },
     "crankmagic-online.css": {
       "version": 5,
       "sha": "e90202aaf6c35cbb"
@@ -282,8 +290,8 @@
       "sha": "d9cbaccbac245070"
     },
     "crankmagic-pull.js": {
-      "version": 15,
-      "sha": "e5ea796e6dbbaa43"
+      "version": 16,
+      "sha": "976e6164481fc834"
     },
     "crankmagic-qr.js": {
       "version": 1,
@@ -314,12 +322,12 @@
       "sha": "28329362ce68da61"
     },
     "crankmagic-settings.js": {
-      "version": 16,
-      "sha": "3bff017258645f0e"
+      "version": 17,
+      "sha": "d265daaa37d6f6e5"
     },
     "crankmagic-sharing.js": {
-      "version": 2,
-      "sha": "be7e03276bc0b7a1"
+      "version": 3,
+      "sha": "c61e48dfc0343c82"
     },
     "crankmagic-sim.js": {
       "version": 25,
@@ -342,8 +350,8 @@
       "sha": "07440b83396bb9e2"
     },
     "crankmagic-sw.js": {
-      "version": 536,
-      "sha": "90dd55492f06d31f"
+      "version": 537,
+      "sha": "8b18efba8bc12bde"
     },
     "crankmagic-table.js": {
       "version": 38,
@@ -366,8 +374,8 @@
       "sha": "ca657a27caa9093d"
     },
     "crankmagic.css": {
-      "version": 296,
-      "sha": "94d14e7b94021d02"
+      "version": 299,
+      "sha": "bcb65115e5125151"
     },
     "custom-model.js": {
       "version": 3,
@@ -385,6 +393,10 @@
       "version": 2,
       "sha": "53a48ee6727fe50d"
     },
+    "data/commander-index.json": {
+      "version": 1,
+      "sha": "2541dfac5b4f9c3b"
+    },
     "data/commander-ranks.json": {
       "version": 5,
       "sha": "e0c08d3382aad867"
@@ -396,6 +408,10 @@
     "data/commander-universe.json": {
       "version": 5,
       "sha": "86de616341486376"
+    },
+    "data/composition-targets.json": {
+      "version": 1,
+      "sha": "5b1b24b87f7849c6"
     },
     "data/deck-guides.json": {
       "version": 4,
@@ -421,6 +437,14 @@
       "version": 2,
       "sha": "b20c428c2122b23d"
     },
+    "deck-autocreate.js": {
+      "version": 1,
+      "sha": "8b2a11316511b249"
+    },
+    "deck-generator.js": {
+      "version": 1,
+      "sha": "9e951b1f5c74adf7"
+    },
     "deck-import.js": {
       "version": 3,
       "sha": "b67d05b8cebb25a9"
@@ -429,9 +453,17 @@
       "version": 13,
       "sha": "bdb8232a633d9cc0"
     },
+    "deck-recommend.js": {
+      "version": 1,
+      "sha": "d551c095770b955c"
+    },
     "deck-sources.js": {
       "version": 3,
       "sha": "aef6091b0e154adb"
+    },
+    "deck-vocabulary.js": {
+      "version": 1,
+      "sha": "287e2e9f7d4ae96a"
     },
     "docx-writer.js": {
       "version": 1,

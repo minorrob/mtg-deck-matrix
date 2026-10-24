@@ -16,7 +16,7 @@
       "power": 3,
       "toughness": 3
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -60,7 +60,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ],
@@ -69,7 +69,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Knight"
@@ -106,7 +106,7 @@
           "zone": "graveyard",
           "cards": [
             "Knight",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {

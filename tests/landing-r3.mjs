@@ -81,11 +81,13 @@ try {
     ok(await page.$eval("#cm-landing-query", (i) => i === document.activeElement), "Start without an account puts the cursor in Step one's box");
     await page.locator("#cm-landing-query").fill("Krenko, Mob Boss");
     await page.locator("#cm-landing-start [type=submit]").click();
-    eq(await dialogTitle(page), "Build a deck · Commander", "a name and Start my deck open Build a deck at its commander step");
-    eq(await page.inputValue("#cm-dialog #cm-card-query"), "Krenko, Mob Boss", "with the name already in its search");
-    await page.locator("#cm-dialog [data-pick-card]").first().waitFor({timeout: 30000});
-    ok(/Krenko, Mob Boss/.test(await page.locator("#cm-dialog #cm-card-results").innerText()), "and already searched");
+    eq(await dialogTitle(page), "Start from", "a name and Start my deck open Start from (the Decks requirements' NEW-2, 2026-10-23)");
+    eq(await page.inputValue("#cm-dialog #cm-flow-query"), "Krenko, Mob Boss", "with the name already in its search");
+    await page.locator("#cm-dialog .cm-flow-results [data-name]").first().waitFor({timeout: 30000});
+    ok(/Krenko, Mob Boss/.test(await page.locator("#cm-dialog #cm-flow-list").innerText()), "and already searched");
     await closeDialog(page);
+    /* Start from saves the deck's shell as it opens (SHL-3); this walk wants the library empty again for step 7. */
+    await page.evaluate(async () => {const r = await CrankRepository.open(); try {let s = await r.getState(); for (const d of s.decks) {await r.commit({id: crypto.randomUUID(), type: "deleteDeck", deckId: d.id, confirmed: true}, s.revision); s = await r.getState();}} finally {r.close();}});
 
     const list = "1 Krenko, Mob Boss\n1 Goblin Matron\n1 Mountain";
     await page.locator("#cm-landing-query").fill("");
@@ -120,9 +122,9 @@ try {
     /* 7. Decks with no decks. */
     eq((await page.locator(".cm-decks-empty h2").textContent()).trim(), "No decks yet", "Decks with no decks says so");
     eq(await page.$$eval(".cm-decks-empty .cm-actions [data-action]", (bs) => bs.map((b) => [b.textContent.trim(), b.dataset.action])),
-      [["Start from a commander", "wizard-create"], ["Bring a list", "wizard-import"], ["Restore backup…", "restore"]], "and offers a commander, a list or a backup you saved, in that order");
-    await page.locator(".cm-decks-empty [data-action=wizard-create]").click();
-    eq(await dialogTitle(page), "Build a deck · Commander", "Start from a commander opens Build a deck at its commander step");
+      [["Start from a commander", "start-from"], ["Bring a list", "wizard-import"], ["Restore backup…", "restore"]], "and offers a commander, a list or a backup you saved, in that order");
+    await page.locator(".cm-decks-empty [data-action=start-from]").click();
+    eq(await dialogTitle(page), "Start from", "Start from a commander opens Start from");
     await closeDialog(page);
     ok(!/Build it\.|Make it yours/.test(await page.locator("#cm-main").innerText()), "and the slogan is the landing page's alone");
 

@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bastion Protector",
+    "oracleId": "858f53ef-3fec-4aa0-867d-b7f040614b3c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Soldier"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Commander creatures you control get +2/+2 and have indestructible.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Commander creatures you control get +2/+2 and have indestructible.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "controller": "you",
+        "types": [
+          "Creature"
+        ],
+        "commander": true
+      },
+      "apply": {
+        "power": 2,
+        "toughness": 2
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Commander creatures you control get +2/+2 and have indestructible.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "controller": "you",
+        "types": [
+          "Creature"
+        ],
+        "commander": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Indestructible"
+        ]
+      }
+    }
+  ]
+}

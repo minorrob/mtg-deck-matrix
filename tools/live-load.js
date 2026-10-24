@@ -154,7 +154,7 @@
       const deckId='deck:live:'+d.id,groupId='group:live:'+d.id;deckIds[d.id]=deckId;groupOf[d.id]=groupId;
       const slots=d.cards.map(([name,qty])=>({id:`slot:live:${d.id}:${idOf(name).slice(5)}`,cardId:idOf(name),quantity:qty,purpose:'main'}));
       run({type:'createGroup',groupId,name:d.name});
-      run({type:'createDeck',deckId,name:d.name,commanders:commandersOf(d).map(idOf),slots,definition:d.definition||{},notes:d.notes||'',groupId});
+      run({type:'createDeck',deckId,name:d.name,commanders:commandersOf(d).map(idOf),slots,definition:d.definition||{},notes:d.notes||'',...(d.description!==undefined?{description:d.description}:{}),...(d.howToPlay!==undefined?{howToPlay:d.howToPlay}:{}),groupId});
       slotOf[d.id]=new Map(slots.map(r=>[r.cardId,r.id]));
       if(!d.draft)try{run({type:'finalize',deckId});}catch(err){issues.push(`${d.name} stays a draft: ${err.message}`);}
       for(const o of d.options||[]){const {card,why}=listed(o,d.id+'.options');run({type:'flag',deckId,slotId:slotOf[d.id].get(idOf(card)),option:true,why});}

@@ -4,7 +4,7 @@ import {createRequire} from 'node:module';
 import {buildFile,bundledLookup} from '../tools/build-live-state.mjs';
 import {readFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
-import {importWorkbook,newestWorkbook,same} from '../tools/build-live-load.mjs';
+import {importWorkbook,newestWorkbook,same,referenceHashes} from '../tools/build-live-load.mjs';
 import {basename} from 'node:path';
 const require=createRequire(import.meta.url),M=require('../collection-model.js'),C=require('../card-catalog.js'),L=require('../tools/live-load.js'),E=require('../collection-exchange.js');
 let checks=0;const ok=v=>{assert.ok(v);checks++;},eq=(a,b)=>{assert.equal(a,b);checks++;};
@@ -359,8 +359,17 @@ eq(L.PASSWORD,'treycmload1');
     eq(JSON.stringify(deck('CJ4').commander),JSON.stringify(['Tymna the Weaver',"Kraum, Ludevic's Opus"]));
     eq(deck('D5').commander,'Teysa Karlov');eq(deck('D3').commander,'Ezuri, Claw of Progress');
     eq(deck('CJ1').definition.baseBracket,4);eq(deck('S1-D2').definition.bracketCeiling,2);
-    ok(deck('D1').notes.startsWith('Planeswalker loyalty')&&/Game Changers: Farewell/.test(deck('D1').notes));
-    ok(table.decks.every(d=>d.notes.length>200));
+    /* THE WRITE-UPS, NOT THE EXCEL PROSE (Rob, 2026-10-23, DPG-7): each deck's description and How to play come from
+       data/deck-writeups-2026-10-23.json; its notes are the owner's, so the builder leaves them empty, and the Deck
+       Reference row stays as data. Every card a write-up names is in that deck's list (DPG-9). */
+    const W=JSON.parse(await readFile(new URL('../data/deck-writeups-2026-10-23.json',import.meta.url),'utf8')).decks;
+    ok(table.decks.every(d=>d.notes===''&&d.reference&&d.description===W[d.id].description&&JSON.stringify(d.howToPlay)===JSON.stringify(W[d.id].howToPlay)));
+    ok(/Farewell/.test(deck('D1').reference.gameChangers));
+    eq(Object.keys(W).sort().join(','),table.decks.map(d=>d.id).sort().join(','));
+    for(const d of table.decks){const names=new Set(d.cards.map(([n])=>n));for(const n of W[d.id].named)ok(names.has(n),`${d.id}'s write-up names ${n}, which is not in its list`);}
+    ok(built.state.decks.every(d=>d.notes===''&&d.description&&d.howToPlay.length>=4));
+    /* THE NOTES THE 10-21 BACKUP WROTE, as hashes for Apply deck write-ups (DPG-6): the committed file is this build's. */
+    eq(JSON.stringify(referenceHashes(table).decks),JSON.stringify(JSON.parse(await readFile(new URL('../data/deck-reference-2026-10-21.json',import.meta.url),'utf8')).decks));
     ok(Object.keys(table.prints).length>1300);
   }}
 console.log(`live-load: ${checks} checks passed; the hand-written file rebuilds a validated library, and the committed file loads clean.`);

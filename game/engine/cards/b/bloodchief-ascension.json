@@ -1,0 +1,79 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bloodchief Ascension",
+    "oracleId": "d5ea905b-4bb6-48d0-9082-c472703db550",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "At the beginning of each end step, if an opponent lost 2 or more life this turn, you may put a quest counter on this enchantment. (Damage causes loss of life.)\nWhenever a card is put into an opponent's graveyard from anywhere, if this enchantment has three or more quest counters on it, you may have that player lose 2 life. If you do, you gain 2 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of each end step, if an opponent lost 2 or more life this turn, you may put a quest counter on this enchantment.",
+      "trigger": {
+        "on": "end step",
+        "yours": false
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "quest",
+          "count": 1
+        }
+      ],
+      "optional": true,
+      "condition": {
+        "compare": {
+          "count": {
+            "count": {
+              "what": "player",
+              "who": "opponent",
+              "lostThisTurnAtLeast": 2
+            }
+          },
+          "atLeast": 1
+        }
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a card is put into an opponent's graveyard from anywhere, if this enchantment has three or more quest counters on it, you may have that player lose 2 life. If you do, you gain 2 life.",
+      "trigger": {
+        "on": "put into graveyard",
+        "owner": "opponent"
+      },
+      "effects": [
+        {
+          "effect": "loseLife",
+          "who": "that player",
+          "amount": 2
+        },
+        {
+          "effect": "gainLife",
+          "amount": 2
+        }
+      ],
+      "optional": true,
+      "condition": {
+        "selfCounters": {
+          "counter": "quest",
+          "atLeast": 3
+        }
+      }
+    }
+  ]
+}

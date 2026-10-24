@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Simian Spirit Guide",
+    "oracleId": "44e0ffa3-8915-4c1f-8f1a-4aeea1365f07",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Ape",
+      "Spirit"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Exile this card from your hand: Add {R}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "Exile this card from your hand: Add {R}.",
+      "mana": true,
+      "zone": "hand",
+      "cost": [
+        {
+          "atom": "exile",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "R": 1
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -786,6 +786,8 @@ export const combatDamage = {
         /* Dealt combat damage this turn, infect or not ("the number of opponents that were dealt combat damage this turn",
            Tymna the Weaver; script/amount.mjs). turn.mjs clears it. */
         state.players[hit.toPlayer].combatDamagedThisTurn = true;
+        /* And how much, noncombat damage counted beside it (effects/resources.mjs; Spinerock Knoll). */
+        state.players[hit.toPlayer].damagedThisTurn = (state.players[hit.toPlayer].damagedThisTurn ?? 0) + hit.amount;
         /* PROWL'S RECORD (CR 702.76a): "a source that, at the time it dealt that damage, was under your control and had any
            of this spell's creature types" -- each source that dealt combat damage to a player this turn, kept for the player
            who controlled it, with its creature types as it dealt it (a changeling's, every one). turn.mjs clears it. */

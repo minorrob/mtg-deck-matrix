@@ -50,7 +50,7 @@
         "Legendary"
       ]
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -226,7 +226,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -240,7 +240,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ],
@@ -306,7 +306,7 @@
           "tap": "Swamp"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Hero"
@@ -343,7 +343,7 @@
             {
               "offers": {
                 "kind": "cast",
-                "card": "Murder",
+                "card": "Smoke Murder",
                 "seat": 1
               },
               "count": 1,

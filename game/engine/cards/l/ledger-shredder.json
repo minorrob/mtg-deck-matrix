@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ledger Shredder",
+    "oracleId": "e9117015-1050-44dd-a46b-e7ffe2085fae",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Bird",
+      "Advisor"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "Flying\nWhenever a player casts their second spell each turn, this creature connives. (Draw a card, then discard a card. If you discarded a nonland card, put a +1/+1 counter on this creature.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a player casts their second spell each turn, this creature connives. (Draw a card, then discard a card. If you discarded a nonland card, put a +1/+1 counter on this creature.)",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "any",
+        "nthThisTurn": 2
+      },
+      "effects": [
+        {
+          "effect": "connive",
+          "targets": "self"
+        }
+      ]
+    }
+  ]
+}

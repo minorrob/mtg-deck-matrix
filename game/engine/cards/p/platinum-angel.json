@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Platinum Angel",
+    "oracleId": "b148578c-c0bf-4785-b97c-4b6f83028008",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel"
+    ],
+    "manaCost": "{7}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Flying\nYou can't lose the game and your opponents can't win the game.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "static",
+      "rule": "cant-lose",
+      "affects": {
+        "self": true
+      },
+      "text": "You can't lose the game and your opponents can't win the game."
+    },
+    {
+      "kind": "static",
+      "rule": "opponents-cant-win",
+      "affects": {
+        "self": true
+      },
+      "text": "You can't lose the game and your opponents can't win the game."
+    }
+  ]
+}

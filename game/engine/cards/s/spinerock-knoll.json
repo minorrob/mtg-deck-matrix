@@ -1,0 +1,90 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Spinerock Knoll",
+    "oracleId": "690c7f8e-fea2-4920-afa7-02ff120701a1",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Hideaway 4 (When this land enters, look at the top four cards of your library, exile one face down, then put the rest on the bottom in a random order.)\nThis land enters tapped.\n{T}: Add {R}.\n{R}, {T}: You may play the exiled card without paying its mana cost if an opponent was dealt 7 or more damage this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Hideaway 4",
+      "keyword": "hideaway",
+      "amount": 4
+    },
+    {
+      "kind": "replacement",
+      "text": "This land enters tapped.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersTapped": true
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {R}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "R": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{R}, {T}: You may play the exiled card without paying its mana cost if an opponent was dealt 7 or more damage this turn.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{R}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "play",
+          "from": "selector",
+          "selector": {
+            "zone": "exile",
+            "exiledWith": "self"
+          },
+          "free": true,
+          "lands": true,
+          "condition": {
+            "compare": {
+              "count": {
+                "damageTakenThisTurn": "an opponent"
+              },
+              "atLeast": 7
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

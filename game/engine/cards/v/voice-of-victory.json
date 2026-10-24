@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Voice of Victory",
+    "oracleId": "b12cbda1-ac09-49eb-96b3-a4df27bc37ea",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Bard"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "Mobilize 2 (Whenever this creature attacks, create two tapped and attacking 1/1 red Warrior creature tokens. Sacrifice them at the beginning of the next end step.)\nYour opponents can't cast spells during your turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Mobilize 2",
+      "keyword": "mobilize",
+      "amount": 2
+    },
+    {
+      "kind": "static",
+      "text": "Your opponents can't cast spells during your turn.",
+      "rule": "cant-cast",
+      "affects": {
+        "what": "player",
+        "who": "opponent"
+      },
+      "duringYourTurn": true
+    }
+  ]
+}

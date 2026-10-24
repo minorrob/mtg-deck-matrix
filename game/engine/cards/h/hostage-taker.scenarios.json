@@ -37,7 +37,7 @@
       "manaCost": "{3}",
       "colors": []
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -197,7 +197,7 @@
           "zone": "hand",
           "cards": [
             "Hostage Taker",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -254,7 +254,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Hostage Taker"
@@ -308,7 +308,7 @@
           "zone": "hand",
           "cards": [
             "Hostage Taker",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -353,7 +353,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Hostage Taker"
@@ -406,7 +406,7 @@
           "zone": "hand",
           "cards": [
             "Hostage Taker",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -455,7 +455,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Hostage Taker"
@@ -484,7 +484,7 @@
           "zone": "graveyard",
           "cards": [
             "Hostage Taker",
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ]

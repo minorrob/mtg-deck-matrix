@@ -45,7 +45,7 @@ BREAKS = [
      "      if (!Array.isArray(list) || !list.length) { problems.push(`${text}: an emblem's abilities are a list, with at least one`); continue; }\n",
      '      if (!Array.isArray(list)) continue;\n'),
     ("emblem: only what works from the command zone", CARDS,
-     '''      for (const ability of list) if (!(["triggered", "replacement"].includes(ability?.kind) || (ability?.kind === "static" && typeof ability.rule === "string" && ability.affects?.what === "player")))''',
+     '''      for (const ability of list) if (!(["triggered", "replacement"].includes(ability?.kind) || (ability?.kind === "static" && typeof ability.rule === "string" && ability.affects?.what === "player")\n        || (ability?.kind === "static" && ability.rule === undefined && Number.isInteger(ability.layer))))''',
      '''      for (const ability of list) if (false)'''),
     ("emblem: its abilities' targets are its own", BIND,
      '    if (value.effect === "emblem") return;\n', ''),

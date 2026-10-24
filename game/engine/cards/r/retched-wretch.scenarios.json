@@ -31,7 +31,7 @@
         ]
       }
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -205,9 +205,9 @@
           "zone": "hand",
           "cards": [
             "Wither",
-            "Murder",
+            "Smoke Murder",
             "Wither",
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ],
@@ -230,7 +230,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Retched Wretch"
@@ -288,7 +288,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Retched Wretch"
@@ -310,8 +310,8 @@
             "Retched Wretch",
             "Wither",
             "Wither",
-            "Murder",
-            "Murder"
+            "Smoke Murder",
+            "Smoke Murder"
           ]
         }
       ]
@@ -333,7 +333,7 @@
           "zone": "hand",
           "cards": [
             "Grow",
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ],
@@ -356,7 +356,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Retched Wretch"
@@ -377,7 +377,7 @@
           "cards": [
             "Retched Wretch",
             "Grow",
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ]
@@ -464,7 +464,7 @@
           "zone": "hand",
           "cards": [
             "Wither",
-            "Murder",
+            "Smoke Murder",
             "Goblin Mimicry"
           ]
         },
@@ -495,7 +495,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Retched Wretch"

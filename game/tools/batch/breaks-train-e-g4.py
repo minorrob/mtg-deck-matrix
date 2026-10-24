@@ -18,7 +18,7 @@ STATICS = 'game/engine/rules/statics.mjs'
 FITS = 'const discardFits = (state, discard, id, player) => typeof discard !== "object" || compileSelector({...discard, what: "card", zone: "hand"})(state, id, {controller: player});'
 NOUN = 'const discardNoun = (discard) => (typeof discard === "object" ? `${noun(discard)} card` : "a card");'
 OPTIONS = '  if (awaiting.discard) return cardsIn(state, "hand", player).filter((id) => discardFits(state, awaiting.discard, id, player))\n'
-WORDS = 'const other = awaiting.discard ? `discard ${discardNoun(awaiting.discard)}` : awaiting.sacrificeCount'
+WORDS = ': awaiting.discard ? `discard ${discardNoun(awaiting.discard)}` : awaiting.sacrificeCount'
 
 MAY = '''    if (params.may === true) {
       const questions = entry.targets.map((t, index) => ({stackId: entry.stackId, index, list: Array.isArray(t)}))

@@ -1,0 +1,165 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Sea Gate Restoration // Sea Gate, Reborn",
+  "scenarios": [
+    {
+      "name": "Six other cards in hand: seven drawn; and all thirteen kept through the cleanup step (no maximum hand size)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sea Gate Restoration // Sea Gate, Reborn",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Sea Gate Restoration"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "hand",
+              "count": 13
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 14
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Sea Gate Restoration"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Sea Gate, Reborn: 3 life paid, untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sea Gate Restoration // Sea Gate, Reborn"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Sea Gate, Reborn"
+        },
+        {
+          "answer": [
+            0
+          ]
+        },
+        {
+          "tap": "Sea Gate, Reborn"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 37
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "U": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sea Gate, Reborn: no life paid, tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sea Gate Restoration // Sea Gate, Reborn"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Sea Gate, Reborn"
+        },
+        {
+          "answer": [
+            1
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "tapped": "Sea Gate, Reborn",
+          "is": true
+        }
+      ]
+    }
+  ]
+}

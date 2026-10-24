@@ -1,0 +1,85 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bristly Bill, Spine Sower",
+    "oracleId": "d3b2d8a2-d3bc-448c-9cf6-6bead6010c28",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Plant",
+      "Druid"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Landfall — Whenever a land you control enters, put a +1/+1 counter on target creature.\n{3}{G}{G}: Double the number of +1/+1 counters on each creature you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Landfall — Whenever a land you control enters, put a +1/+1 counter on target creature.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Land"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{3}{G}{G}: Double the number of +1/+1 counters on each creature you control.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}{G}{G}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "multiplyCounters",
+          "selector": {
+            "what": "permanent",
+            "controller": "you",
+            "types": [
+              "Creature"
+            ]
+          },
+          "counter": "+1/+1"
+        }
+      ]
+    }
+  ]
+}

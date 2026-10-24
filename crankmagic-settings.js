@@ -48,7 +48,7 @@ views.settings=async()=>{
    +card('budget','Budget',budgetCard(acct))
    +card('ai','AI Coach',`<p>What the AI may suggest, how much it says, and what the Coach may see at a table. Nothing here turns an AI feature on: those are invite-only.</p><div class="cm-settings-row">${b('AI Coach settings…','ai-settings')}</div>`)
    +card('data','Data',
-      `<div class="cm-settings-stack">${b('Save a backup file','backup')}${b('Restore from a backup file','restore')}${b('Export as Excel','export-excel')}${b('Email the export…','share-export')}</div>`
+      `<div class="cm-settings-stack">${b('Save a backup file','backup')}${b('Restore from a backup file','restore')}${b('Export as Excel','export-excel')}${b('Email the export…','share-export')}${b('Apply deck write-ups…','apply-writeups')}</div>`
       +`<p class="cm-settings-label">History</p><div class="cm-settings-stack">${b('See every change…','history')}${b('Undo last change','undo')}</div>`
       +`<div class="cm-settings-danger"><p class="cm-settings-label">Danger zone</p><div id="cm-settings-delete"></div>${b('Clear all data','clear',{},false,{cls:'cm-danger'})}<p class="cm-muted">Removes the library, decks, history and cached card data from this device. Save a backup first.</p></div>`)
    +card('about','About',`<p id="cm-save-status" class="cm-muted"></p><div id="cm-data-dates" class="cm-data-dates"></div>${version?'':'<p class="cm-muted">A development copy: no release version.</p>'}`
@@ -58,6 +58,22 @@ views.settings=async()=>{
 };
 
 actions['open-settings']=()=>C.go('settings');
+/* APPLY DECK WRITE-UPS (DPG-5, DPG-6; Rob, 2026-10-23). A one-time action: each deck of the 10-21 backup gets its short
+   description and How to play from data/deck-writeups-2026-10-23.json, in place of the text carried in from Excel. The
+   preview names what matches and what doesn't before anything changes; Apply is one batch, so one Undo takes it back. */
+const WRITEUPS='data/deck-writeups-2026-10-23.json',REFERENCE='data/deck-reference-2026-10-21.json';
+actions['apply-writeups']=async()=>{
+  const read=async url=>{const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw Error(`The deck write-ups could not be read (${r.status}). Try again when connected.`);return r.json();};
+  const [writeups,hashes]=await Promise.all([read(WRITEUPS),read(REFERENCE)]);
+  const noteHash=new Map();for(const d of C.state.decks)if(d.notes)noteHash.set(d.id,await C.E.hash(d.notes));
+  const plan=M.writeupPlan(C.state,writeups,hashes,noteHash),list=(rows,f)=>`<ul class="cm-writeup-list">${rows.map(f).join('')}</ul>`;
+  const body=`<div class="cm-full" id="cm-writeups-preview"><p><strong>${plan.matched.length}</strong> of ${Object.keys(writeups.decks||{}).length} write-ups match a deck${plan.todo.length<plan.matched.length?` · ${plan.matched.length-plan.todo.length} already applied`:''}.</p>`
+    +(plan.todo.length?`<h3>Gets a description and How to play</h3>${list(plan.todo,m=>`<li data-writeup="${e(m.id)}">${e(m.name)}${m.clearNotes?' <span class="cm-muted">· Excel notes cleared</span>':''}</li>`)}`:'')
+    +(plan.matched.some(m=>m.keptNotes)?`<h3>Your notes stay</h3>${list(plan.matched.filter(m=>m.keptNotes),m=>`<li data-kept="${e(m.id)}">${e(m.name)}</li>`)}`:'')
+    +(plan.unmatched.length?`<h3>No deck found</h3>${list(plan.unmatched,m=>`<li data-unmatched="${e(m.id)}">${e(m.name)} <span class="cm-muted">· ${e(m.why)}</span></li>`)}`:'')+`</div>`;
+  if(!plan.command)return C.modal('Apply deck write-ups',body+`<div class="cm-form-footer">${b('Close','close',{},true)}</div>`);
+  C.form('Apply deck write-ups',body,async()=>{await commit(plan.command);},`Apply to ${plan.todo.length} deck${plan.todo.length===1?'':'s'}`);
+};
 /* AI COACH SETTINGS (AI-6, docs/plan-to-done-2026-09-30.md). One panel, two doors: Settings above, and the board's Tools.
    Six controls, nothing else, saved with the person's preferences (`aiCoach`) and synced with the library, so the Worker
    reads the advisor's from the library it holds (cloud/advise.mjs aiSettingsOf, whose defaults these are); the Coach's
