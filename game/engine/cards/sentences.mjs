@@ -331,7 +331,7 @@ export function atomsOf(text) {
         }
         for (const [x, y] of words) {
           const piece = body.slice(x, y), pl = piece.length - piece.trimStart().length;
-          if (piece.trim()) out.push({start: lineStart + a + lead + x + pl, end: lineStart + a + lead + x + pl + piece.trim().length});
+          if (piece.trim()) out.push({start: lineStart + a + lead + x + pl, end: lineStart + a + lead + x + pl + piece.trim().length, keyword: true});
         }
       } else out.push({start: lineStart + a + lead, end: lineStart + a + lead + body.length});
     }
@@ -394,21 +394,39 @@ export function segment(text, name, library, except = null) {
  * every span `keep` accepts, and the sentences left, each with its place in the text. A spell is never half written:
  * when anything is left, its sentences are left too, so the writer writes the whole spell.
  *
+ * NOR IS ANY ABILITY (CR 113.2c: each paragraph of a card's text is one ability, but for keywords strung on one line,
+ * 702.1c). A paragraph the library knows only in part is left whole, its known sentences with it, and asked of the writer
+ * as one piece -- Gemstone Caverns' "{T}: Add {C}." is a sentence the library knows, and "If Gemstone Caverns has a luck
+ * counter on it, instead add one mana of any color." the rest of that same mana ability: written apart, they would be two
+ * mana abilities, and the luck counter's "instead" no option of the {C} one (library load L4, 2026-10-21). A keyword
+ * line's words stay each its own ability.
+ *
  * @returns {{known: object[], write: {text: string, start: number}[], templates: string[]}}
  */
 export function partialTranslate(card, library, {except = null, keep = () => true} = {}) {
-  const name = card.identity.name;
+  const name = card.identity.name, raw = String(card.oracleText ?? "");
   const {atoms, spans} = segment(card.oracleText, name, library, except);
   const inside = (a, list) => list.some((s) => a.start >= s.start && a.end <= s.end);
   const trusted = spans.filter((s) => keep(s.id));
   const whole = trusted.length === spans.length && atoms.every((a) => inside(a, spans));
-  const kept = whole ? trusted : trusted.filter((s) => !s.spell);
+  const paragraph = (at) => (raw.slice(0, at).match(/\n/g) ?? []).length;
+  const unspell = whole ? trusted : trusted.filter((s) => !s.spell);
+  /* The paragraphs with a sentence left: none of their spans kept. */
+  const open = new Set(atoms.filter((a) => !a.keyword && !inside(a, unspell)).map((a) => paragraph(a.start)));
+  const kept = unspell.filter((s) => !open.has(paragraph(s.start)));
   const known = kept.flatMap((span) => {
     const t = templateWithout(library, span.id, except);
     const {slots} = templateOf(span.text, name, t.level);
     return JSON.parse(t.body).map((body) => ({...fillBody(body, slots, name), text: span.text}));
   });
-  return {known, write: atoms.filter((a) => !inside(a, kept)).map((a) => ({text: a.text, start: a.start})), templates: kept.map((s) => s.id)};
+  /* What is left, a paragraph's sentences together as the one ability they are; a keyword line's words, each alone. */
+  const write = [];
+  for (const a of atoms.filter((x) => !inside(x, kept))) {
+    const last = write[write.length - 1];
+    if (last && !a.keyword && last.paragraph === paragraph(a.start)) { last.end = a.end; continue; }
+    write.push({start: a.start, end: a.end, paragraph: paragraph(a.start)});
+  }
+  return {known, write: write.map((w) => ({text: raw.slice(w.start, w.end), start: w.start})), templates: kept.map((s) => s.id)};
 }
 
 /**

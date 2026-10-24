@@ -24,7 +24,7 @@ BREAKS = [
     ("a distrusted sentence kept as written", 'game/engine/cards/sentences.mjs',
      '  const trusted = spans.filter((s) => keep(s.id));', '  const trusted = spans;'),
     ("a spell half written", 'game/engine/cards/sentences.mjs',
-     '  const kept = whole ? trusted : trusted.filter((s) => !s.spell);', '  const kept = trusted;'),
+     '  const unspell = whole ? trusted : trusted.filter((s) => !s.spell);', '  const unspell = trusted;'),
     ("the sample's scenarios not played", 'game/tools/engine-compile.mjs',
      '    try { for (const scenario of file.scenarios) runScenario(scenario, cards, file.fixtures ?? {}); }\n    catch (error) { row("failed", `plays:', '    try { }\n    catch (error) { row("failed", `plays:'),
     ("the sample past its cap", 'game/tools/engine-compile.mjs',
