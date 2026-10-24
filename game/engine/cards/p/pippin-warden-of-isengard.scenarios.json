@@ -1,0 +1,291 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Pippin, Warden of Isengard",
+  "fixtures": {
+    "Food": {
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [
+        "Food"
+      ],
+      "colors": [],
+      "token": true,
+      "abilities": [
+        {
+          "id": "food",
+          "kind": "activated",
+          "text": "{2}, {T}, Sacrifice this artifact: You gain 3 life.",
+          "targets": [],
+          "cost": [
+            {
+              "atom": "mana",
+              "cost": "{2}"
+            },
+            {
+              "atom": "{T}"
+            },
+            {
+              "atom": "sacrifice",
+              "self": true
+            }
+          ],
+          "effects": [
+            {
+              "effect": "gainLife",
+              "amount": 3
+            }
+          ]
+        }
+      ]
+    },
+    "Grizzly Bears": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{1}, {T}: a Food",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Pippin, Warden of Isengard",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Pippin, Warden of Isengard",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Pippin, Warden of Isengard",
+            "Food",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Four Foods: the other creatures get +3/+3 and haste; Pippin does not",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Pippin, Warden of Isengard",
+            "Food",
+            "Food",
+            "Food",
+            "Food"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Grizzly Bears"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Grizzly Bears"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Pippin, Warden of Isengard",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Grizzly Bears",
+            "power": 5,
+            "toughness": 5
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Grizzly Bears",
+            "has": [
+              "Haste"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Pippin, Warden of Isengard",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Grizzly Bears",
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "Three Foods: not offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Pippin, Warden of Isengard",
+            "Food",
+            "Food",
+            "Food"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Pippin, Warden of Isengard"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Only as a sorcery: not in combat",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Pippin, Warden of Isengard",
+            "Food",
+            "Food",
+            "Food",
+            "Food"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_BEGIN"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Pippin, Warden of Isengard"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Pippin enters: Rob may search for Merry",
+      "library": [
+        "Merry, Warden of Isengard"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Pippin, Warden of Isengard"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Pippin, Warden of Isengard"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Rob"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Search"
+          ]
+        },
+        {
+          "choose": [
+            "Merry, Warden of Isengard"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Merry, Warden of Isengard"
+          ]
+        }
+      ]
+    }
+  ]
+}
