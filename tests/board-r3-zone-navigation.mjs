@@ -41,6 +41,7 @@ try {
  // A crowded battlefield wraps whole cards; planeswalkers share the leading creature group.
  for(const mode of ['focus','table','full']) {
   const {page,context,show,acts}=await board(mode,{width:1440,height:900});
+  ok(await page.locator('.cm-bcard-count').evaluateAll(els=>els.length>0&&els.filter(el=>el.getBoundingClientRect().width>0).every(el=>parseFloat(getComputedStyle(el).fontSize)>=10)),`${mode}: pile counts stay at least 10px on every mat`);
   const v=structuredClone(sample);v.revision+=200;
   for(const player of v.state.players){
    player.zones.Battlefield.cards=Array.from({length:60},(_,i)=>({cardId:20000+player.playerId*1000+i,name:i===19?'Jace Beleren':i<20?'Grizzly Bears':i<40?'Sol Ring':'Island',types:[i===19?'Planeswalker':i<20?'Creature':i<40?'Artifact':'Land'],owner:player.playerId,controller:player.playerId,tapped:false,counters:{},token:false,...(i<19?{power:2,toughness:2}:{})}));player.zones.Battlefield.count=60;

@@ -2793,7 +2793,12 @@ globalThis.CrankBoard = Object.seal({
   });
   document.addEventListener("focusin", event => {const el = event.target.closest?.(".cm-control-ghost"); if (el) controlPeek(el);});
   document.addEventListener("focusout", event => {if (event.target.closest?.(".cm-control-ghost")) controlPeek(null);});
-  document.addEventListener("keydown", event => {if (event.key === "Escape") controlPeek(null);});
+  document.addEventListener("keydown", event => {
+    if (event.key !== "Escape" || !document.getElementById("cm-control-peek")) return;
+    // Dismiss the topmost explanation first. Closing a drawer in the same keypress redraws
+    // the ghost under the stationary pointer and immediately opens its tooltip again.
+    controlPeek(null); event.preventDefault(); event.stopImmediatePropagation();
+  });
   document.addEventListener("pointerdown", () => controlPeek(null), {capture: true});
   document.addEventListener("dblclick", (event) => {if (showing === "held" && event.target.closest && event.target.closest(".cm-hand-held")) actions["board-hand-back"]();});
   document.addEventListener("pointermove", (event) => {pointerAt = {x: event.clientX, y: event.clientY};}, {passive: true, capture: true});

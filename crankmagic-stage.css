@@ -523,8 +523,9 @@
 #matrix-v2 .cm-board .cm-stage-region .cm-board-group{overflow:visible}
 #matrix-v2 .cm-board .cm-stage-region .cm-mat-grid{grid-template-rows:minmax(0,1fr) minmax(0,1fr) minmax(0,2fr)}
 #matrix-v2 .cm-board .cm-mat:is([data-fit="table"],[data-fit="focus"]) .cm-mat-grid{grid-template-rows:var(--pile-row) minmax(0,1fr) calc(var(--pile-row) + var(--land-turn,0px) + clamp(10px,calc(var(--bc)*.3),28px)) auto}
-#matrix-v2 .cm-phone-battlefield .cm-board-field{height:clamp(180px,38dvh,320px);min-height:0}
-#matrix-v2 .cm-phone-battlefield .cm-board-lands{height:clamp(120px,22dvh,180px);min-height:0}
+/* Sparse phone boards leave room for both partners; crowded zones keep their own bounded scroll. */
+#matrix-v2 .cm-phone-battlefield .cm-board-field{height:auto;max-height:clamp(130px,25dvh,220px);min-height:130px}
+#matrix-v2 .cm-phone-battlefield .cm-board-lands{height:auto;max-height:clamp(120px,22dvh,180px);min-height:120px}
 /* Legacy focus styles opened zone overflow; keep these viewports scrollable while focused. */
 #matrix-v2 .cm-board .cm-board-field:focus-within{overflow:auto}
 #matrix-v2 .cm-board .cm-board-lands:focus-within{overflow:hidden}
@@ -534,3 +535,6 @@
 #matrix-v2 .cm-board [data-card-section] .cm-bcard-pt{font-size:max(10px,calc(var(--bc)*.13));padding:1px 3px;line-height:1.1}
 
 #matrix-v2 .cm-board .cm-mat-grid:has(.cm-board-lands .is-tapped){--land-turn:calc(var(--bc)*.35)}
+
+/* Pile counts stay readable even on the compact opponent mats. */
+#matrix-v2 .cm-board .cm-bcard-count{font-size:max(10px,calc(var(--bc)*.3));background:#10232f;color:#fff;padding:1px 3px;border-radius:4px}

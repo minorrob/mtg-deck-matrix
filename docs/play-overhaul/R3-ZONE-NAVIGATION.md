@@ -37,3 +37,11 @@ Main's `game/engine/projection.mjs` does not yet expose token identity, Basic su
 The current slice does not finish R3. Complete card/hand readability at all size extremes, exact token/basic-land stack eligibility and member selection, mixed tapped-stack rendering, attachment/control provenance, and full real-art and physical-device acceptance remain. R2's reversible payment draft still needs ROB-74, verified Backlog in Linear on October 23. The frozen plan and completion weights are unchanged.
 
 No merge, full CI pass, Staging deployment, or whole-package acceptance is claimed by this draft slice.
+
+## Release integration and CI repairs (October 24)
+
+PR #854 is ready on Rob's explicit ready/CI/fix/merge/Staging instruction. Main abdf77a6 is integrated by bfacfb58. The Worker release walk now derives its unsupported mono-red fixture from the current Oracle catalog rather than a fixed shortlist exhausted by the new card load; it fails before that repair and passes all 44 checks afterward.
+
+CI identified phone partner-command reach, compact pile-count contrast, and asset hashes recorded against CRLF before Git normalized to LF. Phone zones now shrink with sparse content and cap the battlefield while keeping both partners reachable. Pile counts have a 10px minimum and opaque high-contrast backing. The accessibility fixture uses a real portrait card back rather than a landscape playmat, so uncropped card fitting is tested at the correct aspect ratio; contrast thresholds are unchanged. Served files are normalized before recording asset hashes, with committed-blob hashes checked too.
+
+The repaired crowded-board suite passes 124 checks and accessibility passes 298. `tools/breaks-play-r3-phone.py`, `tools/breaks-play-r3-count.py`, and `tools/breaks-play-r3-peek.py` pass their unchanged baselines, catch the removed fixes, and restore them. Together with the previous nine deliberate regressions, twelve are proven. Control-inspection Escape dismisses the topmost explanation before a drawer redraw can reopen it; `board-control` catches that failure before the repair. Logs: `work/r3-release-proof`. Final head, full CI result, merge/source and release artifact, and live verification are recorded on PR #854 and the Play status report. Production and the outstanding R3 contract/acceptance work remain outside this interim release.

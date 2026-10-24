@@ -103,7 +103,8 @@ const lastFrame = (email) => JSON.parse(frames[email].filter((f) => JSON.parse(f
 /* A view handed to one page as the room would (its own revision, so the real one handed back after is taken again). */
 const hand = (email, frame) => routes[email].at(-1).ws.send(JSON.stringify(frame));
 
-const CARD_ART = readFileSync(path.join(ROOT, "assets", "playmats", "sky-tree-thumb.webp"));
+/* Real cards are portrait 5:7. A landscape playmat leaves artificial letterboxing with object-fit:contain. */
+const CARD_ART = readFileSync(path.join(ROOT, "assets", "crankmagic", "card-back-tan.webp"));
 const html = readFileSync(path.join(ROOT, "index.html"), "utf8").replace("</head>", '<meta name="crankmagic-accounts" content="on"><meta name="crankmagic-play" content="cloud"></head>');
 const {browser, base, stub, close} = await openBrowser({name: "a11y-board", flag: "GEOMETRY_REQUIRED"});
 async function person(email, viewport) {
