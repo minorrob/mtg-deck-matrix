@@ -97,7 +97,7 @@ const backLand = (object) => object.mdfc !== undefined && object.mdfc.transformi
    takes off -- generic mana only, the printed generic first and then the tax, never below nothing. The offer and the
    payment read it here, so they cannot disagree. `targets`, the targets chosen for it: its total cost is determined once
    they are (CR 601.2c, then 601.2f), and "this spell costs {1} less to cast if it targets an attacking creature" reads them. */
-function castCost(state, player, id, tax, free = false, instead = null, extra = "", targets = null) {
+function castCost(state, player, id, tax, free = false, instead = null, extra = "", targets = null, X = undefined) {
   /* Without paying its mana cost (CR 118.9): nothing for the cost itself, and X is 0 (CR 107.3b); the tax still counts.
      `instead`, an alternative cost's mana (flashback, CR 702.34a): paid rather than the mana cost, reduced like it. And
      `extra`, an additional cost's mana ("blight 1 or pay {3}", Bogslither's Embrace): added to it, free or not (CR 601.2f). */
@@ -109,7 +109,17 @@ function castCost(state, player, id, tax, free = false, instead = null, extra = 
   const fromPrinted = Math.min(cost.generic, reduction);
   cost.generic -= fromPrinted;
   reduction -= fromPrinted;
-  return {cost, x: Math.max(0, tax - reduction)};
+  /* WHAT IS LEFT OF A REDUCTION ONCE THE PRINTED GENERIC AND THE TAX ARE PAID FOR (`less`) TAKES OFF X'S MANA (CR 601.2f: the total
+     cost is the mana cost with X's value in it, then reduced; 107.3a): "Affinity for Foods" on Banquet Guests' {X}{G}{W} (Rob's
+     lists P2). With the X chosen (`X`), that X is counted into the generic and reduced with it -- the cost then has no {X} left
+     for its callers to add; without it, `less` says how much higher X may go than the pool alone pays (castOffers). */
+  const less = Math.max(0, reduction - tax);
+  if (less > 0 && cost.variable > 0 && Number.isInteger(X) && X > 0) {
+    const counted = xCounted(cost, X);
+    counted.generic -= Math.min(counted.generic, less);
+    return {cost: counted, x: 0, less: 0};
+  }
+  return {cost, x: Math.max(0, tax - reduction), less};
 }
 
 /**
@@ -217,7 +227,7 @@ const helpsCast = (state, player, id) => hasConvoke(state, id) || hasImprovise(s
    Citadel (`lifeInstead`), life rather than its mana cost, as perform reckons it: no mana for a creature to pay, so none
    is asked for (a question that asked for one could not be answered, and the game waited on it). */
 function convokeCost(state, player, action) {
-  const {cost, x} = castCost(state, player, action.objectId, action.tax ?? 0, false, action.lifeInstead !== undefined ? "" : null, action.extraMana ?? "", action.targets);
+  const {cost, x} = castCost(state, player, action.objectId, action.tax ?? 0, false, action.lifeInstead !== undefined ? "" : null, action.extraMana ?? "", action.targets, action.x);
   /* With its X as announced (CR 601.2b, 107.3): "{X}{G}{G}{G}, convoke" (Chord of Calling). */
   const paying = xCounted(cost, action.x ?? 0);
   return {...paying, generic: paying.generic + x};
@@ -264,7 +274,7 @@ const delvable = (state, player, id) => cardsIn(state, "graveyard", player).filt
 /* The total cost a delved cast pays and the life it pays with, as castPayments reckons them (castTerms). */
 function delveCost(state, player, action) {
   const {tax, free, back, way, fled, permission, lifeCost} = castTerms(state, player, action);
-  const reckoned = castCost(state, player, action.objectId, tax, Boolean(free), lifeCost !== null ? "" : back ? back.mana : fled ? fled.mana : way ? way.mana : null, action.extraMana ?? "", action.targets);
+  const reckoned = castCost(state, player, action.objectId, tax, Boolean(free), lifeCost !== null ? "" : back ? back.mana : fled ? fled.mana : way ? way.mana : null, action.extraMana ?? "", action.targets, action.x);
   return {cost: anyTypeCost(reckoned.cost, permission), extra: reckoned.x,
     life: state.players[player].life - (back?.life ?? 0) - (way?.life ?? 0) - (lifeCost ?? 0) - lifeOwed(state, player, action)};
 }
@@ -364,7 +374,7 @@ function castTerms(state, player, action) {
 /* The ways the pool pays a cast taken with `payWays` (castOffers): its total cost, as perform reckons it. */
 function castPayments(state, player, action) {
   const {tax, free, back, way, fled, permission, lifeCost} = castTerms(state, player, action);
-  const reckoned = castCost(state, player, action.objectId, tax, Boolean(free), lifeCost !== null ? "" : back ? back.mana : fled ? fled.mana : way ? way.mana : null, action.extraMana ?? "", action.targets);
+  const reckoned = castCost(state, player, action.objectId, tax, Boolean(free), lifeCost !== null ? "" : back ? back.mana : fled ? fled.mana : way ? way.mana : null, action.extraMana ?? "", action.targets, action.x);
   const {x} = reckoned, cost = anyTypeCost(reckoned.cost, permission);
   return paymentOptions(poolFor(state, player, {spell: action.objectId}), cost,
     {life: state.players[player].life - (back?.life ?? 0) - (way?.life ?? 0) - (lifeCost ?? 0) - (action.extraLife ?? 0), x: x + (action.x ?? 0) * cost.variable}, PAY_CHOICES);
@@ -1253,10 +1263,11 @@ const combinations = (n, from = 0, colors = COLORS) => (n <= 0 ? [{}]
 
 /* The values X may take for a cost with {X} (CR 107.3): nothing up to what the pool holds past the rest of the cost,
    each X symbol taking X (CR 107.3a). A cost without X: the one null. `extra` is generic already owed (the tax). */
-function xValues(pool, cost, extra = 0) {
+function xValues(pool, cost, extra = 0, less = 0) {
   if (!cost.variable) return [null];
   const rest = cost.symbols.filter((s) => s.kind !== "variable" && s.kind !== "generic").length + cost.generic + extra;
-  const most = Math.floor((poolSize(pool) - rest) / cost.variable);
+  /* `less`, a reduction left over for X's mana (castCost): X that much higher than the pool alone pays. */
+  const most = Math.floor((poolSize(pool) - rest + less) / cost.variable);
   return most < 0 ? [] : Array.from({length: most + 1}, (_, i) => i);
 }
 /* What an activated ability's cost is reduced by (CR 602.2b, 601.2f): its own `costLess`, counted with its chosen `targets` ("for
@@ -1619,7 +1630,7 @@ export function castTapPlans(state, player, action, limit = 2) {
   if (!tapCastable(state, player, action)) return [];
   const tax = action.from === "command" ? commanderTax(state, player, action.objectId) : 0;
   /* An Adventure's cost, cast as one (CR 715.3a). */
-  const {cost, x} = asCast(state, action, () => castCost(state, player, action.objectId, tax, false, null, action.extraMana ?? "", action.targets));
+  const {cost, x} = asCast(state, action, () => castCost(state, player, action.objectId, tax, false, null, action.extraMana ?? "", action.targets, action.x));
   /* Its X, in a match that taps for one (`xTaps`): counted in, as the offer priced it. */
   const xs = xTaps(state) && cost.variable > 0 ? xCounted(cost, action.x ?? 0) : cost;
   return fundingPlans(state, player, action.objectId, {...xs, generic: xs.generic + x}, limit);
@@ -1789,7 +1800,7 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
   const pool = poolFor(state, player, {spell: id});
   /* With `xTaps`, X also as high as the pool and the caster's untapped sources can pay together: tapped for as it is cast. */
   const tapsForX = !lifeX && cost.variable > 0 && xTaps(state) && !freely && !back && !fled && !way && !tapsAny && !variant.escalateTap && ["hand", "command"].includes(from);
-  const xs = lifeX ? Array.from({length: lifeLeft + 1}, (_, i) => i) : xValues(pool, cost, x);
+  const xs = lifeX ? Array.from({length: lifeLeft + 1}, (_, i) => i) : xValues(pool, cost, x, reckoned.less);
   if (tapsForX) {
     const sources = tappable();
     for (let X = xs.length; X <= poolSize(pool) + sources.length; X += 1) {
@@ -1807,7 +1818,12 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
       xs.push(X);
     }
   }
-  for (const X of xs) {
+  /* Each X with what is left of a reduction taken off its mana (castCost's `less`, Banquet Guests' affinity): its own total cost,
+     with no {X} left in it; any other X, the cost reckoned above. */
+  const atX = (X) => (reckoned.less > 0 && Number.isInteger(X) && X > 0 && !lifeX
+    ? ((r) => [anyTypeCost(r.cost, permit), r.x])(castCost(state, player, id, tax, freely, paidLife !== null ? "" : back ? back.mana : fled ? fled.mana : way ? way.mana : null, variant.mana, aim, X))
+    : [cost, x]);
+  for (const X of xs) for (const [cost, x] of [atX(X)]) {
     /* X in its mana cost: what the pool pays for it, and what decides whether its sources can be tapped for it instead. */
     const xMana = lifeX ? null : X;
     let payment = automaticPayment(pool, cost, {life: lifeLeft, x: x + (xMana ?? 0) * cost.variable});
@@ -2780,7 +2796,7 @@ function performOffered(state, player, action, during) {
     }
     if (action.via !== undefined && !permission) throw new Error(`${object.card} cannot be cast that way now`);
     if (lifeCost !== null && lifeCost > state.players[player].life) throw new Error(`${object.card} costs ${lifeCost} life, and ${state.players[player].name} has ${state.players[player].life}`);
-    const reckoned = castCost(state, player, action.objectId, tax, Boolean(free), lifeCost !== null ? "" : back ? back.mana : fled ? fled.mana : way ? way.mana : null, action.extraMana ?? "", action.targets);
+    const reckoned = castCost(state, player, action.objectId, tax, Boolean(free), lifeCost !== null ? "" : back ? back.mana : fled ? fled.mana : way ? way.mana : null, action.extraMana ?? "", action.targets, action.x);
     const {x} = reckoned, cost = anyTypeCost(reckoned.cost, permission);
     /* The life it owes besides (lifeOwed): for its targets as they are now chosen -- a counted one's too (Terror of the Peaks)
        -- and X life (Toxic Deluge). More than there is, and it is refused, saying so (CR 119.4). */
