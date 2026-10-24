@@ -1,0 +1,186 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Charging Troll",
+  "fixtures": {
+    "Murder": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{G}: regenerated, it survives a destroy, tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Charging Troll",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Murder"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "activate": "Charging Troll"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Murder",
+          "targets": [
+            {
+              "card": "Charging Troll"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Charging Troll",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Charging Troll",
+          "is": true
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Murder"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "No shield: the destroy kills it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Charging Troll",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Murder"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Murder",
+          "targets": [
+            {
+              "card": "Charging Troll"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Charging Troll",
+            "Murder"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Vigilance: it attacks and stays untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Charging Troll"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Charging Troll"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Charging Troll",
+          "is": false
+        },
+        {
+          "seat": 1,
+          "life": 37
+        }
+      ]
+    }
+  ]
+}

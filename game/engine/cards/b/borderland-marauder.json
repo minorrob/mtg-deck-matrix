@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Borderland Marauder",
+    "oracleId": "11fd2650-2150-4e62-8b64-e820d734a231",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Warrior"
+    ],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "Whenever this creature attacks, it gets +2/+0 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature attacks, it gets +2/+0 until end of turn.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 2,
+          "toughness": 0,
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

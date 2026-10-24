@@ -1,0 +1,433 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Annihilating Fire",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Treefolk": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Treefolk"
+      ],
+      "manaCost": "{4}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 6
+    },
+    "Garruk Fixture": {
+      "types": [
+        "Planeswalker"
+      ],
+      "subtypes": [
+        "Garruk"
+      ],
+      "manaCost": "{2}{G}",
+      "colors": [
+        "G"
+      ],
+      "loyalty": 3,
+      "abilities": []
+    },
+    "Smoke Murder": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "3 damage to Maya's Bear: it would die, and is exiled instead",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Mountain",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Annihilating Fire"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Annihilating Fire",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": []
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Annihilating Fire"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A 2/6 survives the 3, then dies this turn to Murder: exiled even so",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Mountain",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Annihilating Fire",
+            "Smoke Murder"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Treefolk"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Annihilating Fire",
+          "targets": [
+            {
+              "card": "Treefolk"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "zone": "battlefield",
+              "cards": [
+                "Treefolk"
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Smoke Murder",
+          "targets": [
+            {
+              "card": "Treefolk"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": [
+            "Treefolk"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "name": "Next turn the effect is gone: Murder puts the Treefolk in the graveyard",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Mountain",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Annihilating Fire",
+            "Smoke Murder"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Treefolk"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Annihilating Fire",
+          "targets": [
+            {
+              "card": "Treefolk"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Smoke Murder",
+          "targets": [
+            {
+              "card": "Treefolk"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Treefolk"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A player: 3 damage to Maya",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Mountain",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Annihilating Fire"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Annihilating Fire",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 37
+        }
+      ]
+    },
+    {
+      "name": "A planeswalker is no creature: Maya's Garruk, out of loyalty, goes to her graveyard",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Mountain",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Annihilating Fire"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Garruk Fixture"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Annihilating Fire",
+          "targets": [
+            {
+              "card": "Garruk Fixture"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Garruk Fixture"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": []
+        }
+      ]
+    }
+  ]
+}
