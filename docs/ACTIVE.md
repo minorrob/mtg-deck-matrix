@@ -1,5 +1,13 @@
 # Who holds the work
 
+## Card load, 2026-10-24: the compiler's candidates and the shared sentences (a Claude cloud session, for Rob; `claude/engine-card-load-2026-10-24`)
+
+Rob, 2026-10-24: *"Look at the card list of cards not loaded in the engine but either automatically can be added or easily
+added because of shared mechanics and characteristics with other cards loaded. Then run the load."* In progress, in the
+Claude · Engine lane's card-load files only (`game/engine/cards/**`, the files generated from them, `data/engine/candidates.json`,
+`docs/engine/card-load-2026-10-24/`). No engine code changes. The list and the record are in
+`docs/engine/card-load-2026-10-24/README.md`.
+
 ## Card load, 2026-10-23: wave 4d, six sessions (a Claude cloud session, for Rob; `claude/focused-feynman-tt20o3`)
 
 The library load's lanes are merged (#826–#831, #837): of Rob's library, 4 cards are unloaded and 8 are candidates. This
