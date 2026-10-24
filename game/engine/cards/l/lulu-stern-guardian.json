@@ -31,8 +31,7 @@
       "text": "Whenever an opponent attacks you, choose target creature attacking you. Put a stun counter on that creature.",
       "trigger": {
         "on": "attackers declared",
-        "attacker": "opponent",
-        "defender": "you"
+        "attacker": "opponent"
       },
       "effects": [
         {
@@ -50,7 +49,7 @@
           "types": [
             "Creature"
           ],
-          "attacking": "you"
+          "attacking": "you directly"
         }
       ]
     },

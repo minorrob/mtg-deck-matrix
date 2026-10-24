@@ -138,12 +138,12 @@ const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTu
   "solved", "sacrificedNontokenThisTurn",
   /* Every one of several conditions (Happily Ever After). */
   "allOf",
+  /* Wakka, Devoted Guardian's "if a counter was put on Wakka this turn" (CR 122.6). */
+  "counterPutThisTurn",
   /* Gift's "if the gift was promised" (CR 702.174b). */
   "giftPromised",
   /* Offspring's "if its offspring cost was paid" (CR 702.175a; wave 4c). */
-  "offspringPaid",
-  /* Wakka, Devoted Guardian's "if a counter was put on Wakka this turn" (CR 122.6). */
-  "counterPutThisTurn"];
+  "offspringPaid"];
 /** Whether these effects, nested ones included, ask `firstResolution` -- so their ability's resolutions are counted
     (rules/stack.mjs). */
 export const asksFirstResolution = (effects) => JSON.stringify(effects ?? []).includes('"firstResolution"');

@@ -89,7 +89,7 @@
         ]
       }
     },
-    "Charge": {
+    "Charging": {
       "types": [
         "Instant"
       ],
@@ -255,7 +255,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Charge",
+            "Charging",
             "Kill"
           ]
         }
@@ -265,7 +265,7 @@
           "tap": "Forest"
         },
         {
-          "cast": "Charge",
+          "cast": "Charging",
           "targets": [
             {
               "card": "Bauble"
@@ -463,7 +463,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Charge"
+            "Charging"
           ]
         }
       ],
@@ -472,7 +472,7 @@
           "tap": "Forest"
         },
         {
-          "cast": "Charge",
+          "cast": "Charging",
           "targets": [
             {
               "card": "Bauble"
@@ -569,6 +569,122 @@
       ]
     },
     {
+      "name": "The second target gone before it resolves, no counter can move (CR 122.5): nothing is asked, and the Bauble keeps its counters",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Resourceful Defense",
+            "Bauble",
+            "Bear",
+            "Forest",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Charging",
+            "Bounce"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Charging",
+          "targets": [
+            {
+              "card": "Bauble"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Resourceful Defense",
+          "targets": [
+            {
+              "card": "Bauble"
+            },
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Bounce",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Bauble",
+            "counter": "charge",
+            "count": 2
+          }
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Bauble",
+            "counter": "+1/+1",
+            "count": 1
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ]
+    },
+    {
       "name": "Any number includes none: Rob moves nothing",
       "setup": [
         {
@@ -590,7 +706,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Charge"
+            "Charging"
           ]
         }
       ],
@@ -599,7 +715,7 @@
           "tap": "Forest"
         },
         {
-          "cast": "Charge",
+          "cast": "Charging",
           "targets": [
             {
               "card": "Bauble"

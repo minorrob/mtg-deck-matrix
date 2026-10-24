@@ -2,6 +2,66 @@
   "schema": "CrankCardScenarios@1",
   "card": "Lulu, Stern Guardian",
   "fixtures": {
+    "Mend": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Regenerate target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "regenerate",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Weaken": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Target creature gets -0/-2 until end of turn.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "pump",
+            "targets": {
+              "target": 0
+            },
+            "power": 0,
+            "toughness": -2
+          }
+        ]
+      }
+    },
     "Bear": {
       "types": [
         "Creature"
@@ -103,7 +163,7 @@
         ]
       }
     },
-    "Charge": {
+    "Charging": {
       "types": [
         "Instant"
       ],
@@ -281,6 +341,17 @@
           }
         ]
       }
+    },
+    "Walker": {
+      "types": [
+        "Planeswalker"
+      ],
+      "subtypes": [
+        "Test"
+      ],
+      "manaCost": "{3}",
+      "colors": [],
+      "loyalty": 5
     }
   },
   "scenarios": [
@@ -382,7 +453,7 @@
       ]
     },
     {
-      "name": "Maya attacking Trey does not trigger Lulu",
+      "name": "Maya attacking Trey alone: no creature is attacking Rob, and Lulu's ability does nothing",
       "seats": 3,
       "setup": [
         {
@@ -417,6 +488,83 @@
       "expect": [
         {
           "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "Maya attacks Rob with the Ogre and his Walker with the Bear: only the Ogre is attacking him, and only it may be chosen",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Lulu, Stern Guardian",
+            "Walker"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Ogre",
+            "Bear"
+          ],
+          "at": [
+            "Rob",
+            "Walker (Rob)"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Ogre"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Ogre"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "counters": {
+            "card": "Ogre",
+            "counter": "stun",
+            "count": 1
+          }
+        },
+        {
+          "seat": 1,
+          "counters": {
+            "card": "Bear",
+            "counter": "stun",
+            "count": 0
+          }
         }
       ]
     },

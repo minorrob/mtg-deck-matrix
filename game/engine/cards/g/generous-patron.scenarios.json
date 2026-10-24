@@ -89,7 +89,7 @@
         ]
       }
     },
-    "Charge": {
+    "Charging": {
       "types": [
         "Instant"
       ],
@@ -341,7 +341,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Charge",
+            "Charging",
             "Spread"
           ]
         },
@@ -359,7 +359,7 @@
           "tap": "Forest"
         },
         {
-          "cast": "Charge",
+          "cast": "Charging",
           "targets": [
             {
               "card": "Ogre"

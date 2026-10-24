@@ -117,6 +117,12 @@ function recordArrivals(state, events) {
   }
 }
 
+/* "ONE OR MORE" AT ONCE (`batch`): once for everything one action did. And "whenever you put one or more counters on a creature
+   you don't control" (Generous Patron), "... on a creature" (Rikku, Resourceful Guardian; CR 122.6) -- counters of any kind
+   (`counter: "any"`, cards/index.mjs) -- once for each permanent for everything one action put on it, however many kinds
+   (collectTriggers keys it by the permanent). */
+const oneOrMore = (trigger) => trigger.batch === true || (trigger.on === "GameEventCardCounters" && trigger.counterAdded === true && trigger.counter === "any");
+
 /* THE TURN A COUNTER WAS LAST PUT ON A PERMANENT (CR 122.6): "if a counter was put on Wakka this turn" (Wakka, Devoted
    Guardian; script/condition.mjs, counterPutThisTurn) -- any kind, by anyone, as it entered too. Kept on the permanent, so
    one that changes zones is a new object with none (CR 400.7). */
@@ -265,8 +271,6 @@ function subjects(state, event, condition, sourceId, controller) {
     /* Attacking a planeswalker of a player's is not attacking that player (CR 506.3): not "attacking you", and no player
        attacked for "that player". */
     if (condition.notAttacking === "you" && attacks.some((a) => a.defender?.playerId === controller && !a.defender.planeswalker)) return [];
-    /* "Whenever an opponent attacks you" (Lulu, Stern Guardian): one of those creatures at you, not at a planeswalker of yours. */
-    if (condition.attacksYou && !attacks.some((a) => a.defender?.playerId === controller && !a.defender.planeswalker)) return [];
     /* Each player attacked, "that player"; the attacking player is `attacker` ("that attacking player creates ..."). One of
        this ability's controller's opponents only, when it says so (CR 508.3e). */
     if (condition.eachDefender) return [...new Set(attacks.filter((a) => !a.defender?.planeswalker).map((a) => a.defender?.playerId))]
@@ -778,7 +782,7 @@ export function collectTriggers(state, events) {
             : ability.trigger.on === "GameEventCardDamaged" && ["creature", "enchanted"].includes(ability.trigger.to) ? `:${about.card}`
             /* Counters of any kind put on a permanent (Generous Patron): once for each permanent they were put on. */
             : ability.trigger.on === "GameEventCardCounters" && ability.trigger.counter === "any" ? `:${about.card}` : ""}`;
-          if (ability.trigger.batch && joined(once, about)) continue;
+          if (oneOrMore(ability.trigger) && joined(once, about)) continue;
           /* "This ability triggers only once each turn": once it has, this turn, it does not again. */
           if (ability.limit && usesThisTurn(state, id, `trigger:${ability.id}`) >= ability.limit) continue;
           if (ability.limit) recordUse(state, id, `trigger:${ability.id}`);
@@ -821,7 +825,7 @@ export function collectTriggers(state, events) {
           });
           const times = triggersAgain(state, event, object.controller, id, null, departed);
           if (times) again.push({at: state.pendingTriggers.length - 1, times});
-          if (ability.trigger.batch) opened(once, about);
+          if (oneOrMore(ability.trigger)) opened(once, about);
           }
         }
       }

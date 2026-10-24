@@ -89,7 +89,7 @@
         ]
       }
     },
-    "Charge": {
+    "Charging": {
       "types": [
         "Instant"
       ],
@@ -361,7 +361,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Charge"
+            "Charging"
           ]
         }
       ],
@@ -377,7 +377,7 @@
           "seat": 1
         },
         {
-          "cast": "Charge",
+          "cast": "Charging",
           "seat": 1,
           "targets": [
             {
