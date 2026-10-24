@@ -45,7 +45,7 @@
       "power": 5,
       "toughness": 5
     },
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -190,7 +190,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Shock",
+            "Smoke Shock",
             "Chain Assassination"
           ]
         },
@@ -219,7 +219,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "targets": [
             {
               "card": "Bear"
@@ -376,7 +376,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Shock",
+            "Smoke Shock",
             "Chain Assassination"
           ]
         },
@@ -405,7 +405,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "targets": [
             {
               "card": "Bear"

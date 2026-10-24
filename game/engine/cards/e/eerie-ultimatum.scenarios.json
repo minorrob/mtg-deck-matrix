@@ -30,7 +30,7 @@
       "power": 3,
       "toughness": 3
     },
-    "Omen": {
+    "Smoke Omen": {
       "types": [
         "Sorcery"
       ],
@@ -100,7 +100,7 @@
             "Bear",
             "Bear",
             "Ogre",
-            "Omen",
+            "Smoke Omen",
             "Forest",
             "Walker"
           ]
@@ -188,7 +188,7 @@
           "zone": "graveyard",
           "cards": [
             "Bear",
-            "Omen",
+            "Smoke Omen",
             "Eerie Ultimatum"
           ]
         },

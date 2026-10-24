@@ -36,7 +36,7 @@
         ]
       }
     },
-    "Tidings": {
+    "Smoke Tidings": {
       "types": [
         "Instant"
       ],
@@ -325,7 +325,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Tidings",
+            "Smoke Tidings",
             "Twin"
           ]
         }
@@ -335,7 +335,7 @@
           "tap": "Island"
         },
         {
-          "cast": "Tidings"
+          "cast": "Smoke Tidings"
         },
         {
           "expect": [
@@ -366,7 +366,7 @@
           "cast": "Twin",
           "targets": [
             {
-              "card": "Tidings"
+              "card": "Smoke Tidings"
             }
           ]
         },

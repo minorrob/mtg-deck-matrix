@@ -16,7 +16,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Divination": {
+    "Smoke Divination": {
       "types": [
         "Sorcery"
       ],
@@ -101,7 +101,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Divination"
+            "Smoke Divination"
           ]
         },
         {
@@ -135,7 +135,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Divination"
+          "cast": "Smoke Divination"
         },
         {
           "resolve": true

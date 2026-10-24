@@ -2,24 +2,40 @@
   "schema": "CrankCardScenarios@1",
   "card": "Blue Elemental Blast",
   "fixtures": {
-    "Smoke Commander": {
+    "Goblin Pal": {
       "types": [
         "Creature"
       ],
-      "manaCost": "{W}{U}{B}{R}{G}",
-      "colorIdentity": [
-        "W",
-        "U",
-        "B",
-        "R",
-        "G"
+      "subtypes": [
+        "Goblin"
       ],
-      "power": 5,
-      "toughness": 5
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
     },
-    "Smoke Bear": {
+    "Ogre": {
       "types": [
         "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
       ],
       "manaCost": "{1}{G}",
       "colors": [
@@ -27,77 +43,17 @@
       ],
       "power": 2,
       "toughness": 2
-    },
-    "Smoke Relic": {
-      "types": [
-        "Artifact"
-      ],
-      "manaCost": "{2}"
-    },
-    "Smoke Charm": {
-      "types": [
-        "Enchantment"
-      ],
-      "manaCost": "{2}"
-    },
-    "Smoke Giant": {
-      "types": [
-        "Creature"
-      ],
-      "manaCost": "{4}{G}",
-      "power": 5,
-      "toughness": 5
-    },
-    "Smoke Instant": {
-      "types": [
-        "Instant"
-      ],
-      "manaCost": "{0}",
-      "colors": [
-        "U"
-      ],
-      "spell": {
-        "id": "s",
-        "text": "Target player draws a card.",
-        "targets": [
-          {
-            "what": "player"
-          }
-        ],
-        "effects": [
-          {
-            "effect": "draw",
-            "count": 1,
-            "who": {
-              "target": 0
-            }
-          }
-        ]
-      }
     }
   },
   "scenarios": [
     {
-      "name": "Blue Elemental Blast cast, and each ability used once (drafted by game/tools/card-waves.mjs, approved in review)",
-      "at": {
-        "turn": 2,
-        "phase": "MAIN1"
-      },
+      "name": "Mode one: Maya's red creature spell countered",
       "setup": [
-        {
-          "seat": 0,
-          "zone": "command",
-          "cards": [
-            "Smoke Commander"
-          ]
-        },
         {
           "seat": 0,
           "zone": "battlefield",
           "cards": [
-            "Island",
-            "Wastes",
-            "Wastes"
+            "Island"
           ]
         },
         {
@@ -111,118 +67,221 @@
           "seat": 1,
           "zone": "battlefield",
           "cards": [
-            "Smoke Bear",
-            "Smoke Giant",
-            "Smoke Relic",
-            "Smoke Charm",
-            "Wastes"
+            "Mountain"
           ]
         },
         {
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Smoke Instant"
+            "Goblin Pal"
           ]
         }
       ],
       "steps": [
         {
-          "cast": "Smoke Instant",
-          "seat": 1,
-          "targets": "any"
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "cast": "Goblin Pal",
+          "seat": 1
         },
         {
           "pass": 1
         },
         {
           "tap": "Island",
-          "seat": 0,
-          "optional": true
+          "seat": 0
         },
         {
           "cast": "Blue Elemental Blast",
           "seat": 0,
-          "targets": "any",
-          "optional": true
+          "modes": [
+            0
+          ],
+          "targets": [
+            {
+              "card": "Goblin Pal"
+            }
+          ]
         },
         {
-          "settle": true
-        },
-        {
-          "to": {
-            "turn": 3,
-            "phase": "MAIN1",
-            "settle": true
-          }
+          "resolve": true
         }
       ],
       "expect": [
         {
-          "seat": 0,
-          "life": 40
+          "stack": 0
         },
         {
-          "seat": 0,
-          "zone": "hand",
+          "seat": 1,
+          "zone": "graveyard",
           "cards": [
-            "Blue Elemental Blast",
-            "Wastes",
-            "Wastes"
+            "Goblin Pal"
           ]
         },
+        {
+          "seat": 1,
+          "controls": [
+            "Mountain"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Mode two: Maya's red Ogre destroyed; her green Bear stays",
+      "setup": [
         {
           "seat": 0,
           "zone": "battlefield",
           "cards": [
-            "Island",
-            "Wastes",
-            "Wastes"
+            "Island"
           ]
         },
         {
           "seat": 0,
-          "zone": "graveyard",
-          "cards": []
-        },
-        {
-          "seat": 0,
-          "zone": "exile",
-          "cards": []
-        },
-        {
-          "seat": 1,
-          "life": 40
-        },
-        {
-          "seat": 1,
           "zone": "hand",
           "cards": [
-            "Wastes"
+            "Blue Elemental Blast"
           ]
         },
         {
           "seat": 1,
           "zone": "battlefield",
           "cards": [
-            "Smoke Bear",
-            "Smoke Charm",
-            "Smoke Giant",
-            "Smoke Relic",
+            "Ogre",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Blue Elemental Blast",
+          "modes": [
+            1
+          ],
+          "targets": [
+            {
+              "card": "Ogre"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Nothing red: Maya's green Bear spell on the stack and her green Bear on the battlefield are no targets",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Blue Elemental Blast"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Forest",
             "Wastes"
           ]
         },
         {
           "seat": 1,
-          "zone": "graveyard",
+          "zone": "hand",
           "cards": [
-            "Smoke Instant"
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Bear",
+          "seat": 1
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Blue Elemental Blast",
+                "seat": 0
+              },
+              "count": 0
+            }
           ]
         },
         {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
           "seat": 1,
-          "zone": "exile",
-          "cards": []
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Bear",
+            "Forest",
+            "Wastes"
+          ]
         }
       ]
     }

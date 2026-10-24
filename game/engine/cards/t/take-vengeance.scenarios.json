@@ -2,24 +2,44 @@
   "schema": "CrankCardScenarios@1",
   "card": "Take Vengeance",
   "fixtures": {
-    "Smoke Commander": {
+    "Tapper": {
       "types": [
         "Creature"
       ],
-      "manaCost": "{W}{U}{B}{R}{G}",
-      "colorIdentity": [
-        "W",
-        "U",
-        "B",
-        "R",
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{2}{G}",
+      "colors": [
         "G"
       ],
-      "power": 5,
-      "toughness": 5
+      "power": 3,
+      "toughness": 3,
+      "abilities": [
+        {
+          "id": "t",
+          "kind": "activated",
+          "text": "{T}: You gain 1 life.",
+          "cost": [
+            {
+              "atom": "{T}"
+            }
+          ],
+          "effects": [
+            {
+              "effect": "gainLife",
+              "amount": 1
+            }
+          ]
+        }
+      ]
     },
-    "Smoke Bear": {
+    "Bear": {
       "types": [
         "Creature"
+      ],
+      "subtypes": [
+        "Bear"
       ],
       "manaCost": "{1}{G}",
       "colors": [
@@ -27,70 +47,17 @@
       ],
       "power": 2,
       "toughness": 2
-    },
-    "Smoke Relic": {
-      "types": [
-        "Artifact"
-      ],
-      "manaCost": "{2}"
-    },
-    "Smoke Charm": {
-      "types": [
-        "Enchantment"
-      ],
-      "manaCost": "{2}"
-    },
-    "Smoke Giant": {
-      "types": [
-        "Creature"
-      ],
-      "manaCost": "{4}{G}",
-      "power": 5,
-      "toughness": 5
-    },
-    "Smoke Sorcery": {
-      "types": [
-        "Sorcery"
-      ],
-      "manaCost": "{0}",
-      "spell": {
-        "id": "s",
-        "text": "Target player draws a card.",
-        "targets": [
-          {
-            "what": "player"
-          }
-        ],
-        "effects": [
-          {
-            "effect": "draw",
-            "count": 1,
-            "who": {
-              "target": 0
-            }
-          }
-        ]
-      }
     }
   },
   "scenarios": [
     {
-      "name": "Take Vengeance cast, and each ability used once (drafted by game/tools/card-waves.mjs, approved in review)",
+      "name": "Maya's Tapper is tapped: destroyed on Rob's next turn; her untapped Bear is no legal target",
       "setup": [
-        {
-          "seat": 0,
-          "zone": "command",
-          "cards": [
-            "Smoke Commander"
-          ]
-        },
         {
           "seat": 0,
           "zone": "battlefield",
           "cards": [
-            "Wastes",
             "Plains",
-            "Wastes",
             "Wastes"
           ]
         },
@@ -105,114 +72,145 @@
           "seat": 1,
           "zone": "battlefield",
           "cards": [
-            "Smoke Bear",
-            "Smoke Giant",
-            "Smoke Relic",
-            "Smoke Charm",
-            "Wastes"
-          ]
-        },
-        {
-          "seat": 1,
-          "zone": "hand",
-          "cards": [
-            "Smoke Sorcery"
+            "Tapper",
+            "Bear"
           ]
         }
       ],
       "steps": [
         {
-          "tap": "Wastes",
-          "seat": 0,
-          "optional": true
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
         },
         {
-          "tap": "Plains",
-          "seat": 0,
-          "optional": true
+          "activate": "Tapper",
+          "seat": 1
         },
         {
-          "cast": "Take Vengeance",
-          "seat": 0,
-          "targets": "any",
-          "optional": true
-        },
-        {
-          "settle": true
+          "resolve": true
         },
         {
           "to": {
             "turn": 3,
-            "phase": "MAIN1",
-            "settle": true
+            "phase": "MAIN1"
           }
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Take Vengeance"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Tapper"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Take Vengeance",
+          "targets": [
+            {
+              "card": "Tapper"
+            }
+          ]
+        },
+        {
+          "resolve": true
         }
       ],
       "expect": [
         {
-          "seat": 0,
-          "life": 40
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Tapper"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "life": 41
         },
         {
           "seat": 0,
-          "zone": "hand",
+          "zone": "graveyard",
           "cards": [
-            "Take Vengeance",
-            "Wastes"
+            "Take Vengeance"
           ]
-        },
+        }
+      ]
+    },
+    {
+      "name": "No tapped creature: it cannot be cast",
+      "setup": [
         {
           "seat": 0,
           "zone": "battlefield",
           "cards": [
             "Plains",
-            "Wastes",
-            "Wastes",
             "Wastes"
           ]
         },
         {
           "seat": 0,
-          "zone": "graveyard",
-          "cards": []
-        },
-        {
-          "seat": 0,
-          "zone": "exile",
-          "cards": []
-        },
-        {
-          "seat": 1,
-          "life": 40
-        },
-        {
-          "seat": 1,
           "zone": "hand",
           "cards": [
-            "Smoke Sorcery",
-            "Wastes"
+            "Take Vengeance"
           ]
         },
         {
           "seat": 1,
           "zone": "battlefield",
           "cards": [
-            "Smoke Bear",
-            "Smoke Charm",
-            "Smoke Giant",
-            "Smoke Relic",
-            "Wastes"
+            "Tapper",
+            "Bear"
           ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
         },
         {
-          "seat": 1,
-          "zone": "graveyard",
-          "cards": []
+          "tap": "Wastes"
         },
         {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Take Vengeance"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
           "seat": 1,
-          "zone": "exile",
-          "cards": []
+          "controls": [
+            "Bear",
+            "Tapper"
+          ]
         }
       ]
     }

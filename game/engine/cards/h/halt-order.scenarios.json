@@ -2,98 +2,36 @@
   "schema": "CrankCardScenarios@1",
   "card": "Halt Order",
   "fixtures": {
-    "Smoke Commander": {
-      "types": [
-        "Creature"
-      ],
-      "manaCost": "{W}{U}{B}{R}{G}",
-      "colorIdentity": [
-        "W",
-        "U",
-        "B",
-        "R",
-        "G"
-      ],
-      "power": 5,
-      "toughness": 5
-    },
-    "Smoke Bear": {
-      "types": [
-        "Creature"
-      ],
-      "manaCost": "{1}{G}",
-      "colors": [
-        "G"
-      ],
-      "power": 2,
-      "toughness": 2
-    },
-    "Smoke Relic": {
+    "Rock": {
       "types": [
         "Artifact"
       ],
-      "manaCost": "{2}"
+      "manaCost": "{1}",
+      "colors": []
     },
-    "Smoke Charm": {
-      "types": [
-        "Enchantment"
-      ],
-      "manaCost": "{2}"
-    },
-    "Smoke Giant": {
+    "Goblin Pal": {
       "types": [
         "Creature"
       ],
-      "manaCost": "{4}{G}",
-      "power": 5,
-      "toughness": 5
-    },
-    "Smoke Sorcery": {
-      "types": [
-        "Sorcery"
+      "subtypes": [
+        "Goblin"
       ],
-      "manaCost": "{0}",
-      "spell": {
-        "id": "s",
-        "text": "Target player draws a card.",
-        "targets": [
-          {
-            "what": "player"
-          }
-        ],
-        "effects": [
-          {
-            "effect": "draw",
-            "count": 1,
-            "who": {
-              "target": 0
-            }
-          }
-        ]
-      }
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
     }
   },
   "scenarios": [
     {
-      "name": "Halt Order cast, and each ability used once (drafted by game/tools/card-waves.mjs, approved in review)",
-      "at": {
-        "turn": 2,
-        "phase": "MAIN1"
-      },
+      "name": "Maya's Rock (an artifact spell) countered, and Rob draws a card",
       "setup": [
-        {
-          "seat": 0,
-          "zone": "command",
-          "cards": [
-            "Smoke Commander"
-          ]
-        },
         {
           "seat": 0,
           "zone": "battlefield",
           "cards": [
-            "Wastes",
-            "Wastes",
             "Island",
             "Wastes",
             "Wastes"
@@ -110,10 +48,6 @@
           "seat": 1,
           "zone": "battlefield",
           "cards": [
-            "Smoke Bear",
-            "Smoke Giant",
-            "Smoke Relic",
-            "Smoke Charm",
             "Wastes"
           ]
         },
@@ -121,119 +55,188 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Smoke Sorcery"
+            "Rock"
           ]
         }
       ],
       "steps": [
         {
-          "cast": "Smoke Sorcery",
-          "seat": 1,
-          "targets": "any"
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Rock",
+          "seat": 1
         },
         {
           "pass": 1
         },
         {
-          "tap": "Wastes",
-          "seat": 0,
-          "optional": true
-        },
-        {
-          "tap": "Wastes",
-          "seat": 0,
-          "optional": true
-        },
-        {
           "tap": "Island",
-          "seat": 0,
-          "optional": true
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Halt Order",
+                "seat": 0
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Rock"
+                ]
+              ]
+            }
+          ]
         },
         {
           "cast": "Halt Order",
           "seat": 0,
-          "targets": "any",
-          "optional": true
+          "targets": [
+            {
+              "card": "Rock"
+            }
+          ]
         },
         {
-          "settle": true
-        },
-        {
-          "to": {
-            "turn": 3,
-            "phase": "MAIN1",
-            "settle": true
-          }
+          "resolve": true
         }
       ],
       "expect": [
         {
+          "stack": 0
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Rock"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Wastes"
+          ]
+        },
+        {
           "seat": 0,
-          "life": 40
+          "zone": "graveyard",
+          "cards": [
+            "Halt Order"
+          ]
         },
         {
           "seat": 0,
           "zone": "hand",
-          "cards": [
-            "Halt Order",
-            "Wastes",
-            "Wastes"
-          ]
-        },
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "Maya's Goblin Pal is a creature spell, not an artifact spell: no target",
+      "setup": [
         {
           "seat": 0,
           "zone": "battlefield",
           "cards": [
             "Island",
             "Wastes",
-            "Wastes",
-            "Wastes",
             "Wastes"
           ]
         },
         {
           "seat": 0,
-          "zone": "graveyard",
-          "cards": []
-        },
-        {
-          "seat": 0,
-          "zone": "exile",
-          "cards": []
-        },
-        {
-          "seat": 1,
-          "life": 40
-        },
-        {
-          "seat": 1,
           "zone": "hand",
           "cards": [
-            "Wastes"
+            "Halt Order"
           ]
         },
         {
           "seat": 1,
           "zone": "battlefield",
           "cards": [
-            "Smoke Bear",
-            "Smoke Charm",
-            "Smoke Giant",
-            "Smoke Relic",
-            "Wastes"
+            "Mountain"
           ]
         },
         {
           "seat": 1,
-          "zone": "graveyard",
+          "zone": "hand",
           "cards": [
-            "Smoke Sorcery"
+            "Goblin Pal"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "cast": "Goblin Pal",
+          "seat": 1
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Halt Order",
+                "seat": 0
+              },
+              "count": 0
+            }
           ]
         },
         {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
           "seat": 1,
-          "zone": "exile",
-          "cards": []
+          "controls": [
+            "Goblin Pal",
+            "Mountain"
+          ]
         }
       ]
     }

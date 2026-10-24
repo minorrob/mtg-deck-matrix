@@ -30,7 +30,7 @@
       "power": 3,
       "toughness": 3
     },
-    "Omen": {
+    "Smoke Omen": {
       "types": [
         "Sorcery"
       ],
@@ -192,7 +192,7 @@
           "seat": 0,
           "zone": "graveyard",
           "cards": [
-            "Omen",
+            "Smoke Omen",
             "Sage"
           ]
         }

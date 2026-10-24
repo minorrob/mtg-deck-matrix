@@ -24,7 +24,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Omen": {
+    "Smoke Omen": {
       "types": [
         "Sorcery"
       ],
@@ -157,7 +157,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Omen"
+            "Smoke Omen"
           ]
         }
       ],
@@ -166,7 +166,7 @@
           "tap": "Island"
         },
         {
-          "cast": "Omen"
+          "cast": "Smoke Omen"
         },
         {
           "answer": []
@@ -210,7 +210,7 @@
           "seat": 0,
           "zone": "graveyard",
           "cards": [
-            "Omen"
+            "Smoke Omen"
           ]
         }
       ]

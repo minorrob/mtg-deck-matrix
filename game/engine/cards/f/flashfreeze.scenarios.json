@@ -2,24 +2,26 @@
   "schema": "CrankCardScenarios@1",
   "card": "Flashfreeze",
   "fixtures": {
-    "Smoke Commander": {
+    "Goblin Pal": {
       "types": [
         "Creature"
       ],
-      "manaCost": "{W}{U}{B}{R}{G}",
-      "colorIdentity": [
-        "W",
-        "U",
-        "B",
-        "R",
-        "G"
+      "subtypes": [
+        "Goblin"
       ],
-      "power": 5,
-      "toughness": 5
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
     },
-    "Smoke Bear": {
+    "Bear": {
       "types": [
         "Creature"
+      ],
+      "subtypes": [
+        "Bear"
       ],
       "manaCost": "{1}{G}",
       "colors": [
@@ -28,76 +30,30 @@
       "power": 2,
       "toughness": 2
     },
-    "Smoke Relic": {
-      "types": [
-        "Artifact"
-      ],
-      "manaCost": "{2}"
-    },
-    "Smoke Charm": {
-      "types": [
-        "Enchantment"
-      ],
-      "manaCost": "{2}"
-    },
-    "Smoke Giant": {
+    "White Pal": {
       "types": [
         "Creature"
       ],
-      "manaCost": "{4}{G}",
-      "power": 5,
-      "toughness": 5
-    },
-    "Smoke Instant": {
-      "types": [
-        "Instant"
+      "subtypes": [
+        "Soldier"
       ],
-      "manaCost": "{0}",
+      "manaCost": "{W}",
       "colors": [
-        "U"
+        "W"
       ],
-      "spell": {
-        "id": "s",
-        "text": "Target player draws a card.",
-        "targets": [
-          {
-            "what": "player"
-          }
-        ],
-        "effects": [
-          {
-            "effect": "draw",
-            "count": 1,
-            "who": {
-              "target": 0
-            }
-          }
-        ]
-      }
+      "power": 1,
+      "toughness": 1
     }
   },
   "scenarios": [
     {
-      "name": "Flashfreeze cast, and each ability used once (drafted by game/tools/card-waves.mjs, approved in review)",
-      "at": {
-        "turn": 2,
-        "phase": "MAIN1"
-      },
+      "name": "Maya's Goblin Pal spell countered (red)",
       "setup": [
-        {
-          "seat": 0,
-          "zone": "command",
-          "cards": [
-            "Smoke Commander"
-          ]
-        },
         {
           "seat": 0,
           "zone": "battlefield",
           "cards": [
-            "Wastes",
             "Island",
-            "Wastes",
             "Wastes"
           ]
         },
@@ -112,124 +68,289 @@
           "seat": 1,
           "zone": "battlefield",
           "cards": [
-            "Smoke Bear",
-            "Smoke Giant",
-            "Smoke Relic",
-            "Smoke Charm",
-            "Wastes"
+            "Mountain"
           ]
         },
         {
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Smoke Instant"
+            "Goblin Pal"
           ]
         }
       ],
       "steps": [
         {
-          "cast": "Smoke Instant",
-          "seat": 1,
-          "targets": "any"
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "cast": "Goblin Pal",
+          "seat": 1
         },
         {
           "pass": 1
         },
         {
-          "tap": "Wastes",
-          "seat": 0,
-          "optional": true
+          "tap": "Island",
+          "seat": 0
         },
         {
-          "tap": "Island",
-          "seat": 0,
-          "optional": true
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Flashfreeze",
+                "seat": 0
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Goblin Pal"
+                ]
+              ]
+            }
+          ]
         },
         {
           "cast": "Flashfreeze",
           "seat": 0,
-          "targets": "any",
-          "optional": true
+          "targets": [
+            {
+              "card": "Goblin Pal"
+            }
+          ]
         },
         {
-          "settle": true
-        },
-        {
-          "to": {
-            "turn": 3,
-            "phase": "MAIN1",
-            "settle": true
-          }
+          "resolve": true
         }
       ],
       "expect": [
         {
-          "seat": 0,
-          "life": 40
+          "stack": 0
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Goblin Pal"
+          ]
         },
         {
           "seat": 0,
-          "zone": "hand",
+          "zone": "graveyard",
           "cards": [
-            "Flashfreeze",
-            "Wastes",
-            "Wastes"
+            "Flashfreeze"
           ]
-        },
+        }
+      ]
+    },
+    {
+      "name": "Maya's Bear spell countered (green)",
+      "setup": [
         {
           "seat": 0,
           "zone": "battlefield",
           "cards": [
             "Island",
-            "Wastes",
-            "Wastes",
             "Wastes"
           ]
         },
         {
           "seat": 0,
-          "zone": "graveyard",
-          "cards": []
-        },
-        {
-          "seat": 0,
-          "zone": "exile",
-          "cards": []
-        },
-        {
-          "seat": 1,
-          "life": 40
-        },
-        {
-          "seat": 1,
           "zone": "hand",
           "cards": [
-            "Wastes"
+            "Flashfreeze"
           ]
         },
         {
           "seat": 1,
           "zone": "battlefield",
           "cards": [
-            "Smoke Bear",
-            "Smoke Charm",
-            "Smoke Giant",
-            "Smoke Relic",
+            "Forest",
             "Wastes"
           ]
         },
         {
           "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Bear",
+          "seat": 1
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Flashfreeze",
+                "seat": 0
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Bear"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Flashfreeze",
+          "seat": 0,
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 1,
           "zone": "graveyard",
           "cards": [
-            "Smoke Instant"
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Flashfreeze"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Maya's White Pal is a white spell: no target",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Flashfreeze"
           ]
         },
         {
           "seat": 1,
-          "zone": "exile",
-          "cards": []
+          "zone": "battlefield",
+          "cards": [
+            "Plains"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "White Pal"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Plains",
+          "seat": 1
+        },
+        {
+          "cast": "White Pal",
+          "seat": 1
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Flashfreeze",
+                "seat": 0
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Plains",
+            "White Pal"
+          ]
         }
       ]
     }

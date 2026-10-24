@@ -34,6 +34,25 @@ is the whole undefined Commander pool, through the card compiler (`node game/too
 - Coverage (`docs/engine/coverage.md`): the card library 1,414 → 1,495 defined, the most-played 80% 1,863 → 1,873.
 - Why so few most-played cards: wave 4d had already promoted the candidates among them, so these are mostly the long tail.
 
+## What the suites found, and what was fixed
+
+The full suite run (606 of 611 green) failed five suites, each on something the load changed:
+- **Fixture names (`tests/engine-cards.mjs`):** 22 cards now defined were scenario fixtures in 216 other cards' files,
+  including Shock 67, Zap 32, Tidings 30, Divination 20, Blaze 18, Study 14, Shatter 14 and Omen 11. A defined card is
+  always played from its definition, so each fixture is renamed `Smoke <name>` in its own file, with its option labels, as
+  wave 4d renamed Murder. The scenarios mean what they did: inside its file the fixture always stood in for the card.
+- **Filing (`tests/engine-cards.mjs`):** `card-waves.mjs` filed a card under the first letter of its slug, so 2 Mace went
+  to `m/`. It now files under the slug's first character (`2/2-mace.json`), as the suite does.
+- **Cards the smoke game cannot cast (`tests/engine-compile.mjs`):** 22 promoted cards need a target a smoke game never has,
+  like a tapped or attacking creature, a spell to counter, or an artifact card in a graveyard. Their drafted scenario only
+  showed the card in hand. Each now has scenarios of its own that cast it, with an illegal target refused (47 scenarios),
+  and the suite names them with the 11 it already named.
+- **Suites that drew from the store (`card-compiler`, `card-waves`, `table-candidates`, and `engine-compile`'s demand
+  list):** they assumed thousands of candidates, a vanilla flier or a legendary creature among them. They now take what
+  the store holds, or compile one from a defined card through `compileCard` when it holds none of that kind.
+- **The vetoed-template check (`card-compiler`):** no card is vetoed any more, so the check records the calibration failure
+  itself. A deliberate break of `trustOf`'s rate check fails it.
+
 ## Held back: 23 candidates, each a real mistranslation (`held.json`)
 
 They stay candidates (playtest tables only) until the compiler or a hand definition fixes them. The defects are compiler

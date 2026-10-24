@@ -13,7 +13,7 @@
       "power": 5,
       "toughness": 5
     },
-    "Shrink": {
+    "Smoke Shrink": {
       "types": [
         "Instant"
       ],
@@ -90,7 +90,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Shrink"
+            "Smoke Shrink"
           ]
         }
       ],
@@ -112,7 +112,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Shrink",
+          "cast": "Smoke Shrink",
           "targets": [
             {
               "card": "Big Beast"

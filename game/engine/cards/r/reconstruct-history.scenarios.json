@@ -18,7 +18,7 @@
         "W"
       ]
     },
-    "Zap": {
+    "Smoke Zap": {
       "types": [
         "Instant"
       ],
@@ -159,7 +159,7 @@
           "cards": [
             "Rock",
             "Charm Ward",
-            "Zap",
+            "Smoke Zap",
             "Tome",
             "Walker",
             "Bear",
@@ -195,7 +195,7 @@
             ],
             [
               {
-                "card": "Zap"
+                "card": "Smoke Zap"
               }
             ],
             [
@@ -221,7 +221,7 @@
           "cards": [
             "Rock",
             "Charm Ward",
-            "Zap",
+            "Smoke Zap",
             "Tome",
             "Walker"
           ]
@@ -268,7 +268,7 @@
           "zone": "graveyard",
           "cards": [
             "Rock",
-            "Zap",
+            "Smoke Zap",
             "Tome"
           ]
         },
@@ -276,7 +276,7 @@
           "seat": 1,
           "zone": "graveyard",
           "cards": [
-            "Zap"
+            "Smoke Zap"
           ]
         }
       ],
@@ -320,7 +320,7 @@
               "asks": {
                 "seat": 0,
                 "options": [
-                  "Zap"
+                  "Smoke Zap"
                 ]
               }
             }
@@ -363,14 +363,14 @@
           "seat": 0,
           "zone": "graveyard",
           "cards": [
-            "Zap"
+            "Smoke Zap"
           ]
         },
         {
           "seat": 1,
           "zone": "graveyard",
           "cards": [
-            "Zap"
+            "Smoke Zap"
           ]
         },
         {

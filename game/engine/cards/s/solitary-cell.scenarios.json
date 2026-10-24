@@ -72,7 +72,7 @@
       "manaCost": "{2}",
       "colors": []
     },
-    "Shatter": {
+    "Smoke Shatter": {
       "types": [
         "Instant"
       ],
@@ -133,7 +133,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Shatter"
+            "Smoke Shatter"
           ]
         }
       ],
@@ -187,7 +187,7 @@
           "seat": 1
         },
         {
-          "cast": "Shatter",
+          "cast": "Smoke Shatter",
           "seat": 1,
           "targets": [
             {
@@ -339,7 +339,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Shatter"
+            "Smoke Shatter"
           ]
         }
       ],
@@ -369,7 +369,7 @@
           "seat": 1
         },
         {
-          "cast": "Shatter",
+          "cast": "Smoke Shatter",
           "seat": 1,
           "targets": [
             {

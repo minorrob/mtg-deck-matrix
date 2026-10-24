@@ -28,7 +28,7 @@
         ]
       }
     },
-    "Uproot": {
+    "Smoke Uproot": {
       "types": [
         "Instant"
       ],
@@ -267,7 +267,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Uproot"
+            "Smoke Uproot"
           ]
         }
       ],
@@ -276,7 +276,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Uproot",
+          "cast": "Smoke Uproot",
           "targets": [
             {
               "card": "Yavimaya, Cradle of Growth"

@@ -43,7 +43,7 @@
         ]
       }
     },
-    "Blaze": {
+    "Smoke Blaze": {
       "types": [
         "Sorcery"
       ],
@@ -156,7 +156,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Blaze"
+            "Smoke Blaze"
           ]
         }
       ],
@@ -177,7 +177,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Blaze",
+          "cast": "Smoke Blaze",
           "targets": [
             {
               "player": 1

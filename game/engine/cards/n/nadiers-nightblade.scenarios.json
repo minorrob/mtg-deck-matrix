@@ -16,7 +16,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -147,8 +147,8 @@
           "zone": "hand",
           "cards": [
             "Soldiers",
-            "Shock",
-            "Shock",
+            "Smoke Shock",
+            "Smoke Shock",
             "Lightning Bolt"
           ]
         }
@@ -167,7 +167,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "targets": [
             {
               "card": "Soldier"
@@ -184,7 +184,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "targets": [
             {
               "card": "Soldier"

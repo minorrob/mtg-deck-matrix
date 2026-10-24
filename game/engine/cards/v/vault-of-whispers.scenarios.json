@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Vault of Whispers",
   "fixtures": {
-    "Smash": {
+    "Smoke Smash": {
       "types": [
         "Instant"
       ],
@@ -91,7 +91,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Smash"
+            "Smoke Smash"
           ]
         },
         {
@@ -111,7 +111,7 @@
           "seat": 1
         },
         {
-          "cast": "Smash",
+          "cast": "Smoke Smash",
           "seat": 1,
           "targets": [
             {

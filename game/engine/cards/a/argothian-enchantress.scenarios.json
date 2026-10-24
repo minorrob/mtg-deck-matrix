@@ -25,7 +25,7 @@
         "G"
       ]
     },
-    "Zap": {
+    "Smoke Zap": {
       "types": [
         "Instant"
       ],
@@ -73,7 +73,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Zap"
+            "Smoke Zap"
           ]
         },
         {
@@ -87,7 +87,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Zap"
+            "Smoke Zap"
           ]
         }
       ],
@@ -100,7 +100,7 @@
             {
               "offers": {
                 "kind": "cast",
-                "card": "Zap"
+                "card": "Smoke Zap"
               },
               "count": 1,
               "targets": [
@@ -123,7 +123,7 @@
         {
           "offers": {
             "kind": "cast",
-            "card": "Zap",
+            "card": "Smoke Zap",
             "seat": 1
           },
           "count": 1,

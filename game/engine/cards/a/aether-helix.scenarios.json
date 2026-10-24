@@ -23,7 +23,7 @@
       "manaCost": "{2}",
       "colors": []
     },
-    "Zap": {
+    "Smoke Zap": {
       "types": [
         "Instant"
       ],
@@ -262,7 +262,7 @@
           "seat": 0,
           "zone": "graveyard",
           "cards": [
-            "Zap"
+            "Smoke Zap"
           ]
         },
         {

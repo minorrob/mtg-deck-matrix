@@ -30,7 +30,7 @@
       "power": 3,
       "toughness": 3
     },
-    "Peek": {
+    "Smoke Peek": {
       "types": [
         "Instant"
       ],
@@ -169,7 +169,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Peek"
+            "Smoke Peek"
           ]
         }
       ],
@@ -178,7 +178,7 @@
           "tap": "Island"
         },
         {
-          "cast": "Peek"
+          "cast": "Smoke Peek"
         },
         {
           "resolve": true

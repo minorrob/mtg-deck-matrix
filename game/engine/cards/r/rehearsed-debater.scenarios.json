@@ -58,7 +58,7 @@
         ]
       }
     },
-    "Zap": {
+    "Smoke Zap": {
       "types": [
         "Instant"
       ],
@@ -88,7 +88,7 @@
         ]
       }
     },
-    "Blaze": {
+    "Smoke Blaze": {
       "types": [
         "Sorcery"
       ],
@@ -132,7 +132,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Zap"
+            "Smoke Zap"
           ]
         },
         {
@@ -148,7 +148,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Zap",
+          "cast": "Smoke Zap",
           "targets": [
             {
               "card": "Bear"

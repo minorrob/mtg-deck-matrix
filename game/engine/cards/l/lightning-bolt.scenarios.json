@@ -10,7 +10,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Gladecover Scout": {
+    "Smoke Gladecover Scout": {
       "types": [
         "Creature"
       ],
@@ -224,14 +224,14 @@
           "zone": "battlefield",
           "cards": [
             "Mountain",
-            "Gladecover Scout"
+            "Smoke Gladecover Scout"
           ]
         },
         {
           "seat": 1,
           "zone": "battlefield",
           "cards": [
-            "Gladecover Scout"
+            "Smoke Gladecover Scout"
           ]
         }
       ],
@@ -249,7 +249,7 @@
           "count": 3,
           "targets": [
             [
-              "Gladecover Scout"
+              "Smoke Gladecover Scout"
             ],
             [
               "Maya"

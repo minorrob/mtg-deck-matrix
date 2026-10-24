@@ -8,7 +8,7 @@
       ],
       "manaCost": "{1}"
     },
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -133,7 +133,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Shock"
+            "Smoke Shock"
           ]
         }
       ],
@@ -250,12 +250,12 @@
         },
         {
           "choose": [
-            "Shock"
+            "Smoke Shock"
           ]
         },
         {
           "choose": [
-            "Shock → Maya"
+            "Smoke Shock → Maya"
           ]
         },
         {
@@ -278,7 +278,7 @@
           "seat": 0,
           "zone": "graveyard",
           "cards": [
-            "Shock",
+            "Smoke Shock",
             "Wastes",
             "Wastes",
             "Wastes"
@@ -300,7 +300,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Shock"
+            "Smoke Shock"
           ]
         }
       ],
@@ -405,7 +405,7 @@
         },
         {
           "choose": [
-            "Shock"
+            "Smoke Shock"
           ]
         },
         {
@@ -423,7 +423,7 @@
           "seat": 0,
           "zone": "graveyard",
           "cards": [
-            "Shock",
+            "Smoke Shock",
             "Wastes",
             "Wastes",
             "Wastes"

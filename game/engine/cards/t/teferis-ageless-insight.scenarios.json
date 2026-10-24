@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Teferi's Ageless Insight",
   "fixtures": {
-    "Tidings": {
+    "Smoke Tidings": {
       "types": [
         "Instant"
       ],
@@ -22,7 +22,7 @@
         ]
       }
     },
-    "Study": {
+    "Smoke Study": {
       "types": [
         "Instant"
       ],
@@ -80,8 +80,8 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Tidings",
-            "Study"
+            "Smoke Tidings",
+            "Smoke Study"
           ]
         }
       ],
@@ -90,7 +90,7 @@
           "tap": "Island"
         },
         {
-          "cast": "Tidings"
+          "cast": "Smoke Tidings"
         },
         {
           "resolve": true
@@ -108,7 +108,7 @@
           "tap": "Island"
         },
         {
-          "cast": "Study"
+          "cast": "Smoke Study"
         },
         {
           "resolve": true
@@ -137,7 +137,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Tidings"
+            "Smoke Tidings"
           ]
         }
       ],
@@ -161,7 +161,7 @@
           "tap": "Island"
         },
         {
-          "cast": "Tidings"
+          "cast": "Smoke Tidings"
         },
         {
           "resolve": true
@@ -190,7 +190,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Tidings"
+            "Smoke Tidings"
           ]
         }
       ],
@@ -209,7 +209,7 @@
           "seat": 0
         },
         {
-          "cast": "Tidings",
+          "cast": "Smoke Tidings",
           "seat": 0
         },
         {
@@ -250,7 +250,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Tidings"
+            "Smoke Tidings"
           ]
         }
       ],
@@ -266,7 +266,7 @@
           "seat": 1
         },
         {
-          "cast": "Tidings",
+          "cast": "Smoke Tidings",
           "seat": 1
         },
         {
@@ -298,7 +298,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Tidings",
+            "Smoke Tidings",
             "Dump19"
           ]
         }
@@ -326,7 +326,7 @@
           "tap": "Island"
         },
         {
-          "cast": "Tidings"
+          "cast": "Smoke Tidings"
         },
         {
           "resolve": true

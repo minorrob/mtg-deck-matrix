@@ -16,7 +16,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Zap": {
+    "Smoke Zap": {
       "types": [
         "Instant"
       ],
@@ -46,7 +46,7 @@
         ]
       }
     },
-    "Study": {
+    "Smoke Study": {
       "types": [
         "Sorcery"
       ],
@@ -92,7 +92,7 @@
           "seat": 0,
           "zone": "graveyard",
           "cards": [
-            "Zap",
+            "Smoke Zap",
             "Bear"
           ]
         }
@@ -118,7 +118,7 @@
         },
         {
           "choose": [
-            "Zap"
+            "Smoke Zap"
           ]
         },
         {
@@ -130,7 +130,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Zap"
+            "Smoke Zap"
           ]
         },
         {
@@ -176,7 +176,7 @@
           "seat": 0,
           "zone": "graveyard",
           "cards": [
-            "Study"
+            "Smoke Study"
           ]
         }
       ],
@@ -208,7 +208,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Study"
+            "Smoke Study"
           ]
         },
         {
@@ -311,7 +311,7 @@
           "seat": 1,
           "zone": "graveyard",
           "cards": [
-            "Zap"
+            "Smoke Zap"
           ]
         }
       ],
@@ -348,7 +348,7 @@
           "seat": 1,
           "zone": "graveyard",
           "cards": [
-            "Zap"
+            "Smoke Zap"
           ]
         }
       ]

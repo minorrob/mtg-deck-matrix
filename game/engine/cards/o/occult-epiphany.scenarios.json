@@ -29,7 +29,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -82,7 +82,7 @@
           "cards": [
             "Occult Epiphany",
             "Bear",
-            "Shock",
+            "Smoke Shock",
             "Forest"
           ]
         }
@@ -119,7 +119,7 @@
         {
           "choose": [
             "Bear",
-            "Shock",
+            "Smoke Shock",
             "Forest"
           ]
         }

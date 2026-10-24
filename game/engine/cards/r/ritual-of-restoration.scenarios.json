@@ -2,24 +2,26 @@
   "schema": "CrankCardScenarios@1",
   "card": "Ritual of Restoration",
   "fixtures": {
-    "Smoke Commander": {
+    "Rock": {
       "types": [
-        "Creature"
+        "Artifact"
       ],
-      "manaCost": "{W}{U}{B}{R}{G}",
-      "colorIdentity": [
-        "W",
-        "U",
-        "B",
-        "R",
-        "G"
-      ],
-      "power": 5,
-      "toughness": 5
+      "manaCost": "{1}",
+      "colors": []
     },
-    "Smoke Bear": {
+    "Other Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Bear": {
       "types": [
         "Creature"
+      ],
+      "subtypes": [
+        "Bear"
       ],
       "manaCost": "{1}{G}",
       "colors": [
@@ -27,80 +29,17 @@
       ],
       "power": 2,
       "toughness": 2
-    },
-    "Smoke Relic": {
-      "types": [
-        "Artifact"
-      ],
-      "manaCost": "{2}"
-    },
-    "Smoke Charm": {
-      "types": [
-        "Enchantment"
-      ],
-      "manaCost": "{2}"
-    },
-    "Smoke Giant": {
-      "types": [
-        "Creature"
-      ],
-      "manaCost": "{4}{G}",
-      "power": 5,
-      "toughness": 5
-    },
-    "Smoke Sorcery": {
-      "types": [
-        "Sorcery"
-      ],
-      "manaCost": "{0}",
-      "spell": {
-        "id": "s",
-        "text": "Target player draws a card.",
-        "targets": [
-          {
-            "what": "player"
-          }
-        ],
-        "effects": [
-          {
-            "effect": "draw",
-            "count": 1,
-            "who": {
-              "target": 0
-            }
-          }
-        ]
-      }
     }
   },
   "scenarios": [
     {
-      "name": "Ritual of Restoration cast, and each ability used once (drafted by game/tools/card-waves.mjs, approved in review)",
+      "name": "The Rock in Rob's graveyard returns to Rob's hand; the Bear there and Maya's Other Rock are no targets",
       "setup": [
-        {
-          "seat": 0,
-          "zone": "command",
-          "cards": [
-            "Smoke Commander"
-          ]
-        },
         {
           "seat": 0,
           "zone": "battlefield",
           "cards": [
-            "Plains",
-            "Wastes",
-            "Wastes",
-            "Smoke Bear",
-            "Smoke Relic"
-          ]
-        },
-        {
-          "seat": 0,
-          "zone": "graveyard",
-          "cards": [
-            "Smoke Bear",
-            "Smoke Sorcery"
+            "Plains"
           ]
         },
         {
@@ -111,116 +50,133 @@
           ]
         },
         {
-          "seat": 1,
-          "zone": "battlefield",
+          "seat": 0,
+          "zone": "graveyard",
           "cards": [
-            "Smoke Bear",
-            "Smoke Giant",
-            "Smoke Relic",
-            "Smoke Charm",
-            "Wastes"
+            "Rock",
+            "Bear"
           ]
         },
         {
           "seat": 1,
-          "zone": "hand",
+          "zone": "graveyard",
           "cards": [
-            "Smoke Sorcery"
+            "Other Rock"
           ]
         }
       ],
       "steps": [
         {
-          "tap": "Plains",
-          "seat": 0,
-          "optional": true
+          "tap": "Plains"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Ritual of Restoration"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Rock"
+                ]
+              ]
+            }
+          ]
         },
         {
           "cast": "Ritual of Restoration",
-          "seat": 0,
-          "targets": "any",
-          "optional": true
+          "targets": [
+            {
+              "card": "Rock"
+            }
+          ]
         },
         {
-          "settle": true
-        },
-        {
-          "to": {
-            "turn": 3,
-            "phase": "MAIN1",
-            "settle": true
-          }
+          "resolve": true
         }
       ],
       "expect": [
         {
           "seat": 0,
-          "life": 40
-        },
-        {
-          "seat": 0,
           "zone": "hand",
           "cards": [
-            "Ritual of Restoration",
-            "Wastes"
-          ]
-        },
-        {
-          "seat": 0,
-          "zone": "battlefield",
-          "cards": [
-            "Plains",
-            "Smoke Bear",
-            "Smoke Relic",
-            "Wastes",
-            "Wastes"
+            "Rock"
           ]
         },
         {
           "seat": 0,
           "zone": "graveyard",
           "cards": [
-            "Smoke Bear",
-            "Smoke Sorcery"
-          ]
-        },
-        {
-          "seat": 0,
-          "zone": "exile",
-          "cards": []
-        },
-        {
-          "seat": 1,
-          "life": 40
-        },
-        {
-          "seat": 1,
-          "zone": "hand",
-          "cards": [
-            "Smoke Sorcery",
-            "Wastes"
-          ]
-        },
-        {
-          "seat": 1,
-          "zone": "battlefield",
-          "cards": [
-            "Smoke Bear",
-            "Smoke Charm",
-            "Smoke Giant",
-            "Smoke Relic",
-            "Wastes"
+            "Bear",
+            "Ritual of Restoration"
           ]
         },
         {
           "seat": 1,
           "zone": "graveyard",
-          "cards": []
+          "cards": [
+            "Other Rock"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "No artifact card in Rob's graveyard (only a creature card, and one in Maya's): it cannot be cast",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Ritual of Restoration"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
         },
         {
           "seat": 1,
-          "zone": "exile",
-          "cards": []
+          "zone": "graveyard",
+          "cards": [
+            "Other Rock"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Ritual of Restoration"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
         }
       ]
     }

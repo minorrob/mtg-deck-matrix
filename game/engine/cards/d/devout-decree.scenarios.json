@@ -2,24 +2,40 @@
   "schema": "CrankCardScenarios@1",
   "card": "Devout Decree",
   "fixtures": {
-    "Smoke Commander": {
+    "Goblin Pal": {
       "types": [
         "Creature"
       ],
-      "manaCost": "{W}{U}{B}{R}{G}",
-      "colorIdentity": [
-        "W",
-        "U",
-        "B",
-        "R",
-        "G"
+      "subtypes": [
+        "Goblin"
       ],
-      "power": 5,
-      "toughness": 5
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
     },
-    "Smoke Bear": {
+    "Zombie Pal": {
       "types": [
         "Creature"
+      ],
+      "subtypes": [
+        "Zombie"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
       ],
       "manaCost": "{1}{G}",
       "colors": [
@@ -28,69 +44,29 @@
       "power": 2,
       "toughness": 2
     },
-    "Smoke Relic": {
+    "Black Walker": {
       "types": [
-        "Artifact"
+        "Planeswalker"
       ],
-      "manaCost": "{2}"
-    },
-    "Smoke Charm": {
-      "types": [
-        "Enchantment"
+      "manaCost": "{2}{B}",
+      "colors": [
+        "B"
       ],
-      "manaCost": "{2}"
-    },
-    "Smoke Giant": {
-      "types": [
-        "Creature"
-      ],
-      "manaCost": "{4}{G}",
-      "power": 5,
-      "toughness": 5
-    },
-    "Smoke Sorcery": {
-      "types": [
-        "Sorcery"
-      ],
-      "manaCost": "{0}",
-      "spell": {
-        "id": "s",
-        "text": "Target player draws a card.",
-        "targets": [
-          {
-            "what": "player"
-          }
-        ],
-        "effects": [
-          {
-            "effect": "draw",
-            "count": 1,
-            "who": {
-              "target": 0
-            }
-          }
-        ]
-      }
+      "loyalty": 3
     }
   },
   "scenarios": [
     {
-      "name": "Devout Decree cast, and each ability used once (drafted by game/tools/card-waves.mjs, approved in review)",
+      "name": "Maya's red Goblin Pal exiled, then Scry 1 puts the top card on the bottom; her green Bear is no target",
+      "library": [
+        "Mountain"
+      ],
       "setup": [
-        {
-          "seat": 0,
-          "zone": "command",
-          "cards": [
-            "Smoke Commander"
-          ]
-        },
         {
           "seat": 0,
           "zone": "battlefield",
           "cards": [
-            "Wastes",
             "Plains",
-            "Wastes",
             "Wastes"
           ]
         },
@@ -105,114 +81,189 @@
           "seat": 1,
           "zone": "battlefield",
           "cards": [
-            "Smoke Bear",
-            "Smoke Giant",
-            "Smoke Relic",
-            "Smoke Charm",
-            "Wastes"
-          ]
-        },
-        {
-          "seat": 1,
-          "zone": "hand",
-          "cards": [
-            "Smoke Sorcery"
+            "Goblin Pal",
+            "Bear"
           ]
         }
       ],
       "steps": [
         {
-          "tap": "Wastes",
-          "seat": 0,
-          "optional": true
+          "tap": "Plains"
         },
         {
-          "tap": "Plains",
-          "seat": 0,
-          "optional": true
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Devout Decree"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Goblin Pal"
+                ]
+              ]
+            }
+          ]
         },
         {
           "cast": "Devout Decree",
-          "seat": 0,
-          "targets": "any",
-          "optional": true
+          "targets": [
+            {
+              "card": "Goblin Pal"
+            }
+          ]
         },
         {
-          "settle": true
+          "resolve": true
         },
         {
-          "to": {
-            "turn": 3,
-            "phase": "MAIN1",
-            "settle": true
-          }
+          "answer": [
+            0
+          ]
         }
       ],
       "expect": [
         {
-          "seat": 0,
-          "life": 40
-        },
-        {
-          "seat": 0,
-          "zone": "hand",
+          "seat": 1,
+          "zone": "exile",
           "cards": [
-            "Devout Decree",
-            "Wastes"
+            "Goblin Pal"
           ]
         },
+        {
+          "seat": 1,
+          "controls": [
+            "Bear"
+          ]
+        },
+        {
+          "event": "GameEventShuffle",
+          "where": {
+            "scryedToBottom": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Maya's black creature and black planeswalker are both targets; the planeswalker exiled",
+      "setup": [
         {
           "seat": 0,
           "zone": "battlefield",
           "cards": [
             "Plains",
-            "Wastes",
-            "Wastes",
             "Wastes"
           ]
         },
         {
           "seat": 0,
-          "zone": "graveyard",
-          "cards": []
-        },
-        {
-          "seat": 0,
-          "zone": "exile",
-          "cards": []
-        },
-        {
-          "seat": 1,
-          "life": 40
-        },
-        {
-          "seat": 1,
           "zone": "hand",
           "cards": [
-            "Smoke Sorcery",
-            "Wastes"
+            "Devout Decree"
           ]
         },
         {
           "seat": 1,
           "zone": "battlefield",
           "cards": [
-            "Smoke Bear",
-            "Smoke Charm",
-            "Smoke Giant",
-            "Smoke Relic",
-            "Wastes"
+            "Zombie Pal",
+            "Black Walker"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Devout Decree",
+          "targets": [
+            {
+              "card": "Black Walker"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": []
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": [
+            "Black Walker"
           ]
         },
         {
           "seat": 1,
-          "zone": "graveyard",
-          "cards": []
+          "controls": [
+            "Zombie Pal"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Only a green creature: no target, so it cannot be cast",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Devout Decree"
+          ]
         },
         {
           "seat": 1,
-          "zone": "exile",
-          "cards": []
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Devout Decree"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Bear"
+          ]
         }
       ]
     }

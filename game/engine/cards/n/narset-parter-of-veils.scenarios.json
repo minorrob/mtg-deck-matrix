@@ -25,7 +25,7 @@
         "W"
       ]
     },
-    "Tidings": {
+    "Smoke Tidings": {
       "types": [
         "Instant"
       ],
@@ -65,7 +65,7 @@
         ]
       }
     },
-    "Study": {
+    "Smoke Study": {
       "types": [
         "Sorcery"
       ],
@@ -108,7 +108,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Study"
+            "Smoke Study"
           ]
         }
       ],
@@ -133,7 +133,7 @@
           "seat": 1
         },
         {
-          "cast": "Study",
+          "cast": "Smoke Study",
           "seat": 1
         },
         {
@@ -155,7 +155,7 @@
           "seat": 1,
           "zone": "graveyard",
           "cards": [
-            "Study"
+            "Smoke Study"
           ]
         }
       ]
@@ -229,7 +229,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Study"
+            "Smoke Study"
           ]
         }
       ],
@@ -238,7 +238,7 @@
           "tap": "Island"
         },
         {
-          "cast": "Study"
+          "cast": "Smoke Study"
         },
         {
           "resolve": true
@@ -288,8 +288,8 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Tidings",
-            "Tidings"
+            "Smoke Tidings",
+            "Smoke Tidings"
           ]
         }
       ],
@@ -302,7 +302,7 @@
           "seat": 1
         },
         {
-          "cast": "Tidings",
+          "cast": "Smoke Tidings",
           "seat": 1
         },
         {
@@ -344,7 +344,7 @@
           "seat": 1
         },
         {
-          "cast": "Tidings",
+          "cast": "Smoke Tidings",
           "seat": 1
         },
         {
@@ -366,8 +366,8 @@
           "seat": 1,
           "zone": "graveyard",
           "cards": [
-            "Tidings",
-            "Tidings"
+            "Smoke Tidings",
+            "Smoke Tidings"
           ]
         }
       ]
@@ -393,7 +393,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Study"
+            "Smoke Study"
           ]
         }
       ],
@@ -409,7 +409,7 @@
           "seat": 1
         },
         {
-          "cast": "Study",
+          "cast": "Smoke Study",
           "seat": 1
         },
         {
@@ -456,7 +456,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Tidings"
+            "Smoke Tidings"
           ]
         }
       ],
@@ -472,7 +472,7 @@
           "seat": 1
         },
         {
-          "cast": "Tidings",
+          "cast": "Smoke Tidings",
           "seat": 1
         },
         {
@@ -613,7 +613,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Study"
+            "Smoke Study"
           ]
         },
         {
@@ -629,7 +629,7 @@
           "tap": "Island"
         },
         {
-          "cast": "Study"
+          "cast": "Smoke Study"
         },
         {
           "resolve": true
@@ -680,7 +680,7 @@
       "library": [
         "Bear",
         "Charm",
-        "Study",
+        "Smoke Study",
         "Forest"
       ],
       "setup": [
@@ -706,7 +706,7 @@
                 "seat": 0,
                 "options": [
                   "Charm",
-                  "Study"
+                  "Smoke Study"
                 ],
                 "min": 0
               }
@@ -715,7 +715,7 @@
         },
         {
           "choose": [
-            "Study"
+            "Smoke Study"
           ]
         }
       ],
@@ -724,7 +724,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Study"
+            "Smoke Study"
           ]
         },
         {
@@ -751,7 +751,7 @@
       "library": [
         "Bear",
         "Charm",
-        "Study",
+        "Smoke Study",
         "Forest"
       ],
       "setup": [
@@ -831,7 +831,7 @@
     {
       "name": "One loyalty ability a turn (CR 606.3): after the -2, it is not offered again this turn",
       "library": [
-        "Study"
+        "Smoke Study"
       ],
       "setup": [
         {

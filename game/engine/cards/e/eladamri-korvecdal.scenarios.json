@@ -56,7 +56,7 @@
       "power": 5,
       "toughness": 5
     },
-    "Tidings": {
+    "Smoke Tidings": {
       "types": [
         "Instant"
       ],
@@ -164,7 +164,7 @@
           "zone": "hand",
           "cards": [
             "Troll",
-            "Tidings"
+            "Smoke Tidings"
           ]
         }
       ],
@@ -194,7 +194,7 @@
                 "seat": 0,
                 "options": [
                   "Troll",
-                  "Tidings"
+                  "Smoke Tidings"
                 ]
               }
             }
@@ -221,7 +221,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Tidings"
+            "Smoke Tidings"
           ]
         },
         {
@@ -260,7 +260,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Tidings"
+            "Smoke Tidings"
           ]
         }
       ],
@@ -285,7 +285,7 @@
         },
         {
           "choose": [
-            "Tidings"
+            "Smoke Tidings"
           ]
         }
       ],
@@ -294,7 +294,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Tidings"
+            "Smoke Tidings"
           ]
         },
         {

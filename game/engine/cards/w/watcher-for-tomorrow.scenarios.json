@@ -31,7 +31,7 @@
         ]
       }
     },
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -91,7 +91,7 @@
       "name": "It enters tapped; of the top four, Shock exiled face down (nobody sees its name in exile); the Watcher dies and Shock goes to Rob's hand",
       "library": [
         "Wastes",
-        "Shock",
+        "Smoke Shock",
         "Bear",
         "Island",
         "Mountain"
@@ -159,7 +159,7 @@
                 "seat": 0,
                 "options": [
                   "Wastes",
-                  "Shock",
+                  "Smoke Shock",
                   "Bear",
                   "Island"
                 ]
@@ -169,7 +169,7 @@
         },
         {
           "choose": [
-            "Shock"
+            "Smoke Shock"
           ]
         },
         {
@@ -217,7 +217,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Shock"
+            "Smoke Shock"
           ]
         },
         {
@@ -231,7 +231,7 @@
       "name": "The three not exiled go to the bottom: the fifth card is drawn next",
       "library": [
         "Wastes",
-        "Shock",
+        "Smoke Shock",
         "Bear",
         "Island",
         "Mountain"

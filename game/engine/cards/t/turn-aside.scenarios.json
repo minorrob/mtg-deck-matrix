@@ -2,24 +2,41 @@
   "schema": "CrankCardScenarios@1",
   "card": "Turn Aside",
   "fixtures": {
-    "Smoke Commander": {
+    "Smite": {
       "types": [
-        "Creature"
+        "Instant"
       ],
-      "manaCost": "{W}{U}{B}{R}{G}",
-      "colorIdentity": [
-        "W",
-        "U",
-        "B",
-        "R",
-        "G"
+      "manaCost": "{W}",
+      "colors": [
+        "W"
       ],
-      "power": 5,
-      "toughness": 5
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
     },
-    "Smoke Bear": {
+    "Bear": {
       "types": [
         "Creature"
+      ],
+      "subtypes": [
+        "Bear"
       ],
       "manaCost": "{1}{G}",
       "colors": [
@@ -28,202 +45,229 @@
       "power": 2,
       "toughness": 2
     },
-    "Smoke Relic": {
-      "types": [
-        "Artifact"
-      ],
-      "manaCost": "{2}"
-    },
-    "Smoke Charm": {
-      "types": [
-        "Enchantment"
-      ],
-      "manaCost": "{2}"
-    },
-    "Smoke Giant": {
+    "Ogre": {
       "types": [
         "Creature"
       ],
-      "manaCost": "{4}{G}",
-      "power": 5,
-      "toughness": 5
-    },
-    "Smoke Sorcery": {
-      "types": [
-        "Sorcery"
+      "subtypes": [
+        "Ogre"
       ],
-      "manaCost": "{0}",
-      "spell": {
-        "id": "s",
-        "text": "Target player draws a card.",
-        "targets": [
-          {
-            "what": "player"
-          }
-        ],
-        "effects": [
-          {
-            "effect": "draw",
-            "count": 1,
-            "who": {
-              "target": 0
-            }
-          }
-        ]
-      }
-    },
-    "Smoke Whelp": {
-      "types": [
-        "Creature"
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
       ],
-      "manaCost": "{0}",
-      "power": 1,
-      "toughness": 1
+      "power": 3,
+      "toughness": 3
     }
   },
   "scenarios": [
     {
-      "name": "Turn Aside cast, and each ability used once (drafted by game/tools/card-waves.mjs, approved in review)",
+      "name": "Maya's Smite at Rob's Bear is countered, and the Bear lives",
       "setup": [
-        {
-          "seat": 0,
-          "zone": "command",
-          "cards": [
-            "Smoke Commander"
-          ]
-        },
         {
           "seat": 0,
           "zone": "battlefield",
           "cards": [
             "Island",
-            "Wastes",
-            "Wastes",
-            "Smoke Bear",
-            "Smoke Relic"
+            "Bear"
           ]
         },
         {
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Turn Aside",
-            "Smoke Whelp"
+            "Turn Aside"
           ]
         },
         {
           "seat": 1,
           "zone": "battlefield",
           "cards": [
-            "Smoke Bear",
-            "Smoke Giant",
-            "Smoke Relic",
-            "Smoke Charm",
-            "Wastes"
+            "Plains"
           ]
         },
         {
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Smoke Sorcery"
+            "Smite"
           ]
         }
       ],
       "steps": [
         {
-          "cast": "Smoke Whelp",
-          "seat": 0
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Plains",
+          "seat": 1
+        },
+        {
+          "cast": "Smite",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "pass": 1
         },
         {
           "tap": "Island",
-          "seat": 0,
-          "optional": true
+          "seat": 0
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Turn Aside",
+                "seat": 0
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Smite"
+                ]
+              ]
+            }
+          ]
         },
         {
           "cast": "Turn Aside",
           "seat": 0,
-          "targets": "any",
-          "optional": true
+          "targets": [
+            {
+              "card": "Smite"
+            }
+          ]
         },
         {
-          "settle": true
-        },
-        {
-          "to": {
-            "turn": 3,
-            "phase": "MAIN1",
-            "settle": true
-          }
+          "resolve": true
         }
       ],
       "expect": [
         {
+          "stack": 0
+        },
+        {
           "seat": 0,
-          "life": 40
+          "controls": [
+            "Bear",
+            "Island"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Smite"
+          ]
         },
         {
           "seat": 0,
           "zone": "hand",
-          "cards": [
-            "Turn Aside",
-            "Wastes"
-          ]
-        },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Maya's Smite at her own Ogre targets no permanent Rob controls: no target",
+      "setup": [
         {
           "seat": 0,
           "zone": "battlefield",
           "cards": [
             "Island",
-            "Smoke Bear",
-            "Smoke Relic",
-            "Smoke Whelp",
-            "Wastes",
-            "Wastes"
+            "Bear"
           ]
         },
         {
           "seat": 0,
-          "zone": "graveyard",
-          "cards": []
-        },
-        {
-          "seat": 0,
-          "zone": "exile",
-          "cards": []
-        },
-        {
-          "seat": 1,
-          "life": 40
-        },
-        {
-          "seat": 1,
           "zone": "hand",
           "cards": [
-            "Smoke Sorcery",
-            "Wastes"
+            "Turn Aside"
           ]
         },
         {
           "seat": 1,
           "zone": "battlefield",
           "cards": [
-            "Smoke Bear",
-            "Smoke Charm",
-            "Smoke Giant",
-            "Smoke Relic",
-            "Wastes"
+            "Plains",
+            "Ogre"
           ]
         },
         {
           "seat": 1,
-          "zone": "graveyard",
-          "cards": []
+          "zone": "hand",
+          "cards": [
+            "Smite"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
         },
         {
+          "tap": "Plains",
+          "seat": 1
+        },
+        {
+          "cast": "Smite",
           "seat": 1,
-          "zone": "exile",
-          "cards": []
+          "targets": [
+            {
+              "card": "Ogre"
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Turn Aside",
+                "seat": 0
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Ogre",
+            "Smite"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Bear",
+            "Island"
+          ]
         }
       ]
     }

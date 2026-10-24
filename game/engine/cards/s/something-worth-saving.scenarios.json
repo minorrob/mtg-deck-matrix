@@ -16,7 +16,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Omen": {
+    "Smoke Omen": {
       "types": [
         "Sorcery"
       ],
@@ -63,7 +63,7 @@
       "name": "Four milled; a permanent card among them put into the hand, never the sorcery; and 1 life",
       "library": [
         "Bear",
-        "Omen",
+        "Smoke Omen",
         "Rock",
         "Forest",
         "Ogre"
@@ -139,7 +139,7 @@
           "zone": "graveyard",
           "cards": [
             "Ogre",
-            "Omen",
+            "Smoke Omen",
             "Rock",
             "Forest",
             "Something Worth Saving"
@@ -160,7 +160,7 @@
       "name": "He may put none: all four stay in the graveyard, and he still gains 1",
       "library": [
         "Bear",
-        "Omen",
+        "Smoke Omen",
         "Rock",
         "Forest"
       ],
@@ -209,7 +209,7 @@
           "zone": "graveyard",
           "cards": [
             "Bear",
-            "Omen",
+            "Smoke Omen",
             "Rock",
             "Forest",
             "Something Worth Saving"

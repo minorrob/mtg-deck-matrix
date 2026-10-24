@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Archmage Emeritus",
   "fixtures": {
-    "Tidings": {
+    "Smoke Tidings": {
       "types": [
         "Instant"
       ],
@@ -22,7 +22,7 @@
         ]
       }
     },
-    "Omen": {
+    "Smoke Omen": {
       "types": [
         "Sorcery"
       ],
@@ -142,7 +142,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Omen"
+            "Smoke Omen"
           ]
         }
       ],
@@ -151,7 +151,7 @@
           "tap": "Island"
         },
         {
-          "cast": "Omen"
+          "cast": "Smoke Omen"
         },
         {
           "settle": true
@@ -181,7 +181,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Tidings",
+            "Smoke Tidings",
             "Twin"
           ]
         }
@@ -191,7 +191,7 @@
           "tap": "Island"
         },
         {
-          "cast": "Tidings"
+          "cast": "Smoke Tidings"
         },
         {
           "tap": "Island"
@@ -200,7 +200,7 @@
           "cast": "Twin",
           "targets": [
             {
-              "card": "Tidings"
+              "card": "Smoke Tidings"
             }
           ]
         },
@@ -312,7 +312,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Tidings"
+            "Smoke Tidings"
           ]
         }
       ],
@@ -337,7 +337,7 @@
           "seat": 1
         },
         {
-          "cast": "Tidings",
+          "cast": "Smoke Tidings",
           "seat": 1
         },
         {

@@ -59,10 +59,16 @@ const handOf = (name) => scripts.find((s) => s.identity.name === name);
      planeswalker of an opponent's (Flourishing Grapple), a spell that targets a permanent its caster controls (Rebuff the
      Wicked), a spell of mana value 1 to counter (Mental Misstep), the {2} a mode adds to its mana cost, which spree's one
      or more modes always do (Explosive Derailment, and Return the Favor's {1}; CR 702.172a) -- or for want of seven cards in its player's graveyard, without which it can't be cast at all (Proft,
-     Sinister Mastermind). Named, so a card that stops being played in its smoke game is found, not counted. */
+     Sinister Mastermind). The card load of 2026-10-24 added 23 for the same wants, and an artifact card in its player's
+     graveyard to return (Refurbish); each has scenarios of its own that cast it. Named, so a card that stops being played
+     in its smoke game is found, not counted. */
   const unplayed = smoked.filter((r) => !r.played).map((r) => r.name).sort();
-  eq(unplayed, ["Cloud's Limit Break", "Condemn", "Eriette's Lullaby", "Explosive Derailment", "Flourishing Grapple", "Mental Misstep", "Mirrodin Avenged", "Precise Redaction",
-    "Proft, Sinister Mastermind", "Rebuff the Wicked", "Return the Favor"], `and the other ${scripts.length - unplayed.length} of ${scripts.length} were actually played or cast in it`);
+  eq(unplayed, ["Argivian Restoration", "Artifact Blast", "Assassinate", "Blue Elemental Blast", "Bright Reprisal",
+    "Cloud's Limit Break", "Condemn", "Death Stroke", "Devout Decree", "Eriette's Lullaby", "Explosive Derailment",
+    "Flashfreeze", "Flourishing Grapple", "Halt Order", "Immolating Glare", "Keep Safe", "Kill Shot",
+    "Mental Misstep", "Mirrodin Avenged", "Precise Redaction", "Proft, Sinister Mastermind", "Rebuff the Wicked",
+    "Rebuke", "Reconstruction", "Refurbish", "Return the Favor", "Ritual of Restoration", "Silverstrike",
+    "Spell Snare", "Swift Response", "Take Vengeance", "Turn Aside", "Vengeance", "You Are Already Dead"], `and the other ${scripts.length - unplayed.length} of ${scripts.length} were actually played or cast in it`);
   /* Batch 30: a card aimed at its controller's own creature spell answers the Smoke Whelp its player casts first. */
   ok(smoked.find((r) => r.name === "Double Major")?.played === true, "Double Major (\"copy target creature spell you control\") is cast in its smoke game, at its player's own creature spell");
   /* A creature whose ACTIVATED ability copies its controller's spells is cast as any creature is: no spell of its own put on
@@ -241,7 +247,9 @@ const job = (names, call, ledger = {cards: {}}, extra = {}) => {
   eq(plan.status, 0, "--plan exits cleanly");
   ok(/cards asked for; \d+ hand-authored, \d+ not in the oracle data, \d+ still to learn/.test(plan.stdout) && /spends money/.test(plan.stdout), `and says what a run would take, for free: ${plan.stdout.split("\n")[0]}`);
   const asked = path.join(mkdtempSync(path.join(tmpdir(), "demand-")), "demand.json");
-  writeFileSync(asked, JSON.stringify({schema: "CrankCardDemand@1", cards: [{name: "Lightning Bolt", demand: {decks: 2, asked: 3}}, {name: "A.I.M. Bot"}, {name: "Grim Lavamancer"}]}));
+  /* A candidate as the store holds it today: A.I.M. Bot was one until the load of 2026-10-24 promoted it. */
+  const candidate = JSON.parse(readFileSync(path.join(ROOT, "data/engine/candidates.json"), "utf8")).cards[0].name;
+  writeFileSync(asked, JSON.stringify({schema: "CrankCardDemand@1", cards: [{name: "Lightning Bolt", demand: {decks: 2, asked: 3}}, {name: candidate}, {name: "Grim Lavamancer"}]}));
   const demanded = spawnSync(process.execPath, ["game/tools/engine-compile.mjs", "--plan", "--demand", asked], {cwd: ROOT, encoding: "utf8", env});
   ok(demanded.status === 0 && /^engine-compile: 3 cards asked for; 1 hand-authored/.test(demanded.stdout) && /1 are the card compiler's candidates and cost nothing/.test(demanded.stdout),
     `the demand list is a run's cards, its candidates free: ${demanded.stdout.split("\n").slice(0, 2).join(" ")}`);

@@ -16,7 +16,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -285,7 +285,7 @@
           "zone": "hand",
           "cards": [
             "Boggart Mischief",
-            "Shock"
+            "Smoke Shock"
           ]
         }
       ],
@@ -322,7 +322,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "targets": [
             {
               "card": "Goblin"

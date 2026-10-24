@@ -33,7 +33,7 @@
         ]
       }
     },
-    "Charge": {
+    "Smoke Charge": {
       "types": [
         "Instant"
       ],
@@ -215,7 +215,7 @@
           "zone": "hand",
           "cards": [
             "Moonlit Lamenter",
-            "Charge"
+            "Smoke Charge"
           ]
         }
       ],
@@ -239,7 +239,7 @@
           "tap": "Island"
         },
         {
-          "cast": "Charge",
+          "cast": "Smoke Charge",
           "targets": [
             {
               "card": "Moonlit Lamenter"

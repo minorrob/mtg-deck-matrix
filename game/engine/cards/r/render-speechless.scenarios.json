@@ -23,7 +23,7 @@
       "manaCost": "{1}",
       "colors": []
     },
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -74,7 +74,7 @@
           "zone": "hand",
           "cards": [
             "Bear",
-            "Shock",
+            "Smoke Shock",
             "Forest"
           ]
         }
@@ -116,7 +116,7 @@
                 "seat": 0,
                 "options": [
                   "Bear",
-                  "Shock"
+                  "Smoke Shock"
                 ]
               }
             },
@@ -148,7 +148,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Shock",
+            "Smoke Shock",
             "Forest"
           ]
         },

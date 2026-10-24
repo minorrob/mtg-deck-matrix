@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Atlantean Cavalry",
   "fixtures": {
-    "Divination": {
+    "Smoke Divination": {
       "types": [
         "Sorcery"
       ],
@@ -39,7 +39,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Divination"
+            "Smoke Divination"
           ]
         }
       ],
@@ -48,7 +48,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Divination"
+          "cast": "Smoke Divination"
         },
         {
           "resolve": true
@@ -134,7 +134,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Divination"
+            "Smoke Divination"
           ]
         }
       ],
@@ -150,7 +150,7 @@
           "seat": 1
         },
         {
-          "cast": "Divination",
+          "cast": "Smoke Divination",
           "seat": 1
         },
         {

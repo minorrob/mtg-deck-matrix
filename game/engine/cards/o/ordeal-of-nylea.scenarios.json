@@ -47,7 +47,7 @@
         }
       ]
     },
-    "Shatter": {
+    "Smoke Shatter": {
       "types": [
         "Instant"
       ],
@@ -396,7 +396,7 @@
           "zone": "hand",
           "cards": [
             "Ordeal of Nylea",
-            "Shatter"
+            "Smoke Shatter"
           ]
         },
         {
@@ -432,7 +432,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Shatter",
+          "cast": "Smoke Shatter",
           "targets": [
             {
               "card": "Ordeal of Nylea"
@@ -452,7 +452,7 @@
           "zone": "graveyard",
           "cards": [
             "Ordeal of Nylea",
-            "Shatter"
+            "Smoke Shatter"
           ]
         },
         {

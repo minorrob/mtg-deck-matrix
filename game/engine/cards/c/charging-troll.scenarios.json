@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Charging Troll",
   "fixtures": {
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -47,7 +47,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ],
@@ -65,7 +65,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Charging Troll"
@@ -95,7 +95,7 @@
           "seat": 0,
           "zone": "graveyard",
           "cards": [
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ]
@@ -115,7 +115,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ],
@@ -124,7 +124,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Charging Troll"
@@ -141,7 +141,7 @@
           "zone": "graveyard",
           "cards": [
             "Charging Troll",
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ]

@@ -42,7 +42,7 @@
         ]
       }
     },
-    "Blaze": {
+    "Smoke Blaze": {
       "types": [
         "Instant"
       ],
@@ -248,7 +248,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Blaze"
+            "Smoke Blaze"
           ]
         }
       ],
@@ -264,7 +264,7 @@
           "seat": 1
         },
         {
-          "cast": "Blaze",
+          "cast": "Smoke Blaze",
           "seat": 1,
           "targets": [
             {

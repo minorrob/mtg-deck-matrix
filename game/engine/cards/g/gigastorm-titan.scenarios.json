@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Gigastorm Titan",
   "fixtures": {
-    "Tidings": {
+    "Smoke Tidings": {
       "types": [
         "Instant"
       ],
@@ -67,7 +67,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Tidings",
+            "Smoke Tidings",
             "Gigastorm Titan"
           ]
         }
@@ -77,7 +77,7 @@
           "tap": "Island"
         },
         {
-          "cast": "Tidings"
+          "cast": "Smoke Tidings"
         },
         {
           "resolve": true
@@ -279,8 +279,8 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Tidings",
-            "Tidings",
+            "Smoke Tidings",
+            "Smoke Tidings",
             "Gigastorm Titan"
           ]
         }
@@ -290,7 +290,7 @@
           "tap": "Island"
         },
         {
-          "cast": "Tidings"
+          "cast": "Smoke Tidings"
         },
         {
           "resolve": true
@@ -299,7 +299,7 @@
           "tap": "Island"
         },
         {
-          "cast": "Tidings"
+          "cast": "Smoke Tidings"
         },
         {
           "resolve": true
