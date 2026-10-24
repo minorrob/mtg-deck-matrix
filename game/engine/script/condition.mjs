@@ -87,6 +87,8 @@
  *   {giftPromised: true|false}         its spell's gift was promised, or its permanent's (CR 702.174b, 702.174k; Dawn's Truce:
  *                                      "if the gift was promised") -- the spell resolving, a copy of it too (CR 707.10), or the
  *                                      permanent the spell became (rules/stack.mjs)
+ *   {counterPutThisTurn: true|false}   a counter of any kind was put on its own permanent this turn, as it entered too (CR
+ *                                      122.6; Wakka, Devoted Guardian), or none was
  *   {offspringPaid: true|false}        its own permanent was cast with its offspring cost paid, or was not (CR 702.175a;
  *                                      Coruscation Mage) -- asked again as the trigger resolves, as it triggered
  *   {allOf: [condition, ...]}          every one of them holds: Happily Ever After's three, two of them counted comparisons
@@ -139,7 +141,9 @@ const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTu
   /* Gift's "if the gift was promised" (CR 702.174b). */
   "giftPromised",
   /* Offspring's "if its offspring cost was paid" (CR 702.175a; wave 4c). */
-  "offspringPaid"];
+  "offspringPaid",
+  /* Wakka, Devoted Guardian's "if a counter was put on Wakka this turn" (CR 122.6). */
+  "counterPutThisTurn"];
 /** Whether these effects, nested ones included, ask `firstResolution` -- so their ability's resolutions are counted
     (rules/stack.mjs). */
 export const asksFirstResolution = (effects) => JSON.stringify(effects ?? []).includes('"firstResolution"');
@@ -291,6 +295,9 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   /* "If ... this Case is not solved" (CR 719.3a), "Solved -- ..." (719.3c): its own permanent's designation (script/effects/
      attributes.mjs). Gone, it is not solved. */
   if (condition.solved !== undefined && ((source !== null && state.objects[source]?.solved === true) !== condition.solved)) return false;
+  /* "If a counter was put on Wakka this turn" (Wakka, Devoted Guardian; CR 122.6): its own permanent, a counter of any kind
+     put on it this turn -- as it entered too -- kept on it as the turn it last happened (rules/trigger.mjs, recordCounters). */
+  if (condition.counterPutThisTurn !== undefined && ((source !== null && state.objects[source]?.counterPutTurn === state.turn) !== condition.counterPutThisTurn)) return false;
   /* "As long as you've sacrificed a nontoken permanent this turn" (Evendo Brushrazer; CR 701.21a): counted as each was. */
   if (condition.sacrificedNontokenThisTurn === true && !((state.players[controller]?.sacrificedNontokenThisTurn ?? 0) > 0)) return false;
   /* "If you didn't cast it from your hand" (Chainer, Nightmare Adept; CR 601.2a): the permanent the trigger is about, cast by
@@ -535,6 +542,7 @@ export function conditionProblems(condition) {
   if ("castFromYourHand" in condition && typeof condition.castFromYourHand !== "boolean") problems.push("castFromYourHand is true or false");
   if ("castByYou" in condition && typeof condition.castByYou !== "boolean") problems.push("castByYou is true or false");
   if ("solved" in condition && typeof condition.solved !== "boolean") problems.push("solved is true or false");
+  if ("counterPutThisTurn" in condition && typeof condition.counterPutThisTurn !== "boolean") problems.push("counterPutThisTurn is true or false");
   if ("giftPromised" in condition && typeof condition.giftPromised !== "boolean") problems.push("giftPromised is true or false: whether the gift was promised");
   if ("offspringPaid" in condition && typeof condition.offspringPaid !== "boolean") problems.push("offspringPaid is true or false: whether its offspring cost was paid");
   if ("sacrificedNontokenThisTurn" in condition && condition.sacrificedNontokenThisTurn !== true) problems.push("sacrificedNontokenThisTurn is true");

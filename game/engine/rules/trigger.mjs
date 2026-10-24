@@ -117,6 +117,18 @@ function recordArrivals(state, events) {
   }
 }
 
+/* THE TURN A COUNTER WAS LAST PUT ON A PERMANENT (CR 122.6): "if a counter was put on Wakka this turn" (Wakka, Devoted
+   Guardian; script/condition.mjs, counterPutThisTurn) -- any kind, by anyone, as it entered too. Kept on the permanent, so
+   one that changes zones is a new object with none (CR 400.7). */
+function recordCounters(state, events) {
+  for (const event of events ?? []) {
+    const fields = event.data?.fields ?? {};
+    if (event.kind !== "GameEventCardCounters" || !((fields.newValue ?? 0) > (fields.oldValue ?? 0))) continue;
+    const object = state.objects[fields.card?.cardId];
+    if (object?.zone === "battlefield") object.counterPutTurn = state.turn;
+  }
+}
+
 /**
  * WHAT A TRIGGER IS ABOUT, ONE ENTRY PER TRIGGERING (CR 603.2c). "Whenever a creature you control attacks" triggers once
  * for each creature that attacks, so an event can answer more than once; each answer says what it was about -- the spell
@@ -678,6 +690,7 @@ function inherentTriggers(state, event) {
 export function collectTriggers(state, events) {
   if (!state.pendingTriggers) state.pendingTriggers = [];
   recordArrivals(state, events);
+  recordCounters(state, events);
   /* Triggers that trigger again (triggersAgain): copied once this action is read, so a "one or more" trigger is copied
      with everything it came to be about. */
   const again = [];

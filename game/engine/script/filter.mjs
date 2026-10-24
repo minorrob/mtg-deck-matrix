@@ -96,6 +96,9 @@ export const SELECTOR_KEYS = Object.freeze([
   /* "Each creature without a +1/+1 counter on it" (Wave Goodbye; Rob's lists P3): none of that kind of counter, whatever
      else it has (CR 122.1) -- unlike `counters: "none"`, no counters at all. */
   "nonCounters",
+  /* "The number of opponents who control a creature with power 4 or greater" (Summon: Yojimbo; Rob's lists P3): a player who
+     controls a permanent this selector describes. */
+  "controlsAny",
 ]);
 
 /** The card types (CR 205.2a). */
@@ -232,6 +235,11 @@ function assertGrammar(selector) {
       throw new Error("A selector's targeting is a spell's: a selector of the permanent one of its targets is");
     compileSelector({...selector.targeting, what: "permanent"});
   }
+  if (selector.controlsAny !== undefined) {
+    if (selector.what !== "player" || !selector.controlsAny || typeof selector.controlsAny !== "object" || selector.controlsAny.controller !== undefined)
+      throw new Error("A selector's controlsAny is a player's: a selector of a permanent they control, with no controller of its own");
+    compileSelector({...selector.controlsAny, what: "permanent"});
+  }
   if (selector.nonCounters !== undefined && (typeof selector.nonCounters !== "string" || ["any", "none"].includes(selector.nonCounters)))
     throw new Error("A selector's nonCounters is a kind of counter it has none of: \"+1/+1\"");
   /* "Attacking you and/or planeswalkers you control" (Mangara, the Diplomat): `attacking` true, or "you". */
@@ -346,6 +354,9 @@ export function compileSelector(selector) {
       if (selector.lifeAtMost !== undefined && !(player.life <= selector.lifeAtMost)) return false;
       /* "If an opponent lost 2 or more life this turn" (Bloodchief Ascension; CR 119.3): the life they lost this turn. */
       if (selector.lostThisTurnAtLeast !== undefined && !((player.lostThisTurn ?? 0) >= selector.lostThisTurnAtLeast)) return false;
+      /* "Opponents who control a creature with power 4 or greater" (Summon: Yojimbo): a permanent of theirs it describes, now. */
+      if (selector.controlsAny !== undefined && !state.zones.battlefield.some((pid) => controllerOf(state, pid) === id
+        && matchesSelector({...selector.controlsAny, what: "permanent"}, state, pid, {controller: chooser, source: context.source}))) return false;
       const who = selector.who ?? "any";
       if (who === "you") return id === chooser;
       if (who === "opponent") return id !== chooser;
