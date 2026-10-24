@@ -50,8 +50,12 @@ const byName = new Map(oracle.cards.map((c) => [c.name, c]));
   const backstop = backstopScripts();
   eq(CANDIDATE_SOURCE, {oracle: file.oracle, cards: file.cards.length + backstop.length, compiler: file.cards.length, backstop: backstop.length},
     `all ${file.cards.length} of the compiler's candidates, from the same oracle data, and the backstop's ${backstop.length} provisional cards the directory lacks`);
-  ok(backstop.length >= 1 && backstop.every((b) => JSON.stringify(candidateDefinition(b.identity.name)) === JSON.stringify(compileScript(b).definition) && !tableDefinition(b.identity.name)),
-    `each backstop card (${backstop.slice(0, 3).map((b) => b.identity.name).join(", ")}, ...) as it compiles, none a directory card`);
+  /* None once every learned definition is confirmed (wave 4d confirmed the last 22, 2026-10-23): then no ledger row is
+     provisional, and the next check still shows which of the backstop's cards are taken. */
+  const provisional = Object.values(JSON.parse(readFileSync(new URL("../data/engine/onboarding-ledger.json", import.meta.url), "utf8")).cards)
+    .filter((row) => row.status === "provisional").length;
+  ok((backstop.length >= 1 || provisional === 0) && backstop.every((b) => JSON.stringify(candidateDefinition(b.identity.name)) === JSON.stringify(compileScript(b).definition) && !tableDefinition(b.identity.name)),
+    `each backstop card (${backstop.length ? `${backstop.slice(0, 3).map((b) => b.identity.name).join(", ")}, ...` : "none, and no provisional row"}) as it compiles, none a directory card`);
   const bolt = {schema: "CrankCardScript@1", identity: {name: "Lightning Bolt"}, abilities: []}, odd = {...bolt, identity: {name: "Test Backstop Card"}};
   eq(backstopScripts([{status: "provisional", script: bolt}, {status: "blocked", script: odd}, {status: "provisional", script: odd}]).map((s) => s.identity.name),
     ["Test Backstop Card"], "of the backstop's cards, only a provisional one the directory does not define");
