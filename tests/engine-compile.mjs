@@ -316,13 +316,17 @@ const trust = trustOf(library, calibrate({scripts, library, scenarios, definitio
   ok(run.results.every((r) => r.written >= 1) && Math.abs(run.cost - 3 * costOf(WRITER_MODEL, {input_tokens: 1000, output_tokens: 100})) < 1e-9, "each asked for at least one sentence, the cost counted at list prices");
   const wrong = async (body) => {
     const a = right(body), list = JSON.parse(a.abilitiesJson);
-    return {answer: {...a, abilitiesJson: JSON.stringify(list.slice(1))}, usage: {}};
+    /* Its last sentence left out: the sample holds Gandalf the White since the lists' load of 2026-10-24, whose first written
+       sentence ("... as though they had flash") fidelity reads as claimed by the Flash keyword beside it, and which only its
+       scenarios then catch. */
+    return {answer: {...a, abilitiesJson: JSON.stringify(list.slice(0, -1))}, usage: {}};
   };
   const bad = await heldOutSample({scripts, scenarios, definition: index.definition, oracle: ORACLE, library, trust, call: wrong, examples: [], n: 3});
   ok(bad.passed < 3 && bad.results.filter((r) => r.outcome === "failed").every((r) => /^fidelity: /.test(r.why)), "a writer that leaves a sentence out fails, at fidelity");
   const miscounted = async (body) => {
     const a = right(body);
-    return {answer: {...a, abilitiesJson: a.abilitiesJson.replace(/"count":1\b/g, "\"count\":2")}, usage: {}};
+    /* Every count, amount, power and toughness one more: the sample's cards (it moves as cards are defined) all say one. */
+    return {answer: {...a, abilitiesJson: a.abilitiesJson.replace(/"(count|amount|power|toughness)":(\d+)\b/g, (_, key, n) => `"${key}":${Number(n) + 1}`)}, usage: {}};
   };
   const played = await heldOutSample({scripts, scenarios, definition: index.definition, oracle: ORACLE, library, trust, call: miscounted, examples: [], n: 3});
   ok(played.results.some((r) => r.outcome === "failed" && /^plays: /.test(r.why)), `one that writes every sentence with a wrong number passes every check but its scenarios: "${played.results.find((r) => r.outcome === "failed")?.why}"`);

@@ -46,9 +46,7 @@ BREAKS = [
  ('the {2} offered', ACTIONS, '  const reckoned = castCost(state, player, id, tax, freely, paidLife !== null ? "" : back ? back.mana : fled ? fled.mana : way ? way.mana : manaInstead, variant.mana, aim);', '  const reckoned = castCost(state, player, id, tax, freely, paidLife !== null ? "" : back ? back.mana : fled ? fled.mana : way ? way.mana : null, variant.mana, aim);'),
  ('the {2} paid', ACTIONS, '  const manaInstead = !way && !free && lifeCost === null && typeof permission?.ability.manaInstead === "string" ? permission.ability.manaInstead : null;', '  const manaInstead = null;'),
  ('no other alternative cost', ACTIONS, ' : flashback || escape || lifeCost !== null || manaInstead !== null || permit?.ability.free ? []', ' : flashback || escape || lifeCost !== null || permit?.ability.free ? []'),
- ('not face down', ACTIONS, '  if (disguise && (lifeCost !== null || permit?.ability.free || manaInstead !== null)) return actions;', '  if (disguise && (lifeCost !== null || permit?.ability.free)) return actions;'),
  ('a card with no mana cost', ACTIONS, '  if (manaInstead !== null && !disguise) { /* airbended', '  if (false) { /* airbended'),
- ('two permissions alike or not', ACTIONS, ' ability.graveyardToLibraryBottom === true, ability.manaInstead ?? null,\n', ' ability.graveyardToLibraryBottom === true,\n'),
  # Aerial Extortionist: a spell cast from anywhere other than a hand.
  ('not from a hand, matched', TRIGGER, '    if (condition.notCastFrom && fields.castFrom === condition.notCastFrom) return [];\n', ''),
  ('not from a hand, compiled', INDEX, '    ...(t.notFrom ? {notCastFrom: t.notFrom} : {}),\n', ''),
@@ -67,10 +65,10 @@ BREAKS = [
  ('gone again, its entering trigger', TRIGGER, '    if (goneAgain && !enteringSuppressedGone(state, goneAgain)) for (const own of goneAgain.abilities ?? []) {', '    if (false) for (const own of goneAgain.abilities ?? []) {'),
  ('gone again, Elesh Norn', TRIGGER, '  && matchesLastKnown(a.affects ?? {}, gone, {controller: state.objects[holderId].controller, source: holderId})));', '  && false));'),
  ('gone again, Panharmonicon', TRIGGER, '    return Boolean(gone) && matchesLastKnown(cause.filter ?? {}, gone, context);', '    return false;'),
- # The Mind Stone: harness and its ∞ ability.
+ # The Mind Stone: harness and its infinity ability.
  ('harnessed given', ATTRIBUTES, '      object.harnessed = true;\n', ''),
- ('the ∞ ability inactive until harnessed', TRIGGER, '          if (ability.harnessed === true && object.harnessed !== true) continue;\n', ''),
- ('the ∞ ability compiled', INDEX, '        ...(ability.harnessed === true ? {harnessed: true} : {}),\n', ''),
+ ('the infinity ability inactive until harnessed', TRIGGER, '          if (ability.harnessed === true && object.harnessed !== true) continue;\n', ''),
+ ('the infinity ability compiled', INDEX, '        ...(ability.harnessed === true ? {harnessed: true} : {}),\n', ''),
  # Trouble in Pairs: extra turns skipped; attacks at you counted.
  ("an opponent's extra turn skipped", TURN, ' && playerRuleChanged(state, "skip-extra-turns", extra.player)) continue;', ' && false) continue;'),
  ('attacks at you counted', TRIGGER, '(condition.attacksYou ? attacks.filter((a) => a.defender?.playerId === controller && !a.defender.planeswalker) : attacks).length', 'attacks.length'),

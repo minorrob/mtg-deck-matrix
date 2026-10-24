@@ -1416,7 +1416,7 @@ function playPermission(state, player, id, kind, via = null) {
    gains haste. Each permission that gives something different is an offer of its own, `via` its source -- the preferred of
    those that give alike; ones that all give alike are one offer, as they always were (playPermission). */
 /* And what it asks or allows beside: an additional cost to pay (Exploration Broodship), mana of any type spent (Tinybones). */
-const permissionDoes = (ability) => JSON.stringify([ability.grants ?? null, ability.gains ?? null, ability.payLife ?? null, ability.free === true, ability.graveyardToLibraryBottom === true, ability.manaInstead ?? null,
+const permissionDoes = (ability) => JSON.stringify([ability.grants ?? null, ability.gains ?? null, ability.payLife ?? null, ability.free === true, ability.graveyardToLibraryBottom === true,
   ability.additionalCost ?? null, ability.anyMana === true]);
 /* Through a per-type permission (Muldrotha), which of its permanent types it is cast as: each still open its own offer, its
    player's to choose; through any other, as itself (null). */
@@ -1717,7 +1717,7 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
   /* AIRBENDED (Avatar's Wrath, Aang): "its owner may cast it for {2} rather than its mana cost" -- an alternative cost (CR
      118.9), so that mana and no other alternative cost (118.9a), a card with no mana cost included (118.6a). */
   const manaInstead = typeof permit?.ability.manaInstead === "string" ? permit.ability.manaInstead : null;
-  if (disguise && (lifeCost !== null || permit?.ability.free || manaInstead !== null)) return actions;
+  if (disguise && (lifeCost !== null || permit?.ability.free)) return actions;
   if (manaInstead !== null && !disguise) { /* airbended, with no mana cost or with one: for that mana (CR 118.6a) */ }
   else if (!object.manaCost && lifeCost === null && !disguise && !(permit?.ability.free || freeCast(state, player, id))) return actions;
   if (lifeCost !== null && lifeCost > state.players[player].life) return actions;

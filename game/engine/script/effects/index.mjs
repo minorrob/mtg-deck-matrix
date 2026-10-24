@@ -108,7 +108,7 @@ export function eachOf(state, each, context) {
 /* The most passes a process repeated "again" makes: more than any library holds, so only a library run out ends it. */
 const REPEAT_LIMIT = 1000;
 /** What `repeatFor` may range over. */
-export const REPEAT_EACH = Object.freeze(["player", "opponent", "other opponent", "creature", "remembered"]);
+export const REPEAT_EACH = Object.freeze(["player", "opponent", "creature", "remembered", "other opponent"]);
 
 /**
  * `repeatFor` — Forge's RepeatEach: "deals damage to each player equal to twice the number of nonbasic lands that

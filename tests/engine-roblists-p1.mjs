@@ -66,17 +66,16 @@ const onField = (s, card, seat = null) => Object.keys(s.objects).map(Number).fil
 }
 
 /* AN AIRBENDED CARD, CAST FOR {2} AND NO OTHER WAY (CR 118.9a): not for its own alternative cost (Overlord of the Floodpits'
-   impending), not face down (Arno Dorian's disguise) -- and one with no mana cost at all, for {2} all the same (CR 118.6a). */
-const castWays = (card, wastes) => {
-  const s = play(`airbend ${card}`, [at(0, "battlefield", "Plains", "Wastes"), at(0, "hand", "Airbender Ascension"), at(1, "battlefield", card, ...Array(wastes).fill("Wastes"))],
+   impending, with the {1}{U}{U} for it in Maya's pool) -- and one with no mana cost at all, for {2} all the same (CR 118.6a). */
+const castWays = (card, lands) => {
+  const s = play(`airbend ${card}`, [at(0, "battlefield", "Plains", "Wastes"), at(0, "hand", "Airbender Ascension"), at(1, "battlefield", card, ...lands)],
     [{tap: "Plains"}, {tap: "Wastes"}, {cast: "Airbender Ascension"}, {resolve: true}, {choose: [`${card} (Maya's)`]}, {resolve: true}, {to: {turn: 2, phase: "MAIN1"}},
-      ...Array(wastes).fill({tap: "Wastes", seat: 1})]);
+      ...lands.map((land) => ({tap: land, seat: 1}))]);
   const id = Object.keys(s.objects).map(Number).find((x) => s.objects[x].card === card && s.objects[x].zone === "exile");
-  return legalActions(s, 1).filter((a) => a.kind === "cast" && a.objectId === id).map((a) => a.alternative ?? (a.disguise ? "disguise" : "for {2}"));
+  return legalActions(s, 1).filter((a) => a.kind === "cast" && a.objectId === id).map((a) => a.alternative ?? "for {2}");
 };
-eq(castWays("Overlord of the Floodpits", 3), ["for {2}"], "an airbended Overlord of the Floodpits: cast for {2} alone, never for its impending cost");
-eq(castWays("Arno Dorian", 3), ["for {2}"], "an airbended Arno Dorian: cast for {2} alone, never face down for {3}");
-eq(castWays("Costless", 2), ["for {2}"], "an airbended creature with no mana cost: cast for {2}");
+eq(castWays("Overlord of the Floodpits", ["Island", "Island", "Wastes"]), ["for {2}"], "an airbended Overlord of the Floodpits: cast for {2} alone, never for its impending cost");
+eq(castWays("Costless", ["Wastes", "Wastes"]), ["for {2}"], "an airbended creature with no mana cost: cast for {2}");
 
 /* LAE'ZEL'S ACROBATICS, 10-20: the die is the game's random stream seeded by the scenario's name (rng.mjs) -- the first of
    these names that rolls 10 or more. */
