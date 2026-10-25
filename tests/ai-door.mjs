@@ -17,7 +17,7 @@ import {readFileSync} from "node:fs";
 import {DatabaseSync} from "node:sqlite";
 import {handle} from "../cloud/worker.mjs";
 import {forgetKeys} from "../cloud/access.mjs";
-import {costMicros, grounded, readRequest, DEFAULT_MODEL, MODELS, PRICES} from "../cloud/ai.mjs";
+import {costMicros, grounded, readRequest, pilotBody, DEFAULT_MODEL, MODELS, PRICES} from "../cloud/ai.mjs";
 
 let checks = 0;
 const ok = (value, message) => {assert.ok(value, message); checks++;};
@@ -143,6 +143,9 @@ for (const dearer of ["claude-opus-5-5", "claude-opus-5", "claude-fable-5-1", "s
   r = await call({env: {...OPEN, AI_MODEL: dearer}});
   eq([r.status, /model CrankMagic does not use/.test(r.json.error), sent.length], [503, true, asked], `AI_MODEL naming ${dearer} keeps the door shut, and nothing is sent`);
 }
+/* The AI seat on Claude asks with thinking off, on every model the door may call: left on, Haiku 5.5's thinking spent the
+   whole 300-token allowance before the answer on 14 of staging's first 21 seat calls (2026-10-22), each one paid for. */
+eq(MODELS.map((m) => pilotBody({}, m).thinking), [{type: "disabled"}, {type: "between_tools"}], `the seat's thinking is off in each model's own terms (${MODELS.join(", ")})`);
 
 /* SPENT: the log, the prices, the meter, the caps. */
 const last = calls().at(-2);
