@@ -139,7 +139,21 @@ profiles. Every call the door has made is in `ai_calls` (read 2026-10-24):
   Read staging's next seat calls in `ai_calls`: the outcome should be `ok`, with output well under 300 tokens.
 - **Joe is on the invite list.** He was added to the Access rule group "CrankMagic invitees",
   which staging's Invited policy includes, as Luke and K. Harbeson are. Production's Invited policy does not include the
-  group, so production still admits Rob only.
+  group. Rob, 2026-10-25: *"Add Joe to production's invite list too"*: Joe's address alone is now in production's
+  Invited policy too ("CrankMagic Accounts"), beside Rob's. The group is still staging's only.
+- **Merged and on staging, 2026-10-25** (Rob: *"Merge it and release staging"*). PR #857 merged as `854ffa1f` with a merge
+  commit: Actions `suites` green on head 582fa126 (run 40167591138), base 4096eb28 unmoved. `tools/release-staging.sh`
+  ran from a cloud container, with wrangler 4.139.0 authenticated through the proxy. Acceptance passed 23 checks and
+  play-e2e 44. It pushed `release/cloud-staging` 78180a8b. `wrangler deploy` of that tested folder made version 2c58059b,
+  1.24 MB gzip. The live staging `index.html` is byte-identical to the build and reads `854ffa1 · 2026-10-25`.
+- **The two other callers, moved to cheaper models, 2026-10-25** (Rob: *"switch the compiler's check step to Haiku 5.5
+  and the guide writer to Opus 5.5"*; PR #864):
+  - **The card compiler's read-back** (`READER_MODEL`, `game/tools/engine-compile.mjs`) is Claude Haiku 5.5, $0.10 in and
+    $0.50 out, a tenth of Haiku 4.5. It asks with thinking off, as Haiku 4.5 read, so the checklist keeps its 2,000 tokens.
+  - **The deck guides** (`guide-agent.js`, the price in `tools/generate-guides.mjs`) are on Claude Opus 5.5, $4 and $20
+    against Opus 5's $5 and $25.
+  - **Proof:** `tests/engine-compile.mjs` and `tests/guide-agent.mjs` hold both, and each goes red without its change.
+  - **Not proven:** a live compile or guide run on the new models; neither spends without Rob's go.
 
 ## Card load, 2026-10-24: Rob's four priority lists (Claude Code on Personal-HP, for Rob; PR #862): merged, on staging
 

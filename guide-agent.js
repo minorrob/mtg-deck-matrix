@@ -46,8 +46,10 @@
      knowledge claim about Magic cards, and on Anthropic's own measurement Haiku 4.5
      answers knowledge questions at about a tenth of the cost and 63% accuracy against
      Opus 5's 92%. A guide is generated once per deck and read many times; buying a third
-     of it wrong to save three cents is the wrong trade. See docs/claude-api-evaluation.md. */
-  var MODEL = "claude-opus-5";
+     of it wrong to save three cents is the wrong trade. See docs/claude-api-evaluation.md.
+     Opus 5.5 since 2026-10-25 (Rob: "switch ... the guide writer to Opus 5.5"): the Opus line's
+     successor, at $4 in and $20 out a million against Opus 5's $5 and $25. */
+  var MODEL = "claude-opus-5-5";
   var MAX_TOKENS = 3000;
 
   /* The fields the MODEL writes. Everything else on a deck-guides.json record -- id, label,

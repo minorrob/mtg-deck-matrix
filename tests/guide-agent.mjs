@@ -68,7 +68,7 @@ const GOOD = {
 
 check("the request is the current API shape, not the one from a year ago", () => {
   const body = Agent.request(DECK);
-  assert.equal(body.model, "claude-opus-5");
+  assert.equal(body.model, "claude-opus-5-5");
   assert.equal(body.output_config.format.type, "json_schema");
   assert.ok(body.output_config.format.schema, "no schema was attached");
   assert.ok(!("output_format" in body), "output_format is the old spelling and 400s now");
