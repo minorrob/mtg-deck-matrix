@@ -1,5 +1,23 @@
 # Who holds the work
 
+## Public precons; no deck bundled for everyone, 2026-10-25 (Claude Code on Personal-HP, for Rob; `claude/public-precons`)
+
+Rob, 2026-10-25: *"Make the precons public, available to anyone with access to play, and no other decks other than those
+they make, shared with them or public. This removes the prior auto sharing of my decks."* At his word this changes files of
+the Codex · Play lane (`crankmagic-table.js`, `crankmagic-stage.css`, `tests/table-lobby.mjs`, `tests/uat/solo-vs-ai.mjs`).
+
+- **What changed:** the table's deck chooser offers **Precons**, the six New from Wizards decks, open to everyone, chosen and
+  played with nothing added to a library. Rob's D1–D6, bundled in `crankmagic-table.js` for every player since October 15,
+  are gone; "Shared with you" lists only decks shared with the person or made public.
+- **Proof:** `table-lobby` 140 checks; `breaks-public-precons.py` 5 of 5; asset-versions, feature-wiring, data-integrity,
+  design-tokens, crankmagic-lobby, table-by-group green. `solo-vs-ai` (GAMES=1) seats four precons, starts and reloads the
+  game, then stops mid-game where the board's played-cards strip (`#cm-board-plays`) takes a click meant for the board:
+  **main fails identically with the bundled decks**, so that is the board's, not this change's.
+- **Staging's public shares turned off, 2026-10-25,** on Rob's "turn off the public sharing of my D1-D6 on staging (set
+  public_role to none on those six shares)": the six `shares` rows (`deck:live:D1`–`D6`, owner Rob) now have no
+  `public_role`, each revision 1 → 2, and no grants; staging holds no other share. Read back the same way. Staging's
+  served app already reads shares when signed in, so nobody else is offered those decks there now; the bundled copy in
+  the app goes when this PR is released.
 ## Play: Camera closes on an outside press; Settings is a window, 2026-10-25 (a Claude cloud session, for Rob; `claude/sweet-wright-p0klet`, temporarily in Codex · Play's files)
 
 Rob, 2026-10-25: *"Camera menu doesn't close when I click anywhere outside of it."* and *"Can't access full settings menu

@@ -24,7 +24,7 @@
      from the lobby's head and from the board's menu. The keys are the ones crankmagic-board.js's handlers bind, saying
      what they do there; tests/a11y-board.mjs reads both and holds them to each other. */
   C.HELP.table = {title: "Play: the table and the board", body: `<div class="cm-help"><h3>The table</h3>
-    <p>Up to four seats. Invite people by link, QR code or email, or seat an AI. Everyone chooses one of Rob's shared decks or a deck from their own library and marks Ready, and the host starts the countdown. The host can change the table's rules (starting life, bracket limit) until a seat is ready.</p>
+    <p>Up to four seats. Invite people by link, QR code or email, or seat an AI. Everyone chooses a precon, a deck shared with them, or a deck from their own library and marks Ready, and the host starts the countdown. The host can change the table's rules (starting life, bracket limit) until a seat is ready.</p>
     <h3>The board</h3>
     <p><strong>Table</strong> shows every board at once. <strong>Focus</strong> puts one board on the mat, beside the seats. <strong>3D</strong> puts your cards in an immersive tabletop scene. New desktop players start in 3D; your chosen view is remembered. In 3D the wheel zooms, dragging a mat moves the view across the table, dragging the bare table tilts it, and holding the right button looks at that place until you let go. Right-click a card for what it can do now, in short (🔍 opens it to read); nothing is played until you confirm. Long-press a card on a touch screen to inspect it. Actions and Boards stay together on the left in all three views. Click a card to review its legal actions there. Select an option, review its targets and payment, then Confirm. Clear selection changes only your local choice. Further target or payment questions stay in Actions; each confirmation submits that step. The pass button says what passing will do: <em>Next step</em>, <em>Resolve</em> and the spell's name, or <em>Pass</em>. Your draw happens by itself, and a spell you cast resolves unless someone responds; to be asked first, turn on <em>Hold priority after I cast</em> in Tools. A step where you have nothing to do passes by itself, and the history says so.</p>
     <h3>Keys</h3>
@@ -556,19 +556,29 @@
      deck, so its result is filed nowhere. */
   const TEST_DECK = Object.freeze({name: "Basic lands test deck", commander: ["Wastes"],
     cards: [["Plains", 20], ["Island", 20], ["Swamp", 20], ["Mountain", 20], ["Forest", 19]].flatMap(([land, n]) => Array(n).fill(land))});
-  /* Rob's six staging-profile decks, verified October 15, 2026 (revision 36).
-     Only published names and quantities; no collection, history or account data.
-     Exact publication fixture: tests/fixtures/shared-staging-decks.json. */
-  const SHARED_DECKS = Object.freeze([
-    {"id":"shared:D1","name":"D1 Tymna + Kraum","commander":["Tymna the Weaver","Kraum, Ludevic's Opus"],"cards":["Ajani Resolute","Ajani Unrelenting","Anguished Unmaking","Arcane Signet","Archon of Cruelty","Azorius Signet","Battlefield Forge","Blacksmith's Skill","Caves of Koilos","Chromatic Lantern","Clifftop Retreat","Command Tower","Countersculpt","Deceiver Exarch","Despark","Draconic Visitor","Drowned Catacomb","Elspeth, Sun's Champion","Emrakul, the Exigent Doom","Evolving Wilds","Exotic Orchard","Farewell","Fateful Absence","Fatehold Annex","Fatehold Charm","Fetid Heath","Flawless Maneuver","Frostboil Snarl","Furycalm Snarl","Gamble","Generous Gift","Glacial Fortress","Glamermite","Grateful Apparition","Identity Echo","Inspiring Vantage","Island","Isolated Chapel","Jace, Multiverse Architect","Kiki-Jiki, Mirror Breaker","Mass Polymorph","Meticulous Commons","Mindseeker Oculus","Mountain","Mystic Gate","Negate","Niv-Mizzet, Ghost Counsel","Overlord of the Mistmoors","Path to Exile","Pestermite","Phyrexian Arena","Plains","Plains","Protege's Awakening","Quintorius Kand","Rakdos Signet","Reflecting Pool","Rewrite Regrets","Rugged Prairie","Saheeli, Jewel of Avishkar","Seachrome Coast","Serra's Emissary","Shipwreck Marsh","Shivan Reef","Skullclamp","Sol Ring","Splinter Twin","Steady Progress","Stingerquill Annex","Sulfur Falls","Sulfurous Springs","Sun Titan","Sunbaked Canyon","Sunken Ruins","Swamp","Swords to Plowshares","Talisman of Conviction","Talisman of Creativity","Talisman of Dominance","Talisman of Indulgence","Talisman of Progress","Teyo, Lightshield Expert","Theorist's Proxy","Thrummingbird","Turbulent Crater","Turbulent Shore","Turbulent Steppe","Turbulent Wetlands","Underground River","Vraska, Soul of Stone","Way of the Deathbringer","Way of the Healer","Way of the Necromancer","Way of the Pyromancer","Way of the Warlord","Weathered Wayfarer","Whirlwind of Thought","Winds of Abandon"],"bracket":3},
-    {"id":"shared:D2","name":"D2 Chulane","commander":["Chulane, Teller of Tales"],"cards":["Adarkar Wastes","Ancient Greenwarden","Arcane Signet","Austere Command","Azorius Chancery","Bant Panorama","Bofur, Reliable Guardian // Concerted Care","Cast Out","Cloudblazer","Coiling Oracle","Command Tower","Counterspell","Deputy of Detention","Divining Duelist","Dream Stalker","Dundoolin Weaver","Earth Kingdom Jailer","Ephemerate","Eternal Witness","Evolving Wilds","Exotic Orchard","Fact or Fiction","Faeburrow Elder","Fauna Shaman","Forest","Forest","Forest","Forest","Forest","Forest","Forest","Forest","Forest","Freed from the Real","Generous Gift","Ghalta the Unstoppable","Gifts Ungiven","Glacial Fortress","Great Forest Druid","Hinterland Harbor","Island","Island","Island","Island","Island","Island","Island","Kinbinding","Kor Skyfisher","Llanowar Elves","Loot, the Nexus","Man-o'-War","Mulldrifter","Negate","Noxious Newt","Nylea, Keen-Eyed","Overgrown Battlement","Peregrine Drake","Pia, Aether Ascetic","Plains","Plains","Plains","Plains","Plains","Plains","Prairie Stream","Reclamation Sage","Reflector Mage","Reliquary Tower","Rescue Girl, First Responder","Restoration Angel","Roon of the Hidden Realm","Seachrome Coast","Seaside Citadel","Secure the Wastes","Seedborn Muse","Selfless Spirit","Shrieking Drake","Simic Signet","Skyclave Apparition","Sol Ring","Soulherder","Stonecloaker","Sunpetal Grove","Swords to Plowshares","Talisman of Progress","Tatyova, Benthic Druid","Temur Sabertooth","Terramorphic Expanse","The Eternal Wanderer","Tireless Provisioner","Valorous Stance","Vigorbloom Charm","Village Bell-Ringer","Wavesifter","Wistfulness","Wood Elves","Yavimaya Coast","Zendikar's Roil"],"bracket":3},
-    {"id":"shared:D3","name":"D3 Kiora","commander":["Kiora of Salt and Sand"],"cards":["Aetheric Amplifier","Aetherize","Arcane Signet","Avatar of Burgeoning Echoes","Beast Within","Berta, Wise Extrapolator","Brainstorm","Branching Evolution","Command Tower","Cultivate","Deepglow Skate","Delay","Drift of Phantasms","Evolving Wilds","Exotic Orchard","Ezuri, Claw of Progress","Fabled Passage","Fact or Fiction","Farseek","Fathom Mage","Fellwar Stone","Flux Channeler","Forest","Forest","Forest","Forest","Forest","Forest","Forest","Forest","Forest","Forest","Forest","Forest","Forest","Freyalise, Llanowar's Fury","Fuel for the Cause","Germination Practicum","Glen Elendra Guardian","Glorious Decay","Great Forest Druid","Hall of Echoes","Harmonize","Ichormoon Gauntlet","Inexorable Tide","Innkeeper's Talent","Inspiring Call","Island","Island","Island","Island","Island","Island","Island","Island","Island","Island","Island","Island","Island","Island","Island","Island","Island","Jace, Reality Sculptor","Jace's Machinations","Karn's Bastion","Kasmina, Enigma Sage","Kiora, Behemoth Beckoner","Memory Lapse","Mind Stone","Nature's Lore","Negate","Noxious Newt","Oko, Thief of Crowns","Origin of Metalbending","Paradox Gardens","Plan for All Outcomes","Proft, Consulting Detective","Protege's Awakening","Reality Shift","Restore with Empathy","Retro-Mutation","Shark Typhoon","Simic Ascendancy","Soul of New Phyrexia","Steady Progress","Talisman of Curiosity","Tam's Resistance","Tekuthal, Inquiry Dominus","Tezzeret's Gambit","Theorist's Proxy","Thought Vessel","Trophy Mage","Way of the Cryomancer","Way of the Mind Sculptor","Way of the Paradox","Way of the Wildspeaker","Wayward Swordtooth"],"bracket":3},
-    {"id":"shared:D4","name":"D4 Felothar","commander":["Felothar the Steadfast"],"cards":["Arcane Signet","Ash Barrens","Assault Formation","Avacyn, Angel of Horror","Axebane Guardian","Betor, Ancestor's Voice","Blight Pile","Brushland","Canopy Gargantuan","Carven Caryatid","Cast Out","Cathars' Crusade","Caves of Koilos","Command Tower","Concealed Courtyard","Crashing Drawbridge","Despark","Dragonlord Dromoka","Drumbellower","Eerie Ultimatum","Farewell","Forest","Forest","Forest","Forest","Forest","Forest","Forest","Forest","Forest","Forest","Formidable Commons","Fortified Village","Ghalta the Immovable","Golgari Signet","Greenhouse Propagator","Guardian of Faith","Hexhaven Invigorator","Ikra Shidiqi, the Usurper","Indomitable Ancients","Isolated Chapel","Jaddi Offshoot","Liliana the Faultless","Massacre Girl, Most Wanted","Mentor of the Meek","Mortify","Myriad Landscape","Origin of Metalbending","Orzhov Signet","Overgrown Battlement","Overgrown Farmland","Painful Truths","Path of Ancestry","Plains","Plains","Plains","Plains","Plains","Plains","Plains","Plaza of Heroes","Portcullis Vine","Putrefy","Reaping Willow","Recruiter of the Guard","Reliquary Tower","Rhox Faithmender","Rootborn Defenses","Sandsteppe Citadel","Sapling of Colfenor","Selesnya Signet","Shalai, Voice of Plenty","Shamanic Revelation","Shield-Wall Sentinel","Sidar Kondo of Jamuraa","Skyshroud Claim","Slaughter the Strong","Sol Ring","Stroke of Midnight","Sunpetal Grove","Swamp","Swamp","Swamp","Swamp","Swamp","Swamp","Swords to Plowshares","Sylvan Caryatid","Tower Defense","Tree of Perdition","Tree of Redemption","Valorous Stance","Vindicate","Walking Bulwark","Wave of Reckoning","Weathered Sentinels","Welcoming Vampire","Wingmantle Chaplain","Wood Elves"],"bracket":3},
-    {"id":"shared:D5","name":"D5 Teysa Karlov","commander":["Teysa Karlov"],"cards":["Ao, the Dawn Sky","Arcane Signet","Archfiend of Despair","Bastion of Remembrance","Battle Screech","Bolas's Citadel","Break Under Pressure","Burnished Hart","Castle Ardenvale","Cathar Commando","Chromatic Lantern","Corpse Knight","Cruel Celebrant","Curious Farm Animals","Deadly Dispute","Diabolic Tutor","Elas il-Kor, Sadistic Pilgrim","Emeria, the Sky Ruin","Emptiness","Everflowing Chalice","Exotic Orchard","Fabled Passage","Fell the Mighty","Genesis Chamber","Go for the Throat","Grand Crescendo","Hanged Executioner","Indulging Patrician","Isolated Chapel","Kambal, Profiteering Mayor","Karmic Guide","Knight of the White Orchid","Lethal Scheme","Lich's Relic","Lingering Souls","Martial Coup","Masterful Flourish","Mentor of the Meek","Midnight Reaper","Millikin","Mind Stone","Moonshaker Cavalry","Nadier's Nightblade","Orzhov Signet","Ossification","Path of Ancestry","Path to Exile","Pawn of Ulamog","Pitiless Plunderer","Plains","Plains","Plains","Plains","Plains","Plains","Plains","Plains","Plains","Plains","Plains","Plains","Plains","Plains","Rally the Ancestors","Requiem Angel","Ritual of Soot","Scoured Barrens","Selfless Spirit","Serra Paragon","Shineshadow Snarl","Silence the Echo","Skrelv's Hive","Skullclamp","Spectral Procession","Staff of the Storyteller","Sun Titan","Swamp","Swamp","Swamp","Swamp","Swamp","Swamp","Swamp","Swamp","Swamp","Swamp","Swamp","Swamp","Swamp","Temple of Silence","Tocasia's Welcome","Vault of the Archangel","Village Rites","Viscera Seer","Wayfarer's Bauble","Welcoming Vampire","Woe Strider","Yahenni, Undying Partisan","Zulaport Cutthroat"],"bracket":3},
-    {"id":"shared:D6","name":"D6 Krenko","commander":["Krenko, Mob Boss"],"cards":["Abrade","Anger","Big Score","Blasphemous Act","Bloodthirsty Adversary","Buried Ruin","Burn, Burn, Tree and Fern","Castle Embereth","Chaos Warp","Cinder Strike","Conspicuous Snoop","Curse-Marred Demon","Cursed Mirror","Eldrazi Monument","Fable of the Mirror-Breaker // Reflection of Kiki-Jiki","Fellwar Stone","Fulminous Forte","Gandalf, Goblins' Bane // Flameshape","Glóin the Mighty // Easy Pickings","Goblin Bombardment","Goblin Chieftain","Goblin Instigator","Goblin Matron","Goblin Rally","Goblin Recruiter","Goblin Ringleader","Goblin Trashmaster","Goblin Warchief","Hall of Echoes","Impact Tremors","Kher Keep","Krenko, Tin Street Kingpin","Lavaleaper","Light Up the Stage","Massive Raid","Mind Stone","Mountain","Mountain","Mountain","Mountain","Mountain","Mountain","Mountain","Mountain","Mountain","Mountain","Mountain","Mountain","Mountain","Mountain","Mountain","Mountain","Mountain","Mountain","Mountain","Mountain","Mountain","Mountain","Mountain","Mountain","Mountain","Mountain","Mountain","Mountain","Mountain","Mountain","Mountain","Mountain","Mountain","Mountain","Ogre Battledriver","Outpost Siege","Pashalik Mons","Patchwork Banner","Purphoros, God of the Forge","Purphoros's Intervention","Quest for the Goblin Lord","Red Elemental Blast","Ricochet Trap","Shared Animosity","Siege-Gang Commander","Skirk Prospector","Skullclamp","Smuggler's Copter","Sol Ring","Strixhaven Stadium","Swiftfoot Boots","Sword of the Animist","Tempt with Vengeance","Thornbite Staff","Thousand-Year Elixir","Troop of Ponies","Underworld Breach","Valakut Exploration","Vandalblast","Voyager Staff","Warstorm Surge","Witty Roastmaster","Zealous Conscripts"],"bracket":3}
-  ]);
+  /* WHAT A SEAT MAY CHOOSE (Rob, 2026-10-25: "Make the precons public, available to anyone with access to play, and no
+     other decks other than those they make, shared with them or public. This removes the prior auto sharing of my
+     decks."): the precons the Decks screen lists as New from Wizards (data/precons-latest.json, their lists from
+     data/precons.json), the decks shared with this person or made public (cloud/sharing.mjs), and their own library's.
+     Rob's six decks were bundled here for everyone from October 15; they reach another person now only as he shares them. */
+  let preconsOnce = null;
+  const tablePrecons = () => preconsOnce ||= (async () => {
+    const A = globalThis.CrankAssets, get = async (key) => {
+      const r = await fetch(A[key]).catch(() => null);
+      if (!r || !r.ok) throw Error("The precons could not be loaded. Close this window and try again.");
+      return A.expect(await r.json(), key);
+    };
+    const [latest, all] = await Promise.all([get("preconsLatest"), get("precons")]);
+    const lists = new Map(all.decks.map((d) => [d.id, d]));
+    return latest.decks.map((p) => lists.get(p.id)).filter(Boolean).map((d) => {
+      const commander = d.commander.map((c) => c.name);
+      return {id: `precon:${d.id}`, name: d.name, commander, setName: d.setName || "", notes: "",
+        cards: d.cards.filter(([n]) => !commander.includes(n)).flatMap(([n, q]) => Array(q).fill(n))};
+    });
+  })().catch((error) => {preconsOnce = null; throw error;});
+  let availablePrecons = [];
   const sharedReady = new Set();
-  let availableSharedDecks = SHARED_DECKS;
+  let availableSharedDecks = [];
   /* A DECK'S ROW IN THE CHOOSER (Rob, 2026-10-22: "show the mana colors and description of each commander on its row"):
      its commanders' colors, from their records (none drawn where no record knows them -- never guessed), and what it does:
      the deck's own notes, else its commanders' rules text, cut to a line or two. */
@@ -614,8 +624,9 @@
   });
   actions["table-deck"] = async (el) => {
     await C.sharingReady;
-    if (C.sharingAvailable?.() && C.sharedDecks) availableSharedDecks = await C.sharedDecks();
-    else availableSharedDecks = SHARED_DECKS;
+    availableSharedDecks = C.sharingAvailable?.() && C.sharedDecks ? await C.sharedDecks() : [];
+    let preconError = "";
+    try {availablePrecons = await tablePrecons();} catch (error) {availablePrecons = []; preconError = error.message;}
     const seatId = Number(el.dataset.seat), decks = libraryDecks();
     const test = current && current.playtest
       ? `<li><button type="button" class="cm-table-deck" data-action="table-use-test-deck" data-seat="${seatId}"><strong>${e(TEST_DECK.name)}</strong><span class="cm-muted">Wastes and 99 basic lands · for trying a game through quickly on this playtest table</span></button></li>`
@@ -626,10 +637,11 @@
     /* AN EMPTY LIBRARY says how to fill it (the readiness checks of 2026-10-04: a friend new to CrankMagic, invited
        before restoring the host's backup, saw only the test deck). A restore keeps this page, so the seat is still
        theirs when it is done. */
-    const empty = decks.length ? "" : `<div class="cm-table-deck-empty"><p>You can play with Rob's decks above without adding anything to your library.</p><p class="cm-muted">To use your own deck later, build or import one in Decks.</p></div>`;
-    const shared = `<section aria-label="Rob's shared decks"><h3>Shared decks</h3><p>Choose a deck and play. No import or library setup needed.</p><ul class="cm-table-decks">${availableSharedDecks.map(d => `<li><button type="button" class="cm-table-deck" data-action="table-use-shared-deck" data-shared-deck="${d.id}" data-seat="${seatId}" disabled>${deckLines(d.name, d.commander, d.notes)}<span class="cm-muted" data-shared-status="${d.id}">Checking this server…</span></button></li>`).join("")}</ul></section>`;
+    const empty = decks.length ? "" : `<div class="cm-table-deck-empty"><p>You can play a precon above without adding anything to your library.</p><p class="cm-muted">To use your own deck later, build or import one in Decks.</p></div>`;
+    const precons = `<section aria-label="Precons"><h3>Precons</h3><p>Wizards' newest Commander decks, open to everyone. Choose one and play; nothing is added to your library.</p>${preconError ? `<p class="cm-note cm-warning">${e(preconError)}</p>` : `<ul class="cm-table-decks">${availablePrecons.map(d => `<li><button type="button" class="cm-table-deck" data-action="table-use-precon" data-precon="${d.id}" data-seat="${seatId}" disabled>${deckLines(d.name, d.commander, d.notes)}<span class="cm-muted" data-precon-status="${d.id}">Checking this server…</span></button></li>`).join("")}</ul>`}</section>`;
+    const shared = availableSharedDecks.length ? `<section aria-label="Shared with you"><h3>Shared with you</h3><p>Decks other players shared with you or made public. No import or library setup needed.</p><ul class="cm-table-decks">${availableSharedDecks.map(d => `<li><button type="button" class="cm-table-deck" data-action="table-use-shared-deck" data-shared-deck="${d.id}" data-seat="${seatId}" disabled>${deckLines(d.name, d.commander, d.notes)}<span class="cm-muted" data-shared-status="${d.id}">Checking this server…</span></button></li>`).join("")}</ul></section>` : "";
     const only = `<label class="cm-checkbox cm-table-deck-only"><input type="checkbox" data-table-deck-playable${onlyPlayable() ? " checked" : ""}>Playable</label>`;
-    C.modal(`Choose a deck · Seat ${seatId + 1}`, `<div class="cm-table-deck-choose${onlyPlayable() ? " is-playable-only" : ""}">${only}${shared}${decks.length ? '<h3>Your library decks</h3>' : ''}${list}${empty}</div><div id="cm-table-deck-error" class="cm-note cm-warning" hidden></div><div class="cm-form-footer">${b("Cancel", "close")}</div>`);
+    C.modal(`Choose a deck · Seat ${seatId + 1}`, `<div class="cm-table-deck-choose${onlyPlayable() ? " is-playable-only" : ""}">${only}${precons}${shared}${decks.length ? '<h3>Your library decks</h3>' : ''}${list}${empty}</div><div id="cm-table-deck-error" class="cm-note cm-warning" hidden></div><div class="cm-form-footer">${b("Cancel", "close")}</div>`);
     knownCounts(decks);
     checkSharedDecks(current.tableId);
     fillAbout();
@@ -637,13 +649,13 @@
   async function checkSharedDecks(tableId) {
     sharedReady.clear();
     try {
-      const names = [...new Set(availableSharedDecks.flatMap(d => [...d.commander, ...d.cards]))];
+      const names = [...new Set([...availablePrecons, ...availableSharedDecks].flatMap(d => [...d.commander, ...d.cards]))];
       const response = await api("POST", `${tableUrl(tableId)}/known`, {names});
       if (!Array.isArray(response.unknown)) throw Error("Deck verification is unavailable. Close this window and try again.");
       const unknown = new Set(response.unknown);
       if (current?.tableId !== tableId) return;
-      for (const d of availableSharedDecks) {
-        const status = document.querySelector(`[data-shared-status="${d.id}"]`);
+      for (const [d, attr] of [...availablePrecons.map((d) => [d, "data-precon-status"]), ...availableSharedDecks.map((d) => [d, "data-shared-status"])]) {
+        const status = document.querySelector(`[${attr}="${d.id}"]`);
         if (!status) continue;
         const missing = [...d.commander, ...d.cards].filter(n => unknown.has(n));
         status.textContent = missing.length ? "Not available on this server yet" : "Ready to play";
@@ -651,7 +663,7 @@
         if (!missing.length) sharedReady.add(d.id);
       }
     } catch (error) {
-      for (const status of document.querySelectorAll('[data-shared-status]')) status.textContent = "Could not check this deck. Close and reopen to retry.";
+      for (const status of document.querySelectorAll('[data-shared-status], [data-precon-status]')) status.textContent = "Could not check this deck. Close and reopen to retry.";
     }
   }
   actions["table-use-shared-deck"] = async (el) => {
@@ -665,6 +677,19 @@
         if (current?.tableId !== tableId) return;
       }
       await api("POST", `${tableUrl(current.tableId)}/deck`, {seatId:Number(el.dataset.seat), deck:{name:d.name, commander:[...d.commander], cards:[...d.cards], bracket:d.bracket}});
+      actions.close();
+      await refresh(current.tableId);
+    } catch (error) {
+      const box = document.getElementById("cm-table-deck-error");
+      if (!box) throw error;
+      box.hidden = false; box.textContent = error.message;
+    }
+  };
+  actions["table-use-precon"] = async (el) => {
+    const d = availablePrecons.find((x) => x.id === el.dataset.precon);
+    if (!d || !sharedReady.has(d.id)) return;
+    try {
+      await api("POST", `${tableUrl(current.tableId)}/deck`, {seatId: Number(el.dataset.seat), deck: {name: d.name, commander: [...d.commander], cards: [...d.cards]}});
       actions.close();
       await refresh(current.tableId);
     } catch (error) {

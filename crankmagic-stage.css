@@ -432,7 +432,8 @@
 .cm-table-deck-about{font-size:12px;line-height:1.35;color:var(--v-muted)}
 .cm-table-deck-only{margin:0 0 10px}
 .cm-table-deck-choose.is-playable-only li:has(>.cm-table-deck.is-unknown),
-.cm-table-deck-choose.is-playable-only li:has(>.cm-table-deck[data-shared-deck]:disabled){display:none}
+.cm-table-deck-choose.is-playable-only li:has(>.cm-table-deck[data-shared-deck]:disabled),
+.cm-table-deck-choose.is-playable-only li:has(>.cm-table-deck[data-precon]:disabled){display:none}
 .cm-play-home{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(280px,1fr);gap:18px;max-width:1400px;margin:auto}
 .cm-play-home .v-panel{margin:0;padding:clamp(20px,3vw,38px)}
 .cm-play-home h2{font-family:CrankOxanium,Satoshi,sans-serif;line-height:1.2}
