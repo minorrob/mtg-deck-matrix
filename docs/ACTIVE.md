@@ -1,6 +1,12 @@
 # Who holds the work
 
-## Card load, 2026-10-25: the six precons on the Decks screen (Claude Code on Personal-HP, for Rob; `claude/engine-precons-oct2`)
+## Card load, 2026-10-25: the six precons on the Decks screen (Claude Code on Personal-HP, for Rob; PR #871): merged
+
+**Merged, 2026-10-25:** PR #871 merged to main as `657da9cf` at 13:56 UTC, on Rob's "merge #871 into main once Actions is
+green, merging main in right before". Actions `suites` passed on head 1e896780 (run 40174600950, 50 minutes); main had
+moved by #865 (the Decks flicker fix, Workshop files only), merged in as 8f9e91ae, whose touched suites passed here
+(decks-hub 69, asset-versions, feature-wiring, data-integrity, engine-breaks-anchors) with `tools/local-ci.sh` SCAN PASS.
+Not released: staging still serves 4096eb28, and the release slot is free. Linear: ROB-196, Done.
 
 Rob, 2026-10-25: *"Next, we need to ensure that all cards in the precons listed on the Decks screen is loaded into the game
 engine and can be played in Play."* The six "New from Wizards" decks (Foundations Commander and Reality Fracture
