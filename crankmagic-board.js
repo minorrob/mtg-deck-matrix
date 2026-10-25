@@ -215,6 +215,9 @@ globalThis.CrankBoard = Object.seal({
      there's overlap. Increase the zoom to 200%"): past the fit, cards overlap and the table runs past the window's edges. */
   const CAMERA_MAX = 200;
   const camera = {cards: Math.max(70, Math.min(CAMERA_MAX, Number(stored("cm-stage-card-size-v2")) || 100)), tilt: stored("cm-board-tilt-v2") === null ? 40 : Math.max(0, Math.min(60, Number(stored("cm-board-tilt-v2")) || 0)), zoom: Math.max(60, Math.min(CAMERA_MAX, Number(stored("cm-board-zoom-v2")) || 100))};
+  /* Where the 3D camera looks across the table, moved by dragging a mat (plane pixels from the table's center, y toward
+     you). Kept for the visit only: ⌖ Center in Camera puts it back. */
+  camera.pan = {x: 0, y: 0};
   const stageEnabled = () => mode === "full" && !phone();
   const moduleSide = id => !phone() ? ["left","right"].find(side => paneModules(side).includes(id)) : undefined;
   const openModuleDrawer = id => {const side=moduleSide(id); if(side === "left") stageRail=true; if(side === "right") stageSide=true;};
@@ -937,7 +940,7 @@ globalThis.CrankBoard = Object.seal({
       ${ib(stageSide ? "▸" : "◂", "board-stage-side", "Toggle table panel", {}, {cls: "cm-stage-handle cm-stage-right", pressed: stageSide})}`; }
   function cameraMenu() { return `<div class="cm-stage-camera"><button type="button" data-action="board-camera" aria-expanded="${cameraOpen}">Camera ▾</button>${cameraOpen ? `<div>${phone() ? "" : switcher()}<span>View seats</span>${ib("◀", "board-rotate", "Previous seat", {by: "-1"})}${ib("▶", "board-rotate", "Next seat", {by: "1"})}
         ${stageEnabled() ? `<label>Tilt <input type="range" min="0" max="60" value="${camera.tilt}" data-stage-camera="tilt" aria-label="Table tilt"><output>${camera.tilt}°</output></label>` : ""}
-        ${stageEnabled() ? `<label>Zoom <input type="range" min="60" max="${CAMERA_MAX}" value="${camera.zoom}" data-stage-camera="zoom" aria-label="Table zoom"><output>${camera.zoom}%</output></label>
+        ${stageEnabled() ? `<label>Zoom <input type="range" min="60" max="${CAMERA_MAX}" value="${camera.zoom}" data-stage-camera="zoom" aria-label="Table zoom"><output>${Math.round(camera.zoom)}%</output></label>${ib("⌖", "board-camera-center", "Center the table")}
         <label>Cards <input type="range" min="70" max="${CAMERA_MAX}" value="${camera.cards}" data-stage-camera="cards" aria-label="Tabletop card size"><output>${camera.cards}%</output></label>` : `${scaleSlider("board", "Board cards")}${scaleSlider("hand", "Hand cards")}`}
         ${stageEnabled() ? `<p class="cm-stage-style-note">Appearance preview · this device</p>
         <label class="cm-stage-style">Background <select data-stage-style="background" aria-label="Background">${(CrankStage.appearances.backgrounds).map(x=>`<option value="${x.id}"${appearance.background===x.id?" selected":""}>${x.name}</option>`).join("")}</select></label>
@@ -991,7 +994,7 @@ globalThis.CrankBoard = Object.seal({
     const region = host.querySelector(".cm-stage-region");
     if (!region || !globalThis.CrankStage) {globalThis.CrankStage?.unmount(); return;}
     const big = players()[focus] || players()[view.seat];
-    const opts = {tilt: camera.tilt, zoom: camera.zoom, rotation: 0, cards: camera.cards, reduced: globalThis.CrankMotion?.reduced() ?? false,
+    const opts = {tilt: camera.tilt, zoom: camera.zoom, pan: camera.pan, rotation: 0, cards: camera.cards, reduced: globalThis.CrankMotion?.reduced() ?? false,
       background: table?.appearance?.background || appearance.background, table: tableDesignId(table?.appearance?.table || appearance.table),
       mats: [big, ...players().filter((p) => p.playerId !== big.playerId)].map((p) => matOf(p.playerId)),
       combat: view.state.phase?.startsWith("COMBAT_") ?? false, instant: view.state.stack.some((s) => /Instant/i.test(typeLineOf(s))),
@@ -2025,7 +2028,8 @@ globalThis.CrankBoard = Object.seal({
       host.dataset.view = "focus";
       delete host.dataset.stage; delete host.dataset.shell; globalThis.CrankStage?.unmount();
       host.dataset.phone = innerHeight > innerWidth ? "portrait" : "landscape";
-      host.innerHTML = `${phoneView()}${showHand()}${banner()}${inspector()}`;
+      host.innerHTML = `${phoneView()}${showHand()}${banner()}${inspector()}${cardMenuHtml()}`;
+      placeCardMenu();
       fit();
       return;
     }
@@ -2045,7 +2049,8 @@ globalThis.CrankBoard = Object.seal({
     if (mode === "full") host.innerHTML = `${fullView()}${showHand()}${banner()}`;
     else if (mode === "table") host.innerHTML = `${boardHeader()}${tableView()}${cameraMenu()}${boardDrawers()}${showHand()}${banner()}`;
     else host.innerHTML = `${boardHeader()}${focusView()}${cameraMenu()}${boardDrawers()}${showHand()}${banner()}`;
-    host.insertAdjacentHTML("beforeend", inspector());
+    host.insertAdjacentHTML("beforeend", inspector() + cardMenuHtml());
+    placeCardMenu();
     fit();
   }
 
@@ -2736,6 +2741,160 @@ globalThis.CrankBoard = Object.seal({
     const el = event.target.closest?.("[data-stage-camera]"); if (el) keep(el.dataset.stageCamera === "tilt" ? "cm-board-tilt-v2" : el.dataset.stageCamera === "cards" ? "cm-stage-card-size-v2" : "cm-board-zoom-v2", el.value);
   });
   document.addEventListener("visibilitychange", () => {if (attached && view && !document.hidden) fit();});
+  /* THE 3D CAMERA BY HAND (Rob, 2026-10-25). The wheel zooms; a mat dragged moves the view across the table ("Keep [tilt]
+     as is for when clicking empty table, and implement this left-drag pan the camera function when left clicking on the
+     mat"); a right button held looks at a place (CrankStage.look, the head look). Cards, rows that scroll and the
+     overlays keep their own gestures. Every motion moves the one camera (CrankStage.geometry), so the cards stay on the
+     table. */
+  const HOLD_MS = 200;
+  const OVERLAYS = ".cm-stage-camera, .cm-board-ask, .cm-stage-actions, #cm-card-menu, input, select, textarea";
+  let lastPress = null, hold = null, zoomKeep = null;
+  document.addEventListener("pointerdown", (event) => {lastPress = {at: performance.now(), button: event.button, type: event.pointerType};}, true);
+  /* Plane pixels moved, the view kept over the table. */
+  function panBy(dx, dy) {
+    const r = document.querySelector("#cm-board .cm-stage-region")?.getBoundingClientRect(), w = (r?.width || 0) / 2, h = (r?.height || 0) * .44;
+    camera.pan = {x: Math.max(-w, Math.min(w, camera.pan.x + dx)), y: Math.max(-h, Math.min(h, camera.pan.y + dy))};
+  }
+  /* The wheel zooms toward the place under the pointer, the Camera's Zoom slider following and the zoom kept on this
+     device as the slider keeps it. Over a row of cards that scrolls the wheel scrolls it, as it did (R3); with ⌘ or Ctrl
+     (a trackpad's pinch arrives as one) it zooms there too. ⌘/Ctrl + and − still size the cards. */
+  document.addEventListener("wheel", (event) => {
+    const region = event.target.closest?.("#cm-board .cm-stage-region");
+    if (!region || !view || !stageEnabled() || !globalThis.CrankStage || event.target.closest(OVERLAYS)) return;
+    if (event.target.closest("[data-zone-scroll]") && !event.ctrlKey && !event.metaKey) return;
+    event.preventDefault();
+    const host = region.closest("#cm-board"), unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? region.clientHeight : 1;
+    const next = Math.max(60, Math.min(CAMERA_MAX, camera.zoom * Math.exp(-(event.deltaY || event.deltaX) * unit * .0015)));
+    if (next === camera.zoom) return;
+    const before = CrankStage.pick(event.clientX, event.clientY);
+    camera.zoom = next; fitStage(host);
+    const after = before && CrankStage.pick(event.clientX, event.clientY);
+    if (after) {panBy(before.world[0] - after.world[0], after.world[2] - before.world[2]); fitStage(host);}
+    const slider = host.querySelector('[data-stage-camera="zoom"]');
+    if (slider) {slider.value = Math.round(camera.zoom); slider.parentElement.querySelector("output").textContent = `${Math.round(camera.zoom)}%`;}
+    clearTimeout(zoomKeep); zoomKeep = setTimeout(() => keep("cm-board-zoom-v2", String(Math.round(camera.zoom))), 250);
+  }, {passive: false});
+  /* A mat dragged with the left button moves the view across the table: the place taken hold of stays under the pointer.
+     Empty table still tilts (above); a card, a button or a row that scrolls keeps its own drag. */
+  document.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0 || event.pointerType === "touch" || !view || !stageEnabled() || !globalThis.CrankStage) return;
+    const mat = event.target.closest?.("#cm-board .cm-stage-region .cm-mat");
+    if (!mat || event.target.closest(`.cm-bcard, button, a, [role=button], [data-zone-scroll], [draggable=true], ${OVERLAYS}`)) return;
+    event.preventDefault();
+    const region = mat.closest(".cm-stage-region"), host = region.closest("#cm-board"), start = {x: event.clientX, y: event.clientY};
+    let grab = null;
+    const move = (next) => {
+      if (next.pointerId !== event.pointerId) return;
+      if (!grab) {
+        if (Math.hypot(next.clientX - start.x, next.clientY - start.y) < 4) return;
+        grab = CrankStage.pick(start.x, start.y); if (!grab) return;
+        host.querySelector(".cm-stage-region")?.classList.add("is-panning");
+      }
+      const under = CrankStage.pick(next.clientX, next.clientY); if (!under) return;
+      panBy(grab.world[0] - under.world[0], under.world[2] - grab.world[2]); fitStage(host);
+    };
+    const end = (next) => {
+      if (next.pointerId !== event.pointerId) return;
+      host.querySelector(".cm-stage-region")?.classList.remove("is-panning");
+      removeEventListener("pointermove", move); removeEventListener("pointerup", end); removeEventListener("pointercancel", end);
+    };
+    addEventListener("pointermove", move); addEventListener("pointerup", end); addEventListener("pointercancel", end);
+  });
+  /* A right press on the 3D table: let go before HOLD_MS, it is a click (a card's menu); held, the camera looks at the place
+     under the pointer -- on a card, a mat or the bare table -- until it is let go, and then looks back. */
+  document.addEventListener("pointerdown", (event) => {
+    if (event.button !== 2 || event.pointerType === "touch" || !view || !stageEnabled() || !globalThis.CrankStage) return;
+    if (!event.target.closest?.("#cm-board .cm-stage-region") || event.target.closest(OVERLAYS)) return;
+    if (hold) clearTimeout(hold.timer);
+    const el = event.target.closest(".cm-bcard[data-card]");
+    const h = hold = {id: event.pointerId, card: el ? Number(el.dataset.card) : null, el, x: event.clientX, y: event.clientY, looking: false};
+    /* Let go anywhere, even outside the window, and the camera still looks back. */
+    try {document.documentElement.setPointerCapture(event.pointerId);} catch {/* the release still arrives inside the window */}
+    h.timer = setTimeout(() => {if (hold !== h) return; h.looking = true; peek(null); closeCardMenu(false); CrankStage.look(h.x, h.y);}, HOLD_MS);
+  });
+  addEventListener("pointermove", (event) => {if (hold && !hold.looking && event.pointerId === hold.id) {hold.x = event.clientX; hold.y = event.clientY;}});
+  function letGo(event) {
+    if (!hold || (event.pointerId !== undefined && event.pointerId !== hold.id) || (event.type === "pointerup" && event.button !== 2)) return;
+    const h = hold; hold = null; clearTimeout(h.timer);
+    if (h.looking) globalThis.CrankStage?.unlook();
+    else if (h.card !== null && event.type === "pointerup" && view) {lastPress = {at: performance.now(), button: 2, type: "mouse"}; openCardMenu(h.card, {x: event.clientX, y: event.clientY}, h.el);}
+  }
+  addEventListener("pointerup", letGo); addEventListener("pointercancel", letGo); addEventListener("blur", () => letGo({type: "blur"}));
+  actions["board-camera-center"] = () => {camera.pan = {x: 0, y: 0}; fit();};
+
+  /* THE CARD'S MENU (Rob, 2026-10-25: "always show as little text instruction as possible, always deferring to visual
+     symbols, colors, indicators and short-hand ... But always enough that the basics, e.g. source/cause > action >
+     target/effect objects and events are clear and card references always have a very quick path to viewing and reading
+     the card"). Its first line is the card -- 🔍 and its name, which opens it to read -- and under it each thing the table
+     offers for it now (optionsFor: the room's offers, never one of the board's), as a glyph and the fewest words: ⤓ Play,
+     ✦ Cast, ↷ and the mana, ⚡ an ability, ↶ Untap, ↩ To hand, ⚔ an attack, then the way (→ its target, ↷ what pays).
+     The whole sentence is its accessible name and its tooltip. A row stages the choice as a click on the card does;
+     nothing is sent until Confirm. Drawn with the board, so the rows are always the current offers. A menu: arrows move,
+     Escape or Tab closes it, back to the card. */
+  let cardMenu = null;
+  const MENU = {"play-land": ["⤓", "Play"], cast: ["✦", "Cast"], "activate-mana": ["↷", ""], activate: ["⚡", ""], "undo-mana": ["↶", "Untap"],
+    "undo-land": ["↩", "To hand"], "turn-face-up": ["◐", "Face up"], suspend: ["⏳", "Suspend"], "resolve-all": ["⏩", "All"]};
+  const menuGlyph = () => {const id = String(view.decision?.id || ""); return id.startsWith("declare-attackers") ? "⚔" : id.startsWith("declare-blockers") || blocking() ? "🛡" : "•";};
+  const symbols = (text) => e(text).replace(/\{[^}]+\}/g, (m) => C.mana(m));
+  function menuRow(o, c) {
+    const [glyph, verb] = MENU[o.act] || [menuGlyph(), ""], undo = o.act === "undo-mana" || o.act === "undo-land";
+    const label = !undo && o.label && o.label !== c.name ? (c.name && o.label.startsWith(c.name) ? o.label.slice(c.name.length).trim() : o.label) : "";
+    const detail = undo || !o.detail ? "" : o.detail.replace(/^tapping /, "↷ ").replace(/ · tapping /g, " · ↷ ").replace(o.lean || "\u0000", "").trim();
+    const words = [verb && `<b>${e(verb)}</b>`, label && symbols(label), detail && `<small>${symbols(detail)}</small>`].filter(Boolean).join(" ") || (o.act === "activate-mana" ? "<b>mana</b>" : "");
+    const lean = o.lean ? ` <span class="cm-lean${o.lean.startsWith("helps") ? " is-helps" : " is-against"}">⚠ ${e(o.lean)}</span>` : "";
+    return `<button type="button" role="menuitem" class="cm-card-menu-do" data-action="board-card-menu-do" data-index="${o.index}" aria-label="${e(sayFor(o))}" title="${e(sayFor(o))}"${sending ? " disabled" : ""}><i aria-hidden="true">${glyph}</i><span>${words}${lean}</span></button>`;
+  }
+  function cardMenuHtml() {
+    if (!cardMenu || !view) return "";
+    const c = findCard(cardMenu.id) || shownCard(cardMenu.id), opts = optionsFor(cardMenu.id);
+    if (!c || (!c.name && !opts.length)) {cardMenu = null; return "";}
+    const named = c.name || "A face-down card", n = opts.length;
+    return `<div id="cm-card-menu" class="cm-card-menu" role="menu" aria-label="${e(named)}: ${n ? `${n} ${n === 1 ? "action" : "actions"}` : "no actions now"}" style="left:${cardMenu.x}px;top:${cardMenu.y}px">
+      ${c.name ? `<button type="button" role="menuitem" class="cm-card-menu-card" data-action="board-card-menu-view" data-card="${c.cardId}" aria-label="Read ${e(c.name)}" title="Read ${e(c.name)}"><i aria-hidden="true">🔍</i><span>${e(c.name)}</span></button>` : `<span class="cm-card-menu-card" role="none"><i aria-hidden="true">◐</i><span>${e(named)}</span></span>`}
+      ${n ? opts.map((o) => menuRow(o, c)).join("") : `<p class="cm-card-menu-none" role="none"><i aria-hidden="true">∅</i> ${e(c.why || "No actions now")}</p>`}</div>`;
+  }
+  /* Kept inside the window, measured once it is drawn. */
+  function placeCardMenu() {
+    const m = document.getElementById("cm-card-menu");
+    if (!m || !cardMenu) return;
+    const r = m.getBoundingClientRect(), x = Math.max(8, Math.min(cardMenu.x, innerWidth - r.width - 8)), y = Math.max(8, Math.min(cardMenu.y, innerHeight - r.height - 8));
+    if (x !== cardMenu.x || y !== cardMenu.y) {cardMenu.x = x; cardMenu.y = y; m.style.left = `${x}px`; m.style.top = `${y}px`;}
+  }
+  /* Opened at the pointer, or beside the card (the keyboard's way), with the focus on its first offer; closed, the focus
+     goes back to the card. */
+  function openCardMenu(id, at, el = at instanceof Element ? at : null) {
+    if (!view || !document.getElementById("cm-board")) return;
+    const box = at instanceof Element ? at.getBoundingClientRect() : null;
+    cardMenu = {id, x: Math.round(box ? box.right + 4 : at.x), y: Math.round(box ? box.top : at.y), from: el?.isConnected ? C.focusKey(el) : null};
+    draw();
+    const m = document.getElementById("cm-card-menu");
+    if (!m) return;
+    (m.querySelector(".cm-card-menu-do:not([disabled])") || m.querySelector("[role=menuitem]"))?.focus({preventScroll: true});
+    say(m.getAttribute("aria-label"));
+  }
+  function closeCardMenu(back = true) {
+    if (!cardMenu) return;
+    const from = cardMenu.from;
+    cardMenu = null; document.getElementById("cm-card-menu")?.remove();
+    if (back) C.focusFind(from)?.focus({preventScroll: true});
+  }
+  actions["board-card-menu-do"] = (el) => {const index = Number(el.dataset.index); closeCardMenu(true); option(index);};
+  actions["board-card-menu-view"] = (el) => {const id = el.dataset.card; closeCardMenu(true); inspect(id);};
+  /* A press anywhere outside it puts it away, and still reaches what it was on. */
+  document.addEventListener("pointerdown", (event) => {if (cardMenu && !event.target.closest?.("#cm-card-menu")) closeCardMenu(false);}, true);
+  document.addEventListener("keydown", (event) => {
+    const m = document.getElementById("cm-card-menu");
+    if (!m) {
+      const el = event.target.closest?.("#cm-board .cm-bcard[data-card]");
+      if (el && view && (event.key === "ContextMenu" || (event.shiftKey && event.key === "F10"))) {event.preventDefault(); openCardMenu(Number(el.dataset.card), el);}
+      return;
+    }
+    if (event.key === "Escape" || event.key === "Tab") {event.preventDefault(); event.stopImmediatePropagation(); closeCardMenu(true); return;}
+    const items = [...m.querySelectorAll("[role=menuitem]:not([disabled])")], i = items.indexOf(document.activeElement);
+    if (!items.length || !["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
+    event.preventDefault();
+    items[event.key === "Home" ? 0 : event.key === "End" ? items.length - 1 : (i + (event.key === "ArrowDown" ? 1 : -1) + items.length) % items.length].focus({preventScroll: true});
+  }, true);
   actions["board-pane"] = () => {paneShut = !paneShut; draw();};
   /* The button a menu was opened from, for Escape to give the focus back to. */
   let popupFrom = null;
@@ -2837,10 +2996,21 @@ globalThis.CrankBoard = Object.seal({
     if (hover !== null) {hover = null; drawPick();}
     peek(null);
   });
+  /* A RIGHT CLICK ON A CARD SHOWS WHAT IT CAN DO (Rob, 2026-10-25), in every view: the card's menu (cardMenuHtml). The
+     browser's own menu never opens on the 3D table, where a held right button looks (the head look) and the card's menu
+     opens when a quick press is let go. The Menu key and Shift+F10 open it on the card with the focus; a touch's long
+     press still reads the card (below). */
   document.addEventListener("contextmenu", (event) => {
-    const el = event.target.closest && event.target.closest(".cm-board .cm-bcard[data-card]");
-    if (!el || !view) return;
-    event.preventDefault(); peek(null); inspect(el.dataset.card);
+    if (!view || !document.getElementById("cm-board")) return;
+    if (hold) {event.preventDefault(); return;}   /* a right press on the 3D table, answered when it is let go */
+    const el = event.target.closest?.(".cm-board .cm-bcard[data-card]"), stage = stageEnabled() && event.target.closest?.("#cm-board .cm-stage-region");
+    const table = stage && !event.target.closest(OVERLAYS);
+    if (!el && !stage) return;
+    event.preventDefault();
+    const recent = lastPress && performance.now() - lastPress.at < 900 ? lastPress : null, right = recent?.button === 2;
+    if (!el || (recent && recent.type !== "mouse")) return;
+    if (table && (hold || right)) return;
+    peek(null); openCardMenu(Number(el.dataset.card), right ? {x: event.clientX, y: event.clientY} : el, el);
   });
   /* THE LOBBY'S MUSIC (Rob, 2026-10-09: "Lobby music."): the pack's lobby bed ("Lobby / seat", bgm_lobby_mythic_calm), from
      the first press on a table's page before its game -- a browser plays nothing before one -- and crossfading into the

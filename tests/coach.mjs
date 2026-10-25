@@ -311,6 +311,7 @@ try {
     eq(layout, {reserved: true, hit: true}, `${mode}: Coach keeps board space reserved and its prompts receive the pointer`);
   }
   await page.locator('.cm-board-hand .cm-bcard').first().click({button:"right"});
+  await page.locator('#cm-card-menu [data-action=board-card-menu-view]').click();
   ok(await page.locator('#cm-board-coach').isHidden() && await page.locator('#cm-card-inspector').isVisible(), "card inspection replaces the optional Coach in the shared auxiliary space");
   await page.locator('.cm-board-coach-open').click();
   ok(await page.locator('#cm-board-coach').isVisible() && await page.locator('#cm-card-inspector').count() === 0, "reopening Coach replaces inspection without covering it");
