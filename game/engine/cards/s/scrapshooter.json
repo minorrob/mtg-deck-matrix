@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Scrapshooter",
+    "oracleId": "235e3231-c5e5-4696-a867-705b2c4158fe",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Raccoon",
+      "Archer"
+    ],
+    "manaCost": "{1}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Gift a card (You may promise an opponent a gift as you cast this spell. If you do, when it enters, they draw a card.)\nReach\nWhen this creature enters, if the gift was promised, destroy target artifact or enchantment an opponent controls.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Gift a card",
+      "keyword": "gift",
+      "gift": "a card"
+    },
+    {
+      "kind": "keyword",
+      "text": "Reach",
+      "keyword": "reach"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, if the gift was promised, destroy target artifact or enchantment an opponent controls.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Artifact"
+              ],
+              "controller": "opponent"
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Enchantment"
+              ],
+              "controller": "opponent"
+            }
+          ]
+        }
+      ],
+      "condition": {
+        "giftPromised": true
+      }
+    }
+  ]
+}

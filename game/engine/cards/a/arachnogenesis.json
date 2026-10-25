@@ -1,0 +1,79 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Arachnogenesis",
+    "oracleId": "b655bee5-52d3-467e-b16c-cfc2edf2b1a1",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Create X 1/2 green Spider creature tokens with reach, where X is the number of creatures attacking you. Prevent all combat damage that would be dealt this turn by non-Spider creatures.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Create X 1/2 green Spider creature tokens with reach, where X is the number of creatures attacking you. Prevent all combat damage that would be dealt this turn by non-Spider creatures.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": {
+            "count": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "attacking": "you directly"
+            }
+          },
+          "token": {
+            "name": "Spider",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Spider"
+            ],
+            "colors": [
+              "G"
+            ],
+            "power": 1,
+            "toughness": 2,
+            "keywords": [
+              "Reach"
+            ]
+          }
+        },
+        {
+          "effect": "effectUntil",
+          "rule": "prevent-damage",
+          "affects": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "nonSubtypes": [
+              "Spider"
+            ]
+          },
+          "apply": {
+            "by": true,
+            "to": false,
+            "combat": true
+          },
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

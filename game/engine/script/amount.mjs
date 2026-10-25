@@ -85,6 +85,8 @@
  *                                        Possibility; CR 205.3j)
  *   {commanderCasts: "you"}              every time you've cast your commanders from the command zone this game (Vanguard of
  *                                        the Restless; CR 903.8)
+ *   {commanderManaValue: "you"}          the greatest mana value among your commanders, wherever each is (Tangleweave Armor;
+ *                                        CR 903.3, 202.3), 0 with none
  *
  * and any of them may say `atMost` ("{1} less IF you control a creature with flying": the count, at most 1), `times` and
  * `plus`: "twice X", "1 plus the number of ...", `times: "X"` for "X ... for each" (X tokens for each opponent who does),
@@ -146,7 +148,9 @@ export const AMOUNT_KINDS = Object.freeze(["x", "attacksThisTurn", "count", "cou
   /* Wave 4d: "distribute two +1/+1 counters among one or two target creatures you control" (The Earth Crystal; CR 601.2d). */
   "dividedAmong",
   /* Wave 4d: "eight or more artifacts with the same name as one another" (Mechanized Production). */
-  "mostSharingName"]);
+  "mostSharingName",
+  /* The precon load, lane D: "the greatest mana value among your commanders" (Tangleweave Armor). */
+  "commanderManaValue"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "per", "filter", "controlledBy", "named", "another", "signed"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -214,6 +218,7 @@ export function amountProblems(value) {
   if ("tappedThisWay" in value && value.tappedThisWay !== true) problems.push("tappedThisWay is true");
   if ("sacrificedThisWay" in value && value.sacrificedThisWay !== true) problems.push("sacrificedThisWay is true");
   if ("commanderColors" in value && value.commanderColors !== "you") problems.push('commanderColors is "you"');
+  if ("commanderManaValue" in value && value.commanderManaValue !== "you") problems.push('commanderManaValue is "you"');
   if ("graveyardsWithAtLeast" in value && !(Number.isInteger(value.graveyardsWithAtLeast) && value.graveyardsWithAtLeast >= 1)) problems.push("graveyardsWithAtLeast is a whole number of cards, 1 or more");
   if ("controlledBy" in value && !("rememberedCount" in value && ["that player", "most"].includes(value.controlledBy))) problems.push('controlledBy is "that player" or "most", of a rememberedCount');
   /* A power or toughness as it is, below zero too (CR 701.10c). */
@@ -369,6 +374,11 @@ export function amountOf(state, value, context = {}) {
   else if ("sacrificedThisWay" in value) n = context.about?.sacrificed ?? 0;
   /* "The number of colors in your commanders' color identity" (War Room; CR 903.4): the union of their identities. */
   else if ("commanderColors" in value) n = commanderIdentity(state, context.controller).length;
+  /* "Where X is the greatest mana value among your commanders" (Tangleweave Armor; CR 903.3, 202.3): every commander its player
+     owns, wherever it is -- the command zone, the battlefield, a hand (the card's ruling) -- each one's mana value as it now is,
+     a spell's with its X (CR 202.3e); 0 for a player with none. */
+  else if ("commanderManaValue" in value) n = Math.max(0, ...Object.values(state.objects).filter((o) => o.commander === true && o.owner === context.controller)
+    .map((o) => (valueCostOf(o) ? manaValue(parseManaCost(valueCostOf(o)), {x: xOnStack(state, o.id)}) : 0)));
   /* CONVERGE (Sundering Archaic): "the number of colors of mana spent to cast this creature" -- the colors among the mana
      spent to cast its own object (CR 601.2h; rules/actions.mjs keeps it by kind, and the permanent it becomes keeps it,
      rules/stack.mjs), or, that object gone, as its trigger remembered it (`spent`, rules/trigger.mjs; CR 608.2h). Colorless

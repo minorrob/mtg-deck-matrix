@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Yeva, Nature's Herald",
+    "oracleId": "2d513c3e-bd27-479e-af32-7f66d96d0de0",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Shaman"
+    ],
+    "manaCost": "{2}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Flash (You may cast this spell any time you could cast an instant.)\nYou may cast green creature spells as though they had flash.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flash (You may cast this spell any time you could cast an instant.)",
+      "keyword": "flash"
+    },
+    {
+      "kind": "static",
+      "text": "You may cast green creature spells as though they had flash.",
+      "rule": "cast-as-though-flash",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "spells": {
+        "types": [
+          "Creature"
+        ],
+        "colors": [
+          "G"
+        ]
+      }
+    }
+  ]
+}

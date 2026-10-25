@@ -479,7 +479,8 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
      offer taken -- cast or activated, its player holding priority after it (CR 117.3c, rules/actions.mjs applyAction). */
   /* Escape's other cards, or a flashback cost's creatures, picked: the cast taken, its player holding priority after it
      (CR 117.3c). */
-  if (awaiting.kind === "choose-cost") return resolveCastCost(state, awaiting, indices);
+  /* A total divided among its targets (CR 601.2d): answered with an amount for each (rules/actions.mjs, costChoice). */
+  if (awaiting.kind === "choose-cost") return resolveCastCost(state, awaiting, indices, amounts);
   if (awaiting.kind === "choose-targets") {
     if (awaiting.stackId === undefined) return resolveChooseTargets(state, awaiting, indices);
     const events = resolveTriggerCounted(state, awaiting, indices);

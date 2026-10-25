@@ -1818,6 +1818,9 @@ export function compileScript(script) {
         /* "Exile Avatar's Wrath." (CR 608.2n): the last of what it does, exiled as it resolves rather than put into its owner's
            graveyard -- one that does not resolve goes where any spell would (rules/stack.mjs). */
         ...(ability.exileAsResolves === true ? {exileAsResolves: true} : {}),
+        /* "X damage divided as you choose among any number of target creatures" (Monstrous Onslaught; CR 601.2d): its total and
+           the target it is divided among, announced as it is cast (rules/actions.mjs, dividedOf). */
+        ...(ability.divided ? {divided: structuredClone(ability.divided)} : {}),
         /* "If this spell was kicked, exile target nonland permanent instead" (Tear Asunder): its targets and effects then. */
         ...(ability.kicked ? {kicked: {targets: ability.kicked.targets ?? [], effects: ability.kicked.effects ?? []}} : {})};
       if (ability.kicked && (modal || !(ability.kicked.effects ?? []).length)) problems.push("a kicked spell's script says its effects, on a spell that is not modal");

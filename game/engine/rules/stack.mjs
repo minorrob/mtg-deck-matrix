@@ -213,6 +213,8 @@ export function pushCopy(state, original, {controller, nonLegendary = false} = {
   if (Array.isArray(original.modes)) entry.modes = [...original.modes];
   /* And its gift, promised to the same opponent (CR 707.10, 702.174k; its ruling): the copy gives it too. */
   if (original.gift !== undefined) entry.gift = original.gift;
+  /* And the division announced as it was cast (CR 707.10, 601.2d; rules/actions.mjs, dividedOf). */
+  if (original.division) entry.division = structuredClone(original.division);
   state.stack.push(entry);
   return entry;
 }
@@ -307,6 +309,8 @@ export function resolveTop(state, effect = null, rng = null) {
     ...(entry.cast ? {cast: entry.cast} : {}),
     /* The opponent its gift was promised to (CR 702.174k): "the chosen player", and "if the gift was promised". */
     ...(entry.gift !== undefined ? {gift: entry.gift} : {}),
+    /* The division announced as it was cast (CR 601.2d; rules/actions.mjs): what each target is dealt (effects/resources.mjs). */
+    ...(entry.division ? {division: entry.division} : {}),
     ...(entry.sourceTransforms !== undefined ? {sourceTransforms: entry.sourceTransforms} : {}),
     /* What its cost sacrificed, as each last existed: "the sacrificed creature's toughness" (rules/actions.mjs). */
     ...(entry.sacrificed ? {sacrificed: entry.sacrificed} : {}),

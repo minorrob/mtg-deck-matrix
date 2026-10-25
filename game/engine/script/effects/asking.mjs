@@ -2749,6 +2749,69 @@ export const controlToOpponents = {
   },
 };
 
+/* ---- each fights a different one (the precon load, lane D: Ezuri's Predation) ----
+
+   "For each creature your opponents control, create a 4/4 green Phyrexian Beast creature token. Each of those tokens fights a
+   different one of those creatures": fight's `against`, the creatures fought, its `from` the tokens -- put here by the
+   resolution (script/resolution.mjs). Which fights which is its controller's (the card's ruling; CR 608.2d), one pairing at a
+   time: each of the fewer side in turn, against one of the other side's not chosen yet -- with one left, the rules leave no
+   choice and nobody is asked. More tokens than creatures (two for each, Doubling Season), and the rest fight nothing (its
+   ruling). Then every fight at once (its ruling; CR 701.14a), each power read before any damage (effects/resources.mjs,
+   fightCalls' `pairs`). One no longer a creature on the battlefield fights nothing (CR 701.14b). */
+const fightable = (state, id) => state.objects[id]?.zone === "battlefield" && typesOf(state, id).includes("Creature");
+/* The side whose each is paired in turn, and the side each is paired from. */
+const fightSides = (awaiting) => (awaiting.byFoe ? [awaiting.foes, awaiting.fighters] : [awaiting.fighters, awaiting.foes]);
+const unpaired = (awaiting) => { const [, other] = fightSides(awaiting); return other.filter((id) => !awaiting.pairs.some((pair) => pair.includes(id))); };
+function pairEachFight(state, awaiting) {
+  let pairs = awaiting.pairs;
+  const [each] = fightSides(awaiting);
+  while (pairs.length < each.length) {
+    const left = unpaired({...awaiting, pairs});
+    if (left.length > 1) {
+      state.awaiting = {...awaiting, pairs};
+      return true;
+    }
+    const one = each[pairs.length];
+    pairs = [...pairs, awaiting.byFoe ? [left[0], one] : [one, left[0]]];
+  }
+  return {events: [], splice: pairs.length ? [{effect: "fight", pairs}] : []};
+}
+export const fightPartners = {
+  open(state, params, context) {
+    const fighters = [...new Set(params.then.from ?? [])].filter((id) => fightable(state, id));
+    const foes = selectMatching(state, {...params.then.against, what: "permanent"}, context).filter((id) => fightable(state, id));
+    return pairEachFight(state, {kind: "effect-choice", effect: "fightPartners", player: context.controller, source: context.source ?? null, fighters, foes,
+      byFoe: fighters.length >= foes.length, pairs: []});
+  },
+  choice(state, awaiting) {
+    const [each] = fightSides(awaiting);
+    const one = each[awaiting.pairs.length];
+    const named = (id) => state.objects[id]?.card ?? "A creature";
+    const options = unpaired(awaiting).map((cardId, index) => ({index, label: named(cardId), cardId}));
+    /* Two that read alike, numbered: "Phyrexian Beast (1)", "Phyrexian Beast (2)". */
+    for (const option of options) {
+      const alike = options.filter((o) => o.label === option.label);
+      if (alike.length > 1) alike.forEach((o, k) => { o.label = `${named(o.cardId)} (${k + 1})`; });
+    }
+    return {id: `fightPartners:${awaiting.player}:${state.turn}:${one}`,
+      title: awaiting.byFoe ? `Choose which of your tokens fights ${named(one)}` : `Choose which creature ${named(one)} fights`,
+      mode: "one", min: 1, max: 1, options};
+  },
+  apply(state, awaiting, indices) {
+    const chosen = Array.isArray(indices) && indices.length === 1 ? unpaired(awaiting)[indices[0]] : undefined;
+    if (chosen === undefined) throw new Error("Invalid selection");
+    const [each] = fightSides(awaiting);
+    const one = each[awaiting.pairs.length];
+    const outcome = pairEachFight(state, {...awaiting, pairs: [...awaiting.pairs, awaiting.byFoe ? [chosen, one] : [one, chosen]]});
+    /* The next pairing asked, or the fights. */
+    return outcome === true ? {again: true, events: []} : outcome;
+  },
+  /* Its controller has left the game: their spell left with them (CR 800.4a), and nothing fights. */
+  left() {
+    return {events: []};
+  },
+};
+
 /* ---- which kind of counter (CR 122.1; Train B, X11) ----
 
    "Choose a counter on target permanent. Put an additional counter of that kind on that permanent" (Ichormoon Gauntlet),
@@ -2949,6 +3012,8 @@ export const ASKING = Object.freeze({
   handLook,
   /* Train E: a different opponent for each permanent given away (Dack Fayden, Helping Hand). */
   controlToOpponents,
+  /* The precon load, lane D: each token fights a different creature (Ezuri's Predation). */
+  fightPartners,
   /* Wave 4c, k2: a draw, or a dredge in its place (CR 702.52a). */
   dredgeDraw,
   /* Precons B: what an attacking creature attacks, reselected (CR 508.7; Misleading Signpost). */

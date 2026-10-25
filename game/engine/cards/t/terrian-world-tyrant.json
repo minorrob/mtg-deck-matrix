@@ -1,0 +1,29 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Terrian, World Tyrant",
+    "oracleId": "856245a6-c697-4f03-90be-77d8eb2d274e",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dinosaur",
+      "Ooze"
+    ],
+    "manaCost": "{2}{G}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 9,
+    "toughness": 7
+  },
+  "oracleText": "",
+  "source": "hand",
+  "abilities": []
+}
