@@ -168,7 +168,7 @@ const flashbackPayable = (state, player, back) => back.life <= state.players[pla
   && (!back.sacrifice || sacrificeChoices(state, player, null, back.sacrifice.selector).length >= back.sacrifice.count);
 const COLOR_WORDS = {W: "white", U: "blue", B: "black", R: "red", G: "green"};
 /** The creatures a flashback cost taps, as the card says them: "three untapped white creatures you control". */
-export const tappersInWords = (tap) => `${inWords(tap.count)} untapped ${[...(tap.selector?.colors ?? []).map((c) => COLOR_WORDS[c] ?? c), ...(tap.selector?.subtypes ?? [])].join(" ")}${(tap.selector?.colors ?? []).length || (tap.selector?.subtypes ?? []).length ? " " : ""}creature${tap.count === 1 ? "" : "s"} you control`;
+export const tappersInWords = (tap) => `${inWords(tap.count)} untapped ${[...(tap.selector?.colors ?? []).map((c) => COLOR_WORDS[c] ?? c), ...(tap.selector?.subtypes ?? [])].join(" ")}${(tap.selector?.colors ?? []).length || (tap.selector?.subtypes ?? []).length ? " " : ""}creature${tap.count === 1 ? "" : "s"} you control${(tap.selector?.keywords ?? []).length ? ` with ${tap.selector.keywords.map((k) => String(k).toLowerCase()).join(" and ")}` : ""}`;
 
 /**
  * ESCAPE (CR 702.138a): the ways this card may be cast from its owner's graveyard rather than for its mana cost, each
@@ -508,6 +508,11 @@ function costChoice(state, awaiting) {
     return {id: `choose-cost:${action.objectId}`, title: `${name}: exile ${inWords(n)} other card${n === 1 ? "" : "s"} from your graveyard`, mode: "many", min: n, max: n,
       cost: "exileOthers", options: named(cardsIn(state, "graveyard", player).filter((id) => id !== action.objectId))};
   }
+  /* An alternative cost that taps creatures ("tap four untapped creatures you control with flying", Sephara, Sky's Blade): exactly
+     that many of the ones it may take -- the same question as a flashback cost's tap, answered the same way. */
+  if (graveWay?.tap && !Array.isArray(action.flashbackTap))
+    return {id: `choose-cost:${action.objectId}`, title: `${name}: tap ${tappersInWords(graveWay.tap)}`, mode: "many", min: graveWay.tap.count, max: graveWay.tap.count, cost: "tap",
+      options: named(flashbackTappers(state, player, graveWay.tap))};
   /* A flashback cost's sacrifice (Dread Return; wave 4c, k2): exactly that many of the permanents it may take. */
   const sacrificing = action.flashback ? flashbackCost(state, player, action.objectId)?.sacrifice : null;
   if (sacrificing && !Array.isArray(action.flashbackSacrifice)) {
@@ -572,11 +577,11 @@ function permanentWords(selector, n) {
 
 /* The creatures a flashback cost taps, as its caster picked them: that many, none twice, each untapped and fitting.
    Refused before anything moves. */
-function flashbackTapped(state, player, action, tap) {
+function flashbackTapped(state, player, action, tap, forWhat = "for its flashback") {
   const list = action.flashbackTap;
   const fitting = flashbackTappers(state, player, tap);
   if (!Array.isArray(list) || list.length !== tap.count || new Set(list).size !== list.length || !list.every((id) => fitting.includes(id)))
-    throw new Error(`Those are not ${tappersInWords(tap)} for its flashback`);
+    throw new Error(`Those are not ${tappersInWords(tap)} ${forWhat}`);
   return [...list];
 }
 
@@ -648,6 +653,12 @@ export function alternativeCosts(state, player, id) {
     const cost = ability.cost ?? [];
     const others = cost.filter((a) => a.atom === "exileFromGraveyard").reduce((n, a) => n + (a.count ?? 1), 0);
     if (ability.zone === "graveyard" && cardsIn(state, "graveyard", player).filter((c) => c !== id).length < others) return [];
+    /* "You may pay {W} and tap four untapped creatures you control with flying rather than pay this spell's mana cost" (Sephara,
+       Sky's Blade; CR 118.9): that many to tap now, or it cannot be paid (CR 118.3) -- which ones, asked once the cast is taken
+       (costChoice), as a flashback cost's are. */
+    const tapping = cost.find((a) => a.atom === "tapCreature");
+    const tap = tapping ? {count: tapping.count ?? 1, selector: tapping.selector ?? {}} : null;
+    if (tap && flashbackTappers(state, player, tap).length < tap.count) return [];
     /* Sneak's "returning an unblocked creature you control to its owner's hand" (CR 702.190a): picked with the cast, as a
        sacrifice is (additionalChoices). */
     return [{index, mana: cost.find((a) => a.atom === "mana")?.cost ?? "", life: cost.filter((a) => a.atom === "payLife").reduce((n, a) => n + (a.amount ?? 0), 0),
@@ -664,6 +675,7 @@ export function alternativeCosts(state, player, id) {
       ...(ability.mutate ? {mutate: true, overload: {targets: [{what: "permanent", types: ["Creature"], nonSubtypes: ["Human"], owner: object.owner}],
         effects: [{effect: "mergePermanent", targets: {target: 0}}]}} : {}),
       ...(ability.zone === "graveyard" ? {fromGraveyard: true, exileOthers: others} : {}),
+      ...(tap ? {tap} : {}),
       /* Prowl (CR 702.76a): the permanent it becomes was cast for it (rules/stack.mjs). */
       ...(ability.prowl === true ? {prowl: true} : {}),
       /* Surge (CR 702.117a), freerunning (CR 702.173a): the keyword whose cost this is, for "if its surge cost was paid". */
@@ -2649,8 +2661,10 @@ function performOffered(state, player, action, during) {
       state.awaiting = {kind: "choose-cost", player, action: structuredClone(action)};
       return [];
     }
-    /* A FLASHBACK COST THAT TAPS CREATURES (Battle Screech): the same -- which ones, asked before anything is paid. */
-    if (action.kind === "cast" && action.flashback === true && !Array.isArray(action.flashbackTap) && flashbackCost(state, player, action.objectId)?.tap) {
+    /* A FLASHBACK COST THAT TAPS CREATURES (Battle Screech): the same -- which ones, asked before anything is paid. And an
+       alternative cost that does (Sephara, Sky's Blade). */
+    if (action.kind === "cast" && !Array.isArray(action.flashbackTap) && ((action.flashback === true && flashbackCost(state, player, action.objectId)?.tap)
+      || (action.alternative !== undefined && alternativeCosts(state, player, action.objectId).find((w) => w.index === action.alternative)?.tap))) {
       state.awaiting = {kind: "choose-cost", player, action: structuredClone(action)};
       return [];
     }
@@ -2852,7 +2866,8 @@ function performOffered(state, player, action, during) {
     /* A graveyard alternative cost's other cards, as its caster picked them (othersPicked). */
     const othersExiling = way?.exileOthers && !during ? othersPicked(state, player, action, way) : [];
     /* A flashback cost's creatures, as its caster picked them. */
-    const tapping = back?.tap && !during ? flashbackTapped(state, player, action, back.tap) : [];
+    /* Or an alternative cost's (Sephara, Sky's Blade), the same way. */
+    const tapping = (back?.tap ?? way?.tap) && !during ? flashbackTapped(state, player, action, back?.tap ?? way.tap, back?.tap ? "for its flashback" : "for it") : [];
     /* And the permanents it sacrifices (flashbackSacrificed). */
     const sacrificing = back?.sacrifice && !during ? flashbackSacrificed(state, player, action, back.sacrifice) : [];
     /* And "tap any number of untapped creatures you control", as its caster picked them (tapAnyPicked). */

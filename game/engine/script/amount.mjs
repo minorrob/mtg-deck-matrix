@@ -150,7 +150,10 @@ export const AMOUNT_KINDS = Object.freeze(["x", "attacksThisTurn", "count", "cou
   /* Wave 4d: "eight or more artifacts with the same name as one another" (Mechanized Production). */
   "mostSharingName",
   /* The precon load, lane D: "the greatest mana value among your commanders" (Tangleweave Armor). */
-  "commanderManaValue"]);
+  "commanderManaValue",
+  /* The precon load of 2026-10-25, lane A: "investigate once for each opponent who has more cards in hand than you" (Wojek
+     Investigator). */
+  "opponentsWithMore"]);
 const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "per", "filter", "controlledBy", "named", "another", "signed"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
@@ -241,6 +244,10 @@ export function amountProblems(value) {
     const {anyOf, ...shared} = value[key] ?? {};
     try { for (const one of Array.isArray(anyOf) ? anyOf.map((a) => ({...shared, ...a})) : [value[key]]) compileSelector(one); }
     catch (error) { problems.push(`What ${key} counts: ${error.message}`); }
+  }
+  /* And what opponentsWithMore counts (Wojek Investigator), held to the same grammar. */
+  if ("opponentsWithMore" in value) {
+    try { compileSelector(value.opponentsWithMore ?? {}); } catch (error) { problems.push(`What opponentsWithMore counts: ${error.message}`); }
   }
   /* "The total mana value of historic permanents you control" (Excalibur, Sword of Eden): a selector, held to the grammar. */
   if (value.totalManaValue && typeof value.totalManaValue === "object") {
@@ -522,7 +529,10 @@ export function amountOf(state, value, context = {}) {
   else if ("lifeTotal" in value) {
     /* And a target player's: "Target player's life total becomes 1" (Vraska, Relic Seeker; CR 119.5, they lose the rest). */
     const player = playerOf(value.lifeTotal, context) ?? targetPlayer(value.lifeTotal, context);
-    n = player !== null ? state.players[player]?.life ?? 0 : 0;
+    /* "If an opponent has more life than you" (Linvala, the Preserver; CR 119.1): the most life any one opponent still in the
+       game has (CR 800.4a), none and it is 0. */
+    if (value.lifeTotal === "an opponent") n = Math.max(0, ...state.players.filter((p) => p.id !== context.controller && !p.lost).map((p) => p.life));
+    else n = player !== null ? state.players[player]?.life ?? 0 : 0;
   }
   /* "Equal to the life they lost this turn" (Wound Reflection; resources.mjs keeps it, turn.mjs clears it). */
   else if ("lifeLostThisTurn" in value) {
@@ -653,6 +663,13 @@ export function amountOf(state, value, context = {}) {
   else if ("mostAmongOpponents" in value) {
     const opponents = state.players.filter((p) => p.id !== context.controller && !p.lost).map((p) => p.id);
     n = Math.max(0, ...opponents.map((opponent) => matching(state, value.mostAmongOpponents, {...who, controller: opponent}).length));
+  }
+  /* "Once for each opponent who has more cards in hand than you" (Wojek Investigator): the opponents still in the game (CR
+     800.4a) for whom the selector, counted as each sees it ("you" being that opponent), finds more than it does for you. */
+  else if ("opponentsWithMore" in value) {
+    const mine = matching(state, value.opponentsWithMore, {...who, controller: context.controller}).length;
+    n = state.players.filter((p) => p.id !== context.controller && !p.lost
+      && matching(state, value.opponentsWithMore, {...who, controller: p.id}).length > mine).length;
   }
   /* "If a player has one or fewer cards in hand" (Naktamun Lorespinner): the fewest the selector counts as each player still in
      the game sees it ("you" being that player, CR 800.4a) -- a hand of none among them is none. */

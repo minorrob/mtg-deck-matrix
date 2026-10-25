@@ -1,0 +1,98 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Angelic Destiny",
+    "oracleId": "8ba36878-0816-44c7-b543-8ebfc28c2ecd",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{2}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant creature\nEnchanted creature gets +4/+4, has flying and first strike, and is an Angel in addition to its other types.\nWhen enchanted creature dies, return this card to its owner's hand.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Enchant creature",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Enchanted creature gets +4/+4, has flying and first strike, and is an Angel in addition to its other types.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": 4,
+        "toughness": 4
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Enchanted creature gets +4/+4, has flying and first strike, and is an Angel in addition to its other types.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "addKeywords": [
+          "Flying",
+          "First Strike"
+        ]
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Enchanted creature gets +4/+4, has flying and first strike, and is an Angel in addition to its other types.",
+      "layer": 4,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "addSubtypes": [
+          "Angel"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "When enchanted creature dies, return this card to its owner's hand.",
+      "trigger": {
+        "on": "dies",
+        "who": "any",
+        "filter": {
+          "attachedBy": "self"
+        }
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "this card",
+          "to": "hand"
+        }
+      ]
+    }
+  ]
+}

@@ -171,7 +171,10 @@ const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTu
   /* Gollum, Obsessed Stalker's "each opponent dealt combat damage this game by a creature named Gollum, Obsessed Stalker". */
   "combatDamagedBy",
   /* Descend's "if you descended this turn" (CR 700.11; Canonized in Blood). */
-  "descended"];
+  "descended",
+  /* The precon load of 2026-10-25, lane A: "you can't cast Serra Avenger during your first, second, or third turns of the
+     game" -- the "unless" of its cast restriction (CR 101.2). */
+  "pastYourFirstTurns"];
 /** Whether these effects, nested ones included, ask `firstResolution` -- so their ability's resolutions are counted
     (rules/stack.mjs). */
 export const asksFirstResolution = (effects) => JSON.stringify(effects ?? []).includes('"firstResolution"');
@@ -340,6 +343,11 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   /* "IF IT'S THE FIRST END STEP OF THE TURN" (Y'shtola Rhul; CR 513.1, 500.10): the end steps begun this turn, counted as each
      begins (rules/turn.mjs) -- an additional one is the second. */
   if (condition.firstEndStep === true && (state.endStepsThisTurn ?? 0) !== 1) return false;
+  /* "During your first, second, or third turns of the game" (Serra Avenger): it is its controller's turn, and one of the first N
+     they have begun -- extra turns among them, each a turn of theirs (CR 500.7; rules/turn.mjs keeps `turnsTaken`). Another
+     player's turn is none of them. */
+  if (Number.isInteger(condition.pastYourFirstTurns) && state.activePlayer === controller
+    && (state.players[controller]?.turnsTaken ?? 0) <= condition.pastYourFirstTurns) return false;
   /* "As long as you've sacrificed a nontoken permanent this turn" (Evendo Brushrazer; CR 701.21a): counted as each was. */
   if (condition.sacrificedNontokenThisTurn === true && !((state.players[controller]?.sacrificedNontokenThisTurn ?? 0) > 0)) return false;
   /* "If you didn't cast it from your hand" (Chainer, Nightmare Adept; CR 601.2a): the permanent the trigger is about, cast by
@@ -614,6 +622,8 @@ export function conditionProblems(condition) {
     problems.push("noGreaterPower is {target: n}: no other creature has greater power than that target");
   if ("wasCast" in condition && typeof condition.wasCast !== "boolean") problems.push("wasCast is true or false");
   if ("firstEndStep" in condition && condition.firstEndStep !== true) problems.push("firstEndStep is true");
+  if ("pastYourFirstTurns" in condition && !(Number.isInteger(condition.pastYourFirstTurns) && condition.pastYourFirstTurns >= 1))
+    problems.push("pastYourFirstTurns is a whole number, 1 or more: how many of your first turns of the game it is not");
   if ("thatPlayerMost" in condition && !["hand", "lands", "life"].includes(condition.thatPlayerMost)) problems.push("thatPlayerMost is \"hand\", \"lands\" or \"life\"");
   if ("powerAboveOthers" in condition && condition.powerAboveOthers !== "that card") problems.push("powerAboveOthers is \"that card\": the creature a trigger is about has more power than each other creature");
   if ("firstResolution" in condition && condition.firstResolution !== true) problems.push("firstResolution is true: the first time this ability has resolved this turn");

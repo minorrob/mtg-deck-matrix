@@ -56,6 +56,8 @@ export function beginResolution(state, effects, context = {}, rng = null) {
       ...(context.gift !== undefined ? {gift: context.gift} : {}),
       /* How many times its source had transformed as the ability went on the stack (CR 701.27f; rules/stack.mjs). */
       ...(context.sourceTransforms !== undefined ? {sourceTransforms: context.sourceTransforms} : {}),
+      /* Its source, gone before it reached the stack, for "this card" (Angelic Destiny; rules/stack.mjs, script/bind.mjs). */
+      ...(context.sourceWas !== undefined ? {sourceWas: context.sourceWas} : {}),
       /* What the cost sacrificed, as it last existed ("the sacrificed creature's power"; script/amount.mjs). */
       ...(context.sacrificed ? {sacrificed: context.sacrificed} : {}),
       /* Its targets as they were chosen: what a total was divided among (CR 601.2d; script/amount.mjs, dividedAmong). */

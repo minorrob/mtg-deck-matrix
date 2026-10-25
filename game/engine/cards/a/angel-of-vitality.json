@@ -1,0 +1,57 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Angel of Vitality",
+    "oracleId": "635fe908-6f58-4c9e-ac55-0775a7c6f278",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Flying\nIf you would gain life, you gain that much life plus 1 instead.\nThis creature gets +2/+2 as long as you have 25 or more life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "static",
+      "text": "If you would gain life, you gain that much life plus 1 instead.",
+      "rule": "more-life",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "plus": 1
+    },
+    {
+      "kind": "static",
+      "text": "This creature gets +2/+2 as long as you have 25 or more life.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "power": 2,
+        "toughness": 2
+      },
+      "condition": {
+        "lifeAtLeast": 25
+      }
+    }
+  ]
+}
