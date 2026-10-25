@@ -308,6 +308,8 @@ export function resolveTop(state, effect = null, rng = null) {
     /* The opponent its gift was promised to (CR 702.174k): "the chosen player", and "if the gift was promised". */
     ...(entry.gift !== undefined ? {gift: entry.gift} : {}),
     ...(entry.sourceTransforms !== undefined ? {sourceTransforms: entry.sourceTransforms} : {}),
+    /* Its source, gone before the trigger was put on the stack, for "this card" (Angelic Destiny; rules/trigger.mjs). */
+    ...(entry.sourceWas !== undefined ? {sourceWas: entry.sourceWas} : {}),
     /* What its cost sacrificed, as each last existed: "the sacrificed creature's toughness" (rules/actions.mjs). */
     ...(entry.sacrificed ? {sacrificed: entry.sacrificed} : {}),
     /* Its targets as they were chosen, before any is checked again: what a division among them was (CR 601.2d; script/amount.mjs,

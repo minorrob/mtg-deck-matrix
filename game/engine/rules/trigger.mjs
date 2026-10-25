@@ -419,6 +419,9 @@ function subjects(state, event, condition, sourceId, controller) {
     /* "Whenever an opponent loses life" (batch 78): a loss, about the player and how much. */
     if (condition.loser !== undefined) return gained < 0 && whoseIs(condition.loser, player, controller) ? [{player, amount: -gained}] : [];
     if (!(gained > 0) || !whoseIs(condition.gainer ?? "you", player, controller)) return [];
+    /* "Whenever you gain life for the first time each turn" (Vanguard Seraph): only that player's first gain of the turn --
+       one before it, while this permanent was not there to see it, still counts (effects/resources.mjs). */
+    if (condition.firstThisTurn && fields.firstGainThisTurn !== true) return [];
     return [{player, amount: gained}];
   }
   /* "Whenever a player taps a land for mana" (Manabarbs): what was tapped, and who tapped it. */
@@ -1291,6 +1294,10 @@ function putOnStack(state, triggers) {
        modes with them (CR 603.3c). */
     if ((entry.script?.targets ?? []).length || entry.script?.modal) entry.stage = "targeting";
     if (trigger.modesChosen) entry.modesChosenWas = [...trigger.modesChosen];
+    /* Its source gone before it reached the stack, an ability that names "this card" keeps which object that was, for the card
+       it became (Angelic Destiny: the Aura put into the graveyard after its creature died, CR 400.7, 704.5m; script/bind.mjs). */
+    if (entry.cardId === null && Number.isInteger(trigger.source?.cardId) && JSON.stringify(entry.script?.effects ?? []).includes('"this card"'))
+      entry.sourceWas = trigger.source.cardId;
     const at = state.pendingTriggers.indexOf(trigger);
     if (at >= 0) state.pendingTriggers.splice(at, 1);
   }

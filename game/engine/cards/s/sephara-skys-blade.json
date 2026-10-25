@@ -1,0 +1,87 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sephara, Sky's Blade",
+    "oracleId": "ac8952c9-bd30-48cd-b964-7e6271f9cbc8",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel"
+    ],
+    "manaCost": "{4}{W}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 7,
+    "toughness": 7
+  },
+  "oracleText": "You may pay {W} and tap four untapped creatures you control with flying rather than pay this spell's mana cost.\nFlying, lifelink\nOther creatures you control with flying have indestructible. (Damage and effects that say \"destroy\" don't destroy them.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "You may pay {W} and tap four untapped creatures you control with flying rather than pay this spell's mana cost.",
+      "rule": "alternative-cost",
+      "affects": {
+        "what": "card",
+        "self": true
+      },
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{W}"
+        },
+        {
+          "atom": "tapCreature",
+          "count": 4,
+          "selector": {
+            "types": [
+              "Creature"
+            ],
+            "keywords": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "lifelink",
+      "keyword": "lifelink"
+    },
+    {
+      "kind": "static",
+      "text": "Other creatures you control with flying have indestructible.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "keywords": [
+          "Flying"
+        ],
+        "another": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Indestructible"
+        ]
+      }
+    }
+  ]
+}

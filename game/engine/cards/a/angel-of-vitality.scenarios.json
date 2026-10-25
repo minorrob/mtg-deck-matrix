@@ -1,0 +1,224 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Angel of Vitality",
+  "fixtures": {
+    "Salve": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{0}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "You gain 3 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 3
+          }
+        ]
+      }
+    },
+    "Bleed": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{0}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "You lose 20 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "loseLife",
+            "who": "you",
+            "amount": 20
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "At 40 life a 4/4 flier; Rob gains 3 and gets 4",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Angel of Vitality",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Salve"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Angel of Vitality",
+                "power": 4,
+                "toughness": 4
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Angel of Vitality",
+                "has": [
+                  "Flying"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "cast": "Salve"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 44
+        }
+      ]
+    },
+    {
+      "name": "Below 25 life it is a 2/2; back to 25 and it is a 4/4 again",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Angel of Vitality"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bleed",
+            "Salve",
+            "Salve"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "cast": "Bleed"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "life": 20
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Angel of Vitality",
+                "power": 2,
+                "toughness": 2
+              }
+            }
+          ]
+        },
+        {
+          "cast": "Salve"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "life": 24
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Angel of Vitality",
+                "power": 2,
+                "toughness": 2
+              }
+            }
+          ]
+        },
+        {
+          "cast": "Salve"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 28
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Angel of Vitality",
+            "power": 4,
+            "toughness": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "Maya's life gain is not Rob's: she gains 3",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Angel of Vitality"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Salve"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "cast": "Salve",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 43
+        }
+      ]
+    }
+  ]
+}

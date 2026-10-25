@@ -1,0 +1,543 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Sephara, Sky's Blade",
+  "fixtures": {
+    "Sky Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Angel"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 2,
+      "toughness": 2,
+      "keywords": [
+        "Flying"
+      ]
+    },
+    "Sky Pal Two": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Angel"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 2,
+      "toughness": 3,
+      "keywords": [
+        "Flying"
+      ]
+    },
+    "Bird Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bird"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "keywords": [
+        "Flying"
+      ]
+    },
+    "Big Sky": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Angel"
+      ],
+      "manaCost": "{3}{W}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 5,
+      "toughness": 3,
+      "keywords": [
+        "Flying"
+      ]
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Doom": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{0}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Sky Pal Three": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Angel"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "keywords": [
+        "Flying"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{W} and four of his fliers tapped instead of {4}{W}{W}{W}: a 7/7 flier with lifelink",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Sky Pal",
+            "Sky Pal Two",
+            "Bird Pal",
+            "Big Sky"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sephara, Sky's Blade"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Sephara, Sky's Blade",
+          "alternative": 0
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Sky Pal",
+                  "Sky Pal Two",
+                  "Bird Pal",
+                  "Big Sky"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Sky Pal",
+            "Sky Pal Two",
+            "Bird Pal",
+            "Big Sky"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Sephara, Sky's Blade",
+            "power": 7,
+            "toughness": 7
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Sephara, Sky's Blade",
+            "has": [
+              "Flying",
+              "Lifelink"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Sky Pal"
+        },
+        {
+          "seat": 0,
+          "tapped": "Sky Pal Two"
+        },
+        {
+          "seat": 0,
+          "tapped": "Bird Pal"
+        },
+        {
+          "seat": 0,
+          "tapped": "Big Sky"
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "W": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Five fliers: he picks which four, and the fifth stays untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Sky Pal",
+            "Sky Pal Two",
+            "Bird Pal",
+            "Big Sky",
+            "Sky Pal Three"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sephara, Sky's Blade"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Sephara, Sky's Blade",
+          "alternative": 0
+        },
+        {
+          "choose": [
+            "Sky Pal",
+            "Sky Pal Two",
+            "Bird Pal",
+            "Sky Pal Three"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Big Sky",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "tapped": "Sky Pal Three"
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Sky Pal",
+            "Sky Pal Two",
+            "Bird Pal",
+            "Big Sky",
+            "Sky Pal Three",
+            "Sephara, Sky's Blade"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Three fliers and a Bear: the alternative cost is not offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Sky Pal",
+            "Sky Pal Two",
+            "Bird Pal",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sephara, Sky's Blade"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Sephara, Sky's Blade"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": []
+    },
+    {
+      "name": "Or its mana cost, {4}{W}{W}{W}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sephara, Sky's Blade"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Sephara, Sky's Blade"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Sephara, Sky's Blade"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "His other fliers are indestructible; his Bear and Sephara herself are not",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sephara, Sky's Blade",
+            "Sky Pal",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Doom",
+            "Doom",
+            "Doom"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Sky Pal",
+                "has": [
+                  "Indestructible"
+                ]
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Sephara, Sky's Blade",
+                "lacks": [
+                  "Indestructible"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "cast": "Doom",
+          "targets": [
+            {
+              "card": "Sky Pal"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "cast": "Doom",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "cast": "Doom",
+          "targets": [
+            {
+              "card": "Sephara, Sky's Blade"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sky Pal"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Sephara, Sky's Blade",
+            "Doom",
+            "Doom",
+            "Doom"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Maya's fliers are not his",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sephara, Sky's Blade"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Sky Pal"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "seat": 1,
+          "keywords": {
+            "card": "Sky Pal",
+            "lacks": [
+              "Indestructible"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

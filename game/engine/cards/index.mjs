@@ -67,6 +67,8 @@ function wardCost(cost) {
    Taker's "during your turn", on spells and on abilities that cost more. */
 const RULES_READING_A_CONDITION = ["alternative-cost", "spells-cost-less", "triggers-again", "cant-cast", "attack-tax", "doesnt-untap", "cast-without-paying",
   "spells-cost-more", "abilities-cost-more",
+  /* Archangel of Tithes: "as long as this creature is attacking", a block tax (rules/statics.mjs, blockTax). */
+  "block-tax",
   /* "Twice that many ... instead" at a Class level (Innkeeper's Talent, CR 716.2a; rules/statics.mjs, countersPlaced). */
   "more-counters",
   /* "Can't ... block unless you control seven or more lands" (Topiary Stomper, CR 509.1b): read as each blocker is checked
@@ -392,7 +394,7 @@ const TRIGGERS = {
     ? {on: "GameEventCardChangeZone", from: "Library", to: "Hand", drawn: true, drawer: t.drawer ?? "you",
       ...(t.nthThisTurn !== undefined ? {nthThisTurn: t.nthThisTurn} : {}), ...(t.exceptFirstInDrawStep ? {exceptFirstInDrawStep: true} : {})} : null,
   /* "Whenever you gain life" (CR 119.9): `gainer` you, opponent or any. */
-  "life gained": (t) => ({on: "GameEventPlayerLivesChanged", gainer: t.gainer ?? "you"}),
+  "life gained": (t) => ({on: "GameEventPlayerLivesChanged", gainer: t.gainer ?? "you", ...(t.firstThisTurn === true ? {firstThisTurn: true} : {})}),
   /* "Whenever an opponent loses life", "whenever you lose life" (CR 119.3, batch 78): `loser` you, opponent or any; about
      the player and how much -- once for each player for everything one action took (combat damage from three creatures
      at once is one loss), "that much" all of it. */
@@ -2069,6 +2071,9 @@ export function compileScript(script) {
     if (ability.kind === "static" && ability.rule === "alternative-cost") {
       for (const atom of ability.cost ?? []) if (!["mana", "payLife", "exileFromHand", "sacrifice"].includes(atom?.atom) || (atom.atom === "sacrifice" && !atom.selector) || !fixedLife(atom))
         if (!(ability.zone === "graveyard" && atom?.atom === "exileFromGraveyard" && atom.self !== true && Number.isInteger(atom.count) && atom.count >= 1))
+        /* Untapped creatures of the caster's to tap, that many ("tap four untapped creatures you control with flying", Sephara,
+           Sky's Blade): which, asked once the cast is taken (rules/actions.mjs, alternativeCosts). */
+        if (!(atom?.atom === "tapCreature" && Number.isInteger(atom.count) && atom.count >= 1 && atom.selector && typeof atom.selector === "object"))
           problems.push(`${ability.text}: an alternative cost of ${atom?.atom ?? "something"} nothing pays yet`);
       if (ability.zone !== undefined && ability.zone !== "graveyard") problems.push(`${ability.text}: an alternative cost is cast from where it is, or from the graveyard (\`zone: "graveyard"\`)`);
     }

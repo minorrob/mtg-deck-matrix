@@ -379,7 +379,7 @@ export function housePilot({seat, cards = () => null, picks = false} = {}) {
       }
       /* A choice held to a budget ("any number of creatures with total power 4 or less", Slaughter the Strong): the strongest
          first while they fit, so the most power is kept. Not an attack's, planned below. */
-      if (choice.budget && !id.startsWith("declare-attackers:")) {
+      if (choice.budget && !id.startsWith("declare-attackers:") && !id.startsWith("declare-blockers:")) {
         const by = choice.budget.by, order = options.map((o) => o.index).sort((a, b) => (options[b][by] ?? 0) - (options[a][by] ?? 0) || a - b);
         const kept = [];
         let total = 0;
@@ -449,8 +449,9 @@ export function housePilot({seat, cards = () => null, picks = false} = {}) {
           const biggest = [...single].sort((x, y) => (onBoard.get(y.attackerId)?.power ?? 0) - (onBoard.get(x.attackerId)?.power ?? 0) || x.index - y.index);
           for (const o of biggest) if (!used.has(o.cardId) && !blocked.has(o.attackerId)) { picks.push(o.index); used.add(o.cardId); blocked.add(o.attackerId); }
         }
-        /* And what the record requires ("must be blocked if able", CR 509.1c): those blocks added to its own. */
-        const kept = picks.slice(0, Math.max(min, Math.min(max, picks.length)));
+        /* And what the record requires ("must be blocked if able", CR 509.1c): those blocks added to its own -- kept, in order,
+           to what it can pay to block with (a block tax, Archangel of Tithes; CR 509.1d). */
+        const kept = keptWithin(choice, picks.slice(0, Math.max(min, Math.min(max, picks.length))));
         return {indices: Array.isArray(choice.requires) && choice.requires.length ? meetRequirements(choice, kept) : kept};
       }
       /* A trigger's targets (engine 2.4c): aimed as a cast is -- a hostile one at an opponent's things. */
