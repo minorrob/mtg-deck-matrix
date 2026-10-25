@@ -76,6 +76,16 @@ try{
   await align('head look, held');
   await page.mouse.up({button:'right'});await page.waitForFunction(()=>CrankStage.diagnostics().look===null,null,{polling:'raf',timeout:5000});
   await align('head look, let go');
+  // Your side of the table lengthened (tests/board-hand-table.mjs): the table built at rest stretched while it is dragged,
+  // then built at its new length, the DOM plane on it both ways; and back.
+  const lengthen=(reach,live)=>page.evaluate(([reach,live])=>{CrankStage.layout(document.querySelector('.cm-stage-region').getBoundingClientRect(),{reach,live});},[reach,live]);
+  await lengthen(.2,true);
+  const dragged=await align('your side lengthened, mid-drag');
+  await lengthen(.2,false);
+  const lengthened=await align('your side lengthened');
+  ok(dragged.length.scale>1&&lengthened.length.scale===1&&lengthened.length.reach>0&&lengthened.length.reach===dragged.length.reach,`stretched while dragged, built at its length after (${JSON.stringify([dragged.length,lengthened.length])})`);
+  await lengthen(0,false);
+  ok((await align('your side back')).length.reach===0,'and back to the length it always had');
   ok(await page.evaluate(()=>document.querySelector('.cm-stage-canvas').getAttribute('tabindex'))==='-1','the camera by hand leaves no canvas tab stop');
   ok(await page.evaluate(()=>{const canvas=document.querySelector('.cm-stage-canvas'),gl=canvas.getContext('webgl2')||canvas.getContext('webgl');globalThis.__contextLoss=gl.getExtension('WEBGL_lose_context');return !!__contextLoss;}),'browser can exercise real GPU context loss');
   await page.evaluate(()=>__contextLoss.loseContext());

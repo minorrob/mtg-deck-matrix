@@ -11,13 +11,28 @@
      camera does. At rest it is the camera this file always had: `tilt` from straight down, `zoom` its focal length, the
      table's center at 43% of the height. `pan` moves the point it looks at across the table ({x, y} in plane pixels, y
      toward the viewer); `look` is the head-look's offset from there: the eye moved by {x, y, z} and turned by `yaw`
-     (toward +x) and `pitch` (down). */
-  function geometry(width, height, {tilt = 40, zoom = 100, seats = 3, rotation = 0, pan = null, look = null} = {}) {
+     (toward +x) and `pitch` (down).
+     THE PERSON'S SIDE, LENGTHENED (Rob, 2026-10-25: "expand the table (and their mat size automatically in proportion)
+     ... to increase / decrease the length of the table on their side ... all the way down, underneath the hand's cards,
+     to the padding at the screen edge"). `reach` is how much longer the table runs on the near side, as a share of its
+     resting length `base`. The far side, the opponents' mats and the camera stay where they are -- the table's resting
+     center (cx, cy) is still the world's origin -- and the front mat grows by the same length, its cards with it
+     (place's --stage-card). The longest is the one whose near edge, seen by the resting camera at this tilt and 100%,
+     lies REACH_PAD px above the bottom of the screen (`reachMost`): zooming or moving the view never shortens the table.
+     The shortest is the length it always had, where the front mat's captions are already at 10px. */
+  const REACH_PAD=8;
+  function geometry(width, height, {tilt = 40, zoom = 100, seats = 3, rotation = 0, pan = null, look = null, reach = 0} = {}) {
     const w=Math.max(1,width), h=Math.max(1,height), angle=clamp(tilt,0,60)*Math.PI/180;
     const yaw=clamp(rotation,-180,180)*Math.PI/180, c=Math.cos(yaw), q=Math.sin(yaw);
-    const planeHeight=h*.88, sx=.902*clamp(zoom,60,200)/100, sy=sx*Math.cos(angle);
-    const cx=w/2, cy=planeHeight/2, screenY=h*.43, distance=Math.max(w,h)*2.5, focal=sx*distance;
-    const at={x:clamp(pan?.x,-cx,cx),y:clamp(pan?.y,-cy,cy)}, L=look||{};
+    const base=h*.88, sx=.902*clamp(zoom,60,200)/100, sy=sx*Math.cos(angle);
+    const cx=w/2, cy=base/2, screenY=h*.43, distance=Math.max(w,h)*2.5, focal=sx*distance;
+    /* The resting camera's ray through the bottom of the screen less the pad, down the middle of the view, meets the
+       table's plane at world depth Z: the farthest the near edge may come toward the viewer. */
+    const rest=Math.PI/2-angle, b0=(h-REACH_PAD-screenY)/(.902*distance), ry=-Math.sin(rest)-b0*Math.cos(rest), rz=Math.cos(rest)-b0*Math.sin(rest);
+    const edgeZ=ry<0?-distance*Math.sin(angle)+(distance*Math.cos(angle)/-ry)*rz:-Infinity;
+    const reachMost=Math.max(0,Math.min(base,c*-edgeZ+cy-base)), reachPx=Math.min(reachMost,clamp(reach,0,1)*base);
+    const planeHeight=base+reachPx;
+    const at={x:clamp(pan?.x,-cx,cx),y:clamp(pan?.y,-cy,cy+reachPx)}, L=look||{};
     const eye=[at.x+(L.x||0),distance*Math.cos(angle)+(L.y||0),-at.y-distance*Math.sin(angle)+(L.z||0)];
     const turn=L.yaw||0, pitch=Math.PI/2-angle+(L.pitch||0), ct=Math.cos(turn), st=Math.sin(turn), cp=Math.cos(pitch), sp=Math.sin(pitch);
     const right=[ct,0,-st], up=[st*sp,cp,ct*sp], ahead=[st*cp,-sp,ct*cp];
@@ -41,10 +56,10 @@
       return {x:c*X+q*Y+cx,y:-q*X+c*Y+cy,world:[X,0,Z]};
     }
     const quad=[...project(0,0),...project(w,0),...project(w,planeHeight),...project(0,planeHeight)], [ox,oy]=quad;
-    const margin=22,gap=20,count = clamp(seats,1,3),rearY=18,rearH=planeHeight*.24,rearW=(w-margin*2-gap*(count-1))/count;
+    const margin=22,gap=20,count = clamp(seats,1,3),rearY=18,rearH=base*.24,rearW=(w-margin*2-gap*(count-1))/count;
     const rear=Array.from({length:seats},(_,i)=>surface({x:margin+i*(rearW+gap),y:rearY,width:rearW,height:rearH}));
     const frontY=rearY+rearH+22,front=surface({x:margin,y:frontY,width:w-margin*2,height:planeHeight-frontY-18});
-    return {width:w,height:h,planeHeight,sx,sy,ox,oy,angle,yaw,distance,focal,screenY,pan:at,
+    return {width:w,height:h,planeHeight,base,cy,reach:reachPx,reachMost,sx,sy,ox,oy,angle,yaw,distance,focal,screenY,pan:at,
       camera:{eye,yaw:turn,pitch,right,up,ahead},project,unproject,quad,rear,front};
   }
   const appearances = Object.freeze({backgrounds: [{id:"volcano",name:"Volcano",video:"assets/environments/volcano.webm?v=1",poster:"assets/environments/volcano-poster.jpg?v=1"},{id:"forest",name:"Forest"},{id:"clouds",name:"Cloud sea"}],
@@ -148,12 +163,17 @@
     if(current!==s||!s.engine||!s.box)return;
     const B=root.BABYLON,g=given||geometry(s.box.width,s.box.height,{...s.opts,look:s.pose}),unit=50;
     s.engine.setSize(g.width,g.height);
-    const key=[tableDesign(s.opts.table).id,g.width,g.planeHeight].join(':');
-    if(s.tableKey!==key){
+    const design=tableDesign(s.opts.table).id,key=[design,g.width,g.planeHeight].join(':');
+    /* While the person's side is being stretched (opts.live) the table already built is stretched to the new length,
+       not built again at every move; it is built at its length when the stretch is let go. */
+    if(s.tableKey!==key&&!(s.opts.live&&s.table&&s.tableKey.startsWith(`${design}:${g.width}:`))){
       s.table?.dispose();
-      s.table=root.CrankTables.build(B,s.scene,tableDesign(s.opts.table).id,{width:g.width/unit,depth:g.planeHeight/unit});
-      s.table.root.position.y=.225;s.tableKey=key;
+      s.table=root.CrankTables.build(B,s.scene,design,{width:g.width/unit,depth:g.planeHeight/unit});
+      s.table.root.position.y=.225;s.tableKey=key;s.tableDepth=g.planeHeight/unit;s.builds=(s.builds||0)+1;
     }
+    // Its center is the plane's: half the added length nearer the viewer than the resting center.
+    const near=g.reach/2/unit;
+    s.table.root.scaling.z=g.planeHeight/unit/s.tableDepth;s.table.root.position.x=-Math.sin(g.yaw)*near;s.table.root.position.z=-Math.cos(g.yaw)*near;
     s.table.root.rotation.y=g.yaw;
     // The geometry's own camera in Babylon's units: its eye, and its turn and pitch as Babylon's yaw and pitch, no roll.
     const {eye,yaw,pitch}=g.camera;
@@ -184,7 +204,7 @@
   const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
   const phase=(t,[a,b])=>ease(clamp((t-a)/(b-a),0,1));
   function aim(g,P) {
-    const eye=g.camera.eye, u=clamp((P[0]-g.pan.x)/(g.width/2),-1,1), v=clamp((-P[2]-g.pan.y)/(g.planeHeight/2),-1,1), r=Math.min(1,Math.hypot(u,v));
+    const eye=g.camera.eye, u=clamp((P[0]-g.pan.x)/(g.width/2),-1,1), v=clamp((-P[2]-g.pan.y)/(g.base/2),-1,1), r=Math.min(1,Math.hypot(u,v));
     const lean=[.3*(P[0]-eye[0]),-.06*eye[1]*r,.25*(P[2]+g.pan.y)], leaned=eye.map((n,i)=>n+lean[i]);
     const k=.06+.1*r, read=leaned.map((n,i)=>k*(P[i]-n)), d=P.map((n,i)=>n-leaned[i]-read[i]);
     const f=LOOK.strength;
@@ -230,19 +250,23 @@
     const s=current;if(!s?.view)return null;
     const box=s.host.getBoundingClientRect();return s.view.unproject(clientX-box.left,clientY-box.top);
   }
-  const planeOf=(g,P)=>{const c=Math.cos(g.yaw),q=Math.sin(g.yaw),Y=-P[2];return [c*P[0]+q*Y+g.width/2,-q*P[0]+c*Y+g.planeHeight/2];};
+  const planeOf=(g,P)=>{const c=Math.cos(g.yaw),q=Math.sin(g.yaw),Y=-P[2];return [c*P[0]+q*Y+g.width/2,-q*P[0]+c*Y+g.cy];};
   // Presentation diagnostics only: no cards, decisions, credentials, or room state.
   function diagnostics() {
     const s=current;if(!s?.engine||!s.geometry)return {renderer:s?.host.dataset.renderer||'unmounted'};
     const B=root.BABYLON,g=s.geometry,world=s.table.root.computeWorldMatrix(true);
-    const corners=[[0,0],[g.width,0],[g.width,g.planeHeight],[0,g.planeHeight]].flatMap(([x,y])=>{
-      const p=B.Vector3.Project(new B.Vector3((x-g.width/2)/50,-.225,(g.planeHeight/2-y)/50),world,s.scene.getTransformMatrix(),new B.Viewport(0,0,g.width,g.height));return [p.x,p.y];
+    /* The corners of the table top as it was built (its own size, before any stretch), through the transform Babylon
+       draws it with: where the mesh really is, against where the DOM's plane is. */
+    const W=g.width/100,D=s.tableDepth/2;
+    const corners=[[-W,D],[W,D],[W,-D],[-W,-D]].flatMap(([x,z])=>{
+      const p=B.Vector3.Project(new B.Vector3(x,-.225,z),world,s.scene.getTransformMatrix(),new B.Viewport(0,0,g.width,g.height));return [p.x,p.y];
     });
     const front=s.host.querySelector('.cm-stage-front'),shown=front?Array.from(new DOMMatrix(getComputedStyle(front).transform).toFloat64Array()):null;
     return {renderer:'babylon',meshes:s.scene.meshes.length,parts:[...new Set(s.table.parts.map(p=>p.metadata.part))],materials:s.scene.materials.length,textures:s.scene.textures.length,quad:corners,domQuad:g.quad,
       camera:{position:s.camera.position.asArray(),rotation:s.camera.rotation.asArray()},pan:{...g.pan},
       look:s.look?{t:s.look.t,dir:s.look.dir,ms:s.look.aim.ms,r:s.look.aim.r,clock:s.look.last,started:s.look.started,back:s.look.back,at:g.project(...planeOf(g,s.look.aim.point))}:null,
-      center:[g.width/2,g.screenY],front:{shown,matrix:g.front.matrix}};
+      center:[g.width/2,g.screenY],front:{shown,matrix:g.front.matrix,height:g.front.height,quad:g.front.quad},rear:g.rear.map(r=>({height:r.height,width:r.width})),
+      length:{base:g.base,reach:g.reach,most:g.reachMost,plane:g.planeHeight,built:s.tableDepth*50,scale:s.table.root.scaling.z,builds:s.builds}};
   }
   function unmount() {
     const s=current;current=null;if(!s)return;
