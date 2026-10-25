@@ -11,15 +11,6 @@ five lane files, one per deck.
 - **In progress:** five lanes in the Claude · Engine lane's card files, `claude/engine-precons-<lane>`, each a draft PR into
   this branch, which integrates them and goes to `main` as one PR. This branch also carries #863's record of the 10-24 load.
 
-## Card load, 2026-10-24: Rob's four priority lists (Claude Code on Personal-HP, for Rob; PR #862): merged, on staging
-
-**Merged, 2026-10-25:** PR #862 (`claude/card-engine-loading-0584aa`, head e9804988) merged to main as `30172f7e` at
-03:22 UTC, by the Decks session at Rob's request, after Actions `suites` passed on that head (run 40140621294, 38
-minutes) with base 71929eb4 unmoved. The Decks session then released staging with Codex's #769: release/cloud-staging
-`2bfa3082` from main `4096eb28`, which carries #862 (its report: acceptance 23, play-e2e 44, Worker dry-run 6.78 MB /
-1.24 MB gzip, Cloudflare version 5c5ad208, `staging-check --expect 4096eb28` passing). The release slot is free.
-Production is unchanged. Linear: ROB-195, Done.
-
 ## AI spend audit and the Claude seat's thinking, 2026-10-24 (a Claude cloud session, for Rob; `claude/busy-dirac-1jkaoo`)
 
 Rob, 2026-10-24: *"I want to understand API usage for the games that have been played. I'm seeing costs much higher
@@ -47,7 +38,14 @@ profiles. Every call the door has made is in `ai_calls` (read 2026-10-24):
   which staging's Invited policy includes, as Luke and K. Harbeson are. Production's Invited policy does not include the
   group, so production still admits Rob only.
 
-## Card load, 2026-10-24: Rob's four priority lists (Claude Code on Personal-HP, for Rob; `claude/card-engine-loading-0584aa`)
+## Card load, 2026-10-24: Rob's four priority lists (Claude Code on Personal-HP, for Rob; PR #862): merged, on staging
+
+**Merged, 2026-10-25:** PR #862 (`claude/card-engine-loading-0584aa`, head e9804988) merged to main as `30172f7e` at
+03:22 UTC, by the Decks session at Rob's request, after Actions `suites` passed on that head (run 40140621294, 38
+minutes) with base 71929eb4 unmoved. The Decks session then released staging with Codex's #769: release/cloud-staging
+`2bfa3082` from main `4096eb28`, which carries #862 (its report: acceptance 23, play-e2e 44, Worker dry-run 6.78 MB /
+1.24 MB gzip, Cloudflare version 5c5ad208, `staging-check --expect 4096eb28` passing). The release slot is free.
+Production is unchanged. Linear: ROB-195, Done.
 
 Rob, 2026-10-24: *"Here are a few lists of cards we need to prioritize loading into the engine. Review what needs to be
 loaded, then begin the engine updates to make all of these cards playable."* Four deck lists, 287 distinct cards: 187
