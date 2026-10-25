@@ -13,8 +13,11 @@
  *   6. Selection and Bulk actions: the menu's items in order, Compare greyed below two, a chip change clears the
  *      selection; Favorite, Add to group (a deck set, its tag on the tile), Box decks (the counts, then the box), and
  *      Remove (Archive, and one Undo) (SEL-1 to SEL-10, BOX, Q3, Q4).
- *   7. Shared, without an account: says to sign in (FLT-6).
- *   8. A phone: the bar wraps inside the screen.
+ *   7. A save redraws without a flicker (Rob, 2026-10-25): with Play in the cloud stood in (its answers 150 ms late),
+ *      a star's save and a deck page's redraw never draw a frame without New from Wizards, the tiles' and the deck's
+ *      lines from the table, or with the page shorter than it ends.
+ *   8. Shared, without an account: says to sign in (FLT-6).
+ *   9. A phone: the bar wraps inside the screen.
  *
  * Every expected set is computed here from the library itself (CrankCollection), never copied from the page.
  * Needs Playwright and Chromium; GEOMETRY_REQUIRED=1 (CI) turns a missing browser into a failure.
@@ -192,14 +195,56 @@ try {
   await page.evaluate(() => globalThis.__cm.actions.undo());await page.waitForFunction((id) => !globalThis.__cm.state.decks.find((d) => d.id === id).archived, a.id);
   ok(true, "one Undo brings it back");
 
-  /* 7. Shared, without an account. */
+  /* 7. A save redraws without a flicker. Play in the cloud is stood in, answering 150 ms late as staging's does; every
+     frame for 600 ms after the click is read. */
+  await page.evaluate(() => { const C = globalThis.__cm; globalThis.__realPlay = C.play; const late = (ms) => new Promise((r) => setTimeout(r, ms));
+    C.play = {...(C.play || {}), open: () => true,
+      tiles: async () => { await late(150); for (const el of document.querySelectorAll("[data-play-for]")) { el.textContent = "Playable at the table"; el.classList.add("is-playable"); el.hidden = false; } },
+      count: async () => { await late(50); return 1; },
+      deck: async () => { await late(150); const el = document.getElementById("cm-deck-play"); if (el) { el.innerHTML = "<span>Playable at the table</span>"; el.hidden = false; } }};
+  });
+  await hash(page, "#decks");
+  await page.waitForFunction(() => document.querySelectorAll("[data-play-for]:not([hidden])").length && !document.getElementById("cm-precon-latest")?.hidden, null, {timeout: 30000})
+  const frames = (act) => page.evaluate(async (a) => {
+    const seen = [], t0 = performance.now(), read = () => { const pre = document.getElementById("cm-precon-latest"), dp = document.getElementById("cm-deck-play");
+      seen.push({h: Math.round(document.getElementById("cm-main").getBoundingClientRect().height), lines: document.querySelectorAll("[data-play-for]:not([hidden])").length,
+        pre: Boolean(pre && !pre.hidden && pre.textContent.trim()), deck: dp ? !dp.hidden : null}); };
+    const done = new Promise((r) => { const tick = () => { read(); if (performance.now() - t0 < 600) requestAnimationFrame(tick); else r(); }; requestAnimationFrame(tick); });
+    if (a === "render") globalThis.__cm.render(); else document.querySelector(a).click();
+    await done; return seen; }, act);
+  const first = (await tiles(page))[0], beforeStar = await revision(page);
+  const starFrames = await frames(`[data-deck-tile="${first}"] [data-action=favorite-deck]`);
+  await committed(page, beforeStar);
+  const end = starFrames.at(-1);
+  ok(end.lines > 0 && end.pre, `the hub ends with its lines from the table and New from Wizards: ${JSON.stringify(end)}`);
+  ok(starFrames.every((f) => f.lines === end.lines && f.pre && f.h >= end.h), `a star's save never draws a frame without them, or shorter: ${JSON.stringify([...new Set(starFrames.map((f) => JSON.stringify(f)))])}`);
+  /* A remembered line the table's answer does not write again is put away, not kept: here the answer skips one deck. */
+  await page.evaluate((skip) => { const C = globalThis.__cm, tiles = C.play.tiles; C.play.tiles = async () => { await new Promise((r) => setTimeout(r, 150));
+    for (const el of document.querySelectorAll("[data-play-for]")) if (el.dataset.playFor !== skip) { el.textContent = "Playable at the table"; el.classList.add("is-playable"); el.hidden = false; } };
+    globalThis.__restoreTiles = () => { C.play.tiles = tiles; }; }, first);
+  await hash(page, "#decks");
+  await page.waitForTimeout(600);
+  eq(await page.$$eval("[data-play-for]", (els, skip) => els.filter((x) => !x.hidden).map((x) => x.dataset.playFor).includes(skip), first), false, "a line the table's answer does not write again ends hidden");
+  ok(await page.$$eval("[data-play-for]:not([hidden])", (els) => els.length > 0), "and the lines it does write stay");
+  await page.evaluate(() => globalThis.__restoreTiles());
+  await hash(page, "#decks");
+  await page.waitForFunction((id) => !document.querySelector(`[data-play-for="${id}"]`)?.hidden, first, {timeout: 30000});
+  await go(page, () => page.locator(`.cm-deck-grid [data-deck-tile="${first}"] button[data-action=deck]`).click()).catch(() => {});
+  await page.locator(".cm-deck-hero h1").waitFor({timeout: 30000});
+  await page.waitForFunction(() => document.getElementById("cm-deck-play") && !document.getElementById("cm-deck-play").hidden, null, {timeout: 30000});
+  const redraw = await frames("render");
+  ok(redraw.every((f) => f.deck === true), `a deck page's redraw never hides its line from the table: ${JSON.stringify([...new Set(redraw.map((f) => JSON.stringify(f)))])}`);
+  await page.evaluate(() => { globalThis.__cm.play = globalThis.__realPlay; delete globalThis.__realPlay; });
+  await hash(page, "#decks");
+
+  /* 8. Shared, without an account. */
   await go(page, () => page.locator(".cm-subnav a", {hasText: "Shared"}).click());
   ok(/stage=shared/.test(page.url()), "Shared is a chip of the Decks page");
   ok(/Sign in to see the decks other people share with you/.test(await page.locator("#cm-main").innerText()), "and without an account it says to sign in");
   ok(await page.locator("#cm-include-public").isVisible() && !(await page.locator("#cm-include-public").isChecked()), "Include public decks is there, off by default");
   await context.close();
 
-  /* 8. A phone: the bar wraps inside the screen. */
+  /* 9. A phone: the bar wraps inside the screen. */
   const phone = await browser.newContext({viewport: {width: 390, height: 844}, isMobile: true, hasTouch: true, serviceWorkers: "block"});
   const small = await phone.newPage();
   if (stub) await stub(small);
