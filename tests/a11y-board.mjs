@@ -691,7 +691,7 @@ try {
     ok(views(who.email).length > before && kept === id, `a view arriving redraws the board and the focus stays on the same card (${kept} for ${id})`);
   }
   /* A MENU closed by Escape gives the focus back to its button; one opened by the keyboard is entered by Tab. */
-  for (const [action, inside] of [["board-tools", "#cm-board-tools"], ["board-menu", "#cm-board-nav"], ["board-steps", "#cm-board-steps"]]) {
+  for (const [action, inside] of [["board-menu", "#cm-board-nav"], ["board-steps", "#cm-board-steps"]]) {
     const page = rob.page; if(action!=="board-steps") await profile(page);
     const opener = page.locator(`.cm-stage-top [data-action=${action}]`).first();
     await page.keyboard.press("Shift");
@@ -708,12 +708,33 @@ try {
     const back = await page.evaluate((a) => !!document.activeElement.matches(`[data-action=${a}]`), action);
     ok(expanded === "true" && entered && back, `${action}: Enter opens it and says so (aria-expanded ${expanded}), Tab goes into it (${entered}), Escape closes it with the focus back on its button (${back})`);
   }
+  /* SETTINGS IS A WINDOW (Rob, Oct 25): its button says it opens a dialog, Enter opens it as one with the focus inside it,
+     and Escape closes it with the focus back on the Profile menu's button, the one still on the board. */
+  {
+    const page = rob.page; await profile(page);
+    const opener = page.locator(".cm-stage-top [data-action=board-tools]").first();
+    const popup = await opener.getAttribute("aria-haspopup");
+    await page.keyboard.press("Shift");
+    await opener.focus();
+    await page.keyboard.press("Enter");
+    await page.locator("#cm-dialog[open] #cm-board-tools").waitFor();
+    const [dialogAx] = await axOf(rob, "#cm-dialog");
+    await page.keyboard.press("Tab");
+    const entered = await page.evaluate(() => !!document.activeElement.closest("#cm-dialog[open]"));
+    await page.keyboard.press("Escape");
+    await page.locator("#cm-board-tools").waitFor({state: "detached"});
+    const back = await page.evaluate(() => !!document.activeElement.matches("[data-action=board-profile]"));
+    ok(popup === "dialog" && dialogAx && dialogAx.role === "dialog" && /^settings$/i.test(dialogAx.name) && entered && back,
+      `board-tools: says it opens a dialog (${popup}), Enter opens Settings as a named dialog (${JSON.stringify(dialogAx)}), Tab stays inside it (${entered}), Escape closes it with the focus on the Profile menu's button (${back})`);
+  }
   /* What each is, said as it is: Tools a group of controls, ☰ the pages' navigation -- neither an ARIA menu, whose items
      would want the arrow keys they do not take. */
   {
     const page = rob.page;
     await utility(page,"board-tools");
     const [toolsAx] = await axOf(rob, "#cm-board-tools");
+    await page.keyboard.press("Escape");
+    await page.locator("#cm-board-tools").waitFor({state: "detached"});
     await utility(page,"board-menu");
     const [navAx] = await axOf(rob, "#cm-board-nav");
     const menus = await page.evaluate(() => document.querySelectorAll("#cm-board [role=menu], #cm-board [role=menuitem]").length);
@@ -1102,7 +1123,8 @@ try {
     await readWords(page,'.cm-profile-menu',`${t}: Profile`,{min:4});
     await utility(page,"board-tools");
     await readWords(page, "#cm-board-tools", `${t}: Tools`, {min: 4});
-    await utility(page,"board-tools");
+    await page.keyboard.press("Escape");
+    await page.locator("#cm-board-tools").waitFor({state: "detached"});
     await utility(page,"board-history");
     await readWords(page, "#cm-board-history", `${t}: History`, {min: 3});
     await page.keyboard.press("Escape");

@@ -73,9 +73,11 @@ try {
     for(const action of ['board-menu','board-history','board-tools']) {
       await page.locator('[data-action=board-profile]').click();
       await page.locator(`.cm-profile-menu [data-action=${action}]`).click();
-      const menu=page.locator('.cm-profile-menu .cm-board-menu'),box=await menu.boundingBox();
+      /* Settings is a window of its own (Rob, Oct 25), sized to the browser; the others pop up from the profile menu. */
+      const settings=action==='board-tools',menu=page.locator(settings?'#cm-dialog[open]':'.cm-profile-menu .cm-board-menu'),box=await menu.boundingBox();
       assert.ok(box.x>=0&&box.x+box.width<=width+1,'profile pop-ups fit without sideways scrolling');
-      await page.keyboard.press('Escape');await page.keyboard.press('Escape');
+      if(settings) assert.ok(box.y>=0&&box.y+box.height<=721,'the Settings window fits the browser top to bottom');
+      await page.keyboard.press('Escape');if(!settings) await page.keyboard.press('Escape');
     }
     assert.equal(await page.locator('#cm-board').evaluate(el=>el.scrollLeft),0,'opening utilities never scrolls the shell sideways');
     if(view==='focus') {
