@@ -956,7 +956,9 @@ export const sacrifice = {
       return {events};
     }
     state.awaiting = {kind: "effect-choice", effect: "sacrifice", player: queue[0], remaining: queue.slice(1), ...(counts === null ? {count: params.count ?? 1} : {counts}), ...asked,
-      ...(params.remember ? {remember: context.controller, remembering: []} : {})};
+      /* "You create a 2/2 black Zombie creature token for each creature sacrificed this way" (Syphon Flesh): `remember: "each"`,
+         what every player named sacrificed, not the effect's controller's alone. */
+      ...(params.remember ? {remember: params.remember === "each" ? "each" : context.controller, remembering: []} : {})};
     return true;
   },
 
@@ -1033,13 +1035,13 @@ export const sacrifice = {
     let remembering = awaiting.remembering;
     const movedWas = [];
     for (const {player, ids} of decided) {
-      const gone = [];
+      const gone = [], theirs = awaiting.remember === player || awaiting.remember === "each";
       for (const id of ids) {
-        const was = awaiting.remember === player ? lastKnown(state, id) : null;
+        const was = theirs ? lastKnown(state, id) : null;
         const moved = sacrificeOne(state, id, events);
         if (moved !== null) { gone.push(moved); if (was) movedWas.push(was); }
       }
-      if (awaiting.remember === player) remembering = [...remembering, ...gone];
+      if (theirs) remembering = [...remembering, ...gone];
     }
     const refused = awaiting.optional || awaiting.named ? unrefused(state, awaiting, decided) : null;
     return remembering || refused ? {events, ...(remembering ? {remembered: remembering, movedWas} : {}), ...(refused ? {splice: refused} : {})} : events;

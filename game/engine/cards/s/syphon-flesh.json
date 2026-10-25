@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Syphon Flesh",
+    "oracleId": "bc7c3151-ad07-429a-8af8-e4f24b7d9f6b",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each other player sacrifices a creature of their choice. You create a 2/2 black Zombie creature token for each creature sacrificed this way.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Each other player sacrifices a creature of their choice. You create a 2/2 black Zombie creature token for each creature sacrificed this way.",
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "who": "opponent",
+          "count": 1,
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          },
+          "remember": "each"
+        },
+        {
+          "effect": "createToken",
+          "count": {
+            "rememberedCount": true
+          },
+          "token": {
+            "name": "Zombie",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Zombie"
+            ],
+            "colors": [
+              "B"
+            ],
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,918 defined and playable today; 2,901 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,934 defined and playable today; 2,903 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -36,7 +36,7 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 9 | 49 |
+| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 9 | 48 |
 | count | What entered or died this turn | — | missing | 8 | 8 |
 | effect | ChoosePlayer | — | missing | 5 | 7 |
 | count | Times this resolved this turn | — | missing | 5 | 7 |
@@ -45,12 +45,12 @@ The things that alone hold back the most of the most-played cards.
 | trigger | AbilityCast | — | missing | 5 | 5 |
 | option | Remembering what an effect moved | — | missing | 4 | 47 |
 | count | Your life total | — | missing | 4 | 10 |
-| option | Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 4 | 7 |
 | count | Amount | — | missing | 4 | 7 |
 | option | Imprint (a card exiled with this) | — | missing | 4 | 6 |
 | static | RaiseCost | — | missing | 4 | 5 |
 | keyword ability | Landwalk | — | named | 4 | 4 |
 | static | CantBeActivated | — | missing | 4 | 4 |
+| option | Unless a player sacrifices a permanent | — | missing | 4 | 4 |
 
 ## Keyword abilities (CR 702)
 
@@ -828,12 +828,12 @@ The things that alone hold back the most of the most-played cards.
 | Fewer targets than the most ("up to", "any number of") | a target's count {min, max} (script/bind.mjs), picked as a pick-several | built | 126 | 1672 | 0 | 0 |
 | Remembering what an effect moved | — | missing | 124 | 1168 | 47 | 4 |
 | More than one target of a kind ("up to N") | a target's count {min, max} (script/bind.mjs); a count that is X is not built | partial | 123 | 1664 | 0 | 0 |
-| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 49 | 9 |
+| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 48 | 9 |
 | An intervening "if" or "activate only if": a permanent present | condition {present: selector} | built | 114 | 1200 | 0 | 0 |
 | How long an effect lasts (until end of turn is built; others not) | — | partial | 111 | 1658 | 0 | 0 |
 | An effect's condition: a comparison | a count compared: an arrival's unless {min, max}; a condition's {atLeast, atMost} | built | 104 | 684 | 0 | 0 |
 | You may (an optional effect, CR 603.5) | modal (Yes / No) | built | 101 | 1094 | 0 | 0 |
-| You may play or cast a card from another zone | — | missing | 99 | 625 | 35 | 1 |
+| You may play or cast a card from another zone | — | missing | 99 | 625 | 34 | 1 |
 | An intervening "if" or "activate only if": a counted value | condition {compare} | built | 79 | 974 | 0 | 0 |
 | An effect's condition: a counted value | condition {compare: {count, atLeast / atMost / moreThan / fewerThan}} | built | 75 | 603 | 0 | 0 |
 | Unless a player pays | unlessPays, by kind | partial | 66 | 677 | 0 | 0 |
@@ -852,7 +852,7 @@ The things that alone hold back the most of the most-played cards.
 | Imprint (a card exiled with this) | — | missing | 10 | 97 | 6 | 4 |
 | Except it isn't legendary (a copy) | except.nonLegendary | built | 10 | 43 | 0 | 0 |
 | Unless a player reveals a card ("reveal an Island or Swamp card") | unlessReveal, as it enters | built | 10 | 22 | 0 | 0 |
-| Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 9 | 160 | 7 | 4 |
+| Present in a zone other than the battlefield ("as long as this card is in your graveyard") | — | missing | 9 | 160 | 6 | 3 |
 | Unless a player sacrifices a permanent | — | missing | 7 | 89 | 4 | 4 |
 | Unless a player discards a card | unlessPays's discard: each card in the payer's hand an option; the discarded card remembered ("this way") | built | 5 | 83 | 0 | 0 |
 | Populate (copy a creature token you control) | populate | built | 5 | 27 | 0 | 0 |

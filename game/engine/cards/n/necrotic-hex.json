@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Necrotic Hex",
+    "oracleId": "a6e720a2-9819-40ec-a811-7812898b531a",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{6}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each player sacrifices six creatures of their choice. You create six tapped 2/2 black Zombie creature tokens.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Each player sacrifices six creatures of their choice. You create six tapped 2/2 black Zombie creature tokens.",
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "who": "each",
+          "count": 6,
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          }
+        },
+        {
+          "effect": "createToken",
+          "count": 6,
+          "token": {
+            "name": "Zombie",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Zombie"
+            ],
+            "colors": [
+              "B"
+            ],
+            "power": 2,
+            "toughness": 2
+          },
+          "tapped": true
+        }
+      ]
+    }
+  ]
+}

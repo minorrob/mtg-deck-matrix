@@ -1,0 +1,69 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tendrils of Corruption",
+    "oracleId": "84ee0da2-d886-4603-9aaa-bc5326a424d7",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Tendrils of Corruption deals X damage to target creature and you gain X life, where X is the number of Swamps you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Tendrils of Corruption deals X damage to target creature and you gain X life, where X is the number of Swamps you control.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": {
+            "count": {
+              "controller": "you",
+              "types": [
+                "Land"
+              ],
+              "subtypes": [
+                "Swamp"
+              ]
+            }
+          },
+          "targets": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "gainLife",
+          "amount": {
+            "count": {
+              "controller": "you",
+              "types": [
+                "Land"
+              ],
+              "subtypes": [
+                "Swamp"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

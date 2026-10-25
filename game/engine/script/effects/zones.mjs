@@ -28,6 +28,7 @@ import {selectMatching, compileSelector, matchesSelector, shareCreatureType} fro
 import {applyReplacements, enteringModifications, placeReplacedCounters, regenerated} from "../../rules/replacement.mjs";
 import {cantBeCountered, entersUntapped, enteringCountersPlaced, drawsInstead, cantBeSacrificed, drawForbidden, emptyDrawWins, drawsMore} from "../../rules/statics.mjs";
 import {winGame} from "./resources.mjs";
+import {runFollowUps} from "./index.mjs";
 import {amountOf} from "../amount.mjs";
 import {manaValue, parseManaCost} from "../../rules/mana.mjs";
 
@@ -183,6 +184,8 @@ export function moveOne(state, id, to, events, {owner = null, controller = null,
     from: {zoneType: ZONE_LABEL[from] ?? from, player: {playerId: object.controller}},
     to: {zoneType: ZONE_LABEL[destination] ?? destination, player: {playerId: destination === "battlefield" ? enteringController : holder}},
   }));
+  /* What the replacement that sent it there does beside the move (Kalitas's Zombie; rules/replacement.mjs, `followUps`). */
+  if (destination === proposal.to) events.push(...runFollowUps(state, proposal));
   /* "You may have this creature enter as a copy of ...": its arrival waits for the answer (rules/entering.mjs). */
   if (destination === "battlefield") holdArrival(state, moved, events[events.length - 1]);
   /* "Enters prepared" (CR 614.1c, 722.3a): the designation it entered with, and its prepare spell's copy in exile (722.3c). */

@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Noxious Ghoul",
+    "oracleId": "602e421e-afab-4488-8a52-af66b4fdce4b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Zombie"
+    ],
+    "manaCost": "{3}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Whenever this creature or another Zombie enters, all non-Zombie creatures get -1/-1 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature or another Zombie enters, all non-Zombie creatures get -1/-1 until end of turn.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "anyOf": [
+            {
+              "self": true
+            },
+            {
+              "subtypes": [
+                "Zombie"
+              ]
+            }
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "nonSubtypes": [
+              "Zombie"
+            ]
+          },
+          "power": -1,
+          "toughness": -1,
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

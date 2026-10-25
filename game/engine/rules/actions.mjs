@@ -1058,7 +1058,10 @@ function countersPicked(state, player, sourceId, atom, picked) {
 function sacrificeChoices(state, player, sourceId, given) {
   /* "Sacrifice a creature of the chosen type" (Etchings of the Chosen): its source's choice. */
   const selector = namesChosen(given) ? withChosen(given, state.objects[sourceId]?.chosen) : given;
-  const matches = (Array.isArray(selector?.anyOf) ? selector.anyOf : [selector ?? {}])
+  /* A choice, with what its alternatives share (script/filter.mjs): "Sacrifice another Vampire or Zombie" (Kalitas, Traitor of
+     Ghet) -- `another` beside the anyOf, held by each. */
+  const {anyOf, ...shared} = selector ?? {};
+  const matches = (Array.isArray(anyOf) ? anyOf.map((one) => ({...shared, ...one})) : [selector ?? {}])
     .map((one) => compileSelector({...one, what: "permanent", controller: "you"}));
   /* Never one that can't be sacrificed (Alexios; rules/statics.mjs): a cost it can't pay. */
   return state.zones.battlefield.filter((id) => matches.some((m) => m(state, id, {controller: player, source: sourceId})) && !cantBeSacrificed(state, id));
@@ -1907,7 +1910,9 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
          to cast it (CR 119.4). */
       const affordable = (offer) => lifeIncrease(state, player, id, offer.targets) <= lifeLeft + aimLife;
       actions.push(...(object.spell?.modal && !way?.overload ? withModes(state, base, object.spell.modal, {controller: player, source: id}, variant.escalate !== undefined ? variant.escalate + 1 : null, variant.spree ?? variant.tier ?? null)
-        : withTargets(state, base, way?.overload ?? (variant.kicked && object.spell?.kicked ? object.spell.kicked : object.spell), {controller: player, source: id, cast, ...(Number.isInteger(X) && !lifeX ? {x: X} : {})}, aim)).filter(affordable));
+        : withTargets(state, base, way?.overload ?? (variant.kicked && object.spell?.kicked ? object.spell.kicked
+          /* Its gift promised, what it targets then (Consumed by Greed; CR 601.2c, 702.174a; rules/stack.mjs, scriptOf). */
+          : gift !== undefined && object.spell?.promised ? object.spell.promised : object.spell), {controller: player, source: id, cast, ...(Number.isInteger(X) && !lifeX ? {x: X} : {})}, aim)).filter(affordable));
     }
   }
   }

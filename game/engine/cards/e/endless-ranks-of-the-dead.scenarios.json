@@ -1,0 +1,198 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Endless Ranks of the Dead",
+  "fixtures": {
+    "Grave Zombie": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Zombie"
+      ],
+      "manaCost": "{1}{B}",
+      "colors": [
+        "B"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Five Zombies at upkeep: two more (half, rounded down)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Endless Ranks of the Dead"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Grave Zombie",
+            "Grave Zombie",
+            "Grave Zombie",
+            "Grave Zombie",
+            "Grave Zombie"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Endless Ranks of the Dead",
+            "Grave Zombie",
+            "Grave Zombie",
+            "Grave Zombie",
+            "Grave Zombie",
+            "Grave Zombie",
+            "Zombie",
+            "Zombie"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "One Zombie: half of one is none",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Endless Ranks of the Dead"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Grave Zombie"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Endless Ranks of the Dead",
+            "Grave Zombie"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Not on Maya's upkeep, and only Rob's Zombies are counted: two of his, four of hers, one token",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Endless Ranks of the Dead"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Grave Zombie",
+            "Grave Zombie"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Grave Zombie",
+            "Grave Zombie",
+            "Grave Zombie",
+            "Grave Zombie"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "battlefield",
+              "cards": [
+                "Endless Ranks of the Dead",
+                "Grave Zombie",
+                "Grave Zombie"
+              ]
+            },
+            {
+              "seat": 1,
+              "zone": "battlefield",
+              "cards": [
+                "Grave Zombie",
+                "Grave Zombie",
+                "Grave Zombie",
+                "Grave Zombie"
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Endless Ranks of the Dead",
+            "Grave Zombie",
+            "Grave Zombie",
+            "Zombie"
+          ]
+        }
+      ]
+    }
+  ]
+}

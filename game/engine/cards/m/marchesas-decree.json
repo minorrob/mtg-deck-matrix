@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Marchesa's Decree",
+    "oracleId": "e4ab5ee4-4683-4219-9e15-31975e69efbb",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "When this enchantment enters, you become the monarch.\nWhenever a creature attacks you or a planeswalker you control, that creature's controller loses 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this enchantment enters, you become the monarch.",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "becomeMonarch"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a creature attacks you or a planeswalker you control, that creature's controller loses 1 life.",
+      "trigger": {
+        "on": "attacks",
+        "who": "any",
+        "defender": "you",
+        "planeswalkers": true
+      },
+      "effects": [
+        {
+          "effect": "loseLife",
+          "who": "that card's controller",
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}
