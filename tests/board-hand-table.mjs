@@ -82,10 +82,10 @@ const diag = (page) => page.evaluate(() => CrankStage.diagnostics());
 const misalign = (d) => Math.max(...d.quad.map((n, i) => Math.abs(n - d.domQuad[i])));
 const mismatrix = (d) => Math.max(...d.front.shown.map((n, i) => Math.abs(n - d.front.matrix[i])));
 const stored = (page, k) => page.evaluate((k) => localStorage.getItem(k), k);
-/* The hand's cards as drawn: the first one's width, every visible word's size, and whether they are inside the window. */
+/* The hand's cards as drawn: the first one's width, every word's size (a name under its picture too: it shows when the picture does not), and whether they are inside the window. */
 const handNow = (page, cards) => page.evaluate((sel) => {
   const els = [...document.querySelectorAll(sel)], boxes = els.map((el) => el.getBoundingClientRect());
-  const words = els.flatMap((el) => [...el.querySelectorAll("*")].filter((n) => n.childNodes.length && [...n.childNodes].some((t) => t.nodeType === 3 && t.textContent.trim()) && getComputedStyle(n).visibility !== "hidden" && n.getClientRects().length));
+  const words = els.flatMap((el) => [...el.querySelectorAll("*")].filter((n) => n.childNodes.length && [...n.childNodes].some((t) => t.nodeType === 3 && t.textContent.trim()) && n.getClientRects().length));
   return {width: els[0]?.offsetWidth || 0, count: els.length, fonts: words.map((n) => parseFloat(getComputedStyle(n).fontSize)),
     top: Math.min(...boxes.map((r) => r.top)), bottom: Math.max(...boxes.map((r) => r.bottom)), left: Math.min(...boxes.map((r) => r.left)), right: Math.max(...boxes.map((r) => r.right)),
     first: els[0]?.closest("[data-hand-index]")?.dataset.handIndex ?? null, h: innerHeight, w: innerWidth};
@@ -181,6 +181,19 @@ try {
     ok(!errors.length, `no page error (${errors.join(" | ")})`);
     await context.close();
   }
+  /* A smaller window, where 60% of the fan's old size would be under 84px: it stops at 84px, its names at 10px. */
+  {
+    const {page, context, errors} = await board("full", {width: 1100, height: 700, hand: 4});
+    const FAN = ".cm-stage-fan .cm-stage-fan-slot .cm-bcard";
+    const at0 = await handNow(page, FAN);
+    ok(at0.width * .6 < 84, `at 1100×700 the fan is ${at0.width}px at 100%, so 60% of it would be under 84px`);
+    await wheel(page, FAN, 400, 12);
+    const small = await handNow(page, FAN);
+    eq([small.width, await page.waitForFunction(() => localStorage.getItem("cm-board-scale:hand") === "60", null, {timeout: 2000}).then(() => 60, () => null)], [84, 60], "at 60% it stops at 84px");
+    ok(small.fonts.length > 0 && small.fonts.every((f) => f >= 10), `and every word on it is 10px or more (${small.fonts.join(", ")})`);
+    ok(!errors.length, `no page error (${errors.join(" | ")})`);
+    await context.close();
+  }
   /* Ten cards: the fan shows seven, and Shift + wheel turns it. */
   {
     const {page, context, errors} = await board("full", {hand: 10});
@@ -226,7 +239,7 @@ try {
     await page.waitForTimeout(400);
     const small = await handNow(page, CARDS);
     eq((await slider(page, BAR)).value, 60, `${mode}: down to the slider's least, 60%`);
-    ok(small.fonts.every((f) => f >= 10), `${mode}: at its smallest no word on the hand is under 10px (${small.fonts.join(", ") || "its pictures, no words"})`);
+    ok(small.fonts.length > 0 && small.fonts.every((f) => f >= 10), `${mode}: at its smallest no word on the hand is under 10px, the names a picture covers included (${small.fonts.join(", ")})`);
     spot = await onHand(page, CARDS);
     await wheel(page, CARDS, -400, 12);
     await page.waitForTimeout(400);
@@ -350,7 +363,7 @@ try {
     near(Math.max(longest.domQuad[5], longest.domQuad[7]), region.height - 8, .5, "its near edge 8px above the bottom of the screen");
     ok(longest.domQuad[5] > handTop + 100, `under the hand's cards (the edge at ${Math.round(longest.domQuad[5])}px, the cards from ${Math.round(handTop)}px)`);
     ok(misalign(longest) < .03 && mismatrix(longest) < .001, `the DOM and Babylon tables agree at its longest (${misalign(longest)}px)`);
-    const fonts = await page.evaluate(() => [...document.querySelectorAll(".cm-stage-front *")].filter((n) => [...n.childNodes].some((t) => t.nodeType === 3 && t.textContent.trim()) && getComputedStyle(n).visibility !== "hidden" && n.getClientRects().length).map((n) => parseFloat(getComputedStyle(n).fontSize)));
+    const fonts = await page.evaluate(() => [...document.querySelectorAll(".cm-stage-front *")].filter((n) => [...n.childNodes].some((t) => t.nodeType === 3 && t.textContent.trim()) && n.getClientRects().length).map((n) => parseFloat(getComputedStyle(n).fontSize)));
     ok(fonts.length && fonts.every((f) => f >= 10), `every word on your mat is 10px or more (${Math.min(...fonts)}px)`);
     if (SHOTS) await page.screenshot({path: path.join(SHOTS, "table-stretched-to-the-foot.png")});
     /* remembered */
