@@ -1,0 +1,73 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rhonas's Monument",
+    "oracleId": "b9a7c722-6b24-4383-ac6e-2a30f7834269",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Green creature spells you cast cost {1} less to cast.\nWhenever you cast a creature spell, target creature you control gets +2/+2 and gains trample until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Green creature spells you cast cost {1} less to cast.",
+      "rule": "spells-cost-less",
+      "affects": {
+        "what": "spell",
+        "types": [
+          "Creature"
+        ],
+        "colors": [
+          "G"
+        ]
+      },
+      "amount": 1
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a creature spell, target creature you control gets +2/+2 and gains trample until end of turn.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "filter": {
+          "types": [
+            "Creature"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 2,
+          "toughness": 2,
+          "keywords": [
+            "Trample"
+          ]
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ]
+    }
+  ]
+}

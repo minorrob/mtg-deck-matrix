@@ -1,0 +1,240 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Bite Down",
+  "fixtures": {
+    "Brute": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Beast"
+      ],
+      "manaCost": "{3}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 4,
+      "toughness": 4
+    },
+    "Their Brute": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Beast"
+      ],
+      "manaCost": "{3}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 4,
+      "toughness": 4
+    },
+    "Their Elk": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elk"
+      ],
+      "manaCost": "{2}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Their Walker": {
+      "types": [
+        "Planeswalker"
+      ],
+      "subtypes": [
+        "Garruk"
+      ],
+      "manaCost": "{2}{G}",
+      "colors": [
+        "G"
+      ],
+      "loyalty": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Rob's 4/4 deals 4 to Maya's 4/4, which dies; nothing is dealt back",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Brute"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bite Down"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Brute"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Bite Down",
+          "targets": [
+            {
+              "card": "Brute"
+            },
+            {
+              "card": "Their Brute"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Their Brute"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Brute",
+            "Forest",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "At Maya's planeswalker: 4 damage takes its 3 loyalty, and it is gone",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Brute"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bite Down"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Walker"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Bite Down",
+          "targets": [
+            {
+              "card": "Brute"
+            },
+            {
+              "card": "Their Walker"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Their Walker"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Only Rob's creature deals it, only to what he does not control",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Brute"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bite Down"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Elk"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Bite Down"
+          },
+          "count": 1,
+          "targets": [
+            [
+              "Brute",
+              "Their Elk"
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

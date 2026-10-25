@@ -1,0 +1,308 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Thickest in the Thicket",
+  "fixtures": {
+    "Elk": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elk"
+      ],
+      "manaCost": "{2}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Their Brute": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Beast"
+      ],
+      "manaCost": "{3}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 4,
+      "toughness": 4
+    },
+    "Their Giant": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{5}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 7,
+      "toughness": 7
+    },
+    "Brute": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Beast"
+      ],
+      "manaCost": "{3}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 4,
+      "toughness": 4
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters: three counters on Rob's 3/3 Elk; at his end step the 6/6 Elk is the greatest, and he draws two",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Elk"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Thickest in the Thicket"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Brute"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Thickest in the Thicket"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Elk"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Elk",
+                "power": 6,
+                "toughness": 6
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "END_OF_TURN"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "name": "Maya's 7/7 is the greatest: the trigger resolves and Rob draws nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Thickest in the Thicket",
+            "Elk"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Giant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 1,
+            "phase": "END_OF_TURN"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Tied for the greatest is enough: his 4/4 against her 4/4",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Thickest in the Thicket",
+            "Brute"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Brute"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 1,
+            "phase": "END_OF_TURN"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "name": "It may put the counters on Maya's creature: her 4/4 becomes 8/8",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Thickest in the Thicket"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Brute"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Thickest in the Thicket"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Their Brute"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Their Brute",
+            "power": 8,
+            "toughness": 8
+          }
+        }
+      ]
+    }
+  ]
+}

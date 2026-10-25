@@ -1,0 +1,67 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Terrian, World Tyrant",
+  "scenarios": [
+    {
+      "name": "Cast: a 9/7 with no abilities",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Terrian, World Tyrant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Terrian, World Tyrant"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Terrian, World Tyrant",
+            "power": 9,
+            "toughness": 7
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": []
+        }
+      ]
+    }
+  ]
+}

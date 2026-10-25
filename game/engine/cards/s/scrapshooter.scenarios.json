@@ -1,0 +1,164 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Scrapshooter",
+  "fixtures": {
+    "Relic": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{2}"
+    },
+    "Their Relic": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{2}"
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Gift promised to Maya: she draws a card, and her Relic is destroyed -- never Rob's",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Relic"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Scrapshooter"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Relic"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Scrapshooter",
+          "gift": 1
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Their Relic"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Relic",
+            "Scrapshooter",
+            "Forest",
+            "Forest",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "No gift: nothing is destroyed, and Maya draws nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Scrapshooter"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Relic"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Scrapshooter"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Their Relic"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Scrapshooter",
+            "has": [
+              "Reach"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
