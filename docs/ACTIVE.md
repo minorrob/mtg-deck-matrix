@@ -1,5 +1,23 @@
 # Who holds the work
 
+## The board: the same card one stack; the cards others play beside the question, 2026-10-25 (Claude Code on Personal-HP, for Rob; `claude/board-plays-clicks`)
+
+Rob, 2026-10-25, choosing option A from renders: the cards another seat plays, held up for ten seconds, stood over the
+question being answered -- its options, Confirm, a blocker's tile -- in every view and size measured (25 of 27), so a full
+game against AIs stopped mid-game on main too. And: *"stack cards that are identical and have an x# on them ... If I can
+select more than one, I should have a small numeric tick up/down value to choose how many in that stack."* At his word
+this changes the Codex · Play lane's `crankmagic-board.js`, `crankmagic-stage.css` and two of its suites.
+
+- **What changed:** the held-up cards move just past the question when they would cover it, and one that still would (a
+  window too narrow) is put away, as one over the keyboard's focus already was. In a question for one or many, the same
+  card is one button, ×N (a library search's 21 Islands one "Island ×21"); a click takes one, a click again puts it back;
+  where more than one may be chosen, a number beside it says how many, never past the stack or the question's most. A
+  card on the table is the same only in the same state (a tapped Goblin is not an untapped one's twin).
+- **Suites moved with it:** `board-choices`' scry now expects a button per different card (its library repeats a name);
+  `tools/play-tabletop-preview.mjs`' long list gives each option a different name, so `table-tabletop` still has 60 and 150.
+- **Proof:** `tests/board-choice-stacks.mjs` 63 checks, `breaks-choice-stacks.py` 9 of 9; every suite that loads the board
+  green (29); `solo-vs-ai` GAMES=1 plays a whole game to its end through the board, 17 checks.
+
 ## Public precons; no deck bundled for everyone, 2026-10-25 (Claude Code on Personal-HP, for Rob; `claude/public-precons`)
 
 Rob, 2026-10-25: *"Make the precons public, available to anyone with access to play, and no other decks other than those
