@@ -221,7 +221,7 @@ const bar=`<div class="cm-decks-bar"><nav class="cm-decks-stages" aria-label="Sh
   +`<div class="cm-decks-order">${stage==='shared'?`<label class="cm-checkbox cm-include-public"><input id="cm-include-public" type="checkbox" ${pub?'checked':''}>Include public decks</label>`:`<label class="cm-decks-sort">Sort<select id="cm-decks-sort" aria-label="Sort decks">${SORTS.map(([k,label])=>`<option value="${k}"${k===sort?' selected':''}>${e(label)}</option>`).join('')}</select></label><label class="cm-checkbox cm-show-archived"><input id="cm-show-archived" type="checkbox" ${showArchived?'checked':''}>Show archived</label>`}</div></div>`;
 const chipName=(CHIPS.find(([k])=>k===stage)||[,''])[1];
 const noneHere=fav?`<p class="cm-muted cm-decks-none">No favorites yet. Star a deck to see it here.</p>`:`<p class="cm-muted cm-decks-none">No ${e(chipName.toLowerCase())} decks right now. <a href="#decks${sort==='closest'?'':'?sort='+e(sort)}">Show all</a></p>`;
-const latestSlot=`<section class="cm-precon-latest" id="cm-precon-latest" aria-label="New from Wizards"${preconSeen()?'':' hidden'}>${preconSeen()}</section>`,latestTile=latestSlot.replace('<section','<article').replace('</section>','</article>').replace('cm-precon-latest"','cm-precon-latest cm-precon-tile"');
+const latestSlot='<section class="cm-precon-latest" id="cm-precon-latest" aria-label="New from Wizards" hidden></section>',latestTile=latestSlot.replace('<section','<article').replace('</section>','</article>').replace('cm-precon-latest"','cm-precon-latest cm-precon-tile"');
 if(stage!=='shared')C.preconLatest('cm-precon-latest');
 const title=fav?'Favorites':stage==='shared'?'Shared':'Decks';
 /* THE TILE'S TOOLS (FAV-1, SEL-1): left to right, the select tick, the star, the ⋯. They show on hover; a favorite's
@@ -835,11 +835,10 @@ const preconText=p=>p.commander.map(c=>`1 ${c.name}`).concat(p.cards.map(([n,q])
 /* NO FLICKER ON A REDRAW (Rob, 2026-10-25: "an odd screen flicker every time I click a button on the Decks screen").
    Every save redraws the page, and some of it arrives late: on the hub this section, each tile's line from the table
    and the summary's playable count; on a deck's page its line from the table. Drawn empty each time, the page lost
-   them for a moment (the section's height and a line on every tile) and the tiles below jumped. Each is now drawn as
+   them for a moment (the section's height and a line on every tile) and the tiles below jumped. The file for this
+   section is now fetched once, so a redraw fills it before the page is painted; each line from the table is drawn as
    it last read, and the late answer only corrects it. */
-let latestOnce=null,preconDrawn=null;
-const preconKey=()=>`${M.today()}|${C.play?.open()?1:0}`;
-const preconSeen=()=>preconDrawn&&preconDrawn.key===preconKey()?preconDrawn.html:'';
+let latestOnce=null;
 const playSeen={lines:new Map(),count:null,of:null,deck:new Map()};
 const seenOf=(map,id)=>C.play?.open()?map.get(id):null;
 const deckPlayLine=id=>{const s=seenOf(playSeen.deck,id);return `<p class="cm-deck-play${s&&s.ok?' is-playable':''}" id="cm-deck-play" data-deck="${e(id)}"${s?' data-play-seen':' hidden'}>${s?s.html:''}</p>`;};
@@ -866,8 +865,7 @@ C.preconLatest=async id=>{
   const today=M.today(),sets=[...new Set(data.decks.map(p=>p.setName))].join(' · ');
   const html=`<div class="cm-precon-latest-head"><h2>New from Wizards</h2><span class="cm-muted">${e(sets)} · ${data.releaseDate>today?'Releases ':''}${e(usDate(data.releaseDate))}</span></div>
     <ul>${data.decks.map(p=>`<li><button type="button" class="cm-precon-chip" data-action="precon-start" data-precon="${e(p.id)}" data-card="${e(p.commander[0].name)}" title="Start from ${e(p.name)}"><strong>${e(p.name)}</strong><span><em class="cm-precon-lead">${e(p.commander.map(c=>c.name).join(' + '))}</em>${C.colors([...new Set(p.commander.flatMap(c=>c.colorIdentity))])}</span></button>${C.play?.open()?`<button type="button" class="cm-text-button cm-precon-play" data-action="precon-play" data-precon="${e(p.id)}" aria-label="Play ${e(p.name)}: make it a deck, then a table">Play it</button>`:''}</li>`).join('')}</ul>`;
-  preconDrawn={key:preconKey(),html};
-  if(el.innerHTML!==html)el.innerHTML=html;
+  el.innerHTML=html;
   el.hidden=false;
 };
 async function preconPicker(){
