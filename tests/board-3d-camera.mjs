@@ -9,7 +9,7 @@
      2. A mat dragged with the left button moves the view across the table, the place taken hold of staying under the
         pointer; dragging the empty table still tilts it. ⌖ Center puts the view back.
      3. A right button held (200 ms) anywhere on the table -- a card, a mat, the bare table -- looks at the place: the
-        head turns, the shoulders lean, the head pitches down, until the place is at the center of the view, in 0.25 s +
+        head turns, the shoulders lean, the head pitches down, until the place is about halfway to the center of the view, in 0.25 s +
         0.40 s·r (the farthest about 0.65 s); let go, the same motion backward from wherever it reached, to exactly the
         resting camera. Reduced motion jumps. The DOM cards stay on the Babylon table through every frame of it.
      4. A quick right click on a card, in every view, shows what it can do: the card to read (🔍 and its name), then each
@@ -248,7 +248,9 @@ try {
   ok(mid.rotation[1] > 0 && mid.rotation[1] < end.rotation[1], `halfway the head has turned part of the way toward the right (yaw ${mid.rotation[1].toFixed(4)} of ${end.rotation[1].toFixed(4)})`);
   ok(mid.rotation[0] >= rest.camera.rotation[0] && mid.rotation[0] < end.rotation[0], `halfway it has pitched part of the way down (${mid.rotation[0].toFixed(4)} of ${end.rotation[0].toFixed(4)}, at rest ${rest.camera.rotation[0].toFixed(4)})`);
   ok(end.position[0] > rest.camera.position[0] && end.position[1] < rest.camera.position[1], `the shoulders lean toward the place and lower the eye (${JSON.stringify(end.position)} from ${JSON.stringify(rest.camera.position)})`);
-  ok(Math.abs(end.at[0] - end.center[0]) < 1 && Math.abs(end.at[1] - end.center[1]) < 1, `at the end the place held is at the center of the view (${JSON.stringify([end.at, end.center])})`);
+  /* A glance, about half (Rob, Oct 25): the place ends about halfway from where it was to the center of the view. */
+  const off = (x) => Math.hypot(x.at[0] - x.center[0], x.at[1] - x.center[1]), glance = (m) => off(m.reached) / off(m.moving[0]);
+  ok(glance(a) > .3 && glance(a) < .7, `at the end the place held is about halfway to the center of the view (${Math.round(off(a.moving[0]))}px → ${Math.round(off(end))}px)`);
   const all = [...a.forward.f, ...a.back.f];
   ok(Math.max(...all.map((x) => x.mis)) < .05 && Math.max(...all.map((x) => x.mm)) < .001, `through every frame the DOM cards stay on the Babylon table (${Math.max(...all.map((x) => x.mis)).toFixed(4)}px; ${all.length} frames)`);
   ok(Math.abs(a.release.at - a.back.up) < 60 && a.release.t === 1, `let go, it turns back at once (${Math.round(a.release.at - a.back.up)} ms after the button came up)`);
@@ -261,7 +263,7 @@ try {
   const b = await look(close_);
   ok(b.start.r < .3 && b.start.ms < 400 && b.start.ms < a.start.ms - 200, `a place near the centerline is a shorter motion (${Math.round(b.start.ms)} ms, r ${b.start.r.toFixed(2)}, against ${a.start.ms} ms)`);
   ok(onTime(b) && backOnTime(b), "and keeps its own time there and back");
-  ok(Math.abs(b.reached.at[0] - b.reached.center[0]) < 1 && Math.abs(b.reached.at[1] - b.reached.center[1]) < 1, "ending with that place at the center of the view");
+  ok(off(b.reached) < off(b.moving[0]) && (off(b.moving[0]) < 20 || (glance(b) > .3 && glance(b) < .7)), `ending with that place about halfway to the center of the view (${Math.round(off(b.moving[0]))}px → ${Math.round(off(b.reached))}px)`);
   ok(same(b.last, atRest), "and it too comes back exactly");
   /* Let go partway: backward from there, in the time it took to get there. */
   const c = await look(far, {release: "half"});

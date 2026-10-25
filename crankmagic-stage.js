@@ -176,15 +176,19 @@
          goes 6% + 10%·r of the rest of the way toward P.
      It takes 0.25 s + 0.40 s·r, so the farthest places take about 0.65 s. Letting go runs the same motion backward from
      wherever it has reached -- a release halfway takes half the time -- and ends exactly at the resting camera. Reduced
-     motion (CrankMotion) jumps to either end. */
-  const LOOK={turn:[0,.6],lean:[.2,.8],pitch:[.4,1],read:[.6,1]};
+     motion (CrankMotion) jumps to either end.
+     SOFTER, A GLANCE (Rob, 2026-10-25: "softer, about half"): every part of the motion -- the turn, the lean, the pitch and
+     the read -- is `LOOK.strength` (one half) of what would center P exactly, so P ends halfway to the center of the view.
+     The timing is unchanged. The admin panel is to carry this and its kin as settings. */
+  const LOOK={turn:[0,.6],lean:[.2,.8],pitch:[.4,1],read:[.6,1],strength:.5};
   const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
   const phase=(t,[a,b])=>ease(clamp((t-a)/(b-a),0,1));
   function aim(g,P) {
     const eye=g.camera.eye, u=clamp((P[0]-g.pan.x)/(g.width/2),-1,1), v=clamp((-P[2]-g.pan.y)/(g.planeHeight/2),-1,1), r=Math.min(1,Math.hypot(u,v));
     const lean=[.3*(P[0]-eye[0]),-.06*eye[1]*r,.25*(P[2]+g.pan.y)], leaned=eye.map((n,i)=>n+lean[i]);
     const k=.06+.1*r, read=leaned.map((n,i)=>k*(P[i]-n)), d=P.map((n,i)=>n-leaned[i]-read[i]);
-    return {lean,read,yaw:Math.atan2(d[0],d[2]),pitch:Math.atan2(-d[1],Math.hypot(d[0],d[2]))-g.camera.pitch,r,ms:250+400*r,point:P};
+    const f=LOOK.strength;
+    return {lean:lean.map(n=>n*f),read:read.map(n=>n*f),yaw:f*Math.atan2(d[0],d[2]),pitch:f*(Math.atan2(-d[1],Math.hypot(d[0],d[2]))-g.camera.pitch),r,ms:250+400*r,point:P};
   }
   const mix=(a,b,k)=>({...b,lean:a.lean.map((n,i)=>n+(b.lean[i]-n)*k),read:a.read.map((n,i)=>n+(b.read[i]-n)*k),yaw:a.yaw+(b.yaw-a.yaw)*k,pitch:a.pitch+(b.pitch-a.pitch)*k,ms:a.ms+(b.ms-a.ms)*k});
   // A new hold while the last one is still easing back turns toward the new place over 150 ms, rather than jumping.
