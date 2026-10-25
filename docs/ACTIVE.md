@@ -24,7 +24,13 @@ play now (three are flavor names of defined cards), **100 to write**, every list
 
 Rob resumed this lane to merge its completed work and push staging. PR #769 is scoped to Share Library boundary tests and four deliberate mutations, not completion of ROB-36/37. Current main is merged into `codex/workshop-sharing-acceptance`; newer Workshop status/budget records are preserved. Local checks are rerun on the combined tree before ready, followed by the Actions gate. Staging release and deployed-source verification follow the merge, coordinated in ROB-11. Recipient browser coverage and live sharing/mail acceptance remain open; the October 18 sign-in attempts did not yield verified sessions. No new feature, migration, inventory change, or production release is part of this slice.
 
-## Card load, 2026-10-24: the compiler's candidates and the shared sentences (a Claude cloud session, for Rob; `claude/engine-card-load-2026-10-24`)
+## Card load, 2026-10-24: the compiler's candidates and the shared sentences (a Claude cloud session, for Rob; PR #855): merged
+
+**Merged, 2026-10-24:** PR #855 merged to main as `abdf77a6` with a merge commit, on Rob's "complete through merge".
+- **Readiness, re-run by the merging session:** base 02a52c3 unmoved, no conflicts, Actions `suites` green on head a8cdca0
+  (run 40091861196, 35 minutes), and `tools/local-ci.sh` SCAN PASS on that head.
+- **Not released to staging:** the next staging release belongs to the Claude · Engine release owner, who should first read
+  the Worker's size from `wrangler deploy --dry-run` (below).
 
 Rob, 2026-10-24: *"Look at the card list of cards not loaded in the engine but either automatically can be added or easily
 added because of shared mechanics and characteristics with other cards loaded. Then run the load."* Done in one
@@ -50,7 +56,7 @@ session, in the Claude · Engine lane's card-load files only (`game/engine/cards
   - 22 cards given scenarios that cast them;
   - suites made to fit the drained store.
 
-  The PR's body holds the handoff, and it stays a draft until it is marked ready for Actions.
+  The PR's body holds the handoff.
 - **Not proven:** the Worker build is untested here (no wrangler). `definitions.mjs` grows 2.5 → 4.4 MB (0.43 → 0.74 MB
   gzip), so the release owner should read the size of `wrangler deploy --dry-run` before the next staging release.
 
