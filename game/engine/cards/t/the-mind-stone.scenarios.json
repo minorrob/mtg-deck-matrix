@@ -1,0 +1,217 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "The Mind Stone",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{T}: Add {W}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "The Mind Stone"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "The Mind Stone"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "W": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Not harnessed: its end step ability is not active",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "The Mind Stone",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 1,
+            "phase": "END_OF_TURN"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "{5}{W}, {T}: harnessed -- at your end step the Circuit Mender blinks: a card for leaving, 2 life for entering",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "The Mind Stone",
+            "Circuit Mender",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "The Mind Stone",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "END_OF_TURN"
+          }
+        },
+        {
+          "choose": [
+            "Circuit Mender"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 42
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Harnessed, up to one: none chosen, nothing happens; it is indestructible",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "The Mind Stone",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "The Mind Stone",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "END_OF_TURN"
+          }
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "The Mind Stone",
+            "has": [
+              "Indestructible"
+            ]
+          }
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Overlord of the Floodpits",
+    "oracleId": "31196f0b-33ee-4981-ac97-24226e8b405f",
+    "types": [
+      "Enchantment",
+      "Creature"
+    ],
+    "subtypes": [
+      "Avatar",
+      "Horror"
+    ],
+    "manaCost": "{3}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 5,
+    "toughness": 3
+  },
+  "oracleText": "Impending 4—{1}{U}{U} (If you cast this spell for its impending cost, it enters with four time counters and isn't a creature until the last is removed. At the beginning of your end step, remove a time counter from it.)\nFlying\nWhenever this permanent enters or attacks, draw two cards, then discard a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Impending 4—{1}{U}{U} (If you cast this spell for its impending cost, it enters with four time counters and isn't a creature until the last is removed. At the beginning of your end step, remove a time counter from it.)",
+      "keyword": "impending",
+      "count": 4,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{U}{U}"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this permanent enters or attacks, draw two cards, then discard a card.",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 2
+        },
+        {
+          "effect": "discard",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this permanent enters or attacks, draw two cards, then discard a card.",
+      "trigger": {
+        "on": "attacks"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 2
+        },
+        {
+          "effect": "discard",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,99 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Lae'zel's Acrobatics",
+    "oracleId": "3efe6ac8-f92e-4108-913b-077e41c0a841",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Exile all nontoken creatures you control, then roll a d20.\n1—9 | Return those cards to the battlefield under their owner's control at the beginning of the next end step.\n10—20 | Return those cards to the battlefield under their owner's control, then exile them again. Return those cards to the battlefield under their owner's control at the beginning of the next end step.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Exile all nontoken creatures you control, then roll a d20.\n1—9 | Return those cards to the battlefield under their owner's control at the beginning of the next end step.\n10—20 | Return those cards to the battlefield under their owner's control, then exile them again. Return those cards to the battlefield under their owner's control at the beginning of the next end step.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "moveZoneAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you",
+            "token": false
+          },
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "rollDie",
+          "sides": 20
+        },
+        {
+          "effect": "branch",
+          "if": {
+            "compare": {
+              "count": {
+                "dieRolled": true
+              },
+              "atMost": 9
+            }
+          },
+          "then": [
+            {
+              "effect": "delayedTrigger",
+              "at": "end step",
+              "text": "Return those cards to the battlefield under their owner's control at the beginning of the next end step.",
+              "effects": [
+                {
+                  "effect": "moveZone",
+                  "targets": "remembered",
+                  "to": "battlefield"
+                }
+              ]
+            }
+          ],
+          "otherwise": [
+            {
+              "effect": "moveZone",
+              "targets": "remembered",
+              "to": "battlefield",
+              "remember": true
+            },
+            {
+              "effect": "moveZone",
+              "targets": "remembered",
+              "to": "exile",
+              "remember": true
+            },
+            {
+              "effect": "delayedTrigger",
+              "at": "end step",
+              "text": "Return those cards to the battlefield under their owner's control at the beginning of the next end step.",
+              "effects": [
+                {
+                  "effect": "moveZone",
+                  "targets": "remembered",
+                  "to": "battlefield"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

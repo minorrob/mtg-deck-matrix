@@ -1,0 +1,98 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kimahri, Valiant Guardian",
+    "oracleId": "6d42e81a-84d3-4c90-9c69-c0d562c66cac",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Cat",
+      "Warrior"
+    ],
+    "manaCost": "{2}{G}{U}",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Vigilance\nRonso Rage — At the beginning of combat on your turn, put a +1/+1 counter on Kimahri and tap target creature an opponent controls. Then you may have Kimahri become a copy of that creature, except its name is Kimahri, Valiant Guardian and it has vigilance and this ability.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "triggered",
+      "text": "Ronso Rage — At the beginning of combat on your turn, put a +1/+1 counter on Kimahri and tap target creature an opponent controls. Then you may have Kimahri become a copy of that creature, except its name is Kimahri, Valiant Guardian and it has vigilance and this ability.",
+      "trigger": {
+        "on": "step",
+        "step": "COMBAT_BEGIN"
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        },
+        {
+          "effect": "tap",
+          "targets": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "modal",
+          "title": "Have Kimahri become a copy of that creature?",
+          "modes": [
+            {
+              "text": "Yes",
+              "effects": [
+                {
+                  "effect": "becomeCopy",
+                  "targets": {
+                    "target": 0
+                  },
+                  "keep": [
+                    "a1"
+                  ],
+                  "except": {
+                    "name": "Kimahri, Valiant Guardian",
+                    "addKeywords": [
+                      "Vigilance"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "text": "No",
+              "effects": []
+            }
+          ]
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "opponent"
+        }
+      ]
+    }
+  ]
+}

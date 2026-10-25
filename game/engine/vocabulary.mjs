@@ -265,9 +265,15 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
   /* And improvise (CR 702.126a; Organic Extinction), artifacts tapped to pay a spell's generic mana, as convoke's creatures
      are (rules/actions.mjs). */
   "improvise",
+  /* Rob's lists, P1: myriad (CR 702.116a; Battle Angels of Tyr), an attack trigger making token copies attacking the other
+     opponents (cards/index.mjs). */
+  "myriad",
   /* And cascade (CR 702.85a; Apex Devastator), a cast trigger: cards exiled until a nonland one that costs less, cast free
      (cards/index.mjs). */
-  "cascade"];
+  "cascade",
+  /* Rob's lists P2: devour (CR 702.82; Feasting Hobbit's "Devour Food 3"), permanents sacrificed as it enters for +1/+1
+     counters (cards/index.mjs, rules/entering.mjs); skulk (CR 702.118; Gollum, Obsessed Stalker), evasion (keywords/combat.mjs). */
+  "devour", "skulk"];
 
 /** Every keyword the engine will accept in a card script. */
 export const KEYWORDS = Object.freeze([...TIER0_KEYWORDS, ...BEYOND_TIER0]);

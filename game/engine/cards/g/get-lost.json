@@ -1,0 +1,72 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Get Lost",
+    "oracleId": "522dd417-364b-44ab-8ca9-fb55db5f26a6",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Destroy target creature, enchantment, or planeswalker. Its controller creates two Map tokens. (They're artifacts with \"{1}, {T}, Sacrifice this token: Target creature you control explores. Activate only as a sorcery.\")",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Destroy target creature, enchantment, or planeswalker. Its controller creates two Map tokens.",
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Enchantment"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "createToken",
+          "count": 2,
+          "controller": {
+            "controllerOf": {
+              "target": 0
+            }
+          },
+          "token": {
+            "predefined": "Map"
+          }
+        }
+      ]
+    }
+  ]
+}

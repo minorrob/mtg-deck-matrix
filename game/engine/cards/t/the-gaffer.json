@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "The Gaffer",
+    "oracleId": "a177295e-3b58-4e46-a1cb-fc003a7a0848",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Halfling",
+      "Peasant"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "At the beginning of each end step, if you gained 3 or more life this turn, draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of each end step, if you gained 3 or more life this turn, draw a card.",
+      "trigger": {
+        "on": "end step",
+        "yours": false
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "lifeGainedThisTurn": "you"
+          },
+          "atLeast": 3
+        }
+      }
+    }
+  ]
+}

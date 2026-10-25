@@ -112,7 +112,7 @@ export function runResolution(state, rng = null) {
        put in front of whatever follows, so one of them may stop to ask (Composer of Spring's "you may put a card"). */
     if (effect?.effect === "branch") {
       const holds = conditionHolds(state, effect.if, {controller: resolving.context.controller, source: resolving.context.source, about: resolving.context.about,
-        remembered: resolving.context.remembered, targets: resolving.context.targets, cast: resolving.context.cast,
+        remembered: resolving.context.remembered, targets: resolving.context.targets, cast: resolving.context.cast, rolled: resolving.context.rolled,
         movedWas: resolving.context.movedWas, searched: resolving.context.searched, lastKnown: resolving.context.lastKnown, resolvedBefore: resolving.context.resolvedBefore,
         gift: resolving.context.gift});
       resolving.queue.shift();
@@ -249,6 +249,11 @@ export function runResolution(state, rng = null) {
     /* "Remove up to three counters from another target creature or planeswalker" (Mabel, Bitter Recluse): which counters,
        of any kinds, its controller chooses as it resolves (CR 608.2d; effects/asking.mjs, countersToRemove). */
     else if (effect?.effect === "removeCounter" && effect.counter === "any" && effect.removing === undefined)
+      resolving.queue[0] = {effect: "countersToRemove", then: effect};
+    /* "Move any number of counters from target permanent you control onto a second target permanent you control" (Resourceful
+       Defense; CR 122.5, 608.2d): which of the counters on the first, of any kinds, its controller chooses as it resolves --
+       the same question (effects/asking.mjs, countersToRemove), then moved (`moving`, effects/resources.mjs). */
+    else if (effect?.effect === "moveCounters" && effect.counter === "any" && effect.moving === undefined)
       resolving.queue[0] = {effect: "countersToRemove", then: effect};
     /* "You may move any number of +1/+1 counters from this creature onto other creatures" (Forgotten Ancient): where each
        goes, its controller's choice as it resolves (effects/asking.mjs, countersOnto). */

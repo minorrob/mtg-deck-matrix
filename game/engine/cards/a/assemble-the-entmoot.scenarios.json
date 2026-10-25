@@ -1,0 +1,186 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Assemble the Entmoot",
+  "fixtures": {
+    "Heal Three": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "You gain 3 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 3
+          }
+        ]
+      }
+    },
+    "Spare Pup": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Dog"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Creatures Rob controls have reach",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Assemble the Entmoot",
+            "Spare Pup"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Spare Pup"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Spare Pup",
+            "has": [
+              "Reach"
+            ]
+          }
+        },
+        {
+          "seat": 1,
+          "keywords": {
+            "card": "Spare Pup",
+            "lacks": [
+              "Reach"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gained 3 this turn, then sacrificed: three tapped 3/3 Treefolk, each with a reach counter",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Assemble the Entmoot",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Heal Three"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Heal Three"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Assemble the Entmoot"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Treefolk",
+            "Treefolk",
+            "Treefolk",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Treefolk"
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Treefolk",
+            "power": 3,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Treefolk",
+            "counter": "reach",
+            "count": 1
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Treefolk",
+            "has": [
+              "Reach"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "No life gained: three 0/0s, which die",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Assemble the Entmoot"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Assemble the Entmoot"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": []
+        }
+      ]
+    }
+  ]
+}

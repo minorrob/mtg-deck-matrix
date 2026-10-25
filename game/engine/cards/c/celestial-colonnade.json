@@ -1,0 +1,95 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Celestial Colonnade",
+    "oracleId": "876ac6f6-74de-4666-84c6-83d81f054723",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This land enters tapped.\n{T}: Add {W} or {U}.\n{3}{W}{U}: Until end of turn, this land becomes a 4/4 white and blue Elemental creature with flying and vigilance. It's still a land.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "This land enters tapped.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersTapped": true
+      }
+    },
+    {
+      "kind": "activated",
+      "mana": true,
+      "text": "{T}: Add {W} or {U}.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "W": 1
+            },
+            {
+              "U": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{3}{W}{U}: Until end of turn, this land becomes a 4/4 white and blue Elemental creature with flying and vigilance. It's still a land.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}{W}{U}"
+        }
+      ],
+      "targets": [],
+      "effects": [
+        {
+          "effect": "animate",
+          "targets": "self",
+          "power": 4,
+          "toughness": 4,
+          "subtypes": [
+            "Elemental"
+          ],
+          "colors": [
+            "W",
+            "U"
+          ],
+          "until": "end-of-turn"
+        },
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Flying",
+            "Vigilance"
+          ],
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

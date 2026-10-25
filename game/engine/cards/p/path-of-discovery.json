@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Path of Discovery",
+    "oracleId": "52714c3c-6821-44dd-88ba-813554df9914",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever a creature you control enters, it explores. (Reveal the top card of your library. Put that card into your hand if it's a land. Otherwise, put a +1/+1 counter on the creature, then put the card back or put it into your graveyard.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever a creature you control enters, it explores. (Reveal the top card of your library. Put that card into your hand if it's a land. Otherwise, put a +1/+1 counter on the creature, then put the card back or put it into your graveyard.)",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "explore",
+          "targets": "that card"
+        }
+      ]
+    }
+  ]
+}

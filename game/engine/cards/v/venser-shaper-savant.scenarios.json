@@ -1,0 +1,211 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Venser, Shaper Savant",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Flashed in on an opponent's turn: their Bear spell goes back to their hand",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Venser, Shaper Savant"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "at": {
+        "turn": 2,
+        "phase": "MAIN1"
+      },
+      "steps": [
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Bear",
+          "seat": 1
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "tap": "Island",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "cast": "Venser, Shaper Savant",
+          "seat": 0
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bear",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Venser, Shaper Savant",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Enters: an opponent's permanent back to its owner's hand",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Venser, Shaper Savant"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Venser, Shaper Savant"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": []
+        }
+      ]
+    }
+  ]
+}

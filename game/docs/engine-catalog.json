@@ -9,17 +9,17 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1873,
+  "defined": 1918,
   "provisional": 0,
-  "everyRule": 2880
+  "everyRule": 2901
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
-    "built": 84,
+    "built": 86,
     "partial": 0,
-    "named": 9,
-    "missing": 101
+    "named": 10,
+    "missing": 98
    },
    "entries": [
     {
@@ -475,7 +475,7 @@
      "forge": "Landwalk",
      "top": 5,
      "all": 131,
-     "blocks": 5,
+     "blocks": 4,
      "alone": 4
     },
     {
@@ -518,13 +518,13 @@
      "kind": "keyword ability",
      "rule": "702.116",
      "name": "Myriad",
-     "engine": null,
-     "status": "missing",
+     "engine": "Myriad",
+     "status": "built",
      "forge": "Myriad",
      "top": 5,
      "all": 23,
-     "blocks": 5,
-     "alone": 4
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -914,13 +914,13 @@
      "kind": "keyword ability",
      "rule": "702.118",
      "name": "Skulk",
-     "engine": null,
-     "status": "missing",
+     "engine": "Skulk",
+     "status": "built",
      "forge": "Skulk",
      "top": 2,
      "all": 15,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "keyword ability",
@@ -1119,7 +1119,7 @@
      "rule": "702.82",
      "name": "Devour",
      "engine": null,
-     "status": "missing",
+     "status": "named",
      "forge": "Devour",
      "top": 1,
      "all": 24,
@@ -3787,7 +3787,7 @@
      "forge": "ReplaceToken",
      "top": 17,
      "all": 35,
-     "blocks": 3,
+     "blocks": 2,
      "alone": 0
     },
     {
@@ -4051,7 +4051,7 @@
      "forge": "RollDice",
      "top": 7,
      "all": 131,
-     "blocks": 6,
+     "blocks": 5,
      "alone": 2
     },
     {
@@ -4195,8 +4195,8 @@
      "forge": "Airbend",
      "top": 4,
      "all": 13,
-     "blocks": 4,
-     "alone": 3
+     "blocks": 1,
+     "alone": 1
     },
     {
      "kind": "effect",
@@ -5861,8 +5861,8 @@
      "forge": "FullyUnlock",
      "top": 3,
      "all": 17,
-     "blocks": 3,
-     "alone": 1
+     "blocks": 1,
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -5945,8 +5945,8 @@
      "forge": "CounterPlayerAddedAll",
      "top": 2,
      "all": 8,
-     "blocks": 2,
-     "alone": 1
+     "blocks": 1,
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -5981,8 +5981,8 @@
      "forge": "TokenCreated",
      "top": 2,
      "all": 3,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "trigger",
@@ -7551,8 +7551,8 @@
      "forge": "DisableTriggers",
      "top": 1,
      "all": 8,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "static",
@@ -8173,7 +8173,7 @@
      "forge": "CreateToken",
      "top": 17,
      "all": 32,
-     "blocks": 3,
+     "blocks": 2,
      "alone": 0
     },
     {
@@ -8305,8 +8305,8 @@
      "forge": "BeginTurn",
      "top": 1,
      "all": 5,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "replacement",
@@ -8365,7 +8365,7 @@
      "forge": "RemoveCounter",
      "top": 1,
      "all": 2,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {
@@ -8925,7 +8925,7 @@
      "forge": "RememberChanged",
      "top": 124,
      "all": 1168,
-     "blocks": 51,
+     "blocks": 47,
      "alone": 4
     },
     {
@@ -8949,8 +8949,8 @@
      "forge": "RememberObjects",
      "top": 123,
      "all": 1460,
-     "blocks": 53,
-     "alone": 10
+     "blocks": 49,
+     "alone": 9
     },
     {
      "kind": "option",
@@ -9009,7 +9009,7 @@
      "forge": "MayPlay",
      "top": 99,
      "all": 625,
-     "blocks": 36,
+     "blocks": 35,
      "alone": 1
     },
     {
@@ -10135,7 +10135,7 @@
      "forge": "FinishedEndOfTurnsThisTurn",
      "top": 1,
      "all": 1,
-     "blocks": 1,
+     "blocks": 0,
      "alone": 0
     },
     {

@@ -1,0 +1,338 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Niko, Light of Hope",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Hero": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 2,
+      "toughness": 2,
+      "supertypes": [
+        "Legendary"
+      ]
+    },
+    "Shard Fixture": {
+      "types": [
+        "Enchantment"
+      ],
+      "subtypes": [
+        "Shard"
+      ],
+      "manaCost": null,
+      "colors": [],
+      "power": null,
+      "toughness": null
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Niko enters: two Shard tokens, each with \"{2}, Sacrifice this token: Scry 1, then draw a card.\"",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Niko, Light of Hope"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Niko, Light of Hope"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "battlefield",
+              "cards": [
+                "Island",
+                "Niko, Light of Hope",
+                "Plains",
+                "Shard",
+                "Shard",
+                "Wastes",
+                "Wastes",
+                "Wastes",
+                "Wastes"
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Shard"
+              },
+              "count": 2
+            }
+          ]
+        },
+        {
+          "activate": "Shard"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Niko, Light of Hope",
+            "Plains",
+            "Shard",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "name": "{2}, {T}: the Bear is exiled, the Shards become Bears until the next end step, and the Bear returns then",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Niko, Light of Hope",
+            "Bear",
+            "Shard Fixture",
+            "Shard Fixture",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Shard Fixture"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Niko, Light of Hope",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "battlefield",
+              "cards": [
+                "Niko, Light of Hope",
+                "Bear",
+                "Bear",
+                "Wastes",
+                "Wastes"
+              ]
+            },
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Bear"
+              ]
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Bear",
+                "power": 2,
+                "toughness": 2
+              }
+            },
+            {
+              "seat": 1,
+              "zone": "battlefield",
+              "cards": [
+                "Shard Fixture"
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "END_OF_TURN"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "battlefield",
+              "cards": [
+                "Niko, Light of Hope",
+                "Shard Fixture",
+                "Shard Fixture",
+                "Wastes",
+                "Wastes"
+              ]
+            },
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Niko, Light of Hope",
+            "Bear",
+            "Shard Fixture",
+            "Shard Fixture",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "name": "Only a nonlegendary creature you control: not a legendary one, not an opponent's",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Niko, Light of Hope",
+            "Hero",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Niko, Light of Hope"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

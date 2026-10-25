@@ -1,0 +1,207 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Time Wipe",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Elk": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elk"
+      ],
+      "manaCost": "{2}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 3,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Return the Bear to hand (its controller's choice), then destroy every other creature",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Plains",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Bear",
+            "Elk"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Time Wipe"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Time Wipe"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Bear",
+                  "Elk"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Elk",
+            "Time Wipe"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "name": "With no creature of yours, nothing returns, and every creature is destroyed",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Plains",
+            "Island",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Time Wipe"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Elk"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Time Wipe"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Elk"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": []
+        }
+      ]
+    }
+  ]
+}

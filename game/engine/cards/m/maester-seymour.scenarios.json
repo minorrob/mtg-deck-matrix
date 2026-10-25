@@ -1,0 +1,647 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Maester Seymour",
+  "fixtures": {
+    "Mend": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Regenerate target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "regenerate",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Weaken": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Target creature gets -0/-2 until end of turn.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "pump",
+            "targets": {
+              "target": 0
+            },
+            "power": 0,
+            "toughness": -2
+          }
+        ]
+      }
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Cub": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Big": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Beast"
+      ],
+      "manaCost": "{3}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Their Wall": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Wall"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 0,
+      "toughness": 4
+    },
+    "Grow": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Put a +1/+1 counter on target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "putCounter",
+            "targets": {
+              "target": 0
+            },
+            "counter": "+1/+1",
+            "count": 1
+          }
+        ]
+      }
+    },
+    "Charging": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Put a +1/+1 counter and two charge counters on target permanent.",
+        "targets": [
+          {
+            "what": "permanent"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "putCounter",
+            "targets": {
+              "target": 0
+            },
+            "counter": "+1/+1",
+            "count": 1
+          },
+          {
+            "effect": "putCounter",
+            "targets": {
+              "target": 0
+            },
+            "counter": "charge",
+            "count": 2
+          }
+        ]
+      }
+    },
+    "Wither": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Put a -1/-1 counter on target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "putCounter",
+            "targets": {
+              "target": 0
+            },
+            "counter": "-1/-1",
+            "count": 1
+          }
+        ]
+      }
+    },
+    "Trinket": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Draw a card.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "draw",
+            "count": 1
+          }
+        ]
+      }
+    },
+    "Kill": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target permanent.",
+        "targets": [
+          {
+            "what": "permanent"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Bolt": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "This spell deals 3 damage to any target.",
+        "targets": [
+          {
+            "anyOf": [
+              {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ]
+              },
+              {
+                "what": "player"
+              }
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "targets": {
+              "target": 0
+            },
+            "amount": 3
+          }
+        ]
+      }
+    },
+    "Bounce": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Return target creature to its owner's hand.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "returnToHand",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "At Rob's combat, counters equal to Seymour's power (1) on another creature of his; not on Seymour himself",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Maester Seymour",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_BEGIN"
+          }
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Bear"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Bear",
+            "counter": "+1/+1",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Monstrosity X, X the counters of every kind among his creatures counted as it resolves: a -1/-1 counter on the Big, then a Charge in answer puts three more on the Bear -- X is 4, not the 1 there was as it was activated",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Maester Seymour",
+            "Bear",
+            "Big",
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Forest",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Grow",
+            "Charging",
+            "Wither"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Wither",
+          "targets": [
+            {
+              "card": "Big"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Maester Seymour"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Charging",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Maester Seymour",
+            "counter": "+1/+1",
+            "count": 4
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Maester Seymour",
+            "power": 5,
+            "toughness": 7
+          }
+        }
+      ]
+    },
+    {
+      "name": "Maya's counters are not counted (X is 0, and Seymour becomes monstrous with none); a second monstrosity, with a counter on the Bear now, does nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Maester Seymour",
+            "Bear",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Grow",
+            "Grow"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Grow",
+          "targets": [
+            {
+              "card": "Ogre"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Maester Seymour"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Maester Seymour",
+                "counter": "+1/+1",
+                "count": 0
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Grow",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Maester Seymour"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Maester Seymour",
+            "counter": "+1/+1",
+            "count": 0
+          }
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Bear",
+            "counter": "+1/+1",
+            "count": 1
+          }
+        }
+      ]
+    }
+  ]
+}

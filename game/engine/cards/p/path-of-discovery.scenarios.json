@@ -1,0 +1,314 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Path of Discovery",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Cub": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Big": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Beast"
+      ],
+      "manaCost": "{3}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Grow": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Put a +1/+1 counter on target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "putCounter",
+            "targets": {
+              "target": 0
+            },
+            "counter": "+1/+1",
+            "count": 1
+          }
+        ]
+      }
+    },
+    "Trinket": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Draw a card.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "draw",
+            "count": 1
+          }
+        ]
+      }
+    },
+    "Kill": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A creature of Rob's enters and explores: a land revealed goes to his hand",
+      "library": [
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Path of Discovery",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Cub"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Cub"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Cub",
+            "counter": "+1/+1",
+            "count": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "A nonland revealed: a +1/+1 counter on the creature, and Rob puts the card into his graveyard",
+      "library": [
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Path of Discovery",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Cub"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Cub"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Cub",
+            "counter": "+1/+1",
+            "count": 1
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Maya's creature entering does not explore",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Path of Discovery"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Cub"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Forest",
+          "seat": 1
+        },
+        {
+          "cast": "Cub",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

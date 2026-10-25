@@ -132,9 +132,25 @@ function faceFidelity(script) {
      of it (Opt's "Scry 1. (Look at ...)\nDraw a card.") is quoted with its parentheses. */
   const texts = (script.abilities ?? []).map((a) => normalize(a?.text === undefined || a?.text === null ? a?.text : String(a.text).replace(/[()]/g, "")));
   const invented = (script.abilities ?? []).filter((a, i) => !texts[i] || !full.includes(texts[i])).map((a) => String(a?.text ?? ""));
+  /* A clause is claimed by an ability that quotes it whole, or by the abilities quoted inside it when together they are
+     all of it but connectives and punctuation (one sentence written as several abilities). An ability inside a longer
+     clause does not claim the rest: Gandalf the White's Flash is not "You may cast legendary spells and artifact spells as
+     though they had flash" (Rob's lists P2, 2026-10-24, where a writer that left that sentence out passed). A line that
+     is all reminder text has no rules meaning (CR 207.2a), so an ability inside it claims it: Dryad Arbor's "{T}: Add
+     {G}." in "(This land isn't a spell, ... and it has "{T}: Add {G}.")", whose rest its types already say. */
+  const reminderLines = String(script.oracleText ?? "").split("\n").filter((line) => /^\(.*\)$/.test(line.trim()));
+  const reminder = new Set(oracleClauses(reminderLines.join("\n")).map(normalize));
+  const covered = (c) => {
+    const inside = texts.filter((t) => t && c.includes(t));
+    if (!inside.length) return false;
+    if (reminder.has(c)) return true;
+    let rest = c;
+    for (const t of [...inside].sort((a, b) => b.length - a.length)) rest = rest.split(t).join(" ");
+    return rest.replace(/[\s,.;:"'()-]+/g, " ").replace(/\b(and|or|then)\b/g, " ").trim() === "";
+  };
   const unclaimed = oracleClauses(script.oracleText).filter((clause) => {
     const c = normalize(clause);
-    return !texts.some((t) => t && (t.includes(c) || c.includes(t)));
+    return !texts.some((t) => t && t.includes(c)) && !covered(c);
   });
   return {ok: invented.length === 0 && unclaimed.length === 0, invented, unclaimed};
 }

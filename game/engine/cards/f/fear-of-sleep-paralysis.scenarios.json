@@ -1,0 +1,312 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Fear of Sleep Paralysis",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Charm": {
+      "types": [
+        "Enchantment"
+      ],
+      "subtypes": [],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "power": null,
+      "toughness": null
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Enters: Maya's Bear tapped with a stun counter, which can't be removed -- her untap step leaves it tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Fear of Sleep Paralysis"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Fear of Sleep Paralysis"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Bear (Maya's)"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "UPKEEP"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "tapped": "Bear"
+        },
+        {
+          "seat": 1,
+          "counters": {
+            "card": "Bear",
+            "counter": "stun",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Another enchantment of yours enters: Rob's own Bear is stunned -- his untap step removes the counter instead of untapping it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Fear of Sleep Paralysis",
+            "Bear",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Charm"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Charm"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Bear"
+            },
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Bear",
+                "counter": "stun",
+                "count": 1
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "UPKEEP"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Bear"
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Bear",
+            "counter": "stun",
+            "count": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "An opponent's enchantment entering triggers nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Fear of Sleep Paralysis"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Charm"
+          ]
+        }
+      ],
+      "at": {
+        "turn": 2,
+        "phase": "MAIN1"
+      },
+      "steps": [
+        {
+          "tap": "Plains",
+          "seat": 1
+        },
+        {
+          "cast": "Charm",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 1,
+          "tapped": "Bear",
+          "is": false
+        }
+      ]
+    },
+    {
+      "name": "Up to one: no target, and it does nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Fear of Sleep Paralysis"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Fear of Sleep Paralysis"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Fear of Sleep Paralysis",
+          "is": false
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

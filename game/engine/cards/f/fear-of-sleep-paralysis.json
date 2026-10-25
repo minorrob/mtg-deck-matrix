@@ -1,0 +1,90 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Fear of Sleep Paralysis",
+    "oracleId": "a3a1f149-febe-4ff6-9e34-8b82ef21c2ee",
+    "types": [
+      "Enchantment",
+      "Creature"
+    ],
+    "subtypes": [
+      "Nightmare"
+    ],
+    "manaCost": "{5}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 6,
+    "toughness": 6
+  },
+  "oracleText": "Flying\nEerie — Whenever this creature or another enchantment you control enters and whenever you fully unlock a Room, tap up to one target creature and put a stun counter on it.\nStun counters can't be removed from permanents your opponents control. (They won't untap if they have stun counters.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "Eerie — Whenever this creature or another enchantment you control enters and whenever you fully unlock a Room, tap up to one target creature and put a stun counter on it.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "anyOf": [
+            {
+              "self": true
+            },
+            {
+              "types": [
+                "Enchantment"
+              ],
+              "controller": "you"
+            }
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "tap",
+          "targets": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "counter": "stun",
+          "count": 1
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "count": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "Stun counters can't be removed from permanents your opponents control. (They won't untap if they have stun counters.)",
+      "rule": "stun-counters-stay",
+      "affects": {
+        "what": "permanent",
+        "controller": "opponent"
+      }
+    }
+  ]
+}

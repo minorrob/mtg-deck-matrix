@@ -1,0 +1,146 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Trading Post",
+    "oracleId": "63788566-e25a-44bb-bb55-197e1b93b3e8",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{1}, {T}, Discard a card: You gain 4 life.\n{1}, {T}, Pay 1 life: Create a 0/1 white Goat creature token.\n{1}, {T}, Sacrifice a creature: Return target artifact card from your graveyard to your hand.\n{1}, {T}, Sacrifice an artifact: Draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{1}, {T}, Discard a card: You gain 4 life.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        },
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "discard"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{1}, {T}, Pay 1 life: Create a 0/1 white Goat creature token.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        },
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "payLife",
+          "amount": 1
+        }
+      ],
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Goat",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Goat"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 0,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{1}, {T}, Sacrifice a creature: Return target artifact card from your graveyard to your hand.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        },
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "owner": "you",
+          "types": [
+            "Artifact"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "hand"
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{1}, {T}, Sacrifice an artifact: Draw a card.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        },
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "types": [
+              "Artifact"
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hengegate Pathway // Mistgate Pathway",
+    "oracleId": "461b3f2f-fcee-4160-abfa-061f8b6a784f",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {W}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {W}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "W": 1
+          }
+        }
+      ]
+    }
+  ],
+  "back": {
+    "identity": {
+      "name": "Mistgate Pathway",
+      "types": [
+        "Land"
+      ],
+      "subtypes": [],
+      "manaCost": null,
+      "colors": [],
+      "power": null,
+      "toughness": null
+    },
+    "oracleText": "{T}: Add {U}.",
+    "abilities": [
+      {
+        "kind": "activated",
+        "text": "{T}: Add {U}.",
+        "mana": true,
+        "cost": [
+          {
+            "atom": "{T}"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "addMana",
+            "mana": {
+              "U": 1
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

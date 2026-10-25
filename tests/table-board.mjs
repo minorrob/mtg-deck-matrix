@@ -298,7 +298,7 @@ try {
   ok(await heard(active === rob ? ROB : MAYA, "sfx/sfx_play_land.mp3"), "and it sounds as a land played (the pack's land voice)");
   await other.page.click(`.cm-board-tile[data-seat='${activeSeat}'] [data-action=board-focus]`);
   await waitText(other.page, ".cm-board-lands", /Lands · 1/);
-  ok((await text(other.page, ".cm-board-lands")).includes(land), "the other board shows the same land, now public");
+  ok(await other.page.locator('.cm-board-lands').getByRole('button',{name:new RegExp(`^${land}(?:,|:|$)`)}).count()>0, "the other board shows the same land, now public");
   /* With the land down there is its mana, and a creature it could pay for: Next step passes, and taps nothing. */
   await active.page.click("[data-action=board-actions-open]");
   ok(/Tap for mana/.test(await text(active.page, "#cm-board-decision")), "the land played, Actions offers its mana");
@@ -452,7 +452,7 @@ try {
     await rob.page.locator('[data-action=board-camera]').click();
     await rob.page.setViewportSize(was);
   }
-  ok((await text(rob.page, `.cm-seatboard[data-seat='${activeSeat}']`)).includes(land), "the land played is on its owner's board in the Table view too");
+  ok(await rob.page.locator(`.cm-seatboard[data-seat='${activeSeat}']`).getByRole('button',{name:new RegExp(`^${land}(?:,|:|$)`)}).count()>0, "the land played is on its owner's board in the Table view too");
   await shot(rob.page, "board-table-1400");
   await rob.page.click(".cm-board-center");
   await rob.page.locator(".cm-table-vitals").waitFor();
@@ -887,7 +887,7 @@ try {
   await rob.page.locator("#cm-board-peek .cm-bcard").waitFor({timeout: 5000});
   const peekWidth = await rob.page.evaluate(() => document.querySelector("#cm-board-peek .cm-bcard").getBoundingClientRect().width);
   const peekBox = await rob.page.evaluate(() => {const r = document.querySelector("#cm-board-peek .cm-bcard").getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2), innerWidth / 2, innerHeight / 2];});
-  ok(Math.round(peekWidth) === 400 && Math.abs(peekBox[0] - peekBox[2]) < 2 && Math.abs(peekBox[1] - peekBox[3]) < 2 && (await text(rob.page, "#cm-board-peek")).includes(robCardName), `a card under the pointer shows large at the center of the screen, 400px (${robCardName})`);
+  ok(Math.round(peekWidth) === 400 && Math.abs(peekBox[0] - peekBox[2]) < 2 && (await rob.page.locator('#cm-board-peek .cm-bcard').getAttribute('aria-label')).includes(robCardName) && Math.abs(peekBox[1] - peekBox[3]) < 2, `a card under the pointer shows large at the center of the screen, 400px (${robCardName})`);
   /* The accessibility pass: the pop-up is said as well as shown, by the board's one polite status region beside the board
      (tests/a11y-board.mjs), its picture not read twice. */
   const peekSaid = await rob.page.evaluate(() => {const p = document.getElementById("cm-board-peek"), s = document.getElementById("cm-board-said"); return {hidden: p.getAttribute("aria-hidden"), role: s && s.getAttribute("role"), live: s && s.getAttribute("aria-live"), said: s ? s.textContent : "", beside: !!s && !s.closest("#cm-board")};});
@@ -971,7 +971,7 @@ try {
   await second.page.locator("#cm-board-decision [data-action=board-confirm]").click(); if(await second.page.locator("[data-action=board-inspect-close]").count()) await second.page.locator("[data-action=board-inspect-close]").click();
   await second.page.click(`.cm-board-tile[data-seat='${secondSeat}'] [data-action=board-focus]`);
   await waitText(second.page, ".cm-board-lands", /Lands · 1/);
-  ok((await text(second.page, ".cm-board-lands")).includes(secondLand), "Enter plays it: the hand is put away and the land is down");
+  ok(await second.page.locator('.cm-board-lands').getByRole('button',{name:new RegExp(`^${secondLand}(?:,|:|$)`)}).count()>0, "Enter plays it: the hand is put away and the land is down");
   for (let i = 0; i < 3; i += 1) await second.page.keyboard.press("Control+Minus");
   /* B1, item 17: the Panel reads a tapped card upright, with a small Tapped mark, and no "Card" heading over it. */
   await second.page.click("[data-action=board-actions-open]");
@@ -1134,46 +1134,26 @@ try {
   await rob.page.waitForTimeout(300);
   eq([prefersSent().slice(prefers0).map((f) => f.stepByStep), views(ROB).at(-1).stepByStep ?? false], [[true, true, false], false], "turned off, the same: told once, and the view says it is off");
 
-  /* A FULL ROW OF LANDS (Rob, 2026-10-11: five lands, "cards cutting off on the right side ... I have no scroll bar"):
-     tapped lands overlap like any card, by the room their turn takes, and none is cut off; past a readable strip of each
-     the row scrolls, a bar to scroll it by, its last land reached. Copies of a land of Rob's are put in his own row and
-     the board laid out again (a resize); the next view puts it back as it was. */
-  const landRow = async (n) => {
-    await rob.page.click(".cm-board-tile[data-seat='0'] [data-action=board-focus]");
-    await rob.page.evaluate((n) => {
-      const row = document.querySelector(".cm-board-mat .cm-board-lands .cm-board-cards"), first = row.querySelector(".cm-bcard");
-      for (const k of [...row.querySelectorAll(".is-copy")]) k.remove();
-      for (let i = 0; i < n; i += 1) {const c = first.cloneNode(true); c.classList.add("is-copy"); if (i % 2 === 0) c.classList.add("is-tapped"); row.append(c);}
-    }, n);
-    const size = rob.page.viewportSize();
-    await rob.page.setViewportSize({width: size.width - 1, height: size.height});
-    await rob.page.setViewportSize(size);
-    await rob.page.waitForTimeout(400);
-    return rob.page.evaluate(() => {
-      const row = document.querySelector(".cm-board-mat .cm-board-lands .cm-board-cards"), r = row.getBoundingClientRect(), kids = [...row.children];
-      const last = kids.at(-1), lr = () => last.getBoundingClientRect();
-      const out = {n: kids.length, lapped: row.style.getPropertyValue("--lap") !== "", scrolling: row.classList.contains("is-scrolling"), overflow: getComputedStyle(row).overflowX, scrolls: row.scrollWidth > row.clientWidth + 1,
-        cut: kids.filter((k) => k.getBoundingClientRect().right > r.right + 1).length};
-      row.scrollLeft = row.scrollWidth;
-      out.lastSeen = lr().right <= row.getBoundingClientRect().right + 1 && lr().left >= row.getBoundingClientRect().left - 1;
-      return out;
-    });
-  };
-  let copies = 7;
-  const eight = await landRow(copies);
-  ok(!eight.scrolling && eight.cut === 0, `${eight.n} lands, half of them tapped: none cut off (${JSON.stringify(eight)})`);
-  /* The fewest lands that overlap: a tapped land takes its share of the overlap too, and its room is measured with the
-     margins it is turned in. */
-  let fewest = eight;
-  while (!fewest.lapped && fewest.n < 30) fewest = await landRow(copies += 1);
-  ok(fewest.lapped && !fewest.scrolling && fewest.cut === 0, `${fewest.n} lands, the fewest that overlap, half of them tapped: overlapped to fit, none cut off (${JSON.stringify(fewest)})`);
-  /* And the most before the row scrolls, each card down to its readable strip: there a tapped land that took no share of
-     the overlap would push the row's end out of it. */
-  let deepest = fewest, next = fewest;
-  while (!next.scrolling && next.n < 40) {deepest = next; next = await landRow(copies += 1);}
-  ok(deepest.lapped && !deepest.scrolling && deepest.cut === 0 && next.scrolling, `${deepest.n} lands, the most that overlap before the row scrolls: none cut off, and ${next.n} scroll (${JSON.stringify(deepest)})`);
-  const thirty = await landRow(29);
-  ok(thirty.scrolling && thirty.overflow === "auto" && thirty.scrolls && thirty.lastSeen, `${thirty.n} lands: the row scrolls, with its bar, and the last land is reached (${JSON.stringify(thirty)})`);
+  /* R3: crowded lands wrap whole cards and scroll independently, including rotated tapped cards. */
+  await rob.page.click(".cm-board-tile[data-seat='0'] [data-action=board-focus]");
+  const crowded=await rob.page.evaluate(()=>{
+    // Settle the responsive mode before adding layout-only copies, then measure in one task.
+    dispatchEvent(new Event('resize'));
+    const source=document.querySelector('.cm-board-mat .cm-board-lands .cm-board-cards'),first=source.querySelector('.cm-bcard');
+    for(let i=0;i<29;i++){const c=first.cloneNode(true);c.classList.add('is-copy');if(i%2===0)c.classList.add('is-tapped');source.append(c);}
+    dispatchEvent(new Event('resize'));
+    const row=document.querySelector('.cm-board-mat .cm-board-lands .cm-board-cards'),kids=[...row.children];
+    row.scrollTop=row.scrollHeight;
+    const r=row.getBoundingClientRect(),last=kids.at(-1).getBoundingClientRect(),tap=kids.find(c=>c.classList.contains('is-tapped'));
+    const matrix=new DOMMatrixReadOnly(getComputedStyle(tap).transform);
+    return {rows:new Set(kids.map(c=>c.offsetTop)).size,overflow:getComputedStyle(row).overflowY,scrolls:row.scrollHeight>row.clientHeight+1,
+      lastSeen:last.bottom<=r.bottom+1&&last.top>=r.top-1,
+      cut:kids.some(c=>{const b=c.getBoundingClientRect();return b.left<r.left-1||b.right>r.right+1;}),angle:Math.atan2(matrix.b,matrix.a)*180/Math.PI};
+  });
+  ok(crowded.rows>1,'crowded lands form multiple whole-card rows');
+  ok(!crowded.cut,'tapped cards reserve their rotated width within the land zone');
+  ok(Math.abs(crowded.angle-30)<.1,'tapped cards rotate 30 degrees');
+  ok(crowded.overflow==='auto'&&crowded.scrolls&&crowded.lastSeen,`the final crowded land is fully reachable: ${JSON.stringify(crowded)}`);
   await serial(async () => object.broadcast());
   await rob.page.waitForFunction(() => !document.querySelector(".cm-board-lands .is-copy"), null, {timeout: 10000});
 

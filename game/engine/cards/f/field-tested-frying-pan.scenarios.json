@@ -1,0 +1,228 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Field-Tested Frying Pan",
+  "fixtures": {
+    "Heal Three": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "You gain 3 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 3
+          }
+        ]
+      }
+    },
+    "Brown Bear Cub": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters: a Food, then a Halfling it is attached to; Rob gains 3, the Halfling is 4/4 until end of turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Field-Tested Frying Pan",
+            "Heal Three"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Field-Tested Frying Pan"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Heal Three"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Field-Tested Frying Pan",
+            "Food",
+            "Halfling",
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Halfling",
+            "power": 4,
+            "toughness": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "Equip {2} to the Bears: they get the ability",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Field-Tested Frying Pan",
+            "Brown Bear Cub",
+            "Plains",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Heal Three"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Field-Tested Frying Pan",
+          "targets": [
+            {
+              "card": "Brown Bear Cub"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Heal Three"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Brown Bear Cub",
+            "power": 5,
+            "toughness": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "Unattached: nothing happens as Rob gains life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Field-Tested Frying Pan",
+            "Brown Bear Cub",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Heal Three"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Heal Three"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Brown Bear Cub",
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    }
+  ]
+}

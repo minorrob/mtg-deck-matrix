@@ -1,0 +1,336 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Auron, Venerated Guardian",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Cub": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Big": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Beast"
+      ],
+      "manaCost": "{3}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Huge": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Beast"
+      ],
+      "manaCost": "{5}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 6,
+      "toughness": 6
+    },
+    "Grow": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Put a +1/+1 counter on target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "putCounter",
+            "targets": {
+              "target": 0
+            },
+            "counter": "+1/+1",
+            "count": 1
+          }
+        ]
+      }
+    },
+    "Trinket": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Draw a card.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "draw",
+            "count": 1
+          }
+        ]
+      }
+    },
+    "Kill": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target permanent.",
+        "targets": [
+          {
+            "what": "permanent"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Hero": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human"
+      ],
+      "manaCost": "{2}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 2,
+      "toughness": 2,
+      "supertypes": [
+        "Legendary"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Auron attacks: a +1/+1 counter makes it 3/6; when it does, Maya's Ogre (power 3, not less) cannot be chosen, her Bear is exiled until Auron leaves",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Auron, Venerated Guardian",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Kill"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Auron, Venerated Guardian"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Auron, Venerated Guardian",
+                "counter": "+1/+1",
+                "count": 1
+              }
+            },
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Bear"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "zone": "exile",
+              "cards": [
+                "Bear"
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Kill",
+          "targets": [
+            {
+              "card": "Auron, Venerated Guardian"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Auron, Venerated Guardian",
+            "Kill"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Nothing of the defending player with less power: the reflexive trigger has no target and does nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Auron, Venerated Guardian"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Big"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Auron, Venerated Guardian"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Big"
+          ]
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Auron, Venerated Guardian",
+            "counter": "+1/+1",
+            "count": 1
+          }
+        }
+      ]
+    }
+  ]
+}

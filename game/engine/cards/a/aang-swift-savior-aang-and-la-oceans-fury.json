@@ -1,0 +1,164 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+    "oracleId": "cbf09050-39d0-463b-96db-9e22011ae0d8",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Avatar",
+      "Ally"
+    ],
+    "manaCost": "{1}{W}{U}",
+    "colors": [
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Flash\nFlying\nWhen Aang enters, airbend up to one other target creature or spell. (Exile it. While it's exiled, its owner may cast it for {2} rather than its mana cost.)\nWaterbend {8}: Transform Aang.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flash",
+      "keyword": "flash"
+    },
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "When Aang enters, airbend up to one other target creature or spell. (Exile it. While it's exiled, its owner may cast it for {2} rather than its mana cost.)",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "mayPlay",
+          "targets": "remembered",
+          "owner": true,
+          "zone": "exile",
+          "until": "ever",
+          "spellsOnly": true,
+          "manaInstead": "{2}"
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "another": true
+            },
+            {
+              "what": "spell"
+            }
+          ],
+          "count": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "Waterbend {8}: Transform Aang.",
+      "cost": [
+        {
+          "atom": "waterbend",
+          "cost": "{8}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "setState",
+          "targets": "self",
+          "transform": true
+        }
+      ]
+    }
+  ],
+  "layout": "transform",
+  "back": {
+    "identity": {
+      "name": "Aang and La, Ocean's Fury",
+      "supertypes": [
+        "Legendary"
+      ],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Avatar",
+        "Spirit",
+        "Ally"
+      ],
+      "manaCost": null,
+      "colors": [],
+      "power": 5,
+      "toughness": 5
+    },
+    "oracleText": "Reach, trample\nWhenever Aang and La attack, put a +1/+1 counter on each tapped creature you control.",
+    "abilities": [
+      {
+        "kind": "keyword",
+        "text": "Reach",
+        "keyword": "reach"
+      },
+      {
+        "kind": "keyword",
+        "text": "trample",
+        "keyword": "trample"
+      },
+      {
+        "kind": "triggered",
+        "text": "Whenever Aang and La attack, put a +1/+1 counter on each tapped creature you control.",
+        "trigger": {
+          "on": "attacks",
+          "who": "self"
+        },
+        "effects": [
+          {
+            "effect": "putCounterAll",
+            "selector": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you",
+              "tapped": true
+            },
+            "counter": "+1/+1",
+            "count": 1
+          }
+        ]
+      }
+    ]
+  }
+}

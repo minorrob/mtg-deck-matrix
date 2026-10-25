@@ -1,0 +1,70 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Call for Unity",
+    "oracleId": "288d5415-ef44-400f-ab88-7c8a4deaaf4b",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Revolt — At the beginning of your end step, if a permanent left the battlefield under your control this turn, put a unity counter on this enchantment.\nCreatures you control get +1/+1 for each unity counter on this enchantment.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Revolt — At the beginning of your end step, if a permanent left the battlefield under your control this turn, put a unity counter on this enchantment.",
+      "trigger": {
+        "on": "end step"
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "unity",
+          "count": 1
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "permanentsLeftThisTurn": "you"
+          },
+          "atLeast": 1
+        }
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Creatures you control get +1/+1 for each unity counter on this enchantment.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "power": {
+          "countersOn": "self",
+          "counter": "unity"
+        },
+        "toughness": {
+          "countersOn": "self",
+          "counter": "unity"
+        }
+      }
+    }
+  ]
+}

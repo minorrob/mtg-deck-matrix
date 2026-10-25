@@ -244,6 +244,10 @@ export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: 
   /* Cascade (CR 702.85a; Apex Devastator, wave 4d L6): a cast trigger -- cards exiled from the top until a nonland card of lesser
      mana value, that card cast free or not, and every card exiled to the bottom in a random order (cards/index.mjs). */
   Cascade: "digUntil",
+  /* Myriad (CR 702.116a; Battle Angels of Tyr, Rob's lists P1): an attack trigger -- for each opponent other than the defending
+     player, a "you may" token copy tapped and attacking that player or a planeswalker of theirs, the tokens exiled at end of
+     combat (cards/index.mjs). */
+  Myriad: "copyPermanent",
   /* Ninjutsu (batch 54): an ability of the card in hand, returning an unblocked attacker, the Ninja put onto the battlefield
      tapped and attacking (cards/index.mjs). */
   Ninjutsu: "moveZone",

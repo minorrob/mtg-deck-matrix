@@ -1,0 +1,203 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Overlord of the Floodpits",
+  "scenarios": [
+    {
+      "name": "Cast for its impending cost {1}{U}{U}: four time counters, not a creature; draws two, discards one",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Overlord of the Floodpits"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Overlord of the Floodpits",
+          "alternative": 0
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Overlord of the Floodpits",
+            "counter": "time",
+            "count": 4
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Cast for {3}{U}{U}: a 5/3 flier; attacks: draws two, discards one",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Overlord of the Floodpits"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Overlord of the Floodpits",
+          "alternative": false
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Overlord of the Floodpits",
+                "power": 5,
+                "toughness": 3
+              }
+            },
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Wastes"
+              ]
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Already on the battlefield, attacks: draws two, then discards one",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Overlord of the Floodpits"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Overlord of the Floodpits"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Wastes"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1871,7 +1871,8 @@ export const attackWhom = {
   /* Queued only with two defending players or more, and asked at once: nothing happens between. */
   /* Each defending player, and each planeswalker one of them controls (CR 508.4; effects/permanents.mjs, attackPlaces). */
   open(state, params) {
-    state.awaiting = {kind: "effect-choice", effect: "attackWhom", player: params.player, tokens: [...params.tokens], places: attackPlaces(state, params.player)};
+    /* Or only some of them (myriad's "that player or a planeswalker they control"; effects/permanents.mjs, enterAttacking). */
+    state.awaiting = {kind: "effect-choice", effect: "attackWhom", player: params.player, tokens: [...params.tokens], places: params.places ?? attackPlaces(state, params.player)};
     return true;
   },
   choice(state, awaiting) {
@@ -2751,13 +2752,19 @@ export const counterKind = {
    choice: nobody is asked either way. */
 export const countersToRemove = {
   open(state, params, context) {
-    const then = params.then, [on] = then.targets ?? [], most = Math.max(0, then.count ?? 1);
-    const units = countersOn(state, on).flatMap(({kind, n}) => Array.from({length: Math.min(n, most)}, () => kind));
-    const min = then.upTo === true ? 0 : Math.min(most, units.length);
+    /* Or "move any number of counters from target permanent you control onto a second target permanent you control" (Resourceful
+       Defense): a moveCounters of any kinds (`counter: "any"`), from its `from` -- any number of them, none too. The two the
+       same, or the second gone, and none can move (CR 122.5): nobody is asked. */
+    const moving = then => then.effect === "moveCounters";
+    const then = params.then, [on] = (moving(then) ? then.from : then.targets) ?? [], most = moving(then) ? Infinity : Math.max(0, then.count ?? 1);
+    const [onto] = moving(then) ? then.targets ?? [] : [];
+    const units = moving(then) && (onto === undefined || onto === on || state.objects[onto]?.zone !== "battlefield") ? []
+      : countersOn(state, on).flatMap(({kind, n}) => Array.from({length: Math.min(n, most)}, () => kind));
+    const min = then.upTo === true || moving(then) ? 0 : Math.min(most, units.length);
     if (min === units.length) {
       const removing = {};
       for (const kind of units) removing[kind] = (removing[kind] ?? 0) + 1;
-      return {events: removeCounter(state, {...then, removing}, context)};
+      return {events: moving(then) ? [] : removeCounter(state, {...then, removing}, context)};
     }
     state.awaiting = {kind: "effect-choice", effect: "countersToRemove", player: context.controller, on, units, min, max: Math.min(most, units.length), then};
     return true;
@@ -2769,6 +2776,11 @@ export const countersToRemove = {
       const alike = options.filter((o) => o.counter === option.counter);
       if (alike.length > 1 && option === alike[0]) alike.forEach((o, k) => { o.label = `${o.label} (${k + 1})`; });
     }
+    if (awaiting.then.effect === "moveCounters") {
+      const onto = state.objects[(awaiting.then.targets ?? [])[0]]?.card ?? "that permanent";
+      return {id: `move-counters:${awaiting.player}:${state.turn}:${awaiting.on}`, title: `Move any number of counters from ${name} onto ${onto}`,
+        mode: "many", min: awaiting.min, max: awaiting.max, options};
+    }
     return {id: `remove-counters:${awaiting.player}:${state.turn}:${awaiting.on}`,
       title: `Remove ${awaiting.min === 0 ? "up to " : ""}${awaiting.max} counter${awaiting.max === 1 ? "" : "s"} from ${name}`,
       mode: "many", min: awaiting.min, max: awaiting.max, options};
@@ -2779,6 +2791,7 @@ export const countersToRemove = {
       throw new Error("Invalid selection");
     const removing = {};
     for (const i of picked) removing[awaiting.units[i]] = (removing[awaiting.units[i]] ?? 0) + 1;
+    if (awaiting.then.effect === "moveCounters") return {events: [], splice: [{...awaiting.then, moving: removing}]};
     return {events: [], splice: [{...awaiting.then, removing}]};
   },
   /* Its controller has left the game, and the ability with them (CR 800.4a): nothing is removed. */

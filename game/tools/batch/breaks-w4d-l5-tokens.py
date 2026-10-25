@@ -71,7 +71,7 @@ BREAKS = [
     ('a commander anthem on every creature', LA,
      '  if (rule.commander === true && state.objects[current.id]?.commander !== true) return false;\n', ''),
     ('nonSupertypes and commander no layer affects keys', LA,
-     '"continued", "nonSupertypes", "commander"]);', '"continued"]);'),
+     '"continued", "nonSupertypes", "commander",\n', '"continued",\n'),
     # Monument to Endurance
     ('unchosen "turn" refused', IX,
      '!((effect.unchosen === true || effect.unchosen === "turn") && ability.kind', '!((effect.unchosen === true) && ability.kind'),

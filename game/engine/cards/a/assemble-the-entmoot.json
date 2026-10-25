@@ -1,0 +1,83 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Assemble the Entmoot",
+    "oracleId": "1f1ad44c-1811-40e3-976b-03f19866abd5",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Creatures you control have reach.\nSacrifice this enchantment: Create three tapped X/X green Treefolk creature tokens, where X is the amount of life you gained this turn. Put a reach counter on each of them.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Creatures you control have reach.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "addKeywords": [
+          "Reach"
+        ]
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "Sacrifice this enchantment: Create three tapped X/X green Treefolk creature tokens, where X is the amount of life you gained this turn. Put a reach counter on each of them.",
+      "cost": [
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 3,
+          "tapped": true,
+          "remember": true,
+          "token": {
+            "name": "Treefolk",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Treefolk"
+            ],
+            "colors": [
+              "G"
+            ],
+            "power": {
+              "lifeGainedThisTurn": "you"
+            },
+            "toughness": {
+              "lifeGainedThisTurn": "you"
+            }
+          }
+        },
+        {
+          "effect": "putCounter",
+          "targets": "remembered",
+          "counter": "reach",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

@@ -106,7 +106,7 @@ BREAKS = [
     # Shadow (CR 702.28b) and its counter (CR 122.1b).
     ('shadow: counter', LAYERS, '  "shadow": "Shadow"});', '});'),
     ('shadow: blocking', COMBAT, '  if (has(state, attackerId, "Shadow") !== has(state, blockerId, "Shadow")) return false;\n', ''),
-    ('shadow: a keyword with behavior', COMBAT, '    "Shadow"]),', '    ]),'),
+    ('shadow: a keyword with behavior', COMBAT, '    "Shadow",\n    /* Skulk', '    /* Skulk'),
     ('shadow: declared', VOCAB, '  "shadow",\n', ''),
     # Selective Obliteration: each player's color, and whose it is.
     ('obliteration: that player chooses', ASKING,

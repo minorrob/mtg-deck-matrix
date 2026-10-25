@@ -1,0 +1,92 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Canonized in Blood",
+    "oracleId": "d491995f-e9b2-4187-852c-8a4c2495eaca",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "At the beginning of your end step, if you descended this turn, put a +1/+1 counter on target creature you control. (You descended if a permanent card was put into your graveyard from anywhere.)\n{5}{B}{B}, Sacrifice this enchantment: Create a 4/3 white and black Vampire Demon creature token with flying.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your end step, if you descended this turn, put a +1/+1 counter on target creature you control.",
+      "trigger": {
+        "on": "end step"
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ],
+      "condition": {
+        "descended": true
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{5}{B}{B}, Sacrifice this enchantment: Create a 4/3 white and black Vampire Demon creature token with flying.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{5}{B}{B}"
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Vampire Demon",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Vampire",
+              "Demon"
+            ],
+            "colors": [
+              "W",
+              "B"
+            ],
+            "power": 4,
+            "toughness": 3,
+            "keywords": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

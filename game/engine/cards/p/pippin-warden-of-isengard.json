@@ -1,0 +1,98 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Pippin, Warden of Isengard",
+    "oracleId": "421ec8a8-2b20-4296-b8f7-010acc3f8097",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Halfling",
+      "Advisor"
+    ],
+    "manaCost": "{B}{G}",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "colorIdentity": [
+      "B",
+      "G"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Partner with Merry, Warden of Isengard (When this creature enters, target player may put Merry into their hand from their library, then shuffle.)\n{1}, {T}: Create a Food token.\n{T}, Sacrifice four Foods: Other creatures you control get +3/+3 and gain haste until end of turn. Activate only as a sorcery.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Partner with Merry, Warden of Isengard",
+      "keyword": "partner with",
+      "name": "Merry, Warden of Isengard"
+    },
+    {
+      "kind": "activated",
+      "text": "{1}, {T}: Create a Food token.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "predefined": "Food"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{T}, Sacrifice four Foods: Other creatures you control get +3/+3 and gain haste until end of turn. Activate only as a sorcery.",
+      "timing": "sorcery",
+      "cost": [
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "subtypes": [
+              "Food"
+            ]
+          },
+          "count": 4
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you",
+            "another": true
+          },
+          "power": 3,
+          "toughness": 3,
+          "keywords": [
+            "Haste"
+          ],
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

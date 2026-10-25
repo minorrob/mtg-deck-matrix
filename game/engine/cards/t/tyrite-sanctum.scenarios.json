@@ -1,0 +1,380 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Tyrite Sanctum",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Cub": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Big": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Beast"
+      ],
+      "manaCost": "{3}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Huge": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Beast"
+      ],
+      "manaCost": "{5}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 6,
+      "toughness": 6
+    },
+    "Grow": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Put a +1/+1 counter on target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "putCounter",
+            "targets": {
+              "target": 0
+            },
+            "counter": "+1/+1",
+            "count": 1
+          }
+        ]
+      }
+    },
+    "Trinket": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Draw a card.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "draw",
+            "count": 1
+          }
+        ]
+      }
+    },
+    "Kill": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target permanent.",
+        "targets": [
+          {
+            "what": "permanent"
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Hero": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human"
+      ],
+      "manaCost": "{2}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 2,
+      "toughness": 2,
+      "supertypes": [
+        "Legendary"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{2}, {T}: the legendary Hero becomes a God with a +1/+1 counter, for good; then {4}, {T}, sacrifice: an indestructible counter on that God, and Kill does nothing to it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tyrite Sanctum",
+            "Hero",
+            "Bear",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Kill"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Tyrite Sanctum"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Hero"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Tyrite Sanctum",
+          "targets": [
+            {
+              "card": "Hero"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Hero",
+                "counter": "+1/+1",
+                "count": 1
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Tyrite Sanctum"
+              },
+              "count": 2
+            }
+          ]
+        },
+        {
+          "activate": "Tyrite Sanctum",
+          "ability": "a2",
+          "targets": [
+            {
+              "card": "Hero"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Kill",
+          "targets": [
+            {
+              "card": "Hero"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Hero",
+            "counter": "indestructible",
+            "count": 1
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Hero",
+            "has": [
+              "Indestructible"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Tyrite Sanctum",
+            "Kill"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Taps for {C}; no God, no target for the last ability",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Tyrite Sanctum",
+            "Bear",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Tyrite Sanctum"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "tap": "Tyrite Sanctum"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 5
+          }
+        }
+      ]
+    }
+  ]
+}
