@@ -380,9 +380,13 @@ try {
         const d = p.locator("#cm-board-decision:not(.is-also)").first();
         if (await d.count()) {
           assert.ok(!/cannot answer/.test((await d.textContent()) || ""), "the board can answer what it is asked");
-          const confirm = d.locator("[data-action=board-confirm]"), opts = d.locator("[data-action=board-option]:enabled");
+          /* A stack of the same card (×N) is a choice to press as well (Rob, 2026-10-25); where a question needs more of it
+             than one, its how-many is set to as many as it allows. */
+          const confirm = d.locator("[data-action=board-confirm]"), opts = d.locator("[data-action=board-option]:enabled, [data-action=board-option-same]:enabled");
           if (await confirm.count()) {
             for (let i = 0; i < await opts.count() && !(await enabled(confirm)); i++) await opts.nth(i).click({timeout:2000});
+            const counts = d.locator(".cm-board-same-count:enabled");
+            for (let i = 0; i < await counts.count() && !(await enabled(confirm)); i++) {const c = counts.nth(i); await c.fill(String(await c.getAttribute("max")), {timeout:2000});}
             if (await enabled(confirm)) await confirm.click({timeout:2000});
           } else if (await opts.count()) await opts.first().click({timeout:2000});
           return;

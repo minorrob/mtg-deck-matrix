@@ -24,6 +24,23 @@ export async function click(page, selector) {
   await element.click({timeout: 10000});
 }
 
+/* The options the pilot picked, pressed as a person would (Rob, 2026-10-25: the same card in a question is one stack, ×N):
+   an option drawn on its own by its button; one in a stack by the stack -- a click where one may be taken, and where more
+   may, its how-many set to the number of that card the pilot took. Which of identical cards is taken is the same choice. */
+async function pickOptions(page, indices) {
+  const stacks = await page.$$eval("#cm-board-decision [data-action=board-option-same]", (bs) => bs.map((b) => b.dataset.same));
+  const done = new Set();
+  for (const i of indices) {
+    const key = stacks.find((s) => s.split(",").map(Number).includes(i));
+    if (!key) {await click(page, `[data-action=board-option][data-index="${i}"]`); continue;}
+    if (done.has(key)) continue;
+    done.add(key);
+    const n = indices.filter((x) => key.split(",").map(Number).includes(x)).length, count = await visible(page, `#cm-board-decision [data-board-same="${key}"]`);
+    if (count) await count.fill(String(n));
+    else await click(page, `#cm-board-decision [data-action=board-option-same][data-same="${key}"]`);
+  }
+}
+
 /* The option the pilot picked at priority, found where the board shows it: in the decision panel, behind Also, in
    the card's own chooser, or grouped under one button with others of its kind. */
 async function priority(page, d, chosen) {
@@ -78,7 +95,7 @@ export function boardPerson({page, seat, cards, current, timeout = 15000}) {
           await click(page, `[data-action=board-block-pair][data-index="${i}"]`);
         }
         await page.locator("[data-action=board-confirm]:not([disabled])").waitFor({timeout});
-      } else for (const i of picked.indices ?? []) await click(page, `[data-action=board-option][data-index="${i}"]`);
+      } else await pickOptions(page, picked.indices ?? []);
       if (["one", "boolean", "index", "many", "order", "ack", "damage", "amount"].includes(d.mode)) await click(page, "[data-action=board-confirm]:not([disabled])");
     }
     while (current()?.revision === v.revision && Date.now() - at < timeout) await page.waitForTimeout(20);
