@@ -1,5 +1,41 @@
 # Who holds the work
 
+## The board: the same card one stack; the cards others play beside the question, 2026-10-25 (Claude Code on Personal-HP, for Rob; `claude/board-plays-clicks`)
+
+Rob, 2026-10-25, choosing option A from renders: the cards another seat plays, held up for ten seconds, stood over the
+question being answered -- its options, Confirm, a blocker's tile -- in every view and size measured (25 of 27), so a full
+game against AIs stopped mid-game on main too. And: *"stack cards that are identical and have an x# on them ... If I can
+select more than one, I should have a small numeric tick up/down value to choose how many in that stack."* At his word
+this changes the Codex · Play lane's `crankmagic-board.js`, `crankmagic-stage.css` and two of its suites.
+
+- **What changed:** the held-up cards move just past the question when they would cover it, and one that still would (a
+  window too narrow) is put away, as one over the keyboard's focus already was. In a question for one or many, the same
+  card is one button, ×N (a library search's 21 Islands one "Island ×21"); a click takes one, a click again puts it back;
+  where more than one may be chosen, a number beside it says how many, never past the stack or the question's most. A
+  card on the table is the same only in the same state (a tapped Goblin is not an untapped one's twin).
+- **Suites moved with it:** `board-choices`' scry now expects a button per different card (its library repeats a name);
+  `tools/play-tabletop-preview.mjs`' long list gives each option a different name, so `table-tabletop` still has 60 and 150.
+- **Proof:** `tests/board-choice-stacks.mjs` 63 checks, `breaks-choice-stacks.py` 9 of 9; every suite that loads the board
+  green (29); `solo-vs-ai` GAMES=1 plays a whole game to its end through the board, 17 checks.
+
+## Public precons; no deck bundled for everyone, 2026-10-25 (Claude Code on Personal-HP, for Rob; `claude/public-precons`)
+
+Rob, 2026-10-25: *"Make the precons public, available to anyone with access to play, and no other decks other than those
+they make, shared with them or public. This removes the prior auto sharing of my decks."* At his word this changes files of
+the Codex · Play lane (`crankmagic-table.js`, `crankmagic-stage.css`, `tests/table-lobby.mjs`, `tests/uat/solo-vs-ai.mjs`).
+
+- **What changed:** the table's deck chooser offers **Precons**, the six New from Wizards decks, open to everyone, chosen and
+  played with nothing added to a library. Rob's D1–D6, bundled in `crankmagic-table.js` for every player since October 15,
+  are gone; "Shared with you" lists only decks shared with the person or made public.
+- **Proof:** `table-lobby` 140 checks; `breaks-public-precons.py` 5 of 5; asset-versions, feature-wiring, data-integrity,
+  design-tokens, crankmagic-lobby, table-by-group green. `solo-vs-ai` (GAMES=1) seats four precons, starts and reloads the
+  game, then stops mid-game where the board's played-cards strip (`#cm-board-plays`) takes a click meant for the board:
+  **main fails identically with the bundled decks**, so that is the board's, not this change's.
+- **Staging's public shares turned off, 2026-10-25,** on Rob's "turn off the public sharing of my D1-D6 on staging (set
+  public_role to none on those six shares)": the six `shares` rows (`deck:live:D1`–`D6`, owner Rob) now have no
+  `public_role`, each revision 1 → 2, and no grants; staging holds no other share. Read back the same way. Staging's
+  served app already reads shares when signed in, so nobody else is offered those decks there now; the bundled copy in
+  the app goes when this PR is released.
 ## Play: Camera closes on an outside press; Settings is a window, 2026-10-25 (a Claude cloud session, for Rob; `claude/sweet-wright-p0klet`, temporarily in Codex · Play's files)
 
 Rob, 2026-10-25: *"Camera menu doesn't close when I click anywhere outside of it."* and *"Can't access full settings menu

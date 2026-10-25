@@ -357,18 +357,28 @@ try {
   const box = page.locator("#cm-board-decision");
   await box.locator("h3", {hasText: "Scry 3"}).waitFor({timeout: 60000});
   const cardsBox = box.locator("[data-action=board-option]"), confirm = box.locator("[data-action=board-confirm]");
-  const pressed = async () => Promise.all((await cardsBox.all()).map((el) => el.getAttribute("aria-pressed")));
   const foot = async () => (await box.locator(".cm-board-decision-foot .cm-muted").first().innerText()).replace(/\s+/g, " ").trim();
-  eq([(await box.locator("h3").textContent()).trim(), await cardsBox.count(), await pressed()], ["Scry 3: choose any to put on the bottom", 3, ["false", "false", "false"]],
-    "the board draws Rob's scry as a pick-several pop-up: the question, a button for each card looked at, none picked");
+  /* THE SAME CARD, ONE STACK (Rob, 2026-10-25): a button for each different card looked at, and the same card twice one
+     stack, ×2. Rob's library is Mountains and Peek Threes, so the top three repeat a name; the groups are read off the
+     question, in its order (the first of a stack is what its click takes). */
+  const groups = [...new Map(scry.options.map((o) => [o.label, scry.options.filter((x) => x.label === o.label)])).values()];
+  const choices = box.locator("[data-action=board-option], [data-action=board-option-same]");
+  const choicePressed = async () => Promise.all((await choices.all()).map((el) => el.getAttribute("aria-pressed")));
+  const words = async () => (await choices.allInnerTexts()).map((x) => x.replace(/\s+/g, " ").trim());
+  eq([(await box.locator("h3").textContent()).trim(), await words(), await choicePressed()],
+    ["Scry 3: choose any to put on the bottom", groups.map((g) => g.length > 1 ? `${g[0].label} ×${g.length}` : g[0].label), groups.map(() => "false")],
+    "the board draws Rob's scry as a pick-several pop-up: the question, a button for each different card looked at (the same card one stack), none picked");
   ok(await confirm.isEnabled() && await foot() === "0 chosen · 0 to 3", `Confirm is ready with none picked, since keeping all three is an answer ("${await foot()}")`);
-  await cardsBox.nth(2).focus();
+  const last = groups.length - 1;
+  await choices.nth(last).focus();
   await page.keyboard.press('Enter');
-  ok(await cardsBox.nth(2).evaluate(el=>el===document.activeElement), 'a non-first many-choice option keeps keyboard focus through its redraw');
-  await cardsBox.nth(0).click();
-  eq(await pressed(), ["true", "false", "true"], "two cards pressed, each marked picked");
-  await cardsBox.nth(2).click();
-  eq([await pressed(), await foot()], [["true", "false", "false"], "1 chosen · 0 to 3"], "and a second press puts one back: a pick-several, not a pick-one");
+  ok(await choices.nth(last).evaluate(el=>el===document.activeElement), 'a non-first many-choice option keeps keyboard focus through its redraw');
+  if (last > 0) {
+    await choices.nth(0).click();
+    eq(await choicePressed(), groups.map((_, i) => i === 0 || i === last ? "true" : "false"), "two cards pressed, each marked picked");
+    await choices.nth(last).click();
+  }
+  eq([await choicePressed(), await foot()], [groups.map((_, i) => i === 0 ? "true" : "false"), "1 chosen · 0 to 3"], "and a second press puts one back: a pick-several, not a pick-one");
   if (SHOTS) await page.screenshot({path: path.join(SHOTS, "board-scry-bottom-1400.png")});
   await confirm.click();
   await box.locator("h3", {hasText: "Put the rest back on top"}).waitFor({timeout: 10000});
