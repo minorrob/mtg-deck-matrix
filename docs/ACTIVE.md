@@ -1,6 +1,13 @@
 # Who holds the work
 
-## Play: Camera closes on an outside press; Settings is a window, 2026-10-25 (a Claude cloud session, for Rob; `claude/sweet-wright-p0klet`, temporarily in Codex · Play's files)
+## Play: Camera closes on an outside press; Settings is a window, 2026-10-25 (a Claude cloud session, for Rob; PR #874): merged, on staging
+
+**Merged and released, 2026-10-25:** PR #874 merged to main as `9ca99e53` (merge commit) on Rob's "merge 874 and push to
+staging when green", after Actions `suites` passed on head `958dd778` (run 40205995620) with base `9f20538d` unmoved.
+`tools/release-staging.sh` then pushed `release/cloud-staging` `a60c06dc` from main `9ca99e53` (release-acceptance 23,
+play-e2e 44), and `node tools/staging-check.mjs --expect 9ca99e53` passed (both pages and `/api/me`). The release slot is
+free; production is unchanged. Locally `a11y-board` fails one contrast reading ("2/2", steel-cobalt, table view) on clean
+main `9f20538d` as well; Actions passes it.
 
 Rob, 2026-10-25: *"Camera menu doesn't close when I click anywhere outside of it."* and *"Can't access full settings menu
 when selected. It cuts off at bottom of screen and I can't scroll down. ... when I press "Settings" in the dropdown, the
