@@ -1,0 +1,451 @@
+{
+ "schema": "library-load-lane@1",
+ "lane": "A-angels",
+ "theme": "Calling All Angels",
+ "label": "Angels and life (Giada, Font of Hope): lieutenant; the monarch; \"can't attack you unless\" taxes; investigate and Clues with exalted; \"7 life more than your starting life total\"; a cast restriction by turn of the game (Serra Avenger); an alternative cost of tapping creatures (Sephara)",
+ "source": {
+  "precon": "CallingAllAngels_FDC",
+  "set": "FDC",
+  "released": "2026-10-02",
+  "decklists": "data/precons.json",
+  "oracle": "data/engine/oracle.json"
+ },
+ "cards": [
+  {
+   "name": "Always Watching",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Nontoken creatures you control get +1/+1 and have vigilance."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Angel of Vitality",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Creature - Angel",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "This creature gets +2/+2 as long as you have 25 or more life."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Angelic Destiny",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Enchantment - Aura",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Enchanted creature gets +4/+4, has flying and first strike, and is an Angel in addition to its other types.",
+    "When enchanted creature dies, return this card to its owner's hand."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Angelic Field Marshal",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Creature - Angel",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Lieutenant — As long as you control your commander, this creature gets +2/+2 and creatures you control have vigilance."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Angelic Sleuth",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Creature - Angel Advisor",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever another permanent you control leaves the battlefield, if it had counters on it, investigate. (Create a Clue token. It's an artifact with \"{2}, Sacrifice this token: Draw a card.\")"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Archangel of Tithes",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Creature - Angel",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "As long as this creature is untapped, creatures can't attack you or planeswalkers you control unless their controller pays {1} for each of those creatures.",
+    "As long as this creature is attacking, creatures can't block unless their controller pays {1} for each of those creatures."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Bishop of Wings",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Creature - Human Cleric",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever an Angel you control enters, you gain 4 life.",
+    "Whenever an Angel you control dies, create a 1/1 white Spirit creature token with flying."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Cleansing Nova",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Choose one —",
+    "• Destroy all creatures.",
+    "• Destroy all artifacts and enchantments."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Court of Grace",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this enchantment enters, you become the monarch.",
+    "At the beginning of your upkeep, create a 1/1 white Spirit creature token with flying.",
+    "If you're the monarch, create a 4/4 white Angel creature token with flying instead."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Defy Death",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "If it's an Angel, put two +1/+1 counters on it."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Emeria Shepherd",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Creature - Angel",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Landfall — Whenever a land you control enters, you may return target nonland permanent card from your graveyard to your hand.",
+    "If that land is a Plains, you may return that nonland permanent card to the battlefield instead."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Endless Atlas",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{2}, {T}: Draw a card.",
+    "Activate only if you control three or more lands with the same name."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Exorcise",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Exile target artifact, enchantment, or creature with power 4 or greater."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Grasp of Fate",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this enchantment enters, for each opponent, exile up to one target nonland permanent that player controls until this enchantment leaves the battlefield. (Those permanents return under their owners' control.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Herald of War",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Creature - Angel",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever this creature attacks, put a +1/+1 counter on it.",
+    "Angel spells and Human spells you cast cost {1} less to cast for each +1/+1 counter on this creature."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Linvala, the Preserver",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Legendary Creature - Angel",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When Linvala enters, if an opponent has more life than you, you gain 5 life.",
+    "When Linvala enters, if an opponent controls more creatures than you, create a 3/3 white Angel creature token with flying."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Lyra Dawnbringer",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Legendary Creature - Angel",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Other Angels you control get +1/+1 and have lifelink."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Merchant of Truth",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Creature - Angel Detective",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever a nontoken creature you control dies, investigate.",
+    "Clues you control have exalted. (Whenever a creature you control attacks alone, that creature gets +1/+1 until end of turn for each instance of exalted among permanents you control.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Metropolis Reformer",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Creature - Angel Cleric",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever this creature is dealt damage, you gain that much life."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Norn's Choirmaster",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Creature - Phyrexian Angel",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever a commander you control enters or attacks, proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Reya Dawnbringer",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Legendary Creature - Angel",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "At the beginning of your upkeep, you may return target creature card from your graveyard to the battlefield."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Righteous Valkyrie",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Creature - Angel Cleric",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever another Angel or Cleric you control enters, you gain life equal to that creature's toughness.",
+    "As long as you have at least 7 life more than your starting life total, creatures you control get +2/+2."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Search the Premises",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever a creature attacks you or a planeswalker you control, investigate. (Create a Clue token. It's an artifact with \"{2}, Sacrifice this token: Draw a card.\")"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Sephara, Sky's Blade",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Legendary Creature - Angel",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "You may pay {W} and tap four untapped creatures you control with flying rather than pay this spell's mana cost.",
+    "Other creatures you control with flying have indestructible. (Damage and effects that say \"destroy\" don't destroy them.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Seraph of the Sword",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Creature - Angel",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Prevent all combat damage that would be dealt to this creature."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Seraph Sanctuary",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Land",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever an Angel you control enters, you gain 1 life."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Serra Avenger",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Creature - Angel",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "You can't cast Serra Avenger during your first, second, or third turns of the game."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Speaker of the Heavens",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Creature - Human Cleric",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{T}: Create a 4/4 white Angel creature token with flying.",
+    "Activate only if you have at least 7 life more than your starting life total and only as a sorcery."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Starnheim Aspirant",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Creature - Human Cleric",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Angel spells you cast cost {2} less to cast."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Sunblast Angel",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Creature - Angel",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature enters, destroy all tapped creatures."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Thraben Watcher",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Creature - Angel",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Other nontoken creatures you control get +1/+1 and have vigilance."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Vanguard Seraph",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Creature - Angel Warrior",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever you gain life for the first time each turn, surveil 1. (Look at the top card of your library. You may put it into your graveyard.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Wojek Investigator",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Creature - Angel Detective",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "At the beginning of your upkeep, investigate once for each opponent who has more cards in hand than you. (To investigate, create a Clue token. It's an artifact with \"{2}, Sacrifice this token: Draw a card.\")"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Youthful Valkyrie",
+   "scope": "precon",
+   "deck": "Calling All Angels",
+   "type": "Creature - Angel",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever another Angel you control enters, put a +1/+1 counter on this creature."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Tyrant's Familiar",
+   "scope": "precon",
+   "deck": "Reign of Dragons",
+   "type": "Creature - Dragon",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Lieutenant — As long as you control your commander, this creature gets +2/+2 and has \"Whenever this creature attacks, it deals 7 damage to target creature defending player controls.\""
+   ],
+   "needs": null
+  }
+ ],
+ "review": []
+}

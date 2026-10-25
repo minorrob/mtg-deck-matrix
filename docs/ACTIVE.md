@@ -1,5 +1,16 @@
 # Who holds the work
 
+## Card load, 2026-10-25: the six precons on the Decks screen (Claude Code on Personal-HP, for Rob; `claude/engine-precons-oct2`)
+
+Rob, 2026-10-25: *"Next, we need to ensure that all cards in the precons listed on the Decks screen is loaded into the game
+engine and can be played in Play."* The six "New from Wizards" decks (Foundations Commander and Reality Fracture
+Commander, 2026-10-02): 406 distinct cards, 256 play now, **150 to write**. Multiverse Reforged plays already; of the
+commanders only Ghoulcaller Gisa is unwritten. `docs/engine/card-load-precons-2026-10-25/` has the review, the brief and
+five lane files, one per deck.
+
+- **In progress:** five lanes in the Claude · Engine lane's card files, `claude/engine-precons-<lane>`, each a draft PR into
+  this branch, which integrates them and goes to `main` as one PR. This branch also carries #863's record of the 10-24 load.
+
 ## Card load, 2026-10-24: Rob's four priority lists (Claude Code on Personal-HP, for Rob; PR #862): merged, on staging
 
 **Merged, 2026-10-25:** PR #862 (`claude/card-engine-loading-0584aa`, head e9804988) merged to main as `30172f7e` at

@@ -1,0 +1,366 @@
+{
+ "schema": "library-load-lane@1",
+ "lane": "C-dragons",
+ "theme": "Reign of Dragons",
+ "label": "Dragons (Lathliss, Dragon Queen): additional combat phases (Hellkite Charger, Scourge of the Throne); dethrone; discover; behold; unspent red mana kept (Leyline Tyrant); mana spendable only on Dragons; exile-and-play-until; the Saga The Elder Dragon War",
+ "source": {
+  "precon": "ReignOfDragons_FDC",
+  "set": "FDC",
+  "released": "2026-10-02",
+  "decklists": "data/precons.json",
+  "oracle": "data/engine/oracle.json"
+ },
+ "cards": [
+  {
+   "name": "Bitter Reunion",
+   "scope": "precon",
+   "deck": "Reign of Dragons",
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this enchantment enters, you may discard a card.",
+    "If you do, draw two cards.",
+    "{1}, Sacrifice this enchantment: Creatures you control gain haste until end of turn."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Breaching Dragonstorm",
+   "scope": "precon",
+   "deck": "Reign of Dragons",
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this enchantment enters, exile cards from the top of your library until you exile a nonland card.",
+    "You may cast it without paying its mana cost if that spell's mana value is 8 or less.",
+    "If you don't, put that card into your hand.",
+    "When a Dragon you control enters, return this enchantment to its owner's hand."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Breath Weapon",
+   "scope": "precon",
+   "deck": "Reign of Dragons",
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Breath Weapon deals 2 damage to each non-Dragon creature."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Carnelian Orb of Dragonkind",
+   "scope": "precon",
+   "deck": "Reign of Dragons",
+   "type": "Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "If that mana is spent on a Dragon creature spell, it gains haste until end of turn."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Count on Luck",
+   "scope": "precon",
+   "deck": "Reign of Dragons",
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "At the beginning of your upkeep, exile the top card of your library.",
+    "You may play that card this turn."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Crucible of Fire",
+   "scope": "precon",
+   "deck": "Reign of Dragons",
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Dragon creatures you control get +3/+3."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Dragonhawk, Fate's Tempest",
+   "scope": "precon",
+   "deck": "Reign of Dragons",
+   "type": "Legendary Creature - Bird Dragon",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever Dragonhawk enters or attacks, exile the top X cards of your library, where X is the number of creatures you control with power 4 or greater.",
+    "You may play those cards until your next end step.",
+    "At the beginning of your next end step, Dragonhawk deals 2 damage to each opponent for each of those cards that are still exiled."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Firespitter Whelp",
+   "scope": "precon",
+   "deck": "Reign of Dragons",
+   "type": "Creature - Dragon",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever you cast a noncreature or Dragon spell, this creature deals 1 damage to each opponent."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Goddric, Cloaked Reveler",
+   "scope": "precon",
+   "deck": "Reign of Dragons",
+   "type": "Legendary Creature - Human Noble",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Celebration — As long as two or more nonland permanents entered the battlefield under your control this turn, Goddric is a Dragon with base power and toughness 4/4, flying, and \"{R}: Dragons you control get +1/+0 until end of turn.\" (He loses all other creature types.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Goldlust Triad",
+   "scope": "precon",
+   "deck": "Reign of Dragons",
+   "type": "Creature - Dragon",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever this creature deals combat damage to a player, create a Treasure token."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Hazoret's Monument",
+   "scope": "precon",
+   "deck": "Reign of Dragons",
+   "type": "Legendary Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever you cast a creature spell, you may discard a card.",
+    "If you do, draw a card."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Hellkite Charger",
+   "scope": "precon",
+   "deck": "Reign of Dragons",
+   "type": "Creature - Dragon",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever this creature attacks, you may pay {5}{R}{R}.",
+    "If you do, untap all attacking creatures and after this phase, there is an additional combat phase."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Hit the Mother Lode",
+   "scope": "precon",
+   "deck": "Reign of Dragons",
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Discover 10.",
+    "If the discovered card's mana value is less than 10, create a number of tapped Treasure tokens equal to the difference. (To discover 10, exile cards from the top of your library until you exile a nonland card with mana value 10 or less. Cast it without paying its mana cost or put it into your hand. Put the rest on the bottom in a random order.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Leyline Tyrant",
+   "scope": "precon",
+   "deck": "Reign of Dragons",
+   "type": "Creature - Dragon",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "You don't lose unspent red mana as steps and phases end.",
+    "When this creature dies, you may pay any amount of {R}.",
+    "When you do, it deals that much damage to any target."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Magmaquake",
+   "scope": "precon",
+   "deck": "Reign of Dragons",
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Magmaquake deals X damage to each creature without flying and each planeswalker."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Minion of the Mighty",
+   "scope": "precon",
+   "deck": "Reign of Dragons",
+   "type": "Creature - Kobold",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Pack tactics — Whenever this creature attacks, if you attacked with creatures with total power 6 or greater this combat, you may put a Dragon creature card from your hand onto the battlefield tapped and attacking."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Nogi, Draco-Zealot",
+   "scope": "precon",
+   "deck": "Reign of Dragons",
+   "type": "Legendary Creature - Kobold Shaman",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever Nogi attacks, if you control three or more Dragons, until end of turn, Nogi becomes a Dragon with base power and toughness 5/5 and gains flying."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Orb of Dragonkind",
+   "scope": "precon",
+   "deck": "Reign of Dragons",
+   "type": "Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Spend this mana only to cast Dragon spells or activate abilities of Dragons.",
+    "{R}, {T}, Sacrifice this artifact: Look at the top seven cards of your library.",
+    "You may reveal a Dragon card from among them and put it into your hand.",
+    "Put the rest on the bottom of your library in a random order."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Parapet Thrasher",
+   "scope": "precon",
+   "deck": "Reign of Dragons",
+   "type": "Creature - Dragon",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever one or more Dragons you control deal combat damage to an opponent",
+    "choose one that hasn't been chosen this turn —",
+    "• Destroy target artifact that opponent controls.",
+    "• This creature deals 4 damage to each other opponent.",
+    "• Exile the top card of your library.",
+    "You may play it this turn."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Rapacious Dragon",
+   "scope": "precon",
+   "deck": "Reign of Dragons",
+   "type": "Creature - Dragon",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature enters, create two Treasure tokens. (They're artifacts with \"{T}, Sacrifice this token: Add one mana of any color.\")"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Sarkhan, Dragon Ascendant",
+   "scope": "precon",
+   "deck": "Reign of Dragons",
+   "type": "Legendary Creature - Human Druid",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When Sarkhan enters, you may behold a Dragon.",
+    "If you do, create a Treasure token. (To behold a Dragon, choose a Dragon you control or reveal a Dragon card from your hand.)",
+    "Whenever a Dragon you control enters, put a +1/+1 counter on Sarkhan.",
+    "Until end of turn, Sarkhan becomes a Dragon in addition to his other types and gains flying."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Scourge of the Throne",
+   "scope": "precon",
+   "deck": "Reign of Dragons",
+   "type": "Creature - Dragon",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Dethrone (Whenever this creature attacks the player with the most life or tied for most life, put a +1/+1 counter on it.)",
+    "Whenever this creature attacks for the first time each turn, if it's attacking the player with the most life or tied for most life, untap all attacking creatures.",
+    "After this phase, there is an additional combat phase."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Scourge of Valkas",
+   "scope": "precon",
+   "deck": "Reign of Dragons",
+   "type": "Creature - Dragon",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever this creature or another Dragon you control enters, it deals X damage to any target, where X is the number of Dragons you control."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Skyline Despot",
+   "scope": "precon",
+   "deck": "Reign of Dragons",
+   "type": "Creature - Dragon",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature enters, you become the monarch.",
+    "At the beginning of your upkeep, if you're the monarch, create a 5/5 red Dragon creature token with flying."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Spit Flame",
+   "scope": "precon",
+   "deck": "Reign of Dragons",
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever a Dragon you control enters, you may pay {R}.",
+    "If you do, return this card from your graveyard to your hand."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Terror of Mount Velus",
+   "scope": "precon",
+   "deck": "Reign of Dragons",
+   "type": "Creature - Dragon",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature enters, creatures you control gain double strike until end of turn."
+   ],
+   "needs": null
+  },
+  {
+   "name": "The Elder Dragon War",
+   "scope": "precon",
+   "deck": "Reign of Dragons",
+   "type": "Enchantment - Saga",
+   "layout": "saga",
+   "compiler": "structure",
+   "gaps": [],
+   "needs": null
+  }
+ ],
+ "review": []
+}
