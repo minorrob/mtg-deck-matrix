@@ -35,7 +35,7 @@
  * replay and in a room woken mid-game alike.
  */
 
-import {housePilot, meetRequirements, withinBudget} from "./house-pilot.mjs";
+import {housePilot, meetRequirements, withinBudget, keptWithin} from "./house-pilot.mjs";
 import {atLeast} from "./odds.mjs";
 import {createRng} from "../rng.mjs";
 
@@ -439,7 +439,10 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
     const canBlock = (b, a) => !has(a, "Menace") && allowed.has(`${b.cardId}:${a.cardId}`);
     const out = defend({attackers, blockers, life: self.life, canBlock, worth, toPlayer: (a) => atMe.has(a.cardId)});
     const indices = [...out.blocks].map(([attackerId, b]) => allowed.get(`${b.cardId}:${attackerId}`));
-    return {indices: indices.slice(0, Math.max(choice.min ?? 0, Math.min(choice.max ?? indices.length, indices.length)))};
+    /* Kept, in order, to what it can pay to block with (a block tax, Archangel of Tithes; CR 509.1d). */
+    const kept = keptWithin(choice, indices.slice(0, Math.max(choice.min ?? 0, Math.min(choice.max ?? indices.length, indices.length))));
+    /* And what the record requires ("must be blocked if able", CR 509.1c): those blocks added to its plan. */
+    return {indices: Array.isArray(choice.requires) && choice.requires.length ? meetRequirements(choice, kept) : kept};
   }
 
   /* ---- Whether to keep the opening hand ---- */

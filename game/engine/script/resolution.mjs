@@ -20,13 +20,14 @@
  */
 
 import {runEffect, eachOf} from "./effects/index.mjs";
+import {mergedOrderToAsk} from "../state/index.mjs";
 import {ASKING, commandersGoingHome} from "./effects/asking.mjs";
 import {damageQuestion, addCounters, counterQuestion} from "./effects/resources.mjs";
 import {controllerOf} from "../rules/layers.mjs";
 import {destructionQuestion, drawQuestion, dredgers, singleDraws} from "./effects/zones.mjs";
 import {tokenQuestion} from "./effects/permanents.mjs";
 import {bindEffect} from "./bind.mjs";
-import {countEffect} from "./amount.mjs";
+import {countEffect, amountOf} from "./amount.mjs";
 import {conditionHolds} from "./condition.mjs";
 import {proliferateTimes} from "../rules/statics.mjs";
 
@@ -55,8 +56,14 @@ export function beginResolution(state, effects, context = {}, rng = null) {
       ...(context.gift !== undefined ? {gift: context.gift} : {}),
       /* How many times its source had transformed as the ability went on the stack (CR 701.27f; rules/stack.mjs). */
       ...(context.sourceTransforms !== undefined ? {sourceTransforms: context.sourceTransforms} : {}),
+      /* Its source, gone before it reached the stack, for "this card" (Angelic Destiny; rules/stack.mjs, script/bind.mjs). */
+      ...(context.sourceWas !== undefined ? {sourceWas: context.sourceWas} : {}),
       /* What the cost sacrificed, as it last existed ("the sacrificed creature's power"; script/amount.mjs). */
       ...(context.sacrificed ? {sacrificed: context.sacrificed} : {}),
+      /* Its targets as they were chosen: what a total was divided among (CR 601.2d; script/amount.mjs, dividedAmong). */
+      ...(context.targetsChosen ? {targetsChosen: context.targetsChosen} : {}),
+      /* And the division its caster announced, target by target (CR 601.2d; effects/resources.mjs, damageHits' `divided`). */
+      ...(context.division ? {division: context.division} : {}),
       /* How many times its ability resolved before this one this turn (rules/stack.mjs; script/condition.mjs, firstResolution). */
       ...(context.resolvedBefore !== undefined ? {resolvedBefore: context.resolvedBefore} : {})},
     events: [],
@@ -83,7 +90,8 @@ export function runResolution(state, rng = null) {
   const resolving = state.resolving;
   if (!resolving) return {status: "done", events: []};
 
-  while (resolving.queue.length > 0) {
+  while (resolving.queue.length > 0 || mergedOrderToAsk(state)) {
+    if (mergedOrderToAsk(state) && resolving.queue[0]?.effect !== "orderMerged") resolving.queue.unshift({effect: "orderMerged"});
     /* Bound as it reaches the head, not when the queue was built: a modal's chosen effects arrive later, and are
        bound against the same targets as everything else (bind.mjs). */
     /* And counted as it reaches the head (CR 608.2h): "draw a card for each creature you control" counts then. */
@@ -108,7 +116,7 @@ export function runResolution(state, rng = null) {
        put in front of whatever follows, so one of them may stop to ask (Composer of Spring's "you may put a card"). */
     if (effect?.effect === "branch") {
       const holds = conditionHolds(state, effect.if, {controller: resolving.context.controller, source: resolving.context.source, about: resolving.context.about,
-        remembered: resolving.context.remembered, targets: resolving.context.targets, cast: resolving.context.cast,
+        remembered: resolving.context.remembered, targets: resolving.context.targets, cast: resolving.context.cast, rolled: resolving.context.rolled,
         movedWas: resolving.context.movedWas, searched: resolving.context.searched, lastKnown: resolving.context.lastKnown, resolvedBefore: resolving.context.resolvedBefore,
         gift: resolving.context.gift});
       resolving.queue.shift();
@@ -126,7 +134,12 @@ export function runResolution(state, rng = null) {
     if (effect?.effect === "repeatFor" && (effect.effects ?? []).some((inner) => ASKING[inner?.effect] || inner?.effect === "connive")) {
       resolving.queue.shift();
       const before = resolving.context.about;
-      const spliced = eachOf(state, effect.each, resolving.context).flatMap((about) => [{effect: "__about", about: {...(before ?? {}), ...about}}, ...structuredClone(effect.effects ?? [])]);
+      const round = eachOf(state, effect.each, resolving.context).flatMap((about) => [{effect: "__about", about: {...(before ?? {}), ...about}}, ...structuredClone(effect.effects ?? [])]);
+      /* "REPEAT THE FOLLOWING PROCESS X TIMES. EACH OPPONENT LOSES 3 LIFE UNLESS ..." (Torment of Hailfire; CR 608.2c, its
+         instructions in order): `times`, counted as it reaches the head (CR 608.2h) -- the whole round, each of what it ranges
+         over in turn, that many times over; none, and nothing is done. */
+      const times = effect.times === undefined ? 1 : amountOf(state, effect.times, resolving.context);
+      const spliced = Array.from({length: times}, () => structuredClone(round)).flat();
       resolving.queue.unshift(...spliced, {effect: "__about", ...(before !== undefined ? {about: before} : {})});
       continue;
     }
@@ -241,6 +254,11 @@ export function runResolution(state, rng = null) {
        of any kinds, its controller chooses as it resolves (CR 608.2d; effects/asking.mjs, countersToRemove). */
     else if (effect?.effect === "removeCounter" && effect.counter === "any" && effect.removing === undefined)
       resolving.queue[0] = {effect: "countersToRemove", then: effect};
+    /* "Move any number of counters from target permanent you control onto a second target permanent you control" (Resourceful
+       Defense; CR 122.5, 608.2d): which of the counters on the first, of any kinds, its controller chooses as it resolves --
+       the same question (effects/asking.mjs, countersToRemove), then moved (`moving`, effects/resources.mjs). */
+    else if (effect?.effect === "moveCounters" && effect.counter === "any" && effect.moving === undefined)
+      resolving.queue[0] = {effect: "countersToRemove", then: effect};
     /* "You may move any number of +1/+1 counters from this creature onto other creatures" (Forgotten Ancient): where each
        goes, its controller's choice as it resolves (effects/asking.mjs, countersOnto). */
     else if (effect?.effect === "moveCounters" && effect.onto !== undefined)
@@ -250,6 +268,10 @@ export function runResolution(state, rng = null) {
        effects/asking.mjs, controlToOpponents). */
     else if (effect?.effect === "gainControl" && effect.toEach === "different opponent")
       resolving.queue[0] = {effect: "controlToOpponents", then: effect};
+    /* "Each of those tokens fights a different one of those creatures" (Ezuri's Predation): which fights which, its controller's
+       choice as it resolves (CR 608.2d, the card's ruling; effects/asking.mjs, fightPartners), then every fight at once. */
+    else if (effect?.effect === "fight" && effect.against !== undefined)
+      resolving.queue[0] = {effect: "fightPartners", then: effect};
     /* CR 616.1: counters that two or more effects would change, where the order changes how many -- the permanent's
        controller chooses which applies first, before any is put on (effects/asking.mjs, orderCounters). */
     else if ((asked = counterQuestion(state, effect, resolving.context, effect?.counterOrders ?? {})))

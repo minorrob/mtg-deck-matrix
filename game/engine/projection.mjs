@@ -100,6 +100,11 @@ function cardFor(state, id, canSeeFace, viewer = null) {
     power: shown ? current.power : null,
     toughness: shown ? current.toughness : null,
     keywords: shown ? [...current.keywords] : [],
+    ...(object.zone === "battlefield" && object.merged ? {components: object.merged.map(part => ({
+      name: part.faceDown && viewer !== controller ? null : part.physical.card, faceDown: part.faceDown === true,
+      commander: part.physical.commander === true})), mutations: object.mutations ?? 0,
+      text: (current.abilities ?? object.abilities ?? []).map(a => a.text).filter(Boolean).join("\n")} : {}),
+    ...(object.zone === "battlefield" && state.players.some(p => p.ring?.bearer === id && p.id === controller) ? {ringBearer: true} : {}),
     /* A Class's level (CR 716.2a), a designation anyone can see (716.2b); none is level 1 (716.2d). */
     ...(Number.isInteger(object.level) ? {level: object.level} : {}),
     /* Monstrous (CR 701.37b) and prepared (CR 722.3a): designations, which anyone can see (script/effects/attributes.mjs). */
@@ -108,6 +113,8 @@ function cardFor(state, id, canSeeFace, viewer = null) {
     /* Solved (CR 719.3b): a Case's designation, which anyone can see. */
     ...(object.solved === true ? {solved: true} : {}),
     commander: object.commander === true,
+    /* An emblem (CR 114), public in the command zone: what it does, its abilities' words, for the board to show. */
+    ...(object.emblem === true ? {emblem: true, text: (object.abilities ?? []).map((a) => a.text).filter(Boolean).join("\n")} : {}),
     /* A candidate (card load step 5, Rob's decision 2): written by the card compiler, not yet reviewed, so the board labels
        it and offers "report a wrong card". Said only of a card this seat can name, as its name is. */
     ...(named && object.candidate === true ? {candidate: true} : {}),

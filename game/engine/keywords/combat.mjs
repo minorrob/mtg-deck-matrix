@@ -31,7 +31,7 @@
  */
 
 import {keywordsOf, characteristicsOf, controllerOf, typesOf, subtypesOf} from "../rules/layers.mjs";
-import {toughnessOf} from "../rules/layers.mjs";
+import {toughnessOf, powerOf} from "../rules/layers.mjs";
 import {combatDamageOf, ruleChanged, cantBeBlockedBy, blocksOnlyOthers} from "../rules/statics.mjs";
 import {protectedFrom} from "../rules/protection.mjs";
 
@@ -39,8 +39,12 @@ import {protectedFrom} from "../rules/protection.mjs";
 export const KEYWORD_FAMILIES = Object.freeze({
   /** Who may block, and whom. */
   evasion: Object.freeze(["Flying", "Reach", "Menace", "Fear", "Forestwalk", "Islandwalk",
+    /* Nonbasic landwalk (CR 702.14a, c; Trailblazer's Boots, wave 4d L3): canBlockAttacker, below. */
+    "Nonbasic Landwalk",
     /* Shadow (CR 702.28; Minas Morgul, Dark Fortress's shadow counter, CR 122.1b): canBlockAttacker, below. */
-    "Shadow"]),
+    "Shadow",
+    /* Skulk (CR 702.118; Gollum, Obsessed Stalker, Rob's lists P2): canBlockAttacker, below. */
+    "Skulk"]),
   /** What happens when damage is dealt. */
   combat: Object.freeze(["Deathtouch", "Trample", "Lifelink", "First Strike", "Double Strike", "Vigilance", "Defender",
     /* Infect (CR 702.90, batch 78): its damage is poison counters to a player and -1/-1 counters to a creature (rules/combat.mjs,
@@ -48,7 +52,10 @@ export const KEYWORD_FAMILIES = Object.freeze({
     "Infect",
     /* Flanking (CR 702.25a): a triggered ability, as a creature without flanking blocks this one, the blocker -1/-1 until end
        of turn (cards/index.mjs; rules/trigger.mjs, `blockedBy`). */
-    "Flanking"]),
+    "Flanking",
+    /* Bushido (CR 702.45a; library load L4): a triggered ability, as it blocks or becomes blocked, +N/+N until end of turn
+       (cards/index.mjs; rules/trigger.mjs, `blocksOrBlocked`). */
+    "Bushido"]),
   /**
    * Keywords that stop something happening, enforced elsewhere in the engine but listed here so
    * that "which keywords actually do something" has one answer.
@@ -92,6 +99,13 @@ export function canBlockAttacker(state, blockerId, attackerId) {
     if (state.zones.battlefield.some(id => controllerOf(state, id) === defender
         && typesOf(state, id).includes("Land") && subtypesOf(state, id).includes(type))) return false;
   }
+  /* Nonbasic landwalk (CR 702.14a, c; Trailblazer's Boots): the defending player controls a land without the supertype
+     basic, its supertypes as they are now (CR 205.4a). */
+  if (has(state, attackerId, "Nonbasic Landwalk")) {
+    const defending = state.combat?.attacks?.find((attack) => attack.attacker === attackerId)?.defender ?? controllerOf(state, blockerId);
+    const nonbasic = (id) => typesOf(state, id).includes("Land") && !(characteristicsOf(state, id).supertypes ?? []).includes("Basic");
+    if (state.zones.battlefield.some((id) => controllerOf(state, id) === defending && nonbasic(id))) return false;
+  }
   /* Protection (CR 702.16f): not blocked by a creature with the quality. */
   if (protectedFrom(state, {card: attackerId}, blockerId)) return false;
   /* CR 702.9b: flying can be blocked only by flying or reach (CR 702.17b). Note which way round it
@@ -101,6 +115,8 @@ export function canBlockAttacker(state, blockerId, attackerId) {
   /* CR 702.28b: shadow -- a creature with shadow can block or be blocked by only creatures with shadow; one without it,
      neither (Minas Morgul, Dark Fortress's shadow counter). */
   if (has(state, attackerId, "Shadow") !== has(state, blockerId, "Shadow")) return false;
+  /* CR 702.118b: skulk -- not blocked by a creature with greater power, each power as it is now (Gollum, Obsessed Stalker). */
+  if (has(state, attackerId, "Skulk") && powerOf(state, blockerId) > powerOf(state, attackerId)) return false;
   /* CR 702.36b: fear -- blocked only by an artifact creature or a black creature. */
   if (has(state, attackerId, "Fear")) {
     const blocker = characteristicsOf(state, blockerId);
@@ -120,8 +136,14 @@ export function blockersAreLegal(state, attackerId, blockerIds) {
   if (blockers.length === 0) return true;
   /* CR 702.111b */
   if (has(state, attackerId, "Menace") && blockers.length < 2) return false;
+  /* "Can't be blocked by more than one creature" (Safewright Cavalry; CR 509.1b): a restriction on the set, as menace's is. */
+  if (blockers.length > 1 && ruleChanged(state, "blocked-by-one-at-most", attackerId)) return false;
   return blockers.every((id) => canBlockAttacker(state, id, attackerId));
 }
+
+/** The refusal of a second blocker on a creature that can't be blocked by more than one: what is wrong, then what to do. */
+export const oneBlockerWords = (state, attackerId) =>
+  `${state.objects[attackerId].card} can't be blocked by more than one creature. Choose one creature to block it.`;
 
 /** Why a set of blockers is illegal, for the refusal message. */
 export function whyBlockersAreIllegal(state, attackerId, blockerIds) {
@@ -129,6 +151,7 @@ export function whyBlockersAreIllegal(state, attackerId, blockerIds) {
   if (blockers.length === 0) return null;
   if (has(state, attackerId, "Menace") && blockers.length < 2)
     return `${state.objects[attackerId].card} has menace and can't be blocked except by two or more creatures`;
+  if (blockers.length > 1 && ruleChanged(state, "blocked-by-one-at-most", attackerId)) return oneBlockerWords(state, attackerId);
   const illegal = blockers.find((id) => !canBlockAttacker(state, id, attackerId));
   if (illegal !== undefined)
     return `${state.objects[illegal].card} can't block ${state.objects[attackerId].card}`;

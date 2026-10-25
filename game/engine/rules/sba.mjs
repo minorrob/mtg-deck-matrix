@@ -45,12 +45,15 @@
  */
 
 import {moveObject, removeObject, PER_PLAYER, PUBLIC_ZONES, eventCard, rememberExileLooker, recordDeath} from "../state/index.mjs";
-import {applyReplacements} from "./replacement.mjs";
-import {lastKnown, toughnessOf, typesOf, keywordsOf, controllerOf, deriving, staticAbilities} from "./layers.mjs";
+import {applyReplacements, placeReplacedCounters} from "./replacement.mjs";
+import {lastKnown, supertypesOf, subtypesOf, toughnessOf, typesOf, keywordsOf, controllerOf, deriving, staticAbilities} from "./layers.mjs";
 import {matchesSelector} from "../script/filter.mjs";
 import {commanderToAsk, resolveCommanderChoice, recordCommanderDamage} from "./commander.mjs";
 import {sacrificeOne, moveOne, returnExiledUntil, leavingRef, destructionReplaced, destructionAsks} from "../script/effects/zones.mjs";
 import {changeLife, crown} from "../script/effects/resources.mjs";
+import {runFollowUps} from "../script/effects/index.mjs";
+import {mergedOrderToAsk} from "../state/index.mjs";
+import {checkRingBearers} from "../keywords/ring.mjs";
 import {enduringStories, citysBlessings} from "../keywords/designations.mjs";
 import {preparedCopyStays} from "../script/effects/attributes.mjs";
 import {endControlChange, nextRecord, endCounterDurations, controlByAuras} from "../script/effects/permanents.mjs";
@@ -213,6 +216,7 @@ function auraToGraveyard(state, id, events) {
   const leftBehind = lastKnown(state, id);
   const {proposal} = applyReplacements(state, {event: "zone-change", objectId: id, from: "battlefield", to: "graveyard", player: object.controller});
   const fell = moveObject(state, id, proposal.to, PER_PLAYER.includes(proposal.to) ? object.owner : null);
+  placeReplacedCounters(state, fell, proposal);
   /* An Aura that is a creature too, put there (CR 303.4d), dies (CR 700.4; state/index.mjs). */
   recordDeath(state, leftBehind, proposal.to);
   events.push(event("GameEventCardChangeZone", state, {
@@ -227,6 +231,7 @@ function auraToGraveyard(state, id, events) {
 }
 
 export function checkStateBasedActions(state) {
+  checkRingBearers(state);
   /* "For as long as that land has a blight counter on it" (CR 611.2b): over, for an object with none (effects/permanents.mjs). */
   endCounterDurations(state);
   /* Continuous control changes also confer hideaway's look permission (CR 406.3, 702.75a). Record it before a state-based
@@ -310,7 +315,8 @@ export function checkStateBasedActions(state) {
       const object = state.objects[id];
       if (object.attachedTo === null || object.attachedTo === undefined) continue;
       const host = state.objects[object.attachedTo];
-      const equipment = (object.subtypes ?? []).includes("Equipment");
+      /* Its subtypes as they now are: an artifact an effect made an Equipment (Bludgeon Brawl; CR 205.1b) is one. */
+      const equipment = subtypesOf(state, id).includes("Equipment");
       const attachable = !typesOf(state, id).includes("Creature") && (Boolean(object.enchant) || equipment);
       /* An Aura enchanting a card in a graveyard (Animate Dead) stays attached to it, as the check above found legal. */
       const there = host && (host.zone === "battlefield" || (object.enchant?.what === "card" && host.zone === object.enchant.zone));
@@ -391,6 +397,7 @@ export function checkStateBasedActions(state) {
         const destination = proposal.to;
         const died = moveObject(state, id, destination, destination === "graveyard" || destination === "hand" || destination === "library"
           ? object.owner : null);
+        placeReplacedCounters(state, died, proposal);
         /* Died, unless a replacement sent it elsewhere (CR 700.4; state/index.mjs). */
         recordDeath(state, leftBehind, destination);
         events.push(event("GameEventCardChangeZone", state, {
@@ -401,6 +408,8 @@ export function checkStateBasedActions(state) {
           from: {zoneType: "Battlefield", player: {playerId: object.controller}},
           to: {zoneType: ZONE_LABEL[destination] ?? destination, player: {playerId: object.owner}},
         }));
+        /* What the replacement that sent it elsewhere does beside the move (Kalitas's Zombie; rules/replacement.mjs). */
+        events.push(...runFollowUps(state, proposal));
         /* What it exiled "until this leaves the battlefield", back (CR 610.3). */
         returnExiledUntil(state, id, events, leftBehind);
         acted = true;
@@ -417,6 +426,7 @@ export function checkStateBasedActions(state) {
       const leftBehind = lastKnown(state, id);
       const {proposal} = applyReplacements(state, {event: "zone-change", objectId: id, from: "battlefield", to: "graveyard", player: object.controller});
       const went = moveObject(state, id, proposal.to, PER_PLAYER.includes(proposal.to) ? object.owner : null);
+      placeReplacedCounters(state, went, proposal);
       /* A planeswalker that is a creature too dies as it is put there (CR 700.4; state/index.mjs). */
       recordDeath(state, leftBehind, proposal.to);
       events.push(event("GameEventCardChangeZone", state, {
@@ -473,7 +483,7 @@ export function checkStateBasedActions(state) {
          who lost is not asked, and a game that is over asks nobody anything. */
       if (!state.awaiting && !gameOver(state)) {
         /* Only read: every object derived once (rules/layers.mjs, deriving). */
-        const ask = deriving(state, () => legendToAsk(state) ?? commanderToAsk(state));
+        const ask = deriving(state, () => mergedOrderToAsk(state) ?? legendToAsk(state) ?? commanderToAsk(state));
         if (ask) state.awaiting = ask;
       }
       break;
@@ -582,7 +592,7 @@ function legendToAsk(state) {
     const byName = new Map();
     for (const id of state.zones.battlefield) {
       const object = state.objects[id];
-      if (object.faceDown === true || !(object.supertypes ?? []).includes("Legendary") || controllerOf(state, id) !== player) continue;
+      if (object.faceDown === true || !supertypesOf(state, id).includes("Legendary") || controllerOf(state, id) !== player) continue;
       byName.set(object.card, [...(byName.get(object.card) ?? []), id]);
     }
     for (const [name, objectIds] of byName) if (objectIds.length > 1) return {kind: "legend-rule", player, name, objectIds};

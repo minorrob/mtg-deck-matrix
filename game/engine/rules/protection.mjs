@@ -7,7 +7,8 @@
  * (rules/layers.mjs, staticAffects); `players: "you"`, its controller has it too (CR 702.16j); `from` the quality --
  * `{types: [...]}`, a card type, which may be the one its permanent chose as it entered ("$chosen", script/chosen.mjs),
  * or "everything" (CR 702.16j), or `{colors: [...]}`, a color -- "protection from black" (Karmic Guide), or `{multicolored:
- * true}`, two or more colors (CR 105.2b; Argentum Masticore) -- the keyword compiled
+ * true}`, two or more colors (CR 105.2b; Argentum Masticore), or `{subtypes: [...]}`, a subtype ("protection from Humans",
+ * Yawgmoth, Thran Physician) -- the keyword compiled
  * to this static on its own permanent (cards/index.mjs). A source has the quality when it is an object of one of those card
  * types or colors, as it now is.
  *
@@ -18,7 +19,7 @@
  *   Targeted by a spell or ability from one, never    script/filter.mjs (a permanent, or a player)
  */
 
-import {staticAffects, typesOf, colorsOf, controllerOf, onceAQuestion, staticAbilities} from "./layers.mjs";
+import {staticAffects, typesOf, subtypesOf, colorsOf, controllerOf, onceAQuestion, staticAbilities} from "./layers.mjs";
 import {chosenFor} from "../script/chosen.mjs";
 import {commanderIdentity, hasCommander} from "./commander.mjs";
 
@@ -59,6 +60,9 @@ function hasQuality(state, from, sourceId, holder = null) {
   const onBattlefield = state.objects[sourceId].zone === "battlefield";
   const types = onBattlefield ? typesOf(state, sourceId) : (state.objects[sourceId].types ?? []);
   if ((from?.types ?? []).some((type) => types.includes(type))) return true;
+  /* "Protection from Humans" (Yawgmoth, Thran Physician; wave 4d L3, CR 702.16a): a source of that subtype, as it now is. */
+  const subtypes = onBattlefield ? subtypesOf(state, sourceId) : (state.objects[sourceId].subtypes ?? []);
+  if ((from?.subtypes ?? []).some((type) => subtypes.includes(type))) return true;
   const colors = onBattlefield ? colorsOf(state, sourceId) : (state.objects[sourceId].colors ?? []);
   /* "Protection from multicolored" (Argentum Masticore): a source of two or more colors (CR 105.2b). */
   if (from?.multicolored === true && colors.length >= 2) return true;
@@ -80,6 +84,17 @@ export function hexproofFrom(state, id, chooser, sourceId) {
      card's ruling): one given before that effect is gone, one given after it is had (CR 613.7). */
   const lostAt = Math.max(-1, ...(state.effects ?? []).filter((e) => (e.apply?.removeKeywords ?? []).includes("Hexproof") && (e.affects?.ids ?? []).includes(id)).map((e) => e.timestamp ?? 0));
   return (state.effects ?? []).some((e) => e.rule === "hexproof-from" && (e.timestamp ?? 0) > lostAt && (e.affects?.ids ?? []).includes(id) && (e.colors ?? []).some((c) => colors.includes(c)));
+}
+
+/**
+ * A PLAYER'S HEXPROOF FROM [QUALITY] (CR 702.11d, 702.11c; Veil of Summer): "you ... gain hexproof from blue and from black
+ * until end of turn" -- the same effect over the players it names (effectUntil's `players`): `player` can't be the target of a
+ * spell of `chooser`'s, an opponent of theirs, or an ability from a source of theirs, of one of those colors as it now is.
+ */
+export function playerHexproofFrom(state, player, chooser, sourceId) {
+  if (!state.objects[sourceId] || player === chooser) return false;
+  const colors = state.objects[sourceId].zone === "battlefield" ? colorsOf(state, sourceId) : (state.objects[sourceId].colors ?? []);
+  return (state.effects ?? []).some((e) => e.rule === "hexproof-from" && (e.players ?? []).includes(player) && (e.colors ?? []).some((c) => colors.includes(c)));
 }
 
 /**

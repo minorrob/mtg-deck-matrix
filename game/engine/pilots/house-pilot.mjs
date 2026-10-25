@@ -51,6 +51,8 @@ export const HOUSE_PILOT_ID = "house-pilot";
  * A CHOICE'S REQUIREMENTS, MET (CR 508.1d: "other Goblin creatures you control attack each combat if able"): `indices`, with
  * as few options added as the record's `requires` asks -- for each, at least `least` of the options whose `by` value is
  * one of `values`, each value once -- keeping to `exclusiveBy` and to `capped` (no more at a planeswalker than it allows).
+ * A value may need more than one option (`per`): "must be blocked if able" asks two blockers of an attacker with menace
+ * (CR 509.1c, 702.111b; rules/combat.mjs, blockRequirements), each blocker blocking once (`exclusiveBy`).
  * And to `budget`, what the player can pay for (an attack tax, CR 508.1d, 508.1h): the picks it is given are kept, in
  * order, while they fit it, and what it adds fits it.
  * A player the answerer prefers (`prefer`, the house pilot's defender) is tried first, then players before planeswalkers,
@@ -60,9 +62,13 @@ export const HOUSE_PILOT_ID = "house-pilot";
 export function meetRequirements(choice, indices, prefer = null) {
   const options = choice.options ?? [];
   const requirements = Array.isArray(choice.requires) ? choice.requires : [];
-  const room = (list, option) => withinBudget(choice, [...list, option.index]) && (option.planeswalkerId === undefined
-    || choice.capped?.most?.[option.planeswalkerId] === undefined
-    || list.filter((i) => options[i]?.planeswalkerId === option.planeswalkerId).length < choice.capped.most[option.planeswalkerId]);
+  /* `capped` by its own field: a planeswalker an attack may name (CR 508.1c; the field unsaid, as before), an attacker a
+     blocker may (509.1b). */
+  const cap = (option) => (choice.capped ? option[choice.capped.by ?? "planeswalkerId"] : undefined);
+  const room = (list, option) => withinBudget(choice, [...list, option.index])
+    && (choice.exclusiveBy === undefined || !list.some((i) => options[i]?.[choice.exclusiveBy] === option[choice.exclusiveBy]))
+    && (cap(option) === undefined || choice.capped.most?.[cap(option)] === undefined
+      || list.filter((i) => options[i] && cap(options[i]) === cap(option)).length < choice.capped.most[cap(option)]);
   const costs = (o) => (choice.budget && (o[choice.budget.by] ?? 0) > 0 ? 1 : 0);
   const rank = (o) => (o.planeswalkerId === undefined ? (prefer !== null && o.defenderId === prefer ? 0 : 1) : 2) * 2 + costs(o);
   indices = keptWithin(choice, indices);
@@ -71,19 +77,26 @@ export function meetRequirements(choice, indices, prefer = null) {
   const solve = (n, selected) => {
     if (n >= requirements.length) return selected;
     const need = requirements[n];
-    const taken = new Set(selected.map((i) => options[i]?.[need.by]));
-    const missing = (need.values ?? []).filter((value) => !taken.has(value));
+    const per = (value) => need.per?.[value] ?? 1;
+    const count = (list, value) => list.filter((i) => options[i]?.[need.by] === value).length;
+    const missing = (need.values ?? []).filter((value) => count(selected, value) < per(value));
     const short = (need.least ?? 0) - ((need.values ?? []).length - missing.length);
-    /* The first way that fits, depth first, a value left out only when the rest can still make up the number. */
+    /* The first way that fits, depth first, a value left out only when the rest can still make up the number: each value's
+       options taken, as many as it still needs, each with room beside those before it. */
     const fill = (k, list, left) => {
       if (left <= 0) return solve(n + 1, list);
       if (missing.length - k < left) return null;
-      const ways = options.filter((o) => o[need.by] === missing[k] && room(list, o)).sort((a, b) => rank(a) - rank(b) || a.index - b.index);
-      for (const way of ways) {
-        const rest = fill(k + 1, [...list, way.index], left - 1);
-        if (rest) return rest;
-      }
-      return fill(k + 1, list, left);
+      const ways = options.filter((o) => o[need.by] === missing[k]).sort((a, b) => rank(a) - rank(b) || a.index - b.index);
+      const take = (list2, from, still) => {
+        if (still <= 0) return fill(k + 1, list2, left - 1);
+        for (let j = from; j < ways.length; j += 1) {
+          if (list2.includes(ways[j].index) || !room(list2, ways[j])) continue;
+          const rest = take([...list2, ways[j].index], j + 1, still - 1);
+          if (rest) return rest;
+        }
+        return null;
+      };
+      return take(list, 0, per(missing[k]) - count(list, missing[k])) ?? fill(k + 1, list, left);
     };
     return fill(0, selected, short);
   };
@@ -366,7 +379,7 @@ export function housePilot({seat, cards = () => null, picks = false} = {}) {
       }
       /* A choice held to a budget ("any number of creatures with total power 4 or less", Slaughter the Strong): the strongest
          first while they fit, so the most power is kept. Not an attack's, planned below. */
-      if (choice.budget && !id.startsWith("declare-attackers:")) {
+      if (choice.budget && !id.startsWith("declare-attackers:") && !id.startsWith("declare-blockers:")) {
         const by = choice.budget.by, order = options.map((o) => o.index).sort((a, b) => (options[b][by] ?? 0) - (options[a][by] ?? 0) || a - b);
         const kept = [];
         let total = 0;
@@ -436,7 +449,10 @@ export function housePilot({seat, cards = () => null, picks = false} = {}) {
           const biggest = [...single].sort((x, y) => (onBoard.get(y.attackerId)?.power ?? 0) - (onBoard.get(x.attackerId)?.power ?? 0) || x.index - y.index);
           for (const o of biggest) if (!used.has(o.cardId) && !blocked.has(o.attackerId)) { picks.push(o.index); used.add(o.cardId); blocked.add(o.attackerId); }
         }
-        return {indices: picks.slice(0, Math.max(min, Math.min(max, picks.length)))};
+        /* And what the record requires ("must be blocked if able", CR 509.1c): those blocks added to its own -- kept, in order,
+           to what it can pay to block with (a block tax, Archangel of Tithes; CR 509.1d). */
+        const kept = keptWithin(choice, picks.slice(0, Math.max(min, Math.min(max, picks.length))));
+        return {indices: Array.isArray(choice.requires) && choice.requires.length ? meetRequirements(choice, kept) : kept};
       }
       /* A trigger's targets (engine 2.4c): aimed as a cast is -- a hostile one at an opponent's things. */
       if (id.startsWith("trigger-targets:") && options.length) {

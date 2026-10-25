@@ -1,0 +1,35 @@
+{
+  "schema": "composition-targets@1",
+  "generatedAt": "2026-10-18",
+  "generator": "written by hand: Claude · Deck intelligence, October 18, 2026 (Linear ROB-114)",
+  "source": "A first cut, to be corrected by measurement. The floors are the house minimums in crankmagic-rules.js ROLE_MINIMUMS (removal 8, wipe 2, ramp 10, draw 10; Rob, September 2026) and the land formula in crankmagic-change.js (38 lands, less one per two cheap ramp pieces, floor 33). The ranges around them follow the deck-building templates Commander players commonly use (about ten ramp, ten draw, five or more spot removal, two or more wipes, and a plan to win) and the published Commander Brackets (crankmagic-lobby.js BRACKETS): the lower brackets lean on fewer tutors and slower finishers; the higher ones on more ramp, protection and tutors. The reasonableness report (ROB-112) and the simulator's calibration (ROB-116) will move these numbers; until they do, each range is an opinion with a reason, not a measurement.",
+  "base": {
+    "roles": {
+      "ramp": {"min": 10, "max": 14, "why": "the house floor is 10; past 14 the deck runs out of things to spend it on"},
+      "draw": {"min": 10, "max": 14, "why": "the house floor is 10; a hundred-card singleton deck lives on its draw"},
+      "removal": {"min": 8, "max": 12, "why": "the house floor is 8 spot answers; three opponents bring more threats than one"},
+      "counterspell": {"min": 2, "max": 6, "why": "only when the deck plays blue; a few, because tapping out on your own turn is the Commander norm"},
+      "wipe": {"min": 2, "max": 4, "why": "the house floor is 2; the reset button for a board you are losing"},
+      "protection": {"min": 3, "max": 8, "why": "the engine and the commander kept alive: counters, hexproof granted, indestructible, blink to dodge"},
+      "recursion": {"min": 2, "max": 6, "why": "the pieces that come back after the wipe"},
+      "tutor": {"min": 1, "max": 5, "why": "consistency; too many and every game is the same game"},
+      "threat": {"min": 12, "max": 25, "why": "bodies that pressure life totals; below twelve the deck durdles, above twenty-five it has no answers"},
+      "finisher": {"min": 1, "max": 6, "why": "ways to actually end the game by card text: drains that scale, extra combats, you-win effects; most decks close with threats instead, so the floor is one"}
+    }
+  },
+  "brackets": {
+    "1": {"note": "Exhibition: ultra-casual, no Game Changers, no tutors to speak of, slow finishes.", "roles": {"tutor": {"min": 0, "max": 1}, "finisher": {"min": 1, "max": 3}, "counterspell": {"min": 0, "max": 3}, "removal": {"min": 6, "max": 10}}},
+    "2": {"note": "Core: precon level; the same restrictions; games run long and end on a big turn.", "roles": {"tutor": {"min": 0, "max": 2}, "finisher": {"min": 1, "max": 4}, "removal": {"min": 7, "max": 11}}},
+    "3": {"note": "Upgraded: the base ranges; up to three Game Changers; a two-card combo only as a late finish.", "roles": {}},
+    "4": {"note": "Optimized: more tutors, protection and ramp; the strongest build of what the deck does.", "roles": {"tutor": {"min": 3, "max": 8}, "protection": {"min": 4, "max": 10}, "ramp": {"min": 10, "max": 16}, "finisher": {"min": 3, "max": 8}}},
+    "5": {"note": "cEDH: fast mana, dense interaction, every seat playing to win; wipes are rare, counters are not.", "roles": {"ramp": {"min": 12, "max": 18}, "tutor": {"min": 6, "max": 12}, "counterspell": {"min": 6, "max": 12}, "wipe": {"min": 0, "max": 2}, "threat": {"min": 4, "max": 14}, "draw": {"min": 8, "max": 14}, "protection": {"min": 4, "max": 10}}}
+  },
+  "playStyles": {
+    "Balanced": {"note": "The bracket's ranges as they are.", "roles": {}},
+    "Aggressive": {"note": "More bodies, fewer answers; wipes hurt the aggressor most.", "roles": {"threat": {"min": 4, "max": 4}, "removal": {"min": -2, "max": 0}, "wipe": {"min": -1, "max": -1}, "draw": {"min": -2, "max": 0}}},
+    "Reactive": {"note": "Answers first; threats can wait.", "roles": {"removal": {"min": 2, "max": 2}, "counterspell": {"min": 2, "max": 2}, "protection": {"min": 2, "max": 2}, "threat": {"min": -4, "max": -4}, "wipe": {"min": 1, "max": 1}}},
+    "Value engine": {"note": "Card advantage and recursion over raw aggression.", "roles": {"draw": {"min": 2, "max": 2}, "recursion": {"min": 2, "max": 2}, "threat": {"min": -2, "max": 0}}},
+    "Combo": {"note": "Find the pieces, protect the turn.", "roles": {"tutor": {"min": 3, "max": 3}, "protection": {"min": 2, "max": 2}, "threat": {"min": -4, "max": -4}, "finisher": {"min": 0, "max": 2}}},
+    "Defensive": {"note": "Blockers, answers and protection; fewer threats, a slower clock. Auto-create's Defense (Rob, 2026-10-23); first numbers, to tune.", "roles": {"removal": {"min": 2, "max": 2}, "wipe": {"min": 1, "max": 1}, "protection": {"min": 2, "max": 2}, "threat": {"min": -3, "max": -3}}}
+  }
+}
