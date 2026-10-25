@@ -33,6 +33,25 @@ back with `tools/staging-check.mjs --expect 9ca99e53`.
   Worker setting was added since 1fcfc3d. Sharing stays off in `cloud-production` (it is on in the staging profile
   only), so the `cloud/sharing.mjs` changes do not run there.
 
+## Play's Actions drawer, fewer words; a favorite's star off its stage pill, 2026-10-25 (a Claude cloud session, for Rob; `claude/vigilant-dijkstra-bzs1wf`)
+
+Rob, 2026-10-25, with screenshots: *"Remove the entire "Your Selection" explanation box. The outline around the selection
+indicates the selection ... Change "Confirm Action" and "Clear Selection" to "Confirm" and "Clear" and put them
+side-by-side. The arrow up next to Actions is way too big ... I don't like the big, obtrusive white line on the side. The
+"All Actions", if that's a button should be smaller and justified left."* And: on Decks and Favorites the favorite's star
+covered the tile's stage pill. At his word this changes the Codex · Play lane's `crankmagic-board.js`,
+`crankmagic-stage.css`, `crankmagic-table.js` (one help sentence) and the Workshop lane's `crankmagic.css` (one rule).
+
+- **Actions:** no "Your selection" box and no paragraph under it (the selection is said to a screen reader alone, in a
+  `cm-sr-only` live line); no "Select an option to review it" hint; **Confirm** and **Clear**, side by side, equal width.
+  "All actions" is a small chevron link at the left, above the card's name.
+- **Chevrons:** the Actions and Boards open/shut are a thin SVG chevron, 24px, no fill, turned right when shut.
+- **Scrollbars on the board:** a 10% white track and a 40% gray thumb (`scrollbar-color` on `.cm-board`), thin on the rail.
+- **Decks:** a favorite's stage pill stays stepped down below the star, as it already did on hover.
+- **Proof:** `board-r2-actions-inspection` 109 (no visible summary or paragraph, Confirm/Clear words and row, the toggle's
+  size and fill, All actions at the left edge, the rail's scrollbar color) and `decks-hub` 70 (star clear of the pill);
+  both new checks red on the old source. **Not proven:** how Windows/macOS draw the scrollbar colors (headless shows none).
+
 ## The board: the same card one stack; the cards others play beside the question, 2026-10-25 (Claude Code on Personal-HP, for Rob; `claude/board-plays-clicks`)
 
 Rob, 2026-10-25, choosing option A from renders: the cards another seat plays, held up for ten seconds, stood over the

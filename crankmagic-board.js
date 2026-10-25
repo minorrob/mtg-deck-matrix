@@ -102,6 +102,11 @@ globalThis.CrankBoard = Object.seal({
      the menu. The Coach is a speech bubble with the wand in it (Part 4's recommendation, decision 21), not the ✦
      that read as another product's. */
   const CLOCK = `<svg class="cm-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 4.6V8l2.4 1.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  /* A drawer's open/shut and the way back are a thin chevron, not a filled ▾ in a button (Rob, 2026-10-25: "Look for
+     proper iconography and sizing for moderately minimalistic arrows"). Down is open; shut turns it to point right. */
+  const CHEV_PATH = (d) => `<svg class="cm-icon cm-chev" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="${d}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const CHEV_DOWN = CHEV_PATH("M4 6l4 4 4-4"), CHEV_LEFT = CHEV_PATH("M10 4L6 8l4 4");
+  const chevToggle = (shut, action, label) => ib(CHEV_DOWN, action, label, {}, {cls: `compact cm-chev-toggle${shut ? " is-shut" : ""}`, pressed: !shut});
   const COACH = `<svg class="cm-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 2.25h10A1.75 1.75 0 0 1 14.75 4v5.75A1.75 1.75 0 0 1 13 11.5H7.25L4 14.25V11.5H3A1.75 1.75 0 0 1 1.25 9.75V4A1.75 1.75 0 0 1 3 2.25z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M4.3 9.9l4.9-3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M10.5 3l.56 1.43 1.53.09-1.19.97.39 1.49-1.29-.83-1.29.83.39-1.49-1.19-.97 1.53-.09z" fill="currentColor"/></svg>`;
 
   /* The step ribbon: the handoff's seven, each the engine's phases it covers. */
@@ -951,7 +956,7 @@ globalThis.CrankBoard = Object.seal({
     return `<div class="cm-board-body" style="--pane-w:0px;--panel-w:${panelWidth()}px"><div class="cm-board-main"><div class="cm-board-stage">${fan(p.playerId)}${mat(p, {size: "focus"})}</div>${ask()}${hand()}</div></div>`;
   }
   function boardsPane() {
-    return `<nav class="cm-board-pane${paneShut ? " is-shut" : ""}" aria-label="Boards"><div class="cm-board-pane-head"><h3>Boards</h3>${ib(paneShut ? "▸" : "▾", "board-pane", paneShut ? "Show the boards" : "Collapse the boards", {}, {pressed: !paneShut})}</div>${paneShut ? "" : players().map(tile).join("") + b("My board", "board-focus", {seat: String(view.seat)}, true) + `<button type="button" class="cm-board-coach-open" data-action="board-coach" aria-pressed="${coach.open}" aria-label="CrankMagic Coach">${COACH}Coach</button>`}</nav>`;
+    return `<nav class="cm-board-pane${paneShut ? " is-shut" : ""}" aria-label="Boards"><div class="cm-board-pane-head"><h3>Boards</h3>${chevToggle(paneShut, "board-pane", paneShut ? "Show the boards" : "Collapse the boards")}</div>${paneShut ? "" : players().map(tile).join("") + b("My board", "board-focus", {seat: String(view.seat)}, true) + `<button type="button" class="cm-board-coach-open" data-action="board-coach" aria-pressed="${coach.open}" aria-label="CrankMagic Coach">${COACH}Coach</button>`}</nav>`;
   }
   /* THE FULL SCREEN VIEW: the page given to the game. A slim rail; the others across the top, the big board across
      the foot -- yours, or whichever ⟳ Rotate has walked to -- with the step, Next and Pass over it and your hand along
@@ -1050,7 +1055,7 @@ globalThis.CrankBoard = Object.seal({
     };
     return `<div class="cm-stage-modules" data-module-side="${side}" aria-label="${side === "left" ? "Left" : "Right"} drawer modules">${ids.map((id, i) => {
       const title = PANE_MODULES.find(([key]) => key === id)[1];
-      return `<section class="cm-stage-module" data-module="${id}" aria-label="${title} module"><header><h3>${title}</h3>${id === "actions" ? ib(actionsShut ? "▸" : "▾", "board-actions-toggle", actionsShut ? "Expand Actions" : "Collapse Actions", {}, {pressed: !actionsShut}) : ""}${paneEditing && id !== "actions" ? `<button type="button" class="cm-module-drag" draggable="true" data-module-drag="${id}" aria-label="Drag ${title}; use the adjacent move buttons for keyboard control">⠿</button>${ib("↑", "board-module-move", `Move ${title} up`, {module:id, side, by:"-1"}, {disabled:i===0})}${ib("↓", "board-module-move", `Move ${title} down`, {module:id, side, by:"1"}, {disabled:i===ids.length-1})}${ib("×", "board-module-remove", `Remove ${title}`, {module:id, side})}` : ""}</header><div class="cm-module-body">${bodies[id]()}</div></section>`;
+      return `<section class="cm-stage-module" data-module="${id}" aria-label="${title} module"><header><h3>${title}</h3>${id === "actions" ? chevToggle(actionsShut, "board-actions-toggle", actionsShut ? "Expand Actions" : "Collapse Actions") : ""}${paneEditing && id !== "actions" ? `<button type="button" class="cm-module-drag" draggable="true" data-module-drag="${id}" aria-label="Drag ${title}; use the adjacent move buttons for keyboard control">⠿</button>${ib("↑", "board-module-move", `Move ${title} up`, {module:id, side, by:"-1"}, {disabled:i===0})}${ib("↓", "board-module-move", `Move ${title} down`, {module:id, side, by:"1"}, {disabled:i===ids.length-1})}${ib("×", "board-module-remove", `Remove ${title}`, {module:id, side})}` : ""}</header><div class="cm-module-body">${bodies[id]()}</div></section>`;
     }).join("")}</div>`;
   }
   function stageHand(p) {
@@ -1224,17 +1229,16 @@ globalThis.CrankBoard = Object.seal({
       ${result && !result.open ? b("Check again", "board-block-retry") : ""}
       <details class="cm-block-list"${blockListOpen ? " open" : ""}><summary>All block options</summary>${options.map(o => `<button type="button" class="v-button compact" data-action="board-option" data-index="${o.index}" aria-pressed="${picked.includes(o.index)}"${sending ? " disabled" : ""}>${e(o.label)} · #${o.cardId} → #${o.attackerId}</button>`).join("")}</details></div>`;
   }
-  // Review uses only the current seat's offered words. No target, payment or outcome is inferred.
+  /* Review uses only the current seat's offered words. No target, payment or outcome is inferred. The outlined option is
+     the selection on screen (Rob, 2026-10-25: "The outline around the selection indicates the selection. We don't need to
+     restate it"), so the words are a screen reader's alone. */
   function selectionSummary(d) {
     const choices = picked.map(i => d.options.find(o => o.index === i)).filter(Boolean);
-    return `<div class="cm-action-summary" aria-live="polite"><strong>Your selection</strong><ul>${choices.map(o => `<li>${e(d.kind === "priority" ? sayFor(o) : o.label)}</li>`).join("")}</ul></div>`;
+    return `<span class="cm-action-summary cm-sr-only" aria-live="polite">Selected: ${choices.map(o => e(d.kind === "priority" ? sayFor(o) : o.label)).join("; ")}</span>`;
   }
   function commitReview(d) {
-    if (!picked.length) return `<p class="cm-action-hint">Select an option to review it. Nothing is submitted until you confirm.</p>`;
-    const o = d.options.find(o => o.index === picked[0]);
-    if (!o) return "";
-    const cast = d.kind === "priority" && ["cast","activate"].includes(o.act);
-    return `<div class="cm-action-review">${selectionSummary(d)}<p>${cast ? "This submits the selected action. If the game asks for targets or payment next, you will review those choices here before submitting them. Casting does not guarantee resolution." : "Confirm submits this choice to the game. Review the card and selected option before continuing."}</p><div class="cm-actions">${b(d.kind === "priority" ? "Confirm action" : "Confirm choice", "board-confirm", {}, true, {disabled:sending || draftRevision !== view.revision})}${b("Clear selection", "board-reset", {}, false, {disabled:sending})}</div></div>`;
+    if (!picked.length || !d.options.some(o => o.index === picked[0])) return "";
+    return `<div class="cm-action-review">${selectionSummary(d)}<div class="cm-actions">${b("Confirm", "board-confirm", {}, true, {disabled:sending || draftRevision !== view.revision})}${b("Clear", "board-reset", {}, false, {disabled:sending})}</div></div>`;
   }
   /* THE SAME CARD, ONE STACK (Rob, 2026-10-25: "stack cards that are identical and have an x# on them to say how many. I can
      then click that stack to select one. If I can select more than one, I should have a small numeric tick up/down value to
@@ -1284,7 +1288,7 @@ globalThis.CrankBoard = Object.seal({
       body = [...seen.values()].map(({o, n}) => actionCard === null && ways(o) > 1
         ? `<button type="button" class="v-button compact" data-action="board-choose" data-card="${o.cardId}"${sending ? " disabled" : ""}>${e(verbFor(o))} <span class="cm-muted">· ${ways(o)} ways</span></button>`
         : `<button type="button" class="v-button compact" data-action="board-option" data-index="${o.index}" aria-pressed="${picked.includes(o.index)}"${sending ? " disabled" : ""}>${sayHtml(o)}${n > 1 ? ` <span class="cm-muted">×${n}</span>` : ""}</button>`).join("");
-      return `<section class="cm-board-decision is-also" id="cm-board-decision" aria-label="What you can do"><h3>${actionCard === null ? "Choose an action" : e(findCard(actionCard)?.name || "Choose an action")}</h3>${actionCard === null ? "" : b("All actions", "board-action-all", {}, false, {cls:"compact"})}<div class="cm-board-options">${body}</div>${commitReview(d)}</section>`;
+      return `<section class="cm-board-decision is-also" id="cm-board-decision" aria-label="What you can do">${actionCard === null ? "" : `<button type="button" class="cm-board-back" data-action="board-action-all">${CHEV_LEFT}<span>All actions</span></button>`}<h3>${actionCard === null ? "Choose an action" : e(findCard(actionCard)?.name || "Choose an action")}</h3><div class="cm-board-options">${body}</div>${commitReview(d)}</section>`;
     }
     if (["one", "boolean", "index"].includes(d.mode)) {body = (d.mode === "one" ? sameStacks(d) : d.options.map((o) => [o])).map(stackOpt).join(""); foot = commitReview(d);}
     else if (blocking()) {
