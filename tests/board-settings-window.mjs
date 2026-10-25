@@ -1,0 +1,167 @@
+/* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE.
+
+   ROB'S TWO PLAY NOTES OF OCT 25, 2026 (crankmagic-board.js, crankmagic-stage.css).
+
+     1. Camera ▾ closes on a press anywhere outside it -- the board, the table, the header -- and stays open for a
+        press inside it.
+     2. Settings (Profile ▾ › Settings) is a window: the app's dialog, ✕ at its top right, Cancel and Save at its bottom
+        right, sized to the browser at every size and again when the window changes size. Its middle scrolls to its
+        last control. Save keeps what is set; Cancel, ✕ and Escape put back what was set when it opened.
+
+   GEOMETRY_REQUIRED=1 refuses a missing browser.
+     node tests/board-settings-window.mjs
+*/
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import path from "node:path";
+import {openBrowser, ROOT} from "./uat/browser-runner.mjs";
+
+const {browser, base, stub, close} = await openBrowser({name: "board-settings-window", flag: "GEOMETRY_REQUIRED"});
+const sample = JSON.parse(readFileSync(path.join(ROOT, "docs/reference/replit-sample-views.json"), "utf8")).views[13];
+const html = readFileSync(path.join(ROOT, "index.html"), "utf8").replace("</head>", '<meta name="crankmagic-accounts" content="on"><meta name="crankmagic-play" content="cloud"></head>');
+const TABLE = "settings01";
+const table = {tableId: TABLE, phase: "playing", matchId: sample.matchId, away: [], blockers: [], youAreHost: true, rules: {},
+  seats: sample.state.players.map((p) => ({seatId: p.playerId, name: p.name, kind: p.playerId === sample.seat ? "human" : "ai", you: p.playerId === sample.seat, occupied: true, ready: true, mat: "felt"}))};
+
+let checks = 0;
+const ok = (c, m) => {assert.ok(c, m); checks += 1;};
+const eq = (a, b, m) => {assert.deepEqual(a, b, m); checks += 1;};
+
+async function board(mode, {width = 1440, height = 900} = {}) {
+  const context = await browser.newContext({viewport: {width, height}, reducedMotion: "reduce", serviceWorkers: "block"});
+  await context.addInitScript((m) => {localStorage.setItem("cm-board-view", m); localStorage.setItem("crankmagic-audio-muted", "true");}, mode);
+  const page = await context.newPage();
+  if (stub) await stub(page);
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.route(`${base}/index.html*`, (r) => r.fulfill({contentType: "text/html", body: html}));
+  await page.route(`${base}/api/me`, (r) => r.fulfill({json: {email: "rob@example.com"}}));
+  await page.route(`${base}/api/library**`, (r) => r.fulfill({json: {head: null}}));
+  await page.route(`${base}/api/tables**`, (r) => r.fulfill({json: {table, now: Date.now()}}));
+  await page.routeWebSocket(new RegExp(`/api/tables/${TABLE}/connect$`), (ws) => ws.send(JSON.stringify({type: "view", view: sample})));
+  await page.goto(`${base}/index.html#table?id=${TABLE}`);
+  await page.locator("#cm-board [data-action=board-profile]").first().waitFor({timeout: 20000});
+  await page.waitForTimeout(300);
+  return {page, context, errors};
+}
+const cameraOpen = (page) => page.locator("#cm-board .cm-stage-camera>div").count();
+const settingsOpen = (page) => page.evaluate(() => !!document.querySelector("#cm-dialog.cm-play-settings-dialog[open] #cm-board-tools"));
+async function openSettings(page) {
+  await page.locator("#cm-board [data-action=board-profile]").first().click();
+  await page.locator("#cm-board [data-action=board-tools]").first().click();
+  await page.locator("#cm-dialog[open] #cm-board-tools").waitFor({timeout: 5000});
+}
+/* Where the window and its parts are, against the browser's own size. */
+const layout = (page) => page.evaluate(() => {
+  const r = (el) => {const b = el.getBoundingClientRect(); return {l: b.left, t: b.top, r: b.right, b: b.bottom};};
+  const d = document.getElementById("cm-dialog"), body = d.querySelector("#cm-board-tools");
+  const buttons = [...d.querySelectorAll(".cm-play-settings-foot .v-button")];
+  return {vw: innerWidth, vh: innerHeight, dialog: r(d), close: r(d.querySelector(".cm-dialog-close")), foot: buttons.map((el) => ({text: el.textContent.trim(), ...r(el)})),
+    body: r(body), scrolls: body.scrollHeight > body.clientHeight + 1, pageScroll: document.documentElement.scrollWidth > innerWidth + 1};
+});
+
+try {
+  /* ---- 1. Camera ▾ closes on a press outside it ---- */
+  for (const mode of ["focus", "full"]) {
+    const {page, context, errors} = await board(mode);
+    await page.locator("#cm-board [data-action=board-camera]").click();
+    eq(await cameraOpen(page), 1, `${mode}: Camera ▾ opens`);
+    await page.locator("#cm-board .cm-stage-camera>div input[type=range]").first().click();
+    eq(await cameraOpen(page), 1, `${mode}: a press inside Camera keeps it open`);
+    const spot = await page.evaluate(() => {
+      const el = document.querySelector("#cm-board .cm-board-turn") || document.querySelector("#cm-board .cm-stage-top");
+      const b = el.getBoundingClientRect(); return {x: b.left + 4, y: b.top + b.height / 2};
+    });
+    await page.mouse.click(spot.x, spot.y);
+    await page.waitForTimeout(150);
+    eq(await cameraOpen(page), 0, `${mode}: a press on the board outside Camera closes it`);
+    eq(await page.locator("#cm-board [data-action=board-camera]").getAttribute("aria-expanded"), "false", `${mode}: and its button says it is closed`);
+    await page.locator("#cm-board [data-action=board-camera]").click();
+    eq(await cameraOpen(page), 1, `${mode}: it opens again after`);
+    const far = await page.evaluate(() => {
+      const el = document.querySelector("#cm-board .cm-stage-canvas, #cm-board .cm-stage-region, #cm-board .cm-board-table, #cm-board .cm-mat") || document.getElementById("cm-board");
+      const b = el.getBoundingClientRect(); return {x: b.left + b.width / 2, y: b.top + b.height / 2};
+    });
+    await page.mouse.click(far.x, far.y);
+    await page.waitForTimeout(150);
+    eq(await cameraOpen(page), 0, `${mode}: a press on the table closes it too`);
+    eq(errors, [], `${mode}: no page error (${errors.join(" | ")})`);
+    await context.close();
+  }
+
+  /* ---- 2. Settings is a window, sized to the browser ---- */
+  for (const [width, height] of [[1440, 900], [1024, 560], [390, 700]]) {
+    const at = `${width}x${height}`;
+    const {page, context, errors} = await board("focus", {width, height});
+    await openSettings(page);
+    ok(await settingsOpen(page), `${at}: Settings opens as a window`);
+    eq(await page.locator("#cm-board .cm-profile-menu").count(), 0, `${at}: and the Profile menu closes behind it`);
+    const L = await layout(page);
+    ok(L.dialog.l >= 0 && L.dialog.t >= 0 && L.dialog.r <= L.vw && L.dialog.b <= L.vh, `${at}: the window fits the browser (${JSON.stringify(L.dialog)})`);
+    ok(!L.pageScroll, `${at}: no sideways scroll`);
+    ok(L.close.r >= L.dialog.r - 40 && L.close.t <= L.dialog.t + 40, `${at}: ✕ at its top right (${JSON.stringify(L.close)})`);
+    eq(L.foot.map((f) => f.text), ["Cancel", "Save"], `${at}: Cancel and Save in its foot, Save last`);
+    ok(L.foot.every((f) => f.b <= L.dialog.b && f.b >= L.dialog.b - 60 && f.b <= L.vh) && L.foot[1].r >= L.dialog.r - 40, `${at}: at its bottom right, in view (${JSON.stringify(L.foot)})`);
+    /* the last control is reachable: the middle scrolls to it */
+    await page.locator("#cm-dialog [data-action=board-concede]").scrollIntoViewIfNeeded();
+    const last = await page.evaluate(() => {
+      const el = document.querySelector("#cm-dialog [data-action=board-concede]"), b = el.getBoundingClientRect();
+      return {inView: b.top >= 0 && b.bottom <= innerHeight, hit: document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2)?.closest("[data-action]") === el};
+    });
+    ok(last.inView && last.hit, `${at}: the last control (Concede) scrolls into view and can be pressed (${JSON.stringify(last)})`);
+    if (height <= 700) ok(L.scrolls, `${at}: the window's middle scrolls when its controls are taller than the window`);
+    /* reactive: the browser grows smaller with the window open */
+    await page.setViewportSize({width: Math.max(360, Math.round(width * 0.7)), height: Math.max(480, Math.round(height * 0.7))});
+    await page.waitForTimeout(150);
+    const S = await layout(page);
+    ok(S.dialog.r <= S.vw && S.dialog.b <= S.vh && S.foot.every((f) => f.b <= S.vh && f.r <= S.vw), `${at}: made smaller while open, the window and its foot still fit (${S.vw}x${S.vh})`);
+    eq(errors, [], `${at}: no page error (${errors.join(" | ")})`);
+    await context.close();
+  }
+
+  /* ---- 3. Save keeps; Cancel, ✕ and Escape put back ---- */
+  {
+    const {page, context, errors} = await board("focus");
+    const hold = () => page.evaluate(() => localStorage.getItem("cm-board-hold"));
+    for (const [how, leave] of [["Cancel", (p) => p.locator("#cm-dialog .cm-play-settings-foot [data-action=close]").click()],
+      ["✕", (p) => p.locator("#cm-dialog .cm-dialog-close").click()], ["Escape", (p) => p.keyboard.press("Escape")]]) {
+      await openSettings(page);
+      await page.locator("#cm-dialog [data-board-hold]").check();
+      eq(await hold(), "on", `${how}: the choice previews as it is made`);
+      await leave(page);
+      await page.waitForTimeout(150);
+      ok(!(await settingsOpen(page)), `${how} closes the window`);
+      ok((await hold()) !== "on", `${how} puts back Hold priority after I cast (${await hold()})`);
+    }
+    await openSettings(page);
+    ok(!(await page.locator("#cm-dialog [data-board-hold]").isChecked()), "opened again, it shows what was put back");
+    const sfx = await page.locator("#cm-dialog [data-board-sound=sfx]").count();
+    if (sfx) {
+      const was = await page.locator("#cm-dialog [data-board-sound=sfx]").inputValue();
+      await page.locator("#cm-dialog [data-board-sound=sfx]").fill("30");
+      await page.locator("#cm-dialog .cm-play-settings-foot [data-action=close]").click();
+      await openSettings(page);
+      eq(await page.locator("#cm-dialog [data-board-sound=sfx]").inputValue(), was, "Cancel puts back the Effects volume");
+    }
+    await page.locator("#cm-dialog [data-board-hold]").check();
+    await page.locator("#cm-dialog [data-action=board-settings-save]").click();
+    await page.waitForTimeout(150);
+    ok(!(await settingsOpen(page)), "Save closes the window");
+    eq(await hold(), "on", "Save keeps Hold priority after I cast");
+    await openSettings(page);
+    ok(await page.locator("#cm-dialog [data-board-hold]").isChecked(), "opened again, it shows what was saved");
+    /* End game's second tap is drawn in the window */
+    await page.locator("#cm-dialog [data-action=board-end]").click();
+    eq((await page.locator("#cm-dialog [data-action=board-end][data-confirm='1']").textContent()).trim(), "End for everyone · keep the record", "End game asks its second tap inside the window");
+    await page.locator("#cm-dialog [data-action=board-end-cancel]").click();
+    eq(await page.locator("#cm-dialog [data-action=board-end][data-confirm='1']").count(), 0, "and Keep playing takes it back");
+    await page.locator("#cm-dialog .cm-dialog-close").click();
+    await page.waitForTimeout(150);
+    eq(await page.evaluate(() => document.activeElement?.dataset?.action), "board-profile", "closed, the focus goes back to the Profile menu's button");
+    eq(errors, [], `no page error (${errors.join(" | ")})`);
+    await context.close();
+  }
+} finally {
+  await close();
+}
+console.log(`board-settings-window: ${checks} checks passed -- Camera closes on a press outside it in Focus and Full screen; Settings is a window sized to the browser at three sizes and when made smaller, ✕ at its top right, Cancel and Save at its bottom right, its middle scrolling to Concede; Save keeps, Cancel, ✕ and Escape put back.`);

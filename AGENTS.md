@@ -215,6 +215,21 @@ the rule's shape rather than that feature's:
   grace expiring, a rematch decline or a withdrawn invitation is `released`, and is never refused.
   Only the chair nobody ever accounted for is.
 
+## Symbols first, words last
+
+Rob, 2026-10-25: *"We need to shift the standing instruction on CrankMagic development that we always show as little
+text instruction as possible, always deferring to visual symbols, colors, indicators and short-hand wherever possible.
+This includes in actions. But always enough that the basics, e.g. source/cause > action > target/effect objects and
+events are clear and card references always have a very quick path to viewing and reading the card."*
+
+- **Prefer a glyph, a color, an indicator or shorthand to a sentence**, everywhere: menus, actions, callouts, prompts,
+  status. A paragraph of instruction is a design to replace, not to add to.
+- **The minimum that must stay clear:** the source or cause, the action, and the target or effect of every object and
+  event (*Fauna Shaman* → ⤳ *Rob*), in that order.
+- **Every card reference is one press from the card itself**, to see it large and read it.
+- Words that are an accessible name (`aria-label`, a title) stay whole: a symbol on screen still says what it is to a
+  screen reader. The refusal rule above still names the specific problem and the way out, as briefly as it can.
+
 ## Things no agent does
 
 - Force-push or rewrite history on a branch someone else has pulled.
