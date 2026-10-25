@@ -1150,6 +1150,23 @@ refused of the concept, and the passes to come: `docs/ui-lane/plan-play-ui-2026-
   - **found, not fixed, for the UI lane:** opening Settings from Full screen's profile menu drops the keyboard focus
     to the page body (the Settings button is redrawn away); the old rail kept it. The walk asserts what holds.
   - Breaks: `game/tools/batch/breaks-a11y-tabletop.py`.
+  - **Merged** as #729 on main 9cf57d0c (2026-10-17, a merge commit on the green `suites` run of 6c1e1de1). The
+    fanned name took three CI cycles: the one pixel CI read low was the "4" of a name showing through the next card's
+    translucent border, found from the suite's own screenshot; the name now ends before the next card begins.
+    Breaks: 4 of 4 caught. Asset versions: `crankmagic-stage.css` 16, `crankmagic-stage.js` 5, the worker 481, the app 497.
+  - **Linear:** ROB-15 and ROB-16 commented, ROB-16 Done; the focus loss filed as ROB-154 (UI lane, Backlog); the
+    tabletop breaks still to write filed as ROB-156, related to ROB-16.
+- **2026-10-18, this session closed** (Rob: "close out the session and prepare a session handoff"):
+  - **Branch and commit:** `claude/nice-hypatia-4ajdyi` at main's merge commit 9cf57d0c, nothing unmerged; the
+    close-out docs ride a last small PR from it.
+  - **Proven:** everything above, by the commands in `docs/ui-lane/astra/handoff.md` §4 and the breaks files named.
+  - **Assumed:** nothing new. Staging serves main 62900176 (2026-10-18, #775's release), which carries #729's fixes;
+    read back signed in at this close.
+  - **Outstanding, and whose:** the focus loss (UI lane, the Linear issue); breaks for the tabletop's mat material,
+    rear-seat layout and camera persistence against `tests/table-tabletop.mjs` (UI lane, ROB-16's leftover); Rob's
+    feedback on pass 1 and pass 2 by whoever holds the UI lane (`docs/ui-lane/astra/README.md` §4, and
+    `docs/HANDOFF-TO-CODEX-2026-10-18.md`, which is newer). The handoff for the next session of this lane:
+    `docs/handoff-ui-2026-10-18.md`.
 
 ## 2026-10-12: the AI call log on the clock it is handed (`claude/advisor-meter-clock`)
 
