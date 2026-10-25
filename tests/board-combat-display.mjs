@@ -106,8 +106,11 @@ try{
     const list=page.locator(".cm-combat-groups");
     /* The confirmed assignments run in a row and wrap to the next when it is full, never sideways (Rob, 2026-10-25). */
     if(width>=1000){
-      const lay=await list.evaluate(g=>{const rows=[...g.querySelectorAll('.cm-combat-row')].map(r=>r.getBoundingClientRect());return {sameLine:rows.length>1&&Math.abs(rows[0].top-rows[1].top)<1,sideways:g.scrollWidth>g.clientWidth+1,rows:rows.length};});
-      assert.ok(lay.sameLine&&!lay.sideways,`${where}: the assignments run side by side and wrap, with no sideways scroll (${JSON.stringify(lay)})`);
+      let combat;
+      await publish(v=>{combat=structuredClone(v.state.combat);v.state.combat.attacks=v.state.combat.attacks.filter(a=>a.planeswalker===undefined).map(a=>({...a,defender:1}));});
+      const lay=await list.evaluate(g=>{const rows=[...g.querySelectorAll('.cm-combat-row')].map(r=>r.getBoundingClientRect());return {sameLine:rows.length>1&&Math.abs(rows[0].top-rows[1].top)<1,wrapped:rows.some(r=>r.top>rows[0].top+1),sideways:g.scrollWidth>g.clientWidth+1,rows:rows.length};});
+      assert.ok(lay.sameLine&&lay.wrapped&&!lay.sideways,`${where}: one defender's assignments run side by side and wrap to the next row, with no sideways scroll (${JSON.stringify(lay)})`);
+      await publish(v=>{v.state.combat=combat;});
     }
     const r=await list.boundingBox();
     const horizontal=await list.evaluate(el=>el.scrollWidth>el.clientWidth);
