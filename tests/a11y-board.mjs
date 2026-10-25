@@ -103,7 +103,8 @@ const lastFrame = (email) => JSON.parse(frames[email].filter((f) => JSON.parse(f
 /* A view handed to one page as the room would (its own revision, so the real one handed back after is taken again). */
 const hand = (email, frame) => routes[email].at(-1).ws.send(JSON.stringify(frame));
 
-const CARD_ART = readFileSync(path.join(ROOT, "assets", "playmats", "sky-tree-thumb.webp"));
+/* Real cards are portrait 5:7. A landscape playmat leaves artificial letterboxing with object-fit:contain. */
+const CARD_ART = readFileSync(path.join(ROOT, "assets", "crankmagic", "card-back-tan.webp"));
 const html = readFileSync(path.join(ROOT, "index.html"), "utf8").replace("</head>", '<meta name="crankmagic-accounts" content="on"><meta name="crankmagic-play" content="cloud"></head>');
 const {browser, base, stub, close} = await openBrowser({name: "a11y-board", flag: "GEOMETRY_REQUIRED"});
 async function person(email, viewport) {
@@ -351,6 +352,13 @@ async function ringContrast(page, selector, label = "") {
   await el.scrollIntoViewIfNeeded().catch(() => {});
   const box = await el.boundingBox();
   if (!box) return null;
+  // A 30-degree tapped card has a rotated edge, not its axis-aligned bounding rectangle.
+  const quad = await el.evaluate(node => {
+    const box=node.getBoundingClientRect(),style=getComputedStyle(node),m=new DOMMatrixReadOnly(style.transform);
+    if(Math.abs(m.b)<.001 && Math.abs(m.c)<.001) return null;
+    const w=parseFloat(style.width),h=parseFloat(style.height),cx=box.x+box.width/2,cy=box.y+box.height/2;
+    return [[-w/2,-h/2],[w/2,-h/2],[w/2,h/2],[-w/2,h/2]].map(([x,y])=>[cx+m.a*x+m.c*y,cy+m.b*x+m.d*y]);
+  });
   const vp = page.viewportSize(), PAD = 10;
   const clip = {x: Math.max(0, Math.floor(box.x - PAD)), y: Math.max(0, Math.floor(box.y - PAD))};
   clip.width = Math.min(vp.width, Math.ceil(box.x + box.width + PAD)) - clip.x; clip.height = Math.min(vp.height, Math.ceil(box.y + box.height + PAD)) - clip.y;
@@ -371,8 +379,15 @@ async function ringContrast(page, selector, label = "") {
   };
   const l = Math.round(box.x - clip.x), t = Math.round(box.y - clip.y), r = Math.round(l + box.width), bt = Math.round(t + box.height), rays = [];
   const ray = (x, y, dx, dy) => {let best = 0; for (let d = -2; d <= 8; d += 1) best = Math.max(best, change(Math.round(x + dx * d), Math.round(y + dy * d))); rays.push(best);};
-  for (let x = l + 6; x <= r - 6; x += 3) {ray(x, t, 0, -1); ray(x, bt, 0, 1);}
-  for (let y = t + 6; y <= bt - 6; y += 3) {ray(l, y, -1, 0); ray(r, y, 1, 0);}
+  if(quad) {
+    for(let edge=0;edge<4;edge++) {
+      const [x,y]=quad[edge],[xx,yy]=quad[(edge+1)%4],dx=xx-x,dy=yy-y,length=Math.hypot(dx,dy);
+      for(let d=6;d<=length-6;d+=3) ray(x-clip.x+dx*d/length,y-clip.y+dy*d/length,dy/length,-dx/length);
+    }
+  } else {
+    for (let x = l + 6; x <= r - 6; x += 3) {ray(x, t, 0, -1); ray(x, bt, 0, 1);}
+    for (let y = t + 6; y <= bt - 6; y += 3) {ray(l, y, -1, 0); ray(r, y, 1, 0);}
+  }
   rays.sort((x, y) => x - y);
   const okRays = rays.filter((c) => c >= 3).length;
   return {rays: rays.length, share: rays.length ? Math.round(okRays / rays.length * 100) / 100 : 0, p10: rays.length ? Math.round(rays[Math.floor(rays.length * 0.1)] * 100) / 100 : 0};
