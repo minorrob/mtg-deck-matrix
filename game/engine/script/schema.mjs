@@ -238,6 +238,11 @@ function checkEffect(effect, path, errors) {
     errors.push({path: `${path}.amountX`, message: "\"You may pay {X}\" is `amountX: true` with `ifPaid: true`, and no amount or mana beside it"});
   if (name === "play" && effect.exileInstead !== undefined && effect.exileInstead !== true)
     errors.push({path: `${path}.exileInstead`, message: "\"If that spell would be put into a graveyard, exile it instead\" is `exileInstead: true`"});
+  /* Discover's two ways (Hit the Mother Lode; effects/asking.mjs): what follows no cast, a list, and the spell cast remembered. */
+  if (name === "play" && effect.otherwise !== undefined && !(Array.isArray(effect.otherwise) && effect.otherwise.length))
+    errors.push({path: `${path}.otherwise`, message: "What is done when nothing is cast is a list of effects"});
+  if (name === "play" && effect.rememberCast !== undefined && !(effect.rememberCast === true && effect.anyNumber !== true))
+    errors.push({path: `${path}.rememberCast`, message: "\"The spell cast\", remembered, is `rememberCast: true`, of one spell (no `anyNumber`)"});
   if (name === "unlessPays" && effect.whenPaid !== undefined && !(Array.isArray(effect.whenPaid) && effect.whenPaid.length))
     errors.push({path: `${path}.whenPaid`, message: "What follows paying is a list of effects"});
   /* Where a countered spell goes instead of its owner's graveyard: exile (Force of Negation) or the top of its owner's
@@ -392,6 +397,9 @@ function checkEffect(effect, path, errors) {
   }
   /* What follows a prevention shield's prevention (Inkshield, Deflecting Palm; CR 615.5): effects, each held to the rest. */
   if (name === "effectUntil" && Array.isArray(effect.then)) effect.then.forEach((child, index) => checkEffect(child, `${path}.then[${index}]`, errors));
+  /* Discover's "or put it into your hand" (Hit the Mother Lode; effects/asking.mjs, play's `otherwise`): what is done when
+     nothing is cast, each held to the rest. */
+  if (name === "play" && Array.isArray(effect.otherwise)) effect.otherwise.forEach((child, index) => checkEffect(child, `${path}.otherwise[${index}]`, errors));
   const children = COMPOSERS[name];
   if (!children) return;
   const nested = children(effect);

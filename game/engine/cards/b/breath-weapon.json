@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Breath Weapon",
+    "oracleId": "f3dd1f6d-f7d7-4358-8139-7495404f29c7",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Breath Weapon deals 2 damage to each non-Dragon creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Breath Weapon deals 2 damage to each non-Dragon creature.",
+      "effects": [
+        {
+          "effect": "damageAll",
+          "amount": 2,
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "nonSubtypes": [
+              "Dragon"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

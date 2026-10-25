@@ -267,6 +267,9 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
   /* And improvise (CR 702.126a; Organic Extinction), artifacts tapped to pay a spell's generic mana, as convoke's creatures
      are (rules/actions.mjs). */
   "improvise",
+  /* The precon load, lane C: dethrone (CR 702.105; Scourge of the Throne), an attack trigger (cards/index.mjs); and read ahead
+     (CR 702.155; The Elder Dragon War), a Saga's chapter chosen as it enters (cards/index.mjs, rules/replacement.mjs). */
+  "dethrone", "read ahead",
   /* Rob's lists, P1: myriad (CR 702.116a; Battle Angels of Tyr), an attack trigger making token copies attacking the other
      opponents (cards/index.mjs). */
   "myriad",
