@@ -8,8 +8,16 @@ Commander, 2026-10-02): 406 distinct cards, 256 play now, **150 to write**. Mult
 commanders only Ghoulcaller Gisa is unwritten. `docs/engine/card-load-precons-2026-10-25/` has the review, the brief and
 five lane files, one per deck.
 
-- **In progress:** five lanes in the Claude · Engine lane's card files, `claude/engine-precons-<lane>`, each a draft PR into
-  this branch, which integrates them and goes to `main` as one PR. This branch also carries #863's record of the 10-24 load.
+- **Done:** five lanes, one per deck, wrote the 150 (A Angels #869, B Engineering #866, C Dragons #870, D Dinosaurs #867,
+  E Zombies #868, each into this branch), none stopped: **6,255 definitions became 6,405**, and all six decks seat whole.
+  Built: lieutenant-era block tax, Duplicant, reselecting a defender, dethrone, pack tactics, behold, read ahead, red mana
+  kept, divided damage, paired fights, Kalitas's replacement, and more (the README's result).
+- **Ignores, named:** Kalitas beside another exile replacement (order not asked, CR 616.1) and two state-based deaths
+  without a Zombie; Emeria Shepherd's Plains read on resolution; Serra Avenger in games saved before this load; Leyline
+  Tyrant's zero not offered; pack tactics with negative power.
+- **Proof:** `check-cards` 6,405 definitions, 10,928 scenarios, 0 failed; 419 touched suites green; every breaks file
+  `missed: []`; `anchors.py` clean. **Not proven:** a game at a real table with these decks. This branch also carries
+  #863's record of the 10-24 load.
 
 ## AI spend audit and the Claude seat's thinking, 2026-10-24 (a Claude cloud session, for Rob; `claude/busy-dirac-1jkaoo`)
 
