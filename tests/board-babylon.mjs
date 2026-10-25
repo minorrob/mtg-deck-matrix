@@ -67,6 +67,16 @@ try{
     await page.getByRole('button',{name:'Camera',exact:false}).click();
     await page.screenshot({path:path.join(shots,'babylon-obsidian-1280.png')});
   }
+  // The camera moved by hand keeps the one projection (tests/board-3d-camera.mjs): the wheel's zoom toward the pointer, a
+  // held right button's head look, and back.
+  const stageBox=await page.locator('.cm-stage-region').boundingBox();
+  await page.mouse.move(stageBox.x+stageBox.width*.35,stageBox.y+stageBox.height*.6);await page.mouse.wheel(0,-200);await page.waitForTimeout(300);
+  ok((await align('wheel zoom')).pan.x!==0,'the wheel zooms toward the pointer');
+  await page.mouse.down({button:'right'});await page.waitForFunction(()=>CrankStage.diagnostics().look?.t===1,null,{polling:'raf',timeout:5000});
+  await align('head look, held');
+  await page.mouse.up({button:'right'});await page.waitForFunction(()=>CrankStage.diagnostics().look===null,null,{polling:'raf',timeout:5000});
+  await align('head look, let go');
+  ok(await page.evaluate(()=>document.querySelector('.cm-stage-canvas').getAttribute('tabindex'))==='-1','the camera by hand leaves no canvas tab stop');
   ok(await page.evaluate(()=>{const canvas=document.querySelector('.cm-stage-canvas'),gl=canvas.getContext('webgl2')||canvas.getContext('webgl');globalThis.__contextLoss=gl.getExtension('WEBGL_lose_context');return !!__contextLoss;}),'browser can exercise real GPU context loss');
   await page.evaluate(()=>__contextLoss.loseContext());
   await page.locator('[data-renderer=fallback]').waitFor();
