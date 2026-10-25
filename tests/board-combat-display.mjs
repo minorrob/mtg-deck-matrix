@@ -104,6 +104,11 @@ try{
     assert.equal(frames.filter(f=>f.type==="act").length,0,`${where}: inspection never plays a card or assigns a block`);
     await page.getByRole("button",{name:"Close",exact:true}).last().click();
     const list=page.locator(".cm-combat-groups");
+    /* The confirmed assignments run in a row and wrap to the next when it is full, never sideways (Rob, 2026-10-25). */
+    if(width>=1000){
+      const lay=await list.evaluate(g=>{const rows=[...g.querySelectorAll('.cm-combat-row')].map(r=>r.getBoundingClientRect());return {sameLine:rows.length>1&&Math.abs(rows[0].top-rows[1].top)<1,sideways:g.scrollWidth>g.clientWidth+1,rows:rows.length};});
+      assert.ok(lay.sameLine&&!lay.sideways,`${where}: the assignments run side by side and wrap, with no sideways scroll (${JSON.stringify(lay)})`);
+    }
     const r=await list.boundingBox();
     const horizontal=await list.evaluate(el=>el.scrollWidth>el.clientWidth);
     await page.mouse.move(r.x+r.width/2,r.y+r.height/2);

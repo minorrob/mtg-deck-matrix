@@ -574,7 +574,7 @@ try {
   const sizes = () => rob.page.evaluate(() => {
     const land = document.querySelector(".cm-board-table [data-zone=lands] .cm-bcard"), board = land.closest(".cm-seatboard"), host = getComputedStyle(document.getElementById("cm-board"));
     return {board: parseFloat(getComputedStyle(land).width) / board.getBoundingClientRect().width, hand: parseFloat(getComputedStyle(document.querySelector(".cm-board-hand .cm-board-hand-cards .cm-bcard")).width),
-      scopes: [host.getPropertyValue("--board-scale").trim(), host.getPropertyValue("--hand-scale").trim()], outs: ["board", "hand"].map(scope => document.querySelector(`#cm-board [data-board-scale="${scope}"]`).closest('label').querySelector('output').textContent)};
+      scopes: [host.getPropertyValue("--board-scale").trim(), host.getPropertyValue("--hand-scale").trim()], outs: ["board", "hand"].map(scope => document.querySelector(`#cm-board [data-board-scale="${scope}"]`)?.closest('label').querySelector('output').textContent ?? null)};
   });
   await rob.page.locator(".cm-board-traybar [data-board-scale=hand]").fill("100");
   const s100 = await sizes();
@@ -589,12 +589,13 @@ try {
   await utility(rob.page,"board-tools");
   await rob.page.locator("#cm-board-tools [data-card-scale]").fill("120");
   const sTools = await sizes();
-  ok(sTools.scopes.join() === "1.2,1.2" && sTools.outs.join() === "120%,120%" && Math.abs(sTools.board / s100.board - 1.2) < 0.03 && Math.abs(sTools.hand / s100.hand - 1.2) < 0.02,
+  /* Camera closed when the Profile menu was pressed (Rob, Oct 25: a press outside it closes it), so Board cards is read after. */
+  ok(sTools.scopes.join() === "1.2,1.2" && sTools.outs[1] === "120%" && Math.abs(sTools.board / s100.board - 1.2) < 0.03 && Math.abs(sTools.hand / s100.hand - 1.2) < 0.02,
     `Tools is the table's card size, and moving it sets Board cards and Hand cards to its value (${sTools.outs.join(", ")})`);
   await rob.page.locator("#cm-board-tools [data-card-scale]").fill("100");
   await rob.page.click("#cm-dialog [data-action=board-settings-save]");
+  await rob.page.locator('[data-action=board-camera]').click();
   eq((await sizes()).outs, ["100%", "100%"], "and back to 100%, all three agree");
-  await rob.page.locator('.cm-stage-top [data-action=board-profile]').click();
   await rob.page.locator('[data-action=board-camera]').click();
   await rob.page.locator(".cm-seatboard:not(.is-you) [data-action=board-focus]").click();
   await rob.page.locator(".cm-board-mat").waitFor();
