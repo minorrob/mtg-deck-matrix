@@ -1,5 +1,21 @@
 # Who holds the work
 
+## Public precons; no deck bundled for everyone, 2026-10-25 (Claude Code on Personal-HP, for Rob; `claude/public-precons`)
+
+Rob, 2026-10-25: *"Make the precons public, available to anyone with access to play, and no other decks other than those
+they make, shared with them or public. This removes the prior auto sharing of my decks."* At his word this changes files of
+the Codex · Play lane (`crankmagic-table.js`, `crankmagic-stage.css`, `tests/table-lobby.mjs`, `tests/uat/solo-vs-ai.mjs`).
+
+- **What changed:** the table's deck chooser offers **Precons**, the six New from Wizards decks, open to everyone, chosen and
+  played with nothing added to a library. Rob's D1–D6, bundled in `crankmagic-table.js` for every player since October 15,
+  are gone; "Shared with you" lists only decks shared with the person or made public.
+- **Proof:** `table-lobby` 140 checks; `breaks-public-precons.py` 5 of 5; asset-versions, feature-wiring, data-integrity,
+  design-tokens, crankmagic-lobby, table-by-group green. `solo-vs-ai` (GAMES=1) seats four precons, starts and reloads the
+  game, then stops mid-game where the board's played-cards strip (`#cm-board-plays`) takes a click meant for the board:
+  **main fails identically with the bundled decks**, so that is the board's, not this change's.
+- **Not done, Rob's call:** on staging, Rob's D1–D6 are also shared publicly as Reviewer in the database (six `shares` rows,
+  owner Rob, `public_role` reviewer). Under the new rule they still show every player "Shared with you" until unshared.
+
 ## Card load, 2026-10-25: the six precons on the Decks screen (Claude Code on Personal-HP, for Rob; `claude/engine-precons-oct2`)
 
 Rob, 2026-10-25: *"Next, we need to ensure that all cards in the precons listed on the Decks screen is loaded into the game
