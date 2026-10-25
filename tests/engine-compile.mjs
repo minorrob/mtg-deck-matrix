@@ -154,8 +154,8 @@ const handOf = (name) => scripts.find((s) => s.identity.name === name);
   const req = JSON.parse(writerRequest(ORACLE.get("Lightning Bolt"), ["abilities[0].text: missing"]));
   eq([req.card.oracleText, req.yourLastAnswerWasRefused], ["Lightning Bolt deals 3 damage to any target.", ["abilities[0].text: missing"]], "a retry carries what was wrong");
   eq(checkAnswer(ORACLE.get("Lightning Bolt"), {abilitiesJson: "[{oops"}).stage, "schema", "abilities that are not JSON are a schema refusal");
-  ok(Math.abs(costOf(WRITER_MODEL, {input_tokens: 1e6, output_tokens: 1e6}) - 12) < 1e-9 && Math.abs(costOf(READER_MODEL, {input_tokens: 1e6, cache_read_input_tokens: 1e6}) - 1.1) < 1e-9,
-    "costs at list prices: Sonnet 5.5 $2 in and $10 out, Haiku 4.5 $1 in, a cache read a tenth");
+  ok(Math.abs(costOf(WRITER_MODEL, {input_tokens: 1e6, output_tokens: 1e6}) - 12) < 1e-9 && Math.abs(costOf(READER_MODEL, {input_tokens: 1e6, cache_read_input_tokens: 1e6}) - 0.11) < 1e-9,
+    "costs at list prices: Sonnet 5.5 $2 in and $10 out, Haiku 5.5 $0.10 in, a cache read a tenth");
 }
 
 /* ---- 2. a run, against a stub of the API ---- */
@@ -185,8 +185,8 @@ const job = (names, call, ledger = {cards: {}}, extra = {}) => {
   const id = ORACLE.get("Lightning Bolt").id;
   eq([results[0].outcome, ledger.cards[id].status, written[id].status, written[id].schema], ["provisional", "provisional", "provisional", COMPILED_SCHEMA],
     "a right answer passes all four checks and is stored provisional, until a playtest or Rob confirms it");
-  eq([calls.map((c) => c.model), calls[0].output_config.effort, calls[1].output_config.effort], [[WRITER_MODEL, READER_MODEL], "medium", undefined],
-    "Sonnet 5.5 at medium effort writes it and Haiku 4.5 reads it back, with no effort sent to Haiku");
+  eq([calls.map((c) => c.model), calls[0].output_config.effort, calls[1].output_config.effort, calls[1].thinking], [[WRITER_MODEL, READER_MODEL], "medium", undefined, {type: "disabled"}],
+    "Sonnet 5.5 at medium effort writes it and Haiku 5.5 reads it back, with no effort sent to Haiku and its thinking off");
   ok(calls[0].system[0].cache_control?.type === "ephemeral", "the writer's standing instructions are cached");
   eq([written[id].crFlags, written[id].script.identity.oracleId, written[id].oracleHash], [["CR 120.3: damage to a creature is marked"], id, oracleHash(ORACLE.get("Lightning Bolt"))],
     "with the rules it relied on, the printed facts from the oracle data, and the hash of the text it was learned from");

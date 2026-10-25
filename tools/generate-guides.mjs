@@ -151,7 +151,7 @@ if (!wanted.length) {
 /* ---- what it would cost -------------------------------------------------- */
 
 const CHARS_PER_TOKEN = 3.4;
-const PRICE = {in: 5, out: 25};   // claude-opus-5, dollars per million
+const PRICE = {in: 4, out: 20};   // claude-opus-5-5, dollars per million
 const tok = (s) => Math.round(s.length / CHARS_PER_TOKEN);
 
 if (SHOW) {
