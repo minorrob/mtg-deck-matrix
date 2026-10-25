@@ -129,7 +129,7 @@ globalThis.CrankBoard = Object.seal({
   let mode = (() => {try {const v = localStorage.getItem(VIEW_KEY); return VIEWS.some(([k]) => k === v) ? v : "full";} catch {return "full";}})();
   let inspection = null, inspectionFrom = null, actionsShut = false;
   let actionCard = null, draftRevision = null;
-  let stackSelected = null;
+  let stackSelected = null, stackFor = null;
   let selected = null, hover = null;   /* Full screen: the card shown large in the side column (picked, and under the pointer) */
   let showing = null, held = null;     /* Show hand: null, "fan" or "held"; the card held up */
   /* Turns that went by while you waited: said for a few seconds, then put away by itself -- nothing to acknowledge (Rob,
@@ -1109,7 +1109,7 @@ globalThis.CrankBoard = Object.seal({
   function pickPanel() {
     const id = hover ?? selected, pick = id === null ? null : findCard(id);
     if (!pick || !pick.name) return `<p class="cm-full-pick-empty cm-muted">Hover a card to read it here; click one to keep it.</p>`;
-    return `<section class="cm-full-pick" aria-label="${e(pick.name)}">${card(pick, {where: "pick", action: "board-zoom-open"})}<div class="cm-board-options">${optionsFor(pick.cardId).map((o) => `<button type="button" class="v-button compact primary" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}>${sayHtml(o)}</button>`).join("") || (pick.why ? `<p class="cm-muted cm-hand-why">${e(pick.why)}</p>` : "")}</div></section>`;
+    return `<section class="cm-full-pick" aria-label="${e(pick.name)}">${card(pick, {where: "pick", action: "board-zoom-open"})}<div class="cm-board-options">${withManaRow(optionsFor(pick.cardId), (o) => `<button type="button" class="v-button compact primary" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}>${sayHtml(o)}</button>`) || (pick.why ? `<p class="cm-muted cm-hand-why">${e(pick.why)}</p>` : "")}</div></section>`;
   }
   function drawPick() {const el = document.getElementById("cm-full-pick"); if (el && view) el.innerHTML = pickPanel();}
   /* TABLE VITALS (the handoff's 560px dialog): every seat's life and poison, and every commander's damage to
@@ -1161,14 +1161,51 @@ globalThis.CrankBoard = Object.seal({
     return `<section class="cm-mat-zone cm-board-band" data-zone="history" aria-label="History"><h3>History ${ib(CLOCK, "board-history", "Open the history")}</h3>
       <ol>${recent.map((l, k) => `<li style="--age:${k}"${l.mark === "end" ? ' class="is-end"' : l.mark === "quiet" ? ' class="is-quiet"' : ""}><span>${e(l.text)}</span></li>`).join("") || `<li class="cm-muted">Nothing yet.</li>`}</ol></section>`;
   }
+  /* THE CARDS A QUESTION OFFERS THAT THE TABLE DOES NOT SHOW (Rob, 2026-10-25: "When I'm presented with a card I can't see
+     (e.g. a scry card), it should be on the stack and that should be the way to see it ... graveyard, multiple cards in
+     either stack, cards in a player's graveyard or library"): a question other than priority whose options name cards
+     outside every battlefield and your own hand -- a library being scried or searched, a graveyard, exile, another
+     player's hand -- puts those cards in front of On the Stack, ◇, ahead of the spell or ability that asked, and the
+     pile's shuffle browses them. A card the seat's view holds is read from it; one it does not (a library's) is the
+     question's own words for it, its name, as a shown card is. */
+  function whereIs(cardId) {
+    for (const p of players()) for (const [zone, z] of Object.entries(p.zones)) if (z.cards.some((c) => c.cardId === cardId)) return {p, zone};
+    return null;
+  }
+  const ZONE_WORD = {Graveyard: "graveyard", Exile: "exile", Library: "library", Hand: "hand", Command: "command zone"};
+  function offeredCards() {
+    const d = view?.decision;
+    if (!d || d.kind === "priority" || !Array.isArray(d.options)) return [];
+    const out = new Map();
+    for (const o of d.options) {
+      if (o.cardId === undefined || out.has(o.cardId)) continue;
+      const at = whereIs(o.cardId);
+      if (at && (at.zone === "Battlefield" || (at.zone === "Hand" && at.p.playerId === view.seat))) continue;
+      const c = at && findCard(o.cardId), name = c ? (c.faceDown ? "" : c.name || "") : String(o.label || "").replace(/ \([^)]*\)$/, "");
+      const whose = at ? (at.p.playerId === view.seat ? "Your" : `${at.p.name}'s`) : "Your";
+      out.set(o.cardId, {cardId: o.cardId, name, where: at ? `${whose} ${ZONE_WORD[at.zone] || at.zone.toLowerCase()}` : "Hidden"});
+    }
+    return [...out.values()];
+  }
+  /* On the Stack's pile: the offered cards first, then the stack, newest first. A new question puts its first card in front. */
+  function stackEntries() {
+    const offered = offeredCards(), d = view?.decision;
+    if (offered.length && stackFor !== d.id) {stackFor = d.id; stackSelected = null;}
+    if (!offered.length) stackFor = null;
+    return [...offered.map((c) => ({key: `c:${c.cardId}`, name: c.name, who: c.where, choice: true, inspect: {kind: "card", ref: String(c.cardId)}})),
+      ...[...view.state.stack].reverse().map((x) => ({key: String(x.stackId), name: x.name, who: nameOf(x.playerId), choice: false, inspect: {kind: "stack", ref: String(x.stackId)}}))];
+  }
   /* The stack, newest first; a run of the same thing in a row (a thousand Intruder Alarm triggers) is one line, ×N. */
   function stack({module = false} = {}) {
     const items = view.state.stack;
-    if (!items.length) return "";
+    if (!items.length && !module) return "";
     if (module) {
-      const ordered=[...items].reverse(), selectedIndex=Math.max(0,ordered.findIndex(s=>String(s.stackId)===stackSelected));
-      const shown=ordered[selectedIndex], visible=CrankStage.carousel(ordered.length,selectedIndex,5);
-      return `<section class="cm-board-stack cm-module-stack" aria-label="The stack"><p class="cm-stack-order-note">#1 resolves next · click the pile to browse</p>${shown.name ? b("Inspect card", "board-inspect", {kind:"stack", ref:String(shown.stackId)}, false, {cls:"compact"}) : ""}<div class="cm-stack-browser"><ol class="cm-stack-list">${ordered.map((s,i)=>`<li><button type="button" class="cm-stack-summary" data-action="board-stack-select" data-stack-id="${e(String(s.stackId))}" aria-pressed="${i===selectedIndex}"><b class="cm-stack-position">#${i+1}</b><strong>${e(s.name || 'A face-down spell')}</strong><span>${e(nameOf(s.playerId))}</span></button></li>`).join('')}</ol><div class="cm-stack-image"><button type="button" class="cm-stack-pile" data-action="board-stack-cycle" aria-label="${e(shown.name || 'A face-down spell')}, stack position ${selectedIndex+1} of ${ordered.length}; show next card" style="--pile-depth:${visible.length-1}">${visible.map((index,depth)=>{const s=ordered[index];return `<span class="cm-bcard cm-stack-card${s.name ? '' : ' is-back'}" data-stack-depth="${depth}" style="--depth:${depth};z-index:${visible.length-depth}" aria-hidden="true">${s.name ? `<span class="cm-bcard-name">${e(s.name)}</span><img src="${e(pictureOf(s.name))}" alt="" draggable="false" referrerpolicy="no-referrer">` : ''}</span>`;}).join('')}</button></div></div></section>`;
+      const ordered = stackEntries(), offered = ordered.filter((x) => x.choice).length;
+      if (!ordered.length) return "";
+      const selectedIndex = Math.max(0, ordered.findIndex((x) => x.key === stackSelected));
+      const shown = ordered[selectedIndex], visible = CrankStage.carousel(ordered.length, selectedIndex, 5);
+      const say = (x) => x.name || (x.choice ? "A card you cannot see" : "A face-down spell");
+      return `<section class="cm-board-stack cm-module-stack" aria-label="The stack"><p class="cm-stack-order-note">${offered ? `◇ ${offered} to choose · ` : ""}${ordered.length > offered ? "#1 resolves next · " : ""}click the pile to browse</p>${shown.name ? b("Inspect card", "board-inspect", shown.inspect, false, {cls:"compact"}) : ""}<div class="cm-stack-browser"><ol class="cm-stack-list">${ordered.map((x, i) => `<li><button type="button" class="cm-stack-summary${x.choice ? " is-choice" : ""}" data-action="board-stack-select" data-stack-id="${e(x.key)}" aria-pressed="${i === selectedIndex}"><b class="cm-stack-position"${x.choice ? ' aria-label="To choose"' : ""}>${x.choice ? "◇" : `#${i + 1 - offered}`}</b><strong>${e(say(x))}</strong><span>${e(x.who)}</span></button></li>`).join("")}</ol><div class="cm-stack-image"><button type="button" class="cm-stack-pile" data-action="board-stack-cycle" aria-label="${e(say(shown))}, ${shown.choice ? `card ${selectedIndex + 1} of ${offered} to choose from` : `stack position ${selectedIndex + 1 - offered} of ${ordered.length - offered}`}; show next card" style="--pile-depth:${visible.length - 1}">${visible.map((index, depth) => {const x = ordered[index]; return `<span class="cm-bcard cm-stack-card${x.name ? "" : " is-back"}${x.choice ? " is-choice" : ""}" data-stack-depth="${depth}" style="--depth:${depth};z-index:${visible.length - depth}" aria-hidden="true">${x.name ? `<span class="cm-bcard-name">${e(x.name)}</span><img src="${e(pictureOf(x.name))}" alt="" draggable="false" referrerpolicy="no-referrer">` : ""}</span>`;}).join("")}</button></div></div></section>`;
     }
     const rows = [];
     for (const s of [...items].reverse()) {
@@ -1194,7 +1231,7 @@ globalThis.CrankBoard = Object.seal({
     if (panelTab === "resources") return `<aside class="cm-board-panel" aria-label="Turn Resources" data-tab="resources">${head}${turnResources()}</aside>`;
     if (panelTab === "history") return `<aside class="cm-board-panel" aria-label="History" data-tab="history">${head}<section class="cm-panel-history is-whole"><h3>History · newest first</h3>${historyList()}</section></aside>`;
     return `<aside class="cm-board-panel" aria-label="Panel" data-tab="panel" style="--split:${Math.round(splitOf("panel") * 100)}%">${head}
-      <section class="cm-panel-pick">${pick && pick.name ? `<div class="cm-panel-card">${card(pick, {where: "pick", action: "board-zoom-open"})}<div class="cm-board-options">${optionsFor(pick.cardId).map((o) => `<button type="button" class="v-button compact primary" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}>${sayHtml(o)}</button>`).join("")}</div></div>` : `<p class="cm-muted">Click a card on the board or in your hand to keep it here.</p>`}</section>
+      <section class="cm-panel-pick">${pick && pick.name ? `<div class="cm-panel-card">${card(pick, {where: "pick", action: "board-zoom-open"})}<div class="cm-board-options">${withManaRow(optionsFor(pick.cardId), (o) => `<button type="button" class="v-button compact primary" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}>${sayHtml(o)}</button>`)}</div></div>` : `<p class="cm-muted">Click a card on the board or in your hand to keep it here.</p>`}</section>
       ${splitBar("panel")}${stack()}
       <section class="cm-panel-history"><h3>History · newest first</h3>${historyList()}</section></aside>`;
   }
@@ -1211,6 +1248,19 @@ globalThis.CrankBoard = Object.seal({
   /* As HTML, an offer that helps an opponent or is aimed against your own marked where it says so (Rob, 2026-10-12: "some
      indicator ... distinguishing it from spells that are negative"; game/room/room.mjs, `leaning`). */
   const sayHtml = (o) => (o.lean ? e(sayFor(o)).replace(e(o.lean), `<span class="cm-lean${o.lean.startsWith("helps") ? " is-helps" : " is-against"}">⚠ ${e(o.lean)}</span>`) : e(sayFor(o)));
+  /* A MANA ABILITY IS ITS SYMBOLS (Rob, 2026-10-25: "On Lands or mana taps ... we should show a button for each of the mana
+     options as their mana symbol(s) ... 4 mana symbol buttons in a single row under the image"): where the room's offer is a
+     mana ability whose way is mana alone ({W}, {G}{G}), it is one small button of those symbols, all of a card's in one row;
+     its whole sentence ("Tap for mana: Command Tower {W}") its accessible name and tooltip. Any other offer is as it was. */
+  const manaOf = (o) => (o.act === "activate-mana" && /^(\{[^}]+\}\s*)+$/.test(String(o.detail || "").trim()) ? o.detail.trim() : null);
+  const manaTap = (o, pressed) => `<button type="button" class="v-button compact cm-mana-tap${picked.includes(o.index) ? " is-picked" : ""}" data-action="board-option" data-index="${o.index}" aria-label="${e(sayFor(o))}" title="${e(sayFor(o))}"${pressed ? ` aria-pressed="${picked.includes(o.index)}"` : ""}${sending ? " disabled" : ""}>${C.mana(manaOf(o))}</button>`;
+  function withManaRow(opts, one, pressed = false) {
+    const taps = opts.filter(manaOf);
+    if (!taps.length) return opts.map(one).join("");
+    const row = `<div class="cm-mana-row" role="group" aria-label="${e(`Tap ${taps[0].label} for mana`)}">${taps.map((o) => manaTap(o, pressed)).join("")}</div>`;
+    let placed = false;
+    return opts.map((o) => (manaOf(o) ? (placed ? "" : ((placed = true), row)) : one(o))).join("");
+  }
   function blockDraft() {
     const d = view.decision, label = id => {const c = combatCard(id); return `${c ? combatName(c) : "Object"} #${id}`;};
     const tile = (id, action, selected, index) => {
@@ -1258,16 +1308,39 @@ globalThis.CrankBoard = Object.seal({
     for (const o of d.options) {const k = sameKey(o); if (stacks.has(k)) stacks.get(k).push(o); else stacks.set(k, [o]);}
     return [...stacks.values()];
   }
+  /* WHAT AN ATTACK RISKS (Rob, 2026-10-25: "If they have a creature with power equal to or greater than the toughness of one of
+     my attackers, that action button for that attacker should be red ... If the creature ... has power lower than ... all of
+     the target opponent's creatures, it should have a yellow ... indication that it will not result in killing [one] on its
+     own"). Read from the table as it stands, for each attack option: the defending player's untapped creatures that could
+     block it (a flyer only by flying or reach), which of them could kill it (power at least its toughness left, or
+     deathtouch; never an indestructible attacker), and whether it could kill any of them alone. A hint about the table, not
+     a rule: the blocks are the defender's to choose, and a trick or first strike can change either answer. */
+  const kw = (c, k) => (c.keywords || []).some((x) => String(x).toLowerCase() === k);
+  function attackRisk(o) {
+    if (o.defenderId === undefined || !String(view.decision?.id || "").startsWith("declare-attackers:")) return null;
+    const a = findCard(o.cardId);
+    if (!a || a.power == null || a.toughness == null) return null;
+    const left = (c) => c.toughness - (c.damage || 0);
+    const blockers = controlledCards(o.defenderId).filter((c) => c.types.includes("Creature") && !c.tapped && c.power != null
+      && (!kw(a, "flying") || kw(c, "flying") || kw(c, "reach")));
+    if (!blockers.length) return null;
+    const die = kw(a, "indestructible") ? [] : blockers.filter((c) => c.power > 0 && (kw(c, "deathtouch") || c.power >= left(a)));
+    const kills = a.power > 0 && blockers.some((c) => !kw(c, "indestructible") && (kw(a, "deathtouch") || a.power >= left(c)));
+    return die.length || !kills ? {die, weak: !kills} : null;
+  }
+  const riskCls = (r) => (r ? `${r.die.length ? " is-risk-die" : ""}${r.weak ? " is-risk-weak" : ""}` : "");
+  const riskMark = (r) => (r ? `${r.die.length ? `<span class="cm-risk is-die" title="Could die: ${e(r.die.map((c) => `${c.name} ${c.power}/${c.toughness}`).join(", "))}">☠<span class="cm-sr-only"> could die to ${e(r.die.map((c) => c.name).join(", "))};</span></span>` : ""}${r.weak ? `<span class="cm-risk is-weak" title="Kills no blocker alone">⊘<span class="cm-sr-only"> kills no blocker alone;</span></span>` : ""}` : "");
   function decision() {
     const d = view.decision;
     if (!d || view.status === "finished" || d.kind === "draw") return "";
-    const opt = (o, extra = "") => `<button type="button" class="v-button compact${picked.includes(o.index) ? " is-picked" : ""}" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}${extra}>${e(o.label)}</button>`;
+    const opt = (o, extra = "", r = attackRisk(o)) => `<button type="button" class="v-button compact${picked.includes(o.index) ? " is-picked" : ""}${riskCls(r)}" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}${extra}>${riskMark(r)}${e(o.label)}</button>`;
     /* One option as ever; a stack as one button, ×N, and -- where the question takes more than one -- how many of it. */
     const stackOpt = (s) => {
       if (s.length === 1) return opt(s[0], ` aria-pressed="${picked.includes(s[0].index)}"`);
       const ids = s.map((o) => o.index), k = ids.filter((i) => picked.includes(i)).length;
       const many = d.mode === "many" && d.max > 1, room = Math.min(s.length, d.max - (picked.length - k));
-      return `<span class="cm-board-same"><button type="button" class="v-button compact${k ? " is-picked" : ""}" data-action="board-option-same" data-same="${ids.join(",")}" aria-pressed="${k > 0}"${sending ? " disabled" : ""}>${e(s[0].label)} <span class="cm-board-same-n">×${s.length}</span></button>${many
+      const r = attackRisk(s[0]);
+      return `<span class="cm-board-same"><button type="button" class="v-button compact${k ? " is-picked" : ""}${riskCls(r)}" data-action="board-option-same" data-same="${ids.join(",")}" aria-pressed="${k > 0}"${sending ? " disabled" : ""}>${riskMark(r)}${e(s[0].label)} <span class="cm-board-same-n">×${s.length}</span></button>${many
         ? `<input type="number" class="cm-board-same-count" min="0" max="${room}" step="1" value="${k}" data-board-same="${ids.join(",")}" aria-label="How many ${e(s[0].label)}"${sending ? " disabled" : ""}>` : ""}</span>`;
     };
     let body = "", foot = "";
@@ -1285,9 +1358,12 @@ globalThis.CrankBoard = Object.seal({
       /* A card that can be used more than one way -- a spell's targets, a cost's sacrifice, a land's colors -- asks which
          in Actions rather than doing the first (Rob, 2026-10-01). */
       const ways = (o) => new Set(d.options.filter((x) => x.act === o.act && x.label === o.label && x.detail).map((x) => x.detail)).size;
-      body = [...seen.values()].map(({o, n}) => actionCard === null && ways(o) > 1
+      const each = ({o, n}) => actionCard === null && ways(o) > 1
         ? `<button type="button" class="v-button compact" data-action="board-choose" data-card="${o.cardId}"${sending ? " disabled" : ""}>${e(verbFor(o))} <span class="cm-muted">· ${ways(o)} ways</span></button>`
-        : `<button type="button" class="v-button compact" data-action="board-option" data-index="${o.index}" aria-pressed="${picked.includes(o.index)}"${sending ? " disabled" : ""}>${sayHtml(o)}${n > 1 ? ` <span class="cm-muted">×${n}</span>` : ""}</button>`).join("");
+        : `<button type="button" class="v-button compact" data-action="board-option" data-index="${o.index}" aria-pressed="${picked.includes(o.index)}"${sending ? " disabled" : ""}>${sayHtml(o)}${n > 1 ? ` <span class="cm-muted">×${n}</span>` : ""}</button>`;
+      /* One card's offers: its mana abilities one row of symbols. */
+      const rows = [...seen.values()], count = new Map(rows.map((r) => [r.o, r.n]));
+      body = actionCard === null ? rows.map(each).join("") : withManaRow(rows.map((r) => r.o), (o) => each({o, n: count.get(o)}), true);
       return `<section class="cm-board-decision is-also" id="cm-board-decision" aria-label="What you can do">${actionCard === null ? "" : `<button type="button" class="cm-board-back" data-action="board-action-all">${CHEV_LEFT}<span>All actions</span></button>`}<h3>${actionCard === null ? "Choose an action" : e(findCard(actionCard)?.name || "Choose an action")}</h3><div class="cm-board-options">${body}</div>${commitReview(d)}</section>`;
     }
     if (["one", "boolean", "index"].includes(d.mode)) {body = (d.mode === "one" ? sameStacks(d) : d.options.map((o) => [o])).map(stackOpt).join(""); foot = commitReview(d);}
@@ -1487,7 +1563,10 @@ globalThis.CrankBoard = Object.seal({
      can see: read from the decision, by name. */
   const shownCard = (cardId) => {
     const o = view?.decision?.mode === "ack" ? view.decision.options.find((x) => x.cardId === cardId && x.label) : null;
-    return o ? {cardId: o.cardId, name: o.label, types: [], power: null, counters: {}} : null;
+    if (o) return {cardId: o.cardId, name: o.label, types: [], power: null, counters: {}};
+    /* And a card a question offers from out of sight (offeredCards): its name as the question says it. */
+    const c = offeredCards().find((x) => x.cardId === cardId && x.name);
+    return c ? {cardId: c.cardId, name: c.name, types: [], power: null, counters: {}} : null;
   };
   function zoom(cardId) {
     const c = findCard(cardId) || shownCard(cardId);
@@ -2722,8 +2801,8 @@ globalThis.CrankBoard = Object.seal({
   };
 
   function selectStack(id, fromPile=false) {
-    const entries=[...(view?.state.stack || [])].reverse(), section=document.querySelector('.cm-module-stack');
-    if(!section || !entries.some(s=>String(s.stackId)===id)) return;
+    const entries=view ? stackEntries() : [], section=document.querySelector('.cm-module-stack');
+    if(!section || !entries.some(x=>x.key===id)) return;
     const old=section.querySelector('[data-stack-depth="0"]')?.cloneNode(true);
     const currentId=section.querySelector('[aria-pressed="true"]')?.dataset.stackId;
     if(id===currentId) return;
@@ -2739,9 +2818,9 @@ globalThis.CrankBoard = Object.seal({
   }
   actions['board-stack-select']=el=>selectStack(el.dataset.stackId);
   actions['board-stack-cycle']=()=>{
-    const entries=[...(view?.state.stack || [])].reverse();if(entries.length<2)return;
-    const index=Math.max(0,entries.findIndex(s=>String(s.stackId)===stackSelected));
-    selectStack(String(entries[(index+1)%entries.length].stackId),true);
+    const entries=view ? stackEntries() : [];if(entries.length<2)return;
+    const index=Math.max(0,entries.findIndex(x=>x.key===stackSelected));
+    selectStack(entries[(index+1)%entries.length].key,true);
   };
   actions["board-hand-cycle"] = (el) => cycleHand(Number(el.dataset.seat), Number(el.dataset.by));
   function cycleHand(seat, direction) {

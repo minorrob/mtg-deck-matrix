@@ -33,7 +33,7 @@ back with `tools/staging-check.mjs --expect 9ca99e53`.
   Worker setting was added since 1fcfc3d. Sharing stays off in `cloud-production` (it is on in the staging profile
   only), so the `cloud/sharing.mjs` changes do not run there.
 
-## Play's Actions drawer, fewer words; a favorite's star off its stage pill, 2026-10-25 (a Claude cloud session, for Rob; `claude/vigilant-dijkstra-bzs1wf`)
+## Play's Actions drawer, fewer words; offered cards on the stack; attack risk; mana as symbols; a favorite's star off its pill, 2026-10-25 (a Claude cloud session, for Rob; `claude/vigilant-dijkstra-bzs1wf`)
 
 Rob, 2026-10-25, with screenshots: *"Remove the entire "Your Selection" explanation box. The outline around the selection
 indicates the selection ... Change "Confirm Action" and "Clear Selection" to "Confirm" and "Clear" and put them
@@ -48,9 +48,22 @@ covered the tile's stage pill. At his word this changes the Codex · Play lane's
 - **Chevrons:** the Actions and Boards open/shut are a thin SVG chevron, 24px, no fill, turned right when shut.
 - **Scrollbars on the board:** a 10% white track and a 40% gray thumb (`scrollbar-color` on `.cm-board`), thin on the rail.
 - **Decks:** a favorite's stage pill stays stepped down below the star, as it already did on hover.
+- **A card a question offers from out of sight is on the stack** (Rob, same day: *"When I'm presented with a card I can't
+  see (e.g. a scry card), it should be on the stack ... graveyard, multiple cards in either stack, cards in a player's
+  graveyard or library"*): any question but priority whose options name cards off every battlefield and your own hand
+  (a scry, a search, a graveyard target, exile, a look at a hand) puts them in front of On the Stack, ◇ and edged in gold,
+  ahead of the spell or ability that asked; the pile's shuffle carousels through them; Inspect card opens each; the module
+  shows them with the stack empty too. A library card is named from the question's own words (`offeredCards`).
+- **What an attack risks** (Rob, same day): on Declare attackers each option is **red, ☠** when an untapped creature of
+  that defender that could block it (a flyer only by flying or reach) could kill it (power ≥ its toughness left, or
+  deathtouch; never an indestructible attacker), and **yellow, ⊘** when it could kill none of them alone. The ☠'s title
+  names the killers. A hint from the table as it stands: tricks and first strike are not read (`attackRisk`).
+- **A mana ability is its symbols** (Rob, same day, Command Tower's four "Tap for mana" buttons): a card's mana abilities
+  whose way is mana alone are one row of small mana-symbol buttons, in Actions and in Card Preview / the Panel; each
+  button's accessible name and tooltip is the whole sentence (`withManaRow`). Lands only for now, at Rob's word.
 - **Proof:** `board-r2-actions-inspection` 109 (no visible summary or paragraph, Confirm/Clear words and row, the toggle's
   size and fill, All actions at the left edge, the rail's scrollbar color) and `decks-hub` 70 (star clear of the pill);
-  both new checks red on the old source. **Not proven:** how Windows/macOS draw the scrollbar colors (headless shows none).
+  new `board-stack-choices` 16, `board-attack-risk` 11 and `board-mana-symbols` 13; every new check red on the old source. **Not proven:** how Windows/macOS draw the scrollbar colors (headless shows none).
 
 ## The board: the same card one stack; the cards others play beside the question, 2026-10-25 (Claude Code on Personal-HP, for Rob; `claude/board-plays-clicks`)
 

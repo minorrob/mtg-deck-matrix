@@ -267,6 +267,10 @@
 #matrix-v2 .cm-stack-summary{width:100%;padding:7px 3px;margin:0 0 5px;background:transparent;color:inherit;border:1px solid transparent;border-radius:5px;text-align:left;cursor:pointer}
 #matrix-v2 .cm-stack-summary[aria-pressed="true"]{background:#286c534d;border-color:#75b895}
 #matrix-v2 .cm-stack-summary:focus-visible,#matrix-v2 .cm-stack-pile:focus-visible{outline:2px solid #a8dfbf;outline-offset:2px}
+/* A card the question offers from out of sight (crankmagic-board.js, offeredCards): ◇ and a gold edge, ahead of the stack. */
+.cm-stack-summary.is-choice .cm-stack-position{color:#e2c98f}
+#matrix-v2 .cm-stack-summary.is-choice[aria-pressed="true"]{background:#8d78564d;border-color:#d9c39a}
+.cm-stack-card.is-choice{box-shadow:0 0 0 2px #d9c39a,0 8px 18px #0006}
 #matrix-v2 .cm-stack-pile{position:relative;display:block;width:var(--module-card-w);height:calc(var(--module-card-w)*1.4 + var(--pile-depth)*5px);padding:0;margin:0 12px 0 0;border:0;background:transparent;cursor:pointer;flex-shrink:0;isolation:isolate}
 .cm-stack-pile .cm-stack-card{position:absolute;left:0;top:0;margin:0;transform:translate(calc(var(--depth)*3px),calc(var(--depth)*5px));pointer-events:none;box-shadow:0 2px 5px #0008}
 .cm-stack-ghost{pointer-events:none}
@@ -483,6 +487,15 @@
 .cm-board-same{display:flex;align-items:stretch;gap:6px;min-width:0}
 #matrix-v2 .cm-board-same>.v-button{flex:1 1 auto;min-width:0}
 .cm-board-same-n{margin-left:6px;font-weight:800;color:var(--v-accent)}
+/* A card's mana abilities, one row of symbol buttons (crankmagic-board.js, withManaRow). */
+.cm-mana-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+#matrix-v2 .cm-board .v-button.cm-mana-tap{flex:none;display:inline-grid;place-items:center;min-width:44px;width:auto;min-height:40px;height:40px;padding:0 8px;white-space:nowrap}
+.cm-mana-tap .cm-mana{display:inline-flex;gap:2px}.cm-mana-tap .cm-mana :is(img,svg){width:24px;height:24px}
+/* What an attack risks (crankmagic-board.js, attackRisk): red, ☠, a blocker could kill it; yellow, ⊘, it kills no blocker alone. */
+.cm-risk{display:inline-block;margin-right:6px;font-weight:800}.cm-risk.is-die{color:#ff8a7a}.cm-risk.is-weak{color:#f2d06b}
+#matrix-v2 .cm-board-decision .v-button.is-risk-weak{box-shadow:inset 4px 0 #e0b938}
+#matrix-v2 .cm-board-decision .v-button.is-risk-die{box-shadow:inset 4px 0 #e0533f;border-color:#e0533f99}
+#matrix-v2 .cm-board-decision .v-button.is-risk-die.is-risk-weak{box-shadow:inset 4px 0 #e0533f,inset 8px 0 #e0b938}
 #matrix-v2 .cm-board-same-count{flex:none;width:60px;padding:0 6px;border:1px solid var(--v-line-strong);border-radius:var(--v-radius);background:var(--v-raised);color:var(--v-ink);font:inherit;font-weight:700;text-align:center}
 .cm-stage-rail .cm-block-tiles{flex-wrap:wrap;overflow:visible}
 #matrix-v2 .cm-stage-module[data-module="actions"] .v-button{white-space:normal;text-align:left;line-height:1.4;min-height:40px;overflow-wrap:anywhere}
