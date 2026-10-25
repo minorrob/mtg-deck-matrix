@@ -170,7 +170,7 @@ globalThis.CrankBoard = Object.seal({
   const keep = (k, v) => {try {localStorage.setItem(k, String(v));} catch {/* applied, not remembered */}};
   const rowShare = () => {const raw = stored(ROWS_KEY), v = Number(raw); return raw !== null && v >= ROWS[0] && v <= ROWS[1] ? v : 0.5;};
   const inRange = (v) => {const [lo, hi] = C.cardScaleRange(); return Math.min(hi, Math.max(lo, Math.round(Number(v) || 100)));};
-  /* The hand's size while the wheel turns over it: shown at once, kept a moment after the wheel stops (handWheel). */
+  /* The hand's size while the wheel turns over it: shown at once, kept a moment after the wheel stops (the wheel over your hand, below). */
   let handLive = null, handKeep = null;
   const scaleOf = (scope) => {if (scope === "hand" && handLive !== null) return inRange(handLive); const v = stored(SCALE_KEY[scope]); return v === null ? C.cardScale() : inRange(v);};
   /* FOCUS AND FULL SCREEN'S DIVIDERS (items 15 and 18), remembered on the device like the rest: the seat pane's width,
