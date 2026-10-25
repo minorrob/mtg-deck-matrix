@@ -28,7 +28,7 @@ SC = 'game/engine/script/schema.mjs'
 SN = 'game/engine/cards/scenario.mjs'
 BREAKS = [
     # Tangleweave Armor
-    ('commanderManaValue not a kind of amount', AM, '  "commanderManaValue"]);', '  ]);'),
+    ('commanderManaValue not a kind of amount', AM, '  "commanderManaValue",\n', ''),
     ('commanderManaValue taken for anything', AM,
      'if ("commanderManaValue" in value && value.commanderManaValue !== "you") problems', 'if (false && value.commanderManaValue !== "you") problems'),
     ('anyone\'s commanders counted', AM, 'o.commander === true && o.owner === context.controller)', 'o.commander === true)'),
