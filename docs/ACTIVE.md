@@ -1,5 +1,38 @@
 # Who holds the work
 
+## 2026-10-25: main 9ca99e5 in production (Rob: "release main 9ca99e5 to production")
+
+Released by the Decks cloud session (`claude/vibrant-turing-50yl3r`), with the Camera and Settings session told before
+the push and after it. Staging already served the same main: `release/cloud-staging` a60c06d, version 8d31593d, read
+back with `tools/staging-check.mjs --expect 9ca99e53`.
+- **Production** (`cloud-production`, by `tools/release-production.sh`):
+  - `release/pages` ccf09c02, on 06d1d733, pushed at 18:26 UTC;
+  - local walks: `release-acceptance` 23 and `production-play-e2e` 27;
+  - the Worker (`wrangler deploy --dry-run`): 6.98 MB, 1.27 MB gzip;
+  - Workers Builds deployed version **e61dde22**, at 100% since 18:26:50 UTC;
+  - `version.json` reads 9ca99e53, profile `cloud-production`;
+  - the live walk at `https://crankmagic.com`: 23 checks, with `UAT_LIVE_NETWORK=1`;
+  - **the rollback target** is **06d1d733** (version bf700e93, main 1fcfc3d, 2026-10-21).
+- **Not in production:** what merged after 9ca99e5 (#875 public precons, #877, #878 the board's plays and clicks).
+- **It carries everything merged since 1fcfc3d:**
+  - **Decks:** the Decks screen and New deck flow (#844, by #852); no flicker when a button is clicked (#865).
+  - **Play:**
+    - Rob's Full screen notes: a land at any step, a land taken back, the actions over the table (#832, #835);
+    - the Babylon tabletop and the lounge (#836, #838);
+    - the opponent preview and Full screen's controls (#839 to #841);
+    - review actions and card inspection (#842);
+    - crowded boards: whole-card rows and zone navigation (#854);
+    - the combat strip and Camera (#874).
+  - **Cards:** Rob's 34-deck backup and the library load (#816, #826 to #831), planar dice (#833), Nethroi and
+    Boromir (#837), wave 4d (#843, #845 to #852), the 10-24 load (#855), Rob's four lists (#862) and the six precons
+    (#871): 6,255 definitions.
+  - **Cloud:** shared decks loaded within the Worker's CPU budget (#851, #853); the Claude seat asks with thinking off
+    (#857).
+  - **Tests and records:** Share Library's permission and privacy boundaries (#769), and Requests row 13 (#873).
+- **Production's D1, bindings and secrets are unchanged** (migrations 0001 and 0002): no migration, binding or
+  Worker setting was added since 1fcfc3d. Sharing stays off in `cloud-production` (it is on in the staging profile
+  only), so the `cloud/sharing.mjs` changes do not run there.
+
 ## The board: the same card one stack; the cards others play beside the question, 2026-10-25 (Claude Code on Personal-HP, for Rob; `claude/board-plays-clicks`)
 
 Rob, 2026-10-25, choosing option A from renders: the cards another seat plays, held up for ten seconds, stood over the
