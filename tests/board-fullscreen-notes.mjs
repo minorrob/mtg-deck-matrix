@@ -85,7 +85,7 @@ try {
     await page.locator(".cm-stage-top [data-action=board-actions-open]").click();
     sent.length = 0;
     if (mode === 'full') {
-      await page.locator('.cm-stage-hand .cm-bcard').last().click({button:'right'});
+      await page.locator('.cm-stage-hand .cm-bcard').last().click({button:'right'});await page.locator('#cm-card-menu [data-action=board-card-menu-view]').click();
       const row = page.locator('.cm-stage-front .cm-board-lands [data-zone-scroll]');
       await row.hover();await page.mouse.wheel(0,900);await page.waitForTimeout(150);
       ok(await row.evaluate(el=>el.scrollTop>0||el.scrollLeft>0), 'the narrowed land row scrolls instead of spilling under graveyard');
