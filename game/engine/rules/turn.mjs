@@ -155,6 +155,9 @@ function nextRound(state, from, to) {
 function takeExtraTurn(state) {
   while ((state.extraTurns ?? []).length) {
     const extra = state.extraTurns.pop();
+    /* "If an opponent would begin an extra turn, that player skips that turn instead" (Trouble in Pairs; CR 614.1b, 614.10):
+       the turn never begins, and the next waiting one is taken -- or the player after the last turn that wasn't extra. */
+    if (state.players[extra.player] && !state.players[extra.player].lost && playerRuleChanged(state, "skip-extra-turns", extra.player)) continue;
     if (state.players[extra.player] && !state.players[extra.player].lost) return extra;
   }
   return null;
@@ -464,7 +467,7 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
     return events;
   }
   if (awaiting.kind === "trigger-targets") {
-    const events = resolveTriggerTargets(state, awaiting, indices);
+    const events = resolveTriggerTargets(state, awaiting, indices, rng);
     /* What the trigger is now aimed at triggers at once (ward), even while another trigger still asks for its targets
        and nobody receives priority yet. */
     collectTriggers(state, events);
@@ -604,6 +607,12 @@ function arrive(state, events) {
      to their next. Before anything triggers at its beginning, or anyone has priority in it. */
   if (state.phase === "END_OF_TURN" && (state.effects ?? []).some((e) => e.until === "your-next-end-step"))
     state.effects = state.effects.filter((e) => !(e.until === "your-next-end-step" && e.sourceController === state.activePlayer));
+  /* "Shards you control become copies of it until the next end step" (Niko, Light of Hope; effects/permanents.mjs, becomeCopy):
+     over as the next end step begins, anyone's (CR 513.1, 611.2a). */
+  if (state.phase === "END_OF_TURN") endCopies(state, "next-end-step");
+  /* "If it's the first end step of the turn" (Y'shtola Rhul; CR 500.10): each end step counted as it begins, an additional
+     one too (script/condition.mjs, firstEndStep). */
+  if (state.phase === "END_OF_TURN") state.endStepsThisTurn = (state.endStepsThisTurn ?? 0) + 1;
   /* A draw step skipped (CR 103.8a) is never arrived at: `drawStep`, above. */
   if (state.phase === "DRAW" && !state.players[state.activePlayer].lost) {
     /* CR 504.1 makes the draw a turn-based action, not a choice. A table that asks for the beat (item 13) holds it
@@ -831,6 +840,7 @@ export function advance(state) {
     state.stepQueue = [];
     state.resumeAfter = null;
     state.combatsThisTurn = 0;
+    if (state.endStepsThisTurn) state.endStepsThisTurn = 0;
     /* And the nonland permanents that left the battlefield (state/index.mjs, recordDeath; void). */
     if (state.nonlandLeftThisTurn) state.nonlandLeftThisTurn = 0;
     for (const player of state.players) {
@@ -848,6 +858,8 @@ export function advance(state) {
       if (player.leftThisTurn) player.leftThisTurn = 0;
       /* And how many cards left each one's graveyard (state/index.mjs; "if a card left your graveyard this turn"). */
       if (player.leftGraveyardThisTurn) player.leftGraveyardThisTurn = 0;
+      /* And whether each descended (state/index.mjs; Canonized in Blood). */
+      if (player.descendedThisTurn) player.descendedThisTurn = 0;
       if (player.enteredThisTurn) player.enteredThisTurn = [];
       /* And whether each was dealt combat damage (rules/combat.mjs). */
       if (player.combatDamagedThisTurn) player.combatDamagedThisTurn = false;
