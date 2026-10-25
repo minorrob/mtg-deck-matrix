@@ -540,3 +540,14 @@
 
 /* Pile counts stay readable even on the compact opponent mats. */
 #matrix-v2 .cm-board .cm-bcard-count{font-size:max(10px,calc(var(--bc)*.3));background:#10232f;color:#fff;padding:1px 3px;border-radius:4px}
+
+/* Settings, the window (Rob, 2026-10-25): the app's dialog sized to the browser, ✕ at its top right, its middle
+   scrolling, and its foot (Cancel, Save) always in view at the bottom right. */
+#matrix-v2 dialog#cm-dialog.cm-play-settings-dialog[open]{display:flex;flex-direction:column;width:min(640px,calc(100vw - 24px));max-height:calc(100dvh - 32px);overflow:hidden}
+#cm-dialog.cm-play-settings-dialog .cm-dialog-head{flex:none;margin-bottom:14px}
+#cm-dialog .cm-play-settings{display:flex;flex-direction:column;flex:1 1 auto;min-height:0}
+#cm-dialog .cm-play-settings-body{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;padding-right:4px}
+#cm-dialog .cm-play-settings-body p{margin:0 0 10px;font-size:12px}
+#cm-dialog .cm-play-settings-body h3{margin:0 0 8px;font-size:13px}
+#cm-dialog .cm-play-settings-foot{flex:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--v-line)}
+@media(max-width:560px){#matrix-v2 dialog#cm-dialog.cm-play-settings-dialog[open]{padding:16px;max-height:calc(100dvh - 16px)}}
