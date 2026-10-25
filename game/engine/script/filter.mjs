@@ -96,6 +96,13 @@ export const SELECTOR_KEYS = Object.freeze([
   /* "The number of opponents who control a creature with power 4 or greater" (Summon: Yojimbo; Rob's lists P3): a player who
      controls a permanent this selector describes. */
   "controlsAny",
+  /* "Doesn't untap during its controller's untap step unless that player is the monarch" (Fall from Favor; precons B, CR 725):
+     a permanent whose controller holds the monarch designation now (`state.monarch`), or, false, does not. */
+  "monarch",
+  /* "Each nonland permanent ... whose controller was dealt combat damage by this creature this turn" (Steel Hellkite; precons
+     B, CR 510.2): a permanent controlled by a player this source dealt combat damage to this turn (rules/combat.mjs keeps
+     the source's record), the source as it last was if it has left the battlefield since (CR 113.7a). */
+  "controllerDealtCombatDamageBy",
   /* "Unless ... it's only the color its controller chose" (Selective Obliteration; CR 105.2): the one color its controller chose
      as this resolution did (effects/asking.mjs, chooseColor's `chooser`), and no other. */
   "onlyChosenColor",
@@ -228,6 +235,9 @@ function assertGrammar(selector) {
   if (selector.fromBattlefieldThisTurn !== undefined && selector.fromBattlefieldThisTurn !== true) throw new Error("A selector's fromBattlefieldThisTurn is true: a graveyard card put there from the battlefield this turn");
   if (selector.xInManaCost !== undefined && selector.xInManaCost !== true) throw new Error("A selector's xInManaCost is true: {X} among the symbols of its mana cost");
   if (selector.onlyChosenColor !== undefined && typeof selector.onlyChosenColor !== "boolean") throw new Error("A selector's onlyChosenColor is true or false: only the color its controller chose");
+  if (selector.monarch !== undefined && typeof selector.monarch !== "boolean") throw new Error("A selector's monarch is true or false: whether its controller is the monarch (CR 725)");
+  if (selector.controllerDealtCombatDamageBy !== undefined && selector.controllerDealtCombatDamageBy !== "self")
+    throw new Error("A selector's controllerDealtCombatDamageBy is \"self\": its controller was dealt combat damage by this source this turn");
   /* What a spell targets (Rebuff the Wicked): a permanent, by a selector of its own -- only a spell's, the one thing that has
      targets among what a selector can be about. */
   if (selector.targeting !== undefined) {
@@ -439,6 +449,15 @@ export function compileSelector(selector) {
       if (selector.controller === "that player" && holder !== context.about?.player) return false;
       /* A player itself, bound from a target ("exile target player's graveyard", script/bind.mjs). */
       if (Number.isInteger(selector.controller) && holder !== selector.controller) return false;
+    }
+    /* "Unless that player is the monarch" (Fall from Favor; CR 725): its controller holds the designation now, or not. */
+    if (selector.monarch !== undefined && ((state.monarch ?? null) === controllerOf(state, id)) !== selector.monarch) return false;
+    /* "Whose controller was dealt combat damage by this creature this turn" (Steel Hellkite; CR 510.2): the players the source
+       dealt combat damage to this turn, as rules/combat.mjs records them on it -- read from it as it last was when it has left
+       the battlefield (CR 113.7a; rules/layers.mjs, lastKnown); a record from an earlier turn is no record. */
+    if (selector.controllerDealtCombatDamageBy === "self") {
+      const record = (context.source !== undefined && context.source !== null && state.objects[context.source]?.combatDamaged) || context.lastKnown?.combatDamaged;
+      if (!record || record.turn !== state.turn || !record.players.includes(controllerOf(state, id))) return false;
     }
 
     /* "Equipped creature gets +X/+0, where X is that artifact's mana value" (Bludgeon Brawl): attached to "it", the creature

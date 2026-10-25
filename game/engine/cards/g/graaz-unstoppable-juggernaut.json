@@ -1,0 +1,98 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Graaz, Unstoppable Juggernaut",
+    "oracleId": "aebfdcc0-c5b9-4737-8498-764a5021b087",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Juggernaut"
+    ],
+    "manaCost": "{8}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 7,
+    "toughness": 5
+  },
+  "oracleText": "Juggernauts you control attack each combat if able.\nJuggernauts you control can't be blocked by Walls.\nOther creatures you control have base power and toughness 5/3 and are Juggernauts in addition to their other creature types.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Juggernauts you control attack each combat if able.",
+      "rule": "attacks-each-combat",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Juggernaut"
+        ],
+        "controller": "you"
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Juggernauts you control can't be blocked by Walls.",
+      "rule": "cant-be-blocked-by",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Juggernaut"
+        ],
+        "controller": "you"
+      },
+      "by": {
+        "what": "permanent",
+        "subtypes": [
+          "Wall"
+        ]
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Other creatures you control have base power and toughness 5/3 and are Juggernauts in addition to their other creature types.",
+      "layer": 4,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "another": true
+      },
+      "apply": {
+        "addSubtypes": [
+          "Juggernaut"
+        ]
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Other creatures you control have base power and toughness 5/3 and are Juggernauts in addition to their other creature types.",
+      "layer": 7,
+      "sublayer": "b",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "another": true
+      },
+      "apply": {
+        "setPower": 5,
+        "setToughness": 3
+      }
+    }
+  ]
+}

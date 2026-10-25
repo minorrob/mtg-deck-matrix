@@ -2084,6 +2084,17 @@ export function compileScript(script) {
     if (ability.kind === "static" && ability.apply?.correspondingSubtypes !== undefined
       && !(ability.apply.correspondingSubtypes === true && ability.layer === 4 && Array.isArray(ability.apply.setTypes)))
       problems.push(`${ability.text}: correspondingSubtypes is true, in layer 4, beside setTypes (CR 205.3d)`);
+    /* "This creature has the power, toughness, and creature types of the last creature card exiled with it" (Duplicant;
+       precons B): read from the card its linked ability exiled (rules/layers.mjs, linkedCreatureGrant) -- its creature types in
+       layer 4 (CR 613.1d), with `plusCreatureTypes` it keeps ("It's still a Shapeshifter"), or its power and toughness in
+       layer 7b (CR 613.4b), of the source itself. */
+    if (ability.kind === "static" && ability.apply?.linkedCreature !== undefined) {
+      const {linkedCreature: what, plusCreatureTypes, ...rest} = ability.apply;
+      const typesOk = what === "creature types" && ability.layer === 4 && (plusCreatureTypes === undefined || (Array.isArray(plusCreatureTypes) && plusCreatureTypes.every((t) => typeof t === "string")));
+      const statsOk = what === "power and toughness" && ability.layer === 7 && ability.sublayer === "b" && plusCreatureTypes === undefined;
+      if (!(typesOk || statsOk) || Object.keys(rest).length || ability.affects?.self !== true)
+        problems.push(`${ability.text}: linkedCreature is "creature types" in layer 4 (with plusCreatureTypes, a list) or "power and toughness" in layer 7b, of the source itself, and nothing beside it`);
+    }
     /* "A deck can have any number of cards named <this card>" (CR 100.2a): said of the card's own name, or no card says it. */
     if (ability.kind === "static" && ability.rule === "any-number-in-deck" && ability.text !== `A deck can have any number of cards named ${identity.name}.`)
       problems.push(`${ability.text}: any number of a card in a deck is the card's own words, of its own name`);

@@ -789,6 +789,13 @@ export const combatDamage = {
         /* Dealt combat damage this turn, infect or not ("the number of opponents that were dealt combat damage this turn",
            Tymna the Weaver; script/amount.mjs). turn.mjs clears it. */
         state.players[hit.toPlayer].combatDamagedThisTurn = true;
+        /* And by this source, this turn (Steel Hellkite: "each nonland permanent ... whose controller was dealt combat damage by
+           this creature this turn"; precons B, CR 510.2): the players it hit, kept on it with the turn, so a record from an
+           earlier turn is none, and a new object has none (CR 400.7; script/filter.mjs, controllerDealtCombatDamageBy). */
+        if (state.objects[hit.source]) {
+          const record = state.objects[hit.source].combatDamaged;
+          state.objects[hit.source].combatDamaged = {turn: state.turn, players: [...new Set([...(record?.turn === state.turn ? record.players : []), hit.toPlayer])]};
+        }
         /* And by what names this game (Gollum, Obsessed Stalker: "each opponent dealt combat damage this game by a creature named
            Gollum, Obsessed Stalker"; Rob's lists P2): the source's name as it dealt it (CR 201.2), kept for the game -- nothing
            clears it (script/condition.mjs, combatDamagedBy). */
