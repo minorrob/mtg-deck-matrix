@@ -206,7 +206,7 @@ const subs=ready.reduce((n,x)=>n+(x.standIns||0),0);
 const words=['no','one','two','three','four','five','six','seven','eight','nine','ten'];
 const count=n=>n<=10?words[n]:String(n);
 const playWords=n=>n===live.length?(live.length===1?', ready to play':', all playable'):n===0?(live.length===1?', not playable yet':', none playable yet'):`, ${count(n)} playable`;
-const summary=live.length&&stage!=='shared'?`<p class="cm-decks-summary">${e(count(live.length).replace(/^./,c=>c.toUpperCase()))} deck${live.length===1?'':'s'}<span id="cm-decks-playable"></span>.${subs?` <b>${subs} substitute${subs===1?'':'s'}</b> still standing in.`:''}</p>`:'';
+const summary=live.length&&stage!=='shared'?`<p class="cm-decks-summary">${e(count(live.length).replace(/^./,c=>c.toUpperCase()))} deck${live.length===1?'':'s'}<span id="cm-decks-playable">${C.play?.open()&&playSeen.count!==null&&playSeen.of===live.length?playWords(playSeen.count):''}</span>.${subs?` <b>${subs} substitute${subs===1?'':'s'}</b> still standing in.`:''}</p>`:'';
 const acct=M.budgets(C.state),cash=v=>e(C.money(Math.round(v*100)/100));
 const budgetLine=acct.decks.length&&stage!=='shared'?`<p class="cm-muted cm-decks-budget" title="Each deck counts at its budget, or at its cost when that is more. Nothing is refused for money.">${acct.budget===null?`Your decks plan <strong>${cash(acct.planned)}</strong> together. <a href="#settings">Set an account budget</a>`:`Your decks plan <strong>${cash(acct.planned)}</strong> of your <strong>${cash(acct.budget)}</strong> account budget · <strong class="${acct.over?'cm-over':''}">${cash(Math.abs(acct.left))} ${acct.over?'over':'left'}</strong> · <a href="#settings">Budget</a>`}</p>`:'';
 const footLinks=anyDecks?`<div class="cm-deck-footlinks">${howLink}${lobbyHidden||C.showLobbyDecks?`<label class="cm-checkbox cm-show-lobby" title="Decks the Play lobby built for a seat. They stay out of Decks and the library until you save one."><input id="cm-show-lobby" type="checkbox" ${C.showLobbyDecks?'checked':''}>Show lobby decks${lobbyHidden&&!C.showLobbyDecks?` (${lobbyHidden})`:''}</label>`:''}</div>`:'';
@@ -221,7 +221,7 @@ const bar=`<div class="cm-decks-bar"><nav class="cm-decks-stages" aria-label="Sh
   +`<div class="cm-decks-order">${stage==='shared'?`<label class="cm-checkbox cm-include-public"><input id="cm-include-public" type="checkbox" ${pub?'checked':''}>Include public decks</label>`:`<label class="cm-decks-sort">Sort<select id="cm-decks-sort" aria-label="Sort decks">${SORTS.map(([k,label])=>`<option value="${k}"${k===sort?' selected':''}>${e(label)}</option>`).join('')}</select></label><label class="cm-checkbox cm-show-archived"><input id="cm-show-archived" type="checkbox" ${showArchived?'checked':''}>Show archived</label>`}</div></div>`;
 const chipName=(CHIPS.find(([k])=>k===stage)||[,''])[1];
 const noneHere=fav?`<p class="cm-muted cm-decks-none">No favorites yet. Star a deck to see it here.</p>`:`<p class="cm-muted cm-decks-none">No ${e(chipName.toLowerCase())} decks right now. <a href="#decks${sort==='closest'?'':'?sort='+e(sort)}">Show all</a></p>`;
-const latestSlot='<section class="cm-precon-latest" id="cm-precon-latest" aria-label="New from Wizards" hidden></section>',latestTile=latestSlot.replace('<section','<article').replace('</section>','</article>').replace('cm-precon-latest"','cm-precon-latest cm-precon-tile"');
+const latestSlot=`<section class="cm-precon-latest" id="cm-precon-latest" aria-label="New from Wizards"${preconSeen()?'':' hidden'}>${preconSeen()}</section>`,latestTile=latestSlot.replace('<section','<article').replace('</section>','</article>').replace('cm-precon-latest"','cm-precon-latest cm-precon-tile"');
 if(stage!=='shared')C.preconLatest('cm-precon-latest');
 const title=fav?'Favorites':stage==='shared'?'Shared':'Decks';
 /* THE TILE'S TOOLS (FAV-1, SEL-1): left to right, the select tick, the star, the ⋯. They show on hover; a favorite's
@@ -236,7 +236,7 @@ const tile=d=>{const r=M.readiness(C.state,d),picked=picks.includes(d.id),word=s
   if(!caption.length)caption.push(`${r.sleeved} in the physical deck`);if(record)caption.push(record);
   const ci=(C.card(d.commanders[0])?.colorIdentity)||[],tint=/^[WUBRG]$/.test(ci[0]||'')?`--tint:var(--mana-${ci[0]});`:'';
   const sets=(d.sets||[]).length?`<span class="cm-tile-sets" aria-label="Deck sets">${d.sets.map(x=>`<span class="cm-chip">${e(x)}</span>`).join('')}</span>`:'';
-  return `<article class="cm-deck-tile${picked?' is-picked':''}" data-deck-tile="${e(d.id)}" data-stage="${e(word.toLowerCase())}" style="${tint}">${art(d)?`<img class="cm-deck-art" src="${e(art(d))}" alt="" loading="lazy">`:initials(d)}<span class="cm-tile-tools">${pick(d.id,d.name)}${star(d.id,d.name)}<button type="button" class="cm-icon-button cm-tile-menu-btn" data-action="deck-menu" data-deck="${e(d.id)}" aria-haspopup="menu" aria-label="Deck options for ${e(d.name)}">⋯</button></span>${C.pill(e(word),STAGE_TONE[word])}<span class="cm-tile-mana">${C.colors(ci)}</span><button data-action="${d.commanders.length?'deck':'start-from'}" data-deck="${e(d.id)}"><small>${e(d.name)}</small><h3>${e(commander(d)||'Choose a commander')}</h3>${(()=>{const m=mechanicsOf(d);return m.list.length?`<p${m.derived?' class="cm-tile-derived" title="Read from the list. Name your own in Deck Definition."':''}>${e(m.list.join(' · '))}</p>`:'';})()}<span class="cm-tile-ready">${C.readinessBar(r)}<span class="cm-tile-caption"><span>${e(caption.join(' · '))}</span><b>B${d.definition.baseBracket}${scoreOf(latestReport(d))?` · ${e(scoreOf(latestReport(d)))} pts`:''}${d.locked?' · Locked':''}</b></span></span><span class="cm-tile-play" data-play-for="${e(d.id)}" hidden></span></button>${sets}${M.isLobbyDeck(d)?`<div class="cm-tile-lobby">${C.pill('Lobby deck','draft')}${b('Save to Decks','promote-lobby-deck',{deck:d.id},false,{cls:'compact'})}</div>`:''}</article>`;};
+  return `<article class="cm-deck-tile${picked?' is-picked':''}" data-deck-tile="${e(d.id)}" data-stage="${e(word.toLowerCase())}" style="${tint}"${stage==='playable'&&seenOf(playSeen.lines,d.id)&&!playSeen.lines.get(d.id).ok?' hidden':''}>${art(d)?`<img class="cm-deck-art" src="${e(art(d))}" alt="" loading="lazy">`:initials(d)}<span class="cm-tile-tools">${pick(d.id,d.name)}${star(d.id,d.name)}<button type="button" class="cm-icon-button cm-tile-menu-btn" data-action="deck-menu" data-deck="${e(d.id)}" aria-haspopup="menu" aria-label="Deck options for ${e(d.name)}">⋯</button></span>${C.pill(e(word),STAGE_TONE[word])}<span class="cm-tile-mana">${C.colors(ci)}</span><button data-action="${d.commanders.length?'deck':'start-from'}" data-deck="${e(d.id)}"><small>${e(d.name)}</small><h3>${e(commander(d)||'Choose a commander')}</h3>${(()=>{const m=mechanicsOf(d);return m.list.length?`<p${m.derived?' class="cm-tile-derived" title="Read from the list. Name your own in Deck Definition."':''}>${e(m.list.join(' · '))}</p>`:'';})()}<span class="cm-tile-ready">${C.readinessBar(r)}<span class="cm-tile-caption"><span>${e(caption.join(' · '))}</span><b>B${d.definition.baseBracket}${scoreOf(latestReport(d))?` · ${e(scoreOf(latestReport(d)))} pts`:''}${d.locked?' · Locked':''}</b></span></span>${playLine(d.id)}</button>${sets}${M.isLobbyDeck(d)?`<div class="cm-tile-lobby">${C.pill('Lobby deck','draft')}${b('Save to Decks','promote-lobby-deck',{deck:d.id},false,{cls:'compact'})}</div>`:''}</article>`;};
 /* A DECK SHARED WITH YOU (FLT-6): a tile in the same grid with the owner's name; it opens on its own page. Its
    favorite and its tick are yours, keyed by the share, and never touch the owner's deck (FAV-5). */
 C.sharedTile=x=>{const key='share:'+x.id,c=x.content,name=c.name;return `<article class="cm-deck-tile cm-deck-shared" data-shared-tile="${e(x.id)}" data-via="${e(x.via||'')}"><span class="cm-tile-tools">${pick(key,name)}${star(key,name)}</span>${C.pill('Shared','draft')}<a class="cm-deck-shared-link" href="#shared?item=${e(x.id)}"><small>${e(name)}</small><h3>${e(c.commanders.map(m=>m.name).join(' + ')||'No commander yet')}</h3>${c.description?`<p>${e(c.description)}</p>`:''}<span class="cm-tile-caption"><span>Shared by ${e(x.owner)} · ${x.access==='collaborator'?'Collaborator':'Reviewer'}${x.via==='public'?' · Public':''}</span></span></a></article>`;};
@@ -257,14 +257,15 @@ if(stage==='shared'){const box=document.getElementById('cm-shared-grid');
 /* AI-5: each tile says whether the table can play its deck, where Play is in the cloud (crankmagic-table.js, C.play);
    and the summary, how many of them it can. Playable (FLT-4) puts away the tiles the table can't play every card of --
    the chip already shows only Defined decks, so a 92-seat deck the table knows is never Playable. */
-if(C.play?.open())C.play.tiles().then(()=>{
+if(C.play?.open())confirmLate([...document.querySelectorAll('[data-play-for]')],()=>C.play.tiles()).then(()=>{
+  for(const el of document.querySelectorAll('[data-play-for]'))if(el.hidden)playSeen.lines.delete(el.dataset.playFor);else playSeen.lines.set(el.dataset.playFor,{text:el.textContent,ok:el.classList.contains('is-playable')});
   if(stage==='playable'){
     const tiles=[...document.querySelectorAll('[data-deck-tile]')];
     for(const t of tiles)t.hidden=!t.querySelector('[data-play-for].is-playable');
     if(tiles.length&&tiles.every(t=>t.hidden))document.querySelector('.cm-deck-grid')?.insertAdjacentHTML('beforebegin',noneHere);
   }
   return C.play.count(live);
-}).then(n=>{const el=document.getElementById('cm-decks-playable');if(el&&n!==null&&n!==undefined)el.textContent=playWords(n);});};
+}).then(n=>{const el=document.getElementById('cm-decks-playable');if(n!==null&&n!==undefined)Object.assign(playSeen,{count:n,of:live.length});if(el&&n!==null&&n!==undefined)el.textContent=playWords(n);});};
 /* A card's roles: the ones the catalog already carries, or the classifier read fresh from
    the rules text -- the same vocabulary the graph joins cards on, so "ramp" here is the
    ramp the Discover page means. */
@@ -349,9 +350,9 @@ const body={
 }[tab]();
 /* THE STAGE, ONE WORD (§2): the same reading as the tile's badge -- Building, Defined or Boxed -- or Archived. */
 const stageNow=M.deckStatus(C.state,d),stageWord=d.archived?'Archived':stageNow.boxed?'Boxed':stageNow.stage==='defined'?'Defined':'Building';
-C.main.innerHTML=`<section class="cm-deck-hero" style="${heroTint}${heroArt?`--hero:url('${e(heroArt)}')`:''}">${heroCard}<div class="cm-deck-hero-copy"><a class="cm-crumb" href="#decks">Decks</a><h1>${e(d.name)}</h1><p>${heroCost(d)} ${precon?`<span class="cm-badge cm-precon-badge" title="Made from the ${e(precon.name)} precon${precon.setName?` (${e(precon.setName)})`:''}">Precon · ${e(precon.name)}</span> `:''}<span class="cm-badge ${stageNow.boxed?'good':''}" data-stage="${e(stageWord)}">${e(stageWord)}</span> ${d.archived?'':legalBadge(d)} <span class="cm-badge">Bracket ${e(String(d.definition.baseBracket))}–${e(String(d.definition.bracketCeiling))}</span>${overCap?` <span class="cm-badge warn" title="The list at recorded prices against the deck’s budget. A budget only informs: nothing is refused for it.">Over the ${e(C.money(cap))} budget · about ${e(C.money(spend))}</span>`:''}${latest?` <span class="cm-badge" title="Latest measured score">Measured ${e(scoreOf(latest))} pts</span>`:''}${attached(d)?` <span class="cm-badge">Group: ${e(attached(d).name)}</span> <button type="button" class="cm-text-button cm-hero-link" data-action="deck-group" data-group="${e(d.groupId)}">Open group</button>`:''}${d.locked?' <span class="cm-badge warn">Locked</span>':''}</p><p class="cm-deck-play" id="cm-deck-play" data-deck="${e(d.id)}" hidden></p>${mech.list.length?`<div class="cm-deck-chips${mech.derived?' cm-tile-derived':''}"${mech.derived?' title="Read from the list. Name your own in Deck Definition."':''}>${mech.list.map(m=>`<span class="cm-chip">${e(m)}</span>`).join('')}</div>`:''}${d.description?`<p class="cm-deck-strategy">${e(d.description)}</p>`:''}<div class="cm-actions cm-deck-actions"><span class="cm-deck-work">${work.join('')}</span>${changeBtn}${measure}${b('More','deck-more-menu',{deck:d.id},false,{caret:'down'})}</div></div></section>`+tabs+body+(d.archived?'':`<nav class="cm-action-bar" aria-label="Deck actions">${work.join('')}${changeBtn}</nav>`);C.afterOverview?.(d.id);
+C.main.innerHTML=`<section class="cm-deck-hero" style="${heroTint}${heroArt?`--hero:url('${e(heroArt)}')`:''}">${heroCard}<div class="cm-deck-hero-copy"><a class="cm-crumb" href="#decks">Decks</a><h1>${e(d.name)}</h1><p>${heroCost(d)} ${precon?`<span class="cm-badge cm-precon-badge" title="Made from the ${e(precon.name)} precon${precon.setName?` (${e(precon.setName)})`:''}">Precon · ${e(precon.name)}</span> `:''}<span class="cm-badge ${stageNow.boxed?'good':''}" data-stage="${e(stageWord)}">${e(stageWord)}</span> ${d.archived?'':legalBadge(d)} <span class="cm-badge">Bracket ${e(String(d.definition.baseBracket))}–${e(String(d.definition.bracketCeiling))}</span>${overCap?` <span class="cm-badge warn" title="The list at recorded prices against the deck’s budget. A budget only informs: nothing is refused for it.">Over the ${e(C.money(cap))} budget · about ${e(C.money(spend))}</span>`:''}${latest?` <span class="cm-badge" title="Latest measured score">Measured ${e(scoreOf(latest))} pts</span>`:''}${attached(d)?` <span class="cm-badge">Group: ${e(attached(d).name)}</span> <button type="button" class="cm-text-button cm-hero-link" data-action="deck-group" data-group="${e(d.groupId)}">Open group</button>`:''}${d.locked?' <span class="cm-badge warn">Locked</span>':''}</p>${deckPlayLine(d.id)}${mech.list.length?`<div class="cm-deck-chips${mech.derived?' cm-tile-derived':''}"${mech.derived?' title="Read from the list. Name your own in Deck Definition."':''}>${mech.list.map(m=>`<span class="cm-chip">${e(m)}</span>`).join('')}</div>`:''}${d.description?`<p class="cm-deck-strategy">${e(d.description)}</p>`:''}<div class="cm-actions cm-deck-actions"><span class="cm-deck-work">${work.join('')}</span>${changeBtn}${measure}${b('More','deck-more-menu',{deck:d.id},false,{caret:'down'})}</div></div></section>`+tabs+body+(d.archived?'':`<nav class="cm-action-bar" aria-label="Deck actions">${work.join('')}${changeBtn}</nav>`);C.afterOverview?.(d.id);
 /* AI-5: whether the table can play this deck, and Play this deck when it can (crankmagic-table.js, C.play). */
-if(C.play?.open())C.play.deck(d);}
+if(C.play?.open()){const line=document.getElementById('cm-deck-play');confirmLate(line?[line]:[],()=>C.play.deck(d)).then(()=>{const el=document.getElementById('cm-deck-play');if(!el||el.dataset.deck!==d.id)return;if(el.hidden)playSeen.deck.delete(d.id);else playSeen.deck.set(d.id,{html:el.innerHTML,ok:el.classList.contains('is-playable')});});}}
 /* THE NEXT LINE. One sentence, in the order the work happens: add what you already own, buy
    what you do not, wait for what is ordered, swap the substitutes out when the real copies
    arrive. Every number is readiness's, so the line agrees with the figures above it. */
@@ -831,6 +832,28 @@ const preconText=p=>p.commander.map(c=>`1 ${c.name}`).concat(p.cards.map(([n,q])
    decks alone come from data/precons-latest.json, a few kilobytes, and are drawn into a slot on the Decks hub and the
    landing page; a click starts one exactly as the picker does, fetching the full list only then. Nothing waits on
    it: the slot stays hidden until the file has arrived, and stays hidden if it never does. */
+/* NO FLICKER ON A REDRAW (Rob, 2026-10-25: "an odd screen flicker every time I click a button on the Decks screen").
+   Every save redraws the page, and some of it arrives late: on the hub this section, each tile's line from the table
+   and the summary's playable count; on a deck's page its line from the table. Drawn empty each time, the page lost
+   them for a moment (the section's height and a line on every tile) and the tiles below jumped. Each is now drawn as
+   it last read, and the late answer only corrects it. */
+let latestOnce=null,preconDrawn=null;
+const preconKey=()=>`${M.today()}|${C.play?.open()?1:0}`;
+const preconSeen=()=>preconDrawn&&preconDrawn.key===preconKey()?preconDrawn.html:'';
+const playSeen={lines:new Map(),count:null,of:null,deck:new Map()};
+const seenOf=(map,id)=>C.play?.open()?map.get(id):null;
+const deckPlayLine=id=>{const s=seenOf(playSeen.deck,id);return `<p class="cm-deck-play${s&&s.ok?' is-playable':''}" id="cm-deck-play" data-deck="${e(id)}"${s?' data-play-seen':' hidden'}>${s?s.html:''}</p>`;};
+const playLine=id=>{const s=seenOf(playSeen.lines,id);return `<span class="cm-tile-play${s&&s.ok?' is-playable':''}" data-play-for="${e(id)}"${s?' data-play-seen':' hidden'}>${s?e(s.text):''}</span>`;};
+/* A line drawn as it last read waits for the table's answer to write it again. The answer writes only the decks it can
+   check, and none if it fails, so a line it did not write by the time it finishes is put away and forgotten: a deck
+   that lost its commander never keeps "Playable at the table". */
+const confirmLate=(els,run)=>{
+  const mark=els.filter(el=>el.hasAttribute('data-play-seen'));
+  const seen=rs=>{for(const r of rs){const el=(r.target.nodeType===1?r.target:r.target.parentElement)?.closest('[data-play-seen]');el?.removeAttribute('data-play-seen');}};
+  const mo=new MutationObserver(seen);for(const el of mark)mo.observe(el,{childList:true,characterData:true,subtree:true});
+  return Promise.resolve(run()).finally(()=>{seen(mo.takeRecords());mo.disconnect();
+    for(const el of mark)if(el.hasAttribute('data-play-seen')){el.removeAttribute('data-play-seen');el.hidden=true;el.textContent='';el.classList.remove('is-playable');}});
+};
 async function latestPrecons(){
   const A=globalThis.CrankAssets,r=await fetch(A.preconsLatest).catch(()=>null);
   if(!r||!r.ok)return null;
@@ -838,11 +861,13 @@ async function latestPrecons(){
 }
 /* NEW FROM WIZARDS: each chip names its (first) commander, so the card shows under the pointer as a Library name's does (Rob, 2026-09-30). */
 C.preconLatest=async id=>{
-  const data=await latestPrecons().catch(()=>null),el=document.getElementById(id);
+  const data=await (latestOnce||=latestPrecons().catch(()=>null).then(d=>{if(!d)latestOnce=null;return d;})),el=document.getElementById(id);
   if(!el||!data||!data.decks.length)return;
   const today=M.today(),sets=[...new Set(data.decks.map(p=>p.setName))].join(' · ');
-  el.innerHTML=`<div class="cm-precon-latest-head"><h2>New from Wizards</h2><span class="cm-muted">${e(sets)} · ${data.releaseDate>today?'Releases ':''}${e(usDate(data.releaseDate))}</span></div>
+  const html=`<div class="cm-precon-latest-head"><h2>New from Wizards</h2><span class="cm-muted">${e(sets)} · ${data.releaseDate>today?'Releases ':''}${e(usDate(data.releaseDate))}</span></div>
     <ul>${data.decks.map(p=>`<li><button type="button" class="cm-precon-chip" data-action="precon-start" data-precon="${e(p.id)}" data-card="${e(p.commander[0].name)}" title="Start from ${e(p.name)}"><strong>${e(p.name)}</strong><span><em class="cm-precon-lead">${e(p.commander.map(c=>c.name).join(' + '))}</em>${C.colors([...new Set(p.commander.flatMap(c=>c.colorIdentity))])}</span></button>${C.play?.open()?`<button type="button" class="cm-text-button cm-precon-play" data-action="precon-play" data-precon="${e(p.id)}" aria-label="Play ${e(p.name)}: make it a deck, then a table">Play it</button>`:''}</li>`).join('')}</ul>`;
+  preconDrawn={key:preconKey(),html};
+  if(el.innerHTML!==html)el.innerHTML=html;
   el.hidden=false;
 };
 async function preconPicker(){

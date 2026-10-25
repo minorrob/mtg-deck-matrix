@@ -27,4 +27,12 @@ BREAKS = [
      "{label:'Create',hash:'#new',current:location.hash==='#new'}", "{label:C.state.decks[0]?.name||'Create',hash:'#new',current:location.hash==='#new'}"),
     ('an old address keeps its chip', 'crankmagic-decks.js',
      "const stage=CHIPS.some(([k])=>k===params.get('stage'))?params.get('stage'):'all'", "const stage=params.get('stage')==='complete'?'boxed':CHIPS.some(([k])=>k===params.get('stage'))?params.get('stage'):'all'"),
+    ('the precon section drawn empty on a redraw', 'crankmagic-decks.js',
+     "aria-label=\"New from Wizards\"${preconSeen()?'':' hidden'}>${preconSeen()}</section>`", "aria-label=\"New from Wizards\" hidden></section>`"),
+    ('a tile drops its table line on a redraw', 'crankmagic-decks.js',
+     "data-play-for=\"${e(id)}\"${s?' data-play-seen':' hidden'}>${s?e(s.text):''}</span>`", "data-play-for=\"${e(id)}\" hidden></span>`"),
+    ('the deck page drops its table line on a redraw', 'crankmagic-decks.js',
+     "id=\"cm-deck-play\" data-deck=\"${e(id)}\"${s?' data-play-seen':' hidden'}>${s?s.html:''}</p>`", "id=\"cm-deck-play\" data-deck=\"${e(id)}\" hidden></p>`"),
+    ('a stale table line kept when the answer skips it', 'crankmagic-decks.js',
+     "el.removeAttribute('data-play-seen');el.hidden=true;el.textContent='';", "el.removeAttribute('data-play-seen');"),
 ]
