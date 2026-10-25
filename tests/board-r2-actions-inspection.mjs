@@ -119,6 +119,7 @@ try{
  ok((await page.locator('.cm-action-summary').innerText()).includes('Forest and Sol Ring'),'payment sources shown for review');
  await page.locator('[data-action=board-profile]').click();
  await page.locator('[data-action=board-tools]').click();await page.keyboard.press('Escape');
+ await page.locator('#cm-board-tools').waitFor({state:'detached',timeout:3000});
  eq(await page.locator('#cm-board-tools').count(),0,'Escape closes the foremost Settings menu');
  eq(await page.locator('#cm-card-inspector').count(),1,'closing Settings preserves the card being reviewed');
  await page.keyboard.press('Escape');

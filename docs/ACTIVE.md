@@ -1,5 +1,31 @@
 # Who holds the work
 
+## Play: Camera closes on an outside press; Settings is a window, 2026-10-25 (a Claude cloud session, for Rob; `claude/sweet-wright-p0klet`, temporarily in Codex · Play's files)
+
+Rob, 2026-10-25: *"Camera menu doesn't close when I click anywhere outside of it."* and *"Can't access full settings menu
+when selected. It cuts off at bottom of screen and I can't scroll down. ... when I press "Settings" in the dropdown, the
+settings screen should be a pop-up window with close in the top right, and save and cancel in the bottom right. The
+window should be reactive to the browser size."* No Codex · Play PR was open on these files (the newest, #770, is from
+Oct 18), so this small change is made here, in `crankmagic-board.js` and `crankmagic-stage.css` only.
+
+- **Camera ▾** closes on a press anywhere outside it (a capture-phase `pointerdown`, so a card's own handler cannot keep
+  it open), as Profile and History already did. A press inside it keeps it open; Escape still closes it.
+- **Settings** (Profile ▾ › Settings) opens the app's dialog: ✕ top right, Cancel and Save bottom right, the middle
+  scrolling, sized `min(640px, 100vw − 24px)` by `100dvh − 32px` and following the window. Controls still preview live;
+  Save keeps them; Cancel, ✕, Escape, a press on the backdrop or a button that leaves the window (Concede, Recommended
+  actions, Table vitals, …) put back what was set when it opened (hold, skip-empty and the room's `prefer`, card size,
+  sound). ⌘/Ctrl + / − still size the cards with it open.
+- **Combat strip** (Rob, same day, a screenshot): each defender's confirmed assignments run in a row and wrap to the next
+  when it is full, instead of one column with a scrollbar; defenders stay side by side so each one's first assignment is
+  in reach. `board-combat-display` proves the wrap and goes red with the old column.
+- **AGENTS.md, "Symbols first, words last":** Rob's new standing rule for every lane, in his words.
+- **Parallel, not in this PR:** the 3D camera Rob asked for (wheel zoom, mat-drag pan, right-click-hold head-look, a
+  shorthand actions menu on a card's right-click) is on `claude/play-3d-camera`, its own PR.
+- **Proof:** new `tests/board-settings-window.mjs` (Camera in Focus and Full; the window at 1440×900, 1024×560 and
+  390×700 and made smaller while open; Save/Cancel/✕/Escape); four deliberate breaks caught and restored. The suites
+  that drove the old inline menu are updated (`table-board`, `a11y-board`, `table-shared-shell`,
+  `board-r2-actions-inspection`); results are on the PR. **Not proven:** a physical phone.
+
 ## Card load, 2026-10-25: the six precons on the Decks screen (Claude Code on Personal-HP, for Rob; `claude/engine-precons-oct2`)
 
 Rob, 2026-10-25: *"Next, we need to ensure that all cards in the precons listed on the Decks screen is loaded into the game

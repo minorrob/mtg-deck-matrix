@@ -325,9 +325,11 @@
 .cm-combat{position:absolute;left:0;right:0;bottom:0;height:130px;padding:4px 12px;background:#102425;color:#edf6ef;border-top:1px solid #72988a;box-sizing:border-box;min-width:0}
 .cm-combat-heading{display:block;font-size:11px;font-weight:700;line-height:18px}
 .cm-combat-groups{display:flex;gap:12px;overflow:auto;height:100px;min-width:0;scrollbar-width:thin}
-.cm-combat-group{flex:0 0 auto;min-width:0}
+.cm-combat-group{flex:1 1 0}
 #matrix-v2 .cm-board .cm-combat-group h3{font:700 11px/16px system-ui;margin:0;color:#edf6ef}
-#matrix-v2 .cm-board .cm-combat-group ul{display:flex;flex-direction:column;gap:8px;list-style:none;padding:0;margin:0}
+/* Each defender's confirmed assignments run in a row and wrap to the next when it is full (Rob, 2026-10-25), before the strip
+   scrolls; the defenders stay side by side, so each one's first assignment is in reach without scrolling. */
+#matrix-v2 .cm-board .cm-combat-group ul{display:flex;flex-flow:row wrap;gap:8px;list-style:none;padding:0;margin:0}
 .cm-combat-row{display:flex;align-items:center;gap:6px;min-height:66px;padding:2px 6px;border:1px solid #72988a;border-radius:6px}
 .cm-combat-card{display:flex;align-items:center;gap:5px;width:136px;min-width:136px;height:60px;padding:3px;border:1px solid #72988a;border-radius:5px;background:#1c302e;color:#edf6ef;text-align:left;cursor:pointer}
 .cm-combat-card img,.cm-combat-back{display:block;width:35px;height:49px;object-fit:cover;border-radius:3px;flex:none}
@@ -555,3 +557,14 @@
 
 /* Pile counts stay readable even on the compact opponent mats. */
 #matrix-v2 .cm-board .cm-bcard-count{font-size:max(10px,calc(var(--bc)*.3));background:#10232f;color:#fff;padding:1px 3px;border-radius:4px}
+
+/* Settings, the window (Rob, 2026-10-25): the app's dialog sized to the browser, ✕ at its top right, its middle
+   scrolling, and its foot (Cancel, Save) always in view at the bottom right. */
+#matrix-v2 dialog#cm-dialog.cm-play-settings-dialog[open]{display:flex;flex-direction:column;width:min(640px,calc(100vw - 24px));max-height:calc(100dvh - 32px);overflow:hidden}
+#cm-dialog.cm-play-settings-dialog .cm-dialog-head{flex:none;margin-bottom:14px}
+#cm-dialog .cm-play-settings{display:flex;flex-direction:column;flex:1 1 auto;min-height:0}
+#cm-dialog .cm-play-settings-body{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;padding-right:4px}
+#cm-dialog .cm-play-settings-body p{margin:0 0 10px;font-size:12px}
+#cm-dialog .cm-play-settings-body h3{margin:0 0 8px;font-size:13px}
+#cm-dialog .cm-play-settings-foot{flex:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--v-line)}
+@media(max-width:560px){#matrix-v2 dialog#cm-dialog.cm-play-settings-dialog[open]{padding:16px;max-height:calc(100dvh - 16px)}}

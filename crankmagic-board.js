@@ -715,7 +715,7 @@ globalThis.CrankBoard = Object.seal({
       <label class="cm-board-hold"><input type="checkbox" data-board-hold${stored(HOLD_KEY) === "on" ? " checked" : ""}><span>Hold priority after I cast</span></label>
       <label class="cm-board-hold"><input type="checkbox" data-board-skip-empty${skipEmpty() ? " checked" : ""}><span>Skip my priority if no response possible</span></label>
       <p class="cm-muted cm-board-yield-help">${yours ? "Skip to end passes your priority for you through the rest of your turn. It stops when anything is on the stack or you are asked anything else." : e(yieldHelp())}</p>`;
-    return `<div class="cm-board-menu" role="group" aria-label="Settings" id="cm-board-tools">
+    return `<div class="cm-play-settings-body" role="group" aria-label="Settings" id="cm-board-tools">
       <div class="cm-actions cm-board-menu-row">${b("Set Side Drawer Modules", "board-modules-settings")}</div>
       <div class="cm-actions cm-board-menu-row">${gb(COACH, "Recommended actions", "board-coach", {}, {cls: ""})}${b("Table vitals", "board-vitals", {})}${b("AI Coach settings…", "ai-settings", {})}</div>
       ${priority}
@@ -724,6 +724,65 @@ globalThis.CrankBoard = Object.seal({
       <div class="cm-actions cm-board-menu-row">${b("Try the callouts", "board-callout-demo", {}, false, {cls: "compact"})}<span class="cm-muted">Overlay ${overlay()}% · set in Settings › Play</span></div>
       <p class="cm-muted">End game stops it for everyone and keeps its record. Concede leaves it to the others.</p>
       <div class="cm-actions">${end}${b("Concede", "board-concede", {}, false, {disabled: over || left})}</div></div>`;
+  }
+
+  /* SETTINGS IS A WINDOW (Rob, 2026-10-25: "when I press "Settings" in the dropdown, the settings screen should be a
+     pop-up window with close in the top right, and save and cancel in the bottom right. The window should be reactive to
+     the browser size."). Opened inside the Profile menu it ran past the bottom of the screen, and nothing scrolled it.
+     Now it is the app's dialog, sized to the window: its middle scrolls, its foot stays in view. Each control still
+     previews as it moves; Save keeps what is set, and Cancel, ✕, Escape, a press outside or any button that leaves it
+     (Concede, Recommended actions, …) put back what was set when it opened. */
+  const SETTINGS_LEAVE = new Set(["board-skip", "board-coach", "board-callout-demo", "board-concede", "board-vitals", "ai-settings", "board-modules-settings"]);
+  const settingsKeys = () => [HOLD_KEY, SKIP_KEY, SCALE_KEY.board, SCALE_KEY.hand, "cm-card-scale:board"];
+  function settingsNow() {
+    const a = sound();
+    return {kept: Object.fromEntries(settingsKeys().map((k) => [k, stored(k)])), sound: a ? a.volumes() : null};
+  }
+  function restoreSettings(before) {
+    const skipWas = skipEmpty();
+    for (const [k, v] of Object.entries(before.kept)) try {if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v);} catch {/* applied, not remembered */}
+    if (skipEmpty() !== skipWas) prefer();
+    C.setCardScale(C.cardScale(), {save: false});
+    document.dispatchEvent(new CustomEvent("cm-card-scale", {detail: {live: false}}));
+    const a = sound(), v = before.sound;
+    if (a && v) {
+      a.setBusVolume("sfx", v.sfx); a.setBusVolume("bgm", v.bgm);
+      if (a.volumes().muted !== v.muted) actions["board-mute"]();
+    }
+  }
+  /* The window's own words that follow a press inside it (End game's second tap, Mute), drawn again where they are. */
+  function refreshSettings() {
+    const body = tools && document.getElementById("cm-board-tools");
+    if (!body || !view) return;
+    const top = body.scrollTop, key = C.focusKey(document.activeElement);
+    body.outerHTML = toolsMenu();
+    const next = document.getElementById("cm-board-tools");
+    next.scrollTop = top;
+    (C.focusFind(key) || next.querySelector("[data-action=board-end]"))?.focus({preventScroll: true});
+  }
+  function openSettings() {
+    profileOpen = false; menuOpen = false; historyOpen = false; stepsOpen = false; alsoOpen = false; confirmEnd = false;
+    draw();
+    const before = settingsNow();
+    let saved = false;
+    const d = C.modal("Settings", `<div class="cm-play-settings">${toolsMenu()}<div class="cm-form-footer cm-play-settings-foot">${b("Cancel", "close")}${b("Save", "board-settings-save", {}, true)}</div></div>`);
+    d.classList.add("cm-play-settings-dialog");
+    tools = true;
+    const leave = (event) => {
+      const el = event.target.closest?.("#cm-board-tools [data-action]");
+      if (el && (SETTINGS_LEAVE.has(el.dataset.action) || (el.dataset.action === "board-end" && el.dataset.confirm === "1"))) d.close();
+    };
+    d.addEventListener("click", leave);
+    d.addEventListener("close", () => {
+      d.removeEventListener("click", leave);
+      tools = false; confirmEnd = false;
+      if (!saved) restoreSettings(before);
+      if (d.open) return;   /* another window took its place */
+      d.querySelector(".cm-play-settings")?.remove();
+      const a = document.activeElement;
+      if (!a || a === document.body || d.contains(a)) document.querySelector("#cm-board [data-action=board-profile]")?.focus({preventScroll: true});
+    }, {once: true});
+    actions["board-settings-save"] = () => {saved = true; d.close();};
   }
 
   /* The sound (B8; the pack's three ui rows): the effects and the music, each a slider, and a mute. */
@@ -947,7 +1006,7 @@ globalThis.CrankBoard = Object.seal({
         <label class="cm-stage-style">Table <select data-stage-style="table" aria-label="Table design">${(CrankStage.appearances.tables).map(x=>`<option value="${x.id}"${tableDesignId(appearance.table)===x.id?" selected":""}>${x.name}</option>`).join("")}</select></label>` : ""}</div>` : ""}</div>`; }
   function stageProfile(me) {
     const initials = (me.name || "Player").trim().split(/\s+/).slice(0,2).map(s=>s[0]).join("").toUpperCase();
-    return `<div class="cm-stage-profile"><button type="button" class="cm-profile-avatar" data-action="board-profile" aria-label="Profile menu" aria-expanded="${profileOpen}" title="${e(me.name)} · Profile menu"><span aria-hidden="true">${e(initials)}</span></button>${profileOpen ? `<div class="cm-profile-menu" role="group" aria-label="Profile"><strong>${e(me.name)}</strong><span class="cm-board-tools">${opens(b("Pages", "board-menu"),menuOpen)}${menuOpen ? menu() : ""}</span><span class="cm-board-tools">${gb(CLOCK, "History", "board-history", {}, {expanded:historyOpen})}${historyOpen ? historyMenu() : ""}</span>${opens(b("Settings", "board-tools"),tools)}${tools ? toolsMenu() : ""}${b("Arrange drawer order", "board-modules-edit")}${b("Account & app settings", "open-settings")}${b("Help", "page-help", {help:"table"})}</div>` : ""}</div>`;
+    return `<div class="cm-stage-profile"><button type="button" class="cm-profile-avatar" data-action="board-profile" aria-label="Profile menu" aria-expanded="${profileOpen}" title="${e(me.name)} · Profile menu"><span aria-hidden="true">${e(initials)}</span></button>${profileOpen ? `<div class="cm-profile-menu" role="group" aria-label="Profile"><strong>${e(me.name)}</strong><span class="cm-board-tools">${opens(b("Pages", "board-menu"),menuOpen)}${menuOpen ? menu() : ""}</span><span class="cm-board-tools">${gb(CLOCK, "History", "board-history", {}, {expanded:historyOpen})}${historyOpen ? historyMenu() : ""}</span>${b("Settings", "board-tools").replace("<button ", '<button aria-haspopup="dialog" ')}${b("Arrange drawer order", "board-modules-edit")}${b("Account & app settings", "open-settings")}${b("Help", "page-help", {help:"table"})}</div>` : ""}</div>`;
   }
   function moduleSettings() {
     tools = false; profileOpen = false; draw();
@@ -2360,6 +2419,7 @@ globalThis.CrankBoard = Object.seal({
       shell(false);
       if (audio) audio.stopBgm(400);
       globalThis.CrankStage?.unmount(); stopSea(); if (observer) {observer.disconnect(); observer = null;} peek(null); leaveFullscreen();
+      if (tools) document.getElementById("cm-dialog")?.close();
       tools = false; confirmEnd = false; historyOpen = false; menuOpen = false; stepsOpen = false; alsoOpen = false; showing = null; held = null;
       coach.open = false; coach.asked += 1; coach.typing = false;
       calloutQueue = []; clearTimeout(calloutTimer); calloutTimer = null;
@@ -2379,6 +2439,7 @@ globalThis.CrankBoard = Object.seal({
       if (audio) audio.stopBgm(400);
       disconnect(); globalThis.CrankStage?.unmount(); stopSea(); if (observer) {observer.disconnect(); observer = null;}
       document.getElementById("cm-game-on")?.remove();
+      if (tools) document.getElementById("cm-dialog")?.close();
       inspection = null; inspectionFrom = null; stackSelected = null; tableId = null; view = null; table = null; tools = false; confirmEnd = false; selected = null; hover = null; showing = null; held = null;
       historyOpen = false; historyFilter = ""; menuOpen = false; stepsOpen = false; panelOpen = false; skipping = null; records = null;
       coach.open = false; coach.thread = []; coach.typing = false; coach.asked += 1; peek(null); leaveFullscreen();
@@ -2493,7 +2554,7 @@ globalThis.CrankBoard = Object.seal({
     const d = view && view.decision;
     if (d && d.kind === "draw" && !sending) send({indices: [d.options[0].index]});
   };
-  actions["board-mute"] = () => {const a = sound(); if (!a) return; a.setMuted(!a.volumes().muted); if (!a.volumes().muted && view) {const bed = CrankAudio.bedFor(view, view.seat); if (bed) a.startBgm(bed);} draw();};
+  actions["board-mute"] = () => {const a = sound(); if (!a) return; a.setMuted(!a.volumes().muted); if (!a.volumes().muted && view) {const bed = CrankAudio.bedFor(view, view.seat); if (bed) a.startBgm(bed);} draw(); refreshSettings();};
   actions["board-skip"] = () => {
     if (!view || view.status === "finished") return;
     if (view.state.turnPlayerId !== view.seat) {
@@ -2712,6 +2773,16 @@ globalThis.CrankBoard = Object.seal({
   });
   actions["board-stage-rail"] = () => {stageRail = !stageRail; draw();};
   actions["board-camera"] = () => {cameraOpen = !cameraOpen; draw();};
+  /* CAMERA ▾ CLOSES ON A PRESS ANYWHERE OUTSIDE IT (Rob, 2026-10-25), as Profile and History do. Taken out where it is,
+     not by a redraw, so the press still reaches what it was on; caught on the way down, so a card's own handler that
+     stops the press does not keep it open. */
+  document.addEventListener("pointerdown", (event) => {
+    if (!cameraOpen || !document.getElementById("cm-board") || document.querySelector("#cm-dialog[open]")) return;
+    if (event.target?.closest?.(".cm-stage-camera")) return;
+    cameraOpen = false;
+    for (const menu of document.querySelectorAll("#cm-board .cm-stage-camera>div")) menu.remove();
+    for (const button of document.querySelectorAll("#cm-board [data-action=board-camera]")) button.setAttribute("aria-expanded", "false");
+  }, true);
   /* Empty table ground adjusts tilt only. Card, hand, module and scroll gestures keep their own handlers. */
   document.addEventListener('pointerdown',event=>{
     if(event.button!==0||!event.target.matches?.('.cm-stage-canvas, .cm-stage-region'))return;
@@ -3056,7 +3127,9 @@ globalThis.CrankBoard = Object.seal({
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && peekId !== null && !showing) {peek(null); return;}
     if (event.key === "Escape" && stackShown !== null) stackPeek(null);
-    if (!document.getElementById("cm-board") || !view || document.querySelector("#cm-dialog[open]")) return;
+    /* ⌘/Ctrl + and − still size the cards with the Settings window open, as its card-size line says. */
+    const sizing = (event.ctrlKey || event.metaKey) && ["+", "=", "-", "_"].includes(event.key);
+    if (!document.getElementById("cm-board") || !view || (document.querySelector("#cm-dialog[open]") && !(tools && sizing))) return;
     const tag = (document.activeElement && document.activeElement.tagName) || "";
     const typing = /^(INPUT|SELECT|TEXTAREA)$/.test(tag);
     if (event.key === "Escape" && showing) {
@@ -3078,11 +3151,14 @@ globalThis.CrankBoard = Object.seal({
       event.preventDefault(); event.target.form.requestSubmit(); return;
     }
     if (event.key === "Escape" && coach.open) {actions["board-coach"](); return;}
-    if ((event.ctrlKey || event.metaKey) && ["+", "=", "-", "_"].includes(event.key)) {
+    if (sizing) {
       event.preventDefault();
       const n = C.setCardScale(C.cardScale() + (event.key === "-" || event.key === "_" ? -10 : 10));
       document.dispatchEvent(new CustomEvent("cm-card-scale", {detail: {scale: n, live: false}}));
-      if (tools) draw(); else fit();
+      const slider = document.querySelector("#cm-board-tools [data-card-scale]"), out = slider?.parentElement.querySelector("output");
+      if (slider) {slider.value = String(n); slider.setAttribute("aria-valuetext", `${n}%`);}
+      if (out) out.textContent = `${n}%`;
+      fit();
       return;
     }
     if (typing) return;
@@ -3110,7 +3186,7 @@ globalThis.CrankBoard = Object.seal({
 
     }
   });
-  actions["board-tools"] = (el) => { tools = !tools; confirmEnd = false; historyOpen = false; menuOpen = false; stepsOpen = false; opened(el, tools); draw();};
+  actions["board-tools"] = () => openSettings();
   actions["board-coach"] = () => {profileOpen=false; coach.open = !coach.open; tools = false; historyOpen = false; if (coach.open) {if (!moduleSide("coach")) inspection = null; panelOpen = false;openModuleDrawer("coach");} draw(); drawCoach(); if (coach.open) document.querySelector("#cm-board-coach .cm-coach-input")?.focus();};
   actions["board-recommend"] = () => {coach.open=true;if (!moduleSide("coach")) inspection = null;openModuleDrawer("coach");draw();drawCoach();ask_("What are my best actions right now?");};
   actions["board-coach-ask"] = (el) => ask_(el.dataset.q);
@@ -3149,7 +3225,7 @@ globalThis.CrankBoard = Object.seal({
   });
   actions["board-history"] = (el) => {historyOpen = !historyOpen; if (!phone() && historyOpen) profileOpen = true; tools = false; menuOpen = false; stepsOpen = false; opened(el, historyOpen); draw(); if (historyOpen) document.querySelector("#cm-board-history .cm-history-filter")?.focus();};
   actions["board-end"] = async (el) => {
-    if (el.dataset.confirm !== "1") {confirmEnd = true; draw(); return;}
+    if (el.dataset.confirm !== "1") {confirmEnd = true; draw(); refreshSettings(); return;}
     confirmEnd = false; tools = false;
     await tableApi().api("POST", `${tableApi().tableUrl(tableId)}/end`);
     draw();   /* the room's own view, ended, follows on the socket */
@@ -3160,19 +3236,19 @@ globalThis.CrankBoard = Object.seal({
     /* A download changes nothing in the library, so it offers no Undo (the result filed a moment ago is not this). */
     C.notice(record.kind === "full" ? "The full record is downloaded: its seed and decision tape play the game again." : "Your record is downloaded: your seat's view and the table's history.", false, {undo: false});
   };
-  actions["board-end-cancel"] = () => {confirmEnd = false; draw();};
+  actions["board-end-cancel"] = () => {confirmEnd = false; draw(); refreshSettings();};
   actions["board-concede"] = async () => {tools = false; await tableApi().api("POST", `${tableApi().tableUrl(tableId)}/concede`); draw();};
   actions["board-rematch"] = (el) => answerRematch(el.dataset.accept === "yes");
   actions["board-leave"] = async () => {const id = tableId; C.board.close(); await tableApi().refresh(id);};
   /* Hold priority after I cast (Tools): kept on this device, and the Tools' words follow it. */
   document.addEventListener("change", (event) => {
-    if (!event.target || !event.target.matches || !event.target.matches("#cm-board [data-board-hold]")) return;
+    if (!event.target || !event.target.matches || !event.target.matches("#cm-board-tools [data-board-hold]")) return;
     keep(HOLD_KEY, event.target.checked ? "on" : "off");
     draw();
   });
   /* Skip my priority if no response possible: kept on this device, and told to the room at once (prefer). */
   document.addEventListener("change", (event) => {
-    if (!event.target || !event.target.matches || !event.target.matches("#cm-board [data-board-skip-empty]")) return;
+    if (!event.target || !event.target.matches || !event.target.matches("#cm-board-tools [data-board-skip-empty]")) return;
     keep(SKIP_KEY, event.target.checked ? "on" : "off");
     prefer();
     draw();
@@ -3213,7 +3289,7 @@ globalThis.CrankBoard = Object.seal({
   document.addEventListener("input", (event) => {
     const el = event.target.closest && event.target.closest("#cm-board [data-board-scale]");
     if (el) setScale(el.dataset.boardScale, el.value);
-    const vol = event.target.closest && event.target.closest("#cm-board [data-board-sound]");
+    const vol = event.target.closest && event.target.closest("#cm-board-tools [data-board-sound]");
     if (vol && sound()) {
       const n = Math.round(sound().setBusVolume(vol.dataset.boardSound, Number(vol.value) / 100) * 100);
       vol.setAttribute("aria-valuetext", `${n}%`);
