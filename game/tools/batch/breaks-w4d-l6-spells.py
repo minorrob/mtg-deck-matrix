@@ -37,7 +37,7 @@ BREAKS = [
     ('repeatFor over the remembered ranges over nothing', EFFECTS,
      'if (each === "remembered") return (context.remembered ?? [])', 'if (each === "remembered") return ([])'),
     ('repeatFor may not range over the remembered', EFFECTS,
-     '"creature", "remembered"]);', '"creature"]);'),
+     '"creature", "remembered", "other opponent"]);', '"creature", "other opponent"]);'),
     # High Tide: "that player adds".
     ('the tapper\'s extra mana goes to the trigger\'s controller', TRIGGER,
      'player: mana.toTapper === true ? fields.player?.playerId ?? d.controller : d.controller,', 'player: d.controller,'),
@@ -131,7 +131,7 @@ BREAKS = [
     # The words.
     ('kicker is no keyword', VOCAB, '  "kicker",\n', ''),
     ('improvise is no keyword', VOCAB, '  "improvise",\n', ''),
-    ('cascade is no keyword', VOCAB, '  "cascade"];', '  ];'),
+    ('cascade is no keyword', VOCAB, '  "cascade",\n  /* Rob', '  /* Rob'),
     ('kicker is not credited', CONSTRUCTS, 'Affinity: "rules/statics.mjs", Kicker: "rules/actions.mjs",', 'Affinity: "rules/statics.mjs",'),
     ('cascade is not credited', CONSTRUCTS, '  Cascade: "digUntil",\n', ''),
 ]

@@ -1,0 +1,120 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Dream Trawler",
+  "scenarios": [
+    {
+      "name": "Attacks: draws a card, and the draw gives it +1/+0 until end of turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Dream Trawler"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Dream Trawler"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Dream Trawler",
+            "power": 4,
+            "toughness": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "Discard a card: hexproof until end of turn, and it is tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Dream Trawler"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Dream Trawler",
+          "discard": "Wastes"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Dream Trawler",
+            "has": [
+              "Hexproof"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Dream Trawler"
+        }
+      ]
+    },
+    {
+      "name": "Without a card in hand, the hexproof ability is not offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Dream Trawler"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Dream Trawler"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

@@ -8,6 +8,6 @@ SUITES = ['tests/engine-play-permission.mjs']
 A = 'game/engine/rules/actions.mjs'
 BREAKS = [
     ('convoke priced at the mana cost through the Citadel', A,
-     'action.tax ?? 0, false, action.lifeInstead !== undefined ? "" : null, action.extraMana ?? "", action.targets);',
-     'action.tax ?? 0, false, null, action.extraMana ?? "", action.targets);'),
+     'action.tax ?? 0, false, action.lifeInstead !== undefined ? "" : null, action.extraMana ?? "", action.targets, action.x);',
+     'action.tax ?? 0, false, null, action.extraMana ?? "", action.targets, action.x);'),
 ]

@@ -1,0 +1,105 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Skycat Sovereign",
+    "oracleId": "84adce5c-39c7-425e-b163-4a1a3977364b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental",
+      "Cat"
+    ],
+    "manaCost": "{W}{U}",
+    "colors": [
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Flying\nThis creature gets +1/+1 for each other creature you control with flying.\n{2}{W}{U}: Create a 1/1 white Cat Bird creature token with flying.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "static",
+      "text": "This creature gets +1/+1 for each other creature you control with flying.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "power": {
+          "count": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you",
+            "keywords": [
+              "Flying"
+            ],
+            "another": true
+          }
+        },
+        "toughness": {
+          "count": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you",
+            "keywords": [
+              "Flying"
+            ],
+            "another": true
+          }
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{2}{W}{U}: Create a 1/1 white Cat Bird creature token with flying.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{W}{U}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Cat Bird",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Cat",
+              "Bird"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 1,
+            "toughness": 1,
+            "keywords": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

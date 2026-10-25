@@ -1,0 +1,35 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Pristine Talisman",
+  "scenarios": [
+    {
+      "name": "{T}: {C}, and Rob gains 1 life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Pristine Talisman"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Pristine Talisman"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 1
+          }
+        },
+        {
+          "seat": 0,
+          "life": 41
+        }
+      ]
+    }
+  ]
+}

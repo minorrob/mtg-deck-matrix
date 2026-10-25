@@ -245,8 +245,11 @@ const TRIGGERS = {
      existed (CR 603.10a). */
   /* "When this permanent is put into a graveyard from the battlefield" (Serra Paragon's grant): `to: "graveyard"`, a
      permanent of any type -- "dies" is a creature's word for it (CR 700.4). */
-  leaves: (t) => (ARRIVALS.includes(t.who ?? "self") && [undefined, "graveyard"].includes(t.to)
-    ? {on: "GameEventCardChangeZone", from: "Battlefield", who: t.who ?? "self", ...(t.to === "graveyard" ? {to: "Graveyard"} : {}), ...(t.filter ? {filter: t.filter} : {})} : null),
+  /* "Whenever one or more other creatures you control leave the battlefield without dying" (Dour Port-Mage; CR 700.4): `notTo:
+     "graveyard"`, to anywhere else. */
+  leaves: (t) => (ARRIVALS.includes(t.who ?? "self") && [undefined, "graveyard"].includes(t.to) && [undefined, "graveyard"].includes(t.notTo) && !(t.to && t.notTo)
+    ? {on: "GameEventCardChangeZone", from: "Battlefield", who: t.who ?? "self", ...(t.to === "graveyard" ? {to: "Graveyard"} : {}), ...(t.notTo === "graveyard" ? {notTo: "Graveyard"} : {}),
+      ...(t.filter ? {filter: t.filter} : {})} : null),
   /* "Whenever a creature is exiled from the battlefield" (Soulherder): a permanent put into exile from the battlefield, `who`
      and `filter` read as it last existed -- a leaves-the-battlefield ability, so it looks back (CR 603.10a): a creature
      exiled with this one is seen, and so is this one. One whose owner then puts it in the command zone was exiled first
@@ -277,6 +280,8 @@ const TRIGGERS = {
     ...(Number.isInteger(t.nthThisTurn) && t.nthThisTurn >= 2 ? {nthThisTurn: t.nthThisTurn} : {}),
     /* "From your hand" (Jodah): where it was cast from (rules/actions.mjs). */
     ...(t.from ? {castFrom: t.from} : {}),
+    /* "From anywhere other than their hand" (Aerial Extortionist): `notFrom`, "hand". */
+    ...(t.notFrom ? {notCastFrom: t.notFrom} : {}),
     /* "When you cast this spell" (Emrakul, the Exigent Doom): its own cast, from the stack (rules/trigger.mjs). */
     ...(t.who === "self" ? {who: "self"} : {}),
     /* "When you cast this spell while you control a creature" (Social Snub): `while`, a condition of script/condition.mjs's
@@ -331,7 +336,9 @@ const TRIGGERS = {
      (`each: "defender"`): once for each player attacked; "with two or more creatures" (`atLeast`); "if none of those
      creatures attacked you" (`notAttacking: "you"`); "with one or more non-Gnome creatures", "whenever one or more Goblins
      you control attack" (`filter`: an attacker it fits, one at least). `attacker`: you, opponent ("another player") or any. */
+  /* "Whenever an opponent attacks you with two or more creatures" (Trouble in Pairs): `attacksYou`, `atLeast` of them at you. */
   "attackers declared": (t) => ({on: "GameEventAttackersDeclared", declared: true, attacker: t.attacker ?? "you", ...(t.atLeast ? {atLeast: t.atLeast} : {}),
+    ...(t.attacksYou === true ? {attacksYou: true} : {}),
     ...(t.each === "defender" ? {eachDefender: true} : {}), ...(t.notAttacking ? {notAttacking: t.notAttacking} : {}), ...(t.filter ? {filter: t.filter} : {}),
     /* "Whenever a player attacks one of your opponents" (Combat Calligrapher; CR 508.3e): once for each opponent of this
        ability's controller attacked (`each: "defender"`, `defender: "opponent"`), about that player and the attacking one. */
@@ -880,6 +887,22 @@ export function compileScript(script) {
       keywords.push("Cascade");
       return;
     }
+    /* MYRIAD (CR 702.116a; Battle Angels of Tyr): "Whenever this creature attacks, for each opponent other than defending
+       player, you may create a token that's a copy of this creature that's tapped and attacking that player or a planeswalker
+       they control. If one or more tokens are created this way, exile the tokens at end of combat." Each "you may" is asked
+       in turn (CR 101.4), the player or planeswalker asked as each token enters (effects/permanents.mjs, enterAttacking),
+       and one delayed trigger exiles every token made (CR 603.7) -- none made, and there is none. Instances trigger
+       separately (702.116b). */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "myriad") {
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.attacks({who: "self"}),
+        effects: [{effect: "repeatFor", each: "other opponent", effects: [{effect: "modal", title: "Myriad: create a token copy attacking this player?",
+          modes: [{text: "Yes", effects: [{effect: "copyPermanent", targets: "self", lastKnown: true, tapped: true, attacking: "that player or their planeswalker", rememberMore: true}]},
+            {text: "No", effects: []}]}]},
+          {effect: "delayedTrigger", at: "end of combat", text: "Exile the tokens at end of combat.", condition: {compare: {count: {rememberedCount: true}, atLeast: 1}},
+            effects: [{effect: "moveZone", targets: "remembered", to: "exile"}]}]});
+      keywords.push("Myriad");
+      return;
+    }
     if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "exalted") {
       abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.attacks({who: "any", alone: true, filter: {types: ["Creature"], controller: "you"}}),
         effects: [{effect: "pump", targets: "that card", power: 1, toughness: 1}]});
@@ -1049,6 +1072,18 @@ export function compileScript(script) {
     /* RIOT (CR 702.136a; Ghor-Clan Wrecker): "You may have this permanent enter with an additional +1/+1 counter on it. If you
        don't, it gains haste" -- a replacement on its own entering, its controller asked once it is there (rules/replacement.mjs,
        rules/entering.mjs). Each instance works separately (702.136b). Only on a card that enters as a permanent. */
+    /* DEVOUR [QUALITY] N (CR 702.82a, 702.82c; Feasting Hobbit's "Devour Food 3", Rob's lists P2): "as this object enters, you
+       may sacrifice any number of [quality] permanents. This permanent enters with N +1/+1 counters on it for each permanent
+       sacrificed this way" -- a replacement on its own entering, its controller asked which once it is there, as riot's
+       question is (rules/replacement.mjs, rules/entering.mjs). `amount` N, `of` the quality (a selector; creatures, unsaid). */
+    if (word === "devour") {
+      if (!(Number.isInteger(ability.amount) && ability.amount >= 1)) problems.push(`${ability.text}: devour needs its number, 1 or more`);
+      if ((identity.types ?? []).some((t) => t === "Instant" || t === "Sorcery")) problems.push(`${ability.text}: devour on a card that never enters the battlefield`);
+      abilities.push({id, kind: "replacement", text: ability.text, watches: {event: "enters", who: "self"},
+        change: {devour: {amount: ability.amount ?? 1, of: structuredClone(ability.of ?? {types: ["Creature"]})}}});
+      keywords.push("Devour");
+      return;
+    }
     if (word === "riot") {
       if ((identity.types ?? []).some((t) => t === "Instant" || t === "Sorcery")) problems.push(`${ability.text}: riot on a card that never enters the battlefield`);
       abilities.push({id, kind: "replacement", text: ability.text, watches: {event: "enters", who: "self"}, change: {riot: true}});
@@ -1780,6 +1815,9 @@ export function compileScript(script) {
           modes: (only.modes ?? []).map((m) => ({text: m.text ?? "", targets: m.targets ?? [], effects: m.effects ?? [], ...(m.cost !== undefined ? {cost: m.cost} : {})}))} : null;
       if (modal && (ability.targets ?? []).length) problems.push("a modal spell chosen as it is cast names its targets in its modes, not beside them");
       spell = {id, text: ability.text, targets: ability.targets ?? [], effects: ability.effects, ...(modal ? {modal} : {}), ...(ability.additionalCost ? {additionalCost: ability.additionalCost} : {}),
+        /* "Exile Avatar's Wrath." (CR 608.2n): the last of what it does, exiled as it resolves rather than put into its owner's
+           graveyard -- one that does not resolve goes where any spell would (rules/stack.mjs). */
+        ...(ability.exileAsResolves === true ? {exileAsResolves: true} : {}),
         /* "If this spell was kicked, exile target nonland permanent instead" (Tear Asunder): its targets and effects then. */
         ...(ability.kicked ? {kicked: {targets: ability.kicked.targets ?? [], effects: ability.kicked.effects ?? []}} : {})};
       if (ability.kicked && (modal || !(ability.kicked.effects ?? []).length)) problems.push("a kicked spell's script says its effects, on a spell that is not modal");
@@ -1960,9 +1998,18 @@ export function compileScript(script) {
           /* "Choose one that hasn't been chosen" (Gollum, Riddle Master): each mode once, for as long as its permanent is
              the object it is (rules/trigger.mjs, modesTaken). */
           ...(lone.unchosen === true || lone.unchosen === "turn" ? {unchosen: lone.unchosen} : {}),
+          /* "Choose one at random" (Summon: Magus Sisters; CR 700.2): the game's random stream picks the mode as the ability is
+             put on the stack (rules/trigger.mjs), among those it could choose -- nobody's choice; its targets are then its
+             controller's. */
+          ...(lone.random === true ? {random: true} : {}),
           modes: (lone.modes ?? []).map((m) => ({text: m.text ?? "", targets: m.targets ?? [], effects: m.effects ?? []}))} : null;
+      if (modal?.random && (modal.choose !== 1 || modal.upTo || modal.unchosen || modal.mayChooseNone || modal.differentPlayers))
+        problems.push(`${ability.text}: "choose one at random" chooses one, and nothing else about its modes`);
       if (modal && (ability.optional || (ability.targets ?? []).length)) problems.push(`${ability.text}: a modal triggered ability names its targets in its modes, and "you may" as mayChooseNone`);
-      if (modal && modal.modes.some((m) => m.targets.some((t) => t && typeof t === "object" && t.count !== undefined)))
+      /* A counted target in a mode is picked once the mode is chosen, as any trigger's is (rules/trigger.mjs, askCounted) -- built
+         for a mode chosen at random ("Fight! -- This creature fights up to one target creature an opponent controls", Summon:
+         Magus Sisters), the one mode there is to aim; not yet beside a choice of modes a player makes. */
+      if (modal && !modal.random && modal.modes.some((m) => m.targets.some((t) => t && typeof t === "object" && t.count !== undefined)))
         problems.push(`${ability.text}: a counted target in a triggered ability's mode is not built`);
       abilities.push({id, kind: "triggered", text: ability.text, trigger: trigger ?? {on: null}, effects: modal ? [] : effects, ...(modal ? {modal} : {}),
         ...((ability.targets ?? []).length ? {targets: ability.targets} : {}),
@@ -1974,6 +2021,8 @@ export function compileScript(script) {
         ...(ability.onlyOnce === true ? {onlyOnce: true} : {}),
         /* Had only at that Class level or greater (CR 716.2a; classLevel, above). */
         ...(Number.isInteger(ability.level) ? {level: ability.level} : {}),
+        /* An ∞ ability, active only once its permanent is harnessed (The Mind Stone; rules/trigger.mjs). */
+        ...(ability.harnessed === true ? {harnessed: true} : {}),
         /* "At the beginning of your upkeep, you may return this card from your graveyard to your hand" (Squee, Goblin Nabob):
            an ability that works from its card's graveyard, and only there (CR 113.6m; rules/trigger.mjs). */
         ...(ability.zone === "graveyard" ? {zone: "graveyard"} : {})});

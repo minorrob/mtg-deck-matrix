@@ -31,7 +31,7 @@
  */
 
 import {keywordsOf, characteristicsOf, controllerOf, typesOf, subtypesOf} from "../rules/layers.mjs";
-import {toughnessOf} from "../rules/layers.mjs";
+import {toughnessOf, powerOf} from "../rules/layers.mjs";
 import {combatDamageOf, ruleChanged, cantBeBlockedBy, blocksOnlyOthers} from "../rules/statics.mjs";
 import {protectedFrom} from "../rules/protection.mjs";
 
@@ -42,7 +42,9 @@ export const KEYWORD_FAMILIES = Object.freeze({
     /* Nonbasic landwalk (CR 702.14a, c; Trailblazer's Boots, wave 4d L3): canBlockAttacker, below. */
     "Nonbasic Landwalk",
     /* Shadow (CR 702.28; Minas Morgul, Dark Fortress's shadow counter, CR 122.1b): canBlockAttacker, below. */
-    "Shadow"]),
+    "Shadow",
+    /* Skulk (CR 702.118; Gollum, Obsessed Stalker, Rob's lists P2): canBlockAttacker, below. */
+    "Skulk"]),
   /** What happens when damage is dealt. */
   combat: Object.freeze(["Deathtouch", "Trample", "Lifelink", "First Strike", "Double Strike", "Vigilance", "Defender",
     /* Infect (CR 702.90, batch 78): its damage is poison counters to a player and -1/-1 counters to a creature (rules/combat.mjs,
@@ -113,6 +115,8 @@ export function canBlockAttacker(state, blockerId, attackerId) {
   /* CR 702.28b: shadow -- a creature with shadow can block or be blocked by only creatures with shadow; one without it,
      neither (Minas Morgul, Dark Fortress's shadow counter). */
   if (has(state, attackerId, "Shadow") !== has(state, blockerId, "Shadow")) return false;
+  /* CR 702.118b: skulk -- not blocked by a creature with greater power, each power as it is now (Gollum, Obsessed Stalker). */
+  if (has(state, attackerId, "Skulk") && powerOf(state, blockerId) > powerOf(state, attackerId)) return false;
   /* CR 702.36b: fear -- blocked only by an artifact creature or a black creature. */
   if (has(state, attackerId, "Fear")) {
     const blocker = characteristicsOf(state, blockerId);

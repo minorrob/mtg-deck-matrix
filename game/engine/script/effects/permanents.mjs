@@ -29,6 +29,7 @@ import {countersPlaced, enteringCountersPlaced, tokensCreated} from "../../rules
 import {clearRingBearer} from "../../keywords/ring.mjs";
 import {removeFromCombat} from "../../rules/combat.mjs";
 import {enteringModifications} from "../../rules/replacement.mjs";
+import {isCreatureType} from "../../keywords/types.mjs";
 
 /* A continuous effect needs a timestamp to be ordered by (CR 613.7), and it has to be part of the
    state so a checkpoint carries it. The state's own counter is the right source: it is monotonic
@@ -174,7 +175,10 @@ function copiable(object, except = {}) {
     /* "It's a Vehicle artifact ... and it loses all other card types" (Imposter Mech): set, then any added. */
     types: [...new Set([...(except.setTypes ?? object.types ?? []), ...(except.addTypes ?? [])])],
     /* "It's a 2/2 black Zombie in addition to its other colors and types" (Ratadrabik): added, not set. */
-    subtypes: [...new Set([...(except.setSubtypes ?? object.subtypes ?? []), ...(except.addSubtypes ?? [])])],
+    /* "Except it's a 0/1 white Illusion" (Preston, the Vanisher; CR 707.9b, 205.1b): its creature types that one alone
+       (`setCreatureTypes`), its other subtypes (an Equipment's, a Vehicle's) kept. */
+    subtypes: [...new Set([...[...(except.setSubtypes ?? object.subtypes ?? []), ...(except.addSubtypes ?? [])]
+      .filter((t) => !except.setCreatureTypes || !isCreatureType(t)), ...(except.setCreatureTypes ?? [])])],
     ...(supertypes.length ? {supertypes} : {}),
     colors: [...new Set([...(except.setColors ?? object.colors ?? []), ...(except.addColors ?? [])])],
     keywords: [...new Set([...(object.keywords ?? []), ...(except.addKeywords ?? [])])],
@@ -232,6 +236,15 @@ export function enterAttacking(state, ids, whom, context, controller) {
   if (!state.combat && state.phase === "COMBAT_DECLARE_ATTACKERS" && controller === state.activePlayer)
     state.combat = {attackingPlayerId: controller, defenders: [], attacks: []};
   if (!state.combat || state.combat.attackingPlayerId !== controller) return;
+  /* "Tapped and attacking that player or a planeswalker they control" (myriad, CR 702.116a): the player the effect is about,
+     or one of their planeswalkers, its controller's choice as it enters (asking.mjs, attackWhom). */
+  if (whom === "that player or their planeswalker") {
+    const places = attackPlaces(state, controller).filter((place) => place.player === context.about?.player);
+    if (!places.length) return;
+    if (places.length === 1 || !state.resolving) { for (const id of creatures) joinAttack(state, id, places[0].player, places[0].planeswalker); return; }
+    state.resolving.queue.unshift({effect: "attackWhom", tokens: creatures, player: controller, places});
+    return;
+  }
   if (whom === "that player") {
     const player = context.about?.player, planeswalker = context.about?.planeswalker;
     if (player === controller || !state.players[player] || state.players[player].lost) return;
@@ -282,6 +295,9 @@ export function afterwards(state, ids, params, context) {
   /* "Return it to the battlefield under its owner's control. It's an enchantment. (It's not a creature.)" (the Enduring
      cycle): its card types from now on, as long as it is this object (CR 205.1a, layer 4). */
   if (params.setTypes) pushEffect(state, {id: `types:${context.source ?? "effect"}`, layer: 4, affects: {ids: made}, apply: {setTypes: params.setTypes}, until: null, sourceController: controller});
+  /* "Put target creature card from a graveyard onto the battlefield under your control. It's a Phyrexian in addition to its
+     other types" (Portal to Phyrexia): a subtype added from now on, as long as it is this object (CR 205.1b, layer 4). */
+  if (params.addSubtypes) pushEffect(state, {id: `subtypes:${context.source ?? "effect"}`, layer: 4, affects: {ids: made}, apply: {addSubtypes: params.addSubtypes}, until: null, sourceController: controller});
 }
 
 /**
@@ -370,6 +386,8 @@ export function copyPermanent(state, params, context) {
   const made = makeCopies(state, gone ?? originals, params, context, events);
   /* "If the token is an Aura, untap Yenna" (batch 70): the tokens made, for the effects after it. */
   if (params.remember) context.remembered = made;
+  /* "Exile the tokens at end of combat" (myriad): every token made by each time it is repeated, kept together. */
+  if (params.rememberMore) context.remembered = [...(context.remembered ?? []), ...made];
   return events;
 }
 
@@ -439,12 +457,14 @@ export function endCounterDurations(state) {
   if (over.size) state.effects = state.effects.filter((e) => !over.has(e));
 }
 
-/** "Until end of turn": those copy effects end (rules/turn.mjs, the cleanup step). */
-export function endCopies(state) {
+/** "Until end of turn": those copy effects end (rules/turn.mjs, the cleanup step). "Shards you control become copies of it
+    until the next end step" (Niko, Light of Hope): `until` "next-end-step", over as an end step begins (rules/turn.mjs),
+    before anything triggers then (CR 513.1, 611.2a). */
+export function endCopies(state, until = "end-of-turn") {
   for (const id of state.zones.battlefield) {
     const object = state.objects[id];
-    if (!(object.copyEffects ?? []).some((c) => c.until === "end-of-turn")) continue;
-    object.copyEffects = object.copyEffects.filter((c) => c.until !== "end-of-turn");
+    if (!(object.copyEffects ?? []).some((c) => c.until === until)) continue;
+    object.copyEffects = object.copyEffects.filter((c) => c.until !== until);
     showCopy(object);
   }
 }
@@ -796,6 +816,15 @@ export function effectUntil(state, params, context) {
      ("you"). "Your opponents can't cast spells this turn" (Silence; library load L2): each opponent still in the game as it
      resolves ("opponent"); "players can't cast spells this turn" (Bilbo's Gambit): each player ("each") -- named now, as
      the rule is changed for players and not objects (CR 611.2c is about characteristics). */
+  /* "Until your next turn, your opponents can't cast spells from anywhere other than their hands" (Avatar's Wrath; CR 601.3):
+     every spell from anywhere but a hand (`fromAnywhereButHand`; rules/statics.mjs, castForbidden). */
+  if (params.rule === "cant-cast" && params.fromAnywhereButHand === true) {
+    const forbidden = Array.isArray(params.who) ? params.who : playersFor(state, params.who, context.controller);
+    if (!forbidden.length) return [];
+    pushEffect(state, {id: params.id ?? `effect:${context.source ?? "effect"}`, rule: "cant-cast", players: [...forbidden], spells: {}, fromAnywhereButHand: true,
+      affects: {what: "player"}, apply: {}, until: params.until ?? "end-of-turn", sourceController: context.controller});
+    return [];
+  }
   if (params.rule === "cant-cast") {
     const who = typeof params.who === "string" ? playersFor(state, params.who, context.controller) : params.who;
     if (!(typeof params.named === "string" || params.allSpells === true) || !Array.isArray(who) || !who.length) return [];
@@ -1143,6 +1172,8 @@ const ADDED_STEPS = Object.freeze({
   combat: ["COMBAT_BEGIN", "COMBAT_DECLARE_ATTACKERS", "COMBAT_DECLARE_BLOCKERS", "COMBAT_FIRST_STRIKE_DAMAGE", "COMBAT_DAMAGE", "COMBAT_END"],
   main: ["MAIN2"],
   beginning: ["UNTAP", "UPKEEP", "DRAW"],
+  /* "There is an additional end step after this step" (Y'shtola Rhul; CR 500.10): a step, after the one under way. */
+  "end step": ["END_OF_TURN"],
 });
 export const ADDED_PHASES = Object.freeze(Object.keys(ADDED_STEPS));
 const endOfPhase = (step) => (["UNTAP", "UPKEEP", "DRAW"].includes(step) ? "DRAW" : String(step).startsWith("COMBAT") ? "COMBAT_END"
@@ -1161,7 +1192,9 @@ export function addPhase(state, params, context) {
      delayed trigger of that added combat's beginning, and no other's -- `atBeginning`, tagged with it; rules/turn.mjs numbers
      the combat as the phase is put in the turn, and rules/trigger.mjs fires it there. */
   const tag = steps.includes("COMBAT_BEGIN") && params.atBeginning ? `combat:${state.turn}:${(state.extraPhases ?? []).length}:${(state.delayedTriggers ?? []).length}` : undefined;
-  (state.extraPhases ??= []).push({turn: state.turn, after: endOfPhase(state.phase), steps, ...(tag ? {tag} : {})});
+  /* An added step goes after this step, not after this phase (CR 500.10): an end step, after this end step. */
+  const after = (params.phases ?? []).includes("end step") ? state.phase : endOfPhase(state.phase);
+  (state.extraPhases ??= []).push({turn: state.turn, after, steps, ...(tag ? {tag} : {})});
   if (tag) delayedTrigger(state, {at: "that combat", tag, text: params.atBeginning.text, effects: params.atBeginning.effects}, context);
   return [];
 }

@@ -621,6 +621,8 @@ export function finishMergedOrder(state, awaiting, indices) {
   return [];
 }
 
+/* The permanent types (CR 110.4a): what makes a card a permanent card, for descend. */
+const PERMANENT_TYPES = ["Artifact", "Battle", "Creature", "Enchantment", "Land", "Planeswalker"];
 function moveCard(state, from, zone, player, {faceDown, transformed, disguised}) {
 
   /* Only what the CARD says survives the move: its identity, its printed types and its owner. The
@@ -669,5 +671,10 @@ function moveCard(state, from, zone, player, {faceDown, transformed, disguised})
      became in the graveyard (CR 400.7) knows it came from the battlefield, and `arrivedTurn` when (script/filter.mjs,
      fromBattlefieldThisTurn). A new object again as it leaves the graveyard, it does not carry the mark. */
   if (from.zone === "battlefield" && zone === "graveyard") state.objects[arrived].fromBattlefield = true;
+  /* DESCEND (CR 700.11; Canonized in Blood, Rob's lists P2): "you descended if a permanent card was put into your graveyard from
+     anywhere" -- a card, never a token (CR 108.2b), of a permanent type (CR 110.4a), counted for its owner, whose graveyard it
+     went to (CR 404.2; script/condition.mjs, descended; cleared as a turn begins, rules/turn.mjs). */
+  if (zone === "graveyard" && from.token !== true && (from.types ?? []).some((type) => PERMANENT_TYPES.includes(type)) && state.players[from.owner])
+    state.players[from.owner].descendedThisTurn = (state.players[from.owner].descendedThisTurn ?? 0) + 1;
   return arrived;
 }

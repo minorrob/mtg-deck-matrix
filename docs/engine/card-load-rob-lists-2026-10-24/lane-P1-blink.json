@@ -1,0 +1,366 @@
+{
+ "schema": "library-load-lane@1",
+ "lane": "P1-blink",
+ "theme": "blink",
+ "label": "Flicker, exile-and-return, bounce and the stack (the Brago / flicker list): airbend, waterbend and transform; myriad; harness and the infinity ability; an additional end step; \"leave the battlefield without dying\"; spells cast from anywhere other than a hand; Elesh Norn's entering-trigger suppression; copies with exceptions made by a flicker (Preston, Niko); one target per opponent (Riptide Gearhulk); the second card drawn or spell cast each turn",
+ "source": {
+  "list": "Rob's priority lists, 2026-10-24 (README.md here)",
+  "oracle": "data/engine/oracle.json"
+ },
+ "cards": [
+  {
+   "name": "Aerial Extortionist",
+   "scope": "rob-list",
+   "type": "Creature - Bird Soldier",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever this creature enters or deals combat damage to a player, exile up to one target nonland permanent.",
+    "For as long as that card remains exiled, its owner may cast it.",
+    "Whenever another player casts a spell from anywhere other than their hand, draw a card."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Aether Channeler",
+   "scope": "rob-list",
+   "type": "Creature - Human Wizard",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature enters",
+    "choose one —",
+    "• Create a 1/1 white Bird creature token with flying.",
+    "• Return another target nonland permanent to its owner's hand.",
+    "• Draw a card."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Airbender Ascension",
+   "scope": "rob-list",
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this enchantment enters, airbend up to one target creature.",
+    "Whenever a creature you control enters, put a quest counter on this enchantment.",
+    "At the beginning of your end step, if this enchantment has four or more quest counters on it, exile up to one target creature you control, then return it to the battlefield under its owner's control."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Avatar's Wrath",
+   "scope": "rob-list",
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Choose up to one target creature, then airbend all other creatures. (Exile them. While each one is exiled, its owner may cast it for {2} rather than its mana cost.)",
+    "Until your next turn, your opponents can't cast spells from anywhere other than their hands."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+   "scope": "rob-list",
+   "type": "Legendary Creature - Human Avatar Ally // Legendary Creature - Avatar Spirit Ally",
+   "layout": "transform",
+   "compiler": "structure",
+   "gaps": [],
+   "needs": null
+  },
+  {
+   "name": "Battle Angels of Tyr",
+   "scope": "rob-list",
+   "type": "Creature - Angel Knight",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "myriad",
+    "Whenever this creature deals combat damage to a player, draw a card if that player has more cards in hand than each other player.",
+    "Then you create a Treasure token if that player controls more lands than each other player.",
+    "Then you gain 3 life if that player has more life than each other player."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Circuit Mender",
+   "scope": "rob-list",
+   "type": "Artifact Creature - Insect",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature leaves the battlefield, draw a card."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Dour Port-Mage",
+   "scope": "rob-list",
+   "type": "Creature - Frog Wizard",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever one or more other creatures you control leave the battlefield without dying, draw a card.",
+    "{1}{U}, {T}: Return another target creature you control to its owner's hand."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Dream Trawler",
+   "scope": "rob-list",
+   "type": "Creature - Sphinx",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever you draw a card, this creature gets +1/+0 until end of turn.",
+    "Whenever this creature attacks, draw a card.",
+    "Discard a card: This creature gains hexproof until end of turn.",
+    "Tap it."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Elesh Norn, Mother of Machines",
+   "scope": "rob-list",
+   "type": "Legendary Creature - Phyrexian Praetor",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Permanents entering don't cause abilities of permanents your opponents control to trigger."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Entity Tracker",
+   "scope": "rob-list",
+   "type": "Creature - Human Scout",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Eerie — Whenever an enchantment you control enters and whenever you fully unlock a Room, draw a card."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Fear of Sleep Paralysis",
+   "scope": "rob-list",
+   "type": "Enchantment Creature - Nightmare",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Eerie — Whenever this creature or another enchantment you control enters and whenever you fully unlock a Room, tap up to one target creature and put a stun counter on it.",
+    "Stun counters can't be removed from permanents your opponents control. (They won't untap if they have stun counters.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Getaway Glamer",
+   "scope": "rob-list",
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "+ {1} — Exile target nontoken creature.",
+    "Return it to the battlefield under its owner's control at the beginning of the next end step.",
+    "+ {2} — Destroy target creature if no other creature has greater power."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Ghostway",
+   "scope": "rob-list",
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Exile each creature you control.",
+    "Return those cards to the battlefield under their owner's control at the beginning of the next end step."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Lae'zel's Acrobatics",
+   "scope": "rob-list",
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Exile all nontoken creatures you control, then roll a d20.",
+    "1—9 | Return those cards to the battlefield under their owner's control at the beginning of the next end step.",
+    "10—20 | Return those cards to the battlefield under their owner's control, then exile them again.",
+    "Return those cards to the battlefield under their owner's control at the beginning of the next end step."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Overlord of the Floodpits",
+   "scope": "rob-list",
+   "type": "Enchantment Creature - Avatar Horror",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Impending 4—{1}{U}{U} (If you cast this spell for its impending cost, it enters with four time counters and isn't a creature until the last is removed. At the beginning of your end step, remove a time counter from it.)",
+    "Whenever this permanent enters or attacks, draw two cards, then discard a card."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Parting Gust",
+   "scope": "rob-list",
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Gift a tapped Fish (You may promise an opponent a gift as you cast this spell. If you do, they create a tapped 1/1 blue Fish creature token before its other effects.)",
+    "Exile target nontoken creature.",
+    "If the gift wasn't promised, return that card to the battlefield under its owner's control with a +1/+1 counter on it at the beginning of the next end step."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Portal to Phyrexia",
+   "scope": "rob-list",
+   "type": "Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this artifact enters, each opponent sacrifices three creatures of their choice.",
+    "At the beginning of your upkeep, put target creature card from a graveyard onto the battlefield under your control.",
+    "It's a Phyrexian in addition to its other types."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Preston, the Vanisher",
+   "scope": "rob-list",
+   "type": "Legendary Creature - Rabbit Wizard",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever another nontoken creature you control enters, if it wasn't cast, create a token that's a copy of that creature, except it's a 0/1 white Illusion.",
+    "{1}{W}, Sacrifice five Illusions: Exile target nonland permanent."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Riptide Gearhulk",
+   "scope": "rob-list",
+   "type": "Artifact Creature - Construct",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature enters, for each opponent, put up to one target nonland permanent that player controls into its owner's library third from the top."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Starfield Vocalist",
+   "scope": "rob-list",
+   "type": "Creature - Human Bard",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "If a permanent entering the battlefield causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time.",
+    "Warp {1}{U} (You may cast this card from your hand for its warp cost. Exile this creature at the beginning of the next end step, then you may cast it from exile on a later turn.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Time Wipe",
+   "scope": "rob-list",
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Return a creature you control to its owner's hand, then destroy all creatures."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Niko, Light of Hope",
+   "scope": "rob-list",
+   "type": "Legendary Creature - Human Wizard",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When Niko enters, create two Shard tokens. (They're enchantments with \"{2}, Sacrifice this token: Scry 1, then draw a card.\")",
+    "{2}, {T}: Exile target nonlegendary creature you control.",
+    "Shards you control become copies of it until the next end step.",
+    "Return it to the battlefield under its owner's control at the beginning of the next end step."
+   ],
+   "needs": null
+  },
+  {
+   "name": "The Mind Stone",
+   "scope": "rob-list",
+   "type": "Legendary Artifact - Infinity Stone",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{5}{W}, {T}: Harness The Mind Stone. (Once harnessed, its ∞ ability is active.)",
+    "∞ — At the beginning of your end step, exile up to one other target nonland permanent you control, then return that card to the battlefield under its owner's control."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Y'shtola Rhul",
+   "scope": "rob-list",
+   "type": "Legendary Creature - Cat Druid",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "At the beginning of your end step, exile target creature you control, then return it to the battlefield under its owner's control.",
+    "Then if it's the first end step of the turn, there is an additional end step after this step."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Venser, Shaper Savant",
+   "scope": "rob-list",
+   "type": "Legendary Creature - Human Wizard",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When Venser enters, return target spell or permanent to its owner's hand."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Galadriel's Dismissal",
+   "scope": "rob-list",
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Kicker {2}{W} (You may pay an additional {2}{W} as you cast this spell.)",
+    "Target creature phases out.",
+    "If this spell was kicked, each creature target player controls phases out instead. (Treat phased-out creatures and anything attached to them as though they don't exist until their controller's next turn.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Trouble in Pairs",
+   "scope": "rob-list",
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "If an opponent would begin an extra turn, that player skips that turn instead.",
+    "Whenever an opponent attacks you with two or more creatures, draws their second card each turn, or casts their second spell each turn, you draw a card."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Hengegate Pathway // Mistgate Pathway",
+   "scope": "rob-list",
+   "type": "Land // Land",
+   "layout": "modal_dfc",
+   "compiler": "structure",
+   "gaps": [],
+   "needs": null
+  }
+ ],
+ "review": []
+}
