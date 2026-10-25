@@ -1,0 +1,65 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mutilate",
+    "oracleId": "698e79ec-c2bc-4973-a095-f3c57b50e39c",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "All creatures get -1/-1 until end of turn for each Swamp you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "All creatures get -1/-1 until end of turn for each Swamp you control.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          },
+          "power": {
+            "count": {
+              "controller": "you",
+              "types": [
+                "Land"
+              ],
+              "subtypes": [
+                "Swamp"
+              ]
+            },
+            "times": -1
+          },
+          "toughness": {
+            "count": {
+              "controller": "you",
+              "types": [
+                "Land"
+              ],
+              "subtypes": [
+                "Swamp"
+              ]
+            },
+            "times": -1
+          },
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

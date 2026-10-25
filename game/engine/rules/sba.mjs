@@ -51,6 +51,7 @@ import {matchesSelector} from "../script/filter.mjs";
 import {commanderToAsk, resolveCommanderChoice, recordCommanderDamage} from "./commander.mjs";
 import {sacrificeOne, moveOne, returnExiledUntil, leavingRef, destructionReplaced, destructionAsks} from "../script/effects/zones.mjs";
 import {changeLife, crown} from "../script/effects/resources.mjs";
+import {runFollowUps} from "../script/effects/index.mjs";
 import {mergedOrderToAsk} from "../state/index.mjs";
 import {checkRingBearers} from "../keywords/ring.mjs";
 import {enduringStories, citysBlessings} from "../keywords/designations.mjs";
@@ -407,6 +408,8 @@ export function checkStateBasedActions(state) {
           from: {zoneType: "Battlefield", player: {playerId: object.controller}},
           to: {zoneType: ZONE_LABEL[destination] ?? destination, player: {playerId: object.owner}},
         }));
+        /* What the replacement that sent it elsewhere does beside the move (Kalitas's Zombie; rules/replacement.mjs). */
+        events.push(...runFollowUps(state, proposal));
         /* What it exiled "until this leaves the battlefield", back (CR 610.3). */
         returnExiledUntil(state, id, events, leftBehind);
         acted = true;

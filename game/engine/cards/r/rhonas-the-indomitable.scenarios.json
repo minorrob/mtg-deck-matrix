@@ -1,0 +1,359 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Rhonas the Indomitable",
+  "fixtures": {
+    "Brute": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Beast"
+      ],
+      "manaCost": "{3}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 4,
+      "toughness": 4
+    },
+    "Elk": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elk"
+      ],
+      "manaCost": "{2}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Their Brute": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Beast"
+      ],
+      "manaCost": "{3}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 4,
+      "toughness": 4
+    },
+    "Their Elk": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elk"
+      ],
+      "manaCost": "{2}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 3,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "With Rob's 4/4 it attacks, the 4/4 staying home: Maya at 35",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Rhonas the Indomitable",
+            "Brute"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Rhonas the Indomitable"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 35
+        }
+      ]
+    },
+    {
+      "name": "With only a 3/3 Elk -- and Maya's 4/4 -- it cannot attack; the Elk can",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Rhonas the Indomitable",
+            "Elk"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Brute"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Elk"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 37
+        }
+      ]
+    },
+    {
+      "name": "{2}{G}: the Elk gets +2/+0 and trample, a 5/3 -- now Rhonas may attack beside it: Maya at 30",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Rhonas the Indomitable",
+            "Elk",
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Rhonas the Indomitable"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Elk"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Rhonas the Indomitable",
+          "targets": [
+            {
+              "card": "Elk"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Elk",
+                "power": 5,
+                "toughness": 3
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Elk",
+                "has": [
+                  "Trample"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "attack": [
+            "Rhonas the Indomitable",
+            "Elk"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 30
+        }
+      ]
+    },
+    {
+      "name": "It blocks Maya's 4/4 while Rob has one: deathtouch kills it, and indestructible Rhonas lives",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Rhonas the Indomitable",
+            "Brute"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Brute"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Their Brute"
+          ],
+          "seat": 1
+        },
+        {
+          "block": [
+            [
+              "Rhonas the Indomitable",
+              "Their Brute"
+            ]
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Their Brute"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Brute",
+            "Rhonas the Indomitable"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Without one, only the Elk may block",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Rhonas the Indomitable",
+            "Elk"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Elk"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Their Elk"
+          ],
+          "seat": 1
+        },
+        {
+          "block": [
+            [
+              "Elk",
+              "Their Elk"
+            ]
+          ],
+          "blockers": [
+            "Elk"
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Their Elk"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Elk"
+          ]
+        }
+      ]
+    }
+  ]
+}

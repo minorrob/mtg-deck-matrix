@@ -1,0 +1,101 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tyrant's Familiar",
+    "oracleId": "63394e24-a456-4cc6-9885-8c62447b050a",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dragon"
+    ],
+    "manaCost": "{5}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Flying, haste\nLieutenant — As long as you control your commander, this creature gets +2/+2 and has \"Whenever this creature attacks, it deals 7 damage to target creature defending player controls.\"",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "haste",
+      "keyword": "haste"
+    },
+    {
+      "kind": "static",
+      "text": "Lieutenant — As long as you control your commander, this creature gets +2/+2 and has \"Whenever this creature attacks, it deals 7 damage to target creature defending player controls.\"",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "power": 2,
+        "toughness": 2
+      },
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "commander": true,
+          "controller": "you"
+        }
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Lieutenant — As long as you control your commander, this creature gets +2/+2 and has \"Whenever this creature attacks, it deals 7 damage to target creature defending player controls.\"",
+      "layer": 6,
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "addAbilities": [
+          {
+            "kind": "triggered",
+            "text": "Whenever this creature attacks, it deals 7 damage to target creature defending player controls.",
+            "trigger": {
+              "on": "attacks",
+              "who": "self"
+            },
+            "effects": [
+              {
+                "effect": "dealDamage",
+                "amount": 7,
+                "targets": {
+                  "target": 0
+                }
+              }
+            ],
+            "targets": [
+              {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ],
+                "controller": "that player"
+              }
+            ]
+          }
+        ]
+      },
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "commander": true,
+          "controller": "you"
+        }
+      }
+    }
+  ]
+}

@@ -85,6 +85,8 @@
  *                                        Possibility; CR 205.3j)
  *   {commanderCasts: "you"}              every time you've cast your commanders from the command zone this game (Vanguard of
  *                                        the Restless; CR 903.8)
+ *   {commanderManaValue: "you"}          the greatest mana value among your commanders, wherever each is (Tangleweave Armor;
+ *                                        CR 903.3, 202.3), 0 with none
  *
  * and any of them may say `atMost` ("{1} less IF you control a creature with flying": the count, at most 1), `times` and
  * `plus`: "twice X", "1 plus the number of ...", `times: "X"` for "X ... for each" (X tokens for each opponent who does),
@@ -146,8 +148,16 @@ export const AMOUNT_KINDS = Object.freeze(["x", "attacksThisTurn", "count", "cou
   /* Wave 4d: "distribute two +1/+1 counters among one or two target creatures you control" (The Earth Crystal; CR 601.2d). */
   "dividedAmong",
   /* Wave 4d: "eight or more artifacts with the same name as one another" (Mechanized Production). */
-  "mostSharingName"]);
-const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "per", "filter", "controlledBy", "named", "another", "signed"];
+  "mostSharingName",
+  /* The precon load, lane D: "the greatest mana value among your commanders" (Tangleweave Armor). */
+  "commanderManaValue",
+  /* The precon load of 2026-10-25, lane A: "investigate once for each opponent who has more cards in hand than you" (Wojek
+     Investigator). */
+  "opponentsWithMore"]);
+/* `still` (Dragonhawk, Fate's Tempest; precon load lane C): "for each of those cards that are still exiled" -- a delayed
+   trigger's count of what the resolution that made it remembered, counted as the delayed trigger resolves, not as it is made
+   (script/bind.mjs, thisWayNow): those of them that are still the objects they were (CR 400.7), so still where they were put. */
+const AMOUNT_EXTRAS = ["still", "counter", "times", "plus", "atMost", "then", "else", "half", "per", "filter", "controlledBy", "named", "another", "signed"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
 /** Whether an amount is undefined for its player (CR 903.4f): one of the colors in their commanders' color identity, for a
@@ -202,6 +212,7 @@ export function amountProblems(value) {
   if ("half" in value && value.half !== true) problems.push("An amount's half is true: halved, rounded down");
   if ("per" in value && !(Number.isInteger(value.per) && value.per > 1)) problems.push("An amount's per is a whole number above 1: \"for every seven\" is per 7");
   if ("countersRemovedThisWay" in value && value.countersRemovedThisWay !== true) problems.push("countersRemovedThisWay is true");
+  if ("still" in value && !(value.still === true && "rememberedCount" in value)) problems.push("still is true, beside rememberedCount: those of them still there as a delayed trigger resolves");
   if ("dieRolled" in value && value.dieRolled !== true) problems.push("dieRolled is true: the result of the die rolled before it");
   if ("dividedAmong" in value && !(Number.isInteger(value.dividedAmong?.total) && value.dividedAmong.total > 0 && Number.isInteger(value.dividedAmong?.target) && value.dividedAmong.target >= 0))
     problems.push("dividedAmong is {total, target}: a whole amount above 0, divided among the objects chosen for that target");
@@ -214,6 +225,7 @@ export function amountProblems(value) {
   if ("tappedThisWay" in value && value.tappedThisWay !== true) problems.push("tappedThisWay is true");
   if ("sacrificedThisWay" in value && value.sacrificedThisWay !== true) problems.push("sacrificedThisWay is true");
   if ("commanderColors" in value && value.commanderColors !== "you") problems.push('commanderColors is "you"');
+  if ("commanderManaValue" in value && value.commanderManaValue !== "you") problems.push('commanderManaValue is "you"');
   if ("graveyardsWithAtLeast" in value && !(Number.isInteger(value.graveyardsWithAtLeast) && value.graveyardsWithAtLeast >= 1)) problems.push("graveyardsWithAtLeast is a whole number of cards, 1 or more");
   if ("controlledBy" in value && !("rememberedCount" in value && ["that player", "most"].includes(value.controlledBy))) problems.push('controlledBy is "that player" or "most", of a rememberedCount');
   /* A power or toughness as it is, below zero too (CR 701.10c). */
@@ -236,6 +248,10 @@ export function amountProblems(value) {
     const {anyOf, ...shared} = value[key] ?? {};
     try { for (const one of Array.isArray(anyOf) ? anyOf.map((a) => ({...shared, ...a})) : [value[key]]) compileSelector(one); }
     catch (error) { problems.push(`What ${key} counts: ${error.message}`); }
+  }
+  /* And what opponentsWithMore counts (Wojek Investigator), held to the same grammar. */
+  if ("opponentsWithMore" in value) {
+    try { compileSelector(value.opponentsWithMore ?? {}); } catch (error) { problems.push(`What opponentsWithMore counts: ${error.message}`); }
   }
   /* "The total mana value of historic permanents you control" (Excalibur, Sword of Eden): a selector, held to the grammar. */
   if (value.totalManaValue && typeof value.totalManaValue === "object") {
@@ -369,6 +385,11 @@ export function amountOf(state, value, context = {}) {
   else if ("sacrificedThisWay" in value) n = context.about?.sacrificed ?? 0;
   /* "The number of colors in your commanders' color identity" (War Room; CR 903.4): the union of their identities. */
   else if ("commanderColors" in value) n = commanderIdentity(state, context.controller).length;
+  /* "Where X is the greatest mana value among your commanders" (Tangleweave Armor; CR 903.3, 202.3): every commander its player
+     owns, wherever it is -- the command zone, the battlefield, a hand (the card's ruling) -- each one's mana value as it now is,
+     a spell's with its X (CR 202.3e); 0 for a player with none. */
+  else if ("commanderManaValue" in value) n = Math.max(0, ...Object.values(state.objects).filter((o) => o.commander === true && o.owner === context.controller)
+    .map((o) => (valueCostOf(o) ? manaValue(parseManaCost(valueCostOf(o)), {x: xOnStack(state, o.id)}) : 0)));
   /* CONVERGE (Sundering Archaic): "the number of colors of mana spent to cast this creature" -- the colors among the mana
      spent to cast its own object (CR 601.2h; rules/actions.mjs keeps it by kind, and the permanent it becomes keeps it,
      rules/stack.mjs), or, that object gone, as its trigger remembered it (`spent`, rules/trigger.mjs; CR 608.2h). Colorless
@@ -452,7 +473,9 @@ export function amountOf(state, value, context = {}) {
   /* "For each creature card exiled this way" (Release to Memory), "when one or more nonland cards are exiled this way" (Augusta,
      Order Returned): `filter`, those the selector describes where each now is (fitsNow). */
   else if ("rememberedCount" in value) {
-    const remembered = (context.remembered ?? []).filter((id) => value.filter === undefined || fitsNow(state, value.filter, id, who));
+    /* `still`: the objects a delayed trigger was made remembering (script/bind.mjs), each counted while it is still that object. */
+    const remembered = (Array.isArray(value.still) ? value.still.filter((id) => state.objects[id]) : context.remembered ?? [])
+      .filter((id) => value.filter === undefined || fitsNow(state, value.filter, id, who));
     const whose = (id) => (context.rememberedControllers ?? {})[id];
     /* "The greatest number of cards a player discarded this way" (Windfall): `controlledBy` "most", the most of them any one
        player had -- the discarder, as discard's `remember` keeps it (effects/asking.mjs). */
@@ -512,7 +535,10 @@ export function amountOf(state, value, context = {}) {
   else if ("lifeTotal" in value) {
     /* And a target player's: "Target player's life total becomes 1" (Vraska, Relic Seeker; CR 119.5, they lose the rest). */
     const player = playerOf(value.lifeTotal, context) ?? targetPlayer(value.lifeTotal, context);
-    n = player !== null ? state.players[player]?.life ?? 0 : 0;
+    /* "If an opponent has more life than you" (Linvala, the Preserver; CR 119.1): the most life any one opponent still in the
+       game has (CR 800.4a), none and it is 0. */
+    if (value.lifeTotal === "an opponent") n = Math.max(0, ...state.players.filter((p) => p.id !== context.controller && !p.lost).map((p) => p.life));
+    else n = player !== null ? state.players[player]?.life ?? 0 : 0;
   }
   /* "Equal to the life they lost this turn" (Wound Reflection; resources.mjs keeps it, turn.mjs clears it). */
   else if ("lifeLostThisTurn" in value) {
@@ -643,6 +669,13 @@ export function amountOf(state, value, context = {}) {
   else if ("mostAmongOpponents" in value) {
     const opponents = state.players.filter((p) => p.id !== context.controller && !p.lost).map((p) => p.id);
     n = Math.max(0, ...opponents.map((opponent) => matching(state, value.mostAmongOpponents, {...who, controller: opponent}).length));
+  }
+  /* "Once for each opponent who has more cards in hand than you" (Wojek Investigator): the opponents still in the game (CR
+     800.4a) for whom the selector, counted as each sees it ("you" being that opponent), finds more than it does for you. */
+  else if ("opponentsWithMore" in value) {
+    const mine = matching(state, value.opponentsWithMore, {...who, controller: context.controller}).length;
+    n = state.players.filter((p) => p.id !== context.controller && !p.lost
+      && matching(state, value.opponentsWithMore, {...who, controller: p.id}).length > mine).length;
   }
   /* "If a player has one or fewer cards in hand" (Naktamun Lorespinner): the fewest the selector counts as each player still in
      the game sees it ("you" being that player, CR 800.4a) -- a hand of none among them is none. */

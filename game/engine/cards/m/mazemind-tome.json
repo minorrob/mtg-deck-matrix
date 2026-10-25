@@ -1,0 +1,100 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mazemind Tome",
+    "oracleId": "800fb917-8898-4eba-9f94-aec6e9d75236",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Book"
+    ],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}, Put a page counter on this artifact: Scry 1. (Look at the top card of your library. You may put that card on the bottom.)\n{2}, {T}, Put a page counter on this artifact: Draw a card.\nWhen there are four or more page counters on this artifact, exile it. If you do, you gain 4 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}, Put a page counter on this artifact: Scry 1. (Look at the top card of your library. You may put that card on the bottom.)",
+      "cost": [
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "addCounters",
+          "self": true,
+          "counter": "page",
+          "count": 1
+        }
+      ],
+      "effects": [
+        {
+          "effect": "scry",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{2}, {T}, Put a page counter on this artifact: Draw a card.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "addCounters",
+          "self": true,
+          "counter": "page",
+          "count": 1
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "When there are four or more page counters on this artifact, exile it. If you do, you gain 4 life.",
+      "trigger": {
+        "on": "state",
+        "state": {
+          "compare": {
+            "count": {
+              "countersOn": "self",
+              "counter": "page"
+            },
+            "atLeast": 4
+          }
+        }
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "gainLife",
+          "amount": 4,
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          }
+        }
+      ]
+    }
+  ]
+}

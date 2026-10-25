@@ -164,6 +164,17 @@ function checkEffect(effect, path, errors) {
   if (effect.toEach !== undefined && (name !== "gainControl" || effect.toEach !== "different opponent" || effect.until !== undefined || effect.toPlayer !== undefined
     || effect.selector !== undefined || effect.targets === undefined))
     errors.push({path: `${path}.toEach`, message: "A different opponent for each permanent (`toEach: \"different opponent\"`) is gainControl's, of its `targets`, for good, with no `toPlayer`"});
+  /* "Each of those tokens fights a different one of those creatures" (Ezuri's Predation; effects/asking.mjs, fightPartners):
+     `against`, a selector of the creatures fought, on a fight whose `from` names the fighters and that has no targets. */
+  if (effect.against !== undefined) {
+    if (name !== "fight" || effect.from === undefined || effect.targets !== undefined || !effect.against || typeof effect.against !== "object")
+      errors.push({path: `${path}.against`, message: "\"Each fights a different one\" (`against`, a selector of the creatures fought) is a fight's, with `from` its fighters and no targets"});
+    else checkSelector(effect.against, `${path}.against`, errors);
+  }
+  /* Damage dealt as its caster divided it (Monstrous Onslaught; CR 601.2d): `divided`, the target it was divided among -- a
+     dealDamage of that target, with no amount of its own. */
+  if (effect.divided !== undefined && !(name === "dealDamage" && Number.isInteger(effect.divided) && effect.targets?.target === effect.divided && effect.amount === undefined))
+    errors.push({path: `${path}.divided`, message: "Damage dealt as its caster divided it (`divided`, a target's number) is a dealDamage of that target, with no amount of its own"});
   /* "Goaded for the rest of the game" (Dack Fayden, Helping Hand; CR 701.15a): a goad's `until` is "game" or unsaid (until
      its controller's next turn). */
   if (name === "goad" && effect.until !== undefined && effect.until !== "game")
@@ -227,6 +238,11 @@ function checkEffect(effect, path, errors) {
     errors.push({path: `${path}.amountX`, message: "\"You may pay {X}\" is `amountX: true` with `ifPaid: true`, and no amount or mana beside it"});
   if (name === "play" && effect.exileInstead !== undefined && effect.exileInstead !== true)
     errors.push({path: `${path}.exileInstead`, message: "\"If that spell would be put into a graveyard, exile it instead\" is `exileInstead: true`"});
+  /* Discover's two ways (Hit the Mother Lode; effects/asking.mjs): what follows no cast, a list, and the spell cast remembered. */
+  if (name === "play" && effect.otherwise !== undefined && !(Array.isArray(effect.otherwise) && effect.otherwise.length))
+    errors.push({path: `${path}.otherwise`, message: "What is done when nothing is cast is a list of effects"});
+  if (name === "play" && effect.rememberCast !== undefined && !(effect.rememberCast === true && effect.anyNumber !== true))
+    errors.push({path: `${path}.rememberCast`, message: "\"The spell cast\", remembered, is `rememberCast: true`, of one spell (no `anyNumber`)"});
   if (name === "unlessPays" && effect.whenPaid !== undefined && !(Array.isArray(effect.whenPaid) && effect.whenPaid.length))
     errors.push({path: `${path}.whenPaid`, message: "What follows paying is a list of effects"});
   /* Where a countered spell goes instead of its owner's graveyard: exile (Force of Negation) or the top of its owner's
@@ -381,6 +397,9 @@ function checkEffect(effect, path, errors) {
   }
   /* What follows a prevention shield's prevention (Inkshield, Deflecting Palm; CR 615.5): effects, each held to the rest. */
   if (name === "effectUntil" && Array.isArray(effect.then)) effect.then.forEach((child, index) => checkEffect(child, `${path}.then[${index}]`, errors));
+  /* Discover's "or put it into your hand" (Hit the Mother Lode; effects/asking.mjs, play's `otherwise`): what is done when
+     nothing is cast, each held to the rest. */
+  if (name === "play" && Array.isArray(effect.otherwise)) effect.otherwise.forEach((child, index) => checkEffect(child, `${path}.otherwise[${index}]`, errors));
   const children = COMPOSERS[name];
   if (!children) return;
   const nested = children(effect);
@@ -524,6 +543,16 @@ function checkAbility(ability, path, errors, {permanent = false, manaX = false} 
     || (!["triggered", "activated"].includes(ability.kind) && asksFirstResolution(ability.effects)))
     errors.push({path, message: "firstResolution is asked of a triggered or activated ability's effect as it resolves"});
 
+  /* "X damage divided as you choose among any number of target creatures" (Monstrous Onslaught; CR 601.2d; rules/actions.mjs,
+     dividedOf): a spell's `divided`, `{target, total}` -- a counted target of its own, the total a number or counted as it is
+     cast -- dealt by a dealDamage of it that says `divided`. */
+  if (ability.divided !== undefined) {
+    const divided = ability.divided, spec = Number.isInteger(divided?.target) ? (ability.targets ?? [])[divided.target] : undefined;
+    if (ability.kind !== "spell" || !spec || spec.count === undefined || amountProblems(divided.total ?? null).length
+      || (typeof divided.total === "number" && !(Number.isInteger(divided.total) && divided.total >= 1))
+      || !(ability.effects ?? []).some((effect) => effect?.divided === divided.target))
+      errors.push({path: `${path}.divided`, message: "A total divided among targets is a spell's `divided: {target, total}`: a counted target of its own, a total, and a dealDamage of it that says `divided`"});
+  }
   const effectful = ["spell", "activated", "triggered"].includes(ability.kind);
   if (effectful) {
     const effects = ability.effects ?? [];
@@ -734,11 +763,13 @@ function checkAbility(ability, path, errors, {permanent = false, manaX = false} 
       errors.push({path: `${path}.watches`, message: "A replacement effect says which event it is watching for (CR 614)"});
     if (!ability.change && ability.prevent === undefined)
       errors.push({path: `${path}`, message: "A replacement effect either changes the event or prevents it"});
-    /* What follows a prevention (CR 615.5, rules/replacement.mjs): effects held to the effect grammar, after a prevention
-       only. A redirection (CR 614.9) goes to what its holder enchants. */
+    /* What follows a prevention (CR 615.5, rules/replacement.mjs): effects held to the effect grammar, after a prevention --
+       or beside a zone change's new destination ("instead exile that card and create a 2/2 black Zombie creature token",
+       Kalitas, Traitor of Ghet; CR 614.1a). A redirection (CR 614.9) goes to what its holder enchants. */
     const then = ability.change?.then;
-    if (then !== undefined && (ability.change.prevent !== true || !Array.isArray(then) || then.length === 0))
-      errors.push({path: `${path}.change.then`, message: "What follows a prevention is a list of effects, beside prevent: true"});
+    const besideMove = ability.watches?.event === "zone-change" && typeof ability.change?.to === "string";
+    if (then !== undefined && ((ability.change.prevent !== true && !besideMove) || !Array.isArray(then) || then.length === 0))
+      errors.push({path: `${path}.change.then`, message: "What follows a prevention, or a zone change's new destination, is a list of effects, beside prevent: true or to"});
     if (Array.isArray(then)) then.forEach((effect, index) => checkEffect(effect, `${path}.change.then[${index}]`, errors));
     if (ability.change?.redirect !== undefined && ability.change.redirect !== "enchanted")
       errors.push({path: `${path}.change.redirect`, message: "Damage is redirected to \"enchanted\": what the holder enchants"});

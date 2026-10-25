@@ -19,7 +19,7 @@
  *     name, seats?: 2..4, at?: {turn, phase}, library?: [names],
  *     setup: [{seat, zone, cards, sick?}]   (a card put in the command zone is that seat's commander),
  *     steps: [ {play|tap|cast|activate|turnFaceUp|suspend|plot: name, seat?, targets?: [{card, seat?} | {player} | {ability}] | "any", ability?, mana?, x?, optional?, gift?}
- *            | {resolve: true} | {settle: true} | {pass: n} | {to: {turn, phase}} | {answer: [indices]} | {expect: [...]}
+ *            | {resolve: true} | {settle: true} | {pass: n} | {to: {turn, phase}} | {answer: [indices], amounts?: [n]} | {expect: [...]}
  *            | {attack: [names], at?} | {block: [[blocker, attacker], ...]} | {choose: [labels]} ],
  *   (`targets: "any"` takes the first legal aim; `optional` skips a move the rules do not offer; `settle` answers every
  *   question with its first legal answer and resolves the stack until it is empty -- the card loader's smoke test.)
@@ -47,6 +47,15 @@ const basic = (name) => (BASIC[name]
   ? {types: ["Land"], supertypes: ["Basic"], ...(name !== "Wastes" ? {subtypes: [name]} : {}),
     abilities: [{id: `t-${BASIC[name].toLowerCase()}`, kind: "mana", tapSelf: true, produces: {[BASIC[name]]: 1}}]}
   : null);
+
+/* The first legal amounts for a division (mode "damage" or "amount"): each option its least (`minEach`, CR 601.2d: at least 1
+   to each target divided among), the rest to the first; null for any other question. */
+const firstAmounts = (choice) => {
+  if (choice.mode !== "damage" && choice.mode !== "amount") return null;
+  const amounts = choice.options.map(() => choice.minEach ?? 0);
+  if (amounts.length && choice.total) amounts[0] += choice.total - amounts.reduce((a, b) => a + b, 0);
+  return amounts;
+};
 
 const ZONES = {hand: "Hand", battlefield: "Battlefield", graveyard: "Graveyard", exile: "Exile", command: "Command", library: "Library"};
 const STEP_LIMIT = 2000;
@@ -123,8 +132,7 @@ export function runScenario(scenario, cards, fixtures = {}) {
      trigger's "you may" or an opponent's spell asks something nobody scripted. A scenario never sets it. */
   const settleOne = () => {
     const choice = awaitingChoice(state);
-    const amounts = choice.mode === "damage" || choice.mode === "amount" ? choice.options.map(() => 0) : null;
-    if (amounts && choice.total) amounts[0] = choice.total;
+    const amounts = firstAmounts(choice);
     record(resolveAwaiting(state, amounts ? [] : choice.options.slice(0, choice.min ?? 0).map((o) => o.index), amounts, rng));
   };
   const goTo = ({turn, phase, settle = false}) => {
@@ -372,8 +380,7 @@ export function runScenario(scenario, cards, fixtures = {}) {
       for (let n = 0; n < STEP_LIMIT && (state.awaiting || state.stack.length); n += 1) {
         if (state.awaiting) {
           const choice = awaitingChoice(state);
-          const amounts = choice.mode === "damage" || choice.mode === "amount" ? choice.options.map(() => 0) : null;
-          if (amounts && choice.total) amounts[0] = choice.total;
+          const amounts = firstAmounts(choice);
           record(resolveAwaiting(state, amounts ? [] : choice.options.slice(0, choice.min ?? 0).map((o) => o.index), amounts, rng));
         } else stepOnce();
       }
@@ -419,7 +426,8 @@ export function runScenario(scenario, cards, fixtures = {}) {
       const indices = step.choose.map((label) => { const o = choice.options.find((x) => x.label === label); if (!o) fail(`no option ${label}: ${choice.options.map((x) => x.label).join(", ")}`); return o.index; });
       record(resolveAwaiting(state, indices, null, rng, step.extra ?? {}));
     }
-    else if (step.answer) record(resolveAwaiting(state, step.answer, null, rng, step.extra ?? {}));
+    /* An amount for each option (`amounts`): a division (CR 601.2d), answered as the room answers one. */
+    else if (step.answer) record(resolveAwaiting(state, step.answer, step.amounts ?? null, rng, step.extra ?? {}));
     else if (step.expect) check(step.expect);
     else fail(`a step the runner does not know: ${JSON.stringify(step)}`);
   }

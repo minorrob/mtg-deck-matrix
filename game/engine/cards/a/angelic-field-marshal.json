@@ -1,0 +1,75 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Angelic Field Marshal",
+    "oracleId": "502575f4-7c56-44bc-a77f-ae28d66c8e1f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel"
+    ],
+    "manaCost": "{2}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Flying\nLieutenant — As long as you control your commander, this creature gets +2/+2 and creatures you control have vigilance.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "static",
+      "text": "Lieutenant — As long as you control your commander, this creature gets +2/+2 and creatures you control have vigilance.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "power": 2,
+        "toughness": 2
+      },
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "commander": true,
+          "controller": "you"
+        }
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Lieutenant — As long as you control your commander, this creature gets +2/+2 and creatures you control have vigilance.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "addKeywords": [
+          "Vigilance"
+        ]
+      },
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "commander": true,
+          "controller": "you"
+        }
+      }
+    }
+  ]
+}

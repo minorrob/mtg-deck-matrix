@@ -57,7 +57,7 @@ import {powerOf, toughnessOf, typesOf, keywordsOf, controllerOf, abilitiesOf, de
 import {isCreatureType} from "../keywords/types.mjs";
 import {givePoison, changeLife, infects, addCounters, damagePermanent} from "../script/effects/resources.mjs";
 import {summoningSick} from "../keywords/timing.mjs";
-import {combatDamageOf, ruleChanged, attackTax, goadersOf, mustAttackOf, cantAttack as restricted, cantGainLife, lifeGained, attackerCaps, defenderLifted, attacksEachCombat} from "./statics.mjs";
+import {combatDamageOf, ruleChanged, attackTax, blockTax, goadersOf, mustAttackOf, cantAttack as restricted, cantGainLife, lifeGained, attackerCaps, defenderLifted, attacksEachCombat} from "./statics.mjs";
 import {paymentUnits, paymentIsAChoice, paymentChoice, payWithUnits} from "./mana.mjs";
 import {recordCommanderDamage} from "./commander.mjs";
 import {damageAssignmentProblem} from "../controller.mjs";
@@ -395,6 +395,10 @@ function declareAttacks(state, player, picked, events) {
     /* Whether the first-strike damage step happens is read from the creatures as the combat damage step begins (CR 510.4;
        rules/turn.mjs), not kept here: first strike given after the declarations counts (Interjection, Train E). */
   };
+  /* PACK TACTICS (Minion of the Mighty; precon load lane C): "if you attacked with creatures with total power 6 or greater this
+     combat" -- the attackers' total power as they are declared (CR 508.1), kept for the combat (script/condition.mjs,
+     attackedWithPowerAtLeast). */
+  state.combat.declaredPower = state.combat.attacks.reduce((sum, attack) => sum + powerOf(state, attack.attacker), 0);
   /* "Creatures that attacked this turn", "attacks for the first time each turn": counted on each attacker. */
   for (const attack of state.combat.attacks) recordUse(state, attack.attacker, "attacked");
   /* And whom the attacking player attacked this turn -- players, not their planeswalkers (CR 506.3): "players who attacked
@@ -512,6 +516,11 @@ export const blockers = {
     const one = [...new Set(options.map((o) => o.attackerId))].filter((id) => ruleChanged(state, "blocked-by-one-at-most", id));
     const capped = one.length ? {by: "attackerId", most: Object.fromEntries(one.map((id) => [id, 1])), why: Object.fromEntries(one.map((id) => [id, oneBlockerWords(state, id)]))} : null;
     const requires = blockRequirements(state, options);
+    /* WHAT BLOCKING COSTS (Archangel of Tithes; CR 509.1d, 509.1f): each option's tax, and every unit of mana the player could pay
+       with, said in the record as an attack tax's are (taxBudget) -- so every answerer declares only what can be paid for. */
+    const taxes = options.map((o) => blockTax(state, [o]));
+    if (taxes.some((n) => n > 0)) options.forEach((o, i) => { if (taxes[i] > 0) o.mana = taxes[i]; });
+    const budget = taxes.some((n) => n > 0) ? {by: "mana", most: paymentUnits(state, awaiting.player).length} : null;
     return {
       id: `declare-blockers:${state.turn}:${awaiting.player}`,
       title: "Declare blockers",
@@ -520,6 +529,7 @@ export const blockers = {
       max: new Set(options.map((o) => o.cardId)).size,
       /* One option per blocker per attacker, so the same rule applies (CR 509.1a). */
       exclusiveBy: "cardId",
+      ...(budget ? {budget} : {}),
       ...(capped ? {capped} : {}),
       ...(requires.length ? {requires} : {}),
       options,
@@ -530,25 +540,29 @@ export const blockers = {
   resolve(state, awaiting, indices) {
     /* What is declared, read before anything changes: every object derived once (rules/layers.mjs, deriving). */
     const picked = deriving(state, () => blockers.declared(state, awaiting, indices));
-    const events = [];
-    for (const option of picked) {
-      const attack = state.combat.attacks.find((a) => a.attacker === option.attackerId);
-      attack.blocked = true;                              /* CR 509.1h */
-      attack.blockers.push(option.cardId);
+    /* CR 509.1d-f: what blocking costs (Archangel of Tithes), paid now -- from the pool and the player's plain mana sources, as an
+       attack tax is. Blocks that cost more than that were refused by `check`. Which mana pays is the player's when the ways
+       differ. */
+    const tax = blockTax(state, picked);
+    if (tax > 0) {
+      const units = paymentUnits(state, awaiting.player);
+      if (paymentIsAChoice(units, tax)) {
+        state.awaiting = {kind: "block-tax", player: awaiting.player, tax, picked: picked.map(({cardId, attackerId}) => ({cardId, attackerId}))};
+        return [];
+      }
+      return declareBlocks(state, awaiting.player, picked, payWithUnits(state, awaiting.player, units, units.slice(0, tax).map((_, i) => i), tax));
     }
-    if (picked.length > 0) {
-      events.push(event("GameEventBlockersDeclared", state, {
-        player: {playerId: awaiting.player, name: state.players[awaiting.player].name},
-        blockers: picked.map((o) => ({
-          card: cardRef(state, o.cardId), blocking: cardRef(state, o.attackerId),
-        })),
-      }));
-    }
+    return declareBlocks(state, awaiting.player, picked, []);
+  },
 
-    /* The next defending player, if there is one; otherwise the step is done. */
-    const next = nextDefenderToDeclare(state, awaiting.player);
-    state.awaiting = next === null ? null : {kind: "declare-blockers", player: next};
-    return events;
+  /* The block tax's question, when the ways to pay it differ: which mana pays. */
+  taxChoice(state, awaiting) {
+    return paymentChoice(`block-tax:${state.turn}:${awaiting.player}`, awaiting.tax, paymentUnits(state, awaiting.player));
+  },
+  /* Paid with what was chosen, and then the blocks are declared. */
+  payTax(state, awaiting, indices) {
+    const events = payWithUnits(state, awaiting.player, paymentUnits(state, awaiting.player), indices, awaiting.tax);
+    return declareBlocks(state, awaiting.player, awaiting.picked, events);
   },
 
   /* The answer read against the question, the set of blocks checked: only reads. Refused for the first thing wrong with
@@ -586,9 +600,34 @@ export const blockers = {
       const met = need.values.filter((id) => (bySeat.get(id) ?? []).length >= (need.per?.[id] ?? 1)).length;
       if (met < need.least) reasons.push(need.why);
     }
+    /* What these blocks cost (Archangel of Tithes; CR 509.1d): more than the player can pay, and they cannot be declared. */
+    const due = choice.budget ? blockTax(state, picked) : 0;
+    if (due > (choice.budget?.most ?? Infinity)) reasons.push(`Those blockers cost {${due}} to block with, more than you can pay. Declare fewer blockers.`);
     return {picked, reasons};
   },
 };
+
+/* The blocks, declared (CR 509.1g-h): each attacker blocked by its blockers, said, and the next defending player asked. */
+function declareBlocks(state, player, picked, events) {
+  for (const option of picked) {
+    const attack = state.combat.attacks.find((a) => a.attacker === option.attackerId);
+    attack.blocked = true;                              /* CR 509.1h */
+    attack.blockers.push(option.cardId);
+  }
+  if (picked.length > 0) {
+    events.push(event("GameEventBlockersDeclared", state, {
+      player: {playerId: player, name: state.players[player].name},
+      blockers: picked.map((o) => ({
+        card: cardRef(state, o.cardId), blocking: cardRef(state, o.attackerId),
+      })),
+    }));
+  }
+
+  /* The next defending player, if there is one; otherwise the step is done. */
+  const next = nextDefenderToDeclare(state, player);
+  state.awaiting = next === null ? null : {kind: "declare-blockers", player: next};
+  return events;
+}
 
 /* ---- combat damage ---- */
 
@@ -789,6 +828,13 @@ export const combatDamage = {
         /* Dealt combat damage this turn, infect or not ("the number of opponents that were dealt combat damage this turn",
            Tymna the Weaver; script/amount.mjs). turn.mjs clears it. */
         state.players[hit.toPlayer].combatDamagedThisTurn = true;
+        /* And by this source, this turn (Steel Hellkite: "each nonland permanent ... whose controller was dealt combat damage by
+           this creature this turn"; precons B, CR 510.2): the players it hit, kept on it with the turn, so a record from an
+           earlier turn is none, and a new object has none (CR 400.7; script/filter.mjs, controllerDealtCombatDamageBy). */
+        if (state.objects[hit.source]) {
+          const record = state.objects[hit.source].combatDamaged;
+          state.objects[hit.source].combatDamaged = {turn: state.turn, players: [...new Set([...(record?.turn === state.turn ? record.players : []), hit.toPlayer])]};
+        }
         /* And by what names this game (Gollum, Obsessed Stalker: "each opponent dealt combat damage this game by a creature named
            Gollum, Obsessed Stalker"; Rob's lists P2): the source's name as it dealt it (CR 201.2), kept for the game -- nothing
            clears it (script/condition.mjs, combatDamagedBy). */
@@ -843,11 +889,12 @@ export const combatDamage = {
           /* "You gain twice that much life instead" (Rhox Faithmender; rules/statics.mjs, lifeGained). */
           const gained = lifeGained(state, gains, linked);
           state.players[gains].life += gained;
-          /* Life gained this turn, as every other gain is kept (effects/resources.mjs changeLife). */
+          /* Life gained this turn, as every other gain is kept (effects/resources.mjs changeLife) -- and whether this is the first. */
+          const firstGain = gained > 0 && !(state.players[gains].gainedThisTurn > 0);
           state.players[gains].gainedThisTurn = (state.players[gains].gainedThisTurn ?? 0) + gained;
           events.push(event("GameEventPlayerLivesChanged", state, {
             player: {playerId: gains, name: state.players[gains].name},
-            oldLives: before, newLives: state.players[gains].life, lifelink: true,
+            oldLives: before, newLives: state.players[gains].life, lifelink: true, ...(firstGain ? {firstGainThisTurn: true} : {}),
           }));
         }
       }

@@ -1,0 +1,207 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Seraph of the Sword",
+  "fixtures": {
+    "Big Sky": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Angel"
+      ],
+      "manaCost": "{3}{W}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 5,
+      "toughness": 3,
+      "keywords": [
+        "Flying"
+      ]
+    },
+    "Big Zap": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{0}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Big Zap deals 3 damage to target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 3,
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Blocked by a 5/3 flier: the Seraph takes nothing and lives; the 5/3 takes 3 and dies",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Seraph of the Sword"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Big Sky"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Seraph of the Sword"
+          ]
+        },
+        {
+          "block": [
+            [
+              "Big Sky",
+              "Seraph of the Sword"
+            ]
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Seraph of the Sword"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Big Sky"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Blocking a 5/3 flier: the Seraph takes nothing there either",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Big Sky"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Seraph of the Sword"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Big Sky"
+          ]
+        },
+        {
+          "block": [
+            [
+              "Seraph of the Sword",
+              "Big Sky"
+            ]
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Seraph of the Sword"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Big Sky"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Noncombat damage is not prevented: 3 from Big Zap and it dies",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Seraph of the Sword"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Big Zap"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "cast": "Big Zap",
+          "targets": [
+            {
+              "card": "Seraph of the Sword"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Seraph of the Sword",
+            "Big Zap"
+          ]
+        }
+      ]
+    }
+  ]
+}

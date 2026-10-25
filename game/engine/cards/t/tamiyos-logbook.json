@@ -1,0 +1,55 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tamiyo's Logbook",
+    "oracleId": "d9356199-4ce3-44fa-9463-90fc134088f9",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Book"
+    ],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{5}{U}, {T}: Draw a card. This ability costs {1} less to activate for each other artifact you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{5}{U}, {T}: Draw a card. This ability costs {1} less to activate for each other artifact you control.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{5}{U}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ],
+      "costLess": {
+        "count": {
+          "what": "permanent",
+          "types": [
+            "Artifact"
+          ],
+          "controller": "you",
+          "another": true
+        }
+      }
+    }
+  ]
+}

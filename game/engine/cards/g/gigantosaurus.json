@@ -1,0 +1,25 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gigantosaurus",
+    "oracleId": "e666bae7-dd51-4921-8b89-7e8d423caba0",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dinosaur"
+    ],
+    "manaCost": "{G}{G}{G}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 10,
+    "toughness": 10
+  },
+  "oracleText": "",
+  "source": "hand",
+  "abilities": []
+}

@@ -1,0 +1,175 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Ghoulcaller Gisa",
+  "fixtures": {
+    "Big Moss Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{3}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 4,
+      "toughness": 4
+    },
+    "Moss Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Sacrificing a 4/4: four 2/2 Zombies",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ghoulcaller Gisa",
+            "Big Moss Bear",
+            "Moss Bear",
+            "Swamp"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Ghoulcaller Gisa"
+              },
+              "count": 2,
+              "costs": [
+                [
+                  "Big Moss Bear"
+                ],
+                [
+                  "Moss Bear"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Ghoulcaller Gisa",
+          "sacrifice": "Big Moss Bear"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ghoulcaller Gisa",
+            "Moss Bear",
+            "Swamp",
+            "Zombie",
+            "Zombie",
+            "Zombie",
+            "Zombie"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Big Moss Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Ghoulcaller Gisa"
+        }
+      ]
+    },
+    {
+      "name": "Gisa cannot sacrifice herself: with no other creature it is not offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ghoulcaller Gisa",
+            "Swamp"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Ghoulcaller Gisa"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A 2/2 sacrificed: two Zombies",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ghoulcaller Gisa",
+            "Moss Bear",
+            "Swamp"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "activate": "Ghoulcaller Gisa",
+          "sacrifice": "Moss Bear"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ghoulcaller Gisa",
+            "Swamp",
+            "Zombie",
+            "Zombie"
+          ]
+        }
+      ]
+    }
+  ]
+}

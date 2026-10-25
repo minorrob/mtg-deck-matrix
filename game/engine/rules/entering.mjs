@@ -30,6 +30,9 @@ import {enteringCountersPlaced, cantBeSacrificed} from "./statics.mjs";
 import {amountOf} from "../script/amount.mjs";
 import {withChosen} from "../script/chosen.mjs";
 
+/* A chapter's number as a Saga prints it (CR 714.2a). */
+const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII"];
+
 /* The cards in the controller's hand a reveal could show ("an Island or Swamp card"). */
 const revealable = (state, player, selector) => cardsIn(state, "hand", player).filter((id) => matchesSelector({...selector, what: "card", zone: "hand"}, state, id, {controller: player}));
 
@@ -39,7 +42,8 @@ const revealable = (state, player, selector) => cardsIn(state, "hand", player).f
  * rules/stack.mjs) its arrival is marked; rules/trigger.mjs passes a marked one by.
  */
 export function holdArrival(state, objectId, arrival) {
-  const waiting = (state.enteringQuestions ?? []).filter((q) => q.objectId === objectId && (q.copyOf || q.discardInstead));
+  /* And a Saga with read ahead (CR 702.155a): its chapter I, an arrival trigger (cards/index.mjs), waits for the number chosen. */
+  const waiting = (state.enteringQuestions ?? []).filter((q) => q.objectId === objectId && ((q.copyOf || q.discardInstead) || q.readAhead));
   if (!waiting.length || !arrival) return;
   arrival.data.fields.awaitingCopy = true;
   for (const q of waiting) q.arrival = arrival;
@@ -122,6 +126,8 @@ export function askEntering(state) {
     /* "Enter as a copy of any creature on the battlefield": nothing to copy, and it arrives as itself. */
     const copies = q.copyOf ? copyChoices(state, q, object) : null;
     if (copies && !copies.length) { arrived(state, q); queue.shift(); continue; }
+    /* Read ahead (CR 702.155a): a chapter from one to its last, always a choice to make. */
+    if (q.readAhead) { state.awaiting = {kind: "entering-choice", player: object.controller, objectId: q.objectId, readAhead: q.readAhead}; return true; }
     state.awaiting = {kind: "entering-choice", player: object.controller, objectId: q.objectId, life: q.life ?? 0, ...(q.reveal ? {reveal: q.reveal} : {}), ...(choices ? {choose: choices} : {}),
       ...(q.riot === true ? {riot: true} : {}),
       ...(copies ? {copyOf: copies, copy: q.copy ?? {}} : {})};
@@ -150,6 +156,9 @@ export function enteringChoice(state, awaiting) {
   if (awaiting.discardInstead) return {id: `entering-discard:${awaiting.objectId}`, title: `${name}: discard a land card?`, mode: "one", min: 1, max: 1,
     options: [...awaiting.discardInstead.map((id, index) => ({index, label: `Discard ${state.objects[id]?.card ?? "?"}: ${name} enters`, cardId: id, discard: id})),
       {index: awaiting.discardInstead.length, label: `Don't discard: ${name} goes to the graveyard`, cardId: awaiting.objectId, discard: null}]};
+  /* Read ahead (CR 702.155a): which chapter it starts at -- that many lore counters. */
+  if (awaiting.readAhead) return {id: `entering-read-ahead:${awaiting.objectId}`, title: `${name}: read ahead -- choose a chapter to start with`, mode: "one", min: 1, max: 1,
+    options: Array.from({length: awaiting.readAhead}, (_, index) => ({index, label: `Chapter ${ROMAN[index] ?? index + 1}`, cardId: awaiting.objectId, readAhead: index + 1}))};
   /* Riot (CR 702.136a): a +1/+1 counter, or haste -- one or the other, the controller's to choose. */
   if (awaiting.riot) return {id: `entering-riot:${awaiting.objectId}`, title: `${name}: riot`, mode: "one", min: 1, max: 1,
     options: [{index: 0, label: `${name} enters with a +1/+1 counter`, cardId: awaiting.objectId, riot: "counter"},
@@ -244,6 +253,17 @@ export function resolveEnteringChoice(state, awaiting, indices) {
     /* Revealed to everyone (CR 701.20a): the card is named in the history; it stays in the hand. */
     events.push({kind: "GameEventCardRevealed", data: {turn: state.turn, phase: state.phase, fields: {card: {cardId: option.reveal, name: state.objects[option.reveal].card, owner: awaiting.player}, player: {playerId: awaiting.player}}}});
     state.objects[awaiting.objectId].tapped = false;
+  }
+  /* READ AHEAD (CR 702.155a): the lore counters it enters with, put on as it entered (CR 122.6) by its controller (122.6a) and
+     said, as riot's counter is below -- a chapter they bring it to triggers (CR 714.2b), and none below the number chosen
+     (`readAhead`, kept on the permanent; rules/trigger.mjs). Then its arrival is seen: chapter I, when one was chosen. */
+  const saga = state.objects[awaiting.objectId];
+  if (option.readAhead !== undefined && saga) {
+    saga.readAhead = option.readAhead;
+    const was = saga.counters.lore ?? 0;
+    saga.counters.lore = was + enteringCountersPlaced(state, awaiting.objectId, "lore", option.readAhead, saga.controller);
+    events.push({kind: "GameEventCardCounters", data: {turn: state.turn, phase: state.phase, fields: {card: eventCard(state, awaiting.objectId), type: "lore", oldValue: was, newValue: saga.counters.lore, by: saga.controller}}});
+    arrived(state, asked);
   }
   /* Riot (CR 702.136a): the counter, put on it as it entered (CR 122.6) by its controller (122.6a) -- "twice that many instead"
      sees it -- and said, as an entering counter is (enteredWith); or haste, for as long as it is this permanent (CR 400.7),

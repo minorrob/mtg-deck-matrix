@@ -1,0 +1,94 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Righteous Valkyrie",
+    "oracleId": "891d2690-7144-4f87-b6ef-96f2469780a9",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel",
+      "Cleric"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "Flying\nWhenever another Angel or Cleric you control enters, you gain life equal to that creature's toughness.\nAs long as you have at least 7 life more than your starting life total, creatures you control get +2/+2.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever another Angel or Cleric you control enters, you gain life equal to that creature's toughness.",
+      "trigger": {
+        "on": "enters",
+        "who": "another",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "anyOf": [
+            {
+              "subtypes": [
+                "Angel"
+              ]
+            },
+            {
+              "subtypes": [
+                "Cleric"
+              ]
+            }
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": {
+            "toughnessOf": "that card"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "As long as you have at least 7 life more than your starting life total, creatures you control get +2/+2.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "power": 2,
+        "toughness": 2
+      },
+      "condition": {
+        "compare": {
+          "count": {
+            "lifeTotal": "you"
+          },
+          "atLeast": {
+            "startingLife": "you",
+            "plus": 7
+          }
+        }
+      }
+    }
+  ]
+}

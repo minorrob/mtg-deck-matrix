@@ -574,7 +574,7 @@ try {
   const sizes = () => rob.page.evaluate(() => {
     const land = document.querySelector(".cm-board-table [data-zone=lands] .cm-bcard"), board = land.closest(".cm-seatboard"), host = getComputedStyle(document.getElementById("cm-board"));
     return {board: parseFloat(getComputedStyle(land).width) / board.getBoundingClientRect().width, hand: parseFloat(getComputedStyle(document.querySelector(".cm-board-hand .cm-board-hand-cards .cm-bcard")).width),
-      scopes: [host.getPropertyValue("--board-scale").trim(), host.getPropertyValue("--hand-scale").trim()], outs: ["board", "hand"].map(scope => document.querySelector(`#cm-board [data-board-scale="${scope}"]`).closest('label').querySelector('output').textContent)};
+      scopes: [host.getPropertyValue("--board-scale").trim(), host.getPropertyValue("--hand-scale").trim()], outs: ["board", "hand"].map(scope => document.querySelector(`#cm-board [data-board-scale="${scope}"]`)?.closest('label').querySelector('output').textContent ?? null)};
   });
   await rob.page.locator(".cm-board-traybar [data-board-scale=hand]").fill("100");
   const s100 = await sizes();
@@ -589,12 +589,13 @@ try {
   await utility(rob.page,"board-tools");
   await rob.page.locator("#cm-board-tools [data-card-scale]").fill("120");
   const sTools = await sizes();
-  ok(sTools.scopes.join() === "1.2,1.2" && sTools.outs.join() === "120%,120%" && Math.abs(sTools.board / s100.board - 1.2) < 0.03 && Math.abs(sTools.hand / s100.hand - 1.2) < 0.02,
+  /* Camera closed when the Profile menu was pressed (Rob, Oct 25: a press outside it closes it), so Board cards is read after. */
+  ok(sTools.scopes.join() === "1.2,1.2" && sTools.outs[1] === "120%" && Math.abs(sTools.board / s100.board - 1.2) < 0.03 && Math.abs(sTools.hand / s100.hand - 1.2) < 0.02,
     `Tools is the table's card size, and moving it sets Board cards and Hand cards to its value (${sTools.outs.join(", ")})`);
   await rob.page.locator("#cm-board-tools [data-card-scale]").fill("100");
-  await utility(rob.page,"board-tools");
+  await rob.page.click("#cm-dialog [data-action=board-settings-save]");
+  await rob.page.locator('[data-action=board-camera]').click();
   eq((await sizes()).outs, ["100%", "100%"], "and back to 100%, all three agree");
-  await rob.page.locator('.cm-stage-top [data-action=board-profile]').click();
   await rob.page.locator('[data-action=board-camera]').click();
   await rob.page.locator(".cm-seatboard:not(.is-you) [data-action=board-focus]").click();
   await rob.page.locator(".cm-board-mat").waitFor();
@@ -841,7 +842,7 @@ try {
   const yieldHelp = await text(active.page, "#cm-board-tools .cm-board-yield-help");
   ok(new RegExp(`Yield this turn passes all your priority for the rest of ${active === rob ? "Maya" : "Rob"}'s turn`).test(yieldHelp) && /required decisions/.test(yieldHelp) && /after the room acknowledges/.test(yieldHelp),
     `Tools explains room Yield, required decisions, and acknowledged cancellation ("${yieldHelp.trim().slice(0, 90)}…")`);
-  await utility(active.page,"board-tools");
+  await active.page.click("#cm-dialog .cm-dialog-close");
   /* ROB-28: cross the real GameTable socket seam, not only the controlled
      acknowledgment fixture. The other person still owns this main-phase choice. */
   const yieldingEmail = active === rob ? ROB : MAYA, peerEmail = other === rob ? ROB : MAYA;
@@ -924,8 +925,9 @@ try {
   await chooseView(rob.page,"focus");
   await rob.page.locator(".cm-board-mat").waitFor();
   await robCard.click({button: "right"});
+  await rob.page.locator("#cm-card-menu [data-action=board-card-menu-view]").click();
   await rob.page.locator("#cm-card-inspector").waitFor();
-  ok((await text(rob.page, "#cm-card-inspector")).includes(robCardName), "a right click pins read-only inspection");
+  ok((await text(rob.page, "#cm-card-inspector")).includes(robCardName), "a right click opens the card's menu, and its 🔍 pins read-only inspection");
   await rob.page.keyboard.press("Escape");
   await rob.page.locator("#cm-dialog[open]").waitFor({state: "detached"}).catch(() => {});
   await rob.page.evaluate(() => {
@@ -1110,8 +1112,8 @@ try {
   /* The choice says itself, with no paragraph explaining it (Rob, Oct 21: "We don't want to directly state everything as
      written out instruction to end users"). */
   await maya.page.locator("#cm-board-tools [data-board-hold]:checked").waitFor({timeout: 5000});
-  eq(await maya.page.evaluate(() => localStorage.getItem("cm-board-hold")), "on", "Tools' Hold priority after I cast is kept on the device, and stays checked");
-  await maya.page.keyboard.press("Escape");
+  await maya.page.click("#cm-dialog [data-action=board-settings-save]");
+  eq(await maya.page.evaluate(() => localStorage.getItem("cm-board-hold")), "on", "Tools' Hold priority after I cast is kept on the device once saved");
   const sentBefore = sent[MAYA].length;
   await maya.page.locator(".cm-board-hand .cm-bcard.is-bright[aria-label*='Cast']").first().click(); await maya.page.locator("#cm-board-decision [data-action=board-confirm]").click(); if(await maya.page.locator("[data-action=board-inspect-close]").count()) await maya.page.locator("[data-action=board-inspect-close]").click();
   await waitText(maya.page, ".cm-stage-top [data-action=board-pass]", new RegExp(`Resolve ${heldName}`));
@@ -1336,16 +1338,19 @@ try {
 
   /* B1, items 21 and 24: the history opens from a clock wherever it is offered, never ☰ (the menu's) or ⌕; the Coach is
      its own glyph, the same wherever it is named, and ✦ is nowhere. */
-  await utility(rob.page,"board-tools");
-  const glyphs = await rob.page.evaluate(() => {
+  /* The profile menu open, for its History; then Settings, a window of its own (Rob, Oct 25), for its Recommended actions. */
+  await rob.page.locator(".cm-stage-top [data-action=board-profile]").click();
+  const histGlyphs = await rob.page.evaluate(() => [...document.querySelectorAll("#cm-board [data-action=board-history]")].map((el) => [(el.querySelector("svg.cm-icon") || {}).outerHTML || "", el.textContent]));
+  await rob.page.locator(".cm-stage-top [data-action=board-tools]").click();
+  const glyphs = await rob.page.evaluate((histGlyphs) => {
     const svg = (el) => (el.querySelector("svg.cm-icon") || {}).outerHTML || "";
-    const hist = [...document.querySelectorAll("#cm-board [data-action=board-history]")], coachEls = [...document.querySelectorAll("#cm-board [data-action=board-coach]")];
-    return {hist: hist.length, histSame: hist.every((el) => svg(el) && svg(el) === svg(hist[0])), histText: hist.map((el) => el.textContent).join(""),
-      coach: coachEls.length, coachSame: coachEls.every((el) => svg(el) && svg(el) === svg(coachEls[0])), differ: svg(hist[0]) !== svg(coachEls[0]), star: document.getElementById("cm-board").innerHTML.includes("✦")};
-  });
+    const hist = histGlyphs.map(([g]) => g), coachEls = [...document.querySelectorAll("#cm-board [data-action=board-coach], #cm-board-tools [data-action=board-coach]")];
+    return {hist: hist.length, histSame: hist.every((g) => g && g === hist[0]), histText: histGlyphs.map(([, t]) => t).join(""),
+      coach: coachEls.length, coachSame: coachEls.every((el) => svg(el) && svg(el) === svg(coachEls[0])), differ: hist[0] !== svg(coachEls[0]), star: document.getElementById("cm-board").innerHTML.includes("✦") || document.getElementById("cm-dialog").innerHTML.includes("✦")};
+  }, histGlyphs);
   ok(glyphs.hist >= 2 && glyphs.histSame && !/[☰⌕]/.test(glyphs.histText), `the strip's History ▾ and the band's button open the history from the same clock (${glyphs.hist} places), not ☰ or ⌕`);
   ok(glyphs.coach >= 2 && glyphs.coachSame && glyphs.differ && !glyphs.star, `the pane's Coach and Tools › Recommended actions carry the Coach's own glyph (${glyphs.coach} places), and ✦ is nowhere on the board`);
-  await utility(rob.page,"board-tools");
+  await rob.page.click("#cm-dialog .cm-dialog-close");
   await chooseView(rob.page,"full"); await fullTools(rob.page);
   await rob.page.locator(".cm-stage-rail").waitFor();
   ok(await rob.page.locator('.cm-stage-rail [data-action="board-rotate"], .cm-stage-rail [data-action="board-view"], .cm-stage-rail [data-action="board-tools"]').count()===0,

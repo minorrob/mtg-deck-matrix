@@ -1,5 +1,86 @@
 # Who holds the work
 
+## The board: the same card one stack; the cards others play beside the question, 2026-10-25 (Claude Code on Personal-HP, for Rob; `claude/board-plays-clicks`)
+
+Rob, 2026-10-25, choosing option A from renders: the cards another seat plays, held up for ten seconds, stood over the
+question being answered -- its options, Confirm, a blocker's tile -- in every view and size measured (25 of 27), so a full
+game against AIs stopped mid-game on main too. And: *"stack cards that are identical and have an x# on them ... If I can
+select more than one, I should have a small numeric tick up/down value to choose how many in that stack."* At his word
+this changes the Codex · Play lane's `crankmagic-board.js`, `crankmagic-stage.css` and two of its suites.
+
+- **What changed:** the held-up cards move just past the question when they would cover it, and one that still would (a
+  window too narrow) is put away, as one over the keyboard's focus already was. In a question for one or many, the same
+  card is one button, ×N (a library search's 21 Islands one "Island ×21"); a click takes one, a click again puts it back;
+  where more than one may be chosen, a number beside it says how many, never past the stack or the question's most. A
+  card on the table is the same only in the same state (a tapped Goblin is not an untapped one's twin).
+- **Suites moved with it:** `board-choices`' scry now expects a button per different card (its library repeats a name);
+  `tools/play-tabletop-preview.mjs`' long list gives each option a different name, so `table-tabletop` still has 60 and 150.
+- **Proof:** `tests/board-choice-stacks.mjs` 63 checks, `breaks-choice-stacks.py` 9 of 9; every suite that loads the board
+  green (29); `solo-vs-ai` GAMES=1 plays a whole game to its end through the board, 17 checks.
+
+## Public precons; no deck bundled for everyone, 2026-10-25 (Claude Code on Personal-HP, for Rob; `claude/public-precons`)
+
+Rob, 2026-10-25: *"Make the precons public, available to anyone with access to play, and no other decks other than those
+they make, shared with them or public. This removes the prior auto sharing of my decks."* At his word this changes files of
+the Codex · Play lane (`crankmagic-table.js`, `crankmagic-stage.css`, `tests/table-lobby.mjs`, `tests/uat/solo-vs-ai.mjs`).
+
+- **What changed:** the table's deck chooser offers **Precons**, the six New from Wizards decks, open to everyone, chosen and
+  played with nothing added to a library. Rob's D1–D6, bundled in `crankmagic-table.js` for every player since October 15,
+  are gone; "Shared with you" lists only decks shared with the person or made public.
+- **Proof:** `table-lobby` 140 checks; `breaks-public-precons.py` 5 of 5; asset-versions, feature-wiring, data-integrity,
+  design-tokens, crankmagic-lobby, table-by-group green. `solo-vs-ai` (GAMES=1) seats four precons, starts and reloads the
+  game, then stops mid-game where the board's played-cards strip (`#cm-board-plays`) takes a click meant for the board:
+  **main fails identically with the bundled decks**, so that is the board's, not this change's.
+- **Staging's public shares turned off, 2026-10-25,** on Rob's "turn off the public sharing of my D1-D6 on staging (set
+  public_role to none on those six shares)": the six `shares` rows (`deck:live:D1`–`D6`, owner Rob) now have no
+  `public_role`, each revision 1 → 2, and no grants; staging holds no other share. Read back the same way. Staging's
+  served app already reads shares when signed in, so nobody else is offered those decks there now; the bundled copy in
+  the app goes when this PR is released.
+## Play: Camera closes on an outside press; Settings is a window, 2026-10-25 (a Claude cloud session, for Rob; `claude/sweet-wright-p0klet`, temporarily in Codex · Play's files)
+
+Rob, 2026-10-25: *"Camera menu doesn't close when I click anywhere outside of it."* and *"Can't access full settings menu
+when selected. It cuts off at bottom of screen and I can't scroll down. ... when I press "Settings" in the dropdown, the
+settings screen should be a pop-up window with close in the top right, and save and cancel in the bottom right. The
+window should be reactive to the browser size."* No Codex · Play PR was open on these files (the newest, #770, is from
+Oct 18), so this small change is made here, in `crankmagic-board.js` and `crankmagic-stage.css` only.
+
+- **Camera ▾** closes on a press anywhere outside it (a capture-phase `pointerdown`, so a card's own handler cannot keep
+  it open), as Profile and History already did. A press inside it keeps it open; Escape still closes it.
+- **Settings** (Profile ▾ › Settings) opens the app's dialog: ✕ top right, Cancel and Save bottom right, the middle
+  scrolling, sized `min(640px, 100vw − 24px)` by `100dvh − 32px` and following the window. Controls still preview live;
+  Save keeps them; Cancel, ✕, Escape, a press on the backdrop or a button that leaves the window (Concede, Recommended
+  actions, Table vitals, …) put back what was set when it opened (hold, skip-empty and the room's `prefer`, card size,
+  sound). ⌘/Ctrl + / − still size the cards with it open.
+- **Combat strip** (Rob, same day, a screenshot): each defender's confirmed assignments run in a row and wrap to the next
+  when it is full, instead of one column with a scrollbar; defenders stay side by side so each one's first assignment is
+  in reach. `board-combat-display` proves the wrap and goes red with the old column.
+- **AGENTS.md, "Symbols first, words last":** Rob's new standing rule for every lane, in his words.
+- **Parallel, not in this PR:** the 3D camera Rob asked for (wheel zoom, mat-drag pan, right-click-hold head-look, a
+  shorthand actions menu on a card's right-click) is on `claude/play-3d-camera`, its own PR.
+- **Proof:** new `tests/board-settings-window.mjs` (Camera in Focus and Full; the window at 1440×900, 1024×560 and
+  390×700 and made smaller while open; Save/Cancel/✕/Escape); four deliberate breaks caught and restored. The suites
+  that drove the old inline menu are updated (`table-board`, `a11y-board`, `table-shared-shell`,
+  `board-r2-actions-inspection`); results are on the PR. **Not proven:** a physical phone.
+
+## Card load, 2026-10-25: the six precons on the Decks screen (Claude Code on Personal-HP, for Rob; `claude/engine-precons-oct2`)
+
+Rob, 2026-10-25: *"Next, we need to ensure that all cards in the precons listed on the Decks screen is loaded into the game
+engine and can be played in Play."* The six "New from Wizards" decks (Foundations Commander and Reality Fracture
+Commander, 2026-10-02): 406 distinct cards, 256 play now, **150 to write**. Multiverse Reforged plays already; of the
+commanders only Ghoulcaller Gisa is unwritten. `docs/engine/card-load-precons-2026-10-25/` has the review, the brief and
+five lane files, one per deck.
+
+- **Done:** five lanes, one per deck, wrote the 150 (A Angels #869, B Engineering #866, C Dragons #870, D Dinosaurs #867,
+  E Zombies #868, each into this branch), none stopped: **6,255 definitions became 6,405**, and all six decks seat whole.
+  Built: a block tax (Archangel of Tithes), Duplicant, reselecting a defender, dethrone, pack tactics, behold, read ahead, red mana
+  kept, divided damage, paired fights, Kalitas's replacement, and more (the README's result).
+- **Ignores, named:** Kalitas beside another exile replacement (order not asked, CR 616.1) and two state-based deaths
+  without a Zombie; Emeria Shepherd's Plains read on resolution; Serra Avenger in games saved before this load; Leyline
+  Tyrant's zero not offered; pack tactics with negative power.
+- **Proof:** `check-cards` 6,405 definitions, 10,928 scenarios, 0 failed; 419 touched suites green; every breaks file
+  `missed: []`; `anchors.py` clean. **Not proven:** a game at a real table with these decks. This branch also carries
+  #863's record of the 10-24 load.
+
 ## AI spend audit and the Claude seat's thinking, 2026-10-24 (a Claude cloud session, for Rob; `claude/busy-dirac-1jkaoo`)
 
 Rob, 2026-10-24: *"I want to understand API usage for the games that have been played. I'm seeing costs much higher
@@ -33,7 +114,14 @@ profiles. Every call the door has made is in `ai_calls` (read 2026-10-24):
   play-e2e 44. It pushed `release/cloud-staging` 78180a8b. `wrangler deploy` of that tested folder made version 2c58059b,
   1.24 MB gzip. The live staging `index.html` is byte-identical to the build and reads `854ffa1 · 2026-10-25`.
 
-## Card load, 2026-10-24: Rob's four priority lists (Claude Code on Personal-HP, for Rob; `claude/card-engine-loading-0584aa`)
+## Card load, 2026-10-24: Rob's four priority lists (Claude Code on Personal-HP, for Rob; PR #862): merged, on staging
+
+**Merged, 2026-10-25:** PR #862 (`claude/card-engine-loading-0584aa`, head e9804988) merged to main as `30172f7e` at
+03:22 UTC, by the Decks session at Rob's request, after Actions `suites` passed on that head (run 40140621294, 38
+minutes) with base 71929eb4 unmoved. The Decks session then released staging with Codex's #769: release/cloud-staging
+`2bfa3082` from main `4096eb28`, which carries #862 (its report: acceptance 23, play-e2e 44, Worker dry-run 6.78 MB /
+1.24 MB gzip, Cloudflare version 5c5ad208, `staging-check --expect 4096eb28` passing). The release slot is free.
+Production is unchanged. Linear: ROB-195, Done.
 
 Rob, 2026-10-24: *"Here are a few lists of cards we need to prioritize loading into the engine. Review what needs to be
 loaded, then begin the engine updates to make all of these cards playable."* Four deck lists, 287 distinct cards: 187
@@ -51,7 +139,7 @@ play now (three are flavor names of defined cards), **100 to write**, every list
   the gameplay-gap list when PR #834 reaches `main`.
 - **Proof:** `check-cards` 6,255 definitions, 10,482 scenarios, 0 failed; 414 touched suites green; every breaks file
   `missed: []`; `anchors.py` clean. **Not proven:** the Worker bundle's size (`definitions.mjs` 4.4 → 4.5 MB) under
-  `wrangler deploy --dry-run`; a game at a real table with these decks. No staging release from this session.
+  `wrangler deploy --dry-run` (answered by the release: 6.78 MB); a game at a real table with these decks.
 
 ## Codex · Workshop: merge and staging release, October 24, 2026
 
@@ -525,6 +613,7 @@ other lane answers in the last column.
 
 | # | From | Asks for | What for | Answer |
 | --- | --- | --- | --- | --- |
+| 13 | Workshop (Decks) → Play | An intermittent failure in `tests/table-board.mjs` (Codex · Play's suite), seen once in CI and never locally: "the real-game inspector keeps its card aspect beside an independently arranged History module" (lines 667-669) failed on Oct 25 in Actions run 40157906338 (PR #769's head `33c6749e`, `main` `71929eb` merged in, a branch that changes no Play file). The next run passed it (run 40161187064), and on `main` `afe58d5` it passes 3 of 3 locally (290 checks). The check measures `#cm-full-pick .cm-bcard`'s ratio (within 0.01 of 5/7) and counts the History module straight after the click, with no wait for the layout to settle, so a slow runner may read a mid-layout card. Please make it wait for the settled size, or fix the layout if the card really drifts from 5:7. (The other Play failure seen alongside it, `tests/board-control.mjs` "Escape dismisses hover", is fixed on `main` by #854: it now passes there.) | A Play suite that fails at random turns any lane's PR red, and the next run passing it hides the cause | `tests/table-board.mjs` | |
 | 11 | Codex · Play → Engine | ROB-172 for ROB-171: project public control provenance, displaced controller(s), source object identity/name and exact Oracle effect text/duration; define chained steals, return destinations, entering under another controller and face-down sources | Rob requests the actual card on its controller's board and a ghost where control was lost, with who took it and how it returns. Current owner/controller fields cannot establish prior control or a return condition. Document and merge the additive contract before Play consumes it | Requested Oct 20 in ROB-11; Play builds existing-contract placement and ownership marker meanwhile |
 | 12 | Codex · Play → Engine | ROB-167: expose `POST /api/tables/:id/rematch {accept}` and public votes/deadline; launch the next round with retained seats/decks using the existing lifecycle | Board/lobby Play again, visible votes and Leave need a deployed route and documented table state. Prove one person/three AIs, a declined human seat, deadline expiry, and a fresh match ID | Requested Oct 20 on ROB-167 and ROB-11; Engine half must merge before Play consumes it **Built:** `POST /api/tables/:id/rematch {accept}` (#806): votes, deadline (2 minutes, `REMATCH_WINDOW`) and the next round with the same seats, decks and rules as `<tableId>g<n>`; the view's `table.rematch` `{lastMatchId, deadline, outcome, reason, votes}`; the host must stay for a next game; documented in `docs/ui-lane/gameplay-anchor.md` ("After the game: Play again"). Play wires the buttons next. |
 | 10 | Codex · Play → Engine | ROB-166: project a structured terminal reason identifying the eliminated human seat and its loss reason when the remaining seats are AIs; distinguish elimination from voluntary end and disconnect timeout | The banner must say who lost and why, and the person's game record must be a loss. Please document the additive view/result contract and merge it before Play consumes it | Requested Oct 20; Play will retain existing result handling until the authoritative contract is on main. **Built:** `result.ending` (`game/room/ending.mjs`, #805): `{kind, seatId, reason, seats: [{seatId, outcome, reason}]}`, kind `won`, `draw`, `eliminated`, `conceded`, `timed-out` or `ended`; `reason`/`endedBy` unchanged; documented in `docs/ui-lane/gameplay-anchor.md` ("How the game ended"). Play consumes it next (ROB-166's banner and record). |

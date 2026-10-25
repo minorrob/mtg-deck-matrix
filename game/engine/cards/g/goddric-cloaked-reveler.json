@@ -1,0 +1,140 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Goddric, Cloaked Reveler",
+    "oracleId": "35b2b172-5fbc-4e4d-a011-390ee1b6c848",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Noble"
+    ],
+    "manaCost": "{1}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Haste\nCelebration — As long as two or more nonland permanents entered the battlefield under your control this turn, Goddric is a Dragon with base power and toughness 4/4, flying, and \"{R}: Dragons you control get +1/+0 until end of turn.\" (He loses all other creature types.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Haste",
+      "keyword": "haste"
+    },
+    {
+      "kind": "static",
+      "text": "Celebration — As long as two or more nonland permanents entered the battlefield under your control this turn, Goddric is a Dragon with base power and toughness 4/4, flying, and \"{R}: Dragons you control get +1/+0 until end of turn.\" (He loses all other creature types.)",
+      "layer": 4,
+      "affects": {
+        "self": true
+      },
+      "condition": {
+        "compare": {
+          "count": {
+            "permanentsEnteredThisTurn": "you",
+            "filter": {
+              "nonTypes": [
+                "Land"
+              ]
+            }
+          },
+          "atLeast": 2
+        }
+      },
+      "apply": {
+        "setCreatureTypes": [
+          "Dragon"
+        ]
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Celebration — As long as two or more nonland permanents entered the battlefield under your control this turn, Goddric is a Dragon with base power and toughness 4/4, flying, and \"{R}: Dragons you control get +1/+0 until end of turn.\" (He loses all other creature types.)",
+      "layer": 7,
+      "sublayer": "b",
+      "affects": {
+        "self": true
+      },
+      "condition": {
+        "compare": {
+          "count": {
+            "permanentsEnteredThisTurn": "you",
+            "filter": {
+              "nonTypes": [
+                "Land"
+              ]
+            }
+          },
+          "atLeast": 2
+        }
+      },
+      "apply": {
+        "setPower": 4,
+        "setToughness": 4
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Celebration — As long as two or more nonland permanents entered the battlefield under your control this turn, Goddric is a Dragon with base power and toughness 4/4, flying, and \"{R}: Dragons you control get +1/+0 until end of turn.\" (He loses all other creature types.)",
+      "layer": 6,
+      "affects": {
+        "self": true
+      },
+      "condition": {
+        "compare": {
+          "count": {
+            "permanentsEnteredThisTurn": "you",
+            "filter": {
+              "nonTypes": [
+                "Land"
+              ]
+            }
+          },
+          "atLeast": 2
+        }
+      },
+      "apply": {
+        "addKeywords": [
+          "Flying"
+        ],
+        "addAbilities": [
+          {
+            "kind": "activated",
+            "text": "{R}: Dragons you control get +1/+0 until end of turn.",
+            "cost": [
+              {
+                "atom": "mana",
+                "cost": "{R}"
+              }
+            ],
+            "effects": [
+              {
+                "effect": "pumpAll",
+                "selector": {
+                  "what": "permanent",
+                  "subtypes": [
+                    "Dragon"
+                  ],
+                  "controller": "you"
+                },
+                "power": 1,
+                "toughness": 0,
+                "until": "end-of-turn"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

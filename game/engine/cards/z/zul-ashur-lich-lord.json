@@ -1,0 +1,73 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Zul Ashur, Lich Lord",
+    "oracleId": "a7c6c9b3-91f2-4ecf-b2b0-b0edd96974d9",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Zombie",
+      "Warlock"
+    ],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Ward—Pay 2 life. (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays 2 life.)\n{T}: You may cast target Zombie creature card from your graveyard this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Ward—Pay 2 life.",
+      "keyword": "ward",
+      "cost": [
+        {
+          "atom": "payLife",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: You may cast target Zombie creature card from your graveyard this turn.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "controller": "you",
+          "types": [
+            "Creature"
+          ],
+          "subtypes": [
+            "Zombie"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "mayPlay",
+          "targets": {
+            "target": 0
+          },
+          "spellsOnly": true,
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

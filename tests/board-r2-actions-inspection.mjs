@@ -47,7 +47,7 @@ try{
   const target=page.locator(`.cm-bcard[data-card="${id}"]`).filter({has:page.locator('img')}).first();
   await target.hover();await page.locator('#cm-board-peek').waitFor();
   eq(sent.filter(x=>x.type==="act").length,0,"hover inspection does not act");
-  await target.click({button:"right"});await page.locator('#cm-card-inspector').waitFor();
+  await target.click({button:"right"});await page.locator('#cm-card-menu [data-action=board-card-menu-view]').click();await page.locator('#cm-card-inspector').waitFor();
   await target.hover();await page.waitForTimeout(450);
   eq(await page.locator('#cm-board-peek').count(),0,'pinned inspection suppresses a duplicate preview over the board');
   eq(sent.filter(x=>x.type==="act").length,0,"pinned inspection does not act");
@@ -76,7 +76,7 @@ try{
  await page.locator('#cm-board-decision [data-index="0"]').click();
  await change(page,"focus");
  eq(await page.locator('#cm-board-decision [data-index="0"]').getAttribute('aria-pressed'),'true','selection survives view switch');
- await page.locator(`.cm-board-hand .cm-bcard[data-card="${id}"]`).click({button:"right"});
+ await page.locator(`.cm-board-hand .cm-bcard[data-card="${id}"]`).click({button:"right"});await page.locator('#cm-card-menu [data-action=board-card-menu-view]').click();
  eq(await page.locator('#cm-board-decision [data-index="0"]').getAttribute('aria-pressed'),'true','inspection preserves draft');
  await page.keyboard.press("Escape");
  const newer=structuredClone(choice);newer.revision=++revision;newer.decision.id="r2-new-targets";await show(newer);
@@ -119,6 +119,7 @@ try{
  ok((await page.locator('.cm-action-summary').innerText()).includes('Forest and Sol Ring'),'payment sources shown for review');
  await page.locator('[data-action=board-profile]').click();
  await page.locator('[data-action=board-tools]').click();await page.keyboard.press('Escape');
+ await page.locator('#cm-board-tools').waitFor({state:'detached',timeout:3000});
  eq(await page.locator('#cm-board-tools').count(),0,'Escape closes the foremost Settings menu');
  eq(await page.locator('#cm-card-inspector').count(),1,'closing Settings preserves the card being reviewed');
  await page.keyboard.press('Escape');
@@ -136,7 +137,7 @@ try{
  await change(page,"table");
  const known=structuredClone(sample);known.revision=++revision;
  const knownCard=known.state.players[known.seat].zones.Hand.cards.find(c=>c.cardId===id);knownCard.faceDown=true;
- await show(known);await page.locator(`.cm-board-hand .cm-bcard[data-card="${id}"]`).click({button:'right'});
+ await show(known);await page.locator(`.cm-board-hand .cm-bcard[data-card="${id}"]`).click({button:'right'});await page.locator('#cm-card-menu [data-action=board-card-menu-view]').click();
  ok((await page.locator('#cm-card-inspector').innerText()).includes(knownCard.name),'authorized face-down identity remains inspectable');
  const concealed=structuredClone(known);concealed.revision=++revision;concealed.state.players[concealed.seat].zones.Hand.cards.find(c=>c.cardId===id).name=null;
  await show(concealed);eq(await page.locator('#cm-card-inspector img').count(),0,'redacted face-down identity is removed from inspection');

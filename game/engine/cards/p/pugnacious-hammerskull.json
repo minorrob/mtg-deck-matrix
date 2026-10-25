@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Pugnacious Hammerskull",
+    "oracleId": "da989677-3647-46b8-aa56-b2cfb60f7a2a",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dinosaur"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 6,
+    "toughness": 6
+  },
+  "oracleText": "Whenever this creature attacks while you don't control another Dinosaur, put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature attacks while you don't control another Dinosaur, put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)",
+      "trigger": {
+        "on": "attacks",
+        "who": "self",
+        "while": {
+          "present": {
+            "what": "permanent",
+            "subtypes": [
+              "Dinosaur"
+            ],
+            "controller": "you",
+            "another": true
+          },
+          "atMost": 0
+        }
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "stun",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}
