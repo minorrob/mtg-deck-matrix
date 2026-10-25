@@ -395,6 +395,10 @@ function declareAttacks(state, player, picked, events) {
     /* Whether the first-strike damage step happens is read from the creatures as the combat damage step begins (CR 510.4;
        rules/turn.mjs), not kept here: first strike given after the declarations counts (Interjection, Train E). */
   };
+  /* PACK TACTICS (Minion of the Mighty; precon load lane C): "if you attacked with creatures with total power 6 or greater this
+     combat" -- the attackers' total power as they are declared (CR 508.1), kept for the combat (script/condition.mjs,
+     attackedWithPowerAtLeast). */
+  state.combat.declaredPower = state.combat.attacks.reduce((sum, attack) => sum + powerOf(state, attack.attacker), 0);
   /* "Creatures that attacked this turn", "attacks for the first time each turn": counted on each attacker. */
   for (const attack of state.combat.attacks) recordUse(state, attack.attacker, "attacked");
   /* And whom the attacking player attacked this turn -- players, not their planeswalkers (CR 506.3): "players who attacked

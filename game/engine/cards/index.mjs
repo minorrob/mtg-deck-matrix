@@ -352,6 +352,9 @@ const TRIGGERS = {
     ...(t.defender ? {defender: t.defender} : {}), ...(t.planeswalkers === true ? {planeswalkers: true} : {}), ...(t.atLeast ? {atLeast: t.atLeast} : {}),
     /* "Whenever Aurelia attacks for the first time each turn" (rules/trigger.mjs). */
     ...(t.firstTime ? {firstTime: true} : {}),
+    /* DETHRONE (CR 702.105a; Scourge of the Throne): "whenever this creature attacks the player with the most life or tied for
+       most life" -- a player, not a planeswalker of theirs, read as it attacks (rules/trigger.mjs). */
+    ...(t.defenderMostLife === true ? {defenderMostLife: true} : {}),
     /* "Whenever this creature attacks while saddled" (Bounding Felidar; CR 702.171b): `while`, a condition asked as it
        attacks and never again -- a trigger condition, not an intervening "if" (CR 603.4; rules/trigger.mjs). */
     ...(t.while !== undefined ? {while: t.while} : {}),
@@ -780,6 +783,18 @@ export function compileScript(script) {
       abilities.push({id, kind: "replacement", text: ability.text, watches: {event: "enters", who: "self"}, change: {entersWithCounters: {counter: "lore", count: 1}}});
       return;
     }
+    /* READ AHEAD (CR 702.155a; The Elder Dragon War, precon load lane C): "As this Saga enters, choose a number from one to its
+       final chapter number. It enters with that many lore counters on it. Chapter abilities whose chapter number is less than
+       that number don't trigger" -- in place of the one lore counter a Saga enters with (CR 714.3a), the number its controller's
+       choice as it enters (rules/entering.mjs, its arrival held for the answer), the skipped chapters' rules/trigger.mjs's. */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "read ahead") {
+      if (!(identity.subtypes ?? []).includes("Saga")) problems.push(`${ability.text}: read ahead on a card that is not a Saga`);
+      const final = Math.max(0, ...script.abilities.filter((a) => a.kind === "triggered" && a.trigger?.on === "chapter").map((a) => a.trigger.chapter ?? 0));
+      if (final < 1) problems.push(`${ability.text}: read ahead on a Saga with no chapters`);
+      abilities.push({id, kind: "replacement", text: ability.text, watches: {event: "enters", who: "self"}, change: {readAhead: final}});
+      keywords.push("Read ahead");
+      return;
+    }
     /* STATION (CR 702.184a): "Tap another untapped creature you control: Put a number of charge counters on this permanent
        equal to the tapped creature's power. Activate only as a sorcery" -- the `tapCreature` cost atom, the creature tapped
        being what the ability is about (rules/actions.mjs). What it has at "N+" (CR 721.2) is the card's own abilities, each
@@ -901,6 +916,15 @@ export function compileScript(script) {
           {effect: "delayedTrigger", at: "end of combat", text: "Exile the tokens at end of combat.", condition: {compare: {count: {rememberedCount: true}, atLeast: 1}},
             effects: [{effect: "moveZone", targets: "remembered", to: "exile"}]}]});
       keywords.push("Myriad");
+      return;
+    }
+    /* DETHRONE (CR 702.105a; Scourge of the Throne, precon load lane C): "Whenever this creature attacks the player with the most
+       life or tied for most life, put a +1/+1 counter on it" -- the keyword IS that triggered ability, the player read as it
+       attacks and not again (no intervening "if", CR 603.4). Instances trigger separately (702.105b). */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "dethrone") {
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.attacks({who: "self", defenderMostLife: true}),
+        effects: [{effect: "putCounter", targets: "self", counter: "+1/+1", count: 1}]});
+      keywords.push("Dethrone");
       return;
     }
     if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "exalted") {

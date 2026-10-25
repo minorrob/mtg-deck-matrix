@@ -441,6 +441,10 @@ function playersOf(value, context, state = null) {
      (CR 800.4a; effects/zones.mjs, playersFor). */
   if (value === "each opponent who didn't")
     return (state?.players ?? []).filter((p) => p.id !== context.controller && !(context.whoDid ?? []).includes(p.id)).map((p) => p.id);
+  /* "This creature deals 4 damage to each other opponent" (Parapet Thrasher; precon load lane C): its controller's opponents but
+     the one the trigger is about -- "that opponent" -- each still in the game (CR 800.4a; effects/zones.mjs, playersFor). */
+  if (value === "each other opponent")
+    return (state?.players ?? []).map((p) => p.id).filter((id) => id !== context.controller && id !== context.about?.player);
   if (!isRef(value)) return value;
   const chosen = (context.targets ?? [])[value.target];
   if (Array.isArray(chosen)) return chosen.filter((t) => t?.kind === "player").map((t) => t.id);
@@ -563,8 +567,13 @@ export function bindEffect(effect, context, state = null) {
 const THIS_WAY = ["rememberedCount", "lifeLostThisWay", "cardTypesAmong"];
 /* An effect's counts of this resolution ("that many" of what the effect before it did), counted now. */
 function thisWayNow(bound, context, state) {
-  for (const key of AMOUNT_PARAMS)
-    if (bound[key] && typeof bound[key] === "object" && THIS_WAY.some((kind) => kind in bound[key])) bound[key] = amountOf(state, bound[key], context);
+  for (const key of AMOUNT_PARAMS) {
+    if (!(bound[key] && typeof bound[key] === "object" && THIS_WAY.some((kind) => kind in bound[key]))) continue;
+    /* "For each of those cards that are STILL exiled" (Dragonhawk, Fate's Tempest; script/amount.mjs, `still`): the cards
+       remembered now, counted as the delayed trigger resolves. */
+    if (bound[key].still === true) bound[key] = {...bound[key], still: [...(context.remembered ?? [])]};
+    else bound[key] = amountOf(state, bound[key], context);
+  }
   return bound;
 }
 /* Each effect, and those nested in it -- a branch's, a repetition's, a modal's modes' -- as `one` makes it. */

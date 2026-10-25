@@ -111,6 +111,11 @@ import {isCreatureType} from "../keywords/types.mjs";
 import {hasCitysBlessing, isSaddled} from "../keywords/designations.mjs";
 import {isRingBearer} from "../keywords/ring.mjs";
 
+/* THE PLAYER WITH THE MOST LIFE OR TIED FOR MOST LIFE (dethrone, CR 702.105a): at least as much life as each other player still
+   in the game (CR 800.4a). Rules/trigger.mjs asks it too, for dethrone's trigger. */
+export const hasMostLife = (state, player) => Boolean(state.players[player]) && !state.players[player].lost
+  && state.players.every((p) => p.lost || p.life <= state.players[player].life);
+
 const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTurn", "firstCombat", "graveyardTypes", "yourTurn", "notYourTurn", "about", "is", "chosen", "selfCounters", "lifeAtLeast", "cast", "compare", "escaped", "evoked", "spent", "enduringStory", "loyaltyThisTurn", "impending",
   "uniqueCreatureName", "cameFrom", "sinceYourLastUpkeep", "level", "opponentPoisonAtLeast", "searched",
   /* Evolve's comparison (CR 702.100a); prowl's damage, and its cost paid (CR 702.76a). */
@@ -162,7 +167,11 @@ const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTu
   /* Gollum, Obsessed Stalker's "each opponent dealt combat damage this game by a creature named Gollum, Obsessed Stalker". */
   "combatDamagedBy",
   /* Descend's "if you descended this turn" (CR 700.11; Canonized in Blood). */
-  "descended"];
+  "descended",
+  /* The precon load, lane C: Scourge of the Throne's "if it's attacking the player with the most life or tied for most life"
+     (dethrone's player, CR 702.105a), and pack tactics' "if you attacked with creatures with total power 6 or greater this
+     combat" (Minion of the Mighty). */
+  "attackingMostLife", "attackedWithPowerAtLeast"];
 /** Whether these effects, nested ones included, ask `firstResolution` -- so their ability's resolutions are counted
     (rules/stack.mjs). */
 export const asksFirstResolution = (effects) => JSON.stringify(effects ?? []).includes('"firstResolution"');
@@ -536,6 +545,18 @@ export function conditionHolds(state, condition, {controller, source = null, abo
     const them = state.players[about?.player];
     if (!them || them.lost || state.players.some((p) => p.id !== them.id && !p.lost && measure(p.id) >= measure(them.id))) return false;
   }
+  /* "IF IT'S ATTACKING THE PLAYER WITH THE MOST LIFE OR TIED FOR MOST LIFE" (Scourge of the Throne; CR 702.105a's player): this
+     creature attacking a player -- not a planeswalker of theirs (CR 506.3) -- who has at least as much life as each other
+     player still in the game (CR 800.4a). Removed from combat, it attacks nobody. */
+  if (condition.attackingMostLife === true) {
+    const attack = (state.combat?.attacks ?? []).find((a) => a.attacker === source && a.planeswalker === undefined);
+    if (!attack || !hasMostLife(state, attack.defender)) return false;
+  }
+  /* PACK TACTICS (Minion of the Mighty): "if you attacked with creatures with total power 6 or greater this combat" -- their
+     power as the attackers were declared, kept with the combat (rules/combat.mjs, `declaredPower`): a pump after, or a
+     creature put onto the battlefield attacking, changes nothing (CR 508.4; the cards' rulings). */
+  if (condition.attackedWithPowerAtLeast !== undefined
+    && !(state.combat?.attackingPlayerId === controller && (state.combat.declaredPower ?? 0) >= condition.attackedWithPowerAtLeast)) return false;
   /* "If you have 40 or more life" (Felidar Sovereign). */
   if (condition.lifeAtLeast !== undefined && state.players[controller].life < condition.lifeAtLeast) return false;
   /* "If it's not your turn, you may exile a blue card from your hand rather than pay this spell's mana cost". */
@@ -599,6 +620,9 @@ export function conditionProblems(condition) {
   if ("wasCast" in condition && typeof condition.wasCast !== "boolean") problems.push("wasCast is true or false");
   if ("firstEndStep" in condition && condition.firstEndStep !== true) problems.push("firstEndStep is true");
   if ("thatPlayerMost" in condition && !["hand", "lands", "life"].includes(condition.thatPlayerMost)) problems.push("thatPlayerMost is \"hand\", \"lands\" or \"life\"");
+  if ("attackingMostLife" in condition && condition.attackingMostLife !== true) problems.push("attackingMostLife is true: this creature is attacking the player with the most life or tied for it");
+  if ("attackedWithPowerAtLeast" in condition && !(Number.isInteger(condition.attackedWithPowerAtLeast) && condition.attackedWithPowerAtLeast >= 1))
+    problems.push("attackedWithPowerAtLeast is a whole number: the total power the attackers had as they were declared");
   if ("powerAboveOthers" in condition && condition.powerAboveOthers !== "that card") problems.push("powerAboveOthers is \"that card\": the creature a trigger is about has more power than each other creature");
   if ("firstResolution" in condition && condition.firstResolution !== true) problems.push("firstResolution is true: the first time this ability has resolved this turn");
   if ("freerunning" in condition && condition.freerunning !== true) problems.push("freerunning is true");

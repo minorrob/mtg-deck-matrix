@@ -50,7 +50,7 @@
  * THE GAME'S OWN TRIGGERS (CR 725.2; Train E): the monarch's two, which no card has -- INHERENT_TRIGGERS, below.
  */
 
-import {conditionHolds} from "../script/condition.mjs";
+import {conditionHolds, hasMostLife} from "../script/condition.mjs";
 import {pushAbility, becameTarget, crimeCommitted} from "./stack.mjs";
 import {objectsAfterMove, cardsIn, usesThisTurn, recordUse} from "../state/index.mjs";
 import {playerStatics, ruleChanged} from "./statics.mjs";
@@ -298,7 +298,10 @@ function subjects(state, event, condition, sourceId, controller) {
       /* "Whenever a creature attacks you or a planeswalker you control" (Jace, Reality Sculptor): `defender` "you". */
       .filter((a) => condition.defender !== "you" || (a.defender?.playerId === controller && (!a.defender.planeswalker || condition.planeswalkers === true)))
       /* "Attacks a player alone" (Jiang Yanggu, Alone; Yuriko): a player, not a planeswalker of theirs (CR 506.3). */
-      .filter((a) => condition.defender !== "player" || (a.defender?.playerId !== undefined && !a.defender.planeswalker));
+      .filter((a) => condition.defender !== "player" || (a.defender?.playerId !== undefined && !a.defender.planeswalker))
+      /* Dethrone's "attacks the player with the most life or tied for most life" (CR 702.105a; cards/index.mjs): that player, as
+         it attacks -- a planeswalker of theirs is not them (CR 506.3). */
+      .filter((a) => condition.defenderMostLife !== true || (a.defender?.playerId !== undefined && !a.defender.planeswalker && hasMostLife(state, a.defender.playerId)));
     /* "Whenever a player attacks with three or more creatures" (Aurelia): the attack as a whole, counted -- one event
        declares every attacker (CR 508.1). */
     if (condition.atLeast && matched.length < condition.atLeast) return [];
@@ -474,6 +477,9 @@ const leftAs = (fields) => (fields.from?.zoneType === "Battlefield" && fields.le
 function matches(state, event, condition, sourceId, controller) {
   if (event.kind !== condition.on) return false;
   const fields = event.data?.fields ?? {};
+  /* READ AHEAD'S SKIPPED CHAPTERS (CR 702.155a; The Elder Dragon War): a chapter numbered below the one its controller chose as
+     it entered (rules/entering.mjs, `readAhead`) does not trigger. */
+  if (Number.isInteger(condition.chapter) && (state.objects[sourceId]?.readAhead ?? 0) > condition.chapter) return false;
 
   if (condition.on === "GameEventCardChangeZone") {
     /* A sacrifice (effects/zones.mjs sacrificeOne): by whom, and not this one if it says "another". Asked here, where a

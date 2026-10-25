@@ -72,6 +72,9 @@ export const STATIC_RULES = Object.freeze({
       of the Void): `affects` the players whose pools it keeps (a player selector, "you" its controller). turn.mjs, as each
       step and phase ends (emptyManaPools). */
   "mana-becomes-colorless": "rules/turn.mjs",
+  /** CR 500.4's exception: "You don't lose unspent red mana as steps and phases end" (Leyline Tyrant; precon load lane C):
+      `affects` the players whose red mana stays -- the pool's and the red kept beside it. turn.mjs, emptyManaPools. */
+  "keeps-red-mana": "rules/turn.mjs",
   /** CR 601.2f: "Artifact spells you cast cost {1} less to cast" (the Medallions, Foundry Inspector). actions.mjs. */
   "spells-cost-less": "rules/actions.mjs",
   /** CR 601.2f: "Noncreature spells cost {1} more to cast" (Thalia), "spells your opponents cast cost {2} more" (God-

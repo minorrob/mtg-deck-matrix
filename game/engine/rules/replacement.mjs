@@ -416,6 +416,9 @@ function applyOne(state, {holderId, ability, effect = null}, proposal, dry = fal
      don't, it gains haste" -- its controller's choice, asked once it is there (rules/entering.mjs); each instance its own
      (702.136b), as each effect applies once (CR 614.5). */
   if (ability.change?.riot === true) next.asks = [...(next.asks ?? []), {riot: true}];
+  /* READ AHEAD (CR 702.155a; The Elder Dragon War): how many lore counters it enters with, from one to its final chapter -- its
+     controller's choice, asked once it is there, its arrival held for the answer (rules/entering.mjs). */
+  if (Number.isInteger(ability.change?.readAhead) && ability.change.readAhead >= 1) next.asks = [...(next.asks ?? []), {readAhead: ability.change.readAhead}];
   /* DEVOUR (CR 702.82a, 702.82c; Feasting Hobbit): which permanents to sacrifice, asked once it is there (rules/entering.mjs). */
   if (ability.change?.devour) next.asks = [...(next.asks ?? []), {devour: structuredClone(ability.change.devour)}];
   /* "You may have this creature enter as a copy of any creature on the battlefield" (CR 614.1c, 707.9): which one is asked

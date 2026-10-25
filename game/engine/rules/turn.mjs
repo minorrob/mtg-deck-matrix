@@ -258,6 +258,11 @@ function emptyManaPools(state, events) {
     else delete player.turnMana;
     const kept = {...combatKept};
     for (const [color, n] of Object.entries(turnKept)) kept[color] = (kept[color] ?? 0) + n;
+    /* "YOU DON'T LOSE UNSPENT RED MANA AS STEPS AND PHASES END" (Leyline Tyrant; precon load lane C; CR 500.4): every {R} of its
+       player's is kept -- the pool's, and the red kept beside it with its restrictions and riders (rules/restricted-mana.mjs) --
+       for as long as the ability applies, from step to step and turn to turn. */
+    const redKept = playerRuleChanged(state, "keeps-red-mana", player.id);
+    if (redKept) kept.R = player.manaPool.R ?? 0;
     /* "IF YOU WOULD LOSE UNSPENT MANA, THAT MANA BECOMES COLORLESS INSTEAD" (Omnath, Locus of the Void; CR 614.1a): none of
        it is lost -- what would have been becomes {C}, the mana kept beside the pool too, its restrictions and riders with it
        (rules/restricted-mana.mjs) -- and nothing is emptied, so nothing is said. Mana not lost now (firebending's, kept)
@@ -267,7 +272,7 @@ function emptyManaPools(state, events) {
       continue;
     }
     /* And the mana that could be spent only on some things (rules/restricted-mana.mjs). */
-    emptyRestricted(player);
+    emptyRestricted(player, redKept ? ["R"] : []);
     const had = Object.fromEntries(Object.entries(player.manaPool).map(([color, n]) => [color, n - (kept[color] ?? 0)]));
     const total = Object.values(had).reduce((a, b) => a + b, 0);
     if (total === 0) continue;

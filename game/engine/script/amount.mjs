@@ -147,7 +147,10 @@ export const AMOUNT_KINDS = Object.freeze(["x", "attacksThisTurn", "count", "cou
   "dividedAmong",
   /* Wave 4d: "eight or more artifacts with the same name as one another" (Mechanized Production). */
   "mostSharingName"]);
-const AMOUNT_EXTRAS = ["counter", "times", "plus", "atMost", "then", "else", "half", "per", "filter", "controlledBy", "named", "another", "signed"];
+/* `still` (Dragonhawk, Fate's Tempest; precon load lane C): "for each of those cards that are still exiled" -- a delayed
+   trigger's count of what the resolution that made it remembered, counted as the delayed trigger resolves, not as it is made
+   (script/bind.mjs, thisWayNow): those of them that are still the objects they were (CR 400.7), so still where they were put. */
+const AMOUNT_EXTRAS = ["still", "counter", "times", "plus", "atMost", "then", "else", "half", "per", "filter", "controlledBy", "named", "another", "signed"];
 const COLORS = ["W", "U", "B", "R", "G"];
 
 /** Whether an amount is undefined for its player (CR 903.4f): one of the colors in their commanders' color identity, for a
@@ -202,6 +205,7 @@ export function amountProblems(value) {
   if ("half" in value && value.half !== true) problems.push("An amount's half is true: halved, rounded down");
   if ("per" in value && !(Number.isInteger(value.per) && value.per > 1)) problems.push("An amount's per is a whole number above 1: \"for every seven\" is per 7");
   if ("countersRemovedThisWay" in value && value.countersRemovedThisWay !== true) problems.push("countersRemovedThisWay is true");
+  if ("still" in value && !(value.still === true && "rememberedCount" in value)) problems.push("still is true, beside rememberedCount: those of them still there as a delayed trigger resolves");
   if ("dieRolled" in value && value.dieRolled !== true) problems.push("dieRolled is true: the result of the die rolled before it");
   if ("dividedAmong" in value && !(Number.isInteger(value.dividedAmong?.total) && value.dividedAmong.total > 0 && Number.isInteger(value.dividedAmong?.target) && value.dividedAmong.target >= 0))
     problems.push("dividedAmong is {total, target}: a whole amount above 0, divided among the objects chosen for that target");
@@ -452,7 +456,9 @@ export function amountOf(state, value, context = {}) {
   /* "For each creature card exiled this way" (Release to Memory), "when one or more nonland cards are exiled this way" (Augusta,
      Order Returned): `filter`, those the selector describes where each now is (fitsNow). */
   else if ("rememberedCount" in value) {
-    const remembered = (context.remembered ?? []).filter((id) => value.filter === undefined || fitsNow(state, value.filter, id, who));
+    /* `still`: the objects a delayed trigger was made remembering (script/bind.mjs), each counted while it is still that object. */
+    const remembered = (Array.isArray(value.still) ? value.still.filter((id) => state.objects[id]) : context.remembered ?? [])
+      .filter((id) => value.filter === undefined || fitsNow(state, value.filter, id, who));
     const whose = (id) => (context.rememberedControllers ?? {})[id];
     /* "The greatest number of cards a player discarded this way" (Windfall): `controlledBy` "most", the most of them any one
        player had -- the discarder, as discard's `remember` keeps it (effects/asking.mjs). */
