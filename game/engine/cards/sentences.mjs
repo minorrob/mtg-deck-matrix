@@ -348,7 +348,11 @@ const LONGEST = 16;
  *
  * @returns {{atoms, gaps: string[], spans: {text, id, level}[]}}
  */
-export function segment(text, name, library, except = null) {
+/* Only an instant or a sorcery has a spell ability (CR 113.3a): a permanent card's sentence is never covered by a template whose
+   translation is a spell -- "{T}: Add {C}. You gain 1 life." (Pristine Talisman, Rob's lists P2) is one mana ability, not a
+   mana ability and a spell -- so it is left for the writer, never translated wrong. */
+const castable = (card) => (card?.identity?.types ?? []).some((t) => t === "Instant" || t === "Sorcery");
+export function segment(text, name, library, except = null, {spells = true} = {}) {
   const atoms = atomsOf(text), n = atoms.length, raw = String(text ?? "");
   const known = new Map();
   const lookup = (span) => {
@@ -376,6 +380,7 @@ export function segment(text, name, library, except = null) {
       const t = lookup(span);
       if (!t) continue;
       const body = JSON.parse(t.body), spell = body.filter((a) => a.kind === "spell").length;
+      if (spell && !spells) continue;
       const plain = body.length === 1 && plainSpell(body[0]);
       /* A second spell only as the next sentence after a first, both plain: one spell, composed. */
       if (spell && at.spells && !(at.lastSpell && at.plain && plain)) continue;
@@ -398,7 +403,7 @@ export function segment(text, name, library, except = null) {
  */
 export function partialTranslate(card, library, {except = null, keep = () => true} = {}) {
   const name = card.identity.name;
-  const {atoms, spans} = segment(card.oracleText, name, library, except);
+  const {atoms, spans} = segment(card.oracleText, name, library, except, {spells: castable(card)});
   const inside = (a, list) => list.some((s) => a.start >= s.start && a.end <= s.end);
   const trusted = spans.filter((s) => keep(s.id));
   const whole = trusted.length === spans.length && atoms.every((a) => inside(a, spans));
@@ -420,7 +425,7 @@ export function partialTranslate(card, library, {except = null, keep = () => tru
  */
 export function translate(card, library, {except = null} = {}) {
   const name = card.identity.name;
-  const {gaps, spans} = segment(card.oracleText, name, library, except);
+  const {gaps, spans} = segment(card.oracleText, name, library, except, {spells: castable(card)});
   if (gaps.length || !spans.length) return {ok: false, gaps};
   const filled = spans.map((span) => {
     const t = templateWithout(library, span.id, except);

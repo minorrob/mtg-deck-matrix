@@ -1,0 +1,126 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Field-Tested Frying Pan",
+    "oracleId": "0c9e3e6a-0bab-4619-b135-d2dbe824b1f0",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Equipment"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "When this Equipment enters, create a Food token, then create a 1/1 white Halfling creature token and attach this Equipment to it.\nEquipped creature has \"Whenever you gain life, this creature gets +X/+X until end of turn, where X is the amount of life you gained.\"\nEquip {2}",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this Equipment enters, create a Food token, then create a 1/1 white Halfling creature token and attach this Equipment to it.",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "predefined": "Food"
+          }
+        },
+        {
+          "effect": "createToken",
+          "count": 1,
+          "remember": true,
+          "token": {
+            "name": "Halfling",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Halfling"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 1,
+            "toughness": 1
+          }
+        },
+        {
+          "effect": "attach",
+          "targets": "remembered"
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "Equipped creature has \"Whenever you gain life, this creature gets +X/+X until end of turn, where X is the amount of life you gained.\"",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "addAbilities": [
+          {
+            "kind": "triggered",
+            "text": "Whenever you gain life, this creature gets +X/+X until end of turn, where X is the amount of life you gained.",
+            "trigger": {
+              "on": "life gained"
+            },
+            "effects": [
+              {
+                "effect": "pump",
+                "targets": "self",
+                "power": {
+                  "lifeGained": true
+                },
+                "toughness": {
+                  "lifeGained": true
+                },
+                "until": "end-of-turn"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "Equip {2}",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        }
+      ],
+      "timing": "sorcery",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "attach",
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

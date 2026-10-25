@@ -1,0 +1,483 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Lobelia, Defender of Bag End",
+  "fixtures": {
+    "Food": {
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [
+        "Food"
+      ],
+      "colors": [],
+      "token": true,
+      "abilities": [
+        {
+          "id": "food",
+          "kind": "activated",
+          "text": "{2}, {T}, Sacrifice this artifact: You gain 3 life.",
+          "targets": [],
+          "cost": [
+            {
+              "atom": "mana",
+              "cost": "{2}"
+            },
+            {
+              "atom": "{T}"
+            },
+            {
+              "atom": "sacrifice",
+              "self": true
+            }
+          ],
+          "effects": [
+            {
+              "effect": "gainLife",
+              "amount": 3
+            }
+          ]
+        }
+      ]
+    },
+    "Brown Bear Cub": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Hill Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "She enters: Maya's and Trey's top cards exiled face down; Rob may look at them, Maya sees only hers face down",
+      "seats": 3,
+      "library": [
+        "Brown Bear Cub"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Lobelia, Defender of Bag End"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Lobelia, Defender of Bag End"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "of": 1,
+          "zone": "exile",
+          "faceDown": [
+            "Brown Bear Cub"
+          ]
+        },
+        {
+          "seat": 0,
+          "of": 2,
+          "zone": "exile",
+          "faceDown": [
+            "Brown Bear Cub"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "exile",
+          "faceDown": [
+            null
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "library",
+          "count": 19
+        },
+        {
+          "seat": 2,
+          "zone": "library",
+          "count": 19
+        },
+        {
+          "seat": 0,
+          "of": 0,
+          "zone": "exile",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "name": "A Food sacrificed, the first mode: Rob casts Maya's exiled Bears without paying -- and only one card",
+      "seats": 3,
+      "library": [
+        "Brown Bear Cub"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Lobelia, Defender of Bag End"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Food",
+            "Swamp",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Lobelia, Defender of Bag End"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 4,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Lobelia, Defender of Bag End",
+          "sacrifice": "Food"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Until end of turn, you may play a card exiled with Lobelia without paying its mana cost."
+          ]
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Brown Bear Cub"
+              },
+              "count": 2
+            }
+          ]
+        },
+        {
+          "cast": "Brown Bear Cub"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Brown Bear Cub"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Lobelia, Defender of Bag End",
+            "Brown Bear Cub",
+            "Swamp",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A land exiled: played (his land for the turn), free",
+      "library": [
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Lobelia, Defender of Bag End"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Food",
+            "Swamp",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Lobelia, Defender of Bag End"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Lobelia, Defender of Bag End",
+          "sacrifice": "Food"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Until end of turn, you may play a card exiled with Lobelia without paying its mana cost."
+          ]
+        },
+        {
+          "play": "Forest"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Lobelia, Defender of Bag End",
+            "Forest",
+            "Swamp",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Until end of turn only: not on his next turn",
+      "library": [
+        "Brown Bear Cub"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Lobelia, Defender of Bag End"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Food",
+            "Swamp",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Lobelia, Defender of Bag End"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Lobelia, Defender of Bag End",
+          "sacrifice": "Food"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Until end of turn, you may play a card exiled with Lobelia without paying its mana cost."
+          ]
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Brown Bear Cub"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "The second mode: Maya and Trey lose 2, Rob gains 2",
+      "seats": 3,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Lobelia, Defender of Bag End",
+            "Food"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Lobelia, Defender of Bag End",
+          "sacrifice": "Food"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Each opponent loses 2 life and you gain 2 life."
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 38
+        },
+        {
+          "seat": 2,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "life": 42
+        }
+      ]
+    },
+    {
+      "name": "No artifact: not offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Lobelia, Defender of Bag End"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Lobelia, Defender of Bag End"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

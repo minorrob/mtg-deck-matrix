@@ -1,0 +1,157 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Prize Pig",
+  "fixtures": {
+    "Heal Three": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "You gain 3 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 3
+          }
+        ]
+      }
+    },
+    "Heal One": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "You gain 1 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 1
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Tapped for mana, then 3 life: three ribbons, removed, and it untaps",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Prize Pig",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Heal Three"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Prize Pig",
+          "mana": {
+            "G": 1
+          }
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Heal Three"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Prize Pig",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Prize Pig",
+            "counter": "ribbon",
+            "count": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "1 life: one ribbon, it stays tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Prize Pig",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Heal One"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Prize Pig",
+          "mana": {
+            "G": 1
+          }
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Heal One"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Prize Pig"
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Prize Pig",
+            "counter": "ribbon",
+            "count": 1
+          }
+        }
+      ]
+    }
+  ]
+}

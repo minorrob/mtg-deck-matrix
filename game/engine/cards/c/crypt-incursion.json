@@ -1,0 +1,57 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Crypt Incursion",
+    "oracleId": "ce00e0d0-c6f4-4fe8-97c3-7279b06d8fdb",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Exile all creature cards from target player's graveyard. You gain 3 life for each card exiled this way.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Exile all creature cards from target player's graveyard. You gain 3 life for each card exiled this way.",
+      "targets": [
+        {
+          "what": "player"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZoneAll",
+          "selector": {
+            "what": "card",
+            "zone": "graveyard",
+            "types": [
+              "Creature"
+            ],
+            "controller": {
+              "target": 0
+            }
+          },
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "gainLife",
+          "amount": {
+            "rememberedCount": true,
+            "times": 3
+          }
+        }
+      ]
+    }
+  ]
+}

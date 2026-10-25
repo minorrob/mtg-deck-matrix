@@ -1,0 +1,83 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gala Greeters",
+    "oracleId": "cce081eb-8820-415a-a7b2-3c5b9d4a2601",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Druid"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Alliance — Whenever another creature you control enters, choose one that hasn't been chosen this turn —\n• Put a +1/+1 counter on this creature.\n• Create a tapped Treasure token.\n• You gain 2 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Alliance — Whenever another creature you control enters, choose one that hasn't been chosen this turn —\n• Put a +1/+1 counter on this creature.\n• Create a tapped Treasure token.\n• You gain 2 life.",
+      "trigger": {
+        "on": "enters",
+        "who": "another",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "unchosen": "turn",
+          "modes": [
+            {
+              "text": "Put a +1/+1 counter on this creature.",
+              "effects": [
+                {
+                  "effect": "putCounter",
+                  "targets": "self",
+                  "counter": "+1/+1",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "text": "Create a tapped Treasure token.",
+              "effects": [
+                {
+                  "effect": "createToken",
+                  "count": 1,
+                  "token": {
+                    "predefined": "Treasure"
+                  },
+                  "tapped": true
+                }
+              ]
+            },
+            {
+              "text": "You gain 2 life.",
+              "effects": [
+                {
+                  "effect": "gainLife",
+                  "amount": 2
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,5 +1,25 @@
 # Who holds the work
 
+## Card load, 2026-10-24: Rob's four priority lists (Claude Code on Personal-HP, for Rob; `claude/card-engine-loading-0584aa`)
+
+Rob, 2026-10-24: *"Here are a few lists of cards we need to prioritize loading into the engine. Review what needs to be
+loaded, then begin the engine updates to make all of these cards playable."* Four deck lists, 287 distinct cards: 187
+play now (three are flavor names of defined cards), **100 to write**, every list's commander among them.
+`docs/engine/card-load-rob-lists-2026-10-24/` has the review (`README.md`), the lanes' brief and the three lane files.
+
+- **Done:** three lanes wrote the 100 (P1 blink #861, P2 Food #860, P3 counters #859, each into this branch), none
+  stopped: **6,155 definitions became 6,255**, and all 287 cards of the four lists are final, every commander among them.
+  Built: airbend, waterbend, myriad, harness, an additional end step, devour, sacrifice X, descend, shield counters,
+  Alliance's unchosen modes, moving counters, "choose one at random", and more (the README's result).
+- **The integration** fixed fidelity (an ability inside a longer sentence no longer claims the rest of it; Gandalf the
+  White) and made `engine-compile`'s held-out checks independent of the sample's position.
+- **Ignores, named:** Entity Tracker and Fear of Sleep Paralysis (no Rooms); Bilbo beside a life doubler (order not
+  asked, CR 616.1); Feasting Hobbit's devour counters just after entering; Lobelia's mode chosen on resolution. They join
+  the gameplay-gap list when PR #834 reaches `main`.
+- **Proof:** `check-cards` 6,255 definitions, 10,482 scenarios, 0 failed; 414 touched suites green; every breaks file
+  `missed: []`; `anchors.py` clean. **Not proven:** the Worker bundle's size (`definitions.mjs` 4.4 → 4.5 MB) under
+  `wrangler deploy --dry-run`; a game at a real table with these decks. No staging release from this session.
+
 ## Card load, 2026-10-24: the compiler's candidates and the shared sentences (a Claude cloud session, for Rob; `claude/engine-card-load-2026-10-24`)
 
 Rob, 2026-10-24: *"Look at the card list of cards not loaded in the engine but either automatically can be added or easily

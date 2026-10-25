@@ -1,0 +1,104 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Ghost Quarter",
+  "fixtures": {
+    "Fancy Land": {
+      "types": [
+        "Land"
+      ],
+      "manaCost": null,
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Maya's land destroyed; she finds a basic",
+      "library": [
+        "Swamp"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ghost Quarter"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Fancy Land"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Ghost Quarter",
+          "targets": [
+            {
+              "card": "Fancy Land"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 1
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Swamp"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Ghost Quarter"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "{T}: Add {C}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ghost Quarter"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Ghost Quarter"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 1
+          }
+        }
+      ]
+    }
+  ]
+}

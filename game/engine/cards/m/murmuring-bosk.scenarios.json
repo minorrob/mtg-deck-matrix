@@ -1,0 +1,165 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Murmuring Bosk",
+  "fixtures": {
+    "Oaken Friend": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Treefolk"
+      ],
+      "manaCost": "{3}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 3,
+      "toughness": 4
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Played revealing a Treefolk: untapped; {T} for {W} deals 1 damage to Rob",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Murmuring Bosk",
+            "Oaken Friend"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Murmuring Bosk"
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Reveal Oaken Friend: Murmuring Bosk enters untapped"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Murmuring Bosk",
+              "is": false
+            }
+          ]
+        },
+        {
+          "tap": "Murmuring Bosk",
+          "mana": {
+            "W": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "W": 1
+          }
+        },
+        {
+          "seat": 0,
+          "life": 39
+        }
+      ]
+    },
+    {
+      "name": "No Treefolk in hand: it enters tapped, nobody asked",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Murmuring Bosk"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Murmuring Bosk"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Murmuring Bosk"
+        }
+      ]
+    },
+    {
+      "name": "Not revealing: tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Murmuring Bosk",
+            "Oaken Friend"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Murmuring Bosk"
+        },
+        {
+          "choose": [
+            "Don't reveal: Murmuring Bosk enters tapped"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Murmuring Bosk"
+        }
+      ]
+    },
+    {
+      "name": "{T}: Add {G}, no damage (it is a Forest)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Murmuring Bosk"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Murmuring Bosk",
+          "mana": {
+            "G": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 1
+          }
+        },
+        {
+          "seat": 0,
+          "life": 40
+        }
+      ]
+    }
+  ]
+}

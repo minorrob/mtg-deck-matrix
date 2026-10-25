@@ -58,14 +58,14 @@ const handOf = (name) => scripts.find((s) => s.identity.name === name);
      creature for the modes its mana pays (Cloud's Limit Break) or at all (Eriette's Lullaby), a red or white creature or
      planeswalker of an opponent's (Flourishing Grapple), a spell that targets a permanent its caster controls (Rebuff the
      Wicked), a spell of mana value 1 to counter (Mental Misstep), the {2} a mode adds to its mana cost, which spree's one
-     or more modes always do (Explosive Derailment, and Return the Favor's {1}; CR 702.172a) -- or for want of seven cards in its player's graveyard, without which it can't be cast at all (Proft,
+     or more modes always do (Explosive Derailment, Getaway Glamer of Rob's lists, and Return the Favor's {1}; CR 702.172a) -- or for want of seven cards in its player's graveyard, without which it can't be cast at all (Proft,
      Sinister Mastermind). The card load of 2026-10-24 added 23 for the same wants, and an artifact card in its player's
      graveyard to return (Refurbish); each has scenarios of its own that cast it. Named, so a card that stops being played
      in its smoke game is found, not counted. */
   const unplayed = smoked.filter((r) => !r.played).map((r) => r.name).sort();
   eq(unplayed, ["Argivian Restoration", "Artifact Blast", "Assassinate", "Blue Elemental Blast", "Bright Reprisal",
     "Cloud's Limit Break", "Condemn", "Death Stroke", "Devout Decree", "Eriette's Lullaby", "Explosive Derailment",
-    "Flashfreeze", "Flourishing Grapple", "Halt Order", "Immolating Glare", "Keep Safe", "Kill Shot",
+    "Flashfreeze", "Flourishing Grapple", "Getaway Glamer", "Halt Order", "Immolating Glare", "Keep Safe", "Kill Shot",
     "Mental Misstep", "Mirrodin Avenged", "Precise Redaction", "Proft, Sinister Mastermind", "Rebuff the Wicked",
     "Rebuke", "Reconstruction", "Refurbish", "Return the Favor", "Ritual of Restoration", "Silverstrike",
     "Spell Snare", "Swift Response", "Take Vengeance", "Turn Aside", "Vengeance", "You Are Already Dead"], `and the other ${scripts.length - unplayed.length} of ${scripts.length} were actually played or cast in it`);
@@ -320,12 +320,25 @@ const trust = trustOf(library, calibrate({scripts, library, scenarios, definitio
   };
   const bad = await heldOutSample({scripts, scenarios, definition: index.definition, oracle: ORACLE, library, trust, call: wrong, examples: [], n: 3});
   ok(bad.passed < 3 && bad.results.filter((r) => r.outcome === "failed").every((r) => /^fidelity: /.test(r.why)), "a writer that leaves a sentence out fails, at fidelity");
+  /* A sentence left out beside a keyword it mentions is still unclaimed: Gandalf the White's Flash does not claim "You may
+     cast legendary spells and artifact spells as though they had flash" (Rob's lists P2, 2026-10-24, sampled it). */
+  const gandalf = handOf("Gandalf the White");
+  ok(gandalf !== undefined && !checkFidelity({...gandalf, abilities: gandalf.abilities.filter((a) => !/as though they had flash/.test(a.text))}).ok,
+    "Gandalf the White without its flash-granting sentence is refused at fidelity, its Flash beside it");
+  /* A miscount only shows where a missing ability has a number to get wrong, so three evenly spaced cards may hold none
+     (Rob's lists P3, 2026-10-24: 33 more cards moved the pick onto +2 Mace, Gather the Townsfolk and Realmwalker). The
+     writer answers free, so the sample is wide enough to hold such cards, and the claim is made of the ones miscounted. */
+  const changed = new Set();
   const miscounted = async (body) => {
     const a = right(body);
-    return {answer: {...a, abilitiesJson: a.abilitiesJson.replace(/"count":1\b/g, "\"count\":2")}, usage: {}};
+    /* Every count, amount, power and toughness one more (lane P1): a wrong number wherever the card says one. */
+    const wrongly = a.abilitiesJson.replace(/"(count|amount|power|toughness)":(\d+)\b/g, (_, key, n) => `"${key}":${Number(n) + 1}`);
+    if (wrongly !== a.abilitiesJson) changed.add(JSON.parse(body.messages[0].content).card.name);
+    return {answer: {...a, abilitiesJson: wrongly}, usage: {}};
   };
-  const played = await heldOutSample({scripts, scenarios, definition: index.definition, oracle: ORACLE, library, trust, call: miscounted, examples: [], n: 3});
-  ok(played.results.some((r) => r.outcome === "failed" && /^plays: /.test(r.why)), `one that writes every sentence with a wrong number passes every check but its scenarios: "${played.results.find((r) => r.outcome === "failed")?.why}"`);
+  const played = await heldOutSample({scripts, scenarios, definition: index.definition, oracle: ORACLE, library, trust, call: miscounted, examples: [], n: 40});
+  const caught = played.results.filter((r) => changed.has(r.name) && r.outcome === "failed" && /^plays: /.test(r.why));
+  ok(changed.size >= 3 && caught.length >= 1, `one that writes every sentence with a wrong number passes every check but its scenarios: ${changed.size} miscounted, caught in play: ${caught.map((r) => r.name).join(", ")}`);
   const capped = await heldOutSample({scripts, scenarios, definition: index.definition, oracle: ORACLE, library, trust, call: writer, examples: [], n: 3, maxCost: 0});
   ok(capped.tried === 0 && /cap/.test(capped.stopped), "the sample stops at its cap");
   /* Every card the sample may take, asked of a writer that answers nothing (free, and refused at fidelity): never one the

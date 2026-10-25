@@ -1,0 +1,73 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Battle Angels of Tyr",
+    "oracleId": "c2bd0c24-3973-48bc-a591-3779e3640c5d",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel",
+      "Knight"
+    ],
+    "manaCost": "{2}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Flying, myriad\nWhenever this creature deals combat damage to a player, draw a card if that player has more cards in hand than each other player. Then you create a Treasure token if that player controls more lands than each other player. Then you gain 3 life if that player has more life than each other player.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "myriad",
+      "keyword": "myriad"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature deals combat damage to a player, draw a card if that player has more cards in hand than each other player. Then you create a Treasure token if that player controls more lands than each other player. Then you gain 3 life if that player has more life than each other player.",
+      "trigger": {
+        "on": "damage dealt",
+        "who": "self",
+        "combat": true,
+        "to": "player"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1,
+          "condition": {
+            "thatPlayerMost": "hand"
+          }
+        },
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "predefined": "Treasure"
+          },
+          "condition": {
+            "thatPlayerMost": "lands"
+          }
+        },
+        {
+          "effect": "gainLife",
+          "amount": 3,
+          "condition": {
+            "thatPlayerMost": "life"
+          }
+        }
+      ]
+    }
+  ]
+}

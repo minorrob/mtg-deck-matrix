@@ -1,0 +1,441 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Battle Angels of Tyr",
+  "fixtures": {
+    "Walker": {
+      "types": [
+        "Planeswalker"
+      ],
+      "subtypes": [
+        "Jace"
+      ],
+      "manaCost": "{2}{U}",
+      "colors": [
+        "U"
+      ],
+      "power": null,
+      "toughness": null,
+      "loyalty": 3,
+      "abilities": []
+    },
+    "Bloodletting": {
+      "types": [
+        "Sorcery"
+      ],
+      "subtypes": [],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "power": null,
+      "toughness": null,
+      "abilities": [],
+      "spell": {
+        "id": "bl",
+        "text": "You lose 10 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "loseLife",
+            "amount": 10
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Three players, attacking Maya: myriad, Yes -- a token copy attacking Trey; Maya, with the most cards and lands, gives a card and a Treasure, Trey nothing; the token exiled at end of combat",
+      "seats": 3,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Battle Angels of Tyr"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Battle Angels of Tyr"
+          ],
+          "at": "Maya"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Yes",
+                  "No"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Yes"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "controls": [
+                "Battle Angels of Tyr",
+                "Battle Angels of Tyr"
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "settle": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 36
+            },
+            {
+              "seat": 2,
+              "life": 36
+            },
+            {
+              "seat": 0,
+              "controls": [
+                "Battle Angels of Tyr",
+                "Battle Angels of Tyr",
+                "Treasure"
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_END"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Battle Angels of Tyr",
+            "Treasure"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "life": 40
+        }
+      ]
+    },
+    {
+      "name": "Three players: myriad, No -- no token, and nothing to exile at end of combat",
+      "seats": 3,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Battle Angels of Tyr"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Battle Angels of Tyr"
+          ],
+          "at": "Maya"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "No"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "controls": [
+                "Battle Angels of Tyr"
+              ]
+            },
+            {
+              "stack": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_END"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "Two players: no opponent other than the defending player, nothing asked",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Battle Angels of Tyr"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Battle Angels of Tyr"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            },
+            {
+              "seat": 0,
+              "controls": [
+                "Battle Angels of Tyr"
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_END"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "Combat damage to Maya, who has more life than Rob (down 10): Rob gains 3 -- their hands tied, no card; Rob with the lands, no Treasure",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Battle Angels of Tyr",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bloodletting"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Bloodletting"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "life": 30
+            }
+          ]
+        },
+        {
+          "attack": [
+            "Battle Angels of Tyr"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 36
+        },
+        {
+          "seat": 0,
+          "life": 33
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": []
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Battle Angels of Tyr",
+            "Swamp"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Three players: the token may attack Trey's planeswalker instead -- Rob's choice as it enters",
+      "seats": 3,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Battle Angels of Tyr"
+          ]
+        },
+        {
+          "seat": 2,
+          "zone": "battlefield",
+          "cards": [
+            "Walker"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Battle Angels of Tyr"
+          ],
+          "at": "Maya"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Yes"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Trey",
+                  "Walker (Trey)"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Walker (Trey)"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 2,
+          "life": 40
+        },
+        {
+          "seat": 2,
+          "zone": "graveyard",
+          "cards": [
+            "Walker"
+          ]
+        },
+        {
+          "seat": 1,
+          "life": 36
+        }
+      ]
+    }
+  ]
+}

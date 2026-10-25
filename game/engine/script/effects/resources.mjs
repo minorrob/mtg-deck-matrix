@@ -22,7 +22,7 @@ import {selectMatching} from "../filter.mjs";
 import {event, cardRef, playersFor} from "./zones.mjs";
 import {markDeathtouch, lifelinkFrom} from "../../keywords/combat.mjs";
 import {typesOf, powerOf, toughnessOf, keywordsOf, isKeywordCounter, controllerOf} from "../../rules/layers.mjs";
-import {cantGainLife, lifeGained, lifeLost, countersPlaced, playerCountersPlaced, placeCounters} from "../../rules/statics.mjs";
+import {cantGainLife, lifeGained, lifeLost, countersPlaced, playerCountersPlaced, placeCounters, ruleChanged} from "../../rules/statics.mjs";
 import {playerRuled, leaveGame, monarchLeft} from "../../rules/sba.mjs";
 import {amountOf} from "../amount.mjs";
 import {recordUse} from "../../state/index.mjs";
@@ -611,6 +611,9 @@ export function removeCounter(state, params, context) {
     const kinds = params.counter === "all" ? Object.keys(object.counters ?? {}) : params.counter === "any" ? Object.keys(params.removing) : [params.counter ?? "+1/+1"];
     for (const kind of kinds) {
       const before = object.counters[kind] ?? 0;
+      /* "Stun counters can't be removed from permanents your opponents control" (Fear of Sleep Paralysis; CR 122.1d): not by
+         anything -- an untap they replace (untapOne, below) leaves it tapped. */
+      if (kind === "stun" && before > 0 && object.zone === "battlefield" && ruleChanged(state, "stun-counters-stay", id)) continue;
       const after = params.counter === "all" || params.all === true ? 0 : Math.max(0, before - (params.counter === "any" ? params.removing[kind] : params.count ?? 1));
       if (after === before) continue;
       object.counters[kind] = after;
@@ -640,6 +643,12 @@ export function moveCounters(state, params, context) {
   /* "Onto other creatures" (Forgotten Ancient): where each goes is asked (effects/asking.mjs, countersOnto), never decided here. */
   if (params.onto !== undefined) throw new Error("moveCounters onto permanents its controller chooses asks where: run it through resolution.mjs");
   const [from] = params.from ?? [], [to] = params.targets ?? [];
+  /* "Move any number of counters" (Resourceful Defense): the ones its controller chose (`moving`, how many of each kind;
+     effects/asking.mjs, countersToRemove), each kind moved as one kind is below. */
+  if (params.counter === "any") {
+    if (!params.moving) throw new Error("moveCounters of any kinds asks its controller which counters: run it through resolution.mjs");
+    return Object.entries(params.moving).flatMap(([kind, n]) => moveCounters(state, {...params, counter: kind, count: n, moving: undefined}, context));
+  }
   /* "Move all counters from The Ozolith onto target creature" (wave 4b; CR 122.5): every kind there, all of each, each moved as
      one kind is below. */
   if (params.counter === "all") {

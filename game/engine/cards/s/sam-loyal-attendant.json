@@ -1,0 +1,68 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sam, Loyal Attendant",
+    "oracleId": "2837be10-23ad-49d2-943e-b1e00edbbbd9",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Halfling",
+      "Peasant"
+    ],
+    "manaCost": "{1}{G}{W}",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "Partner with Frodo, Adventurous Hobbit (When this creature enters, target player may put Frodo into their hand from their library, then shuffle.)\nAt the beginning of combat on your turn, create a Food token. (It's an artifact with \"{2}, {T}, Sacrifice this token: You gain 3 life.\")\nActivated abilities of Foods you control cost {1} less to activate.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Partner with Frodo, Adventurous Hobbit",
+      "keyword": "partner with",
+      "name": "Frodo, Adventurous Hobbit"
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of combat on your turn, create a Food token.",
+      "trigger": {
+        "on": "step",
+        "step": "COMBAT_BEGIN"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "predefined": "Food"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "Activated abilities of Foods you control cost {1} less to activate.",
+      "rule": "abilities-cost-less",
+      "affects": {
+        "what": "permanent",
+        "subtypes": [
+          "Food"
+        ],
+        "controller": "you"
+      },
+      "amount": 1
+    }
+  ]
+}

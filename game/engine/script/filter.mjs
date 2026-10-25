@@ -90,6 +90,12 @@ export const SELECTOR_KEYS = Object.freeze([
   /* "Counter target spell that targets a permanent you control" (Rebuff the Wicked; library load L2): a spell one of whose
      targets is the permanent this describes (CR 115.1a). */
   "targeting",
+  /* "Each creature without a +1/+1 counter on it" (Wave Goodbye; Rob's lists P3): none of that kind of counter, whatever
+     else it has (CR 122.1) -- unlike `counters: "none"`, no counters at all. */
+  "nonCounters",
+  /* "The number of opponents who control a creature with power 4 or greater" (Summon: Yojimbo; Rob's lists P3): a player who
+     controls a permanent this selector describes. */
+  "controlsAny",
   /* "Unless ... it's only the color its controller chose" (Selective Obliteration; CR 105.2): the one color its controller chose
      as this resolution did (effects/asking.mjs, chooseColor's `chooser`), and no other. */
   "onlyChosenColor",
@@ -229,8 +235,17 @@ function assertGrammar(selector) {
       throw new Error("A selector's targeting is a spell's: a selector of the permanent one of its targets is");
     compileSelector({...selector.targeting, what: "permanent"});
   }
+  if (selector.controlsAny !== undefined) {
+    if (selector.what !== "player" || !selector.controlsAny || typeof selector.controlsAny !== "object" || selector.controlsAny.controller !== undefined)
+      throw new Error("A selector's controlsAny is a player's: a selector of a permanent they control, with no controller of its own");
+    compileSelector({...selector.controlsAny, what: "permanent"});
+  }
+  if (selector.nonCounters !== undefined && (typeof selector.nonCounters !== "string" || ["any", "none"].includes(selector.nonCounters)))
+    throw new Error("A selector's nonCounters is a kind of counter it has none of: \"+1/+1\"");
   /* "Attacking you and/or planeswalkers you control" (Mangara, the Diplomat): `attacking` true, or "you". */
-  if (selector.attacking !== undefined && ![true, "you"].includes(selector.attacking)) throw new Error("A selector says attacking: true, or attacking: \"you\" -- attacking you or a planeswalker you control");
+  /* Or "you directly": "target creature attacking you" (Lulu, Stern Guardian; CR 506.3) -- you, not a planeswalker of yours. */
+  if (selector.attacking !== undefined && ![true, "you", "you directly"].includes(selector.attacking))
+    throw new Error("A selector says attacking: true, or attacking: \"you\" -- attacking you or a planeswalker you control -- or \"you directly\", you alone");
   const shared = selector.sharesCardTypeWith;
   if (shared !== undefined && shared !== "moved" && !(Array.isArray(shared) && shared.every((type) => CARD_TYPES.includes(type))))
     throw new Error("A selector's sharesCardTypeWith is \"moved\": a card type of what the effect before it moved, as it last existed");
@@ -341,6 +356,9 @@ export function compileSelector(selector) {
       if (selector.lifeAtMost !== undefined && !(player.life <= selector.lifeAtMost)) return false;
       /* "If an opponent lost 2 or more life this turn" (Bloodchief Ascension; CR 119.3): the life they lost this turn. */
       if (selector.lostThisTurnAtLeast !== undefined && !((player.lostThisTurn ?? 0) >= selector.lostThisTurnAtLeast)) return false;
+      /* "Opponents who control a creature with power 4 or greater" (Summon: Yojimbo): a permanent of theirs it describes, now. */
+      if (selector.controlsAny !== undefined && !state.zones.battlefield.some((pid) => controllerOf(state, pid) === id
+        && matchesSelector({...selector.controlsAny, what: "permanent"}, state, pid, {controller: chooser, source: context.source}))) return false;
       const who = selector.who ?? "any";
       if (who === "you") return id === chooser;
       if (who === "opponent") return id !== chooser;
@@ -503,6 +521,7 @@ export function compileSelector(selector) {
     if (selector.counters !== undefined && !(selector.counters === "any" ? Object.values(object.counters ?? {}).some((n) => n > 0)
       : selector.counters === "none" ? !Object.values(object.counters ?? {}).some((n) => n > 0)
       : (object.counters?.[selector.counters] ?? 0) > 0)) return false;
+    if (selector.nonCounters !== undefined && (object.counters?.[selector.nonCounters] ?? 0) > 0) return false;
     /* Modified (CR 700.15): a counter on it, equipped, or enchanted by an Aura its controller controls (rules/layers.mjs). */
     if (selector.modified !== undefined && isModified(state, id, object.counters, controllerOf(state, id)) !== selector.modified) return false;
     /* "Creatures that entered this turn" (Force of Despair): on the battlefield since this turn. */
@@ -561,6 +580,10 @@ export function compileSelector(selector) {
     /* "If two or more of those creatures are attacking you and/or planeswalkers you control" (Mangara, the Diplomat; CR 506.3,
        508.1b): `attacking: "you"`, declared as an attacker of this combat at this selector's controller, or at a planeswalker
        they control now -- one whose planeswalker has left the battlefield attacks nothing (CR 506.4c). */
+    /* "Target creature attacking you" (Lulu, Stern Guardian; `attacking: "you directly"`): declared as an attacker of this combat
+       at this selector's controller -- one attacking a planeswalker of theirs is not attacking them (CR 506.3). */
+    if (selector.attacking === "you directly" && !(state.combat?.attacks ?? []).some((attack) => attack.attacker === id
+      && attack.planeswalker === undefined && attack.defender === context.controller)) return false;
     if (selector.attacking === "you" && !(state.combat?.attacks ?? []).some((attack) => attack.attacker === id && (attack.planeswalker !== undefined
       ? state.objects[attack.planeswalker]?.zone === "battlefield" && controllerOf(state, attack.planeswalker) === context.controller
       : attack.defender === context.controller))) return false;
