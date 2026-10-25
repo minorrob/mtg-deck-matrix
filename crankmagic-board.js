@@ -1195,10 +1195,36 @@ globalThis.CrankBoard = Object.seal({
     const cast = d.kind === "priority" && ["cast","activate"].includes(o.act);
     return `<div class="cm-action-review">${selectionSummary(d)}<p>${cast ? "This submits the selected action. If the game asks for targets or payment next, you will review those choices here before submitting them. Casting does not guarantee resolution." : "Confirm submits this choice to the game. Review the card and selected option before continuing."}</p><div class="cm-actions">${b(d.kind === "priority" ? "Confirm action" : "Confirm choice", "board-confirm", {}, true, {disabled:sending || draftRevision !== view.revision})}${b("Clear selection", "board-reset", {}, false, {disabled:sending})}</div></div>`;
   }
+  /* THE SAME CARD, ONE STACK (Rob, 2026-10-25: "stack cards that are identical and have an x# on them to say how many. I can
+     then click that stack to select one. If I can select more than one, I should have a small numeric tick up/down value to
+     choose how many in that stack I'm selecting (doesn't apply to no-stack cards)."). In a question that asks for one or many,
+     options that say the same and stand for the same card are one button, ×N: the same words, and a card the board shows
+     in the same state -- everything the room tells of it but its object number, so a tapped Goblin and an untapped one,
+     or one with a counter, stay two. A card the board does not show (one in a library being searched) is its name. Which
+     of identical cards is taken changes nothing, so a stack gives the first it has not given yet. */
+  const sameKey = (o) => {
+    const {index, cardId, ...words} = o;
+    let seen = null;
+    if (cardId !== undefined) {const c = findCard(cardId); seen = c ? Object.fromEntries(Object.entries(c).filter(([k]) => k !== "cardId")) : "unseen";}
+    return JSON.stringify([words, seen]);
+  };
+  function sameStacks(d) {
+    const stacks = new Map();
+    for (const o of d.options) {const k = sameKey(o); if (stacks.has(k)) stacks.get(k).push(o); else stacks.set(k, [o]);}
+    return [...stacks.values()];
+  }
   function decision() {
     const d = view.decision;
     if (!d || view.status === "finished" || d.kind === "draw") return "";
     const opt = (o, extra = "") => `<button type="button" class="v-button compact${picked.includes(o.index) ? " is-picked" : ""}" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}${extra}>${e(o.label)}</button>`;
+    /* One option as ever; a stack as one button, ×N, and -- where the question takes more than one -- how many of it. */
+    const stackOpt = (s) => {
+      if (s.length === 1) return opt(s[0], ` aria-pressed="${picked.includes(s[0].index)}"`);
+      const ids = s.map((o) => o.index), k = ids.filter((i) => picked.includes(i)).length;
+      const many = d.mode === "many" && d.max > 1, room = Math.min(s.length, d.max - (picked.length - k));
+      return `<span class="cm-board-same"><button type="button" class="v-button compact${k ? " is-picked" : ""}" data-action="board-option-same" data-same="${ids.join(",")}" aria-pressed="${k > 0}"${sending ? " disabled" : ""}>${e(s[0].label)} <span class="cm-board-same-n">×${s.length}</span></button>${many
+        ? `<input type="number" class="cm-board-same-count" min="0" max="${room}" step="1" value="${k}" data-board-same="${ids.join(",")}" aria-label="How many ${e(s[0].label)}"${sending ? " disabled" : ""}>` : ""}</span>`;
+    };
     let body = "", foot = "";
     if (d.kind === "priority") {
       /* Pass is the strip's; this is what else you can do, one button per kind of thing, the same land four
@@ -1219,7 +1245,7 @@ globalThis.CrankBoard = Object.seal({
         : `<button type="button" class="v-button compact" data-action="board-option" data-index="${o.index}" aria-pressed="${picked.includes(o.index)}"${sending ? " disabled" : ""}>${sayHtml(o)}${n > 1 ? ` <span class="cm-muted">×${n}</span>` : ""}</button>`).join("");
       return `<section class="cm-board-decision is-also" id="cm-board-decision" aria-label="What you can do"><h3>${actionCard === null ? "Choose an action" : e(findCard(actionCard)?.name || "Choose an action")}</h3>${actionCard === null ? "" : b("All actions", "board-action-all", {}, false, {cls:"compact"})}<div class="cm-board-options">${body}</div>${commitReview(d)}</section>`;
     }
-    if (["one", "boolean", "index"].includes(d.mode)) {body = d.options.map((o) => opt(o, ` aria-pressed="${picked.includes(o.index)}"`)).join(""); foot = commitReview(d);}
+    if (["one", "boolean", "index"].includes(d.mode)) {body = (d.mode === "one" ? sameStacks(d) : d.options.map((o) => [o])).map(stackOpt).join(""); foot = commitReview(d);}
     else if (blocking()) {
       body = blockDraft();
       foot = `${b("No blocks", "board-block-none", {}, false, {disabled:sending})}${b(picked.length ? "Confirm blocks" : "Confirm no blocks", "board-confirm", {}, true, {disabled:!blockValid() || sending})}`;
@@ -1241,7 +1267,7 @@ globalThis.CrankBoard = Object.seal({
       const allAt = atPlayers.length ? `<div class="cm-board-attack-all" role="group" aria-label="Attack with every creature that can">${atPlayers.map((id) =>
         b(`All at ${players().find((p) => p.playerId === id)?.name ?? `Seat ${id + 1}`}`, "board-attack-all", {defender: String(id)}, false, {cls: "compact", disabled: sending})).join("")}${picked.length
         ? b("None", "board-attack-none", {}, false, {cls: "compact", disabled: sending}) : ""}</div>` : "";
-      body = allAt + d.options.map((o) => opt(o, ` aria-pressed="${picked.includes(o.index)}"`)).join("");
+      body = allAt + sameStacks(d).map(stackOpt).join("");
       const ok = picked.length >= d.min && picked.length <= d.max;
       foot = `<span class="cm-muted">${picked.length} chosen · ${d.min === d.max ? d.min : `${d.min} to ${d.max}`}</span>${b("Confirm", "board-confirm", {}, true, {disabled: !ok || sending})}`;
     } else if (d.mode === "order") {
@@ -1930,13 +1956,33 @@ globalThis.CrankBoard = Object.seal({
     if (!layer || !host) return;
     layer.style.removeProperty("--plays-left");
     const mat = host.querySelector(".cm-board-stage .cm-board-mat"), pop = layer.querySelector(".cm-play-pop");
-    if (phone() || !mat || !pop) return;
-    const edge = mat.getBoundingClientRect().left, width = pop.getBoundingClientRect().width;
-    const leftPanes = [...host.querySelectorAll(".cm-board-pane, .cm-stage-rail.is-open")];
-    const start = Math.max(host.getBoundingClientRect().left, ...leftPanes.map(pane => pane.getBoundingClientRect().right));
-    const gap = edge - start;
-    const left = gap >= width ? start + (gap - width) / 2 : edge - width - 12;
-    layer.style.setProperty("--plays-left", `${Math.max(8, Math.round(left))}px`);
+    if (!pop) return;
+    if (!phone() && mat) {
+      const edge = mat.getBoundingClientRect().left, width = pop.getBoundingClientRect().width;
+      const leftPanes = [...host.querySelectorAll(".cm-board-pane, .cm-stage-rail.is-open")];
+      const start = Math.max(host.getBoundingClientRect().left, ...leftPanes.map(pane => pane.getBoundingClientRect().right));
+      const gap = edge - start;
+      const left = gap >= width ? start + (gap - width) / 2 : edge - width - 12;
+      layer.style.setProperty("--plays-left", `${Math.max(8, Math.round(left))}px`);
+    }
+    clearQuestion(layer);
+  }
+  /* NEVER OVER THE QUESTION (Rob, 2026-10-25, his option A): a card held up over a control of what the table is asking you --
+     an option, a blocker's tile, Confirm, the pass -- covered it until its ten seconds were up, and the pointer on it held
+     it there. The cards move just past the question, onto the table's edge; one that would still cover a control there (a
+     window too narrow for both) is put away at once, as one over the keyboard's focus is. What was played is in the History. */
+  const QUESTION = "#cm-board-decision :is(button, input, select, textarea), .cm-stage-actions :is(button, [data-action])";
+  function clearQuestion(layer) {
+    const controls = [...document.querySelectorAll(QUESTION)].filter((el) => !el.disabled).map((el) => el.getBoundingClientRect()).filter((r) => r.width && r.height);
+    const over = (pop) => {const p = pop.getBoundingClientRect(); return controls.some((r) => p.left < r.right && p.right > r.left && p.top < r.bottom && p.bottom > r.top);};
+    const pops = [...layer.querySelectorAll(".cm-play-pop")];
+    if (!pops.some(over)) return;
+    const ask = document.getElementById("cm-board-decision"), width = pops[0].getBoundingClientRect().width;
+    if (ask) {
+      const left = Math.round(ask.getBoundingClientRect().right + 14);
+      if (left + width <= innerWidth - 8) layer.style.setProperty("--plays-left", `${left}px`);
+    }
+    for (const pop of pops) if (over(pop)) pop.remove();
   }
   /* For the eye and the pointer: the keyboard's way round the table is the board's own, and what was played is in the History.
      So the pop-ups take no focus and are not read out (as the callouts are not), and one over whatever the keyboard brings
@@ -2469,6 +2515,34 @@ globalThis.CrankBoard = Object.seal({
     draw();
   }
   actions["board-option"] = (el) => option(Number(el.dataset.index));
+  /* A stack's click takes one, or puts back what was taken from it; its number sets how many. Each is picked as a single
+     option is: one question's one, and in many, the room's exclusive options and its most. */
+  function setSame(ids, want) {
+    const d = view && view.decision;
+    if (!d || sending || d.mode !== "many" || !ids.every((i) => d.options.some((o) => o.index === i))) return;
+    draftRevision = view.revision;
+    actionsShut = false; openModuleDrawer("actions"); alsoOpen = false;
+    want = Math.max(0, Math.min(Math.floor(want) || 0, ids.length));
+    let have = ids.filter((i) => picked.includes(i));
+    while (have.length > want) {const i = have.pop(); picked = picked.filter((x) => x !== i);}
+    for (const i of ids) {
+      if (have.length >= want) break;
+      if (picked.includes(i)) continue;
+      const key = d.exclusiveBy && d.options[i][d.exclusiveBy];
+      if (key !== undefined && key !== null) picked = picked.filter((x) => d.options[x][d.exclusiveBy] !== key);
+      if (d.max === 1) picked = [];
+      if (picked.length >= d.max) break;
+      picked.push(i);
+      have = ids.filter((x) => picked.includes(x));
+    }
+    draw();
+  }
+  actions["board-option-same"] = (el) => {
+    const d = view && view.decision, ids = String(el.dataset.same).split(",").map(Number);
+    if (!d) return;
+    if (d.mode !== "many") return option(ids[0]);
+    setSame(ids, ids.some((i) => picked.includes(i)) ? 0 : 1);
+  };
   actions["board-combat-inspect"] = el => {
     const c = combatCard(Number(el.dataset.card));
     if (!c) return;
@@ -3090,6 +3164,11 @@ globalThis.CrankBoard = Object.seal({
     const rows = event.target.parentElement.querySelectorAll(".cm-history-list li");
     const all = lines();
     rows.forEach((row, i) => {if (all[i]) row.hidden = !matches(all[i]);});
+  });
+  document.addEventListener("input", (event) => {
+    const same = event.target && event.target.dataset && event.target.dataset.boardSame;
+    if (same === undefined || !view || !view.decision) return;
+    setSame(String(same).split(",").map(Number), Number(event.target.value));
   });
   document.addEventListener("input", (event) => {
     const i = event.target && event.target.dataset && event.target.dataset.boardAmount;

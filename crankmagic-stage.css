@@ -453,6 +453,12 @@
 #matrix-v2 .cm-stage-module h3,#matrix-v2 .cm-stage-rail .cm-board-pane h3,#matrix-v2 #cm-card-inspector h3{font-family:CrankOxanium,Satoshi,sans-serif;font-size:14px;font-weight:600;text-transform:none;color:inherit}
 .cm-stage-module[data-module="actions"] .cm-board-options{display:flex;flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:8px;min-height:0;max-height:none;overflow:auto;padding:3px;margin:-3px;scrollbar-width:thin}
 .cm-stage-module[data-module="actions"] .cm-board-options>*{flex:none}
+/* A stack of the same card (crankmagic-board.js, sameStacks): one button, ×N, and how many of it beside it where the
+   question takes more than one (Rob, 2026-10-25). */
+.cm-board-same{display:flex;align-items:stretch;gap:6px;min-width:0}
+#matrix-v2 .cm-board-same>.v-button{flex:1 1 auto;min-width:0}
+.cm-board-same-n{margin-left:6px;font-weight:800;color:var(--v-accent)}
+#matrix-v2 .cm-board-same-count{flex:none;width:60px;padding:0 6px;border:1px solid var(--v-line-strong);border-radius:var(--v-radius);background:var(--v-raised);color:var(--v-ink);font:inherit;font-weight:700;text-align:center}
 .cm-stage-rail .cm-block-tiles{flex-wrap:wrap;overflow:visible}
 #matrix-v2 .cm-stage-module[data-module="actions"] .v-button{white-space:normal;text-align:left;line-height:1.4;min-height:40px;overflow-wrap:anywhere}
 .cm-stage-module[data-module="actions"] .cm-board-decision-foot{position:sticky;bottom:0;background:#101c1e;padding:10px 0;display:flex;flex-wrap:wrap;gap:8px}
