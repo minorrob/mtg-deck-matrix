@@ -10,7 +10,7 @@ five lane files, one per deck.
 
 - **Done:** five lanes, one per deck, wrote the 150 (A Angels #869, B Engineering #866, C Dragons #870, D Dinosaurs #867,
   E Zombies #868, each into this branch), none stopped: **6,255 definitions became 6,405**, and all six decks seat whole.
-  Built: lieutenant-era block tax, Duplicant, reselecting a defender, dethrone, pack tactics, behold, read ahead, red mana
+  Built: a block tax (Archangel of Tithes), Duplicant, reselecting a defender, dethrone, pack tactics, behold, read ahead, red mana
   kept, divided damage, paired fights, Kalitas's replacement, and more (the README's result).
 - **Ignores, named:** Kalitas beside another exile replacement (order not asked, CR 616.1) and two state-based deaths
   without a Zombie; Emeria Shepherd's Plains read on resolution; Serra Avenger in games saved before this load; Leyline
