@@ -1,0 +1,76 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Soulless One",
+    "oracleId": "27d98b94-a8a1-442b-8940-4ffab51b5164",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Zombie",
+      "Avatar"
+    ],
+    "manaCost": "{3}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Soulless One's power and toughness are each equal to the number of Zombies on the battlefield plus the number of Zombie cards in all graveyards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Soulless One's power and toughness are each equal to the number of Zombies on the battlefield plus the number of Zombie cards in all graveyards.",
+      "layer": 7,
+      "sublayer": "a",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "setPower": {
+          "count": {
+            "anyOf": [
+              {
+                "what": "permanent",
+                "subtypes": [
+                  "Zombie"
+                ]
+              },
+              {
+                "what": "card",
+                "zone": "graveyard",
+                "subtypes": [
+                  "Zombie"
+                ]
+              }
+            ]
+          }
+        },
+        "setToughness": {
+          "count": {
+            "anyOf": [
+              {
+                "what": "permanent",
+                "subtypes": [
+                  "Zombie"
+                ]
+              },
+              {
+                "what": "card",
+                "zone": "graveyard",
+                "subtypes": [
+                  "Zombie"
+                ]
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

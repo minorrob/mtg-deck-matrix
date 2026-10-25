@@ -1822,8 +1822,12 @@ export function compileScript(script) {
            the target it is divided among, announced as it is cast (rules/actions.mjs, dividedOf). */
         ...(ability.divided ? {divided: structuredClone(ability.divided)} : {}),
         /* "If this spell was kicked, exile target nonland permanent instead" (Tear Asunder): its targets and effects then. */
-        ...(ability.kicked ? {kicked: {targets: ability.kicked.targets ?? [], effects: ability.kicked.effects ?? []}} : {})};
+        ...(ability.kicked ? {kicked: {targets: ability.kicked.targets ?? [], effects: ability.kicked.effects ?? []}} : {}),
+        /* "If the gift was promised, return target creature card from your graveyard to your hand" (Consumed by Greed): its targets
+           and effects when the gift is promised -- a target only that needs is chosen only then (CR 601.2c, 702.174a). */
+        ...(ability.promised ? {promised: {targets: ability.promised.targets ?? [], effects: ability.promised.effects ?? []}} : {})};
       if (ability.kicked && (modal || !(ability.kicked.effects ?? []).length)) problems.push("a kicked spell's script says its effects, on a spell that is not modal");
+      if (ability.promised && (modal || !(ability.promised.effects ?? []).length)) problems.push("a promised spell's script says its effects, on a spell that is not modal");
       return;
     }
     /* PARTNER WITH [NAME] (CR 702.124j; Pir, Imaginative Rascal): two abilities. A deck rule -- two legendary cards may be one's
@@ -2187,6 +2191,7 @@ export function compileScript(script) {
   /* Kicker's, the same way. */
   if (kicker !== null) spell = {...(spell ?? {id: "kicker", text: "Kicker", targets: [], effects: []}), additionalCost: [...(spell?.additionalCost ?? []), {atom: "kicker", cost: kicker}]};
   if (spell?.kicked && kicker === null) problems.push("a kicked spell's script is a card with kicker's");
+  if (spell?.promised && gift === null) problems.push("a promised spell's script is a card with gift's");
   /* Offspring's additional cost, on the spell -- a creature's, whose spell does nothing else (CR 608.3) -- and its trigger as
      the permanent enters, its "if" an intervening one (CR 603.4; script/condition.mjs, `offspringPaid`): a token copy of it,
      its copiable values with a base power and toughness of 1/1 (CR 707.9b), and of it as it last existed should it be gone
@@ -2207,7 +2212,9 @@ export function compileScript(script) {
     const fleeting = types.some((t) => t === "Instant" || t === "Sorcery");
     const given = gift.effects.map((effect) => ({...effect, condition: {giftPromised: true}}));
     if (fleeting && (!spell || spell.modal)) problems.push(`${gift.text}: a gift on an instant or sorcery is given by its spell ability, one without modes chosen as it is cast`);
-    else if (fleeting) spell = {...spell, additionalCost: [...(spell.additionalCost ?? []), {atom: "gift"}], effects: [...given, ...(spell.effects ?? [])]};
+    else if (fleeting) spell = {...spell, additionalCost: [...(spell.additionalCost ?? []), {atom: "gift"}], effects: [...given, ...(spell.effects ?? [])],
+      /* And first in what it does promised (Consumed by Greed). */
+      ...(spell.promised ? {promised: {...spell.promised, effects: [...given, ...spell.promised.effects]}} : {})};
     else {
       spell = {...(spell ?? {id: "gift", text: gift.text, targets: [], effects: []}), additionalCost: [...(spell?.additionalCost ?? []), {atom: "gift"}]};
       abilities.push({id: gift.id, kind: "triggered", text: gift.text, trigger: TRIGGERS.enters({who: "self"}), condition: {giftPromised: true}, effects: gift.effects});

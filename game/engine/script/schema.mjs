@@ -755,11 +755,13 @@ function checkAbility(ability, path, errors, {permanent = false, manaX = false} 
       errors.push({path: `${path}.watches`, message: "A replacement effect says which event it is watching for (CR 614)"});
     if (!ability.change && ability.prevent === undefined)
       errors.push({path: `${path}`, message: "A replacement effect either changes the event or prevents it"});
-    /* What follows a prevention (CR 615.5, rules/replacement.mjs): effects held to the effect grammar, after a prevention
-       only. A redirection (CR 614.9) goes to what its holder enchants. */
+    /* What follows a prevention (CR 615.5, rules/replacement.mjs): effects held to the effect grammar, after a prevention --
+       or beside a zone change's new destination ("instead exile that card and create a 2/2 black Zombie creature token",
+       Kalitas, Traitor of Ghet; CR 614.1a). A redirection (CR 614.9) goes to what its holder enchants. */
     const then = ability.change?.then;
-    if (then !== undefined && (ability.change.prevent !== true || !Array.isArray(then) || then.length === 0))
-      errors.push({path: `${path}.change.then`, message: "What follows a prevention is a list of effects, beside prevent: true"});
+    const besideMove = ability.watches?.event === "zone-change" && typeof ability.change?.to === "string";
+    if (then !== undefined && ((ability.change.prevent !== true && !besideMove) || !Array.isArray(then) || then.length === 0))
+      errors.push({path: `${path}.change.then`, message: "What follows a prevention, or a zone change's new destination, is a list of effects, beside prevent: true or to"});
     if (Array.isArray(then)) then.forEach((effect, index) => checkEffect(effect, `${path}.change.then[${index}]`, errors));
     if (ability.change?.redirect !== undefined && ability.change.redirect !== "enchanted")
       errors.push({path: `${path}.change.redirect`, message: "Damage is redirected to \"enchanted\": what the holder enchants"});

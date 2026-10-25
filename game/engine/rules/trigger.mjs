@@ -835,6 +835,9 @@ export function collectTriggers(state, events) {
                paid" is asked again as it resolves (CR 603.4), its creature perhaps gone -- a token copy is made all the same
                (Coruscation Mage's ruling). */
             ...(object.offspring === true ? {offspring: true} : {}),
+            /* And how many times it was kicked (CR 702.33d; rules/stack.mjs), as it triggers: "if he was kicked" (Josu Vess, Lich
+               Knight) is asked again as it resolves (CR 603.4), its creature perhaps gone. */
+            ...(Number.isInteger(object.kicked) && object.kicked > 0 ? {kicked: object.kicked} : {}),
             /* "Choose one that hasn't been chosen" (Gollum, Riddle Master): the modes its permanent had chosen as it triggered,
                for its modes to be chosen by should the permanent be gone by then (CR 113.7a; modesTaken). */
             ...(ability.modal?.unchosen ? {modesChosen: [...(object.modesChosen?.[ability.id] ?? [])]} : {}),
@@ -1281,6 +1284,7 @@ function putOnStack(state, triggers) {
       spent: trigger.spent ?? null,
       paidFor: trigger.paidFor ?? null,
       offspring: trigger.offspring === true,
+      kicked: trigger.kicked ?? 0,
       x: trigger.x ?? null,
       /* A delayed trigger's source, as it was when the trigger was made (CR 701.27f). */
       sourceTransforms: trigger.sourceTransforms,

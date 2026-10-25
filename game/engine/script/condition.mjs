@@ -91,6 +91,9 @@
  *                                      permanent the spell became (rules/stack.mjs)
  *   {counterPutThisTurn: true|false}   a counter of any kind was put on its own permanent this turn, as it entered too (CR
  *                                      122.6; Wakka, Devoted Guardian), or none was
+ *   {kicked: true|false}               its own permanent was kicked as it was cast, or was not (CR 702.33d; Josu Vess, Lich
+ *                                      Knight: "when Josu Vess enters, if he was kicked") -- asked again as its trigger resolves,
+ *                                      as it triggered (rules/trigger.mjs keeps it)
  *   {offspringPaid: true|false}        its own permanent was cast with its offspring cost paid, or was not (CR 702.175a;
  *                                      Coruscation Mage) -- asked again as the trigger resolves, as it triggered
  *   {ringBearer: true}                 its own permanent is its controller's Ring-bearer (CR 701.54; Frodo, Adventurous Hobbit)
@@ -160,6 +163,8 @@ const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTu
   "giftPromised",
   /* Offspring's "if its offspring cost was paid" (CR 702.175a; wave 4c). */
   "offspringPaid",
+  /* Kicker's "if it was kicked", of a permanent (CR 702.33d; Josu Vess, Lich Knight, the precon load E). */
+  "kicked",
   /* The Ring (CR 701.54): "if Frodo is your Ring-bearer and the Ring has tempted you two or more times this game" (Frodo,
      Adventurous Hobbit; Rob's lists P2). */
   "ringBearer", "ringTemptedAtLeast",
@@ -259,13 +264,17 @@ function castHolds(rule, cast) {
 
 /** Whether a condition holds now, for an ability controlled by `controller` on object `source`. No condition holds. */
 export function conditionHolds(state, condition, {controller, source = null, about = undefined, remembered = undefined, targets = undefined, cast = undefined, x = undefined, spent = undefined, excessDamage = undefined, rememberedControllers = undefined,
-  movedWas = undefined, searched = undefined, lastKnown = undefined, paidFor = undefined, resolvedBefore = undefined, gift = undefined, offspring = undefined, rolled = undefined} = {}) {
+  movedWas = undefined, searched = undefined, lastKnown = undefined, paidFor = undefined, resolvedBefore = undefined, gift = undefined, offspring = undefined, kicked = undefined, rolled = undefined} = {}) {
   if (!condition) return true;
   /* "IF there are five colors among permanents you control, there are six or more card types among ..., AND your life total is
      greater than or equal to your starting life total" (Happily Ever After): every one of them, each a condition of its own --
      two counted comparisons cannot share one `compare`. Asked with what this one is asked with. */
   if (Array.isArray(condition.allOf) && !condition.allOf.every((one) => conditionHolds(state, one, {controller, source, about, remembered, targets, cast, x, spent,
-    excessDamage, rememberedControllers, movedWas, searched, lastKnown, paidFor, resolvedBefore, gift, offspring, rolled}))) return false;
+    excessDamage, rememberedControllers, movedWas, searched, lastKnown, paidFor, resolvedBefore, gift, offspring, kicked, rolled}))) return false;
+  /* "WHEN JOSU VESS ENTERS, IF HE WAS KICKED" (CR 702.33d, 603.4): its own permanent was cast kicked -- or, asked again as its
+     trigger resolves, its source as it triggered, which may be gone (rules/trigger.mjs keeps it, `kicked`). */
+  if (condition.kicked !== undefined
+    && ((kicked ?? (source !== null && source !== undefined ? state.objects[source]?.kicked : undefined) ?? 0) > 0) !== condition.kicked) return false;
   /* "IF ITS OFFSPRING COST WAS PAID" (CR 702.175a; Coruscation Mage, wave 4c): its own permanent was cast with it paid -- or,
      asked again as its trigger resolves (CR 603.4), its source as it triggered, which may be gone: the token is made all the
      same (the card's ruling; rules/trigger.mjs keeps it, `offspring`). */
@@ -625,6 +634,7 @@ export function conditionProblems(condition) {
   if ("counterPutThisTurn" in condition && typeof condition.counterPutThisTurn !== "boolean") problems.push("counterPutThisTurn is true or false");
   if ("giftPromised" in condition && typeof condition.giftPromised !== "boolean") problems.push("giftPromised is true or false: whether the gift was promised");
   if ("offspringPaid" in condition && typeof condition.offspringPaid !== "boolean") problems.push("offspringPaid is true or false: whether its offspring cost was paid");
+  if ("kicked" in condition && typeof condition.kicked !== "boolean") problems.push("kicked is true or false: whether its permanent was kicked");
   if ("sacrificedNontokenThisTurn" in condition && condition.sacrificedNontokenThisTurn !== true) problems.push("sacrificedNontokenThisTurn is true");
   if ("uniqueCreatureName" in condition && condition.uniqueCreatureName !== true) problems.push("uniqueCreatureName is true");
   if ("searched" in condition && condition.searched !== true) problems.push("searched is true: a library was searched earlier in this resolution");

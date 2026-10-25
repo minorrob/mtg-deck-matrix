@@ -1,0 +1,58 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Undead Warchief",
+    "oracleId": "e6af56bf-bd78-4801-8f6e-033cdd68de3d",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Zombie"
+    ],
+    "manaCost": "{2}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Zombie spells you cast cost {1} less to cast.\nZombie creatures you control get +2/+1.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Zombie spells you cast cost {1} less to cast.",
+      "rule": "spells-cost-less",
+      "affects": {
+        "what": "spell",
+        "subtypes": [
+          "Zombie"
+        ]
+      },
+      "amount": 1
+    },
+    {
+      "kind": "static",
+      "text": "Zombie creatures you control get +2/+1.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Zombie"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "power": 2,
+        "toughness": 1
+      }
+    }
+  ]
+}
