@@ -64,6 +64,15 @@
 .cm-stage-region .cm-mat{cursor:move}
 .cm-stage-region .cm-mat :where(.cm-bcard,button){cursor:pointer}
 .cm-stage-region.is-panning,.cm-stage-region.is-panning *{cursor:grabbing!important;user-select:none}
+/* Ctrl/⌘ held over the table: dragging it lengthens or shortens your side, so the pointer says ↕ -- everywhere on the
+   table but the overlays, which keep theirs. */
+.cm-board[data-stretch] .cm-stage-region,.cm-board[data-stretch] .cm-stage-region *:not(:is(.cm-stage-camera,.cm-board-ask,.cm-stage-actions,#cm-card-menu),:is(.cm-stage-camera,.cm-board-ask,.cm-stage-actions,#cm-card-menu) *){cursor:ns-resize!important}
+.cm-board[data-stretch="on"] .cm-stage-region *{user-select:none}
+/* the phone's hand is Hand cards, as the tray is in the other views (the wheel over it, Camera's slider) */
+.cm-board[data-phone] .cm-hand-slot .cm-bcard{--bc:calc(110px * var(--hand-scale,var(--card-scale,1)))}
+/* and however small the hand is made, the words on its cards stay 10px or more (AGENTS.md: sizes are sliders) */
+:is(.cm-board-hand,.cm-board[data-phone] .cm-hand-slot) .cm-bcard-name{font-size:max(10px,calc(var(--bc) * .12))}
+:is(.cm-board-hand,.cm-board[data-phone] .cm-hand-slot) .cm-bcard-pt{font-size:max(10px,calc(var(--bc) * .13))}
 /* A card's menu (right click): the card to read, then each offer as a glyph and the fewest words. */
 .cm-card-menu{position:fixed;z-index:60;display:flex;flex-direction:column;gap:2px;min-width:150px;max-width:min(320px,calc(100vw - 16px));max-height:calc(100dvh - 16px);overflow:auto;padding:4px;background:#0b2023f5;color:#edf6ef;border:1px solid #6f9c88;border-radius:8px;box-shadow:0 10px 28px #0008;font-size:13px}
 .cm-card-menu>button,.cm-card-menu>span,.cm-card-menu>p{display:flex;align-items:center;gap:8px;min-height:32px;margin:0;padding:4px 10px 4px 6px;border:0;border-radius:5px;background:none;color:inherit;font:inherit;text-align:left}
@@ -151,8 +160,8 @@
 .cm-stage-fan-slot .cm-bcard.is-dim{filter:brightness(.85) saturate(.85)}
 .cm-stage-hand-label{position:absolute;top:0;left:50%;transform:translateX(-50%);color:#fff2d2;background:#181714cc;clip-path:polygon(8% 0,92% 0,100% 100%,0 100%);padding:5px 23px;font-size:11px;white-space:nowrap}
 .cm-stage-hand-empty{display:block;text-align:center;padding-top:50px;color:#e3d8c7;font-size:13px}
-#matrix-v2 .cm-stage-hand-arrow{position:absolute;top:85px;left:calc(50% - var(--hc,140px)*3.05 - 45px);height:48px;width:36px;min-width:0;padding:0;border-radius:50%;border:1px solid #cbb78a88;color:#fff2ce;background:#161716bb;font-size:32px;pointer-events:auto;z-index:25}
-#matrix-v2 .cm-stage-hand-arrow[data-by="1"]{left:auto;right:calc(50% - var(--hc,140px)*3.05 - 45px)}
+#matrix-v2 .cm-stage-hand-arrow{position:absolute;top:85px;left:calc(50% - var(--fan-half,calc(var(--hc,140px)*3.05)) - 45px);height:48px;width:36px;min-width:0;padding:0;border-radius:50%;border:1px solid #cbb78a88;color:#fff2ce;background:#161716bb;font-size:32px;pointer-events:auto;z-index:25}
+#matrix-v2 .cm-stage-hand-arrow[data-by="1"]{left:auto;right:calc(50% - var(--fan-half,calc(var(--hc,140px)*3.05)) - 45px)}
 .cm-stage-camera .cm-stage-style{grid-template-columns:82px 1fr;font-size:11px}.cm-stage-style select{min-width:0;width:100%;color:#f4ebdb;background:#1c302e;border:1px solid #698477;border-radius:4px;padding:4px}
 .cm-stage-style-note{margin:5px 0 1px;font-size:10px;color:#b1c6bb}
 @media(prefers-reduced-motion:reduce){.cm-stage-fan-slot .cm-bcard{transition:none}}
@@ -432,7 +441,8 @@
 .cm-table-deck-about{font-size:12px;line-height:1.35;color:var(--v-muted)}
 .cm-table-deck-only{margin:0 0 10px}
 .cm-table-deck-choose.is-playable-only li:has(>.cm-table-deck.is-unknown),
-.cm-table-deck-choose.is-playable-only li:has(>.cm-table-deck[data-shared-deck]:disabled){display:none}
+.cm-table-deck-choose.is-playable-only li:has(>.cm-table-deck[data-shared-deck]:disabled),
+.cm-table-deck-choose.is-playable-only li:has(>.cm-table-deck[data-precon]:disabled){display:none}
 .cm-play-home{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(280px,1fr);gap:18px;max-width:1400px;margin:auto}
 .cm-play-home .v-panel{margin:0;padding:clamp(20px,3vw,38px)}
 .cm-play-home h2{font-family:CrankOxanium,Satoshi,sans-serif;line-height:1.2}
@@ -468,6 +478,12 @@
 #matrix-v2 .cm-stage-module h3,#matrix-v2 .cm-stage-rail .cm-board-pane h3,#matrix-v2 #cm-card-inspector h3{font-family:CrankOxanium,Satoshi,sans-serif;font-size:14px;font-weight:600;text-transform:none;color:inherit}
 .cm-stage-module[data-module="actions"] .cm-board-options{display:flex;flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:8px;min-height:0;max-height:none;overflow:auto;padding:3px;margin:-3px;scrollbar-width:thin}
 .cm-stage-module[data-module="actions"] .cm-board-options>*{flex:none}
+/* A stack of the same card (crankmagic-board.js, sameStacks): one button, ×N, and how many of it beside it where the
+   question takes more than one (Rob, 2026-10-25). */
+.cm-board-same{display:flex;align-items:stretch;gap:6px;min-width:0}
+#matrix-v2 .cm-board-same>.v-button{flex:1 1 auto;min-width:0}
+.cm-board-same-n{margin-left:6px;font-weight:800;color:var(--v-accent)}
+#matrix-v2 .cm-board-same-count{flex:none;width:60px;padding:0 6px;border:1px solid var(--v-line-strong);border-radius:var(--v-radius);background:var(--v-raised);color:var(--v-ink);font:inherit;font-weight:700;text-align:center}
 .cm-stage-rail .cm-block-tiles{flex-wrap:wrap;overflow:visible}
 #matrix-v2 .cm-stage-module[data-module="actions"] .v-button{white-space:normal;text-align:left;line-height:1.4;min-height:40px;overflow-wrap:anywhere}
 .cm-stage-module[data-module="actions"] .cm-board-decision-foot{position:sticky;bottom:0;background:#101c1e;padding:10px 0;display:flex;flex-wrap:wrap;gap:8px}
