@@ -65,9 +65,12 @@ const byName = new Map(oracle.cards.map((c) => [c.name, c]));
   eq(sample.filter((c) => JSON.stringify(candidateDefinition(c.name)) !== JSON.stringify(compileScript(scriptOf(c, byName.get(c.name))).definition)).map((c) => c.name), [],
     `${sample.length} of them, one in 50: the definition its abilities and oracle record compile to`);
   eq(file.cards.filter((c) => tableDefinition(c.name)).map((c) => c.name), [], "none a card the directory defines");
-  const one = candidateDefinition(file.cards[0].name);
+  /* A candidate with abilities of its own to empty: an instant's are its `spell`, so the first candidate by name (Annul, once
+     the precon load of 2026-10-25 made it one) would leave nothing to show. */
+  const held = file.cards.find((c) => candidateDefinition(c.name).abilities.length > 0).name;
+  const one = candidateDefinition(held);
   one.abilities.length = 0;
-  ok(candidateDefinition(file.cards[0].name).abilities.length > 0, "fresh each call: one table's object is not another's");
+  ok(candidateDefinition(held).abilities.length > 0, `fresh each call: one table's object is not another's (${held})`);
   eq(["Forest", "Llanowar Elves", "No Such Card"].map(candidateDefinition), [null, null, null], "a basic land, a directory card and no card at all: none");
   eq(candidateDefinition(file.cards[0].name.toUpperCase()), candidateDefinition(file.cards[0].name), "found however the name is spelled");
   eq(tableCandidates(file.cards[0].name), candidateDefinition(file.cards[0].name), "the Worker's table plays them from this module");

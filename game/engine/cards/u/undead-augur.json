@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Undead Augur",
+    "oracleId": "c26887e1-27f4-4550-921b-53460e43c079",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Zombie",
+      "Wizard"
+    ],
+    "manaCost": "{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Whenever this creature or another Zombie you control dies, you draw a card and lose 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature or another Zombie you control dies, you draw a card and lose 1 life.",
+      "trigger": {
+        "on": "dies",
+        "who": "any",
+        "filter": {
+          "anyOf": [
+            {
+              "self": true
+            },
+            {
+              "types": [
+                "Creature"
+              ],
+              "subtypes": [
+                "Zombie"
+              ],
+              "controller": "you"
+            }
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        },
+        {
+          "effect": "loseLife",
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

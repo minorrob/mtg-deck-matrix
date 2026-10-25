@@ -1,0 +1,185 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Lord of the Accursed",
+  "fixtures": {
+    "Grave Zombie": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Zombie"
+      ],
+      "manaCost": "{1}{B}",
+      "colors": [
+        "B"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Moss Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Other Zombies of Rob's +1/+1; then every Zombie, Maya's too, gains menace, the Bear not",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Lord of the Accursed",
+            "Grave Zombie",
+            "Moss Bear",
+            "Swamp",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Grave Zombie"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Grave Zombie",
+                "power": 3,
+                "toughness": 3
+              }
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Lord of the Accursed",
+                "power": 2,
+                "toughness": 3
+              }
+            },
+            {
+              "seat": 1,
+              "stats": {
+                "card": "Grave Zombie",
+                "power": 2,
+                "toughness": 2
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Lord of the Accursed"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Grave Zombie",
+            "has": [
+              "Menace"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Lord of the Accursed",
+            "has": [
+              "Menace"
+            ]
+          }
+        },
+        {
+          "seat": 1,
+          "keywords": {
+            "card": "Grave Zombie",
+            "has": [
+              "Menace"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Moss Bear",
+            "lacks": [
+              "Menace"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Until end of turn: gone on the next turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Lord of the Accursed",
+            "Grave Zombie",
+            "Swamp",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Lord of the Accursed"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Grave Zombie",
+            "lacks": [
+              "Menace"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

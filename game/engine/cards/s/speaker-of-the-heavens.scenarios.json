@@ -1,0 +1,225 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Speaker of the Heavens",
+  "fixtures": {
+    "Big Salve": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{0}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "You gain 7 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 7
+          }
+        ]
+      }
+    },
+    "Small Salve": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{0}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "You gain 6 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 6
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "At 47 of a starting 40: {T}: a 4/4 flying Angel",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Speaker of the Heavens"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Big Salve"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "cast": "Big Salve"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Speaker of the Heavens"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Speaker of the Heavens",
+            "Angel"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Angel",
+            "power": 4,
+            "toughness": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "At 46: not 7 more, so not offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Speaker of the Heavens"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Small Salve"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "cast": "Small Salve"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Speaker of the Heavens"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Only as a sorcery: at 47 on Maya's turn, not offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Speaker of the Heavens"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Big Salve"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "cast": "Big Salve"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "pass": 1
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Speaker of the Heavens",
+            "seat": 0
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "A table starting at 20: 27 is enough",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Speaker of the Heavens"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Big Salve"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "cast": "Big Salve"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Speaker of the Heavens"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 27
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Speaker of the Heavens",
+            "Angel"
+          ]
+        }
+      ],
+      "startingLife": 20
+    }
+  ]
+}

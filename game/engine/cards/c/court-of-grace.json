@@ -1,0 +1,98 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Court of Grace",
+    "oracleId": "f63c2438-27d4-449a-828f-f0a2ea86ff16",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "When this enchantment enters, you become the monarch.\nAt the beginning of your upkeep, create a 1/1 white Spirit creature token with flying. If you're the monarch, create a 4/4 white Angel creature token with flying instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this enchantment enters, you become the monarch.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "becomeMonarch"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your upkeep, create a 1/1 white Spirit creature token with flying. If you're the monarch, create a 4/4 white Angel creature token with flying instead.",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "branch",
+          "if": {
+            "monarch": "you"
+          },
+          "then": [
+            {
+              "effect": "createToken",
+              "count": 1,
+              "token": {
+                "name": "Angel",
+                "types": [
+                  "Creature"
+                ],
+                "subtypes": [
+                  "Angel"
+                ],
+                "colors": [
+                  "W"
+                ],
+                "power": 4,
+                "toughness": 4,
+                "keywords": [
+                  "Flying"
+                ]
+              }
+            }
+          ],
+          "otherwise": [
+            {
+              "effect": "createToken",
+              "count": 1,
+              "token": {
+                "name": "Spirit",
+                "types": [
+                  "Creature"
+                ],
+                "subtypes": [
+                  "Spirit"
+                ],
+                "colors": [
+                  "W"
+                ],
+                "power": 1,
+                "toughness": 1,
+                "keywords": [
+                  "Flying"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

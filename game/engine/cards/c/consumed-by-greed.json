@@ -1,0 +1,93 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Consumed by Greed",
+    "oracleId": "b548578c-4910-402c-8e78-498924e0a9be",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Gift a card (You may promise an opponent a gift as you cast this spell. If you do, they draw a card before its other effects.)\nTarget opponent sacrifices a creature with the greatest power among creatures they control. If the gift was promised, return target creature card from your graveyard to your hand.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Gift a card",
+      "keyword": "gift",
+      "gift": "a card"
+    },
+    {
+      "kind": "spell",
+      "text": "Target opponent sacrifices a creature with the greatest power among creatures they control. If the gift was promised, return target creature card from your graveyard to your hand.",
+      "targets": [
+        {
+          "what": "player",
+          "who": "opponent"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "who": {
+            "target": 0
+          },
+          "count": 1,
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          },
+          "greatest": "power"
+        }
+      ],
+      "promised": {
+        "targets": [
+          {
+            "what": "player",
+            "who": "opponent"
+          },
+          {
+            "what": "card",
+            "zone": "graveyard",
+            "controller": "you",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "sacrifice",
+            "who": {
+              "target": 0
+            },
+            "count": 1,
+            "selector": {
+              "types": [
+                "Creature"
+              ]
+            },
+            "greatest": "power"
+          },
+          {
+            "effect": "moveZone",
+            "targets": {
+              "target": 1
+            },
+            "to": "hand"
+          }
+        ]
+      }
+    }
+  ]
+}

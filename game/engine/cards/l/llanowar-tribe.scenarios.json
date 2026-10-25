@@ -1,0 +1,78 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Llanowar Tribe",
+  "scenarios": [
+    {
+      "name": "{T}: {G}{G}{G} in Rob's pool",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Llanowar Tribe"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Llanowar Tribe"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cast this turn, it is summoning sick: no mana from it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Llanowar Tribe"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Llanowar Tribe"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Llanowar Tribe"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

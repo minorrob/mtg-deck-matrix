@@ -1,0 +1,112 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Emeria Shepherd",
+    "oracleId": "473da1b6-232b-4428-a66d-30262246b47a",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel"
+    ],
+    "manaCost": "{5}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Flying\nLandfall — Whenever a land you control enters, you may return target nonland permanent card from your graveyard to your hand. If that land is a Plains, you may return that nonland permanent card to the battlefield instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "Landfall — Whenever a land you control enters, you may return target nonland permanent card from your graveyard to your hand. If that land is a Plains, you may return that nonland permanent card to the battlefield instead.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Land"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "branch",
+          "if": {
+            "about": "that card",
+            "is": {
+              "subtypes": [
+                "Plains"
+              ]
+            }
+          },
+          "then": [
+            {
+              "effect": "modal",
+              "title": "Emeria Shepherd: return it to the battlefield instead of your hand?",
+              "modes": [
+                {
+                  "text": "To the battlefield",
+                  "effects": [
+                    {
+                      "effect": "moveZone",
+                      "targets": {
+                        "target": 0
+                      },
+                      "to": "battlefield"
+                    }
+                  ]
+                },
+                {
+                  "text": "To your hand",
+                  "effects": [
+                    {
+                      "effect": "moveZone",
+                      "targets": {
+                        "target": 0
+                      },
+                      "to": "hand"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "otherwise": [
+            {
+              "effect": "moveZone",
+              "targets": {
+                "target": 0
+              },
+              "to": "hand"
+            }
+          ]
+        }
+      ],
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "controller": "you",
+          "nonTypes": [
+            "Instant",
+            "Sorcery",
+            "Land"
+          ]
+        }
+      ],
+      "optional": true
+    }
+  ]
+}

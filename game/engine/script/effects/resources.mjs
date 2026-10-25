@@ -127,10 +127,14 @@ export function changeLife(state, player, delta, events) {
   /* The life each player has lost this turn (Wound Reflection; script/amount.mjs), cleared as a turn begins (turn.mjs). */
   if (delta < 0) state.players[player].lostThisTurn = (state.players[player].lostThisTurn ?? 0) - delta;
   /* And gained ("if you gained 3 or more life this turn", Indulging Patrician). */
+  const firstGain = delta > 0 && !(state.players[player].gainedThisTurn > 0);
   if (delta > 0) state.players[player].gainedThisTurn = (state.players[player].gainedThisTurn ?? 0) + delta;
   events.push(event("GameEventPlayerLivesChanged", state, {
     player: {playerId: player, name: state.players[player].name},
     oldLives: before, newLives: state.players[player].life,
+    /* "Whenever you gain life for the first time each turn" (Vanguard Seraph; CR 119.9): this gain is that player's first of
+       the turn (rules/trigger.mjs). */
+    ...(firstGain ? {firstGainThisTurn: true} : {}),
   }));
 }
 
@@ -167,6 +171,15 @@ export function loseLife(state, params, context) {
  */
 /* What a damage effect deals, and to whom: the source, the amount, and each hit. */
 function damageHits(state, params, context) {
+  /* "X damage divided as you choose among any number of target creatures" (Monstrous Onslaught; CR 601.2d): `divided`, the
+     target it was divided among, each still legal dealt what its caster gave it as it was cast (rules/stack.mjs, `division`)
+     -- an illegal one's share dealt to nothing (CR 608.2b). */
+  if (params.divided !== undefined) {
+    const division = context.division?.[params.divided] ?? {};
+    const hits = (params.targets ?? []).map((id) => ({toCard: id, amount: division[id] ?? 0}));
+    const named = Array.isArray(params.from) ? params.from[0] ?? null : context.source ?? null;
+    return {source: named !== null && state.objects[named] ? named : null, amount: Math.max(0, ...hits.map((h) => h.amount)), hits};
+  }
   const amount = params.amount ?? 0;
   /* The spell or ability, or a creature the trigger is about: "it deals that much damage to each other opponent". One that
      has left the battlefield since (a Dragon dealt lethal damage) still deals it, as a departed ability source does
@@ -348,6 +361,9 @@ export function addCounters(state, id, kind, count, events, by = null, orders = 
  * If either is no longer a creature on the battlefield, neither deals damage (701.14b).
  */
 function fightCalls(state, params, context) {
+  /* "Each of those tokens fights a different one of those creatures" (Ezuri's Predation; effects/asking.mjs, fightPartners):
+     `pairs`, every fight at once (the card's ruling) -- each power read here, before any of the damage is dealt. */
+  if (Array.isArray(params.pairs)) return params.pairs.flatMap(([from, to]) => fightCalls(state, {from: [from], targets: [to], damageOrders: params.damageOrders}, context));
   const [a] = params.from ?? [], [b] = params.targets ?? [];
   const fighting = (id) => id !== undefined && state.objects[id]?.zone === "battlefield" && typesOf(state, id).includes("Creature");
   if (!fighting(a) || !fighting(b)) return [];

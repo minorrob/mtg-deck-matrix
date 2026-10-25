@@ -671,6 +671,9 @@ function moveCard(state, from, zone, player, {faceDown, transformed, disguised})
      became in the graveyard (CR 400.7) knows it came from the battlefield, and `arrivedTurn` when (script/filter.mjs,
      fromBattlefieldThisTurn). A new object again as it leaves the graveyard, it does not carry the mark. */
   if (from.zone === "battlefield" && zone === "graveyard") state.objects[arrived].fromBattlefield = true;
+  /* And which permanent it was: "when enchanted creature dies, return this card to its owner's hand" (Angelic Destiny; CR
+     400.7, 704.5m) -- the Aura's ability finds the card it became there (script/bind.mjs, "this card"). */
+  if (from.zone === "battlefield" && zone === "graveyard") state.objects[arrived].wasPermanent = from.id;
   /* DESCEND (CR 700.11; Canonized in Blood, Rob's lists P2): "you descended if a permanent card was put into your graveyard from
      anywhere" -- a card, never a token (CR 108.2b), of a permanent type (CR 110.4a), counted for its owner, whose graveyard it
      went to (CR 404.2; script/condition.mjs, descended; cleared as a turn begins, rules/turn.mjs). */

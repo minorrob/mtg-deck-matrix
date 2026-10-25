@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Metropolis Reformer",
+    "oracleId": "baec04a1-3bc9-4618-afab-e42013e36648",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel",
+      "Cleric"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Flying, vigilance\nYou have hexproof.\nWhenever this creature is dealt damage, you gain that much life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "static",
+      "text": "You have hexproof.",
+      "rule": "player-hexproof",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature is dealt damage, you gain that much life.",
+      "trigger": {
+        "on": "damage dealt once",
+        "to": "self"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": {
+            "damageDealt": true
+          }
+        }
+      ]
+    }
+  ]
+}

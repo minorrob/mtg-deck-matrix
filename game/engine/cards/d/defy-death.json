@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Defy Death",
+    "oracleId": "dbf9c3e8-35dd-4b80-bd23-f43e21cfd991",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Return target creature card from your graveyard to the battlefield. If it's an Angel, put two +1/+1 counters on it.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Return target creature card from your graveyard to the battlefield. If it's an Angel, put two +1/+1 counters on it.",
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "controller": "you",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "battlefield",
+          "remember": true
+        },
+        {
+          "effect": "putCounter",
+          "targets": "remembered",
+          "counter": "+1/+1",
+          "count": 2,
+          "condition": {
+            "about": "remembered",
+            "is": {
+              "subtypes": [
+                "Angel"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

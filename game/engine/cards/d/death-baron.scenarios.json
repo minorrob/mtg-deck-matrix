@@ -1,0 +1,151 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Death Baron",
+  "fixtures": {
+    "Bone Rattler": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Skeleton"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Grave Zombie": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Zombie"
+      ],
+      "manaCost": "{1}{B}",
+      "colors": [
+        "B"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Moss Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Skeletons and other Zombies Rob controls: +1/+1 and deathtouch; not the Baron, a Bear, or Maya's Zombie",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Death Baron",
+            "Grave Zombie",
+            "Bone Rattler",
+            "Moss Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Grave Zombie"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Grave Zombie",
+            "power": 3,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Grave Zombie",
+            "has": [
+              "Deathtouch"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bone Rattler",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Bone Rattler",
+            "has": [
+              "Deathtouch"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Death Baron",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Death Baron",
+            "lacks": [
+              "Deathtouch"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Moss Bear",
+            "lacks": [
+              "Deathtouch"
+            ]
+          }
+        },
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Grave Zombie",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 1,
+          "keywords": {
+            "card": "Grave Zombie",
+            "lacks": [
+              "Deathtouch"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

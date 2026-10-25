@@ -1,0 +1,91 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Orb of Dragonkind",
+    "oracleId": "d9c36ed5-629c-4709-bff5-2f10fcde608a",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{1}, {T}: Add two mana in any combination of colors. Spend this mana only to cast Dragon spells or activate abilities of Dragons.\n{R}, {T}, Sacrifice this artifact: Look at the top seven cards of your library. You may reveal a Dragon card from among them and put it into your hand. Put the rest on the bottom of your library in a random order.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{1}, {T}: Add two mana in any combination of colors. Spend this mana only to cast Dragon spells or activate abilities of Dragons.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyCombination": true,
+          "count": 2,
+          "spendOnly": {
+            "spell": {
+              "subtypes": [
+                "Dragon"
+              ]
+            },
+            "ability": {
+              "subtypes": [
+                "Dragon"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{R}, {T}, Sacrifice this artifact: Look at the top seven cards of your library. You may reveal a Dragon card from among them and put it into your hand. Put the rest on the bottom of your library in a random order.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{R}"
+        },
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dig",
+          "count": 7,
+          "take": 1,
+          "selector": {
+            "subtypes": [
+              "Dragon"
+            ]
+          },
+          "upTo": true,
+          "to": "hand",
+          "reveal": "taken",
+          "rest": "bottom",
+          "random": true
+        }
+      ]
+    }
+  ]
+}

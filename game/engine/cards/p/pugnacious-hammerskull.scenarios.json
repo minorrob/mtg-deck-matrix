@@ -1,0 +1,159 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Pugnacious Hammerskull",
+  "fixtures": {
+    "Raptor": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Dinosaur"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Their Raptor": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Dinosaur"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Alone it attacks: a stun counter; on Rob's next turn it stays tapped and the counter is removed",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Pugnacious Hammerskull"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Raptor"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Pugnacious Hammerskull"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Pugnacious Hammerskull",
+                "counter": "stun",
+                "count": 1
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 34
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Pugnacious Hammerskull",
+          "is": true
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Pugnacious Hammerskull",
+            "counter": "stun",
+            "count": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "With another Dinosaur of Rob's it attacks with no counter",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Pugnacious Hammerskull",
+            "Raptor"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Pugnacious Hammerskull"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Pugnacious Hammerskull",
+            "counter": "stun",
+            "count": 0
+          }
+        },
+        {
+          "seat": 1,
+          "life": 34
+        }
+      ]
+    }
+  ]
+}

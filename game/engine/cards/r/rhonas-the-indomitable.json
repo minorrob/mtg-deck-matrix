@@ -1,0 +1,116 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rhonas the Indomitable",
+    "oracleId": "5d2acd3e-4782-42e3-bcd5-80f8b439cc28",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "God"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Deathtouch, indestructible\nRhonas can't attack or block unless you control another creature with power 4 or greater.\n{2}{G}: Another target creature gets +2/+0 and gains trample until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Deathtouch",
+      "keyword": "deathtouch"
+    },
+    {
+      "kind": "keyword",
+      "text": "indestructible",
+      "keyword": "indestructible"
+    },
+    {
+      "kind": "static",
+      "text": "Rhonas can't attack or block unless you control another creature with power 4 or greater.",
+      "rule": "cant-attack",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "unless": {
+        "present": {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "another": true,
+          "power": {
+            "min": 4
+          }
+        }
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Rhonas can't attack or block unless you control another creature with power 4 or greater.",
+      "rule": "cant-block",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "another": true,
+          "power": {
+            "min": 4
+          }
+        },
+        "atMost": 0
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{2}{G}: Another target creature gets +2/+0 and gains trample until end of turn.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{G}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "another": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 2,
+          "toughness": 0,
+          "keywords": [
+            "Trample"
+          ]
+        }
+      ]
+    }
+  ]
+}

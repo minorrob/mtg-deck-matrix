@@ -1,0 +1,285 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Righteous Valkyrie",
+  "fixtures": {
+    "Sky Pal Two": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Angel"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 2,
+      "toughness": 3,
+      "keywords": [
+        "Flying"
+      ]
+    },
+    "Cleric Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human",
+        "Cleric"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 1,
+      "toughness": 3
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Small Salve": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{0}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "You gain 6 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 6
+          }
+        ]
+      }
+    },
+    "Big Salve": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{0}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "You gain 7 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 7
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "An Angel of his with toughness 3 enters: he gains 3; a Cleric with toughness 3: 3 more -- at 46, not yet 7 more",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Righteous Valkyrie",
+            "Plains",
+            "Wastes",
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sky Pal Two",
+            "Cleric Pal"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Sky Pal Two"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Cleric Pal"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 46
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Righteous Valkyrie",
+            "power": 2,
+            "toughness": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "At 47 of 40, his creatures get +2/+2, it too; Maya's do not",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Righteous Valkyrie",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Big Salve"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Bear",
+                "power": 2,
+                "toughness": 2
+              }
+            }
+          ]
+        },
+        {
+          "cast": "Big Salve"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 47
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 4,
+            "toughness": 4
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Righteous Valkyrie",
+            "power": 4,
+            "toughness": 6
+          }
+        },
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Bear",
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "A Bear enters: nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Righteous Valkyrie",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Bear"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 40
+        }
+      ]
+    }
+  ]
+}

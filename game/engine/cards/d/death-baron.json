@@ -1,0 +1,83 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Death Baron",
+    "oracleId": "99024aa8-5687-4d38-8a4b-feef42d6c1ff",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Zombie",
+      "Wizard"
+    ],
+    "manaCost": "{1}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Skeletons you control and other Zombies you control get +1/+1 and have deathtouch. (Any amount of damage they deal to a creature is enough to destroy it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Skeletons you control and other Zombies you control get +1/+1 and have deathtouch. (Any amount of damage they deal to a creature is enough to destroy it.)",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "anyOf": [
+          {
+            "subtypes": [
+              "Skeleton"
+            ],
+            "controller": "you"
+          },
+          {
+            "subtypes": [
+              "Zombie"
+            ],
+            "controller": "you",
+            "another": true
+          }
+        ]
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 1
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Skeletons you control and other Zombies you control get +1/+1 and have deathtouch. (Any amount of damage they deal to a creature is enough to destroy it.)",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "anyOf": [
+          {
+            "subtypes": [
+              "Skeleton"
+            ],
+            "controller": "you"
+          },
+          {
+            "subtypes": [
+              "Zombie"
+            ],
+            "controller": "you",
+            "another": true
+          }
+        ]
+      },
+      "apply": {
+        "addKeywords": [
+          "Deathtouch"
+        ]
+      }
+    }
+  ]
+}

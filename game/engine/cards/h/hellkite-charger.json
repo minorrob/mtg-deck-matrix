@@ -1,0 +1,70 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hellkite Charger",
+    "oracleId": "d4f28a4b-d821-4132-bdec-4c528318f8e2",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dragon"
+    ],
+    "manaCost": "{4}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Flying, haste\nWhenever this creature attacks, you may pay {5}{R}{R}. If you do, untap all attacking creatures and after this phase, there is an additional combat phase.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "haste",
+      "keyword": "haste"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature attacks, you may pay {5}{R}{R}. If you do, untap all attacking creatures and after this phase, there is an additional combat phase.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "who": "you",
+          "mana": "{5}{R}{R}",
+          "ifPaid": true,
+          "effects": [
+            {
+              "effect": "untapAll",
+              "selector": {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ],
+                "attacking": true
+              }
+            },
+            {
+              "effect": "addPhase",
+              "phases": [
+                "combat"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

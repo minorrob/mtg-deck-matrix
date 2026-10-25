@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tangleweave Armor",
+    "oracleId": "b9cec31a-9891-414f-b528-954612168832",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Equipment"
+    ],
+    "manaCost": "{2}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Living weapon (When this Equipment enters, create a 0/0 black Phyrexian Germ creature token, then attach this to it.)\nEquipped creature gets +X/+X, where X is the greatest mana value among your commanders.\nEquip {4}",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Living weapon (When this Equipment enters, create a 0/0 black Phyrexian Germ creature token, then attach this to it.)",
+      "keyword": "living weapon"
+    },
+    {
+      "kind": "static",
+      "text": "Equipped creature gets +X/+X, where X is the greatest mana value among your commanders.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": {
+          "commanderManaValue": "you"
+        },
+        "toughness": {
+          "commanderManaValue": "you"
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "Equip {4}",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{4}"
+        }
+      ],
+      "timing": "sorcery",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "attach",
+          "targets": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

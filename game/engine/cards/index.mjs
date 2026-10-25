@@ -67,6 +67,8 @@ function wardCost(cost) {
    Taker's "during your turn", on spells and on abilities that cost more. */
 const RULES_READING_A_CONDITION = ["alternative-cost", "spells-cost-less", "triggers-again", "cant-cast", "attack-tax", "doesnt-untap", "cast-without-paying",
   "spells-cost-more", "abilities-cost-more",
+  /* Archangel of Tithes: "as long as this creature is attacking", a block tax (rules/statics.mjs, blockTax). */
+  "block-tax",
   /* "Twice that many ... instead" at a Class level (Innkeeper's Talent, CR 716.2a; rules/statics.mjs, countersPlaced). */
   "more-counters",
   /* "Can't ... block unless you control seven or more lands" (Topiary Stomper, CR 509.1b): read as each blocker is checked
@@ -352,6 +354,9 @@ const TRIGGERS = {
     ...(t.defender ? {defender: t.defender} : {}), ...(t.planeswalkers === true ? {planeswalkers: true} : {}), ...(t.atLeast ? {atLeast: t.atLeast} : {}),
     /* "Whenever Aurelia attacks for the first time each turn" (rules/trigger.mjs). */
     ...(t.firstTime ? {firstTime: true} : {}),
+    /* DETHRONE (CR 702.105a; Scourge of the Throne): "whenever this creature attacks the player with the most life or tied for
+       most life" -- a player, not a planeswalker of theirs, read as it attacks (rules/trigger.mjs). */
+    ...(t.defenderMostLife === true ? {defenderMostLife: true} : {}),
     /* "Whenever this creature attacks while saddled" (Bounding Felidar; CR 702.171b): `while`, a condition asked as it
        attacks and never again -- a trigger condition, not an intervening "if" (CR 603.4; rules/trigger.mjs). */
     ...(t.while !== undefined ? {while: t.while} : {}),
@@ -392,7 +397,7 @@ const TRIGGERS = {
     ? {on: "GameEventCardChangeZone", from: "Library", to: "Hand", drawn: true, drawer: t.drawer ?? "you",
       ...(t.nthThisTurn !== undefined ? {nthThisTurn: t.nthThisTurn} : {}), ...(t.exceptFirstInDrawStep ? {exceptFirstInDrawStep: true} : {})} : null,
   /* "Whenever you gain life" (CR 119.9): `gainer` you, opponent or any. */
-  "life gained": (t) => ({on: "GameEventPlayerLivesChanged", gainer: t.gainer ?? "you"}),
+  "life gained": (t) => ({on: "GameEventPlayerLivesChanged", gainer: t.gainer ?? "you", ...(t.firstThisTurn === true ? {firstThisTurn: true} : {})}),
   /* "Whenever an opponent loses life", "whenever you lose life" (CR 119.3, batch 78): `loser` you, opponent or any; about
      the player and how much -- once for each player for everything one action took (combat damage from three creatures
      at once is one loss), "that much" all of it. */
@@ -780,6 +785,18 @@ export function compileScript(script) {
       abilities.push({id, kind: "replacement", text: ability.text, watches: {event: "enters", who: "self"}, change: {entersWithCounters: {counter: "lore", count: 1}}});
       return;
     }
+    /* READ AHEAD (CR 702.155a; The Elder Dragon War, precon load lane C): "As this Saga enters, choose a number from one to its
+       final chapter number. It enters with that many lore counters on it. Chapter abilities whose chapter number is less than
+       that number don't trigger" -- in place of the one lore counter a Saga enters with (CR 714.3a), the number its controller's
+       choice as it enters (rules/entering.mjs, its arrival held for the answer), the skipped chapters' rules/trigger.mjs's. */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "read ahead") {
+      if (!(identity.subtypes ?? []).includes("Saga")) problems.push(`${ability.text}: read ahead on a card that is not a Saga`);
+      const final = Math.max(0, ...script.abilities.filter((a) => a.kind === "triggered" && a.trigger?.on === "chapter").map((a) => a.trigger.chapter ?? 0));
+      if (final < 1) problems.push(`${ability.text}: read ahead on a Saga with no chapters`);
+      abilities.push({id, kind: "replacement", text: ability.text, watches: {event: "enters", who: "self"}, change: {readAhead: final}});
+      keywords.push("Read ahead");
+      return;
+    }
     /* STATION (CR 702.184a): "Tap another untapped creature you control: Put a number of charge counters on this permanent
        equal to the tapped creature's power. Activate only as a sorcery" -- the `tapCreature` cost atom, the creature tapped
        being what the ability is about (rules/actions.mjs). What it has at "N+" (CR 721.2) is the card's own abilities, each
@@ -901,6 +918,15 @@ export function compileScript(script) {
           {effect: "delayedTrigger", at: "end of combat", text: "Exile the tokens at end of combat.", condition: {compare: {count: {rememberedCount: true}, atLeast: 1}},
             effects: [{effect: "moveZone", targets: "remembered", to: "exile"}]}]});
       keywords.push("Myriad");
+      return;
+    }
+    /* DETHRONE (CR 702.105a; Scourge of the Throne, precon load lane C): "Whenever this creature attacks the player with the most
+       life or tied for most life, put a +1/+1 counter on it" -- the keyword IS that triggered ability, the player read as it
+       attacks and not again (no intervening "if", CR 603.4). Instances trigger separately (702.105b). */
+    if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "dethrone") {
+      abilities.push({id, kind: "triggered", text: ability.text, trigger: TRIGGERS.attacks({who: "self", defenderMostLife: true}),
+        effects: [{effect: "putCounter", targets: "self", counter: "+1/+1", count: 1}]});
+      keywords.push("Dethrone");
       return;
     }
     if (ability.kind === "keyword" && String(ability.keyword).toLowerCase() === "exalted") {
@@ -1818,9 +1844,16 @@ export function compileScript(script) {
         /* "Exile Avatar's Wrath." (CR 608.2n): the last of what it does, exiled as it resolves rather than put into its owner's
            graveyard -- one that does not resolve goes where any spell would (rules/stack.mjs). */
         ...(ability.exileAsResolves === true ? {exileAsResolves: true} : {}),
+        /* "X damage divided as you choose among any number of target creatures" (Monstrous Onslaught; CR 601.2d): its total and
+           the target it is divided among, announced as it is cast (rules/actions.mjs, dividedOf). */
+        ...(ability.divided ? {divided: structuredClone(ability.divided)} : {}),
         /* "If this spell was kicked, exile target nonland permanent instead" (Tear Asunder): its targets and effects then. */
-        ...(ability.kicked ? {kicked: {targets: ability.kicked.targets ?? [], effects: ability.kicked.effects ?? []}} : {})};
+        ...(ability.kicked ? {kicked: {targets: ability.kicked.targets ?? [], effects: ability.kicked.effects ?? []}} : {}),
+        /* "If the gift was promised, return target creature card from your graveyard to your hand" (Consumed by Greed): its targets
+           and effects when the gift is promised -- a target only that needs is chosen only then (CR 601.2c, 702.174a). */
+        ...(ability.promised ? {promised: {targets: ability.promised.targets ?? [], effects: ability.promised.effects ?? []}} : {})};
       if (ability.kicked && (modal || !(ability.kicked.effects ?? []).length)) problems.push("a kicked spell's script says its effects, on a spell that is not modal");
+      if (ability.promised && (modal || !(ability.promised.effects ?? []).length)) problems.push("a promised spell's script says its effects, on a spell that is not modal");
       return;
     }
     /* PARTNER WITH [NAME] (CR 702.124j; Pir, Imaginative Rascal): two abilities. A deck rule -- two legendary cards may be one's
@@ -2069,6 +2102,9 @@ export function compileScript(script) {
     if (ability.kind === "static" && ability.rule === "alternative-cost") {
       for (const atom of ability.cost ?? []) if (!["mana", "payLife", "exileFromHand", "sacrifice"].includes(atom?.atom) || (atom.atom === "sacrifice" && !atom.selector) || !fixedLife(atom))
         if (!(ability.zone === "graveyard" && atom?.atom === "exileFromGraveyard" && atom.self !== true && Number.isInteger(atom.count) && atom.count >= 1))
+        /* Untapped creatures of the caster's to tap, that many ("tap four untapped creatures you control with flying", Sephara,
+           Sky's Blade): which, asked once the cast is taken (rules/actions.mjs, alternativeCosts). */
+        if (!(atom?.atom === "tapCreature" && Number.isInteger(atom.count) && atom.count >= 1 && atom.selector && typeof atom.selector === "object"))
           problems.push(`${ability.text}: an alternative cost of ${atom?.atom ?? "something"} nothing pays yet`);
       if (ability.zone !== undefined && ability.zone !== "graveyard") problems.push(`${ability.text}: an alternative cost is cast from where it is, or from the graveyard (\`zone: "graveyard"\`)`);
     }
@@ -2084,6 +2120,17 @@ export function compileScript(script) {
     if (ability.kind === "static" && ability.apply?.correspondingSubtypes !== undefined
       && !(ability.apply.correspondingSubtypes === true && ability.layer === 4 && Array.isArray(ability.apply.setTypes)))
       problems.push(`${ability.text}: correspondingSubtypes is true, in layer 4, beside setTypes (CR 205.3d)`);
+    /* "This creature has the power, toughness, and creature types of the last creature card exiled with it" (Duplicant;
+       precons B): read from the card its linked ability exiled (rules/layers.mjs, linkedCreatureGrant) -- its creature types in
+       layer 4 (CR 613.1d), with `plusCreatureTypes` it keeps ("It's still a Shapeshifter"), or its power and toughness in
+       layer 7b (CR 613.4b), of the source itself. */
+    if (ability.kind === "static" && ability.apply?.linkedCreature !== undefined) {
+      const {linkedCreature: what, plusCreatureTypes, ...rest} = ability.apply;
+      const typesOk = what === "creature types" && ability.layer === 4 && (plusCreatureTypes === undefined || (Array.isArray(plusCreatureTypes) && plusCreatureTypes.every((t) => typeof t === "string")));
+      const statsOk = what === "power and toughness" && ability.layer === 7 && ability.sublayer === "b" && plusCreatureTypes === undefined;
+      if (!(typesOk || statsOk) || Object.keys(rest).length || ability.affects?.self !== true)
+        problems.push(`${ability.text}: linkedCreature is "creature types" in layer 4 (with plusCreatureTypes, a list) or "power and toughness" in layer 7b, of the source itself, and nothing beside it`);
+    }
     /* "A deck can have any number of cards named <this card>" (CR 100.2a): said of the card's own name, or no card says it. */
     if (ability.kind === "static" && ability.rule === "any-number-in-deck" && ability.text !== `A deck can have any number of cards named ${identity.name}.`)
       problems.push(`${ability.text}: any number of a card in a deck is the card's own words, of its own name`);
@@ -2173,6 +2220,7 @@ export function compileScript(script) {
   /* Kicker's, the same way. */
   if (kicker !== null) spell = {...(spell ?? {id: "kicker", text: "Kicker", targets: [], effects: []}), additionalCost: [...(spell?.additionalCost ?? []), {atom: "kicker", cost: kicker}]};
   if (spell?.kicked && kicker === null) problems.push("a kicked spell's script is a card with kicker's");
+  if (spell?.promised && gift === null) problems.push("a promised spell's script is a card with gift's");
   /* Offspring's additional cost, on the spell -- a creature's, whose spell does nothing else (CR 608.3) -- and its trigger as
      the permanent enters, its "if" an intervening one (CR 603.4; script/condition.mjs, `offspringPaid`): a token copy of it,
      its copiable values with a base power and toughness of 1/1 (CR 707.9b), and of it as it last existed should it be gone
@@ -2193,7 +2241,9 @@ export function compileScript(script) {
     const fleeting = types.some((t) => t === "Instant" || t === "Sorcery");
     const given = gift.effects.map((effect) => ({...effect, condition: {giftPromised: true}}));
     if (fleeting && (!spell || spell.modal)) problems.push(`${gift.text}: a gift on an instant or sorcery is given by its spell ability, one without modes chosen as it is cast`);
-    else if (fleeting) spell = {...spell, additionalCost: [...(spell.additionalCost ?? []), {atom: "gift"}], effects: [...given, ...(spell.effects ?? [])]};
+    else if (fleeting) spell = {...spell, additionalCost: [...(spell.additionalCost ?? []), {atom: "gift"}], effects: [...given, ...(spell.effects ?? [])],
+      /* And first in what it does promised (Consumed by Greed). */
+      ...(spell.promised ? {promised: {...spell.promised, effects: [...given, ...spell.promised.effects]}} : {})};
     else {
       spell = {...(spell ?? {id: "gift", text: gift.text, targets: [], effects: []}), additionalCost: [...(spell?.additionalCost ?? []), {atom: "gift"}]};
       abilities.push({id: gift.id, kind: "triggered", text: gift.text, trigger: TRIGGERS.enters({who: "self"}), condition: {giftPromised: true}, effects: gift.effects});

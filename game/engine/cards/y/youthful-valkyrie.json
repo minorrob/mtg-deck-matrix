@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Youthful Valkyrie",
+    "oracleId": "6d37ba4b-ff56-4eec-9dc2-2d7f357dc9c9",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "Flying\nWhenever another Angel you control enters, put a +1/+1 counter on this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever another Angel you control enters, put a +1/+1 counter on this creature.",
+      "trigger": {
+        "on": "enters",
+        "who": "another",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "subtypes": [
+            "Angel"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

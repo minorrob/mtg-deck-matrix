@@ -1,0 +1,511 @@
+{
+ "schema": "library-load-lane@1",
+ "lane": "E-zombies",
+ "theme": "Wretched Ranks",
+ "label": "Zombies (Ghoulcaller Gisa): sacrifice-for-X tokens; lords; the monarch's attack drain (Marchesa's Decree); \"dies or is put into exile\" (God-Eternal Bontu); kicker on a creature (Josu Vess); a death replacement for opponents' creatures (Kalitas); casting from a graveyard this turn (Zul Ashur)",
+ "source": {
+  "precon": "WretchedRanks_FDC",
+  "set": "FDC",
+  "released": "2026-10-02",
+  "decklists": "data/precons.json",
+  "oracle": "data/engine/oracle.json"
+ },
+ "cards": [
+  {
+   "name": "Ghoulcaller Gisa",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Legendary Creature - Human Wizard",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{B}, {T}, Sacrifice another creature: Create X 2/2 black Zombie creature tokens, where X is the sacrificed creature's power."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Bad Moon",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Black creatures get +1/+1."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Barren Moor",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Land",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Cycling {B} ({B}, Discard this card: Draw a card.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Cemetery Reaper",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Creature - Zombie",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Other Zombie creatures you control get +1/+1.",
+    "{2}{B}, {T}: Exile target creature card from a graveyard.",
+    "Create a 2/2 black Zombie creature token."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Cemetery Recruitment",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "If it's a Zombie card, draw a card."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Champion of the Perished",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Creature - Zombie",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever another Zombie you control enters, put a +1/+1 counter on this creature."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Consumed by Greed",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Target opponent sacrifices a creature with the greatest power among creatures they control.",
+    "If the gift was promised, return target creature card from your graveyard to your hand."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Consuming Corruption",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Consuming Corruption deals X damage to target creature or planeswalker and you gain X life, where X is the number of Swamps you control."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Death Baron",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Creature - Zombie Wizard",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Skeletons you control and other Zombies you control get +1/+1 and have deathtouch. (Any amount of damage they deal to a creature is enough to destroy it.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Endless Ranks of the Dead",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "At the beginning of your upkeep, create X 2/2 black Zombie creature tokens, where X is half the number of Zombies you control, rounded down."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Eternal Taskmaster",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Creature - Zombie",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever this creature attacks, you may pay {2}{B}.",
+    "If you do, return target creature card from your graveyard to your hand."
+   ],
+   "needs": null
+  },
+  {
+   "name": "God-Eternal Bontu",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Legendary Creature - Zombie God",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When God-Eternal Bontu enters, sacrifice any number of other permanents, then draw that many cards.",
+    "When God-Eternal Bontu dies or is put into exile from the battlefield, you may put her into her owner's library third from the top."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Graveborn Muse",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Creature - Zombie Spirit",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "At the beginning of your upkeep, you draw X cards and lose X life, where X is the number of Zombies you control."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Headless Rider",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Creature - Zombie",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever this creature or another nontoken Zombie you control dies, create a 2/2 black Zombie creature token."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Infernal Idol",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{1}{B}{B}, {T}, Sacrifice this artifact: You draw two cards and lose 2 life."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Josu Vess, Lich Knight",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Legendary Creature - Zombie Knight",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When Josu Vess enters, if he was kicked, create eight 2/2 black Zombie Knight creature tokens with menace."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Kalitas, Traitor of Ghet",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Legendary Creature - Vampire Warrior",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "If a nontoken creature an opponent controls would die, instead exile that card and create a 2/2 black Zombie creature token.",
+    "{2}{B}, Sacrifice another Vampire or Zombie: Put two +1/+1 counters on Kalitas."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Liliana's Mastery",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Zombies you control get +1/+1.",
+    "When this enchantment enters, create two 2/2 black Zombie creature tokens."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Liliana's Reaver",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Creature - Zombie",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever this creature deals combat damage to a player, that player discards a card and you create a tapped 2/2 black Zombie creature token."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Lord of the Accursed",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Creature - Zombie",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Other Zombies you control get +1/+1.",
+    "{1}{B}, {T}: All Zombies gain menace until end of turn."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Lord of the Undead",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Creature - Zombie",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Other Zombie creatures get +1/+1.",
+    "{1}{B}, {T}: Return target Zombie card from your graveyard to your hand."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Marchesa's Decree",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this enchantment enters, you become the monarch.",
+    "Whenever a creature attacks you or a planeswalker you control, that creature's controller loses 1 life."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Memorial to Folly",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Land",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{2}{B}, {T}, Sacrifice this land: Return target creature card from your graveyard to your hand."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Mire Triton",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Creature - Zombie Merfolk",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature enters, mill two cards and you gain 2 life. (To mill two cards, put the top two cards of your library into your graveyard.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Moan of the Unhallowed",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Create two 2/2 black Zombie creature tokens.",
+    "Flashback {5}{B}{B} (You may cast this card from your graveyard for its flashback cost. Then exile it.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Mutilate",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "All creatures get -1/-1 until end of turn for each Swamp you control."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Necrotic Hex",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "You create six tapped 2/2 black Zombie creature tokens."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Noxious Ghoul",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Creature - Zombie",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever this creature or another Zombie enters, all non-Zombie creatures get -1/-1 until end of turn."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Open the Graves",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever a nontoken creature you control dies, create a 2/2 black Zombie creature token."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Oversold Cemetery",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "At the beginning of your upkeep, if you have four or more creature cards in your graveyard, you may return target creature card from your graveyard to your hand."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Razorlash Transmogrant",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Artifact Creature - Zombie",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{4}{B}{B}: Return this card from your graveyard to the battlefield with a +1/+1 counter on it.",
+    "This ability costs {4} less to activate if an opponent controls four or more nonbasic lands."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Soulless One",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Creature - Zombie Avatar",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Soulless One's power and toughness are each equal to the number of Zombies on the battlefield plus the number of Zombie cards in all graveyards."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Syphon Flesh",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Each other player sacrifices a creature of their choice.",
+    "You create a 2/2 black Zombie creature token for each creature sacrificed this way."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Tendrils of Corruption",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Tendrils of Corruption deals X damage to target creature and you gain X life, where X is the number of Swamps you control."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Undead Augur",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Creature - Zombie Wizard",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever this creature or another Zombie you control dies, you draw a card and lose 1 life."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Undead Butler",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Creature - Zombie",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature dies, you may exile it.",
+    "When you do, return target creature card from your graveyard to your hand."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Undead Warchief",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Creature - Zombie",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Zombie spells you cast cost {1} less to cast.",
+    "Zombie creatures you control get +2/+1."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Vengeful Dead",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Creature - Zombie",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever this creature or another Zombie dies, each opponent loses 1 life."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Wight of Precinct Six",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Creature - Zombie",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "This creature gets +1/+1 for each creature card in your opponents' graveyards."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Zul Ashur, Lich Lord",
+   "scope": "precon",
+   "deck": "Wretched Ranks",
+   "type": "Legendary Creature - Zombie Warlock",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{T}: You may cast target Zombie creature card from your graveyard this turn."
+   ],
+   "needs": null
+  }
+ ],
+ "review": []
+}

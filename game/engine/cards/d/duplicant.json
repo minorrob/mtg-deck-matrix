@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Duplicant",
+    "oracleId": "ea86abfa-6cab-4ef0-8463-34136fc25b59",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Shapeshifter"
+    ],
+    "manaCost": "{6}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "Imprint — When this creature enters, you may exile target nontoken creature.\nAs long as a card exiled with this creature is a creature card, this creature has the power, toughness, and creature types of the last creature card exiled with it. It's still a Shapeshifter.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Imprint — When this creature enters, you may exile target nontoken creature.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile",
+          "link": true
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "token": false
+        }
+      ],
+      "optional": true
+    },
+    {
+      "kind": "static",
+      "text": "As long as a card exiled with this creature is a creature card, this creature has the power, toughness, and creature types of the last creature card exiled with it. It's still a Shapeshifter.",
+      "layer": 4,
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "linkedCreature": "creature types",
+        "plusCreatureTypes": [
+          "Shapeshifter"
+        ]
+      }
+    },
+    {
+      "kind": "static",
+      "text": "As long as a card exiled with this creature is a creature card, this creature has the power, toughness, and creature types of the last creature card exiled with it. It's still a Shapeshifter.",
+      "layer": 7,
+      "sublayer": "b",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "linkedCreature": "power and toughness"
+      }
+    }
+  ]
+}

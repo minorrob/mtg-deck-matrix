@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Seraph of the Sword",
+    "oracleId": "84ee74e9-b3e3-4f47-8b3c-5c1a70f5cad6",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel"
+    ],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Flying\nPrevent all combat damage that would be dealt to this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "replacement",
+      "text": "Prevent all combat damage that would be dealt to this creature.",
+      "watches": {
+        "event": "damage",
+        "combat": true,
+        "toCard": {
+          "self": true
+        }
+      },
+      "change": {
+        "prevent": true
+      }
+    }
+  ]
+}

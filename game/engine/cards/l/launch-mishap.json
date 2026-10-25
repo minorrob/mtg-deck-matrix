@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Launch Mishap",
+    "oracleId": "5d4ed768-0a37-4604-8121-43920ed9fb4a",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Counter target creature or planeswalker spell. Create a 1/1 colorless Thopter artifact creature token with flying.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Counter target creature or planeswalker spell. Create a 1/1 colorless Thopter artifact creature token with flying.",
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "spell",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "spell",
+              "types": [
+                "Planeswalker"
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "counterSpell",
+          "spells": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Thopter",
+            "types": [
+              "Artifact",
+              "Creature"
+            ],
+            "subtypes": [
+              "Thopter"
+            ],
+            "colors": [],
+            "power": 1,
+            "toughness": 1,
+            "keywords": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

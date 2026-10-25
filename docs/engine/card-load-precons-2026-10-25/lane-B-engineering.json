@@ -1,0 +1,296 @@
+{
+ "schema": "library-load-lane@1",
+ "lane": "B-engineering",
+ "theme": "Keen Engineering",
+ "label": "Artifacts and Thopters (Sai, Master Thopterist): imprint and copying a card's power and toughness (Duplicant); base power and toughness and forced attacks (Graaz); reselecting a defender (Misleading Signpost); counters with a threshold that exile (Mazemind Tome); X-cost board wipes by mana value (Steel Hellkite)",
+ "source": {
+  "precon": "KeenEngineering_FDC",
+  "set": "FDC",
+  "released": "2026-10-02",
+  "decklists": "data/precons.json",
+  "oracle": "data/engine/oracle.json"
+ },
+ "cards": [
+  {
+   "name": "Adaptive Omnitool",
+   "scope": "precon",
+   "deck": "Keen Engineering",
+   "type": "Artifact - Equipment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever equipped creature attacks, look at the top six cards of your library.",
+    "You may reveal an artifact card from among them and put it into your hand.",
+    "Put the rest on the bottom of your library in a random order."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Aether Spellbomb",
+   "scope": "precon",
+   "deck": "Keen Engineering",
+   "type": "Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{U}, Sacrifice this artifact: Return target creature to its owner's hand."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Duplicant",
+   "scope": "precon",
+   "deck": "Keen Engineering",
+   "type": "Artifact Creature - Shapeshifter",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Imprint — When this creature enters, you may exile target nontoken creature.",
+    "As long as a card exiled with this creature is a creature card, this creature has the power, toughness, and creature types of the last creature card exiled with it.",
+    "It's still a Shapeshifter."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Fall from Favor",
+   "scope": "precon",
+   "deck": "Keen Engineering",
+   "type": "Enchantment - Aura",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this Aura enters, tap enchanted creature and you become the monarch.",
+    "Enchanted creature doesn't untap during its controller's untap step unless that player is the monarch."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Foundry of the Consuls",
+   "scope": "precon",
+   "deck": "Keen Engineering",
+   "type": "Land",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{5}, {T}, Sacrifice this land: Create two 1/1 colorless Thopter artifact creature tokens with flying."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Graaz, Unstoppable Juggernaut",
+   "scope": "precon",
+   "deck": "Keen Engineering",
+   "type": "Legendary Artifact Creature - Juggernaut",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Juggernauts you control attack each combat if able.",
+    "Juggernauts you control can't be blocked by Walls.",
+    "Other creatures you control have base power and toughness 5/3 and are Juggernauts in addition to their other creature types."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Kappa Cannoneer",
+   "scope": "precon",
+   "deck": "Keen Engineering",
+   "type": "Artifact Creature - Turtle Warrior",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever this creature or another artifact you control enters, put a +1/+1 counter on this creature.",
+    "It can't be blocked this turn."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Launch Mishap",
+   "scope": "precon",
+   "deck": "Keen Engineering",
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Counter target creature or planeswalker spell.",
+    "Create a 1/1 colorless Thopter artifact creature token with flying."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Master Transmuter",
+   "scope": "precon",
+   "deck": "Keen Engineering",
+   "type": "Artifact Creature - Human Artificer",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{U}, {T}, Return an artifact you control to its owner's hand: You may put an artifact card from your hand onto the battlefield."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Mazemind Tome",
+   "scope": "precon",
+   "deck": "Keen Engineering",
+   "type": "Artifact - Book",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{T}, Put a page counter on this artifact: Scry 1. (Look at the top card of your library. You may put that card on the bottom.)",
+    "{2}, {T}, Put a page counter on this artifact: Draw a card.",
+    "When there are four or more page counters on this artifact, exile it.",
+    "If you do, you gain 4 life."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Mind's Eye",
+   "scope": "precon",
+   "deck": "Keen Engineering",
+   "type": "Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever an opponent draws a card, you may pay {1}.",
+    "If you do, draw a card."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Misleading Signpost",
+   "scope": "precon",
+   "deck": "Keen Engineering",
+   "type": "Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this artifact enters during the declare attackers step, you may reselect which player or permanent target attacking creature is attacking. (It can't attack its controller or their permanents.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Nettlecyst",
+   "scope": "precon",
+   "deck": "Keen Engineering",
+   "type": "Artifact - Equipment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Equipped creature gets +1/+1 for each artifact and/or enchantment you control."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Nevinyrral's Disk",
+   "scope": "precon",
+   "deck": "Keen Engineering",
+   "type": "Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{1}, {T}: Destroy all artifacts, creatures, and enchantments."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Research Thief",
+   "scope": "precon",
+   "deck": "Keen Engineering",
+   "type": "Artifact Creature - Moonfolk Wizard",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever an artifact creature you control deals combat damage to a player, draw a card."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Shimmer Dragon",
+   "scope": "precon",
+   "deck": "Keen Engineering",
+   "type": "Creature - Dragon",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "As long as you control four or more artifacts, this creature has hexproof. (It can't be the target of spells or abilities your opponents control.)",
+    "Tap two untapped artifacts you control: Draw a card."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Soul-Guide Lantern",
+   "scope": "precon",
+   "deck": "Keen Engineering",
+   "type": "Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{T}, Sacrifice this artifact: Exile each opponent's graveyard."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Spire Golem",
+   "scope": "precon",
+   "deck": "Keen Engineering",
+   "type": "Artifact Creature - Golem",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Affinity for Islands (This spell costs {1} less to cast for each Island you control.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Steel Hellkite",
+   "scope": "precon",
+   "deck": "Keen Engineering",
+   "type": "Artifact Creature - Dragon",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{X}: Destroy each nonland permanent with mana value X whose controller was dealt combat damage by this creature this turn.",
+    "Activate only once each turn."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Tamiyo's Logbook",
+   "scope": "precon",
+   "deck": "Keen Engineering",
+   "type": "Artifact - Book",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{5}{U}, {T}: Draw a card.",
+    "This ability costs {1} less to activate for each other artifact you control."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Thirst for Knowledge",
+   "scope": "precon",
+   "deck": "Keen Engineering",
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Then discard two cards unless you discard an artifact card."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Thopter Fabricator",
+   "scope": "precon",
+   "deck": "Keen Engineering",
+   "type": "Artifact - Vehicle",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever you draw your second card each turn, create a 1/1 colorless Thopter artifact creature token with flying."
+   ],
+   "needs": null
+  }
+ ],
+ "review": []
+}

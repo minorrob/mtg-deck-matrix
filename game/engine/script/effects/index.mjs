@@ -88,7 +88,10 @@ export const NEEDS_A_DECISION = Object.freeze(["mergePermanent", "ringTempts", "
   /* Explore (CR 701.44): whether the revealed nonland card goes to the graveyard. */
   "explore",
   /* "Look at the top three cards of your library, then put them back in any order" (Ponder; wave 4b): their order. */
-  "rearrangeTop"]);
+  "rearrangeTop",
+  /* "You may reselect which player or permanent target attacking creature is attacking" (Misleading Signpost; precons B,
+     CR 508.7): which, or none. */
+  "reselectAttack"]);
 
 /* What "each" ranges over (`repeatFor`), each with what it binds: a player -- in turn order from the active player
    (CR 101.4) -- as "that player"; a creature as "that card", and its controller as "that player". */

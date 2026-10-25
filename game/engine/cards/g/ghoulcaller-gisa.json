@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ghoulcaller Gisa",
+    "oracleId": "0dd894cb-1968-471c-af08-ea7ec5ce8428",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Wizard"
+    ],
+    "manaCost": "{3}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "{B}, {T}, Sacrifice another creature: Create X 2/2 black Zombie creature tokens, where X is the sacrificed creature's power.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{B}, {T}, Sacrifice another creature: Create X 2/2 black Zombie creature tokens, where X is the sacrificed creature's power.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{B}"
+        },
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "types": [
+              "Creature"
+            ],
+            "another": true
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": {
+            "powerOf": "sacrificed"
+          },
+          "token": {
+            "name": "Zombie",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Zombie"
+            ],
+            "colors": [
+              "B"
+            ],
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    }
+  ]
+}

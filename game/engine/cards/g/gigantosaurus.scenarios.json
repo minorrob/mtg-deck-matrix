@@ -1,0 +1,67 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Gigantosaurus",
+  "scenarios": [
+    {
+      "name": "Cast: a 10/10 with no abilities",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Gigantosaurus"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Gigantosaurus"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Gigantosaurus",
+            "power": 10,
+            "toughness": 10
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": []
+        }
+      ]
+    }
+  ]
+}

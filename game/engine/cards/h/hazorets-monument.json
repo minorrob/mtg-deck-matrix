@@ -1,0 +1,67 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hazoret's Monument",
+    "oracleId": "f02a4cbf-f0bb-4bc7-99c2-6afa1b41ebb8",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Red creature spells you cast cost {1} less to cast.\nWhenever you cast a creature spell, you may discard a card. If you do, draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Red creature spells you cast cost {1} less to cast.",
+      "rule": "spells-cost-less",
+      "affects": {
+        "what": "spell",
+        "types": [
+          "Creature"
+        ],
+        "colors": [
+          "R"
+        ]
+      },
+      "amount": 1
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast a creature spell, you may discard a card. If you do, draw a card.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "filter": {
+          "types": [
+            "Creature"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "discard",
+          "count": 1,
+          "remember": true
+        },
+        {
+          "effect": "draw",
+          "count": 1,
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          }
+        }
+      ],
+      "optional": true
+    }
+  ]
+}

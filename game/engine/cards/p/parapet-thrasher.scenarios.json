@@ -1,0 +1,263 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Parapet Thrasher",
+  "fixtures": {
+    "Whelpling": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Dragon"
+      ],
+      "manaCost": "{1}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 2,
+      "toughness": 2,
+      "keywords": [
+        "Flying"
+      ]
+    },
+    "Relic": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Both Dragons connect with Maya: one trigger -- 4 damage to Trey, not Maya; then the Whelpling hits Trey in the same combat: a second trigger, the 4-damage mode no longer offered -- Trey's Relic destroyed, not Maya's",
+      "seats": 3,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Parapet Thrasher",
+            "Whelpling",
+            "Whelpling"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Relic"
+          ]
+        },
+        {
+          "seat": 2,
+          "zone": "battlefield",
+          "cards": [
+            "Relic"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Parapet Thrasher",
+            "Whelpling",
+            "Whelpling"
+          ],
+          "at": [
+            "Maya",
+            "Maya",
+            "Trey"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Destroy target artifact that opponent controls. → Relic",
+                  "This creature deals 4 damage to each other opponent.",
+                  "Exile the top card of your library. You may play it this turn."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "This creature deals 4 damage to each other opponent."
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Destroy target artifact that opponent controls. → Relic",
+                  "Exile the top card of your library. You may play it this turn."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Destroy target artifact that opponent controls. → Relic"
+          ]
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 34
+        },
+        {
+          "seat": 2,
+          "life": 34
+        },
+        {
+          "seat": 2,
+          "zone": "graveyard",
+          "cards": [
+            "Relic"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Relic"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Exile the top card: Rob may play it this turn",
+      "library": [
+        "Wastes",
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Parapet Thrasher"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Parapet Thrasher"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "choose": [
+            "Exile the top card of your library. You may play it this turn."
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Wastes"
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "play": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Parapet Thrasher",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "life": 36
+        }
+      ]
+    },
+    {
+      "name": "A Bear of his dealing combat damage is no Dragon: nothing triggers",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Parapet Thrasher",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Bear"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 1,
+          "life": 38
+        }
+      ]
+    }
+  ]
+}

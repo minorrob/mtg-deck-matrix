@@ -1,0 +1,97 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Nogi, Draco-Zealot",
+    "oracleId": "3d04aa8c-7bff-42c6-bed3-0b18d2cb1529",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Kobold",
+      "Shaman"
+    ],
+    "manaCost": "{1}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Dragon spells you cast cost {1} less to cast.\nWhenever Nogi attacks, if you control three or more Dragons, until end of turn, Nogi becomes a Dragon with base power and toughness 5/5 and gains flying.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Dragon spells you cast cost {1} less to cast.",
+      "rule": "spells-cost-less",
+      "affects": {
+        "what": "spell",
+        "subtypes": [
+          "Dragon"
+        ]
+      },
+      "amount": 1
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever Nogi attacks, if you control three or more Dragons, until end of turn, Nogi becomes a Dragon with base power and toughness 5/5 and gains flying.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "targets": "self",
+          "layer": 4,
+          "apply": {
+            "setCreatureTypes": [
+              "Dragon"
+            ]
+          },
+          "until": "end-of-turn"
+        },
+        {
+          "effect": "effectUntil",
+          "targets": "self",
+          "layer": 7,
+          "sublayer": "b",
+          "apply": {
+            "setPower": 5,
+            "setToughness": 5
+          },
+          "until": "end-of-turn"
+        },
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Flying"
+          ]
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "count": {
+              "what": "permanent",
+              "subtypes": [
+                "Dragon"
+              ],
+              "controller": "you"
+            }
+          },
+          "atLeast": 3
+        }
+      }
+    }
+  ]
+}

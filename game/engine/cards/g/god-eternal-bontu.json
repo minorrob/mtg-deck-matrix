@@ -1,0 +1,99 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "God-Eternal Bontu",
+    "oracleId": "183891b0-b5ec-47f4-8d09-b9d3cfc4e7f1",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Zombie",
+      "God"
+    ],
+    "manaCost": "{3}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 5,
+    "toughness": 6
+  },
+  "oracleText": "Menace\nWhen God-Eternal Bontu enters, sacrifice any number of other permanents, then draw that many cards.\nWhen God-Eternal Bontu dies or is put into exile from the battlefield, you may put her into her owner's library third from the top.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Menace",
+      "keyword": "menace"
+    },
+    {
+      "kind": "triggered",
+      "text": "When God-Eternal Bontu enters, sacrifice any number of other permanents, then draw that many cards.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "sacrifice",
+          "optional": true,
+          "count": {
+            "count": {
+              "what": "permanent",
+              "controller": "you",
+              "another": true
+            }
+          },
+          "selector": {
+            "another": true
+          },
+          "remember": true
+        },
+        {
+          "effect": "draw",
+          "count": {
+            "rememberedCount": true
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "When God-Eternal Bontu dies or is put into exile from the battlefield, you may put her into her owner's library third from the top.",
+      "trigger": {
+        "on": "dies"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "that card",
+          "to": "library",
+          "position": 3
+        }
+      ],
+      "optional": true
+    },
+    {
+      "kind": "triggered",
+      "text": "When God-Eternal Bontu dies or is put into exile from the battlefield, you may put her into her owner's library third from the top.",
+      "trigger": {
+        "on": "exiled",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "that card",
+          "to": "library",
+          "position": 3
+        }
+      ],
+      "optional": true
+    }
+  ]
+}

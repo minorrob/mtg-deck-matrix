@@ -388,6 +388,12 @@ function factValue(value, context, state = null) {
   return key === "powerOf" ? powerOf(state, id) : toughnessOf(state, id);
 }
 
+function thisCardInGraveyard(state, source) {
+  if (source === null || source === undefined) return [];
+  for (const list of Object.values(state.zones.graveyard ?? {})) for (const id of list) if (state.objects[id]?.wasPermanent === source) return [id];
+  return [];
+}
+
 function objectsOf(value, context) {
   if (value === "self") return context.source !== null && context.source !== undefined ? [context.source] : [];
   /* "That spell", "that creature": what the trigger is about (trigger.mjs), while it is still there. */
@@ -441,6 +447,10 @@ function playersOf(value, context, state = null) {
      (CR 800.4a; effects/zones.mjs, playersFor). */
   if (value === "each opponent who didn't")
     return (state?.players ?? []).filter((p) => p.id !== context.controller && !(context.whoDid ?? []).includes(p.id)).map((p) => p.id);
+  /* "This creature deals 4 damage to each other opponent" (Parapet Thrasher; precon load lane C): its controller's opponents but
+     the one the trigger is about -- "that opponent" -- each still in the game (CR 800.4a; effects/zones.mjs, playersFor). */
+  if (value === "each other opponent")
+    return (state?.players ?? []).map((p) => p.id).filter((id) => id !== context.controller && id !== context.about?.player);
   if (!isRef(value)) return value;
   const chosen = (context.targets ?? [])[value.target];
   if (Array.isArray(chosen)) return chosen.filter((t) => t?.kind === "player").map((t) => t.id);
@@ -479,6 +489,10 @@ export function bindEffect(effect, context, state = null) {
     if (walker === undefined || walker === null) bound.who = "that player";
     else { bound.who = []; bound.targets = !state || state.objects[walker]?.zone === "battlefield" ? [walker] : []; }
   }
+  /* "RETURN THIS CARD TO ITS OWNER'S HAND" (Angelic Destiny, its "when enchanted creature dies"): the card the ability's source
+     became in a graveyard, the new object it is once it was put there from the battlefield (CR 400.7; the Aura, by the
+     state-based action after the creature died, CR 704.5m). Gone from there since, it is nothing. */
+  if (bound.targets === "this card") bound.targets = state ? thisCardInGraveyard(state, context.source ?? context.sourceWas) : [];
   if ("targets" in bound) bound.targets = objectsOf(bound.targets, context);
   /* "Destroy all creatures with power greater than target creature's power" (Fell the Mighty; CR 608.2h): a selector's
      `power.moreThan`, a fact about a target, read as the resolution began -- a number, or null when that target is no
@@ -563,8 +577,13 @@ export function bindEffect(effect, context, state = null) {
 const THIS_WAY = ["rememberedCount", "lifeLostThisWay", "cardTypesAmong"];
 /* An effect's counts of this resolution ("that many" of what the effect before it did), counted now. */
 function thisWayNow(bound, context, state) {
-  for (const key of AMOUNT_PARAMS)
-    if (bound[key] && typeof bound[key] === "object" && THIS_WAY.some((kind) => kind in bound[key])) bound[key] = amountOf(state, bound[key], context);
+  for (const key of AMOUNT_PARAMS) {
+    if (!(bound[key] && typeof bound[key] === "object" && THIS_WAY.some((kind) => kind in bound[key]))) continue;
+    /* "For each of those cards that are STILL exiled" (Dragonhawk, Fate's Tempest; script/amount.mjs, `still`): the cards
+       remembered now, counted as the delayed trigger resolves. */
+    if (bound[key].still === true) bound[key] = {...bound[key], still: [...(context.remembered ?? [])]};
+    else bound[key] = amountOf(state, bound[key], context);
+  }
   return bound;
 }
 /* Each effect, and those nested in it -- a branch's, a repetition's, a modal's modes' -- as `one` makes it. */

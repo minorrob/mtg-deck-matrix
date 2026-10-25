@@ -72,6 +72,9 @@ export const STATIC_RULES = Object.freeze({
       of the Void): `affects` the players whose pools it keeps (a player selector, "you" its controller). turn.mjs, as each
       step and phase ends (emptyManaPools). */
   "mana-becomes-colorless": "rules/turn.mjs",
+  /** CR 500.4's exception: "You don't lose unspent red mana as steps and phases end" (Leyline Tyrant; precon load lane C):
+      `affects` the players whose red mana stays -- the pool's and the red kept beside it. turn.mjs, emptyManaPools. */
+  "keeps-red-mana": "rules/turn.mjs",
   /** CR 601.2f: "Artifact spells you cast cost {1} less to cast" (the Medallions, Foundry Inspector). actions.mjs. */
   "spells-cost-less": "rules/actions.mjs",
   /** CR 601.2f: "Noncreature spells cost {1} more to cast" (Thalia), "spells your opponents cast cost {2} more" (God-
@@ -214,6 +217,9 @@ export const STATIC_RULES = Object.freeze({
   /** "Creatures can't attack you unless their controller pays {2} for each" (CantAttackUnless): attackTax, paid as attackers
       are declared. rules/combat.mjs. */
   "attack-tax": "rules/combat.mjs",
+  /** "As long as this creature is attacking, creatures can't block unless their controller pays {1} for each of those
+      creatures" (Archangel of Tithes; CR 509.1d-f): blockTax, paid as blockers are declared. rules/combat.mjs. */
+  "block-tax": "rules/combat.mjs",
   /** "This artifact doesn't untap during your untap step", "creatures with power 3 or greater don't untap during their
       controllers' untap steps": `affects` what stays tapped, read in the untap step (ruleChanged). rules/turn.mjs. */
   "doesnt-untap": "rules/turn.mjs",
@@ -1106,6 +1112,25 @@ export function attackTax(state, picked) {
      controller, the "you", attacked; not a planeswalker of theirs. It lasts whatever became of the Saga. */
   for (const {defenderId, planeswalkerId} of picked) for (const effect of state.effects ?? [])
     if (effect.rule === "attack-tax" && effect.sourceController === defenderId && planeswalkerId === undefined) total += effect.apply?.amount ?? 0;
+  return total;
+}
+
+/**
+ * "CREATURES CAN'T BLOCK UNLESS THEIR CONTROLLER PAYS {1} FOR EACH OF THOSE CREATURES" (Archangel of Tithes, "as long as this
+ * creature is attacking"; CR 509.1d-f): what these blockers cost the player declaring them, from every permanent's
+ * `block-tax` static whose condition holds now -- whoever controls it -- `amount` for each creature among them, once however
+ * many attackers it blocks.
+ */
+export function blockTax(state, picked) {
+  const creatures = new Set(picked.map((o) => o.cardId)).size;
+  let total = 0;
+  const held = staticAbilities(state);
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    for (const ability of held(holderId)) if (ability.kind === "static" && ability.rule === "block-tax"
+      && conditionHolds(state, ability.condition, {controller: holder.controller, source: holderId}))
+      total += amountOf(state, ability.amount ?? 0, {controller: holder.controller, source: holderId}) * creatures;
+  }
   return total;
 }
 

@@ -60,14 +60,16 @@ const handOf = (name) => scripts.find((s) => s.identity.name === name);
      Wicked), a spell of mana value 1 to counter (Mental Misstep), the {2} a mode adds to its mana cost, which spree's one
      or more modes always do (Explosive Derailment, Getaway Glamer of Rob's lists, and Return the Favor's {1}; CR 702.172a) -- or for want of seven cards in its player's graveyard, without which it can't be cast at all (Proft,
      Sinister Mastermind). The card load of 2026-10-24 added 23 for the same wants, and an artifact card in its player's
-     graveyard to return (Refurbish); each has scenarios of its own that cast it. Named, so a card that stops being played
-     in its smoke game is found, not counted. */
+     graveyard to return (Refurbish); each has scenarios of its own that cast it. The precon load of 2026-10-25 added one
+     that can't be cast during its player's first three turns of the game, where a smoke game casts it (Serra Avenger; its
+     scenarios cast it on the fourth). Named, so a card that stops being played in its smoke game is found, not
+     counted. */
   const unplayed = smoked.filter((r) => !r.played).map((r) => r.name).sort();
   eq(unplayed, ["Argivian Restoration", "Artifact Blast", "Assassinate", "Blue Elemental Blast", "Bright Reprisal",
     "Cloud's Limit Break", "Condemn", "Death Stroke", "Devout Decree", "Eriette's Lullaby", "Explosive Derailment",
     "Flashfreeze", "Flourishing Grapple", "Getaway Glamer", "Halt Order", "Immolating Glare", "Keep Safe", "Kill Shot",
     "Mental Misstep", "Mirrodin Avenged", "Precise Redaction", "Proft, Sinister Mastermind", "Rebuff the Wicked",
-    "Rebuke", "Reconstruction", "Refurbish", "Return the Favor", "Ritual of Restoration", "Silverstrike",
+    "Rebuke", "Reconstruction", "Refurbish", "Return the Favor", "Ritual of Restoration", "Serra Avenger", "Silverstrike",
     "Spell Snare", "Swift Response", "Take Vengeance", "Turn Aside", "Vengeance", "You Are Already Dead"], `and the other ${scripts.length - unplayed.length} of ${scripts.length} were actually played or cast in it`);
   /* Batch 30: a card aimed at its controller's own creature spell answers the Smoke Whelp its player casts first. */
   ok(smoked.find((r) => r.name === "Double Major")?.played === true, "Double Major (\"copy target creature spell you control\") is cast in its smoke game, at its player's own creature spell");

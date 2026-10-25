@@ -1,0 +1,335 @@
+{
+ "schema": "library-load-lane@1",
+ "lane": "D-dinosaurs",
+ "theme": "Tramplesaurus Rex",
+ "label": "Big creatures (Ghalta, Primal Hunger): formidable and ferocious; \"can't be blocked by more than one\"; fights against different creatures (Ezuri's Predation); divided damage; \"greatest mana value among your commanders\"; flash for green creatures",
+ "source": {
+  "precon": "TramplesaurusRex_FDC",
+  "set": "FDC",
+  "released": "2026-10-02",
+  "decklists": "data/precons.json",
+  "oracle": "data/engine/oracle.json"
+ },
+ "cards": [
+  {
+   "name": "Arachnogenesis",
+   "scope": "precon",
+   "deck": "Tramplesaurus Rex",
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Create X 1/2 green Spider creature tokens with reach, where X is the number of creatures attacking you.",
+    "Prevent all combat damage that would be dealt this turn by non-Spider creatures."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Bite Down",
+   "scope": "precon",
+   "deck": "Tramplesaurus Rex",
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Target creature you control deals damage equal to its power to target creature or planeswalker you don't control."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Challenger Troll",
+   "scope": "precon",
+   "deck": "Tramplesaurus Rex",
+   "type": "Creature - Troll",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Each creature you control with power 4 or greater can't be blocked by more than one creature."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Dungrove Elder",
+   "scope": "precon",
+   "deck": "Tramplesaurus Rex",
+   "type": "Creature - Treefolk",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Dungrove Elder's power and toughness are each equal to the number of Forests you control."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Elder Gargaroth",
+   "scope": "precon",
+   "deck": "Tramplesaurus Rex",
+   "type": "Creature - Beast",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever this creature attacks or blocks",
+    "choose one —",
+    "• Create a 3/3 green Beast creature token.",
+    "• You gain 3 life.",
+    "• Draw a card."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Ezuri's Predation",
+   "scope": "precon",
+   "deck": "Tramplesaurus Rex",
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "For each creature your opponents control, create a 4/4 green Phyrexian Beast creature token.",
+    "Each of those tokens fights a different one of those creatures."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Garruk's Packleader",
+   "scope": "precon",
+   "deck": "Tramplesaurus Rex",
+   "type": "Creature - Beast",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever another creature you control with power 3 or greater enters, you may draw a card."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Gigantosaurus",
+   "scope": "precon",
+   "deck": "Tramplesaurus Rex",
+   "type": "Creature - Dinosaur",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [],
+   "needs": null
+  },
+  {
+   "name": "Llanowar Tribe",
+   "scope": "precon",
+   "deck": "Tramplesaurus Rex",
+   "type": "Creature - Elf Druid",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{T}: Add {G}{G}{G}."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Monstrous Onslaught",
+   "scope": "precon",
+   "deck": "Tramplesaurus Rex",
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Monstrous Onslaught deals X damage divided as you choose among any number of target creatures, where X is the greatest power among creatures you control as you cast this spell."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Pugnacious Hammerskull",
+   "scope": "precon",
+   "deck": "Tramplesaurus Rex",
+   "type": "Creature - Dinosaur",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever this creature attacks while you don't control another Dinosaur, put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Regal Imperiosaur",
+   "scope": "precon",
+   "deck": "Tramplesaurus Rex",
+   "type": "Creature - Dinosaur",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Other Dinosaurs you control get +1/+1."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Rhonas the Indomitable",
+   "scope": "precon",
+   "deck": "Tramplesaurus Rex",
+   "type": "Legendary Creature - God",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Rhonas can't attack or block unless you control another creature with power 4 or greater.",
+    "{2}{G}: Another target creature gets +2/+0 and gains trample until end of turn."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Rhonas's Monument",
+   "scope": "precon",
+   "deck": "Tramplesaurus Rex",
+   "type": "Legendary Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever you cast a creature spell, target creature you control gets +2/+2 and gains trample until end of turn."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Scrapshooter",
+   "scope": "precon",
+   "deck": "Tramplesaurus Rex",
+   "type": "Creature - Raccoon Archer",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature enters, if the gift was promised, destroy target artifact or enchantment an opponent controls."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Surrak and Goreclaw",
+   "scope": "precon",
+   "deck": "Tramplesaurus Rex",
+   "type": "Legendary Creature - Human Bear",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever another nontoken creature you control enters, put a +1/+1 counter on it.",
+    "It gains haste until end of turn."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Surrak, the Hunt Caller",
+   "scope": "precon",
+   "deck": "Tramplesaurus Rex",
+   "type": "Legendary Creature - Human Warrior",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Formidable — At the beginning of combat on your turn, if creatures you control have total power 8 or greater, target creature you control gains haste until end of turn. (It can attack and {T} no matter when it came under your control.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Tangleweave Armor",
+   "scope": "precon",
+   "deck": "Tramplesaurus Rex",
+   "type": "Artifact - Equipment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Equipped creature gets +X/+X, where X is the greatest mana value among your commanders."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Terrian, World Tyrant",
+   "scope": "precon",
+   "deck": "Tramplesaurus Rex",
+   "type": "Legendary Creature - Dinosaur Ooze",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [],
+   "needs": null
+  },
+  {
+   "name": "Thickest in the Thicket",
+   "scope": "precon",
+   "deck": "Tramplesaurus Rex",
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this enchantment enters, put X +1/+1 counters on target creature, where X is that creature's power.",
+    "At the beginning of your end step, draw two cards if you control the creature with the greatest power or tied for the greatest power."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Tranquil Thicket",
+   "scope": "precon",
+   "deck": "Tramplesaurus Rex",
+   "type": "Land",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Cycling {G} ({G}, Discard this card: Draw a card.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Verdant Sun's Avatar",
+   "scope": "precon",
+   "deck": "Tramplesaurus Rex",
+   "type": "Creature - Dinosaur Avatar",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever this creature or another creature you control enters, you gain life equal to that creature's toughness."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Whiptongue Hydra",
+   "scope": "precon",
+   "deck": "Tramplesaurus Rex",
+   "type": "Creature - Lizard Hydra",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature enters, destroy all creatures with flying.",
+    "Put a +1/+1 counter on this creature for each creature destroyed this way."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Whisperer of the Wilds",
+   "scope": "precon",
+   "deck": "Tramplesaurus Rex",
+   "type": "Creature - Human Shaman",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Ferocious — {T}: Add {G}{G}.",
+    "Activate only if you control a creature with power 4 or greater."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Witch's Clinic",
+   "scope": "precon",
+   "deck": "Tramplesaurus Rex",
+   "type": "Land",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{2}, {T}: Target commander gains lifelink until end of turn."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Yeva, Nature's Herald",
+   "scope": "precon",
+   "deck": "Tramplesaurus Rex",
+   "type": "Legendary Creature - Elf Shaman",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "You may cast green creature spells as though they had flash."
+   ],
+   "needs": null
+  }
+ ],
+ "review": []
+}

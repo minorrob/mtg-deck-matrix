@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Research Thief",
+    "oracleId": "ba5055ce-6809-47a4-bee6-fb97a5b60f8a",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Moonfolk",
+      "Wizard"
+    ],
+    "manaCost": "{4}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Flash\nFlying\nWhenever an artifact creature you control deals combat damage to a player, draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flash",
+      "keyword": "flash"
+    },
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever an artifact creature you control deals combat damage to a player, draw a card.",
+      "trigger": {
+        "on": "damage dealt",
+        "who": "any",
+        "to": "player",
+        "combat": true,
+        "filter": {
+          "types": [
+            "Artifact",
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

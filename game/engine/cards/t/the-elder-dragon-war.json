@@ -1,0 +1,104 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "The Elder Dragon War",
+    "oracleId": "4945f03b-ff99-4923-b62d-3cdb60275ef1",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Saga"
+    ],
+    "manaCost": "{2}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Read ahead (Choose a chapter and start with that many lore counters. Add one after your draw step. Skipped chapters don't trigger. Sacrifice after III.)\nI — This Saga deals 2 damage to each creature and each opponent.\nII — Discard any number of cards, then draw that many cards.\nIII — Create a 4/4 red Dragon creature token with flying.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Read ahead",
+      "keyword": "read ahead"
+    },
+    {
+      "kind": "triggered",
+      "text": "I — This Saga deals 2 damage to each creature and each opponent.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 1
+      },
+      "effects": [
+        {
+          "effect": "damageAll",
+          "amount": 2,
+          "who": "opponent",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "II — Discard any number of cards, then draw that many cards.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 2
+      },
+      "effects": [
+        {
+          "effect": "discard",
+          "anyNumber": true,
+          "remember": true
+        },
+        {
+          "effect": "draw",
+          "count": {
+            "rememberedCount": true
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "III — Create a 4/4 red Dragon creature token with flying.",
+      "trigger": {
+        "on": "chapter",
+        "chapter": 3
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Dragon",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Dragon"
+            ],
+            "colors": [
+              "R"
+            ],
+            "power": 4,
+            "toughness": 4,
+            "keywords": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

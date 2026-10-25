@@ -1,0 +1,152 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Goldlust Triad",
+  "fixtures": {
+    "Bird": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bird"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "keywords": [
+        "Flying"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It attacks Maya; Rob makes a token copy attacking Trey; both connect: two Treasures, and the token is exiled at end of combat",
+      "seats": 3,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Goldlust Triad"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Goldlust Triad"
+          ],
+          "at": "Maya"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Yes"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "settle": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 36
+            },
+            {
+              "seat": 2,
+              "life": 36
+            },
+            {
+              "seat": 0,
+              "controls": [
+                "Goldlust Triad",
+                "Goldlust Triad",
+                "Treasure",
+                "Treasure"
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Goldlust Triad",
+            "Treasure",
+            "Treasure"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Blocked, it deals no damage to a player: no Treasure",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Goldlust Triad"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bird"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Goldlust Triad"
+          ]
+        },
+        {
+          "block": [
+            [
+              "Bird",
+              "Goldlust Triad"
+            ]
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Goldlust Triad"
+          ]
+        },
+        {
+          "seat": 1,
+          "life": 40
+        }
+      ]
+    }
+  ]
+}

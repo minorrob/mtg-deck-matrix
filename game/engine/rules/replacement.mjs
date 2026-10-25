@@ -388,6 +388,12 @@ function applyOne(state, {holderId, ability, effect = null}, proposal, dry = fal
   const next = {...proposal, applied: [...(proposal.applied ?? []), ability.id], appliedBy: [...(proposal.appliedBy ?? []), appliedKey(holderId, ability)]};
 
   if (ability.change?.to) next.to = ability.change.to;
+  /* "IF A NONTOKEN CREATURE AN OPPONENT CONTROLS WOULD DIE, INSTEAD EXILE THAT CARD AND CREATE A 2/2 BLACK ZOMBIE CREATURE TOKEN"
+     (Kalitas, Traitor of Ghet; CR 614.1a, 614.6): what the replacement does beside the move is part of the same event, done
+     by its holder's controller once the card has moved (`followUps`, run by the routes that move it: effects/zones.mjs
+     moveOne, rules/sba.mjs's lethal creatures) -- not a trigger, so nothing can respond between the two. */
+  if (proposal.event === "zone-change" && Array.isArray(ability.change?.then) && state.objects[holderId])
+    next.followUps = [...(next.followUps ?? []), {effects: structuredClone(ability.change.then), context: {controller: controllerOf(state, holderId), source: holderId}}];
   /* "Instead exile it with a void counter on it" (Dauthi Voidwalker; CR 614.1a, 122.1): counters the card is given as it
      arrives in exile (placeReplacedCounters). A later effect that sends it elsewhere leaves them behind. */
   if (ability.change?.withCounters) {
@@ -416,6 +422,9 @@ function applyOne(state, {holderId, ability, effect = null}, proposal, dry = fal
      don't, it gains haste" -- its controller's choice, asked once it is there (rules/entering.mjs); each instance its own
      (702.136b), as each effect applies once (CR 614.5). */
   if (ability.change?.riot === true) next.asks = [...(next.asks ?? []), {riot: true}];
+  /* READ AHEAD (CR 702.155a; The Elder Dragon War): how many lore counters it enters with, from one to its final chapter -- its
+     controller's choice, asked once it is there, its arrival held for the answer (rules/entering.mjs). */
+  if (Number.isInteger(ability.change?.readAhead) && ability.change.readAhead >= 1) next.asks = [...(next.asks ?? []), {readAhead: ability.change.readAhead}];
   /* DEVOUR (CR 702.82a, 702.82c; Feasting Hobbit): which permanents to sacrifice, asked once it is there (rules/entering.mjs). */
   if (ability.change?.devour) next.asks = [...(next.asks ?? []), {devour: structuredClone(ability.change.devour)}];
   /* "You may have this creature enter as a copy of any creature on the battlefield" (CR 614.1c, 707.9): which one is asked
@@ -660,9 +669,12 @@ export function ownEntering(state, {objectId, player, types, abilities}) {
 
 /* How an event ends under every order of the effects that apply to it (CR 616.1f: each applied, then what still applies),
    and whether that is one way. Tried dry, so trying each order spends nothing. A damage event ends in how much, to whom,
-   and how much a prevention that counts it stopped ("mills that many"). */
+   and how much a prevention that counts it stopped ("mills that many"). A zone change ends where the card goes: what a
+   replacement does beside the move (Kalitas's token) is not compared -- NAMED: Kalitas and another "exile it instead" on one
+   death (Liesa, Dauthi Voidwalker, a second Kalitas) end alike here, and the first found applies, unasked; a zone change
+   whose orders end differently is asked, but its move does not yet pause for the answer (applyReplacements). */
 const endOf = (p) => JSON.stringify({to: p.to ?? null, tapped: p.tapped === true, counters: p.counters ?? {}, asks: p.asks ?? [], designations: p.designations ?? [],
-  amount: p.amount ?? null, toPlayer: p.toPlayer ?? null, toCard: p.toCard ?? null, counted: (p.followUps ?? []).map((f) => f.context.about?.amount ?? null)});
+  amount: p.amount ?? null, toPlayer: p.toPlayer ?? null, toCard: p.toCard ?? null, counted: p.event === "damage" ? (p.followUps ?? []).map((f) => f.context.about?.amount ?? null) : []});
 function ends(state, proposal, out = new Set(), depth = 0) {
   const candidates = depth < 8 ? applicable(state, proposal) : [];
   if (!candidates.length) { out.add(endOf(proposal)); return out; }

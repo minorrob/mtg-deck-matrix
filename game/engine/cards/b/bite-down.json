@@ -1,0 +1,71 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bite Down",
+    "oracleId": "623903de-3c04-4745-9af3-d7ec9fb2574d",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target creature you control deals damage equal to its power to target creature or planeswalker you don't control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Target creature you control deals damage equal to its power to target creature or planeswalker you don't control.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        },
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "opponent"
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ],
+              "controller": "opponent"
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "from": {
+            "target": 0
+          },
+          "targets": {
+            "target": 1
+          },
+          "amount": {
+            "powerOf": {
+              "target": 0
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

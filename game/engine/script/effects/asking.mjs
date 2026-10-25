@@ -956,7 +956,9 @@ export const sacrifice = {
       return {events};
     }
     state.awaiting = {kind: "effect-choice", effect: "sacrifice", player: queue[0], remaining: queue.slice(1), ...(counts === null ? {count: params.count ?? 1} : {counts}), ...asked,
-      ...(params.remember ? {remember: context.controller, remembering: []} : {})};
+      /* "You create a 2/2 black Zombie creature token for each creature sacrificed this way" (Syphon Flesh): `remember: "each"`,
+         what every player named sacrificed, not the effect's controller's alone. */
+      ...(params.remember ? {remember: params.remember === "each" ? "each" : context.controller, remembering: []} : {})};
     return true;
   },
 
@@ -1033,13 +1035,13 @@ export const sacrifice = {
     let remembering = awaiting.remembering;
     const movedWas = [];
     for (const {player, ids} of decided) {
-      const gone = [];
+      const gone = [], theirs = awaiting.remember === player || awaiting.remember === "each";
       for (const id of ids) {
-        const was = awaiting.remember === player ? lastKnown(state, id) : null;
+        const was = theirs ? lastKnown(state, id) : null;
         const moved = sacrificeOne(state, id, events);
         if (moved !== null) { gone.push(moved); if (was) movedWas.push(was); }
       }
-      if (awaiting.remember === player) remembering = [...remembering, ...gone];
+      if (theirs) remembering = [...remembering, ...gone];
     }
     const refused = awaiting.optional || awaiting.named ? unrefused(state, awaiting, decided) : null;
     return remembering || refused ? {events, ...(remembering ? {remembered: remembering, movedWas} : {}), ...(refused ? {splice: refused} : {})} : events;
@@ -1896,6 +1898,47 @@ export const attackWhom = {
   },
 };
 
+/* ---- reselectAttack (precons B; CR 508.7): "you may reselect which player or permanent target attacking creature is
+   attacking. (It can't attack its controller or their permanents.)" (Misleading Signpost). The effect's controller chooses
+   -- not the attacking creature's -- among what it could be attacking instead: an opponent of the creature's controller,
+   or a planeswalker one controls (CR 508.7c; every opponent, under Commander's attack multiple players option, CR 508.7d,
+   802.2), with no requirement or restriction on attacking applied (508.7b) -- or leaves it as it is ("may"). Nothing else
+   to choose, and nobody is asked. The creature stays in combat and has not attacked again (508.7a): only what it attacks
+   changes, and who defends with it (CR 506.2). ---- */
+export const reselectAttack = {
+  open(state, params, context) {
+    /* No longer attacking (removed from combat, CR 506.4), and there is nothing to reselect. */
+    const attack = (state.combat?.attacks ?? []).find((a) => (params.targets ?? []).includes(a.attacker));
+    if (!attack) return false;
+    const places = attackPlaces(state, controllerOf(state, attack.attacker)).filter((p) => !(p.player === attack.defender && p.planeswalker === attack.planeswalker));
+    if (!places.length) return false;
+    state.awaiting = {kind: "effect-choice", effect: "reselectAttack", player: context.controller, attacker: attack.attacker, places};
+    return true;
+  },
+  choice(state, awaiting) {
+    const attack = (state.combat?.attacks ?? []).find((a) => a.attacker === awaiting.attacker);
+    const place = ({player, planeswalker}) => (planeswalker === undefined ? state.players[player].name : `${state.objects[planeswalker]?.card ?? "A planeswalker"} (${state.players[player].name})`);
+    return {id: `reselectAttack:${awaiting.attacker}`, title: `${state.objects[awaiting.attacker]?.card ?? "The creature"} is attacking: reselect what it attacks?`, mode: "one", min: 1, max: 1,
+      options: [...awaiting.places.map((p, index) => ({index, label: place(p), playerId: p.player, ...(p.planeswalker !== undefined ? {planeswalkerId: p.planeswalker} : {})})),
+        {index: awaiting.places.length, label: attack ? `Leave it attacking ${place({player: attack.defender, planeswalker: attack.planeswalker})}` : "Leave it", keep: true}]};
+  },
+  apply(state, awaiting, indices) {
+    const option = reselectAttack.choice(state, awaiting).options[(indices ?? [])[0]];
+    if (!option) throw new Error("Invalid selection");
+    const attack = (state.combat?.attacks ?? []).find((a) => a.attacker === awaiting.attacker);
+    if (option.keep || !attack) return {events: []};
+    attack.defender = option.playerId;
+    if (option.planeswalkerId !== undefined) attack.planeswalker = option.planeswalkerId; else delete attack.planeswalker;
+    /* The defending players are those it and the others now attack (CR 506.2). */
+    state.combat.defenders = [...new Set(state.combat.attacks.map((a) => a.defender))];
+    return {events: []};
+  },
+  /* Its controller has left the game (CR 800.4a): nothing is reselected. */
+  left() {
+    return [];
+  },
+};
+
 /* ---- enchantWhat: an Aura entering the battlefield without being cast, with more than one thing it could enchant
    (CR 303.4f; effects/permanents.mjs, enchantOnArrival): which, its controller's choice as it enters -- asked at once,
    nothing happening between. Queued by what put it there; never written in a card script. ---- */
@@ -1997,6 +2040,8 @@ export const chooseCard = {
        unless the card says "may" (`upTo`), and none, and nobody is asked. */
     const onField = zone === "battlefield";
     const matchers = alternatives.map((one) => compileSelector({...one, what: "card", zone}));
+    /* Beheld (below): a card from the hand read as the card it is there, a permanent as the permanent. */
+    const beheldFits = (state, id, ctx) => alternatives.some((one) => compileSelector({...one, what: "card", zone: state.objects[id].zone})(state, id, ctx));
     /* "A creature card from among them" (Lord of the Void): from what an earlier effect of this resolution moved there,
        face up -- so a card that fits must be chosen; only a search of a hidden zone may fail to find (CR 701.23b). */
     /* "You may exile ONE OF THEM from your graveyard" (Conspiracy Theorist): among what a "one or more" trigger is about
@@ -2017,11 +2062,16 @@ export const chooseCard = {
        beside `among`, each wherever it went -- a public zone, the one a leaving trigger can find it in (CR 400.7e) -- and read
        as it is there (CR 608.2h). */
     const anywhere = zone === "any";
+    /* BEHOLD AS AN EFFECT (CR 701.4a; Sarkhan, Dragon Ascendant, precon load lane C): "you may behold a Dragon" -- choose a Dragon
+       you control or reveal a Dragon card from your hand (`behold: true`, beside `zone: "battlefield"` and `to: "stay"`): both
+       offered in the one question, each where it is, a card from the hand revealed as it is chosen (`reveal`, apply below). */
+    const beholding = params.behold === true && onField;
     const pool = (zones ? zones.flatMap((z) => cardsIn(state, z, player)) : among ? amongIds.filter((id) => (anywhere ? state.objects[id] !== undefined : state.objects[id]?.zone === zone)) : onField ? [...state.zones.battlefield] : cardsIn(state, zone, zone === "exile" ? null : player))
+      .concat(beholding ? cardsIn(state, "hand", player).filter((id) => alternatives.some((one) => compileSelector({...one, what: "card", zone: "hand", controller: "you"})(state, id, {controller: player, source: context.source}))) : [])
       .filter((id) => !except?.has(id));
     /* "For each player, choose a creature that player controls" (The Eternal Wanderer): the player a repetition is about,
        for a selector's "that player" (script/resolution.mjs, repeatFor). */
-    const fits = (id) => (anywhere || zones ? alternatives.map((one) => compileSelector({...one, what: "card", zone: state.objects[id].zone})) : matchers)
+    const fits = (id) => (anywhere || zones ? alternatives.map((one) => compileSelector({...one, what: "card", zone: state.objects[id].zone})) : beholding ? [beheldFits] : matchers)
       /* And the X its spell was cast with: "a creature card with mana value X or less" (Finale of Devastation; script/filter.mjs). */
       .some((m) => m(state, id, {controller: player, source: context.source, ...(context.about ? {about: context.about} : {}), ...(context.x !== undefined ? {x: context.x} : {})}));
     const fitting = greatestOf(state, params.greatest, pool.filter(fits));
@@ -2046,6 +2096,7 @@ export const chooseCard = {
     const min = params.upTo || (!faceUp && hasQuality(params.selector)) ? 0 : Math.min(count, cards.length);
     const awaiting = {
       kind: "effect-choice", effect: "chooseCard", player, zone, ...(zones ? {zones: [...zones]} : {}), cards, min, max: Math.min(count, cards.length),
+      ...(beholding ? {behold: true} : {}),
       destinations: params.destinations ?? [{to: params.to ?? "hand", ...(params.tapped ? {tapped: true} : {})}],
       shuffle: params.shuffle === true, reveal: params.reveal === true, controller: params.controller === "you" ? context.controller : params.controller ?? null,
       ...(attaching !== undefined ? {attaching} : {}),
@@ -2100,7 +2151,8 @@ export const chooseCard = {
     return {
       id: `chooseCard:${awaiting.player}:${state.turn}:${awaiting.cards.length}`,
       /* A permanent is chosen, not searched for. */
-      title: awaiting.zone === "battlefield" ? (awaiting.max > 1 ? "Choose permanents" : "Choose a permanent")
+      title: awaiting.behold ? "Behold: choose one you control, or reveal one from your hand"
+        : awaiting.zone === "battlefield" ? (awaiting.max > 1 ? "Choose permanents" : "Choose a permanent")
         /* A card in exile -- "a card exiled with this artifact" -- is chosen, not searched for. */
         : awaiting.zone === "exile" ? (awaiting.max > 1 ? "Choose cards in exile" : "Choose a card in exile")
         /* Your commander, from the command zone (Command Beacon): chosen there, not searched for. */
@@ -2119,6 +2171,8 @@ export const chooseCard = {
         const object = state.objects[option.cardId];
         /* Searched in two zones at once: where each card is, said beside it ("Bear, in your graveyard"). */
         if (awaiting.zones) return {...option, label: `${option.label}, in your ${ZONE_WORD[object?.zone] ?? object?.zone}`};
+        /* Beheld from the hand: said so, as a behold cost's is (rules/actions.mjs). */
+        if (awaiting.behold && object?.zone === "hand") return {...option, label: `${option.label} (reveal it from your hand)`};
         return object?.faceDown === true && (object.lookers ?? []).includes(awaiting.player) ? {...option, label: object.faceDownCard?.card ?? option.label} : option;
       }),
     };
@@ -2161,7 +2215,7 @@ export const chooseCard = {
     const home = {hand: [], library: []};
     chosen.forEach((id, i) => {
       const where = whereOf(i);
-      if (awaiting.reveal) events.push(event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: player}}));
+      if (awaiting.reveal || (awaiting.behold && state.objects[id]?.zone === "hand")) events.push(event("GameEventCardRevealed", state, {card: cardRef(state, id), player: {playerId: player}}));
       if (where.to === "top" && homeTop) return;
       if (goingHome(id, i)) { home[where.to === "hand" ? "hand" : "library"].push(id); return; }
       /* On top: a card a search found is in the library already; one chosen from a hand ("then put two cards from your
@@ -2309,10 +2363,17 @@ export const play = {
     /* "If that spell would be put into a graveyard, exile it instead" (Halo Forager): the spell cast, so marked (rules/actions.mjs). */
     const exileInstead = params.exileInstead === true ? {exileInstead: true} : {};
     const choices = playable(state, player, pool, terms);
-    if (!choices.length) return false;
+    /* DISCOVER'S "CAST IT WITHOUT PAYING ITS MANA COST OR PUT IT INTO YOUR HAND" (CR 701.57a; Hit the Mother Lode, precon load
+       lane C): `otherwise`, the effects done when no spell is cast -- none could be, or its caster declined -- and
+       `rememberCast`, the spell cast remembered for what follows ("if the discovered card's mana value is less than 10"): a
+       new object on the stack (CR 400.7), its mana value its own (CR 202.3). So what follows reads the discovered card
+       wherever the choice put it, and the hand move never touches a spell already cast. */
+    const otherwise = Array.isArray(params.otherwise) && params.otherwise.length ? {otherwise: structuredClone(params.otherwise)} : {};
+    if (!choices.length) return otherwise.otherwise ? {events: [], splice: otherwise.otherwise} : false;
     /* For `anyNumber`, what may still be cast and on what terms, to ask again (a number, not Infinity: state is JSON). */
     state.awaiting = {kind: "effect-choice", effect: "play", player, choices,
       ...(params.anyNumber === true ? {again: {pool, ...terms, most: Number.isFinite(most) ? most : null}, cast: 0} : {}), ...exileInstead,
+      ...otherwise, ...(params.rememberCast === true ? {rememberCast: true} : {}),
       ...(terms.lands ? {lands: true} : {})};
     return true;
   },
@@ -2344,7 +2405,7 @@ export const play = {
       events = payWithUnits(state, awaiting.player, paymentUnits(state, awaiting.player), indices, awaiting.paying.owed);
     } else {
       const index = (indices ?? [])[0];
-      if (index === awaiting.choices.length) return {events: []};
+      if (index === awaiting.choices.length) return awaiting.otherwise ? {events: [], splice: structuredClone(awaiting.otherwise)} : {events: []};
       chosen = awaiting.choices[index];
       if (!chosen) throw new Error("Invalid selection");
       /* Its mana cost, colors and all (`payMana`): the one way there is, paid at once; more, and which is asked. */
@@ -2367,7 +2428,13 @@ export const play = {
     const action = {...chosen};
     delete action.owed;
     delete action.cost;
+    const stacked = new Set(state.stack.map((entry) => entry.stackId));
     events.push(...castNow(state, awaiting.player, action, awaiting.exileInstead ? {graveyardToExile: true} : {}));
+    /* `rememberCast` (above): the spell now on the stack. */
+    if (awaiting.rememberCast && !awaiting.again) {
+      const cast = state.stack.find((entry) => entry.kind === "spell" && !stacked.has(entry.stackId));
+      return {events, remembered: cast ? [cast.objectId] : []};
+    }
     /* Any number: asked again, of what is still there to cast. */
     if (awaiting.again) {
       const {pool, most, free, anyMana, payMana} = awaiting.again;
@@ -2708,6 +2775,69 @@ export const controlToOpponents = {
   },
 };
 
+/* ---- each fights a different one (the precon load, lane D: Ezuri's Predation) ----
+
+   "For each creature your opponents control, create a 4/4 green Phyrexian Beast creature token. Each of those tokens fights a
+   different one of those creatures": fight's `against`, the creatures fought, its `from` the tokens -- put here by the
+   resolution (script/resolution.mjs). Which fights which is its controller's (the card's ruling; CR 608.2d), one pairing at a
+   time: each of the fewer side in turn, against one of the other side's not chosen yet -- with one left, the rules leave no
+   choice and nobody is asked. More tokens than creatures (two for each, Doubling Season), and the rest fight nothing (its
+   ruling). Then every fight at once (its ruling; CR 701.14a), each power read before any damage (effects/resources.mjs,
+   fightCalls' `pairs`). One no longer a creature on the battlefield fights nothing (CR 701.14b). */
+const fightable = (state, id) => state.objects[id]?.zone === "battlefield" && typesOf(state, id).includes("Creature");
+/* The side whose each is paired in turn, and the side each is paired from. */
+const fightSides = (awaiting) => (awaiting.byFoe ? [awaiting.foes, awaiting.fighters] : [awaiting.fighters, awaiting.foes]);
+const unpaired = (awaiting) => { const [, other] = fightSides(awaiting); return other.filter((id) => !awaiting.pairs.some((pair) => pair.includes(id))); };
+function pairEachFight(state, awaiting) {
+  let pairs = awaiting.pairs;
+  const [each] = fightSides(awaiting);
+  while (pairs.length < each.length) {
+    const left = unpaired({...awaiting, pairs});
+    if (left.length > 1) {
+      state.awaiting = {...awaiting, pairs};
+      return true;
+    }
+    const one = each[pairs.length];
+    pairs = [...pairs, awaiting.byFoe ? [left[0], one] : [one, left[0]]];
+  }
+  return {events: [], splice: pairs.length ? [{effect: "fight", pairs}] : []};
+}
+export const fightPartners = {
+  open(state, params, context) {
+    const fighters = [...new Set(params.then.from ?? [])].filter((id) => fightable(state, id));
+    const foes = selectMatching(state, {...params.then.against, what: "permanent"}, context).filter((id) => fightable(state, id));
+    return pairEachFight(state, {kind: "effect-choice", effect: "fightPartners", player: context.controller, source: context.source ?? null, fighters, foes,
+      byFoe: fighters.length >= foes.length, pairs: []});
+  },
+  choice(state, awaiting) {
+    const [each] = fightSides(awaiting);
+    const one = each[awaiting.pairs.length];
+    const named = (id) => state.objects[id]?.card ?? "A creature";
+    const options = unpaired(awaiting).map((cardId, index) => ({index, label: named(cardId), cardId}));
+    /* Two that read alike, numbered: "Phyrexian Beast (1)", "Phyrexian Beast (2)". */
+    for (const option of options) {
+      const alike = options.filter((o) => o.label === option.label);
+      if (alike.length > 1) alike.forEach((o, k) => { o.label = `${named(o.cardId)} (${k + 1})`; });
+    }
+    return {id: `fightPartners:${awaiting.player}:${state.turn}:${one}`,
+      title: awaiting.byFoe ? `Choose which of your tokens fights ${named(one)}` : `Choose which creature ${named(one)} fights`,
+      mode: "one", min: 1, max: 1, options};
+  },
+  apply(state, awaiting, indices) {
+    const chosen = Array.isArray(indices) && indices.length === 1 ? unpaired(awaiting)[indices[0]] : undefined;
+    if (chosen === undefined) throw new Error("Invalid selection");
+    const [each] = fightSides(awaiting);
+    const one = each[awaiting.pairs.length];
+    const outcome = pairEachFight(state, {...awaiting, pairs: [...awaiting.pairs, awaiting.byFoe ? [chosen, one] : [one, chosen]]});
+    /* The next pairing asked, or the fights. */
+    return outcome === true ? {again: true, events: []} : outcome;
+  },
+  /* Its controller has left the game: their spell left with them (CR 800.4a), and nothing fights. */
+  left() {
+    return {events: []};
+  },
+};
+
 /* ---- which kind of counter (CR 122.1; Train B, X11) ----
 
    "Choose a counter on target permanent. Put an additional counter of that kind on that permanent" (Ichormoon Gauntlet),
@@ -2908,5 +3038,9 @@ export const ASKING = Object.freeze({
   handLook,
   /* Train E: a different opponent for each permanent given away (Dack Fayden, Helping Hand). */
   controlToOpponents,
+  /* The precon load, lane D: each token fights a different creature (Ezuri's Predation). */
+  fightPartners,
   /* Wave 4c, k2: a draw, or a dredge in its place (CR 702.52a). */
-  dredgeDraw});
+  dredgeDraw,
+  /* Precons B: what an attacking creature attacks, reselected (CR 508.7; Misleading Signpost). */
+  reselectAttack});

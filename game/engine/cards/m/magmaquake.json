@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Magmaquake",
+    "oracleId": "a52037df-0be1-4c99-b9eb-b033157af203",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{X}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Magmaquake deals X damage to each creature without flying and each planeswalker.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Magmaquake deals X damage to each creature without flying and each planeswalker.",
+      "effects": [
+        {
+          "effect": "damageAll",
+          "amount": "X",
+          "selector": {
+            "what": "permanent",
+            "anyOf": [
+              {
+                "types": [
+                  "Creature"
+                ],
+                "nonKeywords": [
+                  "Flying"
+                ]
+              },
+              {
+                "types": [
+                  "Planeswalker"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

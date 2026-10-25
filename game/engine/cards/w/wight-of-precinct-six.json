@@ -1,0 +1,57 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wight of Precinct Six",
+    "oracleId": "6397c046-4c59-4f0b-9b44-2a804eb95edf",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Zombie"
+    ],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "This creature gets +1/+1 for each creature card in your opponents' graveyards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This creature gets +1/+1 for each creature card in your opponents' graveyards.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "power": {
+          "count": {
+            "what": "card",
+            "zone": "graveyard",
+            "types": [
+              "Creature"
+            ],
+            "controller": "opponent"
+          }
+        },
+        "toughness": {
+          "count": {
+            "what": "card",
+            "zone": "graveyard",
+            "types": [
+              "Creature"
+            ],
+            "controller": "opponent"
+          }
+        }
+      }
+    }
+  ]
+}

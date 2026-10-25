@@ -1,0 +1,81 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Infernal Idol",
+  "scenarios": [
+    {
+      "name": "Taps for {B}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Infernal Idol"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Infernal Idol"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "B": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sacrificed: two cards drawn, 2 life lost",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Infernal Idol",
+            "Swamp",
+            "Swamp",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Infernal Idol"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 2
+        },
+        {
+          "seat": 0,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Infernal Idol"
+          ]
+        }
+      ]
+    }
+  ]
+}

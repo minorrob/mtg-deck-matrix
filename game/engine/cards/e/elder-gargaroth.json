@@ -1,0 +1,161 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Elder Gargaroth",
+    "oracleId": "397b9dcf-690a-4a58-8637-bb9baab7cc2f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Beast"
+    ],
+    "manaCost": "{3}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 6,
+    "toughness": 6
+  },
+  "oracleText": "Reach, vigilance, trample\nWhenever this creature attacks or blocks, choose one —\n• Create a 3/3 green Beast creature token.\n• You gain 3 life.\n• Draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Reach",
+      "keyword": "reach"
+    },
+    {
+      "kind": "keyword",
+      "text": "vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "keyword",
+      "text": "trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature attacks or blocks, choose one —\n• Create a 3/3 green Beast creature token.\n• You gain 3 life.\n• Draw a card.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Create a 3/3 green Beast creature token.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "createToken",
+                  "count": 1,
+                  "token": {
+                    "name": "Beast",
+                    "types": [
+                      "Creature"
+                    ],
+                    "subtypes": [
+                      "Beast"
+                    ],
+                    "colors": [
+                      "G"
+                    ],
+                    "power": 3,
+                    "toughness": 3
+                  }
+                }
+              ]
+            },
+            {
+              "text": "You gain 3 life.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "gainLife",
+                  "amount": 3
+                }
+              ]
+            },
+            {
+              "text": "Draw a card.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "draw",
+                  "count": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature attacks or blocks, choose one —\n• Create a 3/3 green Beast creature token.\n• You gain 3 life.\n• Draw a card.",
+      "trigger": {
+        "on": "blocks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Create a 3/3 green Beast creature token.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "createToken",
+                  "count": 1,
+                  "token": {
+                    "name": "Beast",
+                    "types": [
+                      "Creature"
+                    ],
+                    "subtypes": [
+                      "Beast"
+                    ],
+                    "colors": [
+                      "G"
+                    ],
+                    "power": 3,
+                    "toughness": 3
+                  }
+                }
+              ]
+            },
+            {
+              "text": "You gain 3 life.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "gainLife",
+                  "amount": 3
+                }
+              ]
+            },
+            {
+              "text": "Draw a card.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "draw",
+                  "count": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
