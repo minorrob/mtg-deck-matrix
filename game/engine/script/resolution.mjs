@@ -60,6 +60,8 @@ export function beginResolution(state, effects, context = {}, rng = null) {
       ...(context.sacrificed ? {sacrificed: context.sacrificed} : {}),
       /* Its targets as they were chosen: what a total was divided among (CR 601.2d; script/amount.mjs, dividedAmong). */
       ...(context.targetsChosen ? {targetsChosen: context.targetsChosen} : {}),
+      /* And the division its caster announced, target by target (CR 601.2d; effects/resources.mjs, damageHits' `divided`). */
+      ...(context.division ? {division: context.division} : {}),
       /* How many times its ability resolved before this one this turn (rules/stack.mjs; script/condition.mjs, firstResolution). */
       ...(context.resolvedBefore !== undefined ? {resolvedBefore: context.resolvedBefore} : {})},
     events: [],
@@ -264,6 +266,10 @@ export function runResolution(state, rng = null) {
        effects/asking.mjs, controlToOpponents). */
     else if (effect?.effect === "gainControl" && effect.toEach === "different opponent")
       resolving.queue[0] = {effect: "controlToOpponents", then: effect};
+    /* "Each of those tokens fights a different one of those creatures" (Ezuri's Predation): which fights which, its controller's
+       choice as it resolves (CR 608.2d, the card's ruling; effects/asking.mjs, fightPartners), then every fight at once. */
+    else if (effect?.effect === "fight" && effect.against !== undefined)
+      resolving.queue[0] = {effect: "fightPartners", then: effect};
     /* CR 616.1: counters that two or more effects would change, where the order changes how many -- the permanent's
        controller chooses which applies first, before any is put on (effects/asking.mjs, orderCounters). */
     else if ((asked = counterQuestion(state, effect, resolving.context, effect?.counterOrders ?? {})))

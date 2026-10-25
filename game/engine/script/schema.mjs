@@ -164,6 +164,17 @@ function checkEffect(effect, path, errors) {
   if (effect.toEach !== undefined && (name !== "gainControl" || effect.toEach !== "different opponent" || effect.until !== undefined || effect.toPlayer !== undefined
     || effect.selector !== undefined || effect.targets === undefined))
     errors.push({path: `${path}.toEach`, message: "A different opponent for each permanent (`toEach: \"different opponent\"`) is gainControl's, of its `targets`, for good, with no `toPlayer`"});
+  /* "Each of those tokens fights a different one of those creatures" (Ezuri's Predation; effects/asking.mjs, fightPartners):
+     `against`, a selector of the creatures fought, on a fight whose `from` names the fighters and that has no targets. */
+  if (effect.against !== undefined) {
+    if (name !== "fight" || effect.from === undefined || effect.targets !== undefined || !effect.against || typeof effect.against !== "object")
+      errors.push({path: `${path}.against`, message: "\"Each fights a different one\" (`against`, a selector of the creatures fought) is a fight's, with `from` its fighters and no targets"});
+    else checkSelector(effect.against, `${path}.against`, errors);
+  }
+  /* Damage dealt as its caster divided it (Monstrous Onslaught; CR 601.2d): `divided`, the target it was divided among -- a
+     dealDamage of that target, with no amount of its own. */
+  if (effect.divided !== undefined && !(name === "dealDamage" && Number.isInteger(effect.divided) && effect.targets?.target === effect.divided && effect.amount === undefined))
+    errors.push({path: `${path}.divided`, message: "Damage dealt as its caster divided it (`divided`, a target's number) is a dealDamage of that target, with no amount of its own"});
   /* "Goaded for the rest of the game" (Dack Fayden, Helping Hand; CR 701.15a): a goad's `until` is "game" or unsaid (until
      its controller's next turn). */
   if (name === "goad" && effect.until !== undefined && effect.until !== "game")
@@ -524,6 +535,16 @@ function checkAbility(ability, path, errors, {permanent = false, manaX = false} 
     || (!["triggered", "activated"].includes(ability.kind) && asksFirstResolution(ability.effects)))
     errors.push({path, message: "firstResolution is asked of a triggered or activated ability's effect as it resolves"});
 
+  /* "X damage divided as you choose among any number of target creatures" (Monstrous Onslaught; CR 601.2d; rules/actions.mjs,
+     dividedOf): a spell's `divided`, `{target, total}` -- a counted target of its own, the total a number or counted as it is
+     cast -- dealt by a dealDamage of it that says `divided`. */
+  if (ability.divided !== undefined) {
+    const divided = ability.divided, spec = Number.isInteger(divided?.target) ? (ability.targets ?? [])[divided.target] : undefined;
+    if (ability.kind !== "spell" || !spec || spec.count === undefined || amountProblems(divided.total ?? null).length
+      || (typeof divided.total === "number" && !(Number.isInteger(divided.total) && divided.total >= 1))
+      || !(ability.effects ?? []).some((effect) => effect?.divided === divided.target))
+      errors.push({path: `${path}.divided`, message: "A total divided among targets is a spell's `divided: {target, total}`: a counted target of its own, a total, and a dealDamage of it that says `divided`"});
+  }
   const effectful = ["spell", "activated", "triggered"].includes(ability.kind);
   if (effectful) {
     const effects = ability.effects ?? [];

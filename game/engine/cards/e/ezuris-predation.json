@@ -1,0 +1,70 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ezuri's Predation",
+    "oracleId": "d0dd425b-fdba-41b4-b9e6-f5161610bd7e",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{5}{G}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "For each creature your opponents control, create a 4/4 green Phyrexian Beast creature token. Each of those tokens fights a different one of those creatures.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "For each creature your opponents control, create a 4/4 green Phyrexian Beast creature token. Each of those tokens fights a different one of those creatures.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": {
+            "count": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "opponent"
+            }
+          },
+          "token": {
+            "name": "Phyrexian Beast",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Phyrexian",
+              "Beast"
+            ],
+            "colors": [
+              "G"
+            ],
+            "power": 4,
+            "toughness": 4
+          },
+          "remember": true
+        },
+        {
+          "effect": "fight",
+          "from": "remembered",
+          "against": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "opponent"
+          }
+        }
+      ]
+    }
+  ]
+}
