@@ -60,6 +60,21 @@
 .cm-stage-mini .cm-board-pile[data-zone="library"],.cm-stage-mini .cm-board-pile[data-zone="graveyard"]{grid-row:2}
 .cm-stage-mini .cm-bcard-name,.cm-stage-mini .cm-bcard-pt,.cm-stage-mini .cm-bcard-marks,.cm-stage-mini .cm-bcard-tax{display:none}
 .cm-stage-mini .cm-board-pile figcaption{font-size:10px}
+/* The camera by hand (Rob, 2026-10-25): a mat drags the view across the table; its cards and buttons keep their pointer. */
+.cm-stage-region .cm-mat{cursor:move}
+.cm-stage-region .cm-mat :where(.cm-bcard,button){cursor:pointer}
+.cm-stage-region.is-panning,.cm-stage-region.is-panning *{cursor:grabbing!important;user-select:none}
+/* A card's menu (right click): the card to read, then each offer as a glyph and the fewest words. */
+.cm-card-menu{position:fixed;z-index:60;display:flex;flex-direction:column;gap:2px;min-width:150px;max-width:min(320px,calc(100vw - 16px));max-height:calc(100dvh - 16px);overflow:auto;padding:4px;background:#0b2023f5;color:#edf6ef;border:1px solid #6f9c88;border-radius:8px;box-shadow:0 10px 28px #0008;font-size:13px}
+.cm-card-menu>button,.cm-card-menu>span,.cm-card-menu>p{display:flex;align-items:center;gap:8px;min-height:32px;margin:0;padding:4px 10px 4px 6px;border:0;border-radius:5px;background:none;color:inherit;font:inherit;text-align:left}
+.cm-card-menu>button{cursor:pointer}
+.cm-card-menu>button:hover,.cm-card-menu>button:focus-visible{background:#22443f;outline:2px solid #a8dfbf;outline-offset:-2px}
+.cm-card-menu>button[disabled]{opacity:.55;cursor:default}
+.cm-card-menu i{flex:none;width:20px;font-style:normal;font-size:16px;text-align:center}
+.cm-card-menu .cm-card-menu-card{font-weight:700;border-bottom:1px solid #6f9c8866;border-radius:5px 5px 0 0}
+.cm-card-menu-do b{font-weight:700}.cm-card-menu-do small{font-size:12px;color:#c7dbd0}
+.cm-card-menu .cm-mana{display:inline-flex;gap:1px;vertical-align:middle}.cm-card-menu .cm-mana :is(img,svg){width:16px;height:16px}
+.cm-card-menu-none{color:#c7dbd0}
 .cm-stage-camera{position:absolute;right:18px;top:10px;z-index:9;min-width:90px;background:#0b2023eb;border:1px solid #5e8a77;border-radius:8px;color:#eaf2e9;box-shadow:0 6px 24px #0005}
 .cm-stage-camera>button{width:100%;padding:7px 14px;color:inherit;background:none;border:0;cursor:pointer;font-size:12px}
 .cm-stage-camera>div{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:10px;width:215px}.cm-stage-camera label{display:grid;grid-template-columns:32px 1fr 30px;gap:7px;align-items:center;width:100%;font-size:11px}.cm-stage-camera input{min-width:0;width:100%;accent-color:#87c6a1}

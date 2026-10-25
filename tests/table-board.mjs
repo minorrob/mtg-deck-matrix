@@ -925,8 +925,9 @@ try {
   await chooseView(rob.page,"focus");
   await rob.page.locator(".cm-board-mat").waitFor();
   await robCard.click({button: "right"});
+  await rob.page.locator("#cm-card-menu [data-action=board-card-menu-view]").click();
   await rob.page.locator("#cm-card-inspector").waitFor();
-  ok((await text(rob.page, "#cm-card-inspector")).includes(robCardName), "a right click pins read-only inspection");
+  ok((await text(rob.page, "#cm-card-inspector")).includes(robCardName), "a right click opens the card's menu, and its 🔍 pins read-only inspection");
   await rob.page.keyboard.press("Escape");
   await rob.page.locator("#cm-dialog[open]").waitFor({state: "detached"}).catch(() => {});
   await rob.page.evaluate(() => {

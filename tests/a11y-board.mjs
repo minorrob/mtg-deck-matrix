@@ -487,7 +487,7 @@ function boundKeys(source) {
   return {keys, handlers: handlers.length};
 }
 /* A key as Help writes it on its <kbd>. */
-const KBD = {" ": "Space", "=": "+", "_": "−", "-": "−", ArrowUp: "↑", ArrowDown: "↓", ArrowLeft: "←", ArrowRight: "→"};
+const KBD = {" ": "Space", "=": "+", "_": "−", "-": "−", ArrowUp: "↑", ArrowDown: "↓", ArrowLeft: "←", ArrowRight: "→", ContextMenu: "Menu"};
 
 try {
   /* THE TABLE, set up through the server as the lobby would: Rob hosts, Maya joins, two AIs; mats chosen. */
