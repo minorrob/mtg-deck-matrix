@@ -88,6 +88,8 @@ export const PRIMITIVES = Object.freeze({
     "pump", "pumpAll", "alterAttribute", "effectUntil", "grantKeyword", "regenerate",
     /* Wave 4d L3: removed from combat (CR 506.4; Reconnaissance). */
     "removeFromCombat",
+    /* Precons B: what an attacking creature attacks, reselected (CR 508.7; Misleading Signpost). */
+    "reselectAttack",
   ]),
   flow: Object.freeze([
     "modal", "sequence", "repeatFor", "branch", "delayedTrigger", "immediateTrigger", "counterSpell",

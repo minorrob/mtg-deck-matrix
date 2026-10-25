@@ -1,0 +1,115 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Shimmer Dragon",
+  "fixtures": {
+    "Smoke Relic": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Four artifacts: hexproof",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Shimmer Dragon",
+            "Smoke Relic",
+            "Smoke Relic",
+            "Smoke Relic",
+            "Smoke Relic"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Shimmer Dragon",
+            "has": [
+              "Flying",
+              "Hexproof"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Three artifacts: no hexproof",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Shimmer Dragon",
+            "Smoke Relic",
+            "Smoke Relic",
+            "Smoke Relic"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Shimmer Dragon",
+            "has": [
+              "Flying"
+            ],
+            "lacks": [
+              "Hexproof"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Two untapped artifacts tapped: a card; with one left untapped, not again",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Shimmer Dragon",
+            "Smoke Relic",
+            "Smoke Relic",
+            "Smoke Relic"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Shimmer Dragon"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Shimmer Dragon"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

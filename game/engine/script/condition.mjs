@@ -68,6 +68,8 @@
  *                                      rules/actions.mjs record them this turn (Plasma Bolt, Temporal Intervention)
  *   {sneak: true}                      sneak's "during your declare blockers step" (CR 702.190a): its controller's turn, that
  *                                      step (Leonardo, Leader in Blue)
+ *   {duringStep: "COMBAT_DECLARE_ATTACKERS"}  the game is in that step, anyone's turn: "when this artifact enters during the
+ *                                      declare attackers step" (Misleading Signpost; CR 508)
  *   {monarch: "you"}                   "if you're the monarch" (CR 725; Ginger, Queen of Sweets): its controller is the
  *                                      monarch now (`state.monarch`, effects/resources.mjs) -- with no monarch in the game, nobody
  *                                      is (725.1)
@@ -131,6 +133,8 @@ const CONDITION_KEYS = ["present", "atLeast", "atMost", "handEmpty", "notTheirTu
   "void", "sneak",
   /* "If you're the monarch" (CR 725). */
   "monarch",
+  /* Misleading Signpost's "when this artifact enters during the declare attackers step" (CR 508; precons B). */
+  "duringStep",
   /* Nissa, Leyline Tamer's "if this is the first time this ability has resolved this turn". */
   "firstResolution",
   /* Goblin Welder's "if both targets are still legal as this ability resolves" (CR 608.2b). */
@@ -444,6 +448,8 @@ export function conditionHolds(state, condition, {controller, source = null, abo
   /* SNEAK'S TIMING (CR 702.190a): "any time you could cast an instant during your declare blockers step" -- its controller's
      own turn, in that step (rules/actions.mjs offers the cast at an instant's timing then). */
   if (condition.sneak === true && !(state.activePlayer === controller && state.phase === "COMBAT_DECLARE_BLOCKERS")) return false;
+  /* "DURING THE DECLARE ATTACKERS STEP" (Misleading Signpost; CR 508): the game is in that step now, whoever's turn it is. */
+  if (condition.duringStep !== undefined && state.phase !== condition.duringStep) return false;
   /* "IF THE GIFT WAS PROMISED" (CR 702.174b, 702.174k): the spell resolving was cast with its gift promised -- the opponent it
      was promised to, whether or not they are still in the game -- or the permanent the trigger is its own was. */
   if (condition.giftPromised !== undefined
@@ -586,6 +592,7 @@ export function conditionProblems(condition) {
   if ("surge" in condition && condition.surge !== true) problems.push("surge is true");
   if ("void" in condition && condition.void !== true) problems.push("void is true");
   if ("sneak" in condition && condition.sneak !== true) problems.push("sneak is true");
+  if ("duringStep" in condition && condition.duringStep !== "COMBAT_DECLARE_ATTACKERS") problems.push("duringStep is \"COMBAT_DECLARE_ATTACKERS\": the step the game is in");
   if ("monarch" in condition && condition.monarch !== "you") problems.push("monarch is \"you\": its controller is the monarch");
   if ("descended" in condition && condition.descended !== true) problems.push("descended is true: its controller descended this turn");
   if ("combatDamagedBy" in condition && !(typeof condition.combatDamagedBy?.named === "string" && Object.keys(condition.combatDamagedBy).length === 1))

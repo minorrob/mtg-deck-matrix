@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mind's Eye",
+    "oracleId": "63fd2a57-7a47-4e07-947c-f4e9da7ee538",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{5}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever an opponent draws a card, you may pay {1}. If you do, draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever an opponent draws a card, you may pay {1}. If you do, draw a card.",
+      "trigger": {
+        "on": "drawn",
+        "drawer": "opponent"
+      },
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "who": "you",
+          "amount": 1,
+          "ifPaid": true,
+          "effects": [
+            {
+              "effect": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

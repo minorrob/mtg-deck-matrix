@@ -47,8 +47,8 @@ const eq = (a, b, m) => { assert.deepEqual(a, b, m); checks += 1; };
     if (!flat.startsWith("- ")) continue;
     for (const [, name] of flat.matchAll(/`([^`]+)`/g)) named.add(name);
   }
-  eq(named.size, 96,
-    "ninety-six names are written in backticks in §12.2 — ninety-four effect primitives (regenerate joined in batch 28, addPhase in batch 33, becomeCopy in batch 58, digUntil in batch 62, poison in batch 64, earthbend and changeTargets in batch 65, winGame in batch 68, goad in batch 69, empowerJace on 2026-10-04, manifest on 2026-10-06, loseGame on 2026-10-11, chooseColor, chooseSource and vote in Train C phase 2, exchangeControl in Train D, explore, incubate and becomeMonarch in Train E, rearrangeTop in wave 4b, rollDie in wave 4c, emblem in the library load of 2026-10-21, ringTempts for Boromir and mergePermanent for Nethroi, removeFromCombat in wave 4d) and the two symbolic cost atoms");
+  eq(named.size, 97,
+    "ninety-seven names are written in backticks in §12.2 — ninety-five effect primitives (regenerate joined in batch 28, addPhase in batch 33, becomeCopy in batch 58, digUntil in batch 62, poison in batch 64, earthbend and changeTargets in batch 65, winGame in batch 68, goad in batch 69, empowerJace on 2026-10-04, manifest on 2026-10-06, loseGame on 2026-10-11, chooseColor, chooseSource and vote in Train C phase 2, exchangeControl in Train D, explore, incubate and becomeMonarch in Train E, rearrangeTop in wave 4b, rollDie in wave 4c, emblem in the library load of 2026-10-21, ringTempts for Boromir and mergePermanent for Nethroi, removeFromCombat in wave 4d, reselectAttack in the precon load of 2026-10-25) and the two symbolic cost atoms");
 
   const missing = [...named].filter((name) => !ALL_PRIMITIVES.includes(name) && !COST_ATOMS.includes(name));
   eq(missing, [],

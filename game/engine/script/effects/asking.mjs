@@ -1896,6 +1896,47 @@ export const attackWhom = {
   },
 };
 
+/* ---- reselectAttack (precons B; CR 508.7): "you may reselect which player or permanent target attacking creature is
+   attacking. (It can't attack its controller or their permanents.)" (Misleading Signpost). The effect's controller chooses
+   -- not the attacking creature's -- among what it could be attacking instead: an opponent of the creature's controller,
+   or a planeswalker one controls (CR 508.7c; every opponent, under Commander's attack multiple players option, CR 508.7d,
+   802.2), with no requirement or restriction on attacking applied (508.7b) -- or leaves it as it is ("may"). Nothing else
+   to choose, and nobody is asked. The creature stays in combat and has not attacked again (508.7a): only what it attacks
+   changes, and who defends with it (CR 506.2). ---- */
+export const reselectAttack = {
+  open(state, params, context) {
+    /* No longer attacking (removed from combat, CR 506.4), and there is nothing to reselect. */
+    const attack = (state.combat?.attacks ?? []).find((a) => (params.targets ?? []).includes(a.attacker));
+    if (!attack) return false;
+    const places = attackPlaces(state, controllerOf(state, attack.attacker)).filter((p) => !(p.player === attack.defender && p.planeswalker === attack.planeswalker));
+    if (!places.length) return false;
+    state.awaiting = {kind: "effect-choice", effect: "reselectAttack", player: context.controller, attacker: attack.attacker, places};
+    return true;
+  },
+  choice(state, awaiting) {
+    const attack = (state.combat?.attacks ?? []).find((a) => a.attacker === awaiting.attacker);
+    const place = ({player, planeswalker}) => (planeswalker === undefined ? state.players[player].name : `${state.objects[planeswalker]?.card ?? "A planeswalker"} (${state.players[player].name})`);
+    return {id: `reselectAttack:${awaiting.attacker}`, title: `${state.objects[awaiting.attacker]?.card ?? "The creature"} is attacking: reselect what it attacks?`, mode: "one", min: 1, max: 1,
+      options: [...awaiting.places.map((p, index) => ({index, label: place(p), playerId: p.player, ...(p.planeswalker !== undefined ? {planeswalkerId: p.planeswalker} : {})})),
+        {index: awaiting.places.length, label: attack ? `Leave it attacking ${place({player: attack.defender, planeswalker: attack.planeswalker})}` : "Leave it", keep: true}]};
+  },
+  apply(state, awaiting, indices) {
+    const option = reselectAttack.choice(state, awaiting).options[(indices ?? [])[0]];
+    if (!option) throw new Error("Invalid selection");
+    const attack = (state.combat?.attacks ?? []).find((a) => a.attacker === awaiting.attacker);
+    if (option.keep || !attack) return {events: []};
+    attack.defender = option.playerId;
+    if (option.planeswalkerId !== undefined) attack.planeswalker = option.planeswalkerId; else delete attack.planeswalker;
+    /* The defending players are those it and the others now attack (CR 506.2). */
+    state.combat.defenders = [...new Set(state.combat.attacks.map((a) => a.defender))];
+    return {events: []};
+  },
+  /* Its controller has left the game (CR 800.4a): nothing is reselected. */
+  left() {
+    return [];
+  },
+};
+
 /* ---- enchantWhat: an Aura entering the battlefield without being cast, with more than one thing it could enchant
    (CR 303.4f; effects/permanents.mjs, enchantOnArrival): which, its controller's choice as it enters -- asked at once,
    nothing happening between. Queued by what put it there; never written in a card script. ---- */
@@ -2909,4 +2950,6 @@ export const ASKING = Object.freeze({
   /* Train E: a different opponent for each permanent given away (Dack Fayden, Helping Hand). */
   controlToOpponents,
   /* Wave 4c, k2: a draw, or a dredge in its place (CR 702.52a). */
-  dredgeDraw});
+  dredgeDraw,
+  /* Precons B: what an attacking creature attacks, reselected (CR 508.7; Misleading Signpost). */
+  reselectAttack});

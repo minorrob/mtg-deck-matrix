@@ -322,6 +322,32 @@ function graveyardGrant(state, holder, ability) {
     .filter((a) => a.kind === "activated" || a.kind === "mana").map((a) => ({...a, id: `${id}:${a.id}`})))}};
 }
 
+/* "AS LONG AS A CARD EXILED WITH THIS CREATURE IS A CREATURE CARD, THIS CREATURE HAS THE POWER, TOUGHNESS, AND CREATURE TYPES
+   OF THE LAST CREATURE CARD EXILED WITH IT. IT'S STILL A SHAPESHIFTER." (Duplicant; precons B, CR 607.2a, 613.1d, 613.4b):
+   `apply.linkedCreature`, read from what the holder's linked ability exiled (effects/zones.mjs, `link`) as it now is -- the
+   last of those cards still in exile that is a creature card, with the characteristics a card has there (CR 400.1, 109.3).
+   "creature types" (layer 4): its creature types, and `plusCreatureTypes` beside them; a changeling card's every one (CR
+   702.73a). "power and toughness" (layer 7b): its power and toughness -- a star read by the card's own characteristic-defining
+   ability, which functions in exile (CR 604.3). No such card, and the static does nothing. */
+function linkedCreatureGrant(state, holderId, ability) {
+  const linked = (state.links?.[holderId] ?? []).filter((id) => state.objects[id]?.zone === "exile" && (state.objects[id].types ?? []).includes("Creature"));
+  if (!linked.length) return null;
+  const cardId = linked[linked.length - 1], card = state.objects[cardId];
+  const {linkedCreature: what, plusCreatureTypes = [], ...rest} = ability.apply;
+  if (what === "creature types") return {...ability, apply: {...rest,
+    setCreatureTypes: [...new Set([...(card.subtypes ?? []).filter(isCreatureType), ...plusCreatureTypes])],
+    ...(everyCreatureType(card.keywords) ? {allCreatureTypes: true} : {})}};
+  /* A star's count is the card's own, made for its owner, who controls it there (CR 604.3, 108.3): counted as every counted
+     change is, under the same guard (`counted`, `countedAs`), so a count it makes never asks it back. */
+  const figure = (key, set) => {
+    if (Number.isInteger(card[key])) return card[key];
+    const defining = (card.abilities ?? []).find((a) => a.kind === "static" && a.layer === 7 && a.sublayer === "a" && a.affects?.self === true && a.apply?.[set] !== undefined);
+    return defining ? defining.apply[set] : 0;
+  };
+  return {...ability, apply: {...rest, setPower: figure("power", "setPower"), setToughness: figure("toughness", "setToughness")},
+    countedAs: {controller: card.owner, source: cardId}};
+}
+
 /* The emblems in the command zone (CR 114.1; script/effects/permanents.mjs, emblem). */
 const emblemsIn = (state) => (state.zones.command ?? []).flat().filter((id) => state.objects[id]?.emblem === true);
 
@@ -343,7 +369,8 @@ function gatherEffects(state) {
       if (ability.worksFrom === "graveyard" || ability.worksFrom === "elsewhere") continue;
       if (!holdsNow(state, ability.condition, {controller: holder.controller, source: id})) continue;
       const given = ability.apply?.topCardAbilities !== undefined ? topCardGrant(state, holder, ability)
-        : ability.apply?.graveyardAbilities !== undefined ? graveyardGrant(state, holder, ability) : ability;
+        : ability.apply?.graveyardAbilities !== undefined ? graveyardGrant(state, holder, ability)
+        : ability.apply?.linkedCreature !== undefined ? linkedCreatureGrant(state, id, ability) : ability;
       if (given === null) continue;
       found.push({
         /* "Creatures you control of the chosen type get +1/+1", "this creature is the chosen type": its own choice. */
@@ -395,7 +422,9 @@ function counted(state, effect, affected = null) {
   try {
     /* `affected`: the object it is applied to, for an amount about "it" (script/amount.mjs) -- "each creature you control gets
        +1/+0 for each time it has attacked this turn" (Moraug), "equipped creature gets +X/+0" (Bludgeon Brawl). */
-    const context = {controller: effect.sourceController, source: effect.sourceId ?? null, x: state.objects[effect.sourceId]?.xPaid ?? 0, affected};
+    /* Or counted as another object's (`countedAs`): an exiled card's own star, read for Duplicant (linkedCreatureGrant). */
+    const context = effect.countedAs ? {...effect.countedAs, x: 0, affected}
+      : {controller: effect.sourceController, source: effect.sourceId ?? null, x: state.objects[effect.sourceId]?.xPaid ?? 0, affected};
     return {...effect, apply: Object.fromEntries(Object.entries(change).map(([k, v]) => [k, isCounted(v) ? amountOf(state, v, context) : v]))};
   } finally {
     counting -= 1;
@@ -899,6 +928,9 @@ export function lastKnown(state, id) {
     ...(object.chosen !== undefined ? {chosen: object.chosen} : {}),
     /* Its Class level (CR 716.2a), for the abilities it had at that level. */
     ...(Number.isInteger(object.level) ? {level: object.level} : {}),
+    /* The players it dealt combat damage to this turn (rules/combat.mjs): Steel Hellkite's ability, the Hellkite gone before it
+       resolves, still reads them (CR 113.7a; script/filter.mjs, controllerDealtCombatDamageBy). */
+    ...(object.combatDamaged ? {combatDamaged: structuredClone(object.combatDamaged)} : {}),
     attachments: [...(object.attachments ?? [])],
     /* What it was attached to: "sacrifice this Aura: exile enchanted creature" (Spiral into Solitude). */
     attachedTo: object.attachedTo ?? null,

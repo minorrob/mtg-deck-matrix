@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Spire Golem",
+    "oracleId": "bfdc6bbc-7402-40ae-91be-658afca2f145",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Golem"
+    ],
+    "manaCost": "{6}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "Affinity for Islands (This spell costs {1} less to cast for each Island you control.)\nFlying",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Affinity for Islands (This spell costs {1} less to cast for each Island you control.)",
+      "keyword": "affinity",
+      "of": {
+        "types": [
+          "Land"
+        ],
+        "subtypes": [
+          "Island"
+        ]
+      }
+    },
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    }
+  ]
+}
