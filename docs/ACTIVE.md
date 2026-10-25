@@ -1,5 +1,22 @@
 # Who holds the work
 
+## Play 3D: the camera by hand and a card's right-click menu, 2026-10-25 (a Claude cloud session, for Rob; PR #877): merged, on staging
+
+Rob, 2026-10-25: wheel zoom, left-drag on a mat to pan (empty table still tilts), a right-click-hold "head look" (turn,
+lean, pitch down, read; 0.25 s + 0.40 s·r, reversed on release), and a quick right-click on a card listing its offered
+actions in shorthand. On his review the head look is a glance (`LOOK.strength` 0.5) and zoom goes toward the pointer.
+`CrankStage.geometry` is now one general camera pose for Babylon and every DOM surface.
+
+- **Merged:** PR #877 as `2632572b` (merge commit), on Rob's "merge + staging", after Actions `suites` passed on head
+  `2c27e8ce` (run 40220341651) with base `9ca99e53` unmoved.
+- **Staging:** `release/cloud-staging` `41453e0c` from main `2632572b` (release-acceptance 23, play-e2e 44);
+  `staging-check --expect 2632572b` passed. Production is unchanged (it serves `9ca99e5`).
+- **Proof:** new `tests/board-3d-camera.mjs` (96; 20 breaks caught, plus full strength caught after the softening),
+  `board-babylon` 82, `table-board` 290 and the other Play suites each alone. **Not proven:** a GPU browser at 60 fps,
+  Safari/Firefox, Windows' context-menu order, a trackpad pinch, a game with Rob at the table.
+- **Next, in flight:** `claude/play-3d-hand-table` (wheel over the hand sizes it; Ctrl-drag lengthens your side of the
+  table), stacked on #877. **Then:** the Admin panel; the brainstorm is Rob's doc "CrankMagic Admin Panel — Brainstorm".
+
 ## Play: Camera closes on an outside press; Settings is a window, 2026-10-25 (a Claude cloud session, for Rob; PR #874): merged, on staging
 
 **Merged and released, 2026-10-25:** PR #874 merged to main as `9ca99e53` (merge commit) on Rob's "merge 874 and push to
