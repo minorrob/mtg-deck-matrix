@@ -302,8 +302,11 @@ try {
      but Sol Ring. */
   await rob.page.waitForFunction(() => [...document.querySelectorAll(".cm-table-deck-known")].every((el) => el.textContent));
   const counts = await rob.page.locator(".cm-table-deck-known").allInnerTexts();
-  await rob.page.waitForFunction(()=>[...document.querySelectorAll('[data-shared-status]')].every(el=>!el.textContent.includes('Checking')));
-  ok(await rob.page.locator('[data-action=table-use-shared-deck]:disabled').count()>0,"the shared catalog refuses decks when this server deliberately lacks Sol Ring");
+  /* PUBLIC PRECONS, AND NOTHING SHARED THAT WAS NOT (Rob, 2026-10-25): the six New from Wizards decks are offered to
+     everyone; Rob's own decks were bundled into this list for every player until then, and are gone from it. */
+  await rob.page.waitForFunction(()=>document.querySelectorAll('[data-precon-status]').length===6&&[...document.querySelectorAll('[data-precon-status]')].every(el=>!el.textContent.includes('Checking')));
+  eq(await rob.page.locator('[data-action=table-use-precon]:disabled').count(),6,"the six precons are offered, and each is refused while this server deliberately lacks Sol Ring, which every one plays");
+  eq(await rob.page.locator('[data-action=table-use-shared-deck]').count(),0,"no deck is listed as shared: nothing is shared with this player, and no deck is bundled for everyone any more");
   ok(counts.some((t) => /^\d+ of \d+ known · \d+ to learn$/.test(t)) && counts.some((t) => /^All \d+ cards known$/.test(t)),
     `each deck says how much of it the table can play: "${counts.find((t) => /to learn/.test(t))}", "${counts.find((t) => /^All/.test(t))}"`);
   eq(await rob.page.locator("[data-action=table-use-test-deck]").count(), 0, "this table is not a playtest table, so the basic lands test deck is not offered (staging's are: tests/uat/play-e2e.mjs)");
@@ -311,20 +314,21 @@ try {
      decks the table cannot play every card of, remembered on the device. */
   const rows = await rob.page.$$eval("[data-action=table-use-deck]", (bs) => bs.map((b) => ({pips: b.querySelectorAll(".cm-table-deck-cmdr .cm-pip, .cm-table-deck-cmdr .cm-color").length, about: (b.querySelector(".cm-table-deck-about")?.textContent || "").trim()})));
   ok(rows.every((r) => r.pips > 0 && r.about.length > 20), `each library deck's row shows its commanders' colors and a line on what it does (${rows.length} rows; "${rows[0] && rows[0].about.slice(0, 60)}…")`);
-  const sharedRows = await rob.page.$$eval("[data-action=table-use-shared-deck]", (bs) => bs.map((b) => ({name: b.querySelector("strong").textContent, pips: b.querySelectorAll(".cm-table-deck-cmdr .cm-pip, .cm-table-deck-cmdr .cm-color").length, about: (b.querySelector(".cm-table-deck-about")?.textContent || "").trim()})));
-  /* A shared deck's line is its commanders' rules text: the records the app ships hold most; the rest the card catalog
-     fetches from Scryfall, which this sandbox answers only for the shipped records (scryfall-stub.mjs), so those wait. */
+  const preconRows = await rob.page.$$eval("[data-action=table-use-precon]", (bs) => bs.map((b) => ({name: b.querySelector("strong").textContent, pips: b.querySelectorAll(".cm-table-deck-cmdr .cm-pip, .cm-table-deck-cmdr .cm-color").length, about: (b.querySelector(".cm-table-deck-about")?.textContent || "").trim()})));
+  /* A precon's line is its commander's rules text: from the records the app ships where they hold it; the rest the card
+     catalog fetches from Scryfall, which this sandbox answers only for the shipped records (scryfall-stub.mjs), so those wait. */
   const shippedText = new Set(JSON.parse(readFileSync(path.join(ROOT, "data", "cards.json"), "utf8")).cards.filter((c) => c.oracleText).map((c) => c.name));
-  const sharedDecks = JSON.parse(readFileSync(path.join(ROOT, "tests", "fixtures", "shared-staging-decks.json"), "utf8")).decks;
-  const told = sharedRows.filter((r) => sharedDecks.find((d) => d.name === r.name)?.commander.every((c) => shippedText.has(c)));
-  ok(sharedRows.every((r) => r.pips > 0) && told.length >= 3 && told.every((r) => r.about.length > 20),
-    `and each shared deck's colors, and what its commander does wherever its text is to be had (${told.map((r) => r.name).join(", ")}; waiting: ${sharedRows.filter((r) => !r.about).map((r) => r.name).join(", ")})`);
+  const latest = JSON.parse(readFileSync(path.join(ROOT, "data", "precons-latest.json"), "utf8")).decks;
+  const shippable = latest.filter((d) => d.commander.every((c) => shippedText.has(c.name))).map((d) => d.name);
+  const told = preconRows.filter((r) => shippable.includes(r.name));
+  ok(preconRows.every((r) => r.pips > 0) && shippable.length >= 1 && told.length === shippable.length && told.every((r) => r.about.length > 20),
+    `and each precon's colors, and what its commander does wherever its text is to be had (${told.map((r) => r.name).join(", ")}; waiting: ${preconRows.filter((r) => !r.about).map((r) => r.name).join(", ")})`);
   const visible = () => rob.page.$$eval(".cm-table-deck", (bs) => bs.filter((b) => b.offsetParent !== null).length);
   const allRows = await visible();
   ok(!(await rob.page.isChecked("[data-table-deck-playable]")), "Playable is off until it is ticked");
   await rob.page.check("[data-table-deck-playable]");
-  const playableRows = await visible(), unplayable = await rob.page.locator(".cm-table-deck.is-unknown, .cm-table-deck[data-shared-deck]:disabled").count();
-  ok(unplayable > 0 && playableRows === allRows - unplayable && await rob.page.$$eval(".cm-table-deck.is-unknown, .cm-table-deck[data-shared-deck]:disabled", (bs) => bs.every((b) => b.offsetParent === null)),
+  const playableRows = await visible(), unplayable = await rob.page.locator(".cm-table-deck.is-unknown, .cm-table-deck[data-precon]:disabled").count();
+  ok(unplayable > 0 && playableRows === allRows - unplayable && await rob.page.$$eval(".cm-table-deck.is-unknown, .cm-table-deck[data-precon]:disabled", (bs) => bs.every((b) => b.offsetParent === null)),
     `ticked, Playable puts away the ${unplayable} decks the table cannot play every card of (${playableRows} of ${allRows} left)`);
   eq(await rob.page.evaluate(() => localStorage.getItem("cm-table-deck-playable")), "on", "and it is remembered on the device");
   await rob.page.uncheck("[data-table-deck-playable]");
@@ -584,27 +588,29 @@ try {
     await nina.page.click("[data-action=table-create]");
     await nina.page.locator(".cm-lobby-seat[data-seat='0'] [data-action=table-deck]").click();
     await nina.page.locator("#cm-dialog .cm-table-deck-empty").waitFor({timeout: 15000});
-    ok(/without adding anything/.test(await pageText(nina.page, "#cm-dialog .cm-table-deck-empty")), "a new player is directed to shared decks, without restoring anyone's library");
-    await nina.page.waitForFunction(()=>document.querySelectorAll('[data-action=table-use-shared-deck]:enabled').length===6);
+    ok(/without adding anything/.test(await pageText(nina.page, "#cm-dialog .cm-table-deck-empty")), "a new player is directed to the precons, without restoring anyone's library");
+    await nina.page.waitForFunction(()=>document.querySelectorAll('[data-action=table-use-precon]:enabled').length===6);
+    eq(await nina.page.locator('[data-action=table-use-shared-deck]').count(),0,"and to none of Rob's decks: nothing of his is shared with her");
     eq(await nina.page.locator('[data-action=table-use-deck]').count(),0,"the tester starts with no personal decks");
-    const sharedNames=await nina.page.locator('[data-action=table-use-shared-deck] strong').allTextContents();
-    eq(sharedNames.length,6,"all six verified staging decks are available to a fresh signed-in player");
+    const sharedNames=await nina.page.locator('[data-action=table-use-precon] strong').allTextContents();
+    eq(sharedNames,JSON.parse(readFileSync(path.join(ROOT,'data/precons-latest.json'),'utf8')).decks.map(d=>d.name),"the six New from Wizards precons are open to a fresh signed-in player");
     if(SHOTS) {
-      await nina.page.locator('[data-action=table-use-shared-deck]').evaluateAll(els=>els.forEach((el,i)=>{const tag=document.createElement('b');tag.textContent=`D${i+1}`;el.style.position='relative';tag.style.cssText='position:absolute;right:8px;top:8px;background:#ffdb6b;color:#151a19;padding:3px;font:11px monospace';el.prepend(tag);}));
-      await shot(nina.page,'shared-decks-1400');
+      await nina.page.locator('[data-action=table-use-precon]').evaluateAll(els=>els.forEach((el,i)=>{const tag=document.createElement('b');tag.textContent=`D${i+1}`;el.style.position='relative';tag.style.cssText='position:absolute;right:8px;top:8px;background:#ffdb6b;color:#151a19;padding:3px;font:11px monospace';el.prepend(tag);}));
+      await shot(nina.page,'precons-1400');
     }
     for(let i=0;i<6;i++) {
-      if(i) {await nina.page.locator(".cm-lobby-seat[data-seat='0'] [data-action=table-deck]").click();await nina.page.waitForFunction(()=>document.querySelectorAll('[data-action=table-use-shared-deck]:enabled').length===6);}
-      await nina.page.locator('[data-action=table-use-shared-deck]').nth(i).click();
+      if(i) {await nina.page.locator(".cm-lobby-seat[data-seat='0'] [data-action=table-deck]").click();await nina.page.waitForFunction(()=>document.querySelectorAll('[data-action=table-use-precon]:enabled').length===6);}
+      await nina.page.locator('[data-action=table-use-precon]').nth(i).click();
       await nina.page.waitForFunction(()=>!document.querySelector('#cm-dialog[open]'));
       await nina.page.waitForFunction(name=>document.querySelector(".cm-lobby-seat[data-seat='0']")?.textContent.includes(name),sharedNames[i]);
       ok((await pageText(nina.page,".cm-lobby-seat[data-seat='0']")).includes(sharedNames[i]),`the real table accepts ${sharedNames[i]} for the tester`);
       const payload=deckBodies.at(-1).deck;
-      eq(payload.cards.length+payload.commander.length,100,'a shared deck submits the full hundred');
-      const published=JSON.parse(readFileSync(path.join(ROOT,'tests/fixtures/shared-staging-decks.json'),'utf8')).decks.find(d=>d.name===sharedNames[i]);
-      const expected={name:published.name,commander:published.commander,cards:published.cards};
-      eq({name:payload.name,commander:payload.commander,cards:payload.cards},expected,'the selected list exactly matches the saved deck, with no stand-ins');
-      ok(!('source' in payload),'a shared deck never attributes the guest result to the owner library');
+      eq(payload.cards.length+payload.commander.length,100,'a precon submits the full hundred');
+      const published=JSON.parse(readFileSync(path.join(ROOT,'data/precons.json'),'utf8')).decks.find(d=>d.name===sharedNames[i]);
+      const commander=published.commander.map(c=>c.name);
+      const expected={name:published.name,commander,cards:published.cards.filter(([n])=>!commander.includes(n)).flatMap(([n,q])=>Array(q).fill(n))};
+      eq({name:payload.name,commander:payload.commander,cards:payload.cards},expected,"the selected list is exactly Wizards' published decklist, with no stand-ins");
+      ok(!('source' in payload),"a precon's result is filed to no one's library");
     }
     useConfirmedCards = false;
     await nina.context.close();
