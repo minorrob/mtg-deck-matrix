@@ -50,7 +50,7 @@
  * THE GAME'S OWN TRIGGERS (CR 725.2; Train E): the monarch's two, which no card has -- INHERENT_TRIGGERS, below.
  */
 
-import {conditionHolds} from "../script/condition.mjs";
+import {conditionHolds, hasMostLife} from "../script/condition.mjs";
 import {pushAbility, becameTarget, crimeCommitted} from "./stack.mjs";
 import {objectsAfterMove, cardsIn, usesThisTurn, recordUse} from "../state/index.mjs";
 import {playerStatics, ruleChanged} from "./statics.mjs";
@@ -298,7 +298,10 @@ function subjects(state, event, condition, sourceId, controller) {
       /* "Whenever a creature attacks you or a planeswalker you control" (Jace, Reality Sculptor): `defender` "you". */
       .filter((a) => condition.defender !== "you" || (a.defender?.playerId === controller && (!a.defender.planeswalker || condition.planeswalkers === true)))
       /* "Attacks a player alone" (Jiang Yanggu, Alone; Yuriko): a player, not a planeswalker of theirs (CR 506.3). */
-      .filter((a) => condition.defender !== "player" || (a.defender?.playerId !== undefined && !a.defender.planeswalker));
+      .filter((a) => condition.defender !== "player" || (a.defender?.playerId !== undefined && !a.defender.planeswalker))
+      /* Dethrone's "attacks the player with the most life or tied for most life" (CR 702.105a; cards/index.mjs): that player, as
+         it attacks -- a planeswalker of theirs is not them (CR 506.3). */
+      .filter((a) => condition.defenderMostLife !== true || (a.defender?.playerId !== undefined && !a.defender.planeswalker && hasMostLife(state, a.defender.playerId)));
     /* "Whenever a player attacks with three or more creatures" (Aurelia): the attack as a whole, counted -- one event
        declares every attacker (CR 508.1). */
     if (condition.atLeast && matched.length < condition.atLeast) return [];
@@ -419,6 +422,9 @@ function subjects(state, event, condition, sourceId, controller) {
     /* "Whenever an opponent loses life" (batch 78): a loss, about the player and how much. */
     if (condition.loser !== undefined) return gained < 0 && whoseIs(condition.loser, player, controller) ? [{player, amount: -gained}] : [];
     if (!(gained > 0) || !whoseIs(condition.gainer ?? "you", player, controller)) return [];
+    /* "Whenever you gain life for the first time each turn" (Vanguard Seraph): only that player's first gain of the turn --
+       one before it, while this permanent was not there to see it, still counts (effects/resources.mjs). */
+    if (condition.firstThisTurn && fields.firstGainThisTurn !== true) return [];
     return [{player, amount: gained}];
   }
   /* "Whenever a player taps a land for mana" (Manabarbs): what was tapped, and who tapped it. */
@@ -474,6 +480,9 @@ const leftAs = (fields) => (fields.from?.zoneType === "Battlefield" && fields.le
 function matches(state, event, condition, sourceId, controller) {
   if (event.kind !== condition.on) return false;
   const fields = event.data?.fields ?? {};
+  /* READ AHEAD'S SKIPPED CHAPTERS (CR 702.155a; The Elder Dragon War): a chapter numbered below the one its controller chose as
+     it entered (rules/entering.mjs, `readAhead`) does not trigger. */
+  if (Number.isInteger(condition.chapter) && (state.objects[sourceId]?.readAhead ?? 0) > condition.chapter) return false;
 
   if (condition.on === "GameEventCardChangeZone") {
     /* A sacrifice (effects/zones.mjs sacrificeOne): by whom, and not this one if it says "another". Asked here, where a
@@ -835,6 +844,9 @@ export function collectTriggers(state, events) {
                paid" is asked again as it resolves (CR 603.4), its creature perhaps gone -- a token copy is made all the same
                (Coruscation Mage's ruling). */
             ...(object.offspring === true ? {offspring: true} : {}),
+            /* And how many times it was kicked (CR 702.33d; rules/stack.mjs), as it triggers: "if he was kicked" (Josu Vess, Lich
+               Knight) is asked again as it resolves (CR 603.4), its creature perhaps gone. */
+            ...(Number.isInteger(object.kicked) && object.kicked > 0 ? {kicked: object.kicked} : {}),
             /* "Choose one that hasn't been chosen" (Gollum, Riddle Master): the modes its permanent had chosen as it triggered,
                for its modes to be chosen by should the permanent be gone by then (CR 113.7a; modesTaken). */
             ...(ability.modal?.unchosen ? {modesChosen: [...(object.modesChosen?.[ability.id] ?? [])]} : {}),
@@ -1281,6 +1293,7 @@ function putOnStack(state, triggers) {
       spent: trigger.spent ?? null,
       paidFor: trigger.paidFor ?? null,
       offspring: trigger.offspring === true,
+      kicked: trigger.kicked ?? 0,
       x: trigger.x ?? null,
       /* A delayed trigger's source, as it was when the trigger was made (CR 701.27f). */
       sourceTransforms: trigger.sourceTransforms,
@@ -1291,6 +1304,10 @@ function putOnStack(state, triggers) {
        modes with them (CR 603.3c). */
     if ((entry.script?.targets ?? []).length || entry.script?.modal) entry.stage = "targeting";
     if (trigger.modesChosen) entry.modesChosenWas = [...trigger.modesChosen];
+    /* Its source gone before it reached the stack, an ability that names "this card" keeps which object that was, for the card
+       it became (Angelic Destiny: the Aura put into the graveyard after its creature died, CR 400.7, 704.5m; script/bind.mjs). */
+    if (entry.cardId === null && Number.isInteger(trigger.source?.cardId) && JSON.stringify(entry.script?.effects ?? []).includes('"this card"'))
+      entry.sourceWas = trigger.source.cardId;
     const at = state.pendingTriggers.indexOf(trigger);
     if (at >= 0) state.pendingTriggers.splice(at, 1);
   }

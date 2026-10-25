@@ -258,6 +258,11 @@ function emptyManaPools(state, events) {
     else delete player.turnMana;
     const kept = {...combatKept};
     for (const [color, n] of Object.entries(turnKept)) kept[color] = (kept[color] ?? 0) + n;
+    /* "YOU DON'T LOSE UNSPENT RED MANA AS STEPS AND PHASES END" (Leyline Tyrant; precon load lane C; CR 500.4): every {R} of its
+       player's is kept -- the pool's, and the red kept beside it with its restrictions and riders (rules/restricted-mana.mjs) --
+       for as long as the ability applies, from step to step and turn to turn. */
+    const redKept = playerRuleChanged(state, "keeps-red-mana", player.id);
+    if (redKept) kept.R = player.manaPool.R ?? 0;
     /* "IF YOU WOULD LOSE UNSPENT MANA, THAT MANA BECOMES COLORLESS INSTEAD" (Omnath, Locus of the Void; CR 614.1a): none of
        it is lost -- what would have been becomes {C}, the mana kept beside the pool too, its restrictions and riders with it
        (rules/restricted-mana.mjs) -- and nothing is emptied, so nothing is said. Mana not lost now (firebending's, kept)
@@ -267,7 +272,7 @@ function emptyManaPools(state, events) {
       continue;
     }
     /* And the mana that could be spent only on some things (rules/restricted-mana.mjs). */
-    emptyRestricted(player);
+    emptyRestricted(player, redKept ? ["R"] : []);
     const had = Object.fromEntries(Object.entries(player.manaPool).map(([color, n]) => [color, n - (kept[color] ?? 0)]));
     const total = Object.values(had).reduce((a, b) => a + b, 0);
     if (total === 0) continue;
@@ -353,6 +358,7 @@ function choiceFor(state) {
   if (awaiting.kind === "declare-attackers") return attackers.choice(state, awaiting);
   if (awaiting.kind === "attack-tax") return attackers.taxChoice(state, awaiting);
   if (awaiting.kind === "declare-blockers") return blockers.choice(state, awaiting);
+  if (awaiting.kind === "block-tax") return blockers.taxChoice(state, awaiting);
   if (awaiting.kind === "assign-combat-damage") return combatDamage.choice(state, awaiting);
   /* CR 616.1: which effect changes a hit of combat damage first, asked before any of it is dealt (rules/combat.mjs). */
   if (awaiting.kind === "order-damage") return damageOrderChoice(state, awaiting);
@@ -479,7 +485,8 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
      offer taken -- cast or activated, its player holding priority after it (CR 117.3c, rules/actions.mjs applyAction). */
   /* Escape's other cards, or a flashback cost's creatures, picked: the cast taken, its player holding priority after it
      (CR 117.3c). */
-  if (awaiting.kind === "choose-cost") return resolveCastCost(state, awaiting, indices);
+  /* A total divided among its targets (CR 601.2d): answered with an amount for each (rules/actions.mjs, costChoice). */
+  if (awaiting.kind === "choose-cost") return resolveCastCost(state, awaiting, indices, amounts);
   if (awaiting.kind === "choose-targets") {
     if (awaiting.stackId === undefined) return resolveChooseTargets(state, awaiting, indices);
     const events = resolveTriggerCounted(state, awaiting, indices);
@@ -508,6 +515,13 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
     /* Each defending player declares in turn; `blockers.resolve` names the next one, or clears the
        wait once the last has answered. */
     const events = blockers.resolve(state, awaiting, indices);
+    grantStepPriority(state, events);
+    return events;
+  }
+  /* What blocking costs, paid with the mana the defending player chose (CR 509.1f; Archangel of Tithes); then the blocks are
+     declared. */
+  if (awaiting.kind === "block-tax") {
+    const events = blockers.payTax(state, awaiting, indices);
     grantStepPriority(state, events);
     return events;
   }
@@ -720,6 +734,9 @@ export function beginGame(state, startingPlayer = 0) {
   state.turnInRound = 1;
   state.activePlayer = startingPlayer;
   state.players[startingPlayer].turnBegan = 1;
+  /* How many turns each player has begun this game: "your first, second, or third turns of the game" (Serra Avenger;
+     script/condition.mjs, pastYourFirstTurns). */
+  state.players[startingPlayer].turnsTaken = 1;
   state.stepIndex = 0;
   state.phase = STEPS[0].phase;
   for (const player of state.players) player.landsPlayed = 0;
@@ -810,6 +827,8 @@ export function advance(state) {
     /* "Since the beginning of your last upkeep" (echo, CR 702.30a; script/condition.mjs): the turn of theirs before this one. */
     if (state.players[state.activePlayer].turnBegan > 0) state.players[state.activePlayer].previousTurnBegan = state.players[state.activePlayer].turnBegan;
     state.players[state.activePlayer].turnBegan = state.turn;   /* CR 302.6, keywords/timing.mjs */
+    /* One more turn of theirs begun, an extra turn too (CR 500.7; beginGame). */
+    state.players[state.activePlayer].turnsTaken = (state.players[state.activePlayer].turnsTaken ?? 0) + 1;
     /* Whom they attack in this turn, from none: "players who attacked you during their last turn" (rules/combat.mjs). */
     if (state.players[state.activePlayer].attackedPlayers) state.players[state.activePlayer].attackedPlayers = [];
     /* Whose next turn has now begun: this player's -- and each player who has left the game and whose turn it would have been

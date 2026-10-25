@@ -168,7 +168,7 @@ const flashbackPayable = (state, player, back) => back.life <= state.players[pla
   && (!back.sacrifice || sacrificeChoices(state, player, null, back.sacrifice.selector).length >= back.sacrifice.count);
 const COLOR_WORDS = {W: "white", U: "blue", B: "black", R: "red", G: "green"};
 /** The creatures a flashback cost taps, as the card says them: "three untapped white creatures you control". */
-export const tappersInWords = (tap) => `${inWords(tap.count)} untapped ${[...(tap.selector?.colors ?? []).map((c) => COLOR_WORDS[c] ?? c), ...(tap.selector?.subtypes ?? [])].join(" ")}${(tap.selector?.colors ?? []).length || (tap.selector?.subtypes ?? []).length ? " " : ""}creature${tap.count === 1 ? "" : "s"} you control`;
+export const tappersInWords = (tap) => `${inWords(tap.count)} untapped ${[...(tap.selector?.colors ?? []).map((c) => COLOR_WORDS[c] ?? c), ...(tap.selector?.subtypes ?? [])].join(" ")}${(tap.selector?.colors ?? []).length || (tap.selector?.subtypes ?? []).length ? " " : ""}creature${tap.count === 1 ? "" : "s"} you control${(tap.selector?.keywords ?? []).length ? ` with ${tap.selector.keywords.map((k) => String(k).toLowerCase()).join(" and ")}` : ""}`;
 
 /**
  * ESCAPE (CR 702.138a): the ways this card may be cast from its owner's graveyard rather than for its mana cost, each
@@ -401,6 +401,14 @@ export function castCostChoice(state, awaiting) {
 }
 function costChoice(state, awaiting) {
   const {action, player} = awaiting;
+  /* A total divided among its targets (CR 601.2d; dividedOf): how much to each, at least 1 each -- asked before any cost. */
+  const divided = action.kind === "cast" ? dividedOf(state.objects[action.objectId]) : null;
+  if (divided && !Array.isArray(action.division)) {
+    const among = dividedTargets(action, divided), total = dividedTotal(state, player, action.objectId);
+    return {id: `choose-cost:${action.objectId}:divide`, title: `${state.objects[action.objectId]?.card ?? "That spell"}: divide ${total} damage among its targets, at least 1 to each`,
+      mode: "amount", min: 0, max: 0, total, minEach: 1, cost: "divide",
+      options: among.map((t, index) => ({index, label: targetName(state, t), cardId: t.id, max: total - (among.length - 1)}))};
+  }
   /* PAID FROM THE POOL, more than one way (X8b): which mana, and which life, pays it -- each way in words, named by its key.
      Asked before any other part of the cost, which is asked after with the way chosen. */
   if (action.payWays === true && action.payWith === undefined) {
@@ -500,6 +508,11 @@ function costChoice(state, awaiting) {
     return {id: `choose-cost:${action.objectId}`, title: `${name}: exile ${inWords(n)} other card${n === 1 ? "" : "s"} from your graveyard`, mode: "many", min: n, max: n,
       cost: "exileOthers", options: named(cardsIn(state, "graveyard", player).filter((id) => id !== action.objectId))};
   }
+  /* An alternative cost that taps creatures ("tap four untapped creatures you control with flying", Sephara, Sky's Blade): exactly
+     that many of the ones it may take -- the same question as a flashback cost's tap, answered the same way. */
+  if (graveWay?.tap && !Array.isArray(action.flashbackTap))
+    return {id: `choose-cost:${action.objectId}`, title: `${name}: tap ${tappersInWords(graveWay.tap)}`, mode: "many", min: graveWay.tap.count, max: graveWay.tap.count, cost: "tap",
+      options: named(flashbackTappers(state, player, graveWay.tap))};
   /* A flashback cost's sacrifice (Dread Return; wave 4c, k2): exactly that many of the permanents it may take. */
   const sacrificing = action.flashback ? flashbackCost(state, player, action.objectId)?.sacrifice : null;
   if (sacrificing && !Array.isArray(action.flashbackSacrifice)) {
@@ -518,8 +531,17 @@ function costChoice(state, awaiting) {
 }
 
 /** What the cast's cost takes, picked: the cast taken with it, as it would have been had it been chosen with it (CR 601.2h). */
-export function resolveCastCost(state, awaiting, indices) {
+export function resolveCastCost(state, awaiting, indices, amounts = null) {
   const choice = castCostChoice(state, awaiting);
+  /* The division announced (CR 601.2d): an amount for each target, checked as the cast is taken with it (divisionProblem). */
+  if (choice.cost === "divide") {
+    const action = {...structuredClone(awaiting.action), division: Array.isArray(amounts) ? [...amounts] : []};
+    const problem = divisionProblem(state, awaiting.player, action);
+    if (problem) throw new Error(problem);
+    state.awaiting = null;
+    state.priorityPlayer = awaiting.player;
+    return applyAction(state, awaiting.player, action);
+  }
   const picked = [...new Set(indices ?? [])].sort((a, b) => a - b);
   /* Convoke's and "tap any number"'s, any number from its least to its most; the others, exactly as many as they take. */
   const counted = ["convoke", "tapAny", "waterbend", "delve"].includes(choice.cost) || choice.cost === "sacrificeAny" ? picked.length >= choice.min && picked.length <= choice.max : picked.length === choice.min;
@@ -555,11 +577,11 @@ function permanentWords(selector, n) {
 
 /* The creatures a flashback cost taps, as its caster picked them: that many, none twice, each untapped and fitting.
    Refused before anything moves. */
-function flashbackTapped(state, player, action, tap) {
+function flashbackTapped(state, player, action, tap, forWhat = "for its flashback") {
   const list = action.flashbackTap;
   const fitting = flashbackTappers(state, player, tap);
   if (!Array.isArray(list) || list.length !== tap.count || new Set(list).size !== list.length || !list.every((id) => fitting.includes(id)))
-    throw new Error(`Those are not ${tappersInWords(tap)} for its flashback`);
+    throw new Error(`Those are not ${tappersInWords(tap)} ${forWhat}`);
   return [...list];
 }
 
@@ -631,6 +653,12 @@ export function alternativeCosts(state, player, id) {
     const cost = ability.cost ?? [];
     const others = cost.filter((a) => a.atom === "exileFromGraveyard").reduce((n, a) => n + (a.count ?? 1), 0);
     if (ability.zone === "graveyard" && cardsIn(state, "graveyard", player).filter((c) => c !== id).length < others) return [];
+    /* "You may pay {W} and tap four untapped creatures you control with flying rather than pay this spell's mana cost" (Sephara,
+       Sky's Blade; CR 118.9): that many to tap now, or it cannot be paid (CR 118.3) -- which ones, asked once the cast is taken
+       (costChoice), as a flashback cost's are. */
+    const tapping = cost.find((a) => a.atom === "tapCreature");
+    const tap = tapping ? {count: tapping.count ?? 1, selector: tapping.selector ?? {}} : null;
+    if (tap && flashbackTappers(state, player, tap).length < tap.count) return [];
     /* Sneak's "returning an unblocked creature you control to its owner's hand" (CR 702.190a): picked with the cast, as a
        sacrifice is (additionalChoices). */
     return [{index, mana: cost.find((a) => a.atom === "mana")?.cost ?? "", life: cost.filter((a) => a.atom === "payLife").reduce((n, a) => n + (a.amount ?? 0), 0),
@@ -647,6 +675,7 @@ export function alternativeCosts(state, player, id) {
       ...(ability.mutate ? {mutate: true, overload: {targets: [{what: "permanent", types: ["Creature"], nonSubtypes: ["Human"], owner: object.owner}],
         effects: [{effect: "mergePermanent", targets: {target: 0}}]}} : {}),
       ...(ability.zone === "graveyard" ? {fromGraveyard: true, exileOthers: others} : {}),
+      ...(tap ? {tap} : {}),
       /* Prowl (CR 702.76a): the permanent it becomes was cast for it (rules/stack.mjs). */
       ...(ability.prowl === true ? {prowl: true} : {}),
       /* Surge (CR 702.117a), freerunning (CR 702.173a): the keyword whose cost this is, for "if its surge cost was paid". */
@@ -1058,7 +1087,10 @@ function countersPicked(state, player, sourceId, atom, picked) {
 function sacrificeChoices(state, player, sourceId, given) {
   /* "Sacrifice a creature of the chosen type" (Etchings of the Chosen): its source's choice. */
   const selector = namesChosen(given) ? withChosen(given, state.objects[sourceId]?.chosen) : given;
-  const matches = (Array.isArray(selector?.anyOf) ? selector.anyOf : [selector ?? {}])
+  /* A choice, with what its alternatives share (script/filter.mjs): "Sacrifice another Vampire or Zombie" (Kalitas, Traitor of
+     Ghet) -- `another` beside the anyOf, held by each. */
+  const {anyOf, ...shared} = selector ?? {};
+  const matches = (Array.isArray(anyOf) ? anyOf.map((one) => ({...shared, ...one})) : [selector ?? {}])
     .map((one) => compileSelector({...one, what: "permanent", controller: "you"}));
   /* Never one that can't be sacrificed (Alexios; rules/statics.mjs): a cost it can't pay. */
   return state.zones.battlefield.filter((id) => matches.some((m) => m(state, id, {controller: player, source: sourceId})) && !cantBeSacrificed(state, id));
@@ -1907,7 +1939,9 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
          to cast it (CR 119.4). */
       const affordable = (offer) => lifeIncrease(state, player, id, offer.targets) <= lifeLeft + aimLife;
       actions.push(...(object.spell?.modal && !way?.overload ? withModes(state, base, object.spell.modal, {controller: player, source: id}, variant.escalate !== undefined ? variant.escalate + 1 : null, variant.spree ?? variant.tier ?? null)
-        : withTargets(state, base, way?.overload ?? (variant.kicked && object.spell?.kicked ? object.spell.kicked : object.spell), {controller: player, source: id, cast, ...(Number.isInteger(X) && !lifeX ? {x: X} : {})}, aim)).filter(affordable));
+        : withTargets(state, base, way?.overload ?? (variant.kicked && object.spell?.kicked ? object.spell.kicked
+          /* Its gift promised, what it targets then (Consumed by Greed; CR 601.2c, 702.174a; rules/stack.mjs, scriptOf). */
+          : gift !== undefined && object.spell?.promised ? object.spell.promised : object.spell), {controller: player, source: id, cast, ...(Number.isInteger(X) && !lifeX ? {x: X} : {})}, aim)).filter(affordable));
     }
   }
   }
@@ -2427,6 +2461,24 @@ const sameAction = (a, b) => a.kind === b.kind
   && targetKey(a) === targetKey(b);
 
 /** The target specs an offer's targets were chosen by, and the context they were chosen in. */
+/* DIVIDED AS ITS CASTER CHOOSES (CR 601.2d; Monstrous Onslaught, the precon load lane D): "deals X damage divided as you choose
+   among any number of target creatures, where X is the greatest power among creatures you control as you cast this spell" --
+   the spell's `divided`, its `total` counted as it is cast and the target it is divided among. The division is announced
+   once the targets are chosen, before the costs (601.2f-h), at least 1 to each target; with one target it is all that one's,
+   and nobody is asked. It goes with the spell (rules/stack.mjs, `division`) and is not made again: what an illegal target was
+   given is dealt to nothing (CR 608.2b; the card's ruling). */
+const dividedOf = (object) => object?.spell?.divided ?? null;
+const dividedTotal = (state, player, objectId) => Math.max(0, amountOf(state, dividedOf(state.objects[objectId])?.total ?? 0, {controller: player, source: objectId}));
+const dividedTargets = (action, divided) => [].concat((action.targets ?? [])[divided.target] ?? []).filter((t) => t?.kind === "object");
+/* What is wrong with a division its caster announced, or null: a whole amount, at least 1, for each target, the whole total. */
+function divisionProblem(state, player, action) {
+  const name = state.objects[action.objectId]?.card ?? "That spell";
+  const among = dividedTargets(action, dividedOf(state.objects[action.objectId])), total = dividedTotal(state, player, action.objectId), amounts = action.division;
+  if (!Array.isArray(amounts) || amounts.length !== among.length || amounts.some((n) => !Number.isInteger(n) || n < 1) || amounts.reduce((a, b) => a + b, 0) !== total)
+    return `${name} divides ${total} damage among its targets: give each target at least 1, and all ${total} in all`;
+  return null;
+}
+
 export function offerSpecs(state, player, action) {
   const object = state.objects[action.objectId];
   if (!object) return {specs: [], context: {controller: player, source: action.objectId}};
@@ -2434,7 +2486,15 @@ export function offerSpecs(state, player, action) {
   /* And the X announced (CR 601.2b, before the targets, 601.2c): "exile X target creatures" (Curse of the Swine), "each of up
      to X targets" (Crackle with Power). */
   const context = {controller: player, source: action.objectId, chosenTargets: action.targets ?? [], ...(Number.isInteger(action.x) ? {x: action.x} : {})};
-  if (action.kind === "cast") return {specs: object.spell?.modal && Array.isArray(action.modes) ? modalScript(object.spell.modal, action.modes).targets : object.spell?.targets ?? [], context};
+  if (action.kind === "cast") {
+    const specs = object.spell?.modal && Array.isArray(action.modes) ? modalScript(object.spell.modal, action.modes).targets : object.spell?.targets ?? [];
+    /* A total divided among "any number of target creatures" (Monstrous Onslaught; CR 601.2d): each target gets at least 1,
+       so there are no more of them than the total -- and at least one, unless there is nothing to divide. */
+    const divided = dividedOf(object);
+    if (!divided) return {specs, context};
+    const total = dividedTotal(state, player, action.objectId);
+    return {specs: specs.map((spec, index) => (index === divided.target ? {...spec, count: {min: Math.min(1, total), max: total}} : spec)), context};
+  }
   const ability = chosenFor(abilitiesOf(state, action.objectId).find((candidate) => candidate.id === action.abilityId), object);
   return {specs: ability?.modal && Array.isArray(action.modes) ? modalScript(ability.modal, action.modes).targets : ability?.targets ?? [], context};
 }
@@ -2444,7 +2504,8 @@ export function offerSpecs(state, player, action) {
 function nextToChoose(state, player, action) {
   const {specs, context} = offerSpecs(state, player, action);
   for (let index = action.targets.findIndex(isChoosing); index >= 0; index = action.targets.findIndex(isChoosing)) {
-    if (targetCandidates(state, specs[index], context).length) return index;
+    /* None at most (a total of 0 to divide, offerSpecs): no question either. */
+    if (targetCandidates(state, specs[index], context).length && countOf(specs[index], context)?.max !== 0) return index;
     action.targets[index] = [];
   }
   return -1;
@@ -2576,6 +2637,18 @@ function performOffered(state, player, action, during) {
       }
     }
     countedProblem(state, player, action);
+    /* A TOTAL DIVIDED AMONG ITS TARGETS (CR 601.2d; dividedOf): with two or more, its caster announces how, asked before
+       anything is paid ("choose-cost", "divide"); with one, all of it is that one's; with none, there is nothing to divide. */
+    const divided = action.kind === "cast" ? dividedOf(state.objects[action.objectId]) : null;
+    if (divided && !Array.isArray(action.division)) {
+      const among = dividedTargets(action, divided);
+      if (among.length > 1) {
+        state.awaiting = {kind: "choose-cost", player, action: structuredClone(action)};
+        return [];
+      }
+      action = {...structuredClone(action), division: among.length ? [dividedTotal(state, player, action.objectId)] : []};
+    }
+    if (divided) { const problem = divisionProblem(state, player, action); if (problem) throw new Error(problem); }
     /* ESCAPE'S OTHER CARDS (CR 702.138a, 601.2h): taken without them, the cast stops to ask which, nothing moved or paid
        before the answer (rules/turn.mjs, "choose-cost"); taken with them, they are checked as it is cast. */
     if (action.kind === "cast" && action.escape !== undefined && !Array.isArray(action.escapeExile)) {
@@ -2588,8 +2661,10 @@ function performOffered(state, player, action, during) {
       state.awaiting = {kind: "choose-cost", player, action: structuredClone(action)};
       return [];
     }
-    /* A FLASHBACK COST THAT TAPS CREATURES (Battle Screech): the same -- which ones, asked before anything is paid. */
-    if (action.kind === "cast" && action.flashback === true && !Array.isArray(action.flashbackTap) && flashbackCost(state, player, action.objectId)?.tap) {
+    /* A FLASHBACK COST THAT TAPS CREATURES (Battle Screech): the same -- which ones, asked before anything is paid. And an
+       alternative cost that does (Sephara, Sky's Blade). */
+    if (action.kind === "cast" && !Array.isArray(action.flashbackTap) && ((action.flashback === true && flashbackCost(state, player, action.objectId)?.tap)
+      || (action.alternative !== undefined && alternativeCosts(state, player, action.objectId).find((w) => w.index === action.alternative)?.tap))) {
       state.awaiting = {kind: "choose-cost", player, action: structuredClone(action)};
       return [];
     }
@@ -2791,7 +2866,8 @@ function performOffered(state, player, action, during) {
     /* A graveyard alternative cost's other cards, as its caster picked them (othersPicked). */
     const othersExiling = way?.exileOthers && !during ? othersPicked(state, player, action, way) : [];
     /* A flashback cost's creatures, as its caster picked them. */
-    const tapping = back?.tap && !during ? flashbackTapped(state, player, action, back.tap) : [];
+    /* Or an alternative cost's (Sephara, Sky's Blade), the same way. */
+    const tapping = (back?.tap ?? way?.tap) && !during ? flashbackTapped(state, player, action, back?.tap ?? way.tap, back?.tap ? "for its flashback" : "for it") : [];
     /* And the permanents it sacrifices (flashbackSacrificed). */
     const sacrificing = back?.sacrifice && !during ? flashbackSacrificed(state, player, action, back.sacrifice) : [];
     /* And "tap any number of untapped creatures you control", as its caster picked them (tapAnyPicked). */
@@ -2913,6 +2989,11 @@ function performOffered(state, player, action, during) {
     /* Its gift promised (CR 702.174k), to the opponent chosen as it was cast: the spell's, a copy's (CR 707.10), and the
        permanent it becomes (rules/stack.mjs). */
     if (action.gift !== undefined) entry.gift = action.gift;
+    /* The division announced (CR 601.2d; dividedOf): by its target, what each object chosen is given -- the spell's, and a
+       copy's (CR 707.10). */
+    const dividing = dividedOf(object);
+    if (dividing && Array.isArray(action.division))
+      entry.division = {[dividing.target]: Object.fromEntries(dividedTargets(action, dividing).map((t, i) => [t.id, action.division[i]]))};
     /* Its offspring cost paid (CR 702.175a): the permanent it becomes knows it as it enters (rules/stack.mjs). */
     if (action.offspring === true) entry.offspring = true;
     /* Cast as an Adventure (CR 715.3): exiled as it resolves, and castable as itself from there (rules/stack.mjs, 715.3d). */
