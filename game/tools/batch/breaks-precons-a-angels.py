@@ -61,7 +61,7 @@ BREAKS = [
     ('every gain triggers "the first time"', TR, '    if (condition.firstThisTurn && fields.firstGainThisTurn !== true) return [];\n', ''),
     ('"the first time" dropped from the trigger', IX, ', ...(t.firstThisTurn === true ? {firstThisTurn: true} : {})})', '})'),
     # Serra Avenger
-    ('pastYourFirstTurns not a condition', CO, '  "pastYourFirstTurns"];', '  ];'),
+    ('pastYourFirstTurns not a condition', CO, '  "pastYourFirstTurns",\n', ''),
     ('pastYourFirstTurns on anyone\'s turn', CO, 'if (Number.isInteger(condition.pastYourFirstTurns) && state.activePlayer === controller\n',
      'if (Number.isInteger(condition.pastYourFirstTurns)\n'),
     ('pastYourFirstTurns always past', CO, '&& (state.players[controller]?.turnsTaken ?? 0) <= condition.pastYourFirstTurns) return false;', '&& false) return false;'),

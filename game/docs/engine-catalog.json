@@ -9,17 +9,17 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1973,
+  "defined": 1985,
   "provisional": 0,
-  "everyRule": 2909
+  "everyRule": 2914
  },
  "sections": {
   "Keyword abilities (CR 702)": {
    "tally": {
     "built": 86,
     "partial": 0,
-    "named": 10,
-    "missing": 98
+    "named": 12,
+    "missing": 96
    },
    "entries": [
     {
@@ -987,12 +987,12 @@
      "rule": "702.105",
      "name": "Dethrone",
      "engine": null,
-     "status": "missing",
+     "status": "named",
      "forge": "Dethrone",
      "top": 2,
      "all": 9,
-     "blocks": 2,
-     "alone": 2
+     "blocks": 1,
+     "alone": 1
     },
     {
      "kind": "keyword ability",
@@ -1959,7 +1959,7 @@
      "rule": "702.155",
      "name": "Read Ahead",
      "engine": null,
-     "status": "missing",
+     "status": "named",
      "forge": "Read ahead",
      "top": 0,
      "all": 10,
@@ -2634,8 +2634,8 @@
      "forge": "Discover",
      "top": 6,
      "all": 35,
-     "blocks": 5,
-     "alone": 5
+     "blocks": 4,
+     "alone": 4
     },
     {
      "kind": "keyword action",
@@ -4111,8 +4111,8 @@
      "forge": "Discover",
      "top": 6,
      "all": 35,
-     "blocks": 5,
-     "alone": 5
+     "blocks": 4,
+     "alone": 4
     },
     {
      "kind": "effect",
@@ -7431,8 +7431,8 @@
      "forge": "UnspentMana",
      "top": 3,
      "all": 6,
-     "blocks": 3,
-     "alone": 2
+     "blocks": 2,
+     "alone": 1
     },
     {
      "kind": "static",
@@ -8925,7 +8925,7 @@
      "forge": "RememberChanged",
      "top": 124,
      "all": 1168,
-     "blocks": 47,
+     "blocks": 45,
      "alone": 4
     },
     {
@@ -8949,7 +8949,7 @@
      "forge": "RememberObjects",
      "top": 123,
      "all": 1460,
-     "blocks": 47,
+     "blocks": 45,
      "alone": 8
     },
     {
@@ -9009,7 +9009,7 @@
      "forge": "MayPlay",
      "top": 99,
      "all": 625,
-     "blocks": 34,
+     "blocks": 32,
      "alone": 1
     },
     {
@@ -9607,7 +9607,7 @@
      "forge": "ValidExile",
      "top": 5,
      "all": 42,
-     "blocks": 4,
+     "blocks": 3,
      "alone": 3
     },
     {
