@@ -170,7 +170,9 @@ globalThis.CrankBoard = Object.seal({
   const keep = (k, v) => {try {localStorage.setItem(k, String(v));} catch {/* applied, not remembered */}};
   const rowShare = () => {const raw = stored(ROWS_KEY), v = Number(raw); return raw !== null && v >= ROWS[0] && v <= ROWS[1] ? v : 0.5;};
   const inRange = (v) => {const [lo, hi] = C.cardScaleRange(); return Math.min(hi, Math.max(lo, Math.round(Number(v) || 100)));};
-  const scaleOf = (scope) => {const v = stored(SCALE_KEY[scope]); return v === null ? C.cardScale() : inRange(v);};
+  /* The hand's size while the wheel turns over it: shown at once, kept a moment after the wheel stops (the wheel over your hand, below). */
+  let handLive = null, handKeep = null;
+  const scaleOf = (scope) => {if (scope === "hand" && handLive !== null) return inRange(handLive); const v = stored(SCALE_KEY[scope]); return v === null ? C.cardScale() : inRange(v);};
   /* FOCUS AND FULL SCREEN'S DIVIDERS (items 15 and 18), remembered on the device like the rest: the seat pane's width,
      past which each tile is a miniature of that seat's board; and the share of the Panel, and of Full screen's side
      column, given to the card above its divider. */
@@ -218,6 +220,11 @@ globalThis.CrankBoard = Object.seal({
   /* Where the 3D camera looks across the table, moved by dragging a mat (plane pixels from the table's center, y toward
      you). Kept for the visit only: ⌖ Center in Camera puts it back. */
   camera.pan = {x: 0, y: 0};
+  /* How much longer the table runs on your side (Ctrl/⌘ + drag), a share of its resting length; kept on this device
+     (CrankStage.geometry's `reach`). `stretch` is the drag under way, `stageGeom` the geometry the stage last drew. */
+  const REACH_KEY = "cm-stage-reach-v1";
+  camera.reach = Math.max(0, Math.min(1, Number(stored(REACH_KEY)) || 0));
+  let stretch = null, stageGeom = null;
   const stageEnabled = () => mode === "full" && !phone();
   const moduleSide = id => !phone() ? ["left","right"].find(side => paneModules(side).includes(id)) : undefined;
   const openModuleDrawer = id => {const side=moduleSide(id); if(side === "left") stageRail=true; if(side === "right") stageSide=true;};
@@ -740,6 +747,7 @@ globalThis.CrankBoard = Object.seal({
   }
   function restoreSettings(before) {
     const skipWas = skipEmpty();
+    handLive = null; clearTimeout(handKeep);
     for (const [k, v] of Object.entries(before.kept)) try {if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v);} catch {/* applied, not remembered */}
     if (skipEmpty() !== skipWas) prefer();
     C.setCardScale(C.cardScale(), {save: false});
@@ -1000,10 +1008,19 @@ globalThis.CrankBoard = Object.seal({
   function cameraMenu() { return `<div class="cm-stage-camera"><button type="button" data-action="board-camera" aria-expanded="${cameraOpen}">Camera ▾</button>${cameraOpen ? `<div>${phone() ? "" : switcher()}<span>View seats</span>${ib("◀", "board-rotate", "Previous seat", {by: "-1"})}${ib("▶", "board-rotate", "Next seat", {by: "1"})}
         ${stageEnabled() ? `<label>Tilt <input type="range" min="0" max="60" value="${camera.tilt}" data-stage-camera="tilt" aria-label="Table tilt"><output>${camera.tilt}°</output></label>` : ""}
         ${stageEnabled() ? `<label>Zoom <input type="range" min="60" max="${CAMERA_MAX}" value="${camera.zoom}" data-stage-camera="zoom" aria-label="Table zoom"><output>${Math.round(camera.zoom)}%</output></label>${ib("⌖", "board-camera-center", "Center the table")}
-        <label>Cards <input type="range" min="70" max="${CAMERA_MAX}" value="${camera.cards}" data-stage-camera="cards" aria-label="Tabletop card size"><output>${camera.cards}%</output></label>` : `${scaleSlider("board", "Board cards")}${scaleSlider("hand", "Hand cards")}`}
+        <label>Cards <input type="range" min="70" max="${CAMERA_MAX}" value="${camera.cards}" data-stage-camera="cards" aria-label="Tabletop card size"><output>${camera.cards}%</output></label>
+        ${stageSliders()}` : `${scaleSlider("board", "Board cards")}${scaleSlider("hand", "Hand cards")}`}
         ${stageEnabled() ? `<p class="cm-stage-style-note">Appearance preview · this device</p>
         <label class="cm-stage-style">Background <select data-stage-style="background" aria-label="Background">${(CrankStage.appearances.backgrounds).map(x=>`<option value="${x.id}"${appearance.background===x.id?" selected":""}>${x.name}</option>`).join("")}</select></label>
         <label class="cm-stage-style">Table <select data-stage-style="table" aria-label="Table design">${(CrankStage.appearances.tables).map(x=>`<option value="${x.id}"${tableDesignId(appearance.table)===x.id?" selected":""}>${x.name}</option>`).join("")}</select></label>` : ""}</div>` : ""}</div>`; }
+  /* 3D's two sizes beside Cards: ✋ the hand's cards (the wheel over the hand moves it too), ↕ the table's length on your
+     side (Ctrl/⌘ + drag moves it too; 100% is the length it always had, the most is the screen's foot). */
+  function stageSliders() {
+    const [lo, hi] = C.cardScaleRange(), hand = scaleOf("hand"), g = stageGeom;
+    const most = g ? 100 + Math.floor(g.reachMost / g.base * 100) : 100 + Math.round(camera.reach * 100), long = g ? 100 + Math.round(g.reach / g.base * 100) : 100 + Math.round(camera.reach * 100);
+    return `<label title="Hand cards">✋ <input type="range" min="${lo}" max="${hi}" step="1" value="${hand}" data-board-scale="hand" aria-label="Hand cards" aria-valuetext="${hand}%"><output>${hand}%</output></label>
+        <label title="Table length on your side">↕ <input type="range" min="100" max="${most}" step="1" value="${long}" data-stage-length aria-label="Table length on your side" aria-valuetext="${long}%"><output>${long}%</output></label>`;
+  }
   function stageProfile(me) {
     const initials = (me.name || "Player").trim().split(/\s+/).slice(0,2).map(s=>s[0]).join("").toUpperCase();
     return `<div class="cm-stage-profile"><button type="button" class="cm-profile-avatar" data-action="board-profile" aria-label="Profile menu" aria-expanded="${profileOpen}" title="${e(me.name)} · Profile menu"><span aria-hidden="true">${e(initials)}</span></button>${profileOpen ? `<div class="cm-profile-menu" role="group" aria-label="Profile"><strong>${e(me.name)}</strong><span class="cm-board-tools">${opens(b("Pages", "board-menu"),menuOpen)}${menuOpen ? menu() : ""}</span><span class="cm-board-tools">${gb(CLOCK, "History", "board-history", {}, {expanded:historyOpen})}${historyOpen ? historyMenu() : ""}</span>${b("Settings", "board-tools").replace("<button ", '<button aria-haspopup="dialog" ')}${b("Arrange drawer order", "board-modules-edit")}${b("Account & app settings", "open-settings")}${b("Help", "page-help", {help:"table"})}</div>` : ""}</div>`;
@@ -1053,15 +1070,36 @@ globalThis.CrankBoard = Object.seal({
     const region = host.querySelector(".cm-stage-region");
     if (!region || !globalThis.CrankStage) {globalThis.CrankStage?.unmount(); return;}
     const big = players()[focus] || players()[view.seat];
-    const opts = {tilt: camera.tilt, zoom: camera.zoom, pan: camera.pan, rotation: 0, cards: camera.cards, reduced: globalThis.CrankMotion?.reduced() ?? false,
+    const opts = {tilt: camera.tilt, zoom: camera.zoom, pan: camera.pan, reach: camera.reach, live: !!stretch, rotation: 0, cards: camera.cards, reduced: globalThis.CrankMotion?.reduced() ?? false,
       background: table?.appearance?.background || appearance.background, table: tableDesignId(table?.appearance?.table || appearance.table),
       mats: [big, ...players().filter((p) => p.playerId !== big.playerId)].map((p) => matOf(p.playerId)),
       combat: view.state.phase?.startsWith("COMBAT_") ?? false, instant: view.state.stack.some((s) => /Instant/i.test(typeLineOf(s))),
       onReady() {stageError = ""; const el = document.querySelector(".cm-stage-error"); if (el) el.textContent = "";},
       onError(message) {stageError = message; const el = document.querySelector(".cm-stage-error"); if (el) el.textContent = `${message} Use Focus view in Camera if graphics are unavailable.`;}};
-    CrankStage.mount(region, opts); CrankStage.layout(region.getBoundingClientRect(), opts);
-    const tray = host.querySelector(".cm-stage-hand");
-    if (tray) tray.style.setProperty("--hc", `${Math.max(70, Math.min(190 * scaleOf("hand") / 100, (tray.clientHeight - 24) * 5 / 7, (tray.clientWidth - 110) / 6.1))}px`);
+    CrankStage.mount(region, opts); stageGeom = CrankStage.layout(region.getBoundingClientRect(), opts) || null;
+    const length = host.querySelector("[data-stage-length]");
+    if (stageGeom && length) {const most = 100 + Math.floor(stageGeom.reachMost / stageGeom.base * 100), v = 100 + Math.round(stageGeom.reach / stageGeom.base * 100); length.max = String(most); length.value = String(v); length.setAttribute("aria-valuetext", `${v}%`); length.parentElement.querySelector("output").textContent = `${v}%`;}
+    fitFan(host);
+  }
+  /* THE 3D HAND'S SIZE is Hand cards (SCALE_KEY.hand), as in the other views: the wheel over it, Camera's ✋ slider and
+     Tools' card size all move the one value. At 100% it is the size it always was -- 190px, or less where the window is
+     short or narrow -- and the rest is in proportion, its smallest (60%) never under 84px, where a card's name is 10px
+     (.cm-bcard-name is 12% of the card), its largest no taller than 60% of the table's height. A fan too wide for the
+     window closes up, each card still showing 40% of its width (its name), rather than running off the screen. The cards
+     stand on the tray's foot, so the tray grows upward with them. */
+  function fitFan(host) {
+    const tray = host.querySelector(".cm-stage-hand"), fan = tray?.querySelector(".cm-stage-fan");
+    if (!tray || !fan) return;
+    const k = scaleOf("hand") / 100, base = Math.max(220, Math.min(330, innerHeight * .34)), wide = tray.clientWidth;
+    const room = host.clientHeight - (host.querySelector(".cm-stage-top")?.offsetHeight || 58), count = Math.max(1, Number(fan.style.getPropertyValue("--fan-count")) || 1);
+    const rest = Math.min(190, (base - 24) * 5 / 7, (wide - 110) / 6.1), spread = (count - 1) / 2;
+    const tallest = (room * .6 - 24) * 5 / 7, widest = (wide / 2 - 60) / (spread * .4 + .77);
+    const hc = Math.round(Math.max(84, Math.min(rest * k, tallest, widest)));
+    const step = spread ? Math.min(hc * .76, (wide / 2 - 60 - hc * .77) / spread) : hc * .76;
+    tray.style.height = `${Math.round(Math.max(base, hc * 1.4 + 24))}px`;
+    tray.style.setProperty("--hc", `${hc}px`);
+    fan.style.setProperty("--fan-step", `${step.toFixed(1)}px`);
+    fan.style.setProperty("--fan-half", `${(spread * step + hc * .77).toFixed(1)}px`);
   }
   function pickPanel() {
     const id = hover ?? selected, pick = id === null ? null : findCard(id);
@@ -2132,7 +2170,7 @@ globalThis.CrankBoard = Object.seal({
     if (phone()) {
       host.dataset.view = "focus";
       delete host.dataset.stage; delete host.dataset.shell; globalThis.CrankStage?.unmount();
-      host.dataset.phone = innerHeight > innerWidth ? "portrait" : "landscape";
+      host.dataset.phone = innerHeight > innerWidth ? "portrait" : "landscape"; applyScales(host);
       host.innerHTML = `${phoneView()}${showHand()}${banner()}${inspector()}${cardMenuHtml()}`;
       placeCardMenu();
       fit();
@@ -2354,9 +2392,10 @@ globalThis.CrankBoard = Object.seal({
     host.style.setProperty("--board-scale", String(scaleOf("board") / 100));
     host.style.setProperty("--hand-scale", String(scaleOf("hand") / 100));
   }
-  function setScale(scope, v) {
+  function setScale(scope, v, {live = false} = {}) {
     const n = inRange(v);
-    keep(SCALE_KEY[scope], n);
+    if (scope === "hand") {clearTimeout(handKeep); handLive = live ? v : null;}
+    if (!live) keep(SCALE_KEY[scope], n);
     applyScales();
     for (const el of document.querySelectorAll(`#cm-board [data-board-scale="${scope}"]`)) {
       if (Number(el.value) !== n) el.value = String(n);
@@ -2700,13 +2739,14 @@ globalThis.CrankBoard = Object.seal({
     const index=Math.max(0,entries.findIndex(s=>String(s.stackId)===stackSelected));
     selectStack(String(entries[(index+1)%entries.length].stackId),true);
   };
-  actions["board-hand-cycle"] = (el) => {
-    const seat=Number(el.dataset.seat), p=players().find(x=>x.playerId===seat), n=p?.zones.Hand.count || 0;
+  actions["board-hand-cycle"] = (el) => cycleHand(Number(el.dataset.seat), Number(el.dataset.by));
+  function cycleHand(seat, direction) {
+    const p=players().find(x=>x.playerId===seat), n=p?.zones.Hand.count || 0;
     if(n>7) {
-      const direction=Number(el.dataset.by);handStarts.set(seat,((handStarts.get(seat)||0)+direction+n)%n);draw();
+      handStarts.set(seat,((handStarts.get(seat)||0)+direction+n)%n);draw();
       if(!globalThis.CrankMotion?.reduced()) document.querySelector(".cm-stage-fan-cards")?.animate([{transform:`translateX(${direction*28}px)`,opacity:.75},{transform:"translateX(0)",opacity:1}],{duration:180,easing:"ease-out"});
     }
-  };
+  }
   document.addEventListener("change", event => {
     const el=event.target.closest?.("[data-stage-style]");if(!el)return;
     const key=el.dataset.stageStyle, list=key==="background"?CrankStage.appearances.backgrounds:CrankStage.appearances.tables;
@@ -2769,7 +2809,7 @@ globalThis.CrankBoard = Object.seal({
   let arranging=null;
   document.addEventListener('wheel', event => {
     const row=event.target.closest?.('[data-zone-scroll]');
-    if(!row||event.ctrlKey||event.metaKey)return;
+    if(event.defaultPrevented||!row||event.ctrlKey||event.metaKey)return;
     const horizontal=row.scrollWidth>row.clientWidth+1 && (event.shiftKey || Math.abs(event.deltaX)>Math.abs(event.deltaY) || row.scrollHeight<=row.clientHeight+1);
     const unit=event.deltaMode===1?16:event.deltaMode===2?(horizontal?row.clientWidth:row.clientHeight):1;
     // Chain vertical wheel input to the phone frame when this zone cannot move farther.
@@ -2898,14 +2938,14 @@ globalThis.CrankBoard = Object.seal({
   /* Plane pixels moved, the view kept over the table. */
   function panBy(dx, dy) {
     const r = document.querySelector("#cm-board .cm-stage-region")?.getBoundingClientRect(), w = (r?.width || 0) / 2, h = (r?.height || 0) * .44;
-    camera.pan = {x: Math.max(-w, Math.min(w, camera.pan.x + dx)), y: Math.max(-h, Math.min(h, camera.pan.y + dy))};
+    camera.pan = {x: Math.max(-w, Math.min(w, camera.pan.x + dx)), y: Math.max(-h, Math.min(h + (stageGeom?.reach || 0), camera.pan.y + dy))};
   }
   /* The wheel zooms toward the place under the pointer, the Camera's Zoom slider following and the zoom kept on this
      device as the slider keeps it. Over a row of cards that scrolls the wheel scrolls it, as it did (R3); with ⌘ or Ctrl
      (a trackpad's pinch arrives as one) it zooms there too. ⌘/Ctrl + and − still size the cards. */
   document.addEventListener("wheel", (event) => {
     const region = event.target.closest?.("#cm-board .cm-stage-region");
-    if (!region || !view || !stageEnabled() || !globalThis.CrankStage || event.target.closest(OVERLAYS)) return;
+    if (event.defaultPrevented || !region || !view || !stageEnabled() || !globalThis.CrankStage || event.target.closest(OVERLAYS)) return;
     if (event.target.closest("[data-zone-scroll]") && !event.ctrlKey && !event.metaKey) return;
     event.preventDefault();
     const host = region.closest("#cm-board"), unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? region.clientHeight : 1;
@@ -3040,6 +3080,101 @@ globalThis.CrankBoard = Object.seal({
     event.preventDefault();
     items[event.key === "Home" ? 0 : event.key === "End" ? items.length - 1 : (i + (event.key === "ArrowDown" ? 1 : -1) + items.length) % items.length].focus({preventScroll: true});
   }, true);
+
+  /* THE WHEEL OVER YOUR HAND SIZES ITS CARDS (Rob, 2026-10-25: "When cursor is over cards in players hand and they
+     scroll, the hand card's size should increase or decrease."). Over your own hand -- 3D's fan, the tray in Table and
+     Focus, the phone's hand -- the wheel up grows its cards and down shrinks them, continuously, through Hand cards: the
+     one value its sliders show (the tray's, Camera's ✋), which follow at once; kept on this device once the wheel has
+     stopped a moment. It is heard first, in the capture, and 3D's zoom and a row's scroll leave a wheel it has taken.
+     Sideways -- Shift with the wheel, or a trackpad's sideways swipe -- still scrolls a hand too wide for its place (3D's
+     fan, which shows seven at a time, turns to the next ones); ⌘/Ctrl with the wheel keeps its meaning. */
+  const OWN_HAND = ".cm-stage-fan:not(.is-backs), .cm-board-hand:not(.is-backs) .cm-board-hand-cards, .cm-board[data-phone] .cm-hand-show:not(.is-held) .cm-hand-fan";
+  let fanTurn = 0;
+  document.addEventListener("wheel", (event) => {
+    if (!view || event.ctrlKey || event.metaKey) return;
+    const own = event.target.closest?.(OWN_HAND);
+    if (!own || !own.closest("#cm-board")) return;
+    const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? innerHeight : 1;
+    if (event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
+      if (!own.matches(".cm-stage-fan")) return;   /* the browser scrolls a tray or a phone's hand that overflows */
+      const n = players()[view.seat]?.zones.Hand.count || 0;
+      if (n <= 7) return;
+      event.preventDefault();
+      fanTurn += (event.deltaX || event.deltaY) * unit;
+      if (Math.abs(fanTurn) >= 50) {const by = Math.sign(fanTurn); fanTurn = 0; cycleHand(view.seat, by);}
+      return;
+    }
+    if (!event.deltaY) return;
+    event.preventDefault();
+    const [lo, hi] = C.cardScaleRange(), from = handLive ?? scaleOf("hand");
+    const next = Math.max(lo, Math.min(hi, from * Math.exp(-event.deltaY * unit * .001)));
+    if (next === from) return;
+    setScale("hand", next, {live: true});
+    handKeep = setTimeout(() => {if (handLive === null) return; keep(SCALE_KEY.hand, inRange(handLive)); handLive = null;}, 300);
+  }, {capture: true, passive: false});
+
+  /* YOUR SIDE OF THE TABLE, LENGTHENED (Rob, 2026-10-25: "Player can expand the table (and their mat size automatically
+     in proportion) by ctrl-left-click, hold and pull or push (move cursor up or down), to increase / decrease the length
+     of the table on their side. They can do this all the way down, underneath the hand's cards, to the padding at the
+     screen edge."). In 3D, Ctrl (or ⌘) and the left button pressed anywhere on the table -- the bare table, a mat, or a
+     card on it: with Ctrl held it is the table that is taken, never the card, so the press plays, picks and drags
+     nothing -- then dragged down lengthens your side toward you, up shortens it, by as much table as the pointer crosses.
+     Your mat grows with it, its zones and cards in proportion; the seats across the table keep their size and the camera
+     stays. From the length it always had to the screen's foot (CrankStage.geometry); kept on this device when let go;
+     Ctrl/⌘ + double-click on the table, or ↕ in Camera at 100%, puts it back. While Ctrl/⌘ is held the pointer over the
+     table is ↕. The hand's fan, Camera, the question and the card's menu keep their own. */
+  const setStretch = (state) => {const host = document.getElementById("cm-board"); if (!host || (host.dataset.stretch || null) === state) return; if (state) host.dataset.stretch = state; else delete host.dataset.stretch;};
+  const ctrlHeld = (event) => {if (!stretch) setStretch((event.ctrlKey || event.metaKey) && view && stageEnabled() ? "ready" : null);};
+  for (const type of ["keydown", "keyup"]) addEventListener(type, (event) => {if (/^(Control|Meta)$/.test(event.key)) ctrlHeld(event);}, true);
+  addEventListener("pointermove", ctrlHeld, true);   /* Ctrl pressed or let go while the window was elsewhere */
+  addEventListener("blur", () => {if (!stretch) setStretch(null);});
+  const stretchable = (event) => event.button === 0 && (event.ctrlKey || event.metaKey) && event.pointerType !== "touch" && view && stageEnabled() && globalThis.CrankStage
+    && event.target.closest?.("#cm-board .cm-stage-region") && !event.target.closest(OVERLAYS);
+  document.addEventListener("pointerdown", (event) => {
+    if (!stretchable(event)) return;
+    const from = CrankStage.pick(event.clientX, event.clientY), g = stageGeom;
+    if (!from || !g) return;
+    event.preventDefault(); event.stopImmediatePropagation();
+    const host = document.getElementById("cm-board"), start = {x: event.clientX, y: event.clientY, reach: g.reach / g.base};
+    const s = stretch = {id: event.pointerId, moved: false};
+    const move = (next) => {
+      if (next.pointerId !== s.id) return;
+      if (!s.moved) {if (Math.hypot(next.clientX - start.x, next.clientY - start.y) < 4) return; s.moved = true; setStretch("on"); peek(null);}
+      const at = CrankStage.pick(next.clientX, next.clientY), most = stageGeom.reachMost / stageGeom.base;
+      camera.reach = Math.max(0, Math.min(most, at ? start.reach + (at.y - from.y) / g.base : next.clientY > start.y ? most : camera.reach));
+      fitStage(host);
+    };
+    const end = (next) => {
+      if (next.pointerId !== s.id) return;
+      removeEventListener("pointermove", move, true); removeEventListener("pointerup", end, true); removeEventListener("pointercancel", end, true);
+      stretch = null; setStretch(null); ctrlHeld(next);
+      /* The press was the table's, not what it was on: its click goes nowhere. */
+      const swallow = (c) => {c.preventDefault(); c.stopImmediatePropagation();};
+      addEventListener("click", swallow, {capture: true, once: true}); setTimeout(() => removeEventListener("click", swallow, {capture: true}), 250);
+      if (!s.moved) return;
+      keep(REACH_KEY, camera.reach.toFixed(4));
+      fitStage(host);   /* and the table is built again at its new length */
+    };
+    addEventListener("pointermove", move, true); addEventListener("pointerup", end, true); addEventListener("pointercancel", end, true);
+  }, true);
+  /* nor a card's drag, nor the browser's menu (a Mac's Ctrl + click) */
+  document.addEventListener("dragstart", (event) => {if (stretch) event.preventDefault();}, true);
+  document.addEventListener("contextmenu", (event) => {if (stretch) {event.preventDefault(); event.stopImmediatePropagation();}}, true);
+  document.addEventListener("dblclick", (event) => {
+    if (!stretchable(event)) return;
+    event.preventDefault(); event.stopImmediatePropagation();
+    camera.reach = 0; keep(REACH_KEY, "0"); fit();
+  }, true);
+  /* ↕ in Camera: the same length, from the keyboard too; built again when it is let go. */
+  document.addEventListener("input", (event) => {
+    const el = event.target.closest?.("#cm-board [data-stage-length]"); if (!el) return;
+    camera.reach = Math.max(0, (Number(el.value) - 100) / 100); stretch = stretch || {slider: true}; fitStage(document.getElementById("cm-board"));
+  });
+  document.addEventListener("change", (event) => {
+    const el = event.target.closest?.("#cm-board [data-stage-length]"); if (!el) return;
+    if (stretch?.slider) stretch = null;
+    keep(REACH_KEY, camera.reach.toFixed(4)); fitStage(document.getElementById("cm-board"));
+  });
   actions["board-pane"] = () => {paneShut = !paneShut; draw();};
   /* The button a menu was opened from, for Escape to give the focus back to. */
   let popupFrom = null;
@@ -3356,6 +3491,7 @@ globalThis.CrankBoard = Object.seal({
   document.addEventListener("cm-card-scale", (event) => {
     if (!view || !document.getElementById("cm-board")) return;
     const n = event.detail && event.detail.scale;
+    handLive = null; clearTimeout(handKeep);
     if (n) {keep(SCALE_KEY.board, inRange(n)); keep(SCALE_KEY.hand, inRange(n));}
     applyScales();
     for (const scope of ["board", "hand"]) for (const el of document.querySelectorAll(`#cm-board [data-board-scale="${scope}"]`)) {
