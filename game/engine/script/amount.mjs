@@ -234,11 +234,15 @@ export function amountProblems(value) {
     for (const key of ["then", "else"]) if (key in value) problems.push(...amountProblems(value[key]));
   }
   /* What it counts is a selector, held to the selector grammar (script/filter.mjs), a choice of them included. */
-  for (const key of ["cardTypesAmong", "count", "greatestPower", "totalPower", "mostAmongOpponents", "differentPowers", "differentNames", "planeswalkerTypesAmong", "fewestAmongPlayers", "greatestManaValue", "opponentsWithMore"]) {
+  for (const key of ["cardTypesAmong", "count", "greatestPower", "totalPower", "mostAmongOpponents", "differentPowers", "differentNames", "planeswalkerTypesAmong", "fewestAmongPlayers", "greatestManaValue"]) {
     if (!(key in value) || value[key] === "remembered") continue;
     const {anyOf, ...shared} = value[key] ?? {};
     try { for (const one of Array.isArray(anyOf) ? anyOf.map((a) => ({...shared, ...a})) : [value[key]]) compileSelector(one); }
     catch (error) { problems.push(`What ${key} counts: ${error.message}`); }
+  }
+  /* And what opponentsWithMore counts (Wojek Investigator), held to the same grammar. */
+  if ("opponentsWithMore" in value) {
+    try { compileSelector(value.opponentsWithMore ?? {}); } catch (error) { problems.push(`What opponentsWithMore counts: ${error.message}`); }
   }
   /* "The total mana value of historic permanents you control" (Excalibur, Sword of Eden): a selector, held to the grammar. */
   if (value.totalManaValue && typeof value.totalManaValue === "object") {

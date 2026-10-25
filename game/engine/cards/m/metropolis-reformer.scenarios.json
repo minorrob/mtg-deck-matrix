@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Metropolis Reformer",
   "fixtures": {
-    "Zap": {
+    "Zap Pal": {
       "types": [
         "Instant"
       ],
@@ -10,7 +10,7 @@
       "colors": [],
       "spell": {
         "id": "s",
-        "text": "Zap deals 2 damage to any target.",
+        "text": "Zap Pal deals 2 damage to target creature.",
         "targets": [
           {
             "what": "permanent",
@@ -102,13 +102,13 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Zap"
+            "Zap Pal"
           ]
         }
       ],
       "steps": [
         {
-          "cast": "Zap",
+          "cast": "Zap Pal",
           "targets": [
             {
               "card": "Metropolis Reformer"

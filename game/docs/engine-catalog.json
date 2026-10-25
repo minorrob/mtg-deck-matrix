@@ -9,9 +9,9 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1918,
+  "defined": 1935,
   "provisional": 0,
-  "everyRule": 2901
+  "everyRule": 2906
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -7539,8 +7539,8 @@
      "forge": "CantBlockUnless",
      "top": 1,
      "all": 9,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "static",
@@ -8209,7 +8209,7 @@
      "forge": "GainLife",
      "top": 6,
      "all": 21,
-     "blocks": 3,
+     "blocks": 2,
      "alone": 1
     },
     {
@@ -9511,7 +9511,7 @@
      "forge": "YourLifeTotal",
      "top": 10,
      "all": 92,
-     "blocks": 10,
+     "blocks": 7,
      "alone": 4
     },
     {
@@ -9619,7 +9619,7 @@
      "forge": "YourStartingLife",
      "top": 5,
      "all": 23,
-     "blocks": 5,
+     "blocks": 3,
      "alone": 0
     },
     {
@@ -9631,7 +9631,7 @@
      "forge": "LifeGained",
      "top": 5,
      "all": 20,
-     "blocks": 2,
+     "blocks": 1,
      "alone": 0
     },
     {
@@ -9799,8 +9799,8 @@
      "forge": "MostCardName",
      "top": 2,
      "all": 4,
-     "blocks": 1,
-     "alone": 1
+     "blocks": 0,
+     "alone": 0
     },
     {
      "kind": "count",

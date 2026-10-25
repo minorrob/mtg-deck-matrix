@@ -390,7 +390,6 @@ function factValue(value, context, state = null) {
 
 function thisCardInGraveyard(state, source) {
   if (source === null || source === undefined) return [];
-  if (state.objects[source]?.zone === "graveyard") return [source];
   for (const list of Object.values(state.zones.graveyard ?? {})) for (const id of list) if (state.objects[id]?.wasPermanent === source) return [id];
   return [];
 }
@@ -487,8 +486,8 @@ export function bindEffect(effect, context, state = null) {
     else { bound.who = []; bound.targets = !state || state.objects[walker]?.zone === "battlefield" ? [walker] : []; }
   }
   /* "RETURN THIS CARD TO ITS OWNER'S HAND" (Angelic Destiny, its "when enchanted creature dies"): the card the ability's source
-     is in a graveyard -- the source itself there, or the new object it became as it was put there from the battlefield (CR
-     400.7; the Aura, by the state-based action after the creature died, CR 704.5m). Gone from there since, it is nothing. */
+     became in a graveyard, the new object it is once it was put there from the battlefield (CR 400.7; the Aura, by the
+     state-based action after the creature died, CR 704.5m). Gone from there since, it is nothing. */
   if (bound.targets === "this card") bound.targets = state ? thisCardInGraveyard(state, context.source ?? context.sourceWas) : [];
   if ("targets" in bound) bound.targets = objectsOf(bound.targets, context);
   /* "Destroy all creatures with power greater than target creature's power" (Fell the Mighty; CR 608.2h): a selector's

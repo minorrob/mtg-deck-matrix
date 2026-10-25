@@ -525,9 +525,9 @@ export const blockers = {
       max: new Set(options.map((o) => o.cardId)).size,
       /* One option per blocker per attacker, so the same rule applies (CR 509.1a). */
       exclusiveBy: "cardId",
+      ...(budget ? {budget} : {}),
       ...(capped ? {capped} : {}),
       ...(requires.length ? {requires} : {}),
-      ...(budget ? {budget} : {}),
       options,
       legalBlocks: [...by].map(([blocker, attackers]) => ({blocker, attackers})),
     };
@@ -537,11 +537,11 @@ export const blockers = {
     /* What is declared, read before anything changes: every object derived once (rules/layers.mjs, deriving). */
     const picked = deriving(state, () => blockers.declared(state, awaiting, indices));
     /* CR 509.1d-f: what blocking costs (Archangel of Tithes), paid now -- from the pool and the player's plain mana sources, as an
-       attack tax is -- or these are not blocks that can be declared. Which mana pays is the player's when the ways differ. */
+       attack tax is. Blocks that cost more than that were refused by `check`. Which mana pays is the player's when the ways
+       differ. */
     const tax = blockTax(state, picked);
     if (tax > 0) {
       const units = paymentUnits(state, awaiting.player);
-      if (units.length < tax) throw new Error(`Those blockers cost {${tax}} to block with, more than can be paid. Declare fewer blockers.`);
       if (paymentIsAChoice(units, tax)) {
         state.awaiting = {kind: "block-tax", player: awaiting.player, tax, picked: picked.map(({cardId, attackerId}) => ({cardId, attackerId}))};
         return [];

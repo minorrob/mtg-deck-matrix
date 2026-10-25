@@ -1120,7 +1120,6 @@ export function attackTax(state, picked) {
  */
 export function blockTax(state, picked) {
   const creatures = new Set(picked.map((o) => o.cardId)).size;
-  if (!creatures) return 0;
   let total = 0;
   const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
