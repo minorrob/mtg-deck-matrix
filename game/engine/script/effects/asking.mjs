@@ -2762,7 +2762,8 @@ export const fightPartners = {
     const [each] = fightSides(awaiting);
     const one = each[awaiting.pairs.length];
     const outcome = pairEachFight(state, {...awaiting, pairs: [...awaiting.pairs, awaiting.byFoe ? [chosen, one] : [one, chosen]]});
-    return outcome === true ? {events: [], again: true} : outcome;
+    /* The next pairing asked, or the fights. */
+    return outcome === true ? {again: true, events: []} : outcome;
   },
   /* Its controller has left the game: their spell left with them (CR 800.4a), and nothing fights. */
   left() {
