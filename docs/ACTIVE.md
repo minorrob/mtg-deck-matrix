@@ -1,5 +1,24 @@
 # Who holds the work
 
+## 2026-10-25: main 1cd2c669 in production (Rob: "Push to prod")
+
+Released by the card-load session on Personal-HP, announced in ROB-11 before the push and recorded there after it. Staging
+already served the same main (`release/cloud-staging` 4c5e12f8, version 41c6f983, read back with `staging-check --expect
+1cd2c669`).
+- **Production** (`cloud-production`, by `tools/release-production.sh`):
+  - `release/pages` **a587e32a**, on ccf09c02, pushed at 22:32 UTC;
+  - local walks: `release-acceptance` 23 and `production-play-e2e` 27;
+  - Workers Builds deployed version **2566738c**, at 100% since 22:33 UTC;
+  - `version.json` reads 1cd2c669, profile `cloud-production`; `/api/me` answers 302;
+  - the live walk at `https://crankmagic.com`: **23 checks**, with `UAT_LIVE_NETWORK=1`;
+  - **the rollback target** is **ccf09c02** (version e61dde22, main 9ca99e5).
+- **It carries, beyond 9ca99e5:** the six precons' 150 cards (#871); precons public, Rob's decks no longer bundled for
+  everyone (#875); Play 3D's camera, hand and table (#877, #879); the board's question kept clear and the same card
+  stacked ×N (#878); the compiler read-back on Haiku 5.5 and deck guides on Opus 5.5 (#864); records and test players
+  (#880, #881, #882).
+- **Production's D1, bindings and secrets are unchanged:** no migration or Worker setting since 9ca99e5. Sharing stays
+  off in `cloud-production`.
+
 ## 2026-10-25: main 9ca99e5 in production (Rob: "release main 9ca99e5 to production")
 
 Released by the Decks cloud session (`claude/vibrant-turing-50yl3r`), with the Camera and Settings session told before
