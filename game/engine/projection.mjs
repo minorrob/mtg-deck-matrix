@@ -110,6 +110,10 @@ function cardFor(state, id, canSeeFace, viewer = null) {
     /* Monstrous (CR 701.37b) and prepared (CR 722.3a): designations, which anyone can see (script/effects/attributes.mjs). */
     ...(object.monstrous === true ? {monstrous: true} : {}),
     ...(object.prepared === true ? {prepared: true} : {}),
+    /* The inset spell is a distinct copy in public exile, not another activation of the creature (CR 722.3c).
+       Its identity lets the board associate that legal cast with the prepared card without inventing an action. */
+    ...(named && object.prepared === true && state.objects[object.preparedCopy]?.zone === "exile" && !state.objects[object.preparedCopy].faceDown
+      ? {preparedSpell: {cardId: object.preparedCopy, name: state.objects[object.preparedCopy].card, manaCost: state.objects[object.preparedCopy].manaCost ?? null}} : {}),
     /* Solved (CR 719.3b): a Case's designation, which anyone can see. */
     ...(object.solved === true ? {solved: true} : {}),
     commander: object.commander === true,

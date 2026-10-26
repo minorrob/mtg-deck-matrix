@@ -166,6 +166,10 @@ try {
   eq([await page.locator(".cm-report-number").textContent(), await page.locator(".cm-report-score").getByText("of 100").count()], ["78", 1], "the score reads 78 of 100");
   eq(await page.$$eval(".cm-report-checks tbody tr", (rows) => rows.map((r) => [r.querySelector("th").textContent, r.lastElementChild.textContent])),
     [["Wins games", "30.1 of 35"], ["Casts its spells", "14.2 of 20"], ["Has answers when it needs them", "14.3 of 15"]], "the checks are the score's own breakdown, points of the points possible");
+  const refine = new URL(await page.locator('.cm-report-refine a').getAttribute('href'), page.url());
+  const refineParams = new URLSearchParams(refine.hash.split('?')[1]);
+  eq([refineParams.get('deck'), refineParams.get('report'), refineParams.get('axis')], [OTHER, current, 'Casts its spells'], 'Fix in Explore carries this deck, this report and its weakest normalized score component');
+  eq(await page.locator('.cm-report-refine [data-action=measure-deck]').count(), 1, 'Measure again stays beside the refinement door');
   const download = page.waitForEvent("download");
   await page.getByRole("button", {name: "Export report"}).click();
   const saved = JSON.parse(readFileSync(await (await download).path(), "utf8"));

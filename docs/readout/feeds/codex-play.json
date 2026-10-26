@@ -1,7 +1,7 @@
 {
   "workstream": "codex-play",
-  "updated": "2026-10-26T15:40:45Z",
-  "updated_by": "Codex, Personal-HP; R3 whole-card rows and navigation",
+  "updated": "2026-10-26T15:51:47Z",
+  "updated_by": "Codex r4 coordinator, Personal-HP",
   "branch": "integration/r4",
   "now": "Executing the approved r4 program: foundation and engine contracts, followed by the Play shell and deck journey; evidence in docs/r4-execution/.",
   "items": [

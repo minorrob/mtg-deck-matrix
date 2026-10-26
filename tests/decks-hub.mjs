@@ -71,12 +71,12 @@ try {
 
   /* 2. The chips, and the badges. */
   const all = await facts(page);
-  eq(await page.$$eval(".cm-decks-stages a", (as) => as.map((a) => a.textContent)), ["All", "Boxed", "Defined", "Building", "Shared"], "the chips are the stages, then Shared");
-  eq(await page.$eval(".cm-decks-stages [aria-current=true]", (a) => a.textContent), "All", "All is the chip in force");
+  eq(await page.$$eval(".cm-decks-stages a", (as) => as.map((a) => a.getAttribute("aria-label"))), ["All", "Boxed", "Defined", "Building", "Shared"], "the chips are the stages, then Shared");
+  eq(await page.$eval(".cm-decks-stages [aria-current=true]", (a) => a.getAttribute("aria-label")), "All", "All is the chip in force");
   eq(await page.$$eval(".cm-deck-grid [data-deck-tile]", (ts) => Object.fromEntries(ts.map((t) => [t.dataset.deckTile, t.querySelector(".cm-pill").textContent]))),
     Object.fromEntries(all.map((d) => [d.id, d.word])), "each tile's badge is its furthest stage, from the model");
   for (const [chip, want] of [["Boxed", all.filter((d) => d.boxed)], ["Defined", all.filter((d) => d.stage === "defined")], ["Building", all.filter((d) => d.stage === "building")]]) {
-    await go(page, () => page.locator(".cm-decks-stages a", {hasText: new RegExp(`^${chip}$`)}).click());
+    await go(page, () => page.locator(".cm-decks-stages").getByRole("link", {name: chip, exact: true}).click());
     ok(new RegExp(`stage=${chip.toLowerCase()}`).test(page.url()), `${chip} is in the address`);
     if (want.length) eq((await tiles(page)).sort(), want.map((d) => d.id).sort(), `${chip} shows exactly its ${want.length} decks`);
     else ok(new RegExp(`No ${chip.toLowerCase()} decks right now`).test(await page.locator("#cm-main").innerText()), `${chip}, with none, says so`);
@@ -88,9 +88,12 @@ try {
   ok(/stage=defined/.test(page.url()), "Back undoes the last chip");
   for (const old of ["toload", "loading", "complete"]) {
     await hash(page, `#decks?stage=${old}`);
-    eq(await page.$eval(".cm-decks-stages [aria-current=true]", (a) => a.textContent), "All", `the old address stage=${old} opens All`);
+    eq(await page.$eval(".cm-decks-stages [aria-current=true]", (a) => a.getAttribute("aria-label")), "All", `the old address stage=${old} opens All`);
   }
 
+  await hash(page, '#decks');
+  const chips = await page.$$eval('[data-stage-chip]', (xs) => Object.fromEntries(xs.filter((x) => x.dataset.stageChip !== 'shared').map((x) => [x.dataset.stageChip, Number(x.querySelector('[data-stage-count]').textContent)])));
+  eq(chips, {all: all.length, boxed: all.filter((x) => x.boxed).length, defined: all.filter((x) => x.stage === 'defined').length, building: all.filter((x) => x.stage === 'building').length}, 'stage counts are drawn from the same deck facts as their filters');
   /* 3. The sorts. */
   await hash(page, "#decks");
   eq(await page.$eval("#cm-decks-sort", (s) => s.value), "closest", "the sort is Closest to finished");
@@ -153,7 +156,7 @@ try {
   eq(items.map((x) => x[0]), ["Compare decks", "Box deck…", "Add to group…", "Favorite", "Remove deck…"], "the menu's items, in order, worded for one deck");
   eq(items[0].slice(1), [true, "Select at least two decks to compare."], "Compare decks is greyed below two, and says why");
   await page.keyboard.press("Escape");
-  await go(page, () => page.locator(".cm-decks-stages a", {hasText: /^Defined$/}).click());
+  await go(page, () => page.locator(".cm-decks-stages").getByRole("link", {name: "Defined", exact: true}).click());
   ok(await page.$eval("[data-action=bulk-menu]", (x) => x.disabled), "a chip change clears the selection");
   await hash(page, "#decks?sort=name");
   for (const d of [a, b]) {await tile(d.id).hover();await tile(d.id).locator("[data-action=select-deck]").check();await settle(page);}
