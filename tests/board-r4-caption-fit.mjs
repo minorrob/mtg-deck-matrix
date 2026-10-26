@@ -19,7 +19,7 @@ const card=id=>`.cm-mat[data-seat="0"] .cm-bcard[data-action="board-card"][data-
 const roots='.cm-stage-top,.cm-mat-head,.cm-seat-header,.cm-mat-label,.cm-board-group>h3,.cm-board-chip,.cm-board-decision,.cm-board-hand-side,.cm-r4-combat,.cm-other-seats,.cm-stage-handle,.cm-bcard-pt,.cm-bcard-count,.cm-bcard-tax,.cm-land-count,.cm-undo-drawer,.cm-vitals-poison';
 const failures=[];let scenarios=0;
 try{
- for(const mode of ['table','focus','full'])for(const hud of [100,200])for(const width of [1440,390])for(const seats of mode==='table'&&width===1440?[2,4]:[4]) {
+ for(const mode of ['table','focus','full'])for(const hud of [100,200])for(const width of [1440,390])for(const seats of mode==='table'&&width===1440?[2,3,4]:[4]) {
   if(process.env.CAPTION_CASE && process.env.CAPTION_CASE!==`${mode}-${width}-${hud}`)continue;
   scenarios++;
   const f=await open(mode,width,false,fixture(seats),hud),{page,context,errors}=f;
