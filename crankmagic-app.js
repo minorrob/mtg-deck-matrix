@@ -654,14 +654,21 @@ actions['share-copy']=async()=>{try{await navigator.clipboard.writeText(APP_URL)
 {const m=$('#cm-user-menu');if(m&&m.closest('.cm-sidebar'))$('#matrix-v2').append(m);}
 let menuChip=null;document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[popovertarget="cm-user-menu"]');if(b)menuChip=b;},true);
 /* Board and Workshop open the same menu node, so verified Admin/account entries and Skin stay in one place. */
-C.openAccountMenu=anchor=>{menuChip=anchor||$('#cm-user-functions');$('#cm-user-menu').togglePopover();};
-C.closeAccountMenu=()=>{const menu=$('#cm-user-menu');if(menu.matches(':popover-open'))menu.hidePopover();};
+C.accountMenuOpen=()=>!!$('#cm-user-menu')?.matches(':popover-open');
+C.openAccountMenu=anchor=>{if(C.accountMenuOpen())return;menuChip=anchor||$('#cm-user-functions');$('#cm-user-menu').showPopover({source:menuChip});};
+C.closeAccountMenu=({restoreFocus=true}={})=>{const menu=$('#cm-user-menu');if(C.accountMenuOpen()){menu.hidePopover();if(restoreFocus&&menuChip?.isConnected)menuChip.focus({preventScroll:true});}};
+document.addEventListener('keydown',event=>{if(C.accountMenuOpen()&&event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();C.closeAccountMenu();}},true);
 $('#cm-user-menu').addEventListener('beforetoggle',e=>{if(e.newState==='open'){describeData();const chip=menuChip&&menuChip.isConnected&&menuChip.getClientRects().length?menuChip:$('#cm-user-functions'),r=chip.getBoundingClientRect(),m=$('#cm-user-menu');
   const below=window.innerHeight-r.bottom;
-  m.style.left=Math.max(8,Math.min(r.left,window.innerWidth-226))+'px';m.style.right='auto';
+  m.style.left=Math.max(8,Math.min(r.left,window.innerWidth-Math.min(320,window.innerWidth-16)-8))+'px';m.style.right='auto';
   if(below>=320){m.style.top=(r.bottom+8)+'px';m.style.bottom='auto';m.style.maxHeight=(below-24)+'px';}
   else{m.style.top='auto';m.style.bottom=(window.innerHeight-r.top+8)+'px';m.style.maxHeight=(r.top-24)+'px';}
-  if(repo)exportFile().then(f=>{shareFile=f;}).catch(()=>{shareFile=null;});}});$('#cm-user-menu').addEventListener('click',e=>{if(e.target.closest('[data-action]'))$('#cm-user-menu').hidePopover();});
+  if(repo)exportFile().then(f=>{shareFile=f;}).catch(()=>{shareFile=null;});}
+  for(const button of document.querySelectorAll('[popovertarget="cm-user-menu"],[aria-controls="cm-user-menu"]'))button.setAttribute('aria-expanded',String(e.newState==='open'&&button===menuChip));
+  if(menuChip)menuChip.setAttribute('aria-expanded',String(e.newState==='open'));
+});
+$('#cm-user-menu').addEventListener('toggle',event=>{if(event.newState==='open'&&!$('#cm-user-menu').contains(document.activeElement))$('#cm-user-menu').querySelector('button:not([disabled]),a[href]')?.focus({preventScroll:true});});
+$('#cm-user-menu').addEventListener('click',e=>{if(e.target.closest('[data-action]'))C.closeAccountMenu({restoreFocus:false});});
 /* A NEW VIEW STARTS AT THE TOP. The hash changed and render() replaced the page, but the
    scroll offset stayed where the last page left it -- open a deck from the bottom of the
    Collection and you landed halfway down its page. A change of view resets; a change of

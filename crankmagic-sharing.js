@@ -71,5 +71,5 @@
   C.sharingAvailable=()=>!!me;
   C.sharingOwner=()=>me?.email||null;
   C.canInvite=()=>me?.canInvite===true;
-  C.sharingReady=document.querySelector('meta[name="crankmagic-accounts"]')?.content==='on'?api('GET','/me').then(v=>{me=v;C.drawProfile();const menu=document.getElementById('cm-user-menu');if(menu&&!menu.querySelector('[data-profile-menu]')){const div=document.createElement('div');div.dataset.profileMenu='';div.innerHTML=C.profileMenu();menu.prepend(div);}}).catch(()=>null):Promise.resolve(null);
+  C.sharingReady=document.querySelector('meta[name="crankmagic-accounts"]')?.content==='on'?api('GET','/me').then(v=>{me=v;C.drawProfile();const menu=document.getElementById('cm-user-menu');if(menu){let div=menu.querySelector('[data-profile-menu]');if(!div){div=document.createElement('div');div.dataset.profileMenu='';(menu.querySelector('[aria-label="You"]')||menu).append(div);}div.innerHTML=C.profileMenu();}}).catch(()=>null):Promise.resolve(null);
 });
