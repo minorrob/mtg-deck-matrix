@@ -15,8 +15,8 @@ BREAKS = [
      'seen = c ? c.name : "unseen";'),
     # No stacks at all in a many question.
     ('many not stacked', B,
-     '      body = allAt + sameStacks(d).map(stackOpt).join("");',
-     '      body = allAt + d.options.map((o) => [o]).map(stackOpt).join("");'),
+     '      body = allAt + grouped(sameStacks(d));',
+     '      body = allAt + grouped(d.options.map((o) => [o]));'),
     # No how-many beside a stack.
     ('no how-many', B,
      '      const many = d.mode === "many" && d.max > 1,',
