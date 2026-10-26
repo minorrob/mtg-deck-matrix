@@ -1111,14 +1111,14 @@
       "changes": [
         "CH-87"
       ],
-      "status": "open",
+      "status": "verified_local",
       "summary": "The 'Actions' row is disabled with no reason, and the drag handles promised by the caption are not visible in the matrix",
       "localEvidence": {
-        "owner": "Workshop",
-        "disposition": "Open",
-        "detail": "The Side Drawer Modules implementation belongs to Play. Workshop's Settings run verifies its entry, not a complete matrix interaction/handle/disabled-reason audit. No resolution is inferred from CH-87 or the retained entry.",
-        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "35992d77"
+        "owner": "Play",
+        "disposition": "Verified locally: honest fixed Actions and functional module controls",
+        "detail": "Native Settings-window70 exercised Focus and Full1440: Actions has zero inputs and explains Always in the left drawer; the false Drag its handle promise is absent; History None/save removes it while Actions remains; a native Coach up-arrow saves reordered modules. No claim that drag handles exist, or that the last row received a separate pixel/viewport visibility audit.",
+        "source": "QA.md; tests/board-settings-window.mjs",
+        "commit": "cfb65183"
       }
     },
     {
