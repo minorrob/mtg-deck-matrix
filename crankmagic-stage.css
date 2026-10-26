@@ -1071,3 +1071,9 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-board-pie-turn{position:absolute;inset:-3px;border-radius:50%;mask:radial-gradient(circle,transparent 64%,#000 66%);filter:drop-shadow(0 0 4px var(--color-aether));pointer-events:none}
 #matrix-v2 .cm-board[data-phone] .cm-phone-pill,#matrix-v2 .cm-board[data-phone] .cm-phone-icon{background:var(--color-panel);color:var(--color-ink);border-color:var(--color-line-strong)}
 #matrix-v2 .cm-board[data-phone] .cm-phone-icon .cm-icon{color:currentColor}
+
+/* The folded slot scrolls as one decision. Shrinking an inner options viewport below the
+   source/card blocks made the returned picker overlap its preceding card at large HUD sizes. */
+#matrix-v2 .cm-board .cm-decision-slot #cm-board-decision{display:flex;flex-flow:column nowrap;align-items:stretch}
+#matrix-v2 .cm-board .cm-decision-slot #cm-board-decision>*{flex:none}
+#matrix-v2 .cm-board .cm-decision-slot #cm-board-decision>.cm-board-options{flex:none;overflow:visible;margin:0;min-height:0}

@@ -1973,15 +1973,24 @@ globalThis.CrankBoard = Object.seal({
   /* What the Coach sees, as the person's AI Coach settings say (AI-6): their hand too, or their board only. */
   const handShared = () => C.state.preferences?.aiCoach?.coachSees !== "board";
   function coachContext() {return `Sees your board${handShared() ? ", hand" : ""} and the table${handShared() ? "" : " (your hand withheld)"} · turn ${view && view.state.turn ? view.state.turn : 0}`;}
-  let coachInput=null,coachGate={key:null,available:false};
+  let coachInput=null,coachGate={key:null,available:false},coachFocusRequest=null;
   const coachKey=()=>`${C.signedInAs?.() || ''}|${tableId || ''}`;
   function probeCoach() {
     const key=coachKey();if(coachGate.key===key)return;
-    const gate=coachGate={key,available:false};coachInput=null;coach.thread=[];coach.typing=false;coach.asked++;
+    const gate=coachGate={key,available:false,ready:false};coachInput=null;coach.thread=[];coach.typing=false;coach.asked++;
     fetch('/api/ai-coach',{credentials:'same-origin',redirect:'manual'}).then(async response=>response.ok?response.json():null).then(result=>{
       if(coachGate!==gate || coachKey()!==key)return;
-      gate.available=result?.open===true;drawCoach();
-    }).catch(()=>{if(coachGate===gate && coachKey()===key)gate.available=false;});
+      gate.available=result?.open===true;gate.ready=true;drawCoach();
+    }).catch(()=>{if(coachGate===gate && coachKey()===key){gate.available=false;gate.ready=true;drawCoach();}});
+  }
+  function focusRequestedCoach(panelEl) {
+    const request=coachFocusRequest;if(!request?.armed)return;
+    if(!coach.open || request.key!==coachKey() || request.matchId!==view?.matchId){coachFocusRequest=null;return;}
+    if(!coachGate.ready && !coachGate.available)return;
+    coachFocusRequest=null;
+    if(document.querySelector('#cm-dialog[open]') || JSON.stringify(C.focusKey(document.activeElement))!==JSON.stringify(request.from))return;
+    const target=panelEl?.querySelector(coachGate.available?'.cm-coach-input':'[data-action=page-help]');
+    target?.focus({preventScroll:true});target?.scrollIntoView({block:'nearest',inline:'nearest'});
   }
   function drawCoach() {
     const panelEl=document.getElementById('cm-board-coach');if(!panelEl)return;
@@ -1999,6 +2008,7 @@ globalThis.CrankBoard = Object.seal({
     if(!focused && activeKey)C.focusFind(activeKey)?.focus({preventScroll:true});
     const next=panelEl.querySelector('.cm-coach-thread');if(next)next.scrollTop=bottom?next.scrollHeight:scroll;
     globalThis.CrankCoach?.bind(panelEl);
+    focusRequestedCoach(panelEl);
   }
   /* A question to the Coach: POST /api/ai/coach with the table and the question, nothing more -- the table says what is
      on it (cloud/worker.mjs). Signed in to the library only, the AI door's sign-in answers with a redirect, which a
@@ -2611,7 +2621,7 @@ globalThis.CrankBoard = Object.seal({
       const host = document.getElementById("cm-board");
       if (!host || !view) return;
       const header=host.querySelector(':scope>.cm-stage-top');
-      if(header){const combat=host.hasAttribute('data-combat')?parseFloat(getComputedStyle(host).getPropertyValue('--combat-h'))||0:0;host.style.setProperty('--hud-top',`${Math.ceil(header.offsetHeight-combat)}px`);}
+      if(header){const combat=header.querySelector('.cm-r4-combat')?.offsetHeight || 0;host.style.setProperty('--hud-top',`${Math.ceil(Math.max(28+30*hudScale()/100,header.offsetHeight-combat))}px`);}
       /* The hand's tray as it would be at the table's card size (Tools): the room the boards leave it, whatever size the
          hand is now (Rob, 2026-10-09). A larger hand runs on below; a smaller one leaves the boards where they are. */
       const atTableSize = (el, measure) => {
@@ -3955,7 +3965,13 @@ globalThis.CrankBoard = Object.seal({
     }
   });
   actions["board-tools"] = () => openSettings();
-  actions["board-coach"] = () => {profileOpen=false; coach.open = !coach.open; tools = false; historyOpen = false; if (coach.open) {if (!moduleSide("coach")) inspection = null; panelOpen = false;openModuleDrawer("coach");if(phone()){stageSide=true;stageRail=false;}} draw(); drawCoach(); if (coach.open) document.querySelector("#cm-board-coach .cm-coach-input")?.focus();};
+  actions["board-coach"] = () => {
+    profileOpen=false;coach.open=!coach.open;tools=false;historyOpen=false;
+    coachFocusRequest=coach.open?{key:coachKey(),matchId:view?.matchId,armed:false,from:null}:null;
+    if(coach.open){if(!moduleSide("coach"))inspection=null;panelOpen=false;openModuleDrawer("coach");if(phone()){stageSide=true;stageRail=false;}}
+    draw();drawCoach();
+    if(coachFocusRequest){coachFocusRequest.from=C.focusKey(document.activeElement);coachFocusRequest.armed=true;focusRequestedCoach(document.getElementById('cm-board-coach'));}
+  };
   actions["board-recommend"] = () => {coach.open=true;if (!moduleSide("coach")) inspection = null;openModuleDrawer("coach");if(phone()){stageSide=true;stageRail=false;}draw();drawCoach();ask_("What are my best actions right now?");};
   actions["board-coach-ask"] = (el) => ask_(el.dataset.q);
   /* Show me: the cards an answer names, lit on the board for four seconds. Why?: each play's reason, one sentence. */

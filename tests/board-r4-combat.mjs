@@ -32,6 +32,7 @@ try{
   if(process.env.COMBAT_CASE && process.env.COMBAT_CASE!==`${mode}-${width}`)continue;
   console.log(`combat ${mode}/${width}`);
   const {page,context,frames,errors,emit,publish}=await open(mode,width,skin);await pause(page);
+  if(width>=500)ok(await page.locator('#cm-board').evaluate(host=>{const header=host.querySelector('.cm-stage-top'),combat=header.querySelector('.cm-r4-combat');return Math.abs(header.offsetHeight-combat.offsetHeight-parseFloat(getComputedStyle(host).getPropertyValue('--hud-top')))<8;}),`${mode}: measured HUD height excludes the combat band exactly once`);
   ok(await page.locator(send).isDisabled(),`${mode}: Send disabled until each attacker settled`);ok((await page.locator(send).getAttribute('title')).includes('2 attackers'),`${mode}: disabled reason names unsettled count`);
   eq(await page.locator('.cm-r4-combat [data-combat-role=Attacker] .cm-twin-mark').allTextContents(),['a','b'],`${mode}: twin attacker marks`);
   ok(!/#\d+/.test(await page.locator('.cm-r4-combat,.cm-block-draft').allTextContents().then(a=>a.join(' '))),`${mode}: no visible engine numbers`);

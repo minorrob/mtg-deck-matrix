@@ -35,14 +35,18 @@ Tracking: https://linear.app/robs-build/issue/ROB-197/implement-r4-design-founda
 
 ## Source integrated, final proof pending
 
-- C/D2 source through cf015b12 is integrated: native History in all views, authoritative seat lifecycle,
-  fixed Actions-row explanation, and real optional module controls. Pure seat lifecycle10 and actual
-  board account-menu keyboard17 pass. Input/layout/views/folded-slot/caption and legacy browser
-  acceptance remain in progress. Current Table screenshot review found menu/seat-header and central
-  dial/board-label overlap; final visual acceptance requires those placement issues to be resolved.
-- The preserved real-table suite reached91 checks on ff4b04dd. Its old DOM assertions are being
+- C/D2 source through 1c65e917 is integrated, including the measured combat header and returned-picker
+  flow repair. Source7931e2a1 passed71 assertions across14 caption/geometry scenarios; phone light-theme
+  turn/icon ink passed its focused7 on777b0a60. Coordinator inspected Table100/200 and phone200 captures.
+  The Table now preserves full battlefield/lands rows and scrolls vertically when required (EX15).
+  Native input62 and views78 passed earlier bounded source checkpoints; final layout, folded16,
+  actual card-badge bounds, affected legacy suites and browser mutations remain pending.
+- Pure offer12, land9, Coach-context20, seat lifecycle10 and account-menu keyboard17 pass. Coordinator
+  caught all three meaningful pending-draft/old-capability-response Coach regressions and restored source.
+- The preserved real-table suite reached119 checks on66916e95. Its old DOM assertions are being
   migrated without dropping identity, privacy, legality, geometry or reconnect coverage. The whole
-  suite is not green yet. Browser proofs remain serial; Foundation currently owns the slot.
+  suite is not green yet. Browser proofs remain serial; Engine currently owns the slot, with Foundation
+  queued for the returned-picker repro and the remaining finite native/mutation gates.
 - Global AccountMenu source begins at 6b70a600; opening/focus refinements are 6f2b1e83/17e599c4,
   required danger ink 69edbf73, and scoped Invite/Admin alignment 8da62a87. Global acceptance is
   green; Foundation owns the real board-avatar adoption and game-draft/hotkey boundary. Shared
