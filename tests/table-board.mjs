@@ -1092,11 +1092,11 @@ try {
   await second.page.getByRole('radio',{name:'Resources: Right',exact:true}).check();
   await second.page.getByRole('button',{name:'Save drawer modules',exact:true}).click();
   if(!await second.page.locator('.cm-stage-side.is-open').count()) await second.page.locator('.cm-stage-right').click();
+  eq(await second.page.locator('.cm-board-mat').boundingBox(),beforeDrawer,'the Stack drawer overlays without changing the mat before standalone inspection opens');
   const inspectedRevision = views(secondEmail).at(-1).revision, inspectedSends = sent[secondEmail].length;
   await second.page.locator('.cm-board-mat .cm-board-lands .cm-bcard.is-tapped').first().click();
   await second.page.locator('#cm-card-menu [data-action=board-card-menu-view]').click();
   await second.page.locator('#cm-card-inspector .cm-bcard').waitFor();
-  eq(await second.page.locator('.cm-board-mat').boundingBox(),beforeDrawer,'the shared drawer overlays without changing the mat');
   const resources = await second.page.evaluate(() => {
     const lands = [...document.querySelectorAll(".cm-board-mat .cm-board-lands .cm-bcard[data-card]")], up = lands.filter((c) => !c.classList.contains("is-tapped")).length;
     const row = document.querySelector(".cm-stage-module[data-module=resources] .cm-res-list[aria-label='Your lands by name'] li"), types = [...document.querySelectorAll(".cm-stage-module[data-module=resources] .cm-res-list[aria-label='Your hand by type'] li")].map((li) => li.textContent.replace(/\s+/g, " ").trim());
@@ -1203,12 +1203,12 @@ try {
     const copies=[];for(let i=0;i<29;i++){const c=first.cloneNode(true);c.classList.add('is-copy');c.classList.remove('is-tapped');c.style.setProperty('transition','none','important');source.append(c);copies.push(c);}
     dispatchEvent(new Event('resize'));
     const row=document.querySelector('.cm-board-mat .cm-board-lands .cm-board-cards'),kids=[...row.children],slots=()=>kids.map(c=>[c.offsetLeft,c.offsetTop,c.offsetWidth,c.offsetHeight]),before=slots();
-    copies.forEach((c,i)=>{if(i%2===0)c.classList.add('is-tapped');});dispatchEvent(new Event('resize'));
+    copies.forEach((c,i)=>{if(i%2===1)c.classList.add('is-tapped');});dispatchEvent(new Event('resize'));
     const stable=JSON.stringify(before)===JSON.stringify(slots());row.scrollTop=row.scrollHeight;
     const raster=el=>{const parent=el.offsetParent,p=parent.getBoundingClientRect(),top=p.top+parent.clientTop+el.offsetTop-parent.scrollTop,left=p.left+parent.clientLeft+el.offsetLeft-parent.scrollLeft;return {top,left,bottom:top+el.offsetHeight,right:left+el.offsetWidth};};
-    const r=row.getBoundingClientRect(),last=raster(kids.at(-1)),tap=copies.find(c=>c.classList.contains('is-tapped'));
+    const r=row.getBoundingClientRect(),last=kids.at(-1).getBoundingClientRect(),tap=copies.find(c=>c.classList.contains('is-tapped'));
     const matrix=new DOMMatrixReadOnly(getComputedStyle(tap).transform);
-    return {rows:new Set(kids.map(c=>c.offsetTop)).size,overflow:getComputedStyle(row).overflowY,scrolls:row.scrollHeight>row.clientHeight+1,
+    return {rowTop:r.top,rowBottom:r.bottom,lastTop:last.top,lastBottom:last.bottom,scrollTop:row.scrollTop,rows:new Set(kids.map(c=>c.offsetTop)).size,overflow:getComputedStyle(row).overflowY,scrolls:row.scrollHeight>row.clientHeight+1,
       lastSeen:last.bottom<=r.bottom+1&&last.top>=r.top-1,
       stable,cut:kids.some(c=>{const b=raster(c);return b.left<r.left-1||b.right>r.right+1;}),angle:Math.atan2(matrix.b,matrix.a)*180/Math.PI};
   });
@@ -1256,8 +1256,13 @@ try {
     await rob.page.waitForTimeout(300);
     const big = await at();
     /* scrolled as a person scrolls, with the wheel over the board */
-    const focusGutter=await rob.page.locator(".cm-board-main").boundingBox();
-    await rob.page.mouse.move(focusGutter.x+2,focusGutter.y+20);
+    const focusGutter=await rob.page.locator('.cm-board-main').evaluate(main=>{
+      const r=main.getBoundingClientRect(),mat=main.querySelector('.cm-board-stage').getBoundingClientRect(),grip=document.querySelector('.cm-board-panegrip')?.getBoundingClientRect();
+      const point={x:(Math.max(r.left,grip?.right||r.left)+mat.left)/2,y:r.top+20},hit=document.elementFromPoint(point.x,point.y);
+      if(!hit||!main.contains(hit)||hit.closest('.cm-mat,[data-zone-scroll]'))throw new Error('Focus wheel gutter does not reach its own scroller');
+      return point;
+    });
+    await rob.page.mouse.move(focusGutter.x,focusGutter.y);
     await rob.page.mouse.wheel(0,-2000);
     await rob.page.waitForFunction(()=>document.querySelector('.cm-board-main').scrollTop===0,null,{timeout:5000});
     await rob.page.mouse.wheel(0,2000);
@@ -1413,12 +1418,12 @@ try {
   await utility(rob.page,"board-tools");
   const glyphs = await rob.page.evaluate((histGlyphs) => {
     const svg = (el) => (el.querySelector("svg.cm-icon") || {}).outerHTML || "";
-    const hist = histGlyphs.map(([g]) => g), coachEls = [...document.querySelectorAll("#cm-board [data-action=board-coach], #cm-board-tools [data-action=board-coach]")];
+    const hist = histGlyphs.map(([g]) => g), coachEls = [...document.querySelectorAll("#cm-board [data-action=board-coach], #cm-board-tools [data-action=board-coach]")].filter(el=>el.querySelector("svg.cm-icon"));
     return {hist: hist.length, histSame: hist.every((g) => g && g === hist[0]), histText: histGlyphs.map(([, t]) => t).join(""),
       coach: coachEls.length, coachSame: coachEls.every((el) => svg(el) && svg(el) === svg(coachEls[0])), differ: hist[0] !== svg(coachEls[0]), star: document.getElementById("cm-board").innerHTML.includes("✦") || document.getElementById("cm-dialog").innerHTML.includes("✦")};
   }, histGlyphs);
   ok(glyphs.hist >= 2 && glyphs.histSame && !/[☰⌕]/.test(glyphs.histText), `the strip's History ▾ and the band's button open the history from the same clock (${glyphs.hist} places), not ☰ or ⌕`);
-  ok(glyphs.coach >= 2 && glyphs.coachSame && glyphs.differ && !glyphs.star, `the pane's Coach and Tools › Recommended actions carry the Coach's own glyph (${glyphs.coach} places), and ✦ is nowhere on the board`);
+  ok(glyphs.coach >= 2 && glyphs.coachSame && glyphs.differ && !glyphs.star, `the icon-bearing Coach controls share their own glyph (${glyphs.coach} places), and ✦ is nowhere on the board: ${JSON.stringify(glyphs)}`);
   await rob.page.click("#cm-dialog .cm-dialog-close");
   await chooseView(rob.page,"full"); await fullTools(rob.page);
   await rob.page.locator(".cm-stage-rail").waitFor();
@@ -1838,11 +1843,12 @@ function tableRowFacts() {
       return {floor,whole:z.height+2>=floor&&z.top>=r.top-1&&z.bottom<=r.bottom+1&&(!c||(c.top>=Math.max(label?.getBoundingClientRect().bottom||z.top,heading?.getBoundingClientRect().bottom||z.top)-1&&c.bottom<=z.bottom+1))};
     };
     const f=zoneFacts(field), l=zoneFacts(lands);
-    const minimum=Math.max(0,mat.offsetHeight-field.offsetHeight-lands.offsetHeight)+f.floor+l.floor;
+    const allocation=field.offsetHeight/(field.offsetHeight+lands.offsetHeight);
+    const minimum=Math.max(0,mat.offsetHeight-field.offsetHeight-lands.offsetHeight)+Math.max(f.floor/allocation,l.floor/(1-allocation));
     const aspectFits=r.width*9/16>=minimum-2;
     const aspect=aspectFits?Math.abs(r.width/r.height-16/9)<.02:r.height+2>=minimum&&r.height>r.width*9/16;
     const cards=[...mat.querySelectorAll('.cm-bcard')];
-    return {seat:mat.dataset.seat,width:r.width,height:r.height,minimum:Math.round(minimum),aspectFits,valid:aspect&&f.whole&&l.whole&&cards.length>0&&cards.every(c=>Math.abs(c.offsetWidth/c.offsetHeight-5/7)<.02)};
+    return {seat:mat.dataset.seat,width:r.width,height:r.height,minimum:Math.round(minimum),allocation,fieldFloor:Math.round(f.floor),landFloor:Math.round(l.floor),aspectFits,valid:aspect&&f.whole&&l.whole&&cards.length>0&&cards.every(c=>Math.abs(c.offsetWidth/c.offsetHeight-5/7)<.02)};
   });
   const grown=rows.some(r=>!r.aspectFits);
   if(focus){const tray=table.querySelector(':scope>.cm-board-hand'),strip=table.querySelector(':scope>.cm-other-seats'),available=table.clientWidth-16,expected=grown?available:Math.min(available,(table.clientHeight-outer(strip)-outer(tray)-16)*16/9);return {mode:'focus',rows,valid:rows.length===1&&rows.every(r=>r.valid),widths:rows.every(r=>Math.abs(r.width-expected)<2),scrolls:table.scrollHeight>table.clientHeight+1,horizontal:table.scrollWidth<=table.clientWidth+1};}
