@@ -17,10 +17,11 @@ async function open(mode,width=1440,touch=false,v=fixture(),hud=100){
 }
 const card=id=>`.cm-mat[data-seat="0"] .cm-bcard[data-action="board-card"][data-card="${id}"]`;
 const roots='.cm-stage-top,.cm-mat-head,.cm-seat-header,.cm-mat-label,.cm-board-group>h3,.cm-board-chip,.cm-board-decision,.cm-board-hand-side,.cm-r4-combat,.cm-other-seats,.cm-stage-handle';
-const failures=[];
+const failures=[];let scenarios=0;
 try{
  for(const mode of ['table','focus','full'])for(const hud of [100,200])for(const width of [1440,390])for(const seats of mode==='table'&&width===1440?[2,4]:[4]) {
   if(process.env.CAPTION_CASE && process.env.CAPTION_CASE!==`${mode}-${width}-${hud}`)continue;
+  scenarios++;
   const f=await open(mode,width,false,fixture(seats),hud),{page,context,errors}=f;
   await page.evaluate(choice=>__r4Act('set-theme',{themeChoice:choice}),mode==='focus'?'bronze-basalt-light':mode==='full'?'chalk-coal':'sapphire-obsidian');
   if(width<500)await page.locator('[data-action=board-stage-rail]').click();
@@ -42,4 +43,4 @@ try{
  }
  eq(failures,[],'actual endpoint typography and geometry audit');
 }finally{await close();}
-console.log(`board-r4-caption-fit: ${checks} checks passed`);
+console.log(`board-r4-caption-fit: ${checks} checks passed across ${scenarios} scenarios`);
