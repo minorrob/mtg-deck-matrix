@@ -1055,8 +1055,8 @@ try {
   await waitText(firstBoard.page, ".cm-stage-top [data-action=board-pass]", new RegExp(`Resolve ${castName}`));
   const secondName = second === rob ? "Rob" : "Maya", firstName_ = second === rob ? "Maya" : "Rob";
   await waitText(second.page, ".cm-board-waiting", new RegExp(`Waiting on ${firstName_}`), 10000);
-  ok(!views(secondEmail).slice(casterSeen).some((v) => v.decision && v.decision.kind === "priority" && v.state.stack.length),
-    `cast, ${castName} goes on the stack and the caster is not asked again with it there: the cast passed for them`);
+  ok(views(secondEmail).slice(casterSeen).some(v=>v.decision?.options.some(o=>o.act==='undo-play'))&&!views(secondEmail).at(-1).decision?.options.some(o=>o.act==='undo-play'),
+    `the acknowledged pass closes the caster's Undo window before the opponent resolves ${castName}`);
   eq((await text(firstBoard.page, ".cm-board-waiting")).trim(), `${secondName}'s first main phase · you may respond`, `on the other board the button reads Resolve ${castName}, and the strip says whose step it is and that they may respond`);
   /* All desktop views use the same inspectable stack pile and ordered list. Browsing it never sends a game action. */
   if(!await firstBoard.page.locator('.cm-stage-side.is-open').count()) await firstBoard.page.locator('.cm-stage-right').click();
