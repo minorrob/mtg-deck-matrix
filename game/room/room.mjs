@@ -1066,7 +1066,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         departures: structuredClone(departures),
         seats: api.seats,
         waitingOn: pendingSeat === null ? null : seats[pendingSeat].seatId,
-        decision: mine ? describeDecision(state, combatWords(state, structuredClone(controller.pending)), pendingActions) : null,
+        decision: mine ? describeDecision(state, combatWords(state, structuredClone(controller.pending)), pendingActions, projected) : null,
         state: projected,
         ...(canUndo ? {canUndo: true, undoablePlay: {cardId: playBack.objectId, name: playBack.name, kind: playBack.kind}} : {}),
         history: history.slice(-HISTORY_VIEW).map(({turn, text, mark}) => ({turn, text, ...(mark ? {mark} : {})})),
