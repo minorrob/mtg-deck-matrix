@@ -104,6 +104,7 @@ import {agentPilot} from "../engine/pilots/agent-pilot.mjs";
 import {addToHistory} from "./history.mjs";
 import {tableEvent, eventsFor, keep, EVENTS_SCHEMA} from "./events.mjs";
 import {endingOf} from "./ending.mjs";
+import {describeDecision} from "./decision.mjs";
 
 export const ROOM_PROTOCOL = 1;
 export const ROOM_SCHEMA = "CrankRoom@1";
@@ -1023,7 +1024,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         departures: structuredClone(departures),
         seats: api.seats,
         waitingOn: pendingSeat === null ? null : seats[pendingSeat].seatId,
-        decision: mine ? combatWords(state, structuredClone(controller.pending)) : null,
+        decision: mine ? describeDecision(state, combatWords(state, structuredClone(controller.pending)), pendingActions) : null,
         state: whyNotFor(projectFor(state, seat), seat, mine ? controller.pending : null),
         history: history.slice(-HISTORY_VIEW).map(({turn, text, mark}) => ({turn, text, ...(mark ? {mark} : {})})),
         /* What happened, as this seat may know it (events.mjs): the change this view shows -- or, asked with `after` (the last
