@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
+import {resultRecord} from '../game/room/result-record.mjs';
 const source=readFileSync(new URL('../crankmagic-table.js',import.meta.url),'utf8');
 let checks=0;const ok=(v,m)=>{assert.ok(v,m);checks++;};
 function setup({failRules=false,unknown=[],failDeck=false,cloud=false}={}){
@@ -69,26 +70,44 @@ function setup({failRules=false,unknown=[],failDeck=false,cloud=false}={}){
   ok(x.requests.length===0,'Leave invents no seat-release endpoint');
   await x.notices.at(-1).options.action.run();ok(x.navigations.at(-1).params.id==='table123456','Return after leaving resumes the same table');
 }
+// Generate the same owner-only records as the real room rather than inventing numeric lifecycle seats.
+for(const seatId of ['s0','s1']) {
+  const x=setup(),saved=[];x.C.state.decks.push({id:'own-deck',version:2});
+  const r=resultRecord({tableId:'table123456',matchId:'table123456g1',
+    view:{seatId,seat:Number(seatId.slice(1)),status:'finished',state:{turn:8},result:{winner:'s0',reason:'Last player standing'},seats:[{pilot:'human'},{pilot:'human'}]},
+    deck:{source:{deckId:'own-deck',deckVersion:1},bracket:3,commander:['Own commander']},
+    opponents:[{seatId:seatId==='s0'?'s1':'s0',name:'Other player',commanders:['Public commander'],ai:false}],now:Date.parse('2026-10-26T12:00:00Z')});
+  x.C.commit=async command=>{saved.push(command);x.C.state.games.push({id:command.gameId,deckId:command.deckId});};
+  const context={account:'rob@example.test',tableId:r.tableId,matchId:r.matchId,seatId};
+  ok(await x.C.tableApi.fileResult(r,context),`an actual server-generated ${seatId} result is accepted`);
+  ok(saved.length===1&&saved[0].gameId===r.id&&saved[0].table.seatId===seatId&&saved[0].seat===r.seat&&saved[0].playedAt===r.playedAt&&saved[0].table.deckVersion===1,`the ${seatId} record keeps canonical identity, position, server date and played version`);
+  for(const invalidSeat of [0,1,'0','s4','s-1','s00','S0','']) {
+    const invalid={...r,seatId:invalidSeat,id:`game:table:${r.matchId}:${invalidSeat}`};
+    ok(!await x.C.tableApi.fileResult(invalid,{...context,seatId:invalidSeat}),`numeric or malformed seat ${JSON.stringify(invalidSeat)} cannot file`);
+  }
+  ok(!await x.C.tableApi.fileResult(r,{...context,seatId:seatId==='s0'?'s1':'s0'}),'a different canonical seat context cannot file another owner result');
+  ok(saved.length===1,'rejected seat identities and context mismatch perform no write');
+}
 {
   const x=setup(),saved=[];x.C.state.decks.push({id:'own-deck',version:2});
-  x.table.gameRecord={schema:'CrankMagicTableResult@1',id:'game:table:table123456g1:0',tableId:'table123456',matchId:'table123456g1',seatId:0,source:{deckId:'own-deck',deckVersion:1},playedAt:'2026-10-26T12:00:00Z',outcome:'win',finishReason:'Last player standing',finishRank:1,turns:8,pod:2,seat:1,bracket:3,opponents:[{commanders:['Public commander']}],ai:false};
+  x.table.gameRecord={schema:'CrankMagicTableResult@1',id:'game:table:table123456g1:s0',tableId:'table123456',matchId:'table123456g1',seatId:'s0',source:{deckId:'own-deck',deckVersion:1},playedAt:'2026-10-26T12:00:00Z',outcome:'win',finishReason:'Last player standing',finishRank:1,turns:8,pod:2,seat:1,bracket:3,opponents:[{commanders:['Public commander']}],ai:false};
   x.C.commit=async command=>{saved.push(command);x.C.state.games.push({id:command.gameId,deckId:command.deckId});};
   await x.C.tableApi.refresh(x.table.tableId);await x.C.tableApi.refresh(x.table.tableId);
   ok(saved.length===1&&saved[0].gameId===x.table.gameRecord.id,'repeated result reads file once under the stable match and seat identity');
   ok(saved[0].type==='game'&&saved[0].table.schema==='CrankMagicTableResult@1'&&saved[0].table.deckVersion===1&&saved[0].finish===1,'automatic filing preserves the existing model command and played deck version');
-  x.table.gameRecord={...x.table.gameRecord,id:'game:table:table123456g2:0',source:{deckId:'missing-local-deck',deckVersion:1}};await x.C.tableApi.refresh(x.table.tableId);
+  x.table.gameRecord={...x.table.gameRecord,id:'game:table:table123456g2:s0',matchId:'table123456g2',source:{deckId:'missing-local-deck',deckVersion:1}};await x.C.tableApi.refresh(x.table.tableId);
   ok(saved.length===1&&x.C.state.decks.length===1,'a result for an unavailable local deck never creates or imports a foreign deck');
 }
 {
   const x=setup(),saved=[];let release;const gate=new Promise(resolve=>{release=resolve;});x.C.state.decks.push({id:'own',version:3});
-  const r={schema:'CrankMagicTableResult@1',id:'game:table:table123456g2:0',tableId:'table123456',matchId:'table123456g2',seatId:0,source:{deckId:'own',deckVersion:2},playedAt:'2026-10-26T12:00:00Z',outcome:'loss',turns:5,pod:2,seat:1,ai:false,finishRank:null,bracket:null,finishReason:'Conceded',opponents:[{commanders:['Public opponent'],privateHand:['Hidden card']}],privateZones:{library:['Hidden library']}};
+  const r={schema:'CrankMagicTableResult@1',id:'game:table:table123456g2:s0',tableId:'table123456',matchId:'table123456g2',seatId:'s0',source:{deckId:'own',deckVersion:2},playedAt:'2026-10-26T12:00:00Z',outcome:'loss',turns:5,pod:2,seat:1,ai:false,finishRank:null,bracket:null,finishReason:'Conceded',opponents:[{commanders:['Public opponent'],privateHand:['Hidden card']}],privateZones:{library:['Hidden library']}};
   const context={account:'rob@example.test',tableId:r.tableId,matchId:r.matchId,seatId:r.seatId};
   x.C.commit=async command=>{saved.push(command);await gate;x.C.state.games.push({id:command.gameId,deckId:command.deckId});};
   const board=x.C.tableApi.fileResult(r,context),lobby=x.C.tableApi.fileResult(r,context);ok(saved.length===1,'concurrent board and lobby observations share a single in-flight commit');release();
   ok((await board)&&(await lobby),'both observers receive the same saved result');
   ok(!JSON.stringify(saved[0]).includes('Hidden')&&!JSON.stringify(saved[0]).includes('private'),'the account command copies only allowlisted public result fields');
   ok(!await x.C.tableApi.fileResult({...r,id:'arbitrary'},context),'a noncanonical result ID cannot be filed');
-  ok(!await x.C.tableApi.fileResult(r,{...context,seatId:1}),'the supplied source context must match the record seat');
+  ok(!await x.C.tableApi.fileResult(r,{...context,seatId:'s1'}),'the supplied source context must match the record seat');
   ok(!await x.C.tableApi.fileResult(r,{...context,account:'other@example.test'}),'an abandoned account observation cannot file into the active library');
   x.C.state.decks[0].archived=true;ok(!await x.C.tableApi.fileResult(r,context),'an archived source deck is never selected as a current filing target');
 }

@@ -293,7 +293,7 @@
     const d=r?.source?.deckId&&C.state.decks.find(x=>x.id===r.source.deckId&&!x.archived);
     const contextMatches=['tableId','matchId','seatId'].every(k=>context[k]===undefined||String(context[k])===String(r?.[k]));
     if(!owner||owner!==currentOwner()||!contextMatches||r?.schema!=='CrankMagicTableResult@1'||!d||!Number.isSafeInteger(r.source.deckVersion)||r.source.deckVersion<1||r.source.deckVersion>d.version
-      ||!/^[a-z0-9]{8,40}$/.test(r.tableId)||!new RegExp('^'+r.tableId+'g[1-9][0-9]{0,5}$').test(r.matchId)||!/^([0-3])$/.test(String(r.seatId))||r.id!==`game:table:${r.matchId}:${r.seatId}`
+      ||!/^[a-z0-9]{8,40}$/.test(r.tableId)||!new RegExp('^'+r.tableId+'g[1-9][0-9]{0,5}$').test(r.matchId)||!/^s[0-3]$/.test(r.seatId)||r.id!==`game:table:${r.matchId}:${r.seatId}`
       ||!Number.isFinite(Date.parse(r.playedAt))||!['win','loss','draw','unfinished'].includes(r.outcome)||!Number.isInteger(r.pod)||r.pod<2||r.pod>4||!Number.isInteger(r.seat)||r.seat<1||r.seat>r.pod||!Number.isInteger(r.turns)||r.turns<0
       ||typeof r.ai!=='boolean'||typeof r.finishReason!=='string'||!(r.finishRank===null||Number.isInteger(r.finishRank)&&r.finishRank>=1&&r.finishRank<=r.pod)||!(r.bracket===null||Number.isInteger(r.bracket)&&r.bracket>=1&&r.bracket<=5)
       ||!Array.isArray(r.opponents)||r.opponents.some(x=>!Array.isArray(x.commanders)||x.commanders.some(n=>typeof n!=='string')))return Promise.resolve(false);
