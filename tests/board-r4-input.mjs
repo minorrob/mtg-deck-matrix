@@ -20,7 +20,7 @@ try{
  for(const mode of ['table','focus','full']){
   const f=await open(mode),{page,context,sent,errors}=f;const island=page.locator(card(9001)).first();await island.evaluate(el=>globalThis.__originalCard=el);await island.click();
   ok(await page.locator('#cm-card-menu').isVisible(),`${mode}: single click opens readable card menu`);eq(sent.filter(s=>s.type==='act').length,0,`${mode}: single click sends nothing`);ok(await page.evaluate(()=>__originalCard.isConnected),`${mode}: opening menu preserves the actual first-click card node`);
-  await page.keyboard.press('Escape');await island.dblclick();eq(sent.filter(s=>s.type==='act').map(s=>s.indices),[[1]],`${mode}: native two-click sequence taps once`);
+  await page.keyboard.press('Escape');await island.dblclick();eq(sent.filter(s=>s.type==='act').map(s=>s.indices),[[1]],`${mode}: native two-click sequence taps once`);eq(await page.locator('#cm-board').getAttribute('data-view'),mode,`${mode}: double clicking a card never focuses another view`);
   await f.feed(v=>{v.state.players[0].zones.Battlefield.cards[0].tapped=true;v.state.players[0].mana=[{color:'U',amount:1}];v.decision.options[1]={index:1,act:'undo-mana',label:'Untap Island',cardId:9001};});
   await island.click();const oldMenu=await page.locator('#cm-card-menu [data-action=board-card-menu-do]').evaluate(el=>({...el.dataset}));await page.keyboard.press('Escape');await island.dblclick();eq(sent.filter(s=>s.type==='act').length,2,`${mode}: native double click untaps unspent mana exactly once`);
   await f.feed(v=>{v.state.players[0].zones.Battlefield.cards[0].tapped=true;v.state.players[0].mana=[];v.decision.options=[v.decision.options[0]];});
@@ -31,6 +31,14 @@ try{
   await f.feed(v=>{v.decision.options[1]={index:1,act:'undo-play',label:'Undo Island',cardId:9002};v.canUndo=true;});await slot.hover();await slot.locator('[data-action=board-offered-undo]').click();eq(sent.filter(s=>s.type==='act').length,3,`${mode}: current offered Undo binds once`);
   if(process.env.UAT_SHOTS){mkdirSync(process.env.UAT_SHOTS,{recursive:true});await page.screenshot({path:path.join(process.env.UAT_SHOTS,`r4-input-${mode}.png`)});}
   eq(errors,[],`${mode}: no browser errors`);await context.close();
+ }
+ for(const mode of ['table','full','focus']) {
+  const v=fixture();v.state.players[1].zones.Battlefield.cards=[];v.decision.options[1]={index:1,act:'activate',cardId:9001,label:'Island ability'};
+  const {page,context,sent}=await open(mode,1440,false,v);await page.evaluate(()=>__r4Act('board-option',{index:'1'}));
+  if(mode==='focus')await page.evaluate(()=>__r4Act('board-focus',{seat:'1'}));
+  const before=await page.locator('.cm-action-summary').textContent(),field=page.locator('.cm-mat[data-seat="1"] .cm-board-field').first();await field.scrollIntoViewIfNeeded();
+  const point=await field.evaluate(el=>{const r=el.getBoundingClientRect();for(const fy of [.2,.5,.8])for(const fx of [.2,.5,.8]){const x=r.x+r.width*fx,y=r.y+r.height*fy,at=document.elementFromPoint(x,y);if(at?.closest('.cm-mat')===el.closest('.cm-mat')&&!at.closest('button,a,input,select,textarea,[role=separator]'))return {x:x-r.x,y:y-r.y};}return null;});ok(point,`${mode}: actual empty opponent area available`);await field.dblclick({position:point});
+  const target=page.locator(mode==='full'?'.cm-stage-front .cm-mat':'.cm-board-stage>.cm-mat');eq(await target.getAttribute('data-seat'),'1',`${mode}: native empty opponent double click focuses that board`);eq(await page.locator('.cm-action-summary').textContent(),before,`${mode}: empty-board focus preserves unsent selection`);eq(sent.filter(s=>s.type==='act').length,0,`${mode}: focus never sends a game action`);await context.close();
  }
  {
   const v=fixture();v.state.players[0].zones.Battlefield.cards[0].tapped=true;v.decision.options[1]={index:1,act:'undo-mana',label:'Untap Island',cardId:9001};const {page,context,sent}=await open('focus',390,true,v);

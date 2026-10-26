@@ -47,7 +47,7 @@ async function board(mode, {width = 1440, height = 900} = {}) {
 const cameraOpen = (page) => page.locator("#cm-board .cm-stage-camera>div").count();
 const settingsOpen = (page) => page.evaluate(() => !!document.querySelector("#cm-dialog.cm-play-settings-dialog[open] #cm-board-tools"));
 async function openSettings(page) {
-  await page.locator("#cm-board [data-action=board-profile]").first().click();
+  await page.locator("#cm-board [data-action=board-camera]").first().click();
   await page.locator("#cm-board [data-action=board-tools]").first().click();
   await page.locator("#cm-dialog[open] #cm-board-tools").waitFor({timeout: 5000});
 }
@@ -95,7 +95,7 @@ try {
     const {page, context, errors} = await board("focus", {width, height});
     await openSettings(page);
     ok(await settingsOpen(page), `${at}: Settings opens as a window`);
-    eq(await page.locator("#cm-board .cm-profile-menu").count(), 0, `${at}: and the Profile menu closes behind it`);
+    eq(await page.locator("#cm-board .cm-stage-camera>div").count(), 0, `${at}: Camera closes behind the settings window`);
     const L = await layout(page);
     ok(L.dialog.l >= 0 && L.dialog.t >= 0 && L.dialog.r <= L.vw && L.dialog.b <= L.vh, `${at}: the window fits the browser (${JSON.stringify(L.dialog)})`);
     ok(!L.pageScroll, `${at}: no sideways scroll`);
@@ -157,7 +157,7 @@ try {
     eq(await page.locator("#cm-dialog [data-action=board-end][data-confirm='1']").count(), 0, "and Keep playing takes it back");
     await page.locator("#cm-dialog .cm-dialog-close").click();
     await page.waitForTimeout(150);
-    eq(await page.evaluate(() => document.activeElement?.dataset?.action), "board-profile", "closed, the focus goes back to the Profile menu's button");
+    eq(await page.evaluate(() => document.activeElement?.dataset?.action), "board-camera", "closed, the focus goes back to Camera");
     eq(errors, [], `no page error (${errors.join(" | ")})`);
     await context.close();
   }

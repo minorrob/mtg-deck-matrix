@@ -1006,3 +1006,11 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board[data-hud-large] .cm-board-table{grid-template-rows:repeat(2,var(--hud-row-h));align-content:start}
 #matrix-v2 .cm-board[data-hud-large] .cm-board-table[data-seats="2"]{grid-template-rows:var(--hud-row-h)}
 #matrix-v2 .cm-board[data-hud-large] .cm-board-table[data-seats="2"] .cm-board-slot{height:var(--hud-row-h)}
+
+/* A compact center retains the original Table allocation; large HUD rows scroll as a whole. */
+#matrix-v2 .cm-board .cm-board-table{--pie:calc(130px*var(--hud-scale,1));row-gap:22px}
+#matrix-v2 .cm-board .cm-board-table[data-seats="2"]{column-gap:22px}
+#matrix-v2 .cm-board .cm-board-pie .cm-board-center{width:calc(24px*var(--hud-scale,1));height:calc(24px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-board-pie-priority{top:calc(50% + 18px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-board-table[data-seats="2"] .cm-board-pie-priority{top:105%}
+#matrix-v2 .cm-board .cm-zone-divider{z-index:10;pointer-events:auto}
