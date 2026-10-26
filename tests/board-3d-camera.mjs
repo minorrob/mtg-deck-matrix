@@ -68,7 +68,7 @@ async function board(mode, {width = 1440, height = 900, reduced = false} = {}) {
   await page.waitForTimeout(300);
   await page.evaluate(async()=>{await document.fonts.ready;await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));});
   /* Every browser menu asked for, and whether the board kept it shut. */
-  await page.evaluate(() => {globalThis.__menus = []; addEventListener("contextmenu", (e) => __menus.push({open: !e.defaultPrevented, table: !!e.target.closest?.(".cm-stage-region")}));});
+  await page.evaluate(() => {globalThis.__menus = []; addEventListener("contextmenu", (e) => __menus.push({open: !e.defaultPrevented, table: !!e.target.closest?.(".cm-stage-region"), target: e.target.outerHTML?.slice(0,180)}));});
   const acts = () => sent.filter((x) => x.type === "act").map((x) => x.indices);
   /* The room's answer to a play: here, the same offers again at a new revision. */
   let revision = view.revision;
@@ -406,7 +406,7 @@ try {
   if (SHOTS) {await cardOn(TOWER, ".cm-stage-front").click({button: "right"}); await page.screenshot({path: path.join(SHOTS, "card-menu-3d.png")}); await page.keyboard.press("Escape");}
   await page.keyboard.press("Escape");
   const menus = await page.evaluate(() => __menus);
-  ok(menus.length > 0 && menus.every((m) => !m.open), `the browser's own menu never opens on the 3D table (${menus.length} asked)`);
+  ok(menus.length > 0 && menus.every((m) => !m.open), `the browser's own menu never opens on the 3D table (${menus.length} asked; ${JSON.stringify(menus)})`);
   eq(acts(), [[1]], "looking plays nothing: the one act sent is the Island confirmed above");
   ok(!errors.length, `no page error (${errors.join(" | ")})`);
   await context.close();
