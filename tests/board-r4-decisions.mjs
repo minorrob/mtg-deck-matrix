@@ -15,7 +15,7 @@ function fixture(optional=false){const v=structuredClone(sample);v.revision=999;
  if(optional)v.decision.options.push({index:4,label:'Do not destroy',decline:true,optional:true});return v;}
 async function open(mode,width,skin='sapphire-obsidian',v=fixture()){
  const context=await browser.newContext({viewport:{width,height:width<500?844:900},reducedMotion:'reduce',serviceWorkers:'block'});
- await context.addInitScript(({mode,skin})=>{localStorage.setItem('cm-board-view',mode);localStorage.setItem('crankmagic-audio-muted','true');(globalThis.CrankFeatures||=[]).push(C=>{globalThis.__r4Commit=c=>C.commit(c);});},{mode,skin});
+ await context.addInitScript(({mode,skin})=>{localStorage.setItem('cm-board-view',mode);localStorage.setItem('crankmagic-audio-muted','true');(globalThis.CrankFeatures||=[]).push(C=>{globalThis.__r4Commit=c=>C.commit(c);globalThis.__r4Confirm=()=>C.actions["board-confirm"]();});},{mode,skin});
  const page=await context.newPage();if(stub)await stub(page);const errors=[],sent=[],posts=[];let ws;
  page.on('pageerror',e=>errors.push(e.message));await page.route(`${base}/index.html*`,r=>r.fulfill({contentType:'text/html',body:html}));await page.route(`${base}/api/me`,r=>r.fulfill({json:{email:'rob@example.com'}}));await page.route(`${base}/api/library**`,r=>r.fulfill({json:{head:null}}));
  const table={tableId:'r4desk01',phase:'playing',matchId:v.matchId,away:[],blockers:[],youAreHost:true,rules:{},seats:v.state.players.map(p=>({seatId:p.playerId,name:p.name,kind:p.playerId===v.seat?'human':'ai',you:p.playerId===v.seat,occupied:true,ready:true,mat:'felt'}))};
@@ -27,8 +27,9 @@ try{
  for(const [mode,width,skin] of [['table',1440,'sapphire-obsidian'],['focus',1440,'sapphire-obsidian-light'],['full',1440,'bronze-basalt'],['focus',390,'sapphire-obsidian']]){
   const {page,context,errors,sent,posts}=await open(mode,width,skin);eq(await page.locator('[data-action=board-draft-cancel],[data-action=board-decline]').count(),0,`${mode}: mandatory question has no fake escape before a draft exists`);eq(await page.locator('.cm-target-controller>h3').allTextContents(),['Keith','Maya','You'],`${mode}: controllers grouped with You last`);
   eq(await page.locator('.cm-target-controller details').first().getAttribute('open'),null,`${mode}: Lands starts folded inside its owner`);
-  await page.locator('[data-action=board-option][data-index="0"]').click();eq(await page.locator('[data-wf=W15]').count(),1,`${mode}: target stays in grouped picker until Next`);eq(sent.filter(s=>s.type==='act').length,0,`${mode}: Next remains a local step`);eq(await page.locator('[data-forward=true]').count(),1,`${mode}: picker has one logical forward action`);ok(!(await page.locator('[data-action=board-target-next]').getAttribute('class')).includes('primary'),`${mode}: compact Next does not pretend to be the binding primary`);await page.locator('[data-action=board-target-next]').click();eq(await page.locator('[data-wf=T04]').textContent(),"Destroy Keith's Smuggler's Copter?",`${mode}: one-target possessive task`);
+  await page.locator('[data-action=board-option][data-index="0"]').click();eq(await page.locator('[data-wf=W15]').count(),1,`${mode}: target stays in grouped picker until Next`);eq(sent.filter(s=>s.type==='act').length,0,`${mode}: Next remains a local step`);await page.evaluate(()=>__r4Confirm());eq(sent.filter(s=>s.type==='act').length,0,`${mode}: generic confirm cannot bypass local Next`);eq(await page.locator('[data-forward=true]').count(),1,`${mode}: picker has one logical forward action`);ok(!(await page.locator('[data-action=board-target-next]').getAttribute('class')).includes('primary'),`${mode}: compact Next does not pretend to be the binding primary`);await page.locator('[data-action=board-target-next]').click();eq(await page.locator('[data-wf=T04]').textContent(),"Destroy Keith's Smuggler's Copter?",`${mode}: one-target possessive task`);
   ok(await page.locator('[data-wf=desk-target-1-M03] .cm-bcard').isVisible(),`${mode}: affected card is large and visible`);
+  const reviewGap=await page.evaluate(()=>document.querySelector('.cm-target-link').getBoundingClientRect().top-document.querySelector('.cm-steps').getBoundingClientRect().bottom);ok(reviewGap>=-1&&reviewGap<=64,`${mode}: no empty option spacer before target diagram (${Math.round(reviewGap)}px)`);
   eq(await primary(page),['Destroy'],`${mode}: target question has one primary`);eq(sent.filter(s=>s.type==='act').length,0,`${mode}: preview sends nothing`);eq(posts,[],`${mode}: picker and Next make no POST request`);
   await page.locator('[data-action=board-reset]').click();eq(await page.locator('[data-wf=W15]').count(),1,`${mode}: Change target restores grouped choices`);
   await page.locator('[data-action=board-option][data-index="0"]').click();await page.locator('[data-action=board-target-next]').click();await page.locator('[data-action=board-draft-cancel]').click();eq(await page.locator('#cm-board-decision').count(),1,`${mode}: Cancel clears only the unsent draft of mandatory question`);eq(await page.locator('[data-wf=W15]').count(),1,`${mode}: Cancel restores grouped choices`);eq(await page.locator('.cm-action-review').count(),0,`${mode}: Cancel removes the unsent review`);
@@ -75,6 +76,16 @@ try{
   const {page,context}=await open('focus',390);await page.locator('[data-action=board-option][data-index="0"]').click();await page.locator('[data-action=board-target-next]').click();
   await page.locator('[data-action=board-camera]').click();await page.locator('.cm-stage-camera [data-play-hud]').evaluate(el=>{el.value='200';el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));});await page.locator('[data-action=board-camera]').click();
   for(const selector of ['[data-wf=T04]','[data-wf=C02]','[data-action=board-draft-cancel]']){const e=page.locator(selector);await e.scrollIntoViewIfNeeded();const r=await e.boundingBox();ok(r.y>=0&&r.y+r.height<=794,`phone 200%: ${selector} wholly reachable`);}
+  await context.close();
+ }
+
+ {
+  const v=fixture();v.decision={id:'trigger-targets:combinations',sourceId:9001,title:'Choose two targets',mode:'one',min:1,max:1,options:[
+   {index:0,label:'Copter and Sol Ring',cardId:9001,controllerId:0,targetGroups:[{index:0,effect:'Destroy',targets:[{kind:'object',id:9002,controllerId:1},{kind:'object',id:9003,controllerId:2}]}]},
+   {index:1,label:'Copter and Your artifact',cardId:9001,controllerId:0,targetGroups:[{index:0,effect:'Destroy',targets:[{kind:'object',id:9002,controllerId:1},{kind:'object',id:9004,controllerId:0}]}]}]};
+  const {page,context}=await open('focus',1440,'sapphire-obsidian',v);
+  const labels=await page.locator('#cm-board-decision [data-action=board-option]').evaluateAll(es=>es.map(el=>[...el.childNodes].filter(n=>n.nodeType===Node.TEXT_NODE).map(n=>n.textContent).join('').trim()));
+  eq(labels,['Copter and Sol Ring','Copter and Your artifact'],'different trigger target combinations retain their visible wording rather than source name');
   await context.close();
  }
 }finally{await close();}

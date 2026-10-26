@@ -490,7 +490,11 @@ globalThis.CrankBoard = Object.seal({
       if (matches(record)) {
         if (!current()) {filed.delete(gameId);return;}
         const saved=await tableApi().fileResult(record,{account:context.account,tableId:context.tableId,matchId:context.matchId,seatId:context.seatId});
-        if(!saved || !current())filed.delete(gameId);
+        if(!current()) {filed.delete(gameId);return;}
+        if(!saved) {
+          if(tries<8) {setTimeout(()=>fileResult(v,tries+1,context),Math.min(8000,800*2**tries));return;}
+          filed.delete(gameId);
+        }
         return;
       }
       // Legacy tables alone use the client-era mapping. New summaries share the
@@ -1387,19 +1391,22 @@ globalThis.CrankBoard = Object.seal({
   const namedFace = c => c?.faceDown ? {...c,name:null} : c;
   const sourceFor = (d,o) => {const id=d.sourceId ?? (d.kind === "priority" ? o?.cardId : null);return namedFace(findCard(id)) || visibleSpell(id);};
   const choiceTargets = o => o?.targetGroups?.filter(g=>g.targets.length) || (o?.affected !== undefined || o?.target ? [{index:0,effect:o.effect,targets:[{kind:o.target?.kind || "object",id:o.affected ?? o.target?.id ?? o.cardId,controllerId:o.controllerId,effect:o.effect}]}] : []);
-  const targetCard = t => t.kind === "player" ? null : namedFace(findCard(t.affected ?? t.id)) || visibleSpell(t.affected ?? t.id);
-  const targetName = t => t.kind === "player" ? nameOf(t.controllerId ?? t.id) : targetCard(t)?.name || "face-down creature";
+  const abilityTarget = t => t.kind === "ability" ? view.state.stack.find(s=>s.stackId===t.id && ["ability","trigger"].includes(s.kind)) : null;
+  const targetController = t => t.controllerId ?? abilityTarget(t)?.playerId;
+  const targetCard = t => t.kind === "player" ? null : t.kind === "ability" ? namedFace(findCard(abilityTarget(t)?.cardId)) : namedFace(findCard(t.affected ?? t.id)) || visibleSpell(t.affected ?? t.id);
+  const targetName = t => t.kind === "player" ? nameOf(t.controllerId ?? t.id) : t.kind === "ability" ? (abilityTarget(t)?.name && !abilityTarget(t).faceDown ? `${abilityTarget(t).name} ability` : "ability") : targetCard(t)?.name || "face-down creature";
   const controllerName = id => id === view.seat ? "You" : players().find(p=>p.playerId === id)?.name || "Unknown controller";
-  const possessive = (t,source) => t.kind === "player" ? targetName(t) : `${(t.affected ?? t.id) === source?.cardId ? "this" : t.controllerId === view.seat ? "your" : controllerName(t.controllerId) + "'s"} ${targetName(t)}`;
+  const possessive = (t,source) => t.kind === "player" ? targetName(t) : `${(t.affected ?? t.id) === source?.cardId ? "this" : targetController(t) === view.seat ? "your" : controllerName(targetController(t)) + "'s"} ${targetName(t)}`;
   let targetPage = 0, targetReviewing = false;
   const reviewReady = d => picked.length && (d.kind === "priority" || targetReviewing);
   const targetCycles = new Map();
   function targetHeading(d,o) {
     const groups=choiceTargets(o),source=sourceFor(d,o),one=groups.length===1 && groups[0].targets.length===1,verb=groups[0]?.effect || o?.effect;
-    const targets=groups.flatMap(g=>g.targets),owners=new Set(targets.map(t=>t.controllerId).filter(id=>id!==undefined));
+    const targets=groups.flatMap(g=>g.targets),owners=new Set(targets.map(t=>targetController(t)).filter(id=>id!==undefined));
     const common=["Artifact","Creature","Land","Enchantment","Planeswalker","Battle"].find(type=>targets.length && targets.every(t=>targetCard(t)?.types?.includes(type)));
     const noun=common ? common.toLowerCase()+"s" : "targets";
-    const title=one && verb ? `${verb} ${possessive(groups[0].targets[0],source)}?`
+    const title=one && groups[0].targets[0].kind==="ability" && (!abilityTarget(groups[0].targets[0])?.name || abilityTarget(groups[0].targets[0]).faceDown) ? d.title
+      : one && verb ? `${verb} ${possessive(groups[0].targets[0],source)}?`
       : groups.length && groups.every(g=>g.effect===verb) && verb ? `${verb} ${targets.length} ${noun}${owners.size ? ` of ${owners.size} player${owners.size===1?'':'s'}` : ''}?`
       : groups.length && groups.every(g=>g.effect) ? `${groups.map(g=>`${g.effect} ${g.targets.length}`).join(", ")}?` : d.title;
     return `<h2 data-wf="T04">${e(title)}</h2>`;
@@ -1410,7 +1417,7 @@ globalThis.CrankBoard = Object.seal({
     if(groups.length === 1 && groups[0].targets.length === 1) {
       const t=groups[0].targets[0],c=targetCard(t),verb=groups[0].effect || o.effect;
       return `<div class="cm-target-one" data-wf="W01"><div class="cm-target-link">${source ? `<span data-wf="desk-target-1-M01" data-peek-card="${source.cardId}">${card(source,{where:"pick",action:"board-zoom-open"})}</span>` : ""}
-        <span class="cm-target-arrow"><b data-wf="T02">${e(verb || "Target")}</b><span aria-hidden="true">→</span><small data-wf="T03">${e(controllerName(t.controllerId))}</small></span>
+        <span class="cm-target-arrow"><b data-wf="T02">${e(verb || "Target")}</b><span aria-hidden="true">→</span><small data-wf="T03">${e(controllerName(targetController(t)))}</small></span>
         ${c ? `<span data-wf="desk-target-1-M02" data-peek-card="${c.cardId}">${card(c,{where:"pick",action:"board-zoom-open"})}</span>` : `<span>${e(targetName(t))}</span>`}</div>
         ${c ? `<div class="cm-target-affected" data-wf="desk-target-1-M03">${card(c,{where:"pick",action:"board-zoom-open"})}</div>` : ""}
         </div>`;
@@ -1422,7 +1429,7 @@ globalThis.CrankBoard = Object.seal({
       <div class="cm-target-quadrants">${shown.map((g,i)=>{
         const key=`${d.id}:${o.index}:${g.index}`,n=targetCycles.get(key)||0,t=g.targets[n%g.targets.length],c=targetCard(t);
         return `<section class="cm-target-quadrant" data-wf="W04"><h3>${e(g.effect || "Target")}</h3><span class="cm-target-effect-arrow" aria-hidden="true">${shown.length===3 ? ["↖","↗","↓"][i] : "→"}</span><button type="button" class="cm-target-stack" data-action="board-target-cycle" data-cycle="${e(key)}" data-count="${g.targets.length}" aria-label="Cycle targets: ${e(targetName(t))}">
-          ${Array.from({length:Math.min(4,g.targets.length)},(_,j)=>`<i class="cm-target-layer" style="--layer:${j}" aria-hidden="true"></i>`).join("")}${c?.name ? `<img src="${e(pictureOf(c.name))}" alt="${e(c.name)}" data-peek-card="${c.cardId}">` : `<span>${e(targetName(t))}</span>`}<b>×${g.targets.length}</b></button><p>${e(controllerName(t.controllerId))} · ${n%g.targets.length+1} of ${g.targets.length}</p></section>`;
+          ${Array.from({length:Math.min(4,g.targets.length)},(_,j)=>`<i class="cm-target-layer" style="--layer:${j}" aria-hidden="true"></i>`).join("")}${c?.name ? `<img src="${e(pictureOf(c.name))}" alt="${e(c.name)}" data-peek-card="${c.cardId}">` : `<span>${e(targetName(t))}</span>`}<b>×${g.targets.length}</b></button><p>${e(controllerName(targetController(t)))} · ${n%g.targets.length+1} of ${g.targets.length}</p></section>`;
       }).join("")}</div>${groups.length>3 ? `<nav class="cm-target-pager">${b("Previous","board-target-page",{by:"-1"},false,{disabled:page===0})}<span>${page+1} of ${Math.ceil(groups.length/3)}</span>${b("Next","board-target-page",{by:"1"},false,{disabled:(page+1)*3>=groups.length})}</nav>` : ""}</div>`;
   }
   function decisionPick(d,o) {
@@ -1487,7 +1494,7 @@ globalThis.CrankBoard = Object.seal({
     if (/^mulligan:/.test(d.id) && d.options.some(o => o.label === 'Keep')) {
       return `<section class="cm-board-decision" id="cm-board-decision" data-choice-id="${e(d.id)}" data-match-id="${e(view.matchId)}"><h3>Your opening hand</h3><div class="cm-decide-actions">${d.options.map(o => b(o.label,'board-opening-hand',{index:String(o.index)},o.label==='Keep',{disabled:sending})).join('')}</div></section>`;
     }
-    const opt = (o, extra = "", r = attackRisk(o)) => `<button type="button" class="v-button compact${picked.includes(o.index) ? " is-picked" : ""}${riskCls(r)}" data-action="board-option" data-index="${o.index}"${peekOf(o)}${sending ? " disabled" : ""}${extra}>${riskMark(r)}${e(targetChoice(d) && o.controllerId !== undefined && !o.decline ? findCard(o.affected ?? o.cardId)?.name || (o.target?.kind === "player" ? controllerName(o.controllerId) : o.label) : o.label)}<span class="cm-sr-only">${targetChoice(d) ? e(o.label) : ""}</span></button>`;
+    const opt = (o, extra = "", r = attackRisk(o)) => `<button type="button" class="v-button compact${picked.includes(o.index) ? " is-picked" : ""}${riskCls(r)}" data-action="board-option" data-index="${o.index}"${peekOf(o)}${sending ? " disabled" : ""}${extra}>${riskMark(r)}${e(targetChoice(d) && o.controllerId !== undefined && !o.decline ? (o.affected !== undefined ? namedFace(findCard(o.affected))?.name || "face-down creature" : o.target?.kind === "player" ? controllerName(o.controllerId) : o.label) : o.label)}<span class="cm-sr-only">${targetChoice(d) ? e(o.label) : ""}</span></button>`;
     /* One option as ever; a stack as one button, ×N, and -- where the question takes more than one -- how many of it. */
     const stackOpt = (s) => {
       if (s.length === 1) return opt(s[0], ` aria-pressed="${picked.includes(s[0].index)}"`);
@@ -1512,6 +1519,7 @@ globalThis.CrankBoard = Object.seal({
     };
     const grouped = stacks => {
       if(!targeting)return landGroup(stacks);
+      if(stacks.some(ss=>choiceTargets(ss[0]).reduce((n,g)=>n+g.targets.length,0)>1))return `<div class="cm-target-options" data-wf="W15">${landGroup(stacks)}</div>`;
       const by=new Map();
       for(const stack of stacks.filter(ss=>!ss[0].decline)) {const id=stack[0].controllerId ?? stack[0].targetGroups?.[0]?.targets?.[0]?.controllerId; if(!by.has(id))by.set(id,[]);by.get(id).push(stack);}
       return `<div class="cm-target-options" data-wf="W15">${[...by].sort(([a],[b])=>(a===view.seat)-(b===view.seat)).map(([id,ss])=>`<section class="cm-target-controller"><h3>${e(controllerName(id))}</h3>${landGroup(ss)}</section>`).join("")}</div>`;
@@ -3016,6 +3024,7 @@ globalThis.CrankBoard = Object.seal({
   actions["board-confirm"] = () => {
     const d = view.decision;
     if (!d || sending) return;
+    if(targetChoice(d) && d.kind!=="priority" && !targetReviewing && !d.options.find(o=>o.index===picked[0])?.decline)return;
     if (["one","boolean","index"].includes(d.mode)) {
       if (draftRevision !== view.revision || picked.length !== 1 || !d.options.some(o => o.index === picked[0])) return;
       return send({indices:[...picked]});
