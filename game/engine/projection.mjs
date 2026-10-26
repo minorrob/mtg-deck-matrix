@@ -93,6 +93,13 @@ function cardFor(state, id, canSeeFace, viewer = null) {
     tapped: object.tapped,
     damage: object.damage,
     counters: {...object.counters},
+    /* Physical battlefield facts are public even when a face is hidden. Keep current reciprocal attachments only:
+       a zone change makes a new object, and an Aura in a hidden zone must never gain an identity through its old host. */
+    ...(object.zone === "battlefield" ? {
+      ...(object.token === true ? {token: true} : {}),
+      attachments: (object.attachments ?? []).filter(id => state.objects[id]?.zone === "battlefield" && state.objects[id].attachedTo === object.id),
+    } : {}),
+
     /* CURRENT characteristics for anything on the battlefield, so the board draws the creature a
        player is actually looking at rather than what was printed on the card. Elsewhere there is
        nothing to derive: a card in a graveyard is its printed self. */
