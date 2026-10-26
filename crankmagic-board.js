@@ -2629,6 +2629,12 @@ globalThis.CrankBoard = Object.seal({
           tbl.style.setProperty("--mid-y", `${Math.round((box.height - used) / 2 + top * 9 / 16 + gy / 2)}px`);
         }
       }
+      if(tbl && hudScale()>=150) {
+        const n=Number(tbl.dataset.seats),box=tbl.getBoundingClientRect(),css=getComputedStyle(tbl),gx=parseFloat(css.columnGap)||14,gy=parseFloat(css.rowGap)||22;
+        const width=Math.max(280,Math.floor((box.width-gx)/2)),height=Math.max(165*hudScale()/100,width*9/16);
+        for(const key of ['--top-w','--bot-w','--board-w'])tbl.style.setProperty(key,`${width}px`);
+        tbl.style.setProperty('--hud-row-h',`${height}px`);tbl.style.setProperty('--mid-x',`${box.width/2}px`);tbl.style.setProperty('--mid-y',`${n===2?height/2:height+gy/2}px`);
+      }
       const stage = host.querySelector(".cm-board-stage");
       if (stage) {
         /* The mat: the largest 16:9 beside the pane with the hand's tray a full row beneath it, so the hand is whole

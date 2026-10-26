@@ -993,3 +993,16 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-vitals-poison,#matrix-v2 .cm-board .cm-vitals>b:after{font-size:calc(15px*var(--hud-scale,1))}
 
 #matrix-v2 .cm-board .cm-mat .cm-mat-name,#matrix-v2 .cm-board .cm-pick>div,#matrix-v2 .cm-board .cm-pick>div>*{font-size:calc(15px*var(--hud-scale,1))}
+
+/* Scale game facts in every seat-header location, including the drawer's board list. */
+#matrix-v2 .cm-board .cm-seat-header :is(.cm-mat-name,.cm-seat-commander,.cm-seat-state),#matrix-v2 .cm-board .cm-board-pane .cm-seat-header .cm-seat-commander,#matrix-v2 .cm-board .cm-stage-rear .cm-seat-header .cm-seat-state{font-size:calc(15px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-stage-top .v-button{font-size:calc(15px*var(--hud-scale,1))!important;height:auto;white-space:normal}
+#matrix-v2 .cm-board .cm-other-seats>header,#matrix-v2 .cm-board .cm-other-seats>header :is(b,.v-button),#matrix-v2 .cm-board .cm-stage-handle>span{font-size:calc(15px*var(--hud-scale,1))}
+/* The dial is in the row gap; it never covers a card's pixels or pointer target. */
+#matrix-v2 .cm-board .cm-board-table{row-gap:calc(var(--pie) + 16px);overflow:auto;overscroll-behavior:contain}
+#matrix-v2 .cm-board .cm-board-table[data-seats="2"]{column-gap:calc(var(--pie) + 16px)}
+#matrix-v2 .cm-board .cm-board-pie{pointer-events:none}
+#matrix-v2 .cm-board .cm-board-pie .cm-board-center{pointer-events:auto}
+#matrix-v2 .cm-board[data-hud-large] .cm-board-table{grid-template-rows:repeat(2,var(--hud-row-h));align-content:start}
+#matrix-v2 .cm-board[data-hud-large] .cm-board-table[data-seats="2"]{grid-template-rows:var(--hud-row-h)}
+#matrix-v2 .cm-board[data-hud-large] .cm-board-table[data-seats="2"] .cm-board-slot{height:var(--hud-row-h)}
