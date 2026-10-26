@@ -110,20 +110,29 @@ command that proves each claim, and what is outstanding with the reason.*
 
 ## 6. Merging this with the feedback-loop session's work
 
-The feedback-loop session (`session_01X2xxK5FjzqAb91gfMipUAB`, started by this one) works on its own branches
-(`claude/workshop-feedback-sheet` among them; PR #895) from the plan at `docs/feedback-loop/PLAN-2026-10-26.html`. The
-two bodies of work touch different files except these, where a merge must take both sides:
+The feedback-loop session (`session_01X2xxK5FjzqAb91gfMipUAB`, started by this one) builds its plan on three stacked
+branches, each containing the one before (its interim word of 23:12 UTC; its own hand-off,
+`docs/handoff-feedback-loop-2026-10-26.md` on the third branch, follows once its suites are green):
 
-- `docs/ACTIVE.md`: each session's section at the top and the Requests table (this one adds row 14).
-- `README.md`: the suite count. Whoever merges second sets it to the count (AGENTS.md); this branch says 599 with
-  `engine-threat`; the feedback branches add their own suites.
-- `cloud/worker.mjs`: this branch adds `/api/me`'s `group`, `adminGroups`, and the `owner` option on every `createAi`
-  call; the feedback branch adds its routes. Both are additive; keep both.
-- `tests/fixtures/asset-versions.json` and the `?v=` pins: regenerate with `node tests/asset-versions.mjs --update`
-  after the merge, never by hand.
+1. `claude/engine-feedback-store`, PR #895 (head 74f8c228 at that word), from `main` c567c581: the schema, migration
+   0009, the routes;
+2. `claude/workshop-feedback-sheet`, PR #896 (head d884c03d, two test fixes to come): the control and the sheet;
+3. `claude/deck-feedback-triage`, PR #897 (head d6501d08): the triage agent.
 
-The feedback-loop session writes its own hand-off; it reports PR 1 (schema, migration, routes), PR 2 (the sheet) and
-PR 3 (the triage agent) built with their suites and breaks at the time of writing. Rationalized here as one order for
-OpenAI: merge this branch first (it changes who may spend, and its `cloud/worker.mjs` change is the smaller), then the
-feedback branches in their PR order, regenerating the asset versions and the suite count after each, with one green
-Actions run per PR.
+**The order for OpenAI:** this branch first (it changes who may spend, and its `cloud/worker.mjs` change is the
+smaller), then the three feedback branches in stack order, each a merge commit, with one green Actions run per PR.
+After each merge: `node tests/asset-versions.mjs --update` (never by hand), and the README's suite count set to the
+count (598 on `main`, 599 with this branch, 602 with all four).
+
+**Where both bodies of work touch one file, and what to keep:**
+
+| File | This branch | The feedback branches | At the merge |
+| --- | --- | --- | --- |
+| `cloud/worker.mjs` | `groupOf` imported from `./access.mjs`; `/api/me` gains `group`; `adminGroups` and its route; `owner: env.OWNER_EMAIL` on every `createAi` call | An import from `./feedback.mjs`; a `/api/admin/feedback*` route after the `/api/ai/` dispatch; a `/api/feedback` POST block; three functions before the AI door's comment; header lines | Keep both; nothing inside an existing function changes on either side. **One collision, asked of that session before its hand-off:** its `./feedback.mjs` also exported a `groupOf`; it is to import this branch's from `./access.mjs` instead, so the name is bound once. If its hand-off does not confirm that, resolve it that way. |
+| `cloud/access.mjs` | `GROUPS` and `groupOf` added before `serviceIdentity` | One condition in `verifyAccess` (`deps.service === true` beside `SERVICE_SEATS`) | Keep both; they do not overlap. |
+| `cloud/feedback.mjs` `isOwner` | — | Its owner test is `INVITE_ADMIN_ID` | `groupOf(...) === "owner"` (by `OWNER_EMAIL`), with `INVITE_ADMIN_ID` as a fallback inside `isOwner` only, until Rob sets `OWNER_EMAIL`; that session was asked to make it so. |
+| `docs/ACTIVE.md` | A section at the top and Requests row 14 | Three sections at the top and a Requests row, to be numbered 15 | Keep all; the rows are 14 (groups) and 15 (feedback). |
+| `README.md` | `engine-threat` named; 599 suites | Its suites named; its count | 602 after all four. |
+| Asset pins and `tests/fixtures/asset-versions.json` | Bumped for the fan (board 107, stage.css 64, sw 565, app 582) | Bumped for the sheet | Re-record after the merge with the tool. |
+| `tests/page-budget.mjs` | — | Six control budgets +1 for the Send feedback glyph | Theirs. |
+| Migrations | None taken | 0009 (0007 and 0008 untouched) | Theirs; this branch takes no number. |
