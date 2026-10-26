@@ -579,10 +579,15 @@
       "id": "CH-76",
       "tier": "M",
       "owner": "F1",
-      "status": "in_progress",
+      "status": "integrated",
       "summary": "Explore / graph: focus ring, aether for the graph only, no accent as selection",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "crankmagic-graph: 30; existing graph relation semantics preserved",
+        "r4-workshop-journey: 40; actual computed selected ink/background and Aether focus, instrumented native canvas check badges, dark/light/bronze",
+        "Four joined-journey deliberate regressions caught; later whole-page primary/inline-error sweep remains open",
+        "Final screenshots in workbench/r4-workshop-20261026/work/r4-joined-shots, not a claim of real simulation or AI execution"
+      ],
+      "commit": "d166fa99"
     },
     {
       "id": "CH-80",

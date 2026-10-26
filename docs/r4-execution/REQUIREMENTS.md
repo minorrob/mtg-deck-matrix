@@ -54,7 +54,7 @@
 | CH-73 | F1 | integrated | d9eed16f |
 | CH-74 | F1 | integrated | 6a5c2883 |
 | CH-75 | F1 | integrated | d9eed16f |
-| CH-76 | F1 | in_progress | Pending |
+| CH-76 | F1 | integrated | d166fa99 |
 | CH-80 | F2 | integrated | 70dfdacf |
 | CH-81 | F2 | integrated | 6a5c2883 |
 | CH-82 | F2 | integrated | 70dfdacf |
