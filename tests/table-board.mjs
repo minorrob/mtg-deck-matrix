@@ -1503,6 +1503,7 @@ try {
   const replyFocus=await rob.page.evaluate(()=>{const active=document.activeElement,more=document.querySelector('#cm-board-coach .cm-coach-more'),drawer=more?.closest('.cm-stage-side,.cm-stage-rail');return {active:{tag:active?.tagName,class:active?.className,action:active?.dataset.action},summaryFocused:active===more?.querySelector('summary'),open:more?.open,drawerScroll:drawer?.scrollTop};});
   if(SHOTS)writeFileSync(path.join(SHOTS,'coach-more-reply-focus.json'),JSON.stringify(replyFocus,null,2));
   ok(await focusOn("summary"), `and the focus stays on ⋯: ${JSON.stringify(replyFocus)}`);
+  await openCoachQuestions(rob.page);
   releaseReply = rob.holdCoachReply();
   await rob.page.locator('#cm-board-coach [data-action=board-coach-ask]').first().click();
   await rob.page.locator('#cm-board-coach [data-action=board-coach-clear]').focus();
