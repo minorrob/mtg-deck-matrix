@@ -1132,7 +1132,8 @@ globalThis.CrankBoard = Object.seal({
       return `<span class="cm-board-pie-life${p.playerId===view.state.turnPlayerId?' is-active':''}" data-seat="${p.playerId}" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%"><b>${p.health.life}</b><small>${e(p.playerId===view.seat?'You':p.name)}</small></span>`;
     }).join("");
     const said = ps.map((p) => `${p.playerId === view.seat ? "You" : p.name} ${p.health.life}`).join(", ");
-    return `<div class="cm-board-pie" role="group" aria-label="Life: ${e(said)}" style="background:conic-gradient(${stops.join(",")})">${totals}
+    const active=parts.find(({p})=>p.playerId===view.state.turnPlayerId),glow=active?`<i class="cm-board-pie-turn" data-seat="${active.p.playerId}" aria-hidden="true" style="background:conic-gradient(from ${active.at[0]}deg,var(--color-aether) 0deg ${active.at[1]-active.at[0]}deg,transparent ${active.at[1]-active.at[0]}deg 360deg)"></i>`:'';
+    return `<div class="cm-board-pie" role="group" aria-label="Life: ${e(said)}" style="background:conic-gradient(${stops.join(",")})">${glow}${totals}
       <button type="button" class="cm-board-center" data-action="board-vitals" aria-label="Table vitals"><img src="${LOGO}" alt=""></button><span class="cm-board-pie-priority">Priority: ${e(view.state.priorityPlayerId===view.seat?'you':nameOf(view.state.priorityPlayerId))}</span></div>`;
   }
   /* THE FOCUS VIEW: the seat pane, then the board on the mat, the largest 16:9 that fits; the hand docked over its

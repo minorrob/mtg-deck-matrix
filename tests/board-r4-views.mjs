@@ -22,6 +22,7 @@ try{
   const f=await open(mode),{page,context,errors}=f;
   await page.evaluate(choice=>__r4Act('set-theme',{themeChoice:choice}),mode==='focus'?'bronze-basalt-light':mode==='full'?'chalk-coal':'sapphire-obsidian');
   if(mode==='table') {eq(await tableClearance(page),[],'Table menus and dial text clear actual seat facts');
+   eq(await page.locator('.cm-board-pie-turn').getAttribute('data-seat'),String(f.current.state.turnPlayerId),'life dial glows on the authoritative active seat slice');await f.feed(v=>v.state.turnPlayerId=1);eq(await page.locator('.cm-board-pie-turn').getAttribute('data-seat'),'1','life dial active slice follows a real room view update');ok(await page.locator('.cm-board-pie-turn').evaluate(el=>getComputedStyle(el).backgroundImage.includes('conic-gradient')&&getComputedStyle(el).maskImage.includes('radial-gradient')),'active-seat glow paints its own annular slice');
    ok(await page.locator('.cm-board-hand .cm-bcard').first().evaluate(el=>el.getBoundingClientRect().height>=110),'Table hand thumbnails at least 110px');
    eq(await page.locator('.cm-hand-legend').count(),1,'hand legend appears once');eq(await page.locator('.cm-board-pie-life small').count(),f.current.state.players.length,'life dial names every seat');ok(await page.locator('.cm-board-pie-priority').textContent(),'life dial says who holds priority');
   }
