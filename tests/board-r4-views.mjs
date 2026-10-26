@@ -1,0 +1,44 @@
+/* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE. */
+import assert from 'node:assert/strict';import {readFileSync,mkdirSync} from 'node:fs';import path from 'node:path';import {openBrowser,ROOT} from './uat/browser-runner.mjs';
+const {browser,base,stub,close}=await openBrowser({name:'board-r4-views',flag:'GEOMETRY_REQUIRED'});
+const sample=JSON.parse(readFileSync(path.join(ROOT,'docs/reference/replit-sample-views.json'),'utf8')).views[13];
+const html=readFileSync(path.join(ROOT,'index.html'),'utf8').replace('</head>','<meta name="crankmagic-accounts" content="on"><meta name="crankmagic-play" content="cloud"></head>');
+let checks=0;const eq=(a,b,m)=>{assert.deepEqual(a,b,m);checks++;};const ok=(c,m)=>{assert.ok(c,m);checks++;};
+const land=(id,tapped=false)=>({cardId:id,name:'Island',owner:0,controller:0,types:['Land'],keywords:[],faceDown:false,tapped,counters:{},power:null,toughness:null,damage:0,attachments:[]});
+function fixture(){const v=structuredClone(sample);v.revision=8000;v.state.combat=null;v.state.phase='MAIN1';v.state.players[0].zones.Battlefield.cards=[land(9001)];v.decision={id:'priority:input',kind:'priority',mode:'one',min:1,max:1,title:'Your priority',options:[{index:0,act:'pass',label:'Pass priority'},{index:1,act:'activate-mana',label:'Island',cardId:9001,detail:'{U}'}]};return v;}
+async function open(mode,width=1440,touch=false,v=fixture(),available=true){
+ const context=await browser.newContext({viewport:{width,height:width<500?844:900},reducedMotion:'reduce',serviceWorkers:'block',hasTouch:touch,isMobile:touch});await context.addInitScript(mode=>{localStorage.setItem('cm-board-view',mode);localStorage.setItem('crankmagic-audio-muted','true');(globalThis.CrankFeatures||=[]).push(C=>{globalThis.__r4Act=(name,data)=>C.actions[name]({dataset:data});});},mode);
+ const page=await context.newPage();if(stub)await stub(page);const sent=[],errors=[];let socket,current=v;
+ page.on('pageerror',e=>errors.push(e.message));await page.route(`${base}/index.html*`,r=>r.fulfill({contentType:'text/html',body:html}));await page.route(`${base}/api/me`,r=>r.fulfill({json:{email:'input@example.com'}}));await page.route(`${base}/api/library**`,r=>r.fulfill({json:{head:null}}));
+ await page.route(`${base}/api/ai-coach`,r=>r.fulfill({json:{open:available}}));await page.route(`${base}/api/ai/coach`,r=>r.fulfill({json:{answer:'Consider your next turn.'}}));
+ const table={tableId:'r4input01',phase:'playing',matchId:v.matchId,away:[],blockers:[],rules:{},seats:v.state.players.map(p=>({seatId:p.playerId,name:p.name,kind:p.playerId===v.seat?'human':'ai',you:p.playerId===v.seat,occupied:true,ready:true,mat:'felt'}))};
+ await page.route(`${base}/api/tables**`,r=>r.fulfill({json:{table,now:Date.now()}}));await page.routeWebSocket(/\/api\/tables\/r4input01\/connect$/,s=>{socket=s;s.onMessage(m=>sent.push(JSON.parse(m)));s.send(JSON.stringify({type:'view',view:v}));});
+ await page.goto(`${base}/index.html#table?id=r4input01`);await page.locator('.cm-mat [data-card="9001"]').first().waitFor();
+ return {page,context,sent,errors,get current(){return current;},feed:async change=>{const next=structuredClone(current);change(next);next.revision++;current=next;socket.send(JSON.stringify({type:'receipt',receipt:{}}));socket.send(JSON.stringify({type:'view',view:next}));await page.waitForTimeout(100);}};
+}
+const card=id=>`.cm-mat[data-seat="0"] .cm-bcard[data-action="board-card"][data-card="${id}"]`;
+try{
+ for(const mode of ['table','focus','full']) {
+  const f=await open(mode),{page,context,errors}=f;
+  if(mode==='table') {
+   ok(await page.locator('.cm-board-hand .cm-bcard').first().evaluate(el=>el.getBoundingClientRect().height>=110),'Table hand thumbnails at least 110px');
+   eq(await page.locator('.cm-hand-legend').count(),1,'hand legend appears once');eq(await page.locator('.cm-board-pie-life small').count(),f.current.state.players.length,'life dial names every seat');ok(await page.locator('.cm-board-pie-priority').textContent(),'life dial says who holds priority');
+  }
+  if(mode==='focus') {
+   const strip=page.locator('.cm-other-seats');ok(await strip.isVisible(),'Other seats visible without opening menu');eq(await strip.locator('.cm-seat--stack').count(),f.current.state.players.length-1,'Other seats lists every other public seat');eq(await strip.locator('.cm-bcard').count(),0,'Other seats never renders private hand cards');ok((await strip.textContent()).includes('in hand'),'Other seats shows public hand counts');
+   await strip.locator('[data-action=board-rotate][data-by="1"]').click();eq(await page.locator('.cm-board-stage>.cm-mat').getAttribute('data-seat'),'1','next focuses next seat');await page.locator('.cm-other-seats [data-action=board-view]').click();eq(await page.locator('#cm-board').getAttribute('data-view'),'table','All seats returns to Table');await page.evaluate(()=>__r4Act('board-view',{view:'focus'}));
+  }
+  await page.evaluate(()=>__r4Act('board-coach',{}));const input=page.locator('#cm-board-coach .cm-coach-input');await input.waitFor();await input.fill('a draft that stays');await input.evaluate(el=>{globalThis.__coachInput=el;el.focus();el.setSelectionRange(2,7);});
+  const before=await input.boundingBox(),summary=page.locator('#cm-board-coach .cm-coach-questions>summary');await summary.click();eq(await summary.getAttribute('aria-expanded'),'true',`${mode}: Questions expands accessibly`);const after=await input.boundingBox();eq(after.y,before.y,`${mode}: Questions overlay never moves input`);await page.keyboard.press('Escape');eq(await summary.getAttribute('aria-expanded'),'false',`${mode}: Escape closes only Questions`);
+  await input.focus();await input.evaluate(el=>el.setSelectionRange(2,7));await f.feed(v=>v.state.turn++);ok(await input.evaluate(el=>el===__coachInput),`${mode}: room redraw keeps actual textarea node`);eq(await input.inputValue(),'a draft that stays',`${mode}: redraw keeps draft`);eq(await input.evaluate(el=>[el.selectionStart,el.selectionEnd]),[2,7],`${mode}: redraw keeps selection`);
+  await summary.click();await page.locator('#cm-coach-question-list button').first().click();await page.locator('.cm-coach-msg.is-coach').waitFor();ok(await input.evaluate(el=>el===__coachInput),`${mode}: async reply keeps actual textarea`);eq(await input.inputValue(),'a draft that stays',`${mode}: prompt reply never clears typed draft`);eq(await page.locator('#cm-board-coach .cm-coach-head').evaluate(el=>el.getBoundingClientRect().height),36,`${mode}: one Coach header at 36px`);
+  eq(await page.locator('.cm-stage-module button button,.cm-stage-module [role=button] button').count(),0,`${mode}: drawer disclosures have no nested buttons`);
+  await page.locator('#cm-board-coach [data-action=board-coach]').click();
+  if(process.env.UAT_SHOTS){mkdirSync(process.env.UAT_SHOTS,{recursive:true});await page.screenshot({path:path.join(process.env.UAT_SHOTS,`r4-views-${mode}.png`)});}
+  eq(errors,[],`${mode}: no browser errors`);await context.close();
+ }
+ {
+  const {page,context}=await open('focus',390,true,fixture(),false);await page.evaluate(()=>__r4Act('board-coach',{}));await page.locator('.cm-coach-unavailable').waitFor();eq(await page.locator('.cm-coach-input').count(),0,'unavailable Coach has no textarea');ok((await page.locator('.cm-coach-unavailable').textContent()).includes("isn't at this table yet"),'unavailable Coach says honest availability');await page.locator('.cm-coach-unavailable [data-action=page-help]').click();await page.locator('#cm-dialog[open]').waitFor();ok(await page.locator('#cm-dialog').isVisible(),'unavailable Coach Help opens actual table help');await context.close();
+ }
+}finally{await close();}
+console.log(`board-r4-views: ${checks} checks passed`);

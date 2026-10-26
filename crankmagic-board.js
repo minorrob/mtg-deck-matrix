@@ -612,7 +612,7 @@ globalThis.CrankBoard = Object.seal({
     return `<div class="cm-seat-header${active ? ' is-turn' : ''}${p.health.life <= 10 ? ' is-danger' : ''}" data-seat-header="${p.playerId}">
       <span class="cm-seat-portrait" aria-hidden="true"><span class="cm-seat-initial">${e(initial)}</span>${commander?.name ? `<img src="${e(pictureOf(commander.name))}" alt="" referrerpolicy="no-referrer">` : ""}</span>
       <span class="cm-seat-identity"><strong class="cm-mat-name">${e(label)}</strong><span class="cm-seat-commander">${e(commander?.name || 'Command zone')}</span></span>
-      ${vitals(p, {button:interactive})}<span class="cm-seat-hand">${p.zones.Hand.count} in hand</span>
+      ${vitals(p, {button:interactive})}${mode==='focus' && p.playerId===focus?`<span class="cm-seat-resources">${p.mana.reduce((n,m)=>n+m.amount,0)} mana open · land drop ${p.landsPlayed?'used':'available'}</span>`:''}<span class="cm-seat-hand">${p.zones.Hand.count} in hand</span>
       <span class="cm-seat-state${view.state.priorityPlayerId === p.playerId ? ' has-priority' : ''}">${e(state)}</span></div>`;
   }
   document.addEventListener('error', event => {if (event.target.matches?.('.cm-seat-portrait img')) event.target.remove();}, true);
@@ -1112,11 +1112,11 @@ globalThis.CrankBoard = Object.seal({
     if (over) stops.unshift(`${tint(over.p)} 0% ${pct(over.at[1] - 360)}`);
     const totals = parts.map(({p, at}) => {
       const mid = ((at[0] + at[1]) / 2) * Math.PI / 180, x = 50 + 30 * Math.sin(mid), y = 50 - 30 * Math.cos(mid);
-      return `<b class="cm-board-pie-life" data-seat="${p.playerId}" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%">${p.health.life}</b>`;
+      return `<span class="cm-board-pie-life${p.playerId===view.state.turnPlayerId?' is-active':''}" data-seat="${p.playerId}" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%"><b>${p.health.life}</b><small>${e(p.playerId===view.seat?'You':p.name)}</small></span>`;
     }).join("");
     const said = ps.map((p) => `${p.playerId === view.seat ? "You" : p.name} ${p.health.life}`).join(", ");
     return `<div class="cm-board-pie" role="group" aria-label="Life: ${e(said)}" style="background:conic-gradient(${stops.join(",")})">${totals}
-      <button type="button" class="cm-board-center" data-action="board-vitals" aria-label="Table vitals"><img src="${LOGO}" alt=""></button></div>`;
+      <button type="button" class="cm-board-center" data-action="board-vitals" aria-label="Table vitals"><img src="${LOGO}" alt=""></button><span class="cm-board-pie-priority">Priority: ${e(view.state.priorityPlayerId===view.seat?'you':nameOf(view.state.priorityPlayerId))}</span></div>`;
   }
   /* THE FOCUS VIEW: the seat pane, then the board on the mat, the largest 16:9 that fits; the hand docked over its
      bottom edge. */
@@ -1129,7 +1129,9 @@ globalThis.CrankBoard = Object.seal({
   }
   function focusView() {
     const p = players()[focus] || players()[view.seat];
-    return `<div class="cm-board-body" style="--pane-w:0px;--panel-w:${panelWidth()}px"><div class="cm-board-main"><div class="cm-board-stage">${fan(p.playerId)}${mat(p, {size: "focus"})}</div>${ask()}${hand()}</div></div>`;
+    const other=players().filter(x=>x.playerId!==p.playerId);
+    const strip=`<section class="cm-other-seats" aria-label="Other seats"><header><b>Other seats</b>${b('All seats','board-view',{view:'table'})}${ib('‹','board-rotate','Previous seat',{by:'-1'})}${ib('›','board-rotate','Next seat',{by:'1'})}</header><div>${other.map(x=>`<button type="button" class="cm-seat--stack${x.playerId===view.state.turnPlayerId?' is-turn':''}" data-action="board-focus" data-seat="${x.playerId}" aria-label="View ${e(x.name)}'s board, ${x.health.life} life"><strong>${e(seatLabel(x))}</strong><span>♥ ${x.health.life} · ☠ ${x.health.poison}</span><span>${controlledCards(x.playerId).length} permanents · ${x.zones.Hand.count} in hand</span><span aria-hidden="true">⤢ Focus</span></button>`).join('')}</div></section>`;
+    return `<div class="cm-board-body" style="--pane-w:0px;--panel-w:${panelWidth()}px"><div class="cm-board-main">${strip}<div class="cm-board-stage">${fan(p.playerId)}${mat(p, {size: "focus"})}</div>${ask()}${hand()}</div></div>`;
   }
   function boardsPane() {
     return `<nav class="cm-board-pane${paneShut ? " is-shut" : ""}" aria-label="Boards"><div class="cm-board-pane-head"><h3>Boards</h3>${chevToggle(paneShut, "board-pane", paneShut ? "Show the boards" : "Collapse the boards")}</div>${paneShut ? "" : players().map(tile).join("") + b("My board", "board-focus", {seat: String(view.seat)}, false) + `<button type="button" class="cm-board-coach-open" data-action="board-coach" aria-pressed="${coach.open}" aria-label="CrankMagic Coach">${COACH}Coach</button>`}</nav>`;
@@ -1214,8 +1216,8 @@ globalThis.CrankBoard = Object.seal({
         <label title="Table length on your side">↕ <input type="range" min="100" max="${most}" step="1" value="${long}" data-stage-length aria-label="Table length on your side" aria-valuetext="${long}%"><output>${long}%</output></label>`;
   }
   function stageProfile(me) {
-    const initials = (me.name || "Player").trim().split(/\s+/).slice(0,2).map(s=>s[0]).join("").toUpperCase();
-    return `<div class="cm-stage-profile"><button type="button" class="cm-profile-avatar" data-action="board-profile" aria-label="Profile menu" aria-expanded="${profileOpen}" title="${e(me.name)} · Profile menu"><span aria-hidden="true">${e(initials)}</span></button>${profileOpen ? `<div class="cm-profile-menu" role="group" aria-label="Profile"><strong>${e(me.name)}</strong><span class="cm-board-tools">${opens(b("Pages", "board-menu"),menuOpen)}${menuOpen ? menu() : ""}</span><span class="cm-board-tools">${gb(CLOCK, "History", "board-history", {}, {expanded:historyOpen})}${historyOpen ? historyMenu() : ""}</span>${b("Settings", "board-tools").replace("<button ", '<button aria-haspopup="dialog" ')}${b("Arrange drawer order", "board-modules-edit")}${b("Account & app settings", "open-settings")}${b("Help", "page-help", {help:"table"})}</div>` : ""}</div>`;
+    const initials=(me.name || 'Player').trim().split(/\s+/).slice(0,2).map(s=>s[0]).join('').toUpperCase();
+    return `<div class="cm-stage-profile"><button type="button" class="cm-profile-avatar" data-action="board-profile" aria-label="Account menu" aria-haspopup="true" aria-controls="cm-user-menu" aria-expanded="${C.accountMenuOpen?.() || false}" title="${e(me.name)} · Account menu"><span aria-hidden="true">${e(initials)}</span></button></div>`;
   }
   function moduleSettings() {
     tools = false; profileOpen = false; draw();
@@ -1245,9 +1247,8 @@ globalThis.CrankBoard = Object.seal({
       const collapsed = id === 'actions' ? actionsShut : foldedModules.has(id);
       const h = moduleH(id), sized = !collapsed;
       return `<section class="cm-stage-module cm-disclosure${h && sized ? ' has-height' : ''}" data-module="${id}" aria-label="${title} module"${h && sized ? ` style="--module-h:${h}px"` : ''}>
-        <header role="button" tabindex="0" data-action="board-module-toggle" data-module="${id}" aria-expanded="${!collapsed}" aria-controls="cm-module-${id}"><h3>${id === 'actions' ? 'Your decision' : title}</h3>
-        ${id === 'actions' ? chevToggle(actionsShut, 'board-actions-toggle', actionsShut ? 'Expand decision' : 'Collapse decision') : ''}
-        ${paneEditing && id !== 'actions' ? `${ib('↑', 'board-module-move', `Move ${title} up`, {module:id, side, by:'-1'}, {disabled:i===0})}${ib('↓', 'board-module-move', `Move ${title} down`, {module:id, side, by:'1'}, {disabled:i===ids.length-1})}${ib('×', 'board-module-remove', `Remove ${title}`, {module:id, side})}` : ''}</header>
+        ${id==='coach' && coach.open && !collapsed?'':`<header><h3><button type="button" class="cm-module-toggle" data-action="${id==='actions'?'board-actions-toggle':'board-module-toggle'}" data-module="${id}" aria-expanded="${!collapsed}" aria-controls="cm-module-${id}">${id==='actions'?'Your decision':title}<span aria-hidden="true">${collapsed?'▸':'▾'}</span></button></h3>
+        ${paneEditing && id !== 'actions' ? `${ib('↑', 'board-module-move', `Move ${title} up`, {module:id, side, by:'-1'}, {disabled:i===0})}${ib('↓', 'board-module-move', `Move ${title} down`, {module:id, side, by:'1'}, {disabled:i===ids.length-1})}${ib('×', 'board-module-remove', `Remove ${title}`, {module:id, side})}` : ''}</header>`}
         <div class="cm-module-body" id="cm-module-${id}"${collapsed ? ' hidden' : ''}>${collapsed ? '' : bodies[id]()}</div>
         ${sized ? `<span class="cm-module-grip">${grip('modh', `${title} height: drag, or use the arrow keys; double-click for its own height`, h || MODH[0], MODH, 'horizontal', ` data-module-id="${id}"`)}</span>` : ''}</section>`;
     }).join("")}</div>`;
@@ -1729,7 +1730,7 @@ globalThis.CrankBoard = Object.seal({
   function handTypes(cards) {
     const n = Object.fromEntries(HAND_TYPES.map((k) => [k, [0, 0]])), live = view.decision && !sending;
     for (const c of cards) {const k = handType(c); n[k][1] += 1; if (live && optionsFor(c.cardId).length) n[k][0] += 1;}
-    return `<ul class="cm-board-hand-types" aria-label="Castable now, of each type in your hand">${HAND_TYPES.map((k) => `<li data-type="${k}"${n[k][0] ? ' class="is-live"' : ""} aria-label="${k}: ${n[k][0]} of ${n[k][1]} castable now"><span>${k}</span><b>${n[k][0]}/${n[k][1]}</b></li>`).join("")}</ul>`;
+    return `<ul class="cm-board-hand-types" aria-label="Castable now, of each type in your hand">${HAND_TYPES.map((k) => `<li data-type="${k}"${n[k][0] ? ' class="is-live"' : ""} aria-label="${k}: ${n[k][0]} of ${n[k][1]} castable now" title="${k}: ${n[k][0]} castable now / ${n[k][1]} in hand"><span>${k}</span><b>${n[k][0]}/${n[k][1]}</b></li>`).join("")}</ul>`;
   }
   /* TURN RESOURCES (Rob's note 9, 2026-10-11: "by land and by card type: how many can be played this turn, how many in
      all, and the mana tapped"). Everything here is read from the view and the decision, nothing worked out: castable is
@@ -1769,7 +1770,7 @@ globalThis.CrankBoard = Object.seal({
     if (!mine) return "";
     const cards = mine.zones.Hand.cards;
     const bar = `<div class="cm-board-traybar">${grip("hand", "The hand's size: drag, or use the arrow keys; the boards keep theirs", scaleOf("hand"), C.cardScaleRange())}${scaleSlider("hand", "Hand cards")}</div>`;
-    return `<section class="cm-board-hand" aria-label="Your hand">${bar}<div class="cm-board-hand-side"><span class="cm-board-hand-head"><button type="button" class="cm-board-showhand" data-action="board-show-hand" aria-label="Show hand (Space)" title="Show hand (Space)" aria-pressed="${!!showing}">✋</button><b class="cm-board-hand-count" aria-label="${cards.length} ${cards.length === 1 ? "card" : "cards"} in your hand">${cards.length}</b></span>${handTypes(cards)}</div>
+    return `<section class="cm-board-hand" aria-label="Your hand">${bar}<div class="cm-board-hand-side"><span class="cm-hand-legend">castable now / in hand</span><span class="cm-board-hand-head"><button type="button" class="cm-board-showhand" data-action="board-show-hand" aria-label="Show hand (Space)" title="Show hand (Space)" aria-pressed="${!!showing}">✋</button><b class="cm-board-hand-count" aria-label="${cards.length} ${cards.length === 1 ? "card" : "cards"} in your hand">${cards.length}</b></span>${handTypes(cards)}</div>
       <div class="cm-board-hand-cards cm-board-cards">${cards.map((c) => card(c, {where: "hand"})).join("")}</div></section>`;
   }
   /* ROTATED TO ANOTHER SEAT (item 20): their hand on the tray as the backs of their cards, in their color. The room
@@ -1953,52 +1954,39 @@ globalThis.CrankBoard = Object.seal({
   /* What the Coach sees, as the person's AI Coach settings say (AI-6): their hand too, or their board only. */
   const handShared = () => C.state.preferences?.aiCoach?.coachSees !== "board";
   function coachContext() {return `Sees your board${handShared() ? ", hand" : ""} and the table${handShared() ? "" : " (your hand withheld)"} · turn ${view && view.state.turn ? view.state.turn : 0}`;}
+  let coachInput=null,coachGate={key:null,available:false};
+  const coachKey=()=>`${C.signedInAs?.() || ''}|${tableId || ''}`;
+  function probeCoach() {
+    const key=coachKey();if(coachGate.key===key)return;
+    coachGate={key,available:false};coachInput=null;coach.thread=[];coach.typing=false;coach.asked++;
+    fetch('/api/ai-coach',{credentials:'same-origin',redirect:'manual'}).then(async response=>response.ok?response.json():null).then(result=>{
+      if(coachGate.key!==key || coachKey()!==key)return;
+      coachGate.available=result?.open===true;drawCoach();
+    }).catch(()=>{if(coachGate.key===key)coachGate.available=false;});
+  }
   function drawCoach() {
-    const panelEl = document.getElementById("cm-board-coach");
-    if (!panelEl) return;
-    panelEl.hidden = !coach.open;
-    /* Desktop reserves space beside the board; a configured Coach module stays in its drawer. */
-    if (!coach.open) {panelEl.innerHTML = ""; return;}
-    dock();
-    /* A redraw keeps what the reader has in hand: the draft, its focus, and ⋯ if it is open (a rebuilt <details> is
-       shut, and the Coach's reply lands on its own timer, so it would snap the menu shut under a pointer). Focus in ⋯
-       stays on ⋯ or on Clear chat; once ⋯ has closed (Clear chat closes it), it goes back to ⋯. */
-    const keep = panelEl.querySelector(".cm-coach-input"), more = panelEl.querySelector(".cm-coach-more"), active = document.activeElement;
-    const typed = keep ? keep.value : "", focused = keep && active === keep, moreOpen = !!(more && more.open);
-    const moreFocus = more && more.contains(active) ? (moreOpen && active.matches("[data-action=board-coach-clear]") ? "[data-action=board-coach-clear]" : "summary") : null;
-    /* A card the Coach names is written [[like this]]: shown in bold, the brackets dropped. */
-    const said = (t) => e(t).replace(/\[\[([^\]]{1,200})\]\]/g, "<b>$1</b>");
-    const extras = (m, i) => {
-      if (m.signIn) return `<div class="cm-coach-chips"><a class="v-button compact" href="/api/ai/login?to=${encodeURIComponent(`#table?id=${tableId}`)}">Sign in to the Coach</a></div>`;
-      const chips = [(m.show || []).length ? b("Show me", "board-coach-show", {i}, false, {cls: "compact"}) : "", (m.plays || []).length || m.threat ? b(m.open ? "Hide why" : "Why?", "board-coach-why", {i}, false, {cls: "compact"}) : ""].join("");
-      const why = m.open ? `<ul class="cm-coach-why">${(m.plays || []).map((p) => `<li><b>${e(p.action)} ${e(p.card)}</b> · ${e(p.why)}</li>`).join("")}${m.threat ? `<li><b>The threat: ${e(m.threat.seat)}</b> · ${e(m.threat.why)}</li>` : ""}</ul>` : "";
-      return chips ? `<div class="cm-coach-chips">${chips}</div>${why}` : "";
-    };
-    const bubble = (m, i) => m.divider ? `<li class="cm-coach-divider"><span>${e(m.divider)}</span></li>`
-      : m.from === "coach" ? `<li class="cm-coach-msg is-coach"><span class="cm-coach-avatar">${COACH}</span><div class="cm-coach-said"><p>${said(m.text)}</p>${extras(m, i)}</div></li>`
-      : `<li class="cm-coach-msg is-${m.from}"><p>${e(m.text)}</p></li>`;
-    panelEl.innerHTML = `<header class="cm-coach-head"><span class="cm-coach-logo">${COACH}</span>
-        <div><h2><span class="cm-coach-brand">CrankMagic </span>Coach</h2><p class="cm-muted" id="cm-coach-context">${e(coachContext())}</p></div>
-        <details class="cm-coach-more"${moreOpen ? " open" : ""}><summary aria-label="More">⋯</summary><div>${b("Clear chat", "board-coach-clear")}</div></details>
-        <button type="button" class="v-button compact" data-action="board-coach" aria-label="Close the Coach">✕</button></header>
-      <ol class="cm-coach-thread">${coach.thread.map(bubble).join("") || `<li class="cm-coach-empty cm-muted">Ask about your board, your hand, or the table.</li>`}
-        ${coach.typing ? `<li class="cm-coach-msg is-coach is-typing" aria-label="The Coach is typing"><span class="cm-coach-avatar">${COACH}</span><p><i></i><i></i><i></i></p></li>` : ""}</ol>
-      <div class="cm-coach-prompts">${COACH_PROMPTS.map((q) => `<button type="button" class="v-button compact" data-action="board-coach-ask" data-q="${e(q)}">${e(q)}</button>`).join("")}</div>
-      <form class="cm-coach-compose" data-coach-form><textarea class="cm-coach-input" rows="1" placeholder="Ask the coach…" aria-label="Ask the coach"></textarea>
-        <button type="submit" class="cm-coach-send" aria-label="Send">➤</button></form>`;
-    const input = panelEl.querySelector(".cm-coach-input");
-    input.value = typed;
-    if (focused) input.focus();
-    else if (moreFocus) panelEl.querySelector(`.cm-coach-more ${moreFocus}`).focus();
-    const thread = panelEl.querySelector(".cm-coach-thread");
-    thread.scrollTop = thread.scrollHeight;
+    const panelEl=document.getElementById('cm-board-coach');if(!panelEl)return;
+    const previous=panelEl.querySelector('.cm-coach-input');if(previous)coachInput=previous;
+    panelEl.hidden=!coach.open;if(!coach.open){panelEl.replaceChildren();return;}
+    probeCoach();dock();
+    const input=coachInput,active=document.activeElement,focused=active===input,selection=input?[input.selectionStart,input.selectionEnd,input.selectionDirection]:null;
+    const more=panelEl.querySelector('.cm-coach-more'),questions=panelEl.querySelector('.cm-coach-questions'),thread=panelEl.querySelector('.cm-coach-thread');
+    const scroll=thread?.scrollTop || 0,bottom=!thread || thread.scrollHeight-thread.clientHeight-scroll<8;
+    const activeKey=active?.closest?.('#cm-board-coach')?C.focusKey(active):null;
+    panelEl.innerHTML=globalThis.CrankCoach?.render({open:coach.open,available:coachGate.available,thread:coach.thread,typing:coach.typing,prompts:COACH_PROMPTS,moreOpen:!!more?.open,questionsOpen:!!questions?.open,tableId,context:coachContext()}) || '';
+    const replacement=panelEl.querySelector('.cm-coach-input');
+    if(replacement && input){replacement.replaceWith(input);if(focused){input.focus({preventScroll:true});input.setSelectionRange(...selection);}}
+    else if(replacement)coachInput=replacement;
+    if(!focused && activeKey)C.focusFind(activeKey)?.focus({preventScroll:true});
+    const next=panelEl.querySelector('.cm-coach-thread');if(next)next.scrollTop=bottom?next.scrollHeight:scroll;
+    globalThis.CrankCoach?.bind(panelEl);
   }
   /* A question to the Coach: POST /api/ai/coach with the table and the question, nothing more -- the table says what is
      on it (cloud/worker.mjs). Signed in to the library only, the AI door's sign-in answers with a redirect, which a
      fetch cannot follow: the reply is then a link to sign in, which comes back here. Any refusal reads as the door said it. */
   async function ask_(text) {
     const q = String(text || "").trim();
-    if (!q || !view || coach.typing) return;
+    if (!q || !view || coach.typing || coachGate.key!==coachKey() || coachGate.available!==true) return;
     const here = stepNow(), last = [...coach.thread].reverse().find((m) => m.divider);
     if (!last || last.divider !== here) coach.thread.push({divider: here});
     coach.thread.push({from: "you", text: q});
@@ -2468,6 +2456,7 @@ globalThis.CrankBoard = Object.seal({
         Object.entries(focusData).every(([key, value]) => el.dataset[key] === value));
       next?.focus({preventScroll: true});
     }
+    if(coach.open && coachGate.key!==coachKey())drawCoach();
     const context = document.getElementById("cm-coach-context");
     if (context && view) context.textContent = coachContext();
     if (caret === null) return;
@@ -2646,16 +2635,18 @@ globalThis.CrankBoard = Object.seal({
            (Rob, 2026-09-30, item 25; the mock's tray over the mat's foot cut the cards off). The tray's card follows the
            mat's width, so the two are settled together -- measured at a guess, then at the mat that leaves it room --
            and a last step makes sure the pair fits the window, since a narrower mat never needs a taller tray. */
-        const main = stage.parentElement, box = main.getBoundingClientRect(), tray = main.querySelector(":scope > .cm-board-hand"), GAP = 8;
-        const widest = (trayH) => Math.max(320, Math.floor(Math.min(box.width - 16, (box.height - 8 - GAP - trayH) * 16 / 9)));
+        const main = stage.parentElement, box = main.getBoundingClientRect(), tray = main.querySelector(":scope > .cm-board-hand"), GAP = 8, stripH=main.querySelector('.cm-other-seats')?.offsetHeight || 0;
+        main.style.setProperty('--seats-strip-h',`${stripH}px`);
+        const widest = (trayH) => Math.max(320, Math.floor(Math.min(box.width - 16, (box.height - stripH - 8 - GAP - trayH) * 16 / 9)));
         /* the tray measured at the table's card size: the hand's own size never moves the mat (Rob, 2026-10-09) */
         const trayAt = (w) => {main.style.setProperty("--mat-w", `${w}px`); return tray ? atTableSize(main, () => tray.getBoundingClientRect().height) : 0;};
         let matW = widest(0);
         for (let k = 0; k < 4; k += 1) {const next = widest(trayAt(matW)); if (Math.abs(next - matW) < 1) break; matW = next;}
+        
         const trayH = trayAt(matW);
-        if (8 + matW * 9 / 16 + GAP + trayH > box.height) {matW = widest(trayH); trayAt(matW);}
+        if (8 + stripH + matW * 9 / 16 + GAP + trayH > box.height) {matW = widest(trayH); trayAt(matW);}
         main.style.setProperty("--mat-reserve", "0px");
-        main.style.setProperty("--tray-top", `${Math.round(8 + matW * 9 / 16 + GAP)}px`);
+        main.style.setProperty("--tray-top", `${Math.round(8 + stripH + matW * 9 / 16 + GAP)}px`);
         /* The card shown large under the pointer is never taller than the mat (Rob, 2026-10-11). */
         host.style.setProperty("--peek-max", `${Math.round(matW * 9 / 16)}px`);
       }
@@ -2946,7 +2937,7 @@ globalThis.CrankBoard = Object.seal({
       if (tools) document.getElementById("cm-dialog")?.close();
       inspection = null; inspectionFrom = null; stackSelected = null; tableId = null; view = null; table = null; tools = false; confirmEnd = false; selected = null; hover = null; showing = null; held = null;
       historyOpen = false; historyFilter = ""; menuOpen = false; stepsOpen = false; panelOpen = false; skipping = null; records = null;
-      coach.open = false; coach.thread = []; coach.typing = false; coach.asked += 1; peek(null); leaveFullscreen();
+      coachInput=null;coachGate={key:null,available:false};coach.open = false; coach.thread = []; coach.typing = false; coach.asked += 1; peek(null); leaveFullscreen();
     },
   };
 
@@ -3234,7 +3225,7 @@ globalThis.CrankBoard = Object.seal({
   actions['board-table-menu'] = el => {tableMenuOpen = !tableMenuOpen; cameraOpen = false; confirmEnd = false; opened(el,tableMenuOpen); draw();};
   actions['board-table-rules'] = () => {tableMenuOpen = false; C.modal('Table rules', `<p>${e(table?.rules?.name || 'Commander')}</p>${b('Close','close')}`); draw();};
   actions['board-leave-page'] = () => {C.board.close(); C.go('game');};
-  actions["board-profile"] = el => {profileOpen=!profileOpen;tools=false;opened(el,profileOpen);draw();};
+  actions["board-profile"] = el => {tools=false;if(C.accountMenuOpen?.())C.closeAccountMenu?.();else C.openAccountMenu?.(el);};
   actions["board-modules-settings"] = moduleSettings;
   C.sideDrawerSettings = moduleSettings;
   actions["board-modules-save"] = async () => {
