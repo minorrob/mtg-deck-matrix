@@ -1112,3 +1112,11 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board [data-card-section]>.cm-bcard.is-tapped,#matrix-v2 .cm-board [data-card-section]>.cm-card-slot:has(>.cm-bcard.is-tapped),#matrix-v2 .cm-board [data-card-section]>.cm-land-stack:is(.is-tapped,:has(.cm-land-tilted)){position:relative;left:calc((var(--zone-cell-width) - var(--bc))/2);top:calc((var(--zone-cell-height) - var(--bc)*1.4)/2)}
 #matrix-v2 .cm-board[data-shell=shared] .cm-stage-camera{right:calc(var(--play-inspector,0px) + var(--stage-side-offset,0px) + 16px)}
 #matrix-v2 .cm-board[data-shell=shared] .cm-table-menu{right:calc(var(--play-inspector,0px) + var(--stage-side-offset,0px) + 126px)}
+#matrix-v2 .cm-board[data-view=full] .cm-stage-top{flex-wrap:wrap}
+#matrix-v2 .cm-board[data-view=full] .cm-stage-top>.cm-stage-camera,#matrix-v2 .cm-board[data-view=full] .cm-stage-top>.cm-table-menu{position:relative;top:auto;right:auto;bottom:auto;flex:none}
+#matrix-v2 .cm-board[data-view=full] .cm-stage-top .cm-stage-camera>div,#matrix-v2 .cm-board[data-view=full] .cm-stage-top .cm-table-menu>div{top:calc(100% + 6px);bottom:auto}
+#matrix-v2 .cm-board[data-view=full]{--full-pane-top:calc(var(--hud-top,58px) + var(--combat-h,0px) + var(--full-action-h,0px) + 24px)}
+#matrix-v2 .cm-board[data-view=full]>.cm-stage-rail,#matrix-v2 .cm-board[data-view=full]>.cm-stage-side,#matrix-v2 .cm-board[data-view=full]>#cm-card-inspector{top:var(--full-pane-top)}
+#matrix-v2 .cm-board[data-view=full]>.cm-stage-side{height:calc(100% - var(--full-pane-top))!important}
+#matrix-v2 .cm-board[data-view=full]>.cm-board-panegrip{top:var(--full-pane-top);height:calc(100% - var(--full-pane-top))}
+#matrix-v2 .cm-board .cm-stage-actions .v-button{font-size:calc(17px*var(--hud-scale,1))}
