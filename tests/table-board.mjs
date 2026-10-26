@@ -1838,11 +1838,12 @@ function tableRowFacts() {
       return {floor,whole:z.height+2>=floor&&z.top>=r.top-1&&z.bottom<=r.bottom+1&&(!c||(c.top>=Math.max(label?.getBoundingClientRect().bottom||z.top,heading?.getBoundingClientRect().bottom||z.top)-1&&c.bottom<=z.bottom+1))};
     };
     const f=zoneFacts(field), l=zoneFacts(lands);
-    const minimum=Math.max(0,mat.offsetHeight-field.offsetHeight-lands.offsetHeight)+f.floor+l.floor;
+    const allocation=field.offsetHeight/(field.offsetHeight+lands.offsetHeight);
+    const minimum=Math.max(0,mat.offsetHeight-field.offsetHeight-lands.offsetHeight)+Math.max(f.floor/allocation,l.floor/(1-allocation));
     const aspectFits=r.width*9/16>=minimum-2;
     const aspect=aspectFits?Math.abs(r.width/r.height-16/9)<.02:r.height+2>=minimum&&r.height>r.width*9/16;
     const cards=[...mat.querySelectorAll('.cm-bcard')];
-    return {seat:mat.dataset.seat,width:r.width,height:r.height,minimum:Math.round(minimum),aspectFits,valid:aspect&&f.whole&&l.whole&&cards.length>0&&cards.every(c=>Math.abs(c.offsetWidth/c.offsetHeight-5/7)<.02)};
+    return {seat:mat.dataset.seat,width:r.width,height:r.height,minimum:Math.round(minimum),allocation,fieldFloor:Math.round(f.floor),landFloor:Math.round(l.floor),aspectFits,valid:aspect&&f.whole&&l.whole&&cards.length>0&&cards.every(c=>Math.abs(c.offsetWidth/c.offsetHeight-5/7)<.02)};
   });
   const grown=rows.some(r=>!r.aspectFits);
   if(focus){const tray=table.querySelector(':scope>.cm-board-hand'),strip=table.querySelector(':scope>.cm-other-seats'),available=table.clientWidth-16,expected=grown?available:Math.min(available,(table.clientHeight-outer(strip)-outer(tray)-16)*16/9);return {mode:'focus',rows,valid:rows.length===1&&rows.every(r=>r.valid),widths:rows.every(r=>Math.abs(r.width-expected)<2),scrolls:table.scrollHeight>table.clientHeight+1,horizontal:table.scrollWidth<=table.clientWidth+1};}
