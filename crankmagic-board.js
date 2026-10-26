@@ -189,6 +189,14 @@ globalThis.CrankBoard = Object.seal({
   const panelWidth = () => {const raw = stored(PANELW_KEY), v = Number(raw); return raw !== null && v >= PANELW[0] && v <= PANELW[1] ? v : 340;};
   let panelTab = "panel";
   const SPLIT_KEY = {panel: "cm-board-split:panel", side: "cm-board-split:side"}, SPLIT = [0.2, 0.8], SPLIT_AT = {panel: 0.45, side: 0.4};
+  /* THE DRAWERS' MODULES, EACH ITS OWN HEIGHT (Rob, 2026-10-26, declaring attackers with the card open: "the card image
+     can't be resized and the bottom selection options I can't see to select ... make the height of the modules grab-n-drag
+     up and down"): a bar under each module drags its height, and a bar under the card read at the top of Actions drags
+     the card's size; both remembered on the device. A module never dragged keeps its own height. */
+  const MODH_KEY = "cm-board-module-h", MODH = [80, 1400], DESK_KEY = "cm-board-desk-card", DESK = [90, 360];
+  const moduleHeights = () => {try {const v = JSON.parse(stored(MODH_KEY) || "{}"); return v && typeof v === "object" ? v : {};} catch {return {};}};
+  const moduleH = (id) => {const v = Number(moduleHeights()[id]); return v >= MODH[0] && v <= MODH[1] ? v : 0;};
+  const deskW = () => {const raw = stored(DESK_KEY), v = Number(raw); return raw !== null && v >= DESK[0] && v <= DESK[1] ? v : 150;};
   const paneWidth = () => {const raw = stored(PANE_KEY), v = Number(raw); return raw !== null && v >= PANE[0] && v <= PANE[1] ? v : 330;};
   const splitOf = (k) => {const raw = stored(SPLIT_KEY[k]), v = Number(raw); return raw !== null && v >= SPLIT[0] && v <= SPLIT[1] ? v : SPLIT_AT[k];};
   let stageSide = false, stageRail = true, cameraOpen = false, stageError = "";
@@ -842,7 +850,7 @@ globalThis.CrankBoard = Object.seal({
     const [lo, hi] = C.cardScaleRange(), v = scaleOf(scope);
     return `<label class="cm-board-scale"><span>${e(label)}</span><input type="range" min="${lo}" max="${hi}" step="1" value="${v}" data-board-scale="${scope}" aria-label="${e(label)}" aria-valuetext="${v}%"><output>${v}%</output></label>`;
   }
-  const grip = (kind, label, now, [lo, hi], orient = "horizontal") => `<span class="cm-board-grip${orient === "vertical" ? " is-upright" : ""}" role="separator" aria-orientation="${orient}" tabindex="0" data-drag="${kind}" aria-label="${e(label)}" aria-valuemin="${lo}" aria-valuemax="${hi}" aria-valuenow="${now}" title="${e(label)}"></span>`;
+  const grip = (kind, label, now, [lo, hi], orient = "horizontal", extra = "") => `<span class="cm-board-grip${orient === "vertical" ? " is-upright" : ""}" role="separator" aria-orientation="${orient}" tabindex="0" data-drag="${kind}"${extra} aria-label="${e(label)}" aria-valuemin="${lo}" aria-valuemax="${hi}" aria-valuenow="${now}" title="${e(label)}"></span>`;
   /* A card-shaped zone: the top card (or the back of the library, its count on it), the name and the count below. */
   function pile(label, zone, top, {back = false, draw: drawing = false} = {}) {
     /* Your library, while your draw waits for you (a game launched with the held draw): clicking it draws, as Draw a card
@@ -1017,7 +1025,7 @@ globalThis.CrankBoard = Object.seal({
       <span class="cm-stage-priority"><span class="cm-board-turn"${view.yourTurn ? ` title="Turn ${s.turn} of the game, counting every player's; your ${ordinal(view.yourTurn)} turn"` : ""}>${s.turn ? `Turn ${s.turn} · ${e(turnName)}${view.yourTurn ? ` (your ${ordinal(view.yourTurn)})` : ""}` : "Before turn 1"}</span><br>Priority: ${e(nameOf(view.state.priorityPlayerId))}<span class="cm-board-waiting" title="${e(waitingText())}">${e(waitingText())}</span>${conn}</span>${alsoButton()}${opens(b(stageRail && !actionsShut ? "Actions" : (view.decision ? "Actions · choice pending" : "Actions"), "board-actions-open", {}, false, {cls:"compact"}), stageRail && !actionsShut)}${pill}${stageProfile(me)}${combatStrip()}</header>`;
   }
   function boardDrawers() { return `<aside class="cm-stage-rail${stageRail ? " is-open" : ""}" aria-label="Left drawer" ${stageRail ? "" : "inert"}>${stageModules("left")}${boardsPane()}</aside>${stageRail ? `<span class="cm-board-panegrip">${grip("pane", "Actions and boards width: drag, or use the arrow keys", paneWidth(), PANE, "vertical")}</span>` : ""}${ib(stageRail ? "◂" : "▸", "board-stage-rail", "Toggle board tools", {}, {cls: "cm-stage-handle cm-stage-left", pressed: stageRail})}
-      <aside class="cm-full-side cm-stage-side${stageSide ? " is-open" : ""}" aria-label="The table" ${stageSide ? "" : "inert"} style="--split:${Math.round(splitOf("side") * 100)}%">${stageEnabled() ? "" : `<span class="cm-board-panelgrip">${grip("panelw", "The drawer’s width: drag, or use the arrow keys", panelWidth(), PANELW, "vertical")}</span>`}<header><b>Your pane</b>${ib("⚙", "board-modules-edit", "Arrange modules", {}, {pressed: paneEditing})}${ib("✕", "board-stage-side", "Close table panel")}</header>
+      <aside class="cm-full-side cm-stage-side${stageSide ? " is-open" : ""}" aria-label="The table" ${stageSide ? "" : "inert"} style="--split:${Math.round(splitOf("side") * 100)}%">${stageSide ? `<span class="cm-board-panelgrip">${grip("panelw", "The drawer’s width: drag, or use the arrow keys", panelWidth(), PANELW, "vertical")}</span>` : ""}<header><b>Your pane</b>${ib("⚙", "board-modules-edit", "Arrange modules", {}, {pressed: paneEditing})}${ib("✕", "board-stage-side", "Close table panel")}</header>
         ${stageModules()}</aside>
       ${ib(stageSide ? "▸" : "◂", "board-stage-side", "Toggle table panel", {}, {cls: "cm-stage-handle cm-stage-right", pressed: stageSide})}`; }
   function cameraMenu() { return `<div class="cm-stage-camera"><button type="button" data-action="board-camera" aria-expanded="${cameraOpen}">Camera ▾</button>${cameraOpen ? `<div>${phone() ? "" : switcher()}<span>View seats</span>${ib("◀", "board-rotate", "Previous seat", {by: "-1"})}${ib("▶", "board-rotate", "Next seat", {by: "1"})}
@@ -1065,7 +1073,8 @@ globalThis.CrankBoard = Object.seal({
     };
     return `<div class="cm-stage-modules" data-module-side="${side}" aria-label="${side === "left" ? "Left" : "Right"} drawer modules">${ids.map((id, i) => {
       const title = PANE_MODULES.find(([key]) => key === id)[1];
-      return `<section class="cm-stage-module" data-module="${id}" aria-label="${title} module"><header><h3>${title}</h3>${id === "actions" ? chevToggle(actionsShut, "board-actions-toggle", actionsShut ? "Expand Actions" : "Collapse Actions") : ""}${paneEditing && id !== "actions" ? `<button type="button" class="cm-module-drag" draggable="true" data-module-drag="${id}" aria-label="Drag ${title}; use the adjacent move buttons for keyboard control">⠿</button>${ib("↑", "board-module-move", `Move ${title} up`, {module:id, side, by:"-1"}, {disabled:i===0})}${ib("↓", "board-module-move", `Move ${title} down`, {module:id, side, by:"1"}, {disabled:i===ids.length-1})}${ib("×", "board-module-remove", `Remove ${title}`, {module:id, side})}` : ""}</header><div class="cm-module-body">${bodies[id]()}</div></section>`;
+      const h = moduleH(id), sized = !(id === "actions" && actionsShut);
+      return `<section class="cm-stage-module${h && sized ? " has-height" : ""}" data-module="${id}" aria-label="${title} module"${h && sized ? ` style="--module-h:${h}px"` : ""}><header><h3>${title}</h3>${id === "actions" ? chevToggle(actionsShut, "board-actions-toggle", actionsShut ? "Expand Actions" : "Collapse Actions") : ""}${paneEditing && id !== "actions" ? `<button type="button" class="cm-module-drag" draggable="true" data-module-drag="${id}" aria-label="Drag ${title}; use the adjacent move buttons for keyboard control">⠿</button>${ib("↑", "board-module-move", `Move ${title} up`, {module:id, side, by:"-1"}, {disabled:i===0})}${ib("↓", "board-module-move", `Move ${title} down`, {module:id, side, by:"1"}, {disabled:i===ids.length-1})}${ib("×", "board-module-remove", `Remove ${title}`, {module:id, side})}` : ""}</header><div class="cm-module-body">${bodies[id]()}</div>${sized ? `<span class="cm-module-grip">${grip("modh", `${title} height: drag, or use the arrow keys; double-click for its own height`, h || MODH[0], MODH, "horizontal", ` data-module-id="${id}"`)}</span>` : ""}</section>`;
     }).join("")}</div>`;
   }
   function stageHand(p) {
@@ -1583,7 +1592,7 @@ globalThis.CrankBoard = Object.seal({
   function deskCard() {
     if (!deskInspection()) return "";
     const c = inspectedCard();
-    return c ? `<div class="cm-action-card" aria-label="${e(c.name)}">${card(c, {where: "pick", action: "board-zoom-open"})}</div>` : "";
+    return c ? `<div class="cm-action-card" aria-label="${e(c.name)}" style="--desk-card-w:${deskW()}px">${card(c, {where: "pick", action: "board-zoom-open"})}</div><span class="cm-desk-grip">${grip("deskcard", "The card's size: drag, or use the arrow keys", deskW(), DESK)}</span>` : "";
   }
   function inspector() {
     if (!inspection || deskInspection()) return "";
@@ -2261,7 +2270,12 @@ globalThis.CrankBoard = Object.seal({
     for (const el of host.querySelectorAll('[data-zone-scroll]')) {const pos=zonePositions.get(`${host.dataset.view}:${el.dataset.zoneScroll}`);if(pos){el.scrollLeft=pos[0];el.scrollTop=pos[1];}}
     for (const el of host.querySelectorAll("[data-block-key]")) el.scrollLeft = blockPositions.get(el.dataset.blockKey) || 0;
     const options = host.querySelector("#cm-board-decision .cm-board-options");
-    if (choiceScroll !== null && options) options.scrollTop = choiceScroll;
+    if (choiceScroll !== null && options) {
+      options.scrollTop = choiceScroll;
+      /* ...and the choice in hand stays whole in it, should the list come back shorter (a pick's Confirm row appearing). */
+      const held = options.contains(document.activeElement) ? document.activeElement : null;
+      if (held) {const r = held.getBoundingClientRect(), b = options.getBoundingClientRect(); if (r.bottom > b.bottom) options.scrollTop += r.bottom - b.bottom + 4; else if (r.top < b.top) options.scrollTop -= b.top - r.top + 4;}
+    }
     const nextFight = host.querySelector(".cm-combat-groups");
     if (nextFight && nextFight.dataset.combatKey === fightPosition?.key) {nextFight.scrollLeft = fightPosition.x; nextFight.scrollTop = fightPosition.y;}
     if (before) motionPlay(host, before);
@@ -2564,6 +2578,26 @@ globalThis.CrankBoard = Object.seal({
     const g = document.querySelector('#cm-board [data-drag="panelw"]');
     if (g) g.setAttribute("aria-valuenow", String(w));
     fit();
+    return w;
+  }
+  function setModuleH(id, v) {
+    const h = Math.min(MODH[1], Math.max(MODH[0], Math.round(v))), all = moduleHeights();
+    all[id] = h; keep(MODH_KEY, JSON.stringify(all));
+    for (const m of document.querySelectorAll(`#cm-board .cm-stage-module[data-module="${id}"]`)) {
+      m.classList.add("has-height"); m.style.setProperty("--module-h", `${h}px`);
+      m.querySelector('[data-drag="modh"]')?.setAttribute("aria-valuenow", String(h));
+    }
+    return h;
+  }
+  function clearModuleH(id) {
+    const all = moduleHeights(); delete all[id]; keep(MODH_KEY, JSON.stringify(all));
+    for (const m of document.querySelectorAll(`#cm-board .cm-stage-module[data-module="${id}"]`)) {m.classList.remove("has-height"); m.style.removeProperty("--module-h");}
+  }
+  function setDeskW(v) {
+    const w = Math.min(DESK[1], Math.max(DESK[0], Math.round(v)));
+    keep(DESK_KEY, w);
+    for (const c of document.querySelectorAll("#cm-board .cm-action-card")) c.style.setProperty("--desk-card-w", `${w}px`);
+    for (const g of document.querySelectorAll('#cm-board [data-drag="deskcard"]')) g.setAttribute("aria-valuenow", String(w));
     return w;
   }
   function setSplit(k, v) {
@@ -3651,6 +3685,9 @@ globalThis.CrankBoard = Object.seal({
     const kind = el.dataset.drag, tbl = document.querySelector("#cm-board .cm-board-table");
     if (kind === "pane") drag = {kind, x: event.clientX, from: paneWidth()};
     else if (kind === "panelw") drag = {kind, x: event.clientX, from: panelWidth()};
+    /* A module's height from the height it shows now; the card's size by the height dragged (a card is 7 tall for 5 wide). */
+    else if (kind === "modh") {const body = el.closest(".cm-stage-module")?.querySelector(":scope>.cm-module-body"); drag = {kind, y: event.clientY, id: el.dataset.moduleId, from: body ? body.getBoundingClientRect().height : moduleH(el.dataset.moduleId) || 200};}
+    else if (kind === "deskcard") {const c = el.parentElement?.previousElementSibling; drag = {kind, y: event.clientY, from: c?.matches(".cm-action-card") ? Math.min(deskW(), c.getBoundingClientRect().height * 5 / 7) : deskW()};}
     else if (kind === "panel" || kind === "side") {
       const col = el.closest(kind === "panel" ? ".cm-board-panel" : ".cm-full-side");
       drag = {kind, y: event.clientY, from: splitOf(kind), per: Math.max(1, col ? col.getBoundingClientRect().height : 600)};
@@ -3671,11 +3708,15 @@ globalThis.CrankBoard = Object.seal({
     if (drag.kind === "pane") {setPane(drag.from + event.clientX - drag.x); return;}
     if (drag.kind === "panelw") {setPanelW(drag.from - (event.clientX - drag.x)); return;}
     const dy = event.clientY - drag.y;
+    if (drag.kind === "modh") {setModuleH(drag.id, drag.from + dy); return;}
+    if (drag.kind === "deskcard") {setDeskW(drag.from + dy * 5 / 7); return;}
     if (drag.kind === "panel" || drag.kind === "side") setSplit(drag.kind, drag.from + dy / drag.per);
     else if (drag.kind === "rows") setRows(drag.from + (drag.side ? event.clientX - drag.x : dy) / drag.per);
     else setScale("hand", drag.from - dy / drag.per * 100);
   });
   const endDrag = () => {if (drag) {drag = null; document.documentElement.classList.remove("cm-dragging");}};
+  /* A double click on a module's bar gives it back its own height. */
+  document.addEventListener("dblclick", (event) => {const el = event.target.closest && event.target.closest('#cm-board [data-drag="modh"]'); if (el) clearModuleH(el.dataset.moduleId);});
   document.addEventListener("pointerup", endDrag);
   document.addEventListener("pointercancel", endDrag);
   document.addEventListener("keydown", (event) => {
@@ -3698,6 +3739,9 @@ globalThis.CrankBoard = Object.seal({
     if (!["ArrowUp", "ArrowDown"].includes(event.key)) return;
     event.preventDefault();
     const up = event.key === "ArrowUp" ? 1 : -1;
+    /* A bar under a module or the card: ↓ makes it taller, as dragging down does. */
+    if (el.dataset.drag === "modh") {const body = el.closest(".cm-stage-module")?.querySelector(":scope>.cm-module-body"); setModuleH(el.dataset.moduleId, (moduleH(el.dataset.moduleId) || body?.getBoundingClientRect().height || 200) - up * 20); return;}
+    if (el.dataset.drag === "deskcard") {setDeskW(deskW() - up * 14); return;}
     if (el.dataset.drag === "panel" || el.dataset.drag === "side") setSplit(el.dataset.drag, splitOf(el.dataset.drag) - up * 0.02);
     else if (el.dataset.drag === "rows") setRows(rowShare() - up * 0.02);
     else setScale("hand", scaleOf("hand") + up * 5);

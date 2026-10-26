@@ -229,7 +229,7 @@ const TOURS=[
      copy:'Everything your decks need and you do not have, priced at the cheapest paper printing the app could find.'},
     {view:'cards',params:{tab:'buy'},selectors:['.cm-tabs'],
      title:'Three tabs, one page',
-     copy:'Library is everything you own or want; To buy is what your decks still need; Orders is what is on its way. Ready to add — what goes into each deck once it has arrived — is under More.'},
+     copy:'Library is everything you own or want; To buy is what your decks still need; Orders is what is on its way. Planned Changes — what goes into each deck once it has arrived — is under More.'},
     {view:'cards',params:{tab:'buy'},selectors:['[data-action=roster-filters]'],
      title:'Filter to today',
      copy:'At a booth you want the red cards under five dollars, not the whole list.'},
