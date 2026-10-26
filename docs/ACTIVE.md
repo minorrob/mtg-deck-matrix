@@ -33,6 +33,56 @@ back with `tools/staging-check.mjs --expect 9ca99e53`.
   Worker setting was added since 1fcfc3d. Sharing stays off in `cloud-production` (it is on in the staging profile
   only), so the `cloud/sharing.mjs` changes do not run there.
 
+## Admin, Play's Settings in sections, and the invitation to staging and production, 2026-10-26 (a Claude cloud session, for Rob; `claude/confident-cori-v447il`)
+
+Rob, 2026-10-26: *"Create an admin button or an admin option in the settings menu that only I can see ... let's adjust
+the settings pop-up when you click settings within the play view, so that one we don't have to scroll ... the sections
+of settings as left-side stacked tabs ... Within Admin, I should have General ... I should have a Share tab ... Invitee
+name, Invitee email, Send button, Cancel button ... when I hit Send, that also adds their email address to the Cloudflare
+staging and production access ... it has to be confirmed that they are added there, and then it sends the HTML email."*
+At his word this changes the Codex · Play lane's `crankmagic-board.js`, `crankmagic-stage.css`, `crankmagic-stage.js`
+(one setting) and its suites, and the Codex · Workshop lane's `crankmagic-app.js`, `crankmagic.css`,
+`crankmagic-sharing.js`, `cloud/sharing.mjs`, `cloud/access-invites.mjs`, `cloud/mail.mjs`. No open PR touched them.
+
+- **A window with its sections down the left** (`tabbed` in `crankmagic-app.js`, `.cm-tabbed-dialog` in
+  `crankmagic.css`): a vertical tablist (arrows, Home, End), one section shown, one height for every section, the section
+  using the window's whole width; tabs across the top below 640 px. The section chosen is remembered while the page is open.
+- **Play › Settings** in four sections: **General** (drawer modules, Recommended actions, Table vitals, AI Coach
+  settings, the callouts), **Video** (card size, Graphics resolution), **Audio** (Effects, Music, Mute), **Gameplay**
+  (Skip to end, Hold priority, Skip if no response, End game, Concede). The space on the right was a leftover
+  `#cm-board-tools{width:380px}` from when Settings was a dropdown; gone. Save, Cancel, ✕ and Escape are unchanged.
+- **Admin** (the Menu, under Profile; drawn only when `/api/social/me` says `isAdmin`, and `/api/social/admin` refuses
+  anyone else with 403): **General** shows this copy's setup as ✓/✕ (email, Access with its number of sign-ins, the
+  invitation link's site, AI for everyone signed in, invitations sent and admitted, the build from `version.json`) and
+  carries the **3D camera glance** (0–100%, kept on the device as `cm-look-strength`; `crankmagic-stage.js` reads it,
+  50% when unset), which the stage's own comment had set aside for "the admin panel". **Share** is Invitee name, Invitee
+  email, Cancel and Send, with each step's result listed.
+- **One invitation, both sign-ins** (`cloud/access-invites.mjs`): `ACCESS_INVITE_APP_IDS` and `ACCESS_INVITE_POLICY_ID`
+  are comma-separated lists read in pairs. `cloud-staging` now names staging's "CrankMagic staging" app with its reusable
+  "Invited" policy and production's "CrankMagic Accounts" (crankmagic.com/api/*) with its own (read from the Cloudflare
+  API on 2026-10-26: both reusable, `app_count` 1, `allow`; staging's "CrankMagic AI (staging)" app is gone, so AI follows
+  the sign-in, `AI_EVERYONE`). Each is written and read back in turn; no email goes until every one confirms; a refusal
+  names what was already admitted, and sending again finishes the rest (idempotent). An invitation sent again re-checks
+  every application (it no longer skips an address marked admitted).
+- **The email is HTML with a text twin** (`cloud/invite-email.mjs`, a placeholder until Claude Design's version; the
+  brief and prompt are `docs/design/invite-email/BRIEF.md`). Its link signs in at production (`INVITE_LINK_ORIGIN`,
+  https://crankmagic.com); its pictures come from production's public `/assets`, never staging. Nothing but the text is
+  stored; a retry draws the HTML again from the invitation's row.
+- **Proven here:** `sharing` 144 (two targets in pairs, a production refusal sends nothing and names staging, both
+  confirmed then sent, idempotent resend, HTML with the name escaped, the retry is HTML, Admin's status without a secret or
+  an address, `isAdmin`; seven deliberate breaks caught), new `admin-window` 32 (Admin for the administrator alone, the
+  window, General, Share's refusal and success against stand-ins for Cloudflare and the mail provider, Cancel, 390 wide),
+  `board-settings-window` 108 (the four sections at three sizes, each fitting without scrolling at desktop sizes and
+  reaching the window's right side; the old 380 px width and a tab that does not switch each caught), `release-pages`
+  224, `cloud-worker` 126, `feature-wiring` 124, `data-integrity`, `asset-versions`; the Play suites that press
+  Settings' controls now open the section first (`table-board`, `board-graphics`, `board-fullscreen-notes`, `play-e2e`,
+  `play-journeys`), results on the PR.
+- **Not proven, Rob's to do:** a real invitation from staging after a release: that the staging Worker's
+  `ACCESS_INVITE_TOKEN` may edit production's policy (an account-level "Access: Apps and Policies Edit" token can; its
+  scope cannot be read from here), and the email in real inboxes. Admin shows on **staging.crankmagic.com** only:
+  sharing (and with it `/api/social/*`) is on in `cloud-staging` alone; production would need migrations 0003–0005 and
+  Rob's go. The release is the engine lane's (`tools/release-staging.sh`).
+
 ## Play 3D's backdrop videos: Rob's six, at the Graphics resolution, 2K at most, 2026-10-26 (a Claude cloud session, for Rob; `claude/crankmagic-background-videos-8nm59v`, PR #888)
 
 Rob, 2026-10-26: *"Replace the current background videos in the CrankMagic Play 3D with those in this folder. Adjust as

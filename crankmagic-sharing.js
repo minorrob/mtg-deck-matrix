@@ -50,13 +50,80 @@
   actions['shared-add-card']=()=>{const x=opened;if(!x||x.kind!=='deck')return;C.cardPicker('Add a card to the shared deck',card=>C.form('Add '+card.name,C.field('Quantity','quantity','1','type="number" min="1" max="9999" required'),async v=>{await api('PATCH','/shares/'+x.id,{head:x.head,command:{type:'target',cardName:card.name,quantity:Number(v.quantity)}});await C.render();C.notice('Shared deck updated.');},'Save'));};
   actions['shared-edit-name']=()=>{const x=opened;if(!x)return;C.form('Edit shared deck',C.field('Deck name','name',x.content.name,'required maxlength="160"')+`<label class="cm-full">Notes<textarea name="notes" maxlength="5000">${e(x.content.notes)}</textarea></label>`,async v=>{await api('PATCH','/shares/'+x.id,{head:x.head,command:{type:'editDeck',...v}});await C.render();C.notice('Shared deck updated.');},'Save');};
   actions['shared-quantity']=el=>{const x=opened,row=(x.content.slots||x.content.lots).find(r=>r.id===el.dataset.record);if(!row)return;C.form('Change shared quantity',C.field('Quantity','quantity',row.quantity,`type="number" min="${x.kind==='deck'?0:1}" max="9999" required`)+`<p class="cm-full">This updates the owner’s ${x.kind}. ${row.assigned?'This record is assigned to a deck; review its quantity before saving.':''}</p>${row.assigned?'<label class="cm-full"><input type="checkbox" name="confirmed" required> I reviewed the assigned card.</label>':''}`,async v=>{await api('PATCH','/shares/'+x.id,{head:x.head,command:x.kind==='deck'?{type:'target',cardId:row.cardId,quantity:Number(v.quantity)}:{type:'quantity',lotId:row.id,quantity:Number(v.quantity),confirmed:v.confirmed==='on'}});await C.render();C.notice('Shared quantity updated.');},'Save');};
-  actions['invite-crankmagic']=()=>C.form('Invite to CrankMagic',C.field('Name','name','','required maxlength="80"')+C.field('Email address','email','','type="email" required'),async v=>{const r=await api('POST','/invite',v);if(r.status!=='sent')throw Error(r.error||'Access was added, but the invitation email is pending.');C.notice('Invitation sent.');},'Send');
+  /* ADMIN (Rob, 2026-10-26: "an admin option in the settings menu that only I can see ... a pop-up, much like the
+     settings pop-up"). The Menu's Admin entry is drawn for the administrator alone (`isAdmin`, from the Worker's
+     INVITE_ADMIN_ID) and every Admin request is refused for anyone else by the Worker, whatever a page shows. The window is
+     the app's tabbed one (crankmagic-app.js `tabbed`): General, what this copy is set up to do and the settings that had
+     no place before; Share, an invitation. More sections join it over time. */
+  const yes=(v,label=v?'Ready':'Not configured')=>`<dd data-ok="${v?'yes':'no'}">${v?'✓':'✕'} ${e(label)}</dd>`;
+  const LOOK_KEY='cm-look-strength';
+  const lookNow=()=>{try{const v=localStorage.getItem(LOOK_KEY);return v===null?50:Math.round(Number(v)*100);}catch{return 50;}};
+  async function drawGeneral(box){
+    let status,version=null;
+    try{[status,version]=await Promise.all([api('GET','/admin'),fetch('/version.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null)]);}
+    catch(err){box.innerHTML=`<p role="alert">${e(err.message)}</p>`;return;}
+    if(!box.isConnected)return;
+    box.innerHTML=`<h3>This copy</h3><dl class="cm-admin-status">
+      <dt>Administrator</dt><dd>${e(me.email)}</dd>
+      <dt>Address</dt><dd>${e(location.host)}</dd>
+      ${version?`<dt>Build</dt><dd>${e(String(version.commit||version.source||'').slice(0,8))}${version.profile?' · '+e(version.profile):''}</dd>`:''}
+      <dt>Invitation email</dt>${yes(status.emailReady)}
+      <dt>Cloudflare Access</dt>${yes(status.accessReady,status.accessReady?`Ready · ${status.accessTargets} sign-in${status.accessTargets===1?'':'s'}`:'Not configured')}
+      <dt>Invitation link</dt><dd>${e(status.linkOrigin)}</dd>
+      <dt>AI features</dt>${yes(status.aiEveryone,status.aiEveryone?'Everyone signed in':'Not open to everyone')}
+      <dt>Invitations</dt><dd>${status.invitations.total.toLocaleString('en-US')} sent · ${status.invitations.admitted.toLocaleString('en-US')} admitted</dd>
+    </dl>
+    <h3>This device</h3>
+    <div class="cm-board-size"><label class="cm-settings-slider">3D camera glance <input type="range" min="0" max="100" step="1" value="${lookNow()}" data-admin-look aria-label="3D camera glance strength" aria-valuetext="${lookNow()}%"><output>${lookNow()}%</output></label><p class="cm-muted">How far a held card turns the 3D camera toward it · 0% – 100% · 50% is the default</p></div>`;
+    const look=box.querySelector('[data-admin-look]');
+    look.addEventListener('input',()=>{look.nextElementSibling.textContent=look.value+'%';look.setAttribute('aria-valuetext',look.value+'%');});
+    look.addEventListener('change',()=>{try{localStorage.setItem(LOOK_KEY,String(Number(look.value)/100));}catch{}C.notice(`3D camera glance kept at ${look.value}% on this device.`);});
+  }
+  const shareForm=`<form class="cm-admin-form" data-admin-share novalidate>
+      <label>Invitee name<input name="name" required maxlength="80" autocomplete="off"></label>
+      <label>Invitee email<input name="email" type="email" required maxlength="254" autocomplete="off"></label>
+      <p class="cm-full cm-muted">Send → sign-in on staging + production, each confirmed ✓ → invitation email · AI included</p>
+      <ol class="cm-admin-steps cm-full" data-admin-steps hidden aria-live="polite"></ol>
+      <p class="cm-error cm-full" hidden role="alert"></p>
+      <div class="cm-form-footer cm-full">${b('Cancel','close')}<button class="v-button primary" type="submit">Send</button></div>
+    </form>`;
+  const step=(state,text)=>`<li data-state="${state}">${e(text)}</li>`;
+  function wireShare(f){
+    const steps=f.querySelector('[data-admin-steps]'),error=f.querySelector('.cm-error'),send=f.querySelector('[type=submit]');
+    f.addEventListener('submit',async ev=>{
+      ev.preventDefault();error.hidden=true;
+      if(!f.reportValidity())return;
+      const v={name:f.elements.name.value.trim(),email:f.elements.email.value.trim()};
+      send.disabled=true;steps.hidden=false;
+      steps.innerHTML=step('busy','Adding to Cloudflare Access (staging and production)…')+step('wait','Invitation email');
+      try{
+        const r=await api('POST','/invite',v);
+        const access=(r.access||[]).map(a=>step('done',`${a.domain||a.name} · ${a.added?'added':'already had access'} · confirmed`)).join('');
+        const mail=r.status==='sent'?step('done',`Invitation emailed to ${v.email}`):step('fail',r.error||'The invitation email is pending.');
+        steps.innerHTML=access+mail;
+        if(r.status==='sent'){C.notice(`Invitation sent to ${v.name}.`);f.elements.name.value='';f.elements.email.value='';}
+        else steps.insertAdjacentHTML('beforeend',`<li>${b('Retry email','share-retry',{mail:r.id})}</li>`);
+      }catch(err){steps.innerHTML=step('fail',err.message)+step('wait','No email was sent');error.textContent=err.message;error.hidden=false;}
+      finally{send.disabled=false;}
+    });
+  }
+  function openAdmin(section){
+    if(!me?.isAdmin)throw Error('Admin is for the CrankMagic administrator.');
+    const d=C.modal('Admin',`<div class="cm-admin">${C.tabbed({id:'admin',label:'Admin sections',active:section,tabs:[
+      {id:'general',icon:'⚙',label:'General',html:'<div data-admin-general><p class="cm-muted" role="status">Loading…</p></div>'},
+      {id:'share',icon:'✉',label:'Share',html:shareForm}]})}</div>`);
+    d.classList.add('cm-tabbed-dialog','cm-admin-dialog');
+    drawGeneral(d.querySelector('[data-admin-general]'));wireShare(d.querySelector('[data-admin-share]'));
+    return d;
+  }
+  actions['open-admin']=()=>{openAdmin();};
+  actions['invite-crankmagic']=()=>{openAdmin('share');};
   C.drawProfile=()=>{const box=document.getElementById('cm-settings-profile');if(!box)return;box.innerHTML=me?`<div class="cm-profile-summary">${me.avatar?`<img src="${e(me.avatar)}" alt="Your profile picture">`:'<span class="cm-profile-placeholder" aria-hidden="true">'+e((me.name||me.email)[0].toUpperCase())+'</span>'}<div><strong>${e(me.name||'Set your name')}</strong><p>${e(me.email)}</p></div></div><div class="cm-settings-row">${b('Edit profile','profile-edit')}${b('Change email address','profile-email')}</div>`:'<p>Sign in to set your name and profile picture.</p>';};
   actions['profile-edit']=()=>{if(!me)throw Error('Sign in to edit your profile.');let avatar=me.avatar,picture=Promise.resolve(),pictureError=null,generation=0;const form=C.form('Edit profile',C.field('Name','name',me.name,'maxlength="80" required')+'<label class="cm-full">Profile picture<input type="file" accept="image/png,image/jpeg,image/webp" data-profile-file></label><p class="cm-full cm-muted">Choose a photo; it will be cropped to a square.</p><button type="button" class="v-button" data-remove-avatar>Remove picture</button>',async v=>{await picture;if(pictureError)throw pictureError;me=await api('PUT','/profile',{name:v.name,avatar});C.drawProfile();C.notice('Profile saved.');},'Save');form.querySelector('[data-remove-avatar]').onclick=()=>{generation++;pictureError=null;avatar='';form.querySelector('[data-profile-file]').value='';};form.querySelector('[data-profile-file]').onchange=ev=>{const file=ev.target.files[0];if(!file)return;const version=++generation;pictureError=null;picture=(async()=>{try{if(file.size>8*1024*1024)throw Error('Choose an image smaller than 8 MB.');const image=await createImageBitmap(file);const canvas=document.createElement('canvas');canvas.width=canvas.height=256;const side=Math.min(image.width,image.height);canvas.getContext('2d').drawImage(image,(image.width-side)/2,(image.height-side)/2,side,side,0,0,256,256);if(version===generation)avatar=canvas.toDataURL('image/webp',.8);image.close();}catch(err){if(version===generation){pictureError=err;C.notice(err.message,true);}}})();};};
   actions['profile-email']=()=>C.form('Change email address',C.field('New email address','email','','type="email" required')+'<p class="cm-full">We will send a verification link. Your current sign-in remains active until you verify the new address.</p>',async v=>{await api('POST','/profile/email',v);C.notice('Verification sent to the new address.');},'Send verification');
   views['verify-email']=()=>{const token=C.route().params.get('token')||'';C.main.innerHTML=C.pageHead('Verify email address')+'<p>Confirm this address change for your signed-in account. Your decks, library, sharing permissions and game identity will stay with your account.</p>'+b('Confirm email address','profile-email-confirm',{token});};
   actions['profile-email-confirm']=async el=>{const result=await api('POST','/profile/email/confirm',{token:el.dataset.token});C.modal('Email verified',`<p>Your sign-in is now ${e(result.email)}. Sign out, then sign in with this address.</p><a class="v-button primary" href="/cdn-cgi/access/logout">Sign out</a>`);};
-  C.profileMenu=()=>me?b('Profile','open-profile')+(me.canInvite?b('Invite to CrankMagic','invite-crankmagic'):''):'';
+  C.profileMenu=()=>me?b('Profile','open-profile')+(me.isAdmin?b('Admin','open-admin'):''):'';
   actions['open-profile']=()=>C.go('settings');
   C.sharingAvailable=()=>!!me;
   C.sharingReady=document.querySelector('meta[name="crankmagic-accounts"]')?.content==='on'?api('GET','/me').then(v=>{me=v;C.drawProfile();const menu=document.getElementById('cm-user-menu');if(menu&&!menu.querySelector('[data-profile-menu]')){const div=document.createElement('div');div.dataset.profileMenu='';div.innerHTML=C.profileMenu();menu.prepend(div);}}).catch(()=>null):Promise.resolve(null);

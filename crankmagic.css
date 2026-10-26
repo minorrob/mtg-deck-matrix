@@ -3319,7 +3319,8 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
 #matrix-v2 .cm-board-strip [data-action=board-pass]{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;line-height:32px}   /* Resolve and a long name */
 .cm-board-menu{position:absolute;right:0;top:calc(100% + 6px);width:320px;padding:14px;border-radius:var(--v-radius-card);background:var(--v-panel);border:1px solid var(--v-line-strong);box-shadow:0 18px 40px -12px rgb(0 0 0 / .67);white-space:normal;z-index:10}
 .cm-board-menu p{margin:0 0 10px;font-size:12px}
-#cm-board-tools{width:min(380px,calc(100vw - 72px))}   /* wide enough for the card-size row: label, both ends, the value */
+/* #cm-board-tools had a width of its own (380 px) from when Settings was a dropdown; in the window it takes the window's
+   width (Rob, 2026-10-26: "wasting a lot of space on the right side"). */
 .cm-board-menu h3{margin:0 0 8px;font-size:13px}
 .cm-board-nav{left:0;right:auto;width:220px}
 .cm-board-nav ul{list-style:none;margin:0 0 8px;padding:0}
@@ -4157,3 +4158,50 @@ button.cm-vitals{cursor:pointer}
   .cm-flow-nav button{white-space:nowrap}
   .cm-review-thumb:hover,.cm-review-thumb:focus-visible{transform:none}
 }
+/* A WINDOW WITH ITS SECTIONS DOWN THE LEFT (crankmagic-app.js `tabbed`; Rob, 2026-10-26): Play's Settings and Admin.
+   One height for every section, so the window does not jump as the tabs change; the section takes the whole width
+   beside the tabs. Below 640 px the tabs run across the top and scroll sideways if they must. */
+#matrix-v2 dialog#cm-dialog.cm-tabbed-dialog[open]{display:flex;flex-direction:column;width:min(920px,calc(100vw - 24px));height:min(620px,calc(100dvh - 32px));max-height:calc(100dvh - 32px);overflow:hidden}
+#matrix-v2 #cm-dialog.cm-tabbed-dialog .cm-dialog-head{flex:none;position:static;margin:0 0 14px;padding:0}
+#cm-dialog .cm-tabbed{display:grid;grid-template-columns:clamp(150px,22%,196px) minmax(0,1fr);gap:0 24px;flex:1 1 auto;min-height:0}
+#cm-dialog .cm-tabbed-nav{display:flex;flex-direction:column;gap:4px;min-height:0;overflow:auto;padding-right:12px;border-right:1px solid var(--v-line)}
+#matrix-v2 #cm-dialog .cm-tabbed-nav [role=tab]{display:flex;align-items:center;gap:10px;width:100%;min-height:40px;padding:8px 12px;border:0;border-radius:8px;background:none;color:var(--v-muted);font:600 14px/1.2 inherit;text-align:left;cursor:pointer}
+#matrix-v2 #cm-dialog .cm-tabbed-nav [role=tab]:hover{background:var(--v-soft);color:var(--v-ink)}
+#matrix-v2 #cm-dialog .cm-tabbed-nav [role=tab][aria-selected=true]{background:color-mix(in srgb,var(--v-accent) 15%,transparent);color:var(--v-ink);box-shadow:inset 3px 0 0 var(--v-accent)}
+#matrix-v2 #cm-dialog .cm-tabbed-nav [role=tab]:focus-visible{outline:2px solid var(--v-accent);outline-offset:-2px}
+#cm-dialog .cm-tabbed-icon{width:20px;text-align:center;font-size:16px;line-height:1}
+#cm-dialog .cm-tabbed-panels{min-width:0;min-height:0;overflow:auto;overscroll-behavior:contain}
+#cm-dialog .cm-tabbed-panel{display:flex;flex-direction:column;gap:14px;min-width:0}
+#cm-dialog .cm-tabbed-panel[hidden]{display:none}
+#cm-dialog .cm-tabbed-panel:focus-visible{outline:2px solid var(--v-accent);outline-offset:2px}
+#cm-dialog .cm-tabbed-panel>h3{margin:0;font-size:15px}
+/* A slider in a section spans it: the shared Settings slider grows along a row, and in a column it grew downward. */
+#matrix-v2 #cm-dialog .cm-tabbed-panel .cm-settings-slider{flex:none;width:100%;max-width:none;gap:12px}
+#cm-dialog .cm-tabbed-foot{flex:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--v-line)}
+@media(max-width:640px){
+  #cm-dialog .cm-tabbed{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:12px}
+  #cm-dialog .cm-tabbed-nav{flex-direction:row;overflow-x:auto;overflow-y:hidden;padding:0 0 8px;border-right:0;border-bottom:1px solid var(--v-line)}
+  #matrix-v2 #cm-dialog .cm-tabbed-nav [role=tab]{width:auto;flex:none;white-space:nowrap}
+  #matrix-v2 #cm-dialog .cm-tabbed-nav [role=tab][aria-selected=true]{box-shadow:inset 0 -3px 0 var(--v-accent)}
+}
+@media(max-width:560px){#matrix-v2 dialog#cm-dialog.cm-tabbed-dialog[open]{padding:16px;height:calc(100dvh - 16px);max-height:calc(100dvh - 16px)}}
+/* Admin › Share and Admin › General. */
+#cm-dialog .cm-admin-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 18px;max-width:none}
+#cm-dialog .cm-admin-form label{display:flex;flex-direction:column;gap:6px;font-weight:600}
+#cm-dialog .cm-admin-form input{width:100%}
+#cm-dialog .cm-admin-form .cm-full{grid-column:1/-1}
+#cm-dialog .cm-admin-steps{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+#cm-dialog .cm-admin-steps li{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--v-line);border-radius:8px}
+#cm-dialog .cm-admin-steps [data-state]::before{content:"○";width:1.2em;text-align:center;font-weight:700;color:var(--v-muted)}
+#cm-dialog .cm-admin-steps [data-state=busy]::before{content:"…";color:var(--v-accent)}
+#cm-dialog .cm-admin-steps [data-state=done]::before{content:"✓";color:var(--v-money)}
+#cm-dialog .cm-admin-steps [data-state=fail]::before{content:"✕";color:var(--vital-danger,#b3261e)}
+#cm-dialog .cm-admin-status{display:grid;grid-template-columns:minmax(0,auto) minmax(0,1fr);gap:8px 18px;margin:0}
+#cm-dialog .cm-admin-status dt{color:var(--v-muted)}
+#cm-dialog .cm-admin-status dd{margin:0;font-weight:600}
+@media(max-width:640px){#cm-dialog .cm-admin-form{grid-template-columns:minmax(0,1fr)}}
+#cm-dialog .cm-admin{display:flex;flex-direction:column;flex:1 1 auto;min-height:0}
+#cm-dialog .cm-admin>.cm-tabbed{flex:1 1 auto}
+#cm-dialog .cm-admin-status dd[data-ok=no]{color:var(--vital-danger,#b3261e)}
+#cm-dialog .cm-admin-form .cm-form-footer{margin-top:4px}
+#cm-dialog .cm-admin-status+h3{margin-top:10px}

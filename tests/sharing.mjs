@@ -21,7 +21,7 @@ let sent=[],failMail=false,requests=[];
 let clock=Date.now();const now=()=>new Date(clock).toISOString();
 const mailFetch=async (url,args)=>{assert.equal(url,'https://api.resend.com/emails');requests.push(args);if(failMail)throw Error('offline');sent.push(JSON.parse(args.body));return Response.json({id:crypto.randomUUID()});};
 const env={INVITE_ADMIN_ID:String(owner.id),RESEND_API_KEY:'test-only'};
-const svc=sharing(db,env,{fetchImpl:mailFetch,now,cacheProjections:false});let checks=0;const eq=(a,b,m)=>{assert.deepEqual(a,b,m);checks++;};const rejects=async(fn,status)=>{await assert.rejects(fn,e=>e instanceof ShareError&&e.status===status);checks++;};
+const svc=sharing(db,env,{fetchImpl:mailFetch,now,cacheProjections:false});let checks=0;const eq=(a,b,m)=>{assert.deepEqual(a,b,m);checks++;};const ok2=(c,m)=>{assert.ok(c,m);checks++;};const rejects=async(fn,status)=>{await assert.rejects(fn,e=>e instanceof ShareError&&e.status===status);checks++;};
 await svc.updateProfile(writer,{name:'Will Player',avatar:''});await svc.profile(owner);
 eq((await svc.search(owner,'Wi')).users.length,0,'minimum search length');eq((await svc.search(owner,'Will')).users[0].id,writer.id,'name search');eq((await svc.search(owner,'writer@')).users[0].id,writer.id,'email search');eq((await svc.search(owner,'%%%')).users.length,0,'wildcards are literal');
 let result=await svc.save(owner,{kind:'deck',sourceId:'deck:one',revision:0,publicRole:null,grants:[{id:reviewer.id,role:'reviewer'},{id:writer.id,role:'collaborator'}]},'https://example.com');const id=result.settings.id;
@@ -178,4 +178,58 @@ const scopedDb={...db};snapshotReads=0;await sharing(scopedDb,env,{fetchImpl:mai
 const damaged=await E.backup({state:loadState,history:[]});damaged.payload.state.decks[1].name='Unchecked change';
 const oldHead=await lib.head(loadOwner.id);await lib.save(loadOwner.id,{parent:oldHead.id,revision:loadState.revision,device:'Test',checksum:damaged.checksum,body:gzipSync(JSON.stringify(damaged)).toString('base64')});
 await assert.rejects(()=>cached.read(visibleId,reviewer),/checksum/);checks++;
+
+/* ONE INVITATION, BOTH SIGN-INS (Rob, 2026-10-26): staging and production are each admitted and read back before the
+   email goes, the email is HTML with a text twin, and Admin › General reports the setup as yes or no. */
+{
+  const {inviteTargets}=await import('../cloud/access-invites.mjs');
+  const apps=['aaaaaaaa-0000-0000-0000-000000000001','aaaaaaaa-0000-0000-0000-000000000002'],policies=['bbbbbbbb-0000-0000-0000-000000000001','bbbbbbbb-0000-0000-0000-000000000002'];
+  eq(inviteTargets({ACCESS_INVITE_APP_IDS:apps.join(', '),ACCESS_INVITE_POLICY_ID:policies.join(',')}),[{app:apps[0],policy:policies[0]},{app:apps[1],policy:policies[1]}],'the two lists are read in pairs');
+  eq(inviteTargets({ACCESS_INVITE_APP_IDS:apps.join(','),ACCESS_INVITE_POLICY_ID:policies[0]}),[],'lists of different lengths configure nothing');
+  eq(inviteTargets({ACCESS_INVITE_APP_IDS:'not-a-uuid',ACCESS_INVITE_POLICY_ID:policies[0]}),[],'a malformed id configures nothing');
+  const names=['CrankMagic staging','CrankMagic Accounts'],domains=['staging.crankmagic.com','crankmagic.com/api/*'];
+  const state=policies.map(id=>({id,reusable:true,app_count:1,name:'Invited',decision:'allow',include:[{email:{email:'rob@example.com'}}]}));
+  const writes=[];let refuse=null;const mail=[];
+  const fetch2=async(url,args)=>{
+    if(url==='https://api.resend.com/emails'){const body=JSON.parse(args.body);mail.push(body);return Response.json({id:crypto.randomUUID()});}
+    const app=apps.findIndex(a=>url.endsWith('/apps/'+a));if(app>=0)return Response.json({success:true,result:{name:names[app],domain:domains[app],policies:[{id:policies[app]}]}});
+    const i=policies.findIndex(p=>url.endsWith('/policies/'+p));assert.ok(i>=0,'only the configured policies are called');
+    if(args.method==='PUT'){if(refuse===i)return Response.json({success:false},{status:403});writes.push(i);state[i]={...state[i],...JSON.parse(args.body)};}
+    return Response.json({success:true,result:state[i]});
+  };
+  const env2={...accessEnv,ACCESS_INVITE_APP_IDS:apps.join(','),ACCESS_INVITE_POLICY_ID:policies.join(','),INVITE_LINK_ORIGIN:'https://crankmagic.com',AI_EVERYONE:'on'};
+  const both=sharing(db,env2,{now,fetchImpl:fetch2});
+  refuse=1;
+  await assert.rejects(()=>both.invite(owner,{name:'Half Way',email:'half@example.com'},'https://staging.example'),e=>e instanceof ShareError&&e.status===502&&/Already admitted: staging\.crankmagic\.com\./.test(e.message));checks++;
+  eq(mail.length,0,'production refused: no email goes, and the refusal names what was already admitted');
+  refuse=null;
+  const r=await both.invite(owner,{name:'Half Way',email:'half@example.com'},'https://staging.example');
+  eq(r.status,'sent','sent once both confirm');
+  eq(r.access,[{app:apps[0],name:names[0],domain:domains[0],added:false},{app:apps[1],name:names[1],domain:domains[1],added:true}],'each application confirms the address; staging already had it from the refused try');
+  eq(state.map(p=>p.include.filter(x=>x.email).map(x=>x.email.email)),[['rob@example.com','half@example.com'],['rob@example.com','half@example.com']],'the address is on both policies');
+  eq(writes,[0,1],'each policy is written once');
+  await both.invite(owner,{name:'Half Way',email:'half@example.com'},'https://staging.example');
+  eq(writes.length,2,'sending again reads both policies and writes neither');
+  const m=mail[0];
+  eq([m.subject,m.from],['You are invited to CrankMagic','CrankMagic <invite@crankmagic.com>'],'the invitation subject and sender');
+  ok2(m.html.includes('Hi Half Way,')&&m.html.includes('href="https://crankmagic.com/api/auth/login?to=%23welcome"')&&/^<!doctype html>/.test(m.html),'the email is HTML, with the name and the production sign-in link');
+  ok2(!/\{\{\w+\}\}/.test(m.html),'every template token is filled');
+  ok2(m.html.includes('src="https://crankmagic.com/assets/crankmagic/'),'its pictures come from production’s public pages, never staging');
+  ok2(m.text.endsWith('\n\nhttps://crankmagic.com/api/auth/login?to=%23welcome')&&m.text.startsWith('Hi Half Way,'),'and it has a plain-text twin');
+  mail.length=0;
+  await both.invite(owner,{name:'<b>Eve</b> & "Co"',email:'eve@example.com'},'https://staging.example');
+  ok2(mail[0].html.includes('Hi &lt;b&gt;Eve&lt;/b&gt; &amp; &quot;Co&quot;,')&&!mail[0].html.includes('<b>Eve</b>'),'the name is escaped in the HTML');
+  /* a retry draws the HTML again from the stored text and the invitation's name */
+  const failing=sharing(db,env2,{now,fetchImpl:async(url,args)=>url==='https://api.resend.com/emails'?Response.json({},{status:500}):fetch2(url,args)});
+  const pending=await failing.invite(owner,{name:'Later',email:'later@example.com'},'https://staging.example');
+  eq(pending.status,'failed','an email that fails is reported');mail.length=0;
+  eq((await both.delivery(owner,pending.id)).status,'sent','and its retry is sent');
+  ok2(mail[0].html?.includes('Hi Later,')&&mail[0].html.includes('https://crankmagic.com/api/auth/login?to=%23welcome'),'the retry is HTML too');
+  await rejects(()=>both.admin(stranger,'https://staging.example'),403);
+  const status=await both.admin(owner,'https://staging.example');
+  eq([status.emailReady,status.accessReady,status.accessTargets,status.linkOrigin,status.aiEveryone],[true,true,2,'https://crankmagic.com',true],'Admin › General reports the setup');
+  ok2(status.invitations.total>=4&&status.invitations.admitted>=4,'and counts the invitations');
+  ok2(!JSON.stringify(status).includes('test-only')&&!JSON.stringify(status).includes('@'),'and carries no secret and no address');
+  eq((await both.profile(owner)).isAdmin,true,'the administrator’s profile says so');eq((await both.profile(stranger)).isAdmin,false,'nobody else’s does');
+}
 console.log(`sharing: ${checks} checks passed — live permissions, revocation, public access, concurrent edits, privacy, notification retry and owner-only invitations.`);
