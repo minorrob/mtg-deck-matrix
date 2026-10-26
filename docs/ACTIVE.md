@@ -1,5 +1,40 @@
 # Who holds the work
 
+## AI players built: PR 6 access groups, PR 1 the threat model; the hand fan stacked left over right, 2026-10-26 (a Claude cloud session, for Rob; `claude/sharp-hawking-8lbwy9`, PR #893; hand-off `docs/handoff-ai-players-2026-10-26.md`)
+
+Rob, 2026-10-26: *"Confirmed on all six calls, start PR 6 then PR 1"*, with three changes folded into the plan (hugginess
+into friendliness; politics read by Hard and the Veteran; response urgency as variable N; the Veteran knows its own
+mechanics), then: *"I'll have you give me a hand-off to merge your work with the other session's work that we'll then hand
+all of that work over to OpenAI that is handling all of the merges"*, and the feedback-loop session's work is to be
+rationalized into that hand-off. **Nothing here is merged; the hand-off is the deliverable.**
+
+- **The hand fan** (his screenshot: *"The left side of each card should be under the next card as the default view"*):
+  `crankmagic-board.js` `stageHand` stacks `z-index: count - i`, the leftmost card on top; `crankmagic-stage.css` moves
+  the fanned name past the card to the left (`:not(:first-child)`, a `left`). Play-lane files, at his word. Asset
+  versions bumped (board 107, stage.css 64, sw 565, app 582) and recorded. `board-hand-table` 110 (two new checks; the
+  stacking one red under the old order: "1 > 2 > 3 > 4 > 5 > 6 > 7").
+- **PR 6, the access groups** (`cloud/access.mjs` `groupOf`; `docs/ai-door.md`): `owner` is `OWNER_EMAIL` (a dashboard
+  variable, never in the repository), `insider` a row in `ai_allowlist`, **now the Game Theory Insiders roster**, `general`
+  everyone else. `createAi(db, {owner}).allowed` is "not general", so Explain, the Coach, the advisor, the meter and the AI
+  seat on Claude refuse General Access; **`AI_EVERYONE` now widens the sign-in only** (Rob's 2026-10-26 word supersedes
+  2026-10-14's). `/api/me` carries `group`; `GET`/`PUT /api/admin/groups` is the owner's roster. No migration: the roster
+  reuses `ai_allowlist`, so no number is taken. `ai-door` 78, `agent-seat-table` 20, `cloud-worker` 127, `coach` 65,
+  `advisor` 56, `card-demand` 43, `sharing` 119. Requests row 14 asks the Workshop lane for the browser's half.
+- **PR 1, the threat model** (`game/engine/pilots/threat.mjs`; the plan's §4): one row per living opponent, six signals
+  in [0, 1] (life, hitters, growth, ramp; engine and commander 0 until PR 2), the weighted mean under the setting's
+  weights, `over(id)` the score less the table's mean (where, never whether: one opponent moves nothing), Easy's rank
+  (the top row 1), and `absurd` (every attacker lost, nothing through). L1 (`scored-pilot.mjs`): an attack plan gains
+  `threat × over × effect` (`WEIGHTS.threat` 6), a hostile aim `threatAim × over` (0.5), absurd plans are dropped before
+  any draw, and Easy attacks only the top of its rank while it offers an attack, else the table is open. New
+  `tests/engine-threat.mjs` 46 (the person-bias invariant among them: the same board marked person or AI gives the same
+  table to the byte and the same answers; the LLM brief carries no kind, level or persona; the target check red with the
+  weight at 0). `engine-scored-pilot` 60, `engine-house-pilot` 19, `engine-pilot-picks` 116, `room-seat-pilots` 15,
+  `room-agent-seat` 23, `data-integrity` green, README at 599 suites. **The bench** (`tools/pilot-bench.mjs --games 100`,
+  L1 Normal against L0): before, L1 65% of the decided games (95%: 56–74%); after, L1 66% (95%: 57–75%); blunders 0 / 0 both ways.
+- **Not proven:** the fan on a GPU browser or a phone; `OWNER_EMAIL` set on staging and production (Rob's); the Actions
+  run (the PR is a draft). **Not started:** PR 2, 3, 4, 5, 7 of the plan, and the Workshop half of PR 6.
+- **Gate:** `tools/local-ci.sh HEAD 0` before the push (its line is in the PR).
+
 ## AI players: the plan for Easy, Normal, Hard, the Veteran agent, personas, the deck matrix, access groups and the game-log admin panel, 2026-10-26 (a Claude cloud session, for Rob; `claude/sharp-hawking-8lbwy9`, planning only)
 
 Rob, 2026-10-26: *"Pick up the work on improving the AI player modes in CrankMagic ... Answer those questions and create the
@@ -901,6 +936,7 @@ other lane answers in the last column.
 
 | # | From | Asks for | What for | Answer |
 | --- | --- | --- | --- | --- |
+| 14 | Engine → Workshop (and Play) | **The access groups (Rob, 2026-10-26; `claude/sharp-hawking-8lbwy9`, PR #893).** `/api/me` now carries `group`: `owner`, `insider` or `general` (`cloud/access.mjs` `groupOf`; `docs/ai-door.md`). Please (1) hide, for `general`, every control that spends: Ask the advisor, Explain the score, the Coach, the AI seat on Claude in New table (it already follows `/api/ai-seat`), the AI Coach Settings meter, and the deck page's AI button when it lands; (2) in `cloud/sharing.mjs`, refuse a mail send (a share notification, an invitation) for a `general` sender with the named reason, since Rob closes "anywhere else that costs could be generated from that user group"; (3) give the owner a roster card in Settings or the Admin panel over `GET` and `PUT /api/admin/groups` (`{email, group: "insider" \| "general", note}`). The Worker is the gate either way: a `general` request at any paid route is already refused. | Rob: "General Access will never be able to run or cause token costs ... I would have access to absolutely everything" | Requested Oct 26. |
 | 13 | Workshop (Decks) → Play | An intermittent failure in `tests/table-board.mjs` (Codex · Play's suite), seen once in CI and never locally: "the real-game inspector keeps its card aspect beside an independently arranged History module" (lines 667-669) failed on Oct 25 in Actions run 40157906338 (PR #769's head `33c6749e`, `main` `71929eb` merged in, a branch that changes no Play file). The next run passed it (run 40161187064), and on `main` `afe58d5` it passes 3 of 3 locally (290 checks). The check measures `#cm-full-pick .cm-bcard`'s ratio (within 0.01 of 5/7) and counts the History module straight after the click, with no wait for the layout to settle, so a slow runner may read a mid-layout card. Please make it wait for the settled size, or fix the layout if the card really drifts from 5:7. (The other Play failure seen alongside it, `tests/board-control.mjs` "Escape dismisses hover", is fixed on `main` by #854: it now passes there.) | A Play suite that fails at random turns any lane's PR red, and the next run passing it hides the cause | `tests/table-board.mjs` | |
 | 11 | Codex · Play → Engine | ROB-172 for ROB-171: project public control provenance, displaced controller(s), source object identity/name and exact Oracle effect text/duration; define chained steals, return destinations, entering under another controller and face-down sources | Rob requests the actual card on its controller's board and a ghost where control was lost, with who took it and how it returns. Current owner/controller fields cannot establish prior control or a return condition. Document and merge the additive contract before Play consumes it | Requested Oct 20 in ROB-11; Play builds existing-contract placement and ownership marker meanwhile |
 | 12 | Codex · Play → Engine | ROB-167: expose `POST /api/tables/:id/rematch {accept}` and public votes/deadline; launch the next round with retained seats/decks using the existing lifecycle | Board/lobby Play again, visible votes and Leave need a deployed route and documented table state. Prove one person/three AIs, a declined human seat, deadline expiry, and a fresh match ID | Requested Oct 20 on ROB-167 and ROB-11; Engine half must merge before Play consumes it **Built:** `POST /api/tables/:id/rematch {accept}` (#806): votes, deadline (2 minutes, `REMATCH_WINDOW`) and the next round with the same seats, decks and rules as `<tableId>g<n>`; the view's `table.rematch` `{lastMatchId, deadline, outcome, reason, votes}`; the host must stay for a next game; documented in `docs/ui-lane/gameplay-anchor.md` ("After the game: Play again"). Play wires the buttons next. |
