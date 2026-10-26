@@ -38,6 +38,38 @@ its equivalent input path. Check normal and reduced motion. A screenshot is insp
 Initial D1 review found phone battlefield labels overlapping at 200%, small desktop chrome, broken-image
 portrait glyphs and a misplaced Table menu. Corrected D1 screenshots and assertions now cover those cases (111 shell checks). The first 67 passing interaction checks did not establish visual acceptance. The actual Study Babylon table was inspected, and the actionBar primary contrast was subsequently corrected in A. Final combined screenshots remain required.
 
+## Workshop and shared-menu local evidence
+
+- `tests/uat/r4-workshop-journey.mjs`: 77 checks, 20 full rendered page/dialog primary sweeps,
+  three rendered graph color cases and both Define/New table inline errors in dark/light/Bronze.
+  Actual composited error contrast is 4.686 / 9.588 / 4.687 respectively. Six deliberate joined
+  regressions were caught and restored. The same isolated saved deck crosses the screens; its
+  Measure report is a precomputed fixture, not an executed simulation or provider result.
+- `tests/table-lobby.mjs`: 155 checks; `tests/table-setup.mjs`: 46; 17 pure flow regressions caught.
+  Includes configured rules before auto-ready AI seats, canonical local chooser names, exact-content
+  shared-snapshot deduplication, retained distinct shared versions, public precons and permission
+  rechecks. Only table-legal defaults on; final server admission remains authoritative. Leave
+  disconnects locally and preserves the saved rejoin shortcut; it does not claim to release a seat.
+- `tests/account-menu-r4.mjs`: 85 checks and five caught regressions. Signed-out desktop dark,
+  signed-in phone 390×844/Bronze dark and administrator desktop light exercise the same native
+  popover, verified gates, ordered groups, one Settings, Skin/register controls and exact reset
+  confirmation. Escape restores a replacement data-action invoker without reaching the draft
+  sentinel; native outside dismissal preserves the clicked control's focus. Careful label/action
+  contrast is measured on the actual group background and the action uses actual required ink.
+- Existing Help 14, Settings 73, reset 43 and Landing 55 pass after the shared-menu adaptation.
+  The shell baseline and a deliberate duplicate-receipt regression prove native revision-bound
+  deletion Undo from hub and detail navigation, including persisted restoration after an intervening
+  error. Preference receipts are ordinary success; no arbitrary later action receives a generic Undo.
+
+Detailed source commits, screenshots and per-finding limits are in `WORKSHOP-AUDIT-EVIDENCE.md`.
+The final Invite/Admin left alignment is a scoped cosmetic refinement after the inspected capture;
+it does not change gates or actions and requires no separate browser slot. Final combined review
+should use the integrated source. Global alternate-anchor/menu proof does not establish the actual
+Play avatar's draft/hotkey boundary or Side Drawer Modules matrix; those remain Play-owned checks.
+F-074 repeated unavailable notices and F-109 budget dominance remain follow-ups. Historical price
+snapshots, generic Settings Undo order, live Admin/mail delivery and a full fresh finished-match/account
+sync journey retain their documented partial limits. Do not convert a CH mapping into audit closure.
+
 ## Execution environment
 
 Targeted checks use the installed Node 24.19.0 and Chrome on this machine. CI's required runtime is Node 22
