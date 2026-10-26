@@ -1475,10 +1475,13 @@ try {
   await rob.page.evaluate(() => __cm.commit({type: "preferences", values: {aiCoach: {coachSees: "hand"}}}, {renderView: false}));
   await rob.page.fill(".cm-coach-input", "a draft");
   await rob.page.focus(".cm-coach-input");
-  const viewsBefore = views(ROB).length;
+  const draftFacts=()=>rob.page.evaluate(()=>{const input=document.querySelector('.cm-coach-input'),drawer=input?.closest('.cm-stage-side,.cm-stage-rail'),active=document.activeElement;return {draft:input?.value,focused:active===input,active:{tag:active?.tagName,action:active?.dataset.action,class:active?.className},drawerScroll:drawer?.scrollTop,input:input?.getBoundingClientRect().toJSON(),mainScroll:document.querySelector('.cm-board-main')?.scrollTop};});
+  const viewsBefore = views(ROB).length, draftBefore=await draftFacts();
   await serial(async () => object.broadcast());
   await rob.page.waitForTimeout(500);
-  ok(views(ROB).length > viewsBefore && await rob.page.inputValue(".cm-coach-input") === "a draft" && await rob.page.evaluate(() => document.activeElement.matches(".cm-coach-input")), "a view arriving mid-sentence leaves the draft, and the focus, where they were");
+  const draftAfter=await draftFacts(),draftProof={viewsBefore,viewsAfter:views(ROB).length,lastFrame:{revision:views(ROB).at(-1)?.revision,matchId:views(ROB).at(-1)?.matchId,decisionId:views(ROB).at(-1)?.decision?.id},before:draftBefore,after:draftAfter};
+  if(SHOTS)writeFileSync(path.join(SHOTS,'coach-draft-redraw.json'),JSON.stringify(draftProof,null,2));
+  ok(views(ROB).length > viewsBefore && draftAfter.draft === "a draft" && draftAfter.focused, `a view arriving mid-sentence leaves the draft, and the focus, where they were: ${JSON.stringify(draftProof)}`);
   await shot(rob.page, "coach-1400");
   await rob.page.click(".cm-coach-more summary");
   await rob.page.click("[data-action=board-coach-clear]");
