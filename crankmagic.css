@@ -4188,6 +4188,15 @@ button.cm-vitals{cursor:pointer}
 #matrix-v2 .cm-row-group-heading{margin:0;font:inherit}
 #matrix-v2 .cm-flow-field .cm-error:not(:empty):before{content:'⚠ ';font-family:var(--font-body)}
 #matrix-v2 .cm-deck-blocked{display:block;color:var(--color-required);font-weight:700}
+#matrix-v2 :is(.cm-graph-modes,.cm-facet-mode,.cm-graph-pop,.cm-pick-actions) .v-button.is-on,#matrix-v2 .cm-term-chips .cm-chip.is-on,#matrix-v2 .cm-pane-tab[aria-selected=true]{background:var(--color-ink);color:var(--color-bg);border-color:var(--color-ink)}
+#matrix-v2 .cm-graph-box .cm-graph-modes .v-button.is-on{background:var(--color-ink);color:var(--color-bg);border-color:var(--color-ink)}
+#matrix-v2 .cm-term-chips .cm-chip.is-on small{color:inherit}
+#matrix-v2 .cm-list-row.is-on>td{background:var(--color-ink);color:var(--color-bg)}
+#matrix-v2 .cm-list-row.is-on :is(button,a,.cm-price){color:inherit}
+#matrix-v2 .cm-graph:focus-visible{outline:var(--focus-width) solid var(--color-aether);outline-offset:var(--focus-offset)}
+#matrix-v2 .cm-graph-box{background:radial-gradient(ellipse at 50% 40%,color-mix(in oklab,var(--color-aether) 9%,var(--color-panel)),var(--color-panel) 70%)}
+#matrix-v2 .cm-graph-reach input[type=range]{accent-color:var(--color-ink)}
+#matrix-v2 .cm-graph-legend .is-loop{background:var(--color-money)}
 #matrix-v2 .cm-flow-field [aria-invalid=true]{border-color:var(--color-required)}
 #matrix-v2 .cm-flow-field .cm-error{margin-top:4px;color:var(--color-required);font-size:var(--text-small)}
 #matrix-v2 .cm-flow-foot>span.cm-error{margin-right:auto;font-size:var(--text-small)}
