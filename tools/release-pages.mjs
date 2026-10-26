@@ -74,7 +74,7 @@ const PLAY = ["crankmagic-mats.css", "crankmagic-seat-art.js", "crankmagic-game.
    local game host's (a Node server on this machine or a tunnel), which no release carries. */
 const PLAY_CLOUD = ["crankmagic-mats.css", "crankmagic-seat-art.js", "crankmagic-table.js", "crankmagic-board.js", "crankmagic-audio.js", "crankmagic-stage.js", "crankmagic-stage.css", "crankmagic-stage-tables.js", "crankmagic-stage-paint.js", "vendor/babylon.js", "vendor/BABYLON-LICENSE.txt"];
 const LOCAL_PLAY = PLAY.filter((f) => !PLAY_CLOUD.includes(f));
-const ACCOUNTS = ["cloud-sync.js", "crankmagic-account.js", "crankmagic-sharing.js"];
+const ACCOUNTS = ["cloud-sync.js", "crankmagic-account.js", "crankmagic-sharing.js", "crankmagic-admin.js"];
 /* What every release shares: Play says Coming Soon, no game host, served by Cloudflare. */
 const RELEASE = {
   play: "coming-soon",
