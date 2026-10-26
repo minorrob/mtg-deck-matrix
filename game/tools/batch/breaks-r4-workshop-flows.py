@@ -16,4 +16,8 @@ BREAKS = [
      "if(el.getAttribute('aria-busy')==='true')return;", ""),
     ('old Admin response wins after return', 'crankmagic-admin.js',
      "active=()=>render===generation&&C.route().view==='admin'", "active=()=>C.route().view==='admin'"),
+    ('concurrent result observations write twice', 'crankmagic-table.js',
+     "if(filing.has(key))return filing.get(key);", ""),
+    ('wrong seat context files result', 'crankmagic-table.js',
+     "||!contextMatches||r?.schema", "||r?.schema"),
 ]

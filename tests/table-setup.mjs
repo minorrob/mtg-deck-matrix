@@ -11,8 +11,8 @@ function setup({failRules=false,unknown=[],failDeck=false}={}){
   const form={values,elements:Object.fromEntries(Object.keys(values).map(k=>[k,{focus(){},setAttribute(){}}]))};
   const document={addEventListener(){},getElementById:id=>id==='cm-table-new'?form:{textContent:''},querySelector:()=>null};
   const precon=id=>({id,name:'Public '+id,commander:[{name:'Commander '+id}],cards:[['Commander '+id,1],['Basic '+id,99]]});
-  const C={esc:String,button:()=>'',actions:{close(){}},views:{},HELP:{},state:{decks:[],games:[],preferences:{}},board:{close(){C.disconnected=true;}},render:async()=>{},signedInAs:()=> 'rob@example.test',go:(view,params)=>navigations.push({view,params}),notice:(text,error,options)=>notices.push({text,error,options})};
-  const context={CrankFeatures:[],CrankAssets:{preconsLatest:'/latest',precons:'/precons',expect:v=>v},document,location:{origin:'https://example.test'},localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},FormData:class{constructor(f){return Object.entries(f.values)[Symbol.iterator]();}},fetch:async(path,init={})=>{
+  const C={esc:String,button:()=>'',actions:{close(){}},views:{},HELP:{},state:{decks:[],games:[],preferences:{}},board:{close(){C.disconnected=true;},wants:()=>true,show(){}},render:async()=>{},signedInAs:()=> 'rob@example.test',go:(view,params)=>navigations.push({view,params}),notice:(text,error,options)=>notices.push({text,error,options})};
+  const context={CrankFeatures:[],performance,URLSearchParams,CrankAssets:{preconsLatest:'/latest',precons:'/precons',expect:v=>v},document,location:{origin:'https://example.test'},localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},FormData:class{constructor(f){return Object.entries(f.values)[Symbol.iterator]();}},fetch:async(path,init={})=>{
     const body=init.body?JSON.parse(init.body):null;requests.push({path,body});
     if(path==='/latest')return Response.json({decks:[{id:'one'},{id:'two'}]});
     if(path==='/precons')return Response.json({decks:[precon('one'),precon('two')]});
@@ -68,4 +68,27 @@ function setup({failRules=false,unknown=[],failDeck=false}={}){
   ok(x.requests.length===0,'Leave invents no seat-release endpoint');
   await x.notices.at(-1).options.action.run();ok(x.navigations.at(-1).params.id==='table123456','Return after leaving resumes the same table');
 }
-console.log(`table-setup: ${checks} checks passed; real setup action, ordered rules, public decks, recoverable failure.`);
+{
+  const x=setup(),saved=[];x.C.state.decks.push({id:'own-deck',version:2});
+  x.table.gameRecord={schema:'CrankMagicTableResult@1',id:'game:table:table123456g1:0',tableId:'table123456',matchId:'table123456g1',seatId:0,source:{deckId:'own-deck',deckVersion:1},playedAt:'2026-10-26T12:00:00Z',outcome:'win',finishReason:'Last player standing',finishRank:1,turns:8,pod:2,seat:1,bracket:3,opponents:[{commanders:['Public commander']}],ai:false};
+  x.C.commit=async command=>{saved.push(command);x.C.state.games.push({id:command.gameId,deckId:command.deckId});};
+  await x.C.tableApi.refresh(x.table.tableId);await x.C.tableApi.refresh(x.table.tableId);
+  ok(saved.length===1&&saved[0].gameId===x.table.gameRecord.id,'repeated result reads file once under the stable match and seat identity');
+  ok(saved[0].type==='game'&&saved[0].table.schema==='CrankMagicTableResult@1'&&saved[0].table.deckVersion===1&&saved[0].finish===1,'automatic filing preserves the existing model command and played deck version');
+  x.table.gameRecord={...x.table.gameRecord,id:'game:table:table123456g2:0',source:{deckId:'missing-local-deck',deckVersion:1}};await x.C.tableApi.refresh(x.table.tableId);
+  ok(saved.length===1&&x.C.state.decks.length===1,'a result for an unavailable local deck never creates or imports a foreign deck');
+}
+{
+  const x=setup(),saved=[];let release;const gate=new Promise(resolve=>{release=resolve;});x.C.state.decks.push({id:'own',version:3});
+  const r={schema:'CrankMagicTableResult@1',id:'game:table:table123456g2:0',tableId:'table123456',matchId:'table123456g2',seatId:0,source:{deckId:'own',deckVersion:2},playedAt:'2026-10-26T12:00:00Z',outcome:'loss',turns:5,pod:2,seat:1,opponents:[{commanders:['Public opponent'],privateHand:['Hidden card']}],privateZones:{library:['Hidden library']}};
+  const context={account:'rob@example.test',tableId:r.tableId,matchId:r.matchId,seatId:r.seatId};
+  x.C.commit=async command=>{saved.push(command);await gate;x.C.state.games.push({id:command.gameId,deckId:command.deckId});};
+  const board=x.C.tableApi.fileResult(r,context),lobby=x.C.tableApi.fileResult(r,context);ok(saved.length===1,'concurrent board and lobby observations share a single in-flight commit');release();
+  ok((await board)&&(await lobby),'both observers receive the same saved result');
+  ok(!JSON.stringify(saved[0]).includes('Hidden')&&!JSON.stringify(saved[0]).includes('private'),'the account command copies only allowlisted public result fields');
+  ok(!await x.C.tableApi.fileResult({...r,id:'arbitrary'},context),'a noncanonical result ID cannot be filed');
+  ok(!await x.C.tableApi.fileResult(r,{...context,seatId:1}),'the supplied source context must match the record seat');
+  ok(!await x.C.tableApi.fileResult(r,{...context,account:'other@example.test'}),'an abandoned account observation cannot file into the active library');
+  x.C.state.decks[0].archived=true;ok(!await x.C.tableApi.fileResult(r,context),'an archived source deck is never selected as a current filing target');
+}
+console.log(`table-setup: ${checks} checks passed; ordered setup, reconnect recovery and idempotent owner result filing.`);
