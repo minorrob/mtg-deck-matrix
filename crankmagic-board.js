@@ -1006,6 +1006,21 @@ globalThis.CrankBoard = Object.seal({
       mat.style.setProperty('--caption-card-min',`${Math.ceil(minimum)}px`);
     }
   }
+  function fitTableCardRange(mat) {
+    const base=Math.min(60,Math.max(30,mat.parentElement.clientWidth*.074)),minimum=parseFloat(mat.style.getPropertyValue('--caption-card-min'))||0,[lo,hi]=C.cardScaleRange();
+    const turned=!!mat.querySelector('[data-card-section] .cm-bcard.is-tapped,[data-card-section] .cm-land-tilted'),footprint=turned?.866+1.4*.5:1;
+    // Grid/field padding, two pile columns, two gaps and the row's 4px inset must all fit.
+    const limit=Math.floor((mat.clientWidth-18)/(footprint+2.48)),delta=base*(hi-lo)/100;
+    mat.style.setProperty('--table-card-growth',String(Math.min(1,Math.max(0,(limit-minimum)/delta))));
+  }
+  function fitPileCaptions(host) {
+    for(const pile of host.querySelectorAll('.cm-board-pile')){
+      pile.removeAttribute('data-caption-compact');
+      const caption=pile.querySelector('figcaption'),name=caption?.querySelector('em'),count=caption?.querySelector('b');if(!name||!count)continue;
+      const css=getComputedStyle(caption),available=caption.clientWidth-parseFloat(css.paddingLeft)-parseFloat(css.paddingRight);
+      pile.toggleAttribute('data-caption-compact',!name.getClientRects().length || name.scrollWidth+count.offsetWidth+(parseFloat(css.columnGap)||4)>available);
+    }
+  }
   function zoneMetrics(mat) {
     const grid=mat.querySelector('.cm-mat-grid'),field=grid.querySelector('.cm-board-field'),lands=grid.querySelector('.cm-board-lands');
     const number=(el,key)=>parseFloat(getComputedStyle(el)[key])||0;
@@ -2685,7 +2700,7 @@ globalThis.CrankBoard = Object.seal({
         /* EX15: preserve the largest-fit widths and 5:7 cards. Where readable captions and two real
            card rows cannot fit a 16:9 mat, grow its row and scroll the outer Table viewport. */
         const n=Number(tbl.dataset.seats),box=tbl.getBoundingClientRect(),css=getComputedStyle(tbl),gy=parseFloat(css.rowGap)||22;
-        const minimum=slot=>{const mat=slot.querySelector('.cm-mat'),m=zoneMetrics(mat);return Math.ceil(m.header+(m.fieldMin+m.landMin)*1.2+m.extra+4);};
+        const minimum=slot=>{const mat=slot.querySelector('.cm-mat');fitTableCardRange(mat);const m=zoneMetrics(mat);return Math.ceil(m.header+(m.fieldMin+m.landMin)*1.2+m.extra+4);};
         const slots=[...tbl.querySelectorAll(':scope>.cm-board-slot')];
         const topBase=parseFloat(tbl.style.getPropertyValue('--top-w'))*9/16,botBase=parseFloat(tbl.style.getPropertyValue('--bot-w'))*9/16;
         let top=Math.max(topBase,...slots.filter(s=>n===2||['a','b'].includes(s.dataset.area)).map(minimum));
@@ -2764,6 +2779,7 @@ globalThis.CrankBoard = Object.seal({
         sec.style.setProperty("--pick-w", `${Math.max(56, Math.floor(Math.min(box.width - 20, room * 5 / 7)))}px`);
       }
       fitStage(host);
+      fitPileCaptions(host);
       applySpacing(host);
       overlap(host);
       fitBoardZones(host);
@@ -3333,7 +3349,7 @@ globalThis.CrankBoard = Object.seal({
       const cards=[...section.children];if(!cards.length)continue;
       const width=Math.max(...cards.map(c=>c.offsetWidth)), height=Math.max(...cards.map(c=>c.offsetHeight));
       // Tapped cards reserve their rotated footprint; their full image stays in the cell.
-      const tapped=cards.some(c=>c.classList.contains('is-tapped'));
+      const tapped=cards.some(c=>c.classList.contains('is-tapped')||c.querySelector(':scope>.cm-bcard.is-tapped,:scope>.cm-land-tilted'));
       const cellWidth=Math.ceil(tapped ? width*.866+height*.5 : width);
       const cellHeight=Math.ceil(tapped ? height*.866+width*.5 : height);
       section.style.setProperty('--zone-cell-width',`${cellWidth}px`);

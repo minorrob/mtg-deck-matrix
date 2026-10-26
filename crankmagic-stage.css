@@ -1080,7 +1080,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 
 /* Keep the existing art scale, with only the minimum needed to contain the actual scaled
    public badge. The same --bc drives pile columns and measured usable zone rows. */
-#matrix-v2 .cm-board .cm-mat[data-fit=table]{--table-card-base:clamp(30px,var(--row-w,var(--board-w,620px))*.074,60px);--bc:max(calc(var(--table-card-base)*var(--board-scale,1)),calc(var(--caption-card-min,0px) + var(--table-card-base)*(var(--board-scale,1) - var(--board-scale-min,.6))))}
+#matrix-v2 .cm-board .cm-mat[data-fit=table]{--table-card-base:clamp(30px,var(--row-w,var(--board-w,620px))*.074,60px);--bc:max(calc(var(--table-card-base)*var(--board-scale,1)),calc(var(--caption-card-min,0px) + var(--table-card-base)*(var(--board-scale,1) - var(--board-scale-min,.6))*var(--table-card-growth,1)))}
 #matrix-v2 .cm-board .cm-mat[data-fit=focus]{--bc:max(calc(clamp(92px,var(--mat-w,1060px)*.078,136px)*var(--board-scale,1)),var(--caption-card-min,0px))}
 #matrix-v2 .cm-board .cm-mat[data-fit=full]{--bc:max(calc(clamp(64px,var(--full-w,1200px)*.075,112px)*var(--board-scale,1)),var(--caption-card-min,0px))}
 #matrix-v2 .cm-board .cm-mat[data-fit=opp]{--bc:max(min(calc(clamp(28px,var(--opp-w,400px)*.11,48px)*var(--board-scale,1)),var(--opp-bc-max,48px)),var(--caption-card-min,0px))}
@@ -1103,3 +1103,8 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
  #matrix-v2 .cm-board .cm-stage-top .cm-board-ribbon li{padding-left:3px;padding-right:3px}
  #matrix-v2 .cm-board .cm-stage-top>.cm-board-turnsteps{flex:1 1 230px;min-width:210px}
 }
+#matrix-v2 .cm-board .cm-mat :is(.cm-board-field,.cm-board-lands)>.cm-mat-label{max-width:100%;box-sizing:border-box;white-space:normal;overflow-wrap:anywhere}
+#matrix-v2 .cm-board .cm-mat:not(.is-bare) .cm-board-pile figcaption em{display:block}
+#matrix-v2 .cm-board .cm-board-pile[data-caption-compact] figcaption em{display:none}
+#matrix-v2 .cm-board .cm-board-pile[data-caption-compact] figcaption{justify-content:center}
+#matrix-v2 .cm-board [data-card-section]>.cm-card-slot:has(>.cm-bcard.is-tapped),#matrix-v2 .cm-board [data-card-section]>.cm-land-stack:is(.is-tapped,:has(.cm-land-tilted)){position:relative;left:calc((var(--zone-cell-width) - var(--bc))/2);top:calc((var(--zone-cell-height) - var(--bc)*1.4)/2)}
