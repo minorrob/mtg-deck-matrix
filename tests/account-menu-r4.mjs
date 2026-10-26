@@ -8,7 +8,7 @@ const {browser,base,stub,close}=await openBrowser({name:'account-menu-r4',flag:'
 const shots=process.env.UAT_SHOTS;if(shots)mkdirSync(shots,{recursive:true});
 try{
   for(const test of [{name:'signed-out',signed:false,admin:false,width:1440,theme:'dark'},{name:'signed-in-phone',signed:true,admin:false,width:390,theme:'bronze-dark'},{name:'admin-light',signed:true,admin:true,width:1440,theme:'light'}]){
-    const context=await browser.newContext({viewport:{width:test.width,height:900},serviceWorkers:'block'}),page=await context.newPage();if(stub)await stub(page);
+    const height=test.width===390?844:900,context=await browser.newContext({viewport:{width:test.width,height},serviceWorkers:'block'}),page=await context.newPage();if(stub)await stub(page);
     await page.addInitScript(()=>(globalThis.CrankFeatures||=[]).push(C=>{globalThis.__menuC=C;}));
     const html=readFileSync(path.join(ROOT,'index.html'),'utf8').replace('<head>','<head><meta name="crankmagic-accounts" content="on">');
     await page.route('**/index.html*',r=>r.fulfill({contentType:'text/html',body:html}));
@@ -53,7 +53,7 @@ try{
     eq(await page.evaluate(()=>document.activeElement.id),'fixture-board-avatar','explicit shared close restores the captured alternate anchor');
     await page.locator('#fixture-board-avatar').evaluate(n=>n.remove());
     await trigger.click();await page.locator('#cm-user-menu:popover-open').waitFor();
-    await page.mouse.click(test.width-5,895);await page.waitForFunction(()=>!__menuC.accountMenuOpen());
+    await page.mouse.click(test.width-5,height-5);await page.waitForFunction(()=>!__menuC.accountMenuOpen());
     eq(await trigger.getAttribute('aria-expanded'),'false','native light-dismiss updates the actual trigger state');
     await trigger.click();await menu.locator('[data-theme-skin=bronze-basalt]').click();
     await page.waitForFunction(()=>document.getElementById('matrix-v2').dataset.palette==='bronze-basalt');
@@ -75,5 +75,7 @@ try{
   }
   // Both entry documents ship the same static groups; runtime account slots preserve their gates.
   for(const entry of ['index.html','crankmagic.html']){const html=readFileSync(path.join(ROOT,entry),'utf8');ok(html.includes('class="cm-menu cm-account-menu" popover="auto"')&&html.includes('aria-label="Careful"')&&html.includes('id="cm-account-device"'),entry+' contains the canonical native menu structure');}
+  const menuMarkup=entry=>{const html=readFileSync(path.join(ROOT,entry),'utf8'),start=html.indexOf('<div id="cm-user-menu"');return html.slice(start,html.indexOf('\n    </div>',start));};
+  eq(menuMarkup('index.html'),menuMarkup('crankmagic.html'),'both entry documents ship exactly the same account-menu controls/groups');
 }finally{await close();}
 console.log(`account-menu-r4: ${checks} checks passed; one grouped native popover, gated actions, shared anchors and keyboard/focus.`);
