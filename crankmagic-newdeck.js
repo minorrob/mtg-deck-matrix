@@ -23,7 +23,7 @@ const short=name=>String(name||'').split(',')[0].replace(/\s+(the|of)\s.*$/i,'')
 
 /* THE FRAME (DLG). `nav` is [[id,label,mark?]]; the current item is pressed. */
 function frame(title,nav,current,canvas,primary,{back=null,cls='',head=''}={}){
-  const d=modal(title,`<div class="cm-flow ${cls}">${head}<div class="cm-flow-body"><nav class="cm-flow-nav" aria-label="${e(title)}">${nav.map(([id,label,mark])=>`<button type="button" data-action="flow-nav" data-to="${e(id)}" aria-pressed="${id===current}"${mark?` data-mark="${e(mark)}"`:''}>${e(label)}${mark?` <span class="cm-flow-mark" aria-label="${e(mark)}">•</span>`:''}</button>`).join('')}</nav><section class="cm-flow-canvas" id="cm-flow-canvas">${canvas}</section></div><footer class="cm-flow-foot">${back?`<button type="button" class="v-button" data-action="${e(back.action)}">${e(back.label)}</button>`:'<span></span>'}<button type="button" class="v-button primary" data-action="${e(primary.action)}"${primary.disabled?' disabled':''}>${e(primary.label)}</button></footer></div>`);
+  const d=modal(title,`<div class="cm-flow ${cls}">${head}<div class="cm-flow-body"><nav class="cm-flow-nav" aria-label="${e(title)}">${nav.map(([id,label,mark])=>`<button type="button" data-action="flow-nav" data-to="${e(id)}" aria-pressed="${id===current}"${mark?` data-mark="${e(mark)}"`:''}>${e(label)}</button>`).join('')}</nav><section class="cm-flow-canvas" id="cm-flow-canvas">${canvas}</section></div><footer class="cm-flow-foot">${back?`<button type="button" class="v-button" data-action="${e(back.action)}">${e(back.label)}</button>`:'<span></span>'}<button type="button" class="v-button primary" data-action="${e(primary.action)}"${primary.disabled?' disabled':''}>${e(primary.label)}</button></footer></div>`);
   d.classList.add('cm-flow-dialog');return d;}
 actions['flow-nav']=el=>{if(!F)return;if(F.step==='start')F.method=el.dataset.to;else F.section=el.dataset.to;draw();};
 
@@ -113,7 +113,10 @@ function defineCanvas(){const x=F.def,s=F.section,on=(a,b2)=>a===b2?' checked':'
   const top=`<div class="cm-flow-modes" role="radiogroup" aria-label="Define the deck"><label class="cm-flow-mode"><input type="radio" name="mode" value="define"${on(x.mode,'define')}>Define the deck</label><label class="cm-flow-mode"><input type="radio" name="mode" value="undefined"${on(x.mode,'undefined')}>Leave undefined</label></div>`;
   if(x.mode!=='define')return top;
   const sel=(name,opts,v)=>`<select name="${name}">${opts.map(([k,l])=>`<option value="${e(k)}"${String(k)===String(v)?' selected':''}>${e(l)}</option>`).join('')}</select>`;
-  const field=(label,inner,cls='')=>`<label class="cm-flow-field ${cls}">${e(label)}${inner}</label>`;
+  const issues=(x.missing||[]).filter(m=>m.section.toLowerCase()===s);
+  const field=(label,inner,cls='')=>{const name=(inner.match(/name="([^" ]+)"/)||[])[1],issue=issues.find(m=>m.field===name||(!m.field&&s==='gameplay'&&name==='primary')),id=`cm-flow-${name}-error`;
+    if(issue)inner=inner.replace(/<(input|select) /,`<$1 aria-invalid="true" aria-describedby="${id}" `);
+    return `<label class="cm-flow-field ${cls}${issue?' is-missing':''}">${e(label)}${inner}${issue?`<span id="${id}" class="cm-error" role="alert">${e(issue.says)}</span>`:''}</label>`;};
   let body='';
   if(s==='general')body=field('Deck name',`<input name="name" maxlength="160" value="${e(F.name)}">`)
     +field('Bracket',sel('bracket',[['',`Default (B${M.defaultDefinition().baseBracket})`],...[1,2,3,4,5].map(n=>[n,`Bracket ${n}`])],x.bracket))
@@ -135,7 +138,7 @@ function defineCanvas(){const x=F.def,s=F.section,on=(a,b2)=>a===b2?' checked':'
       +(x.cards==='auto'?`<fieldset class="cm-flow-field"><legend>Weighting</legend><div class="cm-flow-row">${WEIGHTS.map(([k,l])=>`<label class="cm-checkbox"><input type="radio" name="weighting" value="${k}"${on(x.weighting,k)}>${e(l)}</label>`).join('')}</div></fieldset>`
         +(x.missing.length?`<ul class="cm-flow-missing" role="alert">${x.missing.map(m=>`<li><button type="button" class="cm-text-button" data-action="flow-nav" data-to="${e(m.section.toLowerCase())}">${e(m.section)}</button>: ${e(m.says)}</li>`).join('')}</ul>`:''):'')
       +(x.cards==='merge'?field('Collection group',sel('group',[['','Choose a group…'],...groups.map(g=>[g.id,C.groupLabel(g)])],x.group)):'');}
-  return top+body;}
+  return top+body+(s!=='gameplay'?issues.filter(m=>!m.field).map(m=>`<p class="cm-error" role="alert">${e(m.says)}</p>`).join(''):'');}
 function keepDefine(d){const f=d.querySelector('#cm-flow-canvas');if(!f)return;const x=F.def;
   for(const el of f.querySelectorAll('input,select')){const n=el.name;if(!n)continue;
     if(n==='mode'||n==='cards'||n==='weighting'||n==='sources'){if(el.checked)x[n]=el.value;continue;}
@@ -145,7 +148,10 @@ function keepDefine(d){const f=d.querySelector('#cm-flow-canvas');if(!f)return;c
     x[n]=el.value;}}
 function drawDefine(){const x=F.def,marks=new Map(x.missing.map(m=>[m.section.toLowerCase(),'Needs a choice']));
   const d=frame('Define the Deck',x.mode==='define'?SECTIONS.map(([id,l])=>[id,l,marks.get(id)]):[],F.section,defineCanvas(),{label:'Create deck',action:'flow-create',disabled:!x.mode},{back:{label:'Back',action:'flow-back'}});
-  d.querySelector('#cm-flow-canvas').addEventListener('change',()=>{keepDefine(d);const redraw=d.querySelector('[name=mode]:checked')||d.querySelector('[name=cards]:checked')||d.querySelector('[name=primary]');if(redraw)draw();});}
+  const missing=x.missing.length;
+  if(missing)d.querySelector('.cm-flow-foot').insertAdjacentHTML('afterbegin',`<span class="cm-error" role="status">${e(x.missing[0].says)} · ${missing} field${missing===1?'':'s'} left</span>`);
+  d.querySelector('[aria-invalid=true]')?.focus();
+  d.querySelector('#cm-flow-canvas').addEventListener('change',()=>{keepDefine(d);x.missing=x.missing.filter(m=>m.field==='name'?!F.name:m.field==='budget'?(!Number.isFinite(Number(x.budget))||Number(x.budget)<0):false);draw();});}
 actions['flow-def-mech']=el=>{keepDefine(document.querySelector('.cm-flow-dialog'));F.def.mechanics=toggle(F.def.mechanics,el.dataset.id);draw();};
 /* BACK (DEF-7): Start from with the commander still selected; a different commander then recomputes what came from it. */
 actions['flow-back']=()=>{keepDefine(document.querySelector('.cm-flow-dialog'));F.step='start';F.fitCache=null;draw();};
@@ -158,6 +164,10 @@ const definitionOf=()=>{const d=M.deck(C.state,F.deckId),x=F.def,base=x.bracket?
 /* CREATE DECK (DEF-3, DEF-6, CRD). */
 actions['flow-create']=async()=>{const dlg=document.querySelector('.cm-flow-dialog');if(dlg)keepDefine(dlg);const x=F.def,deckId=F.deckId;
   if(x.mode==='undefined'){F=null;actions.close();return go('decks',{deck:deckId});}
+  x.missing=[];
+  if(!F.name)x.missing.push({section:'General',field:'name',says:'Name the deck.'});
+  if(x.budget!==''&&(!Number.isFinite(Number(x.budget))||Number(x.budget)<0))x.missing.push({section:'General',field:'budget',says:'Enter a budget of $0 or more.'});
+  if(x.missing.length){F.section='general';return draw();}
   if(!x.cards){x.missing=[{section:'Cards',says:'Choose Auto-create, Merge in a Group or Define later.'}];F.section='cards';return draw();}
   let def=definitionOf();
   if(x.cards==='auto'){

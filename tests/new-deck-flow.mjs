@@ -100,6 +100,18 @@ try {
   await page.locator("#cm-sec-overview-empty [data-action=define-deck]").click();
   await page.waitForFunction(() => document.querySelector("#cm-dialog[open] #cm-dialog-title")?.textContent === "Define the Deck");
   eq(await page.$$eval(".cm-flow-nav button", (bs) => bs.map((x) => x.textContent.trim())), ["General", "Gameplay", "Mechanics", "Cards"], "four sections, in order");
+  const savedName = await page.inputValue('input[name=name]');
+  await page.fill('input[name=name]', '   ');
+  await page.locator('input[name=name]').dispatchEvent('change');
+  const beforeInvalid = await page.evaluate(() => globalThis.__cm.state.revision);
+  await page.click('[data-action=flow-create]');
+  await page.locator('[name=name][aria-invalid=true]').waitFor();
+  eq(await page.locator('#cm-flow-name-error').textContent(), 'Name the deck.', 'a blank name has an error at its field');
+  ok(await page.locator('[name=name]').evaluate((x) => x === document.activeElement), 'the first invalid field receives focus');
+  eq(await page.evaluate(() => globalThis.__cm.state.revision), beforeInvalid, 'invalid input never commits');
+  eq(await page.locator('.cm-flow-nav .cm-flow-mark').count(), 0, 'validation is not a dot on a tab');
+  await page.fill('input[name=name]', savedName);
+  await page.locator('input[name=name]').dispatchEvent('change');
   await page.selectOption("select[name=bracket]", "3");
   await page.fill("input[name=budget]", "150");await page.locator("input[name=budget]").dispatchEvent("change");
   await page.locator(".cm-flow-nav button", {hasText: "Cards"}).click();
