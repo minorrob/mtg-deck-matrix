@@ -34,6 +34,14 @@ component sizes above the general 12px minimum (EX-14). Measure actual descendan
 Reject clipping, overlapping headings, inaccessible scroll content, missing focus, lost input drafts,
 duplicate primary actions, broken portrait placeholders, or a tap-only/double-click-only action without
 its equivalent input path. Check normal and reduced motion. A screenshot is inspected, not merely saved.
+EX-17 expressly permits a tapped card's rotated corners to tuck under adjacent cards while every slot
+and neighbor stays fixed; do not mistake that approved overlap for an untapped-card fit failure.
+
+Combined incoming source is recorded in INCOMING-1026.md (merged PR #894). The later native Coach check
+failed when a received room view blurred the connected composer; c50d78e3 preserves that live focus,
+selection and same-match/same-view drawer scroll. board-r4-views passes 106 checks, including native
+composer viewport/hit access, retained draft/caret/node and delayed capability entry. The full real-table
+continuation and final CI remain separate gates; this targeted result does not claim either passed.
 
 Initial D1 review found phone battlefield labels overlapping at 200%, small desktop chrome, broken-image
 portrait glyphs and a misplaced Table menu. Corrected D1 screenshots and assertions now cover those cases (111 shell checks). The first 67 passing interaction checks did not establish visual acceptance. The actual Study Babylon table was inspected, and the actionBar primary contrast was subsequently corrected in A. Final combined screenshots remain required.
