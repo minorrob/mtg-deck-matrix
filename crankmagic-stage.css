@@ -1016,3 +1016,5 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-zone-divider{z-index:10;pointer-events:auto}
 
 #matrix-v2 .cm-board .cm-mat-grid{overflow-anchor:none}
+
+#matrix-v2 .cm-board .cm-mat[data-fit]>.cm-mat-grid{grid-template-rows:var(--field-px,minmax(180px,1fr)) 8px var(--lands-px,minmax(140px,1fr)) auto}
