@@ -51,7 +51,7 @@ try{
     ok(fit.left>=0&&fit.top>=0&&fit.right<=fit.width&&fit.bottom<=fit.height,'menu fits the viewport from a right-edge anchor');
     await page.evaluate(()=>__menuC.closeAccountMenu());
     eq(await page.evaluate(()=>document.activeElement.id),'fixture-board-avatar','explicit shared close restores the captured alternate anchor');
-    await page.evaluate(()=>{const old=document.getElementById('fixture-board-avatar');__menuC.openAccountMenu(old);const fresh=old.cloneNode(true);old.replaceWith(fresh);globalThis.__oldMenuInvoker=old;});
+    await page.evaluate(()=>{const old=document.getElementById('fixture-board-avatar');old.dataset.action='fixture-account-avatar';old.removeAttribute('id');__menuC.openAccountMenu(old);const fresh=old.cloneNode(true);fresh.id='fixture-board-avatar';old.replaceWith(fresh);globalThis.__oldMenuInvoker=old;});
     await page.locator('#cm-user-menu:popover-open').waitFor();await page.keyboard.press('Escape');
     eq(await page.evaluate(()=>({open:__menuC.accountMenuOpen(),draft:__menuDraftChanges,focus:document.activeElement.id,fresh:document.activeElement!==__oldMenuInvoker,expanded:document.getElementById('fixture-board-avatar').getAttribute('aria-expanded')})),{open:false,draft:0,focus:'fixture-board-avatar',fresh:true,expanded:'false'},'Escape resolves a replaced invoker identity, restores the new node and leaves the draft untouched');
     await page.locator('#fixture-board-avatar').evaluate(n=>n.remove());
