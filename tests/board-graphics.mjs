@@ -108,6 +108,12 @@ try{
   eq(tiers.one,[720,720],"a backdrop kept at 720 only plays it at every setting");
   eq(tiers.wide,720,"a stage narrower than 16:9 needs only the height its width allows (1280 wide: 720)");
   eq(tiers.none,null,"a backdrop with no video has no height");
+  /* With no resolution chosen, where WebGL is drawn in software (as here and on Actions' runners), 720 lines at most. */
+  const unchosen=await page.evaluate(()=>{const k="cm-stage-resolution",v=localStorage.getItem(k);localStorage.removeItem(k);
+    const all={video:{720:"a",1080:"b",1440:"c"}},box={width:1830,height:1000};
+    const r=[CrankStage.backdropLines(all,box,200),CrankStage.backdropLines({video:{1080:"b",1440:"c"}},box,200)];localStorage.setItem(k,v);return r;});
+  const soft=(await gfx()).software;
+  eq(unchosen,soft?[720,1080]:[1440,1440],soft?"with no resolution chosen and WebGL drawn in software, the backdrop stays at 720 lines (or the smallest kept)":"with no resolution chosen and a graphics card, the backdrop follows the default");
   let bd=await page.evaluate(()=>CrankStage.diagnostics().backdrop);
   ok(bd.id===first.id&&first.video.includes(bd.src),`the first backdrop plays by default, one of its kept files (${bd.src} at ${bd.lines} lines)`);
   /* Three heights of the same clip (the query alone tells them apart), then the setting moved. */

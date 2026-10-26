@@ -145,10 +145,14 @@
      resolution"): the video played is the smallest kept that fills the height it is shown at in drawn pixels -- the
      stage's height at 16:9, times the screen's pixel ratio, times the kept Graphics resolution -- and never more than 1440
      lines (2K). A slider being dragged previews the table only; the video follows the setting when it is kept. */
-  const BACKDROP_MAX=1440;
+  /* Where the browser draws WebGL in software the video is decoded by the same processor: with no resolution chosen, the
+     backdrop stays at 720 lines there (a 1080 one took the table's frames on Actions' runners), as the skins stay at
+     1024. A resolution chosen in Settings gets the backdrop it calls for, on any machine. */
+  const BACKDROP_MAX=1440, backdropMax=()=>!chosen()&&softwareGL()?720:BACKDROP_MAX;
   function backdropLines(scene,box,pct=resolution()){
-    const lines=Object.keys(scene?.video||{}).map(Number).filter(n=>n<=BACKDROP_MAX).sort((a,b)=>a-b);
-    if(!lines.length)return null;
+    const kept=Object.keys(scene?.video||{}).map(Number).sort((a,b)=>a-b),most=backdropMax();
+    if(!kept.length)return null;
+    const lines=kept[0]<=most?kept.filter(n=>n<=most):kept.slice(0,1);
     const w=box?.width||root.innerWidth||1280,h=box?.height||root.innerHeight||720;
     const need=Math.min(h,w*9/16)*(root.devicePixelRatio||1)*pct/100;
     return lines.find(n=>n>=need)??lines.at(-1);

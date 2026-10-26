@@ -300,11 +300,13 @@ try {
     await page.mouse.move(box.x-20,box.y+box.height/2,{steps:12});await page.mouse.up();
     assert.equal(await slider.inputValue(),await slider.getAttribute('min'),`${name} reaches minimum with pointer dragging`);
   }
-  await page.getByRole('combobox',{name:'Background',exact:true}).selectOption('forest');
+  /* A backdrop other than the default (the list is whatever tools/stage-backdrops.mjs last wrote). */
+  const background=page.getByRole('combobox',{name:'Background',exact:true}),other=await background.locator('option').nth(1).getAttribute('value');
+  await background.selectOption(other);
   const designs=page.getByRole('combobox',{name:'Table design',exact:true});
   assert.equal(await designs.locator('option').count(),7,'the Camera offers the seven table designs (ROB-100)');
   await designs.selectOption('stone-dais');
-  assert.equal(await page.getByRole('combobox',{name:'Background',exact:true}).inputValue(),'forest','background is independent of the table design');
+  assert.equal(await background.inputValue(),other,'background is independent of the table design');
   assert.equal(await page.evaluate(()=>localStorage.getItem('cm-stage-table')),'stone-dais','the table design is remembered on this device');
   assert.equal(await page.evaluate(()=>CrankStage.tableDesign('stone').id),'stone-dais','an older saved choice (stone) maps onto its design');
   assert.equal(await page.evaluate(()=>CrankStage.tableDesign(null).id),'medieval-banded','no saved choice means the default, medieval oak with iron bands');
