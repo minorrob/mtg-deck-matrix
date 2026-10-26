@@ -27,6 +27,7 @@ import {createState, addObject, cardsIn, moveObject} from "../game/engine/state/
 import {beginGame, advance, currentPhase, awaitingChoice, resolveAwaiting} from "../game/engine/rules/turn.mjs";
 import {legalActions, applyAction} from "../game/engine/rules/actions.mjs";
 import {passPriority} from "../game/engine/rules/priority.mjs";
+import {attach} from "../game/engine/script/effects/permanents.mjs";
 import {gameOver} from "../game/engine/rules/sba.mjs";
 import {projectFor, PROJECTION_SCHEMA} from "../game/engine/projection.mjs";
 import {createRng} from "../game/engine/rng.mjs";
@@ -271,4 +272,38 @@ function everyString(value, out = []) {
     `three whole games, every seat, every decision point: ${looks} decision points, four projections each, and no leak`);
 }
 
+/* Land stacks need public physical facts even when an Aura changes neither type nor P/T. */
+{
+  const s = createState(pod);
+  const land = addObject(s, {...FOREST, owner:0,controller:0}, "battlefield");
+  const plain = addObject(s, {...FOREST, owner:0,controller:0}, "battlefield");
+  const token = addObject(s, {...FOREST, owner:0,controller:0,token:true}, "battlefield");
+  const aura = addObject(s, {card:"Public mana Aura",types:["Enchantment"],owner:1,controller:1}, "battlefield");
+  attach(s, {targets:[land]}, {controller:1,source:aura});
+  const publicCard = (id, viewer=0) => projectFor(s,viewer).players.flatMap(p=>p.zones.Battlefield.cards).find(c=>c.cardId===id);
+  eq(publicCard(land).attachments, [aura], "a real attachment supplies its current public object identity on the host");
+  eq(publicCard(plain).attachments, [], "an ordinary land advertises an empty attachment list");
+  eq([publicCard(token).token,publicCard(plain).token], [true,undefined], "a token land can be separated without guessing its name");
+  eq(publicCard(land, null).attachments,[aura],"spectators see the same public battlefield relationship");
+  const hand = addObject(s, {card:"Hidden attachment name",types:["Enchantment"],owner:1,controller:1},"hand",1);
+  s.objects[hand].attachedTo=land;s.objects[land].attachments.push(hand,999999);
+  eq(publicCard(land).attachments,[aura],"hidden-zone and absent attachment references never cross the projection boundary");
+  attach(s,{targets:[plain]},{controller:1,source:aura});
+  s.objects[land].attachments.push(aura);
+  eq(publicCard(land).attachments,[],"a stale host array cannot claim an attachment now attached elsewhere");
+  eq(publicCard(plain).attachments,[aura],"moving an attachment changes the public relationship to its current host");
+  const movedAura=moveObject(s,aura,"hand",1);
+  eq(publicCard(land).attachments,[],"a departed attachment ID does not survive or remap to its new hidden object");
+  ok(!everyString(projectFor(s,0)).includes("Public mana Aura")&&!JSON.stringify(publicCard(land)).includes(String(movedAura)),"the removed Aura's hidden face and new identity are not attachment metadata");
+  attach(s,{targets:[plain]},{controller:1,source:hand});
+  const faceDown=moveObject(s,hand,"battlefield",null,{faceDown:true});
+  s.objects[faceDown].attachedTo=plain;s.objects[plain].attachments.push(faceDown);
+  eq(publicCard(plain).attachments,[faceDown],"a face-down attachment may expose only its already-public battlefield ID");
+  ok(!everyString(projectFor(s,0)).includes("Hidden attachment name"),"no attachment descriptor discloses a face-down name");
+  s.objects[faceDown].token=true;
+  eq([publicCard(faceDown).token,publicCard(faceDown).name],[true,null],"public token status does not disclose a face-down identity");
+  const returnedLand=moveObject(s,plain,"hand",0);
+  const seenHand=projectFor(s,0).players[0].zones.Hand.cards.find(c=>c.cardId===returnedLand);
+  ok(!Object.hasOwn(seenHand,"attachments")&&!Object.hasOwn(seenHand,"token"),"battlefield physical metadata does not follow a card into a hand");
+}
 console.log(`engine-projection: ${checks} checks passed — a count is not a card, a library is hidden from its owner too, and three whole games leaked nothing to anybody.`);
