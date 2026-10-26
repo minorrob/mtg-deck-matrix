@@ -4223,6 +4223,7 @@ button.cm-vitals{cursor:pointer}
 #matrix-v2 .cm-table-new-deck{height:64px;min-height:64px;overflow:auto;margin-bottom:8px}
 #matrix-v2 .cm-table-field-error{display:block;min-height:20px;font-size:var(--text-small);color:var(--color-required)}
 #matrix-v2 :is(.cm-table-field-error,#cm-table-new-error):empty{background:transparent;padding:0;border:0;box-shadow:none}
+#matrix-v2 .cm-table-field-error,#matrix-v2 .cm-flow-field .cm-error{background:var(--color-panel);color:var(--color-required);padding:0;border:0;box-shadow:none}
 @media(max-width:560px){#matrix-v2 .cm-new-table-center{display:none}}
 #matrix-v2 .cm-table-new [aria-invalid=true]{border-color:var(--color-required)}
 #matrix-v2 .cm-table-field-error:not(:empty):before{content:'⚠ ';font-family:var(--font-body)}
