@@ -1434,14 +1434,14 @@ try {
 
   /* THE COACH: a reserved column beside the board; the shell, with a stub reply that says so. */
   const matWidth = () => rob.page.evaluate(() => Math.round(document.querySelector(".cm-board-mat").getBoundingClientRect().width));
-  const matBefore = await matWidth(), beforeFocusCoach=await rob.page.locator(".cm-board-mat").boundingBox();
+  const matBefore = await matWidth(), beforeFocusCoach=await rob.page.locator(".cm-board-mat").boundingBox(),focusScrollBefore=await rob.page.locator(".cm-board-main").evaluate(el=>el.scrollTop);
   await rob.page.click(".cm-board-coach-open");
   await rob.page.locator("#cm-board-coach:not([hidden]) .cm-coach-input").waitFor();
-  const coachBox = await rob.page.evaluate(() => {const r = document.getElementById("cm-board-coach").getBoundingClientRect(), mat = document.querySelector(".cm-board-mat").getBoundingClientRect(), drawer = document.querySelector(".cm-stage-side").getBoundingClientRect(); return {module:document.getElementById("cm-board").dataset.coach === "module",width:r.width,right:r.right,edge:innerWidth,drawerContained:r.left>=drawer.left && r.right<=drawer.right+1,clear:mat.right<=r.left+1,mat: {x:mat.x,y:mat.y,width:mat.width,height:mat.height},visible:r.bottom<=innerHeight+1};});
+  const coachBox = await rob.page.evaluate(() => {const r = document.getElementById("cm-board-coach").getBoundingClientRect(), mat = document.querySelector(".cm-board-mat").getBoundingClientRect(), drawer = document.querySelector(".cm-stage-side").getBoundingClientRect(); return {scroll:document.querySelector(".cm-board-main")?.scrollTop,module:document.getElementById("cm-board").dataset.coach === "module",width:r.width,right:r.right,edge:innerWidth,drawerContained:r.left>=drawer.left && r.right<=drawer.right+1,drawer:{x:drawer.x,y:drawer.y,width:drawer.width,height:drawer.height},clear:mat.right<=r.left+1,mat: {x:mat.x,y:mat.y,width:mat.width,height:mat.height},visible:r.bottom<=innerHeight+1};});
   ok(coachBox.width>=240 && coachBox.right<=coachBox.edge && (coachBox.module
     ? coachBox.drawerContained&&Object.entries(beforeFocusCoach).every(([key,n])=>Math.abs(coachBox.mat[key]-n)<1)
     : coachBox.clear&&coachBox.visible&&await matWidth()<=matBefore),
-    `the Focus Coach uses its actual module-overlay or standalone-reserved layout (${Math.round(coachBox.width)}px)`);
+    `the Focus Coach uses its actual module-overlay or standalone-reserved layout (${Math.round(coachBox.width)}px): ${JSON.stringify({before:beforeFocusCoach,scrollBefore:focusScrollBefore,after:coachBox})}`);
   await verifyCoachUsable(rob.page);
   ok(/Sees your board, hand and the table · turn \d+/.test(await text(rob.page, "#cm-coach-context")), "it says what it sees, and the turn");
   await openCoachQuestions(rob.page);
