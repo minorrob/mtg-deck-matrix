@@ -37,7 +37,7 @@ ok(v.state.players[0].zones.Battlefield.cards.some(c => c.undoable), "the played
 ok(!room.view("maya").canUndo, "an opponent never receives the owner's undo permission");
 await answer(room, v, find(v, "undo-play"));
 eq(room.fingerprint().hash, beforeLand, "undo restores the land to hand and its land drop, to the exact hash");
-ok(room.view("maya").history.some(h => /undone: Mountain/.test(h.text)), "the opponent's history says the play was undone");
+ok(room.view("maya").history.some(h => /Mountain undone/.test(h.text)), "the opponent's history says the play was undone");
 v = await until(room, v => v.seatId === "rob" && v.decision.kind === "priority" && v.state.players[0].zones.Battlefield.cards.length >= 2,
   v => find(v, "play-land"));
 const beforeCast = room.fingerprint().hash;

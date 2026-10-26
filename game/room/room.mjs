@@ -551,6 +551,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
   /* The run of a person's taps for mana that may still be taken back (`untapMana`; rules/untap-mana.mjs), or null. */
   let untapMana = false, taken = null;
   let undoLastPlay = false, playBack = null, playBackSaved = false;
+  let resultRecords = false;
   /* Each person's way of playing (`prefer`), by seat id: `stepByStep`, asked at every step of their own turn. */
   let prefs = {};
   /* Each seat's own turns so far, by seat id, and the game turn last counted (`at`); null in a room saved before they were
@@ -840,7 +841,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     passEmpty = record.passEmpty === true; step = record.step || {key: null, quiet: false, acted: false}; prefs = record.prefs || {}; turnsOf = record.turnsOf || null;
     resolveAll = record.resolveAll === true; standing = record.standing || {}; endAsks = record.endAsks === true;
     untapMana = record.untapMana === true; taken = record.taken ?? null;
-    undoLastPlay = record.undoLastPlay === true;
+    undoLastPlay = record.undoLastPlay === true; resultRecords = record.resultRecords === true;
     playBack = undoLastPlay && record.playBack === true ? JSON.parse(await storage.get(PLAY_KEY) || "null") : null;
     playBackSaved = playBack !== null;
     passAfterCast = record.passAfterCast === true; castBy = record.castBy ?? null;
@@ -893,7 +894,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       const previous = playBack;
       state = undoPlay(state, previous, seat, rng.checkpoint());
       playBack = null; landBack = null; taken = null; castBy = null;
-      note(`${seats[seat].name} undone: ${previous.name}, the play and its mana restored`);
+      note(`${seats[seat].name}: ${previous.name} undone`);
       return;
     }
     playBack = null;
@@ -971,7 +972,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     const point = journal.checkpoint(state, rng.checkpoint());
     await store.saveCheckpoint(point);
     await store.pruneCheckpoints();
-    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, ...(outs.length ? {outs} : {}), history, refusals, ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {}), ...(resolveAll ? {resolveAll, standing} : {}), ...(passAfterCast ? {passAfterCast, castBy} : {}), ...(endAsks ? {endAsks} : {}), ...(untapMana ? {untapMana, taken} : {}), ...(undoLastPlay ? {undoLastPlay, playBack: playBack !== null} : {}), ...(Object.keys(prefs).length ? {prefs} : {}), ...(turnsOf ? {turnsOf} : {}), ...(passStack ? {passStack, heldBy} : {}), ...(blocksNone ? {blocksNone} : {}), ...(landAnyStep ? {landAnyStep} : {}), ...(takeBackLand ? {takeBackLand, landBack: landBack !== null} : {}), ...(askAimed ? {askAimed} : {}), ...(yieldable ? {yieldTurn: true, yielding} : {}), ...(tableEvents.length ? {events: tableEvents, eventsMark, eventsFloor} : {}), ...(seated ? {candidates: true} : {}), ...(pilotPicks ? {pilotPicks: true} : {})}));
+    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, ...(outs.length ? {outs} : {}), history, refusals, ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {}), ...(resolveAll ? {resolveAll, standing} : {}), ...(passAfterCast ? {passAfterCast, castBy} : {}), ...(endAsks ? {endAsks} : {}), ...(untapMana ? {untapMana, taken} : {}), ...(undoLastPlay ? {undoLastPlay, playBack: playBack !== null} : {}), ...(resultRecords ? {resultRecords: true} : {}), ...(Object.keys(prefs).length ? {prefs} : {}), ...(turnsOf ? {turnsOf} : {}), ...(passStack ? {passStack, heldBy} : {}), ...(blocksNone ? {blocksNone} : {}), ...(landAnyStep ? {landAnyStep} : {}), ...(takeBackLand ? {takeBackLand, landBack: landBack !== null} : {}), ...(askAimed ? {askAimed} : {}), ...(yieldable ? {yieldTurn: true, yielding} : {}), ...(tableEvents.length ? {events: tableEvents, eventsMark, eventsFloor} : {}), ...(seated ? {candidates: true} : {}), ...(pilotPicks ? {pilotPicks: true} : {})}));
   }
 
   const api = {
@@ -1001,7 +1002,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       const beats = {...(pod && pod.drawBeat === true ? {drawBeat: true} : {}), ...(pod && pod.passEmpty === true ? {passEmpty: true} : {}),
         ...(pod && pod.endWhenNoPerson === true ? {endWhenNoPerson: true} : {}), ...(pod && pod.resolveAll === true ? {resolveAll: true} : {}),
         ...(pod && pod.passAfterCast === true ? {passAfterCast: true} : {}), ...(pod && pod.endAsks === true ? {endAsks: true} : {}),
-        ...(pod && pod.untapMana === true ? {untapMana: true} : {}),
+        ...(pod && pod.untapMana === true ? {untapMana: true} : {}), ...(pod?.resultRecords === true ? {resultRecords: true} : {}),
         ...((pod?.houseRules?.undoLastPlay === true || pod?.undoLastPlay === true) ? {houseRules: {undoLastPlay: true}} : {}),
         /* And whether its AI seats take what a choice they may answer with none is for (`pilotPicks`), kept the same way. */
         ...(pod && pod.pilotPicks === true ? {pilotPicks: true} : {}),
@@ -1009,14 +1010,14 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         ...(pod && pod.blocksNone === true ? {blocksNone: true} : {}),
         ...(pod && pod.landAnyStep === true ? {landAnyStep: true} : {}), ...(pod && pod.takeBackLand === true ? {takeBackLand: true} : {}),
         ...(pod && pod.askAimed === true ? {askAimed: true} : {})};
-      passEmpty = beats.passEmpty === true; endWhenNoPerson = beats.endWhenNoPerson === true; resolveAll = beats.resolveAll === true; passAfterCast = beats.passAfterCast === true; endAsks = beats.endAsks === true; untapMana = beats.untapMana === true; undoLastPlay = beats.houseRules?.undoLastPlay === true;
+      passEmpty = beats.passEmpty === true; endWhenNoPerson = beats.endWhenNoPerson === true; resolveAll = beats.resolveAll === true; passAfterCast = beats.passAfterCast === true; endAsks = beats.endAsks === true; untapMana = beats.untapMana === true; undoLastPlay = beats.houseRules?.undoLastPlay === true; resultRecords = beats.resultRecords === true;
       passStack = beats.passStack === true; yieldable = beats.yieldTurn === true; blocksNone = beats.blocksNone === true;
       landAnyStep = beats.landAnyStep === true; takeBackLand = beats.takeBackLand === true; askAimed = beats.askAimed === true;
       /* The people at the table, by seat, who may play a land in any step of their own turn (`landAnyStep`). */
       const anyStep = landAnyStep ? {landAnyStep: seats.flatMap((s, seat) => (s.pilot === "house" ? [] : [seat]))} : {};
       /* And whether a cast tapped for tops up floating mana and taps a source for all it makes (`pooledTaps`, rules/actions.mjs):
          a match launched before it lacks the key, and so offers what it offered then. */
-      const pooled = {...(pod && pod.pooledTaps === true ? {pooledTaps: true} : {}), ...(pod && pod.xTaps === true ? {xTaps: true} : {})};
+      const pooled = {...(pod && pod.pooledTaps === true ? {pooledTaps: true} : {}), ...(pod && pod.xTaps === true ? {xTaps: true} : {}), ...(pod?.preparedTaps === true ? {preparedTaps: true} : {})};
       pilotPicks = beats.pilotPicks === true;
       try {state = createState({matchId, seed, players: seats.map((s) => ({name: s.name})), ...rules, ...(beats.drawBeat ? {drawBeat: true} : {}), ...pooled, ...anyStep});}
       catch (error) {throw new RoomError(400, error.message);}
@@ -1058,6 +1059,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         schema: VIEW_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seatId, seat,
         revision: controller.revision,
         status: over ? "finished" : "playing",
+        ...(resultRecords ? {resultRecordExpected: true} : {}),
         result: over ? {winner: over.winner === null ? null : seats[over.winner].seatId, reason: over.reason, ...(ended ? {endedBy: ended.by} : {}),
           /* And how it ended, as data (ending.mjs; Linear ROB-166): who lost and why, beside the words, which stay as they were. */
           ending: endingOf({over, ended, seats, players: state.players, departures, outs})} : null,
@@ -1256,10 +1258,9 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       const pending = controller.pending;
       if (finished() || pendingSeat !== seat || !pending || pending.id !== choiceId)
         return {ok: false, open: false, reasons: ["That question is no longer open. Answer the one your view shows now."]};
-      const reasons = state.awaiting?.kind === "declare-blockers"
-        ? deriving(state, () => blockers.check(state, state.awaiting, indices)).reasons
-        : [controller.check({choiceId, indices})].filter(Boolean);
-      return {ok: reasons.length === 0, open: true, reasons};
+      const checked = state.awaiting?.kind === "declare-blockers" ? deriving(state, () => blockers.check(state, state.awaiting, indices)) : null;
+      const reasons = checked ? checked.reasons : [controller.check({choiceId, indices})].filter(Boolean);
+      return {ok: reasons.length === 0, open: true, reasons, ...(checked?.byAttacker?.length ? {byAttacker: checked.byAttacker} : {})};
     },
     async act(seatId, request) {
       const seat = seatIndex(seatId);
