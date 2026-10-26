@@ -109,3 +109,10 @@ Final scoped acceptance repairs include phone Camera layering, physical stacked-
 Full49px action targets and EX-27 preview clearance from drawer bodies and their actual spine controls.
 Fullscreen49 passes; native preview/spine hits failed before repair and pass afterward. The same existing
 light Focus200 fixture measures drawer facts16.95:1 and avatar initial12.98:1 after the themed-ink repair.
+
+Real-table phone diagnostics showed a101px battlefield viewport with626px content and uncanceled wheel
+events that could not reach Library. The nested grid's scroll containment intercepted the native chain.
+2e8320b2 makes only the phone grid overflow visible and permits chaining to the outer frame. The same
+844×390 fixture fails before repair and passes all6 checks afterward (offset0→475, Library hit, fixed
+turn pill), plus the existing portrait folded case14. Frame sizing and JavaScript gestures are unchanged.
+Evidence: workbench/r4-play-evidence-20261026/phone-wheel-fix/. Physical phone hardware is still unproven.
