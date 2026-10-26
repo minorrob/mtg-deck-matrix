@@ -158,6 +158,16 @@ try {
     await page.locator("#cm-dialog .cm-dialog-close").click();
     await page.waitForTimeout(150);
     eq(await page.evaluate(() => document.activeElement?.dataset?.action), "board-camera", "closed, the focus goes back to Camera");
+    if(width===1440) {
+      await openSettings(page);await page.locator('#cm-board-tools [data-action=board-modules-settings]').click();await page.locator('#cm-drawer-settings').waitFor();
+      const actions=page.locator('#cm-drawer-settings tr').filter({has:page.locator('th', {hasText:/^Actions$/})});
+      eq(await actions.locator('input').count(),0,'fixed Actions location is honest text rather than unexplained disabled choices');ok((await actions.textContent()).includes('Always in the left drawer'),'fixed Actions row explains why the decision stays available');
+      ok(!/Drag its handle/.test(await page.locator('#cm-drawer-settings').textContent()),'drawer settings promise only the real arrow controls');
+      await page.locator('input[name=module-history][value=none]').check();await page.locator('[data-action=board-modules-save]').click();await page.locator('#cm-drawer-settings').waitFor({state:'detached'});
+      eq(await page.locator('.cm-stage-module[data-module=history]').count(),0,'real None selection removes optional History module');eq(await page.locator('.cm-stage-module[data-module=actions]').count(),1,'saving preserves the fixed Actions module');
+      const stackToggle=page.locator('[data-action=board-stage-side]');if(await stackToggle.getAttribute('aria-expanded')!=='true')await stackToggle.click();
+      await page.locator('[data-action=board-module-move][data-module=coach][data-by="-1"]').click();await page.waitForFunction(()=>document.querySelector('.cm-stage-modules[data-module-side=right]>.cm-stage-module')?.dataset.module==='coach');ok(true,'real drawer arrow changes saved module order');
+    }
     eq(errors, [], `no page error (${errors.join(" | ")})`);
     await context.close();
   }
