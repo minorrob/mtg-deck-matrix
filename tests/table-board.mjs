@@ -630,8 +630,8 @@ try {
   await rob.page.mouse.move(paneGrip.x + paneGrip.width / 2 + 200, paneGrip.y + 200, {steps: 4});
   await rob.page.mouse.up();
   const pane1 = await paneGeo();
-  ok(pane0.pane === 330 && Math.abs(pane1.pane - 530) <= 2 && pane1.tile > pane0.tile + 150 && pane1.matBox.every((n,i) => Math.abs(n-pane0.matBox[i])<1) && Math.abs(pane1.ratio - 1.78) < 0.02,
-    `the divider between the pane and the mat drags: 200px right, the pane ${pane0.pane} → ${pane1.pane}px, the tiles growing with it, the overlay leaving the 16:9 mat in exactly the same place and size`);
+  ok(pane0.pane === 330 && Math.abs(pane1.pane - 530) <= 2 && pane1.tile > pane0.tile + 150 && pane1.matW < pane0.matW && pane1.largest && Math.abs(pane1.ratio - 1.78) < 0.02,
+    `the divider between the pane and the mat drags: 200px right, the pane ${pane0.pane} → ${pane1.pane}px, the tiles growing with it, the mat still the largest 16:9 beside the reserved pane`);
   ok(pane0.mini === 0 && pane1.mini === 2 && pane1.robLands >= 1 && pane1.inert, `and past 400px each tile is a miniature of that seat's board, cards and all (the Forest on Rob's: ${pane1.robLands}), only to look at`);
   await shot(rob.page, "pane-miniatures-1400");
   await rob.page.locator(".cm-board-tile[data-seat='1'] .cm-board-tile-main").click();
@@ -748,14 +748,13 @@ try {
   await rob.page.locator("#cm-dialog[open] .cm-table-vitals").waitFor();
   ok(await seenAt(rob.page, "#cm-dialog[open]"), "in 3D, Table vitals is seen over the game");
   await rob.page.click("#cm-dialog[open] .cm-form-footer [data-action=close]");
-  const coachBoardBefore = await rob.page.locator(".cm-stage-region").boundingBox();
   await fullCoach(rob.page);
   await rob.page.locator("#cm-board-coach:not([hidden]) .cm-coach-input").waitFor();
   const docked = await rob.page.evaluate(() => {
     const c = document.getElementById("cm-board-coach").getBoundingClientRect(), board = document.querySelector(".cm-stage-region").getBoundingClientRect(), header = document.querySelector(".cm-stage-top").getBoundingClientRect(), host = document.getElementById("cm-board").getBoundingClientRect();
-    return {board: {x:board.x,y:board.y,width:board.width,height:board.height}, aligned: c.left >= host.left && c.right <= host.right + 1 && c.top >= header.bottom - 1, contained: c.width >= 240 && c.bottom <= host.bottom + 0.5, width: Math.round(c.width)};
+    return {reserved: board.right <= c.left + 1, aligned: c.left >= host.left && c.right <= host.right + 1 && c.top >= header.bottom - 1, contained: c.width >= 240 && c.bottom <= host.bottom + 0.5, width: Math.round(c.width)};
   });
-  ok(await seenAt(rob.page, "#cm-board-coach") && Object.entries(coachBoardBefore).every(([k,n]) => Math.abs(docked.board[k]-n)<1) && docked.aligned && docked.contained, `the Coach is visible in its ${docked.width}px overlay below the header, with unchanged board geometry`);
+  ok(await seenAt(rob.page, "#cm-board-coach") && docked.reserved && docked.aligned && docked.contained, `the Coach is visible in its reserved ${docked.width}px drawer below the header, clear of the board`);
   await shot(rob.page, "coach-full-1400");
   await rob.page.click("#cm-board-coach [aria-label='Close the Coach']");
   /* B1, item 23: the rail squares its own buttons, not the ones in the menus it opens. */
@@ -1381,8 +1380,8 @@ try {
   const matBefore = await matWidth(), coachMatBefore = await rob.page.locator(".cm-board-mat").boundingBox();
   await rob.page.click(".cm-board-coach-open");
   await rob.page.locator("#cm-board-coach:not([hidden]) .cm-coach-input").waitFor();
-  const coachBox = await rob.page.evaluate(() => {const r = document.getElementById("cm-board-coach").getBoundingClientRect(), mat = document.querySelector(".cm-board-mat").getBoundingClientRect(), drawer = document.querySelector(".cm-stage-side").getBoundingClientRect(); return {width:r.width,right:r.right,edge:innerWidth,drawerContained:r.left>=drawer.left && r.right<=drawer.right+1,mat: {x:mat.x,y:mat.y,width:mat.width,height:mat.height},visible:r.bottom<=innerHeight+1};});
-  ok(coachBox.width >= 240 && coachBox.drawerContained && coachBox.right <= coachBox.edge && Object.entries(coachMatBefore).every(([k,n]) => Math.abs(coachBox.mat[k]-n)<1) && coachBox.visible && await matWidth() === matBefore, `the Coach uses its ${Math.round(coachBox.width)}px overlay at the right edge without moving or resizing the mat`);
+  const coachBox = await rob.page.evaluate(() => {const r = document.getElementById("cm-board-coach").getBoundingClientRect(), mat = document.querySelector(".cm-board-mat").getBoundingClientRect(), drawer = document.querySelector(".cm-stage-side").getBoundingClientRect(); return {width:r.width,right:r.right,edge:innerWidth,drawerContained:r.left>=drawer.left && r.right<=drawer.right+1,clear:mat.right<=r.left+1,mat: {x:mat.x,y:mat.y,width:mat.width,height:mat.height},visible:r.bottom<=innerHeight+1};});
+  ok(coachBox.width >= 240 && coachBox.drawerContained && coachBox.right <= coachBox.edge && coachBox.clear && coachBox.visible && await matWidth() <= matBefore, `the Coach uses its ${Math.round(coachBox.width)}px reserved drawer while the full mat fits clear beside it`);
   ok(/Sees your board, hand and the table · turn \d+/.test(await text(rob.page, "#cm-coach-context")), "it says what it sees, and the turn");
   await openCoachQuestions(rob.page);
   await rob.page.click("[data-action=board-coach-ask][data-q=\"What's my best play?\"]");
