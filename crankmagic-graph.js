@@ -752,7 +752,7 @@
           background: read(V('v-bg')),
           muted: read(V('v-muted')),
           on: read(V('v-on')),
-          /* the focus and its two rings: the focus carries the accent, the rings step back */
+          /* The focus and its two rings use Aether; the rings step back. */
           focus: mix(V('v-aether'), 42, V('v-panel')),
           ring1: mix(V('v-aether'), 22, V('v-panel')),
           ring2: mix(V('v-aether'), 12, V('v-panel')),

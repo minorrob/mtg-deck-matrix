@@ -28,4 +28,6 @@ BREAKS = [
      "Number(button.dataset.undoRevision)!==state.revision", "false"),
     ('unrelated success acquires global Undo', 'crankmagic-app.js',
      "stay=false,undo=false,dismiss=null", "stay=false,undo=true,dismiss=null"),
+    ('abandoned deck readiness restyles the current screen', 'crankmagic-table.js',
+     "if(!currentView)return;", ""),
 ]

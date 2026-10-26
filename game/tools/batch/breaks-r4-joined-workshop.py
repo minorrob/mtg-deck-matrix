@@ -13,4 +13,10 @@ BREAKS = [
     ('valid setup fields wear error strips', 'crankmagic.css',
      '#matrix-v2 :is(.cm-table-field-error,#cm-table-new-error):empty{background:transparent;padding:0;border:0;box-shadow:none}',
      ''),
+    ('other deck tabs keep competing primaries', 'crankmagic-decks.js',
+     "for(const button of C.main.querySelectorAll('.primary'))button.classList.remove('primary');",
+     ''),
+    ('inline errors inherit a low-contrast red mix', 'crankmagic.css',
+     '#matrix-v2 .cm-table-field-error,#matrix-v2 .cm-flow-field .cm-error{background:var(--color-panel);',
+     '#matrix-v2 .cm-table-field-error,#matrix-v2 .cm-flow-field .cm-error{background:color-mix(in srgb,var(--color-required) 15%,transparent);'),
 ]

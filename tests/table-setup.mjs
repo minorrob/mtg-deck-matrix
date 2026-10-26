@@ -107,4 +107,17 @@ function setup({failRules=false,unknown=[],failDeck=false,cloud=false}={}){
   const pending=x.C.tableApi.refresh(x.table.tableId);x.C.signedInAs=()=> 'other@example.test';release();await pending;
   ok(!drawn,'a table response from an abandoned account cannot redraw the new account page');
 }
+for(const change of['navigation','same-deck rerender','deck version','none']){
+  const x=setup({cloud:true}),d={id:'own',version:1,name:'Own deck',commanders:['Leader'],slots:[{cardId:'Leader',quantity:1,purpose:'main'},{cardId:'Basic',quantity:99,purpose:'main'}]};x.C.state.decks.push(d);
+  let route={view:'decks',params:new URLSearchParams({deck:d.id})},demoted=0,release;const gate=new Promise(resolve=>{release=resolve;}),old={isConnected:true,dataset:{deck:d.id},innerHTML:'Original line',classList:{toggle(){}},hidden:false},next={textContent:'Original next',dataset:{nextDefault:'Original next'}};let line=old;
+  x.C.route=()=>route;x.C.M={readiness:()=>({complete:true})};const originalGet=x.context.document.getElementById,originalQuery=x.context.document.querySelector;
+  x.context.document.getElementById=id=>id==='cm-deck-play'?line:originalGet(id);x.context.document.querySelector=selector=>selector==='#cm-deck-next .cm-bento-next-line'?next:originalQuery(selector);x.context.document.querySelectorAll=()=>[{classList:{remove(){demoted++;},add(){}},dataset:{}}];x.context.fetch=async()=>{await gate;return Response.json({unknown:[]});};
+  const pending=x.C.play.deck(d);
+  if(change==='navigation')route={view:'decks',params:new URLSearchParams({deck:'another'})};
+  if(change==='same-deck rerender'){old.isConnected=false;line={...old,isConnected:true,innerHTML:'New current line'};}
+  if(change==='deck version')x.C.state.decks[0]={...d,version:2};
+  release();await pending;
+  if(change==='none')ok(old.innerHTML.includes('Playable at the table')&&demoted>0,'a current same-version deck still receives its valid readiness and action styling');
+  else ok(old.innerHTML==='Original line'&&next.textContent==='Original next'&&demoted===0,`a delayed readiness result after ${change} cannot mutate any deck or current Next/primary state`);
+}
 console.log(`table-setup: ${checks} checks passed; ordered setup, reconnect recovery and idempotent owner result filing.`);
