@@ -1364,7 +1364,7 @@ globalThis.CrankBoard = Object.seal({
       /* One card's offers: its mana abilities one row of symbols. */
       const rows = [...seen.values()], count = new Map(rows.map((r) => [r.o, r.n]));
       body = actionCard === null ? rows.map(each).join("") : withManaRow(rows.map((r) => r.o), (o) => each({o, n: count.get(o)}), true);
-      return `<section class="cm-board-decision is-also" id="cm-board-decision" aria-label="What you can do">${actionCard === null ? "" : `<button type="button" class="cm-board-back" data-action="board-action-all">${CHEV_LEFT}<span>All actions</span></button>`}<h3>${actionCard === null ? "Choose an action" : e(findCard(actionCard)?.name || "Choose an action")}</h3><div class="cm-board-options">${body}</div>${commitReview(d)}</section>`;
+      return `<section class="cm-board-decision is-also" id="cm-board-decision" aria-label="What you can do">${actionCard === null ? "" : `<button type="button" class="cm-board-back" data-action="board-action-all">${CHEV_LEFT}<span>All actions</span></button>`}<h3>${actionCard === null ? "Choose an action" : e(findCard(actionCard)?.name || "Choose an action")}</h3>${deskCard()}<div class="cm-board-options">${body}</div>${commitReview(d)}</section>`;
     }
     if (["one", "boolean", "index"].includes(d.mode)) {body = (d.mode === "one" ? sameStacks(d) : d.options.map((o) => [o])).map(stackOpt).join(""); foot = commitReview(d);}
     else if (blocking()) {
@@ -1405,7 +1405,7 @@ globalThis.CrankBoard = Object.seal({
     /* Asked in a run you chose Resolve all for: this answer goes for the same question each time the run asks it (Rob,
        2026-10-09: "Yes to all"; game/room/room.mjs). */
     const forRun = d.forRun ? `<p class="cm-muted cm-board-for-run">Resolve all: your answer goes for this same question each time the run asks it.</p>` : "";
-    return `<section class="cm-board-decision${blocking() ? " is-blocking" : ""}" id="cm-board-decision" data-choice-id="${e(d.id)}" data-match-id="${e(view.matchId)}" aria-label="${e(d.title)}"><h3${sentence ? ' class="is-sentence"' : ""}>${e(d.title)}</h3>${forRun}
+    return `<section class="cm-board-decision${blocking() ? " is-blocking" : ""}" id="cm-board-decision" data-choice-id="${e(d.id)}" data-match-id="${e(view.matchId)}" aria-label="${e(d.title)}"><h3${sentence ? ' class="is-sentence"' : ""}>${e(d.title)}</h3>${forRun}${deskCard()}
       <div class="cm-board-options">${body}</div>${foot ? `<div class="cm-board-decision-foot">${foot}</div>` : ""}</section>`;
   }
   /* What the room asks, and what is on the stack, floated over the surface under the strip. Priority is not
@@ -1549,8 +1549,19 @@ globalThis.CrankBoard = Object.seal({
     peek(null); stackPeek(null); draw();
     document.querySelector("[data-action=board-inspect-close]")?.focus({preventScroll:true});
   }
+  /* THE CARD BEING ACTED ON IS READ IN ACTIONS (Rob, 2026-10-25: "whenever I click on a card that can have an action, I
+     end up with both the inspection pane and the left side pane. Don't need both. Inspection pane should be within the
+     left drawer."): an inspection the board opens by itself -- a card clicked for its actions, an option staged, a cost or
+     a target asked for a card -- is drawn at the top of the Actions desk, beside its actions, and no pane opens on the
+     right. One a person asks for (🔍, Inspect card) still opens the inspector. */
+  const deskInspection = () => !!inspection?.automatic;
+  function deskCard() {
+    if (!deskInspection()) return "";
+    const c = inspectedCard();
+    return c ? `<div class="cm-action-card" aria-label="${e(c.name)}">${card(c, {where: "pick", action: "board-zoom-open"})}</div>` : "";
+  }
   function inspector() {
-    if (!inspection) return "";
+    if (!inspection || deskInspection()) return "";
     const c = inspectedCard();
     return `<aside id="cm-card-inspector" aria-label="Card inspection"><header><h3>${e(c?.name || "Card unavailable")}</h3>${ib("✕", "board-inspect-close", "Close card inspection")}</header>
       ${c ? `<p class="cm-inspection-context">${inspection.kind === "event" ? "Recorded event · card reference" : inspection.kind === "stack" ? "On the stack" : "Current visible card"} · inspection only</p>${card(c, {where:"peek", action:"none"})}${c.oracleText ? `<p>${e(c.oracleText)}</p>` : ""}${c.why ? `<p>${e(c.why)}</p>` : ""}` : `<p>This card is no longer visible in your current game view.</p>`}</aside>`;
@@ -1573,7 +1584,8 @@ globalThis.CrankBoard = Object.seal({
     if (!c?.name) return;
     actionCard = cardId; picked = []; draftRevision = view.revision;
     actionsShut = false; openModuleDrawer("actions"); alsoOpen = false;
-    if (phone()) {showing = null; held = null; draw();} else inspect(cardId, "card", true);
+    if (!phone() && view) inspection = {id: String(cardId), kind: "card", matchId: view.matchId, automatic: true};
+    showing = null; held = null; peek(null); draw();
   }
   /* The peek follows the pointer: it is put away when the pointer leaves the card -- and, since a card redrawn or moved
      away from under a still pointer never says it was left (Rob, 2026-10-09: ending the game left a Plains shown large,
@@ -1585,7 +1597,8 @@ globalThis.CrankBoard = Object.seal({
     peekTimer = null;
     const old = document.getElementById("cm-board-peek");
     if (!el) {peekId = null; if (old) old.remove(); return;}
-    if (inspection) return;
+    /* A pinned inspection stands for the hover; so does the card already read in the Actions desk, for that card. */
+    if (inspection && (!deskInspection() || inspection.id === String(el.dataset.card))) return;
     peekId = Number(el.dataset.card);
     peekTimer = setTimeout(() => {
       peekTimer = null;
@@ -2271,7 +2284,7 @@ globalThis.CrankBoard = Object.seal({
     host.classList.remove("has-panel");
     host.dataset.shell="shared";
     host.style.setProperty("--stage-left-width", `${paneWidth()}px`);
-    host.dataset.inspecting = inspection ? "on" : "off";
+    host.dataset.inspecting = inspection && !deskInspection() ? "on" : "off";
     if (mode === "full") host.innerHTML = `${fullView()}${showHand()}${banner()}`;
     else if (mode === "table") host.innerHTML = `${boardHeader()}${tableView()}${cameraMenu()}${boardDrawers()}${showHand()}${banner()}`;
     else host.innerHTML = `${boardHeader()}${focusView()}${cameraMenu()}${boardDrawers()}${showHand()}${banner()}`;

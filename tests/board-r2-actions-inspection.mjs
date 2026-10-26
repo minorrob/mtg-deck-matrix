@@ -114,7 +114,11 @@ try{
   ok(quiet.w<=24&&quiet.h<=24&&quiet.svg&&/rgba\(0, 0, 0, 0\)|transparent/.test(quiet.bg),`the Actions toggle is a small unfilled chevron (${quiet.w}×${quiet.h}, ${quiet.bg})`);
   eq(quiet.back,0,'All actions is a small link at the left edge');
   ok(!/255, 255, 255\)|#fff\b|white/i.test(quiet.bar)&&quiet.bar!=='auto',`the drawer's scrollbar is quiet (${quiet.bar})`);
-  ok(await page.locator('#cm-card-inspector img').count()===1,'full source card remains visible during review');
+  /* Rob, 2026-10-25: "Don't need both. Inspection pane should be within the left drawer." */
+  ok(await page.locator('.cm-stage-rail #cm-board-decision .cm-action-card img').count()===1,'the source card is read in the Actions desk during review');
+  eq(await page.locator('#cm-card-inspector').count(),0,'and no second inspection pane opens on the right');
+  await page.locator(`.cm-board-hand .cm-bcard[data-card="${id}"], .cm-stage-fan .cm-bcard[data-card="${id}"]`).first().hover();await page.waitForTimeout(450);
+  eq(await page.locator('#cm-board-peek').count(),0,'nor a hover preview of the card the desk already shows');
   await page.locator('[data-action="board-reset"]').click();
   eq(sent.filter(x=>x.type==='act').length,before,'clearing draft sends nothing');
   await page.locator('#cm-board-decision [data-index="0"]').click();
@@ -133,7 +137,7 @@ try{
  await page.locator('[data-action=board-tools]').click();await page.keyboard.press('Escape');
  await page.locator('#cm-board-tools').waitFor({state:'detached',timeout:3000});
  eq(await page.locator('#cm-board-tools').count(),0,'Escape closes the foremost Settings menu');
- eq(await page.locator('#cm-card-inspector').count(),1,'closing Settings preserves the card being reviewed');
+ eq(await page.locator('.cm-stage-rail #cm-board-decision .cm-action-card').count(),1,'closing Settings preserves the card being reviewed, in the Actions desk');
  await page.keyboard.press('Escape');
  const moved=structuredClone(payment);moved.revision=++revision;await show(moved);
  eq(await page.locator('#cm-board-decision [data-action="board-confirm"]').count(),0,'a revision invalidates the old payment selection even with the same question ID');

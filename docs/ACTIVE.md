@@ -61,6 +61,11 @@ covered the tile's stage pill. At his word this changes the Codex · Play lane's
 - **A mana ability is its symbols** (Rob, same day, Command Tower's four "Tap for mana" buttons): a card's mana abilities
   whose way is mana alone are one row of small mana-symbol buttons, in Actions and in Card Preview / the Panel; each
   button's accessible name and tooltip is the whole sentence (`withManaRow`). Lands only for now, at Rob's word.
+- **The card acted on is read in Actions** (Rob, same day: *"I end up with both the inspection pane and the left side
+  pane. Don't need both. Inspection pane should be within the left drawer."*): an inspection the board opens by itself (a
+  card clicked for its actions, an option staged, a cost or target asked for a card) is drawn at the top of the Actions
+  desk, and no pane opens on the right; nor does a hover preview of that same card. One a person asks for (🔍, Inspect
+  card) still opens the inspector (`deskCard`).
 - **Proof:** `board-r2-actions-inspection` 109 (no visible summary or paragraph, Confirm/Clear words and row, the toggle's
   size and fill, All actions at the left edge, the rail's scrollbar color) and `decks-hub` 70 (star clear of the pill);
   new `board-stack-choices` 16, `board-attack-risk` 11 and `board-mana-symbols` 13; every new check red on the old source. **Not proven:** how Windows/macOS draw the scrollbar colors (headless shows none).
