@@ -4267,4 +4267,5 @@ button.cm-vitals{cursor:pointer}
 #cm-user-menu .cm-menu-group .cm-danger{color:var(--color-required)!important}
 #cm-user-menu .cm-menu-group-danger,#cm-user-menu #cm-account-out{background:var(--color-panel);border-radius:8px}
 #cm-user-menu .cm-btn-icon{display:inline-block;min-width:16px;margin-inline-end:8px;text-align:center}
+#cm-user-menu [data-profile-menu] .v-button,#cm-user-menu [data-admin-menu] .v-button{display:block;justify-content:flex-start;text-align:left}
 @media(max-width:760px){#cm-user-menu .cm-menu-group button,#cm-user-menu .cm-menu-group a{min-height:44px}}
