@@ -183,6 +183,17 @@ try {
   await field.waitFor();
   ok(true, "Undo brought the deck back: it is there, archived, to be deleted again");
   await page.keyboard.press("Escape");
+  await page.goto(`${base}/index.html#decks?deck=${encodeURIComponent(live)}`);
+  await page.locator('.cm-deck-hero h1').waitFor();
+  await press(page,'delete-deck',{deck:live});await field.fill(wanted);await page.locator('#cm-dialog [type=submit]').click();
+  await page.waitForFunction(()=>location.hash==='#decks'&&!document.getElementById('cm-dialog').open);
+  await page.locator('#cm-notice [data-undo-revision]').waitFor();
+  const navigatedDelete=await toast(page);
+  ok(navigatedDelete.action==='Undo','deleting from a deck detail retains its Undo after navigating to the hub');
+  eq(await page.locator('.cm-toast:not([hidden]) .cm-toast-text').allTextContents(),[navigatedDelete.text],'the navigated deletion also has exactly one transaction receipt');
+  await page.locator('#cm-notice [data-undo-revision]').click();
+  await page.waitForFunction(()=>/Last change undone/.test(document.getElementById('cm-notice').textContent));
+  ok(await page.evaluate(async id=>{const r=await CrankRepository.open();try{return (await r.getState()).decks.some(d=>d.id===id&&d.archived);}finally{r.close();}},live),'native post-navigation Undo restores the persisted archived deck');
   await context.close();
 
   /* 1, signed in: a page with accounts on, and a cloud that answers. */
