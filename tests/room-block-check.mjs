@@ -44,6 +44,9 @@ s.combat = {attackingPlayerId: 0, defenders: [1, 2], firstStrike: false,
   attacks: [brute, bear, drake].map((attacker) => ({attacker, defender: 1, blocked: false, blockers: []})).concat([{attacker: hound, defender: 2, blocked: false, blockers: []}])};
 s.awaiting = {kind: "declare-blockers", player: 1};
 const choice = awaitingChoice(s);
+eq(choice.blockReasons.find(a => a.attackerId === brute).reasons, ["Menace: needs two or more blockers"], "the menace attacker's tile has its engine restriction in words");
+eq(choice.blockReasons.find(a => a.attackerId === drake).reasons, ["Flying: needs flying or reach"], "the flying attacker's tile explains which creatures may block it");
+ok(!choice.blockReasons.some(a => a.attackerId === hound), "another defending player's restrictions are not part of this decision");
 const pick = (...pairs) => pairs.map(([b, a]) => choice.options.findIndex((o) => o.cardId === b && o.attackerId === a));
 
 eq(choice.legalBlocks, [{blocker: wall, attackers: [brute, bear]}, {blocker: elf, attackers: [brute, bear]}, {blocker: archer, attackers: [brute, bear, drake]}],
@@ -132,6 +135,7 @@ const quiet = () => ({fingerprint: JSON.stringify(room.fingerprint()), revision:
 const still = quiet();
 eq(room.check("maya", {choiceId: d.id, indices: []}), {ok: true, open: true, reasons: []}, "no blocks: legal");
 const alone = room.check("maya", {choiceId: d.id, indices: [at(b1, a1)]});
+eq(alone.byAttacker, [{attackerId: a1, reasons: alone.reasons}], "an invalid draft maps the actual refusal to its attacker tile");
 eq([alone.ok, alone.open, alone.reasons.length, /has menace and can't be blocked except by two or more creatures/.test(alone.reasons[0])], [false, true, 1, true],
   "one Bear on a Brute: refused, for menace");
 eq(room.check("maya", {choiceId: d.id, indices: [at(b1, a1), at(b2, a1)]}), {ok: true, open: true, reasons: []}, "two Bears on one Brute: legal");

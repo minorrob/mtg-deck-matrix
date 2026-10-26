@@ -41,3 +41,47 @@ There is no second untap command and no browser-side permission to reverse a spe
 
 Proof: `node tests/room-undo-play.mjs`, `node tests/room-untap-mana.mjs`; deliberate breaks:
 `python game/tools/batch/breaks.py game/tools/batch/breaks-undo-play.py`.
+
+## Prepared spell offers (CH-55)
+
+An inset spell is a separate Sorcery or Instant copy in public exile. Its cast option carries `preparedFrom`, the
+prepared permanent's card id, so its creature's menu can include that legal option without guessing an action. The
+prepared permanent projects `preparedSpell: {cardId, name, manaCost}` while the copy exists. The copy's own `cardId`
+and the room's answer index remain authoritative; the creature is never cast again to cast its inset.
+
+New table matches persist `preparedTaps: true`: a valid prepared copy can be funded from its controller's untapped
+mana sources as a cast from hand can. This changes neither the printed cost nor its timing. Matches without the key
+retain their previous offers and replay; manual mana payment remains available. Casting the inset unprepares the
+creature, and a Sorcery inset cannot be cast in combat or resolve as a permanent.
+
+Proof: `node tests/room-prepared.mjs` uses the real Studious First-Year // Rampant Growth definition, tests its cost,
+timing, source association, resolution and replay; `python game/tools/batch/breaks.py game/tools/batch/breaks-prepared-room.py`.
+
+## A dated result for the existing deck record (CH-59)
+
+New room views carry `resultRecordExpected: true`, persisted through reopen and the finished view. Once the table
+settles that finished match, its existing GET/view returns owner-only `gameRecord`. A finished socket view can precede
+the alarm's settlement; refresh the table and retry while the expected summary is absent. Legacy rooms omit the flag.
+
+The summary reuses `CrankMagicTableResult@1` and id `game:table:<matchId>:<seatId>`, the existing idempotent library game
+command's identity. Fields are `tableId`, `matchId`, `seatId`, own `source: {deckId, deckVersion}` or null, `playedAt`
+(ISO, from the settlement clock), `outcome` (`win`, `loss`, `draw`, `unfinished`), `finishReason`, `finishRank` (1 for a
+win, otherwise null), `turns`, `pod`, 1-based `seat`, `bracket`, own `commanders`, and `ai`. `opponents` is a list of
+`{seatId, name, commanders, ai}` holding public facts. Map `finishRank` to the existing numeric `finish` command field;
+the reason belongs in notes/table metadata. No new library write protocol is introduced.
+
+The table saves one summary per human seat and match, before releasing rematch seats. It preserves the original source
+and timestamp across retries and reopen. Other players' deck sources, accounts, hands, libraries, seed and tape are
+excluded. The same seat's existing downloadable record includes the same summary.
+
+Proof: `node tests/table-game-record.mjs` and `python game/tools/batch/breaks.py game/tools/batch/breaks-result-record.py`.
+
+## Blocking restrictions and refusal mapping (CH-60)
+
+`decision.legalBlocks` remains its existing legal-pair array. Additive `decision.blockReasons` is a list of
+`{attackerId, reasons: string[]}` for this defending player's attackers: public restrictions such as menace and flying,
+and whether any legal blocker exists. It contains no drafted selection. A refusal from the existing room `check`
+adds `byAttacker: [{attackerId, reasons: string[]}]`, mapping actual draft errors to their tiles. A valid check's
+`{ok: true, open: true, reasons: []}` shape stays unchanged. Only an answer publishes the selected blockers.
+
+Proof: `node tests/room-block-check.mjs` and `python game/tools/batch/breaks.py game/tools/batch/breaks-block-reasons.py`.

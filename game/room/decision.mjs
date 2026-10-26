@@ -2,16 +2,13 @@
 
 /* Additive desk facts in CrankRoomView@1. The original choice is kept private to its answering seat, as before.
    This describes its existing options and never introduces a Cancel, a target, or a shortcut past a mandatory choice. */
-import {characteristicsOf, deriving} from "../engine/rules/layers.mjs";
+import {deriving} from "../engine/rules/layers.mjs";
+import {offerScript} from "../engine/rules/actions.mjs";
 import {modalScript} from "../engine/script/bind.mjs";
 import {effectForTarget, targetFacts, targetGroups} from "../engine/script/decision.mjs";
 
 function scriptFor(state, action) {
-  const object = state.objects[action?.objectId];
-  if (!object) return null;
-  const script = action.kind === "cast" ? (action.adventure ? object.adventure?.spell : object.spell)
-    : (characteristicsOf(state, action.objectId).abilities ?? []).find(a => a.id === action.abilityId);
-  return script?.modal && Array.isArray(action.modes) ? {...script, ...modalScript(script.modal, action.modes)} : script;
+  return offerScript(state, action);
 }
 
 export function describeDecision(state, choice, actions = null) {
@@ -39,8 +36,10 @@ function description(state, choice, actions) {
     const direct = option.playerId !== undefined ? {kind: "player", id: option.playerId}
       : option.cardId !== undefined && state.objects[option.cardId] ? {kind: "object", id: option.cardId} : null;
     const effect = effectForTarget(effects);
+    const preparedFrom = action?.kind === "cast" ? state.objects[action.objectId]?.prepareOf : undefined;
     const decline = may && awaiting?.effect === "modal" && !(awaiting.modes[option.index]?.effects ?? []).length;
     return {...option, ...targetFacts(state, direct), ...(effect ? {effect} : {}), ...aimed,
-      ...(groups.length ? {targetGroups: groups} : {}), ...(may ? {optional: true} : {}), ...(decline ? {decline: true} : {})};
+      ...(groups.length ? {targetGroups: groups} : {}), ...(preparedFrom !== undefined ? {preparedFrom} : {}),
+      ...(may ? {optional: true} : {}), ...(decline ? {decline: true} : {})};
   })};
 }
