@@ -10,7 +10,7 @@
  *   1. framed at 16:9, the stage's shape (crankmagic-stage.css): scaled to cover it and cropped to its center;
  *   2. made to loop without a seam: the last --fade seconds (default 1; 0 for none) cross-fade into the first, so the
  *      clip ends on what it begins with. A clip shorter than three fades is left as it is;
- *   3. kept at 720, 1080 and 1440 lines (1280x720, 1920x1080, 2560x1440), never larger than the source: the stage plays
+ *   3. kept at 720, 1080 and 1440 lines (1280x720, 1920x1080, 2560x1440), never more than 2% larger than the source: the stage plays
  *      the smallest that fills the backdrop at the Graphics resolution kept in Settings, 1440 (2K) at the most
  *      (crankmagic-stage.js, backdropLines). A source under 720 lines is kept at its own height only;
  *   4. encoded VP9 in WebM without sound, at most 30 frames a second, at constrained quality (CRF 32 under a ceiling of
@@ -59,8 +59,9 @@ export const slug = name => name.replace(VIDEO, "").normalize("NFKD").replace(/[
 /** A name for the Background menu: the file's words, without a size tag (4K, 1080p, UHD), capitalized where left lowercase. */
 export const title = name => name.replace(VIDEO, "").replace(/[_-]+/g, " ").replace(/\b(\d{3,4}p|[248]k|uhd|fhd|qhd|hd)\b/gi, " ").replace(/\s+/g, " ").trim()
   .replace(/(^|\s)(\p{Ll})/gu, (_, a, c) => a + c.toUpperCase()) || "Backdrop";
-/** The heights kept for a source of `height` lines: 720, 1080 and 1440 up to it, or its own (even) height under 720. */
-export const linesFor = height => {const kept = LINES.filter(n => n <= height);return kept.length ? kept : [Math.max(2, height - height % 2)];};
+/** The heights kept for a source of `height` lines: 720, 1080 and 1440 up to it, or its own (even) height under 720. A
+    height within 2% of a tier reaches it (a 2544x1456 clip framed at 16:9 is 1431 lines: kept at 1440, not left at 1080). */
+export const linesFor = height => {const kept = LINES.filter(n => n <= height * 1.02);return kept.length ? kept : [Math.max(2, height - height % 2)];};
 
 function probe(file) {
   const info = JSON.parse(run("ffprobe", ["-v", "error", "-select_streams", "v:0", "-show_entries",
