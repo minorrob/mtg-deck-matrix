@@ -4081,6 +4081,7 @@ globalThis.CrankBoard = Object.seal({
      press still reads the card (below). */
   document.addEventListener("contextmenu", (event) => {
     if (!view || !document.getElementById("cm-board")) return;
+    if(event.target.closest?.('#cm-card-menu')){event.preventDefault();return;}
     if (hold) {event.preventDefault(); return;}   /* a right press on the 3D table, answered when it is let go */
     const el = event.target.closest?.(".cm-board .cm-bcard[data-card]"), stage = stageEnabled() && event.target.closest?.("#cm-board .cm-stage-region");
     const table = stage && !event.target.closest(OVERLAYS);

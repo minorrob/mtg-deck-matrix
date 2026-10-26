@@ -68,7 +68,7 @@ async function board(mode, {width = 1440, height = 900, reduced = false} = {}) {
   await page.waitForTimeout(300);
   await page.evaluate(async()=>{await document.fonts.ready;await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));});
   /* Every browser menu asked for, and whether the board kept it shut. */
-  await page.evaluate(() => {globalThis.__menus = []; addEventListener("contextmenu", (e) => __menus.push({open: !e.defaultPrevented, table: !!e.target.closest?.(".cm-stage-region")}));});
+  await page.evaluate(() => {globalThis.__menus = []; addEventListener("contextmenu", (e) => __menus.push({open: !e.defaultPrevented, table: !!e.target.closest?.(".cm-stage-region"), target: e.target.outerHTML?.slice(0,180)}));});
   const acts = () => sent.filter((x) => x.type === "act").map((x) => x.indices);
   /* The room's answer to a play: here, the same offers again at a new revision. */
   let revision = view.revision;
@@ -105,7 +105,7 @@ try {
   const zoomSlider = () => page.getByRole("slider", {name: "Table zoom", exact: true});
   await page.getByRole("button", {name: "Camera", exact: false}).click();
   eq(await zoomSlider().inputValue(), "100", "the zoom starts at 100%");
-  const point = {x: region.x + region.width * .7, y: region.y + region.height * .55};
+  const point = await page.evaluate(({fx,fy})=>{const region=document.querySelector('.cm-stage-region'),r=region.getBoundingClientRect(),want={x:r.left+r.width*fx,y:r.top+r.height*fy};let best=null,distance=Infinity;for(let y=r.top+20;y<r.bottom-20;y+=9)for(let x=r.left+20;x<r.right-20;x+=9){const el=document.elementFromPoint(x,y),d=(x-want.x)**2+(y-want.y)**2;if(el?.matches('.cm-stage-canvas,.cm-stage-region')&&CrankStage.pick(x,y)&&d<distance){best={x,y};distance=d;}}if(!best)throw new Error('no native bare table point for wheel zoom');return best;},{fx:.7,fy:.55});
   const beforePick = await page.evaluate(({x, y}) => CrankStage.pick(x, y).world, point);
   const wheelHit=await page.evaluate(({x,y})=>{const el=document.elementFromPoint(x,y);return {hit:el?.outerHTML.slice(0,180),row:!!el?.closest('[data-zone-scroll]'),overlay:!!el?.closest('.cm-stage-camera,.cm-stage-actions,#cm-card-inspector,.cm-stage-side,.cm-stage-rail')};},point);
   await page.mouse.move(point.x, point.y);
@@ -346,7 +346,7 @@ try {
   /* ---- 4. a card's menu: what it can do, in shorthand ---- */
   const menu = page.locator("#cm-card-menu");
   const readMenu = () => menu.evaluate((m) => ({label: m.getAttribute("aria-label"), role: m.getAttribute("role"),
-    card: [...(m.querySelector("[data-action=board-card-menu-view]")?.children || [])].map((n) => n.textContent).join(" ") || null,
+    card: [...(m.querySelector("[data-action=board-card-menu-view]")?.children || [])].map((n) => n.textContent).join(" ").replace(/\s+/g," ").trim() || null,
     rows: [...m.querySelectorAll("[data-action=board-card-menu-do]")].map((r) => ({index: Number(r.dataset.index), text: [...r.children].map((n) => n.textContent).join(" ").replace(/\s+/g, " ").trim(), said: r.getAttribute("aria-label"), mana: r.querySelectorAll(".cm-mana img, .cm-mana svg").length})),
     none: m.querySelector(".cm-card-menu-none")?.textContent.trim() || null, focused: document.activeElement?.closest("#cm-card-menu") ? document.activeElement.getAttribute("aria-label") : null}));
   let m = await readMenu();
@@ -364,9 +364,9 @@ try {
   await page.keyboard.press("ArrowDown");
   await page.keyboard.press("Enter");
   ok(await menu.count() === 0, "choosing an offer closes the menu");
-  await page.locator("#cm-board-decision [data-action=board-confirm]").waitFor({timeout: 3000});
+  const binding=page.locator("#cm-board-decision [data-action=board-confirm]:visible:not([disabled]),#cm-board-decision [data-action=board-direct]:visible:not([disabled])");await binding.waitFor({timeout: 3000});
   eq(acts(), [], "and stages it, as a click on the card does: nothing is sent yet");
-  await page.locator("#cm-board-decision [data-action=board-confirm]").click();
+  await binding.click();
   for (let i = 0; i < 100 && !acts().length; i += 1) await page.waitForTimeout(20);
   eq(acts(), [[1]], "Confirm plays it, once");
   /* The view a played land leaves is not this test's business: the offers come back as they were. */
@@ -406,7 +406,7 @@ try {
   if (SHOTS) {await cardOn(TOWER, ".cm-stage-front").click({button: "right"}); await page.screenshot({path: path.join(SHOTS, "card-menu-3d.png")}); await page.keyboard.press("Escape");}
   await page.keyboard.press("Escape");
   const menus = await page.evaluate(() => __menus);
-  ok(menus.length > 0 && menus.every((m) => !m.open), `the browser's own menu never opens on the 3D table (${menus.length} asked)`);
+  ok(menus.length > 0 && menus.every((m) => !m.open), `the browser's own menu never opens on the 3D table (${menus.length} asked; ${JSON.stringify(menus)})`);
   eq(acts(), [[1]], "looking plays nothing: the one act sent is the Island confirmed above");
   ok(!errors.length, `no page error (${errors.join(" | ")})`);
   await context.close();
