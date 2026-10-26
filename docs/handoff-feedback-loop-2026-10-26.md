@@ -42,7 +42,9 @@ the migration number this work took; 0007 and 0008 stay reserved (docs/ACTIVE.md
 ## PR 1: CrankFeedback@1, the feedback table, the routes
 
 - **Commit:** `86f1f265` on `claude/engine-feedback-store`, from main c567c581 (74f8c228 plus the owner by `OWNER_EMAIL`
-  and the `feedbackGroup` name). Actions: PR_1_CI.
+  and the `feedbackGroup` name). Actions: the `suites` run on #895's head is the gate (the run of 74f8c228 passed every
+  suite it reached, `feedback-store` and `a11y-board` among them, until the runner was shut down at 23:05 UTC; the run of
+  86f1f265 is the one to read).
 - **Proven:** `node tests/feedback-store.mjs` (135 checks: the migration; the schema module's every bound refused by
   name and unknown fields dropped; POST /api/feedback from a signed-in person, the reporter from the token, a screenshot
   dropped with its bytes kept nowhere; ten an hour a person with the eleventh refused and when to retry; the admin GET
