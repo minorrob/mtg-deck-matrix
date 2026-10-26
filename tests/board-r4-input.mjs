@@ -34,7 +34,7 @@ try{
  }
  {
   const v=fixture();v.state.players[0].zones.Battlefield.cards[0].tapped=true;v.decision.options[1]={index:1,act:'undo-mana',label:'Untap Island',cardId:9001};const {page,context,sent}=await open('focus',390,true,v);
-  await page.locator(card(9001)).tap();ok(await page.locator('#cm-card-menu').isVisible(),'native phone tap exposes every offered action');await page.locator('#cm-card-menu [data-action=board-card-menu-do]').tap();eq(sent.filter(s=>s.type==='act').map(s=>s.indices),[[1]],'phone uses legal untap menu without double-tap requirement');await context.close();
+  await page.locator('[data-action=board-stage-rail]').tap();await page.locator(card(9001)).tap();ok(await page.locator('#cm-card-menu').isVisible(),'native phone tap exposes every offered action');await page.locator('#cm-card-menu [data-action=board-card-menu-do]').tap();eq(sent.filter(s=>s.type==='act').map(s=>s.indices),[[1]],'phone uses legal untap menu without double-tap requirement');await context.close();
  }
 }finally{await close();}
 console.log(`board-r4-input: ${checks} checks passed`);

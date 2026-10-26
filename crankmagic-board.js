@@ -605,14 +605,14 @@ globalThis.CrankBoard = Object.seal({
     return button ? `<button type="button" class="${cls}" data-action="board-vitals" aria-label="${e(label)}; open Table vitals">${inner}</button>`
       : `<span class="${cls}" aria-label="${e(label)}">${inner}</span>`;
   }
-  function seatHeader(p, {interactive = true} = {}) {
+  function seatHeader(p, {interactive = true,resources=false} = {}) {
     const commander = commanderOf(p), label = seatLabel(p), active = view.state.turnPlayerId === p.playerId;
     const state = view.decision && p.playerId === view.seat ? 'Deciding' : active ? (p.playerId === view.seat ? 'Your turn' : `${p.name}'s turn`) : 'Waiting';
     const initial = (p.name || 'Player').trim()[0] || '?';
     return `<div class="cm-seat-header${active ? ' is-turn' : ''}${p.health.life <= 10 ? ' is-danger' : ''}" data-seat-header="${p.playerId}">
       <span class="cm-seat-portrait" aria-hidden="true"><span class="cm-seat-initial">${e(initial)}</span>${commander?.name ? `<img src="${e(pictureOf(commander.name))}" alt="" referrerpolicy="no-referrer">` : ""}</span>
       <span class="cm-seat-identity"><strong class="cm-mat-name">${e(label)}</strong><span class="cm-seat-commander">${e(commander?.name || 'Command zone')}</span></span>
-      ${vitals(p, {button:interactive})}${mode==='focus' && p.playerId===focus?`<span class="cm-seat-resources">${p.mana.reduce((n,m)=>n+m.amount,0)} mana open · land drop ${p.landsPlayed?'used':'available'}</span>`:''}<span class="cm-seat-hand">${p.zones.Hand.count} in hand</span>
+      ${vitals(p, {button:interactive})}${resources?`<span class="cm-seat-resources">${p.mana.reduce((n,m)=>n+m.amount,0)} mana open · land drop ${p.landsPlayed?'used':'available'}</span>`:''}<span class="cm-seat-hand">${p.zones.Hand.count} in hand</span>
       <span class="cm-seat-state${view.state.priorityPlayerId === p.playerId ? ' has-priority' : ''}">${e(state)}</span></div>`;
   }
   document.addEventListener('error', event => {if (event.target.matches?.('.cm-seat-portrait img')) event.target.remove();}, true);
@@ -1056,7 +1056,7 @@ globalThis.CrankBoard = Object.seal({
     const mana = p.mana.reduce((n, m) => n + m.amount, 0);
     const bare = size === "full" || size === "opp" || size === "side" || size === "phone";
     const active = view.state.turnPlayerId === i;
-    const header = head === "none" ? "" : `<header class="cm-mat-head cm-seatboard-head">${seatHeader(p)}${focusButton ? b("⤢ Focus", "board-focus", {seat: String(i)}, false, {cls: "compact"}) : ""}</header>`;
+    const header = head === "none" ? "" : `<header class="cm-mat-head cm-seatboard-head">${seatHeader(p,{resources:size==='focus'})}${focusButton ? b("⤢ Focus", "board-focus", {seat: String(i)}, false, {cls: "compact"}) : ""}</header>`;
     const body = `<div class="cm-mat-grid cm-seatboard-body"><i class="cm-zone-origin" data-zone-probe="o" aria-hidden="true"></i><i class="cm-zone-origin" data-zone-probe="x" aria-hidden="true"></i><i class="cm-zone-origin" data-zone-probe="y" aria-hidden="true"></i>
         <div class="cm-mat-zone cm-board-field" data-zone="battlefield">${group("Creatures", creatures)}${group("Artifacts & enchantments", other)}${!field.length && !ghosts.length ? `<p class="cm-board-empty">${p.health.status === "lost" || departed(i) ? "Out of the game." : "No permanents yet."}</p>` : ""}<i class="cm-mat-label">Battlefield</i></div>
         <span class="cm-zone-divider" data-wf="W17">${grip('zones','Battlefield and lands divider: drag, arrows, or double click to reset',Math.round(zoneShare(i)*100),[20,80],'horizontal',` data-zone-seat="${i}"`)}</span>
@@ -1111,7 +1111,7 @@ globalThis.CrankBoard = Object.seal({
     const over = parts.find(({at}) => at[1] > 360);
     if (over) stops.unshift(`${tint(over.p)} 0% ${pct(over.at[1] - 360)}`);
     const totals = parts.map(({p, at}) => {
-      const mid = ((at[0] + at[1]) / 2) * Math.PI / 180, x = 50 + 30 * Math.sin(mid), y = 50 - 30 * Math.cos(mid);
+      const mid = ((at[0] + at[1]) / 2) * Math.PI / 180, x = 50 + 36 * Math.sin(mid), y = 50 - 36 * Math.cos(mid);
       return `<span class="cm-board-pie-life${p.playerId===view.state.turnPlayerId?' is-active':''}" data-seat="${p.playerId}" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%"><b>${p.health.life}</b><small>${e(p.playerId===view.seat?'You':p.name)}</small></span>`;
     }).join("");
     const said = ps.map((p) => `${p.playerId === view.seat ? "You" : p.name} ${p.health.life}`).join(", ");

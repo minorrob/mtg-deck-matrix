@@ -984,3 +984,8 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board :is(.cm-pick small,.cm-steps,.cm-consequence,.cm-board-waiting,.cm-stage-priority small,.cm-stage-priority .cm-board-waiting,.cm-board-pie-priority,.cm-board-next,.cm-board-conn,.cm-bcard-pt,.cm-bcard-count,.cm-bcard-tax,.cm-bcard-mark,.cm-board-chip,.cm-board-hand-types,.cm-board-hand-types li,.cm-board-hand-count,.cm-board-turn small,.cm-board-tile-flag,.cm-seat-hand,.cm-control-label){font-size:calc(15px*var(--hud-scale,1))}
 #matrix-v2 .cm-board[data-phone] .cm-phone-ask{overflow:auto;overscroll-behavior:contain}
 #matrix-v2 .cm-board[data-phone] .cm-phone-ask .cm-decision-slot{width:100%;min-width:0;box-sizing:border-box}
+
+/* The dial's center and labels each retain their own clear area and contrast. */
+#matrix-v2 .cm-board .cm-board-pie .cm-board-center{width:calc(32px*var(--hud-scale,1));height:calc(32px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-board-pie-life small{color:var(--mat-ink);background:var(--mat-scrim);padding:2px 4px;border-radius:3px}
+#matrix-v2 .cm-board .cm-board-pie-priority{top:calc(50% + 20px*var(--hud-scale,1));font-size:calc(15px*var(--hud-scale,1));line-height:1.1}
