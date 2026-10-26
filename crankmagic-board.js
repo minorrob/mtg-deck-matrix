@@ -345,7 +345,7 @@ globalThis.CrankBoard = Object.seal({
     if (!force && view && next.revision < view.revision) return;
     const before = view && view.decision && view.decision.id, was = view, priorBlocks = blockContext();
     view = next;
-    if (was?.revision !== next.revision || was?.matchId !== next.matchId || was?.seat !== next.seat) {picked = []; amounts = []; draftRevision = null; actionCard = null;}
+    if (was?.revision !== next.revision || was?.matchId !== next.matchId || was?.seat !== next.seat) {targetPage=0;targetReviewing=false;targetCycles.clear();picked = []; amounts = []; draftRevision = null; actionCard = null;}
     if (inspection?.automatic && was?.revision !== next.revision) inspection = null;
     if (inspection && (was?.matchId !== next.matchId || was?.seat !== next.seat)) inspection = null;
     yieldReady = true;
@@ -487,26 +487,28 @@ globalThis.CrankBoard = Object.seal({
         if (tries < 8) {setTimeout(() => fileResult(v, tries + 1, context), Math.min(8000, 800 * 2 ** tries)); return;}
         filed.delete(gameId); return;
       }
-      if (!matches(record)) record = null; // legacy tables alone retain the old fallback
-      const mine = (t.seats || []).find(s => s.you), source = record?.source || mine?.source;
+      if (matches(record)) {
+        if (!current()) {filed.delete(gameId);return;}
+        const saved=await tableApi().fileResult(record,{account:context.account,tableId:context.tableId,matchId:context.matchId,seatId:context.seatId});
+        if(!saved || !current())filed.delete(gameId);
+        return;
+      }
+      // Legacy tables alone use the client-era mapping. New summaries share the
+      // table writer, whose account-bound in-flight identity also deduplicates lobby reads.
+      const mine = (t.seats || []).find(s => s.you), source = mine?.source;
       const deck = source && (C.state.decks || []).find(d => d.id === source.deckId && !d.archived);
       if (!deck) {
         filed.delete(gameId);
         if (source) C.notice("This game's result was not filed: the deck you brought is no longer in your library.", true);
         return;
       }
-      const ai = record ? record.ai : v.seats.some(s => s.pilot === "house"), outcome = record?.outcome || o.outcome;
-      const opponents = record ? record.opponents.map(s => `${s.commanders.join(" + ") || s.name} · ${s.ai ? "AI" : s.name}`).join("; ")
-        : (t.seats || []).filter(s => !s.you && s.occupied !== false && s.deck).map(s => `${(s.deck.commander || []).join(" + ") || s.deck.name}${s.kind === "ai" ? " · AI" : ` · ${s.name}`}`).join("; ");
-      const reason = record?.finishReason || o.reason;
+      const ai=v.seats.some(s=>s.pilot==="house"),outcome=o.outcome,reason=o.reason;
+      const opponents=(t.seats || []).filter(s=>!s.you && s.occupied!==false && s.deck).map(s=>`${(s.deck.commander || []).join(" + ") || s.deck.name}${s.kind === "ai" ? " · AI" : ` · ${s.name}`}`).join("; ");
       if (!current()) {filed.delete(gameId);return;}
-      await C.commit({type:"game", gameId, deckId:deck.id, outcome, playedAt:record?.playedAt || new Date().toISOString(),
-        pod:record?.pod || v.seats.length, bracket:record?.bracket ?? null, finish:record ? record.finishRank : outcome === "win" ? 1 : null,
-        turns:record ? record.turns : v.state?.turn || null, seat:record?.seat || v.seat + 1, opponents,
-        notes:`Played at a CrankMagic table${ai ? " with AI seats" : ""}${reason ? ` · ${reason}` : ""}.`,
-        table:record ? {...record,reason:record.finishReason,deckVersion:source.deckVersion} : {schema:"CrankMagicTableResult@1",tableId:t.tableId,matchId:v.matchId,seatId:v.seatId,ai,reason,deckVersion:source.deckVersion}},
-      {renderView:false});
-      C.notice(`${outcome === "win" ? "Your win" : outcome === "loss" ? "Your loss" : outcome === "draw" ? "The draw" : "This unfinished game"} is filed under ${deck.name}'s record.`);
+      await C.commit({type:"game",gameId,deckId:deck.id,outcome,playedAt:new Date().toISOString(),pod:v.seats.length,finish:outcome==="win"?1:null,
+        turns:v.state?.turn || null,seat:v.seat+1,opponents,notes:`Played at a CrankMagic table${ai?" with AI seats":""}${reason?` · ${reason}`:""}.`,
+        table:{schema:"CrankMagicTableResult@1",tableId:t.tableId,matchId:v.matchId,seatId:v.seatId,ai,reason,deckVersion:source.deckVersion}}, {renderView:false});
+      if(current())C.notice(`${outcome==="win"?"Your win":outcome==="loss"?"Your loss":outcome==="draw"?"The draw":"This unfinished game"} is filed under ${deck.name}'s record.`);
     } catch (error) {
       if (!current()) {filed.delete(gameId);return;}
       if ((v.resultRecordExpected || error?.retryable) && tries < 8) {setTimeout(() => fileResult(v, tries + 1, context), Math.min(8000, 800 * 2 ** tries)); return;}
@@ -747,7 +749,7 @@ globalThis.CrankBoard = Object.seal({
     const d = view.decision;
     if (!d || view.status === "finished" || !["draw","priority"].includes(d.kind)) return "";
     if (d && d.kind === "draw" && view.status !== "finished") return b("Draw card", "board-draw", {}, true, {cls, disabled: sending});
-    return b(passLabel(), "board-pass", {}, !picked.length, {cls, disabled: !canPass()});
+    return b(passLabel(), "board-pass", {}, !picked.length && actionCard === null, {cls, disabled: !canPass()});
   }
   /* RESOLVE ALL, beside the pass (Rob, 2026-10-09): a run of identical triggers on top of the stack -- a thousand
      Intruder Alarm triggers -- let resolve with one click rather than one each. The room offers it (game/room/room.mjs,
@@ -1379,9 +1381,63 @@ globalThis.CrankBoard = Object.seal({
     const choices = picked.map(i => d.options.find(o => o.index === i)).filter(Boolean);
     return `<span class="cm-action-summary cm-sr-only" aria-live="polite">Selected: ${choices.map(o => e(d.kind === "priority" ? sayFor(o) : o.label)).join("; ")}</span>`;
   }
+  const actionLabel = o => ({"play-land":"⤓ Play Card",cast:"✦ Cast Spell",activate:"⚡ Activate","activate-mana":"Tap for mana","undo-mana":"Untap","undo-play":"Undo","undo-land":"Return to hand","turn-face-up":"Turn face up"}[o?.act] || o?.effect || "Confirm");
+  const targetChoice = d => /^(?:choose|trigger)-targets?:/.test(String(d.id)) || d.options.some(o=>o.target || o.targetGroups?.some(g=>g.targets.length));
+  const visibleSpell = id => {const c=view.state.stack.find(c=>c.cardId===id && c.name && !c.faceDown && c.kind==="spell");return c ? {...c,types:c.types || [],keywords:c.keywords || [],counters:c.counters || {},controller:c.playerId,power:c.power ?? null,toughness:c.toughness ?? null} : null;};
+  const namedFace = c => c?.faceDown ? {...c,name:null} : c;
+  const sourceFor = (d,o) => {const id=d.sourceId ?? (d.kind === "priority" ? o?.cardId : null);return namedFace(findCard(id)) || visibleSpell(id);};
+  const choiceTargets = o => o?.targetGroups?.filter(g=>g.targets.length) || (o?.affected !== undefined || o?.target ? [{index:0,effect:o.effect,targets:[{kind:o.target?.kind || "object",id:o.affected ?? o.target?.id ?? o.cardId,controllerId:o.controllerId,effect:o.effect}]}] : []);
+  const targetCard = t => t.kind === "player" ? null : namedFace(findCard(t.affected ?? t.id)) || visibleSpell(t.affected ?? t.id);
+  const targetName = t => t.kind === "player" ? nameOf(t.controllerId ?? t.id) : targetCard(t)?.name || "face-down creature";
+  const controllerName = id => id === view.seat ? "You" : players().find(p=>p.playerId === id)?.name || "Unknown controller";
+  const possessive = (t,source) => t.kind === "player" ? targetName(t) : `${(t.affected ?? t.id) === source?.cardId ? "this" : t.controllerId === view.seat ? "your" : controllerName(t.controllerId) + "'s"} ${targetName(t)}`;
+  let targetPage = 0, targetReviewing = false;
+  const reviewReady = d => picked.length && (d.kind === "priority" || targetReviewing);
+  const targetCycles = new Map();
+  function targetHeading(d,o) {
+    const groups=choiceTargets(o),source=sourceFor(d,o),one=groups.length===1 && groups[0].targets.length===1,verb=groups[0]?.effect || o?.effect;
+    const targets=groups.flatMap(g=>g.targets),owners=new Set(targets.map(t=>t.controllerId).filter(id=>id!==undefined));
+    const common=["Artifact","Creature","Land","Enchantment","Planeswalker","Battle"].find(type=>targets.length && targets.every(t=>targetCard(t)?.types?.includes(type)));
+    const noun=common ? common.toLowerCase()+"s" : "targets";
+    const title=one && verb ? `${verb} ${possessive(groups[0].targets[0],source)}?`
+      : groups.length && groups.every(g=>g.effect===verb) && verb ? `${verb} ${targets.length} ${noun}${owners.size ? ` of ${owners.size} player${owners.size===1?'':'s'}` : ''}?`
+      : groups.length && groups.every(g=>g.effect) ? `${groups.map(g=>`${g.effect} ${g.targets.length}`).join(", ")}?` : d.title;
+    return `<h2 data-wf="T04">${e(title)}</h2>`;
+  }
+  function targetReview(d,o) {
+    const groups=choiceTargets(o), source=sourceFor(d,o);
+    if(!groups.length)return "";
+    if(groups.length === 1 && groups[0].targets.length === 1) {
+      const t=groups[0].targets[0],c=targetCard(t),verb=groups[0].effect || o.effect;
+      return `<div class="cm-target-one" data-wf="W01"><div class="cm-target-link">${source ? `<span data-wf="desk-target-1-M01" data-peek-card="${source.cardId}">${card(source,{where:"pick",action:"board-zoom-open"})}</span>` : ""}
+        <span class="cm-target-arrow"><b data-wf="T02">${e(verb || "Target")}</b><span aria-hidden="true">→</span><small data-wf="T03">${e(controllerName(t.controllerId))}</small></span>
+        ${c ? `<span data-wf="desk-target-1-M02" data-peek-card="${c.cardId}">${card(c,{where:"pick",action:"board-zoom-open"})}</span>` : `<span>${e(targetName(t))}</span>`}</div>
+        ${c ? `<div class="cm-target-affected" data-wf="desk-target-1-M03">${card(c,{where:"pick",action:"board-zoom-open"})}</div>` : ""}
+        </div>`;
+    }
+    const page=Math.min(targetPage,Math.floor((groups.length-1)/3)), shown=groups.slice(page*3,page*3+3);
+    const total=groups.reduce((n,g)=>n+g.targets.length,0), owners=new Set(groups.flatMap(g=>g.targets.map(t=>t.controllerId)));
+    return `<div class="cm-target-many has-${shown.length}" data-wf="${shown.length === 3 ? "W03" : "W02"}">
+      ${source ? `<div class="cm-target-source">${card(source,{where:"pick",action:"board-zoom-open"})}</div>` : ""}
+      <div class="cm-target-quadrants">${shown.map((g,i)=>{
+        const key=`${d.id}:${o.index}:${g.index}`,n=targetCycles.get(key)||0,t=g.targets[n%g.targets.length],c=targetCard(t);
+        return `<section class="cm-target-quadrant" data-wf="W04"><h3>${e(g.effect || "Target")}</h3><span class="cm-target-effect-arrow" aria-hidden="true">${shown.length===3 ? ["↖","↗","↓"][i] : "→"}</span><button type="button" class="cm-target-stack" data-action="board-target-cycle" data-cycle="${e(key)}" data-count="${g.targets.length}" aria-label="Cycle targets: ${e(targetName(t))}">
+          ${Array.from({length:Math.min(4,g.targets.length)},(_,j)=>`<i class="cm-target-layer" style="--layer:${j}" aria-hidden="true"></i>`).join("")}${c?.name ? `<img src="${e(pictureOf(c.name))}" alt="${e(c.name)}" data-peek-card="${c.cardId}">` : `<span>${e(targetName(t))}</span>`}<b>×${g.targets.length}</b></button><p>${e(controllerName(t.controllerId))} · ${n%g.targets.length+1} of ${g.targets.length}</p></section>`;
+      }).join("")}</div>${groups.length>3 ? `<nav class="cm-target-pager">${b("Previous","board-target-page",{by:"-1"},false,{disabled:page===0})}<span>${page+1} of ${Math.ceil(groups.length/3)}</span>${b("Next","board-target-page",{by:"1"},false,{disabled:(page+1)*3>=groups.length})}</nav>` : ""}</div>`;
+  }
+  function decisionPick(d,o) {
+    const c=sourceFor(d,o);
+    return c ? `<div class="cm-pick">${card(c,{where:"pick",action:"board-zoom-open"})}<div><strong>${e(c.name || "Face-down card")}</strong><small>${e(typeLineOf(c))}</small><span>${e(controllerName(c.controller))}</span></div></div>` : "";
+  }
   function commitReview(d) {
-    if (!picked.length || !d.options.some(o => o.index === picked[0])) return "";
-    return `<div class="cm-action-review">${selectionSummary(d)}<div class="cm-actions">${b("Confirm", "board-confirm", {}, true, {disabled:sending || draftRevision !== view.revision})}${b("Clear", "board-reset", {}, false, {disabled:sending})}</div></div>`;
+    const o=d.options.find(o=>o.index===picked[0]);
+    if (!o || !picked.length) return "";
+    if(targetChoice(d) && d.kind!=="priority" && !targetReviewing) {
+      return `<div class="cm-action-review" data-wf="W15-actions">${selectionSummary(d)}<div class="cm-decide-actions">${b("Next","board-target-next",{},false,{cls:"compact cm-text-action",disabled:sending || draftRevision!==view.revision}).replace('data-action="board-target-next"','data-wf="W15-next" data-forward="true" data-action="board-target-next"')}${b("Cancel","board-draft-cancel",{},false,{cls:"compact",disabled:sending})}</div></div>`;
+    }
+    const groups=choiceTargets(o), verb=groups[0]?.effect || o.effect;
+    const decline=d.options.find(x=>x.decline===true), targeting=targetChoice(d), label=targeting && groups.length===1 && verb ? verb : actionLabel(o);
+    return `<div class="cm-action-review">${selectionSummary(d)}${targetReview(d,o)}${verb ? `<p class="cm-consequence">If it resolves: ${e(verb.toLowerCase())}${groups.length ? ` ${groups.reduce((n,g)=>n+g.targets.length,0)} target${groups.reduce((n,g)=>n+g.targets.length,0)===1?'':'s'}` : ''}.</p>` : ""}<div class="cm-decide-actions" data-wf="W01-actions">${b(label,"board-confirm",{},true,{disabled:sending || draftRevision !== view.revision}).replace('data-action="board-confirm"','data-wf="C02" data-action="board-confirm"')}${b(targeting ? "Change target" : "Back","board-reset",{},false,{disabled:sending}).replace('data-action="board-reset"','data-wf="C03" data-action="board-reset"')}${decline && (d.optional || decline.optional) ? b(`Don't ${(verb || "continue").toLowerCase()}`,"board-decline",{index:String(decline.index)},false,{disabled:sending}).replace('data-action="board-decline"','data-wf="C04" data-action="board-decline"') : b("Cancel","board-draft-cancel",{},false,{disabled:sending})}</div></div>`;
   }
   /* THE SAME CARD, ONE STACK (Rob, 2026-10-25: "stack cards that are identical and have an x# on them to say how many. I can
      then click that stack to select one. If I can select more than one, I should have a small numeric tick up/down value to
@@ -1431,7 +1487,7 @@ globalThis.CrankBoard = Object.seal({
     if (/^mulligan:/.test(d.id) && d.options.some(o => o.label === 'Keep')) {
       return `<section class="cm-board-decision" id="cm-board-decision" data-choice-id="${e(d.id)}" data-match-id="${e(view.matchId)}"><h3>Your opening hand</h3><div class="cm-decide-actions">${d.options.map(o => b(o.label,'board-opening-hand',{index:String(o.index)},o.label==='Keep',{disabled:sending})).join('')}</div></section>`;
     }
-    const opt = (o, extra = "", r = attackRisk(o)) => `<button type="button" class="v-button compact${picked.includes(o.index) ? " is-picked" : ""}${riskCls(r)}" data-action="board-option" data-index="${o.index}"${peekOf(o)}${sending ? " disabled" : ""}${extra}>${riskMark(r)}${e(o.label)}</button>`;
+    const opt = (o, extra = "", r = attackRisk(o)) => `<button type="button" class="v-button compact${picked.includes(o.index) ? " is-picked" : ""}${riskCls(r)}" data-action="board-option" data-index="${o.index}"${peekOf(o)}${sending ? " disabled" : ""}${extra}>${riskMark(r)}${e(targetChoice(d) && o.controllerId !== undefined && !o.decline ? findCard(o.affected ?? o.cardId)?.name || (o.target?.kind === "player" ? controllerName(o.controllerId) : o.label) : o.label)}<span class="cm-sr-only">${targetChoice(d) ? e(o.label) : ""}</span></button>`;
     /* One option as ever; a stack as one button, ×N, and -- where the question takes more than one -- how many of it. */
     const stackOpt = (s) => {
       if (s.length === 1) return opt(s[0], ` aria-pressed="${picked.includes(s[0].index)}"`);
@@ -1446,13 +1502,19 @@ globalThis.CrankBoard = Object.seal({
        collapsed."): in a question of targets that offers lands beside other things, the lands come after everything
        else, in a "Lands" group shut until opened -- open while a land is picked, and as the player left it for this
        question. Only targets: a cost's question (what to tap) is about lands and keeps them in view. */
-    const targeting = /^(?:choose|trigger)-targets?:/.test(String(d.id)) || d.options.some((o) => o.target);
+    const targeting = targetChoice(d);
     const isLand = (s) => targeting && s.every((o) => o.cardId !== undefined && findCard(o.cardId)?.types?.includes("Land"));
-    const grouped = (stacks) => {
+    const landGroup = (stacks) => {
       const lands = stacks.filter(isLand), rest = stacks.filter((s) => !isLand(s));
       if (!lands.length || !rest.length) return stacks.map(stackOpt).join("");
       const open = landsOpen === d.id || lands.some((s) => s.some((o) => picked.includes(o.index)));
       return rest.map(stackOpt).join("") + `<details class="cm-board-lands-group" data-lands-for="${e(d.id)}"${open ? " open" : ""}><summary>Lands <span class="cm-board-lands-n">${lands.reduce((n, s) => n + s.length, 0)}</span></summary><div class="cm-board-lands-options">${lands.map(stackOpt).join("")}</div></details>`;
+    };
+    const grouped = stacks => {
+      if(!targeting)return landGroup(stacks);
+      const by=new Map();
+      for(const stack of stacks.filter(ss=>!ss[0].decline)) {const id=stack[0].controllerId ?? stack[0].targetGroups?.[0]?.targets?.[0]?.controllerId; if(!by.has(id))by.set(id,[]);by.get(id).push(stack);}
+      return `<div class="cm-target-options" data-wf="W15">${[...by].sort(([a],[b])=>(a===view.seat)-(b===view.seat)).map(([id,ss])=>`<section class="cm-target-controller"><h3>${e(controllerName(id))}</h3>${landGroup(ss)}</section>`).join("")}</div>`;
     };
     let body = "", foot = "";
     if (d.kind === "priority") {
@@ -1474,10 +1536,14 @@ globalThis.CrankBoard = Object.seal({
         : `<button type="button" class="v-button compact" data-action="board-option" data-index="${o.index}" aria-pressed="${picked.includes(o.index)}"${sending ? " disabled" : ""}>${sayHtml(o)}${n > 1 ? ` <span class="cm-muted">×${n}</span>` : ""}</button>`;
       /* One card's offers: its mana abilities one row of symbols. */
       const rows = [...seen.values()], count = new Map(rows.map((r) => [r.o, r.n]));
+      if(actionCard !== null && rows.length===1 && !choiceTargets(rows[0].o).length) {
+        const o=rows[0].o;
+        return `<section class="cm-board-decision" id="cm-board-decision" data-wf="W14">${decisionPick(d,o)}<h2>${e(actionLabel(o))}</h2>${deskCard()}<div class="cm-decide-actions">${b(actionLabel(o),"board-direct",{index:String(o.index),revision:String(view.revision)},true,{disabled:sending || draftRevision !== view.revision})}${b("Cancel","board-action-all")}</div></section>`;
+      }
       body = actionCard === null ? rows.map(each).join("") : withManaRow(rows.map((r) => r.o), (o) => each({o, n: count.get(o)}), true);
-      return `<section class="cm-board-decision is-also" id="cm-board-decision" aria-label="What you can do">${actionCard === null ? "" : `<button type="button" class="cm-board-back" data-action="board-action-all">${CHEV_LEFT}<span>All actions</span></button>`}<h3>${actionCard === null ? "Choose an action" : e(findCard(actionCard)?.name || "Choose an action")}</h3>${deskCard()}<div class="cm-board-options">${body}</div>${commitReview(d)}</section>`;
+      return `<section class="cm-board-decision is-also" id="cm-board-decision" aria-label="What you can do">${actionCard === null ? "" : `<button type="button" class="cm-board-back" data-action="board-action-all">${CHEV_LEFT}<span>All actions</span></button>`}${picked.length && targetChoice(d) ? "" : `<h3>${actionCard === null ? "Choose an action" : e(findCard(actionCard)?.name || "Choose an action")}</h3>`}${decisionPick(d,d.options.find(o=>o.index===picked[0]) || rows[0]?.o)}${picked.length && targetChoice(d) ? targetHeading(d,d.options.find(o=>o.index===picked[0])) : ""}${picked.length && targetChoice(d) ? "" : deskCard()}<div class="cm-board-options">${picked.length && targetChoice(d) ? "" : body}</div>${commitReview(d)}</section>`;
     }
-    if (["one", "boolean", "index"].includes(d.mode)) {body = d.mode === "one" ? grouped(sameStacks(d)) : d.options.map((o) => [o]).map(stackOpt).join(""); foot = commitReview(d);}
+    if (["one", "boolean", "index"].includes(d.mode)) {body = reviewReady(d) && targeting ? "" : d.mode === "one" ? grouped(sameStacks(d)) : d.options.map((o) => [o]).map(stackOpt).join(""); foot = commitReview(d);}
     else if (blocking()) {
       body = blockDraft();
       foot = `${b("No blocks", "board-block-none", {}, false, {disabled:sending})}${b(picked.length ? "Confirm blocks" : "Confirm no blocks", "board-confirm", {}, true, {disabled:!blockValid() || sending})}`;
@@ -1510,13 +1576,17 @@ globalThis.CrankBoard = Object.seal({
       body = d.options.map((o, i) => `<label class="cm-board-amount">${e(o.label)}${o.lethal ? ` <span class="cm-muted">lethal ${o.lethal}</span>` : ""}<input type="number" min="0" max="${o.max ?? d.total}" step="1" value="${amounts[i] ?? 0}" data-board-amount="${i}"></label>`).join("");
       foot = `<span class="cm-muted">${total} of ${d.total}</span>${b("Confirm", "board-confirm", {}, true, {disabled: total !== d.total || sending})}`;
     } else body = `<p class="cm-muted">This board cannot answer a "${e(d.mode)}" choice yet.</p>`;
+    if(!foot && targeting) {
+      const decline=d.options.find(o=>o.decline && (d.optional || o.optional));
+      foot=decline ? b(`Don't ${(d.options.find(o=>o.effect)?.effect || "continue").toLowerCase()}`,"board-decline",{index:String(decline.index)}) : "";
+    }
     /* A question in the card's own words ("When this creature enters, you may search ...") is a sentence to read, not a
        heading: it is set as one (Rob, 2026-10-01: a choice is a pop-up where the player selects). */
     const sentence = String(d.title || "").length > 48;
     /* Asked in a run you chose Resolve all for: this answer goes for the same question each time the run asks it (Rob,
        2026-10-09: "Yes to all"; game/room/room.mjs). */
     const forRun = d.forRun ? `<p class="cm-muted cm-board-for-run">Resolve all: your answer goes for this same question each time the run asks it.</p>` : "";
-    return `<section class="cm-board-decision${blocking() ? " is-blocking" : ""}" id="cm-board-decision" data-choice-id="${e(d.id)}" data-match-id="${e(view.matchId)}" aria-label="${e(d.title)}"><h3${sentence ? ' class="is-sentence"' : ""}>${e(d.title)}</h3>${forRun}${deskCard()}
+    return `<section class="cm-board-decision${blocking() ? " is-blocking" : ""}" id="cm-board-decision" data-choice-id="${e(d.id)}" data-match-id="${e(view.matchId)}" aria-label="${e(d.title)}">${decisionPick(d,d.options.find(o=>o.index===picked[0]))}${reviewReady(d) && targeting && choiceTargets(d.options.find(o=>o.index===picked[0])).length ? targetHeading(d,d.options.find(o=>o.index===picked[0])) : `<h2>${e(d.title)}</h2>`}${forRun}${targeting ? `<ol class="cm-steps"><li class="${reviewReady(d) ? '' : 'is-now'}">Pick</li><li class="${reviewReady(d) ? 'is-now' : ''}">Review</li></ol>` : ""}${reviewReady(d) && targeting ? "" : deskCard()}
       <div class="cm-board-options">${body}</div>${foot ? `<div class="cm-board-decision-foot">${foot}</div>` : ""}</section>`;
   }
   /* What the room asks, and what is on the stack, floated over the surface under the strip. Priority is not
@@ -2786,6 +2856,7 @@ globalThis.CrankBoard = Object.seal({
     if (!d || sending) return;
     if (!d.options.some(o => o.index === index)) return;
     draftRevision = view.revision;
+    targetReviewing=false;
     actionsShut = false; openModuleDrawer("actions"); alsoOpen = false;
     if (["one", "boolean", "index"].includes(d.mode)) {
       picked = [index];
@@ -2958,7 +3029,25 @@ globalThis.CrankBoard = Object.seal({
     if (d.mode === "damage" || d.mode === "amount") return send({amounts: d.options.map((_, i) => Number(amounts[i]) || 0)});
     send({indices: picked});
   };
-  actions["board-reset"] = () => {picked = []; draftRevision = null; draw();};
+  actions["board-target-next"] = () => {
+    const d=view?.decision;
+    if(!d || sending || draftRevision!==view.revision || picked.length!==1 || !d.options.some(o=>o.index===picked[0]) || !targetChoice(d))return;
+    targetReviewing=true;draw();
+  };
+  actions["board-direct"] = el => {
+    const d=view?.decision,index=Number(el.dataset.index);
+    if(!d || sending || Number(el.dataset.revision)!==view.revision || draftRevision!==view.revision || !d.options.some(o=>o.index===index))return;
+    picked=[index];return actions["board-confirm"]();
+  };
+  actions["board-decline"] = el => {
+    const d=view?.decision,o=d?.options.find(o=>o.index===Number(el.dataset.index));
+    if(sending || !o?.decline || !(d.optional || o.optional))return;
+    picked=[o.index];draftRevision=view.revision;return actions["board-confirm"]();
+  };
+  actions["board-draft-cancel"] = () => {if(sending || !picked.length)return;targetReviewing=false;picked=[];draftRevision=null;if(view?.decision?.kind==="priority")actionCard=null;draw();};
+  actions["board-target-cycle"] = el => {const key=el.dataset.cycle;targetCycles.set(key,((targetCycles.get(key)||0)+1)%Number(el.dataset.count));draw();document.querySelector(`[data-cycle="${CSS.escape(key)}"]`)?.focus({preventScroll:true});};
+  actions["board-target-page"] = el => {targetPage=Math.max(0,targetPage+Number(el.dataset.by));draw();};
+  actions["board-reset"] = () => {targetReviewing=false;picked = []; draftRevision = null; draw();};
   actions["board-action-all"] = () => {actionCard = null; picked = []; draftRevision = null; draw();};
   actions["board-focus"] = (el) => {focus = Number(el.dataset.seat); if (mode === "table" && !phone()) setMode("focus"); else draw();};
   actions["board-rotate"] = (el) => {
@@ -3638,6 +3727,7 @@ globalThis.CrankBoard = Object.seal({
       return;
     }
     if (event.key === "Escape" && cameraOpen) {cameraOpen=false; draw(); document.querySelector("[data-action=board-camera]")?.focus(); return;}
+    if (event.key === "Escape" && picked.length && !blocking()) {event.preventDefault();actions["board-reset"]();return;}
     if (event.key === "Escape" && inspection) {event.preventDefault(); actions["board-inspect-close"](); return;}
     if (coach.open && event.target && event.target.matches && event.target.matches(".cm-coach-input") && event.key === "Enter" && !event.shiftKey) {
       event.preventDefault(); event.target.form.requestSubmit(); return;
