@@ -1,5 +1,24 @@
 # Who holds the work
 
+## 2026-10-26: main f2e00ba4 on staging and in production (Rob: "Once it's on staging, push it to prod too")
+
+Released by the cloud session on `claude/vigilant-dijkstra-bzs1wf`, after PR #886 merged as `f2e00ba4` on Actions `suites`
+green on head f823b96f (run 40292053702).
+- **Staging** (`tools/release-staging.sh`): local `release-acceptance` 23 and `play-e2e` 44; `release/cloud-staging`
+  **a272bf9b**; Workers version **b788202c**; `staging-check --expect f2e00ba4` passed.
+- **Production** (`cloud-production`, `tools/release-production.sh`):
+  - `release/pages` **8bfca342**, on a587e32a, pushed at 09:32 UTC;
+  - local walks: `release-acceptance` 23 and `production-play-e2e` 27;
+  - Workers Builds deployed version **8ab2cca0**, at 100% since 09:32 UTC;
+  - `version.json` reads f2e00ba4, profile `cloud-production`; `/api/me` answers 302;
+  - the live walk at `https://crankmagic.com`: **23 checks**, with `UAT_LIVE_NETWORK=1`;
+  - **the rollback target** is **a587e32a** (version 2566738c, main 1cd2c669).
+- **It carries, beyond 1cd2c669:** Play's Actions drawer with fewer words, offered cards on the stack, attack risk,
+  mana as symbols, the hover never locked (#884); graphics resolution, the volcano whole, painted 32-bit table skins,
+  sharp mat cards, target lands folded (#885); Planned Changes C1–C8, every attack choice in reach with drawer
+  modules, the desk card and the right drawer sized by hand, and Ordered as *To Buy · Ordered* (#886).
+- **Production's D1, bindings and secrets are unchanged:** no migration or Worker setting since 1cd2c669.
+
 ## 2026-10-25: main 1cd2c669 in production (Rob: "Push to prod")
 
 Released by the card-load session on Personal-HP, announced in ROB-11 before the push and recorded there after it. Staging
