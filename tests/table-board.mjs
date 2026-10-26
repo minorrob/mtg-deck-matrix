@@ -63,7 +63,7 @@
  * Needs Playwright and Chromium; GEOMETRY_REQUIRED=1 (CI) turns a missing browser into a failure.
  */
 import assert from "node:assert/strict";
-import {readFileSync, mkdirSync} from "node:fs";
+import {readFileSync, mkdirSync, writeFileSync} from "node:fs";
 import path from "node:path";
 import {fileURLToPath} from "node:url";
 import {openBrowser, loadLiveState, legendaryNames} from "./uat/browser-runner.mjs";
@@ -71,7 +71,7 @@ import {basicCards, RoomError} from "../game/room/room.mjs";
 import {GameTable} from "../cloud/game-room.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const proofPages=[];
+const proofPages=[], tableGeometryProof=[];
 let checks = 0;
 const ok = (c, m) => {assert.ok(c, m); checks += 1;};
 const eq = (a, b, m) => {assert.deepEqual(a, b, m); checks += 1;};
@@ -735,8 +735,15 @@ try {
   await maya.page.locator(".cm-full-mine .cm-seatboard.is-you").waitFor();
   ok(true, "My board brings hers back");
   await maya.page.keyboard.press("Escape");
-  eq(await maya.page.locator('.cm-stage-side.is-open, .cm-stage-rail.is-open').count(),0,'Escape closes the shared drawers first');
+  await maya.page.locator('#cm-table-menu').waitFor();
+  ok(true, 'Escape from your own board opens Table, as the r4 escape order specifies');
   await maya.page.keyboard.press("Escape");
+  await maya.page.locator('#cm-table-menu').waitFor({state:'detached'});
+  for (const side of ['left','right']) {
+    const drawer = side==='left'?'.cm-stage-rail':'.cm-stage-side';
+    if(await maya.page.locator(drawer+'.is-open').count()) await maya.page.locator('.cm-stage-'+side+'[data-action]').click();
+  }
+  eq(await maya.page.locator('.cm-stage-side.is-open, .cm-stage-rail.is-open').count(),0,'native drawer tabs collapse both shared drawers');
   await maya.page.locator(".cm-stage-top").waitFor();
   eq(await maya.page.getAttribute("#cm-board", "data-view"), "full", "Escape keeps the selected 3D view");
   await chooseView(maya.page,"focus");
@@ -1037,8 +1044,8 @@ try {
   ok((await pile.getAttribute('aria-label')).startsWith(castName+', stack position 1'),'pointer and keyboard browsing identify the selected spell');
   eq(views(firstBoard===rob?ROB:MAYA).at(-1).revision,revBeforeBrowse,'browsing the stack never changes the game');
   const picture=await stackCard.boundingBox();ok(picture.width>=150&&picture.height>picture.width,'the stack picture remains readable and upright');
-  await firstBoard.page.keyboard.press('Escape');
-  eq(await firstBoard.page.locator('.cm-stage-side.is-open').count(),0,'Escape puts the stack drawer away');
+  await firstBoard.page.locator('.cm-stage-right[data-action=board-stage-side]').click();
+  eq(await firstBoard.page.locator('.cm-stage-side.is-open').count(),0,'the native Stack tab puts the stack drawer away');
   /* The caster view has also acknowledged the pass before its Undo offer is inspected above. */
   ok(true, "and the caster's strip says who the table waits on");
   await shot(firstBoard.page, "resolve-" + (firstBoard === rob ? "1400" : "1280"));
@@ -1800,6 +1807,9 @@ function tableRowFacts() {
   return {rows,valid:rows.length===2&&rows.every(r=>r.valid),widths:rows.every((r,i)=>Math.abs(r.width-(grown?Math.floor(room*(i===0?share:1-share)):Math.min(room*(i===0?share:1-share),table.clientHeight*16/9)))<2),scrolls:table.scrollHeight>table.clientHeight+1,horizontal:table.scrollWidth<=table.clientWidth+1};
 }
 async function verifyTableRowAccess(page, facts) {
+  const proof={...facts,nativeScrollAccess:false}; tableGeometryProof.push(proof);
+  const save=()=>{if(SHOTS)writeFileSync(path.join(SHOTS,'table-row-geometry.json'),JSON.stringify(tableGeometryProof,null,2));};
+  save();
   ok(facts.horizontal, 'complete Table rows never introduce horizontal overflow');
   if(!facts.scrolls)return;
   const viewport=await page.locator('.cm-board-table').boundingBox();
@@ -1811,6 +1821,7 @@ async function verifyTableRowAccess(page, facts) {
     return [...table.querySelectorAll('.cm-board-lands')].every(zone=>{const r=zone.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2,hit=document.elementFromPoint(x,y);return r.top>=t.top-1&&r.bottom<=t.bottom+1&&!!hit&&zone.contains(hit);});
   });
   ok(reachable,'native Table scrolling exposes each complete Lands row to the pointer');
+  proof.nativeScrollAccess=true;save();
   await page.mouse.wheel(0,-2000);
   await page.waitForFunction(()=>document.querySelector('.cm-board-table').scrollTop===0,null,{timeout:5000});
 }
