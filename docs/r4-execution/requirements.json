@@ -505,7 +505,8 @@
       "status": "integrated",
       "summary": "Prepared: after the creature half resolves prepared, offer the copy as its spell half per Oracle text (timing, cost, how often); the copy is a spell, never a permanent; tests per step + breaks script",
       "evidence": [
-        "room-prepared:13; safe new-match funding and source association; menu integration in progress"
+        "room-prepared:13; safe new-match funding and source association; menu integration in progress",
+        "board-r4-decisions: 118 includes native prepared creature menu, private inset selection and exact binding index in Focus; no fresh live-match claim"
       ],
       "commit": "8679027a"
     },

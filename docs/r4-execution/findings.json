@@ -873,6 +873,11 @@
         "detail": "P proves stable account-bound owner result filing and concurrent board/lobby deduplication; T covers rematch/result surfaces; `work/r4-shots/over-390.png`. Review appears only after a local record exists. Engine settlement and Play's result bridge have separately owned evidence. Workshop did not play a fresh real Forge/online match to finish and validate the entire live account/sync loop.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
         "commit": "35992d77"
+      },
+      "supportingEvidence": {
+        "owner": "Engine and coordinator",
+        "detail": "table-game-record: 21 plus four caught regressions proves owner-only stable match/seat records with source deck version, server date/outcome/reason, reopen persistence and private-fact exclusion. board-result-bridge: 28 proves the account-bound shared writer remains retryable and rejects stale account/table/match context. The original partial status remains: no fresh live finished-match/account-sync journey has been claimed.",
+        "commit": "8679027a; 0d23f48a"
       }
     },
     {
@@ -1209,8 +1214,15 @@
       "changes": [
         "CH-55"
       ],
-      "status": "pending_verification",
-      "summary": "Prepared: after the creature half resolves prepared, the option to cast the copy as its spell half is not offered (Studious First-Year)"
+      "status": "verified_local",
+      "summary": "Prepared: after the creature half resolves prepared, the option to cast the copy as its spell half is not offered (Studious First-Year)",
+      "localEvidence": {
+        "owner": "Engine and Play",
+        "disposition": "Verified locally",
+        "detail": "room-prepared: 13 plus three caught regressions uses the actual Studious First-Year definition: prepared Rampant Growth has a source and cost, is refused in combat, casts in MAIN2, unprepares its creature, resolves its search once, and replays identically. board-r4-decisions: 118 includes a native Focus keyboard card menu for that distinct prepared inset, a private selection, and one binding press sending its exact offered cast index. This is room plus browser-fixture evidence, not a fresh live account match or all-card certification.",
+        "source": "tests/room-prepared.mjs; tests/board-r4-decisions.mjs",
+        "commit": "8679027a; 0d23f48a"
+      }
     },
     {
       "id": "F-125",

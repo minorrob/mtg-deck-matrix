@@ -1,6 +1,6 @@
 # Audit crosswalk
 
-All129 original walkthrough findings, their supplied change mappings, and current bounded evidence. Local verification does not replace combined release acceptance. Workshop detail and limits: [WORKSHOP-AUDIT-EVIDENCE.md](WORKSHOP-AUDIT-EVIDENCE.md). Unmapped findings remain open.
+All129 original walkthrough findings, their supplied change mappings, and current bounded evidence. Local verification does not replace combined release acceptance. Workshop detail and limits: [WORKSHOP-AUDIT-EVIDENCE.md](WORKSHOP-AUDIT-EVIDENCE.md). Unmapped findings remain open. Detailed evidence and limits are in findings.json.
 
 | Finding | Status | Changes | Original finding |
 | --- | --- | --- | --- |
@@ -127,7 +127,7 @@ All129 original walkthrough findings, their supplied change mappings, and curren
 | F-121 | pending_verification | CH-52 | The four prompt chips are 11 px text in 26 px-tall targets; on main they are hidden altogether |
 | F-122 | pending_verification | CH-41 | Module reorder in edit mode relies on a six-dot drag handle that is small and does not work well; the ↑ ↓ buttons already do the job |
 | F-123 | pending_verification | CH-41 | Module headers are not toggles: collapsing a side-pane module is a separate 33×40 button at 12 px, and a collapsed module cannot be resized |
-| F-124 | pending_verification | CH-55 | Prepared: after the creature half resolves prepared, the option to cast the copy as its spell half is not offered (Studious First-Year) |
+| F-124 | verified_local | CH-55 | Prepared: after the creature half resolves prepared, the option to cast the copy as its spell half is not offered (Studious First-Year) |
 | F-125 | pending_verification | CH-20, CH-21, CH-22, CH-23, CH-24 | The block draft is blocker-first with text pairs ('Goblin #486 → Dream Stalker #475 · Remove'), a 'Clear this blocker' button, 'All block options' and one Confirm for the whole draft |
 | F-126 | pending_verification | CH-13 | Target options name the card and append the controller as a suffix only for permanents that are not yours ('Smuggler's Copter (Keith's)'); nothing groups targets by player |
 | F-127 | pending_verification | CH-10, CH-11 | During a targets question the desk's large image is the source card and the title repeats its name ('Reclamation Sage: choose one target …'); the affected card is only a text button, and a second Confirm / Clear step follows |
