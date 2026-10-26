@@ -1,13 +1,13 @@
 # r4 requirements and evidence
 
-The register has 61 changes. An ID ending in 89 is not a count. Completion requires behavioral proof and integration; a source assertion is not proof.
+There are 61 CH entries. Integrated means code is present on integration/r4; remaining cross-cutting acceptance is still required. See requirements.json for commands, commit references and scope limits.
 
-| Change | Owner | State | Evidence |
+| Change | Owner | State | Code commit |
 | --- | --- | --- | --- |
-| CH-01 | S0 | in_progress | Pending |
-| CH-02 | S0 | in_progress | Pending |
-| CH-03 | S0 | in_progress | Pending |
-| CH-04 | S0 | in_progress | Pending |
+| CH-01 | S0 | integrated | fe65eb65 |
+| CH-02 | S0 | integrated | fe65eb65 |
+| CH-03 | S0 | integrated | fe65eb65 |
+| CH-04 | S0 | integrated | 15e50e41 |
 | CH-10 | A | pending | Pending |
 | CH-11 | A | pending | Pending |
 | CH-12 | A | pending | Pending |
@@ -29,31 +29,31 @@ The register has 61 changes. An ID ending in 89 is not a count. Completion requi
 | CH-34 | C | pending | Pending |
 | CH-35 | C | pending | Pending |
 | CH-36 | C | pending | Pending |
-| CH-40 | D1 | pending | Pending |
-| CH-41 | D1 | pending | Pending |
-| CH-42 | D1 | pending | Pending |
-| CH-43 | D1 | pending | Pending |
-| CH-44 | D1 | pending | Pending |
-| CH-45 | D1 | pending | Pending |
-| CH-46 | D1 | pending | Pending |
-| CH-47 | D1 | pending | Pending |
-| CH-48 | D1 | pending | Pending |
+| CH-40 | D1 | in_progress | Pending |
+| CH-41 | D1 | in_progress | Pending |
+| CH-42 | D1 | in_progress | Pending |
+| CH-43 | D1 | in_progress | Pending |
+| CH-44 | D1 | in_progress | Pending |
+| CH-45 | D1 | in_progress | Pending |
+| CH-46 | D1 | in_progress | Pending |
+| CH-47 | D1 | in_progress | Pending |
+| CH-48 | D1 | in_progress | Pending |
 | CH-50 | D2 | pending | Pending |
 | CH-51 | D2 | pending | Pending |
 | CH-52 | D2 | pending | Pending |
 | CH-53 | D2 | pending | Pending |
 | CH-55 | E | in_progress | Pending |
-| CH-56 | E | in_progress | Pending |
+| CH-56 | E | integrated | a7f0fa5f |
 | CH-57 | E | in_progress | Pending |
 | CH-58 | E | in_progress | Pending |
 | CH-59 | E | in_progress | Pending |
 | CH-60 | E | in_progress | Pending |
 | CH-70 | F1 | in_progress | Pending |
-| CH-71 | F1 | in_progress | Pending |
+| CH-71 | F1 | integrated | d9eed16f |
 | CH-72 | F1 | in_progress | Pending |
-| CH-73 | F1 | in_progress | Pending |
+| CH-73 | F1 | integrated | d9eed16f |
 | CH-74 | F1 | in_progress | Pending |
-| CH-75 | F1 | in_progress | Pending |
+| CH-75 | F1 | integrated | d9eed16f |
 | CH-76 | F1 | in_progress | Pending |
 | CH-80 | F2 | pending | Pending |
 | CH-81 | F2 | pending | Pending |
@@ -63,5 +63,5 @@ The register has 61 changes. An ID ending in 89 is not a count. Completion requi
 | CH-85 | F2 | pending | Pending |
 | CH-86 | F2 | pending | Pending |
 | CH-87 | F2 | pending | Pending |
-| CH-88 | F2 | pending | Pending |
+| CH-88 | F2 | integrated | c15a94b4 |
 | CH-89 | F2 | pending | Pending |

@@ -949,7 +949,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 598 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 601 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1594,3 +1594,9 @@ The `table-tabletop` suite checks the preview geometry and its browser interacti
 
 - `sharing` - `tests/sharing.mjs`: live deck/library permissions, public access, revocation, concurrent edits, privacy, notifications, owner-only invitations and verified email identity changes.
 - `sharing-ui` - `tests/sharing-ui.mjs`: keyboard user selection, sharing menus, email controls, profile saving and mobile layout with labeled screenshots.
+
+- `engine-decision-facts` — `tests/engine-decision-facts.mjs`
+
+- `room-undo-play` — `tests/room-undo-play.mjs`
+
+- `admin-ui` — `tests/admin-ui.mjs`

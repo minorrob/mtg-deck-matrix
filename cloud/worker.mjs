@@ -100,6 +100,69 @@ async function body(request) {
   try {return JSON.parse(text);} catch {throw new Invalid("that request is not JSON");}
 }
 
+/* Read-only administration (r4 CH-88). Access has already verified the identity before this
+   permission is considered. The existing invitation owner remains the owner unless an explicit
+   ADMIN_EMAIL is configured; service seats and client-supplied identity headers never qualify. */
+function administrator(who, person, env) {
+  if (who.service || !who.email || who.email.startsWith('service:')) return false;
+  const owner = typeof env.ADMIN_EMAIL === 'string' ? env.ADMIN_EMAIL.trim().toLowerCase() : '';
+  if (owner) return who.email === owner;
+  return !!env.INVITE_ADMIN_ID && String(person.id) === String(env.INVITE_ADMIN_ID);
+}
+const ADMIN_FLAGS = ['SHARING_ENABLED','AI_EVERYONE','AI_COACH','AI_ADVISE','AI_PILOT','PLAYTEST_TABLES','PLAY_TABLES_CLOSED','SERVICE_SEATS'];
+const adminFeatures = env => ADMIN_FLAGS.map(key => ({key, value: env[key] === 'on' ? 'on' : 'off',
+  defaultValue: 'off', source: Object.hasOwn(env,key) ? 'Worker configuration' : 'Code default'}));
+async function adminRead(path, url, env, now) {
+  if (path === '/api/admin' || path === '/api/admin/features') return reply(200, {
+    readOnly: true, features: adminFeatures(env), invitationsEnabled: env.SHARING_ENABLED === 'on',
+  });
+  if (path === '/api/admin/spend') {
+    const since = new Date(now - 24 * 60 * 60 * 1000).toISOString();
+    const row = await env.DB.prepare('SELECT COUNT(*) AS calls, COALESCE(SUM(cost_micros),0) AS micros FROM ai_calls WHERE at>=? AND at<=?')
+      .bind(since,new Date(now).toISOString()).first();
+    const cap = env.AI_CAP_TOTAL_CENTS == null || env.AI_CAP_TOTAL_CENTS === '' ? null : Number(env.AI_CAP_TOTAL_CENTS);
+    return reply(200,{readOnly:true, since, until:new Date(now).toISOString(), calls:Number(row?.calls||0),
+      spentCents:Number(row?.micros||0)/10000, capCents:Number.isFinite(cap) && cap>=0 ? cap : null});
+  }
+  if (path === '/api/admin/health') {
+    let release=null;
+    if (env.ASSETS) {
+      try {
+        const response=await env.ASSETS.fetch(new Request(new URL('/version.json',url)));
+        if(response.ok) {
+          const value=await response.json();
+          release={commit:/^[a-f0-9]{7,40}$/.test(value.commit||'') ? value.commit : null,
+            profile:['pages','cloud-staging','cloud-production','cloud-production-standby'].includes(value.profile) ? value.profile : null,
+            date:/^\d{4}-\d{2}-\d{2}$/.test(value.date||'') ? value.date : null};
+        }
+      } catch { /* No release metadata is an unavailable measurement, not a healthy version claim. */ }
+    }
+    return reply(200,{readOnly:true,release});
+  }
+  if (path === '/api/admin/invites') {
+    if (env.SHARING_ENABLED !== 'on') return reply(503,{error:'Invitations are not enabled on this copy yet.'});
+    const requested = Number(url.searchParams.get('limit'));
+    const limit = Number.isInteger(requested) && requested > 0 ? Math.min(100,requested) : 30;
+    const before = url.searchParams.get('before') || '', after = url.searchParams.get('after') || '';
+    if ((before || after) && (!/^\d{4}-\d{2}-\d{2}T[^\s]{1,30}$/.test(before) || after.length>254 || !/^[^\s@]+@[^\s@]+$/.test(after)))
+      return reply(400,{error:'Use the next-page link supplied by the invitation list.'});
+    try {
+      const page = await env.DB.prepare(`SELECT i.email,i.name,i.created_at AS createdAt,i.status,
+        (SELECT m.status FROM share_mail m WHERE m.recipient=i.email AND m.subject='You are invited to CrankMagic'
+          ORDER BY m.created_at DESC,m.id DESC LIMIT 1) AS deliveryStatus
+        FROM account_invitations i ${before ? 'WHERE i.created_at<? OR (i.created_at=? AND i.email>?)' : ''}
+        ORDER BY i.created_at DESC,i.email ASC LIMIT ?`)
+        .bind(...(before ? [before,before,after] : []),limit+1).all();
+      const rows=page.results||[], invites=rows.slice(0,limit), last=invites.at(-1);
+      return reply(200,{readOnly:true,invites,next:rows.length>limit && last ? {before:last.createdAt,after:last.email} : null});
+    } catch(error) {
+      if (/no such table/i.test(error.message)) return reply(503,{error:'Invitation storage is not available on this copy yet.'});
+      throw error;
+    }
+  }
+  return reply(404,{error:'No such administration endpoint.'});
+}
+
 /* `deps` lets the suite stand in for the network and the clock: {fetchImpl, now (ms), newId}. */
 export async function handle(request, env, deps = {}) {
   const url = new URL(request.url), path = url.pathname, method = request.method;
@@ -149,6 +212,12 @@ export async function handle(request, env, deps = {}) {
   const library = createLibrary(env.DB, {now: () => new Date(ms()).toISOString(), ...(deps.newId ? {newId: deps.newId} : {})});
   const person = await library.user(who.email);
   try {
+    if (path === '/api/admin' || path.startsWith('/api/admin/')) {
+      if (!administrator(who,person,env)) return reply(403,{error:'Only the CrankMagic administrator can open this page.'});
+      if (method !== 'GET') return new Response(JSON.stringify({error:'Administration is read-only in this version.'}),
+        {status:405,headers:{...HEADERS,allow:'GET'}});
+      return adminRead(path,url,env,ms());
+    }
     if (path.startsWith('/api/social/')) {
       if (env.SHARING_ENABLED !== 'on') return reply(503, {error: 'Sharing is not enabled on this copy yet.'});
       return reply(200, await social(request, env, person, {now: () => new Date(ms()).toISOString(), ...(deps.fetchImpl ? {fetchImpl: deps.fetchImpl} : {})}));
@@ -166,7 +235,7 @@ export async function handle(request, env, deps = {}) {
        `to` already carried it; nothing here keeps it, and it seats only someone Access admits. */
     const joined = method === "GET" ? joinLocation(url) : null;
     if (joined) return new Response(null, {status: 302, headers: {location: joined, "cache-control": "no-store", "referrer-policy": "no-referrer"}});
-    if (method === "GET" && path === "/api/me") return reply(200, {email: loginEmail, since: person.createdAt, head: await library.head(person.id)});
+    if (method === "GET" && path === "/api/me") return reply(200, {email: loginEmail, since: person.createdAt, head: await library.head(person.id), admin:administrator(who,person,env)});
     /* AN AI ON CLAUDE (AI-2): New table offers one only where the table's object would seat it (cloud/game-room.mjs
        `pilotOpen`): the switch on, the door's key, caps and model set, and this person on the allowlist. */
     if (method === "GET" && path === "/api/ai-seat") return reply(200, {open: await aiSeatOpen(env, person.email)});

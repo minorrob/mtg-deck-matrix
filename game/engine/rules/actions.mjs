@@ -2521,7 +2521,8 @@ export function chooseTargetsChoice(state, awaiting) {
     const object = state.objects[awaiting.action.objectId];
     const ability = awaiting.action.kind === "activate" ? abilitiesOf(state, awaiting.action.objectId).find((a) => a.id === awaiting.action.abilityId) : object?.spell;
     return countedChoice(state, specs[awaiting.index], context, {id: `choose-targets:${awaiting.action.objectId}:${awaiting.index}`,
-      name: object?.card ?? "That spell", hostile: awaiting.action.hostile === true || isHostile(ability?.effects ?? []), placeholder: awaiting.action.targets[awaiting.index]});
+      name: object?.card ?? "That spell", hostile: awaiting.action.hostile === true || isHostile(ability?.effects ?? []), placeholder: awaiting.action.targets[awaiting.index],
+      effects: ability?.effects ?? [], targetIndex: awaiting.index});
   });
 }
 
