@@ -4220,7 +4220,11 @@ globalThis.CrankBoard = Object.seal({
   };
   actions["board-coach-why"] = (el) => {const m = coach.thread[Number(el.dataset.i)]; if (m) {m.open = !m.open; drawCoach();}};
   /* Clear chat is ⋯'s command, so doing it closes ⋯ (the redraw keeps the menu as it finds it). */
-  actions["board-coach-clear"] = (el) => {coach.thread = []; coach.typing = false; coach.asked += 1; const more = el.closest(".cm-coach-more"); if (more) more.open = false; drawCoach();};
+  actions["board-coach-clear"] = (el) => {
+    const more=el?.closest?.('.cm-coach-more'),returnFocus=more?.contains(document.activeElement);
+    coach.thread=[];coach.typing=false;coach.asked+=1;if(more)more.open=false;drawCoach();
+    if(returnFocus)document.querySelector('#cm-board-coach .cm-coach-more>summary')?.focus({preventScroll:true});
+  };
   document.addEventListener("submit", (event) => {
     if (!event.target.matches || !event.target.matches("[data-coach-form]")) return;
     event.preventDefault();
