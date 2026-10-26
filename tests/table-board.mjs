@@ -1002,6 +1002,7 @@ try {
   await second.page.locator('.cm-stage-top [data-action=board-pass]:not([disabled])').click();
   await waitText(firstBoard.page, ".cm-stage-top [data-action=board-pass]", new RegExp(`Resolve ${castName}`));
   const secondName = second === rob ? "Rob" : "Maya", firstName_ = second === rob ? "Maya" : "Rob";
+  await waitText(second.page, ".cm-board-waiting", new RegExp(`Waiting on ${firstName_}`), 10000);
   ok(!views(secondEmail).slice(casterSeen).some((v) => v.decision && v.decision.kind === "priority" && v.state.stack.length),
     `cast, ${castName} goes on the stack and the caster is not asked again with it there: the cast passed for them`);
   eq((await text(firstBoard.page, ".cm-board-waiting")).trim(), `${secondName}'s first main phase · you may respond`, `on the other board the button reads Resolve ${castName}, and the strip says whose step it is and that they may respond`);
@@ -1018,9 +1019,7 @@ try {
   const picture=await stackCard.boundingBox();ok(picture.width>=150&&picture.height>picture.width,'the stack picture remains readable and upright');
   await firstBoard.page.keyboard.press('Escape');
   eq(await firstBoard.page.locator('.cm-stage-side.is-open').count(),0,'Escape puts the stack drawer away');
-  /* The caster's own view comes on the caster's socket, and may come after the other board's: until it does, the strip
-     says "Sent…". So it is waited for. */
-  await waitText(second.page, ".cm-board-waiting", new RegExp(`Waiting on ${firstName_}`), 10000);
+  /* The caster view has also acknowledged the pass before its Undo offer is inspected above. */
   ok(true, "and the caster's strip says who the table waits on");
   await shot(firstBoard.page, "resolve-" + (firstBoard === rob ? "1400" : "1280"));
   await chooseView(firstBoard.page,"full");
@@ -1678,8 +1677,9 @@ try {
   ok(!away.includes("Game:") && /Where I was: /.test(away), "and with no game on the board, the mail names none");
   await rob.context.close(); await maya.context.close();
 } catch(error) {
-  mkdirSync("work",{recursive:true});
-  for(let i=0;i<proofPages.length;i++){const p=proofPages[i];if(!p.isClosed()){await p.screenshot({path:`work/table-board-failure-${i}.png`});console.error(await p.locator("#cm-board").evaluate(el=>({view:el.dataset,rect:el.getBoundingClientRect().toJSON(),hand:el.querySelector(".cm-board-hand")?.getBoundingClientRect().toJSON()})).catch(()=>null));}}
+  console.error(`table-board stopped after ${checks} checks`);
+  mkdirSync(SHOTS || "work",{recursive:true});
+  for(let i=0;i<proofPages.length;i++){const p=proofPages[i];if(!p.isClosed()){await p.screenshot({path:path.join(SHOTS || "work", `table-board-failure-${i}.png`)});console.error(await p.locator("#cm-board").evaluate(el=>({view:el.dataset,rect:el.getBoundingClientRect().toJSON(),hand:el.querySelector(".cm-board-hand")?.getBoundingClientRect().toJSON()})).catch(()=>null));}}
   throw error;
 } finally {
   await close();
