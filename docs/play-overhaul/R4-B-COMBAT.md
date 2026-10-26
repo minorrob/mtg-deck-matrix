@@ -31,3 +31,7 @@ serial-check, stale-response, privacy, capacity and real pointer assertions must
 
 Mutation runner: `python game/tools/batch/breaks.py game/tools/batch/breaks-r4-combat.py`.
 Screenshots: r4-combat-<view>-<width>.png in the same task evidence directory as A/D1.
+
+## Canonical acceptance
+
+The coordinator proved board-r4-combat (96), board-direct-blocking (8 layouts, including tall text and crowded choices) and board-combat-display (6 layouts). Legacy privacy, serial/stale validation, reconnect retry, keyboard and real pointer checks were migrated rather than dropped. They exposed and proved fixes for a missing Check again control, the phone attacker opener, and a clipped attacked-permanent reference. All seven meaningful mutations were caught. The selected-color mutation targets the winning shared !important rule; changing only a redundant tile declaration had no rendered effect. Final combined HUD endpoints, C/D2 and staging remain separate gates.

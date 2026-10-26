@@ -7,5 +7,6 @@ BREAKS = [
  ('global reason assigned to all attackers', 'crankmagic-board.js', 'const fromCheck=checked?.byAttacker?.find(x=>x.attackerId===id)?.reasons || [];', 'const fromCheck=checked?.reasons || [];'),
  ('stale Send binds', 'crankmagic-board.js', 'Number(el?.dataset?.revision)===view?.revision && ', ''),
  ('attacker strip wraps', 'crankmagic-stage.css', '.cm-r4-combat .cm-combat-groups{display:flex;flex-flow:row nowrap;', '.cm-r4-combat .cm-combat-groups{display:flex;flex-flow:row wrap;'),
- ('chosen blockers borrow ownership color', 'crankmagic-stage.css', '.cm-block-tile[aria-pressed=true]{background:var(--color-ink);', '.cm-block-tile[aria-pressed=true]{background:var(--st-inbox);'),
+ # Break the winning shared !important rule, not the redundant lower-priority tile rule.
+ ('chosen blockers borrow ownership color', 'crankmagic-stage.css', '.cm-board .cm-board-options [aria-pressed=true]{background:var(--color-ink)!important;', '.cm-board .cm-board-options [aria-pressed=true]{background:var(--st-inbox)!important;'),
 ]
