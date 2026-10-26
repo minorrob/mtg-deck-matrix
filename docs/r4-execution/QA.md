@@ -34,8 +34,7 @@ duplicate primary actions, broken portrait placeholders, or a tap-only/double-cl
 its equivalent input path. Check normal and reduced motion. A screenshot is inspected, not merely saved.
 
 Initial D1 review found phone battlefield labels overlapping at 200%, small desktop chrome, broken-image
-portrait glyphs and a misplaced Table menu. Those are open until the corrected screenshots and assertions
-prove them fixed; the first 67 passing interaction checks did not establish visual acceptance.
+portrait glyphs and a misplaced Table menu. Corrected D1 screenshots and assertions now cover those cases (111 shell checks). The first 67 passing interaction checks did not establish visual acceptance. The actual Study Babylon table was inspected, and the actionBar primary contrast was subsequently corrected in A. Final combined screenshots remain required.
 
 ## Execution environment
 
