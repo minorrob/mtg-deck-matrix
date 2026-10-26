@@ -4201,6 +4201,8 @@ button.cm-vitals{cursor:pointer}
 #matrix-v2 .cm-table-new-deck{height:64px;min-height:64px;overflow:auto;margin-bottom:8px}
 #matrix-v2 .cm-table-field-error{display:block;min-height:20px;font-size:var(--text-small);color:var(--color-required)}
 #matrix-v2 .cm-table-new [aria-invalid=true]{border-color:var(--color-required)}
+#matrix-v2 .cm-table-field-error:not(:empty):before{content:'⚠ ';font-family:var(--font-body)}
+#matrix-v2 .cm-cloud-table>.cm-countdown-cancel{position:absolute;left:50%;top:calc(50% + 60px);transform:translateX(-50%);z-index:42;min-height:var(--control-height)}
 #matrix-v2 .cm-confirmation-rules{display:grid;gap:8px;margin:16px 0}
 #matrix-v2 .cm-confirmation-rules dt{font-weight:700}
 #matrix-v2 .cm-confirmation-rules dd{margin:0 0 8px;color:var(--color-muted)}

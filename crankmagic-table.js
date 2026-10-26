@@ -80,7 +80,7 @@
   }
   const tableUrl = (id) => `/api/tables/${encodeURIComponent(id)}`;
   /* The board sends End game and Concede through the same door, then has the lobby read the table again. */
-  C.tableApi = {api, tableUrl, refresh: (id) => refresh(id)};
+  C.tableApi = {api, tableUrl, refresh: (id) => refresh(id), fileResult};
   /* Through the Worker (cloud/worker.mjs, /api/join): Access's sign-in keeps the path, where it would drop a fragment. */
   const inviteLink = (id, code) => `${location.origin}/api/join/${id}/${code}`;
 
@@ -271,12 +271,24 @@
     if(!record)return '';
     const outcome={win:'Won',loss:'Lost',draw:'Draw',unfinished:'Unfinished'}[record.outcome]||'Finished';
     return `<section class="v-panel cm-game-result" aria-label="Game result"><h2>${e(outcome)}</h2><p>Turn ${e(String(record.turns))} · ${e(String(record.pod))} seats${record.bracket?' · Bracket '+e(String(record.bracket)):''}</p><p>${e(record.finishReason||'')}</p><div class="cm-actions"><a class="v-button" href="#game">Back to lobby</a>${deck?`<a class="v-button" href="#decks?${e(new URLSearchParams({deck:deck.id,tab:'overview',game:record.id}).toString())}">Review this game</a>`:'<span class="cm-muted">The result stays at this table; its original deck is not in this library.</span>'}</div></section>`;}
-  const filing=new Set();
-  async function fileTableResult(t){const r=t.gameRecord,d=r?.source?.deckId&&C.state.decks.find(x=>x.id===r.source.deckId);
-    if(!r||r.schema!=='CrankMagicTableResult@1'||!d||filing.has(r.id)||C.state.games.some(g=>g.id===r.id))return;
-    filing.add(r.id);try{await C.commit({type:'game',deckId:d.id,gameId:r.id,outcome:r.outcome,playedAt:r.playedAt,finish:r.finishRank??null,pod:r.pod,bracket:r.bracket??null,turns:r.turns,seat:r.seat,opponents:(r.opponents||[]).map(x=>x.commanders.join(' + ')).join(' · '),notes:r.finishReason||'',table:{schema:r.schema,tableId:r.tableId,matchId:r.matchId,seatId:r.seatId,ai:!!r.ai,reason:r.finishReason||'',deckVersion:r.source.deckVersion}},{renderView:false});}
-    catch(error){if(!C.state.games.some(g=>g.id===r.id))C.notice('The game result has not been saved to this library. '+error.message,true,{action:{label:'Retry',run:()=>refresh(t.tableId)}});}
-    finally{filing.delete(r.id);}}
+  const filing=new Map();
+  /* The board's verified record read and the lobby's owner-only result share one writer. No
+     snapshot, cards or hidden zones are copied into the account's library. */
+  function fileResult(r,context={}){const owner=context.account??context.owner??null,currentOwner=()=>C.signedInAs?.()||null;
+    const d=r?.source?.deckId&&C.state.decks.find(x=>x.id===r.source.deckId&&!x.archived);
+    const contextMatches=['tableId','matchId','seatId'].every(k=>context[k]===undefined||String(context[k])===String(r?.[k]));
+    if(!owner||owner!==currentOwner()||!contextMatches||r?.schema!=='CrankMagicTableResult@1'||!d||!Number.isSafeInteger(r.source.deckVersion)||r.source.deckVersion<1||r.source.deckVersion>d.version
+      ||!/^[a-z0-9]{8,40}$/.test(r.tableId)||!new RegExp('^'+r.tableId+'g[1-9][0-9]{0,5}$').test(r.matchId)||!/^([0-3])$/.test(String(r.seatId))||r.id!==`game:table:${r.matchId}:${r.seatId}`
+      ||!Number.isFinite(Date.parse(r.playedAt))||!['win','loss','draw','unfinished'].includes(r.outcome)||!Number.isInteger(r.pod)||r.pod<2||r.pod>4||!Number.isInteger(r.seat)||r.seat<1||r.seat>r.pod||!Number.isInteger(r.turns)||r.turns<0
+      ||!Array.isArray(r.opponents)||r.opponents.some(x=>!Array.isArray(x.commanders)||x.commanders.some(n=>typeof n!=='string')))return Promise.resolve(false);
+    if(C.state.games.some(g=>g.id===r.id&&g.deckId===d.id))return Promise.resolve(true);
+    const key=owner+'|'+r.id;if(filing.has(key))return filing.get(key);
+    const write=(async()=>{try{if(owner!==currentOwner())return false;
+      await C.commit({type:'game',deckId:d.id,gameId:r.id,outcome:r.outcome,playedAt:r.playedAt,finish:r.finishRank??null,pod:r.pod,bracket:r.bracket??null,turns:r.turns,seat:r.seat,opponents:r.opponents.map(x=>x.commanders.join(' + ')).join(' · '),notes:r.finishReason||'',table:{schema:r.schema,tableId:r.tableId,matchId:r.matchId,seatId:r.seatId,ai:!!r.ai,reason:r.finishReason||'',deckVersion:r.source.deckVersion}},{renderView:false});
+      return owner===currentOwner()&&C.state.games.some(g=>g.id===r.id&&g.deckId===d.id);
+    }catch(error){if(owner===currentOwner()&&!C.state.games.some(g=>g.id===r.id))C.notice('The game result has not been saved to this library. '+error.message,true,{stay:true,action:{label:'Retry',run:()=>fileResult(r,context)}});return false;}
+    })();filing.set(key,write);write.finally(()=>{if(filing.get(key)===write)filing.delete(key);});return write;
+  }
   function gamePanel(t) {
     const review=resultReview(t);
     const r = t && t.rematch;
@@ -336,12 +348,13 @@
   }
   /* `live` says whether the page still wants this table: a read that lands after the person left draws nothing. */
   async function refresh(id, live = () => true) {
+    const owner=C.signedInAs?.()||null;
     const asked = performance.now();   /* the board weighs the read against the room's newer frames by when it was asked */
     const {table, now} = await api("GET", tableUrl(id));
-    if (!live()) return table;
+    if (!live()||owner!==(C.signedInAs?.()||null)) return table;
     if (Number.isFinite(now)) skew = now - Date.now();
-    await fileTableResult(table);
-    if(!live())return table;
+    await fileResult(table.gameRecord,{account:owner,tableId:id,matchId:table.gameRecord?.matchId,seatId:table.gameRecord?.seatId});
+    if(!live()||owner!==(C.signedInAs?.()||null))return table;
     draw(table, asked);
     return table;
   }
@@ -362,6 +375,8 @@
       /* written only when it changes: the count is a live region, said each time it is written */
       if (seconds && left !== null && seconds.textContent !== left) seconds.textContent = left;
       const host=document.querySelector('.cm-cloud-table');if(host&&globalThis.CrankBoard?.countdown){const value=current?.phase==='countdown'?Number(left):null;if(host.dataset.countdownValue!==String(value)){globalThis.CrankBoard.countdown(host,value);host.dataset.countdownValue=String(value);}}
+      /* The way back stays above the shared dimmer, beside its callout, rather than under it. */
+      const cancel=host?.querySelector('[data-action=table-cancel]');if(cancel&&cancel.parentElement!==host){cancel.classList.add('cm-countdown-cancel');host.append(cancel);}
     };
     const loop = async () => {
       if (stop) return;

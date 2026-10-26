@@ -181,8 +181,17 @@ try {
   await page.getByRole("link", {name: "Back to deck"}).click();
   await page.locator(".cm-deck-hero h1").waitFor();
   ok(!/report=/.test(page.url()), "Back to deck returns to the deck");
-  await openDeck(page);
-  await page.locator(`.cm-deck-hero [data-action=log-game][data-deck="${DECK}"]`).click();
+  await page.goto(`${base}/index.html#decks?deck=${encodeURIComponent(OTHER)}`);
+  await page.locator('.cm-deck-hero h1').waitFor();
+  const commonBuy=await page.evaluate(id=>{const C=globalThis.__cm,d=C.M.deck(C.state,id);return {ready:C.M.readiness(C.state,d).toBuy,projection:C.M.projection(C.state).filter(r=>r.kind==='need'&&r.deckId===id).reduce((n,r)=>n+r.quantity,0)};},OTHER);
+  eq(commonBuy.ready,commonBuy.projection,'readiness and the common ownership rung projection count the same missing copies');
+  eq(await page.locator(`.cm-deck-hero [data-action=deck-buy-list]`).textContent(),`Buy list (${commonBuy.ready})`,'the deck header uses that single to-buy count');
+  await page.getByRole('tab',{name:/^Acquire/}).click();
+  eq(await page.locator('#cm-sec-acquire .cm-budget-figures strong').first().textContent(),String(commonBuy.ready),'Acquire reads that same missing-copy count');
+  await page.locator('#cm-sec-acquire [data-action=deck-buy-list]').click();await page.locator('#cm-shop-count').waitFor();
+  eq(await page.locator('#cm-shop-count').textContent(),String(commonBuy.ready),'the deck-scoped Library To buy view reads the same count');
+  await page.goto(`${base}/index.html#decks?deck=${encodeURIComponent(OTHER)}`);
+  await page.locator(`.cm-deck-hero [data-action=log-game][data-deck="${OTHER}"]`).click();
   eq(await page.$$eval('#cm-dialog .cm-form-grid>label', xs=>xs.slice(0,2).map(x=>x.childNodes[0].textContent)), ['Outcome','Card that won it'], 'a game log starts with outcome and the winning card');
   const dead = await page.locator('#cm-dialog [name=deadCardId] option').nth(1).getAttribute('value');
   await page.selectOption('#cm-dialog [name=deadCardId]', dead);
@@ -190,7 +199,7 @@ try {
   await page.locator('#cm-dialog [data-action=game-mark-replacement]').waitFor();
   await page.locator('#cm-dialog [data-action=game-mark-replacement]').click();
   await page.waitForFunction(()=>location.hash.startsWith('#discover?'));
-  const marked = await page.evaluate(([deckId,cardId])=>globalThis.__cm.state.decks.find(d=>d.id===deckId).slots.find(r=>r.cardId===cardId&&r.purpose==='main').option,[DECK,dead]);
+  const marked = await page.evaluate(([deckId,cardId])=>globalThis.__cm.state.decks.find(d=>d.id===deckId).slots.find(r=>r.cardId===cardId&&r.purpose==='main').option,[OTHER,dead]);
   ok(marked, 'marking a dead card records the existing swap-out flag without changing the hundred');
   eq(new URLSearchParams(page.url().split('#discover?')[1]).get('replace'),dead,'Explore keeps the card to replace in its route');
   await context.close();
