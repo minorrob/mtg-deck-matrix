@@ -1008,7 +1008,7 @@ globalThis.CrankBoard = Object.seal({
   }
   function fitTableCardRange(mat) {
     const base=Math.min(60,Math.max(30,mat.parentElement.clientWidth*.074)),minimum=parseFloat(mat.style.getPropertyValue('--caption-card-min'))||0,[lo,hi]=C.cardScaleRange();
-    const turned=!!mat.querySelector('[data-card-section] .cm-bcard.is-tapped,[data-card-section] .cm-land-tilted'),footprint=turned?.866+1.4*.5:1;
+    const turned=!!mat.querySelector('[data-card-section] .cm-bcard.is-tapped,[data-card-section] .cm-land-tilted'),footprint=turned ? .866+1.4*.5 : 1;
     // Grid/field padding, two pile columns, two gaps and the row's 4px inset must all fit.
     const limit=Math.floor((mat.clientWidth-18)/(footprint+2.48)),delta=base*(hi-lo)/100;
     mat.style.setProperty('--table-card-growth',String(Math.min(1,Math.max(0,(limit-minimum)/delta))));

@@ -32,3 +32,13 @@ export async function cardBadgeBounds(page){return page.evaluate(()=>[...documen
  const left=el.offsetLeft+(el.matches('.cm-bcard-count')?-el.offsetWidth/2:0)+parseFloat(style.paddingLeft),width=el.scrollWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight);
  return left<-.5||left+width>card.clientWidth+.5?[{seat:card.closest('.cm-mat').dataset.seat,card:card.dataset.card||card.getAttribute('aria-label'),text:el.textContent.trim(),textLeft:left,textRight:left+width,cardWidth:card.clientWidth}]:[];
 }));}
+
+export async function zoneCaptionBounds(page){return page.evaluate(()=>{
+ const problems=[],texts=[];
+ for(const el of document.querySelectorAll('.cm-mat .cm-mat-label,.cm-mat .cm-board-pile figcaption em,.cm-mat .cm-board-pile figcaption b')){
+  if(!el.getClientRects().length||getComputedStyle(el).visibility==='hidden')continue;const frame=el.closest('.cm-mat-zone'),box=frame.getBoundingClientRect(),range=document.createRange();range.selectNodeContents(el);
+  for(const r of range.getClientRects()){if(r.width<1||r.height<1)continue;if(r.left<box.left-.5||r.right>box.right+.5)problems.push({text:el.textContent.trim(),zone:frame.dataset.zone,bounds:{left:r.left,right:r.right},frame:{left:box.left,right:box.right}});texts.push({el,frame,r});}
+ }
+ for(let i=0;i<texts.length;i++)for(let j=i+1;j<texts.length;j++){const a=texts[i],b=texts[j];if(a.frame===b.frame||a.el.closest('.cm-mat')!==b.el.closest('.cm-mat'))continue;if(Math.min(a.r.right,b.r.right)-Math.max(a.r.left,b.r.left)>1&&Math.min(a.r.bottom,b.r.bottom)-Math.max(a.r.top,b.r.top)>1)problems.push({overlap:[a.el.textContent.trim(),b.el.textContent.trim()]});}
+ return problems;
+});}
