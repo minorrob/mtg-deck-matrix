@@ -1987,6 +1987,7 @@ globalThis.CrankBoard = Object.seal({
   async function ask_(text) {
     const q = String(text || "").trim();
     if (!q || !view || coach.typing || coachGate.key!==coachKey() || coachGate.available!==true) return;
+    const requestKey=JSON.stringify([coachKey(),view.matchId]);
     const here = stepNow(), last = [...coach.thread].reverse().find((m) => m.divider);
     if (!last || last.divider !== here) coach.thread.push({divider: here});
     coach.thread.push({from: "you", text: q});
@@ -2007,6 +2008,7 @@ globalThis.CrankBoard = Object.seal({
       }
     } catch {said = {text: "The Coach could not be reached. Try again in a moment."};}
     if (coach.asked !== turn) return;
+    if(JSON.stringify([coachKey(),view?.matchId])!==requestKey){coach.typing=false;coach.thread=[];coach.asked++;drawCoach();return;}
     coach.typing = false;
     coach.thread.push({from: "coach", ...said});
     drawCoach();
