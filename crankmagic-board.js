@@ -1008,9 +1008,8 @@ globalThis.CrankBoard = Object.seal({
   }
   function fitTableCardRange(mat) {
     const base=Math.min(60,Math.max(30,mat.parentElement.clientWidth*.074)),minimum=parseFloat(mat.style.getPropertyValue('--caption-card-min'))||0,[lo,hi]=C.cardScaleRange();
-    const turned=!!mat.querySelector('[data-card-section] .cm-bcard.is-tapped,[data-card-section] .cm-land-tilted'),footprint=turned ? .866+1.4*.5 : 1;
     // Grid/field padding, two pile columns, two gaps and the row's 4px inset must all fit.
-    const limit=Math.floor((mat.clientWidth-18)/(footprint+2.48)),delta=base*(hi-lo)/100;
+    const limit=Math.floor((mat.clientWidth-18)/3.48),delta=base*(hi-lo)/100;
     mat.style.setProperty('--table-card-growth',String(Math.min(1,Math.max(0,(limit-minimum)/delta))));
   }
   function fitPileCaptions(host) {
@@ -3349,10 +3348,8 @@ globalThis.CrankBoard = Object.seal({
       section.style.removeProperty('height');
       const cards=[...section.children];if(!cards.length)continue;
       const width=Math.max(...cards.map(c=>c.offsetWidth)), height=Math.max(...cards.map(c=>c.offsetHeight));
-      // Tapped cards reserve their rotated footprint; their full image stays in the cell.
-      const tapped=cards.some(c=>c.classList.contains('is-tapped')||c.querySelector(':scope>.cm-bcard.is-tapped,:scope>.cm-land-tilted'));
-      const cellWidth=Math.ceil(tapped ? width*.866+height*.5 : width);
-      const cellHeight=Math.ceil(tapped ? height*.866+width*.5 : height);
+      // Tapping rotates within the same slot; corners may tuck under adjacent cards.
+      const cellWidth=Math.ceil(width),cellHeight=Math.ceil(height);
       section.style.setProperty('--zone-cell-width',`${cellWidth}px`);
       section.style.setProperty('--zone-pitch',`${Math.max(cellWidth*.3,cellWidth+width*Math.min(0,spacing())/100)}px`);
       section.style.setProperty('--zone-cell-height',`${cellHeight}px`);
