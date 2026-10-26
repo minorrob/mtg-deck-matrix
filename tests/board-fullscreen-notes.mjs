@@ -79,11 +79,11 @@ try {
     eq(acts(), [[1]], `${mode}: confirming plays the staged Island once`);
     /* ---- 2. r4: the authoritative legacy take-back is the card's Undo drawer. */
     await show(played());sent.length=0;
-    const playedCard=page.locator(`#cm-board .cm-bcard[data-card='${PLAYED}'][data-action=board-card]`).first();await playedCard.scrollIntoViewIfNeeded();await playedCard.hover();
+    const playedSelector=`#cm-board .cm-bcard[data-action=board-card]:is([data-card='${PLAYED}'],[data-land-members='${PLAYED}'],[data-land-members^='${PLAYED},'],[data-land-members$=',${PLAYED}'],[data-land-members*=',${PLAYED},'])`,playedCard=page.locator(playedSelector).first();await playedCard.scrollIntoViewIfNeeded();await playedCard.hover();
     const undo=page.locator(`[data-action=board-offered-undo][data-card='${PLAYED}']`).first();await undo.click();
     eq(acts(),[[2]],`${mode}: the actual offered Undo rewinds the land play once`);
     await show(played());sent.length=0;
-    const after=await page.evaluate(id=>{const start=performance.now();document.querySelector(`#cm-board .cm-bcard[data-card='${id}'][data-action=board-card]`).dispatchEvent(new MouseEvent('click',{bubbles:true,detail:1}));return document.getElementById('cm-card-menu')?performance.now()-start:null;},PLAYED);
+    const after=await page.evaluate(id=>{const start=performance.now();document.querySelector(id).dispatchEvent(new MouseEvent('click',{bubbles:true,detail:1}));return document.getElementById('cm-card-menu')?performance.now()-start:null;},playedSelector);
     ok(after!==null && after<280,`${mode}: single click opens the read-only menu without a 300ms wait (${after}ms)`);eq(acts(),[],`${mode}: reading the card menu sends nothing`);
     await page.locator(`#cm-card-menu [data-act=activate-mana][data-card='${PLAYED}']`).click();eq(acts(),[],`${mode}: selecting a mana row stages its binding action`);
     await binding(page).click();
