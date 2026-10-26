@@ -1120,3 +1120,10 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board[data-view=full]>.cm-stage-side{height:calc(100% - var(--full-pane-top))!important}
 #matrix-v2 .cm-board[data-view=full]>.cm-board-panegrip{top:var(--full-pane-top);height:calc(100% - var(--full-pane-top))}
 #matrix-v2 .cm-board .cm-stage-actions .v-button{font-size:calc(17px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-stage-actions small,#matrix-v2 .cm-board :is(.cm-stage-caption,.cm-stage-life-list,.cm-stage-life){font-size:calc(15px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-stage-caption{max-width:max(72px,calc((100% - var(--full-action-w,0px))/2 - 30px));box-sizing:border-box;line-height:1.15}
+#matrix-v2 .cm-board .cm-stage-caption>span{max-width:100%;box-sizing:border-box;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#matrix-v2 .cm-board .cm-stage-life-list{min-width:0;box-sizing:border-box}
+#matrix-v2 .cm-board .cm-stage-life{display:flex;gap:6px;min-width:0;white-space:nowrap}
+#matrix-v2 .cm-board .cm-stage-life>span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+#matrix-v2 .cm-board .cm-stage-life>b{flex:none}

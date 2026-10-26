@@ -1204,7 +1204,7 @@ globalThis.CrankBoard = Object.seal({
       <div class="cm-stage-mini">${mat(p, {size: "opp", head: "none"})}</div></section>`).join("");
     return `${boardHeader()}
       <div class="cm-full-mine cm-stage-region" aria-label="Tabletop">
-        <div class="cm-stage-caption"><span>TURN ${view.state.turn}</span><div class="cm-stage-life-list" role="group" aria-label="Player life totals">${others.map(p=>`<span class="cm-stage-life">${e(p.name)} · <b>${p.health.life}</b></span>`).join("")}</div></div>
+        <div class="cm-stage-caption"><span title="Turn ${view.state.turn}">TURN ${view.state.turn}</span><div class="cm-stage-life-list" role="group" aria-label="Player life totals">${others.map(p=>`<span class="cm-stage-life" title="${e(p.name)}, ${p.health.life} life"><span>${e(p.name)}</span><b>${p.health.life}</b></span>`).join("")}</div></div>
         ${rear}<div class="cm-stage-front">${mat(big, {size: "full", head: "none"})}${corner}</div>
         ${actionBar()}
         <span class="cm-stage-error" role="status">${e(stageError)}</span>${ask()}
@@ -2654,6 +2654,7 @@ globalThis.CrankBoard = Object.seal({
       const header=host.querySelector(':scope>.cm-stage-top');
       if(header){const combat=header.querySelector('.cm-r4-combat')?.offsetHeight || 0;host.style.setProperty('--hud-top',`${Math.ceil(Math.max(28+30*hudScale()/100,header.offsetHeight-combat))}px`);}
       host.style.setProperty('--full-action-h',`${host.querySelector('.cm-stage-actions')?.offsetHeight || 0}px`);
+      host.style.setProperty('--full-action-w',`${host.querySelector('.cm-stage-actions')?.offsetWidth || 0}px`);
       fitCardCaptions(host);
       /* The hand's tray as it would be at the table's card size (Tools): the room the boards leave it, whatever size the
          hand is now (Rob, 2026-10-09). A larger hand runs on below; a smaller one leaves the boards where they are. */
