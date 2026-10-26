@@ -274,64 +274,78 @@
       "id": "CH-30",
       "tier": "C",
       "owner": "C",
-      "status": "pending",
+      "status": "in_progress",
       "summary": "Click map (D5): single click = inspect / card menu; double click on a card or stack = activate (tap for mana, tap ability → Actions lists it, cast); double click on the just-tapped card = untap until the mana is spent or the tap is undone; undoing a card untaps the lands it used; double click on empty board area = focus that board (RQ-02); no 300ms single-click wait; the card menu row stays the single-tap path on touch",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "Combined source integrated; C input 44 and layout 69 on worker baseline; D2 visual/caption and shared AccountMenu browser acceptance remain open"
+      ],
+      "commit": "b3008cb4"
     },
     {
       "id": "CH-31",
       "tier": "C",
       "owner": "C",
-      "status": "pending",
+      "status": "in_progress",
       "summary": "Undo hover drawer (W14 right): a 65% black band one 11–12px line tall slides up from the card's bottom edge on hover for a card played this step; \"↶ Undo\" rewinds and untaps; hidden once locked in; same on a stack entry; \"undone\" in every seat's log",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "Combined source integrated; C input 44 and layout 69 on worker baseline; D2 visual/caption and shared AccountMenu browser acceptance remain open"
+      ],
+      "commit": "b3008cb4"
     },
     {
       "id": "CH-32",
       "tier": "C",
       "owner": "C",
-      "status": "pending",
+      "status": "in_progress",
       "summary": "Identical lands as one stack (W16 r2): `sameKey` identity; count drawer \"×N · n untapped\" flush to the top card's bottom edge (`hud-caption` × scale); a double click taps the next untapped copy; a tapped copy tilts 30° (≤160ms, none under reduced motion), never 90°; never splits; a differing copy sits beside the stack; whole stack untaps in the untap step",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "Combined source integrated; C input 44 and layout 69 on worker baseline; D2 visual/caption and shared AccountMenu browser acceptance remain open"
+      ],
+      "commit": "b3008cb4"
     },
     {
       "id": "CH-33",
       "tier": "I",
       "owner": "C",
-      "status": "pending",
+      "status": "in_progress",
       "summary": "Lands / battlefield divider (W17): a 1px line with an invisible 8px hit area, a `grip()` call; keys; double-click reset; per device, per view; 3D maps the drag; applies to a focused opponent's board",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "Combined source integrated; C input 44 and layout 69 on worker baseline; D2 visual/caption and shared AccountMenu browser acceptance remain open"
+      ],
+      "commit": "b3008cb4"
     },
     {
       "id": "CH-34",
       "tier": "I",
       "owner": "C",
-      "status": "pending",
+      "status": "in_progress",
       "summary": "Camera menu per DS: View segmented (Table, Focus, 3D), HUD text segmented (100/125/150/200), sliders with values beside labels at 13px, Spacing slider (gaps → flush → overlap, default flush, one value for rows and columns, per device, opponents' boards too)",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "Combined source integrated; C input 44 and layout 69 on worker baseline; D2 visual/caption and shared AccountMenu browser acceptance remain open"
+      ],
+      "commit": "b3008cb4"
     },
     {
       "id": "CH-35",
       "tier": "I",
       "owner": "C",
-      "status": "pending",
+      "status": "in_progress",
       "summary": "Opponent focus affordances: 'View AI's board' link (14px tall) and ⤢ Focus (59×24 at 11px) become 32px+ controls in `hud-caption`; the Boards list row focuses on single click",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "Combined source integrated; C input 44 and layout 69 on worker baseline; D2 visual/caption and shared AccountMenu browser acceptance remain open"
+      ],
+      "commit": "b3008cb4"
     },
     {
       "id": "CH-36",
       "tier": "M",
       "owner": "C",
-      "status": "pending",
+      "status": "in_progress",
       "summary": "Play surfaces fixed colors: `mat-scrim`, `mat-ink`, `callout-*`, card face/back tokens; the Study replaces the green `mat-felt` default",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "Combined source integrated; C input 44 and layout 69 on worker baseline; D2 visual/caption and shared AccountMenu browser acceptance remain open"
+      ],
+      "commit": "b3008cb4"
     },
     {
       "id": "CH-40",
@@ -436,19 +450,23 @@
       "id": "CH-50",
       "tier": "I",
       "owner": "D2",
-      "status": "pending",
+      "status": "in_progress",
       "summary": "Table view: panel open on a pending choice or DecisionSlot carries it; hand thumbnails ≥110px at 1440; legend labeled once (\"castable now / in hand\") with tooltips; life dial gains seat labels, active-seat glow and priority text",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "Combined source integrated; C input 44 and layout 69 on worker baseline; D2 visual/caption and shared AccountMenu browser acceptance remain open"
+      ],
+      "commit": "b3008cb4"
     },
     {
       "id": "CH-51",
       "tier": "I",
       "owner": "D2",
-      "status": "pending",
+      "status": "in_progress",
       "summary": "Focus view: \"Other seats\" strip (SeatHeader stack form, counts only, never hands) with Focus buttons and double-click focus; All seats + prev/next in the header; \"n mana open · land drop used\" into the seat header at `hud-caption`",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "Combined source integrated; C input 44 and layout 69 on worker baseline; D2 visual/caption and shared AccountMenu browser acceptance remain open"
+      ],
+      "commit": "b3008cb4"
     },
     {
       "id": "CH-52",
@@ -459,18 +477,21 @@
       "evidence": [
         "Standalone presenter: crankmagic-coach 30, coach-layout 135 across six themes; seven deliberate regressions caught",
         "Capability gate: ai-door 73, cloud-worker 151",
-        "Board adoption and final Help route proof remain open"
+        "Board adoption and final Help route proof remain open",
+        "Combined source integrated; C input 44 and layout 69 on worker baseline; D2 visual/caption and shared AccountMenu browser acceptance remain open"
       ],
-      "commit": "c81805fc"
+      "commit": "b3008cb4"
     },
     {
       "id": "CH-53",
       "tier": "M",
       "owner": "D2",
-      "status": "pending",
+      "status": "in_progress",
       "summary": "Avatar menu becomes the DS AccountMenu on the board too: You / This device / Your data / Skin / Help / Careful / Sign out; 'Play settings' vs 'Account & app settings' resolved to Settings",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "Combined source integrated; C input 44 and layout 69 on worker baseline; D2 visual/caption and shared AccountMenu browser acceptance remain open"
+      ],
+      "commit": "6b70a600"
     },
     {
       "id": "CH-55",
