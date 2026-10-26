@@ -3034,7 +3034,7 @@ globalThis.CrankBoard = Object.seal({
     if (skipping !== null) skip();
     draw();
   };
-  actions["board-block-attacker"] = el => {const id=Number(el.dataset.attacker);if(!blocking() || !ownBlockAttacks().some(a=>a.attacker===id))return;blockAttacker=id;actionsShut=false;openModuleDrawer('actions');draw();};
+  actions["board-block-attacker"] = el => {const id=Number(el.dataset.attacker);if(!blocking() || !ownBlockAttacks().some(a=>a.attacker===id))return;blockAttacker=id;actionsShut=false;if(phone())stageRail=true;openModuleDrawer('actions');draw();};
   actions["board-block-attacker-none"] = el => {
     const id=Number(el.dataset.attacker);if(!blocking() || sending || !ownBlockAttacks().some(a=>a.attacker===id))return;
     picked=picked.filter(i=>view.decision.options.find(o=>o.index===i)?.attackerId!==id);blockSettled.add(id);blockResult=null;if(phone())stageRail=false;checkBlocks();draw();
