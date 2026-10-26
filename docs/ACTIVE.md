@@ -33,7 +33,17 @@ back with `tools/staging-check.mjs --expect 9ca99e53`.
   Worker setting was added since 1fcfc3d. Sharing stays off in `cloud-production` (it is on in the staging profile
   only), so the `cloud/sharing.mjs` changes do not run there.
 
-## Admin, Play's Settings in sections, and the invitation to staging and production, 2026-10-26 (a Claude cloud session, for Rob; `claude/confident-cori-v447il`)
+## Admin, Play's Settings in sections, and the invitation to staging and production, 2026-10-26 (a Claude cloud session, for Rob; PR #891): merged, on staging
+
+**Merged and released, 2026-10-26:** PR #891 merged to main as `b13607b2` (merge commit) on Rob's "merge it and release
+to staging when green", after Actions `suites` passed on head `1bef0a45` (run 40412951437) with base `c567c581` unmoved
+(the first run, on `1809d679`, failed `design-tokens` alone: two raw hex fallbacks in the Admin CSS, removed in
+`1bef0a45`). `tools/release-staging.sh`, from a cloud container with wrangler 4.139.0, pushed `release/cloud-staging`
+`d39e6796` from main `b13607b2` (release-acceptance 23, play-e2e 44), and `node tools/staging-check.mjs --expect
+b13607b2` passed (both pages and `/api/me`). Read back live as the session's service token: `/api/social/me` 200 with
+`isAdmin` false and `emailReady` true; `/api/social/admin` 403 for it. The release slot is free; production is unchanged.
+**Still Rob's:** one real invitation from Admin › Share on staging.crankmagic.com, which proves the staging Worker's
+`ACCESS_INVITE_TOKEN` may write production's policy, and the email in a real inbox.
 
 Rob, 2026-10-26: *"Create an admin button or an admin option in the settings menu that only I can see ... let's adjust
 the settings pop-up when you click settings within the play view, so that one we don't have to scroll ... the sections
