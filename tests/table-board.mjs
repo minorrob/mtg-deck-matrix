@@ -1828,18 +1828,31 @@ async function verifyTableRowAccess(page, facts) {
   save();
   ok(facts.horizontal, 'complete Table rows never introduce horizontal overflow');
   if(!facts.scrolls)return;
-  const viewport=await page.locator('.cm-board-table').boundingBox();
-  await page.mouse.move(viewport.x+2,viewport.y+Math.min(40,viewport.height/2));
-  await page.mouse.wheel(0,2000);
-  await page.waitForFunction(()=>document.querySelector('.cm-board-table').scrollTop>0,null,{timeout:5000});
-  const reachable=await page.evaluate(()=>{
-    const table=document.querySelector('.cm-board-table'),t=table.getBoundingClientRect();
-    return [...table.querySelectorAll('.cm-board-lands')].every(zone=>{const r=zone.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2,hit=document.elementFromPoint(x,y);return r.top>=t.top-1&&r.bottom<=t.bottom+1&&!!hit&&zone.contains(hit);});
+  const wheelPoint=await page.locator('.cm-board-table').evaluate(table=>{
+    const r=table.getBoundingClientRect(),gutter=r.width-table.clientWidth;
+    globalThis.__uatTableWheels=[];
+    const handler=event=>{const entry={x:event.clientX,y:event.clientY,dy:event.deltaY,target:event.target.className,zone:event.target.closest?.('[data-zone-scroll]')?.dataset.zoneScroll||null};globalThis.__uatTableWheels.push(entry);setTimeout(()=>entry.prevented=event.defaultPrevented,0);};
+    globalThis.__uatTableWheelHandler=handler;document.addEventListener('wheel',handler,{capture:true});
+    return {x:r.right-Math.max(2,gutter/2),y:r.y+r.height/2};
   });
-  ok(reachable,'native Table scrolling exposes each complete Lands row to the pointer');
-  proof.nativeScrollAccess=true;save();
-  await page.mouse.wheel(0,-2000);
-  await page.waitForFunction(()=>document.querySelector('.cm-board-table').scrollTop===0,null,{timeout:5000});
+  try {
+    await page.mouse.move(wheelPoint.x,wheelPoint.y);
+    await page.mouse.wheel(0,2000);
+    await page.waitForFunction(()=>{const t=document.querySelector('.cm-board-table');return t.scrollTop>0&&t.scrollTop>=t.scrollHeight-t.clientHeight-1;},null,{timeout:5000});
+    const reached=await page.evaluate(()=>{
+      const table=document.querySelector('.cm-board-table'),t=table.getBoundingClientRect();
+      return {offset:table.scrollTop,hit:[...table.querySelectorAll('.cm-board-lands')].every(zone=>{const r=zone.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2,hit=document.elementFromPoint(x,y);return r.top>=t.top-1&&r.bottom<=t.bottom+1&&!!hit&&zone.contains(hit);})};
+    });
+    ok(reached.hit,'native Table scrolling exposes each complete Lands row to the pointer');
+    proof.nativeScrollAccess=true;proof.downOffset=reached.offset;save();
+    await page.mouse.move(wheelPoint.x,wheelPoint.y);
+    await page.mouse.wheel(0,-2000);
+    await page.waitForFunction(()=>document.querySelector('.cm-board-table').scrollTop===0,null,{timeout:5000});
+    proof.returnedToTop=true;
+  } finally {
+    const trace=await page.evaluate(()=>{document.removeEventListener('wheel',globalThis.__uatTableWheelHandler,true);return {events:globalThis.__uatTableWheels,offset:document.querySelector('.cm-board-table').scrollTop};});
+    proof.wheelTrace=trace;save();
+  }
 }
 
 async function verifyCoachUsable(page) {
