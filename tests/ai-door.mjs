@@ -114,6 +114,21 @@ eq((await call({env: EVERYONE, jwt: await stranger(AUD)})).status, 200, "and the
 eq(calls().map((c) => [c.email, c.outcome]), [["new@example.com", "ok"], ["new@example.com", "ok"]], "each call logged under the person, on the same caps");
 const library = async (path, env) => (await handle(new Request(`https://crankmagic.test${path}`, {headers: {"cf-access-jwt-assertion": await stranger(AUD)}}), env, {fetchImpl, now: clock})).json();
 eq([(await library("/api/ai-advise", {...EVERYONE, AI_ADVISE: "on"})).open, (await library("/api/ai-advise", {...OPEN, AI_ADVISE: "on"})).open], [true, false], "the deck page offers the advisor to everyone signed in only with AI_EVERYONE on");
+/* The composer is offered only by the server's existing Coach gate, never inferred from UI presence. */
+const providerBeforeProbe = sent.length, logBeforeProbe = calls().length;
+for (const [probe, expected] of [
+  [{...EVERYONE, AI_COACH: "on"}, true],
+  [{...OPEN, AI_COACH: "on"}, false],
+  [{...EVERYONE, AI_COACH: "off"}, false],
+  [{...everyoneNoKey, AI_COACH: "on"}, false],
+  [{...EVERYONE, AI_COACH: "on", AI_CAP_TOTAL_CENTS: "0"}, false],
+  [{...EVERYONE, AI_COACH: "on", AI_MODEL: "unknown"}, false],
+]) eq((await library("/api/ai-coach", probe)).open, expected, "Coach availability reuses the real switch, settings, and person gates");
+eq((await call({path: "/api/ai-coach", method: "GET", jwt: null, env: {...EVERYONE, AI_COACH: "on"}})).status, 401, "the Coach probe requires verified Access");
+eq((await library("/api/ai-coach", {...EVERYONE, AI_COACH: "on", SERVICE_SEATS: "on"})).open, true, "a real person retains access where test seats are enabled");
+eq((await call({path: "/api/ai-coach", method: "GET", jwt: await token({aud: AUD}), env: {...OPEN, AI_COACH: "on"}})).json.open, true, "an explicitly allowlisted person can ask the Coach without AI_EVERYONE");
+eq((await call({path: "/api/ai-coach", method: "GET", jwt: await token({aud: AUD, email: null, common_name: "agent-1.access"}), env: {...EVERYONE, AI_COACH: "on", SERVICE_SEATS: "on"}})).json.open, false, "a service seat never gains the person's composer through AI_EVERYONE");
+eq([sent.length, calls().length], [providerBeforeProbe, logBeforeProbe], "availability never calls the provider or records spend");
 eq([(await library("/api/ai-meter", EVERYONE)).open, (await library("/api/ai-meter", OPEN)).open], [true, false], "and the settings' meter reads the same way");
 DB.raw.prepare("DELETE FROM ai_calls").run();
 sent = [];
