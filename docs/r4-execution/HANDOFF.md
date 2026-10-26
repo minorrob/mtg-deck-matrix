@@ -1,175 +1,85 @@
-# Current handoff
+# r4 acceptance snapshot
 
-Integration: integration/r4, baseline origin/main c567c581. Updated October 26, 2026.
-PR: https://github.com/minorrob/mtg-deck-matrix/pull/890 (draft).
-Tracking: https://linear.app/robs-build/issue/ROB-197/implement-r4-design-foundation-and-reconciled-playworkshop-ux .
+Integration: integration/r4, main baseline c567c581. This is the pre-CI source and local-proof snapshot.
+The current CI, main merge, staging revision/deployment and live readback are recorded in
+[PR #890](https://github.com/minorrob/mtg-deck-matrix/pull/890), with tracking in
+[ROB-197](https://linear.app/robs-build/issue/ROB-197/implement-r4-design-foundation-and-reconciled-playworkshop-ux).
+Production requires Rob's separate go.
 
-## Latest acceptance checkpoint
+## Source and ownership
 
-Current integrated Coach source is 9ce2148d (root integration d1ebc7db before later docs commits).
-All five legacy Play suites now pass: Camera layout, shell111, hand109, 3D camera106 and Babylon90.
-Native Focus42 covers the three reproduced Coach focus repairs; the last real-table run reached277,
-and its Clear-to-summary failure is repaired locally but still awaits the next full real-table pass.
-Engine is prepared for Run33 on d1ebc7db and holds no browser until Foundation releases its window.
+The coordinator owns canonical Git/index/pins/docs. Engine owns the current serial real-table browser
+window and later staging release; Workshop's tabletop and the coordinator's shared-shell native gates
+are queued. Foundation finished its bounded lane at757cf62b, clean with no browser. No further visual
+polish is in scope; an actual failed acceptance gate may require a bounded repair.
 
-Foundation currently owns the serial browser for the finite four-gate batch: full folded matrix224
-passes; caption17 scenarios found one real large-HUD Focus caption/Actions-spine overlap, with a bounded
-gutter repair underway; Settings-window and fullscreen-notes follow. Workshop's migrated tabletop and
-the coordinator's shared-shell native baselines are queued. No additional design polish is in scope.
-The required CI, main merge and staging remain pending; production awaits Rob's separate go.
+All61 explicit CH rows are integrated, except CH-03, superseded by the later EX-18 Cinzel/gilt request.
+The source numbering ends at89 with gaps. The129 original audit findings remain individually tracked;
+53 unmapped findings and bounded partial/open evidence are not converted into closure by a CH mapping.
 
-Pins at 93d4bfbe are board114, stage21, SW577, app594 with Git/working/manifest byte parity. The later
-9ce2148d board repair and any current gutter repair require a fresh final pin/manifest update before
-the exact-head scan and push. The preexisting untracked design renders must be preserved.
+Latest integrated production/pin snapshot: ad4afea1f36451731b3a478bb845c703bacc6a1e. Board115,
+stage.js21, stage.css71, SW578 and app595 have matching Git/working/manifest bytes;133 assets are recorded.
+Static gates pass: asset133, wiring131, data50 variants/50 buy profiles, readout1121.
+Preserve the preexisting untracked docs/design/2026-10-25-redesign-r4/renders/ and all evidence worktrees.
 
-## Coordinator resumed after PR #894
+## Incoming work and intent
 
-Incoming ownership returned explicitly at pushed integration/r4
-`9198910040383cb9907304bcea9acaaa1b7d89e5`, equal to origin and clean except the preserved untracked
-design renders. PR #894 is merged. Its source commit is `87953f81`; all 14 requested gates passed on
-both that source and the merge, with exact-head secret/clean-merge scans. No incoming browser remains.
-The transfer and hold described in the historical handoff below are complete.
+PR #894 merged into integration at91989100 after all14 requested gates passed on source and merge,
+with exact-head secret/clean-merge scans. Three conflicts and the mana colored-cost/life-cost repairs
+are recorded in INCOMING-1026.md. The incoming chat returned all canonical/browser ownership explicitly.
+EX-17 keeps30-degree tapped cards in unchanged slots; corners may tuck under neighbors. EX-15/16 allow
+usable full rows/readable sizing offsets. EX-18 replaces the original unchanged-wordmark instruction.
+EX-27 applies the later no-drawer-overlap preview request to grown Focus mats, including the actual
+spine controls; both existing Focus viewport cases used over-mat fallback, with no claimed gap-fit case.
 
-The original combined acceptance resumes: Engine continues the real-table pass from the unclassified
-Focus Coach geometry stop; Foundation completes the finite remaining Play gates. Older report-only
-tests must follow EX-15–EX-26 while retaining their functional assertions. In particular EX-17 permits
-rotated card corners across unchanged slots, EX-16 permits a readable sizing offset, and EX-18 supersedes
-the earlier unchanged-wordmark requirement. The required CI, main merge and staging are still pending.
+## Bounded local proof
 
-## Incoming follow-ups: integration evidence
+Commands use GEOMETRY_REQUIRED=1, repository Playwright and installed Chrome. A skipped browser is not
+a pass. Exact source/test snapshots and logs are in workbench/r4-play-evidence-20261026/
+foundation-final-gates-757cf62b.json; local artifacts are outside Git.
 
-`claude/r4-rob-1026` applies the incoming patch to pushed checkpoint `427ada65`. All14 requested gates
-pass, including room-mana-pool20 and board-mana-pool20 after red-before-fix/green-after-fix colored-cost
-and life-cost regressions. All12 report-only suites ran serially: five pass, seven fail. The extra
-table-tabletop failure is also present at unchanged427ada65. Full suite results, the three conflict
-resolutions, fixes and limits are in [INCOMING-1026.md](INCOMING-1026.md).
+| Gate | Proven scope |
+| --- | --- |
+| Five legacy Play suites | Camera layout across three widths/phone/persistence; shell111; hand109; 3D camera106; Babylon90 on0fff1f12. Includes actual head-look, native menus and exact-once binding. |
+| Folded decisions |224 checks/all16 existing scenarios on9ce2148d, including native three-point hits and way back. |
+| Caption endpoints |169 checks/all17 scenarios on476f1176, including readable facts/badges, useful sizing,5:7, stable tapping and Focus draw/Hand independence. |
+| Coach | Earlier all-mode views106 plus final Focus42 on9ce2148d; actual red-before/green-after draft/caret/scroll, async More/Clear/Questions and Clear-to-summary focus. |
+| Settings window |70 checks oncfb65183, including phone Camera layering and real Side Drawer Modules None/save/order controls. |
+| Fullscreen |49 checks on757cf62b, including physical stacked-land Undo, large action targets and preview/spine access. |
+| Drawer contrast | Same existing Focus1440/HUD200 case11 checks: selected facts16.95:1 and initial12.98:1 after scoped repair. |
+| Pure Play guards | Seven suites116 on757cf62b; earlier seven meaningful guard mutations caught. |
+| A/B and Workshop | Decision118; combat96 plus direct-blocking/public-display and meaningful regressions; joined Workshop77, lobby155/setup46, account menu85, Admin boundary, Help/Settings and density evidence in QA.md/requirements.json. |
 
-After this separate PR's local no-ff merge, repeated gates and integration/r4 push, canonical/index/browser
-ownership returns to the coordinator at the exact commit announced in the authorized cross-chat message.
-The earlier combined acceptance work remains pending as documented below; this bounded integration does
-not establish full CI, main readiness or staging acceptance.
+These are precise tested snapshots. Later scoped repairs have their own affected-path native proof;
+not every earlier matrix was rerun after every CSS change. The final Actions run covers the combined tree.
+The coordinator inspected representative Full/Table/Focus/phone captures and the corrected light drawer.
 
-## October 26 follow-up integration handoff
+## Remaining at this snapshot
 
-Rob authorized the separate chat **Integrate October 26 r4 follow-ups** to integrate the supplied Claude
-patch as its own PR into integration/r4, and explicitly approved coordinating this handoff. Its direct
-instructions are in the attached pasted text and work/claude-r4-rob-1026/. It owns the canonical
-branch/index and serial browser slot once the coordinator sends the scanned, pushed checkpoint SHA.
-The source/tests parent of this handoff note is036c321b73047a4ba5a213ae2cf0ab566305a176.
+Engine Run33 is running on ad4afea1. Run32 reached277; the reproduced Coach focus failures are repaired,
+but the next full real-table pass must still complete Escape/reopen, reconnect/newest-wins, phone and
+End/private records/idempotent filing/deck Record. Workshop tabletop and coordinator shared-shell native
+baselines follow. Required full CI, main readiness/merge and staging release/readback remain open.
+No r4 release is claimed by this source snapshot; use PR #890 for subsequent completion records.
 
-All coordinator source work is committed; both worker browser processes are closed. Preserve the
-preexisting untracked docs/design/2026-10-25-redesign-r4/renders/. Incoming work must preserve newer
-functional fixes, EX17 (stable30-degree tapped slots), and renumber its decisions toEX18–EX26.
-The incoming patch's wordmark and other explicit new user requests must be reconciled with the earlier
-source rulings under that chat's conflict instructions; do not silently drop either side.
+## Release execution
 
-**Main, full CI readiness and staging are held until that separate integration returns.** This is an
-in-progress draft checkpoint, not an assertion of a full green gate. After the incoming PR is locally
-merged/pushed to integration/r4, return canonical/browser ownership at its exact commit to this coordinator
-so the combined acceptance, required CI, main merge and staging can resume. Production still requires
-Rob's separate release instruction. The follow-up chat itself is explicitly forbidden to touch main or
-release staging/production.
+After the affected gates and exact-head tools/local-ci.sh <SHA> 0 scan, push the finished candidate and
+mark PR #890 ready for its one required full Actions run. Recheck main/mergeability/green head and merge
+with history preserved. Do not repeat the identical full suite locally while Actions can run.
 
-Latest frozen production isfdc4fc65; pins board111, stage69, app591, SW574,133 assets matching working/Git
-LF bytes. Current completed browser baselines: input62, layout90, views97; focused draw/Hand independence12;
-focused phone folded14 after allowing the actual preference-setup toast to expire. Seven pure suites116
-and existing guard mutations pass. The full folded16, caption16 plus existing Focus-draw, settings-window
-and fullscreen-notes baselines remain pending; remaining native mutations are listed by the Foundation
-worker in workbench/r4-play-evidence-20261026/foundation-frozen-gates-4f3694df.json. Do not duplicate already
-recorded real red-before-fix/green-after-fix paths.
+Engine then uses tools/release-staging.sh with the dedicated checkout
+C:/Users/robmi/CrankMagic/workbench/r4-release-checkout-20261026 and output workspace
+C:/Users/robmi/CrankMagic/workbench/r4-release-staging-20261026. Reverify resolved build/commit delete paths,
+ports and exact gated main SHA. Node22.23.3 is at workbench/node22/node_modules/node-win-x64/bin/node.exe;
+use approved Wrangler, repo Playwright and installed Chrome. The script gates the real cloud-staging
+build locally with release-acceptance and play-e2e before pushing release/cloud-staging.
 
-Real-table latest test head ed7165f3 is integrated (original diagnosticd53d26a5 retained in ancestry).
-Run26 reached258 checks on b7a64cf8 and stopped at Focus Coach module/standalone geometry. The composer is
-visible/focused; source vs oracle is unclassified. The next run prints exact mat/drawer rectangles and
-main.scrollTop before/after; do not weaken the assertion without those facts. Evidence is outside Git:
-workbench/r4-table-board-proof-20261026-r26 and workbench/r4-table-board-20261026-r26.log. Remaining sections
-are Coach prompt/thread/keyboard/draft/Questions, dropped socket/newest-wins, phone, End/private records,
-idempotent filing and deck Record. No full real-table pass is claimed.
+Observe the configured deployment; run tools/staging-check.mjs --expect <main-SHA> for both entries and
+authenticated service identity, then applicable isolated native staging acceptance/density. Never print
+Access credentials or commit the copied native backup. A release-branch push alone is not live acceptance.
 
-This checkpoint is pushed at Rob's explicit incoming-integration instruction despite those documented
-pending baselines. PR890 stays draft. Required secret/merge scan must pass before the checkpoint push.
-
-## Integrated and proven locally
-
-- S0 foundation; E engine and public projection contracts; D1 shell/Study; A decision desk;
-  B combat; F1/F2 Workshop/Admin. Detailed CH evidence is in requirements.json.
-- Canonical A: decision browser118; exact target identities8 plus two meaningful breaks;
-  account-bound result bridge28. Mandatory Cancel only clears an unsent draft; only actual
-  legal decline choices are sent. Phone drawer tabs no longer cover its binding action.
-- Canonical B: combat96; direct-blocking8 layouts including tall text, phone and crowded choices;
-  public combat6 layouts; all7 meaningful browser mutations caught. Preserved private check
-  retry and stale/reconnect guards. Native participant references fit; phone tile opens its desk.
-- Workshop: joined journey 77 with 20 whole-page/dialog primary sweeps and six caught breaks;
-  lobby 155, setup 46, seventeen pure regressions caught. Chooser uses canonical local names,
-  content-based shared-snapshot deduplication, distinct shared versions and separate public precons.
-  Inline error contrast is measured from rendered colors (dark 4.686 / bronze 4.687 / light 9.588).
-  Measure uses a saved fixture report; these proofs make no provider calls or owner-library changes.
-- Shared AccountMenu: global source and hooks pass 85 checks plus five caught regressions;
-  Help 14, Settings 73, reset 43 and Landing 55 remain green. Native groups/gates, one Settings,
-  actual aria, Tab/light-dismiss, phone fit, required danger ink, and fresh-invoker focus after a
-  board-like redraw are covered. Actual board adoption/draft protection remains Play-owned.
-  The shell baseline also proves one native deletion Undo receipt through hub/detail navigation;
-  its duplicate-receipt regression was caught. Typed deletion and reset semantics are unchanged.
-- Native-restore density: exact source4f8c202a;67 checks,42 captures,0 findings, source unchanged,
-  zero real write attempts/page errors. Output: workbench/r4-live-density-proof-20261026-r2.
-  Limits: placeholder art/top viewports, no engine availability/account-sync/SW/live-table proof.
-- Workshop audit evidence covers42 mapped findings:21 locally verified,13 partial,5 newer-baseline
-  reconciliations,3 open. Read WORKSHOP-AUDIT-EVIDENCE.md; mapping alone is not resolution.
-- Current coordinator pure checks: offer-context12, land-identity9, setup46, Admin21,
-  lock-feedback18, service-worker9, feature-wiring131, readout-feeds1121 and data-integrity.
-
-## Source integrated, final proof pending
-
-- C/D2 source through60d058cd is integrated. Source7931e2a1 passed71 assertions across14 earlier
-  caption scenarios; the final matrix now has16 including three-seat Table. Phone light-theme ink
-  passed its focused7 on777b0a60. Native max-size50 on d18c7463 covers public badge bounds, wrapped zone
-  labels, count-only narrow piles, 5:7 raster, whole first tapped card, useful60–160 range and no sideways
-  overflow. Coordinator inspected those endpoint images. EX15 now covers Table and Focus row minima;
-  exact Focus1280×800 Library draw10 passed, with real hand clearance and truthful null-priority display.
-- Coach delayed/cached entry10 on9d828ff1 covers both the module and Play settings paths, actual composer
-  access, draft retention and deliberate moved-focus protection. Returned folded target picker14 passed
-  its focused Table200 case; full folded16, final layout/views/endpoint matrix, affected legacy suites,
-  final combat geometry and browser mutations remain pending.
-- Pure offer12, land9, Coach-context32, seat lifecycle10 and account-menu keyboard17 pass. Coordinator
-  caught three meaningful pending-draft/old-capability Coach regressions; owner subsequently caught all
-  five including account/moved-focus protection. Source was restored cleanly.
-- The preserved real-table suite reached192 checks on e7c1c1ad. Its old DOM assertions are being
-  migrated without dropping identity, privacy, legality, geometry or reconnect coverage. The whole
-  suite is not green yet. Actual Table down-scroll/whole Lands hit/return-to-top is proven, as are cast
-  Undo offer, closure on acknowledged pass, opponent response/Resolve, stack inspection and resolution.
-  Browser proofs remain serial. Foundation owns the bounded current window: the combined Full1400
-  inspector+Stack fix makes Camera reachable but its screenshot shows Next step/Skip covered, so peer
-  control clearance remains a source blocker. Engine resumes on the reviewed fix, then Foundation
-  completes its remaining finite native/mutation list. No full real-table pass has been claimed.
-- Global AccountMenu source begins at 6b70a600; opening/focus refinements are 6f2b1e83/17e599c4,
-  required danger ink 69edbf73, and scoped Invite/Admin alignment 8da62a87. Global acceptance is
-  green; Foundation owns the real board-avatar adoption and game-draft/hotkey boundary. Shared
-  alternate-anchor proof does not replace that real board test. Final row-alignment capture is
-  optional; the inspected earlier captures and functional proof are identified in the Workshop audit.
-- ROOT README now lists625 root suites. Root owns shared pins and the fixture; versions were
-  refreshed for this local checkpoint, but any subsequent served change must move them again.
-- Last remote push was scanned5c3d7ecb. Later source is local until current changed-suite browser
-  baselines pass, then the exact-head secret/merge scan and push. PR stays draft until all gates pass.
-
-## Release gates
-
-No r4 full CI, main merge, staging release or production release has occurred. Finish C/D2/menu,
-combined visual/behavior/privacy acceptance, exact-head scan and required Actions run before main.
-Engine is the staging release executor after root's gate; supported checker authenticated against
-staging c567c581 in readiness review. Production requires Rob's separate release instruction.
-Dedicated clean release checkout: workbench/r4-release-checkout-20261026; release output/log workspace:
-workbench/r4-release-staging-20261026. Build/commit delete targets were checked within that workspace;
-recheck paths, ports and the gated main revision immediately before running the documented script.
-
-Use Node22.23.3 under workbench/node22/node_modules/node-win-x64/bin for release. Targeted local
-checks used Node24.19.0 and installed Chrome. Browser/temporary-Git tests need external execution
-because sandbox localhost/Git-init is restricted. A skip is not a pass. Browser suites run serially.
-
-- Rob's October 26 follow-ups (EX-18 to EX-26) are integrated from `claude/r4-rob-1026`: the Cinzel gilt wordmark,
-  the deck tile's star beside its stage pill, Planned Changes adds without take-outs and decks past 100, the Play camera,
-  hand and backdrop, the life list and play cards, the head look, the Mana Pool module (and the room's `manaSources`) and
-  targeted cards in red. B, C and D2 keep them, CH-34's Camera redesign included; CH-03 reads as superseded by EX-18.
-
-Workers: workbench/r4-foundation-20261026 (single board writer), r4-workshop-20261026 (Workshop/menu),
-r4-engine-20261026 (engine contracts, independent reviews and release executor). Root owns canonical
-repo merges, pins, tracking and central audit disposition. Preserve preexisting untracked design renders.
+Physical phone/GPU hardware, real mail/provider calls and a fresh live finished-match/account-sync
+journey retain their stated limits. The density walk uses a copied native backup in isolated browser
+storage with writes/providers blocked; it cannot prove those live operations. Audit detail remains in
+AUDIT-STATUS.md, findings.json and WORKSHOP-AUDIT-EVIDENCE.md.

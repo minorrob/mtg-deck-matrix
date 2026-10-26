@@ -1,37 +1,22 @@
 # Who holds the work
 
-## r4 coordinated execution, October 26, 2026 (Codex; Rob: "go")
+## r4 coordinated execution, October26,2026 (Codex; Rob: "go")
 
-**Coordinator ownership restored:** PR #894 is merged into integration/r4 and pushed at
-`9198910040383cb9907304bcea9acaaa1b7d89e5`. The incoming chat explicitly returned the canonical index,
-branch and serial browser slot. All 14 incoming gates passed again on that merge; both exact-head scans
-passed. Codex resumes combined acceptance for PR #890, then required CI, main and staging. Engine has
-the first serial browser slot for the real-table continuation; Foundation owns Play production fixes;
-the coordinator and Workshop migrate disjoint older test contracts. Production still awaits Rob's go.
-The incoming handoff paragraphs below record the completed transfer, rather than an active hold.
+**Pre-CI source/local-proof snapshot:** combined source and cache pins are integrated at ad4afea1.
+The coordinator owns canonical Git/index/pins/docs; Engine holds the serial real-table browser and is
+staging release executor. Foundation finished its bounded source/acceptance lane, clean with no browser;
+Workshop tabletop and coordinator shared-shell gates are queued. Source snapshots, commands, proof and
+outstanding gates are in docs/r4-execution/HANDOFF.md. Preserve the untracked design renders.
 
-**Incoming integration evidence:** `claude/r4-rob-1026` builds on pushed427ada65. Its14 requested gates pass;
-all12 report-only suites ran (five pass/seven fail, with the extra table-tabletop failure reproduced on
-the unchanged checkpoint). Three conflicts preserve the newer Play fixes and EX-17 tapping; incoming
-EX-18–EX-26 and all integration fixes are recorded in docs/r4-execution/INCOMING-1026.md. Once its separate
-PR is locally merged, post-merge gated and pushed to integration/r4, ownership returns to the coordinator
-at the exact announced commit. Full combined acceptance remains open.
+The current CI, main merge, staging deployment/readback and remaining release limits are maintained in
+[PR #890](https://github.com/minorrob/mtg-deck-matrix/pull/890), linked to ROB-197. This section is the
+pre-CI checkpoint rather than a claim about a later deployment. Production requires Rob's separate go.
+PR #894 is merged at91989100 and its canonical/browser hold is complete. EX-01–EX-27 record the source
+conflicts and later explicit requests; CH-03's unchanged wordmark is superseded by EX-18.
 
-**Coordinated incoming handoff:** Rob authorized **Integrate October 26 r4 follow-ups** and approved
-cross-chat coordination. After the coordinator's scanned checkpoint push/notification, that chat owns
-the canonical integration/r4 index and serial browser slot for its separate incoming PR. Coordinator
-workers have released their browsers and keep isolated worktrees intact. Hold main/CI readiness/staging
-until the follow-up is merged/pushed back and ownership returned at a named commit. Its own scope never
-touches main, staging or production. Exact proof/pending gates and return protocol: docs/r4-execution/HANDOFF.md.
-
-The revised plan is authorized: `integration/r4` from main `c567c581`, with isolated worktrees for this effort,
-one Play writer, and no history rewrite. Foundation (`codex/r4-foundation`), Engine (`codex/r4-engine`) and
-Workshop (`codex/r4-workshop`) have exclusive workspaces under `workbench/r4-*-20261026`. Source packets,
-61 requirement IDs, decisions and evidence live in `docs/r4-execution/`. Foundation owns global type/theme
-files until handed off; Workshop works in its feature modules; the coordinator owns integration and asset
-pins. Engine work is independent of the visual foundation. Browser suites run one at a time. The existing
-design handoff is preserved. Staging follows combined acceptance through the engine release executor;
-production awaits Rob's separate go. Foundation, engine, Workshop/Admin, shell, decision desk and combat are integrated with bounded local proof in draft PR #890. C/D2 source is integrated; final native Play, visual/layout and combined release acceptance remain open. No r4 deployment has occurred. Current proof and outstanding work: docs/r4-execution/HANDOFF.md.
+The61-row program uses integration/r4 from main c567c581 and Rob-authorized isolated worktrees, one Play
+writer, serial browser checks and preserved Git history. All129 audit findings retain bounded evidence;
+source mapping alone does not close the53 unmapped findings or partial/open follow-ups.
 
 ## 2026-10-25: main 9ca99e5 in production (Rob: "release main 9ca99e5 to production")
 

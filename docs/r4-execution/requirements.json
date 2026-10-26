@@ -274,10 +274,10 @@
       "id": "CH-30",
       "tier": "C",
       "owner": "C",
-      "status": "in_progress",
+      "status": "integrated",
       "summary": "Click map (D5): single click = inspect / card menu; double click on a card or stack = activate (tap for mana, tap ability → Actions lists it, cast); double click on the just-tapped card = untap until the mana is spent or the tap is undone; undoing a card untaps the lands it used; double click on empty board area = focus that board (RQ-02); no 300ms single-click wait; the card menu row stays the single-tap path on touch",
       "evidence": [
-        "Combined source integrated; C input 44 and layout 69 on worker baseline; D2 visual/caption and shared AccountMenu browser acceptance remain open"
+        "Integrated through ad4afea1; bounded native evidence: earlier input62/layout90, views106 plus later Focus42; five legacy baselines green; folded224, caption169/17 scenarios, Settings70 and fullscreen49. Exact source snapshots and later affected-path regressions are in HANDOFF.md and QA.md; this is not a full CI/live-release claim."
       ],
       "commit": "b3008cb4"
     },
@@ -285,10 +285,10 @@
       "id": "CH-31",
       "tier": "C",
       "owner": "C",
-      "status": "in_progress",
+      "status": "integrated",
       "summary": "Undo hover drawer (W14 right): a 65% black band one 11–12px line tall slides up from the card's bottom edge on hover for a card played this step; \"↶ Undo\" rewinds and untaps; hidden once locked in; same on a stack entry; \"undone\" in every seat's log",
       "evidence": [
-        "Combined source integrated; C input 44 and layout 69 on worker baseline; D2 visual/caption and shared AccountMenu browser acceptance remain open"
+        "Integrated through ad4afea1; bounded native evidence: earlier input62/layout90, views106 plus later Focus42; five legacy baselines green; folded224, caption169/17 scenarios, Settings70 and fullscreen49. Exact source snapshots and later affected-path regressions are in HANDOFF.md and QA.md; this is not a full CI/live-release claim."
       ],
       "commit": "b3008cb4"
     },
@@ -296,10 +296,10 @@
       "id": "CH-32",
       "tier": "C",
       "owner": "C",
-      "status": "in_progress",
+      "status": "integrated",
       "summary": "Identical lands as one stack (W16 r2): `sameKey` identity; count drawer \"×N · n untapped\" flush to the top card's bottom edge (`hud-caption` × scale); a double click taps the next untapped copy; a tapped copy tilts 30° (≤160ms, none under reduced motion), never 90°; never splits; a differing copy sits beside the stack; whole stack untaps in the untap step",
       "evidence": [
-        "Combined source integrated; C input 44 and layout 69 on worker baseline; D2 visual/caption and shared AccountMenu browser acceptance remain open"
+        "Integrated through ad4afea1; bounded native evidence: earlier input62/layout90, views106 plus later Focus42; five legacy baselines green; folded224, caption169/17 scenarios, Settings70 and fullscreen49. Exact source snapshots and later affected-path regressions are in HANDOFF.md and QA.md; this is not a full CI/live-release claim."
       ],
       "commit": "b3008cb4"
     },
@@ -307,10 +307,10 @@
       "id": "CH-33",
       "tier": "I",
       "owner": "C",
-      "status": "in_progress",
+      "status": "integrated",
       "summary": "Lands / battlefield divider (W17): a 1px line with an invisible 8px hit area, a `grip()` call; keys; double-click reset; per device, per view; 3D maps the drag; applies to a focused opponent's board",
       "evidence": [
-        "Combined source integrated; C input 44 and layout 69 on worker baseline; D2 visual/caption and shared AccountMenu browser acceptance remain open"
+        "Integrated through ad4afea1; bounded native evidence: earlier input62/layout90, views106 plus later Focus42; five legacy baselines green; folded224, caption169/17 scenarios, Settings70 and fullscreen49. Exact source snapshots and later affected-path regressions are in HANDOFF.md and QA.md; this is not a full CI/live-release claim."
       ],
       "commit": "b3008cb4"
     },
@@ -318,10 +318,10 @@
       "id": "CH-34",
       "tier": "I",
       "owner": "C",
-      "status": "in_progress",
+      "status": "integrated",
       "summary": "Camera menu per DS: View segmented (Table, Focus, 3D), HUD text segmented (100/125/150/200), sliders with values beside labels at 13px, Spacing slider (gaps → flush → overlap, default flush, one value for rows and columns, per device, opponents' boards too)",
       "evidence": [
-        "Combined source integrated; C input 44 and layout 69 on worker baseline; D2 visual/caption and shared AccountMenu browser acceptance remain open"
+        "Integrated through ad4afea1; bounded native evidence: earlier input62/layout90, views106 plus later Focus42; five legacy baselines green; folded224, caption169/17 scenarios, Settings70 and fullscreen49. Exact source snapshots and later affected-path regressions are in HANDOFF.md and QA.md; this is not a full CI/live-release claim."
       ],
       "commit": "b3008cb4"
     },
@@ -329,10 +329,10 @@
       "id": "CH-35",
       "tier": "I",
       "owner": "C",
-      "status": "in_progress",
+      "status": "integrated",
       "summary": "Opponent focus affordances: 'View AI's board' link (14px tall) and ⤢ Focus (59×24 at 11px) become 32px+ controls in `hud-caption`; the Boards list row focuses on single click",
       "evidence": [
-        "Combined source integrated; C input 44 and layout 69 on worker baseline; D2 visual/caption and shared AccountMenu browser acceptance remain open"
+        "Integrated through ad4afea1; bounded native evidence: earlier input62/layout90, views106 plus later Focus42; five legacy baselines green; folded224, caption169/17 scenarios, Settings70 and fullscreen49. Exact source snapshots and later affected-path regressions are in HANDOFF.md and QA.md; this is not a full CI/live-release claim."
       ],
       "commit": "b3008cb4"
     },
@@ -340,10 +340,10 @@
       "id": "CH-36",
       "tier": "M",
       "owner": "C",
-      "status": "in_progress",
+      "status": "integrated",
       "summary": "Play surfaces fixed colors: `mat-scrim`, `mat-ink`, `callout-*`, card face/back tokens; the Study replaces the green `mat-felt` default",
       "evidence": [
-        "Combined source integrated; C input 44 and layout 69 on worker baseline; D2 visual/caption and shared AccountMenu browser acceptance remain open"
+        "Integrated through ad4afea1; bounded native evidence: earlier input62/layout90, views106 plus later Focus42; five legacy baselines green; folded224, caption169/17 scenarios, Settings70 and fullscreen49. Exact source snapshots and later affected-path regressions are in HANDOFF.md and QA.md; this is not a full CI/live-release claim."
       ],
       "commit": "b3008cb4"
     },
@@ -450,10 +450,10 @@
       "id": "CH-50",
       "tier": "I",
       "owner": "D2",
-      "status": "in_progress",
+      "status": "integrated",
       "summary": "Table view: panel open on a pending choice or DecisionSlot carries it; hand thumbnails ≥110px at 1440; legend labeled once (\"castable now / in hand\") with tooltips; life dial gains seat labels, active-seat glow and priority text",
       "evidence": [
-        "Combined source integrated; C input 44 and layout 69 on worker baseline; D2 visual/caption and shared AccountMenu browser acceptance remain open"
+        "Integrated through ad4afea1; bounded native evidence: earlier input62/layout90, views106 plus later Focus42; five legacy baselines green; folded224, caption169/17 scenarios, Settings70 and fullscreen49. Exact source snapshots and later affected-path regressions are in HANDOFF.md and QA.md; this is not a full CI/live-release claim."
       ],
       "commit": "b3008cb4"
     },
@@ -461,10 +461,10 @@
       "id": "CH-51",
       "tier": "I",
       "owner": "D2",
-      "status": "in_progress",
+      "status": "integrated",
       "summary": "Focus view: \"Other seats\" strip (SeatHeader stack form, counts only, never hands) with Focus buttons and double-click focus; All seats + prev/next in the header; \"n mana open · land drop used\" into the seat header at `hud-caption`",
       "evidence": [
-        "Combined source integrated; C input 44 and layout 69 on worker baseline; D2 visual/caption and shared AccountMenu browser acceptance remain open"
+        "Integrated through ad4afea1; bounded native evidence: earlier input62/layout90, views106 plus later Focus42; five legacy baselines green; folded224, caption169/17 scenarios, Settings70 and fullscreen49. Exact source snapshots and later affected-path regressions are in HANDOFF.md and QA.md; this is not a full CI/live-release claim."
       ],
       "commit": "b3008cb4"
     },
@@ -472,13 +472,13 @@
       "id": "CH-52",
       "tier": "I",
       "owner": "D2",
-      "status": "in_progress",
+      "status": "integrated",
       "summary": "Coach section in the right drawer: one 36px line \"CrankMagic Coach\" (`cm-section-title` style), no subtext, shrinks on a narrow pane; \"Questions to Ask\" 22px line opening upward over the conversation, `aria-expanded`; 13px minimum, 30px rows; when the Coach backend is off the section says so and links Help, no textarea",
       "evidence": [
         "Standalone presenter: crankmagic-coach 30, coach-layout 135 across six themes; seven deliberate regressions caught",
         "Capability gate: ai-door 73, cloud-worker 151",
         "Board adoption and final Help route proof remain open",
-        "Combined source integrated; C input 44 and layout 69 on worker baseline; D2 visual/caption and shared AccountMenu browser acceptance remain open"
+        "Integrated through ad4afea1; bounded native evidence: earlier input62/layout90, views106 plus later Focus42; five legacy baselines green; folded224, caption169/17 scenarios, Settings70 and fullscreen49. Exact source snapshots and later affected-path regressions are in HANDOFF.md and QA.md; this is not a full CI/live-release claim."
       ],
       "commit": "b3008cb4"
     },
@@ -486,7 +486,7 @@
       "id": "CH-53",
       "tier": "M",
       "owner": "D2",
-      "status": "in_progress",
+      "status": "integrated",
       "summary": "Avatar menu becomes the DS AccountMenu on the board too: You / This device / Your data / Skin / Help / Careful / Sign out; 'Play settings' vs 'Account & app settings' resolved to Settings",
       "evidence": [
         "Shared AccountMenu source 6b70a600/6f2b1e83/17e599c4/69edbf73: one native auto-popover, You / This device / Your data / Skin / Help / Careful / final Sign out; no unimplemented ARIA menu role",
@@ -494,7 +494,8 @@
         "Stable focusKey/focusFind restoration after a no-id data-action invoker is replaced; Escape restores fresh focus/aria without reaching the draft sentinel; outside click retains clicked-control focus",
         "breaks-account-menu-r4: 5/5 caught, missed []; menu-help: 14; settings-r3: 73; reset-all: 43; landing-r3: 55",
         "Source 8da62a87 only aligns Invite/Admin rows; no fresh capture was required for this reversible cosmetic refinement; final combined gate should use integrated source",
-        "Board avatar adoption, all game hotkeys and real target-draft boundary are Play-owned evidence; shared menu proof alone does not close the whole CH-53"
+        "Board avatar adoption, all game hotkeys and real target-draft boundary are Play-owned evidence; shared menu proof alone does not close the whole CH-53",
+        "Integrated through ad4afea1; bounded native evidence: earlier input62/layout90, views106 plus later Focus42; five legacy baselines green; folded224, caption169/17 scenarios, Settings70 and fullscreen49. Exact source snapshots and later affected-path regressions are in HANDOFF.md and QA.md; this is not a full CI/live-release claim."
       ],
       "commit": "6b70a600"
     },
@@ -801,5 +802,6 @@
       ],
       "commit": "6a5c2883"
     }
-  ]
+  ],
+  "acceptanceRecord": "PR #890 is the canonical combined CI/main/staging record. Source integration and bounded local proof are distinct from release acceptance; CH-03 is superseded by EX-18."
 }
