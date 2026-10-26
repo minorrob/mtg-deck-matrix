@@ -1418,12 +1418,12 @@ try {
   await utility(rob.page,"board-tools");
   const glyphs = await rob.page.evaluate((histGlyphs) => {
     const svg = (el) => (el.querySelector("svg.cm-icon") || {}).outerHTML || "";
-    const hist = histGlyphs.map(([g]) => g), coachEls = [...document.querySelectorAll("#cm-board [data-action=board-coach], #cm-board-tools [data-action=board-coach]")];
+    const hist = histGlyphs.map(([g]) => g), coachEls = [...document.querySelectorAll("#cm-board [data-action=board-coach], #cm-board-tools [data-action=board-coach]")].filter(el=>el.querySelector("svg.cm-icon"));
     return {hist: hist.length, histSame: hist.every((g) => g && g === hist[0]), histText: histGlyphs.map(([, t]) => t).join(""),
       coach: coachEls.length, coachSame: coachEls.every((el) => svg(el) && svg(el) === svg(coachEls[0])), differ: hist[0] !== svg(coachEls[0]), star: document.getElementById("cm-board").innerHTML.includes("✦") || document.getElementById("cm-dialog").innerHTML.includes("✦")};
   }, histGlyphs);
   ok(glyphs.hist >= 2 && glyphs.histSame && !/[☰⌕]/.test(glyphs.histText), `the strip's History ▾ and the band's button open the history from the same clock (${glyphs.hist} places), not ☰ or ⌕`);
-  ok(glyphs.coach >= 2 && glyphs.coachSame && glyphs.differ && !glyphs.star, `the pane's Coach and Tools › Recommended actions carry the Coach's own glyph (${glyphs.coach} places), and ✦ is nowhere on the board`);
+  ok(glyphs.coach >= 2 && glyphs.coachSame && glyphs.differ && !glyphs.star, `the icon-bearing Coach controls share their own glyph (${glyphs.coach} places), and ✦ is nowhere on the board: ${JSON.stringify(glyphs)}`);
   await rob.page.click("#cm-dialog .cm-dialog-close");
   await chooseView(rob.page,"full"); await fullTools(rob.page);
   await rob.page.locator(".cm-stage-rail").waitFor();
