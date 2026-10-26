@@ -1041,7 +1041,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-board-pie-priority,#matrix-v2 .cm-board .cm-board-table[data-seats="2"] .cm-board-pie-priority{top:54%;padding:0 4px;line-height:1.1}
 #matrix-v2 .cm-board .cm-board-tabletop{padding-top:60px}
 #matrix-v2 .cm-board .cm-other-seats>header{min-height:48px;padding-right:216px;box-sizing:border-box}
-#matrix-v2 .cm-board .cm-board-table[data-seats="3"] .cm-board-slot[data-area="c"] .cm-board-field>:is(.cm-mat-label,.cm-board-group:first-of-type>h3){max-width:calc(50% - var(--pie)/2 - 8px);white-space:normal;overflow-wrap:anywhere}
+#matrix-v2 .cm-board .cm-board-table[data-seats="3"] .cm-board-slot[data-area="c"] .cm-board-field{padding-top:calc(var(--pie)/2 + 6px)}
 
 #matrix-v2 .cm-board .cm-board-tabletop{padding-left:56px;padding-right:56px}
 
@@ -1077,3 +1077,16 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-decision-slot #cm-board-decision{display:flex;flex-flow:column nowrap;align-items:stretch}
 #matrix-v2 .cm-board .cm-decision-slot #cm-board-decision>*{flex:none}
 #matrix-v2 .cm-board .cm-decision-slot #cm-board-decision>.cm-board-options{flex:none;overflow:visible;margin:0;min-height:0}
+
+/* Keep the existing art scale, with only the minimum needed to contain the actual scaled
+   public badge. The same --bc drives pile columns and measured usable zone rows. */
+#matrix-v2 .cm-board .cm-mat[data-fit=table]{--bc:max(calc(clamp(30px,var(--row-w,var(--board-w,620px))*.074,60px)*var(--board-scale,1)),var(--caption-card-min,0px))}
+#matrix-v2 .cm-board .cm-mat[data-fit=focus]{--bc:max(calc(clamp(92px,var(--mat-w,1060px)*.078,136px)*var(--board-scale,1)),var(--caption-card-min,0px))}
+#matrix-v2 .cm-board .cm-mat[data-fit=full]{--bc:max(calc(clamp(64px,var(--full-w,1200px)*.075,112px)*var(--board-scale,1)),var(--caption-card-min,0px))}
+#matrix-v2 .cm-board .cm-mat[data-fit=opp]{--bc:max(min(calc(clamp(28px,var(--opp-w,400px)*.11,48px)*var(--board-scale,1)),var(--opp-bc-max,48px)),var(--caption-card-min,0px))}
+#matrix-v2 .cm-board .cm-mat[data-fit=mini]{--bc:max(calc(var(--mini-w,300px)*.074*var(--board-scale,1)),var(--caption-card-min,0px))}
+#matrix-v2 .cm-board .cm-mat[data-fit=side]{--bc:max(calc(clamp(26px,var(--opp-w,300px)*.15,52px)*var(--board-scale,1)),var(--caption-card-min,0px))}
+#matrix-v2 .cm-board .cm-phone-battlefield>.cm-mat{--bc:max(calc(64px*var(--board-scale,1)),var(--caption-card-min,0px))}
+#matrix-v2 .cm-board .cm-stage-front>.cm-mat{--bc:max(var(--stage-card,96px),var(--caption-card-min,0px))}
+#matrix-v2 .cm-board .cm-stage-mini>.cm-mat{--bc:max(var(--rear-card,24px),var(--caption-card-min,0px))}
+#matrix-v2 .cm-board .cm-stage-front .cm-board-pile{--bc:max(calc(var(--stage-card,80px)*.78),var(--caption-card-min,0px))}

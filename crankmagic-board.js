@@ -992,6 +992,16 @@ globalThis.CrankBoard = Object.seal({
   const cardOrders=new Map(), zonePositions=new Map();
   const zoneKey=seat=>`cm-board-zone-split:${mode}:${seat}`;
   function zoneShare(seat) {const value=Number(stored(zoneKey(seat)));return value>=.2&&value<=.8?value:.6;}
+  function fitCardCaptions(host) {
+    for(const mat of host.querySelectorAll('.cm-mat[data-fit]')){
+      let minimum=0;
+      for(const badge of mat.querySelectorAll('.cm-bcard-pt,.cm-bcard-count,.cm-bcard-tax')){
+        if(!badge.getClientRects().length || getComputedStyle(badge).visibility==='hidden')continue;
+        minimum=Math.max(minimum,badge.offsetWidth/(badge.matches('.cm-bcard-count')?1:.95)+4);
+      }
+      mat.style.setProperty('--caption-card-min',`${Math.ceil(minimum)}px`);
+    }
+  }
   function zoneMetrics(mat) {
     const grid=mat.querySelector('.cm-mat-grid'),field=grid.querySelector('.cm-board-field'),lands=grid.querySelector('.cm-board-lands');
     const number=(el,key)=>parseFloat(getComputedStyle(el)[key])||0;
@@ -2622,6 +2632,7 @@ globalThis.CrankBoard = Object.seal({
       if (!host || !view) return;
       const header=host.querySelector(':scope>.cm-stage-top');
       if(header){const combat=header.querySelector('.cm-r4-combat')?.offsetHeight || 0;host.style.setProperty('--hud-top',`${Math.ceil(Math.max(28+30*hudScale()/100,header.offsetHeight-combat))}px`);}
+      fitCardCaptions(host);
       /* The hand's tray as it would be at the table's card size (Tools): the room the boards leave it, whatever size the
          hand is now (Rob, 2026-10-09). A larger hand runs on below; a smaller one leaves the boards where they are. */
       const atTableSize = (el, measure) => {
