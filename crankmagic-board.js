@@ -605,9 +605,15 @@ globalThis.CrankBoard = Object.seal({
     return button ? `<button type="button" class="${cls}" data-action="board-vitals" aria-label="${e(label)}; open Table vitals">${inner}</button>`
       : `<span class="${cls}" aria-label="${e(label)}">${inner}</span>`;
   }
+  function seatState(p) {
+    const flag=seatFlag(p),i=p.playerId;
+    if(departed(i) || p.health.status==='lost' || away.get(i))return flag;
+    if(flag==='Deciding' || (view.decision && i===view.seat))return 'Deciding';
+    return view.state.turnPlayerId===i?(i===view.seat?'Your turn':`${p.name}'s turn`):'Waiting';
+  }
   function seatHeader(p, {interactive = true,resources=false} = {}) {
     const commander = commanderOf(p), label = seatLabel(p), active = view.state.turnPlayerId === p.playerId;
-    const state = view.decision && p.playerId === view.seat ? 'Deciding' : active ? (p.playerId === view.seat ? 'Your turn' : `${p.name}'s turn`) : 'Waiting';
+    const state=seatState(p);
     const initial = (p.name || 'Player').trim()[0] || '?';
     return `<div class="cm-seat-header${active ? ' is-turn' : ''}${p.health.life <= 10 ? ' is-danger' : ''}" data-seat-header="${p.playerId}">
       <span class="cm-seat-portrait" aria-hidden="true"><span class="cm-seat-initial">${e(initial)}</span>${commander?.name ? `<img src="${e(pictureOf(commander.name))}" alt="" referrerpolicy="no-referrer">` : ""}</span>
