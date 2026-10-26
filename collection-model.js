@@ -111,7 +111,7 @@
       return seat(a.deckId,a.slotId,ownership);
     }
     /* SUBSTITUTE · LOADING (Rob, 2026-10-23, the Decks requirements' Q1): an owned stand-in chosen for a seat of a deck
-       and not in its box yet. It mirrors Final · Loading: Box deck (choice 2) or Ready to add puts it in. */
+       and not in its box yet. It mirrors Final · Loading: Box deck (choice 2) or Planned Changes puts it in. */
     if(owned&&r.chosenFor&&loc.kind!=='deck'){const seatHeld=slotOf(r.chosenFor.deckId,r.chosenFor.slotId);if(seatHeld)return st('substitute','own',{deckId:r.chosenFor.deckId,play:'loading',holds:seatHeld.committed?seatHeld.cardId:''});}
     /* For no deck. A copy filed in a deck's own group is being considered for it: an Upgrade, its replaced card not named yet. */
     const considering=(r.groupIds||[]).map(g=>c.groups.get(g)).find(Boolean)||'';
@@ -263,7 +263,7 @@
   /* THE SAME HUNDRED, CUT THE WAY A BUILD NIGHT CUTS IT. `owned` says what you have; it
      does not say where. 72 owned and 55 in the physical deck is 17 cards to go and find, and that
      figure was never computed anywhere -- so the deck page could not say "17 ready to add" and
-     the Ready to add list had nothing to list. The segments below add it without moving a single
+     the Planned Changes list had nothing to list. The segments below add it without moving a single
      existing key: inBox is `placed` under the name the UI uses; pullFromBench and
      pullFromOtherBox are owned, reserved copies sitting somewhere else; remove is a copy in
      this deck that the list no longer asks for. The three money figures follow the
@@ -297,7 +297,7 @@
        ordered or still on the bench. It leaves when a real copy is ready to take a seat
        (swapReady: reserved copies on the bench or in another box) or when the box holds more
        substitutes than the list has empty seats (surplus). `remove` is the two together, the
-       number the Ready to add list asks to take out now; `sleeved` is what is physically in the physical deck. */
+       number the Planned Changes list asks to take out now; `sleeved` is what is physically in the physical deck. */
     const standIns=s.lots.filter(l=>l.source==='owned'&&l.location?.kind==='deck'&&l.location.deckId===d.id&&l.allocation?.deckId!==d.id).reduce((n,l)=>n+l.quantity,0);
     const gap=Math.max(0,target-placed),covered=Math.min(standIns,gap),surplus=standIns-covered,swapReady=Math.min(covered,pullFromBench+pullFromOtherBox),remove=surplus+swapReady,sleeved=placed+standIns;
     /* WATCHED, for a deck: the cards being considered for it -- its upgrade and bracket options,
@@ -445,7 +445,7 @@
       const commands=[{type:'target',...intro,deckId:d.id,cardId:cardObj.id,quantity:value,confirmed:true}];let review=value<t&&a>0||value===0;
       /* Raising a finalized deck's count reserves the free copies (the command does that itself)
          and then takes copies reserved to other decks or sitting in other boxes -- they stay
-         where they physically are until pulled, and those decks' Ready to add lists say so. */
+         where they physically are until pulled, and those decks' Planned Changes lists say so. */
       if(value>t&&d.status==='final'){
         const free=s.lots.filter(l=>l.cardId===cardObj.id&&!PLANNED.includes(l.source)&&!l.allocation&&l.offer!=='held'&&l.location?.kind!=='deck').reduce((n,l)=>n+l.quantity,0);
         const elsewhere=s.lots.filter(l=>l.cardId===cardObj.id&&!PLANNED.includes(l.source)&&l.offer!=='held'&&(l.allocation?l.allocation.deckId!==d.id:l.location?.kind==='deck')).sort((x,y)=>order(x)-order(y));
@@ -541,7 +541,7 @@
      does it. Choice 1 is the deck's Loading cards (its own, owned, not in its box); choice 2 adds the stand-ins chosen
      for its seats (Substitute · Loading); choice 3 adds the copies it has Reserved that sit in another deck's box --
      each leaves that box, so the seat it held there goes back to Reserved · To buy (Q2), and the dialog names it.
-     Every move is a `place`, as Ready to add makes; nothing is locked, bought or ordered (BOX-9). Decks are taken in the
+     Every move is a `place`, as Planned Changes makes; nothing is locked, bought or ordered (BOX-9). Decks are taken in the
      order given (the grid's), so a copy two of them want goes to the first and the other is said to keep waiting. */
   function boxPlan(s,ids,choice=1){const word=x=>x.boxed?'Boxed':x.stage==='defined'?'Defined':'Building',taken=new Map(),plan=[],waiting=[];
     for(const id of ids){const d=deck(s,id);if(d.archived)continue;const main=new Set(d.slots.filter(r=>r.purpose==='main').map(r=>r.id)),lots=[];
@@ -804,7 +804,7 @@
       case 'allocate':{let l=lot(s,c.lotId);warning(l);l=split(l,c.quantity);l.allocation=null;if(l.offer==='held')ensure(false,'Cancel the pending deal before transferring the copy.');allocate(l,deck(s,c.deckId),slot(s,c.deckId,c.slotId),l.quantity);summary='Reserved copies; physical location unchanged';break;}
       /* INTO A BOX. A copy the deck's list calls for is reserved to that seat on the way in. One the
          list does not call for may still go in -- as a SUBSTITUTE, when the command says so: it fills
-         a seat while the real card is bought or on its way, and the Ready to add list asks for it back the
+         a seat while the real card is bought or on its way, and the Planned Changes list asks for it back the
          moment a real copy is ready. Nothing marks it; being in a box without a reservation to
          that deck is what a substitute is. */
       /* CHOOSE A STAND-IN (Q1): an owned, free copy on the Bench is set aside to hold a Reserved card's seat until the

@@ -460,7 +460,7 @@
           return yes("place", "Put in a physical deck", "Asks which deck; a copy the list does not call for is refused unless substitutes are allowed.");
         case "Substitute":
           if (others || plans.length || lots.some((r) => r.source !== "owned")) return no("Only an owned copy can stand in for another card.");
-          return yes("standin", "Put in a physical deck as a substitute", "Asks which deck; goes in without a reservation, and Ready to add asks for it back when the real card is ready.");
+          return yes("standin", "Put in a physical deck as a substitute", "Asks which deck; goes in without a reservation, and Planned Changes asks for it back when the real card is ready.");
         case "Loading":
         case "To add":
         case "Reserved":

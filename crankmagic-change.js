@@ -162,6 +162,102 @@
       readings: {now, afterNow, afterAll, list}, readiness: ready};
   }
 
+  /* PLANNED CHANGES (Rob, 2026-10-25, C1–C8; the list once called Ready to add). One deck's changes as pairs, one copy a
+     side: what to take out of the box beside what to add to it. Read from the model's own record states
+     (M.deckStatus): a Substitute in the box says whose seat it holds, a Reserved or Loading copy which card it replaces,
+     an Upgrade the Final it would replace -- so the original pairs are the model's, not a guess.
+
+     TAKE OUT OF BOX: every Substitute in the box ("Substitute"), and a Final an Upgrade names ("Final").
+     ADD TO BOX, by where it is in the chain (Rob: To Buy · Not purchased > To Buy · Ordered > Owned) and what it is for:
+       - Owned · Final: a Reserved or Loading copy you own, on the Bench or in another deck's box;
+       - Owned · Substitute: a stand-in chosen for a seat, not in yet;
+       - Owned · Bench: a free copy on the Bench that fills a seat this deck has not reserved;
+       - Owned / To Buy / To Buy · Ordered · Upgrade: an Upgrade, by ownership;
+       - To Buy / To Buy · Ordered · Final: a Reserved card still to buy or on its way -- already planned, so shown with
+         the Substitute holding its seat, and not selectable.
+     A row holds one pair, an add alone, or a take-out alone; rows with both come first. */
+  function planned(state, deck, options = {}) {
+    const M = options.M; if (!M || !deck) return null;
+    const s = state, cardOf = options.cardOf || ((id) => s.cards[id]), status = M.deckStatus(s, deck), mine = status.rows;
+    const facts = (id) => cardOf(id) || s.cards[id] || {name: ""};
+    const units = (n, make) => Array.from({length: Math.max(1, num(n) || 1)}, (_, k) => make(k));
+    const chainOf = (own) => (own === "own" ? "owned" : own === "ordered" ? "ordered" : "buy");
+    const CHAIN = {owned: "Owned", ordered: "To Buy · Ordered", buy: "To Buy"};
+    const upgradesFor = new Set(mine.filter(({st}) => st.use === "upgrade" && st.replaces).map(({st}) => st.replaces));
+    const outs = [], ins = [];
+    for (const {r, st} of mine) {
+      if (r.kind !== "lot" || !st.inBox) continue;
+      const role = st.use === "substitute" ? "Substitute" : st.use === "final" && upgradesFor.has(r.cardId) ? "Final" : "";
+      if (!role) continue;
+      for (const k of units(r.quantity, (k) => k)) outs.push({id: `out:${r.id}#${k}`, lotId: r.id, cardId: r.cardId, card: facts(r.cardId), name: facts(r.cardId).name, role, holds: st.holds || "", slotId: st.slotId || (role === "Final" ? (r.allocation && r.allocation.slotId) || "" : ""), selectable: true});
+    }
+    const free = (cardId, taken) => s.lots.find((l) => l.cardId === cardId && l.source === "owned" && !l.allocation && !(l.location && l.location.kind === "deck") && (l.offer || "none") === "none" && !l.chosenFor && !taken.has(l.id));
+    const takenFree = new Set();
+    for (const {r, st} of mine) {
+      if (st.inBox) continue;
+      let kind = "", chain = "", lotId = r.kind === "lot" ? r.id : null, seat = "";
+      if (st.use === "upgrade") {kind = "upgrade"; chain = chainOf(st.ownership); if (chain === "owned" && !lotId) {const l = free(r.cardId, takenFree); if (l) {lotId = l.id; takenFree.add(l.id);} else chain = "buy";}}
+      else if (st.use === "final" && st.play === "loading") {kind = "final"; chain = "owned";}
+      else if (st.use === "reserved") {kind = "final"; chain = chainOf(st.ownership);}
+      else if (st.use === "substitute" && r.kind === "lot") {kind = "substitute"; chain = "owned"; seat = (r.chosenFor && r.chosenFor.slotId) || "";}
+      else continue;
+      const use = kind === "upgrade" ? "Upgrade" : kind === "substitute" ? "Substitute" : "Final";
+      for (const k of units(r.quantity, (k) => k)) ins.push({id: `in:${r.id || r.recordId}#${k}`, kind, chain, label: `${CHAIN[chain]} - ${use}`, lotId, cardId: r.cardId, card: facts(r.cardId), name: facts(r.cardId).name, replaces: st.replaces || "", slotId: st.slotId || r.slotId || "", seat, where: st.from ? (options.deckName ? options.deckName(st.from) : "another deck") : "", selectable: kind === "upgrade" ? !!(st.slotId && st.replaces) : chain === "owned"});
+    }
+    const bench = M.benchFree ? M.benchFree(s, deck) : {rows: []};
+    for (const x of bench.rows || []) for (const k of units(x.quantity, (k) => k)) ins.push({id: `in:bench:${x.lotId || x.cardId}#${k}`, kind: "bench", chain: "owned", label: "Owned - Bench", lotId: x.lotId || null, cardId: x.cardId, card: facts(x.cardId), name: facts(x.cardId).name, replaces: "", slotId: "", seat: "", where: x.box ? `Bench · ${x.box}` : "Bench", selectable: !!x.lotId});
+    /* THE ORIGINAL PAIRS: an Upgrade with the Final it names; a Reserved or Loading copy with the Substitute holding its
+       seat (one whose `holds` is this card), else one of the card it replaces. */
+    const left = outs.slice(), take = (pred) => {const i = left.findIndex(pred); return i >= 0 ? left.splice(i, 1)[0] : null;};
+    const rows = [];
+    for (const a of ins) {
+      const o = a.kind === "upgrade" ? take((x) => x.role === "Final" && x.cardId === a.replaces)
+        : a.kind === "final" ? (take((x) => x.role === "Substitute" && x.holds === a.cardId) || (a.replaces ? take((x) => x.role === "Substitute" && x.cardId === a.replaces) : null)) : null;
+      rows.push({in: a, out: o});
+    }
+    for (const o of left) rows.push({in: null, out: o});
+    const rank = (r) => (r.in && r.out ? 0 : r.in ? 1 : 2) * 10 + (r.in ? ({owned: 0, ordered: 1, buy: 2})[r.in.chain] : 0);
+    rows.sort((a, b) => rank(a) - rank(b) || String((a.in || a.out).name).localeCompare(String((b.in || b.out).name)));
+    rows.forEach((r, i) => { r.row = i + 1; });
+    return {deckId: deck.id, rows, boxTotal: status.deckTotal};
+  }
+
+  /* WHAT A SWAP PAIRS (C7): every selected add with its original take-out when that is selected too; an add whose partner
+     is not selected takes the next selected take-out left over, and that pair is marked re-paired; what is left of
+     either side goes alone (C8: three in and one out still swap). */
+  function pairUp(rows, selectedIn, selectedOut) {
+    const isIn = (a) => a && selectedIn.has(a.id), isOut = (o) => o && selectedOut.has(o.id);
+    const pairs = [], usedOut = new Set();
+    for (const r of rows) if (isIn(r.in) && isOut(r.out)) {pairs.push({in: r.in, out: r.out, repaired: false}); usedOut.add(r.out.id);}
+    const spare = rows.filter((r) => isOut(r.out) && !usedOut.has(r.out.id)).map((r) => r.out);
+    for (const r of rows) if (isIn(r.in) && !isOut(r.out)) {const o = spare.shift() || null; pairs.push({in: r.in, out: o, repaired: !!o});}
+    for (const o of spare) pairs.push({in: null, out: o, repaired: false});
+    return pairs;
+  }
+
+  /* A SWAP AS COMMANDS, one batch, one undo. An Upgrade is reserved in place of the Final it names (that Final staying in
+     the box as its Substitute); re-paired with another Final, that Final's seat takes it instead. An owned card goes in
+     (its seat found by the model, or a stand-in for the seat it was chosen for). A take-out goes to the Bench, except
+     beside a To Buy Upgrade: that one stays in the box holding the seat until the Upgrade arrives (Rob: "Record the
+     plan"). */
+  function swapCommands(deck, pairs) {
+    const deckId = deck.id, into = [], out = [], plan = [];
+    for (const {in: a, out: o} of pairs) {
+      if (a && a.kind === "upgrade") {
+        if (o && o.role === "Final" && o.slotId && o.cardId !== a.replaces) plan.push({type: "swap", deckId, slotId: o.slotId, cardId: a.cardId, substitute: true, confirmed: true}, {type: "removeOption", deckId, slotId: a.slotId});
+        else plan.push({type: "acceptOption", deckId, slotId: a.slotId, substitute: true});
+        if (a.chain === "owned" && a.lotId) into.push({type: "place", lotId: a.lotId, deckId, quantity: 1, confirmed: true});
+        if (o && a.chain === "owned") out.push(o);
+      } else if (a) {
+        into.push(a.kind === "substitute" ? {type: "place", lotId: a.lotId, deckId, quantity: 1, asStandIn: true, standInFor: a.seat, confirmed: true} : {type: "place", lotId: a.lotId, deckId, quantity: 1, confirmed: true});
+        if (o) out.push(o);
+      } else if (o) out.push(o);
+    }
+    /* Copies of one record moving the same way go as one place, so ten Mountains stay one record of ten. */
+    const merged = (list) => {const seen = new Map(); for (const c of list) {const k = [c.lotId, c.deckId || "", c.asStandIn ? 1 : 0, c.standInFor || ""].join("|"); if (seen.has(k)) seen.get(k).quantity += c.quantity; else seen.set(k, {...c});} return [...seen.values()];};
+    return [...plan, ...merged(into), ...merged(out.map((o) => ({type: "place", lotId: o.lotId, quantity: 1, confirmed: true})))];
+  }
+
   /* The sheet a plan exports: rows for the checklist, rows for the readings. */
   function sheets(p) {
     const say = (r) => r.action === "swap" ? "Remove, then put in" : r.action === "remove" ? "Remove" : "Put in";
@@ -176,5 +272,5 @@
     };
   }
 
-  return {MANA, TOTAL, landTarget, tally, judge, plan, sheets, typeOf, isLand};
+  return {MANA, TOTAL, landTarget, tally, judge, plan, sheets, typeOf, isLand, planned, pairUp, swapCommands};
 });

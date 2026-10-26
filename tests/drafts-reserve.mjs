@@ -11,7 +11,7 @@
  *   Keep       a copy offered for trade is not taken
  *   Bench      every free copy on the Bench counts (Rob, 2026-10-01): one marked Keep on bench -- every release to the
  *              Bench marked it -- is taken after every other free copy, never not at all; a deck made before that says
- *              how many free copies are still there for its open seats, on Ready to add, and reserves them on request
+ *              how many free copies are still there for its open seats, on Planned Changes (Owned - Bench), and puts them in on a Swap
  *   Lobby      a lobby deck reserves nothing and asks for nothing
  *   Finalize   changes the badge only: the same reservations and the same buy list before and after
  *   Screens    the Deck page offers Finalize, not Finalize & reserve; the Library has no Draft list rows, and the
@@ -140,9 +140,9 @@ if (browser) try {
   await page.waitForTimeout(600);
   eq(await page.locator("#cm-roster-table tbody tr", {hasText: "G3d draft"}).count(), 1, "the Library has one row for it in the draft, its To buy row: no second Draft list row beside it");
   /* BENCH, on screen: Rob's D1, finalized, still needs a card he does not own; a copy of it is recorded owned on the
-     Bench without saying which deck it is for. Ready to add counts it and lists it under Also on your Bench, and
-     Reserve them reserves it into Add from the Bench. */
-  const readyCount = async () => {await page.goto(`${base}/index.html#decks`); await page.getByRole("heading", {name: "Decks", level: 1}).waitFor({timeout: 30000}); await page.goto(`${base}/index.html#decks?deck=deck%3Alive%3AD1`); await page.locator(".cm-deck-hero h1").waitFor({timeout: 30000}); const m = /Ready to add \((\d+)\)/.exec(await page.locator(".cm-deck-hero").innerText()); return m ? Number(m[1]) : 0;};
+     Bench without saying which deck it is for. The deck page's Planned Changes counts it; the page lists it to add as
+     Owned - Bench (Rob, C3), and a tick and Swap put it in the box. */
+  const readyCount = async () => {await page.goto(`${base}/index.html#decks`); await page.getByRole("heading", {name: "Decks", level: 1}).waitFor({timeout: 30000}); await page.goto(`${base}/index.html#decks?deck=deck%3Alive%3AD1`); await page.locator(".cm-deck-hero h1").waitFor({timeout: 30000}); const m = /Planned Changes \((\d+)\)/.exec(await page.locator(".cm-deck-hero").innerText()); return m ? Number(m[1]) : 0;};
   const readyBefore = await readyCount();
   const late = await page.evaluate(async () => {const C = globalThis.__cm, st = C.state, d = st.decks.find((x) => x.id === "deck:live:D1");
     const count = (r) => st.lots.filter((l) => l.allocation?.deckId === d.id && l.allocation.slotId === r.id).reduce((n, l) => n + l.quantity, 0);
@@ -152,18 +152,19 @@ if (browser) try {
     return {name: C.card(r.cardId).name, cardId: r.cardId, before: l && l.allocation ? 1 : 0};});
   eq(late.before, 0, `a copy of ${late.name}, which D1 still needs, is on the Bench and reserved to nobody`);
   const readyAfter = await readyCount();
-  eq(readyAfter, readyBefore + 1, `the deck's Ready to add counts the free copy on the Bench: ${readyBefore} before it arrived, ${readyAfter} after`);
+  eq(readyAfter, readyBefore + 1, `the deck's Planned Changes counts the free copy on the Bench: ${readyBefore} before it arrived, ${readyAfter} after`);
   await page.goto(`${base}/index.html#pull?deck=deck%3Alive%3AD1`);
-  await page.locator("#cm-pull-free").waitFor({timeout: 30000});
-  ok((await page.locator("#cm-pull-free").innerText()).includes(late.name), `Ready to add lists it under Also on your Bench: ${late.name}`);
-  await shot(page, "ready-to-add-also-on-bench-1280");
-  await page.locator("#cm-pull-free").getByRole("button", {name: "Reserve them"}).click();
+  const benchSide = page.locator(".cm-plan-side.is-in", {hasText: late.name}).filter({hasText: "Owned - Bench"});
+  await benchSide.first().waitFor({timeout: 30000});
+  ok(await benchSide.count() === 1, `Planned Changes lists it to add as Owned - Bench: ${late.name}`);
+  await shot(page, "planned-changes-bench-1280");
+  await benchSide.locator(".cm-plan-tick").check();
+  await page.locator("[data-action=plan-swap]").click();
   await page.locator("#cm-dialog[open] button[type=submit]", {hasText: "Confirm change"}).click({timeout: 15000});
-  await page.locator("#cm-pull-free").waitFor({state: "detached", timeout: 15000});
-  const after = await page.evaluate((cardId) => globalThis.__cm.state.lots.filter((l) => l.allocation?.deckId === "deck:live:D1" && l.cardId === cardId).length, late.cardId);
-  const pullText = await page.locator(".cm-pull").innerText();
-  ok(after === 1 && /Add from the Bench/i.test(pullText) && pullText.includes(late.name), `Reserve them reserves it, and it is an Add from the Bench row like any other (${after} reserved; ${pullText.slice(0, 160).replace(/\s+/g, " ")})`);
-  await shot(page, "ready-to-add-bench-1280");
+  await page.locator("#cm-dialog[open]").waitFor({state: "detached", timeout: 15000}).catch(() => {});
+  await page.waitForTimeout(600);
+  const after = await page.evaluate((cardId) => globalThis.__cm.state.lots.filter((l) => l.allocation?.deckId === "deck:live:D1" && l.cardId === cardId && l.location?.kind === "deck" && l.location.deckId === "deck:live:D1").length, late.cardId);
+  ok(after === 1 && await page.locator(".cm-plan-side.is-in", {hasText: late.name}).count() === 0, `Swap puts it in D1's box, reserved to its seat, and it leaves the list (${after} in the box)`);
   await context.close();
 } finally {
   await close();

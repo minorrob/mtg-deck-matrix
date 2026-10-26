@@ -8,7 +8,7 @@
  *      lists the deck's group -- no Bench copies unless asked.
  *   3. The card panel's Status chips count the card's records by their status, as labels, not links; Change status
  *      and Change assignment sit at the end of the lines.
- *   4. The Table view's piles are places, and Ready to add names a waiting copy Loading.
+ *   4. The Table view's piles are places, and Planned Changes (once Ready to add) names a waiting copy Owned - Final.
  *   5. About Deck Building climbs the ownership words, then the uses.
  *
  * Needs Playwright and Chromium; GEOMETRY_REQUIRED=1 (CI) turns a missing browser into a failure.
@@ -106,13 +106,14 @@ try {
   eq(Object.fromEntries(Object.keys(pileWant).map((k) => [k, piles[k]])), pileWant, "each counting what the model puts there");
   eq(await page.$$eval("[name=ttStatus] option", (os) => os.map((o) => o.textContent)), ["Any status", "Own (any)", "Final", "Loading", "Substitute", "Bench", "Ordered", "To buy", "Watch"], "and its Status dropdown offers the same words");
 
-  /* 5. Ready to add: a copy waiting on the Bench wears "Loading", with where to find it. */
+  /* 5. Planned Changes (once Ready to add; Rob, C5): a copy waiting on the Bench is an add, "Owned - Final", with where
+     it is when that is another deck -- not the old pills. */
   const PULL = st.decks.find((d) => !d.archived && waitingIn(d.id).some((l) => l.location?.kind !== "deck"))?.id;
   ok(PULL, "some deck has a copy waiting on the Bench, so the check below can fail");
   await page.goto(`${base}/index.html#pull?deck=${encodeURIComponent(PULL)}`);
-  await page.waitForTimeout(1500);
-  const pullPills = await page.$$eval(".cm-pill", (ps) => ps.map((p) => p.textContent.trim()).filter((t) => /^(Bench|To add|Loading)\b/.test(t)));
-  ok(pullPills.some((t) => /^Loading · /.test(t)) && !pullPills.some((t) => /^(To add|Bench) · /.test(t)), `Ready to add names each waiting copy "Loading", then where it is: ${pullPills.slice(0, 3).join(" | ")}`);
+  await page.locator(".cm-plan-side.is-in .cm-plan-role").first().waitFor({timeout: 30000});
+  const pullRoles = await page.$$eval(".cm-plan-side.is-in .cm-plan-role", (ps) => ps.map((p) => p.textContent.trim()));
+  ok(pullRoles.includes("Owned - Final") && !(await page.$$eval(".cm-plan .cm-pill", (ps) => ps.length)), `Planned Changes names each waiting copy "Owned - Final": ${[...new Set(pullRoles)].join(" | ")}`);
 
   /* 6. The ladder. */
   await page.goto(`${base}/index.html#how`);

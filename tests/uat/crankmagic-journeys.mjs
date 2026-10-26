@@ -90,13 +90,14 @@ try{
  await page.getByRole('tab',{name:/^The hundred/}).click();await page.locator('.cm-deck-list').first().waitFor();eq(await page.locator('.cm-deck-list li').count()>0,true,'The hundred tab lists the hundred');await click('View deck cards');await page.getByRole('table').waitFor();ok((await page.locator('.cm-chip').innerText()).startsWith('Deck: Journey Goblins'));
  await actionsFor('Mountain','To buy');await rung('Ordered',40);await page.waitForTimeout(700);current=await state();eq(current.lots[0].quantity,40);eq(current.lots[0].source,'ordered');
  await actionsFor('Mountain','Ordered');await rung('Own',10);await page.waitForTimeout(700);current=await state();eq(current.lots.filter(l=>l.source==='owned').reduce((n,l)=>n+l.quantity,0),10);eq(current.lots.filter(l=>l.source==='ordered').reduce((n,l)=>n+l.quantity,0),30);
- /* THE PULL SHEET. Ten owned Mountains sit on the bench, reserved: the sheet lists them under
-    Add from the Bench, one tick puts the lot in the box, the row stays, grayed, and the deck's
-    In box figure moves by the lot. Then back to the Collection where the journey was. */
- const rosterURL=page.url();await page.goto(BASE+'/'+ENTRY+'#pull?deck='+encodeURIComponent(current.decks[0].id));await page.locator('.cm-pull').waitFor({timeout:45000});
- eq(await page.locator('.cm-pull-group[data-group=bench] .cm-pull-row').count(),1);eq(await page.locator('.cm-pull-group[data-group=bench] .cm-pull-n').innerText(),'10');/* Select all sits beside the count while anything is left in the group, and goes when nothing is. */eq(await page.locator('.cm-pull-group[data-group=bench] .cm-pull-select-all').count(),1);
- await page.locator('[data-pull-tick]').first().check();await page.locator('.cm-pull-row.is-done').waitFor({timeout:8000});current=await state();eq(current.lots.find(l=>l.source==='owned').location.kind,'deck');eq(CrankReadiness(current).inBox,10);
- eq(await page.locator('.cm-pull-group[data-group=bench] .cm-pull-n').innerText(),'0');eq(await page.locator('.cm-pull-group[data-group=bench] .cm-pull-select-all').count(),0);
+ /* PLANNED CHANGES (once the pull sheet; Rob, C1–C8). Ten owned Mountains sit on the bench, reserved: the page lists
+    each copy to add as Owned - Final (the thirty ordered as To Buy · Ordered - Final); a tick only selects, Swap asks and puts them in, one change, and the deck's In box
+    figure moves by the lot. Then back to the Collection where the journey was. */
+ const rosterURL=page.url();await page.goto(BASE+'/'+ENTRY+'#pull?deck='+encodeURIComponent(current.decks[0].id));await page.locator('.cm-plan').waitFor({timeout:45000});
+ {const mountains=page.locator('.cm-plan-side.is-in',{hasText:'Mountain'}).filter({hasText:'Owned - Final'});eq(await mountains.count(),10);eq(await page.locator('.cm-plan-side.is-in',{hasText:'Mountain'}).filter({hasText:'To Buy · Ordered - Final'}).count(),30);
+  const rev=(await state()).revision;for(let i=0;i<10;i++)await mountains.nth(i).locator('.cm-plan-tick').check();eq((await state()).revision,rev);
+  await page.locator('[data-action=plan-swap]').click();await page.getByRole('button',{name:'Confirm change'}).click();await page.waitForTimeout(900);current=await state();eq(current.revision,rev+1);
+  eq(current.lots.filter(l=>l.source==='owned'&&l.location.kind==='deck').reduce((n,l)=>n+l.quantity,0),10);eq(CrankReadiness(current).inBox,10);eq(await page.locator('.cm-plan-side.is-in',{hasText:'Mountain'}).filter({hasText:'Owned - Final'}).count(),0);}
  await page.goto(rosterURL);await page.getByRole('table').waitFor();
  /* The row's own verb: the owned, reserved, benched Mountains go into the box in one tap. */
  await page.reload();await page.getByRole('table').waitFor();await page.evaluate(async()=>{const r=await CrankRepository.open();try{const s=await r.getState();const l=s.lots.find(l=>l.source==='owned');await r.commit({id:crypto.randomUUID(),type:'place',lotId:l.id,quantity:l.quantity,confirmed:true},s.revision);}finally{r.close();}});await page.reload();await page.getByRole('table').waitFor();
@@ -714,8 +715,8 @@ try{
  await actionsFor('Wastes','Bench');await moveToGroup('Journey Goblins');await page.waitForTimeout(900);current=await state();
  {const l=current.lots.find(l=>l.cardId===wastesKey);eq(l.location.deckId,journey.id);eq(l.allocation,null);eq(CrankReadiness(current).standIns,1);}
  await nav('Decks');/* The tile's caption shortens it to "1 sub". */{const tile=await page.locator('.cm-deck-tile').filter({hasText:'Journey Goblins'}).first().innerText();ok(/\b1 sub\b/.test(tile),tile);}
- await openDeck('Journey Goblins');await page.getByRole('button',{name:/^Ready to add/}).click();
- await page.locator('.cm-pull-group[data-group=standin]').waitFor();/* A substitute that "stays for now" (nothing real is ready for its seat) is left alone by Select all, as Mark all added leaves it; one that can come out (a real copy is ready, as the journey's deck has one now) is offered to it. Either way the row's own tick moves it. */{const out=/Substitute → Bench/.test(await page.locator('.cm-pull-group[data-group=standin] .cm-pull-row').first().innerText());eq(await page.locator('.cm-pull-group[data-group=standin] .cm-pull-select-all').count(),out?1:0,'Select all offers only a substitute that can come out');}await page.locator('.cm-pull-group[data-group=standin] [data-pull-tick]').first().check();await page.waitForTimeout(900);current=await state();
+ await openDeck('Journey Goblins');await page.getByRole('button',{name:/^Planned Changes/}).click();
+ /* The substitute is a take-out, "Substitute"; its tick and Swap send it to the Bench. */{const sub=page.locator('.cm-plan-side.is-out',{hasText:'Wastes'});await sub.waitFor();eq(await sub.locator('.cm-plan-role').textContent(),'Substitute');await sub.locator('.cm-plan-tick').check();}await page.locator('[data-action=plan-swap]').click();await page.getByRole('button',{name:'Confirm change'}).click();await page.waitForTimeout(900);current=await state();
  eq(current.lots.find(l=>l.cardId===wastesKey).location.kind,'bench');eq(CrankReadiness(current).standIns,0);
  /* MAKE THE CHANGE (Rob, 14 September). The deck page's hero offers the change list for a final
     deck: four readings held to the mana formula and the floors, one physical swap per row with

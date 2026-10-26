@@ -33,6 +33,39 @@ back with `tools/staging-check.mjs --expect 9ca99e53`.
   Worker setting was added since 1fcfc3d. Sharing stays off in `cloud-production` (it is on in the staging profile
   only), so the `cloud/sharing.mjs` changes do not run there.
 
+## Planned Changes (C1–C8, once Ready to add), 2026-10-26 (a Claude cloud session, for Rob; `claude/vigilant-dijkstra-bzs1wf`, restarted from main after #885)
+
+Rob, 2026-10-25, from another session's handoff (C1–C8, "Ready to Add" renamed "Planned Changes"; B1–B4, the deck header
+revamp, **held**): *"Yes, I want C1-C8 merged in. It can be the next PR if needed, but yes."* His answers here: a To Buy
+card swapped in is **"Record the plan"** (its take-out stays in the box as a Substitute until it arrives), and Ordered is
+not a list of its own: *"collapse the Ordered into To Buy logic, then within To Buy we have To Buy - Not Purchased > To
+Buy - Ordered ... > (leaving the To Buy chain) Owned - Upgrade, Owned - Bench, Owned - Final."*
+
+- **The page** (`#pull?deck=`, `crankmagic-pull.js`, rewritten): **Take out of Box** beside **Add to Box**, one copy a
+  side, each a tick, the thumbnail (the card large on a hover), the name, the colors and its label under the name.
+  The rows come from the model (`crankmagic-change.js` `planned`): a Substitute beside the card whose seat it holds, an
+  Upgrade beside the Final it names, every Owned card that could go in (Final, Substitute, Bench), and the To Buy ones.
+- **C1/C2** a tick only selects; **Swap** asks *"Confirm additions and removals?"* (the usual review, previewed by the
+  model) and makes it one batch, one undo. **C5** take-outs say *Substitute* or *Final*; adds *Owned - Final*,
+  *To Buy · Ordered - Upgrade*, *To Buy - Final* and so on. **C6** Removed, Added, Total Deck Cards (box − out + in),
+  green at exactly 100, red otherwise, a warning only. **C7** any ticks in any rows; a lonely add takes a spare ticked
+  take-out (`pairUp`) and both wear one colored dot, no words. **C8** mismatched counts swap after the confirmation,
+  which states the count.
+- **Swaps as commands** (`swapCommands`): an owned card is `place`d (a stand-in for the seat it was chosen for); an
+  Upgrade is `acceptOption` (its Final staying as Substitute) or, re-paired with another Final, `swap` into that seat; a
+  take-out goes to the Bench unless it sits beside a To Buy Upgrade. Copies of one record moving the same way go as one
+  `place`, so ten Mountains stay one record. A To Buy Final is already planned and cannot be ticked (⏳); an Upgrade that
+  names no Final cannot either, until it is given one on the deck page.
+- **Words:** "Ready to add" is "Planned Changes" in the app's copy (deck page button, Library's More, How, tour, help,
+  messages). The old page's *Select all*, *Mark all added*, *Also on your Bench / Reserve them* are gone: a free Bench
+  copy is an *Owned - Bench* add.
+- **Proof:** new `planned-changes` (67, the model on the live library) and `planned-changes-ui` (41, the page), each red
+  under a break (re-pairing off; the counter's 100). `card-states-screens`, `drafts-reserve`, `page-budget` and the UAT
+  `crankmagic-journeys` walk drive the new page. The journeys walk stops here, and on main, at its Play step (no Play
+  host in this container); its Planned Changes steps pass.
+- **Not done, to confirm with Rob:** the app-wide relabel of *Ordered* as *To Buy · Ordered* outside this page (the
+  Library's status ladder, filters, the hundred's pills).
+
 ## Play's graphics: resolution in Settings, the volcano whole, painted table skins, sharp mat cards; target lands folded, 2026-10-26 (a Claude cloud session, for Rob; `claude/vigilant-dijkstra-bzs1wf`, restarted from main after #884)
 
 Rob, 2026-10-25: *"I also want to increase the game's resolution dramatically. I'd like this to be an option in settings.
@@ -74,6 +107,9 @@ slider) and `crankmagic-settings-play.js`.
   here today on main's code with none of this, so this container's timing is not the gate; Actions is.
 - **Release tooling:** `crankmagic-stage-paint.js` is added beside `crankmagic-stage-tables.js` to Play's lists in
   `tools/release-pages.mjs` (the Claude · Engine lane's file, one word, at Rob's word), and `release-pages` checks it.
+- **Merged and on staging:** PR #885 merged to main as `f72d857a` on Rob's go before its re-run finished (he wanted it
+  on staging within 15 minutes); main's push run 40263765484 green. `tools/release-staging.sh`: release-acceptance 23,
+  play-e2e 44, `release/cloud-staging` → `10aa4e91`; `tools/staging-check.mjs --expect f72d857a` passed.
 - **64-bit (16 bits a channel):** not started, as Rob said; it would mean half-float textures and an HDR pipeline.
 - **Queued for the next round, not started (Rob, 2026-10-25, "for the work after the current"):**
   - "Tap for mana" is offered only in the screen for paying a card being cast, never in the board's general actions; a

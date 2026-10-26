@@ -99,7 +99,7 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   are reserved than sleeved). Click a number and type the new one: a plain raise of Own or
   Ordered saves on the spot, and anything that takes a copy from somewhere goes through the
   review dialog first. A raised *T* reserves free copies and takes reserved ones from other
-  decks (they stay in their boxes until pulled, and those decks' Ready to add lists say so); an *A*
+  decks (they stay in their boxes until pulled, and those decks' Planned Changes lists say so); an *A*
   typed to 1 releases the copy from wherever it was, reserves it here and puts it in this
   box, recording a new owned copy when the library holds none. The copies rule holds
   throughout: one of a card per deck except basics and the cards whose text allows more.
@@ -196,7 +196,7 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   row's Status ladder and the ticked-rows bar),
   stamping the sheet price as what was paid (marked *catalog* until a receipt says
   otherwise). Export carries price, cap, vendor and the subtotals; *Print buy list* prints
-  it by deck. **Ready to add** opens a deck's Ready to add list. Tick rows and **Ordered…** takes
+  it by deck. **Planned Changes** opens a deck's Planned Changes list. Tick rows and **Ordered…** takes
   one dialog (vendor, reference, shipping spread across the lines, expected date) for the
   whole order; **Bought in store** does the same with the store as vendor and the copies
   arriving at once; **Arrived** lands ticked ordered copies. The **Orders** tab
@@ -205,17 +205,23 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   *Arrived → bench* (one change, one undo, reservations kept), *Paste receipt* (an order
   confirmation or CSV, matched by name, applied to the lines it names and marked *receipt*;
   also Import list → *Order confirmation*), *Edit* and *Lines*.
-- **Ready to add** (`#pull?deck=`): one deck's reserved copies grouped by where they are —
-  pull from bench, move from another deck — plus the **substitutes** in this deck, color then
-  name inside each, with *In box* / *Move here* / *To bench* per row, a tick that records
-  the walk as it happens, *Select all* beside a group's count (the whole group in one
-  revision), *Mark all added*, Print (black on white, boxes to tick) and
-  Export. A substitute is any owned copy physically in a deck that the list does not call
+- **Planned Changes** (`#pull?deck=`, once *Ready to add*): one deck's changes as pairs in two column
+  groups, **Take out of Box** beside **Add to Box**, one copy a side, each with a tick, its thumbnail
+  (the card large on a hover), its name, its colors and what it is under the name. Take-outs say their
+  role (*Substitute*, *Final*); adds say the chain and the use — *Owned - Final · Substitute · Bench ·
+  Upgrade*, *To Buy · Ordered - …*, *To Buy - …* (To Buy · Not purchased > To Buy · Ordered > Owned).
+  The pairs are the model's own: a Substitute beside the card whose seat it holds, an Upgrade beside the
+  Final it names. A tick only selects; **Swap** asks *Confirm additions and removals?* and makes the
+  whole of it one change, one undo. Any adds and take-outs may be ticked in any rows: an add whose own
+  partner is not ticked pairs with a ticked take-out left over, and both wear the same colored dot.
+  Above the list: *Removed*, *Added* and *Total Deck Cards* after the swap, green at exactly 100, red
+  otherwise — a warning, never a block. A To Buy Upgrade swapped is recorded as the plan (its Final
+  stays in the box as its Substitute until it arrives); a To Buy Final is already planned and waits
+  beside its Substitute. Print and Export (CSV of the pairs).
+  A substitute is any owned copy physically in a deck that the list does not call
   for: it fills a seat while the real card is bought or on its way, so the deck is playable
   before it is finished. Nothing marks it; being in the box without a reservation is what it
-  is. The sheet says how many can come out now (a real copy is ready to take the seat, or the
-  deck holds more substitutes than empty seats) and which fill seats until their cards arrive;
-  *Mark all found* puts the ready copies in and takes exactly that many substitutes out. The
+  is. The
   Collection puts a copy in as a substitute from **Actions → Put in a physical deck as a substitute**
   (a copy the list does call for is reserved on the way in instead). Both substitute paths — that
   one and the table's drop — ask **which seat it is standing in for**, offering the cards the deck
@@ -228,8 +234,8 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   hundred, and the readiness bar hatches the seats substitutes cover. Tiles wear their stage
   as a border: green while *Defining*, blue while *Building*, purple once *Playable*, gold
   when *Complete*. The deck page's Overview shows In
-  physical deck · Substitutes · Ready to add · Ordered · To buy and $ to finish against the cap,
-  with a readiness bar and the *Next:* line; *Ready to add (n)* leads the action row when there is
+  physical deck · Substitutes · Planned Changes · Ordered · To buy and $ to finish against the cap,
+  with a readiness bar and the *Next:* line; *Planned Changes (n)* leads the action row when there is
   anything ready to add. The **Upgrade Path** panel on the Upgrades tab lists the deck's linked upgrades
   as *Add · Replaces · Tier · Price · Why · Promote* with *Tuned only* and *Under $2*
   (D5–D6: $1.50) filters, `$X to Max` and `GC k / 2` in its header; *Promote* is the
@@ -943,7 +949,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 595 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 597 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1239,6 +1245,8 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `board-hover-during-choice` — `tests/board-hover-during-choice.mjs` (Rob, 2026-10-25: with a card's question open -- what to tap for it -- the card asked about is read in Actions, and the hover still pops up any card, on the table or named in an option, by pointer or keyboard, in 3D, Focus and Table)
 - `board-card-sharpness` — `tests/board-card-sharpness.mjs` (Rob, 2026-10-25: in 3D, at 100% and at the camera's closest zoom, the cards on the mats keep their picture's fine print as the hand's do: measured against the same picture drawn flat at the same size)
 - `board-target-lands` — `tests/board-target-lands.mjs` (Rob, 2026-10-25: in a question of targets, lands after every other option in a Lands group shut by default, open while one is picked; all-land targets and a cost's question shown as they are)
+- `planned-changes` — `tests/planned-changes.mjs` (Rob, 2026-10-25, C1–C8: Planned Changes on the live library — every Substitute paired with the card whose seat it holds, Upgrades with the Finals they name, To Buy Finals planned, labeled by the chain To Buy · Not purchased > To Buy · Ordered > Owned; `pairUp` re-pairs lonely adds with spare take-outs and lets counts differ; every kind of swap applied as one batch, a To Buy Upgrade recorded as the plan)
+- `planned-changes-ui` — `tests/planned-changes-ui.mjs` (Rob, 2026-10-25, C1–C8 on the page: two column groups with thumbnails (large on a hover), colors and roles; a tick only selects; the counter green at 100, red otherwise; a re-pair wears one dot on both halves; Swap asks "Confirm additions and removals?" and makes one change; a mismatched count swaps after the warning; the deck page's button is Planned Changes)
 - `board-hand-table` — `tests/board-hand-table.mjs` (the wheel over your own hand sizes its cards through Hand cards in 3D, Focus, Table and on the phone, its sliders following, kept on the device once the wheel stops and after a reload, held between the slider's ends with no word under 10px and the largest inside the window, while the wheel elsewhere still zooms and Shift + wheel still turns or scrolls a hand too wide; Ctrl/⌘ + drag lengthens your side of the 3D table down to 8px above the screen's foot and back to its old length, your mat with it and the far seats unchanged, the DOM table on the Babylon one every frame, kept after a reload and put back by Ctrl/⌘ + double-click or ↕ at 100%, with plain drags, the head look and the right-click menu as before)
 - `crankmagic-audio` — `tests/crankmagic-audio.mjs`
 - `advice-contract` — `tests/advice-contract.mjs` (preparation-only AI requests, evidence references and stale-result rejection)
