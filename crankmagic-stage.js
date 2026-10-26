@@ -139,7 +139,7 @@
   }
   function load() {
     if (!library) library=script('vendor/babylon.js?v=9.30.0',()=>root.BABYLON)
-      .then(()=>script('crankmagic-stage-tables.js?v=3',()=>root.CrankTables)).catch(error=>{library=null;throw error;});
+      .then(()=>script('crankmagic-stage-tables.js?v=4',()=>root.CrankTables)).catch(error=>{library=null;throw error;});
     return library;
   }
   /* THE BACKDROP'S RESOLUTION (Rob, 2026-10-26: "Maintain resolution in line with settings selection with 2k at max
