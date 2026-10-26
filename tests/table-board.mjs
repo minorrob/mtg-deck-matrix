@@ -1432,7 +1432,9 @@ try {
   await chooseView(rob.page,"focus");
   await rob.page.locator(".cm-board-mat").waitFor();
 
-  /* THE COACH: a reserved column beside the board; the shell, with a stub reply that says so. */
+  /* THE COACH: its module overlays; standalone mode reserves a column. Settle native font/layout work before comparing geometry. */
+  await rob.page.evaluate(async()=>{await document.fonts.ready;await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));});
+  await rob.page.waitForFunction(()=>{const r=document.querySelector(".cm-board-mat").getBoundingClientRect(),next=[r.x,r.y,r.width,r.height].join(","),same=next===globalThis.__uatStableCoachMat;globalThis.__uatStableCoachMat=next;return same;},null,{polling:"raf",timeout:5000});
   const matWidth = () => rob.page.evaluate(() => Math.round(document.querySelector(".cm-board-mat").getBoundingClientRect().width));
   const matBefore = await matWidth(), beforeFocusCoach=await rob.page.locator(".cm-board-mat").boundingBox(),focusScrollBefore=await rob.page.locator(".cm-board-main").evaluate(el=>el.scrollTop);
   await rob.page.click(".cm-board-coach-open");
