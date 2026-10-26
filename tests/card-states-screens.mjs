@@ -104,7 +104,7 @@ try {
   for (const {r, s} of all) { const k = M.placeLabel(s); if (k !== "Bench") pileWant[k] = (pileWant[k] || 0) + (r.quantity || 1); }
   ok(Object.keys(piles).every((k) => k === "Bench" || k in pileWant), `the breakout's piles are places (${Object.keys(piles).join(", ")})`);
   eq(Object.fromEntries(Object.keys(pileWant).map((k) => [k, piles[k]])), pileWant, "each counting what the model puts there");
-  eq(await page.$$eval("[name=ttStatus] option", (os) => os.map((o) => o.textContent)), ["Any status", "Own (any)", "Final", "Loading", "Substitute", "Bench", "Ordered", "To buy", "Watch"], "and its Status dropdown offers the same words");
+  eq(await page.$$eval("[name=ttStatus] option", (os) => os.map((o) => o.textContent)), ["Any status", "Own (any)", "Final", "Loading", "Substitute", "Bench", "To Buy · Ordered", "To buy", "Watch"], "and its Status dropdown offers the same words");
 
   /* 5. Planned Changes (once Ready to add; Rob, C5): a copy waiting on the Bench is an add, "Owned - Final", with where
      it is when that is another deck -- not the old pills. */
@@ -118,7 +118,7 @@ try {
   /* 6. The ladder. */
   await page.goto(`${base}/index.html#how`);
   await page.locator("#cm-how-ladder li").first().waitFor({timeout: 30000});
-  eq(await page.$$eval("#cm-how-ladder li strong", (s) => s.map((x) => x.textContent)), ["Watch", "To buy", "Ordered", "Own", "Upgrade", "Reserved", "Loading", "Substitute", "Final"], "About Deck Building (still at #how) climbs the ownership words, then the uses that bring a card into a deck, Loading among them (ABT-3)");
+  eq(await page.$$eval("#cm-how-ladder li strong", (s) => s.map((x) => x.textContent)), ["Watch", "To buy", "To Buy · Ordered", "Own", "Upgrade", "Reserved", "Loading", "Substitute", "Final"], "About Deck Building (still at #how) climbs the ownership words, then the uses that bring a card into a deck, Loading among them (ABT-3)");
   await context.close();
 } finally {
   await close();

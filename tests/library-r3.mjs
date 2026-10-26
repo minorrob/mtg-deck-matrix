@@ -109,7 +109,7 @@ try {
   ok(pills.length > 20 && pills.every((p) => VOCAB.includes(p)), `every Status pill is a card-state word: ${[...new Set(pills.filter((p) => !VOCAB.includes(p)))].join(", ")}`);
   await page.getByRole("button", {name: /^Filters/}).click();
   await opened(page, "Filters");
-  eq(await page.$$eval("#cm-dialog [data-fd=status]", (bs) => bs.map((b) => b.textContent)), ["Final", "Substitute", "Reserved", "Upgrade", "Loading", "Bench", "Sell", "Trade", "Watch", "To buy", "Ordered", "Own (any)", "To buy (any)"], "the Filters dialog's Status chips are the card status words, then two ownership readings");
+  eq(await page.$$eval("#cm-dialog [data-fd=status]", (bs) => bs.map((b) => b.textContent)), ["Final", "Substitute", "Reserved", "Upgrade", "Loading", "Bench", "Sell", "Trade", "Watch", "To buy", "To Buy · Ordered", "Own (any)", "To buy (any)"], "the Filters dialog's Status chips are the card status words, then two ownership readings");
   await page.locator("[data-fd=status][data-value='Loading']").click();
   await page.locator("#cm-fd-show").click();
   await page.waitForFunction(() => /Status: Loading/.test(document.getElementById("cm-filter-chips")?.textContent || ""));

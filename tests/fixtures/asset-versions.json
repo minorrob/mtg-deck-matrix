@@ -134,8 +134,8 @@
       "sha": "ed5b8619450f0b9d"
     },
     "collection-model.js": {
-      "version": 62,
-      "sha": "18a239211d670d1c"
+      "version": 63,
+      "sha": "b2dec28a873d3b4a"
     },
     "collection-repository.js": {
       "version": 4,
@@ -162,8 +162,8 @@
       "sha": "5dd742bd996b24a6"
     },
     "crankmagic-app.js": {
-      "version": 577,
-      "sha": "38230c9e3b3bb282"
+      "version": 578,
+      "sha": "b227cbcba2a01490"
     },
     "crankmagic-assets.js": {
       "version": 36,
@@ -174,8 +174,8 @@
       "sha": "ddab072cfc45df40"
     },
     "crankmagic-board.js": {
-      "version": 103,
-      "sha": "b7884dc1ec0b83f7"
+      "version": 104,
+      "sha": "36b96f81a33c1902"
     },
     "crankmagic-brand.js": {
       "version": 6,
@@ -194,20 +194,20 @@
       "sha": "48d909f4e319a07d"
     },
     "crankmagic-collection.js": {
-      "version": 108,
-      "sha": "0b7976ae5b14246c"
+      "version": 109,
+      "sha": "3f5449f914bd7b86"
     },
     "crankmagic-decks.js": {
-      "version": 115,
-      "sha": "d9ac405c600672e1"
+      "version": 116,
+      "sha": "520edba12bff2d96"
     },
     "crankmagic-design.css": {
       "version": 26,
       "sha": "fddbf907399a047c"
     },
     "crankmagic-discover.js": {
-      "version": 75,
-      "sha": "a82500a83ace5641"
+      "version": 76,
+      "sha": "3244750d1b9b86c9"
     },
     "crankmagic-evidence.js": {
       "version": 4,
@@ -306,8 +306,8 @@
       "sha": "e7ec63cf02b363da"
     },
     "crankmagic-sandbox.js": {
-      "version": 8,
-      "sha": "dcf05043440109c6"
+      "version": 9,
+      "sha": "5a009d3f514a347a"
     },
     "crankmagic-sea.js": {
       "version": 5,
@@ -342,8 +342,8 @@
       "sha": "fd7accd751b01d3e"
     },
     "crankmagic-stage.css": {
-      "version": 61,
-      "sha": "e49bbd230bc02a05"
+      "version": 62,
+      "sha": "793627c45a437277"
     },
     "crankmagic-stage.js": {
       "version": 16,
@@ -354,16 +354,16 @@
       "sha": "07440b83396bb9e2"
     },
     "crankmagic-sw.js": {
-      "version": 560,
-      "sha": "a7c9579012814fb6"
+      "version": 561,
+      "sha": "81175bbf0a6b3816"
     },
     "crankmagic-table.js": {
       "version": 42,
       "sha": "2701cd8453fa3e9b"
     },
     "crankmagic-tabletop.js": {
-      "version": 32,
-      "sha": "b602646a8eadebfa"
+      "version": 33,
+      "sha": "8a31f71a801f8c29"
     },
     "crankmagic-tour.js": {
       "version": 24,

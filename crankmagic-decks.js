@@ -414,7 +414,7 @@ function bento(d,cards,curve,max,types,ready,tint=''){
     <circle cx="56" cy="56" r="44" fill="none" stroke="var(--st-inbox)" stroke-width="12" stroke-linecap="butt" stroke-dasharray="${(circ*pctIn/100).toFixed(1)} ${circ.toFixed(1)}" transform="rotate(-90 56 56)"></circle>
     ${pctSub?`<circle cx="56" cy="56" r="44" fill="none" stroke="var(--st-standin)" stroke-width="12" stroke-linecap="butt" stroke-dasharray="${(circ*pctSub/100).toFixed(1)} ${circ.toFixed(1)}" stroke-dashoffset="${(-circ*(pctIn-pctSub)/100).toFixed(1)}" transform="rotate(-90 56 56)" opacity=".85"></circle>`:''}
   </svg><span class="cm-ring-center"><b>${r.sleeved}</b><small>in the box</small></span></div>`;
-  const progress=card('progress','Progress',ring+`<div class="cm-bento-figures">${key('inbox','Real copies',r.sleeved-r.standIns)}${key('standin','Substitutes',r.standIns)}${key('ordered','Ordered',r.ordered)}${key('buy','To buy',r.toBuy)}</div>`);
+  const progress=card('progress','Progress',ring+`<div class="cm-bento-figures">${key('inbox','Real copies',r.sleeved-r.standIns)}${key('standin','Substitutes',r.standIns)}${key('ordered','To Buy · Ordered',r.ordered)}${key('buy','To buy',r.toBuy)}</div>`);
 
   /* COST. What finishing costs, against the deck's budget, with the three facts that qualify it. */
   const paidWord=(estimated.length?'≈ ':'')+C.money(Math.round(paidOrList*100)/100);

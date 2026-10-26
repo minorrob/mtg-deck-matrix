@@ -108,7 +108,7 @@ const STATE_KINDS=['lot','need','draft','option','entry'];
 const stateOfRow=r=>r.state||(STATE_KINDS.includes(r.kind)?M.cardState(r):{use:'',ownership:'',play:'',deckId:'',inBox:false});
 /* The Table view's piles are places (the model's placeLabel), in the order a deck is finished: in a deck's box, on
    its way in, then the Bench, then what is not held yet. */
-const TABLE_PILES=[['final','Final'],['loading','Loading'],['substitute','Substitute'],['bench','Bench'],['ordered','Ordered'],['buy','To buy'],['watch','Watch']].map(([id,label],order)=>({id,label,tone:M.stateTone(label),order}));
+const TABLE_PILES=[['final','Final'],['loading','Loading'],['substitute','Substitute'],['bench','Bench'],['ordered','To Buy · Ordered'],['buy','To buy'],['watch','Watch']].map(([id,label],order)=>({id,label,tone:M.stateTone(label),order}));
 const tablePile=r=>STATE_KINDS.includes(r.kind)?M.placeLabel(stateOfRow(r)):r.status;
 /* EIGHT CARDS, EVERY RECORD IN ONE (Rob, 2026-10-18). The top row is the four uses a card has for a deck -- Final and
    Substitute in its box, Reserved and Upgrade on their way or under consideration -- and the row under it is the rest:
@@ -152,7 +152,7 @@ function pickedSplit(){const lots=[],byDeck=new Map();for(const id of picked){if
 /* THE STATUS LADDER. Watched, Ordered and Owned -- the rungs a card climbs
    before it is in hand, in order, each with the half-line that tells them apart. One list,
    used by the row menu, the ticked-rows bar and the deck page, so the words never drift. */
-const LADDER=[['watching','Watch','considering it'],['ordered','Ordered','bought or trade arranged, not yet in hand'],['owned','Own','in hand — on the Bench until placed']];
+const LADDER=[['watching','Watch','considering it'],['ordered','To Buy · Ordered','bought or trade arranged, not yet in hand'],['owned','Own','in hand — on the Bench until placed']];
 const rung=(label,why,attrs,current=false)=>`<button type="button" class="cm-rung${current?' is-current':''}" aria-label="${e(label)}" data-label="${e(label)}" ${attrs}><span class="cm-rung-label">${e(label)}</span><small>${e(why)}</small></button>`;
 C.statusLadder=LADDER;
 function batchBar(shop){
@@ -302,7 +302,7 @@ const helpFlow=()=>`<figure class="cm-flow"><div class="cm-flow-scroll"><svg vie
   +fNode(220,118,'Draft list','the hundred a deck claims','draft-list')
   +fNode(424,118,'Reserved','a seat with your name on it','reserved')
   +fNode(616,38,'To buy','nothing you hold fills it','to-buy')
-  +fNode(616,190,'Ordered','paid for, not arrived','ordered')
+  +fNode(616,190,'To Buy · Ordered','paid for, not arrived','ordered')
   +fNode(808,118,'Physical deck','sleeved in the box','physical-deck')
   +fNode(808,190,'Substitute','a bench copy holding a seat','substitute')
   +`<rect x="16" y="310" width="952" height="56" rx="12" fill="${tone('bench')}" fill-opacity=".14" stroke="${tone('bench')}" stroke-width="1.5"></rect><text x="38" y="336" fill="#f2f7ff" font-size="13" font-weight="700">Bench</text><text x="38" y="354" fill="#aec3dc" font-size="10">cards you own that no deck has reserved \u2014 every card that leaves an order or a box lands here</text>`
@@ -1228,7 +1228,7 @@ const FILTER_TYPES=['Creature','Instant','Sorcery','Artifact','Enchantment','Lan
 const FILTER_COLORS=[['W','W','White'],['U','U','Blue'],['B','B','Black'],['R','R','Red'],['G','G','Green'],['C','Colorless','Colorless']];
 /* The card states (docs/card-states.md): the stages, then where an owned card is, then the two roles a card for a
    deck has while it is not in the box -- an upgrade replaces a card in the box, a reserved card takes an empty seat. */
-const FILTER_STATUSES=['Final','Substitute','Reserved','Upgrade','Loading','Bench','Sell','Trade','Watch','To buy','Ordered',['owned','Own (any)'],['to-buy','To buy (any)']];
+const FILTER_STATUSES=['Final','Substitute','Reserved','Upgrade','Loading','Bench','Sell','Trade','Watch','To buy','To Buy · Ordered',['owned','Own (any)'],['to-buy','To buy (any)']];
 const MORE_FILTERS=['subtype','mechanic','mana','flag','offer'];
 actions['roster-filters']=()=>{const r=C.route(),params=new URLSearchParams(r.params),shop=buyTab(),tab=shop?'buy':'library',tight=compactShop(shop);
   const draft={...filter},deckNow=params.get('deck')||'';let deck=deckNow,grouping=shop?shopGroupBy:groupBy;
@@ -1446,7 +1446,7 @@ async function oneTap(el,to){const r=findRow(el.dataset.record);if(!r)throw Erro
   await commit(commands.length===1?commands[0]:{type:'batch',commands,summary:`${to==='owned'?'Bought':'Ordered'} ${r.card.name}${parts.some(p=>p.kind==='entry')?' and consumed want list entry':parts.length>1?' for '+parts.length+' decks':''}`});
   return r;}
 actions['shop-buy']=async el=>{const r=await oneTap(el,'owned');C.notice(`${r.quantity>1?r.quantity+' × ':''}${r.card.name} ${r.quantity>1?'are':'is'} yours — on the Bench until you put ${r.quantity>1?'them':'it'} in a physical deck${sheetPrice(r)!==null?', '+C.money(sheetPrice(r))+' recorded at the catalog price, marked ≈':''}. Undo is in the header menu.`);};
-actions['shop-order']=async el=>{const r=await oneTap(el,'ordered');C.notice(`${r.card.name} marked Ordered${sheetPrice(r)!==null?' at '+C.money(sheetPrice(r)):''}. Arrived is on the row when it lands.`);};
+actions['shop-order']=async el=>{const r=await oneTap(el,'ordered');C.notice(`${r.card.name} marked To Buy · Ordered${sheetPrice(r)!==null?' at '+C.money(sheetPrice(r)):''}. Arrived is on the row when it lands.`);};
 actions['shop-arrive']=async el=>{const r=findRow(el.dataset.record);const parts=r&&r.kind==='fold'?r.partRows:[r];if(!r||!parts.every(p=>p&&p.kind==='lot'&&p.source==='ordered'))throw Error('Only an ordered copy can arrive.');const commands=parts.map(p=>({type:'source',source:'owned',lotId:p.id,quantity:p.quantity,paid:sheetPrice(p),paidSource:'catalog',confirmed:true}));await commit(commands.length===1?commands[0]:{type:'batch',commands,summary:`${r.card.name} arrived for ${parts.length} decks`});C.notice(`${r.card.name} arrived — on the bench, still reserved. Add it to its physical deck from Planned Changes.`);};
 /* THE CAP CELL: what the listing is worth taking at. Under $2 the sheet price; above it the
    sheet plus 10%; at $5 and over the local store gets first refusal, and the cell says so. */
@@ -1709,7 +1709,7 @@ function printing(v,prior={}){return {...prior,set:v.set,collector:v.collector,f
    source and printing, which is what makes "two more owned" read as one record of five. */
 const COPY_MAX = 6;
 const copyRow = (i, source = 'owned', qty = 1) => `<div class="cm-copy-row" data-i="${i}">`
-  +`<select name="source${i}" data-copy="source" aria-label="What these copies are">${[['owned','Owned'],['ordered','Ordered'],['wanted','Wanted'],['watching','Watched']].map(([k,l])=>`<option value="${k}"${k===source?' selected':''}>${l}</option>`).join('')}</select>`
+  +`<select name="source${i}" data-copy="source" aria-label="What these copies are">${[['owned','Owned'],['ordered','To Buy · Ordered'],['wanted','Wanted'],['watching','Watched']].map(([k,l])=>`<option value="${k}"${k===source?' selected':''}>${l}</option>`).join('')}</select>`
   +`<span class="cm-copy-count" role="group" aria-label="How many copies">`
   +`<button type="button" data-copy="less" data-i="${i}" aria-label="One fewer">&#8249;</button>`
   +`<input type="number" name="qty${i}" value="${qty}" min="1" max="1000000" required aria-label="Copies">`

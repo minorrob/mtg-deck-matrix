@@ -59,7 +59,7 @@ const table = [
   ["a substitute holding B's seat", L.sub, {use: "substitute", ownership: "own", play: "playable", deckId: "d1", holds: "B", inBox: true}, "Substitute", "holds the seat for Bravo"],
   ["the deck's own card, owned, not put in yet", L.loading, {use: "final", ownership: "own", play: "loading", deckId: "d1", slotId: "c"}, "Loading", "put it in the box"],
   ["a copy in D2's box claimed by D1, read from anywhere", L.claimed, {use: "substitute", ownership: "own", play: "playable", deckId: "d2", claimedBy: "d1", inBox: true}, "Substitute", "reserved for D1"],
-  ["an ordered copy for a seat", L.ordered, {use: "reserved", ownership: "ordered", play: "toload", deckId: "d1", slotId: "f"}, "Reserved", "Ordered · empty seat"],
+  ["an ordered copy for a seat", L.ordered, {use: "reserved", ownership: "ordered", play: "toload", deckId: "d1", slotId: "f"}, "Reserved", "To Buy · Ordered · empty seat"],
   ["a seat to buy, a substitute in it", {kind: "need", deckId: "d1", slotId: "b", purpose: "main"}, {use: "reserved", ownership: "buy", play: "toload", deckId: "d1", slotId: "b", replaces: "X"}, "Reserved", "To buy · replaces Xray"],
   ["a seat to buy, nothing in it", {kind: "need", deckId: "d1", slotId: "e", purpose: "main"}, {use: "reserved", ownership: "buy", play: "toload", deckId: "d1", slotId: "e"}, "Reserved", "To buy · empty seat"],
   ["a committed upgrade option, to buy", {kind: "need", deckId: "d1", slotId: "u2", purpose: "upgrade"}, {use: "upgrade", ownership: "buy", deckId: "d1", slotId: "u2", replaces: "B"}, "Upgrade", "To buy · would replace Bravo"],
@@ -70,7 +70,7 @@ const table = [
   ["the To Buy list", {kind: "entry", groupId: M.WANT_LIST}, {use: "unowned", ownership: "buy"}, "To buy", ""],
   ["a planned entry in another group", {kind: "entry", groupId: "group:lists"}, {use: "unowned", ownership: "watch"}, "Watch", ""],
   ["a watched copy", L.watch, {use: "unowned", ownership: "watch"}, "Watch", ""],
-  ["an ordered copy for no deck", L.orderedFree, {use: "unowned", ownership: "ordered"}, "Ordered", ""],
+  ["an ordered copy for no deck", L.orderedFree, {use: "unowned", ownership: "ordered"}, "To Buy · Ordered", ""],
   ["a Bench copy", L.bench, {use: "bench", ownership: "own"}, "Bench", ""],
   ["offered, not said which (as before October 18)", L.trade, {use: "trade", ownership: "trade"}, "Trade", ""],
   ["offered for sale", L.sell, {use: "sell", ownership: "sell"}, "Sell", ""],
@@ -88,7 +88,7 @@ eq(M.stateNote(M.cardState(L.claimed, ctx, "d1"), name, deckName), "in D2 · emp
 eq(pick(M.cardState(L.claimed, ctx, "d2")), {use: "substitute", ownership: "own", play: "playable", deckId: "d2", claimedBy: "d1", inBox: true}, "read from D2 it is D2's substitute");
 eq(M.USES.map((x) => x.label), ["Final", "Substitute", "Reserved", "Upgrade", "Bench", "Sell", "Trade", "Unowned"], "the uses");
 eq(M.USES.filter((x) => x.inDeck).map((x) => x.id), ["final", "substitute"], "only Final and Substitute put a card in the deck");
-eq(M.OWNERSHIP.map((x) => x.label), ["Watch", "To buy", "Ordered", "Own", "To sell", "Trade"], "the ownership statuses, with no Canceled");
+eq(M.OWNERSHIP.map((x) => x.label), ["Watch", "To buy", "To Buy · Ordered", "Own", "To sell", "Trade"], "the ownership statuses, with no Canceled");
 eq(M.PLAY.map((x) => x.label), ["Playable", "Loading", "To load"], "the play statuses");
 eq(M.USE_OWNERSHIP.reserved, ["buy", "ordered", "own"], "Reserved is to buy, ordered, or owned in another deck's box -- never only watched");
 eq(M.USE_OWNERSHIP.upgrade, ["watch", "buy", "ordered", "own"], "an Upgrade may be anywhere in the buying cycle");
@@ -174,7 +174,7 @@ ok(claimed.every((r) => { const st = M.stateReader(live, r.allocation.deckId)(r)
   eq(T.accepts(pile("To buy"), [reserved]).action, "release", "a claimed copy dropped on To buy is released, so its deck's seat is to buy again");
   eq(T.accepts(pile("To buy"), [watched]).action, "wanted:plan", "a watched copy dropped on To buy joins the To Buy list");
   eq(T.accepts(pile("Upgrade"), [benchCopy]).ok, false, "Upgrade is a use, not a place: nothing is dropped on it");
-  const places = new Set(["Final", "Loading", "Substitute", "Bench", "Ordered", "To buy", "Watch"]);
+  const places = new Set(["Final", "Loading", "Substitute", "Bench", "To Buy · Ordered", "To buy", "Watch"]);
   ok(records.every((r) => places.has(M.placeLabel(read(r)))), "every record sits on one of the Table view's seven piles");
 }
 /* 8. Rob's rules for the two ways a card replaces another (2026-10-18), through the model's own commands: a Reserved

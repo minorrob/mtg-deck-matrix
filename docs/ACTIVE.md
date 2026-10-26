@@ -67,8 +67,25 @@ Buy - Ordered ... > (leaving the To Buy chain) Owned - Upgrade, Owned - Bench, O
   camera") and three runs in three here. Frames on a slow runner come 250 ms and more apart, and the test stopped on a
   fixed 150 ms after the look ended, so its last recorded frame was from before the camera's last step home (t 0.2–0.3).
   It now waits for a frame recorded after the look ended; three runs in three pass here. Test-only; the camera is unchanged.
-- **Not done, to confirm with Rob:** the app-wide relabel of *Ordered* as *To Buy · Ordered* outside this page (the
-  Library's status ladder, filters, the hundred's pills).
+- **Ordered is To Buy · Ordered, app-wide** (Rob, 2026-10-26: *"Yes, relabel Ordered as To Buy · Ordered app-wide"*): the
+  status word itself, wherever it is defined or matched -- the model's statuses, ownership, ladder, tones and record
+  states (`collection-model.js`), the Library's filters, ladder and Table piles, the Tabletop's piles, the glossary, the
+  deck page's Progress, Explore's ownership, the sandbox and the slot model. Verbs stay (the *Ordered…* button that places
+  an order, "Ordered 3 copies from …"), and so do the sheet's count column and its CSV header, which an import reads.
+- **Urgent, the Actions desk while declaring attackers** (Rob, 2026-10-26: *"the card image can't be resized and the
+  bottom selection options I can't see to select ... make the height of the modules grab-n-drag up and down ... make the
+  width of the right side drawer adjustable in the same way the left side drawer is"*). The card read at the top of
+  Actions was up to 260 px wide (364 tall) inside a question held to 70% of the window less 130 px: at 1366x768 it left
+  the nine attack choices **6 px**. Now (`crankmagic-board.js`, `crankmagic-stage.css`):
+  - the question is as tall as the drawer (100dvh less 170 px), the options keep at least 120 px, and if the card is
+    dragged past that the whole question scrolls, so no choice is out of reach;
+  - a bar under the card drags its size (90–360 px wide, 150 by default; ↑/↓ too), kept on the device;
+  - a bar under **every module** in both drawers drags its height (80–1400 px; ↑/↓; a double click gives it back its own
+    height), kept on the device (`cm-board-module-h`);
+  - the right drawer's width drags at its left edge in 3D as in the other views (240–560 px, kept as `cm-board-panel-w`).
+  New `board-drawer-sizes` (27), red on the old board ("the options keep room ... (6px)").
+- `decks-hub`'s "a line the table's answer does not write again ends hidden" (a 600 ms wait) fails about half the time in
+  this container, with or without these changes; it passed on Actions.
 
 ## Play's graphics: resolution in Settings, the volcano whole, painted table skins, sharp mat cards; target lands folded, 2026-10-26 (a Claude cloud session, for Rob; `claude/vigilant-dijkstra-bzs1wf`, restarted from main after #884)
 
