@@ -3,15 +3,15 @@
 (globalThis.CrankFeatures ||= []).push(function(C){
   const {esc:e,button:b,actions,views}=C;
   const enabled=document.querySelector('meta[name="crankmagic-accounts"]')?.content==='on';
-  let person=null,checking=null;
+  let person=null,checking=null,generation=0;
   async function read(path){const r=await fetch(path,{credentials:'same-origin',redirect:'manual',cache:'no-store'});
     if(r.type==='opaqueredirect'||r.status===401)throw Error('Sign in to open Admin.');
     const value=await r.json().catch(()=>({}));if(!r.ok)throw Error(value.error||'Admin is unavailable. Try again.');return value;}
-  const menu=()=>person?.admin===true?'<a class="v-button" href="#admin" data-admin-link>Admin</a>':'';
+  const menu=()=>person?.admin===true?'<a class="v-button" href="#admin" data-action="open-admin" data-admin-link>Admin</a>':'';
   function drawMenu(){const target=document.getElementById('cm-user-menu');if(!target)return;
     target.querySelector('[data-admin-menu]')?.remove();if(person?.admin===true){const slot=document.createElement('div');slot.dataset.adminMenu='';slot.innerHTML=menu();target.append(slot);}}
   async function identity(force=false){if(!enabled)return false;if(checking)return checking;if(person&&!force)return person.admin===true;
-    checking=read('/api/me').then(value=>{person={admin:value.admin===true};drawMenu();return person.admin;}).catch(()=>{person={admin:false};drawMenu();return false;}).finally(()=>{checking=null;});return checking;}
+    checking=read('/api/me').then(value=>{person={admin:value.admin===true};drawMenu();return person.admin;}).catch(error=>{person={admin:false,error:error.message};drawMenu();return false;}).finally(()=>{checking=null;});return checking;}
   C.adminMenu=menu;C.adminReady=identity();
   document.getElementById('cm-user-menu')?.addEventListener('beforetoggle',drawMenu);
   const number=n=>Number(n||0).toLocaleString('en-US');
@@ -20,12 +20,13 @@
   const link=(section,label)=>`<a class="v-button" href="#admin?section=${section}">${e(label)}</a>`;
   const sections=[['home','Overview'],['people','People and invites'],['features','Feature switches'],['spend','AI spend'],['health','Release and health']];
   const heading=section=>C.pageHead('Admin','<a class="v-button" href="#settings">Settings</a>')+`<nav class="cm-tabs cm-admin-nav" aria-label="Admin">${sections.map(([key,label])=>`<a class="v-button" href="#admin${key==='home'?'':'?section='+key}"${key===section?' aria-current="page"':''}>${e(label)}</a>`).join('')}</nav>`;
+  actions['open-admin']=()=>C.go('admin');
   actions['admin-retry']=()=>C.render();
   views.admin=async()=>{
-    const params=C.route().params,routeKey=params.toString(),active=()=>C.route().view==='admin'&&C.route().params.toString()===routeKey,section=sections.some(([key])=>key===params.get('section'))?params.get('section'):'home';
+    const render=++generation,params=C.route().params,routeKey=params.toString(),active=()=>render===generation&&C.route().view==='admin'&&C.route().params.toString()===routeKey,section=sections.some(([key])=>key===params.get('section'))?params.get('section'):'home';
     C.main.innerHTML=heading(section)+'<p role="status">Checking administrator access…</p>';
     const allowed=await identity(true);if(!active())return;
-    if(!allowed){C.main.innerHTML=C.pageHead('Admin')+'<section class="v-panel"><h2>Administrator access required</h2><p>This account cannot open Admin.</p><a class="v-button" href="#settings">Settings</a></section>';return;}
+    if(!allowed){C.main.innerHTML=C.pageHead('Admin')+(person?.error?`<section class="v-panel"><p class="cm-error" role="alert">${e(person.error)}</p>${b('Retry','admin-retry',{},true)}</section>`:'<section class="v-panel"><h2>Administrator access required</h2><p>This account cannot open Admin.</p><a class="v-button" href="#settings">Settings</a></section>');return;}
     C.main.innerHTML=heading(section)+'<p role="status">Loading…</p>';
     try{
       let body='';

@@ -55,4 +55,18 @@ function setup({enabled=true,admin=false,section='home',responses={}}={}){
     ok(x.C.main.innerHTML.includes('10/26/2026')&&!x.C.main.innerHTML.includes('10/25/2026'),'a date-only release stays on its calendar date in the US timezone');
   }finally{if(oldTZ===undefined)delete process.env.TZ;else process.env.TZ=oldTZ;}
 }
+{
+  const pending=[];
+  const x=setup({admin:true,section:'features',responses:{'/api/admin/features':()=>new Promise(resolve=>pending.push(resolve))}});await x.C.adminReady;
+  const older=x.C.views.admin();while(pending.length<1)await new Promise(resolve=>setTimeout(resolve,0));
+  x.setView('decks');x.C.main.innerHTML='Deck page';x.setView('admin');const newer=x.C.views.admin();while(pending.length<2)await new Promise(resolve=>setTimeout(resolve,0));
+  pending[1]({features:[{key:'NEW_VALUE',value:'on',defaultValue:'off',source:'Worker configuration'}]});await newer;
+  pending[0]({features:[{key:'OLD_VALUE',value:'off',defaultValue:'off',source:'Code default'}]});await older;
+  ok(x.C.main.innerHTML.includes('NEW_VALUE')&&!x.C.main.innerHTML.includes('OLD_VALUE'),'returning to the same Admin route rejects an older response resolved last');
+}
+{
+  const x=setup({responses:{'/api/me':()=>{throw Error('Connection unavailable.');}}});await x.C.adminReady;await x.C.views.admin();
+  ok(x.C.main.innerHTML.includes('Connection unavailable.')&&x.C.main.innerHTML.includes('Retry'),'an account read failure has a recoverable error rather than a false permission diagnosis');
+  ok(x.requests.every(r=>r.path==='/api/me'),'a failed identity read never requests privileged data');
+}
 console.log(`admin-ui: ${checks} checks passed; verified identity, read-only views, privacy and setup states.`);
