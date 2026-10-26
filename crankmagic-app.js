@@ -645,6 +645,9 @@ actions['share-copy']=async()=>{try{await navigator.clipboard.writeText(APP_URL)
    chip was pressed. */
 {const m=$('#cm-user-menu');if(m&&m.closest('.cm-sidebar'))$('#matrix-v2').append(m);}
 let menuChip=null;document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[popovertarget="cm-user-menu"]');if(b)menuChip=b;},true);
+/* Board and Workshop open the same menu node, so verified Admin/account entries and Skin stay in one place. */
+C.openAccountMenu=anchor=>{menuChip=anchor||$('#cm-user-functions');$('#cm-user-menu').togglePopover();};
+C.closeAccountMenu=()=>{const menu=$('#cm-user-menu');if(menu.matches(':popover-open'))menu.hidePopover();};
 $('#cm-user-menu').addEventListener('beforetoggle',e=>{if(e.newState==='open'){describeData();const chip=menuChip&&menuChip.isConnected&&menuChip.getClientRects().length?menuChip:$('#cm-user-functions'),r=chip.getBoundingClientRect(),m=$('#cm-user-menu');
   const below=window.innerHeight-r.bottom;
   m.style.left=Math.max(8,Math.min(r.left,window.innerWidth-226))+'px';m.style.right='auto';
