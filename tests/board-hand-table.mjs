@@ -71,12 +71,12 @@ async function board(mode, {width = 1440, height = 900, hand = 4, init = {}, rea
     await page.goto(`${base}/index.html#table?id=${TABLE}`);
     await page.locator(ready).first().waitFor({timeout: 20000});
     if (mode === "full") await page.locator("[data-engine=babylon][data-renderer=webgl]").waitFor({timeout: 20000});
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(300); await page.evaluate(async()=>{await document.fonts.ready;await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));});
     await page.evaluate(() => {globalThis.__menus = []; addEventListener("contextmenu", (e) => __menus.push(!e.defaultPrevented));});
   };
   await open();
   const acts = () => sent.filter((x) => x.type === "act");
-  return {page, context, errors, acts, reload: async () => {await page.reload(); await page.locator(ready).first().waitFor({timeout: 20000}); if (mode === "full") await page.locator("[data-engine=babylon][data-renderer=webgl]").waitFor({timeout: 20000}); await page.waitForTimeout(300); await page.evaluate(() => {globalThis.__menus = []; addEventListener("contextmenu", (e) => __menus.push(!e.defaultPrevented));});}};
+  return {page, context, errors, acts, reload: async () => {await page.reload(); await page.locator(ready).first().waitFor({timeout: 20000}); if (mode === "full") await page.locator("[data-engine=babylon][data-renderer=webgl]").waitFor({timeout: 20000}); await page.waitForTimeout(300); await page.evaluate(async()=>{await document.fonts.ready;await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));}); await page.evaluate(() => {globalThis.__menus = []; addEventListener("contextmenu", (e) => __menus.push(!e.defaultPrevented));});}};
 }
 const diag = (page) => page.evaluate(() => CrankStage.diagnostics());
 const misalign = (d) => Math.max(...d.quad.map((n, i) => Math.abs(n - d.domQuad[i])));

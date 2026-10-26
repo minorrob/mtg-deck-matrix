@@ -16,6 +16,7 @@ try{
   await page.goto(`${base}/index.html#table?id=tablepreview01`);
   await page.locator('[data-engine=babylon]').waitFor();
   const align=async(label)=>{
+    await page.evaluate(async()=>{await document.fonts.ready;await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));});
     const d=await page.evaluate(()=>CrankStage.diagnostics());
     ok(['top','side','leg'].every(part=>d.parts.includes(part)),`${label}: real table meshes, including sides and base`);
     ok(Math.max(...d.quad.map((n,i)=>Math.abs(n-d.domQuad[i])))<.03,`${label}: Babylon surface and DOM hit areas agree to .03px: ${JSON.stringify(d)}`);

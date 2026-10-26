@@ -66,6 +66,7 @@ async function board(mode, {width = 1440, height = 900, reduced = false} = {}) {
   await page.locator(`#cm-board .cm-bcard[data-card='${ISLAND}']`).first().waitFor({timeout: 20000});
   if (mode === "full") await page.locator("[data-engine=babylon][data-renderer=webgl]").waitFor({timeout: 20000});
   await page.waitForTimeout(300);
+  await page.evaluate(async()=>{await document.fonts.ready;await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));});
   /* Every browser menu asked for, and whether the board kept it shut. */
   await page.evaluate(() => {globalThis.__menus = []; addEventListener("contextmenu", (e) => __menus.push({open: !e.defaultPrevented, table: !!e.target.closest?.(".cm-stage-region")}));});
   const acts = () => sent.filter((x) => x.type === "act").map((x) => x.indices);

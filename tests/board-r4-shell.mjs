@@ -33,6 +33,7 @@ async function open(mode, width, skin = "sapphire-obsidian", opening = false) {
   await page.goto(`${base}/index.html#table?id=${tableId}`);
   await page.locator("#cm-board.cm-study .cm-seat-header").first().waitFor({timeout:20000});
   if (skin !== "sapphire-obsidian") await page.evaluate(async theme => {await globalThis.__r4Commit({type:"preferences",values:{theme}});}, skin);
+  await page.evaluate(async()=>{await document.fonts.ready;await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));});
   return {page,context,errors,posts,sample};
 }
 
