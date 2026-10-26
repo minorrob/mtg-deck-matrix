@@ -1256,8 +1256,13 @@ try {
     await rob.page.waitForTimeout(300);
     const big = await at();
     /* scrolled as a person scrolls, with the wheel over the board */
-    const focusGutter=await rob.page.locator(".cm-board-main").boundingBox();
-    await rob.page.mouse.move(focusGutter.x+2,focusGutter.y+20);
+    const focusGutter=await rob.page.locator('.cm-board-main').evaluate(main=>{
+      const r=main.getBoundingClientRect(),mat=main.querySelector('.cm-board-stage').getBoundingClientRect(),grip=document.querySelector('.cm-board-panegrip')?.getBoundingClientRect();
+      const point={x:(Math.max(r.left,grip?.right||r.left)+mat.left)/2,y:r.top+20},hit=document.elementFromPoint(point.x,point.y);
+      if(!hit||!main.contains(hit)||hit.closest('.cm-mat,[data-zone-scroll]'))throw new Error('Focus wheel gutter does not reach its own scroller');
+      return point;
+    });
+    await rob.page.mouse.move(focusGutter.x,focusGutter.y);
     await rob.page.mouse.wheel(0,-2000);
     await rob.page.waitForFunction(()=>document.querySelector('.cm-board-main').scrollTop===0,null,{timeout:5000});
     await rob.page.mouse.wheel(0,2000);
