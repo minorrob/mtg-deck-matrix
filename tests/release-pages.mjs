@@ -141,7 +141,9 @@ ok(broken((m) => m.set("crankmagic-app.js", Buffer.from(m.get("crankmagic-app.js
 
 /* PRODUCTION HAS ACCOUNTS since Rob approved them on staging (2026-09-24: "Everything looks good!"), on its
    own database and its own Access application; STAGING KEEPS ITS OWN of both. */
-for (const f of ["cloud-sync.js", "crankmagic-account.js", "cloud/worker.mjs", "cloud/access.mjs", "cloud/library.mjs"]) ok(built.has(f), `${f} is in the production release`);
+for (const f of ["cloud-sync.js", "crankmagic-account.js", "cloud/worker.mjs", "cloud/access.mjs", "cloud/library.mjs", "cloud/feedback.mjs", "feedback-schema.js", "cloud/migrations/0009_feedback.sql"]) ok(built.has(f), `${f} is in the production release`);
+/* The feedback loop's schema is a module outside cloud/ that the Worker imports: the release carries what the Worker bundles. */
+eq(verify(new Map([...built].filter(([f]) => f !== "feedback-schema.js")), profile).filter((p) => /feedback-schema\.js/.test(p)), ["feedback-schema.js is imported by the Worker and is not in the commit"], "a release missing a module the Worker imports is refused, naming it");
 ok(PAGES.every((p) => built.get(p).toString("utf8").includes('<meta name="crankmagic-accounts" content="on">')), "and both production pages are marked accounts-on");
 const pw = JSON.parse(built.get("wrangler.jsonc").toString("utf8"));
 eq([pw.name, pw.main, pw.assets, pw.routes], ["crankmagic", "cloud/worker.mjs", {directory: "./", binding: "ASSETS", run_worker_first: ["/api/*"]}, [{pattern: "crankmagic.com", custom_domain: true}]],
@@ -186,7 +188,7 @@ ok(["crankmagic-game.js", "crankmagic-lobby.js", "crankmagic-online.js", "crankm
 const engine = workerModules(worktreeSource());
 eq(engine.problems, [], "Play's Worker imports only modules in this tree, and nothing a Worker cannot bundle");
 eq([...sb.keys()].filter((f) => /^game\//.test(f)).sort(), engine.files.filter((f) => /^game\//.test(f)), `the engine the table carries is in the tree for wrangler to bundle (${engine.files.length - 2} modules of game/), and nothing else of game/`);
-ok(engine.files.every((f) => /\.mjs$/.test(f) || ['collection-model.js','collection-exchange.js'].includes(f)) && !engine.files.some((f) => /^data\//.test(f)), "modules only: no card data, no JSON");
+ok(engine.files.every((f) => /\.mjs$/.test(f) || ['collection-model.js','collection-exchange.js','feedback-schema.js'].includes(f)) && !engine.files.some((f) => /^data\//.test(f)), "modules only: no card data, no JSON");
 ok(engine.files.includes("game/engine/cards/definitions.mjs") && sb.has("game/engine/cards/definitions.mjs"),
   "and the cards the table plays are one of them (M5): every definition in the directory, generated as a module and bundled with the engine");
 ok(sb.get(".assetsignore").toString("utf8").split("\n").includes("game/"), "and none of it is published as a file");

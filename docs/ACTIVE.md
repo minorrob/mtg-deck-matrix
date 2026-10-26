@@ -1,5 +1,34 @@
 # Who holds the work
 
+## The feedback loop, PR 1: the schema, the table and the routes, 2026-10-26 (a Claude cloud session, for Rob; `claude/engine-feedback-store`, the Claude · Engine lane)
+
+Rob, 2026-10-26 (through the planning session's kick-off brief; the plan is `docs/feedback-loop/PLAN-2026-10-26.html`, PR
+#893): build the feedback loop in the plan's order, PR 1 first, on the defaults of his five calls, each named in the PR.
+
+- **Built, on main c567c581:** `feedback-schema.js` (CrankFeedback@1, one module the sheet and the Worker both load:
+  `boundReport` for the sheet, `readReport` and `readPatch` for the Worker, the six states and what each move carries);
+  **migration 0009** `feedback` (0007 and 0008 stay reserved as the engine section below records them; 0009 was the next
+  free, and is now taken); `cloud/feedback.mjs` (the store: ten reports an hour a person, counted in the rows; the
+  reporter from the Access token, never the report; a screenshot dropped and its bytes kept nowhere until R2 is on);
+  `cloud/worker.mjs` routes `POST /api/feedback` (any signed-in person), `GET /api/admin/feedback` and
+  `PATCH /api/admin/feedback/:id` (the owner, and the triage agent's service token for its own Access application,
+  `FEEDBACK_AGENT_AUD`; `cloud/access.mjs` admits a service token where a route asks for one). The contract for the other
+  lanes: `docs/feedback-loop/CrankFeedback.md`.
+- **Rob's calls, taken on the defaults:** D1 not Supabase; GitHub Actions for the agent; approval by Linear label;
+  screenshots dropped until R2 is on; the invite sender for the reporter's email (PR 5). The owner is `INVITE_ADMIN_ID`
+  (sharing's administrator) until the access groups of the AI players plan exist; production's profile does not set it,
+  so there the admin routes admit only the agent until a profile names the owner.
+- **Proven here:** `feedback-store` (132), red under each of 29 breaks (`tools/feedback-store-breaks.py`); `card-demand`,
+  `cloud-worker`, `ai-door`, `release-pages` (the schema module and the migration ship with the Worker in every cloud
+  profile; a release missing a module the Worker imports is refused by name), `data-integrity`, `feature-wiring`,
+  `sharing`, `agent-seat-table`.
+- **Not proven, and why:** the agent's token against live Access (no application exists yet: Rob's dashboard step, with
+  a Service Auth policy, then `FEEDBACK_AGENT_AUD` in the staging profile); migration 0009 on staging D1 (applied at the
+  next staging release, on Rob's go, as 0006 was).
+- **Next:** PR 2 (the control and the sheet: the shell's glyph and the board rail's, at Rob's word in the Workshop and
+  Play lanes' files) on `claude/workshop-feedback-sheet`, and PR 3 (the triage agent: `.github/workflows/feedback-triage.yml`,
+  `tools/feedback-triage.mjs`) on `claude/deck-feedback-triage`, each from main once PR 1 is there.
+
 ## 2026-10-25: main 9ca99e5 in production (Rob: "release main 9ca99e5 to production")
 
 Released by the Decks cloud session (`claude/vibrant-turing-50yl3r`), with the Camera and Settings session told before
@@ -873,6 +902,7 @@ other lane answers in the last column.
 
 | # | From | Asks for | What for | Answer |
 | --- | --- | --- | --- | --- |
+| 14 | Engine → Workshop, Play | The feedback sheet (the plan's PR 2) to build against `docs/feedback-loop/CrankFeedback.md`: load `feedback-schema.js` (a classic script; `?v=` bumped), bound the draft with `CrankFeedback.boundReport`, `POST /api/feedback` with `x-crankmagic: feedback` and a JSON body, and never send who the person is (the Worker takes it from the token). The board rail's glyph reads the game context from the view it already holds (table id, match id, turn, step, seat, decision id, the last history line), never another seat's cards. This session builds it at Rob's word unless a Workshop or Play session has it in hand first: say so here | The feedback loop, PR 2; the routes are on `claude/engine-feedback-store` | `feedback-schema.js`, `cloud/feedback.mjs` | |
 | 13 | Workshop (Decks) → Play | An intermittent failure in `tests/table-board.mjs` (Codex · Play's suite), seen once in CI and never locally: "the real-game inspector keeps its card aspect beside an independently arranged History module" (lines 667-669) failed on Oct 25 in Actions run 40157906338 (PR #769's head `33c6749e`, `main` `71929eb` merged in, a branch that changes no Play file). The next run passed it (run 40161187064), and on `main` `afe58d5` it passes 3 of 3 locally (290 checks). The check measures `#cm-full-pick .cm-bcard`'s ratio (within 0.01 of 5/7) and counts the History module straight after the click, with no wait for the layout to settle, so a slow runner may read a mid-layout card. Please make it wait for the settled size, or fix the layout if the card really drifts from 5:7. (The other Play failure seen alongside it, `tests/board-control.mjs` "Escape dismisses hover", is fixed on `main` by #854: it now passes there.) | A Play suite that fails at random turns any lane's PR red, and the next run passing it hides the cause | `tests/table-board.mjs` | |
 | 11 | Codex · Play → Engine | ROB-172 for ROB-171: project public control provenance, displaced controller(s), source object identity/name and exact Oracle effect text/duration; define chained steals, return destinations, entering under another controller and face-down sources | Rob requests the actual card on its controller's board and a ghost where control was lost, with who took it and how it returns. Current owner/controller fields cannot establish prior control or a return condition. Document and merge the additive contract before Play consumes it | Requested Oct 20 in ROB-11; Play builds existing-contract placement and ownership marker meanwhile |
 | 12 | Codex · Play → Engine | ROB-167: expose `POST /api/tables/:id/rematch {accept}` and public votes/deadline; launch the next round with retained seats/decks using the existing lifecycle | Board/lobby Play again, visible votes and Leave need a deployed route and documented table state. Prove one person/three AIs, a declined human seat, deadline expiry, and a fresh match ID | Requested Oct 20 on ROB-167 and ROB-11; Engine half must merge before Play consumes it **Built:** `POST /api/tables/:id/rematch {accept}` (#806): votes, deadline (2 minutes, `REMATCH_WINDOW`) and the next round with the same seats, decks and rules as `<tableId>g<n>`; the view's `table.rematch` `{lastMatchId, deadline, outcome, reason, votes}`; the host must stay for a next game; documented in `docs/ui-lane/gameplay-anchor.md` ("After the game: Play again"). Play wires the buttons next. |
