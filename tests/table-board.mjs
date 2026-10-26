@@ -1500,7 +1500,9 @@ try {
   releaseReply();
   await rob.page.locator(".cm-coach-msg.is-coach:not(.is-typing)").waitFor({timeout: 5000});
   ok(await moreOpen() && await rob.page.locator("[data-action=board-coach-clear]").isVisible(), "the reply lands and ⋯ stays open, Clear chat still in it");
-  ok(await focusOn("summary"), "and the focus stays on ⋯");
+  const replyFocus=await rob.page.evaluate(()=>{const active=document.activeElement,more=document.querySelector('#cm-board-coach .cm-coach-more'),drawer=more?.closest('.cm-stage-side,.cm-stage-rail');return {active:{tag:active?.tagName,class:active?.className,action:active?.dataset.action},summaryFocused:active===more?.querySelector('summary'),open:more?.open,drawerScroll:drawer?.scrollTop};});
+  if(SHOTS)writeFileSync(path.join(SHOTS,'coach-more-reply-focus.json'),JSON.stringify(replyFocus,null,2));
+  ok(await focusOn("summary"), `and the focus stays on ⋯: ${JSON.stringify(replyFocus)}`);
   releaseReply = rob.holdCoachReply();
   await rob.page.locator('#cm-board-coach [data-action=board-coach-ask]').first().click();
   await rob.page.locator('#cm-board-coach [data-action=board-coach-clear]').focus();
