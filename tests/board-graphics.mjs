@@ -20,18 +20,21 @@ import {readFileSync} from "node:fs";
 import path from "node:path";
 import {openBrowser,ROOT} from "./uat/browser-runner.mjs";
 import {writeCatalog} from "../tools/stage-backdrops.mjs";
-import {copyFileSync,mkdtempSync,rmSync} from "node:fs";
+import {copyFileSync,mkdtempSync,rmSync,writeFileSync} from "node:fs";
 import os from "node:os";
 /* The list tools/stage-backdrops.mjs writes is still between its markers in crankmagic-stage.js. */
 {const dir=mkdtempSync(path.join(os.tmpdir(),"backdrops-")),copy=path.join(dir,"stage.js");copyFileSync(path.join(ROOT,"crankmagic-stage.js"),copy);
+  for (const newline of ["\n","\r\n"]) {
+  writeFileSync(copy,readFileSync(path.join(ROOT,"crankmagic-stage.js"),"utf8").replace(/\r?\n/g,newline));
   writeCatalog(copy,[{id:"x-test",name:"X",poster:"p.jpg",video:{720:"x-720.webm"}}]);
-  assert.match(readFileSync(copy,"utf8"),/\/\* backdrops:begin \*\/\n  const BACKDROPS=\[\{id:"x-test",name:"X",poster:"p\.jpg",video:\{720:"x-720\.webm"\}\}\];\n  \/\* backdrops:end \*\/\n  const appearances = Object\.freeze\(\{backgrounds: BACKDROPS,/,"the backdrop tool rewrites the stage's list between its markers");
+  assert.match(readFileSync(copy,"utf8").replace(/\r\n/g,"\n"),/\/\* backdrops:begin \*\/\n  const BACKDROPS=\[\{id:"x-test",name:"X",poster:"p\.jpg",video:\{720:"x-720\.webm"\}\}\];\n  \/\* backdrops:end \*\/\n  const appearances = Object\.freeze\(\{backgrounds: BACKDROPS,/,"the backdrop tool rewrites the stage's list between its markers");
+  }
   rmSync(dir,{recursive:true});}
 const {browser,base,stub,close}=await openBrowser({name:"board-graphics",flag:"GEOMETRY_REQUIRED"});
 const sample=JSON.parse(readFileSync(path.join(ROOT,"docs/reference/replit-sample-views.json"),"utf8")).views[13];
 const html=readFileSync(path.join(ROOT,"index.html"),"utf8").replace("</head>",'<meta name="crankmagic-accounts" content="on"><meta name="crankmagic-play" content="cloud"></head>');
 const table={tableId:"gfxfixture01",phase:"playing",matchId:sample.matchId,away:[],blockers:[],rules:{},seats:sample.state.players.map(p=>({seatId:p.playerId,name:p.name,kind:p.playerId===sample.seat?"human":"ai",you:p.playerId===sample.seat,occupied:true}))};
-const DESIGNS=["medieval-banded","colonial-inlay","glass-future","tavern-plank","felt-card","stone-dais","obsidian-glass"];
+const DESIGNS=["study","medieval-banded","colonial-inlay","glass-future","tavern-plank","felt-card","stone-dais","obsidian-glass"];
 let checks=0;
 const ok=(c,m)=>{assert.ok(c,m);checks++};
 const eq=(a,b,m)=>{assert.deepEqual(a,b,m);checks++};
@@ -62,6 +65,8 @@ try{
   /* 1. The default. */
   await open();
   let g=await gfx();
+  eq(g.design,"study","unset preference builds the actual Study table");
+  if(process.env.UAT_SHOTS) {await painted();await page.mouse.move(3,3);await page.waitForTimeout(350);await page.screenshot({path:path.join(process.env.UAT_SHOTS,"r4-study-babylon-1830.png")});}
   eq(g.resolution,g.software?100:150,`the default resolution is 150% of the screen's pixels where a graphics card draws, 100% where the browser draws in software (here: ${g.software?"software":"a graphics card"}, ${g.resolution}%)`);
   /* The rest at 150%, the default a graphics card gets. */
   await page.evaluate(()=>localStorage.setItem("cm-stage-resolution","150"));await open();g=await gfx();
@@ -141,6 +146,12 @@ try{
     const where=await page.evaluate(()=>CrankTables.painting());
     g=await gfx();
     eq(g.design,id,`${id}: built`);
+    if(id === "study") {
+      const d=await page.evaluate(()=>CrankStage.diagnostics());
+      ok(["top","edge","side","leg"].every(p=>d.parts.includes(p)),"Study has a walnut top, fine edge, apron and legs");
+      ok(g.textures.some(t=>t.name==="study walnut"),"Study paints walnut rather than inherited oak");
+
+    }
     const skins=g.textures.filter(t=>!/ relief| glow/.test(t.name));
     ok(skins.length&&Math.max(...skins.map(t=>t.width))>=2048,`${id}: its largest skin is ${Math.max(...skins.map(t=>t.width))} px`);
     ok(g.textures.every(t=>t.mips&&t.aniso>=8),`${id}: every texture mipmapped and anisotropic`);

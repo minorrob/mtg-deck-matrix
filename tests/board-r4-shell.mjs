@@ -22,7 +22,7 @@ async function open(mode, width, skin = "sapphire-obsidian", opening = false) {
   const table = {tableId, phase:"playing", matchId:sample.matchId, away:[], blockers:[], youAreHost:true, rules:{},
     seats:sample.state.players.map(p => ({seatId:p.playerId,name:p.name,kind:p.playerId === sample.seat ? "human":"ai",you:p.playerId === sample.seat,occupied:true,ready:true,mat:"felt"}))};
   const context = await browser.newContext({viewport:{width,height:width < 500 ? 844 : 900}, reducedMotion:"reduce", serviceWorkers:"block"});
-  await context.addInitScript(({mode,skin}) => {localStorage.setItem("cm-board-view",mode);localStorage.setItem("crankmagic-audio-muted","true");(globalThis.CrankFeatures ||= []).push(C => {globalThis.__r4Commit = c => C.commit(c);});}, {mode,skin});
+  await context.addInitScript(({mode,skin}) => {localStorage.setItem("cm-board-view",mode);localStorage.setItem("crankmagic-audio-muted","true");(globalThis.CrankFeatures ||= []).push(C => {globalThis.__r4Commit = c => C.commit(c);globalThis.__r4Live=()=>C.board.live();});}, {mode,skin});
   const page = await context.newPage(); if (stub) await stub(page);
   page.on("pageerror", e => errors.push(e.message));
   await page.route(`${base}/index.html*`, r => r.fulfill({contentType:"text/html",body:html}));
@@ -36,12 +36,36 @@ async function open(mode, width, skin = "sapphire-obsidian", opening = false) {
   return {page,context,errors,posts,sample};
 }
 
+async function wholeRows(page,label) {
+  const clipped=await page.evaluate(() => {
+    const fails=[];
+    const areas=[...document.querySelectorAll('#cm-board .cm-mat-grid,.cm-phone-battlefield,.cm-board-field,[data-card-section]')];
+    const saved=areas.map(el=>[el,el.scrollTop,el.scrollLeft]);
+    for(const card of document.querySelectorAll('#cm-board [data-card-section]>.cm-bcard')) {
+      if(!card.getClientRects().length)continue;
+      card.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'});
+      const r=card.getBoundingClientRect();
+      for(let a=card.parentElement;a && !a.matches('#cm-board');a=a.parentElement) {
+        const css=getComputedStyle(a);if(!/(auto|scroll|hidden|clip)/.test(css.overflowY))continue;
+        const b=a.getBoundingClientRect();
+        if(r.top < b.top-2 || r.bottom > b.bottom+2) {fails.push({card:card.dataset.card,ancestor:a.className,cardH:Math.round(r.height),viewportH:Math.round(b.height),top:Math.round(r.top-b.top),bottom:Math.round(r.bottom-b.bottom)});break;}
+      }
+    }
+    for(const [el,y,x] of saved){el.scrollTop=y;el.scrollLeft=x;}
+    return fails;
+  });
+  eq(clipped,[],`${label}: every battlefield/land card is wholly scroll-reachable`);
+}
+
 try {
   for (const [mode,width,skin] of [["table",1440,"sapphire-obsidian"],["focus",1440,"sapphire-obsidian-light"],["full",1440,"bronze-basalt"],["focus",390,"sapphire-obsidian"]]) {
     const {page,context,errors} = await open(mode,width,skin);
     if (shotRoot) await page.screenshot({path:path.join(shotRoot,`r4-shell-${mode}-${width}-100.png`)});
     eq(await page.locator(".cm-sidebar").evaluate(el => [el.inert,el.getAttribute("aria-hidden")]), [true,"true"], `${mode}/${width}: covered navigation is inaccessible`);
     ok(await page.locator("#cm-board .cm-mat").count() > 0, `${mode}: seats retain their mats`);
+    const live=await page.evaluate(()=>globalThis.__r4Live());
+    eq(live.seats.map(s=>s.life),[40,26,40,43],`${mode}: live summary reports public life`);
+    ok(live.seats.every(s=>Object.keys(s).sort().join(',')==='commanders,life,name,seatId'),`${mode}: live summary contains only public seat fields`);
     const order = await page.locator("#cm-board .cm-seat-header").first().evaluate(el => [...el.children].map(n => n.classList[0]));
     eq(order,["cm-seat-portrait","cm-seat-identity","cm-vitals","cm-seat-hand","cm-seat-state"], `${mode}/${width}: one seat header structure`);
     eq(await page.locator('.cm-seat-portrait img').evaluateAll(images => images.filter(img => img.complete && !img.naturalWidth).length),0,`${mode}: unavailable portraits use initials rather than broken images`);
@@ -51,6 +75,7 @@ try {
     eq(primaries.length,1,`${mode}/${width}: priority has one enabled primary (${primaries.join(', ')})`);
     const menu = await page.locator('[data-action=board-table-menu]').boundingBox(), camera = await page.locator('[data-action=board-camera]').boundingBox();
     ok(Math.abs(menu.y-camera.y) <= 5 && menu.x+menu.width <= camera.x+2,`${mode}/${width}: Table sits beside Camera`);
+    await wholeRows(page,`${mode}/${width}/100`);
     const life = await page.locator("#cm-board .cm-seat-header .cm-vitals>b").first().evaluate(el => parseFloat(getComputedStyle(el).fontSize));
     ok(life >= 28, `${mode}/${width}: life is readable (${life}px)`);
     await page.locator('[data-action="board-stage-rail"]').click();
@@ -71,6 +96,7 @@ try {
       const children = await page.locator('.cm-stage-top').evaluate(el => [...el.children].filter(n => n.getClientRects().length && !n.matches('.cm-combat')).map(n => {const r=n.getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom};}));
       ok(children.every(r => r.left >= -1 && r.right <= width+1 && r.top >= header.y-1 && r.bottom <= header.y+header.height+1),`${mode}: all top-bar content fits its HUD-sized row at 200%`);
     }
+    await wholeRows(page,`${mode}/${width}/200`);
     const overlaps = await page.locator('.cm-board-field').evaluateAll(fields => fields.flatMap(field => {const label=field.querySelector(':scope>.cm-mat-label');if(!label || !label.getClientRects().length)return [];const r=label.getBoundingClientRect();return [...field.querySelectorAll('.cm-board-group>h3')].filter(h=>{const b=h.getBoundingClientRect();return r.left<b.right && r.right>b.left && r.top<b.bottom && r.bottom>b.top;}).map(h=>h.textContent);}));
     eq(overlaps,[],`${mode}/${width}: zone captions do not overlap group headings at 200%`);
     const lastChoice = page.locator('#cm-decision-slot button:not([disabled])').last();
