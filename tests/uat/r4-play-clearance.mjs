@@ -14,3 +14,14 @@ export async function tableClearance(page) {return page.evaluate(()=>{
  for(let i=0;i<dial.length;i++)for(let j=i+1;j<dial.length;j++){const a=visible(dial[i]),b=visible(dial[j]);if(a&&b&&overlaps(a,b))problems.push({dial:dial[i].textContent.trim(),other:dial[j].textContent.trim(),a,b});}
  return problems;
  });}
+
+export async function phoneChromeContrast(page){return page.evaluate(()=>{
+ const rgba=text=>{const n=(text.match(/[\d.]+/g)||[]).map(Number);return [n[0]||0,n[1]||0,n[2]||0,n.length>3?n[3]:1];};
+ const blend=(f,b)=>f.slice(0,3).map((c,i)=>c*f[3]+b[i]*(1-f[3]));
+ const light=c=>c.map(x=>x/255).map(x=>x<=.04045?x/12.92:((x+.055)/1.055)**2.4).reduce((n,x,i)=>n+x*[.2126,.7152,.0722][i],0);
+ return [...document.querySelectorAll('.cm-phone-pill>b,.cm-phone-icon[data-action=board-history] circle,.cm-phone-icon[data-action=board-coach] path:first-child')].map(el=>{
+  const chain=[];for(let p=el;p;p=p.parentElement)chain.unshift(p);let bg=[255,255,255],opacity=1;for(const p of chain){const s=getComputedStyle(p);bg=blend(rgba(s.backgroundColor),bg);opacity*=Number(s.opacity);}
+  const s=getComputedStyle(el),icon=el instanceof SVGElement,fg=rgba(icon?s.stroke:s.color);fg[3]*=opacity*(icon?Number(s.strokeOpacity):1);const painted=blend(fg,bg),a=light(painted),b=light(bg),ratio=(Math.max(a,b)+.05)/(Math.min(a,b)+.05);
+  return {element:icon?el.closest('button').dataset.action:el.textContent.trim(),ratio,minimum:icon?3:4.5,foreground:painted,background:bg};
+ });
+});}

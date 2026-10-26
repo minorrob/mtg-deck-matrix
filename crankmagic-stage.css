@@ -1069,3 +1069,5 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
  #matrix-v2 .cm-board[data-hud-large] .cm-stage-top .cm-board-ribbon li{padding-left:3px;padding-right:3px}
 }
 #matrix-v2 .cm-board .cm-board-pie-turn{position:absolute;inset:-3px;border-radius:50%;mask:radial-gradient(circle,transparent 64%,#000 66%);filter:drop-shadow(0 0 4px var(--color-aether));pointer-events:none}
+#matrix-v2 .cm-board[data-phone] .cm-phone-pill,#matrix-v2 .cm-board[data-phone] .cm-phone-icon{background:var(--color-panel);color:var(--color-ink);border-color:var(--color-line-strong)}
+#matrix-v2 .cm-board[data-phone] .cm-phone-icon .cm-icon{color:currentColor}
