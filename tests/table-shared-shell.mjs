@@ -88,6 +88,7 @@ try {
       if(settings) assert.ok(box.y>=0&&box.y+box.height<=721,'the Settings window fits the browser top to bottom');
       await page.keyboard.press('Escape');
       await menu.waitFor({state:'hidden'});
+      if(settings&&await page.locator('[data-action=board-camera]').getAttribute('aria-expanded')==='true')await page.locator('[data-action=board-camera]').click();
     }
     assert.equal(await page.locator('#cm-board').evaluate(el=>el.scrollLeft),0,'opening utilities never scrolls the shell sideways');
     if(view==='focus') {
