@@ -22,7 +22,7 @@ function setup({failRules=false,unknown=[],failDeck=false,cloud=false}={}){
     if(path.endsWith('/deck')&&failDeck)return Response.json({error:'Above this bracket.'},{status:409});
     return Response.json({table});
   }};
-  vm.runInNewContext(source,context);context.CrankFeatures[0](C);return {C,requests,notices,navigations,storage,values,table};
+  vm.runInNewContext(source,context);context.CrankFeatures[0](C);return {C,context,requests,notices,navigations,storage,values,table};
 }
 {
   const x=setup();await x.C.actions['table-create']();
@@ -100,5 +100,11 @@ function setup({failRules=false,unknown=[],failDeck=false,cloud=false}={}){
   ok(await x.C.play.count([single])===1,'a complete single-commander hundred uses serialized quantities without double-counting its commander');
   ok(await x.C.play.count([partners])===1,'a complete partner hundred includes both commanders exactly once');
   ok(await x.C.play.count([{...single,archived:true}])===0,'an archived hundred is not offered for play');
+}
+{
+  const x=setup();let release,drawn=false;const gate=new Promise(resolve=>{release=resolve;});
+  x.context.fetch=async()=>{await gate;return Response.json({table:x.table});};x.C.board.show=()=>{drawn=true;};
+  const pending=x.C.tableApi.refresh(x.table.tableId);x.C.signedInAs=()=> 'other@example.test';release();await pending;
+  ok(!drawn,'a table response from an abandoned account cannot redraw the new account page');
 }
 console.log(`table-setup: ${checks} checks passed; ordered setup, reconnect recovery and idempotent owner result filing.`);
