@@ -148,8 +148,8 @@ function tokensIn(css, selectorRe) {
  *
  * r4 (Rob, 2026-10-25): "Take the font from this image that's used for the app name ... I actually like all of the
  * fonts in this image." Page titles and the deck title are Cinzel 600 at .04em; h2, h3, figures and every word read are
- * Lato 400 and 700. Satoshi and Young Serif are retired. The app is still CrankMagic (Rob, 2026-10-26): its wordmark keeps
- * the embedded Oxanium subset, and Oxanium sets nothing else. Four weights in all,
+ * Lato 400 and 700. Satoshi, Young Serif and Oxanium are retired. The app is still CrankMagic (Rob, 2026-10-26: "Use the typeface
+ * from the mock-up ... on the app name"): its wordmark is Cinzel 600 in capitals at .08em, in --color-brand gilt. Four weights in all,
  * each SIL OFL 1.1 and self-hosted: no shipped page may reach out to a font CDN at render time.
  * tests/type-final.mjs holds the same rule in a rendered page.
  */
@@ -167,26 +167,30 @@ function tokensIn(css, selectorRe) {
       ok(existsSync(path.join(ROOT, `assets/crankmagic/${stem}${sub}.woff2`)), `and assets/crankmagic/${stem}${sub}.woff2 exists`);
     }
   }
-  for (const f of ["cinzel-OFL.txt", "lato-OFL.txt", "barlowcondensed-OFL.txt", "oxanium-OFL.txt"]) ok(existsSync(path.join(ROOT, "assets/crankmagic", f)), `assets/crankmagic/${f} is committed`);
+  for (const f of ["cinzel-OFL.txt", "lato-OFL.txt", "barlowcondensed-OFL.txt"]) ok(existsSync(path.join(ROOT, "assets/crankmagic", f)), `assets/crankmagic/${f} is committed`);
   ok(app.get("--v-display") === "var(--font-display)" && app.get("--v-body") === "var(--font-body)", "--v-display and --v-body are the same faces, by reference, not second declarations");
   /* The retired faces are gone from every sheet, script and page that names a face. */
   const code = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "");
   for (const f of ["crankmagic-design.css", "crankmagic.css", "crankmagic-stage.css", "crankmagic-app.js", "crankmagic-graph.js", "privacy.html", "terms.html", "crankmagic-sw.js"]) {
-    ok(!/Satoshi|Young Serif|youngserif-|satoshi-/.test(code(read(f))), `${f} names no retired face (Satoshi, Young Serif)`);
+    ok(!/Satoshi|Young Serif|youngserif-|satoshi-|CrankOxanium/.test(code(read(f))), `${f} names no retired face (Satoshi, Young Serif, Oxanium)`);
   }
-  for (const f of ["satoshi-400.woff2", "satoshi-900.woff2", "youngserif-400.woff2", "barlowcondensed-600.woff2", "barlowcondensed-700.woff2"]) ok(!existsSync(path.join(ROOT, "assets/crankmagic", f)), `assets/crankmagic/${f} is removed`);
-  /* The name stays CrankMagic: the wordmark keeps its own Oxanium subset, and Oxanium appears nowhere else. */
-  ok(/@font-face\{font-family:CrankOxanium;src:url\(data:font\/ttf;base64,/.test(design), "the CrankMagic wordmark's Oxanium subset is still embedded");
+  for (const f of ["satoshi-400.woff2", "satoshi-900.woff2", "youngserif-400.woff2", "barlowcondensed-600.woff2", "barlowcondensed-700.woff2", "oxanium-OFL.txt"]) ok(!existsSync(path.join(ROOT, "assets/crankmagic", f)), `assets/crankmagic/${f} is removed`);
+  /* The name is CrankMagic in the mock-up's face (Rob, 2026-10-26): Cinzel capitals in antique gilt, and no Oxanium is left. */
+  ok(!/CrankOxanium/.test(design), "the Oxanium wordmark subset is gone");
   const brandRule = [...design.matchAll(/#matrix-v2 \.v-brand\{([^}]*)\}/g)].map((m) => m[1]).find((b) => /font-family/.test(b)) || "";
-  ok(/font-family:CrankOxanium,Lato,sans-serif/.test(brandRule) && /background-clip:text/.test(brandRule), `the wordmark (.v-brand) is unchanged but for its fallback (${brandRule.slice(0, 60)})`);
-  const oxanium = [...(code(design) + code(pageCss) + code(read("crankmagic-stage.css"))).matchAll(/([^{}]*)\{[^{}]*CrankOxanium[^{}]*\}/g)].map((m) => m[1].trim()).filter((s) => !/^@font-face$/.test(s) && !/\.v-brand$/.test(s));
-  eq(oxanium, [], `Oxanium sets only the wordmark: ${oxanium.join(" | ")}`);
+  ok(/font-family:var\(--font-display\)/.test(brandRule) && /text-transform:uppercase/.test(brandRule) && /letter-spacing:\.08em/.test(brandRule), `the wordmark (.v-brand) is Cinzel capitals at .08em (${brandRule.slice(0, 80)})`);
+  ok(/color:var\(--color-brand\)/.test(brandRule) && !/background-clip:text/.test(brandRule), "in --color-brand gilt, with no sheen");
+  for (const [skin, sel] of [["sapphire-obsidian", /(?:^|,)\s*#matrix-v2\s*$/], ["bronze-basalt", /#matrix-v2\[data-palette="bronze-basalt"\]\s*$/], ["chalk-coal", /#matrix-v2\[data-palette="chalk-coal"\]\s*$/]]) {
+    const v = tokensIn(design, sel).get("--color-brand") || "";
+    ok(/^#[0-9a-f]{6}$/.test(v) && v !== tokensIn(design, sel).get("--color-money"), `${skin} carries --color-brand (${v}), apart from --color-money`);
+  }
+  ok(!/CrankOxanium/.test(code(pageCss)), "and crankmagic.css sets the wordmark in the display face too");
   /* Barlow Condensed is the callout word's face and nothing else's: 800 only, self-hosted, reached through --font-callout. */
   const bare = design.replace(/\/\*[\s\S]*?\*\//g, "");
   const sw = read("crankmagic-sw.js");
   for (const f of ["cinzel-600.woff2", "cinzel-600-ext.woff2", "lato-400.woff2", "lato-400-ext.woff2", "lato-700.woff2", "lato-700-ext.woff2", "barlowcondensed-800.woff2"]) ok(sw.includes(`assets/crankmagic/${f}`), `the service worker keeps ${f} for offline use`);
   const notices = read("THIRD-PARTY-NOTICES.md");
-  ok(/\*\*Cinzel\*\*/.test(notices) && /\*\*Lato\*\*/.test(notices) && /\*\*Oxanium\*\*/.test(notices) && !/\*\*Satoshi\*\*|\*\*Young Serif\*\*/.test(notices), "THIRD-PARTY-NOTICES lists Oxanium, Cinzel and Lato and no retired face");
+  ok(/\*\*Cinzel\*\*/.test(notices) && /\*\*Lato\*\*/.test(notices) && !/\*\*Satoshi\*\*|\*\*Young Serif\*\*|\*\*Oxanium\*\*/.test(notices), "THIRD-PARTY-NOTICES lists Cinzel and Lato and no retired face");
   ok(!/@font-face\{font-family:'Barlow Condensed';font-weight:(600|700)/.test(bare), "and Barlow Condensed 600 and 700 are not declared");
   for (const f of ["index.html", "crankmagic.html", "privacy.html", "terms.html", "crankmagic-design.css", "crankmagic.css", "crankmagic-sw.js"]) {
     ok(!/fonts\.(googleapis|gstatic)\.com|api\.fontshare\.com|cdn\.fontshare\.com/.test(read(f)), `${f} does not fetch a font from a CDN; every face is self-hosted`);

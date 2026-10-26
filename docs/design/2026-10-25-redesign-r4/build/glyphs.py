@@ -14,6 +14,8 @@ G = {
   'st-draft':    '<circle cx="8" cy="8" r="5.6" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray=".1 3" stroke-linecap="round"/>',
   # UI
   'check':   f'<path {S} d="M3 8.5 6.5 12 13 4.5"/>',
+  'star':    f'<path {S} d="M8.00 2.10 L9.62 6.28 L14.09 6.52 L10.62 9.35 L11.76 13.68 L8.00 11.25 L4.24 13.68 L5.38 9.35 L1.91 6.52 L6.38 6.28Z"/>',
+  'star-on': '<path fill="currentColor" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" d="M8.00 2.10 L9.62 6.28 L14.09 6.52 L10.62 9.35 L11.76 13.68 L8.00 11.25 L4.24 13.68 L5.38 9.35 L1.91 6.52 L6.38 6.28Z"/>',
   'alert':   f'<circle {S} cx="8" cy="8" r="6.2"/><path {S} d="M8 4.8v3.8M8 11.2v.1"/>',
   'x':       f'<path {S} d="M4 4l8 8M12 4l-8 8"/>',
   'chev':    f'<path {S} d="M4 6l4 4 4-4"/>',

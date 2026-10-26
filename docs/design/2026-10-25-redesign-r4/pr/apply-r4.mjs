@@ -11,8 +11,8 @@
  *   3. crankmagic-app.js: the theme table offers the three skins in both registers and maps every old choice forward.
  *   4. index.html: a page with no choice yet is Sapphire & Obsidian.
  *   5. tests: design-tokens.mjs and type-final.mjs are replaced; a11y-app.mjs takes the new theme names.
- *   6. type: Cinzel 600 and Lato 400/700 (Rob's reference, Concept B) replace Satoshi and Young Serif. The CrankMagic wordmark
- *      (.v-brand, the embedded Oxanium subset) is the app's name and does not change;
+ *   6. type: Cinzel 600 and Lato 400/700 (Rob's reference, Concept B) replace Satoshi, Young Serif and Oxanium. The CrankMagic
+ *      wordmark (.v-brand) becomes Cinzel 600 capitals at .08em in --color-brand gilt (Rob, 2026-10-26);
  *      the font files, the service worker, the legal pages, the play sheet, the graph and the notices follow.
  * File copies and deletions happen last, after every anchor has been found.
  */
@@ -122,8 +122,20 @@ const copies = [], removals = [];
   if (first < 0) throw new Error("type: the Satoshi @font-face anchor is missing");
   d = d.replace(/@font-face\{font-family:(Satoshi|'Young Serif');[^}]*\}\n?/g, "");
   d = d.slice(0, first) + "/* Cinzel and Lato (SIL OFL 1.1, assets/crankmagic/cinzel-OFL.txt and lato-OFL.txt), self-hosted: the faces of Rob's reference,\n   Concept B (docs/design/2026-10-25-redesign-r4/project/reference/). Cinzel names things; Lato does the work. */\n" + faces + "\n" + d.slice(first);
-  /* The wordmark is the app's name: it keeps its Oxanium subset, and only its Satoshi fallback becomes Lato. */
-  d = d.split("#matrix-v2 .v-brand{font-family:CrankOxanium,Satoshi,sans-serif").join("#matrix-v2 .v-brand{font-family:CrankOxanium,Lato,sans-serif");
+  /* The wordmark (Rob, 2026-10-26: "Use the typeface from the mock-up you had on the app name"): CrankMagic in Cinzel 600
+     capitals at .08em, in --color-brand gilt. The Oxanium subset goes, and every size comes down to about the width the
+     Oxanium mark had, so no header or rail has to make room. */
+  {
+    const i = d.indexOf("@font-face{font-family:CrankOxanium;src:url(data:font/ttf;base64,");
+    if (i < 0) throw new Error("type: the Oxanium @font-face anchor is missing");
+    let j = d.indexOf("}", i) + 1; if (d[j] === "\n") j += 1;
+    d = d.slice(0, i) + d.slice(j);
+    const base = d.match(/#matrix-v2 \.v-brand\{font-family:CrankOxanium,Satoshi,sans-serif;[^}]*\}/g) || [];
+    if (base.length !== 1) throw new Error(`type: expected one wordmark rule, found ${base.length}`);
+    d = d.replace(base[0], "#matrix-v2 .v-brand{font-family:var(--font-display);font-size:20px;font-weight:var(--display-weight);line-height:1.02;padding:3px 0;margin:-3px 0;letter-spacing:.08em;text-transform:uppercase;color:var(--color-brand);background:none;-webkit-text-fill-color:currentColor}");
+    d = swap(d, "@media(max-width:520px){#matrix-v2 .v-brand{font-size:27px}", "@media(max-width:520px){#matrix-v2 .v-brand{font-size:18px}", "phone wordmark");
+    d = swap(d, "#matrix-v2 .v-brand{font-size:20px}", "#matrix-v2 .v-brand{font-size:14px}", "early phone wordmark");
+  }
   d = inCode(d, lato);
   set("crankmagic-design.css", d);
 
@@ -132,7 +144,11 @@ const copies = [], removals = [];
     "#matrix-v2 h1{font-family:var(--v-display);font-weight:var(--display-weight);letter-spacing:var(--display-tracking);text-transform:var(--display-case)}#matrix-v2 :is(h2,h3,.cm-deck-tile h3,.cm-stats strong,.cm-summary-figures strong,.cm-budget-figures strong,.cm-kpi strong){font-family:var(--v-body);font-weight:var(--heading-weight);letter-spacing:var(--heading-tracking);text-transform:none}", "heading rule");
   c = swap(c, "/* Headings and big figures in the display face; everything else stays Satoshi (guide, step 1). */", "/* r4: page titles in the display face (Cinzel); h2, h3 and big figures in the body face (Lato) at --heading-weight. */", "heading comment", {optional: true});
   c = swap(c, "below that it stays the Satoshi 900 heading every other page title is. */", "since r4 the hero and the page title are both Cinzel, so the face no longer changes with the width. */", "hero comment", {optional: true});
-  c = swap(c, "#matrix-v2 .v-brand{font-family:CrankOxanium,Satoshi,sans-serif}", "#matrix-v2 .v-brand{font-family:CrankOxanium,Lato,sans-serif}", "page wordmark fallback");
+  c = swap(c, "#matrix-v2 .v-brand{font-family:CrankOxanium,Satoshi,sans-serif}", "#matrix-v2 .v-brand{font-family:var(--font-display)}", "page wordmark face");
+  c = swap(c, "#matrix-v2 .cm-sidebar .v-brand{position:relative;z-index:1;font-size:19px;font-weight:700;line-height:1.1;letter-spacing:-.4px;", "#matrix-v2 .cm-sidebar .v-brand{position:relative;z-index:1;font-size:15px;line-height:1.1;letter-spacing:.08em;", "rail wordmark");
+  c = swap(c, "#matrix-v2 .v-brand{font-size:25px}", "#matrix-v2 .v-brand{font-size:17px}", "tablet wordmark", {optional: true});
+  c = swap(c, "  #matrix-v2 .v-brand{font-size:23px}", "  #matrix-v2 .v-brand{font-size:16px}", "560 wordmark");
+  c = swap(c, "  #matrix-v2 .v-brand{font-size:21px}", "  #matrix-v2 .v-brand{font-size:14px}", "360 wordmark");
   c = inCode(c, lato);
   set("crankmagic.css", c);
 
@@ -152,6 +168,7 @@ const copies = [], removals = [];
   set("crankmagic-sw.js", sw);
 
   let n = get("THIRD-PARTY-NOTICES.md");
+  n = n.replace(/\| \*\*Oxanium\*\* \|[^\n]*\n/, "");
   n = cut(n, "| **Satoshi** |", "self-hosted from the `@fontsource/barlow-condensed` 5.3.0 files, unmodified. |",
     "| **Cinzel** | `assets/crankmagic/cinzel-600.woff2`, `cinzel-600-ext.woff2` | SIL Open Font License 1.1, full text in `assets/crankmagic/cinzel-OFL.txt`; Copyright 2020 The Cinzel Project Authors. The display face since r4 (2026-10-25): the wordmark, page titles and the deck title. Self-hosted from the `@fontsource/cinzel` 5.3.0 files, unmodified. |\n"
     + "| **Lato** | `assets/crankmagic/lato-{400,700}.woff2` and `-ext` | SIL Open Font License 1.1, full text in `assets/crankmagic/lato-OFL.txt`; Copyright (c) 2010-2011 by tyPoland Lukasz Dziedzic, Reserved Font Name \"Lato\". The body face since r4. Self-hosted from the `@fontsource/lato` 5.3.0 files, unmodified. |\n"
@@ -159,12 +176,12 @@ const copies = [], removals = [];
   set("THIRD-PARTY-NOTICES.md", n);
   let a = get("assets/crankmagic/README.md");
   a = swap(a, "Satoshi is the interface font; the embedded Oxanium subset in\n`crankmagic-design.css` is the wordmark. The included `oxanium-OFL.txt` accompanies\nthat subset.",
-    "Since r4 (2026-10-25) the faces are Cinzel 600 for page titles and the deck title, and Lato 400 and\n700 for everything else; Barlow Condensed 800 is the callout word only. The embedded Oxanium subset in\n`crankmagic-design.css` is still the wordmark, the app's name, and `oxanium-OFL.txt` accompanies it.\nEach face ships with its OFL text beside it (`cinzel-OFL.txt`, `lato-OFL.txt`, `barlowcondensed-OFL.txt`).", "assets readme");
+    "Since r4 (2026-10-25) the faces are Cinzel 600 for the CrankMagic wordmark, page titles and the deck title, and Lato\n400 and 700 for everything else; Barlow Condensed 800 is the callout word only. The Oxanium wordmark subset was\nretired on 2026-10-26, when the wordmark became Cinzel capitals in gilt.\nEach face ships with its OFL text beside it (`cinzel-OFL.txt`, `lato-OFL.txt`, `barlowcondensed-OFL.txt`).", "assets readme");
   set("assets/crankmagic/README.md", a);
 
   for (const f of ["cinzel-600.woff2", "cinzel-600-ext.woff2", "lato-400.woff2", "lato-400-ext.woff2", "lato-700.woff2", "lato-700-ext.woff2", "cinzel-OFL.txt", "lato-OFL.txt"]) copies.push([path.join(HERE, "fonts", f), path.join(ROOT, "assets/crankmagic", f)]);
   for (const f of ["satoshi-400.woff2", "satoshi-500.woff2", "satoshi-700.woff2", "satoshi-900.woff2", "youngserif-400.woff2", "youngserif-400-ext.woff2", "youngserif-OFL.txt",
-                   "barlowcondensed-600.woff2", "barlowcondensed-600-ext.woff2", "barlowcondensed-700.woff2", "barlowcondensed-700-ext.woff2"]) removals.push(path.join(ROOT, "assets/crankmagic", f));
+                   "barlowcondensed-600.woff2", "barlowcondensed-600-ext.woff2", "barlowcondensed-700.woff2", "barlowcondensed-700-ext.woff2", "oxanium-OFL.txt"]) removals.push(path.join(ROOT, "assets/crankmagic", f));
 }
 
 for (const [f, t] of edits) writeFileSync(path.join(ROOT, f), t);

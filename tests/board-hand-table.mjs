@@ -194,12 +194,13 @@ try {
     ok(!errors.length, `no page error (${errors.join(" | ")})`);
     await context.close();
   }
-  /* Ten cards: the fan shows seven, and Shift + wheel turns it. */
+  /* Ten cards: the fan shows as many as fit, never fewer than seven (Rob, Oct 26: "Increase cards in hand dynamically
+     based on zoom"), and Shift + wheel turns it. */
   {
     const {page, context, errors} = await board("full", {hand: 10});
     const FAN = ".cm-stage-fan .cm-stage-fan-slot .cm-bcard";
     const was = await handNow(page, FAN);
-    eq([was.count, was.first], [7, "0"], "ten cards: the fan shows seven, from the first");
+    ok(was.count >= 7 && was.count < 10 && was.first === "0", `ten cards: the fan shows as many as fit at this size, never fewer than seven, from the first (${was.count})`);
     let spot = await onHand(page, FAN);
     await page.mouse.move(spot.x, spot.y);
     await page.keyboard.down("Shift"); await page.mouse.wheel(0, 100); await page.keyboard.up("Shift");
@@ -209,6 +210,12 @@ try {
     spot = await onHand(page, FAN);
     await wheel(page, FAN, 0, 1, {dx: -100});
     eq((await handNow(page, FAN)).first, "0", "a sideways wheel turns it back");
+    /* smaller, more of them fit: at the least, all ten */
+    await wheel(page, FAN, 400, 12);
+    await settle(page, 300);
+    eq((await handNow(page, FAN)).count, 10, "made smaller, more fit: at the least size all ten show");
+    await wheel(page, FAN, -400, 12);
+    await settle(page, 300);
     /* at the largest, seven still fit across the window: the fan closes up, each card's name still showing */
     spot = await onHand(page, FAN);
     await wheel(page, FAN, -400, 8);
@@ -314,7 +321,7 @@ try {
     await page.mouse.move(spots.mat.x, spots.mat.y);
     eq(await cursor(spots.mat), plain, `and let go, it is the mat's again (${plain})`);
     /* Ctrl + drag down: longer, every frame aligned */
-    const tiltWas = await stored(page, "cm-board-tilt-v2"), cardWas = await page.evaluate(() => getComputedStyle(document.querySelector(".cm-stage-region")).getPropertyValue("--stage-card"));
+    const tiltWas = await stored(page, "cm-board-tilt-v3"), cardWas = await page.evaluate(() => getComputedStyle(document.querySelector(".cm-stage-region")).getPropertyValue("--stage-card"));
     await page.evaluate(() => {globalThis.__frames = []; const loop = () => {const d = CrankStage.diagnostics(); if (d.length) __frames.push({reach: d.length.reach, scale: d.length.scale, builds: d.length.builds, mis: Math.max(...d.quad.map((n, i) => Math.abs(n - d.domQuad[i]))), mm: Math.max(...d.front.shown.map((n, i) => Math.abs(n - d.front.matrix[i])))}); globalThis.__raf = requestAnimationFrame(loop);}; loop();});
     await page.mouse.move(spots.mat.x, spots.mat.y);
     await page.keyboard.down("Control");
@@ -342,7 +349,7 @@ try {
     ok(misalign(longer) < .03 && mismatrix(longer) < .001, `and after it the DOM and Babylon tables agree (${misalign(longer)}px)`);
     const cardNow = await page.evaluate(() => getComputedStyle(document.querySelector(".cm-stage-region")).getPropertyValue("--stage-card"));
     ok(parseFloat(cardNow) > parseFloat(cardWas), `the mat's cards grow with it (${cardWas} → ${cardNow})`);
-    eq([longer.pan, await stored(page, "cm-board-tilt-v2")], [{x: 0, y: 0}, tiltWas], "Ctrl + drag neither moves the view nor tilts it");
+    eq([longer.pan, await stored(page, "cm-board-tilt-v3")], [{x: 0, y: 0}, tiltWas], "Ctrl + drag neither moves the view nor tilts it");
     ok(Number(await stored(page, "cm-stage-reach-v1")) > 0, "the length is kept on this device");
     let length = await slider(page, ".cm-stage-camera [data-stage-length]");
     eq(length, null, "(Camera is shut)");
@@ -382,16 +389,17 @@ try {
     const panned = await diag(page);
     ok(panned.pan.x > 40 && Math.abs(panned.length.reach - after.length.reach) < 1e-6, `a plain drag on the mat still moves the view, the length unchanged (${JSON.stringify(panned.pan)})`);
     ok(misalign(panned) < .03, `aligned (${misalign(panned)}px)`);
-    await page.getByRole("button", {name: "Camera", exact: false}).click();
-    await page.locator("[data-action=board-camera-center]").click();
-    eq(Math.abs((await diag(page)).length.reach - after.length.reach) < 1e-6, true, "⌖ Center puts the view back and leaves the length");
-    await page.getByRole("button", {name: "Camera", exact: false}).click();
+    /* (No ⌖ Center since Oct 26: Camera's Reset puts every camera setting back, the length too.) Dragged back, the view
+       is where it was. */
+    await page.mouse.move(matSpot.x - 120, matSpot.y); await page.mouse.down(); await page.mouse.move(matSpot.x, matSpot.y, {steps: 6}); await page.mouse.up();
+    const back = await diag(page);
+    ok(Math.abs(back.pan.x) < 1 && Math.abs(back.length.reach - after.length.reach) < 1e-6, `dragged back, the view is where it was and the length unchanged (${JSON.stringify(back.pan)})`);
     await page.mouse.move(spots.ground.x, spots.ground.y); await page.mouse.down(); await page.mouse.move(spots.ground.x, spots.ground.y + 20, {steps: 5}); await page.mouse.up();
-    eq(await stored(page, "cm-board-tilt-v2"), "44", "a plain drag on the bare table still tilts it");
+    eq(await stored(page, "cm-board-tilt-v3"), "2", "a plain drag on the bare table still tilts it (10 to 2 from the floor)");
     const tilted = await diag(page);
     ok(misalign(tilted) < .03 && mismatrix(tilted) < .001, `tilted, the long table is still aligned (${misalign(tilted)}px)`);
     await page.getByRole("button", {name: "Camera", exact: false}).click();
-    await page.getByRole("slider", {name: "Table tilt", exact: true}).fill("40");
+    await page.getByRole("slider", {name: "Table tilt", exact: true}).fill("10");
     await page.getByRole("button", {name: "Camera", exact: false}).click();
     await page.mouse.move(region.x + region.width * .8, region.y + region.height * .55);
     await page.mouse.down({button: "right"});

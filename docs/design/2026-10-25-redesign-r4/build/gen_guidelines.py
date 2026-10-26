@@ -73,7 +73,7 @@ page('colors-mana.html', 'group="Colors" viewport="1100x600" subtitle="Scryfall 
 # ---------- type-display ----------
 def tdisplay(reg):
     return f'''<div style="display:grid;gap:14px">
-  <div><span class="cm-label">Wordmark · the app\'s own Oxanium mark in aether, unchanged</span><div style="margin-top:8px"><span class="cm-wordmark">CrankMagic</span></div></div>
+  <div><span class="cm-label">Wordmark · Cinzel 600 capitals at .08em in --color-brand gilt</span><div style="margin-top:8px"><span class="cm-wordmark">CrankMagic</span></div></div>
   <div><span class="cm-label">--text-hero · Cinzel 600 · the deck title, the landing</span><p class="cm-hero" style="margin-top:6px">Krenko, Mob Boss</p></div>
   <div><span class="cm-label">--text-h1 · Cinzel 600 · every page title</span><h1 style="margin-top:6px">Decks</h1></div>
   <div><span class="cm-label">--text-h2 · Lato 700</span><h2 style="margin-top:6px">The hundred</h2></div>
@@ -84,7 +84,7 @@ def scale_table(reg):
     rows = [(t, v, u) for t, v, u in P['type'] if t.startswith('--text-') or t.startswith('--leading')]
     return '<table class="data"><tr><th>Token</th><th>Value</th><th>Use</th></tr>' + ''.join(f'<tr><td class="mono">{t}</td><td class="mono">{v}</td><td>{u}</td></tr>' for t, v, u in rows) + '</table>'
 page('type-display.html', 'group="Type" viewport="1100x1000" subtitle="Cinzel for names; Lato for headings and figures" name="Display"',
-     'Display type', 'Two voices. Cinzel 600, roman capitals at .04em, names places and things: every page title, the deck title and the landing hero. The app name keeps its own CrankMagic wordmark. Lato 700 carries h2, h3, section titles and every figure, so the work stays plain. Sentence-case text in Cinzel sets as capitals and small capitals. The h1 is one token that holds its own clamp: 40px at 1440, 30px at 390. No rule restates it.',
+     'Display type', 'Two voices. Cinzel 600, roman capitals at .04em, names places and things: every page title, the deck title and the landing hero. It also sets the CrankMagic wordmark, in capitals and gilt. Lato 700 carries h2, h3, section titles and every figure, so the work stays plain. Sentence-case text in Cinzel sets as capitals and small capitals. The h1 is one token that holds its own clamp: 40px at 1440, 30px at 390. No rule restates it.',
      [('Specimens', '', both(tdisplay)), ('The scale', 'Nothing under 12px. Body is 14px; reading surfaces are 16px.', scale_table('dark'))])
 
 # ---------- type-body ----------

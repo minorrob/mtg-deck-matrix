@@ -4,6 +4,19 @@ Integration: integration/r4, baseline origin/main c567c581. Updated October 26, 
 PR: https://github.com/minorrob/mtg-deck-matrix/pull/890 (draft).
 Tracking: https://linear.app/robs-build/issue/ROB-197/implement-r4-design-foundation-and-reconciled-playworkshop-ux .
 
+## Incoming follow-ups: integration evidence
+
+`claude/r4-rob-1026` applies the incoming patch to pushed checkpoint `427ada65`. All14 requested gates
+pass, including room-mana-pool20 and board-mana-pool20 after red-before-fix/green-after-fix colored-cost
+and life-cost regressions. All12 report-only suites ran serially: five pass, seven fail. The extra
+table-tabletop failure is also present at unchanged427ada65. Full suite results, the three conflict
+resolutions, fixes and limits are in [INCOMING-1026.md](INCOMING-1026.md).
+
+After this separate PR's local no-ff merge, repeated gates and integration/r4 push, canonical/index/browser
+ownership returns to the coordinator at the exact commit announced in the authorized cross-chat message.
+The earlier combined acceptance work remains pending as documented below; this bounded integration does
+not establish full CI, main readiness or staging acceptance.
+
 ## October 26 follow-up integration handoff
 
 Rob authorized the separate chat **Integrate October 26 r4 follow-ups** to integrate the supplied Claude
@@ -119,6 +132,11 @@ recheck paths, ports and the gated main revision immediately before running the 
 Use Node22.23.3 under workbench/node22/node_modules/node-win-x64/bin for release. Targeted local
 checks used Node24.19.0 and installed Chrome. Browser/temporary-Git tests need external execution
 because sandbox localhost/Git-init is restricted. A skip is not a pass. Browser suites run serially.
+
+- Rob's October 26 follow-ups (EX-18 to EX-26) are integrated from `claude/r4-rob-1026`: the Cinzel gilt wordmark,
+  the deck tile's star beside its stage pill, Planned Changes adds without take-outs and decks past 100, the Play camera,
+  hand and backdrop, the life list and play cards, the head look, the Mana Pool module (and the room's `manaSources`) and
+  targeted cards in red. B, C and D2 keep them, CH-34's Camera redesign included; CH-03 reads as superseded by EX-18.
 
 Workers: workbench/r4-foundation-20261026 (single board writer), r4-workshop-20261026 (Workshop/menu),
 r4-engine-20261026 (engine contracts, independent reviews and release executor). Root owns canonical

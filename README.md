@@ -955,7 +955,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 625 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 627 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1647,3 +1647,7 @@ The `table-tabletop` suite checks the preview geometry and its browser interacti
 - `r4-density-safety` — `tests/r4-density-safety.mjs`: isolated density-harness network and fixture safety.
 
 - `account-menu-r4` — `tests/account-menu-r4.mjs`: r4 behavior regression coverage.
+
+- `board-mana-pool` — `tests/board-mana-pool.mjs`: Mana Pool drawer geometry, source counts and opponent-targeted card outlines.
+
+- `room-mana-pool` — `tests/room-mana-pool.mjs`: Seat-private mana sources and floating Signet mana payment.

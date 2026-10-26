@@ -135,7 +135,8 @@
     return {total: all.length, unknown: missing, count: all.filter((n) => missing.includes(n)).length};
   }
   const readinessText = (r) => r.count ? `${r.total - r.count} of ${r.total} known · ${r.count} to learn` : `Playable at the table · all ${r.total} cards known`;
-  const playable = (deck) => {if(deck.archived||!(deck.commanders||[]).length)return false;const list=deckForTable(deck);return list.commander.length+list.cards.length===100;};
+  /* Over 100 on the list or in the box, a deck is Building and the table does not take it (Rob, 2026-10-26). */
+  const playable = (deck) => {if(deck.archived||!(deck.commanders||[]).length)return false;if(C.M?.deckStatus&&C.M.deckStatus(C.state,deck).over)return false;const list=deckForTable(deck);return list.commander.length+list.cards.length===100;};
   C.play = {
     open: cloudPlay,
     /* The decks hub: each tile's slot says "Playable at the table", or how many of its cards are still to learn. */

@@ -5,6 +5,7 @@
 | `--color-accent-soft` | · | · | · | · | `#1b273e` | `#e6e8e9` | new. New in r4. |
 | `--color-aether` | `#7cc4ff` | `#4aa6d8` | `#6fb7d9` | `#5fe0ff` | `#69d6ef` | `#006c97` | changed. Light register now 4.97:1 on ground (was 2.39:1). |
 | `--color-bg` | `#1a1815` | `#f5f0e6` | `#121511` | `#0f1217` | `#090c12` | `#f2ece1` | changed |
+| `--color-brand` | · | · | · | · | `#d2a973` | `#745238` | new. Antique gilt for the CrankMagic wordmark only (Rob, 2026-10-26); Chalk & Coal `#eac897` / `#603f26`. Never a value: money keeps --color-money. |
 | `--color-decision-bg` | · | · | · | · | `#2a200d` | `#fff3dd` | new. New in r4. |
 | `--color-decision-field` | · | · | · | · | `#372c15` | `#fceed1` | new. New in r4. |
 | `--color-decision-ink` | · | · | · | · | `#f8e6c3` | `#4c2e00` | new. New in r4. |
@@ -65,7 +66,7 @@
 | `--focus-width` | · | · | · | · | `2px` | · | new. New in r4. |
 | `--font-body` | `Satoshi,system-ui,sans-serif` | · | · | · | `Lato,system-ui,sans-serif` | · | changed. Lato 400 and 700, from Rob's reference, for everything read. |
 | `--font-callout` | · | · | · | · | `'Barlow Condensed',Lato,system-ui,sans-serif` | · | new. New in r4. |
-| `--font-display` | `Satoshi,system-ui,sans-serif` | · | `'Barlow Condensed',Satoshi,system-ui,sans-serif` | `Satoshi,system-ui,sans-serif` | `Cinzel,'Trajan Pro',Georgia,serif` | · | changed. Cinzel 600, from Rob's reference: page titles and the deck title (the wordmark keeps its own mark). Moss & Iron's Barlow override is gone. |
+| `--font-display` | `Satoshi,system-ui,sans-serif` | · | `'Barlow Condensed',Satoshi,system-ui,sans-serif` | `Satoshi,system-ui,sans-serif` | `Cinzel,'Trajan Pro',Georgia,serif` | · | changed. Cinzel 600, from Rob's reference: page titles, the deck title and the CrankMagic wordmark. Moss & Iron's Barlow override is gone. |
 | `--font-hero` | `'Young Serif',Georgia,serif` | · | `'Barlow Condensed',Satoshi,system-ui,sans-serif` | `'Young Serif',Georgia,serif` | `var(--font-display)` | · | changed. The display face at hero size (var(--font-display)); Young Serif is retired. |
 | `--heading-tracking` | · | · | · | · | `-.005em` | · | new. New in r4. |
 | `--heading-weight` | · | · | · | · | `700` | · | new. New in r4. |

@@ -48,7 +48,7 @@ NOTES = {
  '--accent-fill': 'The darkening override for Felt & Cream and Steel & Cobalt is gone; every r4 accent carries its own ink.',
  '--st-watch': 'Moved from a light-dark() literal into each skin\'s color block.', '--st-draft': 'Same.', '--st-reserved': 'Same; now the owned family\'s light step.', '--st-physical': 'Same; now the owned family\'s base.',
  '--poster-ground': 'Warm black to obsidian black, to sit on the new ground.',
- '--font-display': 'Cinzel 600, from Rob\'s reference: page titles and the deck title (the wordmark keeps its own mark). Moss & Iron\'s Barlow override is gone.', '--display-case': 'Moss & Iron\'s uppercase override is gone; Cinzel makes its own capitals.', '--font-body': 'Lato 400 and 700, from Rob\'s reference, for everything read.', '--display-weight': '600: Cinzel\'s weight in the reference.', '--display-tracking': '.04em: roman capitals want air.',
+ '--font-display': 'Cinzel 600, from Rob\'s reference: page titles, the deck title and the CrankMagic wordmark. Moss & Iron\'s Barlow override is gone.', '--display-case': 'Moss & Iron\'s uppercase override is gone; Cinzel makes its own capitals.', '--font-body': 'Lato 400 and 700, from Rob\'s reference, for everything read.', '--display-weight': '600: Cinzel\'s weight in the reference.', '--display-tracking': '.04em: roman capitals want air.',
  '--font-hero': 'The display face at hero size (var(--font-display)); Young Serif is retired.',
 }
 names = sorted(set(o_dark) | set(o_light) | set(n_dark) | set(n_light), key=lambda k: (not k.startswith('--color'), not k.startswith('--mana'), not k.startswith('--st'), k.startswith('--v-'), k))

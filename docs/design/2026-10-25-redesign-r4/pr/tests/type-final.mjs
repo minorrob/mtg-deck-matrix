@@ -4,7 +4,7 @@
  * real page with the committed library restored. The faces come from Rob's reference, "Concept B · Table Companion":
  *
  *   - names are Cinzel 600: the deck title (a hero) at every width; Cinzel's file really loads;
- *   - the app is still CrankMagic (Rob, 2026-10-26): the wordmark keeps its own Oxanium mark, and nothing else is Oxanium;
+ *   - the app is still CrankMagic, its wordmark in the mock-up's face (Rob, 2026-10-26): Cinzel 600 capitals in gilt;
  *   - the work is Lato: h2 at 700, body at 400, and both Lato files really load (a missing file falls back to a
  *     system face with no error anywhere);
  *   - nothing on the page is Satoshi or Young Serif any more, and Barlow Condensed is only the callout word.
@@ -38,8 +38,9 @@ try {
     ok(title.caps === "none", `and it keeps its own case (Cinzel makes the capitals); found ${title.caps}`);
     ok(await page.evaluate(() => document.fonts.check("600 40px Cinzel")), `Cinzel 600's file loaded at ${width}px`);
 
-    const brand = await page.$eval("#matrix-v2 .v-brand", (b) => getComputedStyle(b).fontFamily).catch(() => "");
-    ok(/^["']?CrankOxanium/.test(brand), `the wordmark is still the CrankMagic Oxanium mark at ${width}px; found ${brand}`);
+    const brand = await page.$eval("#matrix-v2 .v-brand", (b) => { const s = getComputedStyle(b); return {family: s.fontFamily, caps: s.textTransform, fill: s.webkitTextFillColor, color: s.color}; }).catch(() => ({}));
+    ok(/^["']?Cinzel/.test(brand.family || "") && brand.caps === "uppercase", `the CrankMagic wordmark is Cinzel capitals at ${width}px; found ${brand.family} ${brand.caps}`);
+    ok(brand.fill === brand.color && brand.color !== "rgba(0, 0, 0, 0)", `in a solid gilt, not a clipped sheen (${brand.color})`);
 
     const h2 = await page.$eval("#matrix-v2 h2", (h) => { const s = getComputedStyle(h); return {family: s.fontFamily, weight: s.fontWeight}; });
     ok(/^["']?Lato/.test(h2.family) && h2.weight === "700", `a section heading is Lato 700 at ${width}px; found ${h2.family} ${h2.weight}`);
@@ -51,7 +52,7 @@ try {
 
     const retired = await page.evaluate(() => [...document.querySelectorAll("#matrix-v2 *")]
       .filter((n) => [...n.childNodes].some((c) => c.nodeType === 3 && c.textContent.trim()))
-      .filter((n) => /Satoshi|Young Serif/.test(getComputedStyle(n).fontFamily) || (/CrankOxanium/.test(getComputedStyle(n).fontFamily) && !n.closest(".v-brand")))
+      .filter((n) => /Satoshi|Young Serif|CrankOxanium/.test(getComputedStyle(n).fontFamily))
       .map((n) => `${n.tagName.toLowerCase()}.${[...n.classList].join(".")}`));
     assert.deepEqual(retired, [], `no text is set in a retired face; found on: ${retired.join(", ")}`);
     checks++;
@@ -64,4 +65,4 @@ try {
 } finally {
   await close();
 }
-console.log(`type-final: ${checks} checks passed. Names are Cinzel 600 (the deck title), the work is Lato 400 and 700, both self-hosted and loaded, the CrankMagic wordmark is unchanged, and no retired face is left on the page.`);
+console.log(`type-final: ${checks} checks passed. Names are Cinzel 600 (the deck title), the work is Lato 400 and 700, both self-hosted and loaded, the CrankMagic wordmark is Cinzel capitals in gilt, and no retired face is left on the page.`);

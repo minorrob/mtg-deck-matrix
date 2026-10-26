@@ -290,7 +290,7 @@ try {
   assert.equal(await page.locator('.cm-stage-fan').getAttribute('aria-label'),'Your hand');
   assert.equal(await page.evaluate(()=>globalThis.__canvas===document.querySelector('.cm-stage-canvas')),true,"the same graphics context survives redraw and rotation");
   await page.getByRole('button',{name:'Camera',exact:false}).click();
-  assert.equal(await page.getByRole('slider',{name:'Table tilt',exact:true}).inputValue(),'40');
+  assert.equal(await page.getByRole('slider',{name:'Table tilt',exact:true}).inputValue(),'10');
   for(const name of ['Table tilt','Table zoom','Tabletop card size']) {
     const slider=page.getByRole('slider',{name,exact:true}), box=await slider.boundingBox();
     await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();
@@ -312,8 +312,9 @@ try {
   assert.equal(await page.evaluate(()=>CrankStage.tableDesign(null).id),'study','no saved choice means the default walnut Study');
   for(const width of [1400,1280,1024]) {
     await page.setViewportSize({width,height:768});
-    for(const [tilt,zoom] of [[0,60],[60,120]]) {
-      await page.getByRole('slider',{name:'Tabletop card size',exact:true}).fill(tilt===0?'70':'150');
+    /* Straight down (90 from the floor) zoomed out, and the most slanted (0) zoomed in. */
+    for(const [tilt,zoom] of [[90,60],[0,120]]) {
+      await page.getByRole('slider',{name:'Tabletop card size',exact:true}).fill(tilt===90?'70':'150');
       await page.getByRole('slider',{name:'Table tilt',exact:true}).fill(String(tilt));
       await page.getByRole('slider',{name:'Table zoom',exact:true}).fill(String(zoom));
       const boxes = await page.locator('.cm-stage-front, .cm-stage-rear').evaluateAll(els=>els.map(el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom};}));
@@ -325,7 +326,8 @@ try {
       assert.ok(fan.every(r=>r.x>=0 && r.right<=width+1 && r.y>=0 && r.bottom<=805),'hand remains within screen width with only its bottoms clipping below the window');
       const alignment = await page.evaluate(() => {
         const host=document.querySelector('.cm-stage-region'), r=host.getBoundingClientRect();
-        const tilt=Number(document.querySelector('[data-stage-camera="tilt"]').value), zoom=Number(document.querySelector('[data-stage-camera="zoom"]').value);
+        /* The slider is the angle to the floor; the camera's tilt from straight down is half of what it lacks of 90. */
+        const tilt=(90-Number(document.querySelector('[data-stage-camera="tilt"]').value))/2, zoom=Number(document.querySelector('[data-stage-camera="zoom"]').value);
         const geometry=CrankStage.geometry(r.width,r.height,{tilt,zoom,seats:3});
         const regions=[document.querySelector('.cm-stage-front'),...document.querySelectorAll('.cm-stage-rear')];
         const matrices=regions.map((el,i)=> {
@@ -362,11 +364,11 @@ try {
   await page.getByRole('button',{name:'Camera',exact:false}).click();
   for(const [name,value] of Object.entries(keptCamera)) assert.equal(await page.getByRole('slider',{name,exact:true}).inputValue(),value,`${name} is kept on this device through a reload`);
   assert.ok(await page.evaluate(()=>{
-    const r=document.querySelector('.cm-stage-region').getBoundingClientRect(), g=CrankStage.geometry(r.width,r.height,{tilt:27,zoom:83,seats:3});
+    const r=document.querySelector('.cm-stage-region').getBoundingClientRect(), g=CrankStage.geometry(r.width,r.height,{tilt:(90-27)/2,zoom:83,seats:3});
     return Array.from(new DOMMatrix(getComputedStyle(document.querySelector('.cm-stage-front')).transform).toFloat64Array()).every((v,j)=>Math.abs(v-g.front.matrix[j])<.01);
   }),'and the table is drawn again at the kept tilt and zoom');
   await page.getByRole('slider',{name:'Tabletop card size',exact:true}).fill('100');
-  await page.getByRole('slider',{name:'Table tilt',exact:true}).fill('40');
+  await page.getByRole('slider',{name:'Table tilt',exact:true}).fill('10');
   await page.getByRole('slider',{name:'Table zoom',exact:true}).fill('100');
   if(await page.locator('.cm-stage-rail.is-open').count()) await page.locator('.cm-stage-left').click();
   const handEdges=await page.evaluate(()=>{

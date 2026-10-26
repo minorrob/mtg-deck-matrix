@@ -389,6 +389,9 @@ width:min(100%,max(900px,calc(var(--cm-table-h,68vh) * 1.9)));aspect-ratio:19/10
    frame the tile used to wear. The dot reads on the blurred dark ground in both themes. */
 .cm-deck-tile .cm-pill:before{content:'';width:7px;height:7px;flex:0 0 7px;border-radius:var(--radius-pill);background:var(--st,var(--st-draft))}
 .cm-deck-tile .cm-tile-mana{position:absolute;top:14px;right:14px;z-index:2;display:flex;gap:4px}
+/* The stage pill and the favorite star share the top-left corner as one row (Rob, 2026-10-26). */
+.cm-deck-tile .cm-tile-status{position:absolute;top:14px;left:14px;z-index:3;display:flex;align-items:center;gap:6px;max-width:calc(100% - 28px)}
+.cm-deck-tile .cm-tile-status .cm-pill{position:static}
 .cm-tile-ready{display:grid;gap:6px;pointer-events:none}
 /* One line, always. The screen writes it as "13 to buy · 2 ordered · 15 subs" with the bracket
    at the right, and at a 260px tile the long form wrapped and pushed the bracket off its row.
@@ -400,12 +403,15 @@ width:min(100%,max(900px,calc(var(--cm-table-h,68vh) * 1.9)));aspect-ratio:19/10
 /* The tick and the deck menu are quiet until the tile is hovered or one of them is focused,
    so seven tiles read as seven pictures rather than fourteen controls. A ticked tile keeps
    its tick showing, or there would be no way to see what is being compared. */
-/* The tools fade in on hover, one by one, so a favorite's filled star can stay without the rest (FAV-3). */
-.cm-deck-tile .cm-tile-tools{position:absolute;top:14px;left:14px;z-index:3;display:flex;gap:6px}
-.cm-deck-tile .cm-tile-tools>*{opacity:0;transition:opacity .2s ease}
-.cm-deck-tile:hover .cm-tile-tools>*,.cm-deck-tile:focus-within .cm-tile-tools>*,.cm-deck-tile.is-picked .cm-tile-tools>*,.cm-deck-tile .cm-tile-tools>.cm-tile-star.is-on{opacity:1}
-#matrix-v2 .cm-deck-tile .cm-tile-star{width:32px;height:32px;min-height:32px;font-size:17px;line-height:1;border-radius:var(--v-radius);background:color-mix(in srgb,var(--poster-ground) 55%,transparent);backdrop-filter:blur(6px);border:1px solid color-mix(in srgb,var(--poster-ink) 28%,transparent);color:var(--poster-ink)}
-#matrix-v2 .cm-deck-tile .cm-tile-star.is-on{color:var(--v-accent);border-color:var(--v-accent)}
+/* The tools fade in on hover, one by one, so a favorite's filled star can stay without the rest (FAV-3). The tick and the
+   ⋯ sit at the right under the mana pips (a shared tile has no pips, so they take the corner), clear of the pill row. */
+.cm-deck-tile .cm-tile-tools{position:absolute;top:48px;right:14px;z-index:3;display:flex;gap:6px}
+.cm-deck-shared .cm-tile-tools{top:14px}
+.cm-deck-tile .cm-tile-tools>*,.cm-deck-tile .cm-tile-star{opacity:0;transition:opacity .2s ease}
+.cm-deck-tile:hover .cm-tile-tools>*,.cm-deck-tile:focus-within .cm-tile-tools>*,.cm-deck-tile.is-picked .cm-tile-tools>*,.cm-deck-tile:hover .cm-tile-star,.cm-deck-tile:focus-within .cm-tile-star,.cm-deck-tile.is-picked .cm-tile-star,.cm-deck-tile .cm-tile-star.is-on{opacity:1}
+/* Round, on the pill's own blurred ground. A favorite is filled ink, not the accent: the accent is the one button to press. */
+#matrix-v2 .cm-deck-tile .cm-tile-star{width:30px;height:30px;min-height:30px;flex:0 0 30px;font-size:15px;line-height:1;border-radius:var(--radius-pill);background:color-mix(in srgb,var(--poster-ground) 55%,transparent);backdrop-filter:blur(6px);border:0;color:var(--poster-ink)}
+#matrix-v2 .cm-deck-tile .cm-tile-star.is-on{color:var(--poster-ink)}
 .cm-deck-tile .cm-tile-sets{display:flex;flex-wrap:wrap;gap:4px;padding:0 16px 12px}
 .cm-deck-shared .cm-deck-shared-link{display:grid;gap:6px;padding:56px 16px 16px;color:inherit;text-decoration:none}
 .cm-box-choices{display:grid;gap:10px;border:0;padding:0;margin:0}
@@ -418,11 +424,7 @@ width:min(100%,max(900px,calc(var(--cm-table-h,68vh) * 1.9)));aspect-ratio:19/10
 .cm-how-to-play ol{margin:0;padding-left:22px;display:grid;gap:6px}
 .cm-deck-tile .cm-tile-pick{display:grid;place-items:center;width:32px;height:32px;border-radius:var(--v-radius);background:color-mix(in srgb,var(--poster-ground) 55%,transparent);backdrop-filter:blur(6px);border:1px solid color-mix(in srgb,var(--poster-ink) 28%,transparent);cursor:pointer}
 .cm-deck-tile .cm-tile-pick:hover{border-color:var(--v-accent)}
-/* The stage pill steps aside when the tools appear, so the two never share the corner. */
-.cm-deck-tile:hover .cm-pill,.cm-deck-tile:focus-within .cm-pill,.cm-deck-tile.is-picked .cm-pill{transform:translateY(42px)}
-/* A favorite's star stays in the corner, so its stage pill stays stepped aside too (Rob, 2026-10-25: the star covered it). */
-.cm-deck-tile:has(.cm-tile-star.is-on) .cm-pill{transform:translateY(42px)}
-.cm-deck-tile .cm-pill{transition:transform .2s ease}
+/* The pill no longer steps aside: the tools have their own place at the right (Rob, 2026-10-26). */
 .cm-deck-tile .cm-tile-bracket{position:absolute;right:20px;bottom:20px;z-index:2;font-size:12px;font-weight:600;color:color-mix(in srgb,var(--poster-ink) 85%,transparent);pointer-events:none}
 /* The last cell offers the one thing the grid does not already hold. */
 .cm-deck-new{aspect-ratio:3/4;border-radius:var(--v-radius-tile);border:1.5px dashed var(--v-line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--v-muted);font-weight:600;text-decoration:none;background:none}
@@ -432,7 +434,7 @@ width:min(100%,max(900px,calc(var(--cm-table-h,68vh) * 1.9)));aspect-ratio:19/10
 .cm-decks-summary{margin:8px 0 0;color:var(--v-muted);font-size:15px;max-width:60ch}
 .cm-decks-summary b{color:var(--v-ink);font-weight:600}
 .cm-deck-footlinks{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-top:20px;font-size:13px;color:var(--v-muted)}
-@media(prefers-reduced-motion:reduce){.cm-deck-tile,.cm-deck-tile .cm-pill,.cm-deck-tile .cm-tile-tools{transition:none}.cm-deck-tile:hover{transform:none}}
+@media(prefers-reduced-motion:reduce){.cm-deck-tile,.cm-deck-tile .cm-pill,.cm-deck-tile .cm-tile-tools,.cm-deck-tile .cm-tile-tools>*,.cm-deck-tile .cm-tile-star{transition:none}.cm-deck-tile:hover{transform:none}}
 @media(max-width:760px){.cm-deck-grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}}
 /* THE RAIL (Track V.3, the implementation guide's step 2). The header bar is gone: the logo,
    the wordmark and its aether mist sit at the top of the 216px rail, the nav under them with
@@ -445,7 +447,7 @@ width:min(100%,max(900px,calc(var(--cm-table-h,68vh) * 1.9)));aspect-ratio:19/10
 #matrix-v2 .cm-sidebar .v-brand-block{position:relative;display:flex;align-items:center;gap:10px;min-height:44px;min-width:0;flex:0 0 auto}
 #matrix-v2 .cm-sidebar .v-brand-logo{position:relative;z-index:1;width:36px;height:36px;flex:0 0 36px;object-fit:contain;margin:0}
 #matrix-v2 .cm-sidebar .v-brand-copy{position:relative;min-width:0;flex:1 1 auto;padding:0}
-#matrix-v2 .cm-sidebar .v-brand{position:relative;z-index:1;font-size:19px;font-weight:700;line-height:1.1;letter-spacing:-.4px;padding:0;margin:0;white-space:nowrap;overflow:hidden}
+#matrix-v2 .cm-sidebar .v-brand{position:relative;z-index:1;font-size:15px;line-height:1.1;letter-spacing:.08em;padding:0;margin:0;white-space:nowrap;overflow:hidden}
 /* The mist is decorative and must never add height to the rail, so the canvases are absolute
    over the wordmark's own box. crankmagic-brand.js sizes them from that box. */
 #matrix-v2 .cm-sidebar .v-aether-wrap{position:absolute;left:0;top:50%;transform:translateY(-50%);width:100%;height:56px;pointer-events:none;z-index:0}
@@ -515,7 +517,7 @@ width:min(100%,max(900px,calc(var(--cm-table-h,68vh) * 1.9)));aspect-ratio:19/10
    rendering at 36px where the screen draws 52. */
 #matrix-v2 .cm-explore-title{font-size:clamp(30px,4vw,52px);line-height:.98;letter-spacing:-.015em;font-weight:400}
 /* r4: page titles in the display face (Cinzel); h2, h3 and big figures in the body face (Lato) at --heading-weight. */
-#matrix-v2 h1{font-family:var(--v-display);font-weight:var(--display-weight);letter-spacing:var(--display-tracking);text-transform:var(--display-case)}#matrix-v2 :is(h2,h3,.cm-deck-tile h3,.cm-stats strong,.cm-summary-figures strong,.cm-budget-figures strong,.cm-kpi strong){font-family:var(--v-body);font-weight:var(--heading-weight);letter-spacing:var(--heading-tracking);text-transform:none}#matrix-v2 .v-top{padding:17px 26px;border-bottom:1px solid var(--v-line);background:var(--v-panel);position:relative;z-index:5;gap:20px;display:flex;justify-content:space-between;align-items:center;overflow:visible}#matrix-v2 .v-brand-subline{max-width:430px}#matrix-v2 .v-brand-block{min-width:0;flex:1}#matrix-v2 .v-brand-copy{min-width:0}#matrix-v2 .v-brand{font-family:CrankOxanium,Lato,sans-serif}#matrix-v2 .v-panel{background:var(--v-panel);border:1px solid var(--v-line);border-radius:var(--v-radius-card);padding:24px;min-width:0}#matrix-v2 .v-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:0 14px;background:var(--v-panel);color:var(--v-ink);border:1px solid var(--v-line);border-radius:var(--v-radius);font-weight:600;text-decoration:none}
+#matrix-v2 h1{font-family:var(--v-display);font-weight:var(--display-weight);letter-spacing:var(--display-tracking);text-transform:var(--display-case)}#matrix-v2 :is(h2,h3,.cm-deck-tile h3,.cm-stats strong,.cm-summary-figures strong,.cm-budget-figures strong,.cm-kpi strong){font-family:var(--v-body);font-weight:var(--heading-weight);letter-spacing:var(--heading-tracking);text-transform:none}#matrix-v2 .v-top{padding:17px 26px;border-bottom:1px solid var(--v-line);background:var(--v-panel);position:relative;z-index:5;gap:20px;display:flex;justify-content:space-between;align-items:center;overflow:visible}#matrix-v2 .v-brand-subline{max-width:430px}#matrix-v2 .v-brand-block{min-width:0;flex:1}#matrix-v2 .v-brand-copy{min-width:0}#matrix-v2 .v-brand{font-family:var(--font-display)}#matrix-v2 .v-panel{background:var(--v-panel);border:1px solid var(--v-line);border-radius:var(--v-radius-card);padding:24px;min-width:0}#matrix-v2 .v-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:0 14px;background:var(--v-panel);color:var(--v-ink);border:1px solid var(--v-line);border-radius:var(--v-radius);font-weight:600;text-decoration:none}
 #matrix-v2 .v-button:hover{background:var(--v-raised)}#matrix-v2 .v-button.primary{background:var(--accent-fill);color:var(--v-on);border-color:var(--accent-fill);font-weight:700}#matrix-v2 .v-button:hover{filter:brightness(1.12)}.cm-layout{display:grid;grid-template-columns:216px minmax(0,1fr);min-height:100vh}.cm-sidebar{border-right:1px solid var(--v-line);background:var(--v-bg);padding:22px 18px;display:flex;flex-direction:column;gap:28px;min-width:0}.cm-sidebar nav{position:sticky;top:18px;display:grid;gap:4px;margin-bottom:auto;z-index:3}.cm-sidebar .v-nav-links a{padding:10px 12px;min-height:42px;display:flex;align-items:center;text-decoration:none;border-radius:10px;font-weight:600;color:var(--v-muted)}.cm-sidebar .v-nav-links a[aria-current=page]{background:var(--v-raised);color:var(--v-ink);font-weight:700;box-shadow:none}.cm-sidebar a:hover{background:var(--color-raised)}.cm-nav-note{font-size:12px;color:var(--v-muted);padding:16px 2px 0;border-top:1px solid var(--v-line);margin-top:24px}.cm-nav-note p{margin:6px 0}.cm-text-button{background:none;border:0;padding:4px 0;min-height:32px;display:inline-flex;align-items:center;color:var(--color-accent);font:inherit;text-align:left;text-decoration:underline;text-underline-offset:4px}#cm-main{padding:28px 36px 48px;min-width:0;outline:none}.cm-skip{position:fixed;left:10px;top:-60px;z-index:30;background:var(--accent-fill);color:var(--v-on);padding:10px}.cm-skip:focus{top:10px}.cm-page-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-end;margin-bottom:26px}.cm-page-head p{color:var(--color-muted);max-width:680px}.cm-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px}.cm-stats{display:flex;flex-wrap:wrap;gap:25px;padding:22px 0;border-top:1px solid var(--v-line);border-bottom:1px solid var(--v-line);margin:24px 0}.cm-stats strong{font-size:27px;font-weight:500;margin-right:6px}.cm-stats span{font-size:13px;color:var(--color-muted)}.cm-deck-tile:after{content:'';position:absolute;inset:0;background:linear-gradient(0deg,var(--v-bg) 34%,color-mix(in srgb,var(--v-bg) 68%,transparent) 56%,color-mix(in srgb,var(--v-bg) 4%,transparent) 88%);z-index:-1}/* Below the art's name banner: at 15px the status sat straight across the commander's printed name. */
 .cm-badge{display:inline-flex;padding:4px 8px;border-radius:var(--v-radius);font-size:12px;background:var(--v-raised);color:var(--v-muted);white-space:nowrap}.cm-badge.warn{background:color-mix(in oklab,var(--v-accent) 20%,var(--v-bg));color:color-mix(in oklab,var(--v-accent) 20%,var(--v-ink))}.cm-badge.good{background:color-mix(in oklab,var(--st-inbox) 24%,var(--v-bg));color:color-mix(in oklab,var(--st-inbox) 32%,var(--v-ink))}.cm-danger{color:color-mix(in oklab,var(--st-remove) 32%,var(--v-ink))!important}.cm-empty{padding:45px 24px;text-align:center;max-width:900px;margin:15px auto}.cm-empty .cm-actions{justify-content:center}.cm-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:22px}.cm-commander{display:grid;grid-template-columns:140px minmax(0,1fr);gap:22px}.cm-commander img{width:100%;border-radius:var(--v-radius-card);align-self:start}.cm-commander ul{padding-left:18px;line-height:1.6}.cm-commander h2{margin-top:0}.cm-mana{display:inline-flex;align-items:center;gap:3px;vertical-align:middle}.cm-mana>*{flex:0 0 auto}.cm-mana .cm-mana-sym{width:19px;height:19px;display:block}.cm-mana img{width:19px;height:19px}.cm-mana-symbol{width:21px;height:21px;border-radius:50%;background:var(--v-muted);color:var(--v-bg);display:inline-grid;place-items:center;font-size:11px;font-weight:700}.cm-colors{display:inline-flex;gap:3px}.cm-color{width:13px;height:13px;border-radius:50%;display:inline-block;background:#ccc;box-shadow:0 0 0 1px #ffffff22}.cm-color.W{background:color-mix(in oklab,var(--mana-W) 8%,var(--v-ink))}.cm-color.U{background:var(--mana-U)}.cm-color.B{background:color-mix(in oklab,var(--mana-B) 56%,var(--v-bg))}.cm-color.R{background:var(--mana-R)}.cm-color.G{background:var(--mana-G)}.cm-curve{display:flex;gap:9px;align-items:flex-end;height:135px}.cm-curve>div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;height:100%;font-size:11px}.cm-curve i{display:block;background:linear-gradient(var(--v-accent),var(--v-line));width:100%;min-height:3px;border-radius:4px 4px 0 0}.cm-count-list{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:14px 0}.cm-count-list span{display:flex;justify-content:space-between;gap:16px;border-bottom:1px solid var(--v-line);padding:6px 0}.cm-toolbar{display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin:20px 0}.cm-toolbar .cm-search{flex:1;min-width:180px}.cm-filter-panel{padding:18px;background:var(--color-panel);border:1px solid var(--color-raised);border-radius:var(--v-radius-card);margin:12px 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px}.cm-graph-focus{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin:12px 0;padding:12px 15px;background:var(--v-panel);border:1px solid var(--v-line);border-radius:var(--v-radius-card)}.cm-graph-focus h2{margin:0;font-size:18px}.cm-graph-focus p{margin:4px 0 0;font-size:13px;color:var(--color-muted);display:flex;gap:8px;align-items:center}.cm-toolbar-split{justify-content:space-between}.cm-show-archived{margin-left:auto}.cm-tile-tools{display:inline-flex;align-items:center;gap:6px}.cm-tile-menu-btn{width:36px;height:36px;border-radius:var(--v-radius);border:1px solid var(--color-raised);background:var(--v-raised);color:var(--v-ink);font-size:18px;line-height:1;cursor:pointer}.cm-tile-menu-btn:hover{background:var(--v-raised)}.cm-tile-menu button.cm-danger{color:color-mix(in oklab,var(--st-remove) 32%,var(--v-ink))}/* screens/Gallery Explore.dc.html draws the graph box 722 tall at 1280x900; 100vh-180px is
    what puts it there, and the clamp still protects a short window and a tall one. */
@@ -733,13 +735,13 @@ button.cm-badge-link:hover{background:var(--v-raised);color:var(--v-ink)}
   .cm-btn-icon{display:inline;font-size:15px;line-height:1}
   .cm-btn-label,.cm-btn-chevron{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
   #matrix-v2 .cm-user-menu>.v-button{min-width:38px;min-height:38px;padding:0;justify-content:center}
-  #matrix-v2 .v-brand{font-size:23px}
+  #matrix-v2 .v-brand{font-size:16px}
   #matrix-v2 .v-brand-subline{font-size:9px;max-width:none}
 }
 @media(max-width:360px){
   /* No room for the mark and the words at this width; the logo carries the brand. */
   #matrix-v2 .v-brand-logo{display:none}
-  #matrix-v2 .v-brand{font-size:21px}
+  #matrix-v2 .v-brand{font-size:14px}
 }
 
 /* TAP TARGETS ON A TOUCH SCREEN. Three controls came out under 30px tall on a 375px

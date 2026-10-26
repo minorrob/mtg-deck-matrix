@@ -84,7 +84,7 @@
  */
 import {createState, addObject, shownName, shownFaceUp} from "../engine/state/index.mjs";
 import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../engine/rules/turn.mjs";
-import {legalActions, applyAction, nothingToDo, whyNot, escapeWays, flashbackCost, tappersInWords, castTapPlans, tapWords} from "../engine/rules/actions.mjs";
+import {legalActions, applyAction, nothingToDo, whyNot, escapeWays, flashbackCost, tappersInWords, castTapPlans, tapWords, manaSources} from "../engine/rules/actions.mjs";
 import {paymentWords} from "../engine/rules/mana.mjs";
 import {beforeTap, tapTaken, untappable, untapTaken} from "../engine/rules/untap-mana.mjs";
 import {beforePlay, observePlay, finishPlay, mayUndoPlay, undoPlay} from "../engine/rules/undo-play.mjs";
@@ -1068,6 +1068,8 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         waitingOn: pendingSeat === null ? null : seats[pendingSeat].seatId,
         decision: mine ? describeDecision(state, combatWords(state, structuredClone(controller.pending)), pendingActions, projected) : null,
         state: projected,
+        /* What this seat's permanents could tap for (actions.mjs, manaSources): the board's Mana Pool. */
+        manaSources: deriving(state, () => manaSources(state, seat)),
         ...(canUndo ? {canUndo: true, undoablePlay: {cardId: playBack.objectId, name: playBack.name, kind: playBack.kind}} : {}),
         history: history.slice(-HISTORY_VIEW).map(({turn, text, mark}) => ({turn, text, ...(mark ? {mark} : {})})),
         /* What happened, as this seat may know it (events.mjs): the change this view shows -- or, asked with `after` (the last

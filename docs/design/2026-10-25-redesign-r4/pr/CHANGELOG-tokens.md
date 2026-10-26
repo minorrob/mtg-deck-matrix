@@ -21,17 +21,17 @@ Red first, as AGENTS.md asks: on that copy, setting one Bronze & Basalt value by
 
 | File | Change |
 |---|---|
-| `crankmagic-design.css` | Block A (the type comment, the Gallery tokens, the four themes, the `--v-*` block and the `--accent-fill` override) becomes Sapphire & Obsidian dark and light plus the Bronze & Basalt and Chalk & Coal skins. Block B (DEEP FIELD) becomes the `--v-*` layer, every name a `var()` of a token, and the fixed table tokens. The type is Cinzel 600 and Lato 400/700 (both latin and latin-ext subsets) with Barlow Condensed 800 for the callout; the Satoshi and Young Serif faces go. The embedded Oxanium subset stays: `.v-brand`, the CrankMagic wordmark, is unchanged. `#matrix-v2 h1` reads `--text-h1`; the 520px h1 override and the overview art's 32px h1 go. |
+| `crankmagic-design.css` | Block A (the type comment, the Gallery tokens, the four themes, the `--v-*` block and the `--accent-fill` override) becomes Sapphire & Obsidian dark and light plus the Bronze & Basalt and Chalk & Coal skins. Block B (DEEP FIELD) becomes the `--v-*` layer, every name a `var()` of a token, and the fixed table tokens. The type is Cinzel 600 and Lato 400/700 (both latin and latin-ext subsets) with Barlow Condensed 800 for the callout; the Satoshi and Young Serif faces go. The CrankMagic wordmark (`.v-brand`) is Cinzel 600 in capitals at .08em, in the new `--color-brand` gilt, and the embedded Oxanium subset goes (Rob, 2026-10-26). `#matrix-v2 h1` reads `--text-h1`; the 520px h1 override and the overview art's 32px h1 go. |
 | `crankmagic.css` | Seven h1 rules read `--text-h1` or `--text-hero`: the base h1, the page head, the deck hero (two rules), the gallery deck hero, the landing and the showcase. The heading rule splits: `h1` takes the display face (Cinzel), and `h2`, `h3`, the tile names and the big figures take the body face at `--heading-weight`. The callout word reads `--font-callout`; literal Satoshi stacks become Lato. |
-| `crankmagic-stage.css`, `crankmagic-graph.js`, `privacy.html`, `terms.html` | Their literal Satoshi stacks become Lato (the legal pages self-host Lato 400 and 700); the Play headings that borrowed the wordmark's Oxanium become the body face, so Oxanium sets only the app name. |
+| `crankmagic-stage.css`, `crankmagic-graph.js`, `privacy.html`, `terms.html` | Their literal Satoshi stacks become Lato (the legal pages self-host Lato 400 and 700); the Play headings that borrowed the wordmark's Oxanium become the body face, so nothing is Oxanium. |
 | `crankmagic-sw.js` | Precaches the six Cinzel and Lato files instead of the Satoshi, Young Serif and Barlow 600/700 files. |
-| `assets/crankmagic/` | Adds `cinzel-600`, `lato-400`, `lato-700` (each with `-ext`) and their OFL texts from `pr/fonts/`; removes the Satoshi, Young Serif and Barlow 600/700 files. `oxanium-OFL.txt` stays with the wordmark. |
-| `THIRD-PARTY-NOTICES.md` | The typeface table lists Oxanium (the wordmark), Cinzel, Lato and Barlow Condensed 800. |
+| `assets/crankmagic/` | Adds `cinzel-600`, `lato-400`, `lato-700` (each with `-ext`) and their OFL texts from `pr/fonts/`; removes the Satoshi, Young Serif and Barlow 600/700 files. `oxanium-OFL.txt` goes with the Oxanium subset. |
+| `THIRD-PARTY-NOTICES.md` | The typeface table lists Cinzel, Lato and Barlow Condensed 800. |
 | `crankmagic-app.js` | `THEMES` and `THEME_FACE` list the three skins in both registers; `THEME_LEGACY` maps the r3 choices forward; `themeChoice()` reads it. |
 | `index.html` | The first paint is `data-palette="sapphire-obsidian"`. |
 | `tests/design-tokens.mjs` | Reads the r4 handoff; checks both skins value for value in both registers and that skins are colors only; checks the scale floor (12px), the HUD floor (18px) and that every h1 reads a token; all ten status rungs are the designer's now. |
 | `tests/a11y-app.mjs` | Probes the six skin and register pairs instead of the four r3 themes. |
-| `tests/type-final.mjs` | Replaced: with no choice the page is Sapphire & Obsidian; at 1400, 1136 and 390 the deck title is Cinzel 600 and its file loads; h2 is Lato 700; body text is Lato 400 and both Lato files load; the wordmark is still the CrankMagic Oxanium mark; no page text is Satoshi or Young Serif, Barlow Condensed only sets the callout and Oxanium only the wordmark. |
+| `tests/type-final.mjs` | Replaced: with no choice the page is Sapphire & Obsidian; at 1400, 1136 and 390 the deck title is Cinzel 600 and its file loads; h2 is Lato 700; body text is Lato 400 and both Lato files load; the wordmark is Cinzel in gilt capitals; no page text is Satoshi, Young Serif or Oxanium, and Barlow Condensed only sets the callout. |
 
 ## Stored preferences
 
@@ -56,6 +56,7 @@ Generated from the current `crankmagic-design.css` and the patched one. A dot me
 | `--color-accent-soft` | · | · | · | · | `#1b273e` | `#e6e8e9` | new. New in r4. |
 | `--color-aether` | `#7cc4ff` | `#4aa6d8` | `#6fb7d9` | `#5fe0ff` | `#69d6ef` | `#006c97` | changed. Light register now 4.97:1 on ground (was 2.39:1). |
 | `--color-bg` | `#1a1815` | `#f5f0e6` | `#121511` | `#0f1217` | `#090c12` | `#f2ece1` | changed |
+| `--color-brand` | · | · | · | · | `#d2a973` | `#745238` | new. Antique gilt for the CrankMagic wordmark only (Rob, 2026-10-26); Chalk & Coal `#eac897` / `#603f26`. Never a value: money keeps --color-money. |
 | `--color-decision-bg` | · | · | · | · | `#2a200d` | `#fff3dd` | new. New in r4. |
 | `--color-decision-field` | · | · | · | · | `#372c15` | `#fceed1` | new. New in r4. |
 | `--color-decision-ink` | · | · | · | · | `#f8e6c3` | `#4c2e00` | new. New in r4. |
@@ -116,7 +117,7 @@ Generated from the current `crankmagic-design.css` and the patched one. A dot me
 | `--focus-width` | · | · | · | · | `2px` | · | new. New in r4. |
 | `--font-body` | `Satoshi,system-ui,sans-serif` | · | · | · | `Lato,system-ui,sans-serif` | · | changed. Lato 400 and 700, from Rob's reference, for everything read. |
 | `--font-callout` | · | · | · | · | `'Barlow Condensed',Lato,system-ui,sans-serif` | · | new. New in r4. |
-| `--font-display` | `Satoshi,system-ui,sans-serif` | · | `'Barlow Condensed',Satoshi,system-ui,sans-serif` | `Satoshi,system-ui,sans-serif` | `Cinzel,'Trajan Pro',Georgia,serif` | · | changed. Cinzel 600, from Rob's reference: page titles and the deck title (the wordmark keeps its own mark). Moss & Iron's Barlow override is gone. |
+| `--font-display` | `Satoshi,system-ui,sans-serif` | · | `'Barlow Condensed',Satoshi,system-ui,sans-serif` | `Satoshi,system-ui,sans-serif` | `Cinzel,'Trajan Pro',Georgia,serif` | · | changed. Cinzel 600, from Rob's reference: page titles, the deck title and the CrankMagic wordmark. Moss & Iron's Barlow override is gone. |
 | `--font-hero` | `'Young Serif',Georgia,serif` | · | `'Barlow Condensed',Satoshi,system-ui,sans-serif` | `'Young Serif',Georgia,serif` | `var(--font-display)` | · | changed. The display face at hero size (var(--font-display)); Young Serif is retired. |
 | `--heading-tracking` | · | · | · | · | `-.005em` | · | new. New in r4. |
 | `--heading-weight` | · | · | · | · | `700` | · | new. New in r4. |

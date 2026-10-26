@@ -62,7 +62,7 @@ On 2026-10-25 Rob shared a concept of the Play screen, "Concept B · Table Compa
 
 1. **A place, not a page.** Play sits on the Study: walnut under a lamp, shadowed at the edges, each seat on charcoal felt.
 2. **Warm light, neutral chrome.** Warmth comes from wood, brass, parchment and light. No mana color owns the frame; color arrives with the cards.
-3. **The name stays ours; brass is the table's metal.** CrankMagic keeps its own wordmark and gear logo, unchanged. The reference's gold lives on as brass rings on the table, never as a value.
+3. **The name in gilt; brass is the table's metal.** CrankMagic is set in Cinzel capitals in antique gilt beside the gear logo, as in the reference. Brass rings the portraits on the table. Neither ever marks a value.
 4. **Two voices of type.** Roman capitals name things; a warm sans does the work.
 5. **People at the table.** A portrait in a brass ring, a name, a big life total. The portrait is the commander's art.
 6. **The cards carry the color.** Show art wherever a card is named.
@@ -79,7 +79,7 @@ One display face and one body face for every skin, both from the reference, both
 - **Body**: Lato 400 and 700. Everything that is read, chosen or counted: body, h2 and h3 (700), section titles (700, spaced capitals with an icon), controls, figures, the HUD.
 - **Callout**: Barlow Condensed 800 italic, only for the neon callout word over the table. It is the table's one expressive face, never page type.
 
-- **Wordmark**: the app's own CrankMagic mark, unchanged: the Oxanium subset in aether with its sheen, beside the gear logo. It sets the app name and nothing else. Cinzel is a typeface in the system, never the name on the app.
+- **Wordmark** (Rob, 2026-10-26): CrankMagic in Cinzel 600 capitals at .08em, in `--color-brand` (antique gilt), beside the gear logo. Gilt sets the app name and nothing else; money keeps the brighter `--color-money`. The Oxanium mark is retired.
 
 Satoshi and Young Serif are retired, and so are Barlow Condensed's 600 and 700 faces.
 

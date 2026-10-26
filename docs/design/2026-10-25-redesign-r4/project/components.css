@@ -26,10 +26,9 @@
 .cm .cm-reading{font-size:var(--text-reading);line-height:var(--leading-reading);max-width:68ch}
 .cm .cm-money{color:var(--color-money)}
 
-/* ---------- wordmark: the app's own CrankMagic mark, as live (crankmagic-design.css .v-brand): the Oxanium subset in
-   aether with a light sheen. It sets the app name and nothing else; Cinzel never sets it. ---------- */
-.cm-wordmark{font:700 22px/1.02 CrankOxanium,var(--font-body);letter-spacing:-.5px;color:var(--color-aether);white-space:nowrap;
-  background:linear-gradient(110deg,var(--color-aether) 12%,color-mix(in oklab,var(--color-aether) 55%,white) 60%,var(--color-aether) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+/* ---------- wordmark (Rob, 2026-10-26): CrankMagic in Cinzel 600 capitals at .08em, in antique gilt (--color-brand), beside
+   the gear logo, as live (crankmagic-design.css .v-brand). Gilt is the brand's metal and marks nothing else. ---------- */
+.cm-wordmark{font:var(--display-weight) 16px/1.02 var(--font-display);letter-spacing:.08em;text-transform:uppercase;color:var(--color-brand);white-space:nowrap}
 
 /* ---------- planes ---------- */
 .cm-panel{background:var(--color-panel);border:var(--line-width) solid var(--color-line);border-radius:var(--radius-card);box-shadow:var(--shadow-card)}
@@ -124,6 +123,18 @@
 .cm-tile.is-selected{box-shadow:0 0 0 2px var(--color-bg),0 0 0 4px var(--color-ink)}
 .cm-tile__top{position:absolute;top:12px;left:12px;right:12px;display:flex;align-items:center;gap:8px}
 .cm-tile__pips{margin-left:auto;display:flex;gap:3px}
+/* The favorite star rides beside the stage pill (Rob, 2026-10-26). A favorite's filled star always shows; an outline star
+   shows on hover or focus. Filled ink, not a color: a favorite is a choice you made, and a choice is ink. */
+.cm-tile__fav{display:inline-grid;place-items:center;width:24px;height:24px;flex:none;border-radius:var(--radius-pill);background:rgb(12 12 16 / .72);backdrop-filter:blur(6px);color:#f3f1ee;opacity:0;transition:opacity var(--motion-fast) var(--motion-ease)}
+.cm-tile__fav svg{width:14px;height:14px}
+.cm-tile__fav.is-on,.cm-tile:hover .cm-tile__fav,.cm-tile.is-hover .cm-tile__fav,.cm-tile:focus-within .cm-tile__fav,.cm-tile.is-focus .cm-tile__fav{opacity:1}
+/* The tick and the deck menu wait at the right, under the pips, until the tile is hovered, focused or ticked. Nothing moves. */
+.cm-tile__tools{position:absolute;top:44px;right:12px;display:flex;align-items:center;gap:6px;opacity:0;transition:opacity var(--motion-fast) var(--motion-ease)}
+.cm-tile:hover .cm-tile__tools,.cm-tile.is-hover .cm-tile__tools,.cm-tile:focus-within .cm-tile__tools,.cm-tile.is-focus .cm-tile__tools,.cm-tile.is-selected .cm-tile__tools{opacity:1}
+.cm-tile__tools .cm-check{min-height:28px}
+.cm-tile__menu{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:var(--radius-control);background:rgb(12 12 16 / .72);backdrop-filter:blur(6px);color:#f3f1ee}
+.cm-tile__menu svg{width:16px;height:16px}
+@media (prefers-reduced-motion:reduce){.cm-tile__fav,.cm-tile__tools{transition:none}}
 .cm-tile__pips img{width:18px;height:18px;filter:drop-shadow(0 1px 2px rgb(0 0 0 / .6))}
 .cm-tile__body{padding:16px;display:grid;gap:8px}
 .cm-tile__eyebrow{font:700 var(--text-label)/1.2 var(--font-body);letter-spacing:var(--label-tracking);text-transform:uppercase;color:#c8c6c1}

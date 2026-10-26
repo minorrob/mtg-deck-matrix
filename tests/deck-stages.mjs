@@ -27,6 +27,10 @@ const slotOf=(s,id,n)=>M.deck(s,id).slots.find(r=>r.cardId==='card:'+n);
 {let s=M.empty();s=make(s,'d99',names('C',99));s=make(s,'d100',names('C',100));
   eq([st(s,'d99').onList,st(s,'d99').stage,st(s,'d99').boxed],[99,'building',false],'99 seats is Building');
   eq([st(s,'d100').onList,st(s,'d100').stage,st(s,'d100').boxed],[100,'defined',false],'100 seats is Defined, as a draft: Lock list is not needed (Q7)');
+  /* Past the hundred (Rob, 2026-10-26): "add as many cards to a deck, even more than 100. It just becomes unplayable in Play
+     and can't box; stays in building". */
+  s=make(s,'d101',names('C',101));
+  eq([st(s,'d101').onList,st(s,'d101').stage,st(s,'d101').boxed,st(s,'d101').over,st(s,'d101').play],[101,'building',false,true,'over'],'101 seats is Building, not Boxed, and Over');
   /* A commander kept out of the main list is still one of the hundred (the seats Play reads). */
   s=run(s,{type:'createDeck',deckId:'lead',name:'lead',commanders:['card:Lead'],cards:[card('Lead'),...names('C',99).map(card)],slots:names('C',99).map(n=>({cardId:'card:'+n,quantity:1}))});
   eq([st(s,'lead').onList,st(s,'lead').stage],[100,'defined'],'the commander is a seat even when not in the main list');

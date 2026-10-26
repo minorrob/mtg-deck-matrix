@@ -35,7 +35,7 @@ page('components-surfaces.html', 'group="Components" viewport="1200x2200" subtit
 def tiles(reg):
     t = lambda **k: tile(**{**dict(name='Krenko, Mob Boss', eyebrow='D6 · Krenko', tags='Goblin tribal · Tokens · ETB triggers', art='krenko', st='inbox', st_word='Boxed', parts=[('inbox',100)], meta_l='100 in the box', meta_r='B3', colors=['R']), **k})
     return f'''<div class="grid" style="--min:200px">
-  <div style="display:grid;gap:6px"><span class="cm-label">Rest</span>{t()}</div>
+  <div style="display:grid;gap:6px"><span class="cm-label">Rest · favorite</span>{t(fav=True)}</div>
   <div style="display:grid;gap:6px"><span class="cm-label">Hover</span>{t(state="hover", name="Chulane, Teller of Tales", eyebrow="D2 · Chulane", art="chulane", colors=["G","W","U"], tags="Landfall · Ramp · Blink")}</div>
   <div style="display:grid;gap:6px"><span class="cm-label">Focus visible</span>{t(state="focus", name="Shadrix Silverquill", eyebrow="D5 · Shadrix", art="shadrix", colors=["W","B"], tags="Counters · Drain and burn")}</div>
   <div style="display:grid;gap:6px"><span class="cm-label">Selected (bulk)</span>{t(state="selected", name="Tymna + Kraum", eyebrow="D1 · Tymna + Kraum", art="tymna", colors=["W","B","U","R"], st="buy", st_word="12 to buy", parts=[("inbox",41),("pull",47),("buy",12)], meta_l="41 in · 47 to pull · 12 to buy", ready="Stand-ins in", tags="Draw · Tap ability · Lifegain")}</div>

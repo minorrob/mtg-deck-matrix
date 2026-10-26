@@ -2,6 +2,13 @@
 
 ## r4 coordinated execution, October 26, 2026 (Codex; Rob: "go")
 
+**Incoming integration evidence:** `claude/r4-rob-1026` builds on pushed427ada65. Its14 requested gates pass;
+all12 report-only suites ran (five pass/seven fail, with the extra table-tabletop failure reproduced on
+the unchanged checkpoint). Three conflicts preserve the newer Play fixes and EX-17 tapping; incoming
+EX-18–EX-26 and all integration fixes are recorded in docs/r4-execution/INCOMING-1026.md. Once its separate
+PR is locally merged, post-merge gated and pushed to integration/r4, ownership returns to the coordinator
+at the exact announced commit. Full combined acceptance remains open.
+
 **Coordinated incoming handoff:** Rob authorized **Integrate October 26 r4 follow-ups** and approved
 cross-chat coordination. After the coordinator's scanned checkpoint push/notification, that chat owns
 the canonical integration/r4 index and serial browser slot for its separate incoming PR. Coordinator
@@ -50,6 +57,24 @@ back with `tools/staging-check.mjs --expect 9ca99e53`.
 - **Production's D1, bindings and secrets are unchanged** (migrations 0001 and 0002): no migration, binding or
   Worker setting was added since 1fcfc3d. Sharing stays off in `cloud-production` (it is on in the staging profile
   only), so the `cloud/sharing.mjs` changes do not run there.
+
+## Rob's October 26 follow-ups to r4: the wordmark to the Mana Pool, 2026-10-26 (a Claude cloud session, for Rob; `claude/r4-rob-1026`)
+
+Rob, 2026-10-26, asked for these together, in one PR merged to `integration/r4` (*"Include all of these changes in the
+same PR and merge."*). At his word this changes files of three lanes; each change is an EX row of
+`docs/r4-execution/DECISIONS.md`.
+
+- **Claude · Engine:** `game/engine/rules/actions.mjs` gains `manaSources(state, player)`, additive, and
+  `game/room/room.mjs` one view field, `manaSources`, the seat's own (`docs/ui-lane/gameplay-anchor.md`).
+  `tests/room-mana-pool.mjs` covers it, and that a Signet's floating mana is spent first when a spell is cast. No rule,
+  decision or journal changes.
+- **Codex · Play:** `crankmagic-board.js`, `crankmagic-stage.js`, `crankmagic-stage.css`, `crankmagic-table.js` and their
+  suites: Tilt as the angle to the floor (`cm-board-tilt-v3`) and Reset in place of ⌖ (the camera suites now use both),
+  the hand that shows what fits, you in the life list, opponents' play cards past the open drawer and below the life
+  list, the head look's rise, closer read and steer, the Mana Pool module, and your targeted cards outlined in red.
+- **Codex · Workshop:** the Cinzel gilt wordmark, the deck tile's star, Planned Changes' adds and decks past 100
+  (`crankmagic.css`, `crankmagic-design.css`, `crankmagic-decks.js`, `collection-model.js`, `crankmagic-change.js`,
+  `crankmagic-pull.js`, `docs/design/2026-10-25-redesign-r4/`).
 
 ## Play 3D's backdrop videos: Rob's six, at the Graphics resolution, 2K at most, 2026-10-26 (a Claude cloud session, for Rob; `claude/crankmagic-background-videos-8nm59v`, PR #888)
 
