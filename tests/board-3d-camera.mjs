@@ -346,7 +346,7 @@ try {
   /* ---- 4. a card's menu: what it can do, in shorthand ---- */
   const menu = page.locator("#cm-card-menu");
   const readMenu = () => menu.evaluate((m) => ({label: m.getAttribute("aria-label"), role: m.getAttribute("role"),
-    card: [...(m.querySelector("[data-action=board-card-menu-view]")?.children || [])].map((n) => n.textContent).join(" ") || null,
+    card: [...(m.querySelector("[data-action=board-card-menu-view]")?.children || [])].map((n) => n.textContent).join(" ").replace(/\s+/g," ").trim() || null,
     rows: [...m.querySelectorAll("[data-action=board-card-menu-do]")].map((r) => ({index: Number(r.dataset.index), text: [...r.children].map((n) => n.textContent).join(" ").replace(/\s+/g, " ").trim(), said: r.getAttribute("aria-label"), mana: r.querySelectorAll(".cm-mana img, .cm-mana svg").length})),
     none: m.querySelector(".cm-card-menu-none")?.textContent.trim() || null, focused: document.activeElement?.closest("#cm-card-menu") ? document.activeElement.getAttribute("aria-label") : null}));
   let m = await readMenu();
