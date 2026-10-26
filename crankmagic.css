@@ -420,6 +420,8 @@ width:min(100%,max(900px,calc(var(--cm-table-h,68vh) * 1.9)));aspect-ratio:19/10
 .cm-deck-tile .cm-tile-pick:hover{border-color:var(--v-accent)}
 /* The stage pill steps aside when the tools appear, so the two never share the corner. */
 .cm-deck-tile:hover .cm-pill,.cm-deck-tile:focus-within .cm-pill,.cm-deck-tile.is-picked .cm-pill{transform:translateY(42px)}
+/* A favorite's star stays in the corner, so its stage pill stays stepped aside too (Rob, 2026-10-25: the star covered it). */
+.cm-deck-tile:has(.cm-tile-star.is-on) .cm-pill{transform:translateY(42px)}
 .cm-deck-tile .cm-pill{transition:transform .2s ease}
 .cm-deck-tile .cm-tile-bracket{position:absolute;right:20px;bottom:20px;z-index:2;font-size:12px;font-weight:600;color:color-mix(in srgb,var(--poster-ink) 85%,transparent);pointer-events:none}
 /* The last cell offers the one thing the grid does not already hold. */
