@@ -10,7 +10,7 @@
  *      Cobalt. The Menu's Switch theme lists them, the choice in force is pressed, it is saved, and it recolors the page
  *      at once. A value saved before A1 reads as its theme: dark is Brass & Slate, light Felt & Cream, and Match
  *      system Moss & Iron.
- *   3. A save's toast carries Undo, and Undo takes the save back. A failure that may pass carries Retry,
+ *   3. Substantive saves carry Undo; preference saves are ordinary success receipts. A failure that may pass carries Retry,
  *      which runs the action again; a rule the reader has not met yet does not.
  *   4. Help is a slide-over at the right with the page visible beside it; the glossary is one step on,
  *      and closing the glossary comes back to the help. The Menu's Help opens the page's own help.
@@ -73,17 +73,19 @@ try {
   eq([await pressed(page), await palette(page)], [["sapphire-obsidian"], ["sapphire-obsidian", "light", "sapphire-obsidian"]], "Light keeps the selected skin");
   ok(await bg(page) !== darkBg, "and the page is recolored without a reload");
 
-  /* 3. Saving still offers Undo; undoing the register restores the previous appearance. */
+  /* 3. Appearance preferences are ordinary receipts, per the r4 bounded Undo exclusion.
+     The native controls still restore the prior appearance, without a false persistent Undo. */
   const saved = await toast(page);
-  ok(saved.shown && /Light appearance/.test(saved.text) && saved.action === "Undo" && !saved.error, `appearance save carries Undo: ${JSON.stringify(saved)}`);
+  ok(saved.shown && /Light appearance/.test(saved.text) && saved.action === null && !saved.error, `appearance save is an ordinary success without Undo: ${JSON.stringify(saved)}`);
   await page.evaluate(() => { window.__notices = []; new MutationObserver(() => { const t = document.querySelector("#cm-notice .cm-toast-text")?.textContent; if (t) window.__notices.push(t); }).observe(document.getElementById("cm-notice"), {childList: true, subtree: true, characterData: true}); });
-  await page.locator("#cm-notice .cm-toast-action").click();
+  await openMenu(page);
+  await page.locator('[data-theme-mode="dark"]').click();
   await page.waitForFunction(() => document.getElementById("matrix-v2").dataset.theme === "dark");
   await page.waitForTimeout(600);
   const during = await page.evaluate(() => window.__notices);
-  ok(!during.some((t) => /another tab/.test(t)), `Undo stays local: ${JSON.stringify(during)}`);
+  ok(!during.some((t) => /another tab/.test(t)), `a local appearance change stays local: ${JSON.stringify(during)}`);
   const undone = await toast(page);
-  ok(/Last change undone/.test(undone.text) && undone.action === null, "Undo restores the earlier appearance and offers no second Undo");
+  ok(/Dark appearance/.test(undone.text) && undone.action === null, "the native Dark control restores the earlier appearance without a persistent Undo");
 
   await openMenu(page);
   await page.getByRole("button", {name: "Chalk & Coal", exact: true}).click();
@@ -170,16 +172,28 @@ try {
   await page.waitForFunction(() => !document.getElementById("cm-dialog").open);
   const gone = await toast(page);
   ok(gone.action === "Undo", `the deletion's toast offers Undo: ${JSON.stringify(gone)}`);
+  eq(await page.locator('.cm-toast:not([hidden]) .cm-toast-text').allTextContents(),[gone.text], 'deletion has one transaction receipt rather than a duplicate ordinary success');
   await press(page, "delete-deck", {deck: live});
   await page.waitForFunction(() => document.getElementById("cm-notice").classList.contains("error"));
   ok(!(await page.evaluate(() => document.getElementById("cm-dialog").open)), "the deck is gone: deleting it again finds nothing to delete");
-  await page.evaluate(() => { document.getElementById("cm-notice").hidden = true; });
-  await press(page, "undo");
+  await page.getByRole('button',{name:'Dismiss error notice',exact:true}).click();
+  await page.locator('#cm-undo-notice [data-undo-revision]').click();
   await page.waitForFunction(() => /Last change undone/.test(document.getElementById("cm-notice").textContent));
   await press(page, "delete-deck", {deck: live});
   await field.waitFor();
   ok(true, "Undo brought the deck back: it is there, archived, to be deleted again");
   await page.keyboard.press("Escape");
+  await page.goto(`${base}/index.html#decks?deck=${encodeURIComponent(live)}`);
+  await page.locator('.cm-deck-hero h1').waitFor();
+  await press(page,'delete-deck',{deck:live});await field.fill(wanted);await page.locator('#cm-dialog [type=submit]').click();
+  await page.waitForFunction(()=>location.hash==='#decks'&&!document.getElementById('cm-dialog').open);
+  await page.locator('#cm-notice [data-undo-revision]').waitFor();
+  const navigatedDelete=await toast(page);
+  ok(navigatedDelete.action==='Undo','deleting from a deck detail retains its Undo after navigating to the hub');
+  eq(await page.locator('.cm-toast:not([hidden]) .cm-toast-text').allTextContents(),[navigatedDelete.text],'the navigated deletion also has exactly one transaction receipt');
+  await page.locator('#cm-notice [data-undo-revision]').click();
+  await page.waitForFunction(()=>/Last change undone/.test(document.getElementById('cm-notice').textContent));
+  ok(await page.evaluate(async id=>{const r=await CrankRepository.open();try{return (await r.getState()).decks.some(d=>d.id===id&&d.archived);}finally{r.close();}},live),'native post-navigation Undo restores the persisted archived deck');
   await context.close();
 
   /* 1, signed in: a page with accounts on, and a cloud that answers. */

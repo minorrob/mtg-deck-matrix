@@ -101,4 +101,4 @@ if (browser) try {
 } finally {
   await close();
 }
-console.log(`menu-help: ${checks} checks passed — Refresh under Sync now, Help with its glossary switch, Switch theme under Help, no Share by email.`);
+console.log(`menu-help: ${checks} checks passed — grouped account/device/data/skin/help controls, persistent glossary choice, reload clears app caches and preserves the library.`);
