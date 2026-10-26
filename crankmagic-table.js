@@ -425,8 +425,8 @@
       }).catch(()=>{if(active&&slot.isConnected)slot.innerHTML=`<p>Your table could not be checked. ${b('Try your table','table-back',{table:id})}</p>`;});}
     return ()=>{active=false;};
   };
-  actions['play-leave-seat']=el=>C.modal('Leave this table?',`<p>Your seat at this table will be released.</p><div class="cm-form-footer">${b('Cancel','close')}${b('Leave table','play-leave-confirm',{table:el.dataset.table},true)}</div>`);
-  actions['play-leave-confirm']=async el=>{await api('POST',`${tableUrl(el.dataset.table)}/leave`,{});keepSeat(null);actions.close();C.render();};
+  actions['play-leave-seat']=el=>C.modal('Leave this table?',`<p>This device will disconnect. Your seat follows the table's normal reconnect window, and its saved shortcut remains available if you want to return.</p><div class="cm-form-footer">${b('Cancel','close')}${b('Leave table','play-leave-confirm',{table:el.dataset.table},true)}</div>`);
+  actions['play-leave-confirm']=async el=>{const id=el.dataset.table;C.board?.close();actions.close();await C.render();C.notice('Disconnected from the table on this device.',false,{undo:false,action:{label:'Return to table',run:()=>C.go('table',{id})}});};
   actions['play-new-table']=()=>C.go('table?new=1');
   actions['play-ai-table']=()=>C.go('table?new=1&ai=1');
   actions['play-join']=()=>{
@@ -528,8 +528,10 @@
     C.go("table", {id: el.dataset.table});
   };
   actions["table-back"] = (el) => C.go("table", {id: el.dataset.table});
+  const creatingTables=new WeakSet();
   actions["table-create"] = async () => {
     const form = document.getElementById("cm-table-new");
+    if(creatingTables.has(form))return;
     const v = Object.fromEntries(new FormData(form));
     if (!v.hostName.trim()){const input=form.elements.hostName;input.setAttribute('aria-invalid','true');document.getElementById('cm-table-host-error').textContent='Give your name at the table.';input.focus();return;}
     const life=Number(v.startingLife);if(!Number.isInteger(life)||life<1||life>999){const input=form.elements.startingLife;input.setAttribute('aria-invalid','true');document.getElementById('cm-table-rules-error').textContent='Choose starting life from 1 to 999.';input.focus();return;}
@@ -540,10 +542,13 @@
       : {kind: v[`kind${n}`], name: v[`name${n}`]}));
     if (!seats.length){document.getElementById('cm-table-new-error').textContent='Choose at least one other seat: a person or an AI.';form.elements.kind2.focus();return;}
     document.getElementById('cm-table-new-error').textContent='';
+    creatingTables.add(form);
+    try{
     const {table} = await api("POST", "/api/tables", {hostName: v.hostName, seats});
     try {localStorage.setItem("cm-table-setup",JSON.stringify({owner:C.signedInAs?.() || null,...Object.fromEntries(["hostName","kind2","name2","kind3","name3","kind4","name4"].map(k=>[k,v[k]]))}));}catch{}
     keepSeat(table.tableId);
     await finishTableSetup(table,v);
+    }finally{creatingTables.delete(form);}
   };
   const settingUp=new Set();
   async function finishTableSetup(table,v){if(settingUp.has(table.tableId))return;settingUp.add(table.tableId);
@@ -611,7 +616,9 @@
     const failures=[];let candidates;
     try{const lists=(await tablePrecons()).filter(d=>d.commander.length+d.cards.length===100);
       const names=[...new Set(lists.flatMap(d=>[...d.commander,...d.cards]))];
-      const unknown=new Set((await api('POST',`${tableUrl(table.tableId)}/known`,{names})).unknown||[]);
+      const answer=await api('POST',`${tableUrl(table.tableId)}/known`,{names});
+      if(!Array.isArray(answer.unknown))throw Error('Deck verification is unavailable. Choose its deck when the table can be checked.');
+      const unknown=new Set(answer.unknown);
       candidates=lists.filter(d=>[...d.commander,...d.cards].every(name=>!unknown.has(name)));
     }catch(error){return seats.map(s=>`${s.name||'AI'} needs a deck: ${error.message}`);}
     for(const seat of seats){if(!candidates.length){failures.push(`${seat.name||'AI'} needs a deck: no public precon is fully known by this table. Choose its deck.`);continue;}

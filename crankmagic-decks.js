@@ -3,6 +3,11 @@
 (globalThis.CrankFeatures ||= []).push(function(C){const {M,esc:e,button:b,field:f,select:s,note,form,modal,commit,go,actions,views,$}=C;let showArchived=false;
 const R=globalThis.CrankRules;   // the house rules and the deck-page literals live there
 const DECK_TABS=[['overview','Overview'],['hundred','The hundred'],['upgrades','Upgrades'],['explore','Explore'],['acquire','Acquire']];
+let sharedSnapshot=null,sharedRead=null;
+function readShared(force=false){const owner=C.signedInAs?.()||null;
+  if(!force&&sharedSnapshot?.owner===owner&&Date.now()-sharedSnapshot.at<30000)return Promise.resolve(sharedSnapshot.items);
+  if(sharedRead?.owner===owner)return sharedRead.promise;
+  const pending={owner,promise:C.sharedItems().then(items=>{if((C.signedInAs?.()||null)===owner)sharedSnapshot={owner,items,at:Date.now()};return items;}).finally(()=>{if(sharedRead===pending)sharedRead=null;})};sharedRead=pending;return pending.promise;}
 /* Tab hash redirects for backward compatibility */
 const TAB_REDIRECTS={cards:'hundred',guide:'overview',history:'overview'};
 /* THE DECKS NAV (Rob, 2026-10-23: the Decks requirements' NAV-1 to NAV-8). Five entries and no deck names: My Decks,
@@ -255,10 +260,13 @@ $('#cm-show-archived')?.addEventListener('change',ev=>{showArchived=ev.target.ch
 $('#cm-include-public')?.addEventListener('change',async ev=>{const on=ev.target.checked;history.replaceState(null,'',hashFor('public',null));await commit({type:'preferences',values:{includePublicShares:on}},{renderView:false});C.render();});
 if(stage==='shared'){const box=document.getElementById('cm-shared-grid');
   if(!C.sharedItems||!C.sharingAvailable?.()){box.innerHTML='<p class="cm-muted cm-decks-none">Sign in to see the decks other people share with you.</p>';box.removeAttribute('aria-busy');}
-  else C.sharedItems().then(items=>{if(!box.isConnected)return;const count=document.querySelector('[data-stage-count=shared]');if(count)count.textContent=items.filter(x=>(pub||x.via!=='public')&&(!fav||favs.has('share:'+x.id))).length.toLocaleString('en-US');const list=items.filter(x=>(pub||x.via!=='public')&&(!fav||favs.has('share:'+x.id)));C.sharedShown=list;
+  else readShared(true).then(items=>{if(!box.isConnected)return;const count=document.querySelector('[data-stage-count=shared]');if(count)count.textContent=items.filter(x=>(pub||x.via!=='public')&&(!fav||favs.has('share:'+x.id))).length.toLocaleString('en-US');const list=items.filter(x=>(pub||x.via!=='public')&&(!fav||favs.has('share:'+x.id)));C.sharedShown=list;
     box.innerHTML=list.length?list.map(C.sharedTile).join(''):`<p class="cm-muted cm-decks-none">${fav?'No favorites yet. Star a deck to see it here.':pub?'Nobody has shared a deck with you yet.':'Nobody has shared a deck with you privately yet. Tick Include public decks to see public ones.'}</p>`;box.removeAttribute('aria-busy');})
     .catch(err=>{if(box.isConnected){box.innerHTML=`<p class="cm-muted cm-decks-none" role="alert">${e(err.message)}</p>`;box.removeAttribute('aria-busy');}});
   return;}
+/* Shared is a count on every stage. Bound background reads to this account and refresh on entry to Shared. */
+const sharedChip=document.querySelector('[data-stage-count=shared]'),sharedOwner=C.signedInAs?.()||null;
+Promise.resolve(C.sharingReady).then(()=>C.sharingAvailable?.()&&C.sharedItems?readShared():[]).then(items=>{if(sharedChip?.isConnected&&(C.signedInAs?.()||null)===sharedOwner)sharedChip.textContent=items.filter(x=>(pub||x.via!=='public')&&(!fav||favs.has('share:'+x.id))).length.toLocaleString('en-US');}).catch(error=>{if(sharedChip?.isConnected){sharedChip.textContent='—';sharedChip.title=error.message;}});
 /* AI-5: each tile says whether the table can play its deck, where Play is in the cloud (crankmagic-table.js, C.play);
    and the summary, how many of them it can. Playable (FLT-4) puts away the tiles the table can't play every card of --
    the chip already shows only Defined decks, so a 92-seat deck the table knows is never Playable. */
@@ -968,13 +976,17 @@ actions['precon-save']=el=>{const d=M.deck(C.state,el.dataset.deck);
   C.modal('Confirm save deck to your decks?',`<div class="cm-form-footer cm-precon-save">${b('Cancel','close')}${b('Confirm Changes','precon-save-confirm',{deck:d.id},true)}</div>`);};
 actions['precon-save-confirm']=async el=>{const d=M.deck(C.state,el.dataset.deck);actions.close();await commit({type:'finalize',deckId:d.id,confirmed:true,as:'save'});};
 actions.finalize=async el=>{
+  if(el.getAttribute('aria-busy')==='true')return;
+  const label=el.textContent;el.disabled=true;el.setAttribute('aria-busy','true');el.textContent='Checking the list…';
+  try{
   const d=M.deck(C.state,el.dataset.deck);
   const current=await refreshLegality(d);
   const fresh=M.deck(C.state,d.id),money=M.definitionIssues(C.state,fresh);
   /* MONEY NEVER STOPS A LOCK (Rob, 2026-10-18; docs/budgets.md). A budget and a per-card cap only inform, so what they
      say about the list is read out here, beside the rest of the review, and the list locks either way. This used to
      be a dialog that refused to lock until the cap was raised or removed. */
-  C.review('Lock the list of '+fresh.name,note(`This marks the list locked. The copies you own were reserved as the cards went in, and the rest are already on the buy list; locking changes neither. Prices and bracket expectations require your review.${current?' Every card in the list was re-checked against Scryfall just now.':''}`)+(money.length?`<p class="cm-muted cm-lock-money">${e(money.join(' '))}</p>`:''),{type:'finalize',deckId:d.id});
+  C.review('Lock the list of '+fresh.name,note(`This marks the list locked. The copies you own were reserved as the cards went in, and the rest are already on the buy list; locking changes neither. Prices and bracket expectations require your review.${current?' Every card in the list was re-checked against Scryfall just now.':''}`)+(money.length?`<p class="cm-muted cm-lock-money">${e(money.join(' '))}</p>`:''),{type:'finalize',deckId:d.id},{after:()=>C.notice(`Locked · ${M.readiness(C.state,M.deck(C.state,d.id)).toBuy} to buy`)});
+  }finally{el.disabled=false;el.removeAttribute('aria-busy');el.textContent=label;}
 };
 actions.lock=async el=>{const d=M.deck(C.state,el.dataset.deck);if(!d.locked)await refreshLegality(d);C.review(d.locked?'Unlock deck':'Lock deck',note('All copies remain visible. A lock excludes the deck’s copies from automatic build consideration unless you explicitly allow that donor.'),{type:'lock',deckId:d.id,locked:!d.locked});};
 actions.fulfill=el=>C.review('Reserve available copies',note('Unassigned eligible copies fulfill matching needs. This changes reservations; it does not physically move cards.'),{type:'fulfill',deckId:el.dataset.deck});
