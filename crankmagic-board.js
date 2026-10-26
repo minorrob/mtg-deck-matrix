@@ -68,6 +68,15 @@ globalThis.CrankBoard = Object.seal({
   calloutsFor: null,
   /** What waits to be called out once a view's callouts come (crankmagic-board.js, queueCallouts); set likewise. */
   queueCallouts: null,
+  /** Shared lobby countdown treatment; the lobby owns its timer and existing sound. */
+  countdown(host, number) {
+    if (!host) return;
+    host.querySelector('.cm-countdown-callout')?.remove();
+    host.classList.toggle('cm-countdown-active', number !== null);
+    if (number === null) return;
+    const el = document.createElement('strong'); el.className = 'cm-countdown-callout';
+    el.setAttribute('role', 'status'); el.textContent = String(number); host.append(el);
+  },
   turnsWentBy(was, next) {
     if (!was || !next || was.matchId !== next.matchId || !was.state || !next.state) return null;
     const from = was.state.turn, to = next.state.turn;
@@ -200,9 +209,29 @@ globalThis.CrankBoard = Object.seal({
   const paneWidth = () => {const raw = stored(PANE_KEY), v = Number(raw); return raw !== null && v >= PANE[0] && v <= PANE[1] ? v : 330;};
   const splitOf = (k) => {const raw = stored(SPLIT_KEY[k]), v = Number(raw); return raw !== null && v >= SPLIT[0] && v <= SPLIT[1] ? v : SPLIT_AT[k];};
   let stageSide = false, stageRail = true, cameraOpen = false, stageError = "";
+  let tableMenuOpen = false;
+  const foldedModules = new Set();
+  const HUD_KEY = 'cm-play-hud-scale';
+  let hudPreview = null;
+  const hudScale = () => hudPreview ?? Math.max(100, Math.min(200, Number(stored(HUD_KEY)) || 100));
+  const hudSlider = () => `<label class="cm-settings-slider cm-hud-slider">HUD text<input type="range" min="100" max="200" step="1" value="${hudScale()}" data-play-hud aria-label="HUD text size" aria-valuetext="${hudScale()}%"><output>${hudScale()}%</output></label>`;
+  function applyHud(host) {if (!host) return; host.style.setProperty('--hud-scale', String(hudScale()/100));host.toggleAttribute('data-hud-large',hudScale()>=150);}
+  C.hudTextScale = hudScale;
+  C.hudTextScaleSlider = hudSlider;
+  document.addEventListener('input', event => {
+    const el = event.target.closest?.('[data-play-hud]'); if (!el) return;
+    hudPreview = Math.max(100, Math.min(200, Number(el.value) || 100));
+    el.setAttribute('aria-valuetext', `${hudPreview}%`); el.parentElement.querySelector('output').textContent = `${hudPreview}%`;
+    applyHud(document.getElementById('cm-board'));
+  });
+  document.addEventListener('change', event => {
+    const el = event.target.closest?.('[data-play-hud]'); if (!el) return;
+    keep(HUD_KEY, Math.max(100, Math.min(200, Number(el.value) || 100))); hudPreview = null;
+    applyHud(document.getElementById('cm-board'));
+  });
   let paneEditing = false, paneSaving = false, profileOpen = false;
   const PANE_MODULES = [["history", "History"], ["coach", "AI Coach"], ["counter", "Counter-Intel"], ["resources", "Resources"], ["stack", "On the Stack"], ["inspect", "Card Preview"], ["table", "Table Vitals"], ["recommended", "Recommended Actions"], ["chat", "Chat"], ["actions", "Actions"]];
-  const DEFAULT_MODULES = ["table", "inspect", "stack", "history", "counter"];
+  const DEFAULT_MODULES = ["stack", "history", "coach"];
   // Preferences travel in the existing account library. Never apply a previous account's layout.
   function paneLayout() {
     const saved = C.state.preferences?.play?.sidePane, fallback = {left:["actions"], right:[...DEFAULT_MODULES]};
@@ -529,6 +558,17 @@ globalThis.CrankBoard = Object.seal({
     return button ? `<button type="button" class="${cls}" data-action="board-vitals" aria-label="${e(label)}; open Table vitals">${inner}</button>`
       : `<span class="${cls}" aria-label="${e(label)}">${inner}</span>`;
   }
+  function seatHeader(p, {interactive = true} = {}) {
+    const commander = commanderOf(p), label = seatLabel(p), active = view.state.turnPlayerId === p.playerId;
+    const state = view.decision && p.playerId === view.seat ? 'Deciding' : active ? (p.playerId === view.seat ? 'Your turn' : `${p.name}'s turn`) : 'Waiting';
+    const initial = (p.name || 'Player').trim()[0] || '?';
+    return `<div class="cm-seat-header${active ? ' is-turn' : ''}${p.health.life <= 10 ? ' is-danger' : ''}" data-seat-header="${p.playerId}">
+      <span class="cm-seat-portrait" aria-hidden="true"><span class="cm-seat-initial">${e(initial)}</span>${commander?.name ? `<img src="${e(pictureOf(commander.name))}" alt="" referrerpolicy="no-referrer">` : ""}</span>
+      <span class="cm-seat-identity"><strong class="cm-mat-name">${e(label)}</strong><span class="cm-seat-commander">${e(commander?.name || 'Command zone')}</span></span>
+      ${vitals(p, {button:interactive})}<span class="cm-seat-hand">${p.zones.Hand.count} in hand</span>
+      <span class="cm-seat-state${view.state.priorityPlayerId === p.playerId ? ' has-priority' : ''}">${e(state)}</span></div>`;
+  }
+  document.addEventListener('error', event => {if (event.target.matches?.('.cm-seat-portrait img')) event.target.remove();}, true);
   function pictureOf(name) {
     const r = recordOf(name);
     return (r && r.image) || `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}&format=image&version=normal`;
@@ -681,8 +721,9 @@ globalThis.CrankBoard = Object.seal({
   }
   function passButton(cls = "compact") {
     const d = view.decision;
+    if (!d || view.status === "finished" || !["draw","priority"].includes(d.kind)) return "";
     if (d && d.kind === "draw" && view.status !== "finished") return b("Draw card", "board-draw", {}, true, {cls, disabled: sending});
-    return b(passLabel(), "board-pass", {}, true, {cls, disabled: !canPass()});
+    return b(passLabel(), "board-pass", {}, !picked.length, {cls, disabled: !canPass()});
   }
   /* RESOLVE ALL, beside the pass (Rob, 2026-10-09): a run of identical triggers on top of the stack -- a thousand
      Intruder Alarm triggers -- let resolve with one click rather than one each. The room offers it (game/room/room.mjs,
@@ -893,11 +934,7 @@ globalThis.CrankBoard = Object.seal({
     const mana = p.mana.reduce((n, m) => n + m.amount, 0);
     const bare = size === "full" || size === "opp" || size === "side" || size === "phone";
     const active = view.state.turnPlayerId === i;
-    const header = head === "none" ? "" : `<header class="cm-mat-head cm-seatboard-head">
-        <strong class="cm-mat-name">${e(seatLabel(p))}</strong>${vitals(p, {big: size === "focus"})}<span class="cm-mat-cmdr cm-muted">${e((commanderOf(p) || {}).name || "")}</span>
-        ${you ? "" : `<span class="cm-board-their-hand">${e(p.name)}'s hand · ${z.Hand.count}</span>`}
-        <span class="cm-board-tile-flag">${e(seatFlag(p))}</span>
-        ${focusButton ? b("⤢ Focus", "board-focus", {seat: String(i)}, false, {cls: "compact"}) : ""}</header>`;
+    const header = head === "none" ? "" : `<header class="cm-mat-head cm-seatboard-head">${seatHeader(p)}${focusButton ? b("⤢ Focus", "board-focus", {seat: String(i)}, false, {cls: "compact"}) : ""}</header>`;
     const body = `<div class="cm-mat-grid cm-seatboard-body">
         <div class="cm-mat-zone cm-board-field" data-zone="battlefield">${group("Creatures", creatures)}${group("Artifacts & enchantments", other)}${!field.length && !ghosts.length ? `<p class="cm-board-empty">${p.health.status === "lost" || departed(i) ? "Out of the game." : "No permanents yet."}</p>` : ""}<i class="cm-mat-label">Battlefield</i></div>
         <div class="cm-mat-zone cm-board-lands" data-zone="lands">${cardSection(lands,`${i}:lands`,ghosts.filter(c => c.types.includes("Land")))}<i class="cm-mat-label">Lands · ${lands.length}</i></div>
@@ -964,17 +1001,15 @@ globalThis.CrankBoard = Object.seal({
      look at (inert), the tile's own button over it. */
   function tile(p) {
     const i = p.playerId, commander = commanderOf(p), mini = paneWidth() >= MINI_AT;
-    return `<div class="cm-board-tile${mini ? " is-mini" : ""}${focus === i ? " is-focus" : ""}${i === view.seat ? " is-you" : ""}${view.state.turnPlayerId === i ? " is-turn" : ""}" data-seat="${i}" style="--seat:${seatColor(i)}">${turnMark(i)}
-      ${mini ? `<div class="cm-board-mini" inert>${mat(p, {size: "mini", head: "none"})}</div>` : ""}<button type="button" class="cm-board-tile-main" data-action="board-focus" data-seat="${i}" aria-pressed="${focus === i}">
-        <span class="cm-board-tile-name">${e(seatLabel(p))}</span><span class="cm-muted">${e(commander ? commander.name : "")}</span></button>
-      ${vitals(p)}<span class="cm-board-tile-flag">${e(seatFlag(p))}</span></div>`;
+    return `<div class="cm-board-tile${mini ? ' is-mini' : ''}${focus === i ? ' is-focus' : ''}${i === view.seat ? ' is-you' : ''}${view.state.turnPlayerId === i ? ' is-turn' : ''}" data-seat="${i}" style="--seat:${seatColor(i)}">
+      ${mini ? `<div class="cm-board-mini" inert>${mat(p, {size:'mini',head:'none'})}</div>` : ''}<button type="button" class="cm-board-tile-main" data-action="board-focus" data-seat="${i}" aria-pressed="${focus === i}">${seatHeader(p,{interactive:false})}</button></div>`;
   }
   function focusView() {
     const p = players()[focus] || players()[view.seat];
     return `<div class="cm-board-body" style="--pane-w:0px;--panel-w:${panelWidth()}px"><div class="cm-board-main"><div class="cm-board-stage">${fan(p.playerId)}${mat(p, {size: "focus"})}</div>${ask()}${hand()}</div></div>`;
   }
   function boardsPane() {
-    return `<nav class="cm-board-pane${paneShut ? " is-shut" : ""}" aria-label="Boards"><div class="cm-board-pane-head"><h3>Boards</h3>${chevToggle(paneShut, "board-pane", paneShut ? "Show the boards" : "Collapse the boards")}</div>${paneShut ? "" : players().map(tile).join("") + b("My board", "board-focus", {seat: String(view.seat)}, true) + `<button type="button" class="cm-board-coach-open" data-action="board-coach" aria-pressed="${coach.open}" aria-label="CrankMagic Coach">${COACH}Coach</button>`}</nav>`;
+    return `<nav class="cm-board-pane${paneShut ? " is-shut" : ""}" aria-label="Boards"><div class="cm-board-pane-head"><h3>Boards</h3>${chevToggle(paneShut, "board-pane", paneShut ? "Show the boards" : "Collapse the boards")}</div>${paneShut ? "" : players().map(tile).join("") + b("My board", "board-focus", {seat: String(view.seat)}, false) + `<button type="button" class="cm-board-coach-open" data-action="board-coach" aria-pressed="${coach.open}" aria-label="CrankMagic Coach">${COACH}Coach</button>`}</nav>`;
   }
   /* THE FULL SCREEN VIEW: the page given to the game. A slim rail; the others across the top, the big board across
      the foot -- yours, or whichever ⟳ Rotate has walked to -- with the step, Next and Pass over it and your hand along
@@ -983,8 +1018,8 @@ globalThis.CrankBoard = Object.seal({
     const s = view.state, me = players()[view.seat], big = players()[focus] || me, others = players().filter((p) => p.playerId !== big.playerId);
     /* The big board's corner, at the pill's head: whose it is and their vitals; when it is not yours, ⟳ and My board too. */
     const viewing = big.playerId !== view.seat;
-    const corner = `<div class="cm-full-corner${viewing ? " cm-full-viewing" : ""}">${vitals(big, {big: true})}<span class="cm-full-corner-name">${viewing ? `Viewing ${e(big.name)}` : e(seatLabel(big))}</span>
-      ${viewing ? `${ib("⟳", "board-rotate", "Rotate: the next seat's board", {by: "1"})}${b("My board", "board-focus", {seat: String(view.seat)}, true, {cls: "compact"})}` : ""}</div>`;
+    const corner = `<div class="cm-full-corner${viewing ? " cm-full-viewing" : ""}">${seatHeader(big)}<span class="cm-full-corner-name">${viewing ? `Viewing ${e(big.name)}` : e(seatLabel(big))}</span>
+      ${viewing ? `${ib("⟳", "board-rotate", "Rotate: the next seat's board", {by: "1"})}${b("My board", "board-focus", {seat: String(view.seat)}, false, {cls: "compact"})}` : ""}</div>`;
     return stageView({corner, big, others});
   }
 
@@ -992,7 +1027,7 @@ globalThis.CrankBoard = Object.seal({
      Full screen always uses this surface; zero tilt is the flat view. */
   function stageView({corner, big, others}) {
     const rear = others.map((p) => `<section class="cm-stage-rear" data-seat="${p.playerId}" style="--seat:${seatColor(p.playerId)}">
-      <button type="button" class="cm-stage-seat-label" data-action="board-focus" data-seat="${p.playerId}" aria-label="View ${e(p.name)}'s board, ${p.health.life} life"><span>${e(p.name)}</span><small>${e((commanderOf(p) || {}).name || "Command zone")}</small></button>
+      <button type="button" class="cm-stage-seat-label" data-action="board-focus" data-seat="${p.playerId}" aria-label="View ${e(p.name)}'s board, ${p.health.life} life">${seatHeader(p,{interactive:false})}</button>
       <div class="cm-stage-mini">${mat(p, {size: "opp", head: "none"})}</div></section>`).join("");
     return `${boardHeader()}
       <div class="cm-full-mine cm-stage-region" aria-label="Tabletop">
@@ -1021,14 +1056,23 @@ globalThis.CrankBoard = Object.seal({
     const me=players()[view.seat],s=view.state,turnName=s.turnPlayerId===null ? "" : nameOf(s.turnPlayerId);
     const pill=`<div class="cm-full-pill">${stageEnabled() ? "" : `${passButton()}${resolveAllButton()}${skipControl(true)}`}</div>`;
     const conn=status === "open" ? "" : `<span class="cm-board-conn">${status === "reconnecting" ? "Reconnecting…" : "Connecting…"}</span>`;
-    return `<header class="cm-stage-top"><span class="cm-stage-self">${vitals(me)}<b>${e(me.name)}</b></span><span class="cm-board-tools cm-board-turnsteps">${turnRibbon()}${stepsOpen ? stepsMenu() : ""}</span>
-      <span class="cm-stage-priority"><span class="cm-board-turn"${view.yourTurn ? ` title="Turn ${s.turn} of the game, counting every player's; your ${ordinal(view.yourTurn)} turn"` : ""}>${s.turn ? `Turn ${s.turn} · ${e(turnName)}${view.yourTurn ? ` (your ${ordinal(view.yourTurn)})` : ""}` : "Before turn 1"}</span><br>Priority: ${e(nameOf(view.state.priorityPlayerId))}<span class="cm-board-waiting" title="${e(waitingText())}">${e(waitingText())}</span>${conn}</span>${alsoButton()}${opens(b(stageRail && !actionsShut ? "Actions" : (view.decision ? "Actions · choice pending" : "Actions"), "board-actions-open", {}, false, {cls:"compact"}), stageRail && !actionsShut)}${pill}${stageProfile(me)}${combatStrip()}</header>`;
+    return `<header class="cm-stage-top"><span class="cm-stage-self">${seatHeader(me)}</span><span class="cm-board-tools cm-board-turnsteps">${turnRibbon()}${stepsOpen ? stepsMenu() : ""}</span>
+      <span class="cm-stage-priority"><span class="cm-board-turn"${view.yourTurn ? ` title="Turn ${s.turn} of the game, counting every player's; your ${ordinal(view.yourTurn)} turn"` : ""}>${s.turn ? `Turn ${s.turn} · ${e(turnName)}${view.yourTurn ? ` (your ${ordinal(view.yourTurn)})` : ""}` : "Before turn 1"}</span><br>Priority: ${e(nameOf(view.state.priorityPlayerId))}<span class="cm-board-waiting" title="${e(waitingText())}">${e(waitingText())}</span>${conn}</span>${alsoButton()}${opens(ib(stageRail && !actionsShut ? "◂" : "▸", "board-actions-open", "Open decision drawer", {}, {cls:"compact"}), stageRail && !actionsShut)}${pill}${stageProfile(me)}${combatStrip()}</header>`;
   }
-  function boardDrawers() { return `<aside class="cm-stage-rail${stageRail ? " is-open" : ""}" aria-label="Left drawer" ${stageRail ? "" : "inert"}>${stageModules("left")}${boardsPane()}</aside>${stageRail ? `<span class="cm-board-panegrip">${grip("pane", "Actions and boards width: drag, or use the arrow keys", paneWidth(), PANE, "vertical")}</span>` : ""}${ib(stageRail ? "◂" : "▸", "board-stage-rail", "Toggle board tools", {}, {cls: "cm-stage-handle cm-stage-left", pressed: stageRail})}
-      <aside class="cm-full-side cm-stage-side${stageSide ? " is-open" : ""}" aria-label="The table" ${stageSide ? "" : "inert"} style="--split:${Math.round(splitOf("side") * 100)}%">${stageSide ? `<span class="cm-board-panelgrip">${grip("panelw", "The drawer’s width: drag, or use the arrow keys", panelWidth(), PANELW, "vertical")}</span>` : ""}<header><b>Your pane</b>${ib("⚙", "board-modules-edit", "Arrange modules", {}, {pressed: paneEditing})}${ib("✕", "board-stage-side", "Close table panel")}</header>
-        ${stageModules()}</aside>
-      ${ib(stageSide ? "▸" : "◂", "board-stage-side", "Toggle table panel", {}, {cls: "cm-stage-handle cm-stage-right", pressed: stageSide})}`; }
-  function cameraMenu() { return `<div class="cm-stage-camera"><button type="button" data-action="board-camera" aria-expanded="${cameraOpen}">Camera ▾</button>${cameraOpen ? `<div>${phone() ? "" : switcher()}<span>View seats</span>${ib("◀", "board-rotate", "Previous seat", {by: "-1"})}${ib("▶", "board-rotate", "Next seat", {by: "1"})}
+  function boardDrawers() {
+    const pending = view.decision && view.decision.kind !== 'draw' ? 1 : 0, count = view.state.stack.length;
+    return `<aside class="cm-stage-rail cm-drawer${stageRail ? ' is-open' : ''}" id="cm-actions-drawer" aria-label="Left drawer" ${stageRail ? '' : 'inert'}>${stageModules('left')}${boardsPane()}</aside>
+      ${stageRail && !phone() ? `<span class="cm-board-panegrip">${grip('pane', 'Actions and boards width: drag, or use the arrow keys', paneWidth(), PANE, 'vertical')}</span>` : ''}
+      <button type="button" class="cm-stage-handle cm-stage-left cm-drawer-tab${pending ? ' has-decision' : ''}" data-action="board-stage-rail" aria-expanded="${stageRail}" aria-controls="cm-actions-drawer" aria-label="${stageRail ? 'Collapse' : 'Expand'} Actions"><span>Actions${pending ? ' · 1' : ''}</span><b aria-hidden="true">${stageRail ? '◂' : '▸'}</b></button>
+      <aside class="cm-full-side cm-stage-side cm-drawer${stageSide ? ' is-open' : ''}" id="cm-stack-drawer" aria-label="The table" ${stageSide ? '' : 'inert'} style="--split:${Math.round(splitOf('side') * 100)}%">
+      ${stageSide && !phone() ? `<span class="cm-board-panelgrip">${grip('panelw', 'The drawer width: drag, or use the arrow keys', panelWidth(), PANELW, 'vertical')}</span>` : ''}
+      <header><b>Stack & history</b>${ib('⚙', 'board-modules-edit', 'Arrange modules', {}, {pressed:paneEditing})}${ib('✕', 'board-stage-side', 'Close table panel')}</header>${stageModules('right')}</aside>
+      <button type="button" class="cm-stage-handle cm-stage-right cm-drawer-tab" data-action="board-stage-side" aria-expanded="${stageSide}" aria-controls="cm-stack-drawer" aria-label="${stageSide ? 'Collapse' : 'Expand'} Stack"><span>Stack · ${count}</span><b aria-hidden="true">${stageSide ? '▸' : '◂'}</b></button>`;
+  }
+  function tableMenu() {
+    return `<div class="cm-table-menu"><button type="button" data-action="board-table-menu" aria-expanded="${tableMenuOpen}" aria-controls="cm-table-menu">Table ▾</button>${tableMenuOpen ? `<div id="cm-table-menu" role="group" aria-label="Table">${b('Concede', 'board-concede')}${b('Leave table', 'board-leave-page')}${table?.youAreHost ? (confirmEnd ? `<p>End the game for everyone? The record is kept.</p>${b('Cancel', 'board-end-cancel')}${b('End game for everyone', 'board-end', {confirm:'1'}, true)}` : b('End game for everyone', 'board-end')) : ''}${b('Table rules', 'board-table-rules')}${b('Help', 'page-help', {help:'table'})}</div>` : ''}</div>`;
+  }
+  function cameraMenu() { return `${tableMenu()}<div class="cm-stage-camera"><button type="button" data-action="board-camera" aria-expanded="${cameraOpen}">Camera ▾</button>${cameraOpen ? `<div>${phone() ? "" : switcher()}${hudSlider()}<span>View seats</span>${ib("◀", "board-rotate", "Previous seat", {by: "-1"})}${ib("▶", "board-rotate", "Next seat", {by: "1"})}
         ${stageEnabled() ? `<label>Tilt <input type="range" min="0" max="60" value="${camera.tilt}" data-stage-camera="tilt" aria-label="Table tilt"><output>${camera.tilt}°</output></label>` : ""}
         ${stageEnabled() ? `<label>Zoom <input type="range" min="60" max="${CAMERA_MAX}" value="${camera.zoom}" data-stage-camera="zoom" aria-label="Table zoom"><output>${Math.round(camera.zoom)}%</output></label>${ib("⌖", "board-camera-center", "Center the table")}
         <label>Cards <input type="range" min="70" max="${CAMERA_MAX}" value="${camera.cards}" data-stage-camera="cards" aria-label="Tabletop card size"><output>${camera.cards}%</output></label>
@@ -1063,7 +1107,7 @@ globalThis.CrankBoard = Object.seal({
       coach: () => coach.open ? `<div class="cm-module-coach-host"></div>` : `<p class="cm-muted">Ask about your board, hand, or table.</p>${b("Open AI Coach", "board-coach", {}, false, {cls:"compact"})}`,
       recommended: () => `<p class="cm-muted">Recommendations use your AI Coach conversation and its privacy settings.</p>${b("Recommend actions", "board-recommend", {}, false, {cls:"compact"})}`,
       chat: () => `<p class="cm-muted">Game chat is not connected yet. Shared messages and voice chat are coming in a later update.</p>`,
-      actions: () => actionsShut ? `<p class="cm-muted">${e(view.decision ? "Your choice is waiting. Expand Actions to continue." : waitingText())}</p>` : `${decision() || `<p class="cm-muted">${e(waitingText() || "Choose a card or continue your turn.")}</p>`}`,
+      actions: () => !stageRail || actionsShut || /^mulligan:/.test(view.decision?.id || "") ? "" : `${decision() || `<p class="cm-muted">${e(waitingText() || "Choose a card or continue your turn.")}</p>`}`,
       table: () => `<div class="cm-full-vitals">${players().map(p => `<div class="${view.state.turnPlayerId === p.playerId ? "is-turn" : ""}" data-seat="${p.playerId}" style="--seat:${seatColor(p.playerId)}"><span>${e(seatLabel(p))}${turnMark(p.playerId)}</span>${vitals(p, {big:true})}</div>`).join("")}</div>`,
       inspect: () => `<div id="cm-full-pick">${pickPanel()}</div>`,
       stack: () => stack({module:true}) || `<p class="cm-muted">The stack is empty.</p>`,
@@ -1073,8 +1117,14 @@ globalThis.CrankBoard = Object.seal({
     };
     return `<div class="cm-stage-modules" data-module-side="${side}" aria-label="${side === "left" ? "Left" : "Right"} drawer modules">${ids.map((id, i) => {
       const title = PANE_MODULES.find(([key]) => key === id)[1];
-      const h = moduleH(id), sized = !(id === "actions" && actionsShut);
-      return `<section class="cm-stage-module${h && sized ? " has-height" : ""}" data-module="${id}" aria-label="${title} module"${h && sized ? ` style="--module-h:${h}px"` : ""}><header><h3>${title}</h3>${id === "actions" ? chevToggle(actionsShut, "board-actions-toggle", actionsShut ? "Expand Actions" : "Collapse Actions") : ""}${paneEditing && id !== "actions" ? `<button type="button" class="cm-module-drag" draggable="true" data-module-drag="${id}" aria-label="Drag ${title}; use the adjacent move buttons for keyboard control">⠿</button>${ib("↑", "board-module-move", `Move ${title} up`, {module:id, side, by:"-1"}, {disabled:i===0})}${ib("↓", "board-module-move", `Move ${title} down`, {module:id, side, by:"1"}, {disabled:i===ids.length-1})}${ib("×", "board-module-remove", `Remove ${title}`, {module:id, side})}` : ""}</header><div class="cm-module-body">${bodies[id]()}</div>${sized ? `<span class="cm-module-grip">${grip("modh", `${title} height: drag, or use the arrow keys; double-click for its own height`, h || MODH[0], MODH, "horizontal", ` data-module-id="${id}"`)}</span>` : ""}</section>`;
+      const collapsed = id === 'actions' ? actionsShut : foldedModules.has(id);
+      const h = moduleH(id), sized = !collapsed;
+      return `<section class="cm-stage-module cm-disclosure${h && sized ? ' has-height' : ''}" data-module="${id}" aria-label="${title} module"${h && sized ? ` style="--module-h:${h}px"` : ''}>
+        <header role="button" tabindex="0" data-action="board-module-toggle" data-module="${id}" aria-expanded="${!collapsed}" aria-controls="cm-module-${id}"><h3>${id === 'actions' ? 'Your decision' : title}</h3>
+        ${id === 'actions' ? chevToggle(actionsShut, 'board-actions-toggle', actionsShut ? 'Expand decision' : 'Collapse decision') : ''}
+        ${paneEditing && id !== 'actions' ? `${ib('↑', 'board-module-move', `Move ${title} up`, {module:id, side, by:'-1'}, {disabled:i===0})}${ib('↓', 'board-module-move', `Move ${title} down`, {module:id, side, by:'1'}, {disabled:i===ids.length-1})}${ib('×', 'board-module-remove', `Remove ${title}`, {module:id, side})}` : ''}</header>
+        <div class="cm-module-body" id="cm-module-${id}"${collapsed ? ' hidden' : ''}>${collapsed ? '' : bodies[id]()}</div>
+        ${sized ? `<span class="cm-module-grip">${grip('modh', `${title} height: drag, or use the arrow keys; double-click for its own height`, h || MODH[0], MODH, 'horizontal', ` data-module-id="${id}"`)}</span>` : ''}</section>`;
     }).join("")}</div>`;
   }
   function stageHand(p) {
@@ -1354,6 +1404,9 @@ globalThis.CrankBoard = Object.seal({
   function decision() {
     const d = view.decision;
     if (!d || view.status === "finished" || d.kind === "draw") return "";
+    if (/^mulligan:/.test(d.id) && d.options.some(o => o.label === 'Keep')) {
+      return `<section class="cm-board-decision" id="cm-board-decision" data-choice-id="${e(d.id)}" data-match-id="${e(view.matchId)}"><h3>Your opening hand</h3><div class="cm-decide-actions">${d.options.map(o => b(o.label,'board-opening-hand',{index:String(o.index)},o.label==='Keep',{disabled:sending})).join('')}</div></section>`;
+    }
     const opt = (o, extra = "", r = attackRisk(o)) => `<button type="button" class="v-button compact${picked.includes(o.index) ? " is-picked" : ""}${riskCls(r)}" data-action="board-option" data-index="${o.index}"${peekOf(o)}${sending ? " disabled" : ""}${extra}>${riskMark(r)}${e(o.label)}</button>`;
     /* One option as ever; a stack as one button, ×N, and -- where the question takes more than one -- how many of it. */
     const stackOpt = (s) => {
@@ -1461,8 +1514,10 @@ globalThis.CrankBoard = Object.seal({
       <ol class="cm-board-went-list">${rows}</ol><div class="cm-board-decision-foot"><span class="cm-muted">${now}</span>${b("OK", "board-went-close", {}, false, {cls: "compact"})}</div></section>`;
   }
   function ask() {
-    const d = view.decision, inner = `${went()}${moduleSide("stack") ? "" : stack()}${!moduleSide("actions") && d && d.kind !== "priority" && d.kind !== "draw" ? decision() : ""}`;
-    return inner ? `<div class="cm-board-ask">${inner}</div>` : "";
+    const d = view.decision, side = moduleSide('actions');
+    const visible = !/^mulligan:/.test(d?.id || '') && !actionsShut && (phone() ? stageRail : side === 'left' ? stageRail : side === 'right' ? stageSide : false);
+    const inner = `${went()}${moduleSide('stack') ? '' : stack()}${!visible && d && d.kind !== 'draw' ? decision() : ''}`;
+    return `<div class="cm-board-ask cm-decision-slot" id="cm-decision-slot" aria-label="Current decision"${inner ? '' : ' hidden'}>${inner}</div>`;
   }
   const alsoCount = () => {const d = view.decision; return d && d.kind === "priority" ? new Set(d.options.filter((o) => o.act !== "pass" && o.act !== "resolve-all" && o.act !== "undo-land").map((o) => `${o.act}|${o.label}`)).size : 0;};
   function alsoButton() {
@@ -1691,13 +1746,13 @@ globalThis.CrankBoard = Object.seal({
     const pill = mine
       ? `<div class="cm-phone-pill"><b>T${s.turn}</b><span class="cm-board-step">${e(step)}</span>${next ? `<span class="cm-board-next">Next: ${e(next)}</span>` : ""}
           ${passButton()}${view.state.turnPlayerId !== view.seat ? skipControl(true) : ""}</div>`
-      : `<div class="cm-phone-pill"><span>Viewing ${e(p.name)}</span>${b("My board", "board-focus", {seat: String(view.seat)}, true, {cls: "compact"})}${view.state.turnPlayerId !== view.seat ? skipControl(true) : ""}</div>`;
+      : `<div class="cm-phone-pill"><span>Viewing ${e(p.name)}</span>${b("My board", "board-focus", {seat: String(view.seat)}, false, {cls: "compact"})}${view.state.turnPlayerId !== view.seat ? skipControl(true) : ""}</div>`;
     const seats = [me, ...players().filter((x) => x.playerId !== view.seat)];
     const strip = `<aside class="cm-phone-seats" aria-label="Seats">
       ${seats.map((x) => `<button type="button" class="cm-phone-seat${x.playerId === p.playerId ? " is-focus" : ""}" data-action="board-focus" data-seat="${x.playerId}" aria-pressed="${x.playerId === p.playerId}" style="--seat:${seatColor(x.playerId)}">
-        <span>${e(x.playerId === view.seat ? "You" : x.name)}</span><b>${x.health.life}</b><small>${e(seatFlag(x))}</small></button>`).join("")}
+        ${seatHeader(x,{interactive:false})}</button>`).join("")}
       <div class="cm-phone-rotate">${b("‹", "board-rotate", {by: "-1"}, false, {cls: "compact"})}${b("›", "board-rotate", {by: "1"}, false, {cls: "compact"})}</div></aside>`;
-    return `${rail}${cameraMenu()}${strip}<div class="cm-phone-center">${pill}${combatStrip()}<div class="cm-phone-battlefield" tabindex="0" aria-label="Battlefield, scroll to explore">${mat(p, {size: "phone", head: "none"})}</div><div class="cm-phone-ask">${went()}${decision()}${stack()}</div></div>`;
+    return `${rail}${cameraMenu()}${strip}<div class="cm-phone-center">${pill}${combatStrip()}<div class="cm-phone-battlefield" tabindex="0" aria-label="Battlefield, scroll to explore">${mat(p, {size: "phone", head: "none"})}</div><div class="cm-phone-ask">${ask()}</div></div>${boardDrawers()}`;
   }
   /* THE COACH (the handoff's play-coach). It lives beside the board, not inside it, so the views that arrive
      while someone types redraw the board and leave the composer, and whatever is in it, alone. */
@@ -2303,6 +2358,8 @@ globalThis.CrankBoard = Object.seal({
     const liveCoach=document.getElementById("cm-board-coach");
     if(liveCoach && host.contains(liveCoach)) host.after(liveCoach);
     if (!view) {host.innerHTML = `<p class="cm-board-loading">${status === "reconnecting" ? "Reconnecting to the table…" : "Opening the board…"}</p>`; return;}
+    host.classList.add('cm-study');
+    applyHud(host);
     host.toggleAttribute("data-combat", combatAttacks().length > 0);
     if (phone()) {
       host.dataset.view = "focus";
@@ -2621,7 +2678,12 @@ globalThis.CrankBoard = Object.seal({
   /* THE PAGE UNDER THE BOARD (WCAG 2.4.3, 2.4.7): the board covers the whole window, so the rail, the skip link and the
      footer under it are inert while it is up -- else Tab walks into controls nobody can see. ☰ is the way to the pages. */
   const SHELL = [".cm-sidebar", ".cm-skip", ".cm-legal"];
-  function shell(covered) {for (const q of SHELL) for (const el of document.querySelectorAll(q)) el.inert = covered;}
+  const shellHidden = new WeakMap();
+  function shell(covered) {for (const q of SHELL) for (const el of document.querySelectorAll(q)) {
+    el.inert = covered;
+    if (covered) {if (!shellHidden.has(el)) shellHidden.set(el, el.getAttribute('aria-hidden')); el.setAttribute('aria-hidden', 'true');}
+    else if (shellHidden.has(el)) {const was = shellHidden.get(el); if (was === null) el.removeAttribute('aria-hidden'); else el.setAttribute('aria-hidden', was); shellHidden.delete(el);}
+  }}
 
   /* ---- what the lobby hands over ---- */
   C.board = {
@@ -2807,6 +2869,10 @@ globalThis.CrankBoard = Object.seal({
   actions["board-zoom-open"] = (el) => inspect(el.dataset.card);
   actions["board-inspect"] = el => inspect(el.dataset.ref, el.dataset.kind || "card");
   actions["board-inspect-close"] = () => {inspection = null; draw(); C.focusFind(inspectionFrom)?.focus({preventScroll:true}); inspectionFrom = null;};
+  actions['board-opening-hand'] = el => {
+    const d = view?.decision, index = Number(el.dataset.index);
+    if (!sending && /^mulligan:/.test(d?.id || '') && d.options.some(o => o.index === index)) send({indices:[index]});
+  };
   actions["board-actions-open"] = () => {stageRail = true; actionsShut = false; draw(); document.querySelector("[data-action=board-actions-toggle]")?.focus({preventScroll:true});};
   actions["board-actions-toggle"] = () => {actionsShut = !actionsShut; draw();};
   actions["board-pass"] = () => {
@@ -2909,7 +2975,33 @@ globalThis.CrankBoard = Object.seal({
     const key=el.dataset.stageStyle, list=key==="background"?CrankStage.appearances.backgrounds:CrankStage.appearances.tables;
     if(list.some(x=>x.id===el.value)){appearance[key]=el.value;keep(`cm-stage-${key}`,el.value);draw();}
   });
-  actions["board-stage-side"] = () => {stageSide = !stageSide; draw();};
+  actions["board-stage-side"] = () => {stageSide = !stageSide; if (phone() && stageSide) stageRail = false; draw();};
+  let modulePress = null;
+  document.addEventListener('pointerdown', event => {
+    const header = event.target.closest?.('.cm-stage-module>header');
+    modulePress = header ? {header,x:event.clientX,y:event.clientY,moved:false} : null;
+    if(tableMenuOpen && !event.target.closest?.('.cm-table-menu,#cm-dialog')) {
+      tableMenuOpen=false;document.getElementById('cm-table-menu')?.remove();
+      document.querySelector('[data-action=board-table-menu]')?.setAttribute('aria-expanded','false');
+    }
+  }, true);
+  document.addEventListener('pointermove', event => {if(modulePress && Math.hypot(event.clientX-modulePress.x,event.clientY-modulePress.y)>4)modulePress.moved=true;},true);
+  document.addEventListener('click', event => {
+    if(modulePress?.moved && event.target.closest?.('.cm-stage-module>header')===modulePress.header) {event.preventDefault();event.stopImmediatePropagation();}
+    modulePress=null;
+  },true);
+  actions['board-module-toggle'] = el => {
+    const id = el.dataset.module; if (id === 'actions') actionsShut = !actionsShut;
+    else if (foldedModules.has(id)) foldedModules.delete(id); else foldedModules.add(id);
+    draw();
+  };
+  document.addEventListener('keydown', event => {
+    if (!event.target.matches?.('.cm-stage-module>header[data-action=board-module-toggle]') || !['Enter',' '].includes(event.key)) return;
+    event.preventDefault(); actions['board-module-toggle'](event.target);
+  });
+  actions['board-table-menu'] = el => {tableMenuOpen = !tableMenuOpen; cameraOpen = false; confirmEnd = false; opened(el,tableMenuOpen); draw();};
+  actions['board-table-rules'] = () => {tableMenuOpen = false; C.modal('Table rules', `<p>${e(table?.rules?.name || 'Commander')}</p>${b('Close','close')}`); draw();};
+  actions['board-leave-page'] = () => {C.board.close(); C.go('game');};
   actions["board-profile"] = el => {profileOpen=!profileOpen;tools=false;opened(el,profileOpen);draw();};
   actions["board-modules-settings"] = moduleSettings;
   C.sideDrawerSettings = moduleSettings;
@@ -3042,8 +3134,8 @@ globalThis.CrankBoard = Object.seal({
     ids.splice(ids.indexOf(target.dataset.module) + Number(after), 0, id);
     savePaneModules(ids,side);
   });
-  actions["board-stage-rail"] = () => {stageRail = !stageRail; draw();};
-  actions["board-camera"] = () => {cameraOpen = !cameraOpen; draw();};
+  actions["board-stage-rail"] = () => {stageRail = !stageRail; if (phone() && stageRail) stageSide = false; draw();};
+  actions["board-camera"] = () => {cameraOpen = !cameraOpen; tableMenuOpen = false; draw();};
   /* CAMERA ▾ CLOSES ON A PRESS ANYWHERE OUTSIDE IT (Rob, 2026-10-25), as Profile and History do. Taken out where it is,
      not by a redraw, so the press still reaches what it was on; caught on the way down, so a card's own handler that
      stops the press does not keep it open. */
@@ -3509,10 +3601,10 @@ globalThis.CrankBoard = Object.seal({
       return;
     }
     /* A menu closed by Escape gives the focus back to the button that opened it, if the focus was on the board. */
-    if (event.key === "Escape" && (historyOpen || menuOpen || stepsOpen || tools || alsoOpen || profileOpen)) {
+    if (event.key === "Escape" && (historyOpen || menuOpen || stepsOpen || tools || alsoOpen || profileOpen || tableMenuOpen)) {
       const a = document.activeElement, back = !a || a === document.body || a.closest("#cm-board") ? popupFrom : null;
       const nested = profileOpen && (historyOpen || menuOpen || tools);
-      profileOpen = nested; historyOpen = false; menuOpen = false; stepsOpen = false; tools = false; alsoOpen = false; confirmEnd = false; popupFrom = nested ? C.focusKey(document.querySelector("#cm-board [data-action=board-profile]")) : null; draw();
+      tableMenuOpen = false; profileOpen = nested; historyOpen = false; menuOpen = false; stepsOpen = false; tools = false; alsoOpen = false; confirmEnd = false; popupFrom = nested ? C.focusKey(document.querySelector("#cm-board [data-action=board-profile]")) : null; draw();
       const el = C.focusFind(back);
       if (el && el.isConnected) el.focus({preventScroll: true});
       return;
@@ -3553,9 +3645,8 @@ globalThis.CrankBoard = Object.seal({
     if (event.key === "Escape") {
       if (showing === "held") {actions["board-hand-back"](); return;}
       if (showing) {actions["board-hand-close"](); return;}
-      if (stageSide || stageRail) {const action=stageSide ? "board-stage-side" : "board-stage-rail"; stageSide=false; stageRail=false; draw(); document.querySelector(`[data-action="${action}"]`)?.focus(); return;}
-      if (panelOpen) {panelOpen = false; draw(); return;}
-
+      if (focus !== view.seat) {focus = view.seat; draw(); return;}
+      tableMenuOpen = true; draw(); document.querySelector('[data-action=board-table-menu]')?.focus(); return;
     }
   });
   actions["board-tools"] = () => openSettings();
@@ -3598,7 +3689,7 @@ globalThis.CrankBoard = Object.seal({
   actions["board-history"] = (el) => {historyOpen = !historyOpen; if (!phone() && historyOpen) profileOpen = true; tools = false; menuOpen = false; stepsOpen = false; opened(el, historyOpen); draw(); if (historyOpen) document.querySelector("#cm-board-history .cm-history-filter")?.focus();};
   actions["board-end"] = async (el) => {
     if (el.dataset.confirm !== "1") {confirmEnd = true; draw(); refreshSettings(); return;}
-    confirmEnd = false; tools = false;
+    confirmEnd = false; tools = false; tableMenuOpen = false;
     await tableApi().api("POST", `${tableApi().tableUrl(tableId)}/end`);
     draw();   /* the room's own view, ended, follows on the socket */
   };
@@ -3609,7 +3700,10 @@ globalThis.CrankBoard = Object.seal({
     C.notice(record.kind === "full" ? "The full record is downloaded: its seed and decision tape play the game again." : "Your record is downloaded: your seat's view and the table's history.", false, {undo: false});
   };
   actions["board-end-cancel"] = () => {confirmEnd = false; draw(); refreshSettings();};
-  actions["board-concede"] = async () => {tools = false; await tableApi().api("POST", `${tableApi().tableUrl(tableId)}/concede`); draw();};
+  actions["board-concede"] = async (el) => {
+    if (el?.dataset.confirm !== '1') {C.modal('Concede this game?', `<p>Your seat concedes this game.</p><div class="cm-actions">${b('Cancel','close')}${b('Concede','board-concede',{confirm:'1'},true)}</div>`); return;}
+    actions.close(); tools = false; tableMenuOpen = false; await tableApi().api('POST', `${tableApi().tableUrl(tableId)}/concede`); draw();
+  };
   actions["board-rematch"] = (el) => answerRematch(el.dataset.accept === "yes");
   actions["board-leave"] = async () => {const id = tableId; C.board.close(); await tableApi().refresh(id);};
   /* Hold priority after I cast (Tools): kept on this device, and the Tools' words follow it. */
