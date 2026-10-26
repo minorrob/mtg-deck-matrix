@@ -40,6 +40,11 @@ try{
   if(problems.length)failures.push({case:`${mode}/${width}/${hud}/${seats}seats`,text:problems});else checks++;
   const own=page.locator('.cm-mat[data-seat="0"] .cm-bcard[data-card="9001"]').first();await own.scrollIntoViewIfNeeded();const reachable=await own.evaluate(el=>{const r=el.getBoundingClientRect(),at=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return el===at||el.contains(at);});if(!reachable)failures.push({case:`${mode}/${width}/${hud}/${seats}seats`,geometry:'card unreachable after scrolling'});else checks++;
   if(process.env.UAT_SHOTS&&mode==='table'&&width===1440)await page.screenshot({path:path.join(process.env.UAT_SHOTS,`r4-caption-${mode}-${width}-${hud}-s${seats}-own-row.png`)});
+  if(mode==='table'&&width===1440&&hud===200&&seats===4)for(const [key,value] of [['Home','60'],['End','160']]){
+   await page.locator('[data-action=board-camera]').click();const scale=page.locator('[data-board-scale=board]');eq(await scale.evaluate(el=>[el.min,el.max]),['60','160'],'original desktop Card Scale endpoints remain available');await scale.focus();await page.keyboard.press(key);eq(await scale.inputValue(),value,`native Card Scale ${key} reaches original endpoint`);await page.locator('[data-action=board-camera]').click();eq(await cardBadgeBounds(page),[],`Card Scale${value}: real badge text fits its raster clip`);
+   for(const selector of ['.cm-board-table .cm-bcard-pt','.cm-board-table .cm-bcard-count']){const badge=page.locator(selector).first();await badge.scrollIntoViewIfNeeded();ok(await badge.evaluate(el=>{const card=el.closest('.cm-bcard'),r=card.getBoundingClientRect(),range=document.createRange();range.selectNodeContents(el);const text=range.getBoundingClientRect();return text.left>=r.left-1&&text.right<=r.right+1&&text.top>=r.top-1&&text.bottom<=r.bottom+1&&Math.abs(card.offsetHeight/card.offsetWidth-1.4)<.04;}),`Card Scale${value}: actual first ${selector.includes('pt')?'P/T':'pile count'} text bounds and5:7 raster preserved`);}
+   if(process.env.UAT_SHOTS)await page.screenshot({path:path.join(process.env.UAT_SHOTS,`r4-caption-table-1440-200-s4-cardscale${value}.png`)});
+  }
   eq(errors,[],`${mode}/${width}/${hud}/${seats}seats: no browser errors`);await context.close();
  }
  eq(failures,[],'actual endpoint typography and geometry audit');
