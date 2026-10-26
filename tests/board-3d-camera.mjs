@@ -240,7 +240,10 @@ try {
   const far = await place(.93, .86), close_ = await place(.53, .55);
   for (const [name, spot] of [["far", far], ["near", close_]]) ok(await page.evaluate(({x, y}) => {const el = document.elementFromPoint(x, y); return !!el.closest(".cm-stage-region") && !el.closest(".cm-stage-camera, .cm-board-ask, .cm-stage-actions");}, spot), `the ${name} place is on the table, under no overlay`);
   if (SHOTS) await page.screenshot({path: path.join(SHOTS, "head-look-rest.png")});
-  const a = await look(far, {label: "far"});
+  /* Enough frames on the way to judge the motion by: a loaded runner can draw only two or three in 0.65 s, so the look is
+     sampled again, up to four times, until three frames fall inside it. */
+  let a = await look(far, {label: "far"});
+  for (let i = 0; i < 3 && a.moving.filter((x) => x.t < 1).length < 3; i++) a = await look(far, {label: "far"});
   const waited = a.start.started - a.forward.down;
   ok(waited >= 195 && waited < 400, `the look starts once the button has been held 200 ms (${Math.round(waited)} ms)`);
   near(a.start.ms, 650, 1, "a place at the far corner is the farthest (r = 1) and takes 0.65 s");
@@ -269,7 +272,11 @@ try {
   ok(off(b.reached) < off(b.moving[0]) && (off(b.moving[0]) < 20 || (glance(b) > .3 && glance(b) < .7)), `ending with that place about halfway to the center of the view (${Math.round(off(b.moving[0]))}px → ${Math.round(off(b.reached))}px)`);
   ok(same(b.last, atRest), "and it too comes back exactly");
   /* Let go partway: backward from there, in the time it took to get there. */
-  const c = await look(far, {release: "half"});
+  /* Let go partway: on a slow runner a frame can come 250 ms and more after the last, and the whole 0.65 s motion can end
+     between the test seeing t >= .3 and the button coming up -- so the look is tried again, up to four times, until the
+     release lands partway. Each try is a whole look, back to rest. */
+  let c = await look(far, {release: "half"});
+  for (let i = 0; i < 3 && !(c.release && c.release.t < 1); i++) c = await look(far, {release: "half"});
   ok(c.release.t >= .3 && c.release.t < 1, `let go partway (at ${c.release.t.toFixed(2)})`);
   ok(c.turned.length >= 2 && backOnTime(c), `it comes back from where it was, not from the end: ${Math.round(c.release.t * 650)} ms`);
   ok(same(c.last, atRest), "to exactly the resting camera");
