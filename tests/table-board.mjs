@@ -734,6 +734,7 @@ try {
   await maya.page.click(".cm-full-viewing [data-action=board-focus]");
   await maya.page.locator(".cm-full-mine .cm-seatboard.is-you").waitFor();
   ok(true, "My board brings hers back");
+  const escapeRevision=views(MAYA).at(-1).revision, escapeSends=sent[MAYA].length;
   await maya.page.keyboard.press("Escape");
   await maya.page.locator('#cm-table-menu').waitFor();
   ok(true, 'Escape from your own board opens Table, as the r4 escape order specifies');
@@ -744,6 +745,7 @@ try {
     if(await maya.page.locator(drawer+'.is-open').count()) await maya.page.locator('.cm-stage-'+side+'[data-action]').click();
   }
   eq(await maya.page.locator('.cm-stage-side.is-open, .cm-stage-rail.is-open').count(),0,'native drawer tabs collapse both shared drawers');
+  eq([views(MAYA).at(-1).revision,sent[MAYA].length],[escapeRevision,escapeSends],'Table Escape and native drawer collapse do not submit a game answer or change its view');
   await maya.page.locator(".cm-stage-top").waitFor();
   eq(await maya.page.getAttribute("#cm-board", "data-view"), "full", "Escape keeps the selected 3D view");
   await chooseView(maya.page,"focus");
