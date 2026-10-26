@@ -1404,13 +1404,13 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-plan-sub{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:12px;color:var(--v-muted)}
 .cm-plan-sub .cm-pip,.cm-plan-sub img{width:14px;height:14px}
 .cm-plan-role{font-weight:600;color:var(--v-ink)}
-.cm-plan-peek{position:fixed;z-index:80;width:244px;pointer-events:none;border-radius:12px;overflow:hidden;box-shadow:0 14px 40px #000a}
+.cm-plan-peek{position:fixed;z-index:80;width:244px;pointer-events:none;border-radius:12px;overflow:hidden;box-shadow:var(--shadow-card)}
 .cm-plan-peek img{width:100%;display:block}
 .cm-plan-confirm{list-style:none;margin:8px 0;padding:0;display:grid;gap:4px;max-height:50vh;overflow:auto}
 .cm-plan-confirm-mark{color:var(--v-accent)}
 .cm-plan-confirm-warn{color:var(--st-remove);font-weight:600}
 @media(max-width:760px){.cm-plan-head,.cm-plan-row{grid-template-columns:1fr;gap:0}.cm-plan-head div+div{display:none}.cm-plan-side.is-in{border-top:1px dashed var(--v-line)}}
-@media print{.cm-plan-tick,.cm-plan-thumb,.cm-plan-head{color:#000}.cm-plan-peek{display:none!important}}
+@media print{.cm-plan-tick,.cm-plan-thumb,.cm-plan-head{color:black}.cm-plan-peek{display:none!important}}
 .cm-pull-counts{display:flex;flex-wrap:wrap;gap:4px 6px;font-size:13px;color:var(--v-muted)}
 .cm-pull-counts span{white-space:nowrap}
 .cm-pull-group{margin:0 0 22px}
