@@ -52,9 +52,10 @@ A row, as the admin routes answer it: the report's fields, plus `id`, `state`, `
 `screenshot` (`null`: none sent; `"dropped"`: sent and not kept, R2 is not on; later an R2 key), `issue`, `pr`,
 `release`, `messageId`, `createdAt`, `updatedAt`.
 
-**The owner** is the administrator the release names (`INVITE_ADMIN_ID`, as `cloud/sharing.mjs` already reads it). The
-access groups of the AI players plan (Owner, Insiders, General) replace that test when they are built; until then every
-other person is `general`.
+**The owner** is the address `OWNER_EMAIL` names (the AI players plan's access groups, `cloud/access.mjs`'s `groupOf`
+once it is on main), in any letter case; until Rob sets it, the administrator the release names (`INVITE_ADMIN_ID`, as
+`cloud/sharing.mjs` reads it) stands in. The store's own group test is `feedbackGroup` (owner, else general; insiders
+come with the groups), named so it never collides with `groupOf`.
 
 **The agent** is a Cloudflare Access service token for its own Access application, named to the Worker as
 `FEEDBACK_AGENT_AUD`. The Worker admits a token for that audience with no email (a service token) as the agent, and a

@@ -156,6 +156,13 @@ const call = async (method, path, {jwt, body, purpose = "feedback", headers = {}
 /* The owner is user 1: the first person the Worker meets. */
 eq((await call("GET", "/api/me", {jwt: await person(OWNER)})).status, 200, "the owner has signed in, as user 1");
 ok(isOwner(ENV, {id: 1}) && !isOwner(ENV, {id: 2}) && !isOwner({}, {id: 1}), "the owner is INVITE_ADMIN_ID's user, and nobody where no administrator is named");
+ok(isOwner({OWNER_EMAIL: " Rob@Example.com "}, {id: 9, email: OWNER}) && !isOwner({OWNER_EMAIL: OWNER}, {id: 1, email: SAM}) && isOwner({OWNER_EMAIL: OWNER, INVITE_ADMIN_ID: "1"}, {id: 1, email: SAM}),
+  "OWNER_EMAIL names the owner first, in any letter case; the administrator stands in beside it");
+{
+  const byAddress = await call("GET", "/api/admin/feedback", {jwt: await person(SAM), env: {INVITE_ADMIN_ID: undefined, OWNER_EMAIL: "SAM@example.com"}});
+  eq(byAddress.status, 200, "the admin route takes the owner by OWNER_EMAIL where no administrator id is set");
+  eq((await call("GET", "/api/admin/feedback", {jwt: await person(KIM), env: {INVITE_ADMIN_ID: undefined, OWNER_EMAIL: "SAM@example.com"}})).status, 403, "and refuses everyone else there");
+}
 
 /* ---- 3. POST /api/feedback ---- */
 {
