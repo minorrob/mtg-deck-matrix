@@ -63,5 +63,11 @@ try{
   const {page,context,frames}=await open('table',1440,'sapphire-obsidian',v);const pw=page.locator('.cm-r4-combat [data-action=board-combat-inspect][data-card="3000"]');
   await pw.focus();await page.keyboard.press('Enter');await page.locator('#cm-dialog[open]').waitFor();ok((await page.locator('#cm-dialog').textContent()).includes('Garruk Wildspeaker'),'attacked permanent has a one-press keyboard inspection path');eq(frames.filter(f=>f.type==='act').length,0,'permanent inspection sends no game action');await context.close();
  }
+
+ {
+  const f=await open('table',1440);f.hold();await f.page.locator(pair(0)).click();await pause(f.page);f.emit({type:'refused',of:'check',error:'Transport check failed'});await pause(f.page);
+  ok(await f.page.locator('[data-action=board-block-retry]').isVisible(),'closed transport check exposes quiet retry');const before=f.frames.filter(x=>x.type==='check').length;f.release();await f.page.locator('[data-action=board-block-retry]').click();await pause(f.page);
+  eq(f.frames.filter(x=>x.type==='check').length,before+1,'retry asks for fresh validation');eq(f.frames.filter(x=>x.type==='check').at(-1).indices,[0],'retry preserves private pair draft');eq(f.frames.filter(x=>x.type==='act').length,0,'retry never submits a game answer');await f.context.close();
+ }
 }finally{await close();}
 console.log(`board-r4-combat: ${checks} checks passed`);
