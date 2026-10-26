@@ -170,7 +170,7 @@
       if (!el || !cloudPlay() || !playable(d)) return;
       let r;
       try {r = await readiness(d);} catch {return;}
-      const playPrimary=!r.count&&C.M?.readiness(C.state,d).complete===true;
+      const playPrimary=!r.count&&C.M?.readiness(C.state,d).complete===true&&(!C.route().params.get('tab')||C.route().params.get('tab')==='overview');
       el.innerHTML = `<span class="cm-deck-play-line">${e(readinessText(r))}</span>`
         + (r.count ? ` <span class="cm-muted">The table cannot play ${r.unknown.length === 1 ? "this one" : "these"} yet: ${e(r.unknown.slice(0, 6).join(", "))}${r.unknown.length > 6 ? ", …" : ""}.</span>`
           : ` ${b("Play this deck", "deck-play", {deck: d.id}, playPrimary, {cls: "compact"})}`);
