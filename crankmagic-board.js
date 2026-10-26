@@ -992,11 +992,22 @@ globalThis.CrankBoard = Object.seal({
   const cardOrders=new Map(), zonePositions=new Map();
   const zoneKey=seat=>`cm-board-zone-split:${mode}:${seat}`;
   function zoneShare(seat) {const value=Number(stored(zoneKey(seat)));return value>=.2&&value<=.8?value:.6;}
+  function zoneMetrics(mat) {
+    const grid=mat.querySelector('.cm-mat-grid'),field=grid.querySelector('.cm-board-field'),lands=grid.querySelector('.cm-board-lands');
+    const number=(el,key)=>parseFloat(getComputedStyle(el)[key])||0;
+    const outer=el=>el?el.offsetHeight+number(el,'marginTop')+number(el,'marginBottom'):0;
+    const padding=el=>number(el,'paddingTop')+number(el,'paddingBottom')+number(el,'borderTopWidth')+number(el,'borderBottomWidth');
+    const bc=mat.querySelector('.cm-bcard')?.offsetWidth || 60,row=Math.ceil(bc*1.72+4);
+    const fieldMin=Math.ceil(row+outer(field.querySelector(':scope>.cm-mat-label'))+outer(field.querySelector('.cm-board-group>h3'))+padding(field));
+    const landMin=Math.ceil(row+outer(lands.querySelector(':scope>.cm-mat-label'))+padding(lands));
+    const chip=grid.querySelector(':scope>.cm-board-chip'),gap=number(grid,'rowGap');
+    const extra=padding(grid)+8+outer(chip)+gap*(chip?3:2);
+    return {fieldMin,landMin,extra,header:outer(mat.querySelector('.cm-mat-head'))};
+  }
   function fitBoardZones(host) {
     for(const grid of host.querySelectorAll('.cm-mat-grid')) {
-      const mat=grid.closest('.cm-mat'),bc=parseFloat(getComputedStyle(mat).getPropertyValue('--bc')) || mat.querySelector('.cm-bcard')?.offsetWidth || 60;
-      const fieldMin=Math.ceil(bc*1.4+64*hudScale()/100),landMin=Math.ceil(bc*1.72+32*hudScale()/100),header=mat.querySelector('.cm-mat-head')?.offsetHeight || 0;
-      const total=Math.max((fieldMin+landMin)*1.2,mat.dataset.fit==='phone'?innerHeight*.65:mat.clientHeight-header-16),share=zoneShare(Number(mat.dataset.seat));
+      const mat=grid.closest('.cm-mat'),{fieldMin,landMin,extra,header}=zoneMetrics(mat);
+      const total=Math.max((fieldMin+landMin)*1.2,mat.dataset.fit==='phone'?innerHeight*.65:mat.clientHeight-header-extra),share=zoneShare(Number(mat.dataset.seat));
       const field=Math.max(fieldMin,Math.min(total-landMin,total*share));
       grid.style.setProperty('--field-px',`${field}px`);grid.style.setProperty('--lands-px',`${total-field}px`);
       grid.dataset.zoneTotal=String(total);grid.dataset.fieldMin=String(fieldMin);grid.dataset.landMin=String(landMin);
@@ -1067,7 +1078,7 @@ globalThis.CrankBoard = Object.seal({
         <div class="cm-mat-zone cm-board-field" data-zone="battlefield">${group("Creatures", creatures)}${group("Artifacts & enchantments", other)}${!field.length && !ghosts.length ? `<p class="cm-board-empty">${p.health.status === "lost" || departed(i) ? "Out of the game." : "No permanents yet."}</p>` : ""}<i class="cm-mat-label">Battlefield</i></div>
         <span class="cm-zone-divider" data-wf="W17">${grip('zones','Battlefield and lands divider: drag, arrows, or double click to reset',Math.round(zoneShare(i)*100),[20,80],'horizontal',` data-zone-seat="${i}"`)}</span>
         <div class="cm-mat-zone cm-board-lands" data-zone="lands">${cardSection(lands,`${i}:lands`,ghosts.filter(c => c.types.includes("Land")))}<i class="cm-mat-label">Lands · ${lands.length}</i></div>
-        ${you ? `<span class="cm-board-chip">${mana} mana open · land drop ${p.landsPlayed ? "used" : "1 left"}</span>` : ""}
+        ${you && size!=='focus' ? `<span class="cm-board-chip">${mana} mana open · land drop ${p.landsPlayed ? "used" : "1 left"}</span>` : ""}
         ${pile("Command", z.Command, z.Command.cards[0])}${pile("Exile", z.Exile, z.Exile.cards.at(-1))}
         ${size === "focus" ? historyBand(6) : ""}
         ${pile("Library", z.Library, null, {back: true, draw: you && !!view.decision && view.decision.kind === "draw" && view.status !== "finished"})}${pile("Graveyard", z.Graveyard, z.Graveyard.cards.at(-1))}
@@ -2639,11 +2650,19 @@ globalThis.CrankBoard = Object.seal({
           tbl.style.setProperty("--mid-y", `${Math.round((box.height - used) / 2 + top * 9 / 16 + gy / 2)}px`);
         }
       }
-      if(tbl && hudScale()>=150) {
-        const n=Number(tbl.dataset.seats),box=tbl.getBoundingClientRect(),css=getComputedStyle(tbl),gx=parseFloat(css.columnGap)||14,gy=parseFloat(css.rowGap)||22;
-        const width=Math.max(280,Math.floor((box.width-gx)/2)),height=Math.max(165*hudScale()/100,width*9/16);
-        for(const key of ['--top-w','--bot-w','--board-w'])tbl.style.setProperty(key,`${width}px`);
-        tbl.style.setProperty('--hud-row-h',`${height}px`);tbl.style.setProperty('--mid-x',`${box.width/2}px`);tbl.style.setProperty('--mid-y',`${n===2?height/2:height+gy/2}px`);
+      if(tbl) {
+        /* EX15: preserve the largest-fit widths and 5:7 cards. Where readable captions and two real
+           card rows cannot fit a 16:9 mat, grow its row and scroll the outer Table viewport. */
+        const n=Number(tbl.dataset.seats),box=tbl.getBoundingClientRect(),css=getComputedStyle(tbl),gy=parseFloat(css.rowGap)||22;
+        const minimum=slot=>{const mat=slot.querySelector('.cm-mat'),m=zoneMetrics(mat);return Math.ceil(m.header+(m.fieldMin+m.landMin)*1.2+m.extra+4);};
+        const slots=[...tbl.querySelectorAll(':scope>.cm-board-slot')];
+        const topBase=parseFloat(tbl.style.getPropertyValue('--top-w'))*9/16,botBase=parseFloat(tbl.style.getPropertyValue('--bot-w'))*9/16;
+        let top=Math.max(topBase,...slots.filter(s=>n===2||['a','b'].includes(s.dataset.area)).map(minimum));
+        let bot=n===2?0:Math.max(botBase,...slots.filter(s=>['c','d'].includes(s.dataset.area)).map(minimum));
+        const height=top+bot+(n===2?0:gy),offset=Math.max(0,(box.height-height)/2);
+        tbl.style.setProperty('--table-top-h',`${Math.ceil(top)}px`);tbl.style.setProperty('--table-bot-h',`${Math.ceil(bot)}px`);
+        tbl.style.setProperty('--grid-h',`${Math.ceil(height)}px`);tbl.style.setProperty('--mid-y',`${offset+(n===2?top/2:top+gy/2)}px`);
+        tbl.style.alignContent=height>box.height?'start':'center';
       }
       const stage = host.querySelector(".cm-board-stage");
       if (stage) {

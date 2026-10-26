@@ -1044,3 +1044,11 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-board-table[data-seats="3"] .cm-board-slot[data-area="c"] .cm-board-field>:is(.cm-mat-label,.cm-board-group:first-of-type>h3){max-width:calc(50% - var(--pie)/2 - 8px);white-space:normal;overflow-wrap:anywhere}
 
 #matrix-v2 .cm-board .cm-board-tabletop{padding-left:56px;padding-right:56px}
+
+/* Captions are in flow: reserve real card rows instead of clipping Lands to a strip. */
+#matrix-v2 .cm-board .cm-board-field,#matrix-v2 .cm-board .cm-board-lands{padding-bottom:4px}
+#matrix-v2 .cm-board .cm-board-table,#matrix-v2 .cm-board[data-hud-large] .cm-board-table{grid-template-rows:var(--table-top-h) var(--table-bot-h)}
+#matrix-v2 .cm-board .cm-board-table[data-seats="2"],#matrix-v2 .cm-board[data-hud-large] .cm-board-table[data-seats="2"]{grid-template-rows:var(--table-top-h)}
+#matrix-v2 .cm-board .cm-board-table[data-seats="2"] .cm-board-slot,#matrix-v2 .cm-board[data-hud-large] .cm-board-table[data-seats="2"] .cm-board-slot{height:var(--table-top-h)}
+#matrix-v2 .cm-board .cm-mat .cm-board-chip{grid-row:4;align-self:start}
+#matrix-v2 .cm-board .cm-phone-battlefield .cm-board-pile{grid-row:5}
