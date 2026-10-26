@@ -1829,11 +1829,13 @@ async function verifyTableRowAccess(page, facts) {
   ok(facts.horizontal, 'complete Table rows never introduce horizontal overflow');
   if(!facts.scrolls)return;
   const wheelPoint=await page.locator('.cm-board-table').evaluate(table=>{
-    const r=table.getBoundingClientRect(),gutter=r.width-table.clientWidth;
+    const r=table.getBoundingClientRect(),bar=table.querySelector(':scope>.cm-board-rowbar').getBoundingClientRect();
+    const point={x:bar.x+bar.width/2,y:r.y+Math.min(20,r.height/4)},hit=document.elementFromPoint(point.x,point.y);
+    if(!hit||!table.contains(hit)||hit.closest('.cm-mat,.cm-board-slot'))throw new Error('The native Table column-gutter point does not reach its own container');
     globalThis.__uatTableWheels=[];
     const handler=event=>{const entry={x:event.clientX,y:event.clientY,dy:event.deltaY,target:event.target.className,zone:event.target.closest?.('[data-zone-scroll]')?.dataset.zoneScroll||null};globalThis.__uatTableWheels.push(entry);setTimeout(()=>entry.prevented=event.defaultPrevented,0);};
     globalThis.__uatTableWheelHandler=handler;document.addEventListener('wheel',handler,{capture:true});
-    return {x:r.right-Math.max(2,gutter/2),y:r.y+r.height/2};
+    return point;
   });
   try {
     await page.mouse.move(wheelPoint.x,wheelPoint.y);
