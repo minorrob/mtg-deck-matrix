@@ -4182,7 +4182,7 @@ button.cm-vitals{cursor:pointer}
 #matrix-v2 .cm-deck-tabs [role=tab][aria-selected=true]{color:var(--color-ink);border-bottom-color:var(--color-ink);background:transparent}
 #matrix-v2 .cm-deck-tabs small{padding:2px 6px;border-radius:var(--radius-pill);font-size:var(--text-small);background:var(--color-raised);color:var(--color-muted);font-variant-numeric:tabular-nums}
 #matrix-v2 .cm-deck-tile h3{font-family:var(--font-body);font-weight:700}
-#matrix-v2 .cm-deck-tile>.cm-tile-play{position:absolute;left:14px;top:48px;z-index:3;min-height:var(--control-height-compact);padding:0 10px}
+#matrix-v2 .cm-deck-tile>.cm-tile-play{position:absolute;right:14px;top:48px;z-index:3;min-height:var(--control-height-compact);padding:0 10px}
 #matrix-v2 .cm-table>tbody>tr:not(.cm-group-row)>:is(td,th){height:48px;vertical-align:middle}
 #matrix-v2 .cm-table :is(.cm-price,.cm-band-dollars){color:var(--color-money);font-variant-numeric:tabular-nums}
 #matrix-v2 .cm-row-group-heading{margin:0;font:inherit}
