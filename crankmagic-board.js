@@ -2688,6 +2688,20 @@ globalThis.CrankBoard = Object.seal({
   /* Drawn anew at every view, the board keeps the focus on the control the keyboard was on (C.keepFocus), holds it in
      Show hand while that is open, and says what has just happened in its status region. */
   let handWas = null, handFrom = null;
+  function fitDecisionSlot(host) {
+    const slot=host.querySelector('#cm-decision-slot:not([hidden])');if(!slot||phone())return;
+    for(const key of ['width','max-width','left','transform','margin-left','margin-right'])slot.style.removeProperty(key);
+    const panel=slot.getBoundingClientRect(),parent=slot.offsetParent||slot.parentElement,bounds=parent.getBoundingClientRect();
+    const tabs=[...host.querySelectorAll(':scope>.cm-stage-left,:scope>.cm-stage-right')].filter(el=>getComputedStyle(el).visibility!=='hidden').map(el=>({left:el.classList.contains('cm-stage-left'),r:el.getBoundingClientRect()})).filter(x=>x.r.width&&x.r.height);
+    const overlaps=(a,b)=>Math.min(a.right,b.right)-Math.max(a.left,b.left)>1&&Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>1;
+    if(!tabs.some(x=>overlaps(panel,x.r)))return;
+    const left=Math.max(bounds.left+8,...tabs.filter(x=>x.left).map(x=>x.r.right+8)),right=Math.min(bounds.right-8,...tabs.filter(x=>!x.left).map(x=>x.r.left-8));
+    if(right<=left)return;
+    const width=Math.min(panel.width,right-left),at=left+(right-left-width)/2-bounds.left-parent.clientLeft+parent.scrollLeft;
+    slot.style.width=`${width}px`;slot.style.maxWidth=`${width}px`;
+    if(getComputedStyle(slot).position==='sticky'){slot.style.marginLeft=`${at}px`;slot.style.marginRight='0px';}
+    else{slot.style.left=`${at}px`;slot.style.transform='none';}
+  }
   function render() {
     const host = document.getElementById("cm-board");
     if (!host) return;
@@ -2940,6 +2954,7 @@ globalThis.CrankBoard = Object.seal({
          scrolls, so a long draft or an open "All block options" pushed No blocks and Confirm below the window. It is as
          tall as the window leaves below its top, and its middle scrolls (crankmagic-stage.css). Focus starts it lower
          than Table, so the room is measured, not assumed -- last, once everything above it has its size. */
+      fitDecisionSlot(host);
       const ask = host.querySelector(".cm-board-main>.cm-board-ask, .cm-board-tabletop>.cm-board-ask");
       if (ask) ask.style.maxHeight = `${Math.max(160, Math.floor(innerHeight - ask.getBoundingClientRect().top - 12))}px`;
       placeCallouts();
