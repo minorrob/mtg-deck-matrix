@@ -1026,3 +1026,8 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 
 /* A folded decision stays above the phone's still-open Boards sheet and below its 50px tabs. */
 #matrix-v2 .cm-board[data-phone] .cm-phone-ask:has(.cm-decision-slot:not([hidden])){position:relative;z-index:32}
+
+/* Focus History has its own row; the 8px divider cannot be its scroll viewport. */
+#matrix-v2 .cm-board .cm-mat[data-fit=focus]>.cm-mat-grid>.cm-board-band{grid-column:1/-1;grid-row:5;min-height:calc(160px*var(--hud-scale,1));overflow:auto}
+#matrix-v2 .cm-board :is(.cm-board-band h3,.cm-board-band ol,.cm-board-history li){font-size:calc(15px*var(--hud-scale,1));line-height:1.2}
+#matrix-v2 .cm-board .cm-board-band h3 .v-button{min-height:32px;height:32px;font-size:15px}
