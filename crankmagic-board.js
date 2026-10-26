@@ -242,7 +242,7 @@ globalThis.CrankBoard = Object.seal({
   const moduleSide = id => !phone() ? ["left","right"].find(side => paneModules(side).includes(id)) : undefined;
   const openModuleDrawer = id => {const side=moduleSide(id); if(side === "left") stageRail=true; if(side === "right") stageSide=true;};
   const handStarts = new Map();
-  const appearance = {background: stored("cm-stage-background") || "volcano", table: stored("cm-stage-table") || ""};
+  const appearance = {background: stored("cm-stage-background") || "", table: stored("cm-stage-table") || ""};
   /* The table design: a saved id, an older one (wooden, stone, obsidian) or none, resolved through the catalog (ROB-100). */
   const tableDesignId = (id) => (globalThis.CrankStage ? CrankStage.tableDesign(id).id : id);
   let blockSelected = null, blockPending = null, blockResult = null, blockListOpen = false, blockEpoch = 0;
