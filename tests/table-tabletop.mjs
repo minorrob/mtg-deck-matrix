@@ -300,11 +300,13 @@ try {
     await page.mouse.move(box.x-20,box.y+box.height/2,{steps:12});await page.mouse.up();
     assert.equal(await slider.inputValue(),await slider.getAttribute('min'),`${name} reaches minimum with pointer dragging`);
   }
-  await page.getByRole('combobox',{name:'Background',exact:true}).selectOption('forest');
+  /* A backdrop other than the default (the list is whatever tools/stage-backdrops.mjs last wrote). */
+  const background=page.getByRole('combobox',{name:'Background',exact:true}),other=await background.locator('option').nth(1).getAttribute('value');
+  await background.selectOption(other);
   const designs=page.getByRole('combobox',{name:'Table design',exact:true});
   assert.equal(await designs.locator('option').count(),7,'the Camera offers the seven table designs (ROB-100)');
   await designs.selectOption('stone-dais');
-  assert.equal(await page.getByRole('combobox',{name:'Background',exact:true}).inputValue(),'forest','background is independent of the table design');
+  assert.equal(await background.inputValue(),other,'background is independent of the table design');
   assert.equal(await page.evaluate(()=>localStorage.getItem('cm-stage-table')),'stone-dais','the table design is remembered on this device');
   assert.equal(await page.evaluate(()=>CrankStage.tableDesign('stone').id),'stone-dais','an older saved choice (stone) maps onto its design');
   assert.equal(await page.evaluate(()=>CrankStage.tableDesign(null).id),'medieval-banded','no saved choice means the default, medieval oak with iron bands');
@@ -413,7 +415,7 @@ try {
   await page.setViewportSize({width:1400,height:900});
   for(const [selector,label] of [['.cm-stage-rail','Toggle board tools'],['.cm-stage-side','Toggle table panel']]) if(await page.locator(`${selector}.is-open`).count()) await page.getByRole('button',{name:label,exact:true}).click();
   if(!await page.getByRole('combobox',{name:'Background',exact:true}).count()) await page.getByRole('button',{name:'Camera',exact:false}).click();
-  await page.getByRole('combobox',{name:'Background',exact:true}).selectOption('volcano');
+  await page.getByRole('combobox',{name:'Background',exact:true}).selectOption({index:0});
   await page.getByRole('button',{name:'Camera',exact:false}).click();
   const row=page.locator('.cm-stage-front [data-card-section$=":others"]');
   const order=()=>row.locator('[data-arrange-card]').evaluateAll(els=>els.map(el=>el.dataset.card));

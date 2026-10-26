@@ -33,6 +33,38 @@ back with `tools/staging-check.mjs --expect 9ca99e53`.
   Worker setting was added since 1fcfc3d. Sharing stays off in `cloud-production` (it is on in the staging profile
   only), so the `cloud/sharing.mjs` changes do not run there.
 
+## Play 3D's backdrop videos: Rob's six, at the Graphics resolution, 2K at most, 2026-10-26 (a Claude cloud session, for Rob; `claude/crankmagic-background-videos-8nm59v`, PR #888)
+
+Rob, 2026-10-26: *"Replace the current background videos in the CrankMagic Play 3D with those in this folder. Adjust as
+required. Maintain resolution in line with settings selection with 2k at max resolution."* At his word this changes the
+Codex · Play lane's `crankmagic-stage.js`, `crankmagic-board.js` (one default), `ui-prototypes/babylon` (two names) and
+two Play suites.
+
+- **The backdrops are Rob's six** (his Drive folder "Backdrop videos", each download checked against Drive's byte size):
+  Dwarven King (the default, first by name), Goblin Stronghold, Golden Fields, Island, Japanese Samurai, Studious
+  Retreat. The volcano and the two placeholders without a video (Forest, Cloud sea) are gone; a saved choice of them
+  falls back to Dwarven King.
+- **Each kept at 720, 1080 and 1440 lines** by `tools/stage-backdrops.mjs`: framed at 16:9, looped without a seam (the
+  last second cross-faded into the first; 10.1 s clips play 9.1 s), VP9 WebM without sound, 24 fps, at most 24 MiB a
+  file (the largest is 8.4 MiB; 51 MB in all), a poster each. The five 2544×1456 clips, 1431 lines at 16:9, reach 1440
+  (a tier within 2% of the source is kept); **Island's source is 1280×720, so it has 720 only** (never enlarged).
+- **The stage plays the height the setting calls for:** the smallest kept that fills the backdrop's height at 16:9 in
+  drawn pixels (stage height × the screen's pixel ratio × the kept Graphics resolution), **1440 (2K) at most**;
+  changed when the setting is kept (not while the slider previews), the clip keeping its place. **Where WebGL is drawn
+  in software and no resolution is chosen, 720 lines at most** (as the skins stay at 1024 there): the 1080 Dwarven King
+  took the table's frames on Actions (run 40326429906, `table-tabletop` timed out at the module drag) and here (2 of 2
+  failed at 1080, 2 of 2 passed at 720). A resolution chosen in Settings gets what it calls for on any machine.
+- **The originals are not committed** (about 72 MB of video in a public history for good): they stay in Rob's Drive;
+  `design/art-source/backdrops/README.md` says how to run the tool again, and `.gitignore` keeps the clips out.
+- **Proven here:** `board-graphics` (the heights at 50/70/100/110/150/200%, the 2K cap with a 2160 file offered, a
+  720-only backdrop, the swap on a kept setting and not on a preview, the clip's place kept, the tool's markers; each
+  new check seen red by breaking the code), `feature-wiring`, `release-pages`, `asset-versions`. The loop's seam
+  measured on a synthetic clip as an ordinary frame step (PSNR 24.18 against 24.15 for adjacent frames).
+- `table-tabletop` no longer names backdrops: it picks the first, and the second for "background is independent of the
+  table design" (it had named the `forest` placeholder, gone now). It runs here with
+  `NODE_PATH=/opt/node-tools/node_modules` (its preview tool needs `playwright-core`).
+- **Not proven:** the backdrops on a GPU browser and a phone; Rob's eye on the loops' seams.
+
 ## Planned Changes (C1–C8, once Ready to add), 2026-10-26 (a Claude cloud session, for Rob; `claude/vigilant-dijkstra-bzs1wf`, restarted from main after #885)
 
 Rob, 2026-10-25, from another session's handoff (C1–C8, "Ready to Add" renamed "Planned Changes"; B1–B4, the deck header
