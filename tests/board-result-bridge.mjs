@@ -6,13 +6,13 @@ const source=readFileSync(new URL('../crankmagic-board.js',import.meta.url),'utf
 const implementation=source.slice(source.indexOf('  async function fileResult('),source.indexOf('  function send(payload)'));
 let checks=0; const eq=(a,b,m)=>{assert.deepEqual(a,b,m);checks++;};
 const record={schema:'CrankMagicTableResult@1',id:'game:table:m1:s0',tableId:'t1',matchId:'m1',seatId:'s0',source:{deckId:'d1',deckVersion:4},playedAt:'2026-10-26T12:00:00.000Z',outcome:'win',finishReason:'last standing',finishRank:1,turns:8,pod:2,seat:1,ai:true,opponents:[{seatId:'s1',name:'Maya',commanders:['Meren'],ai:true}]};
-function setup({records=[record],expected=true,failOnce=false}={}) {
+function setup({records=[record],expected=true,failOnce=false,writerFalseOnce=false}={}) {
   const commands=[],timers=[],notices=[],reads=[],forwarded=[];
   const view={matchId:'m1',seatId:'s0',seat:0,status:'finished',state:{turn:8},seats:[{pilot:'human'},{pilot:'house'}],...(expected?{resultRecordExpected:true}:{})};
   let account='rob@example.com';
   const C={signedInAs:()=>account,state:{decks:[{id:'d1',name:'Test deck'}],games:[]},notice:(...a)=>notices.push(a),commit:async c=>{commands.push(c);if(failOnce){failOnce=false;throw {retryable:true,message:'offline'};}C.state.games.push({id:c.gameId});}};
   const table={tableId:'t1',seats:[{you:true,source:{deckId:'d1',deckVersion:4}},{name:'Maya',kind:'ai',deck:{commander:['Meren']}}]};
-  const context=vm.createContext({C,table,tableId:table.tableId,view,resultEpoch:0,filed:new Set(),outcomeOf:()=>({outcome:'win',reason:'last standing'}),tableApi:()=>({fileResult:async(r,c)=>{forwarded.push({record:r,context:c});await C.commit({gameId:r.id,playedAt:r.playedAt,outcome:r.outcome,finish:r.finishRank,turns:r.turns,pod:r.pod,seat:r.seat,table:{deckVersion:r.source.deckVersion}});return true;},tableUrl:id=>'/api/tables/'+id,api:async(method,url)=>{reads.push([method,url]);return {table:{gameRecord:records.shift()}};}}),setTimeout:fn=>timers.push(fn)});
+  const context=vm.createContext({C,table,tableId:table.tableId,view,resultEpoch:0,filed:new Set(),outcomeOf:()=>({outcome:'win',reason:'last standing'}),tableApi:()=>({fileResult:async(r,c)=>{forwarded.push({record:r,context:c});if(writerFalseOnce){writerFalseOnce=false;return false;}await C.commit({gameId:r.id,playedAt:r.playedAt,outcome:r.outcome,finish:r.finishRank,turns:r.turns,pod:r.pod,seat:r.seat,table:{deckVersion:r.source.deckVersion}});return true;},tableUrl:id=>'/api/tables/'+id,api:async(method,url)=>{reads.push([method,url]);return {table:{gameRecord:records.shift()}};}}),setTimeout:fn=>timers.push(fn)});
   vm.runInContext(implementation+';globalThis.run=fileResult',context);
   return {run:()=>context.run(view),commands,timers,notices,reads,forwarded,C,context,setAccount:v=>account=v};
 }
@@ -58,5 +58,8 @@ function setup({records=[record],expected=true,failOnce=false}={}) {
 {
   const t=setup({records:[undefined,record]});await t.run();t.context.attached=false;await t.timers.shift()();
   eq(t.commands.length,1,'mere detach retains valid finished retry');
+}
+{
+  const t=setup({records:[record,record],writerFalseOnce:true});await t.run();eq(t.commands.length,0,'shared writer false does not claim success');eq(t.timers.length,1,'valid context retries a failed shared write');await t.timers.shift()();eq(t.commands.length,1,'shared write retry eventually files once');
 }
 console.log(`board-result-bridge: ${checks} checks passed`);

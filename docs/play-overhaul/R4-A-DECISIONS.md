@@ -42,3 +42,11 @@ Proof (commands use installed Chrome and local fixture server):
 Screenshots use r4-desk-W01-<view>-<width>.png, r4-desk-W01-phone-question.png and the same task
 evidence directory as D1. Fixture card images remain placeholders. Combined real-game acceptance,
 combat B, board C, view/account D2 and staging are still open.
+
+Independent engine review found two presentation seams, now guarded: ability stack IDs use their
+own namespace (never object lookup by the same number), and a multi-target trigger combination
+retains its offered label rather than substituting the acting source card. `board-target-presentation`
+executes the actual helper against object/ability ID collision, current/departed source and missing
+ability cases (7 checks). The browser fixture includes two distinct trigger target combinations.
+Latest local refinements after the first A proof require coordinator browser/mutation execution;
+they are deliberately marked pending until the canonical run completes.
